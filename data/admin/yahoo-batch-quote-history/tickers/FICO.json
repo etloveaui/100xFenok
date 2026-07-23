@@ -64,12 +64,32 @@
       "run_id": "29789662473",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for FICO despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 884,
+      "natural": true,
+      "observed_at": "2026-07-23T00:56:37Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29968542251",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
     "fetched_at": "2026-07-21T00:35:29Z",
     "history_as_of": "2026-07-20",
-    "path": "data/yf/finance/FICO.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FICO.json",
     "payload_sha256": "2e7d69f8e489e40fea0b809242f21e7d1d25d1237acfd06e7288d2ec01dbf8e0",
     "quote_as_of": "2026-07-20T20:00:02Z",
     "source_as_of": "2026-07-20"
@@ -80,16 +100,49 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for FICO despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 1110,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 884,
     "natural": true,
-    "observed_at": "2026-07-21T00:32:52Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-23T00:56:37Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29789662473",
+    "run_id": "29968542251",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "1/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for FICO despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-07-23T00:56:37Z",
+    "run_attempt": 1,
+    "run_id": "29968542251"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-21T00:35:29Z",
+    "history_as_of": "2026-07-20",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FICO.json",
+    "payload_sha256": "2e7d69f8e489e40fea0b809242f21e7d1d25d1237acfd06e7288d2ec01dbf8e0",
+    "quote_as_of": "2026-07-20T20:00:02Z",
+    "source_as_of": "2026-07-20"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -103,9 +156,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-20"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "FICO",
-  "updated_at": "2026-07-21T00:32:52Z"
+  "updated_at": "2026-07-23T00:56:37Z"
 }

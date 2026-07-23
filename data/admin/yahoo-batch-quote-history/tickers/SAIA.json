@@ -103,12 +103,32 @@
       "run_id": "29879427185",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for SAIA despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 30586,
+      "natural": true,
+      "observed_at": "2026-07-23T00:56:37Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29968542251",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
     "fetched_at": "2026-07-22T01:09:30Z",
     "history_as_of": "2026-07-21",
-    "path": "data/yf/finance/SAIA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SAIA.json",
     "payload_sha256": "a3fe45d1f5722e72d86d729866690901f5edd1fc7dd328f9488c54ab86e474d9",
     "quote_as_of": "2026-07-21T20:00:00Z",
     "source_as_of": "2026-07-21"
@@ -119,16 +139,49 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for SAIA despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 789,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 30586,
     "natural": true,
-    "observed_at": "2026-07-22T01:04:44Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-23T00:56:37Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29879427185",
+    "run_id": "29968542251",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "1/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for SAIA despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-07-23T00:56:37Z",
+    "run_attempt": 1,
+    "run_id": "29968542251"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-22T01:09:30Z",
+    "history_as_of": "2026-07-21",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SAIA.json",
+    "payload_sha256": "a3fe45d1f5722e72d86d729866690901f5edd1fc7dd328f9488c54ab86e474d9",
+    "quote_as_of": "2026-07-21T20:00:00Z",
+    "source_as_of": "2026-07-21"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -142,9 +195,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-21"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "SAIA",
-  "updated_at": "2026-07-22T01:04:44Z"
+  "updated_at": "2026-07-23T00:56:37Z"
 }

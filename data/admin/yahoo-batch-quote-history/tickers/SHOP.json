@@ -77,12 +77,32 @@
       "run_id": "29879427185",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for SHOP despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 30667,
+      "natural": true,
+      "observed_at": "2026-07-23T00:49:28Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29968542251",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
     "fetched_at": "2026-07-22T00:58:38Z",
     "history_as_of": "2026-07-21",
-    "path": "data/yf/finance/SHOP.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SHOP.json",
     "payload_sha256": "17cb23ddb5226cd37752d67c2f4c10933773e0da0649d6ffcf759e11ad2496ff",
     "quote_as_of": "2026-07-21T20:00:00Z",
     "source_as_of": "2026-07-21"
@@ -93,16 +113,49 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for SHOP despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 935,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 30667,
     "natural": true,
-    "observed_at": "2026-07-22T00:53:53Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-23T00:49:28Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29879427185",
+    "run_id": "29968542251",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "0/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for SHOP despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-07-23T00:49:28Z",
+    "run_attempt": 1,
+    "run_id": "29968542251"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-22T00:58:38Z",
+    "history_as_of": "2026-07-21",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SHOP.json",
+    "payload_sha256": "17cb23ddb5226cd37752d67c2f4c10933773e0da0649d6ffcf759e11ad2496ff",
+    "quote_as_of": "2026-07-21T20:00:00Z",
+    "source_as_of": "2026-07-21"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -116,9 +169,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-21"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "SHOP",
-  "updated_at": "2026-07-22T00:53:53Z"
+  "updated_at": "2026-07-23T00:49:28Z"
 }

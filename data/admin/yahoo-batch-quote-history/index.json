@@ -1,46 +1,358 @@
 {
   "counts": {
     "active": 6724,
-    "failed": 11,
-    "fresh": 1911,
-    "lkg": 564,
+    "failed": 28,
+    "fresh": 1884,
+    "lkg": 591,
     "pending_history": 0,
-    "retry": 567,
-    "stale": 563,
+    "retry": 594,
+    "stale": 574,
     "unavailable": 3,
     "untracked": 4246
   },
   "current_attempt": {
-    "attempted": 140,
-    "errors": [],
+    "attempted": 1175,
+    "errors": [
+      {
+        "error": "ValueError: quote_as_of is unavailable for 000568.SZ despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "000568.SZ"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for 004370.KS despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "004370.KS"
+      },
+      {
+        "error": "recovery_not_advanced_by_provider",
+        "failures": [],
+        "ticker": "012510.KS"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
+        "failures": [],
+        "ticker": "230360.KQ"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for 294870.KS despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "294870.KS"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for 601066.SS despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "601066.SS"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for 9888.HK despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "9888.HK"
+      },
+      {
+        "error": "StockDetailValidationError: Yahoo previous close must be a finite number",
+        "failures": [],
+        "ticker": "AAPL"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for AWK despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "AWK"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for BK despite available history",
+        "failures": [],
+        "ticker": "BK"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for BLD despite available history",
+        "failures": [],
+        "ticker": "BLD"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for CAH despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "CAH"
+      },
+      {
+        "error": "empty payload",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "KeyError: 'exchangeTimezoneName'",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "empty payload"
+          },
+          {
+            "attempt": 2,
+            "error": "KeyError: 'exchangeTimezoneName'",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 2,
+            "error": "empty payload"
+          }
+        ],
+        "ticker": "CTRA"
+      },
+      {
+        "error": "empty payload",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "KeyError: 'exchangeTimezoneName'",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "empty payload"
+          },
+          {
+            "attempt": 2,
+            "error": "KeyError: 'exchangeTimezoneName'",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 2,
+            "error": "empty payload"
+          }
+        ],
+        "ticker": "DAY"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for FICO despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "FICO"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for GE despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "GE"
+      },
+      {
+        "error": "ValueError: provider source timestamp is unavailable for HOLX",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "KeyError: 'exchangeTimezoneName'",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "HOLX"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for JCI despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "JCI"
+      },
+      {
+        "error": "StockDetailValidationError: Yahoo previous close must be a finite number",
+        "failures": [],
+        "ticker": "JPM"
+      },
+      {
+        "error": "ValueError: provider source timestamp is unavailable for MMC",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "KeyError: 'exchangeTimezoneName'",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "MMC"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for RKT despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "RKT"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for RS despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "RS"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for SAIA despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "SAIA"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for SATS despite available history",
+        "failures": [],
+        "ticker": "SATS"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for SHOP despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "SHOP"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for WAT despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "WAT"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for WSO despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "WSO"
+      }
+    ],
     "event_name": "schedule",
-    "failed": 0,
-    "fetch_attempts": 140,
+    "failed": 27,
+    "fetch_attempts": 855,
     "natural": true,
-    "promotion_deferral_symbols": [],
-    "promotion_deferrals": 0,
+    "promotion_deferral_symbols": [
+      "012510.KS"
+    ],
+    "promotion_deferrals": 1,
     "run_attempt": 1,
-    "run_id": "29965324287",
-    "schedule": "0 22 * * 3",
-    "skipped": 0,
-    "successes": 140
+    "run_id": "29968542251",
+    "schedule": "20 23 * * 1-5",
+    "skipped": 322,
+    "successes": 826
   },
-  "generated_at": "2026-07-22T23:45:22Z",
+  "generated_at": "2026-07-23T01:13:46Z",
   "lane_id": "yahoo_batch_quote_history",
   "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
-    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
-    "failure_kind": "unexpected",
-    "failures": [],
+    "error": "ValueError: quote_as_of is unavailable for 9888.HK despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+        "source": "provider_safe_call"
+      }
+    ],
     "lkg_status": "retained",
-    "observed_at": "2026-07-22T00:59:16Z",
+    "observed_at": "2026-07-23T01:10:17Z",
     "run_attempt": 1,
-    "run_id": "29879427185",
-    "ticker": "CAT"
+    "run_id": "29968542251",
+    "ticker": "9888.HK"
   },
   "lkg_details": [
+    {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-23T01:04:01Z",
+      "failure_run_id": "29968542251",
+      "max_source_age_business_days": null,
+      "payload_sha256": "498f7680a099e264c9cdd3e25b163b967aa4d1baf4ddc38bc007855ff02475a8",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-21",
+      "state_reason": null,
+      "symbol": "000568.SZ"
+    },
+    {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-23T00:56:37Z",
+      "failure_run_id": "29968542251",
+      "max_source_age_business_days": null,
+      "payload_sha256": "c1d9c0dd87147819f19e1b27783b6ed7d83cac4b2e759b27789e580625df2c96",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-22",
+      "state_reason": null,
+      "symbol": "004370.KS"
+    },
     {
       "expected_resolution": "next_natural_yahoo_run",
       "failure_observed_at": "2026-07-16T00:13:37Z",
@@ -54,8 +366,8 @@
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-07-22T00:47:32Z",
-      "failure_run_id": "29879427185",
+      "failure_observed_at": "2026-07-23T00:49:28Z",
+      "failure_run_id": "29968542251",
       "max_source_age_business_days": 6,
       "payload_sha256": "1045a62575964dd495119208688f18897b4819bfdea0ebe9b04b2cdd9c73bf8f",
       "source_age_business_days": 23,
@@ -64,108 +376,64 @@
       "symbol": "230360.KQ"
     },
     {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "e80f549b5bc3b98ddf5c2e0a7434eabda26ead58161c3b1429656e3b792d0e39",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-07-09T15:19:46Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "AAAD"
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-23T01:04:01Z",
+      "failure_run_id": "29968542251",
+      "max_source_age_business_days": null,
+      "payload_sha256": "aacc618981b4d4aa84400bb77d7bc64b8f9e030311494ebad6af206d8d81017f",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-22",
+      "state_reason": null,
+      "symbol": "294870.KS"
+    },
+    {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-23T01:04:01Z",
+      "failure_run_id": "29968542251",
+      "max_source_age_business_days": null,
+      "payload_sha256": "230ce44c86cdc917acafaa42d094148286ea7493ba4d17a70e271428d3bb2fb0",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-21",
+      "state_reason": null,
+      "symbol": "601066.SS"
+    },
+    {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-23T01:10:17Z",
+      "failure_run_id": "29968542251",
+      "max_source_age_business_days": null,
+      "payload_sha256": "8755bca102aaae449727c7cf9d94b0530e1a2b17aa2b252aedea94540ea90638",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-21",
+      "state_reason": null,
+      "symbol": "9888.HK"
+    },
+    {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-23T00:49:28Z",
+      "failure_run_id": "29968542251",
+      "max_source_age_business_days": null,
+      "payload_sha256": "2b253584efc9dbf093cbea9b8d1705063512cb47075cd5872fcf37c70e133655",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-21",
+      "state_reason": null,
+      "symbol": "AAPL"
+    },
+    {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-23T00:49:28Z",
+      "failure_run_id": "29968542251",
+      "max_source_age_business_days": null,
+      "payload_sha256": "ee55ccd2a9107bef2e3e6ad008344846802ab32f061e831bccd2c17906154171",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-21",
+      "state_reason": null,
+      "symbol": "AWK"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "ad3abfbba9b08b12b190db3383601d63aa2093fa6760a1ee0649a72e9fada55c",
-      "source_age_business_days": 8,
-      "source_as_of": "2026-07-08T16:34:51Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "ABXB"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "f413988ebf497573e4d80850a3a3fc8e2b564d562fc424759ca69efe99e727a2",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-07-10T14:33:39Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "ACHX"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "d67f4adb74a82df53ffe804e6780c595e58d048aa5db520b866867043ce2a398",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-07-13T16:30:21Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "AKAF"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "b1b08f48a3611027897ff4fee4c51716d170eba5c5fce73cc049fcdd620ca864",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-07-10T19:48:43Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "AMUB"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "17fcb5f337a146063523c1555f3cd8adcec89b9315d5999948c7b32512c2d0fd",
-      "source_age_business_days": 8,
-      "source_as_of": "2026-07-08T14:31:42Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "APPC"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "e534723e71b58863771fda976acc2ea8ca897cc0b0269cd7bbd3efec2b283eb7",
-      "source_age_business_days": 10,
-      "source_as_of": "2026-07-08T19:41:59Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "ARCM"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "6cdfcfa89076b4d2060fb2ac258ebdff769a48fbbd249c76a219d86feb56cfb2",
-      "source_age_business_days": 10,
-      "source_as_of": "2026-07-06T15:42:23Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "BFJA"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "30c408aae1c60632acd4d926a7dc6e47f5e5419414bf9e0a5fb8c27825514968",
-      "source_age_business_days": 10,
-      "source_as_of": "2026-07-08T14:25:14Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "BHYB"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-07-22T00:47:32Z",
-      "failure_run_id": "29879427185",
+      "failure_observed_at": "2026-07-23T00:49:28Z",
+      "failure_run_id": "29968542251",
       "max_source_age_business_days": 6,
       "payload_sha256": "9a18aac9ec21b758f886d3106e54facef2cfb0011356353c84097bd3fc0c356c",
       "source_age_business_days": 7,
@@ -175,8 +443,8 @@
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-07-22T00:47:32Z",
-      "failure_run_id": "29879427185",
+      "failure_observed_at": "2026-07-23T00:49:28Z",
+      "failure_run_id": "29968542251",
       "max_source_age_business_days": 6,
       "payload_sha256": "bbff7f35e24be2fb2ec44fc8d58aa790e52705a75d2e8c2affa53bbec3269644",
       "source_age_business_days": 8,
@@ -185,106 +453,128 @@
       "symbol": "BLD"
     },
     {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-23T01:10:17Z",
+      "failure_run_id": "29968542251",
+      "max_source_age_business_days": null,
+      "payload_sha256": "7a245161b775bd21dbbbaf9a6d031ec4189d6c93f88f4d8332208821b97c1a09",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-21",
+      "state_reason": null,
+      "symbol": "CAH"
+    },
+    {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
+      "failure_observed_at": "2026-07-23T00:49:28Z",
+      "failure_run_id": "29968542251",
       "max_source_age_business_days": 6,
-      "payload_sha256": "b883ca9091badd5f1c2f57e77f92371e110e0474e4aa347ab98d1db321a5caeb",
-      "source_age_business_days": 22,
-      "source_as_of": "2026-06-15T14:35:42Z",
+      "payload_sha256": "c1557c52900d93608f067b98d2df714394a7322a8d53d674d3524d275ab36b27",
+      "source_age_business_days": 45,
+      "source_as_of": "2026-05-06",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "BRZX"
+      "symbol": "CTRA"
     },
     {
       "expected_resolution": null,
-      "failure_observed_at": "2026-07-22T00:59:16Z",
-      "failure_run_id": "29879427185",
+      "failure_observed_at": "2026-07-23T00:56:37Z",
+      "failure_run_id": "29968542251",
       "max_source_age_business_days": null,
-      "payload_sha256": "ddd505371b8ae1c6d1aa7b3ad1e03a7aea96a87e9fab10ff18f57072ea59d26e",
+      "payload_sha256": "2e7d69f8e489e40fea0b809242f21e7d1d25d1237acfd06e7288d2ec01dbf8e0",
       "source_age_business_days": null,
       "source_as_of": "2026-07-20",
       "state_reason": null,
-      "symbol": "CAT"
+      "symbol": "FICO"
+    },
+    {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-23T00:49:28Z",
+      "failure_run_id": "29968542251",
+      "max_source_age_business_days": null,
+      "payload_sha256": "689f0b6b730270b0cb4bfdec9b63a59a1bbf59fdd011b59e4cd4a3992601fbc3",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-21",
+      "state_reason": null,
+      "symbol": "GE"
+    },
+    {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-23T00:56:37Z",
+      "failure_run_id": "29968542251",
+      "max_source_age_business_days": null,
+      "payload_sha256": "2f9b55eb078dc52a8e41a4972d4cf20ac799682e45aa85d6313968098c5607ae",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-21",
+      "state_reason": null,
+      "symbol": "JCI"
+    },
+    {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-23T01:10:17Z",
+      "failure_run_id": "29968542251",
+      "max_source_age_business_days": null,
+      "payload_sha256": "f803baadf2978c1a6ffaa32164aeb627c544d072d426074bc600c52a0d92f7ec",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-21",
+      "state_reason": null,
+      "symbol": "JPM"
+    },
+    {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-23T01:10:17Z",
+      "failure_run_id": "29968542251",
+      "max_source_age_business_days": null,
+      "payload_sha256": "98794adb4028f62e2a4821fb4202bfadc4398f278ade0b3b96339a30bcf7b235",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-21",
+      "state_reason": null,
+      "symbol": "RKT"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
+      "failure_observed_at": "2026-07-23T00:56:37Z",
+      "failure_run_id": "29968542251",
       "max_source_age_business_days": 6,
-      "payload_sha256": "596f09a7694a53da7c4c1a2d65b13456d09fa4bc5277dd4a85d0899fe59f451c",
-      "source_age_business_days": 15,
-      "source_as_of": "2026-06-25T19:36:25Z",
+      "payload_sha256": "e8122d5e9b22913dbc2d4252fc43f8889c43c2af0e86cca21c81e376159a237d",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-07-21",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "CCPX"
+      "symbol": "RS"
     },
     {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "3b7848025b95316c8e83303caab25da3144b499dce96cab2991df694e2ca1362",
-      "source_age_business_days": 9,
-      "source_as_of": "2026-06-29",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "CPRO"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "907e9b40c6d929598f5f0ca7ff0cb1aeb032752f84b9e8f8387b823c220bd45c",
-      "source_age_business_days": 9,
-      "source_as_of": "2026-06-29",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "CPRY"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "f65aa57d66be62c8d53494ed6476b62bc880493e7316e53988f50a90f41b5361",
-      "source_age_business_days": 9,
-      "source_as_of": "2026-06-29",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "CPSA"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "91b5de354e32a2851f1b433d8786427e84d096bcc08a1c3f5f3913da32e18ef9",
-      "source_age_business_days": 9,
-      "source_as_of": "2026-06-29",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "CPSD"
+      "expected_resolution": null,
+      "failure_observed_at": "2026-07-23T00:56:37Z",
+      "failure_run_id": "29968542251",
+      "max_source_age_business_days": null,
+      "payload_sha256": "a3fe45d1f5722e72d86d729866690901f5edd1fc7dd328f9488c54ab86e474d9",
+      "source_age_business_days": null,
+      "source_as_of": "2026-07-21",
+      "state_reason": null,
+      "symbol": "SAIA"
     }
   ],
   "lkg_symbols": [
+    "000568.SZ",
+    "004370.KS",
     "012510.KS",
     "230360.KQ",
+    "294870.KS",
+    "601066.SS",
+    "9888.HK",
     "AAAD",
+    "AAOX",
+    "AAPL",
     "ABXB",
+    "ACGO",
     "ACHX",
     "AKAF",
     "AMUB",
     "APPC",
     "ARCM",
-    "BFJA",
-    "BHYB",
-    "BK",
-    "BLD",
-    "BRZX",
-    "CAT",
-    "CCPX",
-    "CPRO",
-    "CPRY",
-    "CPSA",
-    "CPSD"
+    "AWK",
+    "BAVA",
+    "BFJA"
   ],
-  "message": "Yahoo quote/history: fresh=1911, lkg=564, pending_history=0, unavailable=3, retry=567, failed=11, source_stale=563. Pending history is a normal new-listing state and self-resolves on a natural Yahoo run.",
+  "message": "Yahoo quote/history: fresh=1884, lkg=591, pending_history=0, unavailable=3, retry=594, failed=28, source_stale=574. Pending history is a normal new-listing state and self-resolves on a natural Yahoo run.",
   "oldest_source_as_of": "2026-03-06T19:02:43Z",
   "oldest_source_ticker": "RAAY",
   "pending_details": [],
@@ -292,32 +582,45 @@
   "promotion_deferral_details": [
     {
       "event_name": "schedule",
-      "observed_at": "2026-07-22T00:47:32Z",
+      "observed_at": "2026-07-23T00:49:28Z",
       "provider_history_as_of": "2026-07-14",
       "provider_quote_as_of": "2026-06-25T06:30:30Z",
       "reason": "recovery_not_advanced_by_provider",
       "run_attempt": 1,
-      "run_id": "29879427185",
+      "run_id": "29968542251",
       "ticker": "012510.KS"
     }
   ],
   "retry_symbols": [
+    "000568.SZ",
+    "004370.KS",
     "012510.KS",
     "230360.KQ",
+    "294870.KS",
+    "601066.SS",
+    "9888.HK",
     "AAAD",
+    "AAOX",
+    "AAPL",
     "ABXB",
+    "ACGO",
     "ACHX",
     "AKAF",
     "AMUB",
     "APPC",
     "ARCM",
+    "AWK",
+    "BAVA",
     "BFJA",
+    "BFXU",
     "BHYB",
     "BK",
     "BLD",
     "BRZX",
-    "CAT",
+    "CAH",
     "CCPX",
+    "CIEI",
+    "CIVG",
     "CPRO",
     "CPRY",
     "CPSA",
@@ -410,6 +713,7 @@
     "FETH",
     "FGDL",
     "FHIL",
+    "FICO",
     "FITZ",
     "FLAO",
     "FLJJ",
@@ -436,6 +740,7 @@
     "GDOG",
     "GDT",
     "GDXW",
+    "GE",
     "GEQ",
     "GFSG",
     "GLD",
@@ -510,9 +815,11 @@
     "JANU",
     "JANW",
     "JBLG",
+    "JCI",
     "JELM",
     "JNEU",
     "JOJO",
+    "JPM",
     "JUDB",
     "JULC",
     "JULH",
@@ -565,6 +872,7 @@
     "METG",
     "METW",
     "MFEB",
+    "MGKX",
     "MIC",
     "MIGO",
     "MJUN",
@@ -682,14 +990,17 @@
     "RCLY",
     "RDTE",
     "RIZE",
+    "RKT",
     "RKX",
     "RMBC",
     "RMBX",
     "ROM",
     "ROMO",
     "RONB",
+    "RS",
     "RSJN",
     "RYLG",
+    "SAIA",
     "SATS",
     "SCA",
     "SCHD",
@@ -698,6 +1009,7 @@
     "SEPU",
     "SGOL",
     "SGOV",
+    "SHOP",
     "SHY",
     "SIMX",
     "SIVR",
@@ -793,6 +1105,7 @@
     "UX",
     "VAVX",
     "VBNB",
+    "VBX",
     "VCHY",
     "VDG",
     "VDI",
@@ -810,14 +1123,17 @@
     "VYLD",
     "WAGN",
     "WAMA",
+    "WAT",
     "WDE",
     "WDIG",
     "WDRN",
     "WEBX",
     "WRTH",
+    "WSO",
     "WTPI",
     "WX",
     "XBIL",
+    "XCOM",
     "XDIV",
     "XDQQ",
     "XDSQ",
@@ -831,6 +1147,7 @@
     "XLEX",
     "XLF",
     "XLI",
+    "XLIX",
     "XLK",
     "XLP",
     "XLRE",
@@ -1393,6 +1710,15 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
+      "source_age_business_days": 17,
+      "source_as_of": "2026-06-29T19:00:16Z",
+      "symbols": [
+        "CIEI"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
       "source_age_business_days": 13,
       "source_as_of": "2026-06-29T19:00:29Z",
       "symbols": [
@@ -1717,6 +2043,7 @@
         "RKX",
         "RMBX",
         "RONB",
+        "RS",
         "SLON",
         "SOEZ",
         "SOLC",
@@ -1753,6 +2080,15 @@
         "XQTM",
         "XRPC",
         "XRPR"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 11,
+      "source_as_of": "2026-07-08T13:37:49Z",
+      "symbols": [
+        "CIVG"
       ]
     },
     {
@@ -1884,6 +2220,15 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
+      "source_age_business_days": 8,
+      "source_as_of": "2026-07-13T17:08:33Z",
+      "symbols": [
+        "BFXU"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
       "source_age_business_days": 7,
       "source_as_of": "2026-07-13T18:32:06Z",
       "symbols": [
@@ -1898,6 +2243,53 @@
       "symbols": [
         "XLUX"
       ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-07-14",
+      "symbols": [
+        "AAOX",
+        "VBX",
+        "XCOM"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-07-14T16:33:02Z",
+      "symbols": [
+        "MGKX"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-07-14T16:37:57Z",
+      "symbols": [
+        "BAVA"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-07-14T17:02:10Z",
+      "symbols": [
+        "ACGO"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-07-14T18:12:32Z",
+      "symbols": [
+        "XLIX"
+      ]
     }
   ],
   "unavailable_details": [
@@ -1906,8 +2298,8 @@
       "deferred_acquisition": true,
       "expected_resolution": "next_natural_yahoo_run",
       "failure_kind": "transient_provider_miss",
-      "failure_observed_at": "2026-07-22T00:47:32Z",
-      "failure_run_id": "29879427185",
+      "failure_observed_at": "2026-07-23T00:49:28Z",
+      "failure_run_id": "29968542251",
       "lkg_status": "absent",
       "retry": true,
       "symbol": "DAY"
@@ -1917,8 +2309,8 @@
       "deferred_acquisition": true,
       "expected_resolution": "next_natural_yahoo_run",
       "failure_kind": "transient_provider_miss",
-      "failure_observed_at": "2026-07-22T00:47:32Z",
-      "failure_run_id": "29879427185",
+      "failure_observed_at": "2026-07-23T00:49:28Z",
+      "failure_run_id": "29968542251",
       "lkg_status": "absent",
       "retry": true,
       "symbol": "HOLX"
@@ -1928,8 +2320,8 @@
       "deferred_acquisition": true,
       "expected_resolution": "next_natural_yahoo_run",
       "failure_kind": "transient_provider_miss",
-      "failure_observed_at": "2026-07-22T00:47:32Z",
-      "failure_run_id": "29879427185",
+      "failure_observed_at": "2026-07-23T00:49:28Z",
+      "failure_run_id": "29968542251",
       "lkg_status": "absent",
       "retry": true,
       "symbol": "MMC"

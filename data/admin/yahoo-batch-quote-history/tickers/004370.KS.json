@@ -90,12 +90,32 @@
       "run_id": "29879427185",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for 004370.KS despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 30635,
+      "natural": true,
+      "observed_at": "2026-07-23T00:56:37Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29968542251",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
     "fetched_at": "2026-07-22T00:54:15Z",
     "history_as_of": "2026-07-22",
-    "path": "data/yf/finance/004370.KS.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/004370.KS.json",
     "payload_sha256": "c1d9c0dd87147819f19e1b27783b6ed7d83cac4b2e759b27789e580625df2c96",
     "quote_as_of": "2026-07-22T00:33:29Z",
     "source_as_of": "2026-07-22"
@@ -106,16 +126,49 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for 004370.KS despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 886,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 30635,
     "natural": true,
-    "observed_at": "2026-07-22T00:53:53Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-23T00:56:37Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29879427185",
+    "run_id": "29968542251",
     "schedule": "20 23 * * 1-5",
     "shard": "1/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for 004370.KS despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-07-23T00:56:37Z",
+    "run_attempt": 1,
+    "run_id": "29968542251"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-22T00:54:15Z",
+    "history_as_of": "2026-07-22",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/004370.KS.json",
+    "payload_sha256": "c1d9c0dd87147819f19e1b27783b6ed7d83cac4b2e759b27789e580625df2c96",
+    "quote_as_of": "2026-07-22T00:33:29Z",
+    "source_as_of": "2026-07-22"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -129,9 +182,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-22"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "004370.KS",
-  "updated_at": "2026-07-22T00:53:53Z"
+  "updated_at": "2026-07-23T00:56:37Z"
 }

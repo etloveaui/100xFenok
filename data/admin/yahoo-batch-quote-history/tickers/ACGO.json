@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-19T23:00:22Z",
     "history_as_of": "2026-07-17",
-    "path": "data/yf/finance/ACGO.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ACGO.json",
     "payload_sha256": "377567f498e459a261dcc53aa4115b86e9f14de0d314d16a8894b145401a7959",
     "quote_as_of": "2026-07-14T17:02:10Z",
     "source_as_of": "2026-07-14T17:02:10Z"
@@ -52,12 +52,12 @@
     "shard": "0/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-30T23:53:33Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-07-19T23:00:22Z",
+    "history_as_of": "2026-07-17",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ACGO.json",
-    "payload_sha256": "dd084ed56bd75de1db9d41fc6ee87278f50e0b7da19918b00fac406e18c425d1",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "377567f498e459a261dcc53aa4115b86e9f14de0d314d16a8894b145401a7959",
+    "quote_as_of": "2026-07-14T17:02:10Z",
+    "source_as_of": "2026-07-14T17:02:10Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-14T17:02:10Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-23T00:49:28Z",
+    "classified_run_id": "29968542251",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "ACGO holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ACGO holds LKG because Yahoo source date 2026-07-14T17:02:10Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-07-14T17:02:10Z"
   },
   "ticker": "ACGO",
-  "updated_at": "2026-07-19T22:59:54Z"
+  "updated_at": "2026-07-23T00:49:28Z"
 }

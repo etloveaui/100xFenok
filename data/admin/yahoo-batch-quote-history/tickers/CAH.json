@@ -64,12 +64,32 @@
       "run_id": "29879427185",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for CAH despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 30708,
+      "natural": true,
+      "observed_at": "2026-07-23T01:10:17Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29968542251",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
     "fetched_at": "2026-07-22T01:12:53Z",
     "history_as_of": "2026-07-21",
-    "path": "data/yf/finance/CAH.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CAH.json",
     "payload_sha256": "7a245161b775bd21dbbbaf9a6d031ec4189d6c93f88f4d8332208821b97c1a09",
     "quote_as_of": "2026-07-21T20:00:03Z",
     "source_as_of": "2026-07-21"
@@ -80,16 +100,49 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for CAH despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 1053,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 30708,
     "natural": true,
-    "observed_at": "2026-07-22T01:10:12Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-23T01:10:17Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29879427185",
+    "run_id": "29968542251",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "3/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for CAH despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-07-23T01:10:17Z",
+    "run_attempt": 1,
+    "run_id": "29968542251"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-22T01:12:53Z",
+    "history_as_of": "2026-07-21",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CAH.json",
+    "payload_sha256": "7a245161b775bd21dbbbaf9a6d031ec4189d6c93f88f4d8332208821b97c1a09",
+    "quote_as_of": "2026-07-21T20:00:03Z",
+    "source_as_of": "2026-07-21"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -103,9 +156,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-21"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CAH",
-  "updated_at": "2026-07-22T01:10:12Z"
+  "updated_at": "2026-07-23T01:10:17Z"
 }

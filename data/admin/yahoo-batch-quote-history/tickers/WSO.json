@@ -147,12 +147,32 @@
       "run_id": "29879427185",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for WSO despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 1115,
+      "natural": true,
+      "observed_at": "2026-07-23T01:04:01Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29968542251",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
     "fetched_at": "2026-07-22T01:04:39Z",
     "history_as_of": "2026-07-21",
-    "path": "data/yf/finance/WSO.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/WSO.json",
     "payload_sha256": "f29528d036a252a002afc4b091ca7dd01c90f4314b151777d1699e69f9e09584",
     "quote_as_of": "2026-07-21T20:00:03Z",
     "source_as_of": "2026-07-21"
@@ -163,14 +183,21 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for WSO despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 1357,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 1115,
     "natural": true,
-    "observed_at": "2026-07-22T00:59:16Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-23T01:04:01Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29879427185",
+    "run_id": "29968542251",
     "schedule": "20 23 * * 1-5",
     "shard": "2/5"
   },
@@ -216,13 +243,31 @@
     "run_attempt": 1,
     "run_id": "29544227703"
   },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for WSO despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-07-23T01:04:01Z",
+    "run_attempt": 1,
+    "run_id": "29968542251"
+  },
   "lkg": {
-    "fetched_at": "2026-07-16T00:35:19Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-07-22T01:04:39Z",
+    "history_as_of": "2026-07-21",
     "path": "data/admin/yahoo-batch-quote-history/lkg/WSO.json",
-    "payload_sha256": "b3f7efb4a79028b5664441b2fc9b0e55dc4b1455baec813f6d3aa52296c75271",
-    "quote_as_of": "2026-07-15T20:00:03Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "f29528d036a252a002afc4b091ca7dd01c90f4314b151777d1699e69f9e09584",
+    "quote_as_of": "2026-07-21T20:00:03Z",
+    "source_as_of": "2026-07-21"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -241,9 +286,9 @@
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
   "recovery_run_id": "29622560422",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "WSO",
-  "updated_at": "2026-07-22T00:59:16Z"
+  "updated_at": "2026-07-23T01:04:01Z"
 }

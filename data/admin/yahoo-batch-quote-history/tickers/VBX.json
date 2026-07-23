@@ -69,13 +69,12 @@
   "current": {
     "fetched_at": "2026-07-16T00:29:48Z",
     "history_as_of": "2026-07-14",
-    "path": "data/yf/finance/VBX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VBX.json",
     "payload_sha256": "8d12dbd081d85848d91ee29bf33f63c9baec098572c35bac4e1c1ec5d53b5f50",
     "quote_as_of": "2026-07-14T16:32:29Z",
     "source_as_of": "2026-07-14"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -92,26 +91,26 @@
     "shard": "4/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T19:30:24Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-16T00:29:48Z",
+    "history_as_of": "2026-07-14",
     "path": "data/admin/yahoo-batch-quote-history/lkg/VBX.json",
-    "payload_sha256": "b29b7c7928ac8c11279e1c6d2b42597e84d64886f466607e7eec0604003388bd",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "8d12dbd081d85848d91ee29bf33f63c9baec098572c35bac4e1c1ec5d53b5f50",
+    "quote_as_of": "2026-07-14T16:32:29Z",
+    "source_as_of": "2026-07-14"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-23T00:49:28Z",
+    "classified_run_id": "29968542251",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "VBX holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "VBX holds LKG because Yahoo source date 2026-07-14 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-14"
   },
   "ticker": "VBX",
-  "updated_at": "2026-07-16T00:35:28Z"
+  "updated_at": "2026-07-23T00:49:28Z"
 }

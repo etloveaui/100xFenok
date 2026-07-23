@@ -223,6 +223,39 @@
       "run_id": "29879427185",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError: 'exchangeTimezoneName'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError: 'exchangeTimezoneName'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-23T00:49:28Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29968542251",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -262,10 +295,10 @@
     ],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-22T00:47:32Z",
+    "observed_at": "2026-07-23T00:49:28Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29879427185",
+    "run_id": "29968542251",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -296,9 +329,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-07-22T00:47:32Z",
+    "observed_at": "2026-07-23T00:49:28Z",
     "run_attempt": 1,
-    "run_id": "29879427185"
+    "run_id": "29968542251"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:49:09Z",
@@ -322,5 +355,5 @@
     "source_as_of": "2026-05-06"
   },
   "ticker": "CTRA",
-  "updated_at": "2026-07-22T00:47:32Z"
+  "updated_at": "2026-07-23T00:49:28Z"
 }

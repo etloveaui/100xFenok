@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-22T23:46:17Z",
     "history_as_of": "2026-07-21",
-    "path": "data/yf/finance/CIVG.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CIVG.json",
     "payload_sha256": "c7a4fb95d7c7cabd17f629db177250fd7c76e93822191b6911236dbe02b9c386",
     "quote_as_of": "2026-07-08T13:37:49Z",
     "source_as_of": "2026-07-08T13:37:49Z"
@@ -52,12 +52,12 @@
     "shard": "3/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-30T23:55:15Z",
-    "history_as_of": "2026-06-30",
+    "fetched_at": "2026-07-22T23:46:17Z",
+    "history_as_of": "2026-07-21",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CIVG.json",
-    "payload_sha256": "2bdee2f403b9dc5f838feea37c5177a942b32d73483b89decc75494daa8ccdf0",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-30"
+    "payload_sha256": "c7a4fb95d7c7cabd17f629db177250fd7c76e93822191b6911236dbe02b9c386",
+    "quote_as_of": "2026-07-08T13:37:49Z",
+    "source_as_of": "2026-07-08T13:37:49Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-08T13:37:49Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 11,
+    "classified_at": "2026-07-23T00:49:28Z",
+    "classified_run_id": "29968542251",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CIVG holds LKG because Yahoo source date 2026-06-30 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CIVG holds LKG because Yahoo source date 2026-07-08T13:37:49Z is 11 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-30"
+    "source_as_of": "2026-07-08T13:37:49Z"
   },
   "ticker": "CIVG",
-  "updated_at": "2026-07-22T23:45:22Z"
+  "updated_at": "2026-07-23T00:49:28Z"
 }

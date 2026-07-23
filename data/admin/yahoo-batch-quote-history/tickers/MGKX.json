@@ -95,13 +95,12 @@
   "current": {
     "fetched_at": "2026-07-18T00:40:53Z",
     "history_as_of": "2026-07-16",
-    "path": "data/yf/finance/MGKX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MGKX.json",
     "payload_sha256": "f8762390183f6d24cb11bafc23b4eacf2b910d47aaae3b3b2438fe12d975413b",
     "quote_as_of": "2026-07-14T16:33:02Z",
     "source_as_of": "2026-07-14T16:33:02Z"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -118,12 +117,12 @@
     "shard": "4/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T19:30:01Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-18T00:40:53Z",
+    "history_as_of": "2026-07-16",
     "path": "data/admin/yahoo-batch-quote-history/lkg/MGKX.json",
-    "payload_sha256": "421664990a18cc55ba291e87d6cb47722fe5e80f36f4a225443b4e6799b26880",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "f8762390183f6d24cb11bafc23b4eacf2b910d47aaae3b3b2438fe12d975413b",
+    "quote_as_of": "2026-07-14T16:33:02Z",
+    "source_as_of": "2026-07-14T16:33:02Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -137,19 +136,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-14T16:33:02Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-23T00:49:28Z",
+    "classified_run_id": "29968542251",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "MGKX holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "MGKX holds LKG because Yahoo source date 2026-07-14T16:33:02Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-14T16:33:02Z"
   },
   "ticker": "MGKX",
-  "updated_at": "2026-07-18T00:52:19Z"
+  "updated_at": "2026-07-23T00:49:28Z"
 }

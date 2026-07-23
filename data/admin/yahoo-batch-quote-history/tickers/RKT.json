@@ -90,12 +90,32 @@
       "run_id": "29879427185",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for RKT despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 1082,
+      "natural": true,
+      "observed_at": "2026-07-23T01:10:17Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29968542251",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
     "fetched_at": "2026-07-22T01:03:58Z",
     "history_as_of": "2026-07-21",
-    "path": "data/yf/finance/RKT.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/RKT.json",
     "payload_sha256": "98794adb4028f62e2a4821fb4202bfadc4398f278ade0b3b96339a30bcf7b235",
     "quote_as_of": "2026-07-21T20:00:02Z",
     "source_as_of": "2026-07-21"
@@ -106,16 +126,49 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for RKT despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 869,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 1082,
     "natural": true,
-    "observed_at": "2026-07-22T00:59:16Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-23T01:10:17Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29879427185",
+    "run_id": "29968542251",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "3/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for RKT despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-07-23T01:10:17Z",
+    "run_attempt": 1,
+    "run_id": "29968542251"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-22T01:03:58Z",
+    "history_as_of": "2026-07-21",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/RKT.json",
+    "payload_sha256": "98794adb4028f62e2a4821fb4202bfadc4398f278ade0b3b96339a30bcf7b235",
+    "quote_as_of": "2026-07-21T20:00:02Z",
+    "source_as_of": "2026-07-21"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -129,9 +182,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-21"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "RKT",
-  "updated_at": "2026-07-22T00:59:16Z"
+  "updated_at": "2026-07-23T01:10:17Z"
 }

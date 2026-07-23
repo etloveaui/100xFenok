@@ -103,12 +103,32 @@
       "run_id": "29879427185",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for 000568.SZ despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 1274,
+      "natural": true,
+      "observed_at": "2026-07-23T01:04:01Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29968542251",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
     "fetched_at": "2026-07-22T00:59:27Z",
     "history_as_of": "2026-07-21",
-    "path": "data/yf/finance/000568.SZ.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/000568.SZ.json",
     "payload_sha256": "498f7680a099e264c9cdd3e25b163b967aa4d1baf4ddc38bc007855ff02475a8",
     "quote_as_of": "2026-07-21T07:04:03Z",
     "source_as_of": "2026-07-21"
@@ -119,16 +139,49 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for 000568.SZ despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 1005,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 1274,
     "natural": true,
-    "observed_at": "2026-07-22T00:59:16Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-23T01:04:01Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29879427185",
+    "run_id": "29968542251",
     "schedule": "20 23 * * 1-5",
     "shard": "2/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for 000568.SZ despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-07-23T01:04:01Z",
+    "run_attempt": 1,
+    "run_id": "29968542251"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-22T00:59:27Z",
+    "history_as_of": "2026-07-21",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/000568.SZ.json",
+    "payload_sha256": "498f7680a099e264c9cdd3e25b163b967aa4d1baf4ddc38bc007855ff02475a8",
+    "quote_as_of": "2026-07-21T07:04:03Z",
+    "source_as_of": "2026-07-21"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -142,9 +195,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-21"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "000568.SZ",
-  "updated_at": "2026-07-22T00:59:16Z"
+  "updated_at": "2026-07-23T01:04:01Z"
 }

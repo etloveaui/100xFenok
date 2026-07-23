@@ -103,12 +103,32 @@
       "run_id": "29879427185",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for RS despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 30600,
+      "natural": true,
+      "observed_at": "2026-07-23T00:56:37Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "29968542251",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
     "fetched_at": "2026-07-22T01:09:29Z",
     "history_as_of": "2026-07-21",
-    "path": "data/yf/finance/RS.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/RS.json",
     "payload_sha256": "e8122d5e9b22913dbc2d4252fc43f8889c43c2af0e86cca21c81e376159a237d",
     "quote_as_of": "2026-07-21T20:00:02Z",
     "source_as_of": "2026-07-21"
@@ -119,24 +139,49 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for RS despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 900,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 30600,
     "natural": true,
-    "observed_at": "2026-07-22T01:04:44Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-23T00:56:37Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29879427185",
+    "run_id": "29968542251",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "1/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for RS despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-07-23T00:56:37Z",
+    "run_attempt": 1,
+    "run_id": "29968542251"
   },
   "lkg": {
-    "fetched_at": "2026-07-09T02:42:54Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-07-22T01:09:29Z",
+    "history_as_of": "2026-07-21",
     "path": "data/admin/yahoo-batch-quote-history/lkg/RS.json",
-    "payload_sha256": "9cf12942def836794818f94fd07430b71c55311f64d10a5ac7ac05072c9cbcbd",
-    "quote_as_of": "2026-07-08T20:00:02Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "e8122d5e9b22913dbc2d4252fc43f8889c43c2af0e86cca21c81e376159a237d",
+    "quote_as_of": "2026-07-21T20:00:02Z",
+    "source_as_of": "2026-07-21"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -150,8 +195,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-21"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -164,5 +209,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "RS",
-  "updated_at": "2026-07-22T01:04:44Z"
+  "updated_at": "2026-07-23T00:56:37Z"
 }

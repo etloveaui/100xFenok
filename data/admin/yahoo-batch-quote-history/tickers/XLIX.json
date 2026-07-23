@@ -108,13 +108,12 @@
   "current": {
     "fetched_at": "2026-07-17T00:21:06Z",
     "history_as_of": "2026-07-15",
-    "path": "data/yf/finance/XLIX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/XLIX.json",
     "payload_sha256": "4101c23833f4ece49368e41c51d7bde0d1e3f18dadaa3d084ab23507ae812f01",
     "quote_as_of": "2026-07-14T18:12:32Z",
     "source_as_of": "2026-07-14T18:12:32Z"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -131,12 +130,12 @@
     "shard": "3/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T19:30:54Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-17T00:21:06Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/XLIX.json",
-    "payload_sha256": "d21914c298c2e177639a01505586f38a7a452cc0ad958d32f6c111efb3821056",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "4101c23833f4ece49368e41c51d7bde0d1e3f18dadaa3d084ab23507ae812f01",
+    "quote_as_of": "2026-07-14T18:12:32Z",
+    "source_as_of": "2026-07-14T18:12:32Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -150,19 +149,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-14T18:12:32Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-23T00:49:28Z",
+    "classified_run_id": "29968542251",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "XLIX holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "XLIX holds LKG because Yahoo source date 2026-07-14T18:12:32Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-14T18:12:32Z"
   },
   "ticker": "XLIX",
-  "updated_at": "2026-07-17T00:28:16Z"
+  "updated_at": "2026-07-23T00:49:28Z"
 }
