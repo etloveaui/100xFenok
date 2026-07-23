@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-s0-finra-occ-mapping-ledger/v0.1",
-  "generated_at": "2026-07-23T03:57:30.503Z",
+  "generated_at": "2026-07-23T04:22:42.896Z",
   "generated_by": "scripts/audit-fenok-s0-source-gaps.mjs --write-ledger",
   "purpose": "Durable no-fetch control-plane ledger for S0 FINRA/OCC rows that are source-ready by daily market data but need explicit universe mapping, symbol normalization, or null-evidence semantics before flow/options proxy metrics can be required.",
   "raw_policy": {
@@ -12,7 +12,7 @@
   },
   "source_audit": {
     "schema_version": "fenok-s0-source-gap-audit/v0.2",
-    "generated_at": "2026-07-23T03:57:30.503Z",
+    "generated_at": "2026-07-23T04:22:42.896Z",
     "input_files": {
       "active_signals": "data/computed/fenok_signals.json",
       "finra_flow_proxy": "data/computed/fenok_flow_proxies.json",
@@ -21,10 +21,10 @@
       "flow_backfill_index": "data/admin/fenok-flow-backfill-index.json"
     },
     "source_dates": {
-      "signals_generated_at": "2026-07-23T03:56:58.331Z",
-      "finra_source_date": "20260721",
-      "occ_source_date": "20260721",
-      "coverage_index_generated_at": "2026-07-23T03:57:24.045Z",
+      "signals_generated_at": "2026-07-23T04:21:52.142Z",
+      "finra_source_date": "20260722",
+      "occ_source_date": "20260722",
+      "coverage_index_generated_at": "2026-07-23T04:22:32.452Z",
       "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
     },
     "acceptance_ok": true
@@ -43,8 +43,8 @@
     "finra_source_ready_no_reported_row": 3,
     "finra_low_confidence_placeholder_policy_rows": 9,
     "plain_us_occ_denominator": 691,
-    "plain_us_occ_source_ready": 687,
-    "plain_us_occ_no_listed_options_source_ready": 2,
+    "plain_us_occ_source_ready": 691,
+    "plain_us_occ_no_listed_options_source_ready": 5,
     "occ_non_plain_mapping_required": 57,
     "occ_class_share_normalization_required": 2,
     "occ_excluded_us_class_or_non_plain_daily_ready": 59
@@ -2960,6 +2960,54 @@
       }
     ],
     "occ_no_listed_options_source_ready": [
+      {
+        "ticker": "BK",
+        "company": "Bank of New York Mellon Corp",
+        "market": "US",
+        "market_scope": "us",
+        "category": "plain_us_collection_or_no_options_policy_required",
+        "local_evidence": {
+          "yf_finance_file": "data/yf/finance/BK.json",
+          "market_facts_file": "data/computed/market_facts/tickers/BK.json",
+          "market_facts_asset_type": "stock",
+          "exchange": "NYQ",
+          "currency": "USD",
+          "country": null,
+          "sector": "Financial Services"
+        }
+      },
+      {
+        "ticker": "CTRA",
+        "company": "Coterra Energy Inc.",
+        "market": "US",
+        "market_scope": "us",
+        "category": "plain_us_collection_or_no_options_policy_required",
+        "local_evidence": {
+          "yf_finance_file": "data/yf/finance/CTRA.json",
+          "market_facts_file": "data/computed/market_facts/tickers/CTRA.json",
+          "market_facts_asset_type": "stock",
+          "exchange": "NYQ",
+          "currency": "USD",
+          "country": null,
+          "sector": "Energy"
+        }
+      },
+      {
+        "ticker": "NVR",
+        "company": "NVR",
+        "market": "US",
+        "market_scope": "us",
+        "category": "plain_us_collection_or_no_options_policy_required",
+        "local_evidence": {
+          "yf_finance_file": "data/yf/finance/NVR.json",
+          "market_facts_file": "data/computed/market_facts/tickers/NVR.json",
+          "market_facts_asset_type": "stock",
+          "exchange": "NYQ",
+          "currency": "USD",
+          "country": null,
+          "sector": "Consumer Cyclical"
+        }
+      },
       {
         "ticker": "SATS",
         "company": "EchoStar Corporation",
