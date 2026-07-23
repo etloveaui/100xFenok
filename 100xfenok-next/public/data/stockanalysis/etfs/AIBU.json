@@ -3,10 +3,11 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "AIBU",
-  "fetched_at": "2026-06-19T08:05:10Z",
+  "source_as_of": "2026-07-22T20:00:00Z",
+  "fetched_at": "2026-07-23T01:24:26Z",
   "endpoints": {
-    "holdings": "/api/symbol/e/AIBU/holdings",
-    "overview": "/api/symbol/e/AIBU/overview",
+    "holdings": "/etf/aibu/holdings/__data.json",
+    "overview": "/etf/aibu/__data.json",
     "quote": "/api/quotes/e/AIBU",
     "history_periods": {
       "daily_1y": "/api/symbol/e/AIBU/history?range=1Y&period=Daily",
@@ -17,342 +18,362 @@
       "monthly_5y": "/api/symbol/e/AIBU/history?range=5Y&period=Monthly"
     }
   },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
   "normalized": {
     "holdings": [
       {
         "rank": 1,
         "name": "Dreyfus Govt Cash Man Ins",
-        "weight_pct": 14.05,
-        "shares": 4348907,
+        "weight_pct": 14.04,
+        "shares": 3710373,
         "raw": {
           "no": 1,
           "n": "Dreyfus Govt Cash Man Ins",
-          "as": "14.05%",
-          "sh": "4,348,907"
+          "as": "14.04%",
+          "sh": "3,710,373"
         }
       },
       {
         "rank": 2,
         "name": "Goldman Finl Sq Trsry Inst 506",
-        "weight_pct": 6.35,
-        "shares": 1966716,
+        "weight_pct": 7.44,
+        "shares": 1966710,
         "raw": {
           "no": 2,
           "n": "Goldman Finl Sq Trsry Inst 506",
-          "as": "6.35%",
-          "sh": "1,966,716"
+          "as": "7.44%",
+          "sh": "1,966,710"
         }
       },
       {
         "rank": 3,
         "symbol": "AAPL",
         "name": "Apple Inc.",
-        "weight_pct": 5.65,
-        "shares": 5841,
+        "weight_pct": 6.36,
+        "shares": 5130,
         "raw": {
           "no": 3,
           "n": "Apple Inc.",
           "s": "$AAPL",
-          "as": "5.65%",
-          "sh": "5,841"
+          "as": "6.36%",
+          "sh": "5,130"
         }
       },
       {
         "rank": 4,
-        "name": "Solactive Us Ai & Big Data Index",
-        "weight_pct": 5.59,
-        "shares": 2392,
+        "symbol": "AMD",
+        "name": "Advanced Micro Devices, Inc.",
+        "weight_pct": 5.83,
+        "shares": 2913,
         "raw": {
           "no": 4,
-          "n": "Solactive Us Ai & Big Data Index",
-          "as": "5.59%",
-          "sh": "2,392"
+          "n": "Advanced Micro Devices, Inc.",
+          "s": "$AMD",
+          "as": "5.83%",
+          "sh": "2,913"
         }
       },
       {
         "rank": 5,
-        "symbol": "GOOGL",
-        "name": "Alphabet Inc.",
-        "weight_pct": 5.52,
-        "shares": 4579,
+        "symbol": "SNOW",
+        "name": "Snowflake Inc.",
+        "weight_pct": 5.81,
+        "shares": 5648,
         "raw": {
           "no": 5,
-          "n": "Alphabet Inc.",
-          "s": "$GOOGL",
-          "as": "5.52%",
-          "sh": "4,579"
+          "n": "Snowflake Inc.",
+          "s": "$SNOW",
+          "as": "5.81%",
+          "sh": "5,648"
         }
       },
       {
         "rank": 6,
-        "symbol": "AMD",
-        "name": "Advanced Micro Devices, Inc.",
-        "weight_pct": 5.44,
-        "shares": 3317,
+        "symbol": "GOOGL",
+        "name": "Alphabet Inc.",
+        "weight_pct": 5.64,
+        "shares": 4022,
         "raw": {
           "no": 6,
-          "n": "Advanced Micro Devices, Inc.",
-          "s": "$AMD",
-          "as": "5.44%",
-          "sh": "3,317"
+          "n": "Alphabet Inc.",
+          "s": "$GOOGL",
+          "as": "5.64%",
+          "sh": "4,022"
         }
       },
       {
         "rank": 7,
         "symbol": "NVDA",
         "name": "NVIDIA Corporation",
-        "weight_pct": 5.2,
-        "shares": 7756,
+        "weight_pct": 5.48,
+        "shares": 6812,
         "raw": {
           "no": 7,
           "n": "NVIDIA Corporation",
           "s": "$NVDA",
-          "as": "5.20%",
-          "sh": "7,756"
+          "as": "5.48%",
+          "sh": "6,812"
         }
       },
       {
         "rank": 8,
-        "symbol": "INTC",
-        "name": "Intel Corporation",
-        "weight_pct": 5.1,
-        "shares": 13476,
+        "name": "Solactive Us Ai & Big Data Index",
+        "weight_pct": 5.43,
+        "shares": 2392,
         "raw": {
           "no": 8,
-          "n": "Intel Corporation",
-          "s": "$INTC",
-          "as": "5.10%",
-          "sh": "13,476"
+          "n": "Solactive Us Ai & Big Data Index",
+          "as": "5.43%",
+          "sh": "2,392"
         }
       },
       {
         "rank": 9,
-        "symbol": "SNOW",
-        "name": "Snowflake Inc.",
-        "weight_pct": 4.95,
-        "shares": 6430,
+        "symbol": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "weight_pct": 5.22,
+        "shares": 5412,
         "raw": {
           "no": 9,
-          "n": "Snowflake Inc.",
-          "s": "$SNOW",
-          "as": "4.95%",
-          "sh": "6,430"
+          "n": "Amazon.com, Inc.",
+          "s": "$AMZN",
+          "as": "5.22%",
+          "sh": "5,412"
         }
       },
       {
         "rank": 10,
-        "symbol": "AMZN",
-        "name": "Amazon.com, Inc.",
-        "weight_pct": 4.9,
-        "shares": 6161,
+        "symbol": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight_pct": 5.06,
+        "shares": 3391,
         "raw": {
           "no": 10,
-          "n": "Amazon.com, Inc.",
-          "s": "$AMZN",
-          "as": "4.90%",
-          "sh": "6,161"
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "5.06%",
+          "sh": "3,391"
         }
       },
       {
         "rank": 11,
-        "symbol": "AVGO",
-        "name": "Broadcom Inc.",
-        "weight_pct": 4.7,
-        "shares": 3861,
+        "symbol": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight_pct": 4.81,
+        "shares": 3215,
         "raw": {
           "no": 11,
-          "n": "Broadcom Inc.",
-          "s": "$AVGO",
-          "as": "4.70%",
-          "sh": "3,861"
+          "n": "Microsoft Corporation",
+          "s": "$MSFT",
+          "as": "4.81%",
+          "sh": "3,215"
         }
       },
       {
         "rank": 12,
-        "symbol": "MSFT",
-        "name": "Microsoft Corporation",
-        "weight_pct": 4.66,
-        "shares": 3660,
+        "symbol": "INTC",
+        "name": "Intel Corporation",
+        "weight_pct": 4.61,
+        "shares": 11837,
         "raw": {
           "no": 12,
-          "n": "Microsoft Corporation",
-          "s": "$MSFT",
-          "as": "4.66%",
-          "sh": "3,660"
+          "n": "Intel Corporation",
+          "s": "$INTC",
+          "as": "4.61%",
+          "sh": "11,837"
         }
       },
       {
         "rank": 13,
         "symbol": "HPE",
         "name": "Hewlett Packard Enterprise Company",
-        "weight_pct": 4.04,
-        "shares": 25821,
+        "weight_pct": 4.07,
+        "shares": 22680,
         "raw": {
           "no": 13,
           "n": "Hewlett Packard Enterprise Company",
           "s": "$HPE",
-          "as": "4.04%",
-          "sh": "25,821"
+          "as": "4.07%",
+          "sh": "22,680"
         }
       },
       {
         "rank": 14,
-        "name": "Solactive Us Ai & Big Data Index",
-        "weight_pct": 3.98,
-        "shares": 1681,
+        "symbol": "TSM",
+        "name": "Taiwan Semiconductor Manufacturing Company Limited",
+        "weight_pct": 3.54,
+        "shares": 2232,
         "raw": {
           "no": 14,
-          "n": "Solactive Us Ai & Big Data Index",
-          "as": "3.98%",
-          "sh": "1,681"
+          "n": "Taiwan Semiconductor Manufacturing Company Limited",
+          "s": "$TSM",
+          "as": "3.54%",
+          "sh": "2,232"
         }
       },
       {
         "rank": 15,
-        "symbol": "TSM",
-        "name": "Taiwan Semiconductor Manufacturing Company Limited",
-        "weight_pct": 3.5,
-        "shares": 2541,
+        "symbol": "META",
+        "name": "Meta Platforms, Inc.",
+        "weight_pct": 3.08,
+        "shares": 1197,
         "raw": {
           "no": 15,
-          "n": "Taiwan Semiconductor Manufacturing Company Limited",
-          "s": "$TSM",
-          "as": "3.50%",
-          "sh": "2,541"
+          "n": "Meta Platforms, Inc.",
+          "s": "$META",
+          "as": "3.08%",
+          "sh": "1,197"
         }
       },
       {
         "rank": 16,
         "symbol": "MCHP",
         "name": "Microchip Technology Incorporated",
-        "weight_pct": 3.25,
-        "shares": 10531,
+        "weight_pct": 3.02,
+        "shares": 9250,
         "raw": {
           "no": 16,
           "n": "Microchip Technology Incorporated",
           "s": "$MCHP",
-          "as": "3.25%",
-          "sh": "10,531"
+          "as": "3.02%",
+          "sh": "9,250"
         }
       },
       {
         "rank": 17,
-        "symbol": "IBM",
-        "name": "International Business Machines Corporation",
-        "weight_pct": 3.22,
-        "shares": 3677,
+        "symbol": "SNPS",
+        "name": "Synopsys, Inc.",
+        "weight_pct": 2.96,
+        "shares": 1837,
         "raw": {
           "no": 17,
-          "n": "International Business Machines Corporation",
-          "s": "$IBM",
-          "as": "3.22%",
-          "sh": "3,677"
+          "n": "Synopsys, Inc.",
+          "s": "$SNPS",
+          "as": "2.96%",
+          "sh": "1,837"
         }
       },
       {
         "rank": 18,
-        "symbol": "ORCL",
-        "name": "Oracle Corporation",
-        "weight_pct": 3.15,
-        "shares": 5176,
+        "symbol": "PLTR",
+        "name": "Palantir Technologies Inc.",
+        "weight_pct": 2.87,
+        "shares": 5679,
         "raw": {
           "no": 18,
-          "n": "Oracle Corporation",
-          "s": "$ORCL",
-          "as": "3.15%",
-          "sh": "5,176"
+          "n": "Palantir Technologies Inc.",
+          "s": "$PLTR",
+          "as": "2.87%",
+          "sh": "5,679"
         }
       },
       {
         "rank": 19,
-        "symbol": "SNPS",
-        "name": "Synopsys, Inc.",
-        "weight_pct": 3.03,
-        "shares": 2092,
+        "symbol": "IBM",
+        "name": "International Business Machines Corporation",
+        "weight_pct": 2.58,
+        "shares": 3230,
         "raw": {
           "no": 19,
-          "n": "Synopsys, Inc.",
-          "s": "$SNPS",
-          "as": "3.03%",
-          "sh": "2,092"
+          "n": "International Business Machines Corporation",
+          "s": "$IBM",
+          "as": "2.58%",
+          "sh": "3,230"
         }
       },
       {
         "rank": 20,
-        "symbol": "CRWV",
-        "name": "CoreWeave, Inc.",
-        "weight_pct": 2.92,
-        "shares": 7720,
+        "name": "Solactive Us Ai & Big Data Index Swap",
+        "weight_pct": 2.45,
+        "shares": 1065,
         "raw": {
           "no": 20,
-          "n": "CoreWeave, Inc.",
-          "s": "$CRWV",
-          "as": "2.92%",
-          "sh": "7,720"
+          "n": "Solactive Us Ai & Big Data Index Swap",
+          "as": "2.45%",
+          "sh": "1,065"
         }
       },
       {
         "rank": 21,
-        "symbol": "PLTR",
-        "name": "Palantir Technologies Inc.",
-        "weight_pct": 2.78,
-        "shares": 6466,
+        "symbol": "ORCL",
+        "name": "Oracle Corporation",
+        "weight_pct": 2.28,
+        "shares": 4546,
         "raw": {
           "no": 21,
-          "n": "Palantir Technologies Inc.",
-          "s": "$PLTR",
-          "as": "2.78%",
-          "sh": "6,466"
+          "n": "Oracle Corporation",
+          "s": "$ORCL",
+          "as": "2.28%",
+          "sh": "4,546"
         }
       },
       {
         "rank": 22,
-        "symbol": "META",
-        "name": "Meta Platforms, Inc.",
-        "weight_pct": 2.64,
-        "shares": 1363,
+        "symbol": "CRWV",
+        "name": "CoreWeave, Inc.",
+        "weight_pct": 1.98,
+        "shares": 6781,
         "raw": {
           "no": 22,
-          "n": "Meta Platforms, Inc.",
-          "s": "$META",
-          "as": "2.64%",
-          "sh": "1,363"
+          "n": "CoreWeave, Inc.",
+          "s": "$CRWV",
+          "as": "1.98%",
+          "sh": "6,781"
         }
       },
       {
         "rank": 23,
-        "name": "Solactive Us Ai & Big Data Index Swap",
-        "weight_pct": 2.51,
-        "shares": 1065,
+        "name": "Solactive Us Ai & Big Data Index",
+        "weight_pct": 1.91,
+        "shares": 566,
         "raw": {
           "no": 23,
-          "n": "Solactive Us Ai & Big Data Index Swap",
-          "as": "2.51%",
-          "sh": "1,065"
+          "n": "Solactive Us Ai & Big Data Index",
+          "as": "1.91%",
+          "sh": "566"
         }
       },
       {
         "rank": 24,
         "name": "Solactive Us Ai & Big Data Index Swap",
-        "weight_pct": 1.55,
-        "shares": 1088,
+        "weight_pct": 1.69,
+        "shares": 1188,
         "raw": {
           "no": 24,
           "n": "Solactive Us Ai & Big Data Index Swap",
-          "as": "1.55%",
-          "sh": "1,088"
+          "as": "1.69%",
+          "sh": "1,188"
         }
       },
       {
         "rank": 25,
         "name": "Dreyfus Trsry Securities Cash Mgmt",
-        "weight_pct": 0.67,
-        "shares": 206815,
+        "weight_pct": 0.79,
+        "shares": 207708,
         "raw": {
           "no": 25,
           "n": "Dreyfus Trsry Securities Cash Mgmt",
-          "as": "0.67%",
-          "sh": "206,815"
+          "as": "0.79%",
+          "sh": "207,708"
         }
       }
     ],
@@ -406,7 +427,7 @@
       }
     ],
     "holding_count": 43,
-    "holdings_updated": "Jun 16, 2026",
+    "holdings_updated": "Jul 15, 2026",
     "classification": {
       "is_leveraged": true,
       "leverage_factor": 2.0,
@@ -417,65 +438,73 @@
       "confidence": "high"
     },
     "overview": {
-      "aum": "$29.82M",
+      "aum": "$22.74M",
       "expenseRatio": "0.96%",
-      "sharesOut": "425,001",
-      "dividendYield": "1.69%",
-      "beta": "4.12",
+      "sharesOut": "400,001",
+      "dividendYield": "1.81%",
+      "beta": "4.18",
       "inception": "May 15, 2024",
       "provider_page": "direxion",
       "etf_website": "https://www.direxion.com/product/daily-ai-big-data-bull-bear-2x-etfs"
     },
     "performance": {
-      "tr1m": 9.194,
-      "trYTD": 34.202,
-      "tr1y": 79.568,
-      "cagrMAX": 60.544
+      "tr1m": -11.380388653115933,
+      "trYTD": 18.929,
+      "tr1y": 33.148,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": 48.874
     },
     "quote": {
-      "p": 66.2596,
-      "pd": 66.26,
-      "c": 3.01,
-      "cp": 4.76,
-      "cl": 63.25,
-      "cdr": 1,
-      "o": 65.28,
-      "h": 66.26,
-      "l": 64.27,
-      "v": 14491,
-      "ts": 1781812800000,
-      "u": "Jun 18, 2026, 4:00 PM EDT",
-      "td": "2026-06-18",
-      "h52": 78.96,
-      "l52": 32.91,
+      "c": -0.48,
+      "e": false,
+      "h": 59.26,
+      "l": 58.56,
+      "o": 58.56,
+      "p": 58.719,
+      "u": "Jul 22, 2026, 4:00 PM EDT",
+      "v": 2566,
+      "cl": 59.2,
+      "cp": -0.81,
+      "ec": 0,
+      "es": "After-hours",
       "ex": "NYSEARCA",
       "ms": "closed",
-      "fms": "closed",
-      "e": false,
-      "ep": null,
-      "epd": 0,
-      "ec": 0,
+      "pd": 58.72,
+      "td": "2026-07-22",
+      "ts": 1784750400000,
+      "cdr": -1,
       "ecp": 0,
-      "eu": null,
-      "es": "After-hours",
-      "ets": 1781827200061.9373,
-      "etd": null,
-      "epv": null,
+      "epd": 0,
+      "ets": 1784764800062.6543,
+      "exp": 1784794500000,
+      "fms": "closed",
+      "h52": 78.96,
+      "l52": 32.91,
+      "uid": "AIBU",
       "days": 0,
-      "exp": 1782116100000,
-      "symbol": "AIBU",
-      "uid": "AIBU"
+      "symbol": "AIBU"
     },
     "history": [
+      {
+        "t": "2026-07-01",
+        "o": 62.03,
+        "h": 64.2,
+        "l": 53.99,
+        "c": 58.719,
+        "a": 58.719,
+        "v": 111770,
+        "ch": -7.44
+      },
       {
         "t": "2026-06-01",
         "o": 73,
         "h": 78.96,
-        "l": 57.751,
-        "c": 66.26,
-        "a": 66.2596,
-        "v": 320792,
-        "ch": -8.09
+        "l": 56,
+        "c": 63.44,
+        "a": 63.44,
+        "v": 391530,
+        "ch": -12
       },
       {
         "t": "2026-05-01",
@@ -576,20 +605,230 @@
         "a": 45.610908,
         "v": 659463,
         "ch": -1.32
-      },
-      {
-        "t": "2025-07-01",
-        "o": 41.452,
-        "h": 48.94,
-        "l": 40,
-        "c": 47.12,
-        "a": 46.219054,
-        "v": 637195,
-        "ch": 12.35
       }
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-07-22",
+          "o": 58.56,
+          "h": 59.26,
+          "l": 58.56,
+          "c": 58.719,
+          "a": 58.719,
+          "v": 2536,
+          "ch": -0.81
+        },
+        {
+          "t": "2026-07-21",
+          "o": 58.67,
+          "h": 59.21,
+          "l": 58.07,
+          "c": 59.2,
+          "a": 59.2,
+          "v": 6824,
+          "ch": 4.04
+        },
+        {
+          "t": "2026-07-20",
+          "o": 57.42,
+          "h": 58.2,
+          "l": 56.899,
+          "c": 56.899,
+          "a": 56.8985,
+          "v": 4645,
+          "ch": 0.97
+        },
+        {
+          "t": "2026-07-17",
+          "o": 55.7,
+          "h": 57.215,
+          "l": 53.99,
+          "c": 56.35,
+          "a": 56.35,
+          "v": 13000,
+          "ch": -2.98
+        },
+        {
+          "t": "2026-07-16",
+          "o": 60.38,
+          "h": 60.38,
+          "l": 57.67,
+          "c": 58.08,
+          "a": 58.08,
+          "v": 11746,
+          "ch": -5.1
+        },
+        {
+          "t": "2026-07-15",
+          "o": 62.51,
+          "h": 62.51,
+          "l": 59.52,
+          "c": 61.2,
+          "a": 61.2,
+          "v": 22248,
+          "ch": -0.27
+        },
+        {
+          "t": "2026-07-14",
+          "o": 61.27,
+          "h": 61.795,
+          "l": 60.49,
+          "c": 61.369,
+          "a": 61.3686,
+          "v": 2855,
+          "ch": 0.54
+        },
+        {
+          "t": "2026-07-13",
+          "o": 62.36,
+          "h": 62.77,
+          "l": 60.78,
+          "c": 61.04,
+          "a": 61.04,
+          "v": 5586,
+          "ch": -3.9
+        },
+        {
+          "t": "2026-07-10",
+          "o": 63.6,
+          "h": 64.2,
+          "l": 62.7,
+          "c": 63.516,
+          "a": 63.5163,
+          "v": 4464,
+          "ch": -0.2
+        },
+        {
+          "t": "2026-07-09",
+          "o": 61.78,
+          "h": 63.715,
+          "l": 61.78,
+          "c": 63.643,
+          "a": 63.643,
+          "v": 3150,
+          "ch": 3.52
+        },
+        {
+          "t": "2026-07-08",
+          "o": 60.05,
+          "h": 61.49,
+          "l": 59.22,
+          "c": 61.48,
+          "a": 61.48,
+          "v": 5338,
+          "ch": 1.01
+        },
+        {
+          "t": "2026-07-07",
+          "o": 61.35,
+          "h": 61.795,
+          "l": 59.82,
+          "c": 60.863,
+          "a": 60.863,
+          "v": 6000,
+          "ch": -2.88
+        },
+        {
+          "t": "2026-07-06",
+          "o": 60.61,
+          "h": 63.517,
+          "l": 60.6,
+          "c": 62.67,
+          "a": 62.67,
+          "v": 8522,
+          "ch": 4.73
+        },
+        {
+          "t": "2026-07-02",
+          "o": 61.42,
+          "h": 63.05,
+          "l": 59.05,
+          "c": 59.84,
+          "a": 59.84,
+          "v": 8401,
+          "ch": -3.28
+        },
+        {
+          "t": "2026-07-01",
+          "o": 62.03,
+          "h": 63.29,
+          "l": 61.87,
+          "c": 61.87,
+          "a": 61.87,
+          "v": 6455,
+          "ch": -2.47
+        },
+        {
+          "t": "2026-06-30",
+          "o": 60.87,
+          "h": 63.5,
+          "l": 60.68,
+          "c": 63.44,
+          "a": 63.44,
+          "v": 9831,
+          "ch": 4.7
+        },
+        {
+          "t": "2026-06-29",
+          "o": 59.51,
+          "h": 60.6,
+          "l": 57.75,
+          "c": 60.59,
+          "a": 60.59,
+          "v": 9440,
+          "ch": 3.48
+        },
+        {
+          "t": "2026-06-26",
+          "o": 56,
+          "h": 58.63,
+          "l": 56,
+          "c": 58.55,
+          "a": 58.55,
+          "v": 5468,
+          "ch": 0.26
+        },
+        {
+          "t": "2026-06-25",
+          "o": 61.77,
+          "h": 61.77,
+          "l": 57.09,
+          "c": 58.4,
+          "a": 58.4,
+          "v": 15506,
+          "ch": -3.33
+        },
+        {
+          "t": "2026-06-24",
+          "o": 61.61,
+          "h": 62.685,
+          "l": 59.37,
+          "c": 60.41,
+          "a": 60.41,
+          "v": 10169,
+          "ch": -1.94
+        },
+        {
+          "t": "2026-06-23",
+          "o": 61.01,
+          "h": 63.25,
+          "l": 61.01,
+          "c": 61.606,
+          "a": 61.606,
+          "v": 11840,
+          "ch": -4.43
+        },
+        {
+          "t": "2026-06-22",
+          "o": 66.72,
+          "h": 67.115,
+          "l": 63.76,
+          "c": 64.463,
+          "a": 64.4627,
+          "v": 8484,
+          "ch": -2.71
+        },
         {
           "t": "2026-06-18",
           "o": 65.28,
@@ -2889,230 +3128,60 @@
           "a": 43.158709,
           "v": 38729,
           "ch": -2.14
-        },
-        {
-          "t": "2025-07-21",
-          "o": 45,
-          "h": 45.71,
-          "l": 44.96,
-          "c": 44.96,
-          "a": 44.100452,
-          "v": 58079,
-          "ch": 0.38
-        },
-        {
-          "t": "2025-07-18",
-          "o": 45.17,
-          "h": 45.17,
-          "l": 44.395,
-          "c": 44.79,
-          "a": 43.933604,
-          "v": 10792,
-          "ch": 0.13
-        },
-        {
-          "t": "2025-07-17",
-          "o": 44.03,
-          "h": 44.84,
-          "l": 43.98,
-          "c": 44.73,
-          "a": 43.874751,
-          "v": 22841,
-          "ch": 1.93
-        },
-        {
-          "t": "2025-07-16",
-          "o": 43.285,
-          "h": 43.883,
-          "l": 42.791,
-          "c": 43.881,
-          "a": 43.042377,
-          "v": 9296,
-          "ch": 2.05
-        },
-        {
-          "t": "2025-07-15",
-          "o": 43.81,
-          "h": 44.34,
-          "l": 43,
-          "c": 43,
-          "a": 42.177829,
-          "v": 33963,
-          "ch": -0.28
-        },
-        {
-          "t": "2025-07-14",
-          "o": 42.06,
-          "h": 43.12,
-          "l": 42.02,
-          "c": 43.12,
-          "a": 42.295535,
-          "v": 17269,
-          "ch": 1.75
-        },
-        {
-          "t": "2025-07-11",
-          "o": 42.14,
-          "h": 42.861,
-          "l": 41.38,
-          "c": 42.38,
-          "a": 41.569684,
-          "v": 34919,
-          "ch": -1.05
-        },
-        {
-          "t": "2025-07-10",
-          "o": 43.43,
-          "h": 43.43,
-          "l": 42.33,
-          "c": 42.829,
-          "a": 42.010001,
-          "v": 16278,
-          "ch": -0.71
-        },
-        {
-          "t": "2025-07-09",
-          "o": 42.811,
-          "h": 43.137,
-          "l": 42.51,
-          "c": 43.137,
-          "a": 42.312014,
-          "v": 14491,
-          "ch": 2
-        },
-        {
-          "t": "2025-07-08",
-          "o": 42.39,
-          "h": 42.5,
-          "l": 42.2,
-          "c": 42.29,
-          "a": 41.481405,
-          "v": 9134,
-          "ch": 1.05
-        },
-        {
-          "t": "2025-07-07",
-          "o": 42.22,
-          "h": 42.22,
-          "l": 41.46,
-          "c": 41.849,
-          "a": 41.048542,
-          "v": 11787,
-          "ch": -1.09
-        },
-        {
-          "t": "2025-07-03",
-          "o": 41.91,
-          "h": 42.575,
-          "l": 41.87,
-          "c": 42.31,
-          "a": 41.501022,
-          "v": 16070.000000000002,
-          "ch": 2.67
-        },
-        {
-          "t": "2025-07-02",
-          "o": 40.34,
-          "h": 41.211,
-          "l": 40.15,
-          "c": 41.211,
-          "a": 40.423231,
-          "v": 3417,
-          "ch": 1.63
-        },
-        {
-          "t": "2025-07-01",
-          "o": 41.452,
-          "h": 41.48,
-          "l": 40,
-          "c": 40.549,
-          "a": 39.773889,
-          "v": 13821,
-          "ch": -3.32
-        },
-        {
-          "t": "2025-06-30",
-          "o": 42.27,
-          "h": 42.42,
-          "l": 41.741,
-          "c": 41.94,
-          "a": 41.138097,
-          "v": 30783,
-          "ch": 1.67
-        },
-        {
-          "t": "2025-06-27",
-          "o": 41.75,
-          "h": 41.87,
-          "l": 40.661,
-          "c": 41.25,
-          "a": 40.46129,
-          "v": 22346,
-          "ch": -0.15
-        },
-        {
-          "t": "2025-06-26",
-          "o": 40.87,
-          "h": 41.38,
-          "l": 40.224,
-          "c": 41.31,
-          "a": 40.520142,
-          "v": 15813,
-          "ch": 3.17
-        },
-        {
-          "t": "2025-06-25",
-          "o": 40.17,
-          "h": 40.557,
-          "l": 39.92,
-          "c": 40.04,
-          "a": 39.274425,
-          "v": 16905,
-          "ch": 1.21
-        },
-        {
-          "t": "2025-06-24",
-          "o": 38.65,
-          "h": 39.72,
-          "l": 38.65,
-          "c": 39.56,
-          "a": 38.803603,
-          "v": 46690,
-          "ch": 5.44
-        },
-        {
-          "t": "2025-06-23",
-          "o": 37.02,
-          "h": 37.68,
-          "l": 36.46,
-          "c": 37.56,
-          "a": 36.799862,
-          "v": 18202,
-          "ch": 1.49
-        },
-        {
-          "t": "2025-06-20",
-          "o": 38.14,
-          "h": 38.449,
-          "l": 36.83,
-          "c": 37.009,
-          "a": 36.260013,
-          "v": 48527,
-          "ch": -1.94
-        },
-        {
-          "t": "2025-06-18",
-          "o": 37.78,
-          "h": 38.28,
-          "l": 37.55,
-          "c": 37.74,
-          "a": 36.976219,
-          "v": 13963,
-          "ch": 0.21
         }
       ],
       "weekly_1y": [
         {
+          "t": "2026-07-20",
+          "o": 57.42,
+          "h": 59.26,
+          "l": 56.899,
+          "c": 58.719,
+          "a": 58.719,
+          "v": 14005,
+          "ch": 4.2
+        },
+        {
+          "t": "2026-07-13",
+          "o": 62.36,
+          "h": 62.77,
+          "l": 53.99,
+          "c": 56.35,
+          "a": 56.35,
+          "v": 55435,
+          "ch": -11.28
+        },
+        {
+          "t": "2026-07-06",
+          "o": 60.61,
+          "h": 64.2,
+          "l": 59.22,
+          "c": 63.516,
+          "a": 63.5163,
+          "v": 27474,
+          "ch": 6.14
+        },
+        {
+          "t": "2026-06-29",
+          "o": 59.51,
+          "h": 63.5,
+          "l": 57.75,
+          "c": 59.84,
+          "a": 59.84,
+          "v": 34127,
+          "ch": 2.2
+        },
+        {
+          "t": "2026-06-22",
+          "o": 66.72,
+          "h": 67.115,
+          "l": 56,
+          "c": 58.55,
+          "a": 58.55,
+          "v": 51467,
+          "ch": -11.64
+        },
+        {
           "t": "2026-06-15",
           "o": 68.46,
           "h": 68.46,
@@ -3581,68 +3650,28 @@
           "a": 42.530946,
           "v": 326555,
           "ch": -4.91
-        },
-        {
-          "t": "2025-07-21",
-          "o": 45,
-          "h": 46.4,
-          "l": 42.9,
-          "c": 45.599,
-          "a": 44.727332,
-          "v": 186843,
-          "ch": 1.81
-        },
-        {
-          "t": "2025-07-14",
-          "o": 42.06,
-          "h": 45.17,
-          "l": 42.02,
-          "c": 44.79,
-          "a": 43.933604,
-          "v": 94161,
-          "ch": 5.69
-        },
-        {
-          "t": "2025-07-07",
-          "o": 42.22,
-          "h": 43.43,
-          "l": 41.38,
-          "c": 42.38,
-          "a": 41.569684,
-          "v": 86609,
-          "ch": 0.17
-        },
-        {
-          "t": "2025-06-30",
-          "o": 42.27,
-          "h": 42.575,
-          "l": 40,
-          "c": 42.31,
-          "a": 41.501022,
-          "v": 64091,
-          "ch": 2.57
-        },
-        {
-          "t": "2025-06-23",
-          "o": 37.02,
-          "h": 41.87,
-          "l": 36.46,
-          "c": 41.25,
-          "a": 40.46129,
-          "v": 119956,
-          "ch": 11.59
         }
       ],
       "monthly_1y": [
         {
+          "t": "2026-07-01",
+          "o": 62.03,
+          "h": 64.2,
+          "l": 53.99,
+          "c": 58.719,
+          "a": 58.719,
+          "v": 111770,
+          "ch": -7.44
+        },
+        {
           "t": "2026-06-01",
           "o": 73,
           "h": 78.96,
-          "l": 57.751,
-          "c": 66.26,
-          "a": 66.2596,
-          "v": 320792,
-          "ch": -8.09
+          "l": 56,
+          "c": 63.44,
+          "a": 63.44,
+          "v": 391530,
+          "ch": -12
         },
         {
           "t": "2026-05-01",
@@ -3743,19 +3772,59 @@
           "a": 45.610908,
           "v": 659463,
           "ch": -1.32
-        },
-        {
-          "t": "2025-07-01",
-          "o": 41.452,
-          "h": 48.94,
-          "l": 40,
-          "c": 47.12,
-          "a": 46.219054,
-          "v": 637195,
-          "ch": 12.35
         }
       ],
       "weekly_3y": [
+        {
+          "t": "2026-07-20",
+          "o": 57.42,
+          "h": 59.26,
+          "l": 56.899,
+          "c": 58.719,
+          "a": 58.719,
+          "v": 14005,
+          "ch": 4.2
+        },
+        {
+          "t": "2026-07-13",
+          "o": 62.36,
+          "h": 62.77,
+          "l": 53.99,
+          "c": 56.35,
+          "a": 56.35,
+          "v": 55435,
+          "ch": -11.28
+        },
+        {
+          "t": "2026-07-06",
+          "o": 60.61,
+          "h": 64.2,
+          "l": 59.22,
+          "c": 63.516,
+          "a": 63.5163,
+          "v": 27474,
+          "ch": 6.14
+        },
+        {
+          "t": "2026-06-29",
+          "o": 59.51,
+          "h": 63.5,
+          "l": 57.75,
+          "c": 59.84,
+          "a": 59.84,
+          "v": 34127,
+          "ch": 2.2
+        },
+        {
+          "t": "2026-06-22",
+          "o": 66.72,
+          "h": 67.115,
+          "l": 56,
+          "c": 58.55,
+          "a": 58.55,
+          "v": 51467,
+          "ch": -11.64
+        },
         {
           "t": "2026-06-15",
           "o": 68.46,
@@ -4225,68 +4294,28 @@
           "a": 42.530946,
           "v": 326555,
           "ch": -4.91
-        },
-        {
-          "t": "2025-07-21",
-          "o": 45,
-          "h": 46.4,
-          "l": 42.9,
-          "c": 45.599,
-          "a": 44.727332,
-          "v": 186843,
-          "ch": 1.81
-        },
-        {
-          "t": "2025-07-14",
-          "o": 42.06,
-          "h": 45.17,
-          "l": 42.02,
-          "c": 44.79,
-          "a": 43.933604,
-          "v": 94161,
-          "ch": 5.69
-        },
-        {
-          "t": "2025-07-07",
-          "o": 42.22,
-          "h": 43.43,
-          "l": 41.38,
-          "c": 42.38,
-          "a": 41.569684,
-          "v": 86609,
-          "ch": 0.17
-        },
-        {
-          "t": "2025-06-30",
-          "o": 42.27,
-          "h": 42.575,
-          "l": 40,
-          "c": 42.31,
-          "a": 41.501022,
-          "v": 64091,
-          "ch": 2.57
-        },
-        {
-          "t": "2025-06-23",
-          "o": 37.02,
-          "h": 41.87,
-          "l": 36.46,
-          "c": 41.25,
-          "a": 40.46129,
-          "v": 119956,
-          "ch": 11.59
         }
       ],
       "monthly_3y": [
         {
+          "t": "2026-07-01",
+          "o": 62.03,
+          "h": 64.2,
+          "l": 53.99,
+          "c": 58.719,
+          "a": 58.719,
+          "v": 111770,
+          "ch": -7.44
+        },
+        {
           "t": "2026-06-01",
           "o": 73,
           "h": 78.96,
-          "l": 57.751,
-          "c": 66.26,
-          "a": 66.2596,
-          "v": 320792,
-          "ch": -8.09
+          "l": 56,
+          "c": 63.44,
+          "a": 63.44,
+          "v": 391530,
+          "ch": -12
         },
         {
           "t": "2026-05-01",
@@ -4387,28 +4416,28 @@
           "a": 45.610908,
           "v": 659463,
           "ch": -1.32
-        },
-        {
-          "t": "2025-07-01",
-          "o": 41.452,
-          "h": 48.94,
-          "l": 40,
-          "c": 47.12,
-          "a": 46.219054,
-          "v": 637195,
-          "ch": 12.35
         }
       ],
       "monthly_5y": [
         {
+          "t": "2026-07-01",
+          "o": 62.03,
+          "h": 64.2,
+          "l": 53.99,
+          "c": 58.719,
+          "a": 58.719,
+          "v": 111770,
+          "ch": -7.44
+        },
+        {
           "t": "2026-06-01",
           "o": 73,
           "h": 78.96,
-          "l": 57.751,
-          "c": 66.26,
-          "a": 66.2596,
-          "v": 320792,
-          "ch": -8.09
+          "l": 56,
+          "c": 63.44,
+          "a": 63.44,
+          "v": 391530,
+          "ch": -12
         },
         {
           "t": "2026-05-01",
@@ -4654,175 +4683,1946 @@
     }
   },
   "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "AIBU",
+        "lastChecked": 1784769318891,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$22.74M",
+      "nav": null,
+      "expenseRatio": "0.96%",
+      "peRatio": null,
+      "sharesOut": "400,001",
+      "dps": "$1.06",
+      "dividendYield": "1.81%",
+      "payoutRatio": null,
+      "exDivDate": "Dec 10, 2025",
+      "ch1y": "+30.60%",
+      "payoutFrequency": "n/a",
+      "beta": "4.18",
+      "holdings": 43,
+      "inception": "May 15, 2024",
+      "chart": {
+        "expiration": 1784762346330,
+        "data": [
+          {
+            "t": 1784712600
+          },
+          {
+            "c": 58.405,
+            "o": 58.405,
+            "t": 1784712660
+          },
+          {
+            "c": 58.305,
+            "t": 1784712720
+          },
+          {
+            "c": 58.605,
+            "t": 1784712780
+          },
+          {
+            "c": 58.685,
+            "t": 1784712840
+          },
+          {
+            "c": 58.69,
+            "t": 1784712900
+          },
+          {
+            "c": 58.66,
+            "t": 1784712960
+          },
+          {
+            "c": 58.76,
+            "t": 1784713020
+          },
+          {
+            "c": null,
+            "t": 1784713080
+          },
+          {
+            "c": 58.615,
+            "t": 1784713140
+          },
+          {
+            "c": 58.565,
+            "t": 1784713200
+          },
+          {
+            "c": 58.605,
+            "t": 1784713260
+          },
+          {
+            "c": 58.66,
+            "t": 1784713320
+          },
+          {
+            "c": 58.735,
+            "t": 1784713380
+          },
+          {
+            "c": 58.755,
+            "t": 1784713440
+          },
+          {
+            "c": 58.9,
+            "t": 1784713500
+          },
+          {
+            "c": null,
+            "t": 1784713560
+          },
+          {
+            "c": 58.73,
+            "t": 1784713620
+          },
+          {
+            "c": 58.645,
+            "t": 1784713680
+          },
+          {
+            "c": 58.615,
+            "t": 1784713740
+          },
+          {
+            "c": 58.57,
+            "t": 1784713800
+          },
+          {
+            "c": 58.635,
+            "t": 1784713860
+          },
+          {
+            "c": 58.665,
+            "t": 1784713920
+          },
+          {
+            "c": 58.815,
+            "t": 1784713980
+          },
+          {
+            "c": 58.94,
+            "t": 1784714040
+          },
+          {
+            "c": 58.96,
+            "t": 1784714100
+          },
+          {
+            "c": 59.045,
+            "t": 1784714160
+          },
+          {
+            "c": 59.135,
+            "t": 1784714220
+          },
+          {
+            "c": 59.12,
+            "t": 1784714280
+          },
+          {
+            "c": 59.285,
+            "t": 1784714340
+          },
+          {
+            "c": 59.27,
+            "t": 1784714400
+          },
+          {
+            "c": 59.29,
+            "t": 1784714460
+          },
+          {
+            "c": 59.24,
+            "t": 1784714520
+          },
+          {
+            "c": 59.14,
+            "t": 1784714580
+          },
+          {
+            "c": 59.18,
+            "t": 1784714640
+          },
+          {
+            "c": 59.32,
+            "t": 1784714700
+          },
+          {
+            "c": 59.22,
+            "t": 1784714760
+          },
+          {
+            "c": 59.135,
+            "t": 1784714820
+          },
+          {
+            "c": 59.14,
+            "t": 1784714880
+          },
+          {
+            "c": 59.095,
+            "t": 1784714940
+          },
+          {
+            "c": 59.17,
+            "t": 1784715000
+          },
+          {
+            "c": 59.2,
+            "t": 1784715060
+          },
+          {
+            "c": 59.23,
+            "t": 1784715120
+          },
+          {
+            "c": 59.07,
+            "t": 1784715180
+          },
+          {
+            "c": 59.06,
+            "t": 1784715240
+          },
+          {
+            "c": null,
+            "t": 1784715300
+          },
+          {
+            "c": 58.885,
+            "t": 1784715360
+          },
+          {
+            "c": 58.87,
+            "t": 1784715420
+          },
+          {
+            "c": 58.89,
+            "t": 1784715480
+          },
+          {
+            "c": 59.02,
+            "t": 1784715540
+          },
+          {
+            "c": 59.105,
+            "t": 1784715600
+          },
+          {
+            "c": 59.2,
+            "t": 1784715660
+          },
+          {
+            "c": 59.025,
+            "t": 1784715720
+          },
+          {
+            "c": 58.87,
+            "t": 1784715780
+          },
+          {
+            "c": 58.85,
+            "t": 1784715840
+          },
+          {
+            "c": 58.98,
+            "t": 1784715900
+          },
+          {
+            "c": 58.93,
+            "t": 1784715960
+          },
+          {
+            "c": 58.905,
+            "t": 1784716020
+          },
+          {
+            "c": 58.94,
+            "t": 1784716080
+          },
+          {
+            "c": 58.98,
+            "t": 1784716140
+          },
+          {
+            "c": 59.07,
+            "t": 1784716200
+          },
+          {
+            "c": 59.08,
+            "t": 1784716260
+          },
+          {
+            "c": 59.185,
+            "t": 1784716320
+          },
+          {
+            "c": 59.13,
+            "t": 1784716380
+          },
+          {
+            "c": 59,
+            "t": 1784716440
+          },
+          {
+            "c": 59.01,
+            "t": 1784716500
+          },
+          {
+            "c": 59.11,
+            "t": 1784716560
+          },
+          {
+            "c": 59.05,
+            "t": 1784716620
+          },
+          {
+            "c": 59,
+            "t": 1784716680
+          },
+          {
+            "c": 58.91,
+            "t": 1784716740
+          },
+          {
+            "c": 58.945,
+            "t": 1784716800
+          },
+          {
+            "c": 58.82,
+            "t": 1784716860
+          },
+          {
+            "c": 58.85,
+            "t": 1784716920
+          },
+          {
+            "c": 58.79,
+            "t": 1784716980
+          },
+          {
+            "c": 58.84,
+            "t": 1784717040
+          },
+          {
+            "c": 58.845,
+            "t": 1784717100
+          },
+          {
+            "c": 59,
+            "t": 1784717160
+          },
+          {
+            "c": 58.92,
+            "t": 1784717220
+          },
+          {
+            "c": 58.97,
+            "t": 1784717280
+          },
+          {
+            "c": 58.995,
+            "t": 1784717340
+          },
+          {
+            "c": 58.98,
+            "t": 1784717400
+          },
+          {
+            "c": 58.91,
+            "t": 1784717460
+          },
+          {
+            "c": 58.88,
+            "t": 1784717520
+          },
+          {
+            "c": 58.865,
+            "t": 1784717580
+          },
+          {
+            "c": 58.9,
+            "t": 1784717640
+          },
+          {
+            "c": 58.845,
+            "t": 1784717700
+          },
+          {
+            "c": 58.9,
+            "t": 1784717760
+          },
+          {
+            "c": 58.945,
+            "t": 1784717820
+          },
+          {
+            "c": 59.035,
+            "t": 1784717880
+          },
+          {
+            "c": 59.045,
+            "t": 1784717940
+          },
+          {
+            "c": 59.12,
+            "t": 1784718000
+          },
+          {
+            "c": 59.085,
+            "t": 1784718060
+          },
+          {
+            "c": 59.16,
+            "t": 1784718120
+          },
+          {
+            "c": 59.22,
+            "t": 1784718180
+          },
+          {
+            "c": 59.285,
+            "t": 1784718240
+          },
+          {
+            "c": 59.43,
+            "t": 1784718300
+          },
+          {
+            "c": 59.455,
+            "t": 1784718360
+          },
+          {
+            "c": 59.45,
+            "t": 1784718420
+          },
+          {
+            "c": 59.45,
+            "t": 1784718480
+          },
+          {
+            "c": 59.44,
+            "t": 1784718540
+          },
+          {
+            "c": 59.5,
+            "t": 1784718600
+          },
+          {
+            "c": 59.47,
+            "t": 1784718660
+          },
+          {
+            "c": 59.475,
+            "t": 1784718720
+          },
+          {
+            "c": 59.445,
+            "t": 1784718780
+          },
+          {
+            "c": 59.47,
+            "t": 1784718840
+          },
+          {
+            "c": 59.49,
+            "t": 1784718900
+          },
+          {
+            "c": 59.495,
+            "t": 1784718960
+          },
+          {
+            "c": 59.46,
+            "t": 1784719020
+          },
+          {
+            "c": 59.47,
+            "t": 1784719080
+          },
+          {
+            "c": 59.5,
+            "t": 1784719140
+          },
+          {
+            "c": 59.58,
+            "t": 1784719200
+          },
+          {
+            "c": 59.5,
+            "t": 1784719260
+          },
+          {
+            "c": 59.52,
+            "t": 1784719320
+          },
+          {
+            "c": 59.52,
+            "t": 1784719380
+          },
+          {
+            "c": 59.545,
+            "t": 1784719440
+          },
+          {
+            "c": 59.575,
+            "t": 1784719500
+          },
+          {
+            "c": 59.615,
+            "t": 1784719560
+          },
+          {
+            "c": 59.645,
+            "t": 1784719620
+          },
+          {
+            "c": 59.59,
+            "t": 1784719680
+          },
+          {
+            "c": 59.54,
+            "t": 1784719740
+          },
+          {
+            "c": 59.555,
+            "t": 1784719800
+          },
+          {
+            "c": 59.555,
+            "t": 1784719860
+          },
+          {
+            "c": 59.435,
+            "t": 1784719920
+          },
+          {
+            "c": 59.41,
+            "t": 1784719980
+          },
+          {
+            "c": 59.295,
+            "t": 1784720040
+          },
+          {
+            "c": 59.36,
+            "t": 1784720100
+          },
+          {
+            "c": 59.35,
+            "t": 1784720160
+          },
+          {
+            "c": 59.29,
+            "t": 1784720220
+          },
+          {
+            "c": 59.28,
+            "t": 1784720280
+          },
+          {
+            "c": 59.24,
+            "t": 1784720340
+          },
+          {
+            "c": 59.26,
+            "t": 1784720400
+          },
+          {
+            "c": 59.255,
+            "t": 1784720460
+          },
+          {
+            "c": 59.29,
+            "t": 1784720520
+          },
+          {
+            "c": 59.23,
+            "t": 1784720580
+          },
+          {
+            "c": 59.26,
+            "t": 1784720640
+          },
+          {
+            "c": 59.33,
+            "t": 1784720700
+          },
+          {
+            "c": 59.29,
+            "t": 1784720760
+          },
+          {
+            "c": 59.33,
+            "t": 1784720820
+          },
+          {
+            "c": 59.36,
+            "t": 1784720880
+          },
+          {
+            "c": 59.37,
+            "t": 1784720940
+          },
+          {
+            "c": 59.355,
+            "t": 1784721000
+          },
+          {
+            "c": 59.42,
+            "t": 1784721060
+          },
+          {
+            "c": 59.425,
+            "t": 1784721120
+          },
+          {
+            "c": 59.35,
+            "t": 1784721180
+          },
+          {
+            "c": 59.325,
+            "t": 1784721240
+          },
+          {
+            "c": 59.33,
+            "t": 1784721300
+          },
+          {
+            "c": 59.305,
+            "t": 1784721360
+          },
+          {
+            "c": 59.34,
+            "t": 1784721420
+          },
+          {
+            "c": 59.41,
+            "t": 1784721480
+          },
+          {
+            "c": 59.505,
+            "t": 1784721540
+          },
+          {
+            "c": 59.47,
+            "t": 1784721600
+          },
+          {
+            "c": 59.435,
+            "t": 1784721660
+          },
+          {
+            "c": 59.47,
+            "t": 1784721720
+          },
+          {
+            "c": 59.47,
+            "t": 1784721780
+          },
+          {
+            "c": 59.475,
+            "t": 1784721840
+          },
+          {
+            "c": 59.53,
+            "t": 1784721900
+          },
+          {
+            "c": 59.55,
+            "t": 1784721960
+          },
+          {
+            "c": 59.52,
+            "t": 1784722020
+          },
+          {
+            "c": 59.52,
+            "t": 1784722080
+          },
+          {
+            "c": 59.56,
+            "t": 1784722140
+          },
+          {
+            "c": 59.58,
+            "t": 1784722200
+          },
+          {
+            "c": 59.55,
+            "t": 1784722260
+          },
+          {
+            "c": 59.56,
+            "t": 1784722320
+          },
+          {
+            "c": 59.55,
+            "t": 1784722380
+          },
+          {
+            "c": 59.58,
+            "t": 1784722440
+          },
+          {
+            "c": 59.615,
+            "t": 1784722500
+          },
+          {
+            "c": 59.605,
+            "t": 1784722560
+          },
+          {
+            "c": 59.555,
+            "t": 1784722620
+          },
+          {
+            "c": 59.575,
+            "t": 1784722680
+          },
+          {
+            "c": 59.61,
+            "t": 1784722740
+          },
+          {
+            "c": 59.54,
+            "t": 1784722800
+          },
+          {
+            "c": 59.51,
+            "t": 1784722860
+          },
+          {
+            "c": 59.525,
+            "t": 1784722920
+          },
+          {
+            "c": 59.515,
+            "t": 1784722980
+          },
+          {
+            "c": 59.475,
+            "t": 1784723040
+          },
+          {
+            "c": 59.49,
+            "t": 1784723100
+          },
+          {
+            "c": 59.42,
+            "t": 1784723160
+          },
+          {
+            "c": 59.45,
+            "t": 1784723220
+          },
+          {
+            "c": 59.43,
+            "t": 1784723280
+          },
+          {
+            "c": 59.475,
+            "t": 1784723340
+          },
+          {
+            "c": 59.495,
+            "t": 1784723400
+          },
+          {
+            "c": 59.535,
+            "t": 1784723460
+          },
+          {
+            "c": 59.5,
+            "t": 1784723520
+          },
+          {
+            "c": 59.525,
+            "t": 1784723580
+          },
+          {
+            "c": 59.515,
+            "t": 1784723640
+          },
+          {
+            "c": 59.5,
+            "t": 1784723700
+          },
+          {
+            "c": 59.48,
+            "t": 1784723760
+          },
+          {
+            "c": 59.43,
+            "t": 1784723820
+          },
+          {
+            "c": 59.465,
+            "t": 1784723880
+          },
+          {
+            "c": 59.405,
+            "t": 1784723940
+          },
+          {
+            "c": 59.34,
+            "t": 1784724000
+          },
+          {
+            "c": 59.295,
+            "t": 1784724060
+          },
+          {
+            "c": 59.27,
+            "t": 1784724120
+          },
+          {
+            "c": 59.26,
+            "t": 1784724180
+          },
+          {
+            "c": 59.29,
+            "t": 1784724240
+          },
+          {
+            "c": 59.28,
+            "t": 1784724300
+          },
+          {
+            "c": 59.24,
+            "t": 1784724360
+          },
+          {
+            "c": 59.24,
+            "t": 1784724420
+          },
+          {
+            "c": 59.305,
+            "t": 1784724480
+          },
+          {
+            "c": 59.285,
+            "t": 1784724540
+          },
+          {
+            "c": 59.28,
+            "t": 1784724600
+          },
+          {
+            "c": 59.32,
+            "t": 1784724660
+          },
+          {
+            "c": 59.325,
+            "t": 1784724720
+          },
+          {
+            "c": 59.32,
+            "t": 1784724780
+          },
+          {
+            "c": 59.305,
+            "t": 1784724840
+          },
+          {
+            "c": 59.4,
+            "t": 1784724900
+          },
+          {
+            "c": 59.445,
+            "t": 1784724960
+          },
+          {
+            "c": 59.49,
+            "t": 1784725020
+          },
+          {
+            "c": 59.435,
+            "t": 1784725080
+          },
+          {
+            "c": 59.435,
+            "t": 1784725140
+          },
+          {
+            "c": 59.435,
+            "t": 1784725200
+          },
+          {
+            "c": 59.435,
+            "t": 1784725260
+          },
+          {
+            "c": 59.405,
+            "t": 1784725320
+          },
+          {
+            "c": 59.385,
+            "t": 1784725380
+          },
+          {
+            "c": 59.345,
+            "t": 1784725440
+          },
+          {
+            "c": 59.39,
+            "t": 1784725500
+          },
+          {
+            "c": 59.395,
+            "t": 1784725560
+          },
+          {
+            "c": 59.465,
+            "t": 1784725620
+          },
+          {
+            "c": 59.425,
+            "t": 1784725680
+          },
+          {
+            "c": 59.4,
+            "t": 1784725740
+          },
+          {
+            "c": 59.395,
+            "t": 1784725800
+          },
+          {
+            "c": 59.38,
+            "t": 1784725860
+          },
+          {
+            "c": 59.35,
+            "t": 1784725920
+          },
+          {
+            "c": 59.34,
+            "t": 1784725980
+          },
+          {
+            "c": 59.32,
+            "t": 1784726040
+          },
+          {
+            "c": 59.28,
+            "t": 1784726100
+          },
+          {
+            "c": 59.26,
+            "t": 1784726160
+          },
+          {
+            "c": 59.3,
+            "t": 1784726220
+          },
+          {
+            "c": 59.31,
+            "t": 1784726280
+          },
+          {
+            "c": 59.29,
+            "t": 1784726340
+          },
+          {
+            "c": 59.245,
+            "t": 1784726400
+          },
+          {
+            "c": 59.24,
+            "t": 1784726460
+          },
+          {
+            "c": 59.24,
+            "t": 1784726520
+          },
+          {
+            "c": 59.26,
+            "t": 1784726580
+          },
+          {
+            "c": 59.275,
+            "t": 1784726640
+          },
+          {
+            "c": 59.26,
+            "t": 1784726700
+          },
+          {
+            "c": 59.235,
+            "t": 1784726760
+          },
+          {
+            "c": 59.25,
+            "t": 1784726820
+          },
+          {
+            "c": 59.295,
+            "t": 1784726880
+          },
+          {
+            "c": 59.26,
+            "t": 1784726940
+          },
+          {
+            "c": 59.265,
+            "t": 1784727000
+          },
+          {
+            "c": 59.29,
+            "t": 1784727060
+          },
+          {
+            "c": 59.22,
+            "t": 1784727120
+          },
+          {
+            "c": 59.17,
+            "t": 1784727180
+          },
+          {
+            "c": 59.145,
+            "t": 1784727240
+          },
+          {
+            "c": 59.18,
+            "t": 1784727300
+          },
+          {
+            "c": 59.22,
+            "t": 1784727360
+          },
+          {
+            "c": 59.28,
+            "t": 1784727420
+          },
+          {
+            "c": 59.285,
+            "t": 1784727480
+          },
+          {
+            "c": 59.325,
+            "t": 1784727540
+          },
+          {
+            "c": 59.295,
+            "t": 1784727600
+          },
+          {
+            "c": 59.26,
+            "t": 1784727660
+          },
+          {
+            "c": 59.235,
+            "t": 1784727720
+          },
+          {
+            "c": 59.225,
+            "t": 1784727780
+          },
+          {
+            "c": 59.25,
+            "t": 1784727840
+          },
+          {
+            "c": 59.27,
+            "t": 1784727900
+          },
+          {
+            "c": 59.28,
+            "t": 1784727960
+          },
+          {
+            "c": 59.225,
+            "t": 1784728020
+          },
+          {
+            "c": 59.225,
+            "t": 1784728080
+          },
+          {
+            "c": 59.19,
+            "t": 1784728140
+          },
+          {
+            "c": 59.17,
+            "t": 1784728200
+          },
+          {
+            "c": 59.2,
+            "t": 1784728260
+          },
+          {
+            "c": 59.13,
+            "t": 1784728320
+          },
+          {
+            "c": 59.05,
+            "t": 1784728380
+          },
+          {
+            "c": 58.99,
+            "t": 1784728440
+          },
+          {
+            "c": 58.94,
+            "t": 1784728500
+          },
+          {
+            "c": 58.95,
+            "t": 1784728560
+          },
+          {
+            "c": 58.935,
+            "t": 1784728620
+          },
+          {
+            "c": 58.92,
+            "t": 1784728680
+          },
+          {
+            "c": 58.89,
+            "t": 1784728740
+          },
+          {
+            "c": 58.97,
+            "t": 1784728800
+          },
+          {
+            "c": 58.89,
+            "t": 1784728860
+          },
+          {
+            "c": 58.805,
+            "t": 1784728920
+          },
+          {
+            "c": 58.87,
+            "t": 1784728980
+          },
+          {
+            "c": 58.935,
+            "t": 1784729040
+          },
+          {
+            "c": 58.94,
+            "t": 1784729100
+          },
+          {
+            "c": 58.925,
+            "t": 1784729160
+          },
+          {
+            "c": 58.96,
+            "t": 1784729220
+          },
+          {
+            "c": 58.95,
+            "t": 1784729280
+          },
+          {
+            "c": 58.875,
+            "t": 1784729340
+          },
+          {
+            "c": 58.87,
+            "t": 1784729400
+          },
+          {
+            "c": 58.875,
+            "t": 1784729460
+          },
+          {
+            "c": 58.795,
+            "t": 1784729520
+          },
+          {
+            "c": 58.795,
+            "t": 1784729580
+          },
+          {
+            "c": 58.77,
+            "t": 1784729640
+          },
+          {
+            "c": 58.735,
+            "t": 1784729700
+          },
+          {
+            "c": 58.78,
+            "t": 1784729760
+          },
+          {
+            "c": 58.735,
+            "t": 1784729820
+          },
+          {
+            "c": 58.82,
+            "t": 1784729880
+          },
+          {
+            "c": 58.795,
+            "t": 1784729940
+          },
+          {
+            "c": 58.8,
+            "t": 1784730000
+          },
+          {
+            "c": 58.83,
+            "t": 1784730060
+          },
+          {
+            "c": 58.8,
+            "t": 1784730120
+          },
+          {
+            "c": 58.735,
+            "t": 1784730180
+          },
+          {
+            "c": 58.75,
+            "t": 1784730240
+          },
+          {
+            "c": 58.755,
+            "t": 1784730300
+          },
+          {
+            "c": 58.74,
+            "t": 1784730360
+          },
+          {
+            "c": 58.755,
+            "t": 1784730420
+          },
+          {
+            "c": 58.815,
+            "t": 1784730480
+          },
+          {
+            "c": 58.84,
+            "t": 1784730540
+          },
+          {
+            "c": 58.78,
+            "t": 1784730600
+          },
+          {
+            "c": 58.72,
+            "t": 1784730660
+          },
+          {
+            "c": 58.68,
+            "t": 1784730720
+          },
+          {
+            "c": 58.715,
+            "t": 1784730780
+          },
+          {
+            "c": 58.71,
+            "t": 1784730840
+          },
+          {
+            "c": 58.76,
+            "t": 1784730900
+          },
+          {
+            "c": 58.8,
+            "t": 1784730960
+          },
+          {
+            "c": 58.79,
+            "t": 1784731020
+          },
+          {
+            "c": 58.79,
+            "t": 1784731080
+          },
+          {
+            "c": 58.78,
+            "t": 1784731140
+          },
+          {
+            "c": 58.785,
+            "t": 1784731200
+          },
+          {
+            "c": 58.815,
+            "t": 1784731260
+          },
+          {
+            "c": 58.815,
+            "t": 1784731320
+          },
+          {
+            "c": 58.805,
+            "t": 1784731380
+          },
+          {
+            "c": 58.81,
+            "t": 1784731440
+          },
+          {
+            "c": 58.875,
+            "t": 1784731500
+          },
+          {
+            "c": 58.865,
+            "t": 1784731560
+          },
+          {
+            "c": 58.865,
+            "t": 1784731620
+          },
+          {
+            "c": 58.865,
+            "t": 1784731680
+          },
+          {
+            "c": 58.82,
+            "t": 1784731740
+          },
+          {
+            "c": 58.78,
+            "t": 1784731800
+          },
+          {
+            "c": 58.82,
+            "t": 1784731860
+          },
+          {
+            "c": 58.8,
+            "t": 1784731920
+          },
+          {
+            "c": 58.86,
+            "t": 1784731980
+          },
+          {
+            "c": 58.925,
+            "t": 1784732040
+          },
+          {
+            "c": 58.94,
+            "t": 1784732100
+          },
+          {
+            "c": 58.915,
+            "t": 1784732160
+          },
+          {
+            "c": 58.92,
+            "t": 1784732220
+          },
+          {
+            "c": 58.955,
+            "t": 1784732280
+          },
+          {
+            "c": 58.96,
+            "t": 1784732340
+          },
+          {
+            "c": 58.97,
+            "t": 1784732400
+          },
+          {
+            "c": 58.955,
+            "t": 1784732460
+          },
+          {
+            "c": 58.975,
+            "t": 1784732520
+          },
+          {
+            "c": 59.035,
+            "t": 1784732580
+          },
+          {
+            "c": 59.08,
+            "t": 1784732640
+          },
+          {
+            "c": 59.1,
+            "t": 1784732700
+          },
+          {
+            "c": 59.11,
+            "t": 1784732760
+          },
+          {
+            "c": 59.07,
+            "t": 1784732820
+          },
+          {
+            "c": 59.08,
+            "t": 1784732880
+          },
+          {
+            "c": 59.09,
+            "t": 1784732940
+          },
+          {
+            "c": 59.055,
+            "t": 1784733000
+          },
+          {
+            "c": 59.04,
+            "t": 1784733060
+          },
+          {
+            "c": 59.02,
+            "t": 1784733120
+          },
+          {
+            "c": 59.005,
+            "t": 1784733180
+          },
+          {
+            "c": 59.02,
+            "t": 1784733240
+          },
+          {
+            "c": 59.05,
+            "t": 1784733300
+          },
+          {
+            "c": 59.085,
+            "t": 1784733360
+          },
+          {
+            "c": 59.07,
+            "t": 1784733420
+          },
+          {
+            "c": 59.065,
+            "t": 1784733480
+          },
+          {
+            "c": 59.09,
+            "t": 1784733540
+          },
+          {
+            "c": 59.05,
+            "t": 1784733600
+          },
+          {
+            "c": 59.015,
+            "t": 1784733660
+          },
+          {
+            "c": 59.04,
+            "t": 1784733720
+          },
+          {
+            "c": 59.075,
+            "t": 1784733780
+          },
+          {
+            "c": 59.06,
+            "t": 1784733840
+          },
+          {
+            "c": 59.02,
+            "t": 1784733900
+          },
+          {
+            "c": 59.025,
+            "t": 1784733960
+          },
+          {
+            "c": 59.095,
+            "t": 1784734020
+          },
+          {
+            "c": 59.145,
+            "t": 1784734080
+          },
+          {
+            "c": 59.14,
+            "t": 1784734140
+          },
+          {
+            "c": 59.055,
+            "t": 1784734200
+          },
+          {
+            "c": 59.04,
+            "t": 1784734260
+          },
+          {
+            "c": 59.06,
+            "t": 1784734320
+          },
+          {
+            "c": 59.07,
+            "t": 1784734380
+          },
+          {
+            "c": 59.04,
+            "t": 1784734440
+          },
+          {
+            "c": 59,
+            "t": 1784734500
+          },
+          {
+            "c": 58.905,
+            "t": 1784734560
+          },
+          {
+            "c": 58.875,
+            "t": 1784734620
+          },
+          {
+            "c": 58.83,
+            "t": 1784734680
+          },
+          {
+            "c": 58.795,
+            "t": 1784734740
+          },
+          {
+            "c": 58.845,
+            "t": 1784734800
+          },
+          {
+            "c": 58.845,
+            "t": 1784734860
+          },
+          {
+            "c": 58.92,
+            "t": 1784734920
+          },
+          {
+            "c": 58.94,
+            "t": 1784734980
+          },
+          {
+            "c": 58.925,
+            "t": 1784735040
+          },
+          {
+            "c": 58.925,
+            "t": 1784735100
+          },
+          {
+            "c": 58.91,
+            "t": 1784735160
+          },
+          {
+            "c": 58.925,
+            "t": 1784735220
+          },
+          {
+            "c": 58.93,
+            "t": 1784735280
+          },
+          {
+            "c": 58.94,
+            "t": 1784735340
+          },
+          {
+            "c": 58.95,
+            "t": 1784735400
+          },
+          {
+            "c": 58.87,
+            "t": 1784735460
+          },
+          {
+            "c": 58.915,
+            "t": 1784735520
+          },
+          {
+            "c": 58.95,
+            "t": 1784735580
+          },
+          {
+            "c": 58.885,
+            "t": 1784735640
+          },
+          {
+            "c": 58.82,
+            "t": 1784735700
+          },
+          {
+            "c": 58.8,
+            "t": 1784735760
+          },
+          {
+            "c": 58.88,
+            "t": 1784735820
+          },
+          {
+            "c": 58.8,
+            "t": 1784735880
+          },
+          {
+            "c": 58.719,
+            "t": 1784735940
+          },
+          {
+            "c": 58.719,
+            "t": 1784736000
+          }
+        ]
+      },
+      "description": "The Direxion Daily AI and Big Data Bull 2X ETF (AIBU) is an exchange-traded fund that is based on the Solactive US AI & Big Data index. The fund tracks 2x the daily price movements of a concentrated index of US companies involved in artificial intelligence (AI) applications and big data. Stocks are weighted based on their relevance to the business fields. AIBU was launched on May 15, 2024 and is issued by Direxion.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Category",
+          "Trading--Leveraged Equity"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "NYSEARCA"
+        ],
+        [
+          "Ticker Symbol",
+          "AIBU"
+        ],
+        [
+          "Provider",
+          "Direxion"
+        ],
+        [
+          "Index Tracked",
+          "Solactive US AI & Big Data Index"
+        ]
+      ],
+      "etf_website": "https://www.direxion.com/product/daily-ai-big-data-bull-bear-2x-etfs",
+      "provider_page": "direxion",
+      "holdingsTable": {
+        "count": 43,
+        "updated": "Jul 15, 2026",
+        "top10": 66.3,
+        "holdings": [
+          {
+            "n": "Dreyfus Govt Cash Man Ins",
+            "as": "14.04%",
+            "sh": "3,710,373"
+          },
+          {
+            "n": "Goldman Finl Sq Trsry Inst 506",
+            "as": "7.44%",
+            "sh": "1,966,710"
+          },
+          {
+            "n": "Apple Inc.",
+            "s": "$AAPL",
+            "as": "6.36%",
+            "sh": "5,130"
+          },
+          {
+            "n": "Advanced Micro Devices, Inc.",
+            "s": "$AMD",
+            "as": "5.83%",
+            "sh": "2,913"
+          },
+          {
+            "n": "Snowflake Inc.",
+            "s": "$SNOW",
+            "as": "5.81%",
+            "sh": "5,648"
+          },
+          {
+            "n": "Alphabet Inc.",
+            "s": "$GOOGL",
+            "as": "5.64%",
+            "sh": "4,022"
+          },
+          {
+            "n": "NVIDIA Corporation",
+            "s": "$NVDA",
+            "as": "5.48%",
+            "sh": "6,812"
+          },
+          {
+            "n": "Solactive Us Ai & Big Data Index",
+            "as": "5.43%",
+            "sh": "2,392"
+          },
+          {
+            "n": "Amazon.com, Inc.",
+            "s": "$AMZN",
+            "as": "5.22%",
+            "sh": "5,412"
+          },
+          {
+            "n": "Broadcom Inc.",
+            "s": "$AVGO",
+            "as": "5.06%",
+            "sh": "3,391"
+          }
+        ]
+      },
+      "dividendTable": [
+        {
+          "dt": "2025-12-10",
+          "amt": 1.06213,
+          "pay": "2025-12-17"
+        },
+        {
+          "dt": "2025-06-24",
+          "amt": 0.0428,
+          "pay": "2025-07-01"
+        },
+        {
+          "dt": "2025-03-25",
+          "amt": 0.01763,
+          "pay": "2025-04-01"
+        },
+        {
+          "dt": "2024-12-12",
+          "amt": 0.43105,
+          "pay": "2024-12-19"
+        },
+        {
+          "dt": "2024-09-24",
+          "amt": 0.02324,
+          "pay": "2024-10-01"
+        },
+        {
+          "dt": "2024-06-25",
+          "amt": 0.01572,
+          "pay": "2024-07-02"
+        }
+      ],
+      "news": {
+        "exp": "1784789195927",
+        "data": []
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 61.2,
+        "price1m": 66.26,
+        "price3m": 50.54,
+        "price6m": 48.62,
+        "priceYTD": 49.373,
+        "price1y": 44.96,
+        "price5y": null,
+        "priceMAX": 25.947
+      },
+      "performance": {
+        "tr1m": -11.380388653115933,
+        "trYTD": 18.929,
+        "tr1y": 33.148,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": 48.874
+      }
+    },
     "holdings": {
       "holdings": [
         {
           "no": 1,
           "n": "Dreyfus Govt Cash Man Ins",
-          "as": "14.05%",
-          "sh": "4,348,907"
+          "as": "14.04%",
+          "sh": "3,710,373"
         },
         {
           "no": 2,
           "n": "Goldman Finl Sq Trsry Inst 506",
-          "as": "6.35%",
-          "sh": "1,966,716"
+          "as": "7.44%",
+          "sh": "1,966,710"
         },
         {
           "no": 3,
           "n": "Apple Inc.",
           "s": "$AAPL",
-          "as": "5.65%",
-          "sh": "5,841"
+          "as": "6.36%",
+          "sh": "5,130"
         },
         {
           "no": 4,
-          "n": "Solactive Us Ai & Big Data Index",
-          "as": "5.59%",
-          "sh": "2,392"
+          "n": "Advanced Micro Devices, Inc.",
+          "s": "$AMD",
+          "as": "5.83%",
+          "sh": "2,913"
         },
         {
           "no": 5,
-          "n": "Alphabet Inc.",
-          "s": "$GOOGL",
-          "as": "5.52%",
-          "sh": "4,579"
+          "n": "Snowflake Inc.",
+          "s": "$SNOW",
+          "as": "5.81%",
+          "sh": "5,648"
         },
         {
           "no": 6,
-          "n": "Advanced Micro Devices, Inc.",
-          "s": "$AMD",
-          "as": "5.44%",
-          "sh": "3,317"
+          "n": "Alphabet Inc.",
+          "s": "$GOOGL",
+          "as": "5.64%",
+          "sh": "4,022"
         },
         {
           "no": 7,
           "n": "NVIDIA Corporation",
           "s": "$NVDA",
-          "as": "5.20%",
-          "sh": "7,756"
+          "as": "5.48%",
+          "sh": "6,812"
         },
         {
           "no": 8,
-          "n": "Intel Corporation",
-          "s": "$INTC",
-          "as": "5.10%",
-          "sh": "13,476"
+          "n": "Solactive Us Ai & Big Data Index",
+          "as": "5.43%",
+          "sh": "2,392"
         },
         {
           "no": 9,
-          "n": "Snowflake Inc.",
-          "s": "$SNOW",
-          "as": "4.95%",
-          "sh": "6,430"
+          "n": "Amazon.com, Inc.",
+          "s": "$AMZN",
+          "as": "5.22%",
+          "sh": "5,412"
         },
         {
           "no": 10,
-          "n": "Amazon.com, Inc.",
-          "s": "$AMZN",
-          "as": "4.90%",
-          "sh": "6,161"
+          "n": "Broadcom Inc.",
+          "s": "$AVGO",
+          "as": "5.06%",
+          "sh": "3,391"
         },
         {
           "no": 11,
-          "n": "Broadcom Inc.",
-          "s": "$AVGO",
-          "as": "4.70%",
-          "sh": "3,861"
+          "n": "Microsoft Corporation",
+          "s": "$MSFT",
+          "as": "4.81%",
+          "sh": "3,215"
         },
         {
           "no": 12,
-          "n": "Microsoft Corporation",
-          "s": "$MSFT",
-          "as": "4.66%",
-          "sh": "3,660"
+          "n": "Intel Corporation",
+          "s": "$INTC",
+          "as": "4.61%",
+          "sh": "11,837"
         },
         {
           "no": 13,
           "n": "Hewlett Packard Enterprise Company",
           "s": "$HPE",
-          "as": "4.04%",
-          "sh": "25,821"
+          "as": "4.07%",
+          "sh": "22,680"
         },
         {
           "no": 14,
-          "n": "Solactive Us Ai & Big Data Index",
-          "as": "3.98%",
-          "sh": "1,681"
+          "n": "Taiwan Semiconductor Manufacturing Company Limited",
+          "s": "$TSM",
+          "as": "3.54%",
+          "sh": "2,232"
         },
         {
           "no": 15,
-          "n": "Taiwan Semiconductor Manufacturing Company Limited",
-          "s": "$TSM",
-          "as": "3.50%",
-          "sh": "2,541"
+          "n": "Meta Platforms, Inc.",
+          "s": "$META",
+          "as": "3.08%",
+          "sh": "1,197"
         },
         {
           "no": 16,
           "n": "Microchip Technology Incorporated",
           "s": "$MCHP",
-          "as": "3.25%",
-          "sh": "10,531"
+          "as": "3.02%",
+          "sh": "9,250"
         },
         {
           "no": 17,
-          "n": "International Business Machines Corporation",
-          "s": "$IBM",
-          "as": "3.22%",
-          "sh": "3,677"
+          "n": "Synopsys, Inc.",
+          "s": "$SNPS",
+          "as": "2.96%",
+          "sh": "1,837"
         },
         {
           "no": 18,
-          "n": "Oracle Corporation",
-          "s": "$ORCL",
-          "as": "3.15%",
-          "sh": "5,176"
+          "n": "Palantir Technologies Inc.",
+          "s": "$PLTR",
+          "as": "2.87%",
+          "sh": "5,679"
         },
         {
           "no": 19,
-          "n": "Synopsys, Inc.",
-          "s": "$SNPS",
-          "as": "3.03%",
-          "sh": "2,092"
+          "n": "International Business Machines Corporation",
+          "s": "$IBM",
+          "as": "2.58%",
+          "sh": "3,230"
         },
         {
           "no": 20,
-          "n": "CoreWeave, Inc.",
-          "s": "$CRWV",
-          "as": "2.92%",
-          "sh": "7,720"
+          "n": "Solactive Us Ai & Big Data Index Swap",
+          "as": "2.45%",
+          "sh": "1,065"
         },
         {
           "no": 21,
-          "n": "Palantir Technologies Inc.",
-          "s": "$PLTR",
-          "as": "2.78%",
-          "sh": "6,466"
+          "n": "Oracle Corporation",
+          "s": "$ORCL",
+          "as": "2.28%",
+          "sh": "4,546"
         },
         {
           "no": 22,
-          "n": "Meta Platforms, Inc.",
-          "s": "$META",
-          "as": "2.64%",
-          "sh": "1,363"
+          "n": "CoreWeave, Inc.",
+          "s": "$CRWV",
+          "as": "1.98%",
+          "sh": "6,781"
         },
         {
           "no": 23,
-          "n": "Solactive Us Ai & Big Data Index Swap",
-          "as": "2.51%",
-          "sh": "1,065"
+          "n": "Solactive Us Ai & Big Data Index",
+          "as": "1.91%",
+          "sh": "566"
         },
         {
           "no": 24,
           "n": "Solactive Us Ai & Big Data Index Swap",
-          "as": "1.55%",
-          "sh": "1,088"
+          "as": "1.69%",
+          "sh": "1,188"
         },
         {
           "no": 25,
           "n": "Dreyfus Trsry Securities Cash Mgmt",
-          "as": "0.67%",
-          "sh": "206,815"
+          "as": "0.79%",
+          "sh": "207,708"
         }
       ],
       "asset_allocation": null,
@@ -4874,1794 +6674,136 @@
           "country": "United Kingdom"
         }
       ],
-      "infoBox": "AIBU is an equity ETF with a total of 43 individual holdings. The top holdings are Dreyfus Govt Cash Man Ins stock at 14.05%, Goldman Finl Sq Trsry Inst 506 at 6.35%, Apple at 5.65%, Solactive Us Ai & Big Data Index at 5.59%, and Alphabet at 5.52%.",
+      "allocationChartData": {
+        "sectors": [
+          {
+            "name": "Other",
+            "y": 46.1
+          },
+          {
+            "name": "Technology",
+            "y": 42.34
+          },
+          {
+            "name": "Communication Services",
+            "y": 6.93
+          },
+          {
+            "name": "Consumer Discretionary",
+            "y": 4
+          },
+          {
+            "name": "Health Care",
+            "y": 0.55
+          },
+          {
+            "name": "Industrials",
+            "y": 0.08
+          }
+        ],
+        "assets": [],
+        "countries": [
+          {
+            "name": "United States",
+            "y": 97.6899
+          },
+          {
+            "name": "China",
+            "y": 1.18435
+          },
+          {
+            "name": "Taiwan",
+            "y": 0.80623
+          },
+          {
+            "name": "United Kingdom",
+            "y": 0.31952
+          }
+        ]
+      },
+      "infoBox": "AIBU is an equity ETF with a total of 43 individual holdings. The top holdings are Dreyfus Govt Cash Man Ins stock at 14.04%, Goldman Finl Sq Trsry Inst 506 at 7.44%, Apple at 6.36%, Advanced Micro Devices at 5.83%, and Snowflake at 5.81%.",
       "infoTable": {
         "count": 43,
-        "top10": 62.74,
+        "top10": 66.3,
         "assetClass": "Equity",
         "category": "Trading--Leveraged Equity",
-        "aum": 29818585
+        "categoryLabel": "ETF Category",
+        "aum": 22737098,
+        "peRatio": null
       },
-      "date": "Jun 16, 2026",
-      "count": 43
-    },
-    "overview": {
-      "type": "etf",
-      "aum": "$29.82M",
-      "expenseRatio": "0.96%",
-      "sharesOut": "425,001",
-      "dps": "$1.12",
-      "dividendYield": "1.69%",
-      "exDivDate": "Dec 10, 2025",
-      "ch1y": "+75.93%",
-      "payoutFrequency": "Semi-Annual",
-      "beta": "4.12",
-      "holdings": 43,
-      "inception": "May 15, 2024",
-      "chart": {
-        "expiration": 1782135000000,
-        "data": [
-          {
-            "c": 65.53,
-            "o": 65.53,
-            "t": 1781775000
-          },
-          {
-            "c": 65,
-            "t": 1781775060
-          },
-          {
-            "c": 65.205,
-            "t": 1781775120
-          },
-          {
-            "c": 65.075,
-            "t": 1781775180
-          },
-          {
-            "c": 65.15,
-            "t": 1781775240
-          },
-          {
-            "c": 64.6,
-            "t": 1781775300
-          },
-          {
-            "c": 64.39,
-            "t": 1781775360
-          },
-          {
-            "c": 64.265,
-            "t": 1781775420
-          },
-          {
-            "c": 64.185,
-            "t": 1781775480
-          },
-          {
-            "c": 64.27,
-            "t": 1781775540
-          },
-          {
-            "c": 64.185,
-            "t": 1781775600
-          },
-          {
-            "c": 64.24,
-            "t": 1781775660
-          },
-          {
-            "c": 64.39,
-            "t": 1781775720
-          },
-          {
-            "c": 64.28,
-            "t": 1781775780
-          },
-          {
-            "c": 64.115,
-            "t": 1781775840
-          },
-          {
-            "c": null,
-            "t": 1781775900
-          },
-          {
-            "c": null,
-            "t": 1781775960
-          },
-          {
-            "c": 64.255,
-            "t": 1781776020
-          },
-          {
-            "c": 64.225,
-            "t": 1781776080
-          },
-          {
-            "c": 64.38,
-            "t": 1781776140
-          },
-          {
-            "c": 64.23,
-            "t": 1781776200
-          },
-          {
-            "c": 64.3,
-            "t": 1781776260
-          },
-          {
-            "c": 64.445,
-            "t": 1781776320
-          },
-          {
-            "c": 64.495,
-            "t": 1781776380
-          },
-          {
-            "c": 64.215,
-            "t": 1781776440
-          },
-          {
-            "c": 64.125,
-            "t": 1781776500
-          },
-          {
-            "c": 64,
-            "t": 1781776560
-          },
-          {
-            "c": 63.78,
-            "t": 1781776620
-          },
-          {
-            "c": 63.825,
-            "t": 1781776680
-          },
-          {
-            "c": 64.06,
-            "t": 1781776740
-          },
-          {
-            "c": 64.19,
-            "t": 1781776800
-          },
-          {
-            "c": 64.23,
-            "t": 1781776860
-          },
-          {
-            "c": 64.36,
-            "t": 1781776920
-          },
-          {
-            "c": 64.395,
-            "t": 1781776980
-          },
-          {
-            "c": 64.45,
-            "t": 1781777040
-          },
-          {
-            "c": 64.425,
-            "t": 1781777100
-          },
-          {
-            "c": 64.635,
-            "t": 1781777160
-          },
-          {
-            "c": 64.675,
-            "t": 1781777220
-          },
-          {
-            "c": 64.6,
-            "t": 1781777280
-          },
-          {
-            "c": 64.62,
-            "t": 1781777340
-          },
-          {
-            "c": 64.59,
-            "t": 1781777400
-          },
-          {
-            "c": 64.545,
-            "t": 1781777460
-          },
-          {
-            "c": 64.535,
-            "t": 1781777520
-          },
-          {
-            "c": 64.435,
-            "t": 1781777580
-          },
-          {
-            "c": 64.385,
-            "t": 1781777640
-          },
-          {
-            "c": 64.46,
-            "t": 1781777700
-          },
-          {
-            "c": 64.56,
-            "t": 1781777760
-          },
-          {
-            "c": 64.74,
-            "t": 1781777820
-          },
-          {
-            "c": 64.885,
-            "t": 1781777880
-          },
-          {
-            "c": 64.78,
-            "t": 1781777940
-          },
-          {
-            "c": 64.78,
-            "t": 1781778000
-          },
-          {
-            "c": 64.78,
-            "t": 1781778060
-          },
-          {
-            "c": 64.865,
-            "t": 1781778120
-          },
-          {
-            "c": 64.95,
-            "t": 1781778180
-          },
-          {
-            "c": 65.025,
-            "t": 1781778240
-          },
-          {
-            "c": 65.035,
-            "t": 1781778300
-          },
-          {
-            "c": 64.76,
-            "t": 1781778360
-          },
-          {
-            "c": 64.635,
-            "t": 1781778420
-          },
-          {
-            "c": 64.565,
-            "t": 1781778480
-          },
-          {
-            "c": 64.565,
-            "t": 1781778540
-          },
-          {
-            "c": 64.39,
-            "t": 1781778600
-          },
-          {
-            "c": 64.63,
-            "t": 1781778660
-          },
-          {
-            "c": 64.525,
-            "t": 1781778720
-          },
-          {
-            "c": 64.68,
-            "t": 1781778780
-          },
-          {
-            "c": 64.795,
-            "t": 1781778840
-          },
-          {
-            "c": 64.755,
-            "t": 1781778900
-          },
-          {
-            "c": 64.93,
-            "t": 1781778960
-          },
-          {
-            "c": 65.105,
-            "t": 1781779020
-          },
-          {
-            "c": 65.08,
-            "t": 1781779080
-          },
-          {
-            "c": 65.15,
-            "t": 1781779140
-          },
-          {
-            "c": 65.035,
-            "t": 1781779200
-          },
-          {
-            "c": 64.9,
-            "t": 1781779260
-          },
-          {
-            "c": 64.91,
-            "t": 1781779320
-          },
-          {
-            "c": 64.965,
-            "t": 1781779380
-          },
-          {
-            "c": 64.965,
-            "t": 1781779440
-          },
-          {
-            "c": 65.025,
-            "t": 1781779500
-          },
-          {
-            "c": 65.14,
-            "t": 1781779560
-          },
-          {
-            "c": 65.155,
-            "t": 1781779620
-          },
-          {
-            "c": 65.32,
-            "t": 1781779680
-          },
-          {
-            "c": 65.275,
-            "t": 1781779740
-          },
-          {
-            "c": 65.165,
-            "t": 1781779800
-          },
-          {
-            "c": 65.185,
-            "t": 1781779860
-          },
-          {
-            "c": 65.235,
-            "t": 1781779920
-          },
-          {
-            "c": 65.15,
-            "t": 1781779980
-          },
-          {
-            "c": 65.2,
-            "t": 1781780040
-          },
-          {
-            "c": 65.2,
-            "t": 1781780100
-          },
-          {
-            "c": 65.185,
-            "t": 1781780160
-          },
-          {
-            "c": 65.255,
-            "t": 1781780220
-          },
-          {
-            "c": 65.335,
-            "t": 1781780280
-          },
-          {
-            "c": 65.41,
-            "t": 1781780340
-          },
-          {
-            "c": 65.305,
-            "t": 1781780400
-          },
-          {
-            "c": 65.29,
-            "t": 1781780460
-          },
-          {
-            "c": 65.215,
-            "t": 1781780520
-          },
-          {
-            "c": 65.26,
-            "t": 1781780580
-          },
-          {
-            "c": 65.31,
-            "t": 1781780640
-          },
-          {
-            "c": 65.32,
-            "t": 1781780700
-          },
-          {
-            "c": 65.385,
-            "t": 1781780760
-          },
-          {
-            "c": 65.27,
-            "t": 1781780820
-          },
-          {
-            "c": 65.435,
-            "t": 1781780880
-          },
-          {
-            "c": 65.395,
-            "t": 1781780940
-          },
-          {
-            "c": 65.455,
-            "t": 1781781000
-          },
-          {
-            "c": 65.55,
-            "t": 1781781060
-          },
-          {
-            "c": 65.535,
-            "t": 1781781120
-          },
-          {
-            "c": 65.58,
-            "t": 1781781180
-          },
-          {
-            "c": 65.48,
-            "t": 1781781240
-          },
-          {
-            "c": 65.5,
-            "t": 1781781300
-          },
-          {
-            "c": 65.5,
-            "t": 1781781360
-          },
-          {
-            "c": 65.415,
-            "t": 1781781420
-          },
-          {
-            "c": 65.385,
-            "t": 1781781480
-          },
-          {
-            "c": 65.32,
-            "t": 1781781540
-          },
-          {
-            "c": 65.47,
-            "t": 1781781600
-          },
-          {
-            "c": 65.395,
-            "t": 1781781660
-          },
-          {
-            "c": 65.37,
-            "t": 1781781720
-          },
-          {
-            "c": 65.27,
-            "t": 1781781780
-          },
-          {
-            "c": 65.165,
-            "t": 1781781840
-          },
-          {
-            "c": 65.2,
-            "t": 1781781900
-          },
-          {
-            "c": 65.195,
-            "t": 1781781960
-          },
-          {
-            "c": 65.275,
-            "t": 1781782020
-          },
-          {
-            "c": 65.11,
-            "t": 1781782080
-          },
-          {
-            "c": 65.19,
-            "t": 1781782140
-          },
-          {
-            "c": 65.14,
-            "t": 1781782200
-          },
-          {
-            "c": 65.26,
-            "t": 1781782260
-          },
-          {
-            "c": 65.005,
-            "t": 1781782320
-          },
-          {
-            "c": 64.925,
-            "t": 1781782380
-          },
-          {
-            "c": 64.95,
-            "t": 1781782440
-          },
-          {
-            "c": 64.885,
-            "t": 1781782500
-          },
-          {
-            "c": 64.795,
-            "t": 1781782560
-          },
-          {
-            "c": 64.75,
-            "t": 1781782620
-          },
-          {
-            "c": 64.54,
-            "t": 1781782680
-          },
-          {
-            "c": 64.74,
-            "t": 1781782740
-          },
-          {
-            "c": 64.67,
-            "t": 1781782800
-          },
-          {
-            "c": 64.755,
-            "t": 1781782860
-          },
-          {
-            "c": 64.795,
-            "t": 1781782920
-          },
-          {
-            "c": 64.685,
-            "t": 1781782980
-          },
-          {
-            "c": 64.66,
-            "t": 1781783040
-          },
-          {
-            "c": 64.595,
-            "t": 1781783100
-          },
-          {
-            "c": 64.575,
-            "t": 1781783160
-          },
-          {
-            "c": 64.69,
-            "t": 1781783220
-          },
-          {
-            "c": 64.68,
-            "t": 1781783280
-          },
-          {
-            "c": 64.8,
-            "t": 1781783340
-          },
-          {
-            "c": 64.9,
-            "t": 1781783400
-          },
-          {
-            "c": 64.995,
-            "t": 1781783460
-          },
-          {
-            "c": 65.12,
-            "t": 1781783520
-          },
-          {
-            "c": 65.205,
-            "t": 1781783580
-          },
-          {
-            "c": 65.155,
-            "t": 1781783640
-          },
-          {
-            "c": 65.315,
-            "t": 1781783700
-          },
-          {
-            "c": 65.35,
-            "t": 1781783760
-          },
-          {
-            "c": 65.345,
-            "t": 1781783820
-          },
-          {
-            "c": 65.425,
-            "t": 1781783880
-          },
-          {
-            "c": 65.38,
-            "t": 1781783940
-          },
-          {
-            "c": 65.435,
-            "t": 1781784000
-          },
-          {
-            "c": 65.335,
-            "t": 1781784060
-          },
-          {
-            "c": 65.33,
-            "t": 1781784120
-          },
-          {
-            "c": 65.27,
-            "t": 1781784180
-          },
-          {
-            "c": 65.265,
-            "t": 1781784240
-          },
-          {
-            "c": 65.345,
-            "t": 1781784300
-          },
-          {
-            "c": 65.35,
-            "t": 1781784360
-          },
-          {
-            "c": 65.28,
-            "t": 1781784420
-          },
-          {
-            "c": 65.215,
-            "t": 1781784480
-          },
-          {
-            "c": 65.24,
-            "t": 1781784540
-          },
-          {
-            "c": 65.165,
-            "t": 1781784600
-          },
-          {
-            "c": 65.235,
-            "t": 1781784660
-          },
-          {
-            "c": 65.265,
-            "t": 1781784720
-          },
-          {
-            "c": 65.255,
-            "t": 1781784780
-          },
-          {
-            "c": 65.18,
-            "t": 1781784840
-          },
-          {
-            "c": 65.135,
-            "t": 1781784900
-          },
-          {
-            "c": 65.13,
-            "t": 1781784960
-          },
-          {
-            "c": 65.165,
-            "t": 1781785020
-          },
-          {
-            "c": 65.155,
-            "t": 1781785080
-          },
-          {
-            "c": 65.195,
-            "t": 1781785140
-          },
-          {
-            "c": 65.35,
-            "t": 1781785200
-          },
-          {
-            "c": 65.43,
-            "t": 1781785260
-          },
-          {
-            "c": 65.375,
-            "t": 1781785320
-          },
-          {
-            "c": 65.4,
-            "t": 1781785380
-          },
-          {
-            "c": 65.395,
-            "t": 1781785440
-          },
-          {
-            "c": 65.405,
-            "t": 1781785500
-          },
-          {
-            "c": 65.465,
-            "t": 1781785560
-          },
-          {
-            "c": 65.455,
-            "t": 1781785620
-          },
-          {
-            "c": 65.475,
-            "t": 1781785680
-          },
-          {
-            "c": 65.54,
-            "t": 1781785740
-          },
-          {
-            "c": 65.565,
-            "t": 1781785800
-          },
-          {
-            "c": 65.52,
-            "t": 1781785860
-          },
-          {
-            "c": 65.52,
-            "t": 1781785920
-          },
-          {
-            "c": 65.53,
-            "t": 1781785980
-          },
-          {
-            "c": 65.57,
-            "t": 1781786040
-          },
-          {
-            "c": 65.605,
-            "t": 1781786100
-          },
-          {
-            "c": 65.56,
-            "t": 1781786160
-          },
-          {
-            "c": 65.655,
-            "t": 1781786220
-          },
-          {
-            "c": 65.675,
-            "t": 1781786280
-          },
-          {
-            "c": 65.685,
-            "t": 1781786340
-          },
-          {
-            "c": 65.665,
-            "t": 1781786400
-          },
-          {
-            "c": 65.7,
-            "t": 1781786460
-          },
-          {
-            "c": 65.65,
-            "t": 1781786520
-          },
-          {
-            "c": 65.645,
-            "t": 1781786580
-          },
-          {
-            "c": 65.615,
-            "t": 1781786640
-          },
-          {
-            "c": 65.645,
-            "t": 1781786700
-          },
-          {
-            "c": 65.63,
-            "t": 1781786760
-          },
-          {
-            "c": 65.64,
-            "t": 1781786820
-          },
-          {
-            "c": 65.665,
-            "t": 1781786880
-          },
-          {
-            "c": 65.68,
-            "t": 1781786940
-          },
-          {
-            "c": 65.625,
-            "t": 1781787000
-          },
-          {
-            "c": 65.585,
-            "t": 1781787060
-          },
-          {
-            "c": 65.625,
-            "t": 1781787120
-          },
-          {
-            "c": 65.62,
-            "t": 1781787180
-          },
-          {
-            "c": 65.545,
-            "t": 1781787240
-          },
-          {
-            "c": 65.52,
-            "t": 1781787300
-          },
-          {
-            "c": 65.585,
-            "t": 1781787360
-          },
-          {
-            "c": 65.63,
-            "t": 1781787420
-          },
-          {
-            "c": 65.585,
-            "t": 1781787480
-          },
-          {
-            "c": 65.585,
-            "t": 1781787540
-          },
-          {
-            "c": 65.585,
-            "t": 1781787600
-          },
-          {
-            "c": 65.585,
-            "t": 1781787660
-          },
-          {
-            "c": 65.67,
-            "t": 1781787720
-          },
-          {
-            "c": 65.67,
-            "t": 1781787780
-          },
-          {
-            "c": 65.735,
-            "t": 1781787840
-          },
-          {
-            "c": 65.88,
-            "t": 1781787900
-          },
-          {
-            "c": 65.85,
-            "t": 1781787960
-          },
-          {
-            "c": 65.91,
-            "t": 1781788020
-          },
-          {
-            "c": 65.895,
-            "t": 1781788080
-          },
-          {
-            "c": 65.895,
-            "t": 1781788140
-          },
-          {
-            "c": 65.86,
-            "t": 1781788200
-          },
-          {
-            "c": 65.89,
-            "t": 1781788260
-          },
-          {
-            "c": 65.895,
-            "t": 1781788320
-          },
-          {
-            "c": 65.925,
-            "t": 1781788380
-          },
-          {
-            "c": 65.895,
-            "t": 1781788440
-          },
-          {
-            "c": 65.925,
-            "t": 1781788500
-          },
-          {
-            "c": 66.015,
-            "t": 1781788560
-          },
-          {
-            "c": 66.05,
-            "t": 1781788620
-          },
-          {
-            "c": 66.07,
-            "t": 1781788680
-          },
-          {
-            "c": 66.045,
-            "t": 1781788740
-          },
-          {
-            "c": 66.025,
-            "t": 1781788800
-          },
-          {
-            "c": 66.035,
-            "t": 1781788860
-          },
-          {
-            "c": 66,
-            "t": 1781788920
-          },
-          {
-            "c": 66.025,
-            "t": 1781788980
-          },
-          {
-            "c": 65.92,
-            "t": 1781789040
-          },
-          {
-            "c": 65.905,
-            "t": 1781789100
-          },
-          {
-            "c": 65.88,
-            "t": 1781789160
-          },
-          {
-            "c": 65.865,
-            "t": 1781789220
-          },
-          {
-            "c": 65.865,
-            "t": 1781789280
-          },
-          {
-            "c": 65.93,
-            "t": 1781789340
-          },
-          {
-            "c": 66.03,
-            "t": 1781789400
-          },
-          {
-            "c": 66.08,
-            "t": 1781789460
-          },
-          {
-            "c": 66.04,
-            "t": 1781789520
-          },
-          {
-            "c": 66.055,
-            "t": 1781789580
-          },
-          {
-            "c": 66.05,
-            "t": 1781789640
-          },
-          {
-            "c": 66.035,
-            "t": 1781789700
-          },
-          {
-            "c": 65.995,
-            "t": 1781789760
-          },
-          {
-            "c": 66.005,
-            "t": 1781789820
-          },
-          {
-            "c": null,
-            "t": 1781789880
-          },
-          {
-            "c": 65.97,
-            "t": 1781789940
-          },
-          {
-            "c": 65.96,
-            "t": 1781790000
-          },
-          {
-            "c": 65.985,
-            "t": 1781790060
-          },
-          {
-            "c": 66.005,
-            "t": 1781790120
-          },
-          {
-            "c": 65.98,
-            "t": 1781790180
-          },
-          {
-            "c": 66.015,
-            "t": 1781790240
-          },
-          {
-            "c": 66.035,
-            "t": 1781790300
-          },
-          {
-            "c": 66.01,
-            "t": 1781790360
-          },
-          {
-            "c": 66.035,
-            "t": 1781790420
-          },
-          {
-            "c": 66.055,
-            "t": 1781790480
-          },
-          {
-            "c": 66.025,
-            "t": 1781790540
-          },
-          {
-            "c": 66.005,
-            "t": 1781790600
-          },
-          {
-            "c": 66.005,
-            "t": 1781790660
-          },
-          {
-            "c": 66.065,
-            "t": 1781790720
-          },
-          {
-            "c": 66.04,
-            "t": 1781790780
-          },
-          {
-            "c": 65.995,
-            "t": 1781790840
-          },
-          {
-            "c": 65.965,
-            "t": 1781790900
-          },
-          {
-            "c": 65.935,
-            "t": 1781790960
-          },
-          {
-            "c": 65.905,
-            "t": 1781791020
-          },
-          {
-            "c": 65.94,
-            "t": 1781791080
-          },
-          {
-            "c": 65.935,
-            "t": 1781791140
-          },
-          {
-            "c": 65.895,
-            "t": 1781791200
-          },
-          {
-            "c": 65.885,
-            "t": 1781791260
-          },
-          {
-            "c": 65.92,
-            "t": 1781791320
-          },
-          {
-            "c": 65.82,
-            "t": 1781791380
-          },
-          {
-            "c": 65.845,
-            "t": 1781791440
-          },
-          {
-            "c": 65.91,
-            "t": 1781791500
-          },
-          {
-            "c": 65.855,
-            "t": 1781791560
-          },
-          {
-            "c": 65.845,
-            "t": 1781791620
-          },
-          {
-            "c": 65.88,
-            "t": 1781791680
-          },
-          {
-            "c": 65.845,
-            "t": 1781791740
-          },
-          {
-            "c": 65.83,
-            "t": 1781791800
-          },
-          {
-            "c": 65.835,
-            "t": 1781791860
-          },
-          {
-            "c": 65.815,
-            "t": 1781791920
-          },
-          {
-            "c": 65.775,
-            "t": 1781791980
-          },
-          {
-            "c": 65.79,
-            "t": 1781792040
-          },
-          {
-            "c": 65.745,
-            "t": 1781792100
-          },
-          {
-            "c": 65.74,
-            "t": 1781792160
-          },
-          {
-            "c": 65.785,
-            "t": 1781792220
-          },
-          {
-            "c": 65.815,
-            "t": 1781792280
-          },
-          {
-            "c": 65.815,
-            "t": 1781792340
-          },
-          {
-            "c": 65.775,
-            "t": 1781792400
-          },
-          {
-            "c": 65.815,
-            "t": 1781792460
-          },
-          {
-            "c": 65.88,
-            "t": 1781792520
-          },
-          {
-            "c": 65.835,
-            "t": 1781792580
-          },
-          {
-            "c": 65.785,
-            "t": 1781792640
-          },
-          {
-            "c": 65.765,
-            "t": 1781792700
-          },
-          {
-            "c": 65.755,
-            "t": 1781792760
-          },
-          {
-            "c": 65.79,
-            "t": 1781792820
-          },
-          {
-            "c": 65.77,
-            "t": 1781792880
-          },
-          {
-            "c": 65.76,
-            "t": 1781792940
-          },
-          {
-            "c": 65.73,
-            "t": 1781793000
-          },
-          {
-            "c": 65.725,
-            "t": 1781793060
-          },
-          {
-            "c": 65.645,
-            "t": 1781793120
-          },
-          {
-            "c": 65.61,
-            "t": 1781793180
-          },
-          {
-            "c": 65.59,
-            "t": 1781793240
-          },
-          {
-            "c": 65.565,
-            "t": 1781793300
-          },
-          {
-            "c": 65.525,
-            "t": 1781793360
-          },
-          {
-            "c": 65.485,
-            "t": 1781793420
-          },
-          {
-            "c": 65.495,
-            "t": 1781793480
-          },
-          {
-            "c": 65.5,
-            "t": 1781793540
-          },
-          {
-            "c": 65.515,
-            "t": 1781793600
-          },
-          {
-            "c": 65.56,
-            "t": 1781793660
-          },
-          {
-            "c": 65.585,
-            "t": 1781793720
-          },
-          {
-            "c": 65.545,
-            "t": 1781793780
-          },
-          {
-            "c": 65.55,
-            "t": 1781793840
-          },
-          {
-            "c": 65.58,
-            "t": 1781793900
-          },
-          {
-            "c": 65.575,
-            "t": 1781793960
-          },
-          {
-            "c": 65.57,
-            "t": 1781794020
-          },
-          {
-            "c": 65.615,
-            "t": 1781794080
-          },
-          {
-            "c": 65.645,
-            "t": 1781794140
-          },
-          {
-            "c": 65.585,
-            "t": 1781794200
-          },
-          {
-            "c": 65.585,
-            "t": 1781794260
-          },
-          {
-            "c": 65.685,
-            "t": 1781794320
-          },
-          {
-            "c": null,
-            "t": 1781794380
-          },
-          {
-            "c": 65.67,
-            "t": 1781794440
-          },
-          {
-            "c": 65.67,
-            "t": 1781794500
-          },
-          {
-            "c": 65.625,
-            "t": 1781794560
-          },
-          {
-            "c": 65.57,
-            "t": 1781794620
-          },
-          {
-            "c": 65.595,
-            "t": 1781794680
-          },
-          {
-            "c": 65.6,
-            "t": 1781794740
-          },
-          {
-            "c": 65.595,
-            "t": 1781794800
-          },
-          {
-            "c": 65.54,
-            "t": 1781794860
-          },
-          {
-            "c": 65.51,
-            "t": 1781794920
-          },
-          {
-            "c": 65.48,
-            "t": 1781794980
-          },
-          {
-            "c": 65.5,
-            "t": 1781795040
-          },
-          {
-            "c": 65.48,
-            "t": 1781795100
-          },
-          {
-            "c": 65.465,
-            "t": 1781795160
-          },
-          {
-            "c": 65.48,
-            "t": 1781795220
-          },
-          {
-            "c": 65.485,
-            "t": 1781795280
-          },
-          {
-            "c": 65.48,
-            "t": 1781795340
-          },
-          {
-            "c": 65.425,
-            "t": 1781795400
-          },
-          {
-            "c": 65.39,
-            "t": 1781795460
-          },
-          {
-            "c": 65.385,
-            "t": 1781795520
-          },
-          {
-            "c": 65.405,
-            "t": 1781795580
-          },
-          {
-            "c": 65.425,
-            "t": 1781795640
-          },
-          {
-            "c": 65.475,
-            "t": 1781795700
-          },
-          {
-            "c": 65.435,
-            "t": 1781795760
-          },
-          {
-            "c": 65.52,
-            "t": 1781795820
-          },
-          {
-            "c": 65.545,
-            "t": 1781795880
-          },
-          {
-            "c": 65.66,
-            "t": 1781795940
-          },
-          {
-            "c": 65.645,
-            "t": 1781796000
-          },
-          {
-            "c": 65.585,
-            "t": 1781796060
-          },
-          {
-            "c": 65.65,
-            "t": 1781796120
-          },
-          {
-            "c": 65.555,
-            "t": 1781796180
-          },
-          {
-            "c": 65.525,
-            "t": 1781796240
-          },
-          {
-            "c": 65.55,
-            "t": 1781796300
-          },
-          {
-            "c": 65.595,
-            "t": 1781796360
-          },
-          {
-            "c": 65.54,
-            "t": 1781796420
-          },
-          {
-            "c": 65.58,
-            "t": 1781796480
-          },
-          {
-            "c": 65.545,
-            "t": 1781796540
-          },
-          {
-            "c": 65.44,
-            "t": 1781796600
-          },
-          {
-            "c": 65.43,
-            "t": 1781796660
-          },
-          {
-            "c": 65.445,
-            "t": 1781796720
-          },
-          {
-            "c": 65.5,
-            "t": 1781796780
-          },
-          {
-            "c": 65.555,
-            "t": 1781796840
-          },
-          {
-            "c": 65.68,
-            "t": 1781796900
-          },
-          {
-            "c": 65.675,
-            "t": 1781796960
-          },
-          {
-            "c": 65.705,
-            "t": 1781797020
-          },
-          {
-            "c": 65.705,
-            "t": 1781797080
-          },
-          {
-            "c": 65.765,
-            "t": 1781797140
-          },
-          {
-            "c": 65.735,
-            "t": 1781797200
-          },
-          {
-            "c": 65.74,
-            "t": 1781797260
-          },
-          {
-            "c": 65.76,
-            "t": 1781797320
-          },
-          {
-            "c": 65.735,
-            "t": 1781797380
-          },
-          {
-            "c": 65.77,
-            "t": 1781797440
-          },
-          {
-            "c": 65.83,
-            "t": 1781797500
-          },
-          {
-            "c": 65.885,
-            "t": 1781797560
-          },
-          {
-            "c": 65.915,
-            "t": 1781797620
-          },
-          {
-            "c": 65.865,
-            "t": 1781797680
-          },
-          {
-            "c": 65.845,
-            "t": 1781797740
-          },
-          {
-            "c": 66.015,
-            "t": 1781797800
-          },
-          {
-            "c": 66.18,
-            "t": 1781797860
-          },
-          {
-            "c": 66.085,
-            "t": 1781797920
-          },
-          {
-            "c": 66.11,
-            "t": 1781797980
-          },
-          {
-            "c": 66.11,
-            "t": 1781798040
-          },
-          {
-            "c": 66.28,
-            "t": 1781798100
-          },
-          {
-            "c": 66.275,
-            "t": 1781798160
-          },
-          {
-            "c": 66.33,
-            "t": 1781798220
-          },
-          {
-            "c": 66.29,
-            "t": 1781798280
-          },
-          {
-            "c": 66.185,
-            "t": 1781798340
-          },
-          {
-            "c": 66.2596,
-            "t": 1781798400
+      "date": "Jul 15, 2026",
+      "count": 43,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
           }
-        ]
-      },
-      "description": "The Direxion Daily AI and Big Data Bull 2X ETF (AIBU) is an exchange-traded fund that is based on the Solactive US AI & Big Data index. The fund tracks 2x the daily price movements of a concentrated index of US companies involved in artificial intelligence (AI) applications and big data. Stocks are weighted based on their relevance to the business fields. AIBU was launched on May 15, 2024 and is issued by Direxion.",
-      "infoTable": [
-        [
-          "Asset Class",
-          "Equity"
         ],
-        [
-          "Category",
-          "Trading--Leveraged Equity"
-        ],
-        [
-          "Region",
-          "North America"
-        ],
-        [
-          "Stock Exchange",
-          "NYSEARCA"
-        ],
-        [
-          "Ticker Symbol",
-          "AIBU"
-        ],
-        [
-          "Provider",
-          "Direxion"
-        ],
-        [
-          "Index Tracked",
-          "Solactive US AI & Big Data Index"
-        ]
-      ],
-      "etf_website": "https://www.direxion.com/product/daily-ai-big-data-bull-bear-2x-etfs",
-      "provider_page": "direxion",
-      "holdingsTable": {
-        "count": 43,
-        "updated": "Jun 16, 2026",
-        "top10": 62.74,
-        "holdings": [
-          {
-            "n": "Dreyfus Govt Cash Man Ins",
-            "as": "14.05%",
-            "sh": "4,348,907"
-          },
-          {
-            "n": "Goldman Finl Sq Trsry Inst 506",
-            "as": "6.35%",
-            "sh": "1,966,716"
-          },
-          {
-            "n": "Apple Inc.",
-            "s": "$AAPL",
-            "as": "5.65%",
-            "sh": "5,841"
-          },
-          {
-            "n": "Solactive Us Ai & Big Data Index",
-            "as": "5.59%",
-            "sh": "2,392"
-          },
-          {
-            "n": "Alphabet Inc.",
-            "s": "$GOOGL",
-            "as": "5.52%",
-            "sh": "4,579"
-          },
-          {
-            "n": "Advanced Micro Devices, Inc.",
-            "s": "$AMD",
-            "as": "5.44%",
-            "sh": "3,317"
-          },
-          {
-            "n": "NVIDIA Corporation",
-            "s": "$NVDA",
-            "as": "5.20%",
-            "sh": "7,756"
-          },
-          {
-            "n": "Intel Corporation",
-            "s": "$INTC",
-            "as": "5.10%",
-            "sh": "13,476"
-          },
-          {
-            "n": "Snowflake Inc.",
-            "s": "$SNOW",
-            "as": "4.95%",
-            "sh": "6,430"
-          },
-          {
-            "n": "Amazon.com, Inc.",
-            "s": "$AMZN",
-            "as": "4.90%",
-            "sh": "6,161"
-          }
-        ]
-      },
-      "dividendTable": [
-        {
-          "dt": "2025-12-10",
-          "amt": 1.06213,
-          "pay": "2025-12-17"
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Jul 15, 2026",
+        "lastChecked": 1784751504542,
+        "topic": "holdings",
+        "ticker": "AIBU",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
         },
-        {
-          "dt": "2025-06-24",
-          "amt": 0.0428,
-          "pay": "2025-07-01"
-        },
-        {
-          "dt": "2025-03-25",
-          "amt": 0.01763,
-          "pay": "2025-04-01"
-        },
-        {
-          "dt": "2024-12-12",
-          "amt": 0.43105,
-          "pay": "2024-12-19"
-        },
-        {
-          "dt": "2024-09-24",
-          "amt": 0.02324,
-          "pay": "2024-10-01"
-        },
-        {
-          "dt": "2024-06-25",
-          "amt": 0.01572,
-          "pay": "2024-07-02"
-        }
-      ],
-      "news": {
-        "exp": "1781893632293",
-        "data": []
-      },
-      "config": {
-        "no1d": false
-      },
-      "changes": {
-        "price1w": 61.998,
-        "price1m": 60.681,
-        "priceYTD": 49.373,
-        "price1y": 37.662,
-        "priceMAX": 25.947
-      },
-      "performance": {
-        "tr1m": 9.194,
-        "trYTD": 34.202,
-        "tr1y": 79.568,
-        "cagrMAX": 60.544
+        "extraSummaryLinks": null
       }
     },
     "quote": {
-      "p": 66.2596,
-      "pd": 66.26,
-      "c": 3.01,
-      "cp": 4.76,
-      "cl": 63.25,
-      "cdr": 1,
-      "o": 65.28,
-      "h": 66.26,
-      "l": 64.27,
-      "v": 14491,
-      "ts": 1781812800000,
-      "u": "Jun 18, 2026, 4:00 PM EDT",
-      "td": "2026-06-18",
-      "h52": 78.96,
-      "l52": 32.91,
+      "c": -0.48,
+      "e": false,
+      "h": 59.26,
+      "l": 58.56,
+      "o": 58.56,
+      "p": 58.719,
+      "u": "Jul 22, 2026, 4:00 PM EDT",
+      "v": 2566,
+      "cl": 59.2,
+      "cp": -0.81,
+      "ec": 0,
+      "es": "After-hours",
       "ex": "NYSEARCA",
       "ms": "closed",
-      "fms": "closed",
-      "e": false,
-      "ep": null,
-      "epd": 0,
-      "ec": 0,
+      "pd": 58.72,
+      "td": "2026-07-22",
+      "ts": 1784750400000,
+      "cdr": -1,
       "ecp": 0,
-      "eu": null,
-      "es": "After-hours",
-      "ets": 1781827200061.9373,
-      "etd": null,
-      "epv": null,
+      "epd": 0,
+      "ets": 1784764800062.6543,
+      "exp": 1784794500000,
+      "fms": "closed",
+      "h52": 78.96,
+      "l52": 32.91,
+      "uid": "AIBU",
       "days": 0,
-      "exp": 1782116100000,
-      "symbol": "AIBU",
-      "uid": "AIBU"
+      "symbol": "AIBU"
     },
     "history": [
+      {
+        "t": "2026-07-01",
+        "o": 62.03,
+        "h": 64.2,
+        "l": 53.99,
+        "c": 58.719,
+        "a": 58.719,
+        "v": 111770,
+        "ch": -7.44
+      },
       {
         "t": "2026-06-01",
         "o": 73,
         "h": 78.96,
-        "l": 57.751,
-        "c": 66.26,
-        "a": 66.2596,
-        "v": 320792,
-        "ch": -8.09
+        "l": 56,
+        "c": 63.44,
+        "a": 63.44,
+        "v": 391530,
+        "ch": -12
       },
       {
         "t": "2026-05-01",
@@ -6762,20 +6904,230 @@
         "a": 45.610908,
         "v": 659463,
         "ch": -1.32
-      },
-      {
-        "t": "2025-07-01",
-        "o": 41.452,
-        "h": 48.94,
-        "l": 40,
-        "c": 47.12,
-        "a": 46.219054,
-        "v": 637195,
-        "ch": 12.35
       }
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-07-22",
+          "o": 58.56,
+          "h": 59.26,
+          "l": 58.56,
+          "c": 58.719,
+          "a": 58.719,
+          "v": 2536,
+          "ch": -0.81
+        },
+        {
+          "t": "2026-07-21",
+          "o": 58.67,
+          "h": 59.21,
+          "l": 58.07,
+          "c": 59.2,
+          "a": 59.2,
+          "v": 6824,
+          "ch": 4.04
+        },
+        {
+          "t": "2026-07-20",
+          "o": 57.42,
+          "h": 58.2,
+          "l": 56.899,
+          "c": 56.899,
+          "a": 56.8985,
+          "v": 4645,
+          "ch": 0.97
+        },
+        {
+          "t": "2026-07-17",
+          "o": 55.7,
+          "h": 57.215,
+          "l": 53.99,
+          "c": 56.35,
+          "a": 56.35,
+          "v": 13000,
+          "ch": -2.98
+        },
+        {
+          "t": "2026-07-16",
+          "o": 60.38,
+          "h": 60.38,
+          "l": 57.67,
+          "c": 58.08,
+          "a": 58.08,
+          "v": 11746,
+          "ch": -5.1
+        },
+        {
+          "t": "2026-07-15",
+          "o": 62.51,
+          "h": 62.51,
+          "l": 59.52,
+          "c": 61.2,
+          "a": 61.2,
+          "v": 22248,
+          "ch": -0.27
+        },
+        {
+          "t": "2026-07-14",
+          "o": 61.27,
+          "h": 61.795,
+          "l": 60.49,
+          "c": 61.369,
+          "a": 61.3686,
+          "v": 2855,
+          "ch": 0.54
+        },
+        {
+          "t": "2026-07-13",
+          "o": 62.36,
+          "h": 62.77,
+          "l": 60.78,
+          "c": 61.04,
+          "a": 61.04,
+          "v": 5586,
+          "ch": -3.9
+        },
+        {
+          "t": "2026-07-10",
+          "o": 63.6,
+          "h": 64.2,
+          "l": 62.7,
+          "c": 63.516,
+          "a": 63.5163,
+          "v": 4464,
+          "ch": -0.2
+        },
+        {
+          "t": "2026-07-09",
+          "o": 61.78,
+          "h": 63.715,
+          "l": 61.78,
+          "c": 63.643,
+          "a": 63.643,
+          "v": 3150,
+          "ch": 3.52
+        },
+        {
+          "t": "2026-07-08",
+          "o": 60.05,
+          "h": 61.49,
+          "l": 59.22,
+          "c": 61.48,
+          "a": 61.48,
+          "v": 5338,
+          "ch": 1.01
+        },
+        {
+          "t": "2026-07-07",
+          "o": 61.35,
+          "h": 61.795,
+          "l": 59.82,
+          "c": 60.863,
+          "a": 60.863,
+          "v": 6000,
+          "ch": -2.88
+        },
+        {
+          "t": "2026-07-06",
+          "o": 60.61,
+          "h": 63.517,
+          "l": 60.6,
+          "c": 62.67,
+          "a": 62.67,
+          "v": 8522,
+          "ch": 4.73
+        },
+        {
+          "t": "2026-07-02",
+          "o": 61.42,
+          "h": 63.05,
+          "l": 59.05,
+          "c": 59.84,
+          "a": 59.84,
+          "v": 8401,
+          "ch": -3.28
+        },
+        {
+          "t": "2026-07-01",
+          "o": 62.03,
+          "h": 63.29,
+          "l": 61.87,
+          "c": 61.87,
+          "a": 61.87,
+          "v": 6455,
+          "ch": -2.47
+        },
+        {
+          "t": "2026-06-30",
+          "o": 60.87,
+          "h": 63.5,
+          "l": 60.68,
+          "c": 63.44,
+          "a": 63.44,
+          "v": 9831,
+          "ch": 4.7
+        },
+        {
+          "t": "2026-06-29",
+          "o": 59.51,
+          "h": 60.6,
+          "l": 57.75,
+          "c": 60.59,
+          "a": 60.59,
+          "v": 9440,
+          "ch": 3.48
+        },
+        {
+          "t": "2026-06-26",
+          "o": 56,
+          "h": 58.63,
+          "l": 56,
+          "c": 58.55,
+          "a": 58.55,
+          "v": 5468,
+          "ch": 0.26
+        },
+        {
+          "t": "2026-06-25",
+          "o": 61.77,
+          "h": 61.77,
+          "l": 57.09,
+          "c": 58.4,
+          "a": 58.4,
+          "v": 15506,
+          "ch": -3.33
+        },
+        {
+          "t": "2026-06-24",
+          "o": 61.61,
+          "h": 62.685,
+          "l": 59.37,
+          "c": 60.41,
+          "a": 60.41,
+          "v": 10169,
+          "ch": -1.94
+        },
+        {
+          "t": "2026-06-23",
+          "o": 61.01,
+          "h": 63.25,
+          "l": 61.01,
+          "c": 61.606,
+          "a": 61.606,
+          "v": 11840,
+          "ch": -4.43
+        },
+        {
+          "t": "2026-06-22",
+          "o": 66.72,
+          "h": 67.115,
+          "l": 63.76,
+          "c": 64.463,
+          "a": 64.4627,
+          "v": 8484,
+          "ch": -2.71
+        },
         {
           "t": "2026-06-18",
           "o": 65.28,
@@ -9075,230 +9427,60 @@
           "a": 43.158709,
           "v": 38729,
           "ch": -2.14
-        },
-        {
-          "t": "2025-07-21",
-          "o": 45,
-          "h": 45.71,
-          "l": 44.96,
-          "c": 44.96,
-          "a": 44.100452,
-          "v": 58079,
-          "ch": 0.38
-        },
-        {
-          "t": "2025-07-18",
-          "o": 45.17,
-          "h": 45.17,
-          "l": 44.395,
-          "c": 44.79,
-          "a": 43.933604,
-          "v": 10792,
-          "ch": 0.13
-        },
-        {
-          "t": "2025-07-17",
-          "o": 44.03,
-          "h": 44.84,
-          "l": 43.98,
-          "c": 44.73,
-          "a": 43.874751,
-          "v": 22841,
-          "ch": 1.93
-        },
-        {
-          "t": "2025-07-16",
-          "o": 43.285,
-          "h": 43.883,
-          "l": 42.791,
-          "c": 43.881,
-          "a": 43.042377,
-          "v": 9296,
-          "ch": 2.05
-        },
-        {
-          "t": "2025-07-15",
-          "o": 43.81,
-          "h": 44.34,
-          "l": 43,
-          "c": 43,
-          "a": 42.177829,
-          "v": 33963,
-          "ch": -0.28
-        },
-        {
-          "t": "2025-07-14",
-          "o": 42.06,
-          "h": 43.12,
-          "l": 42.02,
-          "c": 43.12,
-          "a": 42.295535,
-          "v": 17269,
-          "ch": 1.75
-        },
-        {
-          "t": "2025-07-11",
-          "o": 42.14,
-          "h": 42.861,
-          "l": 41.38,
-          "c": 42.38,
-          "a": 41.569684,
-          "v": 34919,
-          "ch": -1.05
-        },
-        {
-          "t": "2025-07-10",
-          "o": 43.43,
-          "h": 43.43,
-          "l": 42.33,
-          "c": 42.829,
-          "a": 42.010001,
-          "v": 16278,
-          "ch": -0.71
-        },
-        {
-          "t": "2025-07-09",
-          "o": 42.811,
-          "h": 43.137,
-          "l": 42.51,
-          "c": 43.137,
-          "a": 42.312014,
-          "v": 14491,
-          "ch": 2
-        },
-        {
-          "t": "2025-07-08",
-          "o": 42.39,
-          "h": 42.5,
-          "l": 42.2,
-          "c": 42.29,
-          "a": 41.481405,
-          "v": 9134,
-          "ch": 1.05
-        },
-        {
-          "t": "2025-07-07",
-          "o": 42.22,
-          "h": 42.22,
-          "l": 41.46,
-          "c": 41.849,
-          "a": 41.048542,
-          "v": 11787,
-          "ch": -1.09
-        },
-        {
-          "t": "2025-07-03",
-          "o": 41.91,
-          "h": 42.575,
-          "l": 41.87,
-          "c": 42.31,
-          "a": 41.501022,
-          "v": 16070.000000000002,
-          "ch": 2.67
-        },
-        {
-          "t": "2025-07-02",
-          "o": 40.34,
-          "h": 41.211,
-          "l": 40.15,
-          "c": 41.211,
-          "a": 40.423231,
-          "v": 3417,
-          "ch": 1.63
-        },
-        {
-          "t": "2025-07-01",
-          "o": 41.452,
-          "h": 41.48,
-          "l": 40,
-          "c": 40.549,
-          "a": 39.773889,
-          "v": 13821,
-          "ch": -3.32
-        },
-        {
-          "t": "2025-06-30",
-          "o": 42.27,
-          "h": 42.42,
-          "l": 41.741,
-          "c": 41.94,
-          "a": 41.138097,
-          "v": 30783,
-          "ch": 1.67
-        },
-        {
-          "t": "2025-06-27",
-          "o": 41.75,
-          "h": 41.87,
-          "l": 40.661,
-          "c": 41.25,
-          "a": 40.46129,
-          "v": 22346,
-          "ch": -0.15
-        },
-        {
-          "t": "2025-06-26",
-          "o": 40.87,
-          "h": 41.38,
-          "l": 40.224,
-          "c": 41.31,
-          "a": 40.520142,
-          "v": 15813,
-          "ch": 3.17
-        },
-        {
-          "t": "2025-06-25",
-          "o": 40.17,
-          "h": 40.557,
-          "l": 39.92,
-          "c": 40.04,
-          "a": 39.274425,
-          "v": 16905,
-          "ch": 1.21
-        },
-        {
-          "t": "2025-06-24",
-          "o": 38.65,
-          "h": 39.72,
-          "l": 38.65,
-          "c": 39.56,
-          "a": 38.803603,
-          "v": 46690,
-          "ch": 5.44
-        },
-        {
-          "t": "2025-06-23",
-          "o": 37.02,
-          "h": 37.68,
-          "l": 36.46,
-          "c": 37.56,
-          "a": 36.799862,
-          "v": 18202,
-          "ch": 1.49
-        },
-        {
-          "t": "2025-06-20",
-          "o": 38.14,
-          "h": 38.449,
-          "l": 36.83,
-          "c": 37.009,
-          "a": 36.260013,
-          "v": 48527,
-          "ch": -1.94
-        },
-        {
-          "t": "2025-06-18",
-          "o": 37.78,
-          "h": 38.28,
-          "l": 37.55,
-          "c": 37.74,
-          "a": 36.976219,
-          "v": 13963,
-          "ch": 0.21
         }
       ],
       "weekly_1y": [
         {
+          "t": "2026-07-20",
+          "o": 57.42,
+          "h": 59.26,
+          "l": 56.899,
+          "c": 58.719,
+          "a": 58.719,
+          "v": 14005,
+          "ch": 4.2
+        },
+        {
+          "t": "2026-07-13",
+          "o": 62.36,
+          "h": 62.77,
+          "l": 53.99,
+          "c": 56.35,
+          "a": 56.35,
+          "v": 55435,
+          "ch": -11.28
+        },
+        {
+          "t": "2026-07-06",
+          "o": 60.61,
+          "h": 64.2,
+          "l": 59.22,
+          "c": 63.516,
+          "a": 63.5163,
+          "v": 27474,
+          "ch": 6.14
+        },
+        {
+          "t": "2026-06-29",
+          "o": 59.51,
+          "h": 63.5,
+          "l": 57.75,
+          "c": 59.84,
+          "a": 59.84,
+          "v": 34127,
+          "ch": 2.2
+        },
+        {
+          "t": "2026-06-22",
+          "o": 66.72,
+          "h": 67.115,
+          "l": 56,
+          "c": 58.55,
+          "a": 58.55,
+          "v": 51467,
+          "ch": -11.64
+        },
+        {
           "t": "2026-06-15",
           "o": 68.46,
           "h": 68.46,
@@ -9767,68 +9949,28 @@
           "a": 42.530946,
           "v": 326555,
           "ch": -4.91
-        },
-        {
-          "t": "2025-07-21",
-          "o": 45,
-          "h": 46.4,
-          "l": 42.9,
-          "c": 45.599,
-          "a": 44.727332,
-          "v": 186843,
-          "ch": 1.81
-        },
-        {
-          "t": "2025-07-14",
-          "o": 42.06,
-          "h": 45.17,
-          "l": 42.02,
-          "c": 44.79,
-          "a": 43.933604,
-          "v": 94161,
-          "ch": 5.69
-        },
-        {
-          "t": "2025-07-07",
-          "o": 42.22,
-          "h": 43.43,
-          "l": 41.38,
-          "c": 42.38,
-          "a": 41.569684,
-          "v": 86609,
-          "ch": 0.17
-        },
-        {
-          "t": "2025-06-30",
-          "o": 42.27,
-          "h": 42.575,
-          "l": 40,
-          "c": 42.31,
-          "a": 41.501022,
-          "v": 64091,
-          "ch": 2.57
-        },
-        {
-          "t": "2025-06-23",
-          "o": 37.02,
-          "h": 41.87,
-          "l": 36.46,
-          "c": 41.25,
-          "a": 40.46129,
-          "v": 119956,
-          "ch": 11.59
         }
       ],
       "monthly_1y": [
         {
+          "t": "2026-07-01",
+          "o": 62.03,
+          "h": 64.2,
+          "l": 53.99,
+          "c": 58.719,
+          "a": 58.719,
+          "v": 111770,
+          "ch": -7.44
+        },
+        {
           "t": "2026-06-01",
           "o": 73,
           "h": 78.96,
-          "l": 57.751,
-          "c": 66.26,
-          "a": 66.2596,
-          "v": 320792,
-          "ch": -8.09
+          "l": 56,
+          "c": 63.44,
+          "a": 63.44,
+          "v": 391530,
+          "ch": -12
         },
         {
           "t": "2026-05-01",
@@ -9929,19 +10071,59 @@
           "a": 45.610908,
           "v": 659463,
           "ch": -1.32
-        },
-        {
-          "t": "2025-07-01",
-          "o": 41.452,
-          "h": 48.94,
-          "l": 40,
-          "c": 47.12,
-          "a": 46.219054,
-          "v": 637195,
-          "ch": 12.35
         }
       ],
       "weekly_3y": [
+        {
+          "t": "2026-07-20",
+          "o": 57.42,
+          "h": 59.26,
+          "l": 56.899,
+          "c": 58.719,
+          "a": 58.719,
+          "v": 14005,
+          "ch": 4.2
+        },
+        {
+          "t": "2026-07-13",
+          "o": 62.36,
+          "h": 62.77,
+          "l": 53.99,
+          "c": 56.35,
+          "a": 56.35,
+          "v": 55435,
+          "ch": -11.28
+        },
+        {
+          "t": "2026-07-06",
+          "o": 60.61,
+          "h": 64.2,
+          "l": 59.22,
+          "c": 63.516,
+          "a": 63.5163,
+          "v": 27474,
+          "ch": 6.14
+        },
+        {
+          "t": "2026-06-29",
+          "o": 59.51,
+          "h": 63.5,
+          "l": 57.75,
+          "c": 59.84,
+          "a": 59.84,
+          "v": 34127,
+          "ch": 2.2
+        },
+        {
+          "t": "2026-06-22",
+          "o": 66.72,
+          "h": 67.115,
+          "l": 56,
+          "c": 58.55,
+          "a": 58.55,
+          "v": 51467,
+          "ch": -11.64
+        },
         {
           "t": "2026-06-15",
           "o": 68.46,
@@ -10411,68 +10593,28 @@
           "a": 42.530946,
           "v": 326555,
           "ch": -4.91
-        },
-        {
-          "t": "2025-07-21",
-          "o": 45,
-          "h": 46.4,
-          "l": 42.9,
-          "c": 45.599,
-          "a": 44.727332,
-          "v": 186843,
-          "ch": 1.81
-        },
-        {
-          "t": "2025-07-14",
-          "o": 42.06,
-          "h": 45.17,
-          "l": 42.02,
-          "c": 44.79,
-          "a": 43.933604,
-          "v": 94161,
-          "ch": 5.69
-        },
-        {
-          "t": "2025-07-07",
-          "o": 42.22,
-          "h": 43.43,
-          "l": 41.38,
-          "c": 42.38,
-          "a": 41.569684,
-          "v": 86609,
-          "ch": 0.17
-        },
-        {
-          "t": "2025-06-30",
-          "o": 42.27,
-          "h": 42.575,
-          "l": 40,
-          "c": 42.31,
-          "a": 41.501022,
-          "v": 64091,
-          "ch": 2.57
-        },
-        {
-          "t": "2025-06-23",
-          "o": 37.02,
-          "h": 41.87,
-          "l": 36.46,
-          "c": 41.25,
-          "a": 40.46129,
-          "v": 119956,
-          "ch": 11.59
         }
       ],
       "monthly_3y": [
         {
+          "t": "2026-07-01",
+          "o": 62.03,
+          "h": 64.2,
+          "l": 53.99,
+          "c": 58.719,
+          "a": 58.719,
+          "v": 111770,
+          "ch": -7.44
+        },
+        {
           "t": "2026-06-01",
           "o": 73,
           "h": 78.96,
-          "l": 57.751,
-          "c": 66.26,
-          "a": 66.2596,
-          "v": 320792,
-          "ch": -8.09
+          "l": 56,
+          "c": 63.44,
+          "a": 63.44,
+          "v": 391530,
+          "ch": -12
         },
         {
           "t": "2026-05-01",
@@ -10573,28 +10715,28 @@
           "a": 45.610908,
           "v": 659463,
           "ch": -1.32
-        },
-        {
-          "t": "2025-07-01",
-          "o": 41.452,
-          "h": 48.94,
-          "l": 40,
-          "c": 47.12,
-          "a": 46.219054,
-          "v": 637195,
-          "ch": 12.35
         }
       ],
       "monthly_5y": [
         {
+          "t": "2026-07-01",
+          "o": 62.03,
+          "h": 64.2,
+          "l": 53.99,
+          "c": 58.719,
+          "a": 58.719,
+          "v": 111770,
+          "ch": -7.44
+        },
+        {
           "t": "2026-06-01",
           "o": 73,
           "h": 78.96,
-          "l": 57.751,
-          "c": 66.26,
-          "a": 66.2596,
-          "v": 320792,
-          "ch": -8.09
+          "l": 56,
+          "c": 63.44,
+          "a": 63.44,
+          "v": 391530,
+          "ch": -12
         },
         {
           "t": "2026-05-01",
