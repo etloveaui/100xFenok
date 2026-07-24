@@ -15,11 +15,29 @@ import {
   DEFILLAMA_PERSISTENCE_POLICY,
   boundDefillamaSeries,
   runDefillama,
+  stablecoinsSourceAsOf,
 } from "./fetch-defillama.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+assert.equal(
+  stablecoinsSourceAsOf({
+    series: [
+      { date: "2026-07-16" },
+      { date: "2026-07-18" },
+      { date: "2026-07-17" },
+    ],
+  }),
+  "2026-07-18",
+  "DefiLlama source_as_of must use the provider-max source date",
+);
+assert.equal(
+  stablecoinsSourceAsOf({ series: [{ date: "invalid" }, { date: null }] }),
+  null,
+  "DefiLlama source_as_of must stay honestly null without a valid provider date",
+);
 
 function response(statusCode, payload) {
   return { statusCode, body: typeof payload === "string" ? payload : JSON.stringify(payload) };

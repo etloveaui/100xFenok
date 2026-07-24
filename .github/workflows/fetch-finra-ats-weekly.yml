@@ -62,6 +62,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           FETCH_OUTCOME: ${{ steps.fetch_finra_ats.outcome }}
+          FETCH_PROMOTED: ${{ steps.fetch_finra_ats.outputs.promoted || 'false' }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
         shell: bash
         run: |
           set -euo pipefail
@@ -72,10 +74,14 @@ jobs:
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fetch-finra-ats-weekly.yml \
             --stage always_if_exists
-          if [[ "$FETCH_OUTCOME" == "success" ]]; then
+          if [[ "$FETCH_OUTCOME" == "success" && "$FETCH_PROMOTED" == "true" ]]; then
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-finra-ats-weekly.yml \
               --stage success_if_exists
+          elif [[ "$FETCH_OUTCOME" == "success" && "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            echo "proof dispatch, nothing to stage: stage_selected=0"
+          elif [[ "$FETCH_OUTCOME" == "success" ]]; then
+            echo "successful non-promoting run, nothing to stage: stage_selected=0"
           fi
           if git diff --staged --quiet; then exit "$RECOVERY_EXIT"; fi
           git commit -m "data: update FINRA ATS weekly summary"

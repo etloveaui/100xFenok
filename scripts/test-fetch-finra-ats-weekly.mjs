@@ -24,10 +24,22 @@ import {
   summaryTargets,
   validMarker,
   validRawWeekDocument,
+  writeGitHubOutputs,
 } from "./fetch-finra-ats-weekly.mjs";
 
 const OBSERVED_AT = "2026-07-24T01:00:00.000Z";
 const REFERENCE_DATE = new Date("2026-07-24T12:00:00.000Z");
+
+{
+  const outputPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "finra-ats-output-")), "github-output");
+  writeGitHubOutputs({ promoted: false }, outputPath);
+  writeGitHubOutputs({ promoted: true }, outputPath);
+  assert.equal(
+    fs.readFileSync(outputPath, "utf8"),
+    "promoted=false\npromoted=true\n",
+    "the workflow output must reflect actual promotion/file production",
+  );
+}
 
 function makeRoot(tag, signalRows = null) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), `finra-ats-weekly-${tag}-`));

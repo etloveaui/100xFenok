@@ -42,6 +42,12 @@ const RAW_SCHEMA = "fenok-finra-ats-weekly-raw/v1";
 const HISTORY_LIMIT = 26;
 const PAGE_LIMIT = 5000;
 
+export function writeGitHubOutputs(summary, outputPath = process.env.GITHUB_OUTPUT) {
+  if (!outputPath) return false;
+  fs.appendFileSync(outputPath, `promoted=${summary?.promoted === true}\n`);
+  return true;
+}
+
 class CollectorError extends Error {
   constructor(reason, message, { statusCode = null, systemic = false, rateLimited = false, auth = "ok" } = {}) {
     super(message);
@@ -838,6 +844,7 @@ export async function run({
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   run().then((summary) => {
+    writeGitHubOutputs(summary);
     // Keep CLI output body-free: token, raw rows, and provider response bodies
     // never cross stdout.
     console.log(JSON.stringify(summary));

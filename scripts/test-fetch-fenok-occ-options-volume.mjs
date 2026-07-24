@@ -23,6 +23,7 @@ import {
   mergeOutputSnapshot,
   OCC_AVAILABILITY_POLICY,
   OCC_PERSISTENCE_POLICY,
+  occOutputSourceAsOf,
   parseControlledFailureLanes,
   parseOccCsv,
   parseArgs,
@@ -33,6 +34,23 @@ import {
   summarizeDateAttempt,
   summarizeTickerAvailability,
 } from "./fetch-fenok-occ-options-volume.mjs";
+
+assert.equal(
+  occOutputSourceAsOf({
+    rows: [
+      { source_date: "20260716" },
+      { source_date: "20260718" },
+      { source_date: "20260717" },
+    ],
+  }),
+  "2026-07-18",
+  "OCC source_as_of must use the provider-max source date",
+);
+assert.equal(
+  occOutputSourceAsOf({ rows: [{ source_date: "" }, { source_date: "invalid" }] }),
+  null,
+  "OCC source_as_of must stay honestly null without a valid provider date",
+);
 
 assert.deepEqual(parseControlledFailureLanes("", "schedule"), []);
 assert.deepEqual(

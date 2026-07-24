@@ -193,7 +193,7 @@ function validPersistenceEnvelope(document) {
     && prunedDays === availableDays - retainedDays;
 }
 
-function stablecoinsSourceAsOf(document) {
+export function stablecoinsSourceAsOf(document) {
   const dates = Array.isArray(document?.series)
     ? document.series.map((row) => row?.date).filter(validSourceDate)
     : [];
