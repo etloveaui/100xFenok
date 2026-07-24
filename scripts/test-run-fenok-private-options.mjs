@@ -140,6 +140,84 @@ function tempRoot(tag) {
 }
 
 {
+  const root = tempRoot("controlled-failure");
+  try {
+    const baselineAt = "2026-07-17T01:10:00Z";
+    const baseline = runYahooPrivateOptions({
+      repoRoot: root,
+      observedAt: baselineAt,
+      runId: "controlled-baseline",
+      runAttempt: 1,
+      eventName: "schedule",
+      collect: () => makeSummary(baselineAt),
+    });
+    assert.equal(baseline.ok, true);
+    const canonical = path.join(root, "data/computed/fenok_yahoo_private_options_availability.json");
+    const baselineBytes = fs.readFileSync(canonical);
+
+    let collectCalls = 0;
+    const injected = runYahooPrivateOptions({
+      repoRoot: root,
+      observedAt: "2026-07-18T01:10:00Z",
+      runId: "controlled-failure-run",
+      runAttempt: 1,
+      eventName: "workflow_dispatch",
+      controlledFailureKey: "availability",
+      collect: () => {
+        collectCalls += 1;
+        throw new Error("controlled failure must not call the provider");
+      },
+    });
+    assert.equal(collectCalls, 0);
+    assert.equal(injected.ok, false);
+    assert.equal(injected.reason, "controlled_failure");
+    assert.equal(injected.degraded, true);
+    assert.equal(injected.corrupt, false);
+    assert.equal(injected.exitCode, 0);
+    assert.deepEqual(injected.retrySet, ["availability"]);
+    assert.deepEqual(fs.readFileSync(canonical), baselineBytes);
+    const failedState = JSON.parse(fs.readFileSync(path.join(root, "data/admin/yahoo_private_options/index.json"), "utf8"));
+    assert.equal(failedState.items.availability.resolution_state, "lkg_primary");
+    assert.equal(failedState.items.availability.latest_failure.run_id, "controlled-failure-run");
+    assert.equal(failedState.items.availability.latest_failure.reason, "controlled_failure");
+
+    const recoveredAt = "2026-07-19T01:10:00Z";
+    const recovered = runYahooPrivateOptions({
+      repoRoot: root,
+      observedAt: recoveredAt,
+      runId: "controlled-recovery",
+      runAttempt: 1,
+      eventName: "schedule",
+      collect: () => makeSummary(recoveredAt),
+    });
+    assert.equal(recovered.ok, true);
+    const recoveredState = JSON.parse(fs.readFileSync(path.join(root, "data/admin/yahoo_private_options/index.json"), "utf8"));
+    assert.equal(recoveredState.items.availability.retry, false);
+    assert.equal(recoveredState.items.availability.recovered_from_run_id, "controlled-failure-run");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
+{
+  const root = tempRoot("controlled-failure-rejected");
+  try {
+    assert.throws(() => runYahooPrivateOptions({
+      repoRoot: root,
+      eventName: "schedule",
+      controlledFailureKey: "availability",
+    }), /controlled failure requires workflow_dispatch/);
+    assert.throws(() => runYahooPrivateOptions({
+      repoRoot: root,
+      eventName: "workflow_dispatch",
+      controlledFailureKey: "availability,other",
+    }), /unknown controlled private options key/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
+{
   const root = tempRoot("no-lkg");
   try {
     const result = runYahooPrivateOptions({

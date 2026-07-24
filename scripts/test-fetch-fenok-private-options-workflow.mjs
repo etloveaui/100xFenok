@@ -11,6 +11,9 @@ const broadWorkflow = fs.readFileSync(new URL("../.github/workflows/fetch-yf-fin
 const broadCollector = fs.readFileSync(new URL("./fetch-yf-finance.py", import.meta.url), "utf8");
 
 assert.match(workflow, /cron: ['"]10 1 \* \* 2-6['"]/);
+assert.match(workflow, /workflow_dispatch:\s*\n\s+inputs:\s*\n\s+controlled_failure_key:/);
+assert.match(workflow, /description: ['"]Owner-approved failure proof: target exactly one options key \(availability\)['"]/);
+assert.match(workflow, /INPUT_CONTROLLED_FAILURE_KEY: \$\{\{ github\.event\.inputs\.controlled_failure_key \|\| '' \}\}/);
 assert.match(workflow, /\$RUNNER_TEMP\/yf-options/);
 assert.match(workflow, /run-fenok-private-options\.mjs/);
 assert.match(workflow, /DASH,UNH,PYPL,RDDT,COIN,MU,PLTR,NVDA/);

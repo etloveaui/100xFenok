@@ -1218,6 +1218,118 @@ module.main()
                 selected_universe=True,
             )
 
+    def test_etf_detail_controlled_failure_token_is_dispatch_only_single_and_explicit(self) -> None:
+        surfaces, universe, etf_details = self.fetcher.split_controlled_failure_targets(
+            "etf_detail:tqqq", "core"
+        )
+        self.assertEqual(surfaces, set())
+        self.assertFalse(universe)
+        self.assertEqual(etf_details, {"TQQQ"})
+
+        self.fetcher.validate_controlled_etf_detail_failure_scope(
+            {"TQQQ"},
+            {"TQQQ"},
+            event_name="workflow_dispatch",
+            controlled_stocks=set(),
+            controlled_surfaces=set(),
+            controlled_universe=False,
+        )
+        cases = [
+            ({"TQQQ"}, {"TQQQ"}, "schedule", set(), set(), False, "workflow_dispatch"),
+            ({"TQQQ", "SOXL"}, {"TQQQ", "SOXL"}, "workflow_dispatch", set(), set(), False, "exactly one"),
+            ({"TQQQ"}, {"SOXL"}, "workflow_dispatch", set(), set(), False, "explicit --etfs"),
+            ({"TQQQ"}, {"TQQQ"}, "workflow_dispatch", set(), {"actions_recent"}, False, "minimal scope"),
+            ({"TQQQ"}, {"TQQQ"}, "workflow_dispatch", {"AAPL"}, set(), False, "minimal scope"),
+            ({"TQQQ"}, {"TQQQ"}, "workflow_dispatch", set(), set(), True, "minimal scope"),
+        ]
+        for targets, explicit_etfs, event_name, stocks, controlled_surfaces, universe, message in cases:
+            with self.subTest(message=message), self.assertRaisesRegex(ValueError, message):
+                self.fetcher.validate_controlled_etf_detail_failure_scope(
+                    targets,
+                    explicit_etfs,
+                    event_name=event_name,
+                    controlled_stocks=stocks,
+                    controlled_surfaces=controlled_surfaces,
+                    controlled_universe=universe,
+                )
+
+    def test_etf_detail_controlled_failure_preflight_rejects_schedule(self) -> None:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(FETCHER_PATH),
+                "--etfs",
+                "TQQQ",
+                "--controlled-failure-surfaces",
+                "etf_detail:TQQQ",
+                "--event-name",
+                "schedule",
+                "--preflight-only",
+                "--no-public-mirror",
+            ],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("workflow_dispatch", completed.stderr)
+
+    def test_etf_detail_controlled_failure_uses_detail_observation_path_without_fetching(self) -> None:
+        original_fetch = self.fetcher.fetch_etf
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            original_dirs = (
+                self.fetcher.OUT_DIR,
+                self.fetcher.PUBLIC_DIR,
+                self.fetcher.DATA_SUPPLY_STATE_ROOT,
+            )
+            self.fetcher.OUT_DIR = root / "data" / "stockanalysis"
+            self.fetcher.PUBLIC_DIR = root / "public" / "stockanalysis"
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = root / "data" / "admin" / "data-supply-state" / "v1"
+            truth = self.fetcher.OUT_DIR / "etfs" / "TQQQ.json"
+            lkg_payload = {
+                "schema_version": "stockanalysis/v1",
+                "source": "stockanalysis",
+                "asset_type": "etf",
+                "ticker": "TQQQ",
+                "source_as_of": "2026-07-15T20:00:00Z",
+                "fetched_at": "2026-07-15T21:00:00Z",
+            }
+            self.fetcher.write_json(truth, lkg_payload)
+            expected_bytes = truth.read_bytes()
+
+            def unexpected_fetch(*_args, **_kwargs):
+                self.fail("controlled ETF detail failure must not call the provider")
+
+            self.fetcher.fetch_etf = unexpected_fetch
+            try:
+                result = self.fetcher.run_one(
+                    "etf",
+                    "TQQQ",
+                    1,
+                    False,
+                    yf_fallback=False,
+                    controlled_etf_detail_failure=True,
+                )
+            finally:
+                self.fetcher.fetch_etf = original_fetch
+                (
+                    self.fetcher.OUT_DIR,
+                    self.fetcher.PUBLIC_DIR,
+                    self.fetcher.DATA_SUPPLY_STATE_ROOT,
+                ) = original_dirs
+
+            observation = json.loads(
+                next((root / "data" / "admin" / "data-supply-state" / "v1" / "history" / "observations").glob("*.jsonl")).read_text(encoding="utf-8")
+            )
+            self.assertEqual(truth.read_bytes(), expected_bytes)
+            self.assertEqual(observation["domain"], "etf_detail")
+            self.assertEqual(observation["entity"], "TQQQ")
+            self.assertEqual(observation["validation_status"], "invalid")
+            self.assertEqual(observation["reason_code"], "fetch_failed")
+            self.assertIn("controlled failure injection for etf_detail:TQQQ", result["error"])
+
     def test_workflow_dispatch_inputs_stay_within_github_limit(self) -> None:
         workflow = (
             ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml"
@@ -4537,7 +4649,7 @@ module.main()
             )
             bootstrap = {"run_id": "bootstrap", "run_attempt": 1, "event_name": "local", "observed_at": "2026-07-15T07:00:00Z"}
             chaos = {"run_id": "chaos-1", "run_attempt": 1, "event_name": "workflow_dispatch", "observed_at": "2026-07-15T08:00:00Z"}
-            recovery = {"run_id": "real-1", "run_attempt": 1, "event_name": "workflow_dispatch", "observed_at": "2026-07-15T08:05:00Z"}
+            recovery = {"run_id": "real-1", "run_attempt": 1, "event_name": "schedule", "observed_at": "2026-07-15T08:05:00Z"}
             store.bootstrap_existing(bootstrap)
             try:
                 failed = self.fetcher.run_one(
@@ -4568,6 +4680,7 @@ module.main()
             self.assertEqual(state["resolution_state"], "fresh_primary")
             self.assertFalse(state["retry"])
             self.assertEqual(state["recovered_from_run_id"], "chaos-1")
+            self.assertEqual(state["recovery_event_name"], "schedule")
 
     def test_stock_controlled_failure_also_retains_financial_lkg_and_retry(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -4654,7 +4767,7 @@ module.main()
             )
             bootstrap = {"run_id": "bootstrap", "run_attempt": 1, "event_name": "local", "observed_at": "2026-07-15T07:00:00Z"}
             chaos = {"run_id": "chaos-2", "run_attempt": 1, "event_name": "workflow_dispatch", "observed_at": "2026-07-15T08:00:00Z"}
-            recovery = {"run_id": "real-2", "run_attempt": 1, "event_name": "workflow_dispatch", "observed_at": "2026-07-15T08:05:00Z"}
+            recovery = {"run_id": "real-2", "run_attempt": 1, "event_name": "schedule", "observed_at": "2026-07-15T08:05:00Z"}
             store.bootstrap_existing(bootstrap)
             try:
                 failed = self.fetcher.fetch_surfaces(
@@ -4695,6 +4808,7 @@ module.main()
             self.assertEqual(state["resolution_state"], "fresh_primary")
             self.assertFalse(state["retry"])
             self.assertEqual(state["recovered_from_run_id"], "chaos-2")
+            self.assertEqual(state["recovery_event_name"], "schedule")
 
 
 if __name__ == "__main__":

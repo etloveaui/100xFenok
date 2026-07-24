@@ -71,6 +71,39 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             self.text,
         )
 
+    def test_etf_detail_failure_proof_is_single_target_and_skips_unrelated_fetches(self) -> None:
+        control_input = re.search(
+            r"controlled_failure_surfaces:\n(?P<body>(?:\s+.*\n){1,5})",
+            self.text,
+        )
+        self.assertIsNotNone(control_input)
+        self.assertIn("Owner-approved failure proof", control_input.group("body"))
+        self.assertIn("etf_detail:TQQQ", control_input.group("body"))
+
+        proof_profile = re.search(
+            r'if \[ "\$ETF_DETAIL_FAILURE_PROOF" = "true" \]; then(?P<body>.*?)\n\s*elif ',
+            self.text,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(proof_profile)
+        body = proof_profile.group("body")
+        for expected in (
+            "--etfs=${INPUT_ETFS}",
+            "--controlled-failure-surfaces $INPUT_CONTROLLED_FAILURE_SURFACES",
+            "--limit-etfs 1",
+            "--fail-on-error",
+        ):
+            self.assertIn(expected, body)
+        for unexpected in (
+            "--endpoint-canary",
+            "--discover-etf-universe",
+            "--incremental-etf-backfill",
+            "--fetch-surfaces",
+            "--stocks",
+            "--fetch-financials",
+        ):
+            self.assertNotIn(unexpected, body)
+
     def test_each_known_schedule_has_an_exact_recovery_scope_and_unknown_fails_closed(self) -> None:
         for schedule, scope in (
             ("20 21 * * *", "stock,financial"),

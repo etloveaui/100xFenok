@@ -18,6 +18,7 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from stockanalysis_recovery_state import (  # noqa: E402
     StockAnalysisRecoveryStateStore,
+    is_natural_schedule_run,
     payload_source_fields,
     validate_controlled_failure_scope,
 )
@@ -233,13 +234,30 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
             entity = "actions_recent" if kind == "surface" else "AAPL"
             self.assertTrue(self.store.recovery_candidate_advances(kind, entity, payload))
             write_json(self.store.canonical_path(kind, entity), payload)
-            state = self.store.record_success(kind, entity, payload, self.run_context("real-2"))
+            with self.assertRaisesRegex(ValueError, "natural schedule run"):
+                self.store.record_success(
+                    kind, entity, payload, self.run_context("dispatch-cannot-recover")
+                )
+            retained = self.store._load_state(kind, entity)
+            self.assertTrue(retained["retry"])
+            self.assertEqual(retained["latest_failure"]["run_id"], "chaos-2")
+            natural_run = {
+                **self.run_context("real-2"),
+                "event_name": "schedule",
+                "natural": True,
+            }
+            state = self.store.record_success(kind, entity, payload, natural_run)
             self.assertEqual(state["resolution_state"], "fresh_primary")
             self.assertFalse(state["retry"])
             self.assertEqual(state["recovered_from_run_id"], "chaos-2")
+            self.assertEqual(state["recovery_event_name"], "schedule")
             self.assertEqual(state["last_recovered_failure"]["run_id"], "chaos-2")
 
-        index = self.store.rebuild_index(self.run_context("real-2"))
+        index = self.store.rebuild_index({
+            **self.run_context("real-2"),
+            "event_name": "schedule",
+            "natural": True,
+        })
         self.assertEqual(index["current_attempt"]["recovered"], 3)
         self.assertEqual(index["recovered_tickers"], ["AAPL"])
         self.assertEqual(index["recovered_surfaces"], ["actions_recent"])
@@ -317,6 +335,25 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
                 }
             ],
         )
+
+    def test_natural_schedule_gate_requires_schedule_attempt_one_in_both_directions(self) -> None:
+        self.assertTrue(is_natural_schedule_run({
+            **self.run_context("natural"),
+            "event_name": "schedule",
+            "run_attempt": 1,
+        }))
+        self.assertFalse(is_natural_schedule_run({
+            **self.run_context("dispatch"),
+            "event_name": "workflow_dispatch",
+            "run_attempt": 1,
+            "natural": True,
+        }))
+        self.assertFalse(is_natural_schedule_run({
+            **self.run_context("rerun"),
+            "event_name": "schedule",
+            "run_attempt": 2,
+            "natural": True,
+        }))
 
     def test_financial_recovery_accepts_new_collection_of_same_fiscal_source_only(self) -> None:
         self.seed_lane()
@@ -428,8 +465,19 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
 
         advanced = universe_payload("2026-07-15T08:05:00Z", "AAA", "BBB", "CCC")
         write_json(canonical, advanced)
+        with self.assertRaisesRegex(ValueError, "natural schedule run"):
+            self.store.record_success(
+                "universe", entity, advanced, self.run_context("dispatch-recovered")
+            )
         recovered = self.store.record_success(
-            "universe", entity, advanced, self.run_context("universe-recovered")
+            "universe",
+            entity,
+            advanced,
+            {
+                **self.run_context("universe-recovered"),
+                "event_name": "schedule",
+                "natural": True,
+            },
         )
         self.assertEqual(recovered["resolution_state"], "fresh_primary")
         self.assertFalse(recovered["retry"])

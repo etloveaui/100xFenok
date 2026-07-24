@@ -28,6 +28,7 @@ export const LANE_ID = "yahoo_private_options";
 export const SCHEDULED_TICKERS = Object.freeze(["DASH", "UNH", "PYPL", "RDDT", "COIN", "MU", "PLTR", "NVDA"]);
 export const AVAILABILITY_SCHEMA = "fenok-yahoo-private-options-availability/v1";
 const SUMMARY_SCHEMA = "fenok-private-options-collection-summary/v1";
+const CONTROLLED_FAILURE_KEY = "availability";
 const FORBIDDEN_RAW_KEYS = new Set([
   "ask", "bid", "calls", "contractSymbol", "contracts", "expiration", "impliedVolatility",
   "inTheMoney", "lastPrice", "openInterest", "options", "puts", "strike", "volume",
@@ -144,6 +145,14 @@ function markerContainsSummary(marker, summary) {
     && JSON.stringify(marker.rows) === JSON.stringify(summary.results);
 }
 
+function validateControlledFailureKey(value, eventName) {
+  const key = String(value ?? "").trim();
+  if (!key) return null;
+  if (eventName !== "workflow_dispatch") throw new Error("controlled failure requires workflow_dispatch");
+  if (key !== CONTROLLED_FAILURE_KEY) throw new Error(`unknown controlled private options key: ${key}`);
+  return key;
+}
+
 function defaultCollect({ outputDir, summaryPath, observedAt }) {
   const result = spawnSync("python3", [
     "scripts/fetch-fenok-private-options.py",
@@ -173,8 +182,10 @@ export function runYahooPrivateOptions({
   runId = process.env.GITHUB_RUN_ID || "local",
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || "local",
+  controlledFailureKey = process.env.INPUT_CONTROLLED_FAILURE_KEY || "",
   collect = defaultCollect,
 } = {}) {
+  const controlledKey = validateControlledFailureKey(controlledFailureKey, eventName);
   const started = Date.now();
   const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
   const store = new LaneLkgStore({ repoRoot, laneId: LANE_ID });
@@ -185,27 +196,38 @@ export function runYahooPrivateOptions({
     sourceAsOf: markerSourceAsOf,
   };
   let summary;
-  try {
-    summary = collect({ outputDir, summaryPath, observedAt });
-  } catch {
-    summary = null;
+  if (controlledKey === null) {
+    try {
+      summary = collect({ outputDir, summaryPath, observedAt });
+    } catch {
+      summary = null;
+    }
   }
   const summaryValid = validCollectionSummary(summary);
   const complete = summaryValid && summary.failed_count === 0;
-  const result = attemptResult(complete ? "ok" : summaryValid ? "empty_payload" : "schema_drift", libraryTuple({
-    candidates: SCHEDULED_TICKERS.length,
-    retryCount: 0,
-    latencyMs: Math.max(0, Date.now() - started),
-    outcome: complete ? "success" : "error",
-    decode: complete ? "ok" : "not_attempted",
-    payload: complete ? "non_empty" : "not_available",
-    assertions: complete ? [{ id: "scheduled_allowlist_complete", passed: true }] : [],
-  }), summary);
+  const result = controlledKey !== null
+    ? attemptResult("transport_error", libraryTuple({
+      execution: "threw",
+      exceptionKind: "transport",
+      candidates: SCHEDULED_TICKERS.length,
+      retryCount: 0,
+      latencyMs: Math.max(0, Date.now() - started),
+      outcome: "error",
+    }))
+    : attemptResult(complete ? "ok" : summaryValid ? "empty_payload" : "schema_drift", libraryTuple({
+      candidates: SCHEDULED_TICKERS.length,
+      retryCount: 0,
+      latencyMs: Math.max(0, Date.now() - started),
+      outcome: complete ? "success" : "error",
+      decode: complete ? "ok" : "not_attempted",
+      payload: complete ? "non_empty" : "not_available",
+      assertions: complete ? [{ id: "scheduled_allowlist_complete", passed: true }] : [],
+    }), summary);
   const attempt = writeAttemptShard({ laneId: LANE_ID, attemptShardPath, observedAt, attemptId, result });
   if (!complete) {
-    const reason = summaryValid ? "empty_payload" : "schema_drift";
-    const stateReason = summaryValid ? "provider_failure" : reason;
-    const systemic = summaryValid && summary.failed_count === SCHEDULED_TICKERS.length;
+    const reason = controlledKey !== null ? "controlled_failure" : summaryValid ? "empty_payload" : "schema_drift";
+    const stateReason = controlledKey !== null ? "controlled_failure" : summaryValid ? "provider_failure" : reason;
+    const systemic = controlledKey === null && summaryValid && summary.failed_count === SCHEDULED_TICKERS.length;
     const failure = store.recordFailure({ artifacts: [descriptor], run, reason: stateReason });
     return {
       ok: false,

@@ -93,6 +93,13 @@ def _bounded_error(value: Any, limit: int = 240) -> str:
     return " ".join(str(value or "unknown error").split())[:limit]
 
 
+def is_natural_schedule_run(run: dict) -> bool:
+    return (
+        str(run.get("event_name") or "") == "schedule"
+        and int(run.get("run_attempt") or 1) == 1
+    )
+
+
 def _validate_identity(kind: str, entity: str) -> None:
     if kind not in ARTIFACT_KINDS:
         raise ValueError(f"unsupported StockAnalysis recovery artifact kind: {kind}")
@@ -464,6 +471,11 @@ class StockAnalysisRecoveryStateStore:
 
     def record_success(self, kind: str, entity: str, payload: dict, run: dict) -> dict:
         _validate_identity(kind, entity)
+        state = self._load_state(kind, entity)
+        if state.get("retry") is True and not is_natural_schedule_run(run):
+            raise ValueError(
+                f"recovery promotion requires a natural schedule run for StockAnalysis {kind}:{entity}"
+            )
         if not self.recovery_candidate_advances(kind, entity, payload):
             raise ValueError(f"source did not advance beyond the retained LKG for {kind}:{entity}")
         canonical_path = self.canonical_path(kind, entity)
@@ -474,7 +486,6 @@ class StockAnalysisRecoveryStateStore:
         if _sha256((json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8")) != _sha256(payload_bytes):
             raise ValueError(f"written StockAnalysis {kind} payload differs from recovery candidate for {entity}")
 
-        state = self._load_state(kind, entity)
         previous_state = state.get("resolution_state")
         latest_failure = state.get("latest_failure") if isinstance(state.get("latest_failure"), dict) else None
         previous_run_id = latest_failure.get("run_id") if latest_failure else None
@@ -663,6 +674,7 @@ class StockAnalysisRecoveryStateStore:
 
 __all__ = [
     "StockAnalysisRecoveryStateStore",
+    "is_natural_schedule_run",
     "payload_source_fields",
     "validate_controlled_failure_scope",
 ]

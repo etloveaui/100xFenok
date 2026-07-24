@@ -2119,22 +2119,39 @@ def parse_surface_names(value: str, surface_set: str) -> list[str]:
     return out
 
 
-# GitHub caps workflow_dispatch at 25 inputs, so the ETF universe recovery chaos
-# cannot have its own input. It piggybacks on controlled_failure_surfaces via this
-# reserved token, which is split out to controlled_universe BEFORE surface-name
-# validation (parse_surface_names would otherwise reject it as an unknown surface).
+# GitHub caps workflow_dispatch at 25 inputs, so chaos controls share
+# controlled_failure_surfaces. Reserved tokens are split before surface-name
+# validation (parse_surface_names would otherwise reject them).
 UNIVERSE_CONTROLLED_FAILURE_TOKEN = "etf_universe"
+ETF_DETAIL_CONTROLLED_FAILURE_PREFIX = "etf_detail:"
 
 
-def split_controlled_failure_surfaces(value: str, surface_set: str) -> tuple[set[str], bool]:
+class ControlledETFDetailFailure(ValueError):
+    """Intentional ETF-detail failure that must follow the normal detail path."""
+
+
+def split_controlled_failure_targets(
+    value: str,
+    surface_set: str,
+) -> tuple[set[str], bool, set[str]]:
     controlled_universe = False
+    controlled_etf_details: set[str] = set()
     surface_tokens: list[str] = []
     for item in (value or "").split(","):
         token = item.strip()
         if not token:
             continue
-        if token.lower() == UNIVERSE_CONTROLLED_FAILURE_TOKEN:
+        lowered = token.lower()
+        if lowered == UNIVERSE_CONTROLLED_FAILURE_TOKEN:
             controlled_universe = True
+            continue
+        if lowered.startswith(ETF_DETAIL_CONTROLLED_FAILURE_PREFIX):
+            ticker = clean_symbol(token[len(ETF_DETAIL_CONTROLLED_FAILURE_PREFIX):])
+            if ticker is None:
+                raise ValueError(
+                    "controlled ETF detail token must use etf_detail:TICKER"
+                )
+            controlled_etf_details.add(ticker)
             continue
         surface_tokens.append(token)
     surfaces = set(
@@ -2142,7 +2159,66 @@ def split_controlled_failure_surfaces(value: str, surface_set: str) -> tuple[set
         if surface_tokens
         else []
     )
+    return surfaces, controlled_universe, controlled_etf_details
+
+
+def split_controlled_failure_surfaces(value: str, surface_set: str) -> tuple[set[str], bool]:
+    """Compatibility wrapper for existing surface/universe token callers."""
+    surfaces, controlled_universe, _etf_details = split_controlled_failure_targets(
+        value,
+        surface_set,
+    )
     return surfaces, controlled_universe
+
+
+def validate_controlled_etf_detail_failure_scope(
+    controlled_etfs: set[str],
+    explicit_etfs: set[str],
+    *,
+    event_name: str,
+    controlled_stocks: set[str],
+    controlled_surfaces: set[str],
+    controlled_universe: bool,
+) -> None:
+    if not controlled_etfs:
+        return
+    if event_name != "workflow_dispatch":
+        raise ValueError(
+            "controlled ETF detail failures are restricted to workflow_dispatch"
+        )
+    if len(controlled_etfs) != 1:
+        raise ValueError(
+            "controlled ETF detail failure proof requires exactly one ETF ticker"
+        )
+    if not controlled_etfs.issubset(explicit_etfs):
+        raise ValueError(
+            "controlled ETF detail failure target must be a subset of explicit --etfs"
+        )
+    if controlled_stocks or controlled_surfaces or controlled_universe:
+        raise ValueError(
+            "controlled ETF detail failure proof requires minimal scope without stock, surface, or universe controls"
+        )
+
+
+def validate_controlled_etf_detail_failure_preflight(args: argparse.Namespace) -> None:
+    (
+        controlled_surfaces,
+        controlled_universe_token,
+        controlled_etfs,
+    ) = split_controlled_failure_targets(
+        args.controlled_failure_surfaces,
+        args.surface_set,
+    )
+    validate_controlled_etf_detail_failure_scope(
+        controlled_etfs,
+        set(parse_symbols(args.etfs)),
+        event_name=args.event_name,
+        controlled_stocks=set(parse_symbols(args.controlled_failure_tickers)),
+        controlled_surfaces=controlled_surfaces,
+        controlled_universe=(
+            args.controlled_failure_universe or controlled_universe_token
+        ),
+    )
 
 
 def surface_stamp_membership(consumers: dict | None) -> dict[str, set[str]] | None:
@@ -5115,6 +5191,7 @@ def run_one(
     recovery_store: StockAnalysisRecoveryStateStore | None = None,
     recovery_run: dict | None = None,
     controlled_failure: bool = False,
+    controlled_etf_detail_failure: bool = False,
     require_stock_financial_pair: bool = False,
 ) -> dict:
     start = time.perf_counter()
@@ -5127,6 +5204,10 @@ def run_one(
     try:
         if kind == "etf":
             try:
+                if controlled_etf_detail_failure:
+                    raise ControlledETFDetailFailure(
+                        f"controlled failure injection for etf_detail:{ticker}"
+                    )
                 payload = (
                     fetch_etf(ticker, timeout)
                     if include_etf_history
@@ -5156,7 +5237,9 @@ def run_one(
                 provider_gap = is_expected_missing_error(stockanalysis_error)
                 ATTEMPT_TRACKER.record_yahoo_candidate()
                 failure_reason = (
-                    "endpoint_missing"
+                    "fetch_failed"
+                    if isinstance(exc, ControlledETFDetailFailure)
+                    else "endpoint_missing"
                     if provider_gap
                     else "schema_invalid"
                     if isinstance(exc, (json.JSONDecodeError, ValueError))
@@ -5648,6 +5731,10 @@ def _main() -> None:
         )
     ):
         raise SystemExit("--reconcile-missing-etf-details is an isolated producer mode")
+    try:
+        validate_controlled_etf_detail_failure_preflight(args)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
     validate_manual_etf_preflight(args)
     if args.preflight_only:
         return
@@ -5660,6 +5747,7 @@ def _main() -> None:
 
     mirror_public = not args.no_public_mirror
     explicit_stocks = parse_symbols(args.stocks)
+    explicit_etfs = parse_symbols(args.etfs)
     stocks = explicit_stocks[:]
     if args.fetch_financials and not stocks:
         stocks = DEFAULT_STOCKS[:]
@@ -5670,8 +5758,13 @@ def _main() -> None:
         parse_surface_names(args.surfaces, args.surface_set) if args.fetch_surfaces else []
     )
     controlled_failure_tickers = set(parse_symbols(args.controlled_failure_tickers))
-    controlled_failure_surfaces, controlled_failure_universe_token = (
-        split_controlled_failure_surfaces(args.controlled_failure_surfaces, args.surface_set)
+    (
+        controlled_failure_surfaces,
+        controlled_failure_universe_token,
+        controlled_failure_etfs,
+    ) = split_controlled_failure_targets(
+        args.controlled_failure_surfaces,
+        args.surface_set,
     )
     controlled_failure_universe = (
         args.controlled_failure_universe or controlled_failure_universe_token
@@ -5854,7 +5947,6 @@ def _main() -> None:
             flush=True,
         )
     else:
-        explicit_etfs = parse_symbols(args.etfs)
         etfs = select_base_etfs(
             explicit_etfs,
             stocks_only=args.stocks_only,
@@ -5949,6 +6041,9 @@ def _main() -> None:
                 recovery_run=recovery_run if kind == "stock" else None,
                 controlled_failure=(
                     kind == "stock" and ticker in controlled_failure_tickers
+                ),
+                controlled_etf_detail_failure=(
+                    kind == "etf" and ticker in controlled_failure_etfs
                 ),
                 require_stock_financial_pair=(
                     kind == "stock" and args.require_stock_financial_pair
