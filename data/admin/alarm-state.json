@@ -1,17 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-07-24T04:50:48.885Z",
+  "generated_at": "2026-07-24T09:38:45.608Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 2,
   "open_incidents": [
-    {
-      "workflow": "global-writer-queue-observer.yml",
-      "label": "Global Writer Queue Observability",
-      "streak": 2,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 30058060584,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30058060584"
-    },
     {
       "workflow": "slickcharts-history.yml",
       "label": "SlickCharts History",
@@ -96,8 +88,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "suspected_skip"
+      ]
     },
     {
       "file": "fetch-edgar-filings.yml",
@@ -274,8 +268,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "suspected_skip"
+      ]
     },
     {
       "file": "fetch-yf-finance.yml",
@@ -390,8 +386,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 23,
-    "overdue": 2,
+    "not_due": 21,
+    "overdue": 4,
     "recovered": 0,
     "no_declaration": 7,
     "unknown": 0
@@ -418,12 +414,11 @@
     }
   ],
   "last_firing": {
-    "run_id": "30067795759",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30067795759",
-    "observed_at": "2026-07-24T04:50:48.885Z",
-    "event": "workflow_run",
+    "run_id": "30083247477",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30083247477",
+    "observed_at": "2026-07-24T09:38:45.608Z",
+    "event": "schedule",
     "workflows": [
-      "global-writer-queue-observer.yml",
       "slickcharts-history.yml",
       "slickcharts-monthly.yml"
     ],
