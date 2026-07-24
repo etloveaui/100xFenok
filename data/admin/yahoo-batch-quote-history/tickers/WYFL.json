@@ -69,13 +69,12 @@
   "current": {
     "fetched_at": "2026-07-16T00:24:41Z",
     "history_as_of": "2026-07-15",
-    "path": "data/yf/finance/WYFL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/WYFL.json",
     "payload_sha256": "7c44fba4b7b059dbb00b2d7f33875e686ed76a0182661d638a4be6581afb9ca9",
     "quote_as_of": "2026-07-15T20:00:00Z",
     "source_as_of": "2026-07-15"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -92,26 +91,26 @@
     "shard": "1/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T19:30:34Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-16T00:24:41Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/WYFL.json",
-    "payload_sha256": "936e64b7e1f061a2dd449057e9c20e2804968e566654d3732ade29902bcd9cad",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "7c44fba4b7b059dbb00b2d7f33875e686ed76a0182661d638a4be6581afb9ca9",
+    "quote_as_of": "2026-07-15T20:00:00Z",
+    "source_as_of": "2026-07-15"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-24T00:27:41Z",
+    "classified_run_id": "30055546565",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "WYFL holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "WYFL holds LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-15"
   },
   "ticker": "WYFL",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-07-24T00:27:41Z"
 }

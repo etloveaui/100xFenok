@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -168,15 +155,41 @@
       "run_id": "29968542251",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 375,
+      "natural": true,
+      "observed_at": "2026-07-24T00:27:41Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30055546565",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-24T00:32:28Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "30055546565",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-23T00:56:07Z",
-    "history_as_of": "2026-07-22",
+    "fetched_at": "2026-07-24T00:32:07Z",
+    "history_as_of": "2026-07-23",
     "path": "data/yf/finance/TDOC.json",
-    "payload_sha256": "742125a9566b5821d68190c2b62392aef289e12d827804d067c0cc3e833ee3c5",
-    "quote_as_of": "2026-07-22T20:00:02Z",
-    "source_as_of": "2026-07-22"
+    "payload_sha256": "b9d22fa1ab137d54bc3d1e3c2340adf62ee19386b2e9f5604bb8aa7f286b34d9",
+    "quote_as_of": "2026-07-23T20:00:02Z",
+    "source_as_of": "2026-07-23"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -188,28 +201,28 @@
     "failures": [],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-23T01:04:01Z",
+    "observed_at": "2026-07-24T00:32:28Z",
     "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29968542251",
+    "run_id": "30055546565",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "1/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-22",
-    "observed_at": "2026-07-23T00:49:28Z",
-    "payload_sha256": "af8427d25462044df9d13062b6853b81c9c42aaf3e14ed5eb4bc99805745797d",
-    "quote_as_of": "2026-07-22T20:00:02Z",
+    "history_as_of": "2026-07-23",
+    "observed_at": "2026-07-24T00:27:41Z",
+    "payload_sha256": "517b68ec96e8db46a6592aa4e234a3c8fe2ac69a84ae4f6d78de4bafee424f18",
+    "quote_as_of": "2026-07-23T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "29968542251",
+    "run_id": "30055546565",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-22"
+    "source_as_of": "2026-07-23"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "TDOC",
-  "updated_at": "2026-07-23T01:04:01Z"
+  "updated_at": "2026-07-24T00:32:28Z"
 }

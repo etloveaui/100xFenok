@@ -69,13 +69,12 @@
   "current": {
     "fetched_at": "2026-07-16T00:27:45Z",
     "history_as_of": "2026-07-15",
-    "path": "data/yf/finance/EUVX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EUVX.json",
     "payload_sha256": "aba2fd72eeb65c97ef70ad348f4ea5e8c34cc3d075026f2f607cf0f51361b8cc",
     "quote_as_of": "2026-07-15T20:00:00Z",
     "source_as_of": "2026-07-15"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -92,26 +91,26 @@
     "shard": "4/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T19:29:47Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-16T00:27:45Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/EUVX.json",
-    "payload_sha256": "c6d6e59d1001245d904203884a1d475c3a6592f0ac738950f658abb290c9b477",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "aba2fd72eeb65c97ef70ad348f4ea5e8c34cc3d075026f2f607cf0f51361b8cc",
+    "quote_as_of": "2026-07-15T20:00:00Z",
+    "source_as_of": "2026-07-15"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-24T00:27:41Z",
+    "classified_run_id": "30055546565",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "EUVX holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "EUVX holds LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-15"
   },
   "ticker": "EUVX",
-  "updated_at": "2026-07-16T00:35:28Z"
+  "updated_at": "2026-07-24T00:27:41Z"
 }

@@ -43,13 +43,12 @@
   "current": {
     "fetched_at": "2026-07-18T00:48:22Z",
     "history_as_of": "2026-07-16",
-    "path": "data/yf/finance/GLX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GLX.json",
     "payload_sha256": "dd1e9be918f4bb2e628f09965d94c9cd1eb7081e08aaa52aeb1f55288ec43ca1",
     "quote_as_of": "2026-07-15T14:15:50Z",
     "source_as_of": "2026-07-15T14:15:50Z"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -65,6 +64,14 @@
     "schedule": "20 23 * * 1-5",
     "shard": "2/5"
   },
+  "lkg": {
+    "fetched_at": "2026-07-18T00:48:22Z",
+    "history_as_of": "2026-07-16",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GLX.json",
+    "payload_sha256": "dd1e9be918f4bb2e628f09965d94c9cd1eb7081e08aaa52aeb1f55288ec43ca1",
+    "quote_as_of": "2026-07-15T14:15:50Z",
+    "source_as_of": "2026-07-15T14:15:50Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -77,9 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-15T14:15:50Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-07-24T00:27:41Z",
+    "classified_run_id": "30055546565",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "GLX holds LKG because Yahoo source date 2026-07-15T14:15:50Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-15T14:15:50Z"
+  },
   "ticker": "GLX",
-  "updated_at": "2026-07-18T00:45:55Z"
+  "updated_at": "2026-07-24T00:27:41Z"
 }

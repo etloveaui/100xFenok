@@ -56,13 +56,12 @@
   "current": {
     "fetched_at": "2026-07-16T00:21:40Z",
     "history_as_of": "2026-07-15",
-    "path": "data/yf/finance/ASTY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ASTY.json",
     "payload_sha256": "d9c8d57c699bc8f763d9c94c1b4cce97d390acbdabcd5f570b1ca724c45de29a",
     "quote_as_of": "2026-07-15T19:59:53Z",
     "source_as_of": "2026-07-15"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -79,26 +78,26 @@
     "shard": "1/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T17:17:38Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-16T00:21:40Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ASTY.json",
-    "payload_sha256": "e5f81581a78805cb255ec8c9f3e5a25835907f0e241580ef9ac3ee161400b310",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "d9c8d57c699bc8f763d9c94c1b4cce97d390acbdabcd5f570b1ca724c45de29a",
+    "quote_as_of": "2026-07-15T19:59:53Z",
+    "source_as_of": "2026-07-15"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-24T00:27:41Z",
+    "classified_run_id": "30055546565",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "ASTY holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ASTY holds LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-15"
   },
   "ticker": "ASTY",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-07-24T00:27:41Z"
 }

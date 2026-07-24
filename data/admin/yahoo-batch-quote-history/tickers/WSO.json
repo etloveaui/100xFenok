@@ -167,83 +167,60 @@
       "run_id": "29968542251",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 496,
+      "natural": true,
+      "observed_at": "2026-07-24T00:27:41Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30055546565",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-24T00:35:43Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "30055546565",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-22T01:04:39Z",
-    "history_as_of": "2026-07-21",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/WSO.json",
-    "payload_sha256": "f29528d036a252a002afc4b091ca7dd01c90f4314b151777d1699e69f9e09584",
-    "quote_as_of": "2026-07-21T20:00:03Z",
-    "source_as_of": "2026-07-21"
+    "fetched_at": "2026-07-24T00:28:30Z",
+    "history_as_of": "2026-07-23",
+    "path": "data/yf/finance/WSO.json",
+    "payload_sha256": "bb04c0e5ee48908bf02ac3d85f8cde70cf319025db23e273fef5b3722ef62d57",
+    "quote_as_of": "2026-07-23T20:00:02Z",
+    "source_as_of": "2026-07-23"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for WSO despite available history",
+    "attempts_used": 0,
     "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 1115,
+    "failures": [],
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-23T01:04:01Z",
-    "outcome": "failed",
+    "observed_at": "2026-07-24T00:35:43Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29968542251",
+    "run_id": "30055546565",
     "schedule": "20 23 * * 1-5",
     "shard": "2/5"
   },
   "last_recovered_failure": {
-    "attempts_used": 2,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "empty payload",
-    "failure_kind": "systemic_rate_limit",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "empty payload"
-      },
-      {
-        "attempt": 2,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 2,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "lkg_status": "retained",
-    "observed_at": "2026-07-17T00:24:27Z",
-    "run_attempt": 1,
-    "run_id": "29544227703"
-  },
-  "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -272,23 +249,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-21",
-    "observed_at": "2026-07-22T00:59:16Z",
-    "payload_sha256": "3d499a2c693ec9627c021d88029f7a833c63ae9a5f50a3281831a3ed4d960bb0",
-    "quote_as_of": "2026-07-21T20:00:03Z",
+    "history_as_of": "2026-07-23",
+    "observed_at": "2026-07-24T00:27:41Z",
+    "payload_sha256": "9658e192c5bf9b1ec0bc50a73027216e85d294c55adee9ebf3e8b93a283a4410",
+    "quote_as_of": "2026-07-23T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "29879427185",
+    "run_id": "30055546565",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-21"
+    "source_as_of": "2026-07-23"
   },
-  "recovered_at": "2026-07-18T00:37:10Z",
-  "recovered_from_run_id": "29544227703",
+  "recovered_at": "2026-07-24T00:27:41Z",
+  "recovered_from_run_id": "29968542251",
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
-  "recovery_run_id": "29622560422",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovery_run_id": "30055546565",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "WSO",
-  "updated_at": "2026-07-23T01:04:01Z"
+  "updated_at": "2026-07-24T00:35:43Z"
 }

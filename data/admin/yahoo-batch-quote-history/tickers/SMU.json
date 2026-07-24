@@ -69,13 +69,12 @@
   "current": {
     "fetched_at": "2026-07-16T00:24:00Z",
     "history_as_of": "2026-07-15",
-    "path": "data/yf/finance/SMU.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SMU.json",
     "payload_sha256": "da504f47e5caaf6ad7e8bedabb86d24b2b1205e546d5e55312b6bfcf1144e337",
     "quote_as_of": "2026-07-15T20:00:00Z",
     "source_as_of": "2026-07-15"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -92,26 +91,26 @@
     "shard": "1/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T16:05:06Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-16T00:24:00Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/SMU.json",
-    "payload_sha256": "b172a2868bf56be5e2eb942262c11f7d2726800d9d88c816674eb03de9679454",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "da504f47e5caaf6ad7e8bedabb86d24b2b1205e546d5e55312b6bfcf1144e337",
+    "quote_as_of": "2026-07-15T20:00:00Z",
+    "source_as_of": "2026-07-15"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-24T00:27:41Z",
+    "classified_run_id": "30055546565",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "SMU holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "SMU holds LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-15"
   },
   "ticker": "SMU",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-07-24T00:27:41Z"
 }

@@ -69,13 +69,12 @@
   "current": {
     "fetched_at": "2026-07-16T00:24:28Z",
     "history_as_of": "2026-07-15",
-    "path": "data/yf/finance/USAX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/USAX.json",
     "payload_sha256": "0b807b60fe77ebefb88174bb024b266d6507198b524c530fe6d5379cda992dce",
     "quote_as_of": "2026-07-15T19:59:50Z",
     "source_as_of": "2026-07-15"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -92,26 +91,26 @@
     "shard": "1/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T16:17:59Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-16T00:24:28Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/USAX.json",
-    "payload_sha256": "5343f88965d2022d7b03789fe5b09db3b8fa72c3fff75229dd344f99dbf196e7",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "0b807b60fe77ebefb88174bb024b266d6507198b524c530fe6d5379cda992dce",
+    "quote_as_of": "2026-07-15T19:59:50Z",
+    "source_as_of": "2026-07-15"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-24T00:27:41Z",
+    "classified_run_id": "30055546565",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "USAX holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "USAX holds LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-15"
   },
   "ticker": "USAX",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-07-24T00:27:41Z"
 }

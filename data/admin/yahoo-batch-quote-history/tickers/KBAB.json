@@ -56,13 +56,12 @@
   "current": {
     "fetched_at": "2026-07-16T00:17:41Z",
     "history_as_of": "2026-07-15",
-    "path": "data/yf/finance/KBAB.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/KBAB.json",
     "payload_sha256": "d7920b707cb7c13c9ec7acf920544700c45bfa97c0839ab58162fe5971baddbc",
     "quote_as_of": "2026-07-15T20:00:00Z",
     "source_as_of": "2026-07-15"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -79,26 +78,26 @@
     "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T15:40:59Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-16T00:17:41Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/KBAB.json",
-    "payload_sha256": "32b2be79b8cc89eeca0b9bcd2625a0912c3c705bf7e3891cdc4654a4084d641f",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "d7920b707cb7c13c9ec7acf920544700c45bfa97c0839ab58162fe5971baddbc",
+    "quote_as_of": "2026-07-15T20:00:00Z",
+    "source_as_of": "2026-07-15"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-24T00:27:41Z",
+    "classified_run_id": "30055546565",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "KBAB holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "KBAB holds LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-15"
   },
   "ticker": "KBAB",
-  "updated_at": "2026-07-16T00:13:37Z"
+  "updated_at": "2026-07-24T00:27:41Z"
 }

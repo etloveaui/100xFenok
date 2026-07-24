@@ -95,13 +95,12 @@
   "current": {
     "fetched_at": "2026-07-18T00:41:53Z",
     "history_as_of": "2026-07-16",
-    "path": "data/yf/finance/USX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/USX.json",
     "payload_sha256": "79adf3c3f97eb0a8c7d54a33f11af1a78a8b38d7f0b255285abf6c0faece8058",
     "quote_as_of": "2026-07-15T14:23:13Z",
     "source_as_of": "2026-07-15T14:23:13Z"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -118,12 +117,12 @@
     "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T19:30:21Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-18T00:41:53Z",
+    "history_as_of": "2026-07-16",
     "path": "data/admin/yahoo-batch-quote-history/lkg/USX.json",
-    "payload_sha256": "5a3057631b7a799150373d1408937473514ffc746f9dbb1f1eb1f53b9b25e9e6",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "79adf3c3f97eb0a8c7d54a33f11af1a78a8b38d7f0b255285abf6c0faece8058",
+    "quote_as_of": "2026-07-15T14:23:13Z",
+    "source_as_of": "2026-07-15T14:23:13Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -137,19 +136,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-15T14:23:13Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-24T00:27:41Z",
+    "classified_run_id": "30055546565",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "USX holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "USX holds LKG because Yahoo source date 2026-07-15T14:23:13Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-15T14:23:13Z"
   },
   "ticker": "USX",
-  "updated_at": "2026-07-18T00:37:10Z"
+  "updated_at": "2026-07-24T00:27:41Z"
 }

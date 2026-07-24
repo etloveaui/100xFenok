@@ -69,13 +69,12 @@
   "current": {
     "fetched_at": "2026-07-16T00:23:47Z",
     "history_as_of": "2026-07-15",
-    "path": "data/yf/finance/QBTX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/QBTX.json",
     "payload_sha256": "04b0571da88f13ac29b7c4af490558a783183d8b00687515408eba61b234fbba",
     "quote_as_of": "2026-07-15T20:00:00Z",
     "source_as_of": "2026-07-15"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -92,26 +91,26 @@
     "shard": "1/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T16:02:59Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-16T00:23:47Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/QBTX.json",
-    "payload_sha256": "990838dff1ca0048354dd0c517ae99a3389abffdc83a15b0ca69c6eb9880aa98",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "04b0571da88f13ac29b7c4af490558a783183d8b00687515408eba61b234fbba",
+    "quote_as_of": "2026-07-15T20:00:00Z",
+    "source_as_of": "2026-07-15"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-24T00:27:41Z",
+    "classified_run_id": "30055546565",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "QBTX holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "QBTX holds LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-15"
   },
   "ticker": "QBTX",
-  "updated_at": "2026-07-16T00:19:31Z"
+  "updated_at": "2026-07-24T00:27:41Z"
 }

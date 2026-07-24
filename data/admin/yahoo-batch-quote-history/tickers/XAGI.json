@@ -82,13 +82,12 @@
   "current": {
     "fetched_at": "2026-07-18T00:45:50Z",
     "history_as_of": "2026-07-16",
-    "path": "data/yf/finance/XAGI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/XAGI.json",
     "payload_sha256": "f00f15518461dbdbac75d457ed8193bd65d42dfc3ac44bed89448d073ecebb85",
     "quote_as_of": "2026-07-15T13:37:59Z",
     "source_as_of": "2026-07-15T13:37:59Z"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -105,12 +104,12 @@
     "shard": "3/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T19:30:36Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-18T00:45:50Z",
+    "history_as_of": "2026-07-16",
     "path": "data/admin/yahoo-batch-quote-history/lkg/XAGI.json",
-    "payload_sha256": "724dbfa8c88a7828a2992fcbd81d8a5956c78a6921b54d88bcdc86a102b6701d",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "f00f15518461dbdbac75d457ed8193bd65d42dfc3ac44bed89448d073ecebb85",
+    "quote_as_of": "2026-07-15T13:37:59Z",
+    "source_as_of": "2026-07-15T13:37:59Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -124,19 +123,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-15T13:37:59Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-24T00:27:41Z",
+    "classified_run_id": "30055546565",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "XAGI holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "XAGI holds LKG because Yahoo source date 2026-07-15T13:37:59Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-15T13:37:59Z"
   },
   "ticker": "XAGI",
-  "updated_at": "2026-07-18T00:49:31Z"
+  "updated_at": "2026-07-24T00:27:41Z"
 }

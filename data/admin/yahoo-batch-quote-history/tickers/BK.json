@@ -124,6 +124,39 @@
       "run_id": "29968542251",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError: 'exchangeTimezoneName'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError: 'exchangeTimezoneName'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-24T00:27:41Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "30055546565",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -138,30 +171,68 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for BK despite available history",
+    "attempts_used": 2,
+    "error": "empty payload",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 979,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "KeyError: 'exchangeTimezoneName'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "KeyError: 'exchangeTimezoneName'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "empty payload"
+      }
+    ],
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-23T00:49:28Z",
+    "observed_at": "2026-07-24T00:27:41Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29968542251",
+    "run_id": "30055546565",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
   "latest_failure": {
-    "attempts_used": 1,
+    "attempts_used": 2,
     "data_loss": false,
     "deferred_acquisition": false,
-    "error": "ValueError: quote_as_of is unavailable for BK despite available history",
+    "error": "empty payload",
     "failure_kind": "transient_provider_miss",
-    "failures": [],
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "KeyError: 'exchangeTimezoneName'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "KeyError: 'exchangeTimezoneName'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "empty payload"
+      }
+    ],
     "lkg_status": "retained",
-    "observed_at": "2026-07-23T00:49:28Z",
+    "observed_at": "2026-07-24T00:27:41Z",
     "run_attempt": 1,
-    "run_id": "29968542251"
+    "run_id": "30055546565"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:48:55Z",
@@ -185,5 +256,5 @@
     "source_as_of": "2026-07-02"
   },
   "ticker": "BK",
-  "updated_at": "2026-07-23T00:49:28Z"
+  "updated_at": "2026-07-24T00:27:41Z"
 }

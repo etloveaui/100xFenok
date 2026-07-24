@@ -84,41 +84,60 @@
       "run_id": "29968542251",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 609,
+      "natural": true,
+      "observed_at": "2026-07-24T00:27:41Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30055546565",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-24T00:37:55Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "30055546565",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-21T00:35:29Z",
-    "history_as_of": "2026-07-20",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FICO.json",
-    "payload_sha256": "2e7d69f8e489e40fea0b809242f21e7d1d25d1237acfd06e7288d2ec01dbf8e0",
-    "quote_as_of": "2026-07-20T20:00:02Z",
-    "source_as_of": "2026-07-20"
+    "fetched_at": "2026-07-24T00:28:22Z",
+    "history_as_of": "2026-07-23",
+    "path": "data/yf/finance/FICO.json",
+    "payload_sha256": "351d7d8b6536d75a76fe91553a47e77b2d9cfd70a8dd3641a2e9bcc8e640e690",
+    "quote_as_of": "2026-07-23T20:00:03Z",
+    "source_as_of": "2026-07-23"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for FICO despite available history",
+    "attempts_used": 0,
     "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFException: Failed to parse json response from Yahoo Finance: {'code': 'Internal Server Error', 'description': 'Server caught an exception'}",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 884,
+    "failures": [],
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-23T00:56:37Z",
-    "outcome": "failed",
+    "observed_at": "2026-07-24T00:37:55Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "29968542251",
+    "run_id": "30055546565",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "3/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -147,18 +166,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-20",
-    "observed_at": "2026-07-21T00:32:52Z",
-    "payload_sha256": "01071e56688db2d67c8fac2475fa4f6156f1ec460530052b2b77ec82cb00406a",
-    "quote_as_of": "2026-07-20T20:00:02Z",
+    "history_as_of": "2026-07-23",
+    "observed_at": "2026-07-24T00:27:41Z",
+    "payload_sha256": "11c89f1b360d357221de0a90e2a05a2b267f34b15b7d804447b768fa4a07e4e4",
+    "quote_as_of": "2026-07-23T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "29789662473",
+    "run_id": "30055546565",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-07-23"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-07-24T00:27:41Z",
+  "recovered_from_run_id": "29968542251",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "30055546565",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "FICO",
-  "updated_at": "2026-07-23T00:56:37Z"
+  "updated_at": "2026-07-24T00:37:55Z"
 }

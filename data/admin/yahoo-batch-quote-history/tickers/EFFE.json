@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-07-23T23:23:02Z",
     "history_as_of": "2026-07-22",
-    "path": "data/yf/finance/EFFE.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EFFE.json",
     "payload_sha256": "9db5d807e2250a0ebcd01ab372c214f601e8dddb71fc41c7c5a0f5735b87817e",
     "quote_as_of": "2026-07-10T13:42:35Z",
     "source_as_of": "2026-07-10T13:42:35Z"
@@ -38,6 +38,14 @@
     "schedule": "0 22 * * 4",
     "shard": "4/6"
   },
+  "lkg": {
+    "fetched_at": "2026-07-23T23:23:02Z",
+    "history_as_of": "2026-07-22",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EFFE.json",
+    "payload_sha256": "9db5d807e2250a0ebcd01ab372c214f601e8dddb71fc41c7c5a0f5735b87817e",
+    "quote_as_of": "2026-07-10T13:42:35Z",
+    "source_as_of": "2026-07-10T13:42:35Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-10T13:42:35Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 10,
+    "classified_at": "2026-07-24T00:27:41Z",
+    "classified_run_id": "30055546565",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "EFFE holds LKG because Yahoo source date 2026-07-10T13:42:35Z is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-10T13:42:35Z"
+  },
   "ticker": "EFFE",
-  "updated_at": "2026-07-23T23:19:22Z"
+  "updated_at": "2026-07-24T00:27:41Z"
 }

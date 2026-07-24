@@ -43,13 +43,12 @@
   "current": {
     "fetched_at": "2026-07-16T00:32:22Z",
     "history_as_of": "2026-07-15",
-    "path": "data/yf/finance/CBIL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CBIL.json",
     "payload_sha256": "d169d2ca74f0cbc8a1325932bd7495f0e92796822812302df5cae08f6f5443cb",
     "quote_as_of": "2026-07-15T15:40:34Z",
     "source_as_of": "2026-07-15"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -66,26 +65,26 @@
     "shard": "3/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T19:29:29Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-16T00:32:22Z",
+    "history_as_of": "2026-07-15",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CBIL.json",
-    "payload_sha256": "95dbbae7f59abe6b09a875309d0175463a7768c046964b6d186dd8b2380836e9",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "d169d2ca74f0cbc8a1325932bd7495f0e92796822812302df5cae08f6f5443cb",
+    "quote_as_of": "2026-07-15T15:40:34Z",
+    "source_as_of": "2026-07-15"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-24T00:27:41Z",
+    "classified_run_id": "30055546565",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CBIL holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CBIL holds LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-15"
   },
   "ticker": "CBIL",
-  "updated_at": "2026-07-16T00:30:04Z"
+  "updated_at": "2026-07-24T00:27:41Z"
 }
