@@ -857,13 +857,11 @@ const lanes = [
   record({
     id: "apewisdom_attention",
     label: "ApeWisdom attention proxy",
-    // Owned shard-only producer (#366 wiring). No LKG recovery store: the proxy
-    // recomputes derived attention scores from the live ApeWisdom aggregate each
-    // run, so there is no upstream payload to promote — republishing a stale
-    // computed file as "recovery" would serve stale attention as current. The
-    // honest attempt shard is the detection-floor evidence; admin_store is
-    // reserved (private-withheld) for future recovery state. Flip evidence:
-    // committed shard 06df6f18be from scheduled run 29691115685 (DEC-266).
+    // Live producer with a bounded LaneLkgStore recovery index. Provider failure
+    // retains the last valid derived proxy as LKG; only a natural schedule
+    // attempt 1 may promote an advancing provider observation back to fresh.
+    // Flip evidence remains committed shard 06df6f18be from scheduled run
+    // 29691115685 (DEC-266).
     owner_workflow: ".github/workflows/fetch-fenok-apewisdom.yml",
     store_kind: "marker",
     lane_class: "detection_floor",
@@ -879,17 +877,20 @@ const lanes = [
     public_mirror: [],
     commit_shards: [
       attemptShard("apewisdom_attention"),
+      "data/admin/apewisdom_attention/index.json",
+      "data/admin/apewisdom_attention/lkg/social_attention_proxy.json",
       "data/computed/fenok_social_attention_proxy.json",
       "data/computed/fenok_social_attention_proxy_history.json",
     ],
-    recovery_store: null,
+    recovery_store: "data/admin/apewisdom_attention/index.json",
+    kpi_recovery_shape: "general",
   }),
   record({
     id: "gdelt_news_tone",
     label: "GDELT news tone proxy",
-    // Owned shard-only producer (#366 wiring). Shard-only for the same reason as
-    // apewisdom_attention: the tone proxy recomputes from live GDELT headlines
-    // each run. See that lane's note.
+    // Shadow producer with the same bounded LaneLkgStore recovery contract as
+    // other provider-backed lanes. This adds recovery machinery without changing
+    // enforcement or KPI promotion.
     owner_workflow: ".github/workflows/fetch-fenok-news-tone.yml",
     store_kind: "marker",
     lane_class: "detection_floor",
@@ -905,10 +906,13 @@ const lanes = [
     public_mirror: [],
     commit_shards: [
       attemptShard("gdelt_news_tone"),
+      "data/admin/gdelt_news_tone/index.json",
+      "data/admin/gdelt_news_tone/lkg/news_tone_proxy.json",
       "data/computed/fenok_news_tone_proxy.json",
       "data/computed/fenok_news_tone_proxy_history.json",
     ],
-    recovery_store: null,
+    recovery_store: "data/admin/gdelt_news_tone/index.json",
+    kpi_recovery_shape: "general",
   }),
   record({
     id: "yahoo_batch_quote_history",
@@ -1173,6 +1177,8 @@ workflow_policies[".github/workflows/fetch-defillama.yml"] = policy(["defillama_
 workflow_policies[".github/workflows/fetch-fenok-apewisdom.yml"] = policy(["apewisdom_attention"], {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/apewisdom_attention.json", "file"),
+    commitSpec("data/admin/apewisdom_attention/index.json", "file"),
+    commitSpec("data/admin/apewisdom_attention/lkg/social_attention_proxy.json", "file"),
   ],
   success_if_exists: [
     commitSpec("data/computed/fenok_social_attention_proxy.json", "file"),
@@ -1182,6 +1188,8 @@ workflow_policies[".github/workflows/fetch-fenok-apewisdom.yml"] = policy(["apew
 workflow_policies[".github/workflows/fetch-fenok-news-tone.yml"] = policy(["gdelt_news_tone"], {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/gdelt_news_tone.json", "file"),
+    commitSpec("data/admin/gdelt_news_tone/index.json", "file"),
+    commitSpec("data/admin/gdelt_news_tone/lkg/news_tone_proxy.json", "file"),
   ],
   success_if_exists: [
     commitSpec("data/computed/fenok_news_tone_proxy.json", "file"),

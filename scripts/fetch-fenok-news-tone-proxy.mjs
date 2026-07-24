@@ -19,6 +19,12 @@ import {
   transportError,
   writeAttemptShard,
 } from "./lib/data-supply-attempt-shard.mjs";
+import {
+  LaneLkgStore,
+  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+  buildProviderObservationV2,
+} from "./lib/data-supply-lkg-store.mjs";
+import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -33,6 +39,17 @@ const ATTEMPT_SHARD_PATH = path.join(
 const FORMULA_VERSION = "fenok-news-tone-proxy-v0.1-gdelt-headlines";
 const OUTPUT_FILE = "computed/fenok_news_tone_proxy.json";
 const HISTORY_FILE = "computed/fenok_news_tone_proxy_history.json";
+// Match the FINRA daily marker-history sibling: retain the newest 100 distinct
+// provider source dates for this one artifact, never an unbounded ticker-row set.
+const MAX_GDELT_HISTORY_SOURCE_DATES = 100;
+const GDELT_HISTORY_PERSISTENCE_POLICY = Object.freeze({
+  schema_version: "gdelt-news-tone-bounded-persistence/v1",
+  basis: "provider_source_date",
+  scope: "per_artifact",
+  max_distinct_source_dates: MAX_GDELT_HISTORY_SOURCE_DATES,
+  eviction: "oldest_source_date_first",
+});
+const LKG_ARTIFACT_KEY = "news_tone_proxy";
 const DEFAULT_REFERENCE_TICKERS = ["DASH", "UNH", "PYPL", "RDDT", "COIN", "MU", "PLTR", "NVDA"];
 
 const POSITIVE_CUES = [
@@ -81,8 +98,8 @@ function isoNow() {
   return new Date().toISOString();
 }
 
-function readJson(relPath, fallback = null) {
-  const abs = path.join(dataRoot, relPath);
+function readJson(relPath, fallback = null, dataRootPath = dataRoot) {
+  const abs = path.join(dataRootPath, relPath);
   try {
     return JSON.parse(fs.readFileSync(abs, "utf8"));
   } catch (error) {
@@ -91,8 +108,8 @@ function readJson(relPath, fallback = null) {
   }
 }
 
-function writeJson(relPath, payload) {
-  const abs = path.join(dataRoot, relPath);
+function writeJson(relPath, payload, dataRootPath = dataRoot) {
+  const abs = path.join(dataRootPath, relPath);
   fs.mkdirSync(path.dirname(abs), { recursive: true });
   fs.writeFileSync(abs, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 }
@@ -108,8 +125,8 @@ function cleanCompanyName(value) {
     .trim();
 }
 
-function findFenokRowIndex() {
-  const fenokSignals = readJson("computed/fenok_signals.json", {});
+function findFenokRowIndex(dataRootPath = dataRoot) {
+  const fenokSignals = readJson("computed/fenok_signals.json", {}, dataRootPath);
   const index = new Map();
   for (const row of fenokSignals.rows ?? []) {
     index.set(normalizeTicker(row.ticker), row);
@@ -204,12 +221,26 @@ function gdeltDocUrl(query, maxRecords) {
 // into a detection attempt result. A dispatch-only controlled failure forces an
 // honest transport failure. A valid `{articles:[...]}` response (even zero
 // articles for the probe query) counts as a reachable provider.
-function withRetryEvidence(result, retryCount, retryWaitMs) {
-  if (retryCount === 0) return result;
-  return {
+function withEndpointAssertions(result) {
+  const assertions = result.status !== "ready" && result.attempt.assertions.length === 0
+    ? DATA_SUPPLY_DETECTION_CONFIG.lanes
+      .find((lane) => lane.id === LANE_ID)
+      .endpoint_contract.assertions
+      .map((assertion) => ({ id: assertion.id, passed: false }))
+    : result.attempt.assertions;
+  return assertions === result.attempt.assertions ? result : {
     ...result,
+    attempt: { ...result.attempt, assertions },
+  };
+}
+
+function withRetryEvidence(result, retryCount, retryWaitMs) {
+  const observed = withEndpointAssertions(result);
+  if (retryCount === 0) return observed;
+  return {
+    ...observed,
     attempt: {
-      ...result.attempt,
+      ...observed.attempt,
       retry_reason: "rate_limited",
       retry_count: retryCount,
       retry_wait_ms: retryWaitMs,
@@ -264,13 +295,13 @@ function queryForTicker(ticker, company) {
   return `"${ticker}"`;
 }
 
-function cachePathForTicker(ticker) {
-  return path.join(privateRoot, `${ticker}.json`);
+function cachePathForTicker(ticker, privateRootPath = privateRoot) {
+  return path.join(privateRootPath, `${ticker}.json`);
 }
 
-async function loadArticles({ ticker, company, maxRecords, noFetch, retries, retryBackoffMs }) {
-  fs.mkdirSync(privateRoot, { recursive: true });
-  const cachePath = cachePathForTicker(ticker);
+async function loadArticles({ ticker, company, maxRecords, noFetch, retries, retryBackoffMs, privateRootPath = privateRoot }) {
+  fs.mkdirSync(privateRootPath, { recursive: true });
+  const cachePath = cachePathForTicker(ticker, privateRootPath);
   if (fs.existsSync(cachePath)) {
     return { cache_hit: true, payload: JSON.parse(fs.readFileSync(cachePath, "utf8")) };
   }
@@ -378,8 +409,8 @@ function computeTone({ ticker, company, payload }) {
   };
 }
 
-async function build(args) {
-  const fenokIndex = findFenokRowIndex();
+async function build(args, { dataRootPath = dataRoot, privateRootPath = privateRoot } = {}) {
+  const fenokIndex = findFenokRowIndex(dataRootPath);
   const tickers = loadTickerUniverse(args, fenokIndex);
   const rows = [];
   const errors = [];
@@ -394,6 +425,7 @@ async function build(args) {
         noFetch: args.noFetch,
         retries: args.retries,
         retryBackoffMs: args.retryBackoffMs,
+        privateRootPath,
       });
       rows.push(computeTone({ ticker, company, payload: loaded.payload }));
       if (!loaded.cache_hit && !args.noFetch && args.sleepMs > 0) await sleep(args.sleepMs);
@@ -439,71 +471,321 @@ async function build(args) {
     },
     rows,
   };
-  const history = mergeHistory(snapshot);
-  if (!args.noWrite) {
-    writeJson(OUTPUT_FILE, snapshot);
-    writeJson(HISTORY_FILE, history);
-  }
-  return snapshot;
+  return { snapshot, history: mergeHistory(snapshot, { dataRootPath }) };
 }
 
-function mergeHistory(snapshot) {
-  const history = readJson(HISTORY_FILE, {
+function mergeHistory(snapshot, { dataRootPath = dataRoot, history = null } = {}) {
+  const prior = history ?? readJson(HISTORY_FILE, {
     schema_version: 1,
     formula_version: FORMULA_VERSION,
     rows: [],
-  });
+  }, dataRootPath);
   const current = snapshot.rows.map((row) => ({
     ticker: row.ticker,
     as_of: row.as_of,
+    source_date: providerSourceDate(row.as_of),
     generated_at: snapshot.generated_at,
     directNewsToneProxyScore: row.direct_news_tone_proxy.score_0_100,
     newsAttentionScore: row.direct_news_tone_proxy.attention_score_0_100,
     articleCount: row.direct_news_tone_proxy.article_count,
   }));
-  const keys = new Set(current.map((row) => `${row.ticker}|${row.as_of ?? "missing"}`));
-  const kept = (history.rows ?? []).filter((row) => !keys.has(`${row.ticker}|${row.as_of ?? "missing"}`));
+  const priorPolicySchema = prior?.persistence_policy?.schema_version;
+  const legacyHistory = priorPolicySchema === undefined;
+  if (!legacyHistory && priorPolicySchema !== GDELT_HISTORY_PERSISTENCE_POLICY.schema_version) {
+    throw new Error("GDELT history persistence policy is invalid");
+  }
+  const normalizeRow = (row) => ({ ...row, source_date: row?.source_date ?? providerSourceDate(row?.as_of) });
+  const keys = new Set(current.map((row) => `${row.ticker}|${row.source_date}`));
+  const normalizedPrior = (prior.rows ?? []).map(normalizeRow);
+  const legacyUnboundRows = normalizedPrior.filter((row) => !validSourceDate(row?.source_date));
+  if (!legacyHistory && legacyUnboundRows.length > 0) {
+    throw new Error("GDELT history carries an invalid provider source date");
+  }
+  // Pre-policy history could carry score rows without any provider timestamp.
+  // Such rows cannot prove source-date retention or recovery advancement, so the
+  // first bounded-policy rotation drops only those unbound legacy rows.
+  const migrationRows = legacyHistory
+    ? normalizedPrior.filter((row) => validSourceDate(row?.source_date))
+    : normalizedPrior;
+  const kept = migrationRows
+    .filter((row) => !keys.has(`${row.ticker}|${row.source_date ?? "missing"}`));
+  const all = [...kept, ...current];
+  if (all.some((row) => !validSourceDate(row?.source_date))) {
+    throw new Error("GDELT history carries an invalid provider source date");
+  }
+  const sourceDates = [...new Set(all.map((row) => row.source_date))].sort();
+  const retainedSourceDates = new Set(sourceDates.slice(-MAX_GDELT_HISTORY_SOURCE_DATES));
+  const bounded = all
+    .filter((row) => retainedSourceDates.has(row.source_date))
+    .sort((a, b) => (
+      String(a.ticker).localeCompare(String(b.ticker)) || String(a.source_date).localeCompare(String(b.source_date))
+    ));
   return {
     schema_version: 1,
     formula_version: FORMULA_VERSION,
     generated_at: snapshot.generated_at,
-    rows: [...kept, ...current].sort((a, b) => (
-      String(a.ticker).localeCompare(String(b.ticker)) || String(a.as_of).localeCompare(String(b.as_of))
-    )),
+    raw_policy: {
+      third_party_raw_public: false,
+      rows_are_derived_only: true,
+    },
+    persistence_policy: GDELT_HISTORY_PERSISTENCE_POLICY,
+    persistence_state: {
+      available_source_dates: sourceDates.length,
+      retained_source_dates: retainedSourceDates.size,
+      pruned_source_dates: sourceDates.length - retainedSourceDates.size,
+      legacy_unbound_rows_dropped: legacyHistory ? legacyUnboundRows.length : 0,
+    },
+    rows: bounded,
   };
 }
 
-async function main() {
-  const args = parseArgs(process.argv.slice(2));
-  const observedAt = isoNow();
-  const controlledFailure = (process.env.INPUT_CONTROLLED_FAILURE || "").trim() === "transport";
+// The public document's source_as_of intentionally remains an aggregate floor.
+// LKG recovery needs the same latest provider article clock used by the registry
+// selector (max rows[].as_of), never generated_at or that aggregate floor.
+function validRfc3339Utc(value) {
+  return typeof value === "string" && value.endsWith("Z") && Number.isFinite(Date.parse(value));
+}
 
-  // Detection floor first: observe the provider and publish an honest attempt
-  // shard on every run (ready OR failure). Never fake success.
-  const { result } = await observeAttempt({
+function validSourceDate(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
+function providerSourceDate(value) {
+  return validRfc3339Utc(value) ? value.slice(0, 10) : null;
+}
+
+function latestRowSourceAsOf(snapshot) {
+  const values = (snapshot?.rows ?? [])
+    .map((row) => row?.as_of)
+    .filter(validRfc3339Utc)
+    .sort();
+  return values.at(-1) ?? null;
+}
+
+function validToneSnapshot(snapshot) {
+  return snapshot?.schema_version === 1
+    && snapshot?.status === "ready"
+    && Array.isArray(snapshot?.rows)
+    && snapshot.rows.length > 0
+    && snapshot.rows.every((row) => (
+      row?.direct_news_tone_proxy
+      && typeof row.ticker === "string"
+      && validRfc3339Utc(row.as_of)
+    ))
+    && latestRowSourceAsOf(snapshot) !== null;
+}
+
+function snapshotSourceAsOf(snapshot) {
+  return validToneSnapshot(snapshot) ? latestRowSourceAsOf(snapshot) : null;
+}
+
+// A pre-LKG canonical can legitimately be the old degraded shape: it may have
+// some unavailable ticker rows while still retaining dated GDELT rows. Failure
+// handling may seed LKG from that oldest canonical, but it is never promotable
+// recovery evidence. New candidates stay under validToneSnapshot above.
+function validLegacyLkgCanonical(snapshot) {
+  return snapshot?.schema_version === 1
+    && Array.isArray(snapshot?.rows)
+    && snapshot.rows.length > 0
+    && snapshot.rows.every((row) => row?.direct_news_tone_proxy && typeof row.ticker === "string")
+    && latestRowSourceAsOf(snapshot) !== null;
+}
+
+function legacyLkgCanonicalSourceAsOf(snapshot) {
+  return validLegacyLkgCanonical(snapshot) ? latestRowSourceAsOf(snapshot) : null;
+}
+
+function providerObservationFromSnapshot(snapshot) {
+  return {
+    schema_version: "gdelt-provider-observation/v1",
+    source_as_of: snapshotSourceAsOf(snapshot),
+    rows: snapshot.rows.map((row) => ({ ticker: row.ticker, as_of: row.as_of })),
+  };
+}
+
+function validProviderObservation(document) {
+  return document !== null && typeof document === "object" && !Array.isArray(document)
+    && document.schema_version === "gdelt-provider-observation/v1"
+    && validRfc3339Utc(document.source_as_of)
+    && Array.isArray(document.rows) && document.rows.length > 0
+    && document.rows.every((row) => typeof row?.ticker === "string" && validRfc3339Utc(row?.as_of))
+    && document.source_as_of === document.rows.map((row) => row.as_of).sort().at(-1);
+}
+
+function providerObservationSourceAsOf(document) {
+  return validProviderObservation(document) ? document.source_as_of : null;
+}
+
+function candidateContainsProviderObservation(candidate, providerObservation) {
+  if (!validToneSnapshot(candidate) || !validProviderObservation(providerObservation)) return false;
+  return snapshotSourceAsOf(candidate) === providerObservation.source_as_of
+    && providerObservation.rows.every((providerRow) => candidate.rows.some((row) => (
+      row.ticker === providerRow.ticker && row.as_of === providerRow.as_of
+    )));
+}
+
+function snapshotArtifact(repoRootPath) {
+  return {
+    key: LKG_ARTIFACT_KEY,
+    canonicalPath: path.join(repoRootPath, "data", OUTPUT_FILE),
+    validateDocument: validLegacyLkgCanonical,
+    sourceAsOf: legacyLkgCanonicalSourceAsOf,
+  };
+}
+
+function snapshotCandidate(snapshot, run) {
+  const sourceAsOf = snapshotSourceAsOf(snapshot);
+  if (!validToneSnapshot(snapshot) || sourceAsOf === null) {
+    throw new Error("GDELT snapshot has no provider-derived article seendate");
+  }
+  const payloadBytes = Buffer.from(`${JSON.stringify(snapshot, null, 2)}\n`);
+  const providerObservation = providerObservationFromSnapshot(snapshot);
+  const providerPayloadBytes = Buffer.from(`${JSON.stringify(providerObservation, null, 2)}\n`);
+  return {
+    key: LKG_ARTIFACT_KEY,
+    currentRelativePath: `data/${OUTPUT_FILE}`,
+    payloadBytes,
+    sourceAsOf,
+    validateDocument: validToneSnapshot,
+    deriveSourceAsOf: snapshotSourceAsOf,
+    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+    provider_observation: buildProviderObservationV2({
+      payloadBytes: providerPayloadBytes,
+      sourceAsOf: providerObservationSourceAsOf(providerObservation),
+      validateDocument: validProviderObservation,
+      deriveSourceAsOf: providerObservationSourceAsOf,
+      candidateContainsObservation: candidateContainsProviderObservation,
+      run,
+    }),
+  };
+}
+
+function runContext({ runId, runAttempt, eventName, observedAt }) {
+  return {
+    runId: String(runId),
+    runAttempt: Number(runAttempt),
+    eventName: String(eventName),
+    observedAt,
+  };
+}
+
+export async function runNewsTone({
+  repoRoot: repoRootPath = repoRoot,
+  args = parseArgs(process.argv.slice(2)),
+  observedAt = isoNow(),
+  runId = process.env.GITHUB_RUN_ID || "local",
+  runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
+  eventName = process.env.GITHUB_EVENT_NAME || "local",
+  attemptId = defaultAttemptId("gdelt-news-tone", observedAt),
+  controlledFailure = (process.env.INPUT_CONTROLLED_FAILURE || "").trim() === "transport",
+  attemptShardPath = path.join(repoRootPath, "data", "admin", "data-supply-state", "detection-attempts", `${LANE_ID}.json`),
+  observeAttemptFn = observeAttempt,
+  buildFn = build,
+} = {}) {
+  const write = args.noWrite !== true;
+  const run = runContext({ runId, runAttempt, eventName, observedAt });
+  const store = new LaneLkgStore({ repoRoot: repoRootPath, laneId: LANE_ID });
+  const observed = await observeAttemptFn({
     maxRecords: args.maxRecords,
     controlledFailure,
     retries: args.retries,
     retryBackoffMs: args.retryBackoffMs,
   });
-  if (!args.noWrite) {
-    writeAttemptShard({
-      laneId: LANE_ID,
-      attemptShardPath: ATTEMPT_SHARD_PATH,
-      observedAt,
-      attemptId: defaultAttemptId("gdelt-news-tone", observedAt),
-      result,
-    });
-  }
-  if (result.status !== "ready") {
-    // Degraded, not corrupt: the honest attempt shard is the detection-floor
-    // signal (KPI reads shard status, not exit code). Stay green so a shadow,
-    // non-KPI proxy lane does not trip the pipeline-failure alarm.
-    console.error(`[degraded] GDELT news tone provider ${result.reason}; attempt shard recorded, computed output withheld`);
-    return;
+  const result = withEndpointAssertions(observed.result);
+
+  if (write) {
+    writeAttemptShard({ laneId: LANE_ID, attemptShardPath, observedAt, attemptId, result });
   }
 
-  const snapshot = await build(args);
+  const retainFailure = (reason) => {
+    if (!write) {
+      return { ok: false, reason, degraded: true, exitCode: 0, retrySet: [], result };
+    }
+    const failure = store.recordFailure({
+      artifacts: [snapshotArtifact(repoRootPath)],
+      run,
+      reason,
+    });
+    // GDELT remains a shadow/non-KPI lane. A retained LKG must keep provider
+    // degradation graceful even when the upstream failure is a 429.
+    return {
+      ok: false,
+      reason,
+      degraded: true,
+      exitCode: 0,
+      retrySet: failure.retrySet,
+      retained: failure.hasCompleteLkg,
+      result,
+    };
+  };
+
+  if (result.status !== "ready") return retainFailure(result.reason);
+
+  let built;
+  try {
+    built = await buildFn(args, {
+      dataRootPath: path.join(repoRootPath, "data"),
+      privateRootPath: path.join(repoRootPath, "_private", "admin", "fenok-flow", "gdelt_news"),
+    });
+  } catch {
+    return retainFailure("unexpected_error");
+  }
+  const snapshot = built?.snapshot ?? built;
+  if (snapshot?.status !== "ready") return retainFailure("empty_payload");
+
+  let candidate;
+  try {
+    candidate = snapshotCandidate(snapshot, run);
+  } catch {
+    return retainFailure("schema_drift");
+  }
+  if (!write) {
+    return { ok: true, reason: "ok", degraded: false, exitCode: 0, retrySet: [], snapshot };
+  }
+  const decisions = store.evaluatePromotionCandidates([candidate], run);
+  const decision = decisions[0];
+  if (!decision.eligible) {
+    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)) {
+      store.recordPromotionDeferral({ artifacts: [candidate], run, reason: decision.reason });
+    }
+    return {
+      ok: false,
+      reason: decision.reason,
+      degraded: true,
+      exitCode: 0,
+      retrySet: store.stateSnapshot().retry_set,
+      result,
+      snapshot,
+    };
+  }
+
+  const history = built?.history ?? mergeHistory(snapshot, { dataRootPath: path.join(repoRootPath, "data") });
+  writeJson(OUTPUT_FILE, snapshot, path.join(repoRootPath, "data"));
+  writeJson(HISTORY_FILE, history, path.join(repoRootPath, "data"));
+  const success = store.recordSuccess({ artifacts: [candidate], run });
+  return {
+    ok: true,
+    reason: "ok",
+    degraded: false,
+    exitCode: 0,
+    retrySet: success.retrySet,
+    recovered: success.state.items[LKG_ARTIFACT_KEY]?.recovered_at === observedAt,
+    snapshot,
+    history,
+    result,
+  };
+}
+
+async function main() {
+  const args = parseArgs(process.argv.slice(2));
+  const result = await runNewsTone({ args });
+  if (!result.ok) {
+    console.error(`[degraded] GDELT news tone ${result.reason}; retry set: ${result.retrySet.join(", ") || "none"}`);
+    return;
+  }
+  const snapshot = result.snapshot;
   console.log(JSON.stringify({
     output_file: `data/${OUTPUT_FILE}`,
     history_file: `data/${HISTORY_FILE}`,
@@ -532,7 +814,11 @@ export {
   computeTone,
   cueCounts,
   fetchJsonWithRetry,
+  GDELT_HISTORY_PERSISTENCE_POLICY,
+  MAX_GDELT_HISTORY_SOURCE_DATES,
   latestArticleSeenAt,
+  mergeHistory,
   observeAttempt,
   queryForTicker,
+  snapshotSourceAsOf,
 };

@@ -60,7 +60,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           # Always publish the honest detection attempt shard first; then the
-          # computed proxy only when the producer step reported success.
+          # computed proxy only when the producer step reported success. The
+          # manifest-owned always_if_exists recovery paths are:
+          # - data/admin/apewisdom_attention/index.json
+          # - data/admin/apewisdom_attention/lkg/social_attention_proxy.json
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fetch-fenok-apewisdom.yml \
             --stage always_if_exists

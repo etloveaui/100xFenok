@@ -63,6 +63,8 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           # Always publish the honest detection attempt shard first; then the
           # computed proxy only when the producer step reported success.
+          # Manifest-owned LKG state: data/admin/gdelt_news_tone/index.json
+          # Manifest-owned LKG payload: data/admin/gdelt_news_tone/lkg/news_tone_proxy.json
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fetch-fenok-news-tone.yml \
             --stage always_if_exists

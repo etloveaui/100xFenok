@@ -1040,6 +1040,8 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
     const expectedAssertionIds = lane.endpoint_contract.assertions.map((assertion) => assertion.id).sort();
     const actualAssertionIds = [...assertionIds].sort();
     const hasExactAssertions = canonicalJson(expectedAssertionIds) === canonicalJson(actualAssertionIds);
+    const hasEmptyOrExactFailedAssertions = row.assertions.length === 0
+      || (hasExactAssertions && row.assertions.every((assertion) => assertion.passed === false));
     const providerThrottled = row.assertions.length === 1
       && row.assertions[0].id === "provider_throttled"
       && row.assertions[0].passed === false;
@@ -1097,7 +1099,7 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
           fail("schema_error", `${key} returned library tuple has an unsupported outcome`);
         }
       } else if (row.execution === "threw") {
-        if (!new Set(["transport", "unexpected"]).has(row.exception_kind) || row.http_status !== null || row.auth !== "not_applicable" || row.rate_limited || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) fail("schema_error", `${key} threw tuple is contradictory`);
+        if (!new Set(["transport", "unexpected"]).has(row.exception_kind) || row.http_status !== null || row.auth !== "not_applicable" || row.rate_limited || row.decode !== "not_attempted" || row.payload !== "not_available" || !hasEmptyOrExactFailedAssertions) fail("schema_error", `${key} threw tuple is contradictory`);
       } else {
         if (row.exception_kind !== null || !Number.isInteger(row.http_status) || row.http_status < 100 || row.http_status > 599) fail("schema_error", `${key} returned tuple is invalid`);
         const finraMissingResponse = row.lane_id === "finra_short_volume"
@@ -1113,16 +1115,16 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
             fail("schema_error", `${key} provider-throttled tuple is contradictory`);
           }
         } else if (authFailure) {
-          if (row.auth !== "rejected" || row.rate_limited || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) fail("schema_error", `${key} auth tuple is contradictory`);
+          if (row.auth !== "rejected" || row.rate_limited || row.decode !== "not_attempted" || row.payload !== "not_available" || !hasEmptyOrExactFailedAssertions) fail("schema_error", `${key} auth tuple is contradictory`);
         } else if (rateFailure) {
-          if (!row.rate_limited || !new Set(["ok", "not_applicable"]).has(row.auth) || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) fail("schema_error", `${key} rate tuple is contradictory`);
+          if (!row.rate_limited || !new Set(["ok", "not_applicable"]).has(row.auth) || row.decode !== "not_attempted" || row.payload !== "not_available" || !hasEmptyOrExactFailedAssertions) fail("schema_error", `${key} rate tuple is contradictory`);
         } else if (otherHttpFailure) {
-          if (row.auth !== "not_applicable" || row.rate_limited || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) fail("schema_error", `${key} HTTP tuple is contradictory`);
+          if (row.auth !== "not_applicable" || row.rate_limited || row.decode !== "not_attempted" || row.payload !== "not_available" || !hasEmptyOrExactFailedAssertions) fail("schema_error", `${key} HTTP tuple is contradictory`);
         } else if (row.decode === "error") {
-          if (!new Set(["ok", "not_applicable"]).has(row.auth) || row.rate_limited || row.payload !== "not_available" || row.assertions.length) fail("schema_error", `${key} decode tuple is contradictory`);
+          if (!new Set(["ok", "not_applicable"]).has(row.auth) || row.rate_limited || row.payload !== "not_available" || !hasEmptyOrExactFailedAssertions) fail("schema_error", `${key} decode tuple is contradictory`);
         } else if (row.decode === "ok") {
           if (!new Set(["ok", "not_applicable"]).has(row.auth) || row.rate_limited || row.payload === "not_available") fail("schema_error", `${key} decoded tuple is contradictory`);
-          if (row.payload === "empty" ? row.assertions.length !== 0 : !hasExactAssertions) fail("schema_error", `${key} assertion set is invalid`);
+          if (row.payload === "empty" ? !hasEmptyOrExactFailedAssertions : !hasExactAssertions) fail("schema_error", `${key} assertion set is invalid`);
         } else fail("schema_error", `${key} successful HTTP tuple did not decode`);
       }
     }

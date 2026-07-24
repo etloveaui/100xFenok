@@ -7,12 +7,14 @@
  * artifact is internal by default and must not be mirrored publicly.
  */
 
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  atomicWrite,
   attemptResult,
   classifyEndpointResponse,
   defaultAttemptId,
@@ -20,6 +22,14 @@ import {
   transportError,
   writeAttemptShard,
 } from "./lib/data-supply-attempt-shard.mjs";
+import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
+import {
+  LaneLkgStore,
+  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+  buildProviderObservationV2,
+  classifyLkgFailure,
+  isNaturalScheduleRun,
+} from "./lib/data-supply-lkg-store.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -36,6 +46,18 @@ const SCHEMA_VERSION = "fenok-social-attention-proxy/v0.1";
 const FORMULA_VERSION = "fenok-social-attention-v0.1-apewisdom";
 const OUTPUT_FILE = "computed/fenok_social_attention_proxy.json";
 const HISTORY_FILE = "computed/fenok_social_attention_proxy_history.json";
+const LKG_KEY = "social_attention_proxy";
+
+// Match the FINRA daily marker-history sibling: retain the newest 100 distinct
+// provider source dates, never an unbounded number of ticker rows.
+export const MAX_APEWISDOM_HISTORY_SOURCE_DATES = 100;
+export const APEWISDOM_HISTORY_PERSISTENCE_POLICY = Object.freeze({
+  schema_version: "apewisdom-bounded-persistence/v1",
+  basis: "provider_source_date",
+  scope: "per_artifact",
+  max_distinct_source_dates: MAX_APEWISDOM_HISTORY_SOURCE_DATES,
+  eviction: "oldest_source_date_first",
+});
 
 const SUPPORTED_FILTERS = new Set([
   "all",
@@ -93,16 +115,16 @@ function ymdNow() {
   return `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, "0")}${String(d.getUTCDate()).padStart(2, "0")}`;
 }
 
-function readJson(relPath, fallback = null) {
+function readJson(relPath, fallback = null, root = dataRoot) {
   try {
-    return JSON.parse(fs.readFileSync(path.join(dataRoot, relPath), "utf8"));
+    return JSON.parse(fs.readFileSync(path.join(root, relPath), "utf8"));
   } catch {
     return fallback;
   }
 }
 
-function writeJson(relPath, payload) {
-  const abs = path.join(dataRoot, relPath);
+function writeJson(relPath, payload, root = dataRoot) {
+  const abs = path.join(root, relPath);
   fs.mkdirSync(path.dirname(abs), { recursive: true });
   fs.writeFileSync(abs, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
   return abs;
@@ -174,7 +196,13 @@ function rawGet(url, { timeoutMs = 30000 } = {}) {
       res.on("data", (chunk) => {
         body += chunk;
       });
-      res.on("end", () => resolve({ statusCode: res.statusCode ?? 0, body }));
+      res.on("end", () => resolve({
+        statusCode: res.statusCode ?? 0,
+        body,
+        // The API body has no publish timestamp. Preserve the provider response
+        // HTTP Date exactly as the source marker; never substitute fetch time.
+        headers: { date: res.headers.date ?? null },
+      }));
     });
     req.on("error", reject);
     req.setTimeout(timeoutMs, () => req.destroy(new Error(`timeout after ${timeoutMs}ms`)));
@@ -184,29 +212,52 @@ function rawGet(url, { timeoutMs = 30000 } = {}) {
 // Observe the ApeWisdom aggregate (page 1) and classify it into a detection
 // attempt result. A dispatch-only controlled failure forces an honest transport
 // failure so the failure path can be exercised without faking success.
-async function observeAttempt({ filter, controlledFailure }) {
+function providerSourceAsOf(response) {
+  const raw = Array.isArray(response?.headers?.date) ? response.headers.date[0] : response?.headers?.date;
+  if (typeof raw !== "string" || raw.trim() === "") return null;
+  const timestamp = Date.parse(raw);
+  return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
+}
+
+function withEndpointAssertionIds(result) {
+  if ((result?.attempt?.assertions ?? []).length > 0 || result?.status === "ready") return result;
+  const assertions = DATA_SUPPLY_DETECTION_CONFIG.lanes
+    .find((lane) => lane.id === LANE_ID)
+    .endpoint_contract.assertions
+    .map((assertion) => ({ id: assertion.id, passed: false }));
+  return { ...result, attempt: { ...result.attempt, assertions } };
+}
+
+async function observeAttempt({ filter, controlledFailure, request = rawGet }) {
   if (controlledFailure) {
-    return { result: attemptResult("transport_error", threwTuple("transport")), document: null };
+    return {
+      result: withEndpointAssertionIds(attemptResult("transport_error", threwTuple("transport"))),
+      document: null,
+      response: null,
+    };
   }
   try {
-    const raw = await rawGet(apeWisdomUrl(filter, 1));
-    const result = classifyEndpointResponse(raw, { laneId: LANE_ID });
-    return { result, document: result.document ?? null };
+    const response = await request(apeWisdomUrl(filter, 1));
+    const result = withEndpointAssertionIds(classifyEndpointResponse(response, { laneId: LANE_ID }));
+    return { result, document: result.document ?? null, response };
   } catch (err) {
     const kind = transportError(err) ? "transport" : "unexpected";
     return {
-      result: attemptResult(kind === "transport" ? "transport_error" : "unexpected_error", threwTuple(kind)),
+      result: withEndpointAssertionIds(
+        attemptResult(kind === "transport" ? "transport_error" : "unexpected_error", threwTuple(kind)),
+      ),
       document: null,
+      response: null,
     };
   }
 }
 
-function loadTickerUniverse({ tickers, limit }) {
+function loadTickerUniverse({ tickers, limit, dataRoot: root = dataRoot }) {
   let out = [];
   if (tickers) {
     out = tickers.split(",").map(normalizeTicker).filter(Boolean);
   } else {
-    const fenokSignals = readJson("computed/fenok_signals.json", {});
+    const fenokSignals = readJson("computed/fenok_signals.json", {}, root);
     const rows = Array.isArray(fenokSignals.rows) ? fenokSignals.rows : [];
     out = rows
       .filter((row) => row.market_scope === "us")
@@ -277,7 +328,7 @@ function buildRows({ universeTickers, apeRows, count, sourceDate }) {
   });
 }
 
-async function loadPages({ filter, maxPages, inputFile, noFetch, cacheDate }) {
+async function loadPages({ filter, maxPages, inputFile, noFetch, cacheDate, privateDir = privateRoot, request = fetchJson }) {
   if (inputFile) {
     const payload = JSON.parse(fs.readFileSync(path.resolve(inputFile), "utf8"));
     return Array.isArray(payload) ? payload : [payload];
@@ -285,12 +336,12 @@ async function loadPages({ filter, maxPages, inputFile, noFetch, cacheDate }) {
   const pages = [];
   let totalPages = maxPages;
   for (let page = 1; page <= totalPages && page <= maxPages; page++) {
-    const cachePath = path.join(privateRoot, filter, cacheDate, `page-${page}.json`);
+    const cachePath = path.join(privateDir, filter, cacheDate, `page-${page}.json`);
     if (fs.existsSync(cachePath)) {
       pages.push(JSON.parse(fs.readFileSync(cachePath, "utf8")));
     } else {
       if (noFetch) break;
-      const payload = await fetchJson(apeWisdomUrl(filter, page));
+      const payload = await request(apeWisdomUrl(filter, page));
       writePrivateJson(cachePath, payload);
       pages.push(payload);
     }
@@ -300,7 +351,7 @@ async function loadPages({ filter, maxPages, inputFile, noFetch, cacheDate }) {
   return pages;
 }
 
-function buildSnapshot({ filter, pages, rows, sourceDate, generatedAt }) {
+function buildSnapshot({ filter, pages, rows, sourceDate, sourceAsOf, providerObservationPayloadSha256, generatedAt }) {
   const firstPage = pages[0] ?? {};
   const count = Number(firstPage.count) || rows.length;
   return {
@@ -312,6 +363,8 @@ function buildSnapshot({ filter, pages, rows, sourceDate, generatedAt }) {
       filter,
       source_url: apeWisdomUrl(filter, 1),
       source_date: sourceDate,
+      source_as_of: sourceAsOf,
+      provider_observation_payload_sha256: providerObservationPayloadSha256,
       pages_collected: pages.length,
       reported_count: count,
     },
@@ -336,13 +389,32 @@ function buildSnapshot({ filter, pages, rows, sourceDate, generatedAt }) {
   };
 }
 
-function mergeHistory(snapshot) {
-  const history = readJson(HISTORY_FILE, {
+function validSourceDate(value) {
+  if (typeof value !== "string" || !/^\d{8}$/.test(value)) return false;
+  const iso = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
+  const date = new Date(`${iso}T00:00:00.000Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === iso;
+}
+
+export function mergeHistory(snapshot, { dataRoot: root = dataRoot } = {}) {
+  const fallback = {
     schema_version: 1,
     formula_version: FORMULA_VERSION,
     generated_at: snapshot.generated_at,
     rows: [],
-  });
+  };
+  const historyPath = path.join(root, HISTORY_FILE);
+  let history = fallback;
+  if (fs.existsSync(historyPath)) {
+    try {
+      history = JSON.parse(fs.readFileSync(historyPath, "utf8"));
+    } catch (error) {
+      throw new Error(`ApeWisdom history is invalid JSON: ${error.message}`);
+    }
+    if (history?.schema_version !== 1 || history?.formula_version !== FORMULA_VERSION || !Array.isArray(history?.rows)) {
+      throw new Error("ApeWisdom history contract is invalid");
+    }
+  }
   const incoming = snapshot.rows
     .filter((row) => row.social_attention_proxy.score_0_100 != null)
     .map((row) => ({
@@ -357,6 +429,13 @@ function mergeHistory(snapshot) {
     }));
   const incomingKeys = new Set(incoming.map((row) => `${row.ticker}|${row.source_date}`));
   const kept = (history.rows ?? []).filter((row) => !incomingKeys.has(`${row.ticker}|${row.source_date}`));
+  const all = [...kept, ...incoming];
+  if (all.some((row) => !validSourceDate(row?.source_date))) {
+    throw new Error("ApeWisdom history carries an invalid provider source date");
+  }
+  const sourceDates = [...new Set(all.map((row) => row.source_date))].sort();
+  const retainedSourceDates = new Set(sourceDates.slice(-MAX_APEWISDOM_HISTORY_SOURCE_DATES));
+  const retainedRows = all.filter((row) => retainedSourceDates.has(row.source_date));
   return {
     schema_version: 1,
     formula_version: FORMULA_VERSION,
@@ -365,24 +444,48 @@ function mergeHistory(snapshot) {
       third_party_raw_public: false,
       rows_are_derived_only: true,
     },
-    rows: [...kept, ...incoming].sort((a, b) => (
+    persistence_policy: APEWISDOM_HISTORY_PERSISTENCE_POLICY,
+    persistence_state: {
+      available_source_dates: sourceDates.length,
+      retained_source_dates: retainedSourceDates.size,
+      pruned_source_dates: sourceDates.length - retainedSourceDates.size,
+    },
+    rows: retainedRows.sort((a, b) => (
       String(a.ticker).localeCompare(String(b.ticker)) || String(a.source_date).localeCompare(String(b.source_date))
     )),
   };
 }
 
-async function build(args, { cacheDate = ymdNow() } = {}) {
-  const pages = await loadPages({
+async function build(args, {
+  cacheDate = ymdNow(),
+  sourceAsOf = null,
+  providerObservationPayloadSha256 = null,
+  generatedAt = isoNow(),
+  dataRoot: root = dataRoot,
+  privateDir = privateRoot,
+  pages: suppliedPages = null,
+  request = fetchJson,
+  write = !args.noWrite,
+} = {}) {
+  if (typeof sourceAsOf !== "string" || !Number.isFinite(Date.parse(sourceAsOf))) {
+    throw new Error("ApeWisdom provider source_as_of is required");
+  }
+  if (!/^[0-9a-f]{64}$/.test(providerObservationPayloadSha256 ?? "")) {
+    throw new Error("ApeWisdom provider observation payload hash is required");
+  }
+  const pages = suppliedPages ?? await loadPages({
     filter: args.filter,
     maxPages: args.maxPages,
     inputFile: args.inputFile,
     noFetch: args.noFetch,
     cacheDate,
+    privateDir,
+    request,
   });
   const firstPage = pages[0] ?? {};
   const apeRows = normalizeApeRows(pages);
-  const tickers = loadTickerUniverse(args);
-  const sourceDate = cacheDate;
+  const tickers = loadTickerUniverse({ ...args, dataRoot: root });
+  const sourceDate = sourceAsOf.slice(0, 10).replaceAll("-", "");
   const rows = buildRows({
     universeTickers: tickers,
     apeRows,
@@ -394,58 +497,296 @@ async function build(args, { cacheDate = ymdNow() } = {}) {
     pages,
     rows,
     sourceDate,
-    generatedAt: isoNow(),
+    sourceAsOf,
+    providerObservationPayloadSha256,
+    generatedAt,
   });
-  const history = mergeHistory(snapshot);
-  if (!args.noWrite) {
-    writeJson(OUTPUT_FILE, snapshot);
-    writeJson(HISTORY_FILE, history);
+  const history = mergeHistory(snapshot, { dataRoot: root });
+  if (write) {
+    writeJson(OUTPUT_FILE, snapshot, root);
+    writeJson(HISTORY_FILE, history, root);
   }
   return {
     output_file: `data/${OUTPUT_FILE}`,
     history_file: `data/${HISTORY_FILE}`,
-    wrote: !args.noWrite,
+    wrote: write,
     filter: args.filter,
     pages_collected: pages.length,
     coverage: snapshot.coverage,
     sample_rows: snapshot.rows
       .filter((row) => row.social_attention_proxy.score_0_100 != null)
       .slice(0, 8),
+    snapshot,
+    history,
+  };
+}
+
+function sha256Hex(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function serializeDocument(document) {
+  return `${JSON.stringify(document, null, 2)}\n`;
+}
+
+function validRfc3339Utc(value) {
+  return typeof value === "string" && value.endsWith("Z") && Number.isFinite(Date.parse(value));
+}
+
+function validApeWisdomProviderObservation(document) {
+  return document !== null && typeof document === "object" && !Array.isArray(document)
+    && document.schema_version === "apewisdom-provider-observation/v1"
+    && validRfc3339Utc(document.source_as_of)
+    && document.response !== null && typeof document.response === "object" && !Array.isArray(document.response)
+    && Array.isArray(document.response.results) && document.response.results.length > 0;
+}
+
+function apeWisdomProviderSourceAsOf(document) {
+  return validApeWisdomProviderObservation(document) ? document.source_as_of : null;
+}
+
+function validApeWisdomSnapshot(document) {
+  const source = document?.source;
+  return document !== null && typeof document === "object" && !Array.isArray(document)
+    && document.schema_version === 1
+    && source?.provider === "ApeWisdom"
+    && validRfc3339Utc(source.source_as_of)
+    && validSourceDate(source.source_date)
+    && source.source_date === source.source_as_of.slice(0, 10).replaceAll("-", "")
+    && /^[0-9a-f]{64}$/.test(source.provider_observation_payload_sha256 ?? "")
+    && Array.isArray(document.rows) && document.rows.length > 0;
+}
+
+function apeWisdomSnapshotSourceAsOf(document) {
+  return validApeWisdomSnapshot(document) ? document.source.source_as_of : null;
+}
+
+// The pre-L/P/R canonical has only source_date, which was assigned by our
+// observer. It is not a provider observation and must never be a candidate for
+// new primary promotion. It is accepted only to seed an existing deployment's
+// first retained LKG when the provider is already unavailable.
+function validLegacyApeWisdomSnapshot(document) {
+  const source = document?.source;
+  return document !== null && typeof document === "object" && !Array.isArray(document)
+    && document.schema_version === 1
+    && source?.provider === "ApeWisdom"
+    && typeof source.filter === "string" && typeof source.source_url === "string"
+    && validSourceDate(source.source_date)
+    && !Object.hasOwn(source, "source_as_of")
+    && !Object.hasOwn(source, "provider_observation_payload_sha256")
+    && Array.isArray(document.rows) && document.rows.length > 0;
+}
+
+function legacyApeWisdomSourceAsOf(document) {
+  if (!validLegacyApeWisdomSnapshot(document)) return null;
+  const sourceDate = document.source.source_date;
+  return `${sourceDate.slice(0, 4)}-${sourceDate.slice(4, 6)}-${sourceDate.slice(6, 8)}T00:00:00.000Z`;
+}
+
+function readLegacyApeWisdomSnapshot(filePath) {
+  if (!fs.existsSync(filePath)) return null;
+  try {
+    const document = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    return validLegacyApeWisdomSnapshot(document) ? document : null;
+  } catch {
+    return null;
+  }
+}
+
+function legacyLkgSeedAllowed({ runnerRepoRoot, recoveryState }) {
+  const item = recoveryState?.items?.[LKG_KEY];
+  if (!item) return true;
+  const descriptor = item?.lkg;
+  const expectedPath = `data/admin/${LANE_ID}/lkg/${LKG_KEY}.json`;
+  if (item.resolution_state !== "lkg_primary" || descriptor?.path !== expectedPath) return false;
+  return readLegacyApeWisdomSnapshot(path.join(runnerRepoRoot, descriptor.path)) !== null;
+}
+
+function candidateContainsProviderObservation(candidateDocument, providerDocument) {
+  if (!validApeWisdomSnapshot(candidateDocument) || !validApeWisdomProviderObservation(providerDocument)) return false;
+  return candidateDocument.source.source_as_of === providerDocument.source_as_of
+    && candidateDocument.source.provider_observation_payload_sha256 === sha256Hex(
+      Buffer.from(serializeDocument(providerDocument)),
+    );
+}
+
+function validateControlledFailure(value, eventName) {
+  if (!value) return false;
+  if (value !== "transport") throw new Error(`unknown ApeWisdom controlled failure: ${value}`);
+  if (eventName !== "workflow_dispatch") throw new Error("controlled failure requires workflow_dispatch");
+  return true;
+}
+
+function apeWisdomLkgArtifact(canonicalPath, { allowLegacy = false } = {}) {
+  return {
+    key: LKG_KEY,
+    canonicalPath,
+    validateDocument: (document) => validApeWisdomSnapshot(document)
+      || (allowLegacy && validLegacyApeWisdomSnapshot(document)),
+    sourceAsOf: (document) => apeWisdomSnapshotSourceAsOf(document)
+      ?? (allowLegacy ? legacyApeWisdomSourceAsOf(document) : null),
+  };
+}
+
+export async function runApeWisdomAttention({
+  repoRoot: runnerRepoRoot = repoRoot,
+  dataRoot: runnerDataRoot = dataRoot,
+  privateRoot: runnerPrivateRoot = privateRoot,
+  canonicalPath = path.join(runnerDataRoot, OUTPUT_FILE),
+  historyPath = path.join(runnerDataRoot, HISTORY_FILE),
+  attemptShardPath = path.join(runnerRepoRoot, "data", "admin", "data-supply-state", "detection-attempts", `${LANE_ID}.json`),
+  filter = DEFAULT_FILTER,
+  maxPages = 10,
+  tickers = "",
+  limit = 0,
+  inputFile = "",
+  noFetch = false,
+  noWrite = false,
+  request = rawGet,
+  observedAt = isoNow(),
+  attemptId = defaultAttemptId("apewisdom-attention", observedAt),
+  runId = process.env.GITHUB_RUN_ID || "local",
+  runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
+  eventName = process.env.GITHUB_EVENT_NAME || "local",
+  controlledFailure = process.env.INPUT_CONTROLLED_FAILURE || "",
+} = {}) {
+  if (!SUPPORTED_FILTERS.has(filter)) throw new Error(`Unsupported ApeWisdom filter: ${filter}`);
+  const controlled = validateControlledFailure(String(controlledFailure).trim(), eventName);
+  const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
+  const lkgStore = new LaneLkgStore({ repoRoot: runnerRepoRoot, laneId: LANE_ID });
+  const initialRecoveryState = lkgStore.stateSnapshot();
+  const artifact = apeWisdomLkgArtifact(canonicalPath, {
+    allowLegacy: legacyLkgSeedAllowed({ runnerRepoRoot, recoveryState: initialRecoveryState }),
+  });
+  const args = { filter, maxPages, tickers, limit, inputFile, noFetch, noWrite };
+
+  // Always observe and persist the current endpoint-contract result first. The
+  // LKG store is deliberately separate from this attempt evidence.
+  const observation = await observeAttempt({ filter, controlledFailure: controlled, request });
+  const attempt = noWrite ? null : writeAttemptShard({
+    laneId: LANE_ID,
+    attemptShardPath,
+    observedAt,
+    attemptId,
+    result: observation.result,
+  });
+  const recordFailure = (reason) => {
+    if (noWrite) {
+      return { hasCompleteLkg: lkgStore.validRetainedLkg(LKG_KEY, artifact.validateDocument, artifact.sourceAsOf), retrySet: lkgStore.stateSnapshot().retry_set };
+    }
+    return lkgStore.recordFailure({ artifacts: [artifact], run, reason });
+  };
+  const fail = (reason) => {
+    const failure = recordFailure(reason);
+    return {
+      ok: false,
+      reason,
+      attempt,
+      retrySet: failure.retrySet,
+      ...classifyLkgFailure({ reason, hasCompleteLkg: failure.hasCompleteLkg }),
+    };
+  };
+  if (observation.result.status !== "ready") {
+    return fail(controlled ? "controlled_failure" : observation.result.reason);
+  }
+
+  const sourceAsOf = providerSourceAsOf(observation.response);
+  if (sourceAsOf === null || observation.document === null) return fail("source_date_unavailable");
+  const providerObservation = {
+    schema_version: "apewisdom-provider-observation/v1",
+    source_as_of: sourceAsOf,
+    response: observation.document,
+  };
+  const providerSerialized = serializeDocument(providerObservation);
+  const cacheDate = sourceAsOf.slice(0, 10).replaceAll("-", "");
+
+  // Reuse the exact page-1 response that supplied the provider-issued Date.
+  let built;
+  try {
+    if (!noWrite) writePrivateJson(path.join(runnerPrivateRoot, filter, cacheDate, "page-1.json"), observation.document);
+    built = await build(args, {
+      cacheDate,
+      sourceAsOf,
+      providerObservationPayloadSha256: sha256Hex(Buffer.from(providerSerialized)),
+      generatedAt: observedAt,
+      dataRoot: runnerDataRoot,
+      privateDir: runnerPrivateRoot,
+      write: false,
+    });
+  } catch (error) {
+    return fail(transportError(error) ? "transport_error" : "unexpected_error");
+  }
+  const serialized = serializeDocument(built.snapshot);
+  const candidate = {
+    key: LKG_KEY,
+    currentRelativePath: path.relative(runnerRepoRoot, canonicalPath),
+    payloadBytes: Buffer.from(serialized),
+    sourceAsOf: apeWisdomSnapshotSourceAsOf(built.snapshot),
+    validateDocument: validApeWisdomSnapshot,
+    deriveSourceAsOf: apeWisdomSnapshotSourceAsOf,
+    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+    provider_observation: buildProviderObservationV2({
+      payloadBytes: Buffer.from(providerSerialized),
+      sourceAsOf: apeWisdomProviderSourceAsOf(providerObservation),
+      validateDocument: validApeWisdomProviderObservation,
+      deriveSourceAsOf: apeWisdomProviderSourceAsOf,
+      candidateContainsObservation: candidateContainsProviderObservation,
+      run,
+    }),
+  };
+  const recoveryState = lkgStore.stateSnapshot();
+  if (recoveryState.items[LKG_KEY]?.retry === true && !isNaturalScheduleRun(run)) {
+    return {
+      ok: false,
+      reason: "recovery_requires_schedule",
+      attempt,
+      retrySet: recoveryState.retry_set,
+      degraded: true,
+      corrupt: false,
+      exitCode: 0,
+    };
+  }
+  const decisions = lkgStore.evaluatePromotionCandidates([candidate], run);
+  if (!decisions[0].eligible) {
+    const reason = decisions[0].reason;
+    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(reason) && !noWrite) {
+      lkgStore.recordPromotionDeferral({ artifacts: [candidate], run, reason });
+    }
+    return {
+      ok: false,
+      reason,
+      attempt,
+      retrySet: lkgStore.stateSnapshot().retry_set,
+      degraded: true,
+      corrupt: false,
+      exitCode: 0,
+    };
+  }
+  if (noWrite) return { ok: true, reason: "ok", attempt, retrySet: recoveryState.retry_set, wrote: false, recovered: false };
+  atomicWrite(canonicalPath, serialized);
+  atomicWrite(historyPath, serializeDocument(built.history));
+  const success = lkgStore.recordSuccess({ artifacts: [candidate], run });
+  return {
+    ok: true,
+    reason: "ok",
+    attempt,
+    retrySet: success.retrySet,
+    wrote: true,
+    recovered: success.state.items[LKG_KEY]?.recovered_at === observedAt,
   };
 }
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const observedAt = isoNow();
-  const cacheDate = ymdNow();
-  const controlledFailure = (process.env.INPUT_CONTROLLED_FAILURE || "").trim() === "transport";
-
-  // Detection floor first: observe the provider and publish an honest attempt
-  // shard on every run (ready OR failure). Never fake success.
-  const { result, document } = await observeAttempt({ filter: args.filter, controlledFailure });
-  if (!args.noWrite) {
-    writeAttemptShard({
-      laneId: LANE_ID,
-      attemptShardPath: ATTEMPT_SHARD_PATH,
-      observedAt,
-      attemptId: defaultAttemptId("apewisdom-attention", observedAt),
-      result,
-    });
-  }
-  if (result.status !== "ready") {
-    // Degraded, not corrupt: the honest attempt shard is the detection-floor
-    // signal (KPI reads shard status, not exit code). Stay green so a shadow,
-    // non-KPI proxy lane does not trip the pipeline-failure alarm.
-    console.error(`[degraded] ApeWisdom attention provider ${result.reason}; attempt shard recorded, computed output withheld`);
+  const outcome = await runApeWisdomAttention(args);
+  if (!outcome.ok) {
+    const prefix = outcome.degraded ? "[degraded]" : "[corrupt]";
+    const message = `${prefix} ApeWisdom attention ${outcome.reason}; retry set: ${(outcome.retrySet ?? []).join(", ") || "none"}`;
+    if (outcome.degraded) console.log(message);
+    else console.error(message);
+    process.exitCode = outcome.exitCode ?? 2;
     return;
   }
-
-  // Seed the private page-1 cache so the producer reuses the exact observed
-  // payload instead of issuing a second request.
-  if (document && !args.noWrite) {
-    writePrivateJson(path.join(privateRoot, args.filter, cacheDate, "page-1.json"), document);
-  }
-  const outcome = await build(args, { cacheDate });
   console.log(JSON.stringify(outcome, null, 2));
 }
 

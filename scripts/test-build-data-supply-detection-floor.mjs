@@ -1032,6 +1032,21 @@ function runAttemptChecks(artifactRoot) {
     assert.equal(validateAttemptEvidence({ schema_version: ATTEMPT_SCHEMA, attempts: [row] }), true);
     assert.equal(classifyAttempt(row).reason, reasonCase.expected_reason);
   }
+  for (const reason of ["transport_error", "rate_limited", "decode_error", "empty_payload"]) {
+    const row = legalAttempt(reason);
+    row.assertions = [{ id: "observations_array", passed: false }];
+    assert.equal(
+      validateAttemptEvidence({ schema_version: ATTEMPT_SCHEMA, attempts: [row] }),
+      true,
+      `${reason} may preserve the exact endpoint assertion ids as failed evidence`,
+    );
+  }
+  const wrongFailureAssertions = legalAttempt("rate_limited");
+  wrongFailureAssertions.assertions = [{ id: "wrong_assertion", passed: false }];
+  assertThrowsCode(
+    () => validateAttemptEvidence({ schema_version: ATTEMPT_SCHEMA, attempts: [wrongFailureAssertions] }),
+    "schema_error",
+  );
   const brokenSoxEndpoint = clone(attemptsFixture);
   const soxAttempt = brokenSoxEndpoint.attempts.find((row) => row.lane_id === "nasdaq_giw_sox");
   soxAttempt.assertions[0].passed = false;

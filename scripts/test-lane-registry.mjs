@@ -178,6 +178,37 @@ function clone(value) {
       "the bounded StockAnalysis pair lane is live after its first committed natural 8-pair attempt");
     assert.equal(registryLaneById("yahoo_private_options").enforcement, "live",
       "the targeted Yahoo options lane is live after its first committed natural schedule attempt");
+    for (const {
+      id,
+      enforcement,
+      recoveryStore,
+      lkgShard,
+      kpiRequired,
+    } of [
+      {
+        id: "apewisdom_attention",
+        enforcement: "live",
+        recoveryStore: "data/admin/apewisdom_attention/index.json",
+        lkgShard: "data/admin/apewisdom_attention/lkg/social_attention_proxy.json",
+        kpiRequired: true,
+      },
+      {
+        id: "gdelt_news_tone",
+        enforcement: "shadow",
+        recoveryStore: "data/admin/gdelt_news_tone/index.json",
+        lkgShard: "data/admin/gdelt_news_tone/lkg/news_tone_proxy.json",
+        kpiRequired: false,
+      },
+    ]) {
+      const recoveryLane = registryLaneById(id);
+      const detectionLane = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((row) => row.id === id);
+      assert.equal(recoveryLane.enforcement, enforcement, `${id} enforcement must not drift`);
+      assert.equal(recoveryLane.recovery_store, recoveryStore, `${id} recovery index is registry-owned`);
+      assert.equal(recoveryLane.kpi_recovery_shape, "general", `${id} uses the generic LaneLkgStore KPI adapter`);
+      assert.ok(recoveryLane.commit_shards.includes(recoveryStore), `${id} recovery index must be committed`);
+      assert.ok(recoveryLane.commit_shards.includes(lkgShard), `${id} retained LKG must be committed`);
+      assert.equal(detectionLane?.kpi_required, kpiRequired, `${id} KPI requirement follows enforcement`);
+    }
     assert.deepEqual(
       registryLaneById("finra_ats_weekly"),
       {
