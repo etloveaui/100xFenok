@@ -2,399 +2,45 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_backfill_select",
-  "generated_at": "2026-07-23T01:15:51Z",
+  "generated_at": "2026-07-23T23:40:50Z",
   "policy": {
-    "limit": 40,
-    "max_age_hours": 168.0,
+    "limit": 120,
+    "offset": 0,
+    "max_age_hours": null,
     "cooldown_days": 7,
     "cooldown_failure_threshold": 3,
-    "required_history_periods": [],
-    "history_gaps_only": false,
-    "selection": "never-fetched missing ETF details first, lower prior failures before retries, then Yahoo fallback retries, then multi-year history gaps, then stale records; new_etfs are prioritized within each reason/failure bucket, then etf_universe, then etf_screener-only rows"
+    "required_history_periods": [
+      "daily_1y"
+    ],
+    "history_gaps_only": true,
+    "selection": "exact Fenok Edge scored-ETF daily_1y fetchable plan; includes missing detail files and daily_1y row-count gaps below min rows",
+    "plan_path": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
+    "min_daily_1y_rows": 200
   },
   "counts": {
-    "candidates": 4585,
-    "selected": 40,
-    "missing": 1,
+    "candidates": 0,
+    "selected": 0,
+    "missing": 0,
     "fallback_retry": 0,
     "history_gap": 0,
     "inception_limited_history_gap": 0,
-    "terminal_limited_history_gap": 0,
     "total_history_gap": 0,
-    "stale": 4584,
+    "stale": 0,
     "cooldown_skipped": 0,
-    "prior_failed_candidates": 46,
+    "prior_failed_candidates": 0,
+    "daily_1y_missing_file": 0,
+    "daily_1y_short_rows": 0,
+    "offset_skipped": 0,
+    "scheduled_plan_rows": 0,
     "ledger_tracked": 275,
     "ledger_cooldown": 14
   },
-  "selected": [
-    {
-      "ticker": "CPTL",
-      "source": "etf_screener",
-      "reason": "missing",
-      "age_hours": null,
-      "prior_failures": 0,
-      "priority": 2,
-      "reason_priority": 0
-    },
-    {
-      "ticker": "AMKX",
-      "source": "new_etfs",
-      "reason": "stale",
-      "age_hours": 178.68,
-      "prior_failures": 0,
-      "priority": 0,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AMZG",
-      "source": "new_etfs",
-      "reason": "stale",
-      "age_hours": 178.68,
-      "prior_failures": 0,
-      "priority": 0,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AXTC",
-      "source": "new_etfs",
-      "reason": "stale",
-      "age_hours": 178.57,
-      "prior_failures": 0,
-      "priority": 0,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "BBUL",
-      "source": "new_etfs",
-      "reason": "stale",
-      "age_hours": 178.53,
-      "prior_failures": 0,
-      "priority": 0,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AGRW",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.18,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AGZ",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.18,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AGZD",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.18,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AHD",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.18,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AHLT",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.18,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AHYB",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.18,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AIA",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.18,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AIBD",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.18,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AIBU",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.18,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AIEQ",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.18,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AIFD",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.18,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AIMS",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.18,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AINP",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.18,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AINT",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.18,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AIPI",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AIPO",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AIQ",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AIRR",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AIS",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AIUP",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AIVC",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AIVI",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AIVL",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AIYY",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AKRE",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "ALAI",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "ALBG",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "ALDB",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "ALIL",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "ALRG",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "ALTL",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "ALTY",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AMA",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AMAU",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    },
-    {
-      "ticker": "AMAX",
-      "source": "etf_universe",
-      "reason": "stale",
-      "age_hours": 809.17,
-      "prior_failures": 0,
-      "priority": 1,
-      "reason_priority": 3
-    }
-  ],
+  "selected": [],
   "cooldown": [],
   "inception_limited": [],
-  "terminal_limited": [],
   "pending_ledger": {
     "path": "backfill/pending_ledger.json",
-    "generated_at": "2026-07-23T01:26:28Z",
+    "generated_at": "2026-07-23T23:40:50Z",
     "counts": {
       "tracked": 275,
       "cooldown": 14,
