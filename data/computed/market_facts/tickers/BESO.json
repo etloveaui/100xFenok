@@ -2,18 +2,18 @@
   "schema_version": "market-facts/v1",
   "ticker": "BESO",
   "asset_type": "etf",
-  "generated_at": "2026-07-24T02:21:07Z",
+  "generated_at": "2026-07-24T23:25:49Z",
   "source_as_of": "2026-06-18",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
-    "name": "BESO",
-    "exchange": null,
-    "currency": null,
+    "name": "GSR Crypto Core3 ETF",
+    "exchange": "NGM",
+    "currency": "USD",
     "sector": null,
     "industry": null,
-    "fund_family": null,
-    "category": null
+    "fund_family": "GSR Strategies, LLC",
+    "category": "Digital Assets"
   },
   "facts": {
     "price": {
@@ -41,10 +41,10 @@
       "candidate_count": 1
     },
     "previous_close": {
-      "value": 23.7,
-      "source": "stockanalysis.quote",
-      "as_of": "2026-06-18",
-      "fetched_at": "2026-06-19T08:43:26Z",
+      "value": 26.335,
+      "source": "yf",
+      "as_of": "2026-07-24",
+      "fetched_at": "2026-07-24T23:14:47Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -53,6 +53,13 @@
       ],
       "candidates": [
         {
+          "value": 26.335,
+          "source": "yf",
+          "as_of": "2026-07-24",
+          "fetched_at": "2026-07-24T23:14:47Z",
+          "confidence": "observed"
+        },
+        {
           "value": 23.7,
           "source": "stockanalysis.quote",
           "as_of": "2026-06-18",
@@ -60,7 +67,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change": {
       "value": -0.56,
@@ -81,9 +88,16 @@
           "as_of": "2026-06-18",
           "fetched_at": "2026-06-19T08:43:26Z",
           "confidence": "observed"
+        },
+        {
+          "value": -1.1786995,
+          "source": "yf",
+          "as_of": "2026-07-24",
+          "fetched_at": "2026-07-24T23:14:47Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change_pct": {
       "value": -2.31,
@@ -104,15 +118,44 @@
           "as_of": "2026-06-18",
           "fetched_at": "2026-06-19T08:43:26Z",
           "confidence": "observed"
+        },
+        {
+          "value": -4.475791,
+          "source": "yf",
+          "as_of": "2026-07-24",
+          "fetched_at": "2026-07-24T23:14:47Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "total_assets": {
+      "value": 7627526,
+      "source": "yf",
+      "as_of": "2026-07-24",
+      "fetched_at": "2026-07-24T23:14:47Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 7627526,
+          "source": "yf",
+          "as_of": "2026-07-24",
+          "fetched_at": "2026-07-24T23:14:47Z",
+          "confidence": "observed"
         }
       ],
       "candidate_count": 1
     },
     "expense_ratio": {
       "value": 1.0,
-      "source": "stockanalysis.overview",
-      "as_of": "2026-06-18",
-      "fetched_at": "2026-06-19T08:43:26Z",
+      "source": "yf",
+      "as_of": "2026-07-24",
+      "fetched_at": "2026-07-24T23:14:47Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -123,6 +166,14 @@
       "candidates": [
         {
           "value": 1.0,
+          "source": "yf",
+          "as_of": "2026-07-24",
+          "fetched_at": "2026-07-24T23:14:47Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 1.0,
           "source": "stockanalysis.overview",
           "as_of": "2026-06-18",
           "fetched_at": "2026-06-19T08:43:26Z",
@@ -130,14 +181,14 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_1m": {
-      "value": -6.406170396786856,
-      "source": "stockanalysis.detail.performance",
-      "as_of": "2026-06-18",
-      "fetched_at": "2026-06-19T08:43:26Z",
-      "confidence": "observed",
+      "value": 12.25479590518375,
+      "source": "yf.history_1y",
+      "as_of": "2026-07-24",
+      "fetched_at": "2026-07-24T23:14:47Z",
+      "confidence": "derived",
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
@@ -146,6 +197,14 @@
         "stockanalysis.etf_universe.performance"
       ],
       "candidates": [
+        {
+          "value": 12.25479590518375,
+          "source": "yf.history_1y",
+          "as_of": "2026-07-24",
+          "fetched_at": "2026-07-24T23:14:47Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
         {
           "value": -6.406170396786856,
           "source": "stockanalysis.detail.performance",
@@ -159,6 +218,89 @@
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
           "fetched_at": "2026-07-24T01:12:29Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 3
+    },
+    "return_3m": {
+      "value": -0.5679828076263189,
+      "source": "yf.history_1y",
+      "as_of": "2026-07-24",
+      "fetched_at": "2026-07-24T23:14:47Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": -0.5679828076263189,
+          "source": "yf.history_1y",
+          "as_of": "2026-07-24",
+          "fetched_at": "2026-07-24T23:14:47Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": -3.393630158960363,
+      "source": "yf.history_1y",
+      "as_of": "2026-07-24",
+      "fetched_at": "2026-07-24T23:14:47Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": -3.393630158960363,
+          "source": "yf.history_1y",
+          "as_of": "2026-07-24",
+          "fetched_at": "2026-07-24T23:14:47Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_1y": {
+      "value": -3.393630158960363,
+      "source": "yf.history_1y",
+      "as_of": "2026-07-24",
+      "fetched_at": "2026-07-24T23:14:47Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": -3.393630158960363,
+          "source": "yf.history_1y",
+          "as_of": "2026-07-24",
+          "fetched_at": "2026-07-24T23:14:47Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": -2.1889389,
+          "source": "yf",
+          "as_of": "2026-07-24",
+          "fetched_at": "2026-07-24T23:14:47Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -249,18 +391,18 @@
       "source": "stockanalysis.overview.description",
       "confidence": "high"
     },
-    "yahoo_funds_data_available": false
+    "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
-    "yf": false,
+    "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
-    "yf": null,
+    "yf": "yf/finance/BESO.json",
     "stockanalysis": "stockanalysis/etfs/BESO.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
