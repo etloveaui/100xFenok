@@ -66,8 +66,8 @@ const scheduledMembers = DATA_SUPPLY_DETECTION_CONFIG.lanes
   .flatMap((lane) => lane.producer_members)
   .filter((member) => member.cadence_declaration?.kind === "github_workflow" && member.schedule.length > 0);
 const scheduleBindings = scheduledMembers.reduce((sum, member) => sum + member.schedule.length, 0);
-assert.equal(scheduledMembers.length, 28);
-assert.equal(scheduleBindings, 31);
+assert.equal(scheduledMembers.length, 29);
+assert.equal(scheduleBindings, 32);
 
 // Baseline includes two owner-declared scheduled members with no attempt row.
 const coverage = buildFetchCronAttemptCoverage({ report: baseline, calendars });
@@ -75,10 +75,10 @@ assert.equal(coverage.schema_version, "fetch-cron-attempt-coverage/v1");
 assert.equal(coverage.mode, "shadow");
 assert.equal(coverage.deployment_blocking, false);
 assert.deepEqual(coverage.counts, {
-  scheduled_members: 28,
-  schedule_bindings: 31,
+  scheduled_members: 29,
+  schedule_bindings: 32,
   observed: 29,
-  suspected_skips: 2,
+  suspected_skips: 3,
   attempt_gaps: 0,
 });
 assert.equal(coverage.status, "warning");
@@ -135,10 +135,10 @@ const missingReportCoverage = buildFetchCronAttemptCoverage({
 assert.equal(missingReportCoverage.deployment_blocking, false);
 assert.equal(missingReportCoverage.status, "warning");
 assert.deepEqual(missingReportCoverage.counts, {
-  scheduled_members: 28,
-  schedule_bindings: 31,
+  scheduled_members: 29,
+  schedule_bindings: 32,
   observed: 0,
-  suspected_skips: 31,
+  suspected_skips: 32,
   attempt_gaps: 0,
 });
 
