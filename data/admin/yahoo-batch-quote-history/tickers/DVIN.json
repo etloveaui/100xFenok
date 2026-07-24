@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 745,
+      "natural": true,
+      "observed_at": "2026-07-24T23:12:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30132647097",
+      "schedule": "0 22 * * 5",
+      "shard": "5/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-29T23:53:21Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DVIN.json",
-    "payload_sha256": "3484954b9903ea99a558be5c4ac76b9c8eb28f72c7ac13130f0ecd0689e24de2",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-07-24T23:12:18Z",
+    "history_as_of": "2026-07-24",
+    "path": "data/yf/finance/DVIN.json",
+    "payload_sha256": "da50c4c9ec55477da9bee7e8495b36b16830838a8902447a9cabc8bc3a75a70f",
+    "quote_as_of": "2026-07-24T20:00:00Z",
+    "source_as_of": "2026-07-24"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 745,
+    "natural": true,
+    "observed_at": "2026-07-24T23:12:06Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30132647097",
+    "schedule": "0 22 * * 5",
+    "shard": "5/6"
   },
   "lkg": {
     "fetched_at": "2026-06-29T23:53:21Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-24",
+    "observed_at": "2026-07-24T23:12:06Z",
+    "payload_sha256": "e9dc5c99902eccd0e28b78d304c7330b2c267c87ef21a75b1512586bffa42220",
+    "quote_as_of": "2026-07-24T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "30132647097",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-24"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "DVIN",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-24T23:12:06Z"
 }

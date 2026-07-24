@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 549,
+      "natural": true,
+      "observed_at": "2026-07-24T23:12:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30132647097",
+      "schedule": "0 22 * * 5",
+      "shard": "5/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-29T23:30:58Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ETHE.json",
-    "payload_sha256": "a51f13ad529c7b5411c0ccc58730ef90427b0d3ce15fff21051ee3475b94c499",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-07-24T23:13:07Z",
+    "history_as_of": "2026-07-24",
+    "path": "data/yf/finance/ETHE.json",
+    "payload_sha256": "f39eb49bda34488979ef133d35e297c58a96f5fad7d305ef42265155b179a166",
+    "quote_as_of": "2026-07-24T20:00:00Z",
+    "source_as_of": "2026-07-24"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 549,
+    "natural": true,
+    "observed_at": "2026-07-24T23:12:06Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30132647097",
+    "schedule": "0 22 * * 5",
+    "shard": "5/6"
   },
   "lkg": {
     "fetched_at": "2026-06-29T23:30:58Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-24",
+    "observed_at": "2026-07-24T23:12:06Z",
+    "payload_sha256": "66df7cd8c0600926af825aa95f0a99b99096bf1e71d18187ec6b175f57a29955",
+    "quote_as_of": "2026-07-24T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "30132647097",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-24"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "ETHE",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-24T23:12:06Z"
 }

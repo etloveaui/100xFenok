@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 543,
+      "natural": true,
+      "observed_at": "2026-07-24T23:12:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30132647097",
+      "schedule": "0 22 * * 5",
+      "shard": "5/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T23:56:11Z",
-    "history_as_of": "2026-06-30",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/EMJN.json",
-    "payload_sha256": "2b48febcc2d70b0ddadb8200bdaad61d434110728979df80b48669d99782d70b",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-30"
+    "fetched_at": "2026-07-24T23:12:55Z",
+    "history_as_of": "2026-07-23",
+    "path": "data/yf/finance/EMJN.json",
+    "payload_sha256": "87ee61bd7a6fc77272f66db352035da583679a9eebdf2a3556179990c10e000d",
+    "quote_as_of": "2026-07-20T17:05:18Z",
+    "source_as_of": "2026-07-20T17:05:18Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 543,
+    "natural": true,
+    "observed_at": "2026-07-24T23:12:06Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30132647097",
+    "schedule": "0 22 * * 5",
+    "shard": "5/6"
   },
   "lkg": {
     "fetched_at": "2026-06-30T23:56:11Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-30"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-23",
+    "observed_at": "2026-07-24T23:12:06Z",
+    "payload_sha256": "251ac9fff4221a76feb3adf977e6c374cfa7b4e5eb000f28e8a72016170bd139",
+    "quote_as_of": "2026-07-20T17:05:18Z",
+    "run_attempt": 1,
+    "run_id": "30132647097",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-20T17:05:18Z"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-30"
   },
   "ticker": "EMJN",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-24T23:12:06Z"
 }

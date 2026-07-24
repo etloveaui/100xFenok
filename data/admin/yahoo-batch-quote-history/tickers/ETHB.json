@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 481,
+      "natural": true,
+      "observed_at": "2026-07-24T23:12:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30132647097",
+      "schedule": "0 22 * * 5",
+      "shard": "5/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T09:21:30Z",
-    "history_as_of": "2026-07-08",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ETHB.json",
-    "payload_sha256": "96fb1ba182a9bb35d8f553e9b5f976ccc4f41edf0daa7a7a0b5d992b00d7393e",
-    "quote_as_of": "2026-07-08T20:00:01Z",
-    "source_as_of": "2026-07-08"
+    "fetched_at": "2026-07-24T23:13:05Z",
+    "history_as_of": "2026-07-24",
+    "path": "data/yf/finance/ETHB.json",
+    "payload_sha256": "7e6d5c0d6f1e30d8f0974bcf9c99f529d3cb21327358347cfacf8f754404798a",
+    "quote_as_of": "2026-07-24T20:00:01Z",
+    "source_as_of": "2026-07-24"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 481,
+    "natural": true,
+    "observed_at": "2026-07-24T23:12:06Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30132647097",
+    "schedule": "0 22 * * 5",
+    "shard": "5/6"
   },
   "lkg": {
     "fetched_at": "2026-07-09T09:21:30Z",
@@ -46,8 +59,20 @@
     "quote_as_of": "2026-07-08T20:00:01Z",
     "source_as_of": "2026-07-08"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-24",
+    "observed_at": "2026-07-24T23:12:06Z",
+    "payload_sha256": "cb70b23b84c51c7b1a1065c70fb0b598ee070c01a97220bdc397c9397e47ee41",
+    "quote_as_of": "2026-07-24T20:00:01Z",
+    "run_attempt": 1,
+    "run_id": "30132647097",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-24"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "ETHB",
-  "updated_at": "2026-07-17T00:15:36Z"
+  "updated_at": "2026-07-24T23:12:06Z"
 }

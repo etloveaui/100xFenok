@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 477,
+      "natural": true,
+      "observed_at": "2026-07-24T23:12:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30132647097",
+      "schedule": "0 22 * * 5",
+      "shard": "5/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T09:21:23Z",
-    "history_as_of": "2026-07-08",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/EHCC.json",
-    "payload_sha256": "46714395c19abb11f34868e99c0597fe1618a5e0eaa78d00da5cda4da6d05679",
-    "quote_as_of": "2026-07-08T17:54:14Z",
-    "source_as_of": "2026-07-08"
+    "fetched_at": "2026-07-24T23:12:45Z",
+    "history_as_of": "2026-07-24",
+    "path": "data/yf/finance/EHCC.json",
+    "payload_sha256": "d82165490ea42878daaa3810f860fd520c9ca0971e722e7d87a0e482b97989e2",
+    "quote_as_of": "2026-07-24T18:14:32Z",
+    "source_as_of": "2026-07-24"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 477,
+    "natural": true,
+    "observed_at": "2026-07-24T23:12:06Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30132647097",
+    "schedule": "0 22 * * 5",
+    "shard": "5/6"
   },
   "lkg": {
     "fetched_at": "2026-07-09T09:21:23Z",
@@ -46,8 +59,20 @@
     "quote_as_of": "2026-07-08T17:54:14Z",
     "source_as_of": "2026-07-08"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-24",
+    "observed_at": "2026-07-24T23:12:06Z",
+    "payload_sha256": "9463046d74a23df1de1dea28b45d883fa4986778550cca7ac01d21b2842066a9",
+    "quote_as_of": "2026-07-24T18:14:32Z",
+    "run_attempt": 1,
+    "run_id": "30132647097",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-24"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "EHCC",
-  "updated_at": "2026-07-17T00:15:36Z"
+  "updated_at": "2026-07-24T23:12:06Z"
 }
