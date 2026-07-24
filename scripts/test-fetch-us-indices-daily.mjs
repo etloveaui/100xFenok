@@ -319,6 +319,48 @@ assert.deepEqual(
 }
 
 {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-live-rounded-provider-revision-"));
+  const paths = pathsFor(root);
+  fs.mkdirSync(paths.canonicalRoot, { recursive: true });
+  fs.mkdirSync(paths.publicRoot, { recursive: true });
+  const initial = {
+    sp500: [{ date: "2026-07-23", value: 6400 }],
+    nasdaq: [{ date: "2026-07-23", value: 25137.69 }],
+  };
+  for (const [key, rows] of Object.entries(initial)) {
+    for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
+      fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify(rows)}\n`);
+    }
+  }
+  const result = await runUsIndicesDaily({
+    ...paths,
+    request: async (_url, key) => response(200, yahooPayload(
+      key === "sp500" ? "^GSPC" : "^IXIC",
+      key === "sp500"
+        ? [["2026-07-23", 6400], ["2026-07-24", 6410]]
+        : [["2026-07-23", 25137.693359375], ["2026-07-24", 25200.125]],
+    )),
+    observedAt: "2026-07-24T22:48:00Z",
+    attemptId: "gh-407-1-us-indices",
+    eventName: "schedule",
+  });
+  assert.equal(result.exitCode, 0, "a tolerated 2dp provider revision must not wedge the lane");
+  assert.equal(result.updated, true);
+  assert.equal(result.providerRevisions.length, 1);
+  assert.equal(result.providerRevisions[0].same_date_change_class, "provider_value_change");
+  assert.equal(result.providerRevisions[0].within_tolerance, true);
+  assert.equal(result.providerRevisions[0].within_one_float32_ulp, false);
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(paths.canonicalRoot, "nasdaq.json"), "utf8")), [
+    initial.nasdaq[0],
+    { date: "2026-07-24", value: 25200.125 },
+  ], "the rounded settled value must be preserved while the new date appends");
+  assert.deepEqual(
+    fs.readFileSync(path.join(paths.publicRoot, "nasdaq.json")),
+    fs.readFileSync(path.join(paths.canonicalRoot, "nasdaq.json")),
+  );
+}
+
+{
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-live-out-of-tolerance-"));
   const paths = pathsFor(root);
   fs.mkdirSync(paths.canonicalRoot, { recursive: true });
