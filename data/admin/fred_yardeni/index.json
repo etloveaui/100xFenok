@@ -1,19 +1,21 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "fred_yardeni",
-  "updated_at": "2026-07-21T01:35:19.553Z",
-  "retry_set": [],
+  "updated_at": "2026-07-24T14:45:07.464Z",
+  "retry_set": [
+    "yardney_model"
+  ],
   "items": {
     "yardney_model": {
       "key": "yardney_model",
-      "resolution_state": "fresh_primary",
-      "retry": false,
+      "resolution_state": "lkg_primary",
+      "retry": true,
       "current": {
-        "path": "data/admin/fred_yardeni/current/yardney_model.json",
+        "path": "data/admin/fred_yardeni/lkg/yardney_model.json",
         "payload_sha256": "341d723758c9b1776c14164b220f43f17489c374700ae920dd962b7d478fa2f9",
         "source_as_of": "2026-07-17"
       },
-      "updated_at": "2026-07-21T01:35:19.553Z",
+      "updated_at": "2026-07-24T14:45:07.464Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
@@ -22,6 +24,17 @@
         "run_id": "local",
         "run_attempt": 1,
         "observed_at": "2026-07-21T01:35:19.553Z"
+      },
+      "lkg": {
+        "path": "data/admin/fred_yardeni/lkg/yardney_model.json",
+        "payload_sha256": "341d723758c9b1776c14164b220f43f17489c374700ae920dd962b7d478fa2f9",
+        "source_as_of": "2026-07-17"
+      },
+      "latest_failure": {
+        "run_id": "30101112228",
+        "run_attempt": 1,
+        "observed_at": "2026-07-24T14:45:07.464Z",
+        "reason": "transport_error"
       }
     }
   }
