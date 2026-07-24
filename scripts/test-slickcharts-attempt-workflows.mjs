@@ -101,6 +101,56 @@ for (const member of ["history", "symbols"]) {
       < history.indexOf("python scripts/validate-slickcharts-integrity.py --skip-public"),
     "round-trip proof must run before the merge integrity guard",
   );
+  const projectionValidation = history.slice(
+    history.indexOf("- name: Configure temporary membership projection snapshots"),
+    history.indexOf("- name: Emit SlickCharts history attempt"),
+  );
+  assert.match(
+    projectionValidation,
+    /SLICKCHARTS_UNIVERSE_SNAPSHOT_PATH=\$RUNNER_TEMP\/slickcharts-history-universe\.json" >> "\$GITHUB_ENV"/,
+    "history must configure the universe snapshot from RUNNER_TEMP at step scope",
+  );
+  assert.match(
+    projectionValidation,
+    /SLICKCHARTS_MEMBERSHIP_SNAPSHOT_PATH=\$RUNNER_TEMP\/slickcharts-history-membership-changes\.json" >> "\$GITHUB_ENV"/,
+    "history must configure the membership snapshot from RUNNER_TEMP at step scope",
+  );
+  assert.doesNotMatch(
+    projectionValidation,
+    /\$\{\{ runner\.temp \}\}/,
+    "history projection snapshots must not use runner context",
+  );
+  assert.match(
+    projectionValidation,
+    /trap restore_membership_projections EXIT[\s\S]*?trap 'exit 129' HUP[\s\S]*?trap 'exit 130' INT[\s\S]*?trap 'exit 143' TERM/,
+    "history must restore temporary projections on exit and interruption",
+  );
+  assert.match(projectionValidation, /python scripts\/scrapers\/membership-tracker\.py --quiet/);
+  assert.doesNotMatch(projectionValidation, /membership-tracker\.py --dry-run/);
+  assert.ok(
+    projectionValidation.indexOf("python scripts/scrapers/membership-tracker.py --quiet")
+      < projectionValidation.indexOf("python scripts/validate-slickcharts-integrity.py --skip-public"),
+    "history must rebuild the ephemeral membership projection before strict validation",
+  );
+  const fullHistoryPublish = history.slice(history.indexOf("- name: Commit and push changes"));
+  assert.match(
+    fullHistoryPublish,
+    /git status --porcelain=v1 --untracked-files=all --[\s\S]*?data\/slickcharts\/universe\.json[\s\S]*?data\/slickcharts\/membership-changes\.json[\s\S]*?if \[ -n "\$projection_status" \]; then[\s\S]*?exit 1/,
+    "history publish must reject unrestored membership projections",
+  );
+  assert.ok(
+    fullHistoryPublish.indexOf("git status --porcelain=v1 --untracked-files=all")
+      < fullHistoryPublish.indexOf("scripts/publish-slickcharts-attempt.sh"),
+    "history must verify projection restoration before publishing",
+  );
+  const fullHistoryPublishInvocation = fullHistoryPublish.slice(
+    fullHistoryPublish.indexOf("scripts/publish-slickcharts-attempt.sh"),
+  );
+  assert.doesNotMatch(
+    fullHistoryPublishInvocation,
+    /data\/slickcharts\/(?:universe|membership-changes)\.json/,
+    "history must not stage or publish ephemeral membership projections",
+  );
   const singleAttempt = history.slice(history.indexOf("- name: Commit history attempt"));
   assert.doesNotMatch(singleAttempt, /--manifest-workflow/, "single-symbol history attempt must remain shard-only");
 }

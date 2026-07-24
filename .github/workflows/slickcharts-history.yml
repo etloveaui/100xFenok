@@ -320,9 +320,47 @@ jobs:
             --split-dividends data/slickcharts/ \
             --retention-days 365
 
+      - name: Configure temporary membership projection snapshots
+        run: |
+          echo "SLICKCHARTS_UNIVERSE_SNAPSHOT_PATH=$RUNNER_TEMP/slickcharts-history-universe.json" >> "$GITHUB_ENV"
+          echo "SLICKCHARTS_MEMBERSHIP_SNAPSHOT_PATH=$RUNNER_TEMP/slickcharts-history-membership-changes.json" >> "$GITHUB_ENV"
+
       - name: Validate SlickCharts integrity
         run: |
-          python scripts/scrapers/membership-tracker.py --dry-run --quiet
+          set -euo pipefail
+
+          universe_path=data/slickcharts/universe.json
+          membership_path=data/slickcharts/membership-changes.json
+
+          test -f "$universe_path"
+          test -f "$membership_path"
+          cp -p -- "$universe_path" "$SLICKCHARTS_UNIVERSE_SNAPSHOT_PATH"
+          cp -p -- "$membership_path" "$SLICKCHARTS_MEMBERSHIP_SNAPSHOT_PATH"
+
+          restore_membership_projections() {
+            local original_status=$?
+            local restore_failed=0
+
+            trap - EXIT HUP INT TERM
+            cp -p -- "$SLICKCHARTS_UNIVERSE_SNAPSHOT_PATH" "$universe_path" \
+              || restore_failed=1
+            cp -p -- "$SLICKCHARTS_MEMBERSHIP_SNAPSHOT_PATH" "$membership_path" \
+              || restore_failed=1
+
+            if [ "$restore_failed" -ne 0 ]; then
+              echo "::error::Failed to restore temporary SlickCharts membership projections" >&2
+              original_status=1
+            fi
+
+            exit "$original_status"
+          }
+
+          trap restore_membership_projections EXIT
+          trap 'exit 129' HUP
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+
+          python scripts/scrapers/membership-tracker.py --quiet
           python scripts/validate-slickcharts-integrity.py --skip-public
 
       - name: Emit SlickCharts history attempt
@@ -341,6 +379,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          projection_status="$(
+            git status --porcelain=v1 --untracked-files=all -- \
+              data/slickcharts/universe.json \
+              data/slickcharts/membership-changes.json
+          )"
+          if [ -n "$projection_status" ]; then
+            echo "::error::Temporary SlickCharts membership projections were not restored" >&2
+            printf '%s\n' "$projection_status" >&2
+            exit 1
+          fi
+
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           scripts/publish-slickcharts-attempt.sh \
