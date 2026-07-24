@@ -104,8 +104,6 @@ function successResponses(targets) {
     ])],
     T2: [pageResponse([
       row("AAPL", targets.t2_otce.target_week_start, "T2"),
-    ])],
-    OTCE: [pageResponse([
       row("BRK.B", targets.t2_otce.target_week_start, "OTCE"),
     ])],
   };
@@ -371,6 +369,11 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
   assert.match(tokenCall.url, /\/oauth2\/access_token\?grant_type=client_credentials$/);
   assert.equal(tokenCall.body, undefined);
   assert.match(tokenCall.headers.authorization, /^Basic /);
+  assert.deepEqual(
+    calls.slice(1).map((call) => JSON.parse(call.body).domainFilters
+      .find((filter) => filter.fieldName === "tierIdentifier").values),
+    [["T1"], ["T2", "OTCE"]],
+  );
   const marker = readJson(markerPathFor(root));
   assert.deepEqual(marker, {
     schema_version: FINRA_ATS_MARKER_SCHEMA,
@@ -410,6 +413,31 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
   assert.equal(attempts[0].attemptShardPath, path.join(root, "data/admin/data-supply-state/detection-attempts/finra_ats.json"));
   assert.deepEqual(attempts[0].result.attempt.assertions, ATTEMPT_ASSERTION_IDS.map((id) => ({ id, passed: true })));
   assert.equal(attempts[0].result.attempt.auth, "ok");
+}
+
+// The tracked exchange-listed universe may contain T2 rows without any OTCE
+// symbols. T2/OTCE is one four-week delay group, not two mandatory datasets.
+{
+  const root = makeRoot("t2-without-otce");
+  const targets = summaryTargets(REFERENCE_DATE);
+  const responses = successResponses(targets);
+  responses.T2 = [pageResponse([
+    row("AAPL", targets.t2_otce.target_week_start, "T2"),
+  ])];
+  const { request } = makeRequestMock(responses);
+  const result = await run({
+    repoRoot: root,
+    request,
+    clientId: "client-id",
+    clientSecret: "client-secret",
+    eventName: "schedule",
+    runId: "t2-without-otce",
+    observedAt: OBSERVED_AT,
+    referenceDate: REFERENCE_DATE,
+    attemptWriter: attemptSink([]),
+  });
+  assert.equal(result.exit_code, 0);
+  assert.deepEqual(result.counts, { total_rows: 3, t1_rows: 2, t2_otce_rows: 1 });
 }
 
 // OAuth replies must be usable Bearer credentials; an access token alone is

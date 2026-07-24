@@ -601,11 +601,15 @@ function atsLkgStore(repoRoot) {
   return store;
 }
 
-function rawWeekDocuments({ generatedAt, targets, t1, t2, otce, budget, universe, authPath }) {
+function rawWeekDocuments({ generatedAt, targets, t1, t2Otce, budget, universe, authPath }) {
   const fragments = [
     { tier_group: "t1", tier_identifiers: ["T1"], summary_start_date: t1.summary_start_date, rows: t1.rows },
-    { tier_group: "t2", tier_identifiers: ["T2"], summary_start_date: t2.summary_start_date, rows: t2.rows },
-    { tier_group: "otce", tier_identifiers: ["OTCE"], summary_start_date: otce.summary_start_date, rows: otce.rows },
+    {
+      tier_group: "t2_otce",
+      tier_identifiers: ["T2", "OTCE"],
+      summary_start_date: t2Otce.summary_start_date,
+      rows: t2Otce.rows,
+    },
   ];
   const byDate = new Map();
   for (const fragment of fragments) {
@@ -665,6 +669,15 @@ function failureAttempt(error) {
       auth: error.auth ?? "ok",
       decode: "ok",
       payload: "non_empty",
+      assertions: ATTEMPT_ASSERTION_IDS.map((id) => ({ id, passed: false })),
+    }));
+  }
+  if (error?.reason === "partial_partition") {
+    return attemptResult("empty_payload", returnedTuple({
+      httpStatus: 204,
+      auth: error.auth ?? "ok",
+      decode: "ok",
+      payload: "empty",
       assertions: ATTEMPT_ASSERTION_IDS.map((id) => ({ id, passed: false })),
     }));
   }
@@ -731,22 +744,27 @@ export async function run({
     const token = await acquireAccessToken({ request, budget, clientId, clientSecret, tokenEndpoint });
     const targets = summaryTargets(referenceDate);
     const t1 = await collectPartition({ request, accessToken: token.access_token, budget, universe, partition: targets.t1, endpoint: weeklySummaryEndpoint });
-    const t2 = await collectPartition({ request, accessToken: token.access_token, budget, universe, partition: {
-      ...targets.t2_otce,
-      tier_identifiers: ["T2"],
-    }, endpoint: weeklySummaryEndpoint });
-    const otce = await collectPartition({ request, accessToken: token.access_token, budget, universe, partition: {
-      ...targets.t2_otce,
-      tier_identifiers: ["OTCE"],
-    }, endpoint: weeklySummaryEndpoint });
-    if (!t1.complete || !t2.complete || !otce.complete) {
+    const t2Otce = await collectPartition({
+      request,
+      accessToken: token.access_token,
+      budget,
+      universe,
+      partition: targets.t2_otce,
+      endpoint: weeklySummaryEndpoint,
+    });
+    if (!t1.complete || !t2Otce.complete) {
       throw new CollectorError("partial_partition", "one or more FINRA ATS weekly partitions were unavailable after walkback");
     }
     const marker = buildMarker({
       generatedAt: observedAt,
       partitions: [
         { tier_group: "t1", tier_identifiers: ["T1"], summary_start_date: t1.summary_start_date, rows: t1.rows },
-        { tier_group: "t2_otce", tier_identifiers: ["T2", "OTCE"], summary_start_date: [t2.summary_start_date, otce.summary_start_date].sort()[0], rows: [...t2.rows, ...otce.rows] },
+        {
+          tier_group: "t2_otce",
+          tier_identifiers: ["T2", "OTCE"],
+          summary_start_date: t2Otce.summary_start_date,
+          rows: t2Otce.rows,
+        },
       ],
     });
     const markerBytes = Buffer.from(`${JSON.stringify(marker, null, 2)}\n`, "utf8");
@@ -770,7 +788,7 @@ export async function run({
     const prior = snapshot.items[FINRA_ATS_LKG_KEY];
     const priorSource = prior?.current?.source_as_of;
     if (prior?.retry !== true && typeof priorSource === "string" && Date.parse(marker.source_as_of) <= Date.parse(priorSource)) {
-      attempt = successAttempt([...t1.rows, ...t2.rows, ...otce.rows]);
+      attempt = successAttempt([...t1.rows, ...t2Otce.rows]);
       response = { exit_code: 0, degraded: false, corrupt: false, promoted: false, reason: "not_newer", auth_path: token.auth_path, source_as_of: marker.source_as_of, request_count: budget.used };
       return response;
     }
@@ -779,19 +797,18 @@ export async function run({
       if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)) {
         store.recordPromotionDeferral({ artifacts: [candidate], run: runContext, reason: decision.reason });
       }
-      attempt = successAttempt([...t1.rows, ...t2.rows, ...otce.rows]);
+      attempt = successAttempt([...t1.rows, ...t2Otce.rows]);
       response = { exit_code: 0, degraded: true, corrupt: false, promoted: false, reason: decision.reason, auth_path: token.auth_path, source_as_of: marker.source_as_of, request_count: budget.used };
       return response;
     }
 
-    // All provider pages and all three tier partitions are complete before the
+    // All provider pages and both tier-delay groups are complete before the
     // first candidate write. No partial raw/current candidate is materialized.
     const rawWeeks = rawWeekDocuments({
       generatedAt: observedAt,
       targets,
       t1,
-      t2,
-      otce,
+      t2Otce,
       budget,
       universe,
       authPath: token.auth_path,
@@ -799,7 +816,7 @@ export async function run({
     writeWeeks(resolvedRoot, [...rawWeeks, ...priorWeeks.map((entry) => entry.document)], priorWeeks);
     atomicWrite(markerPath, markerBytes);
     const success = store.recordSuccess({ artifacts: [candidate], run: runContext });
-    attempt = successAttempt([...t1.rows, ...t2.rows, ...otce.rows]);
+    attempt = successAttempt([...t1.rows, ...t2Otce.rows]);
     response = { exit_code: 0, degraded: false, corrupt: false, promoted: true, recovered: success.state.items[FINRA_ATS_LKG_KEY]?.recovered_at === observedAt, auth_path: token.auth_path, source_as_of: marker.source_as_of, request_count: budget.used, counts: marker.counts };
     return response;
   } catch (caught) {
