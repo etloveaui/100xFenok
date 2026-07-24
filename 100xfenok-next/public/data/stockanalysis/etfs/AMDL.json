@@ -3,10 +3,11 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "AMDL",
-  "fetched_at": "2026-06-19T08:05:33Z",
+  "source_as_of": "2026-07-23T20:00:00Z",
+  "fetched_at": "2026-07-24T01:23:00Z",
   "endpoints": {
-    "holdings": "/api/symbol/e/AMDL/holdings",
-    "overview": "/api/symbol/e/AMDL/overview",
+    "holdings": "/etf/amdl/holdings/__data.json",
+    "overview": "/etf/amdl/__data.json",
     "quote": "/api/quotes/e/AMDL",
     "history_periods": {
       "daily_1y": "/api/symbol/e/AMDL/history?range=1Y&period=Daily",
@@ -17,241 +18,237 @@
       "monthly_5y": "/api/symbol/e/AMDL/history?range=5Y&period=Monthly"
     }
   },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
   "normalized": {
     "holdings": [
       {
         "rank": 1,
         "name": "Graniteshares Long Amd Swap Cantor",
-        "weight_pct": 45.21,
+        "weight_pct": 52.88,
         "shares": 1099600,
         "raw": {
           "no": 1,
           "n": "Graniteshares Long Amd Swap Cantor",
-          "as": "45.21%",
+          "as": "52.88%",
           "sh": "1,099,600"
         }
       },
       {
         "rank": 2,
-        "name": "Recv Long 2x Amd Trs Bmo",
-        "weight_pct": 44.4,
-        "shares": 1080000,
+        "name": "Recv Long 2x Amd Trs Nm",
+        "weight_pct": 41.87,
+        "shares": 870700,
         "raw": {
           "no": 2,
-          "n": "Recv Long 2x Amd Trs Bmo",
-          "as": "44.40%",
-          "sh": "1,080,000"
+          "n": "Recv Long 2x Amd Trs Nm",
+          "as": "41.87%",
+          "sh": "870,700"
         }
       },
       {
         "rank": 3,
-        "name": "Recv Long 2x Amd Trs Nm",
-        "weight_pct": 35.8,
-        "shares": 870700,
+        "name": "Recv Long 2x Amd Trs Bmo",
+        "weight_pct": 39.21,
+        "shares": 815400,
         "raw": {
           "no": 3,
-          "n": "Recv Long 2x Amd Trs Nm",
-          "as": "35.80%",
-          "sh": "870,700"
+          "n": "Recv Long 2x Amd Trs Bmo",
+          "as": "39.21%",
+          "sh": "815,400"
         }
       },
       {
         "rank": 4,
         "name": "Amd Equity Swap",
-        "weight_pct": 29.93,
+        "weight_pct": 35.01,
         "shares": 728000,
         "raw": {
           "no": 4,
           "n": "Amd Equity Swap",
-          "as": "29.93%",
+          "as": "35.01%",
           "sh": "728,000"
         }
       },
       {
         "rank": 5,
         "name": "Recv Long 2x Amd Trs Cs",
-        "weight_pct": 22.86,
-        "shares": 556000,
+        "weight_pct": 22.82,
+        "shares": 474500,
         "raw": {
           "no": 5,
           "n": "Recv Long 2x Amd Trs Cs",
-          "as": "22.86%",
-          "sh": "556,000"
+          "as": "22.82%",
+          "sh": "474,500"
         }
       },
       {
         "rank": 6,
-        "name": "Recv Long 2x Amd Trs Wf",
-        "weight_pct": 21.7,
-        "shares": 527800,
+        "name": "Cash & Cash Equivalents",
+        "weight_pct": 8.83,
+        "shares": 92021187,
         "raw": {
           "no": 6,
-          "n": "Recv Long 2x Amd Trs Wf",
-          "as": "21.70%",
-          "sh": "527,800"
+          "n": "Cash & Cash Equivalents",
+          "as": "8.83%",
+          "sh": "92,021,187"
         }
       },
       {
         "rank": 7,
         "name": "Cash & Cash Equivalents",
-        "weight_pct": 8.41,
-        "shares": 104800000,
+        "weight_pct": 8.17,
+        "shares": 85070000,
         "raw": {
           "no": 7,
           "n": "Cash & Cash Equivalents",
-          "as": "8.41%",
-          "sh": "104,800,000"
+          "as": "8.17%",
+          "sh": "85,070,000"
         }
       },
       {
         "rank": 8,
-        "name": "Cash & Cash Equivalents",
-        "weight_pct": 6.29,
-        "shares": 78431187,
+        "name": "Recv Long 2x Amd Trs Wf",
+        "weight_pct": 7.76,
+        "shares": 161300,
         "raw": {
           "no": 8,
-          "n": "Cash & Cash Equivalents",
-          "as": "6.29%",
-          "sh": "78,431,187"
+          "n": "Recv Long 2x Amd Trs Wf",
+          "as": "7.76%",
+          "sh": "161,300"
         }
       },
       {
         "rank": 9,
         "name": "Cash & Cash Equivalents",
-        "weight_pct": 3.5,
-        "shares": 43580000,
+        "weight_pct": 3.66,
+        "shares": 38120000,
         "raw": {
           "no": 9,
           "n": "Cash & Cash Equivalents",
-          "as": "3.50%",
-          "sh": "43,580,000"
+          "as": "3.66%",
+          "sh": "38,120,000"
         }
       },
       {
         "rank": 10,
-        "name": "Cash & Cash Equivalents",
-        "weight_pct": 1.23,
-        "shares": 15340000,
+        "name": "Cash",
+        "weight_pct": -1.32,
         "raw": {
           "no": 10,
-          "n": "Cash & Cash Equivalents",
-          "as": "1.23%",
-          "sh": "15,340,000"
-        }
-      },
-      {
-        "rank": 11,
-        "name": "Cash",
-        "weight_pct": 0.67,
-        "raw": {
-          "no": 11,
           "n": "Cash",
-          "as": "0.67%",
+          "as": "-1.32%",
           "sh": 0
         }
       },
       {
+        "rank": 11,
+        "name": "Payb Long 2x Amd Trs Wf",
+        "weight_pct": -1.52,
+        "shares": 15831959,
+        "raw": {
+          "no": 11,
+          "n": "Payb Long 2x Amd Trs Wf",
+          "as": "-1.52%",
+          "sh": "15,831,959"
+        }
+      },
+      {
         "rank": 12,
-        "name": "Cash & Cash Equivalents",
-        "weight_pct": 0.23,
-        "shares": 2870000,
+        "name": "Payb Long 2x Amd Trs Cs",
+        "weight_pct": -4.48,
+        "shares": 46684064,
         "raw": {
           "no": 12,
-          "n": "Cash & Cash Equivalents",
-          "as": "0.23%",
-          "sh": "2,870,000"
+          "n": "Payb Long 2x Amd Trs Cs",
+          "as": "-4.48%",
+          "sh": "46,684,064"
         }
       },
       {
         "rank": 13,
         "name": "Amd Equity Swap 1",
-        "weight_pct": -5.54,
+        "weight_pct": -6.63,
         "shares": 69063900,
         "raw": {
           "no": 13,
           "n": "Amd Equity Swap 1",
-          "as": "-5.54%",
+          "as": "-6.63%",
           "sh": "69,063,900"
         }
       },
       {
         "rank": 14,
         "name": "Payb Long 2x Amd Trs Nm",
-        "weight_pct": -6.64,
+        "weight_pct": -7.95,
         "shares": 82796444,
         "raw": {
           "no": 14,
           "n": "Payb Long 2x Amd Trs Nm",
-          "as": "-6.64%",
+          "as": "-7.95%",
           "sh": "82,796,444"
         }
       },
       {
         "rank": 15,
-        "name": "Payb Long 2x Amd Trs Cs",
-        "weight_pct": -7.1,
-        "shares": 88465218,
-        "raw": {
-          "no": 15,
-          "n": "Payb Long 2x Amd Trs Cs",
-          "as": "-7.10%",
-          "sh": "88,465,218"
-        }
-      },
-      {
-        "rank": 16,
         "name": "Graniteshares Long Amd Swap Cantor",
-        "weight_pct": -7.38,
+        "weight_pct": -8.83,
         "shares": 91970544,
         "raw": {
-          "no": 16,
+          "no": 15,
           "n": "Graniteshares Long Amd Swap Cantor",
-          "as": "-7.38%",
+          "as": "-8.83%",
           "sh": "91,970,544"
         }
       },
       {
+        "rank": 16,
+        "name": "Payb Long 2x Amd Trs Bmo",
+        "weight_pct": -27.64,
+        "shares": 287923651,
+        "raw": {
+          "no": 16,
+          "n": "Payb Long 2x Amd Trs Bmo",
+          "as": "-27.64%",
+          "sh": "287,923,651"
+        }
+      },
+      {
         "rank": 17,
-        "name": "Payb Long 2x Amd Trs Wf",
-        "weight_pct": -15.94,
-        "shares": 198716874,
+        "name": "Us Dollars",
+        "weight_pct": -61.84,
+        "shares": 644149987,
         "raw": {
           "no": 17,
-          "n": "Payb Long 2x Amd Trs Wf",
-          "as": "-15.94%",
-          "sh": "198,716,874"
-        }
-      },
-      {
-        "rank": 18,
-        "name": "Payb Long 2x Amd Trs Bmo",
-        "weight_pct": -32.55,
-        "shares": 405806920,
-        "raw": {
-          "no": 18,
-          "n": "Payb Long 2x Amd Trs Bmo",
-          "as": "-32.55%",
-          "sh": "405,806,920"
-        }
-      },
-      {
-        "rank": 19,
-        "name": "Us Dollars",
-        "weight_pct": -45.07,
-        "shares": 561782136,
-        "raw": {
-          "no": 19,
           "n": "Us Dollars",
-          "as": "-45.07%",
-          "sh": "561,782,136"
+          "as": "-61.84%",
+          "sh": "644,149,987"
         }
       }
     ],
     "asset_allocation": null,
     "sectors": null,
     "countries": null,
-    "holding_count": 19,
-    "holdings_updated": "Jun 16, 2026",
+    "holding_count": 17,
+    "holdings_updated": "Jul 16, 2026",
     "classification": {
       "is_leveraged": true,
       "leverage_factor": 2.0,
@@ -262,64 +259,75 @@
       "confidence": "high"
     },
     "overview": {
-      "aum": "$1.22B",
+      "aum": "$1.06B",
       "expenseRatio": "1.07%",
-      "sharesOut": "18.99M",
-      "beta": "8.82",
+      "sharesOut": "18.16M",
+      "beta": "8.63",
       "inception": "Mar 4, 2024",
       "provider_page": "graniteshares",
       "etf_website": "https://graniteshares.com/institutional/us/en-us/etfs/amdl/"
     },
     "performance": {
-      "tr1m": 49.314,
-      "trYTD": 361.865,
-      "tr1y": 939.363,
-      "cagrMAX": 58.397
+      "tr1m": -9.786053882725827,
+      "trYTD": 339.293,
+      "tr1y": 585.155,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": 52.165
     },
     "quote": {
-      "p": 71.82,
-      "pd": 71.82,
-      "c": 6.16,
-      "cp": 9.38,
-      "cl": 65.66,
-      "cdr": 1,
-      "o": 70.81,
-      "h": 72.5,
-      "l": 69.11,
-      "v": 3974797,
-      "ts": 1781812800000,
-      "u": "Jun 18, 2026, 4:00 PM EDT",
-      "td": "2026-06-18",
-      "h52": 78.297,
-      "l52": 6.75,
+      "c": -3.32,
+      "e": true,
+      "h": 72.75,
+      "l": 64.55,
+      "o": 69.97,
+      "p": 68.31,
+      "u": "Jul 23, 2026, 4:00 PM EDT",
+      "v": 3415989,
+      "cl": 71.63,
+      "cp": -4.63,
+      "ec": 2.69,
+      "ep": 71,
+      "es": "After-hours",
+      "eu": "Jul 23, 2026, 7:59 PM EDT",
       "ex": "NASDAQ",
       "ms": "closed",
+      "pd": 68.31,
+      "td": "2026-07-23",
+      "ts": 1784836800000,
+      "cdr": -1,
+      "ecp": 3.94,
+      "epd": 71,
+      "etd": "2026-07-23",
+      "ets": 1784851177877.8147,
+      "exp": 1784880900000,
       "fms": "closed",
-      "e": true,
-      "ep": 71.7421,
-      "epd": 71.74,
-      "ec": -0.08,
-      "ecp": -0.11,
-      "eu": "Jun 18, 2026, 7:59 PM EDT",
-      "es": "After-hours",
-      "ets": 1781827178381.1543,
-      "etd": "2026-06-18",
-      "epv": null,
+      "h52": 83.79,
+      "l52": 8.875,
+      "uid": "AMDL",
       "days": 0,
-      "exp": 1782116100000,
-      "symbol": "AMDL",
-      "uid": "AMDL"
+      "symbol": "AMDL"
     },
     "history": [
       {
+        "t": "2026-07-01",
+        "o": 76.085,
+        "h": 78.839,
+        "l": 49.83,
+        "c": 68.31,
+        "a": 68.31,
+        "v": 51192699,
+        "ch": -17.45
+      },
+      {
         "t": "2026-06-01",
         "o": 65.6,
-        "h": 78.297,
+        "h": 83.79,
         "l": 48.25,
-        "c": 71.82,
-        "a": 71.82,
-        "v": 73632517,
-        "ch": 2.72
+        "c": 82.75,
+        "a": 82.75,
+        "v": 102743691,
+        "ch": 18.35
       },
       {
         "t": "2026-05-01",
@@ -420,20 +428,240 @@
         "a": 10.62,
         "v": 607815680,
         "ch": -17.29
-      },
-      {
-        "t": "2025-07-01",
-        "o": 8.14,
-        "h": 13.76,
-        "l": 7.5,
-        "c": 12.84,
-        "a": 12.84,
-        "v": 893933121,
-        "ch": 50.88
       }
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-07-23",
+          "o": 69.97,
+          "h": 72.75,
+          "l": 64.55,
+          "c": 68.31,
+          "a": 68.31,
+          "v": 3150157,
+          "ch": -4.63
+        },
+        {
+          "t": "2026-07-22",
+          "o": 65.75,
+          "h": 74,
+          "l": 65.25,
+          "c": 71.63,
+          "a": 71.63,
+          "v": 2696175,
+          "ch": 2.89
+        },
+        {
+          "t": "2026-07-21",
+          "o": 65.22,
+          "h": 70.3,
+          "l": 64.54,
+          "c": 69.62,
+          "a": 69.62,
+          "v": 2609674,
+          "ch": 15.86
+        },
+        {
+          "t": "2026-07-20",
+          "o": 63,
+          "h": 64.49,
+          "l": 59.71,
+          "c": 60.09,
+          "a": 60.09,
+          "v": 2526422,
+          "ch": 3.35
+        },
+        {
+          "t": "2026-07-17",
+          "o": 53.54,
+          "h": 60.63,
+          "l": 49.83,
+          "c": 58.14,
+          "a": 58.14,
+          "v": 3189449,
+          "ch": -2.25
+        },
+        {
+          "t": "2026-07-16",
+          "o": 61.75,
+          "h": 63.9,
+          "l": 57.27,
+          "c": 59.48,
+          "a": 59.48,
+          "v": 2409982,
+          "ch": -10.82
+        },
+        {
+          "t": "2026-07-15",
+          "o": 73.9,
+          "h": 74.4,
+          "l": 61.6,
+          "c": 66.7,
+          "a": 66.7,
+          "v": 3320829,
+          "ch": -6.7
+        },
+        {
+          "t": "2026-07-14",
+          "o": 76.495,
+          "h": 78.32,
+          "l": 71.35,
+          "c": 71.49,
+          "a": 71.49,
+          "v": 2643484,
+          "ch": 4.81
+        },
+        {
+          "t": "2026-07-13",
+          "o": 69.73,
+          "h": 72.82,
+          "l": 66.21,
+          "c": 68.21,
+          "a": 68.21,
+          "v": 2726493,
+          "ch": -8.48
+        },
+        {
+          "t": "2026-07-10",
+          "o": 70.84,
+          "h": 75.08,
+          "l": 69.895,
+          "c": 74.53,
+          "a": 74.53,
+          "v": 2785989,
+          "ch": 4.15
+        },
+        {
+          "t": "2026-07-09",
+          "o": 69.19,
+          "h": 74.82,
+          "l": 68.73,
+          "c": 71.56,
+          "a": 71.56,
+          "v": 4798299,
+          "ch": 11.07
+        },
+        {
+          "t": "2026-07-08",
+          "o": 61.2,
+          "h": 65.789,
+          "l": 59.61,
+          "c": 64.43,
+          "a": 64.43,
+          "v": 2408908,
+          "ch": 0.37
+        },
+        {
+          "t": "2026-07-07",
+          "o": 64.08,
+          "h": 66.43,
+          "l": 60.66,
+          "c": 64.19,
+          "a": 64.19,
+          "v": 4285973,
+          "ch": -13.01
+        },
+        {
+          "t": "2026-07-06",
+          "o": 69.33,
+          "h": 78.839,
+          "l": 67.451,
+          "c": 73.79,
+          "a": 73.79,
+          "v": 4634860,
+          "ch": 13.26
+        },
+        {
+          "t": "2026-07-02",
+          "o": 70.82,
+          "h": 72.955,
+          "l": 62.06,
+          "c": 65.15,
+          "a": 65.15,
+          "v": 3443016,
+          "ch": -8.78
+        },
+        {
+          "t": "2026-07-01",
+          "o": 76.085,
+          "h": 77.92,
+          "l": 70.76,
+          "c": 71.42,
+          "a": 71.42,
+          "v": 3562989,
+          "ch": -13.69
+        },
+        {
+          "t": "2026-06-30",
+          "o": 73.35,
+          "h": 83.79,
+          "l": 73.35,
+          "c": 82.75,
+          "a": 82.75,
+          "v": 5975970,
+          "ch": 15.25
+        },
+        {
+          "t": "2026-06-29",
+          "o": 67.48,
+          "h": 72.45,
+          "l": 60.494,
+          "c": 71.8,
+          "a": 71.8,
+          "v": 3909554,
+          "ch": 7.6
+        },
+        {
+          "t": "2026-06-26",
+          "o": 66.635,
+          "h": 68.1,
+          "l": 62.37,
+          "c": 66.73,
+          "a": 66.73,
+          "v": 3601182,
+          "ch": -4.9
+        },
+        {
+          "t": "2026-06-25",
+          "o": 73.03,
+          "h": 74.839,
+          "l": 63.63,
+          "c": 70.17,
+          "a": 70.17,
+          "v": 4387185,
+          "ch": 5.14
+        },
+        {
+          "t": "2026-06-24",
+          "o": 67.11,
+          "h": 68.22,
+          "l": 62.75,
+          "c": 66.74,
+          "a": 66.74,
+          "v": 3379127,
+          "ch": -0.37
+        },
+        {
+          "t": "2026-06-23",
+          "o": 63.93,
+          "h": 69.26,
+          "l": 63.27,
+          "c": 66.99,
+          "a": 66.99,
+          "v": 4054033.9999999995,
+          "ch": -11.53
+        },
+        {
+          "t": "2026-06-22",
+          "o": 74.02,
+          "h": 78.71,
+          "l": 71.536,
+          "c": 75.72,
+          "a": 75.72,
+          "v": 3804122,
+          "ch": 5.43
+        },
         {
           "t": "2026-06-18",
           "o": 70.81,
@@ -2723,240 +2951,60 @@
           "a": 10.46,
           "v": 32088884.999999996,
           "ch": 4.91
-        },
-        {
-          "t": "2025-07-22",
-          "o": 10.16,
-          "h": 10.16,
-          "l": 9.26,
-          "c": 9.97,
-          "a": 9.97,
-          "v": 43644271,
-          "ch": -2.92
-        },
-        {
-          "t": "2025-07-21",
-          "o": 10.35,
-          "h": 10.71,
-          "l": 10.25,
-          "c": 10.27,
-          "a": 10.27,
-          "v": 36932278,
-          "ch": 0
-        },
-        {
-          "t": "2025-07-18",
-          "o": 10.61,
-          "h": 10.78,
-          "l": 10.19,
-          "c": 10.27,
-          "a": 10.27,
-          "v": 31652291,
-          "ch": -4.29
-        },
-        {
-          "t": "2025-07-17",
-          "o": 10.91,
-          "h": 10.93,
-          "l": 10.5,
-          "c": 10.73,
-          "a": 10.73,
-          "v": 32628073,
-          "ch": 0.28
-        },
-        {
-          "t": "2025-07-16",
-          "o": 10.09,
-          "h": 10.73,
-          "l": 9.75,
-          "c": 10.7,
-          "a": 10.7,
-          "v": 62153895,
-          "ch": 5.73
-        },
-        {
-          "t": "2025-07-15",
-          "o": 9.87,
-          "h": 10.49,
-          "l": 9.86,
-          "c": 10.12,
-          "a": 10.12,
-          "v": 56829450,
-          "ch": 12.82
-        },
-        {
-          "t": "2025-07-14",
-          "o": 8.83,
-          "h": 9.136,
-          "l": 8.44,
-          "c": 8.97,
-          "a": 8.97,
-          "v": 46406109,
-          "ch": -0.22
-        },
-        {
-          "t": "2025-07-11",
-          "o": 8.52,
-          "h": 9.115,
-          "l": 8.42,
-          "c": 8.99,
-          "a": 8.99,
-          "v": 52975036,
-          "ch": 2.98
-        },
-        {
-          "t": "2025-07-10",
-          "o": 8.6,
-          "h": 8.92,
-          "l": 8.46,
-          "c": 8.73,
-          "a": 8.73,
-          "v": 54271908,
-          "ch": 8.18
-        },
-        {
-          "t": "2025-07-09",
-          "o": 8.09,
-          "h": 8.32,
-          "l": 7.965,
-          "c": 8.07,
-          "a": 8.07,
-          "v": 52605114,
-          "ch": 0.88
-        },
-        {
-          "t": "2025-07-08",
-          "o": 7.94,
-          "h": 8.15,
-          "l": 7.785,
-          "c": 8,
-          "a": 8,
-          "v": 38213710,
-          "ch": 4.44
-        },
-        {
-          "t": "2025-07-07",
-          "o": 7.9,
-          "h": 7.955,
-          "l": 7.5,
-          "c": 7.66,
-          "a": 7.66,
-          "v": 28319729,
-          "ch": -4.49
-        },
-        {
-          "t": "2025-07-03",
-          "o": 8.16,
-          "h": 8.209,
-          "l": 7.95,
-          "c": 8.02,
-          "a": 8.02,
-          "v": 21566255,
-          "ch": -0.99
-        },
-        {
-          "t": "2025-07-02",
-          "o": 7.74,
-          "h": 8.25,
-          "l": 7.725,
-          "c": 8.1,
-          "a": 8.1,
-          "v": 42366769,
-          "ch": 3.45
-        },
-        {
-          "t": "2025-07-01",
-          "o": 8.14,
-          "h": 8.31,
-          "l": 7.71,
-          "c": 7.83,
-          "a": 7.83,
-          "v": 38490660,
-          "ch": -7.99
-        },
-        {
-          "t": "2025-06-30",
-          "o": 8.77,
-          "h": 8.79,
-          "l": 8.425,
-          "c": 8.51,
-          "a": 8.51,
-          "v": 42933321,
-          "ch": -2.96
-        },
-        {
-          "t": "2025-06-27",
-          "o": 8.8,
-          "h": 9.239,
-          "l": 8.495,
-          "c": 8.77,
-          "a": 8.77,
-          "v": 39293775,
-          "ch": 0.23
-        },
-        {
-          "t": "2025-06-26",
-          "o": 9.02,
-          "h": 9.03,
-          "l": 8.53,
-          "c": 8.75,
-          "a": 8.75,
-          "v": 35359023,
-          "ch": 0.23
-        },
-        {
-          "t": "2025-06-25",
-          "o": 8.42,
-          "h": 8.82,
-          "l": 8.261,
-          "c": 8.73,
-          "a": 8.73,
-          "v": 48715209,
-          "ch": 7.25
-        },
-        {
-          "t": "2025-06-24",
-          "o": 7.59,
-          "h": 8.17,
-          "l": 7.53,
-          "c": 8.14,
-          "a": 8.14,
-          "v": 52247195,
-          "ch": 13.69
-        },
-        {
-          "t": "2025-06-23",
-          "o": 7.26,
-          "h": 7.56,
-          "l": 6.855,
-          "c": 7.16,
-          "a": 7.16,
-          "v": 45824862,
-          "ch": 1.99
-        },
-        {
-          "t": "2025-06-20",
-          "o": 7.09,
-          "h": 7.51,
-          "l": 6.94,
-          "c": 7.02,
-          "a": 7.02,
-          "v": 42067132,
-          "ch": 2.18
-        },
-        {
-          "t": "2025-06-18",
-          "o": 7.005,
-          "h": 7.125,
-          "l": 6.75,
-          "c": 6.87,
-          "a": 6.87,
-          "v": 43045229,
-          "ch": -0.58
         }
       ],
       "weekly_1y": [
         {
+          "t": "2026-07-20",
+          "o": 63,
+          "h": 74,
+          "l": 59.71,
+          "c": 68.31,
+          "a": 68.31,
+          "v": 10982428,
+          "ch": 17.49
+        },
+        {
+          "t": "2026-07-13",
+          "o": 69.73,
+          "h": 78.32,
+          "l": 49.83,
+          "c": 58.14,
+          "a": 58.14,
+          "v": 14290237,
+          "ch": -21.99
+        },
+        {
+          "t": "2026-07-06",
+          "o": 69.33,
+          "h": 78.839,
+          "l": 59.61,
+          "c": 74.53,
+          "a": 74.53,
+          "v": 18914029,
+          "ch": 14.4
+        },
+        {
+          "t": "2026-06-29",
+          "o": 67.48,
+          "h": 83.79,
+          "l": 60.494,
+          "c": 65.15,
+          "a": 65.15,
+          "v": 16891529,
+          "ch": -2.37
+        },
+        {
+          "t": "2026-06-22",
+          "o": 74.02,
+          "h": 78.71,
+          "l": 62.37,
+          "c": 66.73,
+          "a": 66.73,
+          "v": 19225650,
+          "ch": -7.09
+        },
+        {
           "t": "2026-06-15",
           "o": 72.53,
           "h": 78.297,
@@ -3425,68 +3473,28 @@
           "a": 12.16,
           "v": 182823624,
           "ch": 5.83
-        },
-        {
-          "t": "2025-07-21",
-          "o": 10.35,
-          "h": 11.6,
-          "l": 9.26,
-          "c": 11.49,
-          "a": 11.49,
-          "v": 181666824,
-          "ch": 11.88
-        },
-        {
-          "t": "2025-07-14",
-          "o": 8.83,
-          "h": 10.93,
-          "l": 8.44,
-          "c": 10.27,
-          "a": 10.27,
-          "v": 229669818,
-          "ch": 14.24
-        },
-        {
-          "t": "2025-07-07",
-          "o": 7.9,
-          "h": 9.115,
-          "l": 7.5,
-          "c": 8.99,
-          "a": 8.99,
-          "v": 226385497,
-          "ch": 12.09
-        },
-        {
-          "t": "2025-06-30",
-          "o": 8.77,
-          "h": 8.79,
-          "l": 7.71,
-          "c": 8.02,
-          "a": 8.02,
-          "v": 145357005,
-          "ch": -8.55
-        },
-        {
-          "t": "2025-06-23",
-          "o": 7.26,
-          "h": 9.239,
-          "l": 6.855,
-          "c": 8.77,
-          "a": 8.77,
-          "v": 221440064,
-          "ch": 24.93
         }
       ],
       "monthly_1y": [
         {
+          "t": "2026-07-01",
+          "o": 76.085,
+          "h": 78.839,
+          "l": 49.83,
+          "c": 68.31,
+          "a": 68.31,
+          "v": 51192699,
+          "ch": -17.45
+        },
+        {
           "t": "2026-06-01",
           "o": 65.6,
-          "h": 78.297,
+          "h": 83.79,
           "l": 48.25,
-          "c": 71.82,
-          "a": 71.82,
-          "v": 73632517,
-          "ch": 2.72
+          "c": 82.75,
+          "a": 82.75,
+          "v": 102743691,
+          "ch": 18.35
         },
         {
           "t": "2026-05-01",
@@ -3587,19 +3595,59 @@
           "a": 10.62,
           "v": 607815680,
           "ch": -17.29
-        },
-        {
-          "t": "2025-07-01",
-          "o": 8.14,
-          "h": 13.76,
-          "l": 7.5,
-          "c": 12.84,
-          "a": 12.84,
-          "v": 893933121,
-          "ch": 50.88
         }
       ],
       "weekly_3y": [
+        {
+          "t": "2026-07-20",
+          "o": 63,
+          "h": 74,
+          "l": 59.71,
+          "c": 68.31,
+          "a": 68.31,
+          "v": 10982428,
+          "ch": 17.49
+        },
+        {
+          "t": "2026-07-13",
+          "o": 69.73,
+          "h": 78.32,
+          "l": 49.83,
+          "c": 58.14,
+          "a": 58.14,
+          "v": 14290237,
+          "ch": -21.99
+        },
+        {
+          "t": "2026-07-06",
+          "o": 69.33,
+          "h": 78.839,
+          "l": 59.61,
+          "c": 74.53,
+          "a": 74.53,
+          "v": 18914029,
+          "ch": 14.4
+        },
+        {
+          "t": "2026-06-29",
+          "o": 67.48,
+          "h": 83.79,
+          "l": 60.494,
+          "c": 65.15,
+          "a": 65.15,
+          "v": 16891529,
+          "ch": -2.37
+        },
+        {
+          "t": "2026-06-22",
+          "o": 74.02,
+          "h": 78.71,
+          "l": 62.37,
+          "c": 66.73,
+          "a": 66.73,
+          "v": 19225650,
+          "ch": -7.09
+        },
         {
           "t": "2026-06-15",
           "o": 72.53,
@@ -4069,68 +4117,28 @@
           "a": 12.16,
           "v": 182823624,
           "ch": 5.83
-        },
-        {
-          "t": "2025-07-21",
-          "o": 10.35,
-          "h": 11.6,
-          "l": 9.26,
-          "c": 11.49,
-          "a": 11.49,
-          "v": 181666824,
-          "ch": 11.88
-        },
-        {
-          "t": "2025-07-14",
-          "o": 8.83,
-          "h": 10.93,
-          "l": 8.44,
-          "c": 10.27,
-          "a": 10.27,
-          "v": 229669818,
-          "ch": 14.24
-        },
-        {
-          "t": "2025-07-07",
-          "o": 7.9,
-          "h": 9.115,
-          "l": 7.5,
-          "c": 8.99,
-          "a": 8.99,
-          "v": 226385497,
-          "ch": 12.09
-        },
-        {
-          "t": "2025-06-30",
-          "o": 8.77,
-          "h": 8.79,
-          "l": 7.71,
-          "c": 8.02,
-          "a": 8.02,
-          "v": 145357005,
-          "ch": -8.55
-        },
-        {
-          "t": "2025-06-23",
-          "o": 7.26,
-          "h": 9.239,
-          "l": 6.855,
-          "c": 8.77,
-          "a": 8.77,
-          "v": 221440064,
-          "ch": 24.93
         }
       ],
       "monthly_3y": [
         {
+          "t": "2026-07-01",
+          "o": 76.085,
+          "h": 78.839,
+          "l": 49.83,
+          "c": 68.31,
+          "a": 68.31,
+          "v": 51192699,
+          "ch": -17.45
+        },
+        {
           "t": "2026-06-01",
           "o": 65.6,
-          "h": 78.297,
+          "h": 83.79,
           "l": 48.25,
-          "c": 71.82,
-          "a": 71.82,
-          "v": 73632517,
-          "ch": 2.72
+          "c": 82.75,
+          "a": 82.75,
+          "v": 102743691,
+          "ch": 18.35
         },
         {
           "t": "2026-05-01",
@@ -4231,28 +4239,28 @@
           "a": 10.62,
           "v": 607815680,
           "ch": -17.29
-        },
-        {
-          "t": "2025-07-01",
-          "o": 8.14,
-          "h": 13.76,
-          "l": 7.5,
-          "c": 12.84,
-          "a": 12.84,
-          "v": 893933121,
-          "ch": 50.88
         }
       ],
       "monthly_5y": [
         {
+          "t": "2026-07-01",
+          "o": 76.085,
+          "h": 78.839,
+          "l": 49.83,
+          "c": 68.31,
+          "a": 68.31,
+          "v": 51192699,
+          "ch": -17.45
+        },
+        {
           "t": "2026-06-01",
           "o": 65.6,
-          "h": 78.297,
+          "h": 83.79,
           "l": 48.25,
-          "c": 71.82,
-          "a": 71.82,
-          "v": 73632517,
-          "ch": 2.72
+          "c": 82.75,
+          "a": 82.75,
+          "v": 102743691,
+          "ch": 18.35
         },
         {
           "t": "2026-05-01",
@@ -4518,1757 +4526,1620 @@
     }
   },
   "raw": {
-    "holdings": {
-      "holdings": [
-        {
-          "no": 1,
-          "n": "Graniteshares Long Amd Swap Cantor",
-          "as": "45.21%",
-          "sh": "1,099,600"
-        },
-        {
-          "no": 2,
-          "n": "Recv Long 2x Amd Trs Bmo",
-          "as": "44.40%",
-          "sh": "1,080,000"
-        },
-        {
-          "no": 3,
-          "n": "Recv Long 2x Amd Trs Nm",
-          "as": "35.80%",
-          "sh": "870,700"
-        },
-        {
-          "no": 4,
-          "n": "Amd Equity Swap",
-          "as": "29.93%",
-          "sh": "728,000"
-        },
-        {
-          "no": 5,
-          "n": "Recv Long 2x Amd Trs Cs",
-          "as": "22.86%",
-          "sh": "556,000"
-        },
-        {
-          "no": 6,
-          "n": "Recv Long 2x Amd Trs Wf",
-          "as": "21.70%",
-          "sh": "527,800"
-        },
-        {
-          "no": 7,
-          "n": "Cash & Cash Equivalents",
-          "as": "8.41%",
-          "sh": "104,800,000"
-        },
-        {
-          "no": 8,
-          "n": "Cash & Cash Equivalents",
-          "as": "6.29%",
-          "sh": "78,431,187"
-        },
-        {
-          "no": 9,
-          "n": "Cash & Cash Equivalents",
-          "as": "3.50%",
-          "sh": "43,580,000"
-        },
-        {
-          "no": 10,
-          "n": "Cash & Cash Equivalents",
-          "as": "1.23%",
-          "sh": "15,340,000"
-        },
-        {
-          "no": 11,
-          "n": "Cash",
-          "as": "0.67%",
-          "sh": 0
-        },
-        {
-          "no": 12,
-          "n": "Cash & Cash Equivalents",
-          "as": "0.23%",
-          "sh": "2,870,000"
-        },
-        {
-          "no": 13,
-          "n": "Amd Equity Swap 1",
-          "as": "-5.54%",
-          "sh": "69,063,900"
-        },
-        {
-          "no": 14,
-          "n": "Payb Long 2x Amd Trs Nm",
-          "as": "-6.64%",
-          "sh": "82,796,444"
-        },
-        {
-          "no": 15,
-          "n": "Payb Long 2x Amd Trs Cs",
-          "as": "-7.10%",
-          "sh": "88,465,218"
-        },
-        {
-          "no": 16,
-          "n": "Graniteshares Long Amd Swap Cantor",
-          "as": "-7.38%",
-          "sh": "91,970,544"
-        },
-        {
-          "no": 17,
-          "n": "Payb Long 2x Amd Trs Wf",
-          "as": "-15.94%",
-          "sh": "198,716,874"
-        },
-        {
-          "no": 18,
-          "n": "Payb Long 2x Amd Trs Bmo",
-          "as": "-32.55%",
-          "sh": "405,806,920"
-        },
-        {
-          "no": 19,
-          "n": "Us Dollars",
-          "as": "-45.07%",
-          "sh": "561,782,136"
-        }
-      ],
-      "asset_allocation": null,
-      "sectors": null,
-      "countries": null,
-      "news": [
-        {
-          "t": "Top Performing Leveraged/Inverse ETFs: 06/14/2026",
-          "u": "https://www.etftrends.com/leveraged-inverse-content-hub/top-performing-leveraged-inverse-etfs-06-14-2026/",
-          "n": "ETF Trends",
-          "d": "2 days ago"
-        },
-        {
-          "t": "Top Performing Leveraged/Inverse ETFs: 05/31/2026",
-          "u": "https://www.etftrends.com/leveraged-inverse-content-hub/top-performing-leveraged-inverse-etfs-05-31-2026/",
-          "n": "ETF Trends",
-          "d": "16 days ago"
-        },
-        {
-          "t": "Top Performing Leveraged/Inverse ETFs: 05/24/2026",
-          "u": "https://www.etftrends.com/leveraged-inverse-content-hub/top-performing-leveraged-inverse-etfs-05-24-2026/",
-          "n": "ETF Trends",
-          "d": "22 days ago"
-        },
-        {
-          "t": "Top Performing Leveraged/Inverse ETFs: 05/10/2026",
-          "u": "https://www.etftrends.com/leveraged-inverse-content-hub/top-performing-leveraged-inverse-etfs-05-10-2026/",
-          "n": "ETF Trends",
-          "d": "5 weeks ago"
-        },
-        {
-          "t": "Semiconductor ETFs: The Trade Broadens",
-          "u": "https://www.etftrends.com/thematic-investing-content-hub/semiconductor-etfs-trade-broadens/",
-          "n": "ETF Trends",
-          "d": "6 weeks ago"
-        },
-        {
-          "t": "Top Performing Leveraged/Inverse ETFs: 04/26/2026",
-          "u": "https://www.etftrends.com/leveraged-inverse-content-hub/top-performing-leveraged-inverse-etfs-04-26-2026/",
-          "n": "ETF Trends",
-          "d": "7 weeks ago"
-        },
-        {
-          "t": "GRANITESHARES HITS $6 BILLION AUM AS NVDL SURGES",
-          "u": "https://www.globenewswire.com/news-release/2024/06/14/2898947/0/en/GRANITESHARES-HITS-6-BILLION-AUM-AS-NVDL-SURGES.html",
-          "n": "GlobeNewsWire",
-          "d": "2 years ago"
-        }
-      ],
-      "infoBox": "AMDL is an equity ETF with a total of 19 individual holdings. The top holdings are Graniteshares Long Amd Swap Cantor stock at 45.21%, Recv Long 2x Amd Trs Bmo at 44.40%, Recv Long 2x Amd Trs Nm at 35.80%, Amd Equity Swap at 29.93%, and Recv Long 2x Amd Trs Cs at 22.86%.",
-      "infoTable": {
-        "count": 19,
-        "top10": 219.32,
-        "assetClass": "Equity",
-        "category": "Trading--Leveraged Equity",
-        "aum": 1223485022
-      },
-      "date": "Jun 16, 2026",
-      "count": 19
-    },
     "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "AMDL",
+        "lastChecked": 1784853219396,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
       "type": "etf",
-      "aum": "$1.22B",
+      "aum": "$1.06B",
+      "nav": null,
       "expenseRatio": "1.07%",
-      "sharesOut": "18.99M",
-      "ch1y": "+939.36%",
-      "beta": "8.82",
-      "holdings": 19,
+      "peRatio": null,
+      "sharesOut": "18.16M",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": "+585.16%",
+      "payoutFrequency": "n/a",
+      "beta": "8.63",
+      "holdings": 17,
       "inception": "Mar 4, 2024",
       "chart": {
-        "expiration": 1782135000000,
+        "expiration": 1784853732728,
         "data": [
           {
-            "c": 69.54,
-            "o": 70.5,
-            "t": 1781775000
+            "c": 69.5,
+            "o": 70.14,
+            "t": 1784799000
           },
           {
-            "c": 69.77,
-            "t": 1781775060
+            "c": 71.01,
+            "t": 1784799060
           },
           {
-            "c": 70.8,
-            "t": 1781775120
-          },
-          {
-            "c": 70.6,
-            "t": 1781775180
-          },
-          {
-            "c": 70.5,
-            "t": 1781775240
-          },
-          {
-            "c": 71.2,
-            "t": 1781775300
-          },
-          {
-            "c": 70.58,
-            "t": 1781775360
-          },
-          {
-            "c": 70.03,
-            "t": 1781775420
-          },
-          {
-            "c": 70.68,
-            "t": 1781775480
-          },
-          {
-            "c": 70.96,
-            "t": 1781775540
-          },
-          {
-            "c": 70.85,
-            "t": 1781775600
-          },
-          {
-            "c": 70.56,
-            "t": 1781775660
-          },
-          {
-            "c": 70.95,
-            "t": 1781775720
-          },
-          {
-            "c": 70.15,
-            "t": 1781775780
-          },
-          {
-            "c": 70.21,
-            "t": 1781775840
-          },
-          {
-            "c": 70.61,
-            "t": 1781775900
-          },
-          {
-            "c": 71.19,
-            "t": 1781775960
-          },
-          {
-            "c": 70.92,
-            "t": 1781776020
-          },
-          {
-            "c": 71,
-            "t": 1781776080
-          },
-          {
-            "c": 71.23,
-            "t": 1781776140
-          },
-          {
-            "c": 70.44,
-            "t": 1781776200
-          },
-          {
-            "c": 70.32,
-            "t": 1781776260
-          },
-          {
-            "c": 70.25,
-            "t": 1781776320
+            "c": 70.97,
+            "t": 1784799120
           },
           {
             "c": 70.28,
-            "t": 1781776380
+            "t": 1784799180
           },
           {
-            "c": 70.07,
-            "t": 1781776440
-          },
-          {
-            "c": 70.63,
-            "t": 1781776500
-          },
-          {
-            "c": 70.05,
-            "t": 1781776560
-          },
-          {
-            "c": 69.5,
-            "t": 1781776620
-          },
-          {
-            "c": 69.58,
-            "t": 1781776680
-          },
-          {
-            "c": 70.07,
-            "t": 1781776740
-          },
-          {
-            "c": 70.42,
-            "t": 1781776800
-          },
-          {
-            "c": 69.86,
-            "t": 1781776860
-          },
-          {
-            "c": 70.4,
-            "t": 1781776920
-          },
-          {
-            "c": 70.39,
-            "t": 1781776980
-          },
-          {
-            "c": 70.41,
-            "t": 1781777040
-          },
-          {
-            "c": 70.41,
-            "t": 1781777100
-          },
-          {
-            "c": 70.92,
-            "t": 1781777160
-          },
-          {
-            "c": 70.6,
-            "t": 1781777220
-          },
-          {
-            "c": 70.57,
-            "t": 1781777280
-          },
-          {
-            "c": 70.38,
-            "t": 1781777340
-          },
-          {
-            "c": 70.18,
-            "t": 1781777400
-          },
-          {
-            "c": 70.55,
-            "t": 1781777460
-          },
-          {
-            "c": 70.51,
-            "t": 1781777520
-          },
-          {
-            "c": 70.13,
-            "t": 1781777580
-          },
-          {
-            "c": 70.3,
-            "t": 1781777640
-          },
-          {
-            "c": 70.1,
-            "t": 1781777700
-          },
-          {
-            "c": 70.7,
-            "t": 1781777760
-          },
-          {
-            "c": 70.96,
-            "t": 1781777820
-          },
-          {
-            "c": 71,
-            "t": 1781777880
-          },
-          {
-            "c": 70.91,
-            "t": 1781777940
-          },
-          {
-            "c": 70.67,
-            "t": 1781778000
-          },
-          {
-            "c": 70.91,
-            "t": 1781778060
-          },
-          {
-            "c": 70.99,
-            "t": 1781778120
-          },
-          {
-            "c": 71.41,
-            "t": 1781778180
-          },
-          {
-            "c": 71.73,
-            "t": 1781778240
-          },
-          {
-            "c": 71.59,
-            "t": 1781778300
-          },
-          {
-            "c": 71.13,
-            "t": 1781778360
-          },
-          {
-            "c": 70.72,
-            "t": 1781778420
-          },
-          {
-            "c": 70.32,
-            "t": 1781778480
-          },
-          {
-            "c": 70.45,
-            "t": 1781778540
-          },
-          {
-            "c": 70.15,
-            "t": 1781778600
-          },
-          {
-            "c": 70.16,
-            "t": 1781778660
-          },
-          {
-            "c": 69.7,
-            "t": 1781778720
-          },
-          {
-            "c": 69.91,
-            "t": 1781778780
-          },
-          {
-            "c": 69.99,
-            "t": 1781778840
-          },
-          {
-            "c": 69.87,
-            "t": 1781778900
-          },
-          {
-            "c": 70.15,
-            "t": 1781778960
-          },
-          {
-            "c": 70.33,
-            "t": 1781779020
-          },
-          {
-            "c": 70.21,
-            "t": 1781779080
-          },
-          {
-            "c": 70.33,
-            "t": 1781779140
-          },
-          {
-            "c": 70.17,
-            "t": 1781779200
-          },
-          {
-            "c": 69.96,
-            "t": 1781779260
-          },
-          {
-            "c": 69.9,
-            "t": 1781779320
-          },
-          {
-            "c": 69.92,
-            "t": 1781779380
-          },
-          {
-            "c": 69.7,
-            "t": 1781779440
-          },
-          {
-            "c": 70.12,
-            "t": 1781779500
+            "c": 70.5,
+            "t": 1784799240
           },
           {
             "c": 70.29,
-            "t": 1781779560
+            "t": 1784799300
           },
           {
-            "c": 70.5,
-            "t": 1781779620
-          },
-          {
-            "c": 70.64,
-            "t": 1781779680
-          },
-          {
-            "c": 70.26,
-            "t": 1781779740
-          },
-          {
-            "c": 70.24,
-            "t": 1781779800
-          },
-          {
-            "c": 70.14,
-            "t": 1781779860
-          },
-          {
-            "c": 70.43,
-            "t": 1781779920
-          },
-          {
-            "c": 70.31,
-            "t": 1781779980
-          },
-          {
-            "c": 70.53,
-            "t": 1781780040
-          },
-          {
-            "c": 70.5,
-            "t": 1781780100
-          },
-          {
-            "c": 70.61,
-            "t": 1781780160
-          },
-          {
-            "c": 70.78,
-            "t": 1781780220
-          },
-          {
-            "c": 71.02,
-            "t": 1781780280
-          },
-          {
-            "c": 70.94,
-            "t": 1781780340
-          },
-          {
-            "c": 70.99,
-            "t": 1781780400
-          },
-          {
-            "c": 70.82,
-            "t": 1781780460
-          },
-          {
-            "c": 70.73,
-            "t": 1781780520
-          },
-          {
-            "c": 71.03,
-            "t": 1781780580
-          },
-          {
-            "c": 71,
-            "t": 1781780640
-          },
-          {
-            "c": 71.05,
-            "t": 1781780700
-          },
-          {
-            "c": 71.14,
-            "t": 1781780760
-          },
-          {
-            "c": 71.18,
-            "t": 1781780820
-          },
-          {
-            "c": 71.25,
-            "t": 1781780880
+            "c": 71.24,
+            "t": 1784799360
           },
           {
             "c": 71.5,
-            "t": 1781780940
-          },
-          {
-            "c": 71.76,
-            "t": 1781781000
-          },
-          {
-            "c": 71.68,
-            "t": 1781781060
-          },
-          {
-            "c": 72.1,
-            "t": 1781781120
-          },
-          {
-            "c": 72.38,
-            "t": 1781781180
-          },
-          {
-            "c": 71.93,
-            "t": 1781781240
-          },
-          {
-            "c": 72.06,
-            "t": 1781781300
-          },
-          {
-            "c": 71.92,
-            "t": 1781781360
-          },
-          {
-            "c": 71.51,
-            "t": 1781781420
+            "t": 1784799420
           },
           {
             "c": 71.4,
-            "t": 1781781480
-          },
-          {
-            "c": 71.27,
-            "t": 1781781540
+            "t": 1784799480
           },
           {
             "c": 71.5,
-            "t": 1781781600
+            "t": 1784799540
           },
           {
-            "c": 71.53,
-            "t": 1781781660
+            "c": 72.39,
+            "t": 1784799600
           },
           {
-            "c": 71.22,
-            "t": 1781781720
+            "c": 72,
+            "t": 1784799660
           },
           {
-            "c": 71.21,
-            "t": 1781781780
+            "c": 72.42,
+            "t": 1784799720
           },
           {
-            "c": 70.9,
-            "t": 1781781840
+            "c": 72.34,
+            "t": 1784799780
           },
           {
-            "c": 70.86,
-            "t": 1781781900
+            "c": 72.69,
+            "t": 1784799840
           },
           {
-            "c": 70.83,
-            "t": 1781781960
+            "c": 71.9,
+            "t": 1784799900
           },
           {
-            "c": 70.92,
-            "t": 1781782020
+            "c": 72.62,
+            "t": 1784799960
           },
           {
-            "c": 70.57,
-            "t": 1781782080
+            "c": 72.2,
+            "t": 1784800020
           },
           {
-            "c": 70.48,
-            "t": 1781782140
-          },
-          {
-            "c": 70.65,
-            "t": 1781782200
-          },
-          {
-            "c": 70.26,
-            "t": 1781782260
-          },
-          {
-            "c": 70.21,
-            "t": 1781782320
-          },
-          {
-            "c": 70.04,
-            "t": 1781782380
-          },
-          {
-            "c": 70.05,
-            "t": 1781782440
-          },
-          {
-            "c": 69.89,
-            "t": 1781782500
-          },
-          {
-            "c": 69.87,
-            "t": 1781782560
-          },
-          {
-            "c": 69.71,
-            "t": 1781782620
-          },
-          {
-            "c": 69.11,
-            "t": 1781782680
-          },
-          {
-            "c": 69.74,
-            "t": 1781782740
-          },
-          {
-            "c": 69.57,
-            "t": 1781782800
-          },
-          {
-            "c": 69.84,
-            "t": 1781782860
-          },
-          {
-            "c": 69.78,
-            "t": 1781782920
-          },
-          {
-            "c": 69.73,
-            "t": 1781782980
-          },
-          {
-            "c": 69.61,
-            "t": 1781783040
-          },
-          {
-            "c": 69.49,
-            "t": 1781783100
-          },
-          {
-            "c": 69.38,
-            "t": 1781783160
-          },
-          {
-            "c": 69.71,
-            "t": 1781783220
-          },
-          {
-            "c": 69.75,
-            "t": 1781783280
-          },
-          {
-            "c": 69.91,
-            "t": 1781783340
-          },
-          {
-            "c": 70.01,
-            "t": 1781783400
-          },
-          {
-            "c": 70.05,
-            "t": 1781783460
-          },
-          {
-            "c": 70.2,
-            "t": 1781783520
-          },
-          {
-            "c": 70.32,
-            "t": 1781783580
-          },
-          {
-            "c": 70.27,
-            "t": 1781783640
-          },
-          {
-            "c": 70.61,
-            "t": 1781783700
-          },
-          {
-            "c": 70.63,
-            "t": 1781783760
-          },
-          {
-            "c": 70.7,
-            "t": 1781783820
-          },
-          {
-            "c": 71.1,
-            "t": 1781783880
-          },
-          {
-            "c": 71.29,
-            "t": 1781783940
-          },
-          {
-            "c": 71.5,
-            "t": 1781784000
-          },
-          {
-            "c": 71.35,
-            "t": 1781784060
-          },
-          {
-            "c": 71.39,
-            "t": 1781784120
-          },
-          {
-            "c": 71.21,
-            "t": 1781784180
-          },
-          {
-            "c": 71.22,
-            "t": 1781784240
-          },
-          {
-            "c": 71.5,
-            "t": 1781784300
-          },
-          {
-            "c": 71.38,
-            "t": 1781784360
-          },
-          {
-            "c": 71.4,
-            "t": 1781784420
+            "c": 71.7,
+            "t": 1784800080
           },
           {
             "c": 71.32,
-            "t": 1781784480
+            "t": 1784800140
           },
           {
             "c": 71.2,
-            "t": 1781784540
-          },
-          {
-            "c": 71.01,
-            "t": 1781784600
-          },
-          {
-            "c": 71.22,
-            "t": 1781784660
-          },
-          {
-            "c": 71.16,
-            "t": 1781784720
-          },
-          {
-            "c": 71.13,
-            "t": 1781784780
-          },
-          {
-            "c": 70.96,
-            "t": 1781784840
-          },
-          {
-            "c": 70.94,
-            "t": 1781784900
-          },
-          {
-            "c": 70.78,
-            "t": 1781784960
-          },
-          {
-            "c": 70.79,
-            "t": 1781785020
-          },
-          {
-            "c": 70.88,
-            "t": 1781785080
-          },
-          {
-            "c": 70.96,
-            "t": 1781785140
-          },
-          {
-            "c": 71.07,
-            "t": 1781785200
-          },
-          {
-            "c": 70.97,
-            "t": 1781785260
-          },
-          {
-            "c": 70.97,
-            "t": 1781785320
-          },
-          {
-            "c": 71.05,
-            "t": 1781785380
-          },
-          {
-            "c": 71.08,
-            "t": 1781785440
-          },
-          {
-            "c": 71.19,
-            "t": 1781785500
-          },
-          {
-            "c": 71.22,
-            "t": 1781785560
-          },
-          {
-            "c": 71.19,
-            "t": 1781785620
-          },
-          {
-            "c": 71.12,
-            "t": 1781785680
-          },
-          {
-            "c": 71.23,
-            "t": 1781785740
-          },
-          {
-            "c": 71.15,
-            "t": 1781785800
-          },
-          {
-            "c": 71.06,
-            "t": 1781785860
-          },
-          {
-            "c": 71.2,
-            "t": 1781785920
-          },
-          {
-            "c": 71.18,
-            "t": 1781785980
-          },
-          {
-            "c": 71.15,
-            "t": 1781786040
-          },
-          {
-            "c": 71.15,
-            "t": 1781786100
+            "t": 1784800200
           },
           {
             "c": 71,
-            "t": 1781786160
+            "t": 1784800260
           },
           {
-            "c": 71.03,
-            "t": 1781786220
+            "c": 71.73,
+            "t": 1784800320
           },
           {
-            "c": 70.94,
-            "t": 1781786280
+            "c": 72.1,
+            "t": 1784800380
           },
           {
-            "c": 70.87,
-            "t": 1781786340
+            "c": 72.41,
+            "t": 1784800440
           },
           {
-            "c": 70.8,
-            "t": 1781786400
+            "c": 72.2,
+            "t": 1784800500
           },
           {
-            "c": 71.1,
-            "t": 1781786460
-          },
-          {
-            "c": 71.15,
-            "t": 1781786520
+            "c": 72,
+            "t": 1784800560
           },
           {
             "c": 71.25,
-            "t": 1781786580
-          },
-          {
-            "c": 71.05,
-            "t": 1781786640
-          },
-          {
-            "c": 71,
-            "t": 1781786700
-          },
-          {
-            "c": 70.93,
-            "t": 1781786760
-          },
-          {
-            "c": 71.08,
-            "t": 1781786820
-          },
-          {
-            "c": 71.13,
-            "t": 1781786880
-          },
-          {
-            "c": 71.19,
-            "t": 1781786940
-          },
-          {
-            "c": 71.06,
-            "t": 1781787000
-          },
-          {
-            "c": 71.01,
-            "t": 1781787060
-          },
-          {
-            "c": 71.07,
-            "t": 1781787120
-          },
-          {
-            "c": 71.02,
-            "t": 1781787180
-          },
-          {
-            "c": 70.84,
-            "t": 1781787240
-          },
-          {
-            "c": 70.78,
-            "t": 1781787300
-          },
-          {
-            "c": 70.78,
-            "t": 1781787360
-          },
-          {
-            "c": 71,
-            "t": 1781787420
-          },
-          {
-            "c": 70.97,
-            "t": 1781787480
-          },
-          {
-            "c": 71.1,
-            "t": 1781787540
-          },
-          {
-            "c": 70.92,
-            "t": 1781787600
-          },
-          {
-            "c": 70.77,
-            "t": 1781787660
-          },
-          {
-            "c": 70.84,
-            "t": 1781787720
-          },
-          {
-            "c": 70.8,
-            "t": 1781787780
-          },
-          {
-            "c": 70.95,
-            "t": 1781787840
-          },
-          {
-            "c": 71.12,
-            "t": 1781787900
-          },
-          {
-            "c": 71.02,
-            "t": 1781787960
-          },
-          {
-            "c": 70.89,
-            "t": 1781788020
-          },
-          {
-            "c": 71,
-            "t": 1781788080
-          },
-          {
-            "c": 71.14,
-            "t": 1781788140
-          },
-          {
-            "c": 71.07,
-            "t": 1781788200
-          },
-          {
-            "c": 71.04,
-            "t": 1781788260
-          },
-          {
-            "c": 71.14,
-            "t": 1781788320
-          },
-          {
-            "c": 71.14,
-            "t": 1781788380
-          },
-          {
-            "c": 71.11,
-            "t": 1781788440
-          },
-          {
-            "c": 71.05,
-            "t": 1781788500
-          },
-          {
-            "c": 71.19,
-            "t": 1781788560
-          },
-          {
-            "c": 71.17,
-            "t": 1781788620
-          },
-          {
-            "c": 71.14,
-            "t": 1781788680
-          },
-          {
-            "c": 71.12,
-            "t": 1781788740
-          },
-          {
-            "c": 71.07,
-            "t": 1781788800
-          },
-          {
-            "c": 71.13,
-            "t": 1781788860
-          },
-          {
-            "c": 71.06,
-            "t": 1781788920
-          },
-          {
-            "c": 71.17,
-            "t": 1781788980
-          },
-          {
-            "c": 71.01,
-            "t": 1781789040
-          },
-          {
-            "c": 70.83,
-            "t": 1781789100
-          },
-          {
-            "c": 70.89,
-            "t": 1781789160
-          },
-          {
-            "c": 70.74,
-            "t": 1781789220
-          },
-          {
-            "c": 70.91,
-            "t": 1781789280
-          },
-          {
-            "c": 71,
-            "t": 1781789340
-          },
-          {
-            "c": 70.95,
-            "t": 1781789400
-          },
-          {
-            "c": 71.1,
-            "t": 1781789460
-          },
-          {
-            "c": 71.01,
-            "t": 1781789520
-          },
-          {
-            "c": 70.97,
-            "t": 1781789580
-          },
-          {
-            "c": 70.95,
-            "t": 1781789640
-          },
-          {
-            "c": 71.06,
-            "t": 1781789700
+            "t": 1784800620
           },
           {
             "c": 70.96,
-            "t": 1781789760
-          },
-          {
-            "c": 70.97,
-            "t": 1781789820
-          },
-          {
-            "c": 71.08,
-            "t": 1781789880
-          },
-          {
-            "c": 71.01,
-            "t": 1781789940
-          },
-          {
-            "c": 71.13,
-            "t": 1781790000
-          },
-          {
-            "c": 71.08,
-            "t": 1781790060
-          },
-          {
-            "c": 71.12,
-            "t": 1781790120
-          },
-          {
-            "c": 71.16,
-            "t": 1781790180
+            "t": 1784800680
           },
           {
             "c": 71.15,
-            "t": 1781790240
+            "t": 1784800740
           },
           {
-            "c": 71.18,
-            "t": 1781790300
-          },
-          {
-            "c": 71.04,
-            "t": 1781790360
-          },
-          {
-            "c": 71.18,
-            "t": 1781790420
-          },
-          {
-            "c": 71.16,
-            "t": 1781790480
-          },
-          {
-            "c": 71.18,
-            "t": 1781790540
-          },
-          {
-            "c": 71.26,
-            "t": 1781790600
-          },
-          {
-            "c": 71.33,
-            "t": 1781790660
-          },
-          {
-            "c": 71.47,
-            "t": 1781790720
-          },
-          {
-            "c": 71.36,
-            "t": 1781790780
-          },
-          {
-            "c": 71.16,
-            "t": 1781790840
-          },
-          {
-            "c": 71.14,
-            "t": 1781790900
-          },
-          {
-            "c": 71.18,
-            "t": 1781790960
-          },
-          {
-            "c": 71.21,
-            "t": 1781791020
-          },
-          {
-            "c": 71.13,
-            "t": 1781791080
-          },
-          {
-            "c": 71.08,
-            "t": 1781791140
-          },
-          {
-            "c": 71.18,
-            "t": 1781791200
-          },
-          {
-            "c": 70.98,
-            "t": 1781791260
-          },
-          {
-            "c": 71.05,
-            "t": 1781791320
-          },
-          {
-            "c": 70.8,
-            "t": 1781791380
-          },
-          {
-            "c": 70.69,
-            "t": 1781791440
-          },
-          {
-            "c": 70.85,
-            "t": 1781791500
-          },
-          {
-            "c": 70.87,
-            "t": 1781791560
-          },
-          {
-            "c": 70.85,
-            "t": 1781791620
-          },
-          {
-            "c": 70.95,
-            "t": 1781791680
-          },
-          {
-            "c": 70.81,
-            "t": 1781791740
-          },
-          {
-            "c": 70.82,
-            "t": 1781791800
-          },
-          {
-            "c": 70.95,
-            "t": 1781791860
-          },
-          {
-            "c": 70.86,
-            "t": 1781791920
-          },
-          {
-            "c": 70.67,
-            "t": 1781791980
-          },
-          {
-            "c": 70.67,
-            "t": 1781792040
-          },
-          {
-            "c": 70.65,
-            "t": 1781792100
-          },
-          {
-            "c": 70.62,
-            "t": 1781792160
-          },
-          {
-            "c": 70.65,
-            "t": 1781792220
-          },
-          {
-            "c": 70.77,
-            "t": 1781792280
-          },
-          {
-            "c": 70.78,
-            "t": 1781792340
-          },
-          {
-            "c": 70.78,
-            "t": 1781792400
-          },
-          {
-            "c": 70.84,
-            "t": 1781792460
-          },
-          {
-            "c": 70.86,
-            "t": 1781792520
-          },
-          {
-            "c": 70.82,
-            "t": 1781792580
-          },
-          {
-            "c": 70.75,
-            "t": 1781792640
-          },
-          {
-            "c": 70.95,
-            "t": 1781792700
-          },
-          {
-            "c": 70.89,
-            "t": 1781792760
-          },
-          {
-            "c": 70.86,
-            "t": 1781792820
-          },
-          {
-            "c": 70.87,
-            "t": 1781792880
-          },
-          {
-            "c": 70.86,
-            "t": 1781792940
-          },
-          {
-            "c": 70.82,
-            "t": 1781793000
-          },
-          {
-            "c": 70.74,
-            "t": 1781793060
-          },
-          {
-            "c": 70.45,
-            "t": 1781793120
-          },
-          {
-            "c": 70.37,
-            "t": 1781793180
-          },
-          {
-            "c": 70.49,
-            "t": 1781793240
-          },
-          {
-            "c": 70.32,
-            "t": 1781793300
-          },
-          {
-            "c": 70.4,
-            "t": 1781793360
-          },
-          {
-            "c": 70.36,
-            "t": 1781793420
-          },
-          {
-            "c": 70.25,
-            "t": 1781793480
-          },
-          {
-            "c": 70.23,
-            "t": 1781793540
-          },
-          {
-            "c": 70.28,
-            "t": 1781793600
-          },
-          {
-            "c": 70.23,
-            "t": 1781793660
-          },
-          {
-            "c": 70.16,
-            "t": 1781793720
-          },
-          {
-            "c": 70.16,
-            "t": 1781793780
-          },
-          {
-            "c": 70.09,
-            "t": 1781793840
-          },
-          {
-            "c": 70.11,
-            "t": 1781793900
-          },
-          {
-            "c": 69.97,
-            "t": 1781793960
-          },
-          {
-            "c": 69.93,
-            "t": 1781794020
-          },
-          {
-            "c": 69.95,
-            "t": 1781794080
-          },
-          {
-            "c": 70.04,
-            "t": 1781794140
-          },
-          {
-            "c": 69.96,
-            "t": 1781794200
-          },
-          {
-            "c": 69.9,
-            "t": 1781794260
-          },
-          {
-            "c": 70.1,
-            "t": 1781794320
-          },
-          {
-            "c": 70.17,
-            "t": 1781794380
-          },
-          {
-            "c": 70.24,
-            "t": 1781794440
-          },
-          {
-            "c": 70.25,
-            "t": 1781794500
-          },
-          {
-            "c": 70.265,
-            "t": 1781794560
-          },
-          {
-            "c": 70.21,
-            "t": 1781794620
-          },
-          {
-            "c": 70.39,
-            "t": 1781794680
-          },
-          {
-            "c": 70.41,
-            "t": 1781794740
-          },
-          {
-            "c": 70.43,
-            "t": 1781794800
-          },
-          {
-            "c": 70.27,
-            "t": 1781794860
-          },
-          {
-            "c": 70.1,
-            "t": 1781794920
-          },
-          {
-            "c": 70.19,
-            "t": 1781794980
-          },
-          {
-            "c": 70.35,
-            "t": 1781795040
-          },
-          {
-            "c": 70.31,
-            "t": 1781795100
-          },
-          {
-            "c": 70.26,
-            "t": 1781795160
-          },
-          {
-            "c": 70.36,
-            "t": 1781795220
-          },
-          {
-            "c": 70.31,
-            "t": 1781795280
-          },
-          {
-            "c": 70.29,
-            "t": 1781795340
-          },
-          {
-            "c": 70.15,
-            "t": 1781795400
-          },
-          {
-            "c": 70.31,
-            "t": 1781795460
-          },
-          {
-            "c": 70.24,
-            "t": 1781795520
-          },
-          {
-            "c": 70.18,
-            "t": 1781795580
-          },
-          {
-            "c": 70.33,
-            "t": 1781795640
-          },
-          {
-            "c": 70.52,
-            "t": 1781795700
-          },
-          {
-            "c": 70.68,
-            "t": 1781795760
-          },
-          {
-            "c": 70.85,
-            "t": 1781795820
-          },
-          {
-            "c": 70.72,
-            "t": 1781795880
-          },
-          {
-            "c": 71,
-            "t": 1781795940
-          },
-          {
-            "c": 70.82,
-            "t": 1781796000
+            "c": 71.53,
+            "t": 1784800800
           },
           {
             "c": 70.9,
-            "t": 1781796060
+            "t": 1784800860
           },
           {
-            "c": 71.02,
-            "t": 1781796120
+            "c": 71.24,
+            "t": 1784800920
           },
           {
-            "c": 70.63,
-            "t": 1781796180
+            "c": 71.5,
+            "t": 1784800980
           },
           {
-            "c": 70.41,
-            "t": 1781796240
+            "c": 71.7,
+            "t": 1784801040
           },
           {
-            "c": 70.39,
-            "t": 1781796300
+            "c": 72.3,
+            "t": 1784801100
           },
           {
-            "c": 70.55,
-            "t": 1781796360
+            "c": 72.02,
+            "t": 1784801160
           },
           {
-            "c": 70.44,
-            "t": 1781796420
+            "c": 71.63,
+            "t": 1784801220
           },
           {
-            "c": 70.33,
-            "t": 1781796480
+            "c": 70.95,
+            "t": 1784801280
           },
           {
-            "c": 70.37,
-            "t": 1781796540
+            "c": 70.88,
+            "t": 1784801340
           },
           {
-            "c": 70.37,
-            "t": 1781796600
+            "c": 71.53,
+            "t": 1784801400
           },
           {
-            "c": 70.38,
-            "t": 1781796660
+            "c": 71.69,
+            "t": 1784801460
           },
           {
-            "c": 70.34,
-            "t": 1781796720
+            "c": 71.66,
+            "t": 1784801520
+          },
+          {
+            "c": 71.54,
+            "t": 1784801580
+          },
+          {
+            "c": 71,
+            "t": 1784801640
+          },
+          {
+            "c": 70.95,
+            "t": 1784801700
+          },
+          {
+            "c": 70.91,
+            "t": 1784801760
+          },
+          {
+            "c": 71.11,
+            "t": 1784801820
+          },
+          {
+            "c": 70.9,
+            "t": 1784801880
+          },
+          {
+            "c": 71,
+            "t": 1784801940
+          },
+          {
+            "c": 71.53,
+            "t": 1784802000
+          },
+          {
+            "c": 71.81,
+            "t": 1784802060
+          },
+          {
+            "c": 72,
+            "t": 1784802120
+          },
+          {
+            "c": 71.53,
+            "t": 1784802180
+          },
+          {
+            "c": 71.27,
+            "t": 1784802240
+          },
+          {
+            "c": 72,
+            "t": 1784802300
+          },
+          {
+            "c": 71.66,
+            "t": 1784802360
+          },
+          {
+            "c": 71.53,
+            "t": 1784802420
+          },
+          {
+            "c": 71.5,
+            "t": 1784802480
+          },
+          {
+            "c": 71.47,
+            "t": 1784802540
+          },
+          {
+            "c": 71.78,
+            "t": 1784802600
+          },
+          {
+            "c": 71.4,
+            "t": 1784802660
+          },
+          {
+            "c": 70.96,
+            "t": 1784802720
+          },
+          {
+            "c": 70.75,
+            "t": 1784802780
+          },
+          {
+            "c": 71.12,
+            "t": 1784802840
+          },
+          {
+            "c": 70.96,
+            "t": 1784802900
+          },
+          {
+            "c": 71.05,
+            "t": 1784802960
+          },
+          {
+            "c": 71.76,
+            "t": 1784803020
+          },
+          {
+            "c": 71.27,
+            "t": 1784803080
+          },
+          {
+            "c": 71.47,
+            "t": 1784803140
+          },
+          {
+            "c": 71.41,
+            "t": 1784803200
+          },
+          {
+            "c": 70.8,
+            "t": 1784803260
           },
           {
             "c": 70.5,
-            "t": 1781796780
+            "t": 1784803320
           },
           {
-            "c": 70.53,
-            "t": 1781796840
+            "c": 70.27,
+            "t": 1784803380
           },
           {
-            "c": 70.6,
-            "t": 1781796900
+            "c": 70.23,
+            "t": 1784803440
           },
           {
-            "c": 70.37,
-            "t": 1781796960
+            "c": 70.15,
+            "t": 1784803500
           },
           {
-            "c": 70.65,
-            "t": 1781797020
+            "c": 70.33,
+            "t": 1784803560
           },
           {
-            "c": 70.69,
-            "t": 1781797080
+            "c": 70.38,
+            "t": 1784803620
           },
           {
-            "c": 70.73,
-            "t": 1781797140
+            "c": 70,
+            "t": 1784803680
           },
           {
-            "c": 70.74,
-            "t": 1781797200
+            "c": 69.97,
+            "t": 1784803740
           },
           {
-            "c": 70.73,
-            "t": 1781797260
+            "c": 69.83,
+            "t": 1784803800
           },
           {
-            "c": 70.79,
-            "t": 1781797320
+            "c": 69.98,
+            "t": 1784803860
           },
           {
-            "c": 70.85,
-            "t": 1781797380
+            "c": 69.97,
+            "t": 1784803920
           },
           {
-            "c": 70.92,
-            "t": 1781797440
+            "c": 69.5,
+            "t": 1784803980
           },
           {
-            "c": 71.19,
-            "t": 1781797500
+            "c": 69.43,
+            "t": 1784804040
           },
           {
-            "c": 71.19,
-            "t": 1781797560
+            "c": 69.41,
+            "t": 1784804100
           },
           {
-            "c": 71.19,
-            "t": 1781797620
+            "c": 69.63,
+            "t": 1784804160
           },
           {
-            "c": 71.1,
-            "t": 1781797680
+            "c": 69.91,
+            "t": 1784804220
+          },
+          {
+            "c": 70,
+            "t": 1784804280
+          },
+          {
+            "c": 69.8,
+            "t": 1784804340
+          },
+          {
+            "c": 69.4,
+            "t": 1784804400
+          },
+          {
+            "c": 69.46,
+            "t": 1784804460
+          },
+          {
+            "c": 69.65,
+            "t": 1784804520
+          },
+          {
+            "c": 69.8,
+            "t": 1784804580
+          },
+          {
+            "c": 69.63,
+            "t": 1784804640
+          },
+          {
+            "c": 69.69,
+            "t": 1784804700
+          },
+          {
+            "c": 69.55,
+            "t": 1784804760
+          },
+          {
+            "c": 69.35,
+            "t": 1784804820
+          },
+          {
+            "c": 69.38,
+            "t": 1784804880
+          },
+          {
+            "c": 69.27,
+            "t": 1784804940
+          },
+          {
+            "c": 69.1,
+            "t": 1784805000
+          },
+          {
+            "c": 68.9,
+            "t": 1784805060
+          },
+          {
+            "c": 68.41,
+            "t": 1784805120
+          },
+          {
+            "c": 68.31,
+            "t": 1784805180
+          },
+          {
+            "c": 68.3,
+            "t": 1784805240
+          },
+          {
+            "c": 68.64,
+            "t": 1784805300
+          },
+          {
+            "c": 68.35,
+            "t": 1784805360
+          },
+          {
+            "c": 68.72,
+            "t": 1784805420
+          },
+          {
+            "c": 68.47,
+            "t": 1784805480
+          },
+          {
+            "c": 68.6,
+            "t": 1784805540
+          },
+          {
+            "c": 68.89,
+            "t": 1784805600
+          },
+          {
+            "c": 68.46,
+            "t": 1784805660
+          },
+          {
+            "c": 68.09,
+            "t": 1784805720
+          },
+          {
+            "c": 68.19,
+            "t": 1784805780
+          },
+          {
+            "c": 68.58,
+            "t": 1784805840
+          },
+          {
+            "c": 68.3,
+            "t": 1784805900
+          },
+          {
+            "c": 68,
+            "t": 1784805960
+          },
+          {
+            "c": 67.71,
+            "t": 1784806020
+          },
+          {
+            "c": 67.92,
+            "t": 1784806080
+          },
+          {
+            "c": 67.91,
+            "t": 1784806140
+          },
+          {
+            "c": 67.8,
+            "t": 1784806200
+          },
+          {
+            "c": 67.88,
+            "t": 1784806260
+          },
+          {
+            "c": 68.16,
+            "t": 1784806320
+          },
+          {
+            "c": 68,
+            "t": 1784806380
+          },
+          {
+            "c": 67.9,
+            "t": 1784806440
+          },
+          {
+            "c": 68.17,
+            "t": 1784806500
+          },
+          {
+            "c": 68.18,
+            "t": 1784806560
+          },
+          {
+            "c": 68.36,
+            "t": 1784806620
+          },
+          {
+            "c": 68.5,
+            "t": 1784806680
+          },
+          {
+            "c": 68.11,
+            "t": 1784806740
+          },
+          {
+            "c": 68.37,
+            "t": 1784806800
+          },
+          {
+            "c": 68.35,
+            "t": 1784806860
+          },
+          {
+            "c": 68.2,
+            "t": 1784806920
+          },
+          {
+            "c": 68.22,
+            "t": 1784806980
+          },
+          {
+            "c": 68.28,
+            "t": 1784807040
+          },
+          {
+            "c": 68.37,
+            "t": 1784807100
+          },
+          {
+            "c": 68.22,
+            "t": 1784807160
+          },
+          {
+            "c": 68.08,
+            "t": 1784807220
+          },
+          {
+            "c": 67.96,
+            "t": 1784807280
+          },
+          {
+            "c": 68,
+            "t": 1784807340
+          },
+          {
+            "c": 68.37,
+            "t": 1784807400
+          },
+          {
+            "c": 68.2,
+            "t": 1784807460
+          },
+          {
+            "c": 68.36,
+            "t": 1784807520
+          },
+          {
+            "c": 68.35,
+            "t": 1784807580
+          },
+          {
+            "c": 68.39,
+            "t": 1784807640
+          },
+          {
+            "c": 68.57,
+            "t": 1784807700
+          },
+          {
+            "c": 68.56,
+            "t": 1784807760
+          },
+          {
+            "c": 68.79,
+            "t": 1784807820
+          },
+          {
+            "c": 68.75,
+            "t": 1784807880
+          },
+          {
+            "c": 68.83,
+            "t": 1784807940
+          },
+          {
+            "c": 68.85,
+            "t": 1784808000
+          },
+          {
+            "c": 68.7,
+            "t": 1784808060
+          },
+          {
+            "c": 69.14,
+            "t": 1784808120
+          },
+          {
+            "c": 69.22,
+            "t": 1784808180
+          },
+          {
+            "c": 69.14,
+            "t": 1784808240
+          },
+          {
+            "c": 68.65,
+            "t": 1784808300
+          },
+          {
+            "c": 68.558,
+            "t": 1784808360
+          },
+          {
+            "c": 68.502,
+            "t": 1784808420
+          },
+          {
+            "c": 68.79,
+            "t": 1784808480
+          },
+          {
+            "c": 68.89,
+            "t": 1784808540
+          },
+          {
+            "c": 69.11,
+            "t": 1784808600
+          },
+          {
+            "c": 68.965,
+            "t": 1784808660
+          },
+          {
+            "c": 68.89,
+            "t": 1784808720
+          },
+          {
+            "c": 68.925,
+            "t": 1784808780
+          },
+          {
+            "c": 69.095,
+            "t": 1784808840
+          },
+          {
+            "c": 69.105,
+            "t": 1784808900
+          },
+          {
+            "c": 68.85,
+            "t": 1784808960
+          },
+          {
+            "c": 68.85,
+            "t": 1784809020
+          },
+          {
+            "c": 69.025,
+            "t": 1784809080
+          },
+          {
+            "c": 68.84,
+            "t": 1784809140
+          },
+          {
+            "c": 69.17,
+            "t": 1784809200
+          },
+          {
+            "c": 69.125,
+            "t": 1784809260
+          },
+          {
+            "c": 69.14,
+            "t": 1784809320
+          },
+          {
+            "c": 69.44,
+            "t": 1784809380
+          },
+          {
+            "c": 69.47,
+            "t": 1784809440
+          },
+          {
+            "c": 69.5,
+            "t": 1784809500
+          },
+          {
+            "c": 69.595,
+            "t": 1784809560
+          },
+          {
+            "c": 69.72,
+            "t": 1784809620
+          },
+          {
+            "c": 69.83,
+            "t": 1784809680
+          },
+          {
+            "c": 69.87,
+            "t": 1784809740
+          },
+          {
+            "c": 69.505,
+            "t": 1784809800
+          },
+          {
+            "c": 69.6,
+            "t": 1784809860
+          },
+          {
+            "c": 69.65,
+            "t": 1784809920
+          },
+          {
+            "c": 69.695,
+            "t": 1784809980
+          },
+          {
+            "c": 69.72,
+            "t": 1784810040
+          },
+          {
+            "c": 69.96,
+            "t": 1784810100
+          },
+          {
+            "c": 69.835,
+            "t": 1784810160
+          },
+          {
+            "c": 70.35,
+            "t": 1784810220
           },
           {
             "c": 71.15,
-            "t": 1781797740
+            "t": 1784810280
           },
           {
-            "c": 71.35,
-            "t": 1781797800
+            "c": 70.475,
+            "t": 1784810340
           },
           {
-            "c": 71.58,
-            "t": 1781797860
+            "c": 70.02,
+            "t": 1784810400
           },
           {
-            "c": 71.68,
-            "t": 1781797920
+            "c": 70,
+            "t": 1784810460
           },
           {
-            "c": 71.72,
-            "t": 1781797980
+            "c": 70.4,
+            "t": 1784810520
           },
           {
-            "c": 71.98,
-            "t": 1781798040
+            "c": 70.14,
+            "t": 1784810580
           },
           {
-            "c": 72.17,
-            "t": 1781798100
+            "c": 69.63,
+            "t": 1784810640
           },
           {
-            "c": 72.29,
-            "t": 1781798160
+            "c": 68.2,
+            "t": 1784810700
           },
           {
-            "c": 72.46,
-            "t": 1781798220
+            "c": 67.8,
+            "t": 1784810760
           },
           {
-            "c": 72.43,
-            "t": 1781798280
+            "c": 68.15,
+            "t": 1784810820
           },
           {
-            "c": 71.83,
-            "t": 1781798340
+            "c": 67.96,
+            "t": 1784810880
           },
           {
-            "c": 71.82,
-            "t": 1781798400
+            "c": 67.91,
+            "t": 1784810940
+          },
+          {
+            "c": 68.18,
+            "t": 1784811000
+          },
+          {
+            "c": 67.71,
+            "t": 1784811060
+          },
+          {
+            "c": 68.452,
+            "t": 1784811120
+          },
+          {
+            "c": 66.86,
+            "t": 1784811180
+          },
+          {
+            "c": 65.675,
+            "t": 1784811240
+          },
+          {
+            "c": 64.86,
+            "t": 1784811300
+          },
+          {
+            "c": 64.935,
+            "t": 1784811360
+          },
+          {
+            "c": 65.853,
+            "t": 1784811420
+          },
+          {
+            "c": 66.14,
+            "t": 1784811480
+          },
+          {
+            "c": 65.72,
+            "t": 1784811540
+          },
+          {
+            "c": 66.162,
+            "t": 1784811600
+          },
+          {
+            "c": 65.86,
+            "t": 1784811660
+          },
+          {
+            "c": 65.8,
+            "t": 1784811720
+          },
+          {
+            "c": 65.93,
+            "t": 1784811780
+          },
+          {
+            "c": 65.24,
+            "t": 1784811840
+          },
+          {
+            "c": 65.225,
+            "t": 1784811900
+          },
+          {
+            "c": 65.25,
+            "t": 1784811960
+          },
+          {
+            "c": 65.98,
+            "t": 1784812020
+          },
+          {
+            "c": 65.82,
+            "t": 1784812080
+          },
+          {
+            "c": 65.9,
+            "t": 1784812140
+          },
+          {
+            "c": 66.02,
+            "t": 1784812200
+          },
+          {
+            "c": 66.3,
+            "t": 1784812260
+          },
+          {
+            "c": 66.61,
+            "t": 1784812320
+          },
+          {
+            "c": 66.64,
+            "t": 1784812380
+          },
+          {
+            "c": 66.6,
+            "t": 1784812440
+          },
+          {
+            "c": 66.64,
+            "t": 1784812500
+          },
+          {
+            "c": 66.519,
+            "t": 1784812560
+          },
+          {
+            "c": 65.92,
+            "t": 1784812620
+          },
+          {
+            "c": 66.53,
+            "t": 1784812680
+          },
+          {
+            "c": 66.72,
+            "t": 1784812740
+          },
+          {
+            "c": 67.31,
+            "t": 1784812800
+          },
+          {
+            "c": 66.99,
+            "t": 1784812860
+          },
+          {
+            "c": 67.035,
+            "t": 1784812920
+          },
+          {
+            "c": 67.02,
+            "t": 1784812980
+          },
+          {
+            "c": 67.285,
+            "t": 1784813040
+          },
+          {
+            "c": 67.31,
+            "t": 1784813100
+          },
+          {
+            "c": 67.29,
+            "t": 1784813160
+          },
+          {
+            "c": 67.31,
+            "t": 1784813220
+          },
+          {
+            "c": 67.245,
+            "t": 1784813280
+          },
+          {
+            "c": 67.366,
+            "t": 1784813340
+          },
+          {
+            "c": 67.16,
+            "t": 1784813400
+          },
+          {
+            "c": 66.754,
+            "t": 1784813460
+          },
+          {
+            "c": 66.737,
+            "t": 1784813520
+          },
+          {
+            "c": 66.545,
+            "t": 1784813580
+          },
+          {
+            "c": 66.876,
+            "t": 1784813640
+          },
+          {
+            "c": 66.59,
+            "t": 1784813700
+          },
+          {
+            "c": 66.605,
+            "t": 1784813760
+          },
+          {
+            "c": 66.385,
+            "t": 1784813820
+          },
+          {
+            "c": 66.605,
+            "t": 1784813880
+          },
+          {
+            "c": 66.455,
+            "t": 1784813940
+          },
+          {
+            "c": 66.515,
+            "t": 1784814000
+          },
+          {
+            "c": 66.76,
+            "t": 1784814060
+          },
+          {
+            "c": 66.765,
+            "t": 1784814120
+          },
+          {
+            "c": 66.805,
+            "t": 1784814180
+          },
+          {
+            "c": 66.82,
+            "t": 1784814240
+          },
+          {
+            "c": 67.015,
+            "t": 1784814300
+          },
+          {
+            "c": 66.745,
+            "t": 1784814360
+          },
+          {
+            "c": 66.83,
+            "t": 1784814420
+          },
+          {
+            "c": 67.16,
+            "t": 1784814480
+          },
+          {
+            "c": 67.275,
+            "t": 1784814540
+          },
+          {
+            "c": 67.54,
+            "t": 1784814600
+          },
+          {
+            "c": 67.36,
+            "t": 1784814660
+          },
+          {
+            "c": 67.87,
+            "t": 1784814720
+          },
+          {
+            "c": 67.57,
+            "t": 1784814780
+          },
+          {
+            "c": 67.564,
+            "t": 1784814840
+          },
+          {
+            "c": 67.26,
+            "t": 1784814900
+          },
+          {
+            "c": 67.2,
+            "t": 1784814960
+          },
+          {
+            "c": 67.1,
+            "t": 1784815020
+          },
+          {
+            "c": 67.37,
+            "t": 1784815080
+          },
+          {
+            "c": 67.05,
+            "t": 1784815140
+          },
+          {
+            "c": 67.17,
+            "t": 1784815200
+          },
+          {
+            "c": 66.84,
+            "t": 1784815260
+          },
+          {
+            "c": 67.005,
+            "t": 1784815320
+          },
+          {
+            "c": 66.845,
+            "t": 1784815380
+          },
+          {
+            "c": 66.89,
+            "t": 1784815440
+          },
+          {
+            "c": 66.855,
+            "t": 1784815500
+          },
+          {
+            "c": 66.815,
+            "t": 1784815560
+          },
+          {
+            "c": 66.865,
+            "t": 1784815620
+          },
+          {
+            "c": 66.96,
+            "t": 1784815680
+          },
+          {
+            "c": 66.99,
+            "t": 1784815740
+          },
+          {
+            "c": 67.07,
+            "t": 1784815800
+          },
+          {
+            "c": 67,
+            "t": 1784815860
+          },
+          {
+            "c": 67.62,
+            "t": 1784815920
+          },
+          {
+            "c": 67.54,
+            "t": 1784815980
+          },
+          {
+            "c": 67.535,
+            "t": 1784816040
+          },
+          {
+            "c": 67.01,
+            "t": 1784816100
+          },
+          {
+            "c": 67.2,
+            "t": 1784816160
+          },
+          {
+            "c": 67.19,
+            "t": 1784816220
+          },
+          {
+            "c": 67.33,
+            "t": 1784816280
+          },
+          {
+            "c": 67.125,
+            "t": 1784816340
+          },
+          {
+            "c": 67.315,
+            "t": 1784816400
+          },
+          {
+            "c": 67.175,
+            "t": 1784816460
+          },
+          {
+            "c": 67.29,
+            "t": 1784816520
+          },
+          {
+            "c": 67.188,
+            "t": 1784816580
+          },
+          {
+            "c": 67.505,
+            "t": 1784816640
+          },
+          {
+            "c": 67.545,
+            "t": 1784816700
+          },
+          {
+            "c": 67.32,
+            "t": 1784816760
+          },
+          {
+            "c": 67.245,
+            "t": 1784816820
+          },
+          {
+            "c": 67.25,
+            "t": 1784816880
+          },
+          {
+            "c": 67.395,
+            "t": 1784816940
+          },
+          {
+            "c": 67.3,
+            "t": 1784817000
+          },
+          {
+            "c": 67.69,
+            "t": 1784817060
+          },
+          {
+            "c": 67.63,
+            "t": 1784817120
+          },
+          {
+            "c": 67.54,
+            "t": 1784817180
+          },
+          {
+            "c": 67.875,
+            "t": 1784817240
+          },
+          {
+            "c": 67.635,
+            "t": 1784817300
+          },
+          {
+            "c": 67.51,
+            "t": 1784817360
+          },
+          {
+            "c": 67.99,
+            "t": 1784817420
+          },
+          {
+            "c": 67.86,
+            "t": 1784817480
+          },
+          {
+            "c": 67.825,
+            "t": 1784817540
+          },
+          {
+            "c": 68.1,
+            "t": 1784817600
+          },
+          {
+            "c": 67.56,
+            "t": 1784817660
+          },
+          {
+            "c": 67.28,
+            "t": 1784817720
+          },
+          {
+            "c": 67.105,
+            "t": 1784817780
+          },
+          {
+            "c": 67.145,
+            "t": 1784817840
+          },
+          {
+            "c": 67.41,
+            "t": 1784817900
+          },
+          {
+            "c": 67.37,
+            "t": 1784817960
+          },
+          {
+            "c": 67.23,
+            "t": 1784818020
+          },
+          {
+            "c": 67.495,
+            "t": 1784818080
+          },
+          {
+            "c": 67.36,
+            "t": 1784818140
+          },
+          {
+            "c": 67.235,
+            "t": 1784818200
+          },
+          {
+            "c": 67.395,
+            "t": 1784818260
+          },
+          {
+            "c": 67.205,
+            "t": 1784818320
+          },
+          {
+            "c": 67.38,
+            "t": 1784818380
+          },
+          {
+            "c": 66.966,
+            "t": 1784818440
+          },
+          {
+            "c": 67.075,
+            "t": 1784818500
+          },
+          {
+            "c": 67.28,
+            "t": 1784818560
+          },
+          {
+            "c": 67.11,
+            "t": 1784818620
+          },
+          {
+            "c": 66.96,
+            "t": 1784818680
+          },
+          {
+            "c": 67.203,
+            "t": 1784818740
+          },
+          {
+            "c": 67.245,
+            "t": 1784818800
+          },
+          {
+            "c": 67.31,
+            "t": 1784818860
+          },
+          {
+            "c": 67.275,
+            "t": 1784818920
+          },
+          {
+            "c": 67.18,
+            "t": 1784818980
+          },
+          {
+            "c": 66.935,
+            "t": 1784819040
+          },
+          {
+            "c": 67.01,
+            "t": 1784819100
+          },
+          {
+            "c": 67.11,
+            "t": 1784819160
+          },
+          {
+            "c": 67.03,
+            "t": 1784819220
+          },
+          {
+            "c": 66.96,
+            "t": 1784819280
+          },
+          {
+            "c": 67,
+            "t": 1784819340
+          },
+          {
+            "c": 67.045,
+            "t": 1784819400
+          },
+          {
+            "c": 67.145,
+            "t": 1784819460
+          },
+          {
+            "c": 67.21,
+            "t": 1784819520
+          },
+          {
+            "c": 67.166,
+            "t": 1784819580
+          },
+          {
+            "c": 67.225,
+            "t": 1784819640
+          },
+          {
+            "c": 67.26,
+            "t": 1784819700
+          },
+          {
+            "c": 67.515,
+            "t": 1784819760
+          },
+          {
+            "c": 67.4,
+            "t": 1784819820
+          },
+          {
+            "c": 67.14,
+            "t": 1784819880
+          },
+          {
+            "c": 67.3,
+            "t": 1784819940
+          },
+          {
+            "c": 67.47,
+            "t": 1784820000
+          },
+          {
+            "c": 67.52,
+            "t": 1784820060
+          },
+          {
+            "c": 67.655,
+            "t": 1784820120
+          },
+          {
+            "c": 67.555,
+            "t": 1784820180
+          },
+          {
+            "c": 67.95,
+            "t": 1784820240
+          },
+          {
+            "c": 68.39,
+            "t": 1784820300
+          },
+          {
+            "c": 68.31,
+            "t": 1784820360
+          },
+          {
+            "c": 68.19,
+            "t": 1784820420
+          },
+          {
+            "c": 68.03,
+            "t": 1784820480
+          },
+          {
+            "c": 68.68,
+            "t": 1784820540
+          },
+          {
+            "c": 68.75,
+            "t": 1784820600
+          },
+          {
+            "c": 68.39,
+            "t": 1784820660
+          },
+          {
+            "c": 68.315,
+            "t": 1784820720
+          },
+          {
+            "c": 68.17,
+            "t": 1784820780
+          },
+          {
+            "c": 68.37,
+            "t": 1784820840
+          },
+          {
+            "c": 68.359,
+            "t": 1784820900
+          },
+          {
+            "c": 68.145,
+            "t": 1784820960
+          },
+          {
+            "c": 68.42,
+            "t": 1784821020
+          },
+          {
+            "c": 68.1,
+            "t": 1784821080
+          },
+          {
+            "c": 68.23,
+            "t": 1784821140
+          },
+          {
+            "c": 68.135,
+            "t": 1784821200
+          },
+          {
+            "c": 68.06,
+            "t": 1784821260
+          },
+          {
+            "c": 67.995,
+            "t": 1784821320
+          },
+          {
+            "c": 67.965,
+            "t": 1784821380
+          },
+          {
+            "c": 67.83,
+            "t": 1784821440
+          },
+          {
+            "c": 67.69,
+            "t": 1784821500
+          },
+          {
+            "c": 67.78,
+            "t": 1784821560
+          },
+          {
+            "c": 67.735,
+            "t": 1784821620
+          },
+          {
+            "c": 67.845,
+            "t": 1784821680
+          },
+          {
+            "c": 68.02,
+            "t": 1784821740
+          },
+          {
+            "c": 67.8,
+            "t": 1784821800
+          },
+          {
+            "c": 68.085,
+            "t": 1784821860
+          },
+          {
+            "c": 67.87,
+            "t": 1784821920
+          },
+          {
+            "c": 68,
+            "t": 1784821980
+          },
+          {
+            "c": 67.75,
+            "t": 1784822040
+          },
+          {
+            "c": 68.11,
+            "t": 1784822100
+          },
+          {
+            "c": 68.16,
+            "t": 1784822160
+          },
+          {
+            "c": 68.3,
+            "t": 1784822220
+          },
+          {
+            "c": 68.38,
+            "t": 1784822280
+          },
+          {
+            "c": 68.35,
+            "t": 1784822340
+          },
+          {
+            "c": 68.31,
+            "t": 1784822400
           }
         ]
       },
@@ -6302,65 +6173,65 @@
       "etf_website": "https://graniteshares.com/institutional/us/en-us/etfs/amdl/",
       "provider_page": "graniteshares",
       "holdingsTable": {
-        "count": 19,
-        "updated": "Jun 16, 2026",
-        "top10": 219.32,
+        "count": 17,
+        "updated": "Jul 16, 2026",
+        "top10": 218.89,
         "holdings": [
           {
             "n": "Graniteshares Long Amd Swap Cantor",
-            "as": "45.21%",
+            "as": "52.88%",
             "sh": "1,099,600"
           },
           {
-            "n": "Recv Long 2x Amd Trs Bmo",
-            "as": "44.40%",
-            "sh": "1,080,000"
-          },
-          {
             "n": "Recv Long 2x Amd Trs Nm",
-            "as": "35.80%",
+            "as": "41.87%",
             "sh": "870,700"
           },
           {
+            "n": "Recv Long 2x Amd Trs Bmo",
+            "as": "39.21%",
+            "sh": "815,400"
+          },
+          {
             "n": "Amd Equity Swap",
-            "as": "29.93%",
+            "as": "35.01%",
             "sh": "728,000"
           },
           {
             "n": "Recv Long 2x Amd Trs Cs",
-            "as": "22.86%",
-            "sh": "556,000"
+            "as": "22.82%",
+            "sh": "474,500"
+          },
+          {
+            "n": "Cash & Cash Equivalents",
+            "as": "8.83%",
+            "sh": "92,021,187"
+          },
+          {
+            "n": "Cash & Cash Equivalents",
+            "as": "8.17%",
+            "sh": "85,070,000"
           },
           {
             "n": "Recv Long 2x Amd Trs Wf",
-            "as": "21.70%",
-            "sh": "527,800"
+            "as": "7.76%",
+            "sh": "161,300"
           },
           {
             "n": "Cash & Cash Equivalents",
-            "as": "8.41%",
-            "sh": "104,800,000"
+            "as": "3.66%",
+            "sh": "38,120,000"
           },
           {
-            "n": "Cash & Cash Equivalents",
-            "as": "6.29%",
-            "sh": "78,431,187"
-          },
-          {
-            "n": "Cash & Cash Equivalents",
-            "as": "3.50%",
-            "sh": "43,580,000"
-          },
-          {
-            "n": "Cash & Cash Equivalents",
-            "as": "1.23%",
-            "sh": "15,340,000"
+            "n": "Cash",
+            "as": "-1.32%",
+            "sh": 0
           }
         ]
       },
-      "dividendTable": [],
+      "dividendTable": null,
       "news": {
-        "exp": "1781860516174",
+        "exp": "1784876009689",
         "data": [
           {
             "url": "https://www.etftrends.com/leveraged-inverse-content-hub/top-performing-leveraged-inverse-etfs-06-14-2026/",
@@ -6379,7 +6250,7 @@
               "#RIOX"
             ],
             "time": "Jun 16, 2026, 2:36 PM EDT",
-            "ago": "2 days ago"
+            "ago": "5 weeks ago"
           },
           {
             "url": "https://www.etftrends.com/leveraged-inverse-content-hub/top-performing-leveraged-inverse-etfs-05-31-2026/",
@@ -6398,7 +6269,7 @@
               "#MSOX"
             ],
             "time": "Jun 2, 2026, 4:28 PM EDT",
-            "ago": "16 days ago"
+            "ago": "7 weeks ago"
           },
           {
             "url": "https://www.etftrends.com/leveraged-inverse-content-hub/top-performing-leveraged-inverse-etfs-05-24-2026/",
@@ -6417,64 +6288,7 @@
               "#SMCX"
             ],
             "time": "May 27, 2026, 1:51 PM EDT",
-            "ago": "22 days ago"
-          },
-          {
-            "url": "https://www.etftrends.com/leveraged-inverse-content-hub/top-performing-leveraged-inverse-etfs-05-10-2026/",
-            "img": "https://cdn.snapi.dev/images/v1/7/a/4/etf16-3695682.jpg",
-            "title": "Top Performing Leveraged/Inverse ETFs: 05/10/2026",
-            "text": "Top Performing Leveraged/Inverse ETFs Last Week These were last week's top performing leveraged and inverse ETFs. Note that because of leverage, these kinds of funds can move quickly.",
-            "source": "ETF Trends",
-            "type": "Article",
-            "tickers": [
-              "#BULZ",
-              "#GDXU",
-              "$INTC",
-              "#KBDU",
-              "#KORU",
-              "$RIOT",
-              "#RIOX"
-            ],
-            "time": "May 12, 2026, 2:23 PM EDT",
-            "ago": "5 weeks ago"
-          },
-          {
-            "url": "https://www.etftrends.com/thematic-investing-content-hub/semiconductor-etfs-trade-broadens/",
-            "img": "https://cdn.snapi.dev/images/v1/e/h/f/etf44-3683765.jpg",
-            "title": "Semiconductor ETFs: The Trade Broadens",
-            "text": "Several years ago, semiconductor ETFs were often viewed as a Nvidia (NVDA) story. With Nvidia driving much of the group's growth and performance, some investors questioned the need for broader exposur...",
-            "source": "ETF Trends",
-            "type": "Article",
-            "tickers": [
-              "#CHPX",
-              "#FTXL",
-              "#NVDL",
-              "#PSI",
-              "#SEMI",
-              "#SHOC",
-              "#SMH"
-            ],
-            "time": "May 7, 2026, 7:24 AM EDT",
-            "ago": "6 weeks ago"
-          },
-          {
-            "url": "https://www.etftrends.com/leveraged-inverse-content-hub/top-performing-leveraged-inverse-etfs-04-26-2026/",
-            "img": "https://cdn.snapi.dev/images/v1/v/n/w/etf34-3661430.jpg",
-            "title": "Top Performing Leveraged/Inverse ETFs: 04/26/2026",
-            "text": "Top Performing Leveraged/Inverse ETFs Last Week These were last week's top performing leveraged and inverse ETFs. Note that because of leverage, these kinds of funds can move quickly.",
-            "source": "ETF Trends",
-            "type": "Article",
-            "tickers": [
-              "#FLYD",
-              "#GDXD",
-              "#JDST",
-              "#JETD",
-              "#MSOS",
-              "#MSOX",
-              "#NRGU"
-            ],
-            "time": "Apr 28, 2026, 3:36 PM EDT",
-            "ago": "7 weeks ago"
+            "ago": "2 months ago"
           },
           {
             "url": "CgujXq8DpBQ",
@@ -6515,63 +6329,249 @@
         "no1d": false
       },
       "changes": {
-        "price1w": 60.53,
-        "price1m": 48.1,
+        "price1w": 59.48,
+        "price1m": 75.72,
+        "price3m": 26.56,
+        "price6m": 21.39,
         "priceYTD": 15.55,
-        "price1y": 6.91,
+        "price1y": 9.97,
+        "price5y": null,
         "priceMAX": 25.51
       },
       "performance": {
-        "tr1m": 49.314,
-        "trYTD": 361.865,
-        "tr1y": 939.363,
-        "cagrMAX": 58.397
+        "tr1m": -9.786053882725827,
+        "trYTD": 339.293,
+        "tr1y": 585.155,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": 52.165
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "Graniteshares Long Amd Swap Cantor",
+          "as": "52.88%",
+          "sh": "1,099,600"
+        },
+        {
+          "no": 2,
+          "n": "Recv Long 2x Amd Trs Nm",
+          "as": "41.87%",
+          "sh": "870,700"
+        },
+        {
+          "no": 3,
+          "n": "Recv Long 2x Amd Trs Bmo",
+          "as": "39.21%",
+          "sh": "815,400"
+        },
+        {
+          "no": 4,
+          "n": "Amd Equity Swap",
+          "as": "35.01%",
+          "sh": "728,000"
+        },
+        {
+          "no": 5,
+          "n": "Recv Long 2x Amd Trs Cs",
+          "as": "22.82%",
+          "sh": "474,500"
+        },
+        {
+          "no": 6,
+          "n": "Cash & Cash Equivalents",
+          "as": "8.83%",
+          "sh": "92,021,187"
+        },
+        {
+          "no": 7,
+          "n": "Cash & Cash Equivalents",
+          "as": "8.17%",
+          "sh": "85,070,000"
+        },
+        {
+          "no": 8,
+          "n": "Recv Long 2x Amd Trs Wf",
+          "as": "7.76%",
+          "sh": "161,300"
+        },
+        {
+          "no": 9,
+          "n": "Cash & Cash Equivalents",
+          "as": "3.66%",
+          "sh": "38,120,000"
+        },
+        {
+          "no": 10,
+          "n": "Cash",
+          "as": "-1.32%",
+          "sh": 0
+        },
+        {
+          "no": 11,
+          "n": "Payb Long 2x Amd Trs Wf",
+          "as": "-1.52%",
+          "sh": "15,831,959"
+        },
+        {
+          "no": 12,
+          "n": "Payb Long 2x Amd Trs Cs",
+          "as": "-4.48%",
+          "sh": "46,684,064"
+        },
+        {
+          "no": 13,
+          "n": "Amd Equity Swap 1",
+          "as": "-6.63%",
+          "sh": "69,063,900"
+        },
+        {
+          "no": 14,
+          "n": "Payb Long 2x Amd Trs Nm",
+          "as": "-7.95%",
+          "sh": "82,796,444"
+        },
+        {
+          "no": 15,
+          "n": "Graniteshares Long Amd Swap Cantor",
+          "as": "-8.83%",
+          "sh": "91,970,544"
+        },
+        {
+          "no": 16,
+          "n": "Payb Long 2x Amd Trs Bmo",
+          "as": "-27.64%",
+          "sh": "287,923,651"
+        },
+        {
+          "no": 17,
+          "n": "Us Dollars",
+          "as": "-61.84%",
+          "sh": "644,149,987"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "allocationChartData": {
+        "sectors": [],
+        "assets": [],
+        "countries": []
+      },
+      "news": [
+        {
+          "t": "Top Performing Leveraged/Inverse ETFs: 06/14/2026",
+          "u": "https://www.etftrends.com/leveraged-inverse-content-hub/top-performing-leveraged-inverse-etfs-06-14-2026/",
+          "n": "ETF Trends",
+          "d": "5 weeks ago"
+        },
+        {
+          "t": "Top Performing Leveraged/Inverse ETFs: 05/31/2026",
+          "u": "https://www.etftrends.com/leveraged-inverse-content-hub/top-performing-leveraged-inverse-etfs-05-31-2026/",
+          "n": "ETF Trends",
+          "d": "7 weeks ago"
+        },
+        {
+          "t": "Top Performing Leveraged/Inverse ETFs: 05/24/2026",
+          "u": "https://www.etftrends.com/leveraged-inverse-content-hub/top-performing-leveraged-inverse-etfs-05-24-2026/",
+          "n": "ETF Trends",
+          "d": "2 months ago"
+        },
+        {
+          "t": "GRANITESHARES HITS $6 BILLION AUM AS NVDL SURGES",
+          "u": "https://www.globenewswire.com/news-release/2024/06/14/2898947/0/en/GRANITESHARES-HITS-6-BILLION-AUM-AS-NVDL-SURGES.html",
+          "n": "GlobeNewsWire",
+          "d": "2 years ago"
+        }
+      ],
+      "infoBox": "AMDL is an equity ETF with a total of 17 individual holdings. The top holdings are Graniteshares Long Amd Swap Cantor stock at 52.88%, Recv Long 2x Amd Trs Nm at 41.87%, Recv Long 2x Amd Trs Bmo at 39.21%, Amd Equity Swap at 35.01%, and Recv Long 2x Amd Trs Cs at 22.82%.",
+      "infoTable": {
+        "count": 17,
+        "top10": 218.89,
+        "assetClass": "Equity",
+        "category": "Trading--Leveraged Equity",
+        "categoryLabel": "ETF Category",
+        "aum": 1057169587,
+        "peRatio": null
+      },
+      "date": "Jul 16, 2026",
+      "count": 17,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Jul 16, 2026",
+        "lastChecked": 1784830276580,
+        "topic": "holdings",
+        "ticker": "AMDL",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
       }
     },
     "quote": {
-      "p": 71.82,
-      "pd": 71.82,
-      "c": 6.16,
-      "cp": 9.38,
-      "cl": 65.66,
-      "cdr": 1,
-      "o": 70.81,
-      "h": 72.5,
-      "l": 69.11,
-      "v": 3974797,
-      "ts": 1781812800000,
-      "u": "Jun 18, 2026, 4:00 PM EDT",
-      "td": "2026-06-18",
-      "h52": 78.297,
-      "l52": 6.75,
+      "c": -3.32,
+      "e": true,
+      "h": 72.75,
+      "l": 64.55,
+      "o": 69.97,
+      "p": 68.31,
+      "u": "Jul 23, 2026, 4:00 PM EDT",
+      "v": 3415989,
+      "cl": 71.63,
+      "cp": -4.63,
+      "ec": 2.69,
+      "ep": 71,
+      "es": "After-hours",
+      "eu": "Jul 23, 2026, 7:59 PM EDT",
       "ex": "NASDAQ",
       "ms": "closed",
+      "pd": 68.31,
+      "td": "2026-07-23",
+      "ts": 1784836800000,
+      "cdr": -1,
+      "ecp": 3.94,
+      "epd": 71,
+      "etd": "2026-07-23",
+      "ets": 1784851177877.8147,
+      "exp": 1784880900000,
       "fms": "closed",
-      "e": true,
-      "ep": 71.7421,
-      "epd": 71.74,
-      "ec": -0.08,
-      "ecp": -0.11,
-      "eu": "Jun 18, 2026, 7:59 PM EDT",
-      "es": "After-hours",
-      "ets": 1781827178381.1543,
-      "etd": "2026-06-18",
-      "epv": null,
+      "h52": 83.79,
+      "l52": 8.875,
+      "uid": "AMDL",
       "days": 0,
-      "exp": 1782116100000,
-      "symbol": "AMDL",
-      "uid": "AMDL"
+      "symbol": "AMDL"
     },
     "history": [
       {
+        "t": "2026-07-01",
+        "o": 76.085,
+        "h": 78.839,
+        "l": 49.83,
+        "c": 68.31,
+        "a": 68.31,
+        "v": 51192699,
+        "ch": -17.45
+      },
+      {
         "t": "2026-06-01",
         "o": 65.6,
-        "h": 78.297,
+        "h": 83.79,
         "l": 48.25,
-        "c": 71.82,
-        "a": 71.82,
-        "v": 73632517,
-        "ch": 2.72
+        "c": 82.75,
+        "a": 82.75,
+        "v": 102743691,
+        "ch": 18.35
       },
       {
         "t": "2026-05-01",
@@ -6672,20 +6672,240 @@
         "a": 10.62,
         "v": 607815680,
         "ch": -17.29
-      },
-      {
-        "t": "2025-07-01",
-        "o": 8.14,
-        "h": 13.76,
-        "l": 7.5,
-        "c": 12.84,
-        "a": 12.84,
-        "v": 893933121,
-        "ch": 50.88
       }
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-07-23",
+          "o": 69.97,
+          "h": 72.75,
+          "l": 64.55,
+          "c": 68.31,
+          "a": 68.31,
+          "v": 3150157,
+          "ch": -4.63
+        },
+        {
+          "t": "2026-07-22",
+          "o": 65.75,
+          "h": 74,
+          "l": 65.25,
+          "c": 71.63,
+          "a": 71.63,
+          "v": 2696175,
+          "ch": 2.89
+        },
+        {
+          "t": "2026-07-21",
+          "o": 65.22,
+          "h": 70.3,
+          "l": 64.54,
+          "c": 69.62,
+          "a": 69.62,
+          "v": 2609674,
+          "ch": 15.86
+        },
+        {
+          "t": "2026-07-20",
+          "o": 63,
+          "h": 64.49,
+          "l": 59.71,
+          "c": 60.09,
+          "a": 60.09,
+          "v": 2526422,
+          "ch": 3.35
+        },
+        {
+          "t": "2026-07-17",
+          "o": 53.54,
+          "h": 60.63,
+          "l": 49.83,
+          "c": 58.14,
+          "a": 58.14,
+          "v": 3189449,
+          "ch": -2.25
+        },
+        {
+          "t": "2026-07-16",
+          "o": 61.75,
+          "h": 63.9,
+          "l": 57.27,
+          "c": 59.48,
+          "a": 59.48,
+          "v": 2409982,
+          "ch": -10.82
+        },
+        {
+          "t": "2026-07-15",
+          "o": 73.9,
+          "h": 74.4,
+          "l": 61.6,
+          "c": 66.7,
+          "a": 66.7,
+          "v": 3320829,
+          "ch": -6.7
+        },
+        {
+          "t": "2026-07-14",
+          "o": 76.495,
+          "h": 78.32,
+          "l": 71.35,
+          "c": 71.49,
+          "a": 71.49,
+          "v": 2643484,
+          "ch": 4.81
+        },
+        {
+          "t": "2026-07-13",
+          "o": 69.73,
+          "h": 72.82,
+          "l": 66.21,
+          "c": 68.21,
+          "a": 68.21,
+          "v": 2726493,
+          "ch": -8.48
+        },
+        {
+          "t": "2026-07-10",
+          "o": 70.84,
+          "h": 75.08,
+          "l": 69.895,
+          "c": 74.53,
+          "a": 74.53,
+          "v": 2785989,
+          "ch": 4.15
+        },
+        {
+          "t": "2026-07-09",
+          "o": 69.19,
+          "h": 74.82,
+          "l": 68.73,
+          "c": 71.56,
+          "a": 71.56,
+          "v": 4798299,
+          "ch": 11.07
+        },
+        {
+          "t": "2026-07-08",
+          "o": 61.2,
+          "h": 65.789,
+          "l": 59.61,
+          "c": 64.43,
+          "a": 64.43,
+          "v": 2408908,
+          "ch": 0.37
+        },
+        {
+          "t": "2026-07-07",
+          "o": 64.08,
+          "h": 66.43,
+          "l": 60.66,
+          "c": 64.19,
+          "a": 64.19,
+          "v": 4285973,
+          "ch": -13.01
+        },
+        {
+          "t": "2026-07-06",
+          "o": 69.33,
+          "h": 78.839,
+          "l": 67.451,
+          "c": 73.79,
+          "a": 73.79,
+          "v": 4634860,
+          "ch": 13.26
+        },
+        {
+          "t": "2026-07-02",
+          "o": 70.82,
+          "h": 72.955,
+          "l": 62.06,
+          "c": 65.15,
+          "a": 65.15,
+          "v": 3443016,
+          "ch": -8.78
+        },
+        {
+          "t": "2026-07-01",
+          "o": 76.085,
+          "h": 77.92,
+          "l": 70.76,
+          "c": 71.42,
+          "a": 71.42,
+          "v": 3562989,
+          "ch": -13.69
+        },
+        {
+          "t": "2026-06-30",
+          "o": 73.35,
+          "h": 83.79,
+          "l": 73.35,
+          "c": 82.75,
+          "a": 82.75,
+          "v": 5975970,
+          "ch": 15.25
+        },
+        {
+          "t": "2026-06-29",
+          "o": 67.48,
+          "h": 72.45,
+          "l": 60.494,
+          "c": 71.8,
+          "a": 71.8,
+          "v": 3909554,
+          "ch": 7.6
+        },
+        {
+          "t": "2026-06-26",
+          "o": 66.635,
+          "h": 68.1,
+          "l": 62.37,
+          "c": 66.73,
+          "a": 66.73,
+          "v": 3601182,
+          "ch": -4.9
+        },
+        {
+          "t": "2026-06-25",
+          "o": 73.03,
+          "h": 74.839,
+          "l": 63.63,
+          "c": 70.17,
+          "a": 70.17,
+          "v": 4387185,
+          "ch": 5.14
+        },
+        {
+          "t": "2026-06-24",
+          "o": 67.11,
+          "h": 68.22,
+          "l": 62.75,
+          "c": 66.74,
+          "a": 66.74,
+          "v": 3379127,
+          "ch": -0.37
+        },
+        {
+          "t": "2026-06-23",
+          "o": 63.93,
+          "h": 69.26,
+          "l": 63.27,
+          "c": 66.99,
+          "a": 66.99,
+          "v": 4054033.9999999995,
+          "ch": -11.53
+        },
+        {
+          "t": "2026-06-22",
+          "o": 74.02,
+          "h": 78.71,
+          "l": 71.536,
+          "c": 75.72,
+          "a": 75.72,
+          "v": 3804122,
+          "ch": 5.43
+        },
         {
           "t": "2026-06-18",
           "o": 70.81,
@@ -8975,240 +9195,60 @@
           "a": 10.46,
           "v": 32088884.999999996,
           "ch": 4.91
-        },
-        {
-          "t": "2025-07-22",
-          "o": 10.16,
-          "h": 10.16,
-          "l": 9.26,
-          "c": 9.97,
-          "a": 9.97,
-          "v": 43644271,
-          "ch": -2.92
-        },
-        {
-          "t": "2025-07-21",
-          "o": 10.35,
-          "h": 10.71,
-          "l": 10.25,
-          "c": 10.27,
-          "a": 10.27,
-          "v": 36932278,
-          "ch": 0
-        },
-        {
-          "t": "2025-07-18",
-          "o": 10.61,
-          "h": 10.78,
-          "l": 10.19,
-          "c": 10.27,
-          "a": 10.27,
-          "v": 31652291,
-          "ch": -4.29
-        },
-        {
-          "t": "2025-07-17",
-          "o": 10.91,
-          "h": 10.93,
-          "l": 10.5,
-          "c": 10.73,
-          "a": 10.73,
-          "v": 32628073,
-          "ch": 0.28
-        },
-        {
-          "t": "2025-07-16",
-          "o": 10.09,
-          "h": 10.73,
-          "l": 9.75,
-          "c": 10.7,
-          "a": 10.7,
-          "v": 62153895,
-          "ch": 5.73
-        },
-        {
-          "t": "2025-07-15",
-          "o": 9.87,
-          "h": 10.49,
-          "l": 9.86,
-          "c": 10.12,
-          "a": 10.12,
-          "v": 56829450,
-          "ch": 12.82
-        },
-        {
-          "t": "2025-07-14",
-          "o": 8.83,
-          "h": 9.136,
-          "l": 8.44,
-          "c": 8.97,
-          "a": 8.97,
-          "v": 46406109,
-          "ch": -0.22
-        },
-        {
-          "t": "2025-07-11",
-          "o": 8.52,
-          "h": 9.115,
-          "l": 8.42,
-          "c": 8.99,
-          "a": 8.99,
-          "v": 52975036,
-          "ch": 2.98
-        },
-        {
-          "t": "2025-07-10",
-          "o": 8.6,
-          "h": 8.92,
-          "l": 8.46,
-          "c": 8.73,
-          "a": 8.73,
-          "v": 54271908,
-          "ch": 8.18
-        },
-        {
-          "t": "2025-07-09",
-          "o": 8.09,
-          "h": 8.32,
-          "l": 7.965,
-          "c": 8.07,
-          "a": 8.07,
-          "v": 52605114,
-          "ch": 0.88
-        },
-        {
-          "t": "2025-07-08",
-          "o": 7.94,
-          "h": 8.15,
-          "l": 7.785,
-          "c": 8,
-          "a": 8,
-          "v": 38213710,
-          "ch": 4.44
-        },
-        {
-          "t": "2025-07-07",
-          "o": 7.9,
-          "h": 7.955,
-          "l": 7.5,
-          "c": 7.66,
-          "a": 7.66,
-          "v": 28319729,
-          "ch": -4.49
-        },
-        {
-          "t": "2025-07-03",
-          "o": 8.16,
-          "h": 8.209,
-          "l": 7.95,
-          "c": 8.02,
-          "a": 8.02,
-          "v": 21566255,
-          "ch": -0.99
-        },
-        {
-          "t": "2025-07-02",
-          "o": 7.74,
-          "h": 8.25,
-          "l": 7.725,
-          "c": 8.1,
-          "a": 8.1,
-          "v": 42366769,
-          "ch": 3.45
-        },
-        {
-          "t": "2025-07-01",
-          "o": 8.14,
-          "h": 8.31,
-          "l": 7.71,
-          "c": 7.83,
-          "a": 7.83,
-          "v": 38490660,
-          "ch": -7.99
-        },
-        {
-          "t": "2025-06-30",
-          "o": 8.77,
-          "h": 8.79,
-          "l": 8.425,
-          "c": 8.51,
-          "a": 8.51,
-          "v": 42933321,
-          "ch": -2.96
-        },
-        {
-          "t": "2025-06-27",
-          "o": 8.8,
-          "h": 9.239,
-          "l": 8.495,
-          "c": 8.77,
-          "a": 8.77,
-          "v": 39293775,
-          "ch": 0.23
-        },
-        {
-          "t": "2025-06-26",
-          "o": 9.02,
-          "h": 9.03,
-          "l": 8.53,
-          "c": 8.75,
-          "a": 8.75,
-          "v": 35359023,
-          "ch": 0.23
-        },
-        {
-          "t": "2025-06-25",
-          "o": 8.42,
-          "h": 8.82,
-          "l": 8.261,
-          "c": 8.73,
-          "a": 8.73,
-          "v": 48715209,
-          "ch": 7.25
-        },
-        {
-          "t": "2025-06-24",
-          "o": 7.59,
-          "h": 8.17,
-          "l": 7.53,
-          "c": 8.14,
-          "a": 8.14,
-          "v": 52247195,
-          "ch": 13.69
-        },
-        {
-          "t": "2025-06-23",
-          "o": 7.26,
-          "h": 7.56,
-          "l": 6.855,
-          "c": 7.16,
-          "a": 7.16,
-          "v": 45824862,
-          "ch": 1.99
-        },
-        {
-          "t": "2025-06-20",
-          "o": 7.09,
-          "h": 7.51,
-          "l": 6.94,
-          "c": 7.02,
-          "a": 7.02,
-          "v": 42067132,
-          "ch": 2.18
-        },
-        {
-          "t": "2025-06-18",
-          "o": 7.005,
-          "h": 7.125,
-          "l": 6.75,
-          "c": 6.87,
-          "a": 6.87,
-          "v": 43045229,
-          "ch": -0.58
         }
       ],
       "weekly_1y": [
         {
+          "t": "2026-07-20",
+          "o": 63,
+          "h": 74,
+          "l": 59.71,
+          "c": 68.31,
+          "a": 68.31,
+          "v": 10982428,
+          "ch": 17.49
+        },
+        {
+          "t": "2026-07-13",
+          "o": 69.73,
+          "h": 78.32,
+          "l": 49.83,
+          "c": 58.14,
+          "a": 58.14,
+          "v": 14290237,
+          "ch": -21.99
+        },
+        {
+          "t": "2026-07-06",
+          "o": 69.33,
+          "h": 78.839,
+          "l": 59.61,
+          "c": 74.53,
+          "a": 74.53,
+          "v": 18914029,
+          "ch": 14.4
+        },
+        {
+          "t": "2026-06-29",
+          "o": 67.48,
+          "h": 83.79,
+          "l": 60.494,
+          "c": 65.15,
+          "a": 65.15,
+          "v": 16891529,
+          "ch": -2.37
+        },
+        {
+          "t": "2026-06-22",
+          "o": 74.02,
+          "h": 78.71,
+          "l": 62.37,
+          "c": 66.73,
+          "a": 66.73,
+          "v": 19225650,
+          "ch": -7.09
+        },
+        {
           "t": "2026-06-15",
           "o": 72.53,
           "h": 78.297,
@@ -9677,68 +9717,28 @@
           "a": 12.16,
           "v": 182823624,
           "ch": 5.83
-        },
-        {
-          "t": "2025-07-21",
-          "o": 10.35,
-          "h": 11.6,
-          "l": 9.26,
-          "c": 11.49,
-          "a": 11.49,
-          "v": 181666824,
-          "ch": 11.88
-        },
-        {
-          "t": "2025-07-14",
-          "o": 8.83,
-          "h": 10.93,
-          "l": 8.44,
-          "c": 10.27,
-          "a": 10.27,
-          "v": 229669818,
-          "ch": 14.24
-        },
-        {
-          "t": "2025-07-07",
-          "o": 7.9,
-          "h": 9.115,
-          "l": 7.5,
-          "c": 8.99,
-          "a": 8.99,
-          "v": 226385497,
-          "ch": 12.09
-        },
-        {
-          "t": "2025-06-30",
-          "o": 8.77,
-          "h": 8.79,
-          "l": 7.71,
-          "c": 8.02,
-          "a": 8.02,
-          "v": 145357005,
-          "ch": -8.55
-        },
-        {
-          "t": "2025-06-23",
-          "o": 7.26,
-          "h": 9.239,
-          "l": 6.855,
-          "c": 8.77,
-          "a": 8.77,
-          "v": 221440064,
-          "ch": 24.93
         }
       ],
       "monthly_1y": [
         {
+          "t": "2026-07-01",
+          "o": 76.085,
+          "h": 78.839,
+          "l": 49.83,
+          "c": 68.31,
+          "a": 68.31,
+          "v": 51192699,
+          "ch": -17.45
+        },
+        {
           "t": "2026-06-01",
           "o": 65.6,
-          "h": 78.297,
+          "h": 83.79,
           "l": 48.25,
-          "c": 71.82,
-          "a": 71.82,
-          "v": 73632517,
-          "ch": 2.72
+          "c": 82.75,
+          "a": 82.75,
+          "v": 102743691,
+          "ch": 18.35
         },
         {
           "t": "2026-05-01",
@@ -9839,19 +9839,59 @@
           "a": 10.62,
           "v": 607815680,
           "ch": -17.29
-        },
-        {
-          "t": "2025-07-01",
-          "o": 8.14,
-          "h": 13.76,
-          "l": 7.5,
-          "c": 12.84,
-          "a": 12.84,
-          "v": 893933121,
-          "ch": 50.88
         }
       ],
       "weekly_3y": [
+        {
+          "t": "2026-07-20",
+          "o": 63,
+          "h": 74,
+          "l": 59.71,
+          "c": 68.31,
+          "a": 68.31,
+          "v": 10982428,
+          "ch": 17.49
+        },
+        {
+          "t": "2026-07-13",
+          "o": 69.73,
+          "h": 78.32,
+          "l": 49.83,
+          "c": 58.14,
+          "a": 58.14,
+          "v": 14290237,
+          "ch": -21.99
+        },
+        {
+          "t": "2026-07-06",
+          "o": 69.33,
+          "h": 78.839,
+          "l": 59.61,
+          "c": 74.53,
+          "a": 74.53,
+          "v": 18914029,
+          "ch": 14.4
+        },
+        {
+          "t": "2026-06-29",
+          "o": 67.48,
+          "h": 83.79,
+          "l": 60.494,
+          "c": 65.15,
+          "a": 65.15,
+          "v": 16891529,
+          "ch": -2.37
+        },
+        {
+          "t": "2026-06-22",
+          "o": 74.02,
+          "h": 78.71,
+          "l": 62.37,
+          "c": 66.73,
+          "a": 66.73,
+          "v": 19225650,
+          "ch": -7.09
+        },
         {
           "t": "2026-06-15",
           "o": 72.53,
@@ -10321,68 +10361,28 @@
           "a": 12.16,
           "v": 182823624,
           "ch": 5.83
-        },
-        {
-          "t": "2025-07-21",
-          "o": 10.35,
-          "h": 11.6,
-          "l": 9.26,
-          "c": 11.49,
-          "a": 11.49,
-          "v": 181666824,
-          "ch": 11.88
-        },
-        {
-          "t": "2025-07-14",
-          "o": 8.83,
-          "h": 10.93,
-          "l": 8.44,
-          "c": 10.27,
-          "a": 10.27,
-          "v": 229669818,
-          "ch": 14.24
-        },
-        {
-          "t": "2025-07-07",
-          "o": 7.9,
-          "h": 9.115,
-          "l": 7.5,
-          "c": 8.99,
-          "a": 8.99,
-          "v": 226385497,
-          "ch": 12.09
-        },
-        {
-          "t": "2025-06-30",
-          "o": 8.77,
-          "h": 8.79,
-          "l": 7.71,
-          "c": 8.02,
-          "a": 8.02,
-          "v": 145357005,
-          "ch": -8.55
-        },
-        {
-          "t": "2025-06-23",
-          "o": 7.26,
-          "h": 9.239,
-          "l": 6.855,
-          "c": 8.77,
-          "a": 8.77,
-          "v": 221440064,
-          "ch": 24.93
         }
       ],
       "monthly_3y": [
         {
+          "t": "2026-07-01",
+          "o": 76.085,
+          "h": 78.839,
+          "l": 49.83,
+          "c": 68.31,
+          "a": 68.31,
+          "v": 51192699,
+          "ch": -17.45
+        },
+        {
           "t": "2026-06-01",
           "o": 65.6,
-          "h": 78.297,
+          "h": 83.79,
           "l": 48.25,
-          "c": 71.82,
-          "a": 71.82,
-          "v": 73632517,
-          "ch": 2.72
+          "c": 82.75,
+          "a": 82.75,
+          "v": 102743691,
+          "ch": 18.35
         },
         {
           "t": "2026-05-01",
@@ -10483,28 +10483,28 @@
           "a": 10.62,
           "v": 607815680,
           "ch": -17.29
-        },
-        {
-          "t": "2025-07-01",
-          "o": 8.14,
-          "h": 13.76,
-          "l": 7.5,
-          "c": 12.84,
-          "a": 12.84,
-          "v": 893933121,
-          "ch": 50.88
         }
       ],
       "monthly_5y": [
         {
+          "t": "2026-07-01",
+          "o": 76.085,
+          "h": 78.839,
+          "l": 49.83,
+          "c": 68.31,
+          "a": 68.31,
+          "v": 51192699,
+          "ch": -17.45
+        },
+        {
           "t": "2026-06-01",
           "o": 65.6,
-          "h": 78.297,
+          "h": 83.79,
           "l": 48.25,
-          "c": 71.82,
-          "a": 71.82,
-          "v": 73632517,
-          "ch": 2.72
+          "c": 82.75,
+          "a": 82.75,
+          "v": 102743691,
+          "ch": 18.35
         },
         {
           "t": "2026-05-01",
@@ -10768,5 +10768,9 @@
         }
       ]
     }
-  }
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_countries_unavailable"
+  ]
 }

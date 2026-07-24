@@ -1,9 +1,9 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-07-24T01:53:54.957Z",
+  "generated_at": "2026-07-24T02:23:08.939Z",
   "status": "degraded",
   "status_label": "저하",
-  "status_message": "9 required lane(s) are not ready; healthy lanes may still publish.",
+  "status_message": "10 required lane(s) are not ready; healthy lanes may still publish.",
   "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
   "raw_policy": {
     "public_mirror_allowed": true,
@@ -22,7 +22,7 @@
   "runtime": {
     "projection": "kpi_runtime_projection.v2",
     "built_at": "2026-07-23T12:31:36.970Z",
-    "evaluated_at": "2026-07-24T01:53:54.957Z",
+    "evaluated_at": "2026-07-24T02:23:08.939Z",
     "verdict": "degraded",
     "slot_status": "degraded",
     "status_message": "9 retained missed slot(s) recovered by later authoritative ready full snapshot(s).",
@@ -38,19 +38,20 @@
     "fetch_cron_skip_detection": {
       "schema_version": "fetch-cron-attempt-coverage/v1",
       "mode": "shadow",
-      "evaluated_at": "2026-07-24T01:53:52.424Z",
+      "evaluated_at": "2026-07-24T02:23:06.474Z",
       "status": "warning",
       "deployment_blocking": false,
       "counts": {
         "scheduled_members": 28,
         "schedule_bindings": 31,
-        "observed": 29,
-        "suspected_skips": 2,
+        "observed": 28,
+        "suspected_skips": 3,
         "attempt_gaps": 0
       },
       "suspected_skip_lane_ids": [
         "damodaran",
-        "oecd_cli"
+        "oecd_cli",
+        "yahoo_ticker_macro"
       ],
       "attempt_gap_lane_ids": []
     }
@@ -81,12 +82,12 @@
     {
       "source_id": "etf_core_daily_basket_admin",
       "freshness_basis": ".rows[].proof.quote_date (OLDEST)",
-      "source_date": "2026-07-22",
+      "source_date": "2026-07-23",
       "unit": "calendar_days",
       "calendar": "us_market",
       "max_staleness": 7,
       "required": true,
-      "age": 2,
+      "age": 1,
       "status": "ready"
     },
     {
@@ -126,7 +127,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:33Z",
+                "collected_at": "2026-07-24T01:12:36Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -134,7 +135,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:33Z",
+                "collected_at": "2026-07-24T01:12:36Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -142,7 +143,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:40Z",
+                "collected_at": "2026-07-24T01:12:43Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -150,7 +151,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:27Z",
+                "collected_at": "2026-07-24T01:12:30Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -158,7 +159,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:28Z",
+                "collected_at": "2026-07-24T01:12:31Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -166,7 +167,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:26Z",
+                "collected_at": "2026-07-24T01:12:29Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -174,7 +175,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:43Z",
+                "collected_at": "2026-07-24T01:12:46Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -182,7 +183,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:31Z",
+                "collected_at": "2026-07-24T01:12:33Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -190,7 +191,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:31Z",
+                "collected_at": "2026-07-24T01:12:34Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -198,7 +199,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:29Z",
+                "collected_at": "2026-07-24T01:12:32Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -206,7 +207,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:30Z",
+                "collected_at": "2026-07-24T01:12:33Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -214,7 +215,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:32Z",
+                "collected_at": "2026-07-24T01:12:35Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -222,7 +223,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:29Z",
+                "collected_at": "2026-07-24T01:12:31Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -230,7 +231,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:35Z",
+                "collected_at": "2026-07-24T01:12:39Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -238,7 +239,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:37Z",
+                "collected_at": "2026-07-24T01:12:40Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -246,7 +247,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:34Z",
+                "collected_at": "2026-07-24T01:12:37Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -254,7 +255,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:38Z",
+                "collected_at": "2026-07-24T01:12:41Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -262,7 +263,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:38Z",
+                "collected_at": "2026-07-24T01:12:41Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -270,7 +271,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:35Z",
+                "collected_at": "2026-07-24T01:12:38Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -278,7 +279,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:39Z",
+                "collected_at": "2026-07-24T01:12:42Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -286,7 +287,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:36Z",
+                "collected_at": "2026-07-24T01:12:39Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -294,7 +295,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:14Z",
+                "collected_at": "2026-07-24T01:12:17Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -302,7 +303,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:42Z",
+                "collected_at": "2026-07-24T01:12:45Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               }
             ],
@@ -317,8 +318,8 @@
               "required_count": 23,
               "collection_fresh_count": 23,
               "stale_count": 0,
-              "collected_at_floor": "2026-07-23T01:15:14Z",
-              "collection_age_hours": 24.645,
+              "collected_at_floor": "2026-07-24T01:12:17Z",
+              "collection_age_hours": 1.181,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -381,7 +382,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:33Z",
+                "collected_at": "2026-07-24T01:12:36Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -389,7 +390,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:33Z",
+                "collected_at": "2026-07-24T01:12:36Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -397,7 +398,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:40Z",
+                "collected_at": "2026-07-24T01:12:43Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -405,7 +406,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:31Z",
+                "collected_at": "2026-07-24T01:12:33Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -413,7 +414,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:31Z",
+                "collected_at": "2026-07-24T01:12:34Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -421,7 +422,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:29Z",
+                "collected_at": "2026-07-24T01:12:32Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -429,7 +430,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:30Z",
+                "collected_at": "2026-07-24T01:12:33Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -437,7 +438,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:32Z",
+                "collected_at": "2026-07-24T01:12:35Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -445,7 +446,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:35Z",
+                "collected_at": "2026-07-24T01:12:39Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -453,7 +454,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:37Z",
+                "collected_at": "2026-07-24T01:12:40Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -461,7 +462,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:34Z",
+                "collected_at": "2026-07-24T01:12:37Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -469,7 +470,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:38Z",
+                "collected_at": "2026-07-24T01:12:41Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -477,7 +478,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:38Z",
+                "collected_at": "2026-07-24T01:12:41Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -485,7 +486,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:35Z",
+                "collected_at": "2026-07-24T01:12:38Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -493,7 +494,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:39Z",
+                "collected_at": "2026-07-24T01:12:42Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -501,7 +502,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:36Z",
+                "collected_at": "2026-07-24T01:12:39Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               }
             ],
@@ -516,8 +517,8 @@
               "required_count": 16,
               "collection_fresh_count": 16,
               "stale_count": 0,
-              "collected_at_floor": "2026-07-23T01:15:29Z",
-              "collection_age_hours": 24.641,
+              "collected_at_floor": "2026-07-24T01:12:32Z",
+              "collection_age_hours": 1.177,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -542,7 +543,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:41Z",
+                "collected_at": "2026-07-24T01:12:44Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -550,7 +551,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:43Z",
+                "collected_at": "2026-07-24T01:12:46Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -558,7 +559,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:42Z",
+                "collected_at": "2026-07-24T01:12:45Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               }
             ],
@@ -573,8 +574,8 @@
               "required_count": 3,
               "collection_fresh_count": 3,
               "stale_count": 0,
-              "collected_at_floor": "2026-07-23T01:15:41Z",
-              "collection_age_hours": 24.637,
+              "collected_at_floor": "2026-07-24T01:12:44Z",
+              "collection_age_hours": 1.174,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -4184,7 +4185,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:27Z",
+                "collected_at": "2026-07-24T01:12:30Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -4192,7 +4193,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:28Z",
+                "collected_at": "2026-07-24T01:12:31Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -4200,7 +4201,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:26Z",
+                "collected_at": "2026-07-24T01:12:29Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -4208,7 +4209,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:29Z",
+                "collected_at": "2026-07-24T01:12:31Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -4216,7 +4217,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-07-23T01:15:14Z",
+                "collected_at": "2026-07-24T01:12:17Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               }
             ],
@@ -4231,8 +4232,8 @@
               "required_count": 5,
               "collection_fresh_count": 5,
               "stale_count": 0,
-              "collected_at_floor": "2026-07-23T01:15:14Z",
-              "collection_age_hours": 24.645,
+              "collected_at_floor": "2026-07-24T01:12:17Z",
+              "collection_age_hours": 1.181,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -4295,7 +4296,7 @@
     {
       "source_id": "etf_daily1y_readiness_admin",
       "freshness_basis": ".generated_at",
-      "source_date": "2026-07-24T01:53:31.781Z",
+      "source_date": "2026-07-24T02:22:45.517Z",
       "unit": "hours",
       "calendar": "wall_clock",
       "max_staleness": 50,
@@ -4311,7 +4312,7 @@
       "calendar": "wall_clock",
       "max_staleness": 30,
       "required": true,
-      "age": 17.29,
+      "age": 17.78,
       "status": "ready"
     },
     {
@@ -4322,7 +4323,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 112.15,
+      "age": 112.64,
       "status": "ready"
     },
     {
@@ -4333,7 +4334,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 111.99,
+      "age": 112.48,
       "status": "ready"
     },
     {
@@ -4344,55 +4345,55 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 226.81,
+      "age": 227.3,
       "status": "ready"
     },
     {
       "source_id": "slickcharts_history_delivery",
       "freshness_basis": ".updated (fetch/write delivery time, OLDEST; not provider publication time)",
-      "source_date": "2026-07-19T10:18:13.000Z",
+      "source_date": "2026-07-24T02:10:32.000Z",
       "unit": "hours",
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 111.59,
+      "age": 0.21,
       "status": "ready"
     }
   ],
   "source_artifacts": [
     {
       "id": "fenok_edge_coverage_index",
-      "generated_at": "2026-07-24T01:53:21.388Z",
+      "generated_at": "2026-07-24T02:22:35.086Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "rim_index_inputs",
-      "generated_at": "2026-07-24T01:53:46.128Z",
+      "generated_at": "2026-07-24T02:22:59.826Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-07-24T01:53:47.609Z",
+      "generated_at": "2026-07-24T02:23:01.474Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "s0_finra_occ_mapping_ledger",
-      "generated_at": "2026-07-24T01:53:31.725Z",
+      "generated_at": "2026-07-24T02:22:45.455Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_daily1y_readiness_admin",
-      "generated_at": "2026-07-24T01:53:31.781Z",
+      "generated_at": "2026-07-24T02:22:45.517Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_core_daily_basket_admin",
-      "generated_at": "2026-07-24T01:53:12.806Z",
+      "generated_at": "2026-07-24T02:22:26.428Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -4404,7 +4405,7 @@
     },
     {
       "id": "stockanalysis_recovery_state",
-      "generated_at": "2026-07-23T23:40:48Z",
+      "generated_at": "2026-07-24T01:12:15Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -4416,7 +4417,7 @@
     },
     {
       "id": "data_supply_detection_floor",
-      "generated_at": "2026-07-24T01:53:52.424Z",
+      "generated_at": "2026-07-24T02:23:06.474Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -4435,12 +4436,12 @@
   ],
   "totals": {
     "lanes": 29,
-    "ready": 20,
-    "degraded": 9,
+    "ready": 19,
+    "degraded": 10,
     "warning": 0,
     "blocked": 0,
     "unavailable": 0,
-    "required_not_ready": 9,
+    "required_not_ready": 10,
     "platform_blocking_not_ready": 0
   },
   "lanes": [
@@ -4452,7 +4453,7 @@
       "status_message": "S0 active stocks daily gate is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-24T01:53:21.388Z",
+      "as_of": "2026-07-24T02:22:35.086Z",
       "counts": {
         "active_total": 1178,
         "by_market": [
@@ -4610,7 +4611,7 @@
       "status_message": "S1 candidate promotion gate is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-24T01:52:37.009Z",
+      "as_of": "2026-07-24T02:21:49.700Z",
       "counts": {
         "denominator": 1184,
         "current_public_stock": 1178,
@@ -4623,8 +4624,8 @@
       "details": {
         "stockanalysis_recovery": {
           "state_present": true,
-          "generated_at": "2026-07-23T23:40:48Z",
-          "current_attempt_ref": "30053870769",
+          "generated_at": "2026-07-24T01:12:15Z",
+          "current_attempt_ref": "30058282672",
           "current_attempt_number": 1,
           "current_failed_count": 0,
           "degraded": [
@@ -4971,7 +4972,7 @@
           "label": "promotion artifact",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-24T01:52:37.009Z",
+          "detail": "2026-07-24T02:21:49.700Z",
           "platform_blocking": false
         },
         {
@@ -5003,7 +5004,7 @@
           "label": "StockAnalysis stock/financial recovery state",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-23T23:40:48Z",
+          "detail": "2026-07-24T01:12:15Z",
           "platform_blocking": false,
           "required": false,
           "service_gate": false
@@ -5028,7 +5029,7 @@
       "status_message": "ETF public scoring and daily gate is not ready: PUBLIC+DAILY+GATED: PUBLIC. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-24T01:53:31.781Z",
+      "as_of": "2026-07-24T02:22:45.517Z",
       "counts": {
         "eligible_etf_count": 4431,
         "scored_public_etf": 4431,
@@ -6598,7 +6599,7 @@
             "missing": 0,
             "stale": 0,
             "invalid": 0,
-            "oldest_delivery_at": "2026-07-19T10:18:13.000Z"
+            "oldest_delivery_at": "2026-07-24T02:10:32.000Z"
           }
         ],
         "offenders": [],
@@ -6642,7 +6643,7 @@
       "status_message": "RIM inputs is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-24T01:53:46.128Z",
+      "as_of": "2026-07-24T02:22:59.826Z",
       "counts": {
         "required_ready": 4,
         "required_total": 4,
@@ -6705,7 +6706,7 @@
             "recovery_event_name": "schedule",
             "recovered_at": "2026-07-17T01:14:57.777Z",
             "lkg_source_as_of": "2026-07-16",
-            "source_as_of": "2026-07-23"
+            "source_as_of": "2026-07-24"
           }
         ],
         "last_attempt": null,
@@ -6797,7 +6798,7 @@
       "status_message": "Product surface freshness is not ready: stale surfaces: 1 stale; product surface true-date/collection taxonomy v2: etf_center:pending_true_date. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-24T01:53:47.609Z",
+      "as_of": "2026-07-24T02:23:01.474Z",
       "counts": {
         "surfaces": 7,
         "ready": 1,
@@ -6812,8 +6813,8 @@
       "details": {
         "stockanalysis_recovery": {
           "state_present": true,
-          "generated_at": "2026-07-23T23:40:48Z",
-          "current_attempt_ref": "30053870769",
+          "generated_at": "2026-07-24T01:12:15Z",
+          "current_attempt_ref": "30058282672",
           "current_attempt_number": 1,
           "current_failed_count": 0,
           "degraded": [],
@@ -6856,7 +6857,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-24T01:53:47.609Z",
+          "detail": "2026-07-24T02:23:01.474Z",
           "platform_blocking": false
         },
         {
@@ -6896,7 +6897,7 @@
           "label": "StockAnalysis surface recovery state",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-23T23:40:48Z",
+          "detail": "2026-07-24T01:12:15Z",
           "platform_blocking": false,
           "required": false,
           "service_gate": false
@@ -6921,7 +6922,7 @@
       "status_message": "FINRA/OCC source gate is not ready: OCC current delivery: OCC target 2026-07-23 was unavailable (0 usable rows; 25 hard failures; threshold stop recorded); serving fallback dated 2026-07-22. Current run remains degraded across 3 non-empty batch(es).. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-24T01:53:31.725Z",
+      "as_of": "2026-07-24T02:22:45.455Z",
       "counts": {
         "active_us_total": 750,
         "plain_us_finra_denominator": 691,
@@ -6933,10 +6934,10 @@
       },
       "details": {
         "source_dates": {
-          "signals_generated_at": "2026-07-24T01:52:41.437Z",
+          "signals_generated_at": "2026-07-24T02:21:54.466Z",
           "finra_source_date": "20260722",
           "occ_source_date": "20260722",
-          "coverage_index_generated_at": "2026-07-24T01:53:21.388Z",
+          "coverage_index_generated_at": "2026-07-24T02:22:35.086Z",
           "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
         },
         "action_policy": [
@@ -6976,7 +6977,7 @@
           "label": "ledger acceptance",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-24T01:53:31.725Z",
+          "detail": "2026-07-24T02:22:45.455Z",
           "platform_blocking": true
         },
         {
@@ -7029,7 +7030,7 @@
       "status_message": "Daily automation and deploy gates is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-24T01:53:55.239Z",
+      "as_of": "2026-07-24T02:23:09.234Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
@@ -7396,7 +7397,7 @@
       "status_message": "US Treasury TGA is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-21",
+      "as_of": "2026-07-22",
       "counts": {},
       "details": {
         "recovery_retry_set": [],
@@ -7411,7 +7412,7 @@
             "recovery_event_name": "schedule",
             "recovered_at": "2026-07-21T02:20:06.242Z",
             "lkg_source_as_of": "2026-07-16",
-            "source_as_of": "2026-07-21"
+            "source_as_of": "2026-07-22"
           }
         ],
         "last_attempt": null,
@@ -7423,7 +7424,7 @@
           "label": "Detection floor status",
           "status": "ready",
           "status_label": "정상",
-          "detail": "ok; source_as_of 2026-07-21",
+          "detail": "ok; source_as_of 2026-07-22",
           "platform_blocking": false
         },
         {
@@ -7437,7 +7438,7 @@
       ],
       "reason": "ok",
       "artifact": {
-        "source_as_of": "2026-07-21"
+        "source_as_of": "2026-07-22"
       }
     },
     {
@@ -7779,12 +7780,12 @@
     {
       "id": "nasdaq_giw_sox",
       "label": "Nasdaq GIW SOX constituents",
-      "status": "ready",
-      "status_label": "정상",
-      "status_message": "Nasdaq GIW SOX constituents is ready.",
+      "status": "degraded",
+      "status_label": "저하",
+      "status_message": "Nasdaq GIW SOX constituents is not ready: Detection floor status: future_source; source_as_of 2026-07-24. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-23",
+      "as_of": "2026-07-24",
       "counts": {},
       "details": {
         "recovery_retry_set": [],
@@ -7796,9 +7797,9 @@
         {
           "id": "detection_floor_status",
           "label": "Detection floor status",
-          "status": "ready",
-          "status_label": "정상",
-          "detail": "ok; source_as_of 2026-07-23",
+          "status": "blocked",
+          "status_label": "차단",
+          "detail": "future_source; source_as_of 2026-07-24",
           "platform_blocking": false
         },
         {
@@ -7810,9 +7811,9 @@
           "platform_blocking": false
         }
       ],
-      "reason": "ok",
+      "reason": "future_source",
       "artifact": {
-        "source_as_of": "2026-07-23"
+        "source_as_of": "2026-07-24"
       }
     },
     {
@@ -7910,13 +7911,13 @@
       "label": "SlickCharts composite",
       "status": "degraded",
       "status_label": "저하",
-      "status_message": "SlickCharts composite is not ready: Detection floor status: unexpected_error; source_as_of 2026-07-19. Other lanes may publish.",
+      "status_message": "SlickCharts composite is not ready: Detection floor status: schema_drift; source_as_of 2026-07-19. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
       "as_of": "2026-07-19",
       "counts": {},
       "details": {
-        "detection_reason": "unexpected_error",
+        "detection_reason": "schema_drift",
         "recovery": {
           "lane_id": "slickcharts_daily_delivery",
           "generated_at": "2026-07-23T08:36:27.924Z",
@@ -7957,7 +7958,7 @@
           "label": "Detection floor status",
           "status": "blocked",
           "status_label": "차단",
-          "detail": "unexpected_error; source_as_of 2026-07-19",
+          "detail": "schema_drift; source_as_of 2026-07-19",
           "platform_blocking": false
         },
         {
@@ -7993,7 +7994,7 @@
           "platform_blocking": false
         }
       ],
-      "reason": "unexpected_error",
+      "reason": "schema_drift",
       "artifact": {
         "source_as_of": "2026-07-19"
       }
@@ -8362,11 +8363,19 @@
       "required": true
     },
     {
+      "lane_id": "nasdaq_giw_sox",
+      "check_id": "detection_floor_status",
+      "status": "blocked",
+      "label": "Detection floor status",
+      "detail": "future_source; source_as_of 2026-07-24",
+      "required": true
+    },
+    {
       "lane_id": "slickcharts",
       "check_id": "detection_floor_status",
       "status": "blocked",
       "label": "Detection floor status",
-      "detail": "unexpected_error; source_as_of 2026-07-19",
+      "detail": "schema_drift; source_as_of 2026-07-19",
       "required": true
     },
     {

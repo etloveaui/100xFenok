@@ -3,10 +3,11 @@
   "source": "stockanalysis",
   "asset_type": "etf",
   "ticker": "AMOM",
-  "fetched_at": "2026-06-19T08:05:37Z",
+  "source_as_of": "2026-07-23T20:00:00Z",
+  "fetched_at": "2026-07-24T01:23:22Z",
   "endpoints": {
-    "holdings": "/api/symbol/e/AMOM/holdings",
-    "overview": "/api/symbol/e/AMOM/overview",
+    "holdings": "/etf/amom/holdings/__data.json",
+    "overview": "/etf/amom/__data.json",
     "quote": "/api/quotes/e/AMOM",
     "history_periods": {
       "daily_1y": "/api/symbol/e/AMOM/history?range=1Y&period=Daily",
@@ -17,356 +18,376 @@
       "monthly_5y": "/api/symbol/e/AMOM/history?range=5Y&period=Monthly"
     }
   },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
   "normalized": {
     "holdings": [
       {
         "rank": 1,
-        "symbol": "MU",
-        "name": "Micron Technology, Inc.",
-        "weight_pct": 5.26,
-        "shares": 1794,
+        "symbol": "CSCO",
+        "name": "Cisco Systems, Inc.",
+        "weight_pct": 4.84,
+        "shares": 10490,
         "raw": {
           "no": 1,
-          "n": "Micron Technology, Inc.",
-          "s": "$MU",
-          "as": "5.26%",
-          "sh": "1,794"
+          "n": "Cisco Systems, Inc.",
+          "s": "$CSCO",
+          "as": "4.84%",
+          "sh": "10,490"
         }
       },
       {
         "rank": 2,
-        "symbol": "CSCO",
-        "name": "Cisco Systems, Inc.",
-        "weight_pct": 4.87,
-        "shares": 13479,
+        "symbol": "MU",
+        "name": "Micron Technology, Inc.",
+        "weight_pct": 4.43,
+        "shares": 1266,
         "raw": {
           "no": 2,
-          "n": "Cisco Systems, Inc.",
-          "s": "$CSCO",
-          "as": "4.87%",
-          "sh": "13,479"
+          "n": "Micron Technology, Inc.",
+          "s": "$MU",
+          "as": "4.43%",
+          "sh": "1,266"
         }
       },
       {
         "rank": 3,
         "symbol": "CAT",
         "name": "Caterpillar Inc.",
-        "weight_pct": 4.68,
-        "shares": 1722,
+        "weight_pct": 4.31,
+        "shares": 1188,
         "raw": {
           "no": 3,
           "n": "Caterpillar Inc.",
           "s": "$CAT",
-          "as": "4.68%",
-          "sh": "1,722"
+          "as": "4.31%",
+          "sh": "1,188"
         }
       },
       {
         "rank": 4,
-        "symbol": "AMD",
-        "name": "Advanced Micro Devices, Inc.",
-        "weight_pct": 4.34,
-        "shares": 2842,
+        "symbol": "PANW",
+        "name": "Palo Alto Networks, Inc.",
+        "weight_pct": 4.25,
+        "shares": 2876,
         "raw": {
           "no": 4,
-          "n": "Advanced Micro Devices, Inc.",
-          "s": "$AMD",
-          "as": "4.34%",
-          "sh": "2,842"
+          "n": "Palo Alto Networks, Inc.",
+          "s": "$PANW",
+          "as": "4.25%",
+          "sh": "2,876"
         }
       },
       {
         "rank": 5,
-        "symbol": "INTC",
-        "name": "Intel Corporation",
-        "weight_pct": 3.66,
-        "shares": 9849,
+        "symbol": "AMD",
+        "name": "Advanced Micro Devices, Inc.",
+        "weight_pct": 4.15,
+        "shares": 2033,
         "raw": {
           "no": 5,
-          "n": "Intel Corporation",
-          "s": "$INTC",
-          "as": "3.66%",
-          "sh": "9,849"
+          "n": "Advanced Micro Devices, Inc.",
+          "s": "$AMD",
+          "as": "4.15%",
+          "sh": "2,033"
         }
       },
       {
         "rank": 6,
         "symbol": "GEV",
         "name": "GE Vernova Inc.",
-        "weight_pct": 3.6,
-        "shares": 1282,
+        "weight_pct": 3.85,
+        "shares": 883,
         "raw": {
           "no": 6,
           "n": "GE Vernova Inc.",
           "s": "$GEV",
-          "as": "3.60%",
-          "sh": "1,282"
+          "as": "3.85%",
+          "sh": "883"
         }
       },
       {
         "rank": 7,
         "symbol": "STX",
         "name": "Seagate Technology Holdings plc",
-        "weight_pct": 3.49,
-        "shares": 1256,
+        "weight_pct": 2.96,
+        "shares": 913,
         "raw": {
           "no": 7,
           "n": "Seagate Technology Holdings plc",
           "s": "$STX",
-          "as": "3.49%",
-          "sh": "1,256"
+          "as": "2.96%",
+          "sh": "913"
         }
       },
       {
         "rank": 8,
-        "symbol": "WDC",
-        "name": "Western Digital Corporation",
-        "weight_pct": 3.38,
-        "shares": 2008,
+        "symbol": "FTNT",
+        "name": "Fortinet, Inc.",
+        "weight_pct": 2.88,
+        "shares": 4333,
         "raw": {
           "no": 8,
-          "n": "Western Digital Corporation",
-          "s": "$WDC",
-          "as": "3.38%",
-          "sh": "2,008"
+          "n": "Fortinet, Inc.",
+          "s": "$FTNT",
+          "as": "2.88%",
+          "sh": "4,333"
         }
       },
       {
         "rank": 9,
-        "symbol": "AMAT",
-        "name": "Applied Materials, Inc.",
-        "weight_pct": 2.96,
-        "shares": 1745,
+        "symbol": "MPC",
+        "name": "Marathon Petroleum Corporation",
+        "weight_pct": 2.84,
+        "shares": 2203,
         "raw": {
           "no": 9,
-          "n": "Applied Materials, Inc.",
-          "s": "$AMAT",
-          "as": "2.96%",
-          "sh": "1,745"
+          "n": "Marathon Petroleum Corporation",
+          "s": "$MPC",
+          "as": "2.84%",
+          "sh": "2,203"
         }
       },
       {
         "rank": 10,
-        "symbol": "LRCX",
-        "name": "Lam Research Corporation",
-        "weight_pct": 2.95,
-        "shares": 2689,
+        "symbol": "VLO",
+        "name": "Valero Energy Corporation",
+        "weight_pct": 2.8,
+        "shares": 2196,
         "raw": {
           "no": 10,
-          "n": "Lam Research Corporation",
-          "s": "$LRCX",
-          "as": "2.95%",
-          "sh": "2,689"
+          "n": "Valero Energy Corporation",
+          "s": "$VLO",
+          "as": "2.80%",
+          "sh": "2,196"
         }
       },
       {
         "rank": 11,
-        "symbol": "GLW",
-        "name": "Corning Incorporated",
-        "weight_pct": 2.94,
-        "shares": 5498,
+        "symbol": "DELL",
+        "name": "Dell Technologies Inc.",
+        "weight_pct": 2.76,
+        "shares": 1692,
         "raw": {
           "no": 11,
-          "n": "Corning Incorporated",
-          "s": "$GLW",
-          "as": "2.94%",
-          "sh": "5,498"
+          "n": "Dell Technologies Inc.",
+          "s": "$DELL",
+          "as": "2.76%",
+          "sh": "1,692"
         }
       },
       {
         "rank": 12,
-        "symbol": "DELL",
-        "name": "Dell Technologies Inc.",
-        "weight_pct": 2.65,
-        "shares": 2240,
+        "symbol": "WDC",
+        "name": "Western Digital Corporation",
+        "weight_pct": 2.72,
+        "shares": 1384,
         "raw": {
           "no": 12,
-          "n": "Dell Technologies Inc.",
-          "s": "$DELL",
-          "as": "2.65%",
-          "sh": "2,240"
+          "n": "Western Digital Corporation",
+          "s": "$WDC",
+          "as": "2.72%",
+          "sh": "1,384"
         }
       },
       {
         "rank": 13,
-        "symbol": "PWR",
-        "name": "Quanta Services, Inc.",
-        "weight_pct": 2.53,
-        "shares": 1196,
+        "symbol": "INTC",
+        "name": "Intel Corporation",
+        "weight_pct": 2.69,
+        "shares": 6873,
         "raw": {
           "no": 13,
-          "n": "Quanta Services, Inc.",
-          "s": "$PWR",
-          "as": "2.53%",
-          "sh": "1,196"
+          "n": "Intel Corporation",
+          "s": "$INTC",
+          "as": "2.69%",
+          "sh": "6,873"
         }
       },
       {
         "rank": 14,
-        "symbol": "FDX",
-        "name": "FedEx Corporation",
-        "weight_pct": 2.51,
-        "shares": 2480,
+        "symbol": "AMAT",
+        "name": "Applied Materials, Inc.",
+        "weight_pct": 2.5,
+        "shares": 1147,
         "raw": {
           "no": 14,
-          "n": "FedEx Corporation",
-          "s": "$FDX",
-          "as": "2.51%",
-          "sh": "2,480"
+          "n": "Applied Materials, Inc.",
+          "s": "$AMAT",
+          "as": "2.50%",
+          "sh": "1,147"
         }
       },
       {
         "rank": 15,
-        "symbol": "NEM",
-        "name": "Newmont Corporation",
-        "weight_pct": 2.41,
-        "shares": 8052,
+        "symbol": "LRCX",
+        "name": "Lam Research Corporation",
+        "weight_pct": 2.36,
+        "shares": 1827,
         "raw": {
           "no": 15,
-          "n": "Newmont Corporation",
-          "s": "$NEM",
-          "as": "2.41%",
-          "sh": "8,052"
+          "n": "Lam Research Corporation",
+          "s": "$LRCX",
+          "as": "2.36%",
+          "sh": "1,827"
         }
       },
       {
         "rank": 16,
-        "symbol": "VLO",
-        "name": "Valero Energy Corporation",
-        "weight_pct": 2.3,
-        "shares": 2978,
+        "symbol": "PWR",
+        "name": "Quanta Services, Inc.",
+        "weight_pct": 2.35,
+        "shares": 907,
         "raw": {
           "no": 16,
-          "n": "Valero Energy Corporation",
-          "s": "$VLO",
-          "as": "2.30%",
-          "sh": "2,978"
+          "n": "Quanta Services, Inc.",
+          "s": "$PWR",
+          "as": "2.35%",
+          "sh": "907"
         }
       },
       {
         "rank": 17,
-        "symbol": "KLAC",
-        "name": "KLA Corporation",
-        "weight_pct": 2.29,
-        "shares": 3010,
+        "symbol": "FDX",
+        "name": "FedEx Corporation",
+        "weight_pct": 2.32,
+        "shares": 1801,
         "raw": {
           "no": 17,
-          "n": "KLA Corporation",
-          "s": "$KLAC",
-          "as": "2.29%",
-          "sh": "3,010"
+          "n": "FedEx Corporation",
+          "s": "$FDX",
+          "as": "2.32%",
+          "sh": "1,801"
         }
       },
       {
         "rank": 18,
-        "symbol": "HPE",
-        "name": "Hewlett Packard Enterprise Company",
-        "weight_pct": 2.22,
-        "shares": 15418,
+        "symbol": "TRGP",
+        "name": "Targa Resources Corp.",
+        "weight_pct": 2.21,
+        "shares": 1897,
         "raw": {
           "no": 18,
-          "n": "Hewlett Packard Enterprise Company",
-          "s": "$HPE",
-          "as": "2.22%",
-          "sh": "15,418"
+          "n": "Targa Resources Corp.",
+          "s": "$TRGP",
+          "as": "2.21%",
+          "sh": "1,897"
         }
       },
       {
         "rank": 19,
-        "symbol": "NUE",
-        "name": "Nucor Corporation",
-        "weight_pct": 2.11,
-        "shares": 2651,
+        "symbol": "GLW",
+        "name": "Corning Incorporated",
+        "weight_pct": 2.21,
+        "shares": 3463,
         "raw": {
           "no": 19,
-          "n": "Nucor Corporation",
-          "s": "$NUE",
-          "as": "2.11%",
-          "sh": "2,651"
+          "n": "Corning Incorporated",
+          "s": "$GLW",
+          "as": "2.21%",
+          "sh": "3,463"
         }
       },
       {
         "rank": 20,
-        "symbol": "TRGP",
-        "name": "Targa Resources Corp.",
-        "weight_pct": 2.08,
-        "shares": 2560,
+        "symbol": "HPE",
+        "name": "Hewlett Packard Enterprise Company",
+        "weight_pct": 2.16,
+        "shares": 11445,
         "raw": {
           "no": 20,
-          "n": "Targa Resources Corp.",
-          "s": "$TRGP",
-          "as": "2.08%",
-          "sh": "2,560"
+          "n": "Hewlett Packard Enterprise Company",
+          "s": "$HPE",
+          "as": "2.16%",
+          "sh": "11,445"
         }
       },
       {
         "rank": 21,
         "symbol": "KEYS",
         "name": "Keysight Technologies, Inc.",
-        "weight_pct": 2.06,
-        "shares": 1971,
+        "weight_pct": 1.92,
+        "shares": 1474,
         "raw": {
           "no": 21,
           "n": "Keysight Technologies, Inc.",
           "s": "$KEYS",
-          "as": "2.06%",
-          "sh": "1,971"
+          "as": "1.92%",
+          "sh": "1,474"
         }
       },
       {
         "rank": 22,
-        "symbol": "!TSX/ABX",
-        "name": "Barrick Mining Corporation",
-        "weight_pct": 2.04,
-        "shares": 17001,
+        "symbol": "KLAC",
+        "name": "KLA Corporation",
+        "weight_pct": 1.79,
+        "shares": 2037,
         "raw": {
           "no": 22,
-          "n": "Barrick Mining Corporation",
-          "s": "!tsx/ABX",
-          "as": "2.04%",
-          "sh": "17,001"
+          "n": "KLA Corporation",
+          "s": "$KLAC",
+          "as": "1.79%",
+          "sh": "2,037"
         }
       },
       {
         "rank": 23,
-        "symbol": "TXN",
-        "name": "Texas Instruments Incorporated",
-        "weight_pct": 1.87,
-        "shares": 2078,
+        "symbol": "STLD",
+        "name": "Steel Dynamics, Inc.",
+        "weight_pct": 1.75,
+        "shares": 1802,
         "raw": {
           "no": 23,
-          "n": "Texas Instruments Incorporated",
-          "s": "$TXN",
-          "as": "1.87%",
-          "sh": "2,078"
+          "n": "Steel Dynamics, Inc.",
+          "s": "$STLD",
+          "as": "1.75%",
+          "sh": "1,802"
         }
       },
       {
         "rank": 24,
-        "symbol": "STLD",
-        "name": "Steel Dynamics, Inc.",
-        "weight_pct": 1.84,
-        "shares": 2180,
+        "symbol": "CNC",
+        "name": "Centene Corporation",
+        "weight_pct": 1.74,
+        "shares": 6344,
         "raw": {
           "no": 24,
-          "n": "Steel Dynamics, Inc.",
-          "s": "$STLD",
-          "as": "1.84%",
-          "sh": "2,180"
+          "n": "Centene Corporation",
+          "s": "$CNC",
+          "as": "1.74%",
+          "sh": "6,344"
         }
       },
       {
         "rank": 25,
-        "symbol": "JBL",
-        "name": "Jabil Inc.",
-        "weight_pct": 1.8,
-        "shares": 1570,
+        "symbol": "TXN",
+        "name": "Texas Instruments Incorporated",
+        "weight_pct": 1.72,
+        "shares": 1472,
         "raw": {
           "no": 25,
-          "n": "Jabil Inc.",
-          "s": "$JBL",
-          "as": "1.80%",
-          "sh": "1,570"
+          "n": "Texas Instruments Incorporated",
+          "s": "$TXN",
+          "as": "1.72%",
+          "sh": "1,472"
         }
       }
     ],
@@ -374,27 +395,43 @@
     "sectors": [
       {
         "n": "Technology",
-        "w": 55.07
+        "w": 35.66
       },
       {
         "n": "Industrials",
-        "w": 18.9
+        "w": 17.2
       },
       {
-        "n": "Energy",
-        "w": 10.97
+        "n": "Financials",
+        "w": 11.28
       },
       {
-        "n": "Materials",
-        "w": 9.75
+        "n": "Communication Services",
+        "w": 10.61
       },
       {
-        "n": "Healthcare",
-        "w": 4.03
+        "n": "Health Care",
+        "w": 9.57
       },
       {
         "n": "Consumer Discretionary",
-        "w": 1.28
+        "w": 6.41
+      },
+      {
+        "n": "Utilities",
+        "w": 3.6
+      },
+      {
+        "n": "Energy",
+        "w": 2.94
+      },
+      {
+        "n": "Consumer Staples",
+        "w": 2.54
+      },
+      {
+        "n": "Other",
+        "w": 0.19
       }
     ],
     "countries": [
@@ -405,7 +442,7 @@
       }
     ],
     "holding_count": 51,
-    "holdings_updated": "Jun 16, 2026",
+    "holdings_updated": "Jul 17, 2026",
     "classification": {
       "is_leveraged": false,
       "leverage_factor": null,
@@ -416,40 +453,41 @@
       "confidence": "high"
     },
     "overview": {
-      "aum": "$33.49M",
+      "aum": "$25.04M",
       "nav": "$26.22",
       "expenseRatio": "0.75%",
-      "peRatio": "34.86",
-      "sharesOut": "550,001",
-      "dividendYield": "0.07%",
-      "beta": "1.24",
+      "peRatio": "35.93",
+      "sharesOut": "425,001",
+      "dividendYield": "0.03%",
+      "beta": "1.22",
       "inception": "May 21, 2019",
       "provider_page": "exchange-traded-concepts",
       "etf_website": "https://qraftaietf.com/amom"
     },
     "performance": {
-      "tr1m": 9.663,
-      "trYTD": 29.538,
-      "tr1y": 45.052,
-      "cagr5y": 12.701,
-      "cagrMAX": 18.792
+      "tr1m": -8.954118699005258,
+      "trYTD": 20.655,
+      "tr1y": 29.868,
+      "cagr5y": 10.454,
+      "cagr10y": null,
+      "cagrMAX": 17.351
     },
     "quote": {
-      "p": 62.9684,
-      "pd": 62.97,
-      "c": 1.26,
-      "cp": 2.04,
-      "cl": 61.71,
-      "cdr": 1,
-      "o": 63.5,
-      "h": 63.5,
-      "l": 62.93,
-      "v": 1999.3639,
-      "ts": 1781812800000,
-      "u": "Jun 18, 2026, 4:00 PM EDT",
-      "td": "2026-06-18",
-      "h52": 63.5,
-      "l52": 43.375,
+      "p": 58.6503,
+      "pd": 58.65,
+      "c": -0.33,
+      "cp": -0.56,
+      "cl": 58.98,
+      "cdr": -1,
+      "o": 58.68,
+      "h": 58.68,
+      "l": 58.65,
+      "v": 185.929318,
+      "ts": 1784836800000,
+      "u": "Jul 23, 2026, 4:00 PM EDT",
+      "td": "2026-07-23",
+      "h52": 64.44,
+      "l52": 44.5,
       "ex": "NYSEARCA",
       "ms": "closed",
       "fms": "closed",
@@ -460,24 +498,34 @@
       "ecp": 0,
       "eu": null,
       "es": "After-hours",
-      "ets": 1781827200148.4922,
+      "ets": 1784851200080.2957,
       "etd": null,
       "epv": null,
       "days": 0,
-      "exp": 1782116100000,
+      "exp": 1784880900000,
       "symbol": "AMOM",
       "uid": "AMOM"
     },
     "history": [
       {
+        "t": "2026-07-01",
+        "o": 62.46,
+        "h": 62.6,
+        "l": 55.365,
+        "c": 58.65,
+        "a": 58.6503,
+        "v": 199068,
+        "ch": -8.77
+      },
+      {
         "t": "2026-06-01",
         "o": 60,
-        "h": 63.5,
+        "h": 64.44,
         "l": 56.445,
-        "c": 62.968,
-        "a": 62.9684,
-        "v": 70118,
-        "ch": 5.03
+        "c": 64.288,
+        "a": 64.2877,
+        "v": 102493,
+        "ch": 7.24
       },
       {
         "t": "2026-05-01",
@@ -578,20 +626,240 @@
         "a": 45.409322,
         "v": 64653,
         "ch": -1.2
-      },
-      {
-        "t": "2025-07-01",
-        "o": 45.535,
-        "h": 46.5,
-        "l": 44.29,
-        "c": 45.979,
-        "a": 45.960194,
-        "v": 125958,
-        "ch": 0.47
       }
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-07-23",
+          "o": 58.68,
+          "h": 58.68,
+          "l": 58.65,
+          "c": 58.65,
+          "a": 58.6503,
+          "v": 630,
+          "ch": -0.56
+        },
+        {
+          "t": "2026-07-22",
+          "o": 59.42,
+          "h": 59.42,
+          "l": 58.982,
+          "c": 58.982,
+          "a": 58.9823,
+          "v": 1572,
+          "ch": -0.25
+        },
+        {
+          "t": "2026-07-21",
+          "o": 58.63,
+          "h": 59.27,
+          "l": 58.63,
+          "c": 59.128,
+          "a": 59.1283,
+          "v": 4187,
+          "ch": 3.84
+        },
+        {
+          "t": "2026-07-20",
+          "o": 57.48,
+          "h": 57.795,
+          "l": 56.942,
+          "c": 56.942,
+          "a": 56.9419,
+          "v": 1981.0000000000002,
+          "ch": -0.43
+        },
+        {
+          "t": "2026-07-17",
+          "o": 55.44,
+          "h": 57.46,
+          "l": 55.365,
+          "c": 57.186,
+          "a": 57.1856,
+          "v": 7620,
+          "ch": 0.36
+        },
+        {
+          "t": "2026-07-16",
+          "o": 57.08,
+          "h": 57.08,
+          "l": 56.79,
+          "c": 56.98,
+          "a": 56.98,
+          "v": 149887,
+          "ch": -2.88
+        },
+        {
+          "t": "2026-07-15",
+          "o": 60.76,
+          "h": 60.76,
+          "l": 57.48,
+          "c": 58.67,
+          "a": 58.67,
+          "v": 2737,
+          "ch": -2.9
+        },
+        {
+          "t": "2026-07-14",
+          "o": 60.01,
+          "h": 60.421,
+          "l": 59.9,
+          "c": 60.421,
+          "a": 60.4206,
+          "v": 1373,
+          "ch": 2.17
+        },
+        {
+          "t": "2026-07-13",
+          "o": 58.85,
+          "h": 59.14,
+          "l": 58.85,
+          "c": 59.14,
+          "a": 59.14,
+          "v": 523,
+          "ch": -1.47
+        },
+        {
+          "t": "2026-07-10",
+          "o": 60.08,
+          "h": 60.175,
+          "l": 60.02,
+          "c": 60.02,
+          "a": 60.02,
+          "v": 808,
+          "ch": -0.23
+        },
+        {
+          "t": "2026-07-09",
+          "o": 60.67,
+          "h": 60.91,
+          "l": 60.161,
+          "c": 60.161,
+          "a": 60.1612,
+          "v": 3552,
+          "ch": 2.37
+        },
+        {
+          "t": "2026-07-08",
+          "o": 58.575,
+          "h": 58.771,
+          "l": 57.71,
+          "c": 58.771,
+          "a": 58.7712,
+          "v": 2249,
+          "ch": 1.36
+        },
+        {
+          "t": "2026-07-07",
+          "o": 58.07,
+          "h": 58.07,
+          "l": 57.39,
+          "c": 57.983,
+          "a": 57.9831,
+          "v": 3819,
+          "ch": -3.08
+        },
+        {
+          "t": "2026-07-06",
+          "o": 59.39,
+          "h": 61.09,
+          "l": 59.39,
+          "c": 59.827,
+          "a": 59.8265,
+          "v": 7972.999999999999,
+          "ch": 1.71
+        },
+        {
+          "t": "2026-07-02",
+          "o": 61.06,
+          "h": 61.06,
+          "l": 58.195,
+          "c": 58.819,
+          "a": 58.819,
+          "v": 6637,
+          "ch": -4.13
+        },
+        {
+          "t": "2026-07-01",
+          "o": 62.46,
+          "h": 62.6,
+          "l": 61.26,
+          "c": 61.356,
+          "a": 61.356,
+          "v": 3520,
+          "ch": -4.56
+        },
+        {
+          "t": "2026-06-30",
+          "o": 63.841,
+          "h": 64.44,
+          "l": 63.841,
+          "c": 64.288,
+          "a": 64.2877,
+          "v": 3360,
+          "ch": 2.08
+        },
+        {
+          "t": "2026-06-29",
+          "o": 61.23,
+          "h": 63.06,
+          "l": 60.81,
+          "c": 62.979,
+          "a": 62.9794,
+          "v": 4396,
+          "ch": 3.39
+        },
+        {
+          "t": "2026-06-26",
+          "o": 61.56,
+          "h": 61.57,
+          "l": 60.916,
+          "c": 60.916,
+          "a": 60.9159,
+          "v": 4724,
+          "ch": -3.83
+        },
+        {
+          "t": "2026-06-25",
+          "o": 63.81,
+          "h": 63.81,
+          "l": 61.8,
+          "c": 63.343,
+          "a": 63.3433,
+          "v": 7807,
+          "ch": 3.55
+        },
+        {
+          "t": "2026-06-24",
+          "o": 61.53,
+          "h": 61.53,
+          "l": 60.56,
+          "c": 61.17,
+          "a": 61.1701,
+          "v": 3835,
+          "ch": -0.74
+        },
+        {
+          "t": "2026-06-23",
+          "o": 61.14,
+          "h": 61.81,
+          "l": 61.06,
+          "c": 61.628,
+          "a": 61.6276,
+          "v": 5502,
+          "ch": -4.33
+        },
+        {
+          "t": "2026-06-22",
+          "o": 63.92,
+          "h": 64.418,
+          "l": 63.78,
+          "c": 64.418,
+          "a": 64.4184,
+          "v": 2751,
+          "ch": 2.3
+        },
         {
           "t": "2026-06-18",
           "o": 63.5,
@@ -2881,240 +3149,60 @@
           "a": 45.724092,
           "v": 3250,
           "ch": 1.25
-        },
-        {
-          "t": "2025-07-22",
-          "o": 45.35,
-          "h": 45.35,
-          "l": 45.18,
-          "c": 45.18,
-          "a": 45.161324,
-          "v": 1190,
-          "ch": -1.47
-        },
-        {
-          "t": "2025-07-21",
-          "o": 45.98,
-          "h": 46.071,
-          "l": 45.854,
-          "c": 45.854,
-          "a": 45.834546,
-          "v": 1036,
-          "ch": -0.05
-        },
-        {
-          "t": "2025-07-18",
-          "o": 46.01,
-          "h": 46.02,
-          "l": 45.75,
-          "c": 45.877,
-          "a": 45.857536,
-          "v": 1087,
-          "ch": 0.16
-        },
-        {
-          "t": "2025-07-17",
-          "o": 45.81,
-          "h": 45.9,
-          "l": 45.682,
-          "c": 45.806,
-          "a": 45.786566,
-          "v": 4430,
-          "ch": 0.32
-        },
-        {
-          "t": "2025-07-16",
-          "o": 45.5,
-          "h": 45.66,
-          "l": 45.5,
-          "c": 45.66,
-          "a": 45.641126,
-          "v": 1406,
-          "ch": 0.1
-        },
-        {
-          "t": "2025-07-15",
-          "o": 46,
-          "h": 46,
-          "l": 45.47,
-          "c": 45.616,
-          "a": 45.597444,
-          "v": 3237,
-          "ch": -0.22
-        },
-        {
-          "t": "2025-07-14",
-          "o": 45.71,
-          "h": 45.815,
-          "l": 45.619,
-          "c": 45.717,
-          "a": 45.698002,
-          "v": 1794,
-          "ch": 0.59
-        },
-        {
-          "t": "2025-07-11",
-          "o": 45.3,
-          "h": 45.57,
-          "l": 45.3,
-          "c": 45.45,
-          "a": 45.431213,
-          "v": 7617,
-          "ch": 0.04
-        },
-        {
-          "t": "2025-07-10",
-          "o": 45.281,
-          "h": 45.54,
-          "l": 45.281,
-          "c": 45.431,
-          "a": 45.41262,
-          "v": 2523,
-          "ch": -0.67
-        },
-        {
-          "t": "2025-07-09",
-          "o": 45.41,
-          "h": 45.75,
-          "l": 44.96,
-          "c": 45.74,
-          "a": 45.721093,
-          "v": 10416,
-          "ch": 1.06
-        },
-        {
-          "t": "2025-07-08",
-          "o": 45.57,
-          "h": 45.57,
-          "l": 45.145,
-          "c": 45.26,
-          "a": 45.241591,
-          "v": 2563,
-          "ch": -0.43
-        },
-        {
-          "t": "2025-07-07",
-          "o": 45.35,
-          "h": 45.54,
-          "l": 45.35,
-          "c": 45.455,
-          "a": 45.436211,
-          "v": 6584,
-          "ch": 0.11
-        },
-        {
-          "t": "2025-07-03",
-          "o": 45.04,
-          "h": 45.5,
-          "l": 45,
-          "c": 45.406,
-          "a": 45.386931,
-          "v": 6008,
-          "ch": 0.95
-        },
-        {
-          "t": "2025-07-02",
-          "o": 44.89,
-          "h": 44.99,
-          "l": 44.29,
-          "c": 44.98,
-          "a": 44.961407,
-          "v": 17270,
-          "ch": 0.38
-        },
-        {
-          "t": "2025-07-01",
-          "o": 45.535,
-          "h": 45.535,
-          "l": 44.81,
-          "c": 44.81,
-          "a": 44.791577,
-          "v": 26367,
-          "ch": -2.09
-        },
-        {
-          "t": "2025-06-30",
-          "o": 45.54,
-          "h": 45.766,
-          "l": 45.399,
-          "c": 45.766,
-          "a": 45.747282,
-          "v": 4335,
-          "ch": 1.1
-        },
-        {
-          "t": "2025-06-27",
-          "o": 45.05,
-          "h": 45.47,
-          "l": 45.02,
-          "c": 45.267,
-          "a": 45.248588,
-          "v": 5440,
-          "ch": 0.42
-        },
-        {
-          "t": "2025-06-26",
-          "o": 44.71,
-          "h": 45.18,
-          "l": 44.71,
-          "c": 45.08,
-          "a": 45.061366,
-          "v": 8449,
-          "ch": 1.35
-        },
-        {
-          "t": "2025-06-25",
-          "o": 44.64,
-          "h": 44.66,
-          "l": 44.43,
-          "c": 44.502,
-          "a": 44.459515,
-          "v": 2017.9999999999998,
-          "ch": -0.05
-        },
-        {
-          "t": "2025-06-24",
-          "o": 44.325,
-          "h": 44.524,
-          "l": 44.234,
-          "c": 44.524,
-          "a": 44.481494,
-          "v": 6730,
-          "ch": 1.3
-        },
-        {
-          "t": "2025-06-23",
-          "o": 43.4,
-          "h": 43.98,
-          "l": 43.4,
-          "c": 43.952,
-          "a": 43.910537,
-          "v": 4744,
-          "ch": 1.16
-        },
-        {
-          "t": "2025-06-20",
-          "o": 43.63,
-          "h": 43.65,
-          "l": 43.375,
-          "c": 43.45,
-          "a": 43.408514,
-          "v": 2396,
-          "ch": -0.19
-        },
-        {
-          "t": "2025-06-18",
-          "o": 43.41,
-          "h": 43.82,
-          "l": 43.41,
-          "c": 43.532,
-          "a": 43.490436,
-          "v": 1903,
-          "ch": 0.18
         }
       ],
       "weekly_1y": [
         {
+          "t": "2026-07-20",
+          "o": 57.48,
+          "h": 59.42,
+          "l": 56.942,
+          "c": 58.65,
+          "a": 58.6503,
+          "v": 8370,
+          "ch": 2.56
+        },
+        {
+          "t": "2026-07-13",
+          "o": 58.85,
+          "h": 60.76,
+          "l": 55.365,
+          "c": 57.186,
+          "a": 57.1856,
+          "v": 162140,
+          "ch": -4.72
+        },
+        {
+          "t": "2026-07-06",
+          "o": 59.39,
+          "h": 61.09,
+          "l": 57.39,
+          "c": 60.02,
+          "a": 60.02,
+          "v": 18401,
+          "ch": 2.04
+        },
+        {
+          "t": "2026-06-29",
+          "o": 61.23,
+          "h": 64.44,
+          "l": 58.195,
+          "c": 58.819,
+          "a": 58.819,
+          "v": 17913,
+          "ch": -3.44
+        },
+        {
+          "t": "2026-06-22",
+          "o": 63.92,
+          "h": 64.418,
+          "l": 60.56,
+          "c": 60.916,
+          "a": 60.9159,
+          "v": 24619,
+          "ch": -3.26
+        },
+        {
           "t": "2026-06-15",
           "o": 62.52,
           "h": 63.5,
@@ -3583,68 +3671,28 @@
           "a": 45.594845,
           "v": 18185,
           "ch": -0.76
-        },
-        {
-          "t": "2025-07-21",
-          "o": 45.98,
-          "h": 46.19,
-          "l": 45.18,
-          "c": 45.962,
-          "a": 45.942501,
-          "v": 18533,
-          "ch": 0.19
-        },
-        {
-          "t": "2025-07-14",
-          "o": 45.71,
-          "h": 46.02,
-          "l": 45.47,
-          "c": 45.877,
-          "a": 45.857536,
-          "v": 11954,
-          "ch": 0.94
-        },
-        {
-          "t": "2025-07-07",
-          "o": 45.35,
-          "h": 45.75,
-          "l": 44.96,
-          "c": 45.45,
-          "a": 45.431213,
-          "v": 29703,
-          "ch": 0.1
-        },
-        {
-          "t": "2025-06-30",
-          "o": 45.54,
-          "h": 45.766,
-          "l": 44.29,
-          "c": 45.406,
-          "a": 45.386931,
-          "v": 53980,
-          "ch": 0.31
-        },
-        {
-          "t": "2025-06-23",
-          "o": 43.4,
-          "h": 45.47,
-          "l": 43.4,
-          "c": 45.267,
-          "a": 45.248588,
-          "v": 27381,
-          "ch": 4.24
         }
       ],
       "monthly_1y": [
         {
+          "t": "2026-07-01",
+          "o": 62.46,
+          "h": 62.6,
+          "l": 55.365,
+          "c": 58.65,
+          "a": 58.6503,
+          "v": 199068,
+          "ch": -8.77
+        },
+        {
           "t": "2026-06-01",
           "o": 60,
-          "h": 63.5,
+          "h": 64.44,
           "l": 56.445,
-          "c": 62.968,
-          "a": 62.9684,
-          "v": 70118,
-          "ch": 5.03
+          "c": 64.288,
+          "a": 64.2877,
+          "v": 102493,
+          "ch": 7.24
         },
         {
           "t": "2026-05-01",
@@ -3745,19 +3793,59 @@
           "a": 45.409322,
           "v": 64653,
           "ch": -1.2
-        },
-        {
-          "t": "2025-07-01",
-          "o": 45.535,
-          "h": 46.5,
-          "l": 44.29,
-          "c": 45.979,
-          "a": 45.960194,
-          "v": 125958,
-          "ch": 0.47
         }
       ],
       "weekly_3y": [
+        {
+          "t": "2026-07-20",
+          "o": 57.48,
+          "h": 59.42,
+          "l": 56.942,
+          "c": 58.65,
+          "a": 58.6503,
+          "v": 8370,
+          "ch": 2.56
+        },
+        {
+          "t": "2026-07-13",
+          "o": 58.85,
+          "h": 60.76,
+          "l": 55.365,
+          "c": 57.186,
+          "a": 57.1856,
+          "v": 162140,
+          "ch": -4.72
+        },
+        {
+          "t": "2026-07-06",
+          "o": 59.39,
+          "h": 61.09,
+          "l": 57.39,
+          "c": 60.02,
+          "a": 60.02,
+          "v": 18401,
+          "ch": 2.04
+        },
+        {
+          "t": "2026-06-29",
+          "o": 61.23,
+          "h": 64.44,
+          "l": 58.195,
+          "c": 58.819,
+          "a": 58.819,
+          "v": 17913,
+          "ch": -3.44
+        },
+        {
+          "t": "2026-06-22",
+          "o": 63.92,
+          "h": 64.418,
+          "l": 60.56,
+          "c": 60.916,
+          "a": 60.9159,
+          "v": 24619,
+          "ch": -3.26
+        },
         {
           "t": "2026-06-15",
           "o": 62.52,
@@ -4227,68 +4315,28 @@
           "a": 45.594845,
           "v": 18185,
           "ch": -0.76
-        },
-        {
-          "t": "2025-07-21",
-          "o": 45.98,
-          "h": 46.19,
-          "l": 45.18,
-          "c": 45.962,
-          "a": 45.942501,
-          "v": 18533,
-          "ch": 0.19
-        },
-        {
-          "t": "2025-07-14",
-          "o": 45.71,
-          "h": 46.02,
-          "l": 45.47,
-          "c": 45.877,
-          "a": 45.857536,
-          "v": 11954,
-          "ch": 0.94
-        },
-        {
-          "t": "2025-07-07",
-          "o": 45.35,
-          "h": 45.75,
-          "l": 44.96,
-          "c": 45.45,
-          "a": 45.431213,
-          "v": 29703,
-          "ch": 0.1
-        },
-        {
-          "t": "2025-06-30",
-          "o": 45.54,
-          "h": 45.766,
-          "l": 44.29,
-          "c": 45.406,
-          "a": 45.386931,
-          "v": 53980,
-          "ch": 0.31
-        },
-        {
-          "t": "2025-06-23",
-          "o": 43.4,
-          "h": 45.47,
-          "l": 43.4,
-          "c": 45.267,
-          "a": 45.248588,
-          "v": 27381,
-          "ch": 4.24
         }
       ],
       "monthly_3y": [
         {
+          "t": "2026-07-01",
+          "o": 62.46,
+          "h": 62.6,
+          "l": 55.365,
+          "c": 58.65,
+          "a": 58.6503,
+          "v": 199068,
+          "ch": -8.77
+        },
+        {
           "t": "2026-06-01",
           "o": 60,
-          "h": 63.5,
+          "h": 64.44,
           "l": 56.445,
-          "c": 62.968,
-          "a": 62.9684,
-          "v": 70118,
-          "ch": 5.03
+          "c": 64.288,
+          "a": 64.2877,
+          "v": 102493,
+          "ch": 7.24
         },
         {
           "t": "2026-05-01",
@@ -4389,28 +4437,28 @@
           "a": 45.409322,
           "v": 64653,
           "ch": -1.2
-        },
-        {
-          "t": "2025-07-01",
-          "o": 45.535,
-          "h": 46.5,
-          "l": 44.29,
-          "c": 45.979,
-          "a": 45.960194,
-          "v": 125958,
-          "ch": 0.47
         }
       ],
       "monthly_5y": [
         {
+          "t": "2026-07-01",
+          "o": 62.46,
+          "h": 62.6,
+          "l": 55.365,
+          "c": 58.65,
+          "a": 58.6503,
+          "v": 199068,
+          "ch": -8.77
+        },
+        {
           "t": "2026-06-01",
           "o": 60,
-          "h": 63.5,
+          "h": 64.44,
           "l": 56.445,
-          "c": 62.968,
-          "a": 62.9684,
-          "v": 70118,
-          "ch": 5.03
+          "c": 64.288,
+          "a": 64.2877,
+          "v": 102493,
+          "ch": 7.24
         },
         {
           "t": "2026-05-01",
@@ -4991,224 +5039,2172 @@
           "a": 36.192225,
           "v": 306166,
           "ch": 0
-        },
-        {
-          "t": "2021-07-01",
-          "o": 36.94,
-          "h": 37.5,
-          "l": 34.82,
-          "c": 36.96,
-          "a": 36.192225,
-          "v": 305637,
-          "ch": 0.21
         }
       ]
     }
   },
   "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "AMOM",
+        "lastChecked": 1784852112112,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$25.04M",
+      "nav": "$26.22",
+      "expenseRatio": "0.75%",
+      "peRatio": "35.93",
+      "sharesOut": "425,001",
+      "dps": "$0.02",
+      "dividendYield": "0.03%",
+      "payoutRatio": "1.21%",
+      "exDivDate": "Sep 29, 2025",
+      "ch1y": "+29.82%",
+      "payoutFrequency": "n/a",
+      "beta": "1.22",
+      "holdings": 51,
+      "inception": "May 21, 2019",
+      "chart": {
+        "expiration": 1784843654600,
+        "data": [
+          {
+            "t": 1784799000
+          },
+          {
+            "t": 1784799060
+          },
+          {
+            "t": 1784799120
+          },
+          {
+            "t": 1784799180
+          },
+          {
+            "t": 1784799240
+          },
+          {
+            "t": 1784799300
+          },
+          {
+            "t": 1784799360
+          },
+          {
+            "t": 1784799420
+          },
+          {
+            "t": 1784799480
+          },
+          {
+            "t": 1784799540
+          },
+          {
+            "t": 1784799600
+          },
+          {
+            "t": 1784799660
+          },
+          {
+            "t": 1784799720
+          },
+          {
+            "t": 1784799780
+          },
+          {
+            "t": 1784799840
+          },
+          {
+            "t": 1784799900
+          },
+          {
+            "c": 58.98,
+            "o": 58.98,
+            "t": 1784799960
+          },
+          {
+            "c": null,
+            "t": 1784800020
+          },
+          {
+            "c": null,
+            "t": 1784800080
+          },
+          {
+            "c": null,
+            "t": 1784800140
+          },
+          {
+            "c": null,
+            "t": 1784800200
+          },
+          {
+            "c": null,
+            "t": 1784800260
+          },
+          {
+            "c": null,
+            "t": 1784800320
+          },
+          {
+            "c": null,
+            "t": 1784800380
+          },
+          {
+            "c": null,
+            "t": 1784800440
+          },
+          {
+            "c": null,
+            "t": 1784800500
+          },
+          {
+            "c": null,
+            "t": 1784800560
+          },
+          {
+            "c": null,
+            "t": 1784800620
+          },
+          {
+            "c": null,
+            "t": 1784800680
+          },
+          {
+            "c": null,
+            "t": 1784800740
+          },
+          {
+            "c": null,
+            "t": 1784800800
+          },
+          {
+            "c": null,
+            "t": 1784800860
+          },
+          {
+            "c": null,
+            "t": 1784800920
+          },
+          {
+            "c": null,
+            "t": 1784800980
+          },
+          {
+            "c": null,
+            "t": 1784801040
+          },
+          {
+            "c": null,
+            "t": 1784801100
+          },
+          {
+            "c": null,
+            "t": 1784801160
+          },
+          {
+            "c": null,
+            "t": 1784801220
+          },
+          {
+            "c": null,
+            "t": 1784801280
+          },
+          {
+            "c": null,
+            "t": 1784801340
+          },
+          {
+            "c": null,
+            "t": 1784801400
+          },
+          {
+            "c": null,
+            "t": 1784801460
+          },
+          {
+            "c": null,
+            "t": 1784801520
+          },
+          {
+            "c": null,
+            "t": 1784801580
+          },
+          {
+            "c": null,
+            "t": 1784801640
+          },
+          {
+            "c": null,
+            "t": 1784801700
+          },
+          {
+            "c": null,
+            "t": 1784801760
+          },
+          {
+            "c": null,
+            "t": 1784801820
+          },
+          {
+            "c": null,
+            "t": 1784801880
+          },
+          {
+            "c": null,
+            "t": 1784801940
+          },
+          {
+            "c": null,
+            "t": 1784802000
+          },
+          {
+            "c": null,
+            "t": 1784802060
+          },
+          {
+            "c": null,
+            "t": 1784802120
+          },
+          {
+            "c": null,
+            "t": 1784802180
+          },
+          {
+            "c": null,
+            "t": 1784802240
+          },
+          {
+            "c": null,
+            "t": 1784802300
+          },
+          {
+            "c": null,
+            "t": 1784802360
+          },
+          {
+            "c": null,
+            "t": 1784802420
+          },
+          {
+            "c": null,
+            "t": 1784802480
+          },
+          {
+            "c": null,
+            "t": 1784802540
+          },
+          {
+            "c": null,
+            "t": 1784802600
+          },
+          {
+            "c": null,
+            "t": 1784802660
+          },
+          {
+            "c": null,
+            "t": 1784802720
+          },
+          {
+            "c": null,
+            "t": 1784802780
+          },
+          {
+            "c": null,
+            "t": 1784802840
+          },
+          {
+            "c": null,
+            "t": 1784802900
+          },
+          {
+            "c": null,
+            "t": 1784802960
+          },
+          {
+            "c": null,
+            "t": 1784803020
+          },
+          {
+            "c": null,
+            "t": 1784803080
+          },
+          {
+            "c": null,
+            "t": 1784803140
+          },
+          {
+            "c": null,
+            "t": 1784803200
+          },
+          {
+            "c": null,
+            "t": 1784803260
+          },
+          {
+            "c": null,
+            "t": 1784803320
+          },
+          {
+            "c": null,
+            "t": 1784803380
+          },
+          {
+            "c": null,
+            "t": 1784803440
+          },
+          {
+            "c": null,
+            "t": 1784803500
+          },
+          {
+            "c": null,
+            "t": 1784803560
+          },
+          {
+            "c": null,
+            "t": 1784803620
+          },
+          {
+            "c": null,
+            "t": 1784803680
+          },
+          {
+            "c": null,
+            "t": 1784803740
+          },
+          {
+            "c": null,
+            "t": 1784803800
+          },
+          {
+            "c": null,
+            "t": 1784803860
+          },
+          {
+            "c": null,
+            "t": 1784803920
+          },
+          {
+            "c": null,
+            "t": 1784803980
+          },
+          {
+            "c": null,
+            "t": 1784804040
+          },
+          {
+            "c": null,
+            "t": 1784804100
+          },
+          {
+            "c": null,
+            "t": 1784804160
+          },
+          {
+            "c": null,
+            "t": 1784804220
+          },
+          {
+            "c": null,
+            "t": 1784804280
+          },
+          {
+            "c": null,
+            "t": 1784804340
+          },
+          {
+            "c": null,
+            "t": 1784804400
+          },
+          {
+            "c": null,
+            "t": 1784804460
+          },
+          {
+            "c": null,
+            "t": 1784804520
+          },
+          {
+            "c": null,
+            "t": 1784804580
+          },
+          {
+            "c": null,
+            "t": 1784804640
+          },
+          {
+            "c": null,
+            "t": 1784804700
+          },
+          {
+            "c": null,
+            "t": 1784804760
+          },
+          {
+            "c": null,
+            "t": 1784804820
+          },
+          {
+            "c": null,
+            "t": 1784804880
+          },
+          {
+            "c": null,
+            "t": 1784804940
+          },
+          {
+            "c": null,
+            "t": 1784805000
+          },
+          {
+            "c": null,
+            "t": 1784805060
+          },
+          {
+            "c": null,
+            "t": 1784805120
+          },
+          {
+            "c": null,
+            "t": 1784805180
+          },
+          {
+            "c": null,
+            "t": 1784805240
+          },
+          {
+            "c": null,
+            "t": 1784805300
+          },
+          {
+            "c": null,
+            "t": 1784805360
+          },
+          {
+            "c": null,
+            "t": 1784805420
+          },
+          {
+            "c": null,
+            "t": 1784805480
+          },
+          {
+            "c": null,
+            "t": 1784805540
+          },
+          {
+            "c": null,
+            "t": 1784805600
+          },
+          {
+            "c": null,
+            "t": 1784805660
+          },
+          {
+            "c": null,
+            "t": 1784805720
+          },
+          {
+            "c": null,
+            "t": 1784805780
+          },
+          {
+            "c": null,
+            "t": 1784805840
+          },
+          {
+            "c": null,
+            "t": 1784805900
+          },
+          {
+            "c": null,
+            "t": 1784805960
+          },
+          {
+            "c": null,
+            "t": 1784806020
+          },
+          {
+            "c": null,
+            "t": 1784806080
+          },
+          {
+            "c": null,
+            "t": 1784806140
+          },
+          {
+            "c": null,
+            "t": 1784806200
+          },
+          {
+            "c": null,
+            "t": 1784806260
+          },
+          {
+            "c": null,
+            "t": 1784806320
+          },
+          {
+            "c": null,
+            "t": 1784806380
+          },
+          {
+            "c": null,
+            "t": 1784806440
+          },
+          {
+            "c": null,
+            "t": 1784806500
+          },
+          {
+            "c": null,
+            "t": 1784806560
+          },
+          {
+            "c": null,
+            "t": 1784806620
+          },
+          {
+            "c": null,
+            "t": 1784806680
+          },
+          {
+            "c": null,
+            "t": 1784806740
+          },
+          {
+            "c": null,
+            "t": 1784806800
+          },
+          {
+            "c": null,
+            "t": 1784806860
+          },
+          {
+            "c": null,
+            "t": 1784806920
+          },
+          {
+            "c": null,
+            "t": 1784806980
+          },
+          {
+            "c": null,
+            "t": 1784807040
+          },
+          {
+            "c": null,
+            "t": 1784807100
+          },
+          {
+            "c": null,
+            "t": 1784807160
+          },
+          {
+            "c": null,
+            "t": 1784807220
+          },
+          {
+            "c": null,
+            "t": 1784807280
+          },
+          {
+            "c": null,
+            "t": 1784807340
+          },
+          {
+            "c": null,
+            "t": 1784807400
+          },
+          {
+            "c": null,
+            "t": 1784807460
+          },
+          {
+            "c": null,
+            "t": 1784807520
+          },
+          {
+            "c": null,
+            "t": 1784807580
+          },
+          {
+            "c": null,
+            "t": 1784807640
+          },
+          {
+            "c": null,
+            "t": 1784807700
+          },
+          {
+            "c": null,
+            "t": 1784807760
+          },
+          {
+            "c": null,
+            "t": 1784807820
+          },
+          {
+            "c": null,
+            "t": 1784807880
+          },
+          {
+            "c": null,
+            "t": 1784807940
+          },
+          {
+            "c": null,
+            "t": 1784808000
+          },
+          {
+            "c": null,
+            "t": 1784808060
+          },
+          {
+            "c": null,
+            "t": 1784808120
+          },
+          {
+            "c": null,
+            "t": 1784808180
+          },
+          {
+            "c": null,
+            "t": 1784808240
+          },
+          {
+            "c": null,
+            "t": 1784808300
+          },
+          {
+            "c": null,
+            "t": 1784808360
+          },
+          {
+            "c": null,
+            "t": 1784808420
+          },
+          {
+            "c": null,
+            "t": 1784808480
+          },
+          {
+            "c": null,
+            "t": 1784808540
+          },
+          {
+            "c": null,
+            "t": 1784808600
+          },
+          {
+            "c": null,
+            "t": 1784808660
+          },
+          {
+            "c": null,
+            "t": 1784808720
+          },
+          {
+            "c": null,
+            "t": 1784808780
+          },
+          {
+            "c": null,
+            "t": 1784808840
+          },
+          {
+            "c": null,
+            "t": 1784808900
+          },
+          {
+            "c": null,
+            "t": 1784808960
+          },
+          {
+            "c": null,
+            "t": 1784809020
+          },
+          {
+            "c": null,
+            "t": 1784809080
+          },
+          {
+            "c": null,
+            "t": 1784809140
+          },
+          {
+            "c": null,
+            "t": 1784809200
+          },
+          {
+            "c": null,
+            "t": 1784809260
+          },
+          {
+            "c": null,
+            "t": 1784809320
+          },
+          {
+            "c": null,
+            "t": 1784809380
+          },
+          {
+            "c": null,
+            "t": 1784809440
+          },
+          {
+            "c": null,
+            "t": 1784809500
+          },
+          {
+            "c": null,
+            "t": 1784809560
+          },
+          {
+            "c": null,
+            "t": 1784809620
+          },
+          {
+            "c": null,
+            "t": 1784809680
+          },
+          {
+            "c": null,
+            "t": 1784809740
+          },
+          {
+            "c": null,
+            "t": 1784809800
+          },
+          {
+            "c": null,
+            "t": 1784809860
+          },
+          {
+            "c": null,
+            "t": 1784809920
+          },
+          {
+            "c": null,
+            "t": 1784809980
+          },
+          {
+            "c": null,
+            "t": 1784810040
+          },
+          {
+            "c": null,
+            "t": 1784810100
+          },
+          {
+            "c": null,
+            "t": 1784810160
+          },
+          {
+            "c": null,
+            "t": 1784810220
+          },
+          {
+            "c": null,
+            "t": 1784810280
+          },
+          {
+            "c": null,
+            "t": 1784810340
+          },
+          {
+            "c": null,
+            "t": 1784810400
+          },
+          {
+            "c": null,
+            "t": 1784810460
+          },
+          {
+            "c": null,
+            "t": 1784810520
+          },
+          {
+            "c": null,
+            "t": 1784810580
+          },
+          {
+            "c": null,
+            "t": 1784810640
+          },
+          {
+            "c": null,
+            "t": 1784810700
+          },
+          {
+            "c": null,
+            "t": 1784810760
+          },
+          {
+            "c": null,
+            "t": 1784810820
+          },
+          {
+            "c": null,
+            "t": 1784810880
+          },
+          {
+            "c": null,
+            "t": 1784810940
+          },
+          {
+            "c": null,
+            "t": 1784811000
+          },
+          {
+            "c": null,
+            "t": 1784811060
+          },
+          {
+            "c": null,
+            "t": 1784811120
+          },
+          {
+            "c": null,
+            "t": 1784811180
+          },
+          {
+            "c": null,
+            "t": 1784811240
+          },
+          {
+            "c": null,
+            "t": 1784811300
+          },
+          {
+            "c": null,
+            "t": 1784811360
+          },
+          {
+            "c": 58.84,
+            "t": 1784811420
+          },
+          {
+            "c": null,
+            "t": 1784811480
+          },
+          {
+            "c": null,
+            "t": 1784811540
+          },
+          {
+            "c": null,
+            "t": 1784811600
+          },
+          {
+            "c": null,
+            "t": 1784811660
+          },
+          {
+            "c": null,
+            "t": 1784811720
+          },
+          {
+            "c": null,
+            "t": 1784811780
+          },
+          {
+            "c": null,
+            "t": 1784811840
+          },
+          {
+            "c": null,
+            "t": 1784811900
+          },
+          {
+            "c": null,
+            "t": 1784811960
+          },
+          {
+            "c": null,
+            "t": 1784812020
+          },
+          {
+            "c": null,
+            "t": 1784812080
+          },
+          {
+            "c": null,
+            "t": 1784812140
+          },
+          {
+            "c": null,
+            "t": 1784812200
+          },
+          {
+            "c": null,
+            "t": 1784812260
+          },
+          {
+            "c": null,
+            "t": 1784812320
+          },
+          {
+            "c": null,
+            "t": 1784812380
+          },
+          {
+            "c": null,
+            "t": 1784812440
+          },
+          {
+            "c": null,
+            "t": 1784812500
+          },
+          {
+            "c": null,
+            "t": 1784812560
+          },
+          {
+            "c": null,
+            "t": 1784812620
+          },
+          {
+            "c": null,
+            "t": 1784812680
+          },
+          {
+            "c": null,
+            "t": 1784812740
+          },
+          {
+            "c": null,
+            "t": 1784812800
+          },
+          {
+            "c": null,
+            "t": 1784812860
+          },
+          {
+            "c": null,
+            "t": 1784812920
+          },
+          {
+            "c": null,
+            "t": 1784812980
+          },
+          {
+            "c": null,
+            "t": 1784813040
+          },
+          {
+            "c": null,
+            "t": 1784813100
+          },
+          {
+            "c": null,
+            "t": 1784813160
+          },
+          {
+            "c": null,
+            "t": 1784813220
+          },
+          {
+            "c": null,
+            "t": 1784813280
+          },
+          {
+            "c": null,
+            "t": 1784813340
+          },
+          {
+            "c": null,
+            "t": 1784813400
+          },
+          {
+            "c": null,
+            "t": 1784813460
+          },
+          {
+            "c": null,
+            "t": 1784813520
+          },
+          {
+            "c": null,
+            "t": 1784813580
+          },
+          {
+            "c": null,
+            "t": 1784813640
+          },
+          {
+            "c": null,
+            "t": 1784813700
+          },
+          {
+            "c": null,
+            "t": 1784813760
+          },
+          {
+            "c": null,
+            "t": 1784813820
+          },
+          {
+            "c": null,
+            "t": 1784813880
+          },
+          {
+            "c": null,
+            "t": 1784813940
+          },
+          {
+            "c": null,
+            "t": 1784814000
+          },
+          {
+            "c": null,
+            "t": 1784814060
+          },
+          {
+            "c": null,
+            "t": 1784814120
+          },
+          {
+            "c": null,
+            "t": 1784814180
+          },
+          {
+            "c": null,
+            "t": 1784814240
+          },
+          {
+            "c": null,
+            "t": 1784814300
+          },
+          {
+            "c": null,
+            "t": 1784814360
+          },
+          {
+            "c": null,
+            "t": 1784814420
+          },
+          {
+            "c": null,
+            "t": 1784814480
+          },
+          {
+            "c": null,
+            "t": 1784814540
+          },
+          {
+            "c": null,
+            "t": 1784814600
+          },
+          {
+            "c": null,
+            "t": 1784814660
+          },
+          {
+            "c": null,
+            "t": 1784814720
+          },
+          {
+            "c": null,
+            "t": 1784814780
+          },
+          {
+            "c": null,
+            "t": 1784814840
+          },
+          {
+            "c": null,
+            "t": 1784814900
+          },
+          {
+            "c": null,
+            "t": 1784814960
+          },
+          {
+            "c": null,
+            "t": 1784815020
+          },
+          {
+            "c": null,
+            "t": 1784815080
+          },
+          {
+            "c": null,
+            "t": 1784815140
+          },
+          {
+            "c": null,
+            "t": 1784815200
+          },
+          {
+            "c": null,
+            "t": 1784815260
+          },
+          {
+            "c": null,
+            "t": 1784815320
+          },
+          {
+            "c": null,
+            "t": 1784815380
+          },
+          {
+            "c": null,
+            "t": 1784815440
+          },
+          {
+            "c": null,
+            "t": 1784815500
+          },
+          {
+            "c": null,
+            "t": 1784815560
+          },
+          {
+            "c": null,
+            "t": 1784815620
+          },
+          {
+            "c": null,
+            "t": 1784815680
+          },
+          {
+            "c": null,
+            "t": 1784815740
+          },
+          {
+            "c": null,
+            "t": 1784815800
+          },
+          {
+            "c": null,
+            "t": 1784815860
+          },
+          {
+            "c": null,
+            "t": 1784815920
+          },
+          {
+            "c": null,
+            "t": 1784815980
+          },
+          {
+            "c": null,
+            "t": 1784816040
+          },
+          {
+            "c": null,
+            "t": 1784816100
+          },
+          {
+            "c": null,
+            "t": 1784816160
+          },
+          {
+            "c": null,
+            "t": 1784816220
+          },
+          {
+            "c": null,
+            "t": 1784816280
+          },
+          {
+            "c": null,
+            "t": 1784816340
+          },
+          {
+            "c": null,
+            "t": 1784816400
+          },
+          {
+            "c": null,
+            "t": 1784816460
+          },
+          {
+            "c": null,
+            "t": 1784816520
+          },
+          {
+            "c": null,
+            "t": 1784816580
+          },
+          {
+            "c": null,
+            "t": 1784816640
+          },
+          {
+            "c": null,
+            "t": 1784816700
+          },
+          {
+            "c": null,
+            "t": 1784816760
+          },
+          {
+            "c": null,
+            "t": 1784816820
+          },
+          {
+            "c": null,
+            "t": 1784816880
+          },
+          {
+            "c": null,
+            "t": 1784816940
+          },
+          {
+            "c": null,
+            "t": 1784817000
+          },
+          {
+            "c": null,
+            "t": 1784817060
+          },
+          {
+            "c": null,
+            "t": 1784817120
+          },
+          {
+            "c": null,
+            "t": 1784817180
+          },
+          {
+            "c": null,
+            "t": 1784817240
+          },
+          {
+            "c": null,
+            "t": 1784817300
+          },
+          {
+            "c": null,
+            "t": 1784817360
+          },
+          {
+            "c": null,
+            "t": 1784817420
+          },
+          {
+            "c": null,
+            "t": 1784817480
+          },
+          {
+            "c": null,
+            "t": 1784817540
+          },
+          {
+            "c": null,
+            "t": 1784817600
+          },
+          {
+            "c": null,
+            "t": 1784817660
+          },
+          {
+            "c": null,
+            "t": 1784817720
+          },
+          {
+            "c": null,
+            "t": 1784817780
+          },
+          {
+            "c": null,
+            "t": 1784817840
+          },
+          {
+            "c": null,
+            "t": 1784817900
+          },
+          {
+            "c": null,
+            "t": 1784817960
+          },
+          {
+            "c": null,
+            "t": 1784818020
+          },
+          {
+            "c": null,
+            "t": 1784818080
+          },
+          {
+            "c": null,
+            "t": 1784818140
+          },
+          {
+            "c": null,
+            "t": 1784818200
+          },
+          {
+            "c": null,
+            "t": 1784818260
+          },
+          {
+            "c": null,
+            "t": 1784818320
+          },
+          {
+            "c": null,
+            "t": 1784818380
+          },
+          {
+            "c": null,
+            "t": 1784818440
+          },
+          {
+            "c": null,
+            "t": 1784818500
+          },
+          {
+            "c": null,
+            "t": 1784818560
+          },
+          {
+            "c": null,
+            "t": 1784818620
+          },
+          {
+            "c": null,
+            "t": 1784818680
+          },
+          {
+            "c": null,
+            "t": 1784818740
+          },
+          {
+            "c": null,
+            "t": 1784818800
+          },
+          {
+            "c": null,
+            "t": 1784818860
+          },
+          {
+            "c": null,
+            "t": 1784818920
+          },
+          {
+            "c": null,
+            "t": 1784818980
+          },
+          {
+            "c": null,
+            "t": 1784819040
+          },
+          {
+            "c": null,
+            "t": 1784819100
+          },
+          {
+            "c": null,
+            "t": 1784819160
+          },
+          {
+            "c": null,
+            "t": 1784819220
+          },
+          {
+            "c": null,
+            "t": 1784819280
+          },
+          {
+            "c": null,
+            "t": 1784819340
+          },
+          {
+            "c": null,
+            "t": 1784819400
+          },
+          {
+            "c": null,
+            "t": 1784819460
+          },
+          {
+            "c": null,
+            "t": 1784819520
+          },
+          {
+            "c": null,
+            "t": 1784819580
+          },
+          {
+            "c": null,
+            "t": 1784819640
+          },
+          {
+            "c": null,
+            "t": 1784819700
+          },
+          {
+            "c": null,
+            "t": 1784819760
+          },
+          {
+            "c": null,
+            "t": 1784819820
+          },
+          {
+            "c": null,
+            "t": 1784819880
+          },
+          {
+            "c": null,
+            "t": 1784819940
+          },
+          {
+            "c": null,
+            "t": 1784820000
+          },
+          {
+            "c": null,
+            "t": 1784820060
+          },
+          {
+            "c": null,
+            "t": 1784820120
+          },
+          {
+            "c": null,
+            "t": 1784820180
+          },
+          {
+            "c": null,
+            "t": 1784820240
+          },
+          {
+            "c": null,
+            "t": 1784820300
+          },
+          {
+            "c": null,
+            "t": 1784820360
+          },
+          {
+            "c": null,
+            "t": 1784820420
+          },
+          {
+            "c": null,
+            "t": 1784820480
+          },
+          {
+            "c": null,
+            "t": 1784820540
+          },
+          {
+            "c": null,
+            "t": 1784820600
+          },
+          {
+            "c": null,
+            "t": 1784820660
+          },
+          {
+            "c": null,
+            "t": 1784820720
+          },
+          {
+            "c": null,
+            "t": 1784820780
+          },
+          {
+            "c": null,
+            "t": 1784820840
+          },
+          {
+            "c": null,
+            "t": 1784820900
+          },
+          {
+            "c": null,
+            "t": 1784820960
+          },
+          {
+            "c": null,
+            "t": 1784821020
+          },
+          {
+            "c": null,
+            "t": 1784821080
+          },
+          {
+            "c": 58.68,
+            "t": 1784821140
+          },
+          {
+            "c": null,
+            "t": 1784821200
+          },
+          {
+            "c": null,
+            "t": 1784821260
+          },
+          {
+            "c": null,
+            "t": 1784821320
+          },
+          {
+            "c": null,
+            "t": 1784821380
+          },
+          {
+            "c": null,
+            "t": 1784821440
+          },
+          {
+            "c": null,
+            "t": 1784821500
+          },
+          {
+            "c": null,
+            "t": 1784821560
+          },
+          {
+            "c": null,
+            "t": 1784821620
+          },
+          {
+            "c": null,
+            "t": 1784821680
+          },
+          {
+            "c": null,
+            "t": 1784821740
+          },
+          {
+            "c": null,
+            "t": 1784821800
+          },
+          {
+            "c": null,
+            "t": 1784821860
+          },
+          {
+            "c": 58.56,
+            "t": 1784821920
+          },
+          {
+            "c": 58.56,
+            "t": 1784821980
+          },
+          {
+            "c": 58.56,
+            "t": 1784822040
+          },
+          {
+            "c": 58.56,
+            "t": 1784822100
+          },
+          {
+            "c": 58.56,
+            "t": 1784822160
+          },
+          {
+            "c": 58.56,
+            "t": 1784822220
+          },
+          {
+            "c": 58.56,
+            "t": 1784822280
+          },
+          {
+            "c": 58.56,
+            "t": 1784822340
+          },
+          {
+            "c": 58.6503,
+            "t": 1784822400
+          }
+        ]
+      },
+      "description": "The QRAFT AI-Enhanced U.S. Large Cap Momentum ETF (AMOM) is an exchange-traded fund that mostly invests in large cap equity. The fund is an actively-managed portfolio of U.S. Large Cap equities chosen with the aid of artificial intelligence. AMOM was launched on May 21, 2019 and is issued by Exchange Traded Concepts.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Category",
+          "Large Growth"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "NYSEARCA"
+        ],
+        [
+          "Ticker Symbol",
+          "AMOM"
+        ],
+        [
+          "Provider",
+          "Exchange Traded Concepts"
+        ]
+      ],
+      "etf_website": "https://qraftaietf.com/amom",
+      "provider_page": "exchange-traded-concepts",
+      "holdingsTable": {
+        "count": 51,
+        "updated": "Jul 17, 2026",
+        "top10": 37.31,
+        "holdings": [
+          {
+            "n": "Cisco Systems, Inc.",
+            "s": "$CSCO",
+            "as": "4.84%",
+            "sh": "10,490"
+          },
+          {
+            "n": "Micron Technology, Inc.",
+            "s": "$MU",
+            "as": "4.43%",
+            "sh": "1,266"
+          },
+          {
+            "n": "Caterpillar Inc.",
+            "s": "$CAT",
+            "as": "4.31%",
+            "sh": "1,188"
+          },
+          {
+            "n": "Palo Alto Networks, Inc.",
+            "s": "$PANW",
+            "as": "4.25%",
+            "sh": "2,876"
+          },
+          {
+            "n": "Advanced Micro Devices, Inc.",
+            "s": "$AMD",
+            "as": "4.15%",
+            "sh": "2,033"
+          },
+          {
+            "n": "GE Vernova Inc.",
+            "s": "$GEV",
+            "as": "3.85%",
+            "sh": "883"
+          },
+          {
+            "n": "Seagate Technology Holdings plc",
+            "s": "$STX",
+            "as": "2.96%",
+            "sh": "913"
+          },
+          {
+            "n": "Fortinet, Inc.",
+            "s": "$FTNT",
+            "as": "2.88%",
+            "sh": "4,333"
+          },
+          {
+            "n": "Marathon Petroleum Corporation",
+            "s": "$MPC",
+            "as": "2.84%",
+            "sh": "2,203"
+          },
+          {
+            "n": "Valero Energy Corporation",
+            "s": "$VLO",
+            "as": "2.80%",
+            "sh": "2,196"
+          }
+        ]
+      },
+      "dividendTable": [
+        {
+          "dt": "2025-09-29",
+          "amt": 0.0198,
+          "pay": "2025-09-30"
+        },
+        {
+          "dt": "2025-06-26",
+          "amt": 0.0239,
+          "pay": "2025-06-27"
+        },
+        {
+          "dt": "2023-12-26",
+          "amt": 0.0697,
+          "pay": "2023-12-29"
+        },
+        {
+          "dt": "2023-09-26",
+          "amt": 0.0206,
+          "pay": "2023-09-29"
+        },
+        {
+          "dt": "2023-06-27",
+          "amt": 0.0235,
+          "pay": "2023-06-30"
+        },
+        {
+          "dt": "2023-03-27",
+          "amt": 0.0417,
+          "pay": "2023-03-30"
+        }
+      ],
+      "news": {
+        "exp": "1784870850401",
+        "data": [
+          {
+            "url": "https://www.barrons.com/articles/ai-robot-trader-stock-picks-4805065f",
+            "img": "https://cdn.snapi.dev/images/v1/u/8/d/broadc12-2478981-2494661-26945-2846114.jpg",
+            "title": "AI Trader Outperformed in 2024. Nvidia, Tesla, and Broadcom Are Some of Its Favorites.",
+            "text": "SoftBank-backed Qraft Technologies has three AI-powered exchange-traded funds, including its momentum fund AMOM.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": [
+              "$AVGO",
+              "$NVDA",
+              "$TSLA"
+            ],
+            "time": "Jan 13, 2025, 1:00 AM EST",
+            "ago": "1 year ago"
+          },
+          {
+            "url": "-V6aikUteXk",
+            "img": "https://cdn.snapi.dev/images/v1/g/e/gen25-2762488.jpg",
+            "title": "Broad A.I. Play: AMOM ETF",
+            "text": "Qraft's Francis Oh joins to talk about the AMOM A.I. ETF. Top holdings include Nvidia (NVDA), Apple (AAPL), and Eli Lilly (LLY).",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": null,
+            "time": "Nov 15, 2024, 3:44 PM EST",
+            "ago": "1 year ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20240521786676/en/Qraft-Technologies%E2%80%99-Flagship-ETFs-AMOM-and-QRFT-Celebrate-5th-Anniversary-with-Powerful-Performance-Milestones/",
+            "img": "https://cdn.snapi.dev/images/v1/k/v/press15-2441571.jpg",
+            "title": "Qraft Technologies' Flagship ETFs AMOM and QRFT Celebrate 5th Anniversary with Powerful Performance Milestones",
+            "text": "NEW YORK & SEOUL, South Korea--(BUSINESS WIRE)---- $AMOM #AI--Two of the earliest AI-driven ETFs, AMOM and QRFT, celebrate their 5-year anniversary and successful track record of strong performance.",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "May 21, 2024, 9:00 AM EDT",
+            "ago": "2 years ago"
+          },
+          {
+            "url": "nmGJzoLwGXw",
+            "img": "https://cdn.snapi.dev/images/v1/3/r/u/etf25-2304623.jpg",
+            "title": "Expectations for Qraft's A.I.-Enhanced ETF Rebalance",
+            "text": "How does Qraft's A.I.-enhanced ETF compare to others?",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": null,
+            "time": "Mar 1, 2024, 4:31 PM EST",
+            "ago": "2 years ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20230613816550/en/Qraft-Technologies-Celebrates-4-Year-Anniversary-of-Flagship-ETFs-AMOM-and-QRFT/",
+            "img": "https://cdn.snapi.dev/images/v1/p/r/press9-1932023.jpg",
+            "title": "Qraft Technologies Celebrates 4-Year Anniversary of Flagship ETFs AMOM and QRFT",
+            "text": "NEW YORK & SEOUL, South Korea--(BUSINESS WIRE)--Qraft Technologies Celebrates 4-Year Anniversary of Flagship ETFs AMOM and QRFT.",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jun 13, 2023, 9:22 AM EDT",
+            "ago": "3 years ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20220622005362/en/Qraft-AI-ETFs-Celebrates-3-Year-Anniversary-of-Flagship-ETF-QRFT/",
+            "img": "https://cdn.snapi.dev/images/v1/c/y/press16-1425244.jpg",
+            "title": "Qraft AI ETFs Celebrates 3-Year Anniversary of Flagship ETF QRFT",
+            "text": "NEW YORK & SEOUL, South Korea--(BUSINESS WIRE)---- $AMOM #AI--Qraft AI ETFs celebrates 3 year anniversary of the 5-star Morningstar rated flagship QRFT ETF.",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jun 22, 2022, 9:00 AM EDT",
+            "ago": "4 years ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20211012005789/en/Asset-Management-Veteran-Robert-Nestor-Named-Global-Senior-Advisor-for-Qraft-Technologies/",
+            "img": "https://cdn.snapi.dev/images/v1/x/o/press4-1045048.jpg",
+            "title": "Asset Management Veteran Robert Nestor Named Global Senior Advisor for Qraft Technologies",
+            "text": "SEOUL, South Korea--(BUSINESS WIRE)---- $AMOM--Qraft Technologies welcomes Robert Nestor, former Blackrock and Vanguard executive, to lead growth initiatives for artificial intelligence firm.",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Oct 12, 2021, 10:22 AM EDT",
+            "ago": "5 years ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/robot-trader-amazon-facebook-nvidia-stock-51631118900",
+            "img": "https://cdn.snapi.dev/images/v1/3/v/s/etf18-999954.jpg",
+            "title": "Robot Trader Turns Bullish on Amazon, Facebook, and Nvidia. What It Sold.",
+            "text": "An ETF run by artificial intelligence smiled on U.S. retail plays in September but soured on a few Covid-19 pandemic trades.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": null,
+            "time": "Sep 9, 2021, 7:47 AM EDT",
+            "ago": "5 years ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/this-robot-trader-just-turned-bullish-on-amazon-facebook-and-nvidia-heres-what-it-sold-51631118900",
+            "img": "https://cdn.snapi.dev/images/v1/8/k/0/etf7-999570.jpg",
+            "title": "This Robot Trader Turned Bullish on Amazon, Facebook, and Nvidia. What It Sold.",
+            "text": "An ETF run by artificial intelligence smiled on U.S. retail plays in September but soured on a few Covid-19 pandemic trades.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": null,
+            "time": "Sep 9, 2021, 12:02 AM EDT",
+            "ago": "5 years ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/a-robot-trader-thinks-this-meme-stock-will-outperform-facebook-and-walmart-heres-what-else-it-bought-51626355852",
+            "img": "https://cdn.snapi.dev/images/v1/2/k/n/entertainment-diversified12-909125.jpg",
+            "title": "A Robot Trader Thinks AMC Will Outperform Facebook and Walmart. Here's What Else It Bought.",
+            "text": "The artificial intelligence-run ETF also turned against meme stock GameStop in July.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": [
+              "$AMC"
+            ],
+            "time": "Jul 15, 2021, 9:30 AM EDT",
+            "ago": "5 years ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20210706005422/en/Qraft%E2%80%99s-AI-Enhanced-U.S.-Large-Cap-Momentum-ETF-Surpasses-50M-in-AUM/",
+            "img": "https://cdn.snapi.dev/images/v1/d/u/press10-895290.jpg",
+            "title": "Qraft's AI-Enhanced U.S. Large Cap Momentum ETF Surpasses $50M in AUM",
+            "text": "SEOUL, South Korea--(BUSINESS WIRE)---- $AMOM #AI--Qraft AI announces its AMOM ETF has surpassed $50 million in assets under management. The fund's success is backed by an active, AI-driven approach.",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 6, 2021, 9:00 AM EDT",
+            "ago": "5 years ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/this-robot-run-etf-favors-a-meme-stock-over-tesla-and-amazon-heres-what-else-it-bought-51623244541",
+            "img": "https://cdn.snapi.dev/images/v1/g/o/h/etf28-861210.jpg",
+            "title": "This Robot-Run ETF Favors a Meme Stock Over Tesla and Amazon. Here's What Else It Bought.",
+            "text": "Trading as AMOM on the New York Stock Exchange, the fund's rebalancing saw it largely pivot away from a heavy weighting on tech companies.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jun 9, 2021, 9:15 AM EDT",
+            "ago": "5 years ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/this-ai-powered-etf-sold-tesla-stock-at-its-peak-it-says-shares-are-a-buy-now-51621613714",
+            "img": "https://cdn.snapi.dev/images/v1/o/8/z/etf15-835834.jpg",
+            "title": "This AI-Powered ETF Has Navigated Tesla's Market Moves",
+            "text": "The small QRAFT AI-Enhanced U.S. Large Cap Momentum ETF uses artificial intelligence to make successful trades in Tesla.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": null,
+            "time": "May 21, 2021, 12:15 PM EDT",
+            "ago": "5 years ago"
+          },
+          {
+            "url": "https://www.prnewswire.com/news-releases/two-robot-run-qraft-etfs-mark-their-two-year-anniversary-301296952.html",
+            "img": "https://cdn.snapi.dev/images/v1/p/r/press10-835734.jpg",
+            "title": "Two Robot-Run Qraft ETFs Mark Their Two-Year Anniversary",
+            "text": "NEW YORK, May 21, 2021 /PRNewswire/ -- On 5/21/21, Qraft AI ETFs celebrated the two-year anniversary of the Qraft AI-Enhanced U.S. Large Cap ETF (NYSE Arca: QRFT) and the Qraft AI-Enhanced U.S. Large-...",
+            "source": "PRNewsWire",
+            "type": "Article",
+            "tickers": [
+              "#QRFT"
+            ],
+            "time": "May 21, 2021, 10:55 AM EDT",
+            "ago": "5 years ago"
+          },
+          {
+            "url": "https://www.marketwatch.com/story/this-robot-run-fund-loaded-up-on-tesla-because-it-thinks-the-stock-will-soar-its-been-right-before-11621012673",
+            "img": "https://cdn.snapi.dev/images/v1/q/g/k/etf5-826072.jpg",
+            "title": "This robot-run fund loaded up on Tesla because it thinks the stock will soar. It's been right before.",
+            "text": "An exchange-traded fund driven by artificial intelligence has just loaded up on shares in Tesla — and it has a history of correctly predicting the stock's price swings.",
+            "source": "Market Watch",
+            "type": "Article",
+            "tickers": [
+              "$TSLA"
+            ],
+            "time": "May 17, 2021, 12:05 AM EDT",
+            "ago": "5 years ago"
+          },
+          {
+            "url": "https://www.prnewswire.com/news-releases/qraft-ai-etfs-post-strong-third-quarter-returns-301157205.html",
+            "img": "https://cdn.snapi.dev/images/v1/l/h/press2---dcdzccocqx.jpg",
+            "title": "Qraft AI ETFs Post Strong Third Quarter Returns",
+            "text": "NEW YORK, Oct. 21, 2020 /PRNewswire/ -- QRAFT AI ETFs recorded returns for its Qraft AI-Enhanced U.S. Large-Cap Momentum ETF (NYSE: AMOM) that outperformed the return of the S&P 500 by 10.59% during t...",
+            "source": "PRNewsWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Oct 21, 2020, 1:01 PM EDT",
+            "ago": "6 years ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 56.98,
+        "price1m": 64.418,
+        "price3m": 54.12,
+        "price6m": 50.742,
+        "priceYTD": 48.61,
+        "price1y": 45.18,
+        "price5y": 36.434,
+        "priceMAX": 25.121
+      },
+      "performance": {
+        "tr1m": -8.954118699005258,
+        "trYTD": 20.655,
+        "tr1y": 29.868,
+        "cagr5y": 10.454,
+        "cagr10y": null,
+        "cagrMAX": 17.351
+      }
+    },
     "holdings": {
       "holdings": [
         {
           "no": 1,
-          "n": "Micron Technology, Inc.",
-          "s": "$MU",
-          "as": "5.26%",
-          "sh": "1,794"
+          "n": "Cisco Systems, Inc.",
+          "s": "$CSCO",
+          "as": "4.84%",
+          "sh": "10,490"
         },
         {
           "no": 2,
-          "n": "Cisco Systems, Inc.",
-          "s": "$CSCO",
-          "as": "4.87%",
-          "sh": "13,479"
+          "n": "Micron Technology, Inc.",
+          "s": "$MU",
+          "as": "4.43%",
+          "sh": "1,266"
         },
         {
           "no": 3,
           "n": "Caterpillar Inc.",
           "s": "$CAT",
-          "as": "4.68%",
-          "sh": "1,722"
+          "as": "4.31%",
+          "sh": "1,188"
         },
         {
           "no": 4,
-          "n": "Advanced Micro Devices, Inc.",
-          "s": "$AMD",
-          "as": "4.34%",
-          "sh": "2,842"
+          "n": "Palo Alto Networks, Inc.",
+          "s": "$PANW",
+          "as": "4.25%",
+          "sh": "2,876"
         },
         {
           "no": 5,
-          "n": "Intel Corporation",
-          "s": "$INTC",
-          "as": "3.66%",
-          "sh": "9,849"
+          "n": "Advanced Micro Devices, Inc.",
+          "s": "$AMD",
+          "as": "4.15%",
+          "sh": "2,033"
         },
         {
           "no": 6,
           "n": "GE Vernova Inc.",
           "s": "$GEV",
-          "as": "3.60%",
-          "sh": "1,282"
+          "as": "3.85%",
+          "sh": "883"
         },
         {
           "no": 7,
           "n": "Seagate Technology Holdings plc",
           "s": "$STX",
-          "as": "3.49%",
-          "sh": "1,256"
+          "as": "2.96%",
+          "sh": "913"
         },
         {
           "no": 8,
-          "n": "Western Digital Corporation",
-          "s": "$WDC",
-          "as": "3.38%",
-          "sh": "2,008"
+          "n": "Fortinet, Inc.",
+          "s": "$FTNT",
+          "as": "2.88%",
+          "sh": "4,333"
         },
         {
           "no": 9,
-          "n": "Applied Materials, Inc.",
-          "s": "$AMAT",
-          "as": "2.96%",
-          "sh": "1,745"
+          "n": "Marathon Petroleum Corporation",
+          "s": "$MPC",
+          "as": "2.84%",
+          "sh": "2,203"
         },
         {
           "no": 10,
-          "n": "Lam Research Corporation",
-          "s": "$LRCX",
-          "as": "2.95%",
-          "sh": "2,689"
+          "n": "Valero Energy Corporation",
+          "s": "$VLO",
+          "as": "2.80%",
+          "sh": "2,196"
         },
         {
           "no": 11,
-          "n": "Corning Incorporated",
-          "s": "$GLW",
-          "as": "2.94%",
-          "sh": "5,498"
+          "n": "Dell Technologies Inc.",
+          "s": "$DELL",
+          "as": "2.76%",
+          "sh": "1,692"
         },
         {
           "no": 12,
-          "n": "Dell Technologies Inc.",
-          "s": "$DELL",
-          "as": "2.65%",
-          "sh": "2,240"
+          "n": "Western Digital Corporation",
+          "s": "$WDC",
+          "as": "2.72%",
+          "sh": "1,384"
         },
         {
           "no": 13,
-          "n": "Quanta Services, Inc.",
-          "s": "$PWR",
-          "as": "2.53%",
-          "sh": "1,196"
+          "n": "Intel Corporation",
+          "s": "$INTC",
+          "as": "2.69%",
+          "sh": "6,873"
         },
         {
           "no": 14,
-          "n": "FedEx Corporation",
-          "s": "$FDX",
-          "as": "2.51%",
-          "sh": "2,480"
+          "n": "Applied Materials, Inc.",
+          "s": "$AMAT",
+          "as": "2.50%",
+          "sh": "1,147"
         },
         {
           "no": 15,
-          "n": "Newmont Corporation",
-          "s": "$NEM",
-          "as": "2.41%",
-          "sh": "8,052"
+          "n": "Lam Research Corporation",
+          "s": "$LRCX",
+          "as": "2.36%",
+          "sh": "1,827"
         },
         {
           "no": 16,
-          "n": "Valero Energy Corporation",
-          "s": "$VLO",
-          "as": "2.30%",
-          "sh": "2,978"
+          "n": "Quanta Services, Inc.",
+          "s": "$PWR",
+          "as": "2.35%",
+          "sh": "907"
         },
         {
           "no": 17,
-          "n": "KLA Corporation",
-          "s": "$KLAC",
-          "as": "2.29%",
-          "sh": "3,010"
+          "n": "FedEx Corporation",
+          "s": "$FDX",
+          "as": "2.32%",
+          "sh": "1,801"
         },
         {
           "no": 18,
-          "n": "Hewlett Packard Enterprise Company",
-          "s": "$HPE",
-          "as": "2.22%",
-          "sh": "15,418"
+          "n": "Targa Resources Corp.",
+          "s": "$TRGP",
+          "as": "2.21%",
+          "sh": "1,897"
         },
         {
           "no": 19,
-          "n": "Nucor Corporation",
-          "s": "$NUE",
-          "as": "2.11%",
-          "sh": "2,651"
+          "n": "Corning Incorporated",
+          "s": "$GLW",
+          "as": "2.21%",
+          "sh": "3,463"
         },
         {
           "no": 20,
-          "n": "Targa Resources Corp.",
-          "s": "$TRGP",
-          "as": "2.08%",
-          "sh": "2,560"
+          "n": "Hewlett Packard Enterprise Company",
+          "s": "$HPE",
+          "as": "2.16%",
+          "sh": "11,445"
         },
         {
           "no": 21,
           "n": "Keysight Technologies, Inc.",
           "s": "$KEYS",
-          "as": "2.06%",
-          "sh": "1,971"
+          "as": "1.92%",
+          "sh": "1,474"
         },
         {
           "no": 22,
-          "n": "Barrick Mining Corporation",
-          "s": "!tsx/ABX",
-          "as": "2.04%",
-          "sh": "17,001"
+          "n": "KLA Corporation",
+          "s": "$KLAC",
+          "as": "1.79%",
+          "sh": "2,037"
         },
         {
           "no": 23,
-          "n": "Texas Instruments Incorporated",
-          "s": "$TXN",
-          "as": "1.87%",
-          "sh": "2,078"
+          "n": "Steel Dynamics, Inc.",
+          "s": "$STLD",
+          "as": "1.75%",
+          "sh": "1,802"
         },
         {
           "no": 24,
-          "n": "Steel Dynamics, Inc.",
-          "s": "$STLD",
-          "as": "1.84%",
-          "sh": "2,180"
+          "n": "Centene Corporation",
+          "s": "$CNC",
+          "as": "1.74%",
+          "sh": "6,344"
         },
         {
           "no": 25,
-          "n": "Jabil Inc.",
-          "s": "$JBL",
-          "as": "1.80%",
-          "sh": "1,570"
+          "n": "Texas Instruments Incorporated",
+          "s": "$TXN",
+          "as": "1.72%",
+          "sh": "1,472"
         }
       ],
       "asset_allocation": null,
       "sectors": [
         {
           "n": "Technology",
-          "w": 55.07
+          "w": 35.66
         },
         {
           "n": "Industrials",
-          "w": 18.9
+          "w": 17.2
         },
         {
-          "n": "Energy",
-          "w": 10.97
+          "n": "Financials",
+          "w": 11.28
         },
         {
-          "n": "Materials",
-          "w": 9.75
+          "n": "Communication Services",
+          "w": 10.61
         },
         {
-          "n": "Healthcare",
-          "w": 4.03
+          "n": "Health Care",
+          "w": 9.57
         },
         {
           "n": "Consumer Discretionary",
-          "w": 1.28
+          "w": 6.41
+        },
+        {
+          "n": "Utilities",
+          "w": 3.6
+        },
+        {
+          "n": "Energy",
+          "w": 2.94
+        },
+        {
+          "n": "Consumer Staples",
+          "w": 2.54
+        },
+        {
+          "n": "Other",
+          "w": 0.19
         }
       ],
       "countries": [
@@ -5218,6 +7214,57 @@
           "country": "United States"
         }
       ],
+      "allocationChartData": {
+        "sectors": [
+          {
+            "name": "Technology",
+            "y": 35.66
+          },
+          {
+            "name": "Industrials",
+            "y": 17.2
+          },
+          {
+            "name": "Financials",
+            "y": 11.28
+          },
+          {
+            "name": "Communication Services",
+            "y": 10.61
+          },
+          {
+            "name": "Health Care",
+            "y": 9.57
+          },
+          {
+            "name": "Consumer Discretionary",
+            "y": 6.41
+          },
+          {
+            "name": "Utilities",
+            "y": 3.6
+          },
+          {
+            "name": "Energy",
+            "y": 2.94
+          },
+          {
+            "name": "Consumer Staples",
+            "y": 2.54
+          },
+          {
+            "name": "Other",
+            "y": 0.19
+          }
+        ],
+        "assets": [],
+        "countries": [
+          {
+            "name": "United States",
+            "y": 100
+          }
+        ]
+      },
       "news": [
         {
           "t": "AI Trader Outperformed in 2024. Nvidia, Tesla, and Broadcom Are Some of Its Favorites.",
@@ -5280,1909 +7327,55 @@
           "d": "5 years ago"
         }
       ],
-      "infoBox": "AMOM is an equity ETF with a total of 51 individual holdings. The top holdings are Micron Technology stock at 5.26%, Cisco Systems at 4.87%, Caterpillar at 4.68%, Advanced Micro Devices at 4.34%, and Intel at 3.66%.",
+      "infoBox": "AMOM is an equity ETF with a total of 51 individual holdings. The top holdings are Cisco Systems stock at 4.84%, Micron Technology at 4.43%, Caterpillar at 4.31%, Palo Alto Networks at 4.25%, and Advanced Micro Devices at 4.15%.",
       "infoTable": {
         "count": 51,
-        "top10": 39.19,
+        "top10": 37.31,
         "assetClass": "Equity",
         "category": "Large Growth",
-        "aum": 33489388,
-        "peRatio": 34.86253
+        "categoryLabel": "ETF Category",
+        "aum": 25037939,
+        "peRatio": 35.92884
       },
-      "date": "Jun 16, 2026",
-      "count": 51
-    },
-    "overview": {
-      "type": "etf",
-      "aum": "$33.49M",
-      "nav": "$26.22",
-      "expenseRatio": "0.75%",
-      "peRatio": "34.86",
-      "sharesOut": "550,001",
-      "dps": "$0.04",
-      "dividendYield": "0.07%",
-      "payoutRatio": "2.53%",
-      "exDivDate": "Sep 29, 2025",
-      "ch1y": "+44.92%",
-      "beta": "1.24",
-      "holdings": 51,
-      "inception": "May 21, 2019",
-      "chart": {
-        "expiration": 1782135000000,
-        "data": [
-          {
-            "t": 1781775000
-          },
-          {
-            "t": 1781775060
-          },
-          {
-            "t": 1781775120
-          },
-          {
-            "t": 1781775180
-          },
-          {
-            "t": 1781775240
-          },
-          {
-            "t": 1781775300
-          },
-          {
-            "t": 1781775360
-          },
-          {
-            "t": 1781775420
-          },
-          {
-            "t": 1781775480
-          },
-          {
-            "t": 1781775540
-          },
-          {
-            "t": 1781775600
-          },
-          {
-            "t": 1781775660
-          },
-          {
-            "t": 1781775720
-          },
-          {
-            "t": 1781775780
-          },
-          {
-            "t": 1781775840
-          },
-          {
-            "t": 1781775900
-          },
-          {
-            "t": 1781775960
-          },
-          {
-            "t": 1781776020
-          },
-          {
-            "t": 1781776080
-          },
-          {
-            "t": 1781776140
-          },
-          {
-            "t": 1781776200
-          },
-          {
-            "t": 1781776260
-          },
-          {
-            "t": 1781776320
-          },
-          {
-            "t": 1781776380
-          },
-          {
-            "t": 1781776440
-          },
-          {
-            "t": 1781776500
-          },
-          {
-            "t": 1781776560
-          },
-          {
-            "t": 1781776620
-          },
-          {
-            "t": 1781776680
-          },
-          {
-            "t": 1781776740
-          },
-          {
-            "t": 1781776800
-          },
-          {
-            "t": 1781776860
-          },
-          {
-            "t": 1781776920
-          },
-          {
-            "t": 1781776980
-          },
-          {
-            "t": 1781777040
-          },
-          {
-            "t": 1781777100
-          },
-          {
-            "c": 63.25,
-            "o": 63.26,
-            "t": 1781777160
-          },
-          {
-            "c": null,
-            "t": 1781777220
-          },
-          {
-            "c": null,
-            "t": 1781777280
-          },
-          {
-            "c": null,
-            "t": 1781777340
-          },
-          {
-            "c": null,
-            "t": 1781777400
-          },
-          {
-            "c": null,
-            "t": 1781777460
-          },
-          {
-            "c": null,
-            "t": 1781777520
-          },
-          {
-            "c": null,
-            "t": 1781777580
-          },
-          {
-            "c": null,
-            "t": 1781777640
-          },
-          {
-            "c": null,
-            "t": 1781777700
-          },
-          {
-            "c": null,
-            "t": 1781777760
-          },
-          {
-            "c": null,
-            "t": 1781777820
-          },
-          {
-            "c": null,
-            "t": 1781777880
-          },
-          {
-            "c": null,
-            "t": 1781777940
-          },
-          {
-            "c": null,
-            "t": 1781778000
-          },
-          {
-            "c": null,
-            "t": 1781778060
-          },
-          {
-            "c": 63.25,
-            "t": 1781778120
-          },
-          {
-            "c": null,
-            "t": 1781778180
-          },
-          {
-            "c": null,
-            "t": 1781778240
-          },
-          {
-            "c": null,
-            "t": 1781778300
-          },
-          {
-            "c": null,
-            "t": 1781778360
-          },
-          {
-            "c": 63.21,
-            "t": 1781778420
-          },
-          {
-            "c": null,
-            "t": 1781778480
-          },
-          {
-            "c": null,
-            "t": 1781778540
-          },
-          {
-            "c": 63.25,
-            "t": 1781778600
-          },
-          {
-            "c": null,
-            "t": 1781778660
-          },
-          {
-            "c": null,
-            "t": 1781778720
-          },
-          {
-            "c": null,
-            "t": 1781778780
-          },
-          {
-            "c": null,
-            "t": 1781778840
-          },
-          {
-            "c": null,
-            "t": 1781778900
-          },
-          {
-            "c": null,
-            "t": 1781778960
-          },
-          {
-            "c": null,
-            "t": 1781779020
-          },
-          {
-            "c": null,
-            "t": 1781779080
-          },
-          {
-            "c": null,
-            "t": 1781779140
-          },
-          {
-            "c": null,
-            "t": 1781779200
-          },
-          {
-            "c": null,
-            "t": 1781779260
-          },
-          {
-            "c": null,
-            "t": 1781779320
-          },
-          {
-            "c": null,
-            "t": 1781779380
-          },
-          {
-            "c": null,
-            "t": 1781779440
-          },
-          {
-            "c": null,
-            "t": 1781779500
-          },
-          {
-            "c": 63.21,
-            "t": 1781779560
-          },
-          {
-            "c": null,
-            "t": 1781779620
-          },
-          {
-            "c": null,
-            "t": 1781779680
-          },
-          {
-            "c": null,
-            "t": 1781779740
-          },
-          {
-            "c": null,
-            "t": 1781779800
-          },
-          {
-            "c": null,
-            "t": 1781779860
-          },
-          {
-            "c": null,
-            "t": 1781779920
-          },
-          {
-            "c": null,
-            "t": 1781779980
-          },
-          {
-            "c": null,
-            "t": 1781780040
-          },
-          {
-            "c": null,
-            "t": 1781780100
-          },
-          {
-            "c": null,
-            "t": 1781780160
-          },
-          {
-            "c": null,
-            "t": 1781780220
-          },
-          {
-            "c": null,
-            "t": 1781780280
-          },
-          {
-            "c": null,
-            "t": 1781780340
-          },
-          {
-            "c": null,
-            "t": 1781780400
-          },
-          {
-            "c": null,
-            "t": 1781780460
-          },
-          {
-            "c": null,
-            "t": 1781780520
-          },
-          {
-            "c": null,
-            "t": 1781780580
-          },
-          {
-            "c": null,
-            "t": 1781780640
-          },
-          {
-            "c": null,
-            "t": 1781780700
-          },
-          {
-            "c": null,
-            "t": 1781780760
-          },
-          {
-            "c": null,
-            "t": 1781780820
-          },
-          {
-            "c": null,
-            "t": 1781780880
-          },
-          {
-            "c": null,
-            "t": 1781780940
-          },
-          {
-            "c": null,
-            "t": 1781781000
-          },
-          {
-            "c": null,
-            "t": 1781781060
-          },
-          {
-            "c": null,
-            "t": 1781781120
-          },
-          {
-            "c": 63.21,
-            "t": 1781781180
-          },
-          {
-            "c": null,
-            "t": 1781781240
-          },
-          {
-            "c": null,
-            "t": 1781781300
-          },
-          {
-            "c": null,
-            "t": 1781781360
-          },
-          {
-            "c": null,
-            "t": 1781781420
-          },
-          {
-            "c": null,
-            "t": 1781781480
-          },
-          {
-            "c": null,
-            "t": 1781781540
-          },
-          {
-            "c": null,
-            "t": 1781781600
-          },
-          {
-            "c": null,
-            "t": 1781781660
-          },
-          {
-            "c": null,
-            "t": 1781781720
-          },
-          {
-            "c": null,
-            "t": 1781781780
-          },
-          {
-            "c": null,
-            "t": 1781781840
-          },
-          {
-            "c": null,
-            "t": 1781781900
-          },
-          {
-            "c": null,
-            "t": 1781781960
-          },
-          {
-            "c": null,
-            "t": 1781782020
-          },
-          {
-            "c": null,
-            "t": 1781782080
-          },
-          {
-            "c": null,
-            "t": 1781782140
-          },
-          {
-            "c": null,
-            "t": 1781782200
-          },
-          {
-            "c": null,
-            "t": 1781782260
-          },
-          {
-            "c": null,
-            "t": 1781782320
-          },
-          {
-            "c": null,
-            "t": 1781782380
-          },
-          {
-            "c": 63.16,
-            "t": 1781782440
-          },
-          {
-            "c": 63.16,
-            "t": 1781782500
-          },
-          {
-            "c": 63.16,
-            "t": 1781782560
-          },
-          {
-            "c": 63.16,
-            "t": 1781782620
-          },
-          {
-            "c": 63.16,
-            "t": 1781782680
-          },
-          {
-            "c": 63.16,
-            "t": 1781782740
-          },
-          {
-            "c": 63.16,
-            "t": 1781782800
-          },
-          {
-            "c": 63.16,
-            "t": 1781782860
-          },
-          {
-            "c": 63.16,
-            "t": 1781782920
-          },
-          {
-            "c": 63.16,
-            "t": 1781782980
-          },
-          {
-            "c": 63.16,
-            "t": 1781783040
-          },
-          {
-            "c": 63.16,
-            "t": 1781783100
-          },
-          {
-            "c": 63.16,
-            "t": 1781783160
-          },
-          {
-            "c": 63.16,
-            "t": 1781783220
-          },
-          {
-            "c": 63.16,
-            "t": 1781783280
-          },
-          {
-            "c": 63.16,
-            "t": 1781783340
-          },
-          {
-            "c": 63.16,
-            "t": 1781783400
-          },
-          {
-            "c": 63.16,
-            "t": 1781783460
-          },
-          {
-            "c": 63.16,
-            "t": 1781783520
-          },
-          {
-            "c": 63.16,
-            "t": 1781783580
-          },
-          {
-            "c": null,
-            "t": 1781783640
-          },
-          {
-            "c": 63.16,
-            "t": 1781783700
-          },
-          {
-            "c": 63.16,
-            "t": 1781783760
-          },
-          {
-            "c": 63.16,
-            "t": 1781783820
-          },
-          {
-            "c": 63.16,
-            "t": 1781783880
-          },
-          {
-            "c": 63.16,
-            "t": 1781783940
-          },
-          {
-            "c": 63.16,
-            "t": 1781784000
-          },
-          {
-            "c": 63.16,
-            "t": 1781784060
-          },
-          {
-            "c": 63.16,
-            "t": 1781784120
-          },
-          {
-            "c": 63.16,
-            "t": 1781784180
-          },
-          {
-            "c": 63.16,
-            "t": 1781784240
-          },
-          {
-            "c": 63.16,
-            "t": 1781784300
-          },
-          {
-            "c": 63.16,
-            "t": 1781784360
-          },
-          {
-            "c": 63.16,
-            "t": 1781784420
-          },
-          {
-            "c": 63.16,
-            "t": 1781784480
-          },
-          {
-            "c": 63.16,
-            "t": 1781784540
-          },
-          {
-            "c": 63.16,
-            "t": 1781784600
-          },
-          {
-            "c": 63.16,
-            "t": 1781784660
-          },
-          {
-            "c": 63.16,
-            "t": 1781784720
-          },
-          {
-            "c": 63.16,
-            "t": 1781784780
-          },
-          {
-            "c": 63.16,
-            "t": 1781784840
-          },
-          {
-            "c": 63.16,
-            "t": 1781784900
-          },
-          {
-            "c": 63.16,
-            "t": 1781784960
-          },
-          {
-            "c": 63.16,
-            "t": 1781785020
-          },
-          {
-            "c": 63.16,
-            "t": 1781785080
-          },
-          {
-            "c": 63.16,
-            "t": 1781785140
-          },
-          {
-            "c": 63.16,
-            "t": 1781785200
-          },
-          {
-            "c": 63.16,
-            "t": 1781785260
-          },
-          {
-            "c": 63.16,
-            "t": 1781785320
-          },
-          {
-            "c": 63.16,
-            "t": 1781785380
-          },
-          {
-            "c": 63.16,
-            "t": 1781785440
-          },
-          {
-            "c": 63.16,
-            "t": 1781785500
-          },
-          {
-            "c": 63.16,
-            "t": 1781785560
-          },
-          {
-            "c": 63.16,
-            "t": 1781785620
-          },
-          {
-            "c": 63.16,
-            "t": 1781785680
-          },
-          {
-            "c": 63.16,
-            "t": 1781785740
-          },
-          {
-            "c": 63.16,
-            "t": 1781785800
-          },
-          {
-            "c": 63.16,
-            "t": 1781785860
-          },
-          {
-            "c": 63.16,
-            "t": 1781785920
-          },
-          {
-            "c": 63.16,
-            "t": 1781785980
-          },
-          {
-            "c": 63.16,
-            "t": 1781786040
-          },
-          {
-            "c": 63.16,
-            "t": 1781786100
-          },
-          {
-            "c": 63.16,
-            "t": 1781786160
-          },
-          {
-            "c": 63.16,
-            "t": 1781786220
-          },
-          {
-            "c": 63.16,
-            "t": 1781786280
-          },
-          {
-            "c": 63.16,
-            "t": 1781786340
-          },
-          {
-            "c": 63.16,
-            "t": 1781786400
-          },
-          {
-            "c": 63.16,
-            "t": 1781786460
-          },
-          {
-            "c": 63.16,
-            "t": 1781786520
-          },
-          {
-            "c": 63.16,
-            "t": 1781786580
-          },
-          {
-            "c": 63.16,
-            "t": 1781786640
-          },
-          {
-            "c": 63.16,
-            "t": 1781786700
-          },
-          {
-            "c": 63.16,
-            "t": 1781786760
-          },
-          {
-            "c": null,
-            "t": 1781786820
-          },
-          {
-            "c": 63.16,
-            "t": 1781786880
-          },
-          {
-            "c": 63.16,
-            "t": 1781786940
-          },
-          {
-            "c": 63.16,
-            "t": 1781787000
-          },
-          {
-            "c": 63.16,
-            "t": 1781787060
-          },
-          {
-            "c": 63.16,
-            "t": 1781787120
-          },
-          {
-            "c": 63.16,
-            "t": 1781787180
-          },
-          {
-            "c": 63.16,
-            "t": 1781787240
-          },
-          {
-            "c": 63.16,
-            "t": 1781787300
-          },
-          {
-            "c": 63.16,
-            "t": 1781787360
-          },
-          {
-            "c": 63.16,
-            "t": 1781787420
-          },
-          {
-            "c": 63.16,
-            "t": 1781787480
-          },
-          {
-            "c": 63.16,
-            "t": 1781787540
-          },
-          {
-            "c": 63.16,
-            "t": 1781787600
-          },
-          {
-            "c": 63.16,
-            "t": 1781787660
-          },
-          {
-            "c": 63.16,
-            "t": 1781787720
-          },
-          {
-            "c": 63.16,
-            "t": 1781787780
-          },
-          {
-            "c": 63.16,
-            "t": 1781787840
-          },
-          {
-            "c": 63.16,
-            "t": 1781787900
-          },
-          {
-            "c": 63.16,
-            "t": 1781787960
-          },
-          {
-            "c": 63.16,
-            "t": 1781788020
-          },
-          {
-            "c": 63.16,
-            "t": 1781788080
-          },
-          {
-            "c": null,
-            "t": 1781788140
-          },
-          {
-            "c": 63.16,
-            "t": 1781788200
-          },
-          {
-            "c": 63.16,
-            "t": 1781788260
-          },
-          {
-            "c": 63.16,
-            "t": 1781788320
-          },
-          {
-            "c": 63.16,
-            "t": 1781788380
-          },
-          {
-            "c": 63.16,
-            "t": 1781788440
-          },
-          {
-            "c": 63.16,
-            "t": 1781788500
-          },
-          {
-            "c": 63.16,
-            "t": 1781788560
-          },
-          {
-            "c": 63.16,
-            "t": 1781788620
-          },
-          {
-            "c": 63.16,
-            "t": 1781788680
-          },
-          {
-            "c": 63.16,
-            "t": 1781788740
-          },
-          {
-            "c": 63.16,
-            "t": 1781788800
-          },
-          {
-            "c": 63.16,
-            "t": 1781788860
-          },
-          {
-            "c": 63.16,
-            "t": 1781788920
-          },
-          {
-            "c": 63.16,
-            "t": 1781788980
-          },
-          {
-            "c": 63.16,
-            "t": 1781789040
-          },
-          {
-            "c": 63.16,
-            "t": 1781789100
-          },
-          {
-            "c": 63.16,
-            "t": 1781789160
-          },
-          {
-            "c": 63.16,
-            "t": 1781789220
-          },
-          {
-            "c": 63.16,
-            "t": 1781789280
-          },
-          {
-            "c": 63.16,
-            "t": 1781789340
-          },
-          {
-            "c": 63.16,
-            "t": 1781789400
-          },
-          {
-            "c": 63.16,
-            "t": 1781789460
-          },
-          {
-            "c": 63.16,
-            "t": 1781789520
-          },
-          {
-            "c": 63.16,
-            "t": 1781789580
-          },
-          {
-            "c": 63.16,
-            "t": 1781789640
-          },
-          {
-            "c": 63.16,
-            "t": 1781789700
-          },
-          {
-            "c": 63.16,
-            "t": 1781789760
-          },
-          {
-            "c": 63.16,
-            "t": 1781789820
-          },
-          {
-            "c": 63.16,
-            "t": 1781789880
-          },
-          {
-            "c": 63.16,
-            "t": 1781789940
-          },
-          {
-            "c": 63.16,
-            "t": 1781790000
-          },
-          {
-            "c": 63.16,
-            "t": 1781790060
-          },
-          {
-            "c": 63.16,
-            "t": 1781790120
-          },
-          {
-            "c": 63.16,
-            "t": 1781790180
-          },
-          {
-            "c": 63.16,
-            "t": 1781790240
-          },
-          {
-            "c": 63.16,
-            "t": 1781790300
-          },
-          {
-            "c": 63.16,
-            "t": 1781790360
-          },
-          {
-            "c": 63.16,
-            "t": 1781790420
-          },
-          {
-            "c": 63.16,
-            "t": 1781790480
-          },
-          {
-            "c": 63.16,
-            "t": 1781790540
-          },
-          {
-            "c": 63.16,
-            "t": 1781790600
-          },
-          {
-            "c": 63.16,
-            "t": 1781790660
-          },
-          {
-            "c": 63.16,
-            "t": 1781790720
-          },
-          {
-            "c": 63.16,
-            "t": 1781790780
-          },
-          {
-            "c": 63.16,
-            "t": 1781790840
-          },
-          {
-            "c": 63.16,
-            "t": 1781790900
-          },
-          {
-            "c": 63.16,
-            "t": 1781790960
-          },
-          {
-            "c": 63.16,
-            "t": 1781791020
-          },
-          {
-            "c": 63.16,
-            "t": 1781791080
-          },
-          {
-            "c": 63.16,
-            "t": 1781791140
-          },
-          {
-            "c": 63.16,
-            "t": 1781791200
-          },
-          {
-            "c": 63.16,
-            "t": 1781791260
-          },
-          {
-            "c": 63.16,
-            "t": 1781791320
-          },
-          {
-            "c": 63.16,
-            "t": 1781791380
-          },
-          {
-            "c": 63.16,
-            "t": 1781791440
-          },
-          {
-            "c": 63.16,
-            "t": 1781791500
-          },
-          {
-            "c": 63.16,
-            "t": 1781791560
-          },
-          {
-            "c": 63.16,
-            "t": 1781791620
-          },
-          {
-            "c": 63.16,
-            "t": 1781791680
-          },
-          {
-            "c": 63.16,
-            "t": 1781791740
-          },
-          {
-            "c": 63.16,
-            "t": 1781791800
-          },
-          {
-            "c": 63.16,
-            "t": 1781791860
-          },
-          {
-            "c": 63.16,
-            "t": 1781791920
-          },
-          {
-            "c": 63.16,
-            "t": 1781791980
-          },
-          {
-            "c": 63.16,
-            "t": 1781792040
-          },
-          {
-            "c": 63.16,
-            "t": 1781792100
-          },
-          {
-            "c": 63.16,
-            "t": 1781792160
-          },
-          {
-            "c": 63.16,
-            "t": 1781792220
-          },
-          {
-            "c": 63.16,
-            "t": 1781792280
-          },
-          {
-            "c": 63.16,
-            "t": 1781792340
-          },
-          {
-            "c": 63.16,
-            "t": 1781792400
-          },
-          {
-            "c": 63.16,
-            "t": 1781792460
-          },
-          {
-            "c": 63.16,
-            "t": 1781792520
-          },
-          {
-            "c": 63.16,
-            "t": 1781792580
-          },
-          {
-            "c": 63.16,
-            "t": 1781792640
-          },
-          {
-            "c": 63.16,
-            "t": 1781792700
-          },
-          {
-            "c": 63.16,
-            "t": 1781792760
-          },
-          {
-            "c": 63.16,
-            "t": 1781792820
-          },
-          {
-            "c": 63.16,
-            "t": 1781792880
-          },
-          {
-            "c": 63.16,
-            "t": 1781792940
-          },
-          {
-            "c": 63.16,
-            "t": 1781793000
-          },
-          {
-            "c": 63.16,
-            "t": 1781793060
-          },
-          {
-            "c": 63.16,
-            "t": 1781793120
-          },
-          {
-            "c": 63.16,
-            "t": 1781793180
-          },
-          {
-            "c": 63.16,
-            "t": 1781793240
-          },
-          {
-            "c": 63.16,
-            "t": 1781793300
-          },
-          {
-            "c": 63.16,
-            "t": 1781793360
-          },
-          {
-            "c": 63.16,
-            "t": 1781793420
-          },
-          {
-            "c": 63.16,
-            "t": 1781793480
-          },
-          {
-            "c": 63.16,
-            "t": 1781793540
-          },
-          {
-            "c": 63.16,
-            "t": 1781793600
-          },
-          {
-            "c": 63.16,
-            "t": 1781793660
-          },
-          {
-            "c": 63.16,
-            "t": 1781793720
-          },
-          {
-            "c": 63.16,
-            "t": 1781793780
-          },
-          {
-            "c": 63.16,
-            "t": 1781793840
-          },
-          {
-            "c": 63.16,
-            "t": 1781793900
-          },
-          {
-            "c": 63.16,
-            "t": 1781793960
-          },
-          {
-            "c": 63.16,
-            "t": 1781794020
-          },
-          {
-            "c": 63.16,
-            "t": 1781794080
-          },
-          {
-            "c": 63.16,
-            "t": 1781794140
-          },
-          {
-            "c": 63.16,
-            "t": 1781794200
-          },
-          {
-            "c": 63.16,
-            "t": 1781794260
-          },
-          {
-            "c": 63.16,
-            "t": 1781794320
-          },
-          {
-            "c": 63.16,
-            "t": 1781794380
-          },
-          {
-            "c": 63.16,
-            "t": 1781794440
-          },
-          {
-            "c": 63.16,
-            "t": 1781794500
-          },
-          {
-            "c": 63.16,
-            "t": 1781794560
-          },
-          {
-            "c": 63.16,
-            "t": 1781794620
-          },
-          {
-            "c": 63.16,
-            "t": 1781794680
-          },
-          {
-            "c": 63.16,
-            "t": 1781794740
-          },
-          {
-            "c": 63.16,
-            "t": 1781794800
-          },
-          {
-            "c": 63.16,
-            "t": 1781794860
-          },
-          {
-            "c": 63.16,
-            "t": 1781794920
-          },
-          {
-            "c": 63.16,
-            "t": 1781794980
-          },
-          {
-            "c": 63.16,
-            "t": 1781795040
-          },
-          {
-            "c": 63.16,
-            "t": 1781795100
-          },
-          {
-            "c": 63.16,
-            "t": 1781795160
-          },
-          {
-            "c": 62.93,
-            "t": 1781795220
-          },
-          {
-            "c": 63.16,
-            "t": 1781795280
-          },
-          {
-            "c": 63.16,
-            "t": 1781795340
-          },
-          {
-            "c": 63.16,
-            "t": 1781795400
-          },
-          {
-            "c": 63.16,
-            "t": 1781795460
-          },
-          {
-            "c": 63.16,
-            "t": 1781795520
-          },
-          {
-            "c": 63.16,
-            "t": 1781795580
-          },
-          {
-            "c": 63.16,
-            "t": 1781795640
-          },
-          {
-            "c": 63.16,
-            "t": 1781795700
-          },
-          {
-            "c": 63.16,
-            "t": 1781795760
-          },
-          {
-            "c": 63.16,
-            "t": 1781795820
-          },
-          {
-            "c": 63.16,
-            "t": 1781795880
-          },
-          {
-            "c": 63.16,
-            "t": 1781795940
-          },
-          {
-            "c": 63.16,
-            "t": 1781796000
-          },
-          {
-            "c": 63.16,
-            "t": 1781796060
-          },
-          {
-            "c": 63.16,
-            "t": 1781796120
-          },
-          {
-            "c": 63.16,
-            "t": 1781796180
-          },
-          {
-            "c": 63.16,
-            "t": 1781796240
-          },
-          {
-            "c": 63.16,
-            "t": 1781796300
-          },
-          {
-            "c": 63.16,
-            "t": 1781796360
-          },
-          {
-            "c": 63.16,
-            "t": 1781796420
-          },
-          {
-            "c": 63.16,
-            "t": 1781796480
-          },
-          {
-            "c": 63.16,
-            "t": 1781796540
-          },
-          {
-            "c": 63.16,
-            "t": 1781796600
-          },
-          {
-            "c": 63.16,
-            "t": 1781796660
-          },
-          {
-            "c": 63.16,
-            "t": 1781796720
-          },
-          {
-            "c": 63.16,
-            "t": 1781796780
-          },
-          {
-            "c": 63.16,
-            "t": 1781796840
-          },
-          {
-            "c": 63.16,
-            "t": 1781796900
-          },
-          {
-            "c": 63.16,
-            "t": 1781796960
-          },
-          {
-            "c": 63.16,
-            "t": 1781797020
-          },
-          {
-            "c": 63.16,
-            "t": 1781797080
-          },
-          {
-            "c": 63.16,
-            "t": 1781797140
-          },
-          {
-            "c": 63.16,
-            "t": 1781797200
-          },
-          {
-            "c": 63.16,
-            "t": 1781797260
-          },
-          {
-            "c": 63.16,
-            "t": 1781797320
-          },
-          {
-            "c": 63.16,
-            "t": 1781797380
-          },
-          {
-            "c": 63.16,
-            "t": 1781797440
-          },
-          {
-            "c": 63.16,
-            "t": 1781797500
-          },
-          {
-            "c": 63.16,
-            "t": 1781797560
-          },
-          {
-            "c": 63.16,
-            "t": 1781797620
-          },
-          {
-            "c": 63.16,
-            "t": 1781797680
-          },
-          {
-            "c": 63.16,
-            "t": 1781797740
-          },
-          {
-            "c": 63.16,
-            "t": 1781797800
-          },
-          {
-            "c": 63.16,
-            "t": 1781797860
-          },
-          {
-            "c": 63.16,
-            "t": 1781797920
-          },
-          {
-            "c": 63.16,
-            "t": 1781797980
-          },
-          {
-            "c": 63.16,
-            "t": 1781798040
-          },
-          {
-            "c": 63.16,
-            "t": 1781798100
-          },
-          {
-            "c": 63.16,
-            "t": 1781798160
-          },
-          {
-            "c": 63.16,
-            "t": 1781798220
-          },
-          {
-            "c": 63.16,
-            "t": 1781798280
-          },
-          {
-            "c": 63.16,
-            "t": 1781798340
-          },
-          {
-            "c": 62.9684,
-            "t": 1781798400
+      "date": "Jul 17, 2026",
+      "count": 51,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
           }
-        ]
-      },
-      "description": "The QRAFT AI-Enhanced U.S. Large Cap Momentum ETF (AMOM) is an exchange-traded fund that mostly invests in large cap equity. The fund is an actively-managed portfolio of U.S. Large Cap equities chosen with the aid of artificial intelligence. AMOM was launched on May 21, 2019 and is issued by Exchange Traded Concepts.",
-      "infoTable": [
-        [
-          "Asset Class",
-          "Equity"
         ],
-        [
-          "Category",
-          "Large Growth"
-        ],
-        [
-          "Region",
-          "North America"
-        ],
-        [
-          "Stock Exchange",
-          "NYSEARCA"
-        ],
-        [
-          "Ticker Symbol",
-          "AMOM"
-        ],
-        [
-          "Provider",
-          "Exchange Traded Concepts"
-        ]
-      ],
-      "etf_website": "https://qraftaietf.com/amom",
-      "provider_page": "exchange-traded-concepts",
-      "holdingsTable": {
-        "count": 51,
-        "updated": "Jun 16, 2026",
-        "top10": 39.19,
-        "holdings": [
-          {
-            "n": "Micron Technology, Inc.",
-            "s": "$MU",
-            "as": "5.26%",
-            "sh": "1,794"
-          },
-          {
-            "n": "Cisco Systems, Inc.",
-            "s": "$CSCO",
-            "as": "4.87%",
-            "sh": "13,479"
-          },
-          {
-            "n": "Caterpillar Inc.",
-            "s": "$CAT",
-            "as": "4.68%",
-            "sh": "1,722"
-          },
-          {
-            "n": "Advanced Micro Devices, Inc.",
-            "s": "$AMD",
-            "as": "4.34%",
-            "sh": "2,842"
-          },
-          {
-            "n": "Intel Corporation",
-            "s": "$INTC",
-            "as": "3.66%",
-            "sh": "9,849"
-          },
-          {
-            "n": "GE Vernova Inc.",
-            "s": "$GEV",
-            "as": "3.60%",
-            "sh": "1,282"
-          },
-          {
-            "n": "Seagate Technology Holdings plc",
-            "s": "$STX",
-            "as": "3.49%",
-            "sh": "1,256"
-          },
-          {
-            "n": "Western Digital Corporation",
-            "s": "$WDC",
-            "as": "3.38%",
-            "sh": "2,008"
-          },
-          {
-            "n": "Applied Materials, Inc.",
-            "s": "$AMAT",
-            "as": "2.96%",
-            "sh": "1,745"
-          },
-          {
-            "n": "Lam Research Corporation",
-            "s": "$LRCX",
-            "as": "2.95%",
-            "sh": "2,689"
-          }
-        ]
-      },
-      "dividendTable": [
-        {
-          "dt": "2025-09-29",
-          "amt": 0.0198,
-          "pay": "2025-09-30"
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Jul 17, 2026",
+        "lastChecked": 1784855332710,
+        "topic": "holdings",
+        "ticker": "AMOM",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
         },
-        {
-          "dt": "2025-06-26",
-          "amt": 0.0239,
-          "pay": "2025-06-27"
-        },
-        {
-          "dt": "2023-12-26",
-          "amt": 0.0697,
-          "pay": "2023-12-29"
-        },
-        {
-          "dt": "2023-09-26",
-          "amt": 0.0206,
-          "pay": "2023-09-29"
-        },
-        {
-          "dt": "2023-06-27",
-          "amt": 0.0235,
-          "pay": "2023-06-30"
-        },
-        {
-          "dt": "2023-03-27",
-          "amt": 0.0417,
-          "pay": "2023-03-30"
-        }
-      ],
-      "news": {
-        "exp": "1781889859394",
-        "data": [
-          {
-            "url": "https://www.barrons.com/articles/ai-robot-trader-stock-picks-4805065f",
-            "img": "https://cdn.snapi.dev/images/v1/u/8/d/broadc12-2478981-2494661-26945-2846114.jpg",
-            "title": "AI Trader Outperformed in 2024. Nvidia, Tesla, and Broadcom Are Some of Its Favorites.",
-            "text": "SoftBank-backed Qraft Technologies has three AI-powered exchange-traded funds, including its momentum fund AMOM.",
-            "source": "Barrons",
-            "type": "Article",
-            "tickers": [
-              "$AVGO",
-              "$NVDA",
-              "$TSLA"
-            ],
-            "time": "Jan 13, 2025, 1:00 AM EST",
-            "ago": "1 year ago"
-          },
-          {
-            "url": "-V6aikUteXk",
-            "img": "https://cdn.snapi.dev/images/v1/g/e/gen25-2762488.jpg",
-            "title": "Broad A.I. Play: AMOM ETF",
-            "text": "Qraft's Francis Oh joins to talk about the AMOM A.I. ETF. Top holdings include Nvidia (NVDA), Apple (AAPL), and Eli Lilly (LLY).",
-            "source": "Schwab Network",
-            "type": "Video",
-            "time": "Nov 15, 2024, 3:44 PM EST",
-            "ago": "1 year ago"
-          },
-          {
-            "url": "https://www.businesswire.com/news/home/20240521786676/en/Qraft-Technologies%E2%80%99-Flagship-ETFs-AMOM-and-QRFT-Celebrate-5th-Anniversary-with-Powerful-Performance-Milestones/",
-            "img": "https://cdn.snapi.dev/images/v1/k/v/press15-2441571.jpg",
-            "title": "Qraft Technologies' Flagship ETFs AMOM and QRFT Celebrate 5th Anniversary with Powerful Performance Milestones",
-            "text": "NEW YORK & SEOUL, South Korea--(BUSINESS WIRE)---- $AMOM #AI--Two of the earliest AI-driven ETFs, AMOM and QRFT, celebrate their 5-year anniversary and successful track record of strong performance.",
-            "source": "Business Wire",
-            "type": "Article",
-            "time": "May 21, 2024, 9:00 AM EDT",
-            "ago": "2 years ago"
-          },
-          {
-            "url": "nmGJzoLwGXw",
-            "img": "https://cdn.snapi.dev/images/v1/3/r/u/etf25-2304623.jpg",
-            "title": "Expectations for Qraft's A.I.-Enhanced ETF Rebalance",
-            "text": "How does Qraft's A.I.-enhanced ETF compare to others?",
-            "source": "Schwab Network",
-            "type": "Video",
-            "time": "Mar 1, 2024, 4:31 PM EST",
-            "ago": "2 years ago"
-          },
-          {
-            "url": "https://www.businesswire.com/news/home/20230613816550/en/Qraft-Technologies-Celebrates-4-Year-Anniversary-of-Flagship-ETFs-AMOM-and-QRFT/",
-            "img": "https://cdn.snapi.dev/images/v1/p/r/press9-1932023.jpg",
-            "title": "Qraft Technologies Celebrates 4-Year Anniversary of Flagship ETFs AMOM and QRFT",
-            "text": "NEW YORK & SEOUL, South Korea--(BUSINESS WIRE)--Qraft Technologies Celebrates 4-Year Anniversary of Flagship ETFs AMOM and QRFT.",
-            "source": "Business Wire",
-            "type": "Article",
-            "time": "Jun 13, 2023, 9:22 AM EDT",
-            "ago": "3 years ago"
-          },
-          {
-            "url": "https://www.businesswire.com/news/home/20220622005362/en/Qraft-AI-ETFs-Celebrates-3-Year-Anniversary-of-Flagship-ETF-QRFT/",
-            "img": "https://cdn.snapi.dev/images/v1/c/y/press16-1425244.jpg",
-            "title": "Qraft AI ETFs Celebrates 3-Year Anniversary of Flagship ETF QRFT",
-            "text": "NEW YORK & SEOUL, South Korea--(BUSINESS WIRE)---- $AMOM #AI--Qraft AI ETFs celebrates 3 year anniversary of the 5-star Morningstar rated flagship QRFT ETF.",
-            "source": "Business Wire",
-            "type": "Article",
-            "time": "Jun 22, 2022, 9:00 AM EDT",
-            "ago": "4 years ago"
-          },
-          {
-            "url": "https://www.businesswire.com/news/home/20211012005789/en/Asset-Management-Veteran-Robert-Nestor-Named-Global-Senior-Advisor-for-Qraft-Technologies/",
-            "img": "https://cdn.snapi.dev/images/v1/x/o/press4-1045048.jpg",
-            "title": "Asset Management Veteran Robert Nestor Named Global Senior Advisor for Qraft Technologies",
-            "text": "SEOUL, South Korea--(BUSINESS WIRE)---- $AMOM--Qraft Technologies welcomes Robert Nestor, former Blackrock and Vanguard executive, to lead growth initiatives for artificial intelligence firm.",
-            "source": "Business Wire",
-            "type": "Article",
-            "time": "Oct 12, 2021, 10:22 AM EDT",
-            "ago": "5 years ago"
-          },
-          {
-            "url": "https://www.barrons.com/articles/robot-trader-amazon-facebook-nvidia-stock-51631118900",
-            "img": "https://cdn.snapi.dev/images/v1/3/v/s/etf18-999954.jpg",
-            "title": "Robot Trader Turns Bullish on Amazon, Facebook, and Nvidia. What It Sold.",
-            "text": "An ETF run by artificial intelligence smiled on U.S. retail plays in September but soured on a few Covid-19 pandemic trades.",
-            "source": "Barrons",
-            "type": "Article",
-            "time": "Sep 9, 2021, 7:47 AM EDT",
-            "ago": "5 years ago"
-          },
-          {
-            "url": "https://www.barrons.com/articles/this-robot-trader-just-turned-bullish-on-amazon-facebook-and-nvidia-heres-what-it-sold-51631118900",
-            "img": "https://cdn.snapi.dev/images/v1/8/k/0/etf7-999570.jpg",
-            "title": "This Robot Trader Turned Bullish on Amazon, Facebook, and Nvidia. What It Sold.",
-            "text": "An ETF run by artificial intelligence smiled on U.S. retail plays in September but soured on a few Covid-19 pandemic trades.",
-            "source": "Barrons",
-            "type": "Article",
-            "time": "Sep 9, 2021, 12:02 AM EDT",
-            "ago": "5 years ago"
-          },
-          {
-            "url": "https://www.barrons.com/articles/a-robot-trader-thinks-this-meme-stock-will-outperform-facebook-and-walmart-heres-what-else-it-bought-51626355852",
-            "img": "https://cdn.snapi.dev/images/v1/2/k/n/entertainment-diversified12-909125.jpg",
-            "title": "A Robot Trader Thinks AMC Will Outperform Facebook and Walmart. Here's What Else It Bought.",
-            "text": "The artificial intelligence-run ETF also turned against meme stock GameStop in July.",
-            "source": "Barrons",
-            "type": "Article",
-            "tickers": [
-              "$AMC"
-            ],
-            "time": "Jul 15, 2021, 9:30 AM EDT",
-            "ago": "5 years ago"
-          },
-          {
-            "url": "https://www.businesswire.com/news/home/20210706005422/en/Qraft%E2%80%99s-AI-Enhanced-U.S.-Large-Cap-Momentum-ETF-Surpasses-50M-in-AUM/",
-            "img": "https://cdn.snapi.dev/images/v1/d/u/press10-895290.jpg",
-            "title": "Qraft's AI-Enhanced U.S. Large Cap Momentum ETF Surpasses $50M in AUM",
-            "text": "SEOUL, South Korea--(BUSINESS WIRE)---- $AMOM #AI--Qraft AI announces its AMOM ETF has surpassed $50 million in assets under management. The fund's success is backed by an active, AI-driven approach.",
-            "source": "Business Wire",
-            "type": "Article",
-            "time": "Jul 6, 2021, 9:00 AM EDT",
-            "ago": "5 years ago"
-          },
-          {
-            "url": "https://www.barrons.com/articles/this-robot-run-etf-favors-a-meme-stock-over-tesla-and-amazon-heres-what-else-it-bought-51623244541",
-            "img": "https://cdn.snapi.dev/images/v1/g/o/h/etf28-861210.jpg",
-            "title": "This Robot-Run ETF Favors a Meme Stock Over Tesla and Amazon. Here's What Else It Bought.",
-            "text": "Trading as AMOM on the New York Stock Exchange, the fund's rebalancing saw it largely pivot away from a heavy weighting on tech companies.",
-            "source": "Barrons",
-            "type": "Article",
-            "time": "Jun 9, 2021, 9:15 AM EDT",
-            "ago": "5 years ago"
-          },
-          {
-            "url": "https://www.barrons.com/articles/this-ai-powered-etf-sold-tesla-stock-at-its-peak-it-says-shares-are-a-buy-now-51621613714",
-            "img": "https://cdn.snapi.dev/images/v1/o/8/z/etf15-835834.jpg",
-            "title": "This AI-Powered ETF Has Navigated Tesla's Market Moves",
-            "text": "The small QRAFT AI-Enhanced U.S. Large Cap Momentum ETF uses artificial intelligence to make successful trades in Tesla.",
-            "source": "Barrons",
-            "type": "Article",
-            "time": "May 21, 2021, 12:15 PM EDT",
-            "ago": "5 years ago"
-          },
-          {
-            "url": "https://www.prnewswire.com/news-releases/two-robot-run-qraft-etfs-mark-their-two-year-anniversary-301296952.html",
-            "img": "https://cdn.snapi.dev/images/v1/p/r/press10-835734.jpg",
-            "title": "Two Robot-Run Qraft ETFs Mark Their Two-Year Anniversary",
-            "text": "NEW YORK, May 21, 2021 /PRNewswire/ -- On 5/21/21, Qraft AI ETFs celebrated the two-year anniversary of the Qraft AI-Enhanced U.S. Large Cap ETF (NYSE Arca: QRFT) and the Qraft AI-Enhanced U.S. Large-...",
-            "source": "PRNewsWire",
-            "type": "Article",
-            "tickers": [
-              "#QRFT"
-            ],
-            "time": "May 21, 2021, 10:55 AM EDT",
-            "ago": "5 years ago"
-          },
-          {
-            "url": "https://www.marketwatch.com/story/this-robot-run-fund-loaded-up-on-tesla-because-it-thinks-the-stock-will-soar-its-been-right-before-11621012673",
-            "img": "https://cdn.snapi.dev/images/v1/q/g/k/etf5-826072.jpg",
-            "title": "This robot-run fund loaded up on Tesla because it thinks the stock will soar. It's been right before.",
-            "text": "An exchange-traded fund driven by artificial intelligence has just loaded up on shares in Tesla — and it has a history of correctly predicting the stock's price swings.",
-            "source": "Market Watch",
-            "type": "Article",
-            "tickers": [
-              "$TSLA"
-            ],
-            "time": "May 17, 2021, 12:05 AM EDT",
-            "ago": "5 years ago"
-          },
-          {
-            "url": "https://www.prnewswire.com/news-releases/qraft-ai-etfs-post-strong-third-quarter-returns-301157205.html",
-            "img": "https://cdn.snapi.dev/images/v1/l/h/press2---dcdzccocqx.jpg",
-            "title": "Qraft AI ETFs Post Strong Third Quarter Returns",
-            "text": "NEW YORK, Oct. 21, 2020 /PRNewswire/ -- QRAFT AI ETFs recorded returns for its Qraft AI-Enhanced U.S. Large-Cap Momentum ETF (NYSE: AMOM) that outperformed the return of the S&P 500 by 10.59% during t...",
-            "source": "PRNewsWire",
-            "type": "Article",
-            "time": "Oct 21, 2020, 1:01 PM EDT",
-            "ago": "6 years ago"
-          }
-        ]
-      },
-      "config": {
-        "no1d": false
-      },
-      "changes": {
-        "price1w": 59.568,
-        "price1m": 57.42,
-        "priceYTD": 48.61,
-        "price1y": 43.452,
-        "price5y": 35.37,
-        "priceMAX": 25.121
-      },
-      "performance": {
-        "tr1m": 9.663,
-        "trYTD": 29.538,
-        "tr1y": 45.052,
-        "cagr5y": 12.701,
-        "cagrMAX": 18.792
+        "extraSummaryLinks": null
       }
     },
     "quote": {
-      "p": 62.9684,
-      "pd": 62.97,
-      "c": 1.26,
-      "cp": 2.04,
-      "cl": 61.71,
-      "cdr": 1,
-      "o": 63.5,
-      "h": 63.5,
-      "l": 62.93,
-      "v": 1999.3639,
-      "ts": 1781812800000,
-      "u": "Jun 18, 2026, 4:00 PM EDT",
-      "td": "2026-06-18",
-      "h52": 63.5,
-      "l52": 43.375,
+      "p": 58.6503,
+      "pd": 58.65,
+      "c": -0.33,
+      "cp": -0.56,
+      "cl": 58.98,
+      "cdr": -1,
+      "o": 58.68,
+      "h": 58.68,
+      "l": 58.65,
+      "v": 185.929318,
+      "ts": 1784836800000,
+      "u": "Jul 23, 2026, 4:00 PM EDT",
+      "td": "2026-07-23",
+      "h52": 64.44,
+      "l52": 44.5,
       "ex": "NYSEARCA",
       "ms": "closed",
       "fms": "closed",
@@ -7193,24 +7386,34 @@
       "ecp": 0,
       "eu": null,
       "es": "After-hours",
-      "ets": 1781827200148.4922,
+      "ets": 1784851200080.2957,
       "etd": null,
       "epv": null,
       "days": 0,
-      "exp": 1782116100000,
+      "exp": 1784880900000,
       "symbol": "AMOM",
       "uid": "AMOM"
     },
     "history": [
       {
+        "t": "2026-07-01",
+        "o": 62.46,
+        "h": 62.6,
+        "l": 55.365,
+        "c": 58.65,
+        "a": 58.6503,
+        "v": 199068,
+        "ch": -8.77
+      },
+      {
         "t": "2026-06-01",
         "o": 60,
-        "h": 63.5,
+        "h": 64.44,
         "l": 56.445,
-        "c": 62.968,
-        "a": 62.9684,
-        "v": 70118,
-        "ch": 5.03
+        "c": 64.288,
+        "a": 64.2877,
+        "v": 102493,
+        "ch": 7.24
       },
       {
         "t": "2026-05-01",
@@ -7311,20 +7514,240 @@
         "a": 45.409322,
         "v": 64653,
         "ch": -1.2
-      },
-      {
-        "t": "2025-07-01",
-        "o": 45.535,
-        "h": 46.5,
-        "l": 44.29,
-        "c": 45.979,
-        "a": 45.960194,
-        "v": 125958,
-        "ch": 0.47
       }
     ],
     "history_periods": {
       "daily_1y": [
+        {
+          "t": "2026-07-23",
+          "o": 58.68,
+          "h": 58.68,
+          "l": 58.65,
+          "c": 58.65,
+          "a": 58.6503,
+          "v": 630,
+          "ch": -0.56
+        },
+        {
+          "t": "2026-07-22",
+          "o": 59.42,
+          "h": 59.42,
+          "l": 58.982,
+          "c": 58.982,
+          "a": 58.9823,
+          "v": 1572,
+          "ch": -0.25
+        },
+        {
+          "t": "2026-07-21",
+          "o": 58.63,
+          "h": 59.27,
+          "l": 58.63,
+          "c": 59.128,
+          "a": 59.1283,
+          "v": 4187,
+          "ch": 3.84
+        },
+        {
+          "t": "2026-07-20",
+          "o": 57.48,
+          "h": 57.795,
+          "l": 56.942,
+          "c": 56.942,
+          "a": 56.9419,
+          "v": 1981.0000000000002,
+          "ch": -0.43
+        },
+        {
+          "t": "2026-07-17",
+          "o": 55.44,
+          "h": 57.46,
+          "l": 55.365,
+          "c": 57.186,
+          "a": 57.1856,
+          "v": 7620,
+          "ch": 0.36
+        },
+        {
+          "t": "2026-07-16",
+          "o": 57.08,
+          "h": 57.08,
+          "l": 56.79,
+          "c": 56.98,
+          "a": 56.98,
+          "v": 149887,
+          "ch": -2.88
+        },
+        {
+          "t": "2026-07-15",
+          "o": 60.76,
+          "h": 60.76,
+          "l": 57.48,
+          "c": 58.67,
+          "a": 58.67,
+          "v": 2737,
+          "ch": -2.9
+        },
+        {
+          "t": "2026-07-14",
+          "o": 60.01,
+          "h": 60.421,
+          "l": 59.9,
+          "c": 60.421,
+          "a": 60.4206,
+          "v": 1373,
+          "ch": 2.17
+        },
+        {
+          "t": "2026-07-13",
+          "o": 58.85,
+          "h": 59.14,
+          "l": 58.85,
+          "c": 59.14,
+          "a": 59.14,
+          "v": 523,
+          "ch": -1.47
+        },
+        {
+          "t": "2026-07-10",
+          "o": 60.08,
+          "h": 60.175,
+          "l": 60.02,
+          "c": 60.02,
+          "a": 60.02,
+          "v": 808,
+          "ch": -0.23
+        },
+        {
+          "t": "2026-07-09",
+          "o": 60.67,
+          "h": 60.91,
+          "l": 60.161,
+          "c": 60.161,
+          "a": 60.1612,
+          "v": 3552,
+          "ch": 2.37
+        },
+        {
+          "t": "2026-07-08",
+          "o": 58.575,
+          "h": 58.771,
+          "l": 57.71,
+          "c": 58.771,
+          "a": 58.7712,
+          "v": 2249,
+          "ch": 1.36
+        },
+        {
+          "t": "2026-07-07",
+          "o": 58.07,
+          "h": 58.07,
+          "l": 57.39,
+          "c": 57.983,
+          "a": 57.9831,
+          "v": 3819,
+          "ch": -3.08
+        },
+        {
+          "t": "2026-07-06",
+          "o": 59.39,
+          "h": 61.09,
+          "l": 59.39,
+          "c": 59.827,
+          "a": 59.8265,
+          "v": 7972.999999999999,
+          "ch": 1.71
+        },
+        {
+          "t": "2026-07-02",
+          "o": 61.06,
+          "h": 61.06,
+          "l": 58.195,
+          "c": 58.819,
+          "a": 58.819,
+          "v": 6637,
+          "ch": -4.13
+        },
+        {
+          "t": "2026-07-01",
+          "o": 62.46,
+          "h": 62.6,
+          "l": 61.26,
+          "c": 61.356,
+          "a": 61.356,
+          "v": 3520,
+          "ch": -4.56
+        },
+        {
+          "t": "2026-06-30",
+          "o": 63.841,
+          "h": 64.44,
+          "l": 63.841,
+          "c": 64.288,
+          "a": 64.2877,
+          "v": 3360,
+          "ch": 2.08
+        },
+        {
+          "t": "2026-06-29",
+          "o": 61.23,
+          "h": 63.06,
+          "l": 60.81,
+          "c": 62.979,
+          "a": 62.9794,
+          "v": 4396,
+          "ch": 3.39
+        },
+        {
+          "t": "2026-06-26",
+          "o": 61.56,
+          "h": 61.57,
+          "l": 60.916,
+          "c": 60.916,
+          "a": 60.9159,
+          "v": 4724,
+          "ch": -3.83
+        },
+        {
+          "t": "2026-06-25",
+          "o": 63.81,
+          "h": 63.81,
+          "l": 61.8,
+          "c": 63.343,
+          "a": 63.3433,
+          "v": 7807,
+          "ch": 3.55
+        },
+        {
+          "t": "2026-06-24",
+          "o": 61.53,
+          "h": 61.53,
+          "l": 60.56,
+          "c": 61.17,
+          "a": 61.1701,
+          "v": 3835,
+          "ch": -0.74
+        },
+        {
+          "t": "2026-06-23",
+          "o": 61.14,
+          "h": 61.81,
+          "l": 61.06,
+          "c": 61.628,
+          "a": 61.6276,
+          "v": 5502,
+          "ch": -4.33
+        },
+        {
+          "t": "2026-06-22",
+          "o": 63.92,
+          "h": 64.418,
+          "l": 63.78,
+          "c": 64.418,
+          "a": 64.4184,
+          "v": 2751,
+          "ch": 2.3
+        },
         {
           "t": "2026-06-18",
           "o": 63.5,
@@ -9614,240 +10037,60 @@
           "a": 45.724092,
           "v": 3250,
           "ch": 1.25
-        },
-        {
-          "t": "2025-07-22",
-          "o": 45.35,
-          "h": 45.35,
-          "l": 45.18,
-          "c": 45.18,
-          "a": 45.161324,
-          "v": 1190,
-          "ch": -1.47
-        },
-        {
-          "t": "2025-07-21",
-          "o": 45.98,
-          "h": 46.071,
-          "l": 45.854,
-          "c": 45.854,
-          "a": 45.834546,
-          "v": 1036,
-          "ch": -0.05
-        },
-        {
-          "t": "2025-07-18",
-          "o": 46.01,
-          "h": 46.02,
-          "l": 45.75,
-          "c": 45.877,
-          "a": 45.857536,
-          "v": 1087,
-          "ch": 0.16
-        },
-        {
-          "t": "2025-07-17",
-          "o": 45.81,
-          "h": 45.9,
-          "l": 45.682,
-          "c": 45.806,
-          "a": 45.786566,
-          "v": 4430,
-          "ch": 0.32
-        },
-        {
-          "t": "2025-07-16",
-          "o": 45.5,
-          "h": 45.66,
-          "l": 45.5,
-          "c": 45.66,
-          "a": 45.641126,
-          "v": 1406,
-          "ch": 0.1
-        },
-        {
-          "t": "2025-07-15",
-          "o": 46,
-          "h": 46,
-          "l": 45.47,
-          "c": 45.616,
-          "a": 45.597444,
-          "v": 3237,
-          "ch": -0.22
-        },
-        {
-          "t": "2025-07-14",
-          "o": 45.71,
-          "h": 45.815,
-          "l": 45.619,
-          "c": 45.717,
-          "a": 45.698002,
-          "v": 1794,
-          "ch": 0.59
-        },
-        {
-          "t": "2025-07-11",
-          "o": 45.3,
-          "h": 45.57,
-          "l": 45.3,
-          "c": 45.45,
-          "a": 45.431213,
-          "v": 7617,
-          "ch": 0.04
-        },
-        {
-          "t": "2025-07-10",
-          "o": 45.281,
-          "h": 45.54,
-          "l": 45.281,
-          "c": 45.431,
-          "a": 45.41262,
-          "v": 2523,
-          "ch": -0.67
-        },
-        {
-          "t": "2025-07-09",
-          "o": 45.41,
-          "h": 45.75,
-          "l": 44.96,
-          "c": 45.74,
-          "a": 45.721093,
-          "v": 10416,
-          "ch": 1.06
-        },
-        {
-          "t": "2025-07-08",
-          "o": 45.57,
-          "h": 45.57,
-          "l": 45.145,
-          "c": 45.26,
-          "a": 45.241591,
-          "v": 2563,
-          "ch": -0.43
-        },
-        {
-          "t": "2025-07-07",
-          "o": 45.35,
-          "h": 45.54,
-          "l": 45.35,
-          "c": 45.455,
-          "a": 45.436211,
-          "v": 6584,
-          "ch": 0.11
-        },
-        {
-          "t": "2025-07-03",
-          "o": 45.04,
-          "h": 45.5,
-          "l": 45,
-          "c": 45.406,
-          "a": 45.386931,
-          "v": 6008,
-          "ch": 0.95
-        },
-        {
-          "t": "2025-07-02",
-          "o": 44.89,
-          "h": 44.99,
-          "l": 44.29,
-          "c": 44.98,
-          "a": 44.961407,
-          "v": 17270,
-          "ch": 0.38
-        },
-        {
-          "t": "2025-07-01",
-          "o": 45.535,
-          "h": 45.535,
-          "l": 44.81,
-          "c": 44.81,
-          "a": 44.791577,
-          "v": 26367,
-          "ch": -2.09
-        },
-        {
-          "t": "2025-06-30",
-          "o": 45.54,
-          "h": 45.766,
-          "l": 45.399,
-          "c": 45.766,
-          "a": 45.747282,
-          "v": 4335,
-          "ch": 1.1
-        },
-        {
-          "t": "2025-06-27",
-          "o": 45.05,
-          "h": 45.47,
-          "l": 45.02,
-          "c": 45.267,
-          "a": 45.248588,
-          "v": 5440,
-          "ch": 0.42
-        },
-        {
-          "t": "2025-06-26",
-          "o": 44.71,
-          "h": 45.18,
-          "l": 44.71,
-          "c": 45.08,
-          "a": 45.061366,
-          "v": 8449,
-          "ch": 1.35
-        },
-        {
-          "t": "2025-06-25",
-          "o": 44.64,
-          "h": 44.66,
-          "l": 44.43,
-          "c": 44.502,
-          "a": 44.459515,
-          "v": 2017.9999999999998,
-          "ch": -0.05
-        },
-        {
-          "t": "2025-06-24",
-          "o": 44.325,
-          "h": 44.524,
-          "l": 44.234,
-          "c": 44.524,
-          "a": 44.481494,
-          "v": 6730,
-          "ch": 1.3
-        },
-        {
-          "t": "2025-06-23",
-          "o": 43.4,
-          "h": 43.98,
-          "l": 43.4,
-          "c": 43.952,
-          "a": 43.910537,
-          "v": 4744,
-          "ch": 1.16
-        },
-        {
-          "t": "2025-06-20",
-          "o": 43.63,
-          "h": 43.65,
-          "l": 43.375,
-          "c": 43.45,
-          "a": 43.408514,
-          "v": 2396,
-          "ch": -0.19
-        },
-        {
-          "t": "2025-06-18",
-          "o": 43.41,
-          "h": 43.82,
-          "l": 43.41,
-          "c": 43.532,
-          "a": 43.490436,
-          "v": 1903,
-          "ch": 0.18
         }
       ],
       "weekly_1y": [
         {
+          "t": "2026-07-20",
+          "o": 57.48,
+          "h": 59.42,
+          "l": 56.942,
+          "c": 58.65,
+          "a": 58.6503,
+          "v": 8370,
+          "ch": 2.56
+        },
+        {
+          "t": "2026-07-13",
+          "o": 58.85,
+          "h": 60.76,
+          "l": 55.365,
+          "c": 57.186,
+          "a": 57.1856,
+          "v": 162140,
+          "ch": -4.72
+        },
+        {
+          "t": "2026-07-06",
+          "o": 59.39,
+          "h": 61.09,
+          "l": 57.39,
+          "c": 60.02,
+          "a": 60.02,
+          "v": 18401,
+          "ch": 2.04
+        },
+        {
+          "t": "2026-06-29",
+          "o": 61.23,
+          "h": 64.44,
+          "l": 58.195,
+          "c": 58.819,
+          "a": 58.819,
+          "v": 17913,
+          "ch": -3.44
+        },
+        {
+          "t": "2026-06-22",
+          "o": 63.92,
+          "h": 64.418,
+          "l": 60.56,
+          "c": 60.916,
+          "a": 60.9159,
+          "v": 24619,
+          "ch": -3.26
+        },
+        {
           "t": "2026-06-15",
           "o": 62.52,
           "h": 63.5,
@@ -10316,68 +10559,28 @@
           "a": 45.594845,
           "v": 18185,
           "ch": -0.76
-        },
-        {
-          "t": "2025-07-21",
-          "o": 45.98,
-          "h": 46.19,
-          "l": 45.18,
-          "c": 45.962,
-          "a": 45.942501,
-          "v": 18533,
-          "ch": 0.19
-        },
-        {
-          "t": "2025-07-14",
-          "o": 45.71,
-          "h": 46.02,
-          "l": 45.47,
-          "c": 45.877,
-          "a": 45.857536,
-          "v": 11954,
-          "ch": 0.94
-        },
-        {
-          "t": "2025-07-07",
-          "o": 45.35,
-          "h": 45.75,
-          "l": 44.96,
-          "c": 45.45,
-          "a": 45.431213,
-          "v": 29703,
-          "ch": 0.1
-        },
-        {
-          "t": "2025-06-30",
-          "o": 45.54,
-          "h": 45.766,
-          "l": 44.29,
-          "c": 45.406,
-          "a": 45.386931,
-          "v": 53980,
-          "ch": 0.31
-        },
-        {
-          "t": "2025-06-23",
-          "o": 43.4,
-          "h": 45.47,
-          "l": 43.4,
-          "c": 45.267,
-          "a": 45.248588,
-          "v": 27381,
-          "ch": 4.24
         }
       ],
       "monthly_1y": [
         {
+          "t": "2026-07-01",
+          "o": 62.46,
+          "h": 62.6,
+          "l": 55.365,
+          "c": 58.65,
+          "a": 58.6503,
+          "v": 199068,
+          "ch": -8.77
+        },
+        {
           "t": "2026-06-01",
           "o": 60,
-          "h": 63.5,
+          "h": 64.44,
           "l": 56.445,
-          "c": 62.968,
-          "a": 62.9684,
-          "v": 70118,
-          "ch": 5.03
+          "c": 64.288,
+          "a": 64.2877,
+          "v": 102493,
+          "ch": 7.24
         },
         {
           "t": "2026-05-01",
@@ -10478,19 +10681,59 @@
           "a": 45.409322,
           "v": 64653,
           "ch": -1.2
-        },
-        {
-          "t": "2025-07-01",
-          "o": 45.535,
-          "h": 46.5,
-          "l": 44.29,
-          "c": 45.979,
-          "a": 45.960194,
-          "v": 125958,
-          "ch": 0.47
         }
       ],
       "weekly_3y": [
+        {
+          "t": "2026-07-20",
+          "o": 57.48,
+          "h": 59.42,
+          "l": 56.942,
+          "c": 58.65,
+          "a": 58.6503,
+          "v": 8370,
+          "ch": 2.56
+        },
+        {
+          "t": "2026-07-13",
+          "o": 58.85,
+          "h": 60.76,
+          "l": 55.365,
+          "c": 57.186,
+          "a": 57.1856,
+          "v": 162140,
+          "ch": -4.72
+        },
+        {
+          "t": "2026-07-06",
+          "o": 59.39,
+          "h": 61.09,
+          "l": 57.39,
+          "c": 60.02,
+          "a": 60.02,
+          "v": 18401,
+          "ch": 2.04
+        },
+        {
+          "t": "2026-06-29",
+          "o": 61.23,
+          "h": 64.44,
+          "l": 58.195,
+          "c": 58.819,
+          "a": 58.819,
+          "v": 17913,
+          "ch": -3.44
+        },
+        {
+          "t": "2026-06-22",
+          "o": 63.92,
+          "h": 64.418,
+          "l": 60.56,
+          "c": 60.916,
+          "a": 60.9159,
+          "v": 24619,
+          "ch": -3.26
+        },
         {
           "t": "2026-06-15",
           "o": 62.52,
@@ -10960,68 +11203,28 @@
           "a": 45.594845,
           "v": 18185,
           "ch": -0.76
-        },
-        {
-          "t": "2025-07-21",
-          "o": 45.98,
-          "h": 46.19,
-          "l": 45.18,
-          "c": 45.962,
-          "a": 45.942501,
-          "v": 18533,
-          "ch": 0.19
-        },
-        {
-          "t": "2025-07-14",
-          "o": 45.71,
-          "h": 46.02,
-          "l": 45.47,
-          "c": 45.877,
-          "a": 45.857536,
-          "v": 11954,
-          "ch": 0.94
-        },
-        {
-          "t": "2025-07-07",
-          "o": 45.35,
-          "h": 45.75,
-          "l": 44.96,
-          "c": 45.45,
-          "a": 45.431213,
-          "v": 29703,
-          "ch": 0.1
-        },
-        {
-          "t": "2025-06-30",
-          "o": 45.54,
-          "h": 45.766,
-          "l": 44.29,
-          "c": 45.406,
-          "a": 45.386931,
-          "v": 53980,
-          "ch": 0.31
-        },
-        {
-          "t": "2025-06-23",
-          "o": 43.4,
-          "h": 45.47,
-          "l": 43.4,
-          "c": 45.267,
-          "a": 45.248588,
-          "v": 27381,
-          "ch": 4.24
         }
       ],
       "monthly_3y": [
         {
+          "t": "2026-07-01",
+          "o": 62.46,
+          "h": 62.6,
+          "l": 55.365,
+          "c": 58.65,
+          "a": 58.6503,
+          "v": 199068,
+          "ch": -8.77
+        },
+        {
           "t": "2026-06-01",
           "o": 60,
-          "h": 63.5,
+          "h": 64.44,
           "l": 56.445,
-          "c": 62.968,
-          "a": 62.9684,
-          "v": 70118,
-          "ch": 5.03
+          "c": 64.288,
+          "a": 64.2877,
+          "v": 102493,
+          "ch": 7.24
         },
         {
           "t": "2026-05-01",
@@ -11122,28 +11325,28 @@
           "a": 45.409322,
           "v": 64653,
           "ch": -1.2
-        },
-        {
-          "t": "2025-07-01",
-          "o": 45.535,
-          "h": 46.5,
-          "l": 44.29,
-          "c": 45.979,
-          "a": 45.960194,
-          "v": 125958,
-          "ch": 0.47
         }
       ],
       "monthly_5y": [
         {
+          "t": "2026-07-01",
+          "o": 62.46,
+          "h": 62.6,
+          "l": 55.365,
+          "c": 58.65,
+          "a": 58.6503,
+          "v": 199068,
+          "ch": -8.77
+        },
+        {
           "t": "2026-06-01",
           "o": 60,
-          "h": 63.5,
+          "h": 64.44,
           "l": 56.445,
-          "c": 62.968,
-          "a": 62.9684,
-          "v": 70118,
-          "ch": 5.03
+          "c": 64.288,
+          "a": 64.2877,
+          "v": 102493,
+          "ch": 7.24
         },
         {
           "t": "2026-05-01",
@@ -11724,16 +11927,6 @@
           "a": 36.192225,
           "v": 306166,
           "ch": 0
-        },
-        {
-          "t": "2021-07-01",
-          "o": 36.94,
-          "h": 37.5,
-          "l": 34.82,
-          "c": 36.96,
-          "a": 36.192225,
-          "v": 305637,
-          "ch": 0.21
         }
       ]
     }
