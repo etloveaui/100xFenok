@@ -1,0 +1,94 @@
+name: Fetch FINRA ATS OTC Weekly Summary
+
+on:
+  schedule:
+    # FINRA publishes recent delayed tranches on Monday; Wednesday adds a
+    # bounded holiday buffer while avoiding the minute-0 writer cluster.
+    - cron: '17 11 * * 3'
+  workflow_dispatch:
+    inputs:
+      controlled_failure:
+        description: 'Dispatch-only chaos: "transport" forces a retained-LKG failure proof'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: fenok-data-writer-${{ github.ref }}
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  fetch-finra-ats-weekly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Start from latest main
+        run: |
+          git fetch --depth=1 origin +main:refs/remotes/origin/main
+          git checkout -B main origin/main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: '20'
+
+      - name: Test FINRA ATS weekly contracts
+        run: |
+          node scripts/test-fetch-finra-ats-weekly.mjs
+          node scripts/test-fetch-finra-ats-weekly-workflow.mjs
+
+      - name: Fetch FINRA ATS weekly summary
+        id: fetch_finra_ats
+        env:
+          FINRA_API_CLIENT_ID: ${{ secrets.FINRA_API_CLIENT_ID }}
+          FINRA_API_CLIENT_SECRET: ${{ secrets.FINRA_API_CLIENT_SECRET }}
+          INPUT_CONTROLLED_FAILURE: ${{ github.event.inputs.controlled_failure || '' }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: node scripts/fetch-finra-ats-weekly.mjs
+
+      - name: Commit FINRA ATS evidence
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FETCH_OUTCOME: ${{ steps.fetch_finra_ats.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          RECOVERY_EXIT=0
+          if [[ "$FETCH_OUTCOME" != "success" ]]; then RECOVERY_EXIT=2; fi
+          scripts/stage-lane-manifest.sh \
+            --workflow .github/workflows/fetch-finra-ats-weekly.yml \
+            --stage always_if_exists
+          if [[ "$FETCH_OUTCOME" == "success" ]]; then
+            scripts/stage-lane-manifest.sh \
+              --workflow .github/workflows/fetch-finra-ats-weekly.yml \
+              --stage success_if_exists
+          fi
+          if git diff --staged --quiet; then exit "$RECOVERY_EXIT"; fi
+          git commit -m "data: update FINRA ATS weekly summary"
+          for attempt in $(seq 1 5); do
+            if ! git pull --rebase --autostash origin main; then
+              git rebase --abort >/dev/null 2>&1 || true
+              sleep 3
+              continue
+            fi
+            if git push; then
+              gh workflow run update-manifest.yml --ref main
+              exit "$RECOVERY_EXIT"
+            fi
+            sleep 3
+          done
+          exit 1

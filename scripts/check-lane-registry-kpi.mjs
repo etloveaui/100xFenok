@@ -16,7 +16,7 @@ import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 
 export function kpiRecoverySourcePaths(sources = RECOVERY_STATE_SOURCES) {
   return new Set([
-    ...sources.general_lane_ids.map((laneId) => `admin/${laneId}/index.json`),
+    ...sources.general_lane_ids.map((laneId) => sources.general_paths?.[laneId] ?? `admin/${laneId}/index.json`),
     ...Object.values(sources.nonstandard),
     ...Object.values(sources.direct),
   ]);

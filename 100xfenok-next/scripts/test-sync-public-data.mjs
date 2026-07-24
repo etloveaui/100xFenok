@@ -29,9 +29,9 @@ import {
 } from "../../scripts/lib/lane-routing.mjs";
 import { FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS } from "./check-fenok-public-mirror-guard.mjs";
 
-// Lane-routing ⇄ hand-list parity gate (#366 item 4, shadow step): the hand
-// lists stay authoritative, but any divergence between them and the registry
-// derivation fails loudly here — before any consumer flips in later slices.
+// Lane-routing parity gate (#366 item 4): directory roots are registry-derived
+// in the sync consumer; file exclusions and mirror-guard roots retain exact
+// parity checks.
 // Equality is TRUE SET equality (both sides deduped, then compared order-free).
 {
   const setEqual = (a, b) => JSON.stringify([...new Set(a)].sort()) === JSON.stringify([...new Set(b)].sort());
@@ -72,21 +72,6 @@ import { FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS } from "./check-fenok-public-mirror
 }
 
 const DETECTION_FLOOR_REPORT = "admin/data-supply-detection-floor.json";
-const EXPECTED_PRIVATE_ROOTS = Object.freeze([
-  "admin/apewisdom_attention",
-  "admin/data-supply-state",
-  "admin/finra_short_volume",
-  "admin/gdelt_news_tone",
-  "admin/occ_options_volume",
-  "admin/yahoo_private_options",
-  "admin/fred_yardeni",
-  "admin/edgar_filings",
-  "admin/nasdaq_giw_sox",
-  "admin/oecd_cli",
-  "yf/etf-details",
-  "yf/migration-evidence",
-]);
-
 const EXPECTED_PRIVATE_PROXY_FILES = Object.freeze([
   "computed/fenok_news_tone_proxy.json",
   "computed/fenok_news_tone_proxy_history.json",
@@ -94,16 +79,9 @@ const EXPECTED_PRIVATE_PROXY_FILES = Object.freeze([
   "computed/fenok_social_attention_proxy_history.json",
 ]);
 
-// Lane Registry ⇄ exclusion cross-check (BACKLOG #366 step 2): the hand list
-// stays authoritative, but omitting a private lane's store from it must be
-// impossible to miss (the 07-18 finra leak class). Also pin the local copy of
-// the list to the imported one so the two can never drift apart silently.
+// Lane Registry ⇄ exclusion cross-check (BACKLOG #366 step 2): roots derive
+// from the registry, and the gate still fails closed if a consumer drops one.
 {
-  assert.deepEqual(
-    [...EXPECTED_PRIVATE_ROOTS].sort(),
-    [...EXCLUDED_PUBLIC_DATA_ROOTS].sort(),
-    "EXPECTED_PRIVATE_ROOTS must mirror EXCLUDED_PUBLIC_DATA_ROOTS exactly",
-  );
   const gate = checkSyncExclusionsAgainstRegistry({ excludedRoots: EXCLUDED_PUBLIC_DATA_ROOTS });
   assert.equal(
     gate.ok,
@@ -112,6 +90,16 @@ const EXPECTED_PRIVATE_PROXY_FILES = Object.freeze([
       missing_exclusions: gate.missing_exclusions,
       undeclared_exclusions: gate.undeclared_exclusions,
     })}`,
+  );
+  assert.equal(EXCLUDED_PUBLIC_DATA_ROOTS.includes("admin/finra-ats"), true,
+    "FINRA ATS raw admin root must be registry-derived into the public-sync exclusion");
+  const missingFinra = checkSyncExclusionsAgainstRegistry({
+    excludedRoots: EXCLUDED_PUBLIC_DATA_ROOTS.filter((root) => root !== "admin/finra-ats"),
+  });
+  assert.deepEqual(
+    missingFinra.missing_exclusions,
+    [{ lane: "finra_ats_weekly", root: "admin/finra-ats" }],
+    "removing the FINRA ATS exclusion must fail with the exact lane/root pair",
   );
 }
 
@@ -241,7 +229,7 @@ function snapshotPaths(paths) {
 }
 
 function seedPrivateRoots(sourceRoot, destinationRoot) {
-  for (const relativeRoot of EXPECTED_PRIVATE_ROOTS) {
+  for (const relativeRoot of EXCLUDED_PUBLIC_DATA_ROOTS) {
     write(sourceRoot, `${relativeRoot}/private.json`, '{"secret":true}\n');
     write(destinationRoot, `${relativeRoot}/stale.json`, '{"stale":true}\n');
   }
@@ -537,7 +525,7 @@ function assertWrongReportNodeFailsClosed(parentRoot, side, kind) {
   }
   const protectedPaths = [
     wrongNode.target,
-    ...EXPECTED_PRIVATE_ROOTS.map((relativeRoot) => path.join(fixture.destinationRoot, ...relativeRoot.split("/"))),
+    ...EXCLUDED_PUBLIC_DATA_ROOTS.map((relativeRoot) => path.join(fixture.destinationRoot, ...relativeRoot.split("/"))),
     path.join(fixture.destinationRoot, "admin", "safe-sibling.json"),
   ];
   const before = snapshotPaths(protectedPaths);
@@ -567,7 +555,7 @@ function assertPrivateRootFailureLeavesReportAndRoots(parentRoot) {
   fs.symlinkSync(outside, unsafeRoot, "dir");
   const protectedPaths = [
     reportPath,
-    ...EXPECTED_PRIVATE_ROOTS.map((relativeRoot) => path.join(fixture.destinationRoot, ...relativeRoot.split("/"))),
+    ...EXCLUDED_PUBLIC_DATA_ROOTS.map((relativeRoot) => path.join(fixture.destinationRoot, ...relativeRoot.split("/"))),
   ];
   const before = snapshotPaths(protectedPaths);
   const error = captureSyncError({
@@ -587,7 +575,7 @@ function assertIdentityDriftFailsBeforeMutation(parentRoot) {
   const outside = path.join(fixture.root, "drift-outside.json");
   fs.writeFileSync(outside, "outside-untouched\n");
   const protectedPaths = [
-    ...EXPECTED_PRIVATE_ROOTS.map((relativeRoot) => path.join(fixture.destinationRoot, ...relativeRoot.split("/"))),
+    ...EXCLUDED_PUBLIC_DATA_ROOTS.map((relativeRoot) => path.join(fixture.destinationRoot, ...relativeRoot.split("/"))),
     path.join(fixture.destinationRoot, "admin", "safe-sibling.json"),
   ];
   const before = snapshotPaths(protectedPaths);
@@ -625,8 +613,8 @@ const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-sync-public-dat
 try {
   assert.deepEqual(
     EXCLUDED_PUBLIC_DATA_ROOTS,
-    EXPECTED_PRIVATE_ROOTS,
-    "the excluded directory roots must remain exact",
+    deriveExcludedPublicDataRoots(),
+    "the excluded directory roots must remain exact registry derivations",
   );
   assert.deepEqual(
     EXCLUDED_PUBLIC_DATA_FILES,
@@ -672,9 +660,9 @@ try {
   assert.equal(rehearsal.removedDestinationExactFiles, 5);
   assert.deepEqual([...rehearsal.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...rehearsal.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
-  assert.equal(rehearsal.excludedSourceRoots, 12);
-  assert.equal(rehearsal.removedDestinationRoots, 12);
-  assert.equal(rehearsal.removedDestinationFiles, 12);
+  assert.equal(rehearsal.excludedSourceRoots, 13);
+  assert.equal(rehearsal.removedDestinationRoots, 13);
+  assert.equal(rehearsal.removedDestinationFiles, 13);
   assert.deepEqual(snapshotNode(sourceRoot), sourceBeforeDryRun, "dry-run must not mutate source bytes");
   assert.deepEqual(snapshotNode(destinationRoot), destinationBeforeDryRun, "dry-run must not mutate destination bytes");
   assert.equal(fs.existsSync(path.join(destinationRoot, "safe/keep.json")), false);
@@ -684,10 +672,10 @@ try {
 
   const result = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(result.filesCopied, 3);
-  assert.equal(result.excludedSourceRoots, 12);
+  assert.equal(result.excludedSourceRoots, 13);
   assert.equal(result.excludedSourceFiles, 5);
-  assert.equal(result.removedDestinationRoots, 12);
-  assert.equal(result.removedDestinationFiles, 12);
+  assert.equal(result.removedDestinationRoots, 13);
+  assert.equal(result.removedDestinationFiles, 13);
   assert.equal(result.removedDestinationExactFiles, 5);
   assert.deepEqual([...result.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...result.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
@@ -716,7 +704,7 @@ try {
   const destinationBeforeRerun = snapshotNode(destinationRoot);
   const rerun = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(rerun.filesCopied, 3);
-  assert.equal(rerun.excludedSourceRoots, 12);
+  assert.equal(rerun.excludedSourceRoots, 13);
   assert.equal(rerun.excludedSourceFiles, 5);
   assert.equal(rerun.removedDestinationRoots, 0);
   assert.equal(rerun.removedDestinationFiles, 0);

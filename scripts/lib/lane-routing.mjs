@@ -1,9 +1,7 @@
-// Lane routing derivation (#366 item 4, shadow step): derives the private-root
-// lists from the lane registry so the hand-maintained copies can be
-// cross-checked — and later REPLACED — by a single source. Shadow contract of
-// this slice: the hand lists stay authoritative; these derivations exist to
-// assert parity with them, fail-closed on any divergence (the 07-18 finra leak
-// class, pinned by bd46f916f8).
+// Lane routing derivation (#366 item 4): private directory roots now feed the
+// public-data sync directly from the lane registry. File-shaped exclusions
+// retain their explicit consumer list and parity gate. This keeps a newly
+// registered private admin root fail-closed against the 07-18 FINRA leak class.
 //
 // Derivation rules (all paths returned data/-stripped, matching the consumers):
 //   - excluded public data ROOTS (sync-public-data): declared exception roots

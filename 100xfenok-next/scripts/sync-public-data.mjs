@@ -9,21 +9,11 @@ import {
   marketFactsShardFileNameForId,
   marketFactsTickerKey,
 } from "../src/lib/market-facts-shard.mjs";
+import { deriveExcludedPublicDataRoots } from "../../scripts/lib/lane-routing.mjs";
 
-export const EXCLUDED_PUBLIC_DATA_ROOTS = Object.freeze([
-  "admin/apewisdom_attention",
-  "admin/data-supply-state",
-  "admin/finra_short_volume",
-  "admin/gdelt_news_tone",
-  "admin/occ_options_volume",
-  "admin/yahoo_private_options",
-  "admin/fred_yardeni",
-  "admin/edgar_filings",
-  "admin/nasdaq_giw_sox",
-  "admin/oecd_cli",
-  "yf/etf-details",
-  "yf/migration-evidence",
-]);
+// Registry-derived #366 privacy boundary. A newly registered private admin
+// store is excluded immediately instead of waiting for a second hand-list edit.
+export const EXCLUDED_PUBLIC_DATA_ROOTS = Object.freeze(deriveExcludedPublicDataRoots());
 
 export const EXCLUDED_PUBLIC_DATA_FILES = Object.freeze([
   "admin/data-supply-detection-floor.json",

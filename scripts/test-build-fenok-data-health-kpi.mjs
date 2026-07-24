@@ -1541,14 +1541,14 @@ console.log("# KPI v2 runtime self-proof fixtures");
   assert.equal(rootCronShadow.mode, "shadow");
   assert.equal(rootCronShadow.deployment_blocking, false);
   assert.deepEqual(rootCronShadow.counts, {
-    scheduled_members: 28,
-    schedule_bindings: 31,
+    scheduled_members: 29,
+    schedule_bindings: 32,
     observed: 29,
-    suspected_skips: 2,
+    suspected_skips: 3,
     attempt_gaps: 0,
   });
-  assert.equal(rootCronShadow.rows.length, 31);
-  assert.deepEqual(publicCronShadow.suspected_skip_lane_ids, ["apewisdom_attention", "gdelt_news_tone"]);
+  assert.equal(rootCronShadow.rows.length, 32);
+  assert.deepEqual(publicCronShadow.suspected_skip_lane_ids, ["apewisdom_attention", "finra_ats_weekly", "gdelt_news_tone"]);
   assert.deepEqual(publicCronShadow.attempt_gap_lane_ids, []);
   assert.equal(Object.hasOwn(publicCronShadow, "rows"), false);
   assert.equal(JSON.stringify(publicCronShadow).includes(".github/workflows/"), false);
@@ -4102,6 +4102,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
 {
   const permuted = Object.freeze({
     general_lane_ids: Object.freeze([...RECOVERY_STATE_SOURCES.general_lane_ids].reverse()),
+    general_paths: Object.freeze(Object.fromEntries(Object.entries(RECOVERY_STATE_SOURCES.general_paths).reverse())),
     nonstandard: Object.freeze(Object.fromEntries(RECOVERY_STATE_SOURCES.nonstandard ? Object.entries(RECOVERY_STATE_SOURCES.nonstandard).reverse() : [])),
     direct: Object.freeze(Object.fromEntries(Object.entries(RECOVERY_STATE_SOURCES.direct).reverse())),
   });

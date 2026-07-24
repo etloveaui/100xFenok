@@ -42,8 +42,8 @@ assert.deepEqual(
 
 // --- Emitter unit: shape + counts ---
 assert.equal(projection.schema_version, PROJECTION_SCHEMA);
-assert.equal(projection.lanes.length, 31, "projection must carry all 31 registry lanes");
-assert.equal(projection.lane_count, 31);
+assert.equal(projection.lanes.length, 32, "projection must carry all 32 registry lanes");
+assert.equal(projection.lane_count, 32);
 
 const ALLOWED_KEYS = ["cadence", "enforcement", "id", "label", "owner_workflow", "privacy_class", "store_kind"];
 for (const lane of projection.lanes) {

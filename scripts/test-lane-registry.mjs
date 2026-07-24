@@ -67,6 +67,12 @@ function clone(value) {
     ["duplicate exception", (draft) => { draft.declared_exceptions.push(clone(draft.declared_exceptions[0])); }],
     ["invalid cadence", (draft) => { draft.lanes[0].cadence.kind = "fortnightly"; }],
     ["invalid privacy class", (draft) => { draft.lanes[0].privacy_class = "publicish"; }],
+    ["non-boolean public mirror flag", (draft) => {
+      draft.lanes.find((row) => row.id === "finra_ats_weekly").public_mirror_allowed = "false";
+    }],
+    ["false public mirror flag with a mirror", (draft) => {
+      draft.lanes.find((row) => row.id === "finra_ats_weekly").roots.public_mirror = ["100xfenok-next/public/leak.json"];
+    }],
     ["missing lane_class", (draft) => { delete draft.lanes[0].lane_class; }],
     ["invalid lane_class", (draft) => { draft.lanes[0].lane_class = "sometimes"; }],
     ["recovery store without shape", (draft) => {
@@ -152,7 +158,7 @@ function clone(value) {
       acc[lane.lane_class] = (acc[lane.lane_class] ?? 0) + 1;
       return acc;
     }, {});
-    assert.deepEqual(byClass, { detection_floor: 27, auxiliary: 4 }, "lane_class partition drifted");
+    assert.deepEqual(byClass, { detection_floor: 28, auxiliary: 4 }, "lane_class partition drifted");
     assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "auxiliary",
       "yahoo_batch_quote_history remains auxiliary (not a detection-floor lane)");
     for (const id of ["benchmarks", "global_scouter", "damodaran"]) {
@@ -172,6 +178,38 @@ function clone(value) {
       "the bounded StockAnalysis pair lane is live after its first committed natural 8-pair attempt");
     assert.equal(registryLaneById("yahoo_private_options").enforcement, "live",
       "the targeted Yahoo options lane is live after its first committed natural schedule attempt");
+    assert.deepEqual(
+      registryLaneById("finra_ats_weekly"),
+      {
+        id: "finra_ats_weekly",
+        label: "FINRA delayed ATS/OTC weekly summary",
+        owner_workflow: ".github/workflows/fetch-finra-ats-weekly.yml",
+        store_kind: "payload",
+        lane_class: "detection_floor",
+        cadence: { kind: "weekly", provider: "finra otc transparency" },
+        enforcement: "shadow",
+        privacy_class: "private",
+        public_mirror_allowed: false,
+        roots: {
+          admin_store: "data/admin/finra-ats",
+          detection_attempt: "data/admin/data-supply-state/detection-attempts/finra_ats.json",
+          canonical_outputs: ["data/admin/finra-ats/current/weekly-summary.json"],
+          public_mirror: [],
+        },
+        commit_shards: [
+          "data/admin/data-supply-state/detection-attempts/finra_ats.json",
+          "data/admin/finra-ats/index.json",
+          "data/admin/finra-ats/current/weekly-summary.json",
+          "data/admin/finra-ats/lkg/weekly-summary.json",
+          "data/admin/finra-ats/weeks",
+        ],
+        recovery_store: "data/admin/finra-ats/index.json",
+        declared_exception: null,
+        script_sources: ["scripts/fetch-finra-ats-weekly.mjs"],
+        kpi_recovery_shape: "general",
+      },
+      "FINRA ATS weekly registry contract must remain exact",
+    );
     for (const id of ["admin_live_voice_logs", "mona_production_study_state", "mona_vnext_kv"]) {
       const lane = registryLaneById(id);
       assert.ok(lane, `private/runtime denominator lane missing: ${id}`);
@@ -334,6 +372,7 @@ function clone(value) {
       "us_indices_daily",
       "oecd_cli",
       "krx",
+      "finra_ats_weekly",
     ]);
     for (const row of summary.absent_store_roots) {
       assert.ok(pendingLanes.has(row.lane), `unexpected absent store: ${row.lane} (${row.path})`);

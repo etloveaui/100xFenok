@@ -921,6 +921,32 @@ const config = {
       visibility: "admin_only",
     }),
     lane({
+      id: "finra_ats_weekly",
+      label: "FINRA delayed ATS/OTC weekly summary",
+      members: [registryMember("finra_ats_weekly", ["17 11 * * 3"], [
+        artifact("finra_ats_weekly_marker", "data/admin/finra-ats/current/weekly-summary.json", {
+          schemaVersion: schemaVersion("/schema_version", "fenok-finra-ats-weekly-marker/v1"),
+          sourceSelector: pointerSource("/source_as_of", "date"),
+          assertions: [
+            exactAssertion("raw_public_false", "/raw_public", false),
+            exactAssertion("public_mirror_disallowed", "/public_mirror_allowed", false),
+            exactAssertion("rows_excluded", "/rows_included", false),
+            typeAssertion("counts_object", "/counts", "object"),
+          ],
+        }),
+      ])],
+      endpointContract: endpointAssertions("finra_otc_weekly_summary", [
+        minRowsAssertion("weekly_summary_rows", "/rows"),
+        exactAssertion("weekly_summary_row_shape", "/row_shape_valid", true),
+      ]),
+      // The marker folds to the older tranche date. Forty-two calendar days
+      // keeps a normal four-week T2/OTCE publication fresh while the producer
+      // separately enforces the exact two-/four-week tier targets.
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 42 }),
+      affectedSurfaceIds: ["finra_ats_weekly_admin"],
+      visibility: "admin_only",
+    }),
+    lane({
       id: "occ_options_volume",
       label: "OCC options volume",
       members: [registryMember("occ_options_volume", ["30 0 * * 2-6"], [

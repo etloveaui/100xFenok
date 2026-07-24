@@ -1,9 +1,9 @@
 {
   "schema_version": "lane-registry-projection/v1",
-  "generated_at": "2026-07-24T02:52:43.638Z",
+  "generated_at": "2026-07-24T03:13:50.513Z",
   "source_schema_version": "lane-registry/v2",
   "purpose": "Admin-safe lane metadata projection for the owner data dashboard. Metadata only — no store roots, attempt/recovery paths, or repo directory structure.",
-  "lane_count": 31,
+  "lane_count": 32,
   "lanes": [
     {
       "id": "fred_macro",
@@ -316,6 +316,18 @@
       "enforcement": "live",
       "privacy_class": "private",
       "owner_workflow": "fenok-edge-daily.yml"
+    },
+    {
+      "id": "finra_ats_weekly",
+      "label": "FINRA delayed ATS/OTC weekly summary",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "weekly",
+        "provider": "finra otc transparency"
+      },
+      "enforcement": "shadow",
+      "privacy_class": "private",
+      "owner_workflow": "fetch-finra-ats-weekly.yml"
     },
     {
       "id": "occ_options_volume",

@@ -10,6 +10,7 @@ import {
   canonicalJson,
   validateDetectionConfig,
 } from "./lib/data-supply-detection-config.mjs";
+import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1128,17 +1129,31 @@ export function validateAttemptShard(document, expectedLaneId, config = DATA_SUP
   return true;
 }
 
-export function loadAttemptShards({ shardRoot, config = DATA_SUPPLY_DETECTION_CONFIG }) {
+export function loadAttemptShards({
+  shardRoot,
+  config = DATA_SUPPLY_DETECTION_CONFIG,
+  registry = LANE_REGISTRY,
+}) {
   validateDetectionConfig(config);
   const root = canonicalExistingDirectory(shardRoot);
   if (!pathInfoMatches(root)) fail("unsafe_path", "attempt shard root identity changed");
-  const laneIds = new Set(config.lanes.map((lane) => lane.id));
+  const configLaneIds = new Set(config.lanes.map((lane) => lane.id));
+  const laneByFileBase = new Map();
+  for (const lane of registry.lanes) {
+    if (!configLaneIds.has(lane.id) || lane.roots.detection_attempt === null) continue;
+    const fileName = path.posix.basename(lane.roots.detection_attempt);
+    const match = /^([a-z][a-z0-9_]{0,63})\.json$/.exec(fileName);
+    if (!match || laneByFileBase.has(match[1])) {
+      fail("schema_error", `registry attempt shard filename is invalid or duplicate: ${fileName}`);
+    }
+    laneByFileBase.set(match[1], lane.id);
+  }
   const byLane = new Map();
   for (const entry of fs.readdirSync(root.real, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name, "en"))) {
     const match = /^([a-z][a-z0-9_]{0,63})\.json$/.exec(entry.name);
     if (!match || !entry.isFile() || entry.isSymbolicLink()) fail("unsafe_path", `unexpected attempt shard entry ${entry.name}`);
-    const laneId = match[1];
-    if (!laneIds.has(laneId) || byLane.has(laneId)) fail("schema_error", `unknown or duplicate attempt shard ${laneId}`);
+    const laneId = laneByFileBase.get(match[1]);
+    if (!laneId || byLane.has(laneId)) fail("schema_error", `unknown or duplicate attempt shard ${match[1]}`);
     const filePath = path.join(root.real, entry.name);
     const document = readJsonStrict(filePath, [root]);
     validateAttemptShard(document, laneId, config);

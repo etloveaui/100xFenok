@@ -2136,6 +2136,7 @@ function buildSourceSla({ nowIso, finraOccLedger, rimInputs, etfCoreBasket, cove
 // (check-lane-registry-kpi.mjs) still cross-checks both directions as sets.
 function deriveRecoveryStateSources() {
   const generalLaneIds = [];
+  const generalPaths = {};
   const nonstandard = {};
   const direct = {};
   for (const lane of LANE_REGISTRY.lanes) {
@@ -2143,6 +2144,7 @@ function deriveRecoveryStateSources() {
     const relativePath = lane.recovery_store.replace(/^data\//, "");
     if (lane.kpi_recovery_shape === "general") {
       generalLaneIds.push(lane.id);
+      generalPaths[lane.id] = relativePath;
     } else if (lane.kpi_recovery_shape === "keyed_v2") {
       nonstandard[lane.id] = relativePath;
     } else if (lane.kpi_recovery_shape === "direct") {
@@ -2155,6 +2157,7 @@ function deriveRecoveryStateSources() {
   }
   return {
     general_lane_ids: Object.freeze(generalLaneIds),
+    general_paths: Object.freeze(generalPaths),
     nonstandard: Object.freeze(nonstandard),
     direct: Object.freeze(direct),
   };
@@ -2241,7 +2244,10 @@ export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, r
   const detectionFloor = readOptionalJsonStrict("admin/data-supply-detection-floor.json");
   const generalRecoveryStates = Object.fromEntries(
     recoverySources.general_lane_ids
-      .map((laneId) => [laneId, readOptionalJsonStrict(`admin/${laneId}/index.json`)]),
+      .map((laneId) => [
+        laneId,
+        readOptionalJsonStrict(recoverySources.general_paths?.[laneId] ?? `admin/${laneId}/index.json`),
+      ]),
   );
   const detectionRecovery = Object.fromEntries(
     Object.entries(recoverySources.nonstandard)

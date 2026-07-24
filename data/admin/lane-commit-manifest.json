@@ -1,5 +1,5 @@
 {
-  "registry_digest": "bbfe46958f93d683765a230f334eae92cf89a090b2f737914319f087bf92d2e1",
+  "registry_digest": "ce5efa879513eaf1d1b4e8172ab5f42ac38a9818ff6c2b1f627627906804c0a1",
   "registry_schema": "lane-registry/v2",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -757,6 +757,45 @@
             "kind": "file",
             "path": "100xfenok-next/public/data/computed/fenok_yahoo_private_options_availability.json",
             "required": false
+          }
+        ],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/fetch-finra-ats-weekly.yml": {
+      "exclude": [],
+      "lanes": [
+        "finra_ats_weekly"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/finra_ats.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/finra-ats/index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/finra-ats/lkg/weekly-summary.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/finra-ats/current/weekly-summary.json",
+            "required": true
+          },
+          {
+            "kind": "directory",
+            "path": "data/admin/finra-ats/weeks",
+            "required": true
           }
         ],
         "success_verify_not_plan_if_exists": []

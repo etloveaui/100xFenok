@@ -49,6 +49,7 @@ function record({
   cadence,
   enforcement,
   privacy_class,
+  public_mirror_allowed,
   admin_store,
   detection_attempt = null,
   canonical_outputs = [],
@@ -69,6 +70,7 @@ function record({
     cadence,
     enforcement,
     privacy_class,
+    ...(public_mirror_allowed !== undefined ? { public_mirror_allowed } : {}),
     roots: {
       admin_store,
       detection_attempt,
@@ -778,6 +780,31 @@ const lanes = [
     kpi_recovery_shape: "general",
   }),
   record({
+    id: "finra_ats_weekly",
+    label: "FINRA delayed ATS/OTC weekly summary",
+    owner_workflow: ".github/workflows/fetch-finra-ats-weekly.yml",
+    store_kind: "payload",
+    lane_class: "detection_floor",
+    cadence: { kind: "weekly", provider: "finra otc transparency" },
+    enforcement: "shadow",
+    privacy_class: "private",
+    public_mirror_allowed: false,
+    admin_store: "data/admin/finra-ats",
+    detection_attempt: attemptShard("finra_ats"),
+    canonical_outputs: ["data/admin/finra-ats/current/weekly-summary.json"],
+    public_mirror: [],
+    commit_shards: [
+      attemptShard("finra_ats"),
+      "data/admin/finra-ats/index.json",
+      "data/admin/finra-ats/current/weekly-summary.json",
+      "data/admin/finra-ats/lkg/weekly-summary.json",
+      "data/admin/finra-ats/weeks",
+    ],
+    recovery_store: "data/admin/finra-ats/index.json",
+    kpi_recovery_shape: "general",
+    script_sources: ["scripts/fetch-finra-ats-weekly.mjs"],
+  }),
+  record({
     id: "occ_options_volume",
     label: "OCC options volume",
     owner_workflow: ".github/workflows/fenok-edge-daily.yml",
@@ -1203,6 +1230,17 @@ workflow_policies[".github/workflows/fenok-edge-daily.yml"] = policy(["finra_sho
     commitSpec("data/computed/fenok_signal_lens_proxies*.json", "glob"),
   ],
 });
+workflow_policies[".github/workflows/fetch-finra-ats-weekly.yml"] = policy(["finra_ats_weekly"], {
+  always_if_exists: [
+    commitSpec("data/admin/data-supply-state/detection-attempts/finra_ats.json", "file"),
+    commitSpec("data/admin/finra-ats/index.json", "file"),
+    commitSpec("data/admin/finra-ats/lkg/weekly-summary.json", "file"),
+  ],
+  success_if_exists: [
+    commitSpec("data/admin/finra-ats/current/weekly-summary.json", "file", true),
+    commitSpec("data/admin/finra-ats/weeks", "directory", true),
+  ],
+});
 workflow_policies[".github/workflows/fetch-yf-finance.yml"] = policy(["yahoo_batch_quote_history"], {
   always_if_exists: [
     commitSpec("data/yf/finance", "directory", true),
@@ -1320,7 +1358,12 @@ const LANE_RECORD_KEYS = Object.freeze([
   "recovery_store",
   "declared_exception",
 ]);
-const LANE_RECORD_OPTIONAL_KEYS = Object.freeze(["script_sources", "caller_workflows", "kpi_recovery_shape"]);
+const LANE_RECORD_OPTIONAL_KEYS = Object.freeze([
+  "script_sources",
+  "caller_workflows",
+  "kpi_recovery_shape",
+  "public_mirror_allowed",
+]);
 
 function exactKeys(value, expected, context) {
   const actual = Object.keys(value ?? {}).sort();
@@ -1406,6 +1449,15 @@ function validateLaneRecord(laneValue) {
   }
   if (!ENFORCEMENTS.includes(laneValue.enforcement)) fail(`${context} enforcement is invalid`);
   if (!PRIVACY_CLASSES.includes(laneValue.privacy_class)) fail(`${context} privacy_class is invalid`);
+  if (laneValue.public_mirror_allowed !== undefined) {
+    if (typeof laneValue.public_mirror_allowed !== "boolean") {
+      fail(`${context}.public_mirror_allowed must be a boolean when present`);
+    }
+    if (laneValue.public_mirror_allowed === false
+      && (laneValue.privacy_class !== "private" || laneValue.roots.public_mirror.length !== 0)) {
+      fail(`${context}.public_mirror_allowed=false requires privacy_class private and an empty public mirror`);
+    }
+  }
   if (typeof laneValue.cadence?.kind !== "string" || !CADENCE_KINDS.includes(laneValue.cadence.kind)) {
     fail(`${context} cadence.kind is invalid`);
   }
