@@ -2,45 +2,399 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_backfill_select",
-  "generated_at": "2026-07-23T23:40:50Z",
+  "generated_at": "2026-07-24T01:12:54Z",
   "policy": {
-    "limit": 120,
-    "offset": 0,
-    "max_age_hours": null,
+    "limit": 40,
+    "max_age_hours": 168.0,
     "cooldown_days": 7,
     "cooldown_failure_threshold": 3,
-    "required_history_periods": [
-      "daily_1y"
-    ],
-    "history_gaps_only": true,
-    "selection": "exact Fenok Edge scored-ETF daily_1y fetchable plan; includes missing detail files and daily_1y row-count gaps below min rows",
-    "plan_path": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
-    "min_daily_1y_rows": 200
+    "required_history_periods": [],
+    "history_gaps_only": false,
+    "selection": "never-fetched missing ETF details first, lower prior failures before retries, then Yahoo fallback retries, then multi-year history gaps, then stale records; new_etfs are prioritized within each reason/failure bucket, then etf_universe, then etf_screener-only rows"
   },
   "counts": {
-    "candidates": 0,
-    "selected": 0,
-    "missing": 0,
+    "candidates": 4591,
+    "selected": 40,
+    "missing": 4,
     "fallback_retry": 0,
     "history_gap": 0,
     "inception_limited_history_gap": 0,
+    "terminal_limited_history_gap": 0,
     "total_history_gap": 0,
-    "stale": 0,
+    "stale": 4587,
     "cooldown_skipped": 0,
-    "prior_failed_candidates": 0,
-    "daily_1y_missing_file": 0,
-    "daily_1y_short_rows": 0,
-    "offset_skipped": 0,
-    "scheduled_plan_rows": 0,
+    "prior_failed_candidates": 46,
     "ledger_tracked": 275,
     "ledger_cooldown": 14
   },
-  "selected": [],
+  "selected": [
+    {
+      "ticker": "HWO",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "LUMA",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "RAML",
+      "source": "new_etfs",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "EQQQ",
+      "source": "etf_screener",
+      "reason": "missing",
+      "age_hours": null,
+      "prior_failures": 0,
+      "priority": 2,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "AAOZ",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.43,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "BTDL",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.42,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "BWQG",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.41,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "CIR",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.4,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "CJUL",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.4,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "COHC",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.39,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "CRD",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.38,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "CRWX",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.38,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "CTJL",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.37,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "FINA",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.36,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "FSPC",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.36,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "HIMC",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.34,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "HYNX",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.33,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "IREC",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.32,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "JPRF",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.31,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "LCTO",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.28,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "LGDS",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.28,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "LRCC",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.27,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "MPWC",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.26,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "MRVX",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.25,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "NBIC",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.24,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "NFX",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.23,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "NOWX",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.23,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "NSIG",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.22,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "NSIV",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.21,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "NVOC",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.21,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "NVTC",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.2,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "OKLC",
+      "source": "new_etfs",
+      "reason": "stale",
+      "age_hours": 191.2,
+      "prior_failures": 0,
+      "priority": 0,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AMDD",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 833.12,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AMDG",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 833.12,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AMDL",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 833.12,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AMDY",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 833.12,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AMID",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 833.12,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AMKL",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 833.12,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AMLP",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 833.12,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    },
+    {
+      "ticker": "AMOM",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 833.12,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3
+    }
+  ],
   "cooldown": [],
   "inception_limited": [],
+  "terminal_limited": [],
   "pending_ledger": {
     "path": "backfill/pending_ledger.json",
-    "generated_at": "2026-07-23T23:40:50Z",
+    "generated_at": "2026-07-24T01:23:26Z",
     "counts": {
       "tracked": 275,
       "cooldown": 14,
