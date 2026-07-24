@@ -600,9 +600,25 @@ const config = {
       id: "sentiment",
       label: "Market sentiment",
       members: [registryMember("sentiment", ["0 22 * * 1-5"], [
+        artifact("sentiment_cnn", "data/sentiment/cnn-fear-greed.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("cnn_non_empty", "")],
+        }),
+        artifact("sentiment_cftc", "data/sentiment/cftc-sp500.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("cftc_non_empty", "")],
+        }),
+        artifact("sentiment_crypto", "data/sentiment/crypto-fear-greed.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("crypto_non_empty", "")],
+        }),
         artifact("sentiment_vix", "data/sentiment/vix.json", {
           sourceSelector: maxArrayFieldSource("", "date", "date"),
           assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("vix_non_empty", "")],
+        }),
+        artifact("sentiment_move", "data/sentiment/move.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("move_non_empty", "")],
         }),
       ], "us_trading")],
       endpointContract: endpointAssertion(

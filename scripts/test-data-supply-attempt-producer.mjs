@@ -138,6 +138,81 @@ function rowFor(memberId, index) {
 }
 
 {
+  const retryReady = buildAttemptRow({
+    laneId: "gdelt_news_tone",
+    memberId: null,
+    attemptId: "gdelt-retry-ready",
+    observedAt: "2026-07-24T06:30:00Z",
+    tuple: returnedTuple({
+      httpStatus: 200,
+      decode: "ok",
+      payload: "non_empty",
+      assertions: [{ id: "articles_array", passed: true }],
+      retryReason: "rate_limited",
+      retryCount: 1,
+      retryWaitMs: 6500,
+    }),
+  });
+  assert.equal(retryReady.retry_reason, "rate_limited");
+  assert.equal(retryReady.retry_count, 1);
+  assert.equal(retryReady.retry_wait_ms, 6500);
+  assert.equal(validateRow(retryReady), true);
+  assert.equal(classifyAttempt(retryReady).reason, "ok");
+
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "http-retry-attempt-"));
+  const attemptShardPath = path.join(root, "gdelt_news_tone.json");
+  const retryResult = {
+    status: "ready",
+    reason: "ok",
+    attempt: returnedTuple({
+      httpStatus: 200,
+      decode: "ok",
+      payload: "non_empty",
+      assertions: [{ id: "articles_array", passed: true }],
+      retryReason: "rate_limited",
+      retryCount: 1,
+      retryWaitMs: 6500,
+    }),
+  };
+  writeMergedAttemptShard({
+    laneId: "gdelt_news_tone",
+    attemptShardPath,
+    observedAt: "2026-07-24T06:30:00Z",
+    attemptId: "gdelt-retry-merge",
+    result: retryResult,
+  });
+  writeMergedAttemptShard({
+    laneId: "gdelt_news_tone",
+    attemptShardPath,
+    observedAt: "2026-07-24T06:30:01Z",
+    attemptId: "gdelt-retry-merge",
+    result: {
+      status: "ready",
+      reason: "ok",
+      attempt: returnedTuple({
+        httpStatus: 200,
+        decode: "ok",
+        payload: "non_empty",
+        assertions: [{ id: "articles_array", passed: true }],
+      }),
+    },
+  });
+  const merged = JSON.parse(fs.readFileSync(attemptShardPath, "utf8")).attempts[0];
+  assert.equal(merged.retry_reason, "rate_limited");
+  assert.equal(merged.retry_count, 1);
+  assert.equal(merged.retry_wait_ms, 6500);
+
+  for (const invalid of [
+    { ...retryReady, retry_reason: undefined },
+    { ...retryReady, retry_count: -1 },
+    { ...retryReady, retry_wait_ms: -1 },
+    { ...retryReady, retry_reason: "http_error" },
+  ]) {
+    assert.throws(() => validateRow(invalid), /schema_error/);
+  }
+}
+
+{
   const decoded = classifyEndpointResponse({
     statusCode: 200,
     body: "Date|Symbol|ShortVolume|ShortExemptVolume|TotalVolume|Market\n20260714|NVDA|10|0|100|Q\n",

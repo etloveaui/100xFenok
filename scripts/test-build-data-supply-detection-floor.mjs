@@ -489,6 +489,21 @@ function runConfigAndFixtureChecks() {
   );
   const treasuryTga = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "treasury_tga");
   const fredYardeni = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "fred_yardeni");
+  const sentiment = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "sentiment");
+  assert.deepEqual(sentiment.producer_members[0].artifact_contracts.map((item) => item.id), [
+    "sentiment_cnn",
+    "sentiment_cftc",
+    "sentiment_crypto",
+    "sentiment_vix",
+    "sentiment_move",
+  ]);
+  assert.deepEqual(sentiment.producer_members[0].artifact_contracts.map((item) => item.path), [
+    "data/sentiment/cnn-fear-greed.json",
+    "data/sentiment/cftc-sp500.json",
+    "data/sentiment/crypto-fear-greed.json",
+    "data/sentiment/vix.json",
+    "data/sentiment/move.json",
+  ]);
   const liveLaneIds = DATA_SUPPLY_DETECTION_CONFIG.lanes
     .filter((item) => item.enforcement === "live")
     .map((item) => item.id);
@@ -1103,6 +1118,26 @@ function runCompositeSourceFoldChecks() {
   const missingTreasuryDaily = lane(missingTreasuryReport, "slickcharts").members.find((member) => member.id === "daily");
   assert.equal(missingTreasuryDaily.reason, "missing_artifact");
   assert.equal(missingTreasuryReport.producer_member_count, 32);
+
+  for (const [key, relativePath] of [
+    ["cnn", "data/sentiment/cnn-fear-greed.json"],
+    ["cftc", "data/sentiment/cftc-sp500.json"],
+    ["crypto", "data/sentiment/crypto-fear-greed.json"],
+    ["vix", "data/sentiment/vix.json"],
+    ["move", "data/sentiment/move.json"],
+  ]) {
+    const missingSentimentRoot = materializeArtifacts("all_valid");
+    fs.unlinkSync(path.join(missingSentimentRoot.raw, relativePath));
+    const missingSentimentReport = buildDetectionReport({
+      artifactRoot: missingSentimentRoot.raw,
+      attempts: attemptsFixture,
+      calendars: calendarsFixture,
+      now: expectedFixture.baseline.now,
+    });
+    const missingSentiment = lane(missingSentimentReport, "sentiment");
+    assert.equal(missingSentiment.status, "unavailable", `${key} missing canonical degrades sentiment`);
+    assert.equal(missingSentiment.reason, "missing_artifact", `${key} missing canonical is named honestly`);
+  }
 
   const staleRoot = materializeArtifacts("all_valid");
   const dailyPath = path.join(staleRoot.raw, "data", "slickcharts", "gainers.json");

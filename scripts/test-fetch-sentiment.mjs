@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import {
   buildSentimentDetectionDocument,
+  cryptoSourceStamp,
   SENTIMENT_LKG_SOURCE_FILES,
   SENTIMENT_LKG_SOURCE_KEYS,
   recordSentimentAttemptTuple,
@@ -30,9 +31,21 @@ const READY_TUPLE = {
   assertions: [],
 };
 
-assert.deepEqual(SENTIMENT_LKG_SOURCE_KEYS, ["cnn", "cftc", "vix", "move"]);
+assert.deepEqual(SENTIMENT_LKG_SOURCE_KEYS, ["cnn", "cftc", "vix", "move", "crypto"]);
 assert.deepEqual(Object.keys(SENTIMENT_LKG_SOURCE_FILES), SENTIMENT_LKG_SOURCE_KEYS);
 assert.equal(SENTIMENT_LKG_SOURCE_FILES.cnn.length, 8);
+assert.deepEqual(cryptoSourceStamp("1784678400"), {
+  source_as_of: "2026-07-22",
+  source_as_of_reason: null,
+});
+assert.deepEqual(cryptoSourceStamp("not-a-timestamp"), {
+  source_as_of: null,
+  source_as_of_reason: "alternative.me data[0].timestamp is missing or invalid",
+});
+assert.deepEqual(cryptoSourceStamp(null), {
+  source_as_of: null,
+  source_as_of_reason: "alternative.me data[0].timestamp is missing or invalid",
+});
 
 function resultRow(file, date, value) {
   const array = [{ date, value }];
@@ -60,7 +73,7 @@ function resultRow(file, date, value) {
 }
 
 function sourceDescriptors(date, overrides = {}) {
-  const lkgSources = SENTIMENT_LKG_SOURCE_KEYS.map((key, sourceIndex) => ({
+  return SENTIMENT_LKG_SOURCE_KEYS.map((key, sourceIndex) => ({
     key,
     label: key.toUpperCase(),
     fileNames: SENTIMENT_LKG_SOURCE_FILES[key],
@@ -71,20 +84,6 @@ function sourceDescriptors(date, overrides = {}) {
       return SENTIMENT_LKG_SOURCE_FILES[key].map((file, fileIndex) => resultRow(file, date, sourceIndex * 10 + fileIndex));
     },
   }));
-  return [
-    ...lkgSources,
-    {
-      key: "crypto",
-      label: "CRYPTO",
-      fileNames: ["crypto-fear-greed.json"],
-      lkg: false,
-      run: async () => {
-        if (overrides.crypto) return overrides.crypto();
-        recordSentimentAttemptTuple(READY_TUPLE);
-        return [resultRow("crypto-fear-greed.json", date, 50)];
-      },
-    },
-  ];
 }
 
 function makePaths(root) {
@@ -138,6 +137,19 @@ async function runCase(root, {
     assert.equal(state.items[key].promotion_contract, "provider_observation/v2");
     assert.equal(fs.existsSync(path.join(root, "data", "admin", "sentiment", "current", `${key}.json`)), true);
   }
+  assert.deepEqual(
+    readJson(path.join(root, "data", "admin", "sentiment", "source-observations", "crypto.json")),
+    {
+      schema_version: "sentiment-source-observation/v1",
+      source_key: "crypto",
+      source_as_of: "2026-07-14",
+      source_as_of_reason: null,
+      observed_at: "2026-07-14T22:00:00.000Z",
+      run_id: "baseline-run",
+      run_attempt: 1,
+      event_name: "workflow_dispatch",
+    },
+  );
 }
 
 {
@@ -318,6 +330,61 @@ async function runCase(root, {
 }
 
 {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sentiment-crypto-dateless-"));
+  await runCase(root);
+  const canonicalCrypto = path.join(root, "data", "sentiment", "crypto-fear-greed.json");
+  const before = fs.readFileSync(canonicalCrypto, "utf8");
+  const sourceAsOfReason = "alternative.me data[0].timestamp is missing or invalid";
+  const failed = await runCase(root, {
+    date: "2026-07-15",
+    runId: "crypto-invalid-timestamp",
+    observedAt: "2026-07-15T22:00:00.000Z",
+    overrides: {
+      crypto: async () => {
+        recordSentimentAttemptTuple({
+          ...READY_TUPLE,
+          assertions: [{ id: "series_array", passed: false }],
+        });
+        throw Object.assign(new Error(sourceAsOfReason), {
+          sourceAsOf: null,
+          sourceAsOfReason,
+        });
+      },
+    },
+  });
+  assert.equal(failed.reason, "schema_drift");
+  assert.equal(failed.corrupt, true);
+  assert.equal(fs.readFileSync(canonicalCrypto, "utf8"), before, "invalid provider time must not append a fetch-day row");
+  assert.deepEqual(
+    failed.sourceOutcomes.find((row) => row.key === "crypto"),
+    {
+      key: "crypto",
+      status: "failed",
+      reason: "schema_drift",
+      source_as_of: null,
+      source_as_of_reason: sourceAsOfReason,
+    },
+  );
+  const state = readJson(path.join(root, "data", "admin", "sentiment", "index.json"));
+  assert.equal(state.items.crypto.resolution_state, "lkg_primary");
+  assert.equal(state.items.crypto.retry, true);
+  assert.equal(fs.existsSync(path.join(root, "data", "admin", "sentiment", "lkg", "crypto.json")), true);
+  assert.deepEqual(
+    readJson(path.join(root, "data", "admin", "sentiment", "source-observations", "crypto.json")),
+    {
+      schema_version: "sentiment-source-observation/v1",
+      source_key: "crypto",
+      source_as_of: null,
+      source_as_of_reason: sourceAsOfReason,
+      observed_at: "2026-07-15T22:00:00.000Z",
+      run_id: "crypto-invalid-timestamp",
+      run_attempt: 1,
+      event_name: "workflow_dispatch",
+    },
+  );
+}
+
+{
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sentiment-multi-retry-"));
   await runCase(root);
   let latest;
@@ -363,6 +430,7 @@ async function runCase(root, {
   assert.match(workflow, /data\/admin\/sentiment\/index\.json/);
   assert.match(workflow, /data\/admin\/sentiment\/current\/\*\.json/);
   assert.match(workflow, /data\/admin\/sentiment\/lkg\/\*\.json/);
+  assert.match(workflow, /data\/admin\/sentiment\/source-observations\/crypto\.json/);
   assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
   assert.match(workflow, /--stage always_if_exists/);
   assert.match(workflow, /--stage success_if_exists/);

@@ -390,6 +390,7 @@ const lanes = [
       "data/admin/sentiment/index.json",
       "data/admin/sentiment/current",
       "data/admin/sentiment/lkg",
+      "data/admin/sentiment/source-observations/crypto.json",
       "data/sentiment",
       "100xfenok-next/public/data/sentiment",
     ],
@@ -1193,6 +1194,7 @@ workflow_policies[".github/workflows/fetch-sentiment.yml"] = policy(["sentiment"
     commitSpec("data/admin/sentiment/index.json", "file"),
     commitSpec("data/admin/sentiment/current/*.json", "glob"),
     commitSpec("data/admin/sentiment/lkg/*.json", "glob"),
+    commitSpec("data/admin/sentiment/source-observations/crypto.json", "file"),
   ],
   success_if_exists: [
     commitSpec("data/sentiment/*.json", "glob"),

@@ -9,6 +9,7 @@ import {
   cleanCompanyName,
   computeTone,
   cueCounts,
+  observeAttempt,
   queryForTicker,
 } from "./fetch-fenok-news-tone-proxy.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
@@ -49,6 +50,135 @@ assert.equal(empty.confidence, "very_low");
 assert.equal(empty.as_of, null);
 assert.match(empty.as_of_reason, /seendate/);
 
+function rawResponse(statusCode, body) {
+  return { statusCode, body: typeof body === "string" ? body : JSON.stringify(body) };
+}
+
+{
+  const responses = [
+    rawResponse(429, "rate limited"),
+    rawResponse(200, { articles: [{ title: "DoorDash expands partnership" }] }),
+  ];
+  const sleeps = [];
+  const observed = await observeAttempt({
+    maxRecords: 25,
+    retries: 2,
+    retryBackoffMs: 6500,
+    controlledFailure: false,
+    rawGetFn: async () => responses.shift(),
+    sleepFn: async (ms) => sleeps.push(ms),
+  });
+  assert.equal(observed.result.status, "ready");
+  assert.equal(observed.result.reason, "ok");
+  assert.equal(observed.result.attempt.retry_reason, "rate_limited");
+  assert.equal(observed.result.attempt.retry_count, 1);
+  assert.equal(observed.result.attempt.retry_wait_ms, 6500);
+  assert.deepEqual(sleeps, [6500]);
+}
+
+{
+  const responses = [
+    rawResponse(429, "rate limited"),
+    rawResponse(429, "rate limited"),
+    rawResponse(429, "rate limited"),
+  ];
+  const sleeps = [];
+  const observed = await observeAttempt({
+    maxRecords: 25,
+    retries: 2,
+    retryBackoffMs: 6500,
+    controlledFailure: false,
+    rawGetFn: async () => responses.shift(),
+    sleepFn: async (ms) => sleeps.push(ms),
+  });
+  assert.equal(observed.result.status, "unavailable");
+  assert.equal(observed.result.reason, "rate_limited");
+  assert.equal(observed.result.attempt.http_status, 429);
+  assert.equal(observed.result.attempt.retry_count, 2);
+  assert.equal(observed.result.attempt.retry_wait_ms, 19500);
+  assert.deepEqual(sleeps, [6500, 13000]);
+}
+
+{
+  const responses = [
+    rawResponse(429, "rate limited"),
+    rawResponse(503, "upstream unavailable"),
+  ];
+  const sleeps = [];
+  const observed = await observeAttempt({
+    maxRecords: 25,
+    retries: 2,
+    retryBackoffMs: 6500,
+    controlledFailure: false,
+    rawGetFn: async () => responses.shift(),
+    sleepFn: async (ms) => sleeps.push(ms),
+  });
+  assert.equal(observed.result.reason, "rate_limited", "a later 5xx cannot launder the initiating 429 storm");
+  assert.equal(observed.result.attempt.http_status, 429);
+  assert.equal(observed.result.attempt.retry_count, 1);
+  assert.deepEqual(sleeps, [6500]);
+  assert.equal(responses.length, 0, "non-429 after a retry ends the bounded probe");
+}
+
+{
+  const responses = [
+    rawResponse(429, "rate limited"),
+    rawResponse(200, {}),
+  ];
+  const observed = await observeAttempt({
+    maxRecords: 25,
+    retries: 2,
+    retryBackoffMs: 6500,
+    controlledFailure: false,
+    rawGetFn: async () => responses.shift(),
+    sleepFn: async () => {},
+  });
+  assert.equal(observed.result.reason, "schema_drift", "a retry must not launder malformed provider schema");
+  assert.equal(observed.result.attempt.retry_reason, "rate_limited");
+  assert.equal(observed.result.attempt.retry_count, 1);
+}
+
+for (const firstFailure of [
+  rawResponse(503, "upstream unavailable"),
+  rawResponse(403, "forbidden"),
+]) {
+  let calls = 0;
+  const sleeps = [];
+  const observed = await observeAttempt({
+    maxRecords: 25,
+    retries: 2,
+    retryBackoffMs: 6500,
+    controlledFailure: false,
+    rawGetFn: async () => {
+      calls += 1;
+      return firstFailure;
+    },
+    sleepFn: async (ms) => sleeps.push(ms),
+  });
+  assert.equal(calls, 1, `${firstFailure.statusCode} is not a rate-limit retry trigger`);
+  assert.deepEqual(sleeps, []);
+  assert.equal(Object.hasOwn(observed.result.attempt, "retry_count"), false);
+}
+
+{
+  let calls = 0;
+  const sleeps = [];
+  const observed = await observeAttempt({
+    maxRecords: 25,
+    retries: 2,
+    retryBackoffMs: 6500,
+    controlledFailure: true,
+    rawGetFn: async () => {
+      calls += 1;
+      throw new Error("must not run");
+    },
+    sleepFn: async (ms) => sleeps.push(ms),
+  });
+  assert.equal(observed.result.reason, "transport_error");
+  assert.equal(calls, 0);
+  assert.deepEqual(sleeps, []);
+}
+
 // --- Workflow contract (owned producer wiring, #366) ------------------------
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, WORKFLOW_REL), "utf8");
@@ -56,6 +186,7 @@ assert.match(empty.as_of_reason, /seendate/);
   assert.match(workflow, /node scripts\/fetch-fenok-news-tone-proxy\.mjs/);
   assert.match(workflow, /controlled_failure/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE/);
+  assert.match(workflow, /--reference-only --retries 2 --retry-backoff-ms 6500/);
   assert.match(workflow, new RegExp(`detection-attempts/${LANE_ID}\\.json`));
   assert.match(workflow, /data\/computed\/fenok_news_tone_proxy\.json/);
   assert.match(workflow, /data\/computed\/fenok_news_tone_proxy_history\.json/);

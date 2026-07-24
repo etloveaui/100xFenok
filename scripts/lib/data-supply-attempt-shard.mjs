@@ -53,8 +53,11 @@ export function returnedTuple({
   decode = "not_attempted",
   payload = "not_available",
   assertions = [],
+  retryReason,
+  retryCount,
+  retryWaitMs,
 }) {
-  return {
+  const tuple = {
     execution: "returned",
     exception_kind: null,
     http_status: httpStatus,
@@ -64,6 +67,12 @@ export function returnedTuple({
     payload,
     assertions,
   };
+  if (retryReason !== undefined || retryCount !== undefined || retryWaitMs !== undefined) {
+    tuple.retry_reason = retryReason;
+    tuple.retry_count = retryCount;
+    tuple.retry_wait_ms = retryWaitMs;
+  }
+  return tuple;
 }
 
 export function libraryTuple({
@@ -171,6 +180,10 @@ export function buildAttemptRow({ laneId, memberId, tuple, attemptId = null, obs
     row.retry_count = tuple.retry_count;
     row.latency_ms = tuple.latency_ms;
     row.outcome = tuple.outcome;
+  } else {
+    for (const key of ["retry_reason", "retry_count", "retry_wait_ms"]) {
+      if (Object.hasOwn(tuple, key)) row[key] = tuple[key];
+    }
   }
   validateAttemptEvidence({ schema_version: ATTEMPT_SCHEMA, attempts: [row] });
   return row;
@@ -475,6 +488,10 @@ function tupleFromAttemptRow(row) {
     tuple.retry_count = row.retry_count;
     tuple.latency_ms = row.latency_ms;
     tuple.outcome = row.outcome;
+  } else {
+    for (const key of ["retry_reason", "retry_count", "retry_wait_ms"]) {
+      if (Object.hasOwn(row, key)) tuple[key] = row[key];
+    }
   }
   return tuple;
 }

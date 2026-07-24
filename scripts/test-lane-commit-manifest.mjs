@@ -157,6 +157,11 @@ assert.deepEqual(sentiment.stages.always_if_exists, [
   },
   { kind: "glob", path: "data/admin/sentiment/current/*.json", required: false },
   { kind: "glob", path: "data/admin/sentiment/lkg/*.json", required: false },
+  {
+    kind: "file",
+    path: "data/admin/sentiment/source-observations/crypto.json",
+    required: false,
+  },
 ]);
 assert.deepEqual(sentiment.stages.success_if_exists, [
   { kind: "glob", path: "data/sentiment/*.json", required: false },

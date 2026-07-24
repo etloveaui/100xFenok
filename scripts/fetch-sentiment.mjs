@@ -47,6 +47,7 @@ import {
   classifyHttpResponse,
   evaluateEndpointAssertions,
   foldWorstTuples,
+  returnedTuple,
   threwTuple,
   transportError,
   tupleStatus,
@@ -86,9 +87,11 @@ export const SENTIMENT_LKG_SOURCE_FILES = Object.freeze({
   cftc: Object.freeze(['cftc-sp500.json']),
   vix: Object.freeze(['vix.json']),
   move: Object.freeze(['move.json']),
+  crypto: Object.freeze(['crypto-fear-greed.json']),
 });
 export const SENTIMENT_LKG_SOURCE_KEYS = Object.freeze(Object.keys(SENTIMENT_LKG_SOURCE_FILES));
 const SENTIMENT_BUNDLE_SCHEMA = 'sentiment-source-bundle/v1';
+const SENTIMENT_SOURCE_OBSERVATION_SCHEMA = 'sentiment-source-observation/v1';
 
 const CNN_PROXY_URL = 'https://fed-proxy.etloveaui.workers.dev/cnn';
 const CRYPTO_FNG_URL = 'https://api.alternative.me/fng/?limit=1';
@@ -404,6 +407,21 @@ async function runCftc(readExistingFn = readExisting) {
   return [{ file: 'cftc-sp500.json', array: r.array, ...r, sample: entry, providerRows: [entry] }];
 }
 
+export function cryptoSourceStamp(value) {
+  const timestamp = Number(value);
+  const parsed = timestamp > 0 ? new Date(timestamp * 1000) : new Date(Number.NaN);
+  if (!Number.isFinite(parsed.getTime())) {
+    return {
+      source_as_of: null,
+      source_as_of_reason: 'alternative.me data[0].timestamp is missing or invalid',
+    };
+  }
+  return {
+    source_as_of: parsed.toISOString().slice(0, 10),
+    source_as_of_reason: null,
+  };
+}
+
 async function runCrypto(readExistingFn = readExisting) {
   const data = await fetchJson(CRYPTO_FNG_URL);
   const row = Array.isArray(data?.data) ? data.data[0] : null;
@@ -412,12 +430,21 @@ async function runCrypto(readExistingFn = readExisting) {
   }
   // Use the source's own timestamp date (UTC) so the point lands on the day the
   // index was actually computed, matching the existing crypto-fear-greed.json.
-  const ts = Number(row.timestamp);
-  const srcDate = Number.isFinite(ts)
-    ? new Date(ts * 1000).toISOString().slice(0, 10)
-    : today;
+  const stamp = cryptoSourceStamp(row.timestamp);
+  if (stamp.source_as_of === null) {
+    recordSentimentAttemptTuple(returnedTuple({
+      httpStatus: 200,
+      decode: 'ok',
+      payload: 'non_empty',
+      assertions: [{ id: 'series_array', passed: false }],
+    }));
+    throw Object.assign(new Error(stamp.source_as_of_reason), {
+      sourceAsOf: null,
+      sourceAsOfReason: stamp.source_as_of_reason,
+    });
+  }
   const entry = {
-    date: srcDate,
+    date: stamp.source_as_of,
     value: Number(row.value),
     classification: String(row.value_classification ?? ''),
   };
@@ -540,7 +567,7 @@ function defaultSources() {
     { key: 'cftc', label: 'CFTC COT', fileNames: SENTIMENT_LKG_SOURCE_FILES.cftc, lkg: true, run: runCftc },
     { key: 'vix', label: 'VIX (Yahoo)', fileNames: SENTIMENT_LKG_SOURCE_FILES.vix, lkg: true, run: runVix },
     { key: 'move', label: 'MOVE (Yahoo)', fileNames: SENTIMENT_LKG_SOURCE_FILES.move, lkg: true, run: runMove },
-    { key: 'crypto', label: 'Crypto (alternative.me)', fileNames: ['crypto-fear-greed.json'], lkg: false, run: runCrypto },
+    { key: 'crypto', label: 'Crypto (alternative.me)', fileNames: SENTIMENT_LKG_SOURCE_FILES.crypto, lkg: true, run: runCrypto },
   ];
 }
 
@@ -550,6 +577,22 @@ function currentBundlePath(repoRoot, key) {
 
 function currentBundleRelativePath(key) {
   return `data/admin/sentiment/current/${key}.json`;
+}
+
+function writeCryptoSourceObservation(repoRoot, { sourceAsOf, sourceAsOfReason, run }) {
+  writeJsonAtomic(
+    path.join(repoRoot, 'data', 'admin', 'sentiment', 'source-observations', 'crypto.json'),
+    {
+      schema_version: SENTIMENT_SOURCE_OBSERVATION_SCHEMA,
+      source_key: 'crypto',
+      source_as_of: sourceAsOf,
+      source_as_of_reason: sourceAsOfReason,
+      observed_at: run.observedAt,
+      run_id: run.runId,
+      run_attempt: Number(run.runAttempt),
+      event_name: run.eventName,
+    },
+  );
 }
 
 function bundleArtifact(repoRoot, source) {
@@ -662,6 +705,13 @@ export async function runSentiment({
         throw new Error('schema_drift');
       }
       measuredSourceGroups.push(measuredGroup);
+      if (source.key === 'crypto') {
+        writeCryptoSourceObservation(repoRoot, {
+          sourceAsOf: results[0]?.sample?.date ?? null,
+          sourceAsOfReason: null,
+          run,
+        });
+      }
 
       if (source.lkg === true) {
         const bundle = buildSourceBundle(source.key, source.fileNames, results);
@@ -715,7 +765,22 @@ export async function runSentiment({
       failCount++;
       const failureTuple = foldWorstTuples(sentimentAttemptTuples.slice(tupleCountBefore));
       const reason = source.key === injectedSource ? 'controlled_failure' : tupleReason(failureTuple);
-      sourceOutcomes.push({ key: source.key, status: 'failed', reason });
+      if (source.key === 'crypto' && Object.hasOwn(e, 'sourceAsOf')) {
+        writeCryptoSourceObservation(repoRoot, {
+          sourceAsOf: e.sourceAsOf,
+          sourceAsOfReason: e.sourceAsOfReason,
+          run,
+        });
+      }
+      sourceOutcomes.push({
+        key: source.key,
+        status: 'failed',
+        reason,
+        ...(Object.hasOwn(e, 'sourceAsOf') ? {
+          source_as_of: e.sourceAsOf,
+          source_as_of_reason: e.sourceAsOfReason,
+        } : {}),
+      });
       if (source.lkg === true) {
         bootstrapCurrentBundle(repoRoot, source, outputDirs);
         const failure = lkgStore.recordFailure({ artifacts: [bundleArtifact(repoRoot, source)], run, reason });

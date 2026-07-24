@@ -204,20 +204,58 @@ function gdeltDocUrl(query, maxRecords) {
 // into a detection attempt result. A dispatch-only controlled failure forces an
 // honest transport failure. A valid `{articles:[...]}` response (even zero
 // articles for the probe query) counts as a reachable provider.
-async function observeAttempt({ maxRecords, controlledFailure }) {
+function withRetryEvidence(result, retryCount, retryWaitMs) {
+  if (retryCount === 0) return result;
+  return {
+    ...result,
+    attempt: {
+      ...result.attempt,
+      retry_reason: "rate_limited",
+      retry_count: retryCount,
+      retry_wait_ms: retryWaitMs,
+    },
+  };
+}
+
+async function observeAttempt({
+  maxRecords,
+  controlledFailure,
+  retries = 2,
+  retryBackoffMs = 6500,
+  rawGetFn = rawGet,
+  sleepFn = sleep,
+}) {
   if (controlledFailure) {
     return { result: attemptResult("transport_error", threwTuple("transport")) };
   }
   const query = queryForTicker("DASH", "DoorDash");
-  try {
-    const raw = await rawGet(gdeltDocUrl(query, maxRecords));
-    return { result: classifyEndpointResponse(raw, { laneId: LANE_ID }) };
-  } catch (err) {
-    const kind = transportError(err) ? "transport" : "unexpected";
-    return {
-      result: attemptResult(kind === "transport" ? "transport_error" : "unexpected_error", threwTuple(kind)),
-    };
+  let firstRateLimited = null;
+  let retryCount = 0;
+  let retryWaitMs = 0;
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    let result;
+    try {
+      const raw = await rawGetFn(gdeltDocUrl(query, maxRecords));
+      result = classifyEndpointResponse(raw, { laneId: LANE_ID });
+    } catch (err) {
+      const kind = transportError(err) ? "transport" : "unexpected";
+      result = attemptResult(kind === "transport" ? "transport_error" : "unexpected_error", threwTuple(kind));
+    }
+    if (result.reason !== "rate_limited") {
+      const preserveInitiatingRateLimit = firstRateLimited
+        && new Set(["http_error", "transport_error"]).has(result.reason);
+      return {
+        result: withRetryEvidence(preserveInitiatingRateLimit ? firstRateLimited : result, retryCount, retryWaitMs),
+      };
+    }
+    firstRateLimited ??= result;
+    if (attempt >= retries) return { result: withRetryEvidence(firstRateLimited, retryCount, retryWaitMs) };
+    const waitMs = retryBackoffMs * (attempt + 1);
+    retryCount += 1;
+    retryWaitMs += waitMs;
+    await sleepFn(waitMs);
   }
+  return { result: withRetryEvidence(firstRateLimited, retryCount, retryWaitMs) };
 }
 
 function queryForTicker(ticker, company) {
@@ -442,7 +480,12 @@ async function main() {
 
   // Detection floor first: observe the provider and publish an honest attempt
   // shard on every run (ready OR failure). Never fake success.
-  const { result } = await observeAttempt({ maxRecords: args.maxRecords, controlledFailure });
+  const { result } = await observeAttempt({
+    maxRecords: args.maxRecords,
+    controlledFailure,
+    retries: args.retries,
+    retryBackoffMs: args.retryBackoffMs,
+  });
   if (!args.noWrite) {
     writeAttemptShard({
       laneId: LANE_ID,
@@ -490,5 +533,6 @@ export {
   cueCounts,
   fetchJsonWithRetry,
   latestArticleSeenAt,
+  observeAttempt,
   queryForTicker,
 };

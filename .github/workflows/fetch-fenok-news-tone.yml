@@ -50,7 +50,7 @@ jobs:
           INPUT_CONTROLLED_FAILURE: ${{ github.event.inputs.controlled_failure || '' }}
         # Bounded reference universe keeps the single-writer queue polite; the
         # full universe with per-ticker GDELT throttling would jam the queue.
-        run: node scripts/fetch-fenok-news-tone-proxy.mjs --reference-only
+        run: node scripts/fetch-fenok-news-tone-proxy.mjs --reference-only --retries 2 --retry-backoff-ms 6500
 
       - name: Commit and push
         if: ${{ always() }}

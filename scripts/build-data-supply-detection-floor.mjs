@@ -77,6 +77,15 @@ const ATTEMPT_KEYS = Object.freeze([
   "payload",
   "assertions",
 ]);
+const HTTP_RETRY_KEYS = Object.freeze([
+  "retry_reason",
+  "retry_count",
+  "retry_wait_ms",
+]);
+const HTTP_RETRY_ATTEMPT_KEYS = Object.freeze([
+  ...ATTEMPT_KEYS,
+  ...HTTP_RETRY_KEYS,
+]);
 const LIBRARY_ATTEMPT_KEYS = Object.freeze([
   ...ATTEMPT_KEYS,
   "candidates",
@@ -996,7 +1005,10 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
     const lane = laneMap.get(row.lane_id);
     if (!lane) fail("schema_error", `unknown attempt lane ${row.lane_id}`);
     const libraryTransport = lane.endpoint_contract.transport === "library";
-    exactKeys(row, libraryTransport ? LIBRARY_ATTEMPT_KEYS : ATTEMPT_KEYS, `attempts[${index}]`);
+    const hasHttpRetryEvidence = !libraryTransport && HTTP_RETRY_KEYS.some((field) => Object.hasOwn(row, field));
+    exactKeys(row, libraryTransport
+      ? LIBRARY_ATTEMPT_KEYS
+      : (hasHttpRetryEvidence ? HTTP_RETRY_ATTEMPT_KEYS : ATTEMPT_KEYS), `attempts[${index}]`);
     const composite = lane.monitoring_mode === "composite";
     const memberIds = new Set(lane.producer_members.map((member) => member.id));
     if (composite ? !memberIds.has(row.member_id) : row.member_id !== null) fail("schema_error", `invalid attempt member for ${lane.id}`);
@@ -1009,6 +1021,16 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
     if (!new Set(["ok", "error", "not_attempted"]).has(row.decode)) fail("schema_error", `${key} decode is invalid`);
     if (!new Set(["non_empty", "empty", "not_available"]).has(row.payload)) fail("schema_error", `${key} payload is invalid`);
     if (typeof row.rate_limited !== "boolean" || !Array.isArray(row.assertions)) fail("schema_error", `${key} typed fields are invalid`);
+    if (hasHttpRetryEvidence && (
+      row.execution !== "returned"
+      || row.retry_reason !== "rate_limited"
+      || !Number.isSafeInteger(row.retry_count)
+      || row.retry_count < 1
+      || !Number.isSafeInteger(row.retry_wait_ms)
+      || row.retry_wait_ms < 0
+    )) {
+      fail("schema_error", `${key} HTTP retry evidence is invalid`);
+    }
     const assertionIds = new Set();
     row.assertions.forEach((assertion, assertionIndex) => {
       exactKeys(assertion, ["id", "passed"], `${key}.assertions[${assertionIndex}]`);

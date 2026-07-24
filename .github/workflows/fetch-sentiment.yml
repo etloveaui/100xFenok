@@ -84,6 +84,9 @@ jobs:
           if compgen -G 'data/admin/sentiment/lkg/*.json' >/dev/null; then
             git add -- data/admin/sentiment/lkg/*.json
           fi
+          if [[ -f data/admin/sentiment/source-observations/crypto.json ]]; then
+            git add -- data/admin/sentiment/source-observations/crypto.json
+          fi
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-sentiment.yml \

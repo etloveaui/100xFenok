@@ -556,12 +556,14 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: SENTIMENT_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SENTIMENT_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /stage_selected=6 staged_index_total=6/);
+  const alwaysCount = fixture.materialized.always.length;
+  assert.match(always.stdout, new RegExp(`stage_selected=${alwaysCount} staged_index_total=${alwaysCount}`));
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   const success = run(fixture.root, "success_if_exists", [], SENTIMENT_WORKFLOW);
   assert.equal(success.status, 0, success.stderr);
-  assert.match(success.stdout, /stage_selected=4 staged_index_total=10/);
+  const successCount = fixture.materialized.success.length;
+  assert.match(success.stdout, new RegExp(`stage_selected=${successCount} staged_index_total=${alwaysCount + successCount}`));
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
