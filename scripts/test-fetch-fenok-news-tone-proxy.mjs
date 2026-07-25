@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   articleSeenAt,
+  buildSnapshotDocument,
   cleanCompanyName,
   computeTone,
   cueCounts,
@@ -16,6 +17,7 @@ import {
   observeAttempt,
   queryForTicker,
   runNewsTone,
+  validToneSnapshot,
 } from "./fetch-fenok-news-tone-proxy.mjs";
 import { attemptResult, returnedTuple, threwTuple } from "./lib/data-supply-attempt-shard.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
@@ -501,6 +503,153 @@ for (const firstFailure of [
   assert.deepEqual(gate.undeclared_in_workflow, [],
     `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
   assert.deepEqual(gate.lanes.sort(), [LANE_ID].sort(), "registry lane attribution for this workflow");
+}
+
+// --- Partial success: publish the rows the provider actually dated -----------
+// GDELT rate-limits per-ticker queries. The fetch loop already degrades a
+// rate-limited ticker into an article-less row on purpose, but the document
+// assembly then treated one undated row as poisoning the whole snapshot:
+// source_as_of went null, status went degraded, and runNewsTone answered
+// empty_payload — discarding every ticker that HAD been fetched. That is the
+// all-or-nothing disease DEC-264 already removed from the StockAnalysis lane.
+// An undated row is not evidence, so it is dropped from the published document
+// and counted; a dated row is evidence, so it publishes.
+const toneRow = (ticker, asOf, articleCount = 1) => ({
+  ticker,
+  as_of: asOf,
+  company: ticker,
+  confidence: asOf ? "low" : "very_low",
+  direct_news_tone_proxy: {
+    score_0_100: asOf ? 55 : null,
+    attention_score_0_100: asOf ? 4 : null,
+    article_count: articleCount,
+  },
+});
+
+{
+  const doc = buildSnapshotDocument({
+    rows: [
+      toneRow("DASH", "2026-07-25T02:00:00.000Z"),
+      toneRow("PYPL", null, 0),
+    ],
+    errors: [{ ticker: "PYPL", error: "GDELT 429" }],
+    generatedAt: "2026-07-25T15:53:14.450Z",
+  });
+  assert.equal(doc.status, "ready", "one dated row is enough to publish");
+  assert.deepEqual(doc.rows.map((row) => row.ticker), ["DASH"], "undated rows are not published");
+  assert.equal(doc.source_as_of, "2026-07-25T02:00:00.000Z");
+  assert.equal(doc.coverage.row_count, 1);
+  assert.equal(doc.coverage.unavailable_row_count, 1, "the dropped ticker must stay counted, not vanish");
+  assert.deepEqual(doc.coverage.unavailable_tickers, ["PYPL"]);
+  assert.match(doc.source_as_of_reason, /partial/i, "a partial floor must say so");
+  assert.equal(validToneSnapshot(doc), true, "a partial document is still promotable evidence");
+}
+
+{
+  // Nothing dated at all is a real acquisition failure: publish nothing.
+  const doc = buildSnapshotDocument({
+    rows: [toneRow("DASH", null, 0), toneRow("PYPL", null, 0)],
+    errors: [{ ticker: "DASH", error: "GDELT 429" }, { ticker: "PYPL", error: "GDELT 429" }],
+    generatedAt: "2026-07-25T15:53:14.450Z",
+  });
+  assert.equal(doc.status, "degraded");
+  assert.deepEqual(doc.rows, []);
+  assert.equal(doc.source_as_of, null);
+  assert.equal(doc.coverage.unavailable_row_count, 2);
+  assert.equal(validToneSnapshot(doc), false, "an empty document must never promote");
+}
+
+{
+  // The healthy path must not acquire partial vocabulary it does not need.
+  const doc = buildSnapshotDocument({
+    rows: [toneRow("DASH", "2026-07-25T02:00:00.000Z"), toneRow("PYPL", "2026-07-24T02:00:00.000Z")],
+    errors: [],
+    generatedAt: "2026-07-25T15:53:14.450Z",
+  });
+  assert.equal(doc.status, "ready");
+  assert.equal(doc.coverage.row_count, 2);
+  assert.equal(doc.coverage.unavailable_row_count, 0);
+  assert.equal(doc.source_as_of_reason, null);
+  assert.equal(doc.source_as_of, "2026-07-24T02:00:00.000Z", "floor stays the oldest dated row");
+}
+
+{
+  // The history merge must never again receive a row it will reject: a partial
+  // document's rows are all dated, so the merge is throw-free by construction.
+  const doc = buildSnapshotDocument({
+    rows: [toneRow("DASH", "2026-07-25T02:00:00.000Z"), toneRow("PYPL", null, 0)],
+    errors: [{ ticker: "PYPL", error: "GDELT 429" }],
+    generatedAt: "2026-07-25T15:53:14.450Z",
+  });
+  const merged = mergeHistory(doc, {
+    history: { schema_version: 1, persistence_policy: GDELT_HISTORY_PERSISTENCE_POLICY, rows: [] },
+  });
+  assert.deepEqual([...new Set(merged.rows.map((row) => row.ticker))], ["DASH"]);
+}
+
+// --- Thrown-builder failures must carry the error identity out ---------------
+// Run 30164248573 (2026-07-25, natural schedule) fetched successfully — the 429
+// backoff worked, http 200, payload non_empty — and then burned 5m31s before
+// printing exactly `[degraded] GDELT news tone unexpected_error`. The bare catch
+// discarded the thrown error, so the failure was undiagnosable from CI alone.
+// The `reason` enum stays stable for the LKG store; the identity travels beside
+// it. Message text is truncated because provider payloads can reach the message.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-thrown-"));
+  const outcome = await runNewsTone({
+    repoRoot: root,
+    args: { noWrite: true, maxRecords: 25, retries: 0, retryBackoffMs: 1 },
+    observedAt: "2026-07-25T15:53:14.450Z",
+    runId: "gdelt-thrown-run",
+    runAttempt: 1,
+    eventName: "schedule",
+    attemptId: "gdelt-thrown-run-1",
+    observeAttemptFn: async () => readyProbe(),
+    buildFn: async () => {
+      throw new TypeError("snapshot builder exploded");
+    },
+  });
+  assert.equal(outcome.reason, "unexpected_error", "reason enum stays stable for the store");
+  assert.match(outcome.failure_detail, /TypeError/, "error class must survive the catch");
+  assert.match(outcome.failure_detail, /snapshot builder exploded/, "error message must survive the catch");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-longmsg-"));
+  const outcome = await runNewsTone({
+    repoRoot: root,
+    args: { noWrite: true, maxRecords: 25, retries: 0, retryBackoffMs: 1 },
+    observedAt: "2026-07-25T15:53:14.450Z",
+    runId: "gdelt-longmsg-run",
+    runAttempt: 1,
+    eventName: "schedule",
+    attemptId: "gdelt-longmsg-run-1",
+    observeAttemptFn: async () => readyProbe(),
+    buildFn: async () => {
+      throw new Error("x".repeat(5000));
+    },
+  });
+  assert.equal(outcome.reason, "unexpected_error");
+  assert(outcome.failure_detail.length <= 320,
+    `failure_detail must stay bounded, got ${outcome.failure_detail.length}`);
+}
+
+// A success carries no failure detail — the field must not become permanent noise.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-nodetail-"));
+  const outcome = await runNewsTone({
+    repoRoot: root,
+    args: { noWrite: true, maxRecords: 25, retries: 0, retryBackoffMs: 1 },
+    observedAt: "2026-07-25T15:53:14.450Z",
+    runId: "gdelt-nodetail-run",
+    runAttempt: 1,
+    eventName: "schedule",
+    attemptId: "gdelt-nodetail-run-1",
+    observeAttemptFn: async () => readyProbe(),
+    buildFn: async () => toneSnapshot({ latestSourceAsOf: "2026-07-23T12:00:00.000Z" }),
+  });
+  assert.equal(outcome.ok, true);
+  assert.equal(outcome.failure_detail ?? null, null);
 }
 
 console.log("test-fetch-fenok-news-tone-proxy: ok");

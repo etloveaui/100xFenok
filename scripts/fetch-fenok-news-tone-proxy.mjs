@@ -439,20 +439,39 @@ async function build(args, { dataRootPath = dataRoot, privateRootPath = privateR
       if (!args.noFetch && args.sleepMs > 0) await sleep(args.sleepMs);
     }
   }
-  const generatedAt = isoNow();
-  const rowsWithArticles = rows.filter((row) => row.direct_news_tone_proxy.article_count > 0);
-  const rowSourceDates = rows.map((row) => row.as_of);
-  const sourceAsOf = rowSourceDates.length > 0 && rowSourceDates.every(Boolean)
-    ? [...rowSourceDates].sort().at(0)
+  const snapshot = buildSnapshotDocument({ rows, errors, generatedAt: isoNow() });
+  return { snapshot, history: mergeHistory(snapshot, { dataRootPath }) };
+}
+
+// The fetch loop turns a rate-limited ticker into an article-less row on
+// purpose. Assembling the document used to let one such row poison everything:
+// the aggregate floor required EVERY row to be dated, so a single 429 sent
+// source_as_of to null, status to degraded, and the caller to empty_payload —
+// throwing away every ticker the provider HAD answered, and making the history
+// merge throw on the undated row it was handed. Publish what the provider
+// actually dated, and keep the rest as a named count rather than a silent loss.
+export function buildSnapshotDocument({ rows = [], errors = [], generatedAt }) {
+  const datedRows = rows.filter((row) => validRfc3339Utc(row?.as_of));
+  const unavailableTickers = rows
+    .filter((row) => !validRfc3339Utc(row?.as_of))
+    .map((row) => row?.ticker)
+    .sort();
+  // Oldest dated row: the floor must never claim freshness a row cannot back.
+  const sourceAsOf = datedRows.length > 0
+    ? [...datedRows.map((row) => row.as_of)].sort().at(0)
     : null;
-  const snapshot = {
+  const partial = sourceAsOf !== null && unavailableTickers.length > 0;
+  return {
     schema_version: 1,
     generated_at: generatedAt,
     source_as_of: sourceAsOf,
     source_as_of_reason: sourceAsOf
-      ? null
-      : "aggregate source floor unavailable because one or more article rows lack a usable seendate",
-    status: errors.length > 0 || sourceAsOf === null ? "degraded" : "ready",
+      ? (partial
+        ? `partial coverage: aggregate source floor spans ${datedRows.length} dated row(s); `
+          + `${unavailableTickers.length} row(s) had no usable seendate and are not published`
+        : null)
+      : "aggregate source floor unavailable because no article row carries a usable seendate",
+    status: sourceAsOf === null ? "degraded" : "ready",
     formula_version: FORMULA_VERSION,
     public_surface_status: "private_admin_derived_only_not_public",
     raw_policy: {
@@ -464,14 +483,15 @@ async function build(args, { dataRootPath = dataRoot, privateRootPath = privateR
       public_payload: null,
     },
     coverage: {
-      row_count: rows.length,
-      with_articles: rows.filter((row) => row.direct_news_tone_proxy.article_count > 0).length,
-      with_tone_score: rows.filter((row) => row.direct_news_tone_proxy.score_0_100 != null).length,
+      row_count: datedRows.length,
+      with_articles: datedRows.filter((row) => row.direct_news_tone_proxy.article_count > 0).length,
+      with_tone_score: datedRows.filter((row) => row.direct_news_tone_proxy.score_0_100 != null).length,
+      unavailable_row_count: unavailableTickers.length,
+      unavailable_tickers: unavailableTickers,
       errors,
     },
-    rows,
+    rows: datedRows,
   };
-  return { snapshot, history: mergeHistory(snapshot, { dataRootPath }) };
 }
 
 function mergeHistory(snapshot, { dataRootPath = dataRoot, history = null } = {}) {
@@ -699,9 +719,21 @@ export async function runNewsTone({
     writeAttemptShard({ laneId: LANE_ID, attemptShardPath, observedAt, attemptId, result });
   }
 
-  const retainFailure = (reason) => {
+  // `reason` is the stable vocabulary the LKG store and the detection floor
+  // consume, so it must not absorb free text. The identity of whatever actually
+  // threw travels beside it instead, because a run that reports only
+  // `unexpected_error` cannot be diagnosed from CI alone. Bounded on purpose:
+  // provider payloads reach error messages.
+  const failureDetailOf = (error) => {
+    if (!error) return null;
+    const name = error?.name || error?.constructor?.name || "Error";
+    return `${name}: ${String(error?.message ?? error)}`.slice(0, 320);
+  };
+
+  const retainFailure = (reason, error = null) => {
+    const failure_detail = failureDetailOf(error);
     if (!write) {
-      return { ok: false, reason, degraded: true, exitCode: 0, retrySet: [], result };
+      return { ok: false, reason, failure_detail, degraded: true, exitCode: 0, retrySet: [], result };
     }
     const failure = store.recordFailure({
       artifacts: [snapshotArtifact(repoRootPath)],
@@ -713,6 +745,7 @@ export async function runNewsTone({
     return {
       ok: false,
       reason,
+      failure_detail,
       degraded: true,
       exitCode: 0,
       retrySet: failure.retrySet,
@@ -729,8 +762,8 @@ export async function runNewsTone({
       dataRootPath: path.join(repoRootPath, "data"),
       privateRootPath: path.join(repoRootPath, "_private", "admin", "fenok-flow", "gdelt_news"),
     });
-  } catch {
-    return retainFailure("unexpected_error");
+  } catch (err) {
+    return retainFailure("unexpected_error", err);
   }
   const snapshot = built?.snapshot ?? built;
   if (snapshot?.status !== "ready") return retainFailure("empty_payload");
@@ -738,8 +771,8 @@ export async function runNewsTone({
   let candidate;
   try {
     candidate = snapshotCandidate(snapshot, run);
-  } catch {
-    return retainFailure("schema_drift");
+  } catch (err) {
+    return retainFailure("schema_drift", err);
   }
   if (!write) {
     return { ok: true, reason: "ok", degraded: false, exitCode: 0, retrySet: [], snapshot };
@@ -782,7 +815,8 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const result = await runNewsTone({ args });
   if (!result.ok) {
-    console.error(`[degraded] GDELT news tone ${result.reason}; retry set: ${result.retrySet.join(", ") || "none"}`);
+    const detail = result.failure_detail ? `; error: ${result.failure_detail}` : "";
+    console.error(`[degraded] GDELT news tone ${result.reason}; retry set: ${result.retrySet.join(", ") || "none"}${detail}`);
     return;
   }
   const snapshot = result.snapshot;
@@ -821,4 +855,5 @@ export {
   observeAttempt,
   queryForTicker,
   snapshotSourceAsOf,
+  validToneSnapshot,
 };
