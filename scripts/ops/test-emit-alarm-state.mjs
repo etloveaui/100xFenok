@@ -70,6 +70,38 @@ const quietHealth = {
   ],
 };
 
+// --- Queue eviction must reach the published state -------------------------
+// A run GitHub evicted from the shared writer queue executed nothing, so it is
+// not an incident and must not page. But it IS a lost acquisition slot, and on
+// 2026-07-24 two of them (news tone, queue observability) vanished with nobody
+// able to see them. The published state carries the count so contention cannot
+// hide behind an otherwise-quiet board. Counts only — the emitter deliberately
+// does not publish raw run evidence.
+{
+  const withEvictions = {
+    status: "ok",
+    workflows: [
+      { ...okRow("fetch-fenok-news-tone.yml", "News Tone"), queue_evicted_run_urls: ["https://gh/run/30107986538"] },
+      { ...okRow("global-writer-queue-observability.yml", "Queue Observability"), queue_evicted_run_urls: ["https://gh/run/30108630740"] },
+      okRow("deploy-worker.yml", "Deploy Worker"),
+    ],
+  };
+  const state = buildAlarmState({ health: withEvictions, prior: null, env: ENV, now: NOW });
+  assert.equal(state.status, "clear", "eviction alone must never page");
+  assert.equal(state.queue_evicted_run_count, 2, "lost slots are counted, not dropped");
+  assert.deepEqual(
+    state.queue_evicted_workflows,
+    [
+      { workflow: "fetch-fenok-news-tone.yml", count: 1 },
+      { workflow: "global-writer-queue-observability.yml", count: 1 },
+    ],
+    "each losing workflow is named, sorted, without raw run evidence",
+  );
+  const quiet = buildAlarmState({ health: quietHealth, prior: null, env: ENV, now: NOW });
+  assert.equal(quiet.queue_evicted_run_count, 0);
+  assert.deepEqual(quiet.queue_evicted_workflows, [], "a clean board sprouts no eviction noise");
+}
+
 // --- RED-first: firing must open + record the incident ---
 const firing = buildAlarmState({ health: firingHealth, prior: null, env: ENV, now: NOW });
 assert.equal(firing.schema_version, ALARM_STATE_SCHEMA);

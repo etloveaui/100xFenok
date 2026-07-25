@@ -15,7 +15,10 @@ import {
   deriveFailureStreakThreshold,
   deriveWorkflowCadenceProjection,
   deriveWorkflowWatchPolicy,
+  QUEUE_EVICTION_INSPECTION_LIMIT,
+  annotateQueueEvictions,
   evaluateWorkflow,
+  isQueueEvictedRun,
   mergeWorkflowRunBatches,
   parseWorkflowRunsPayload,
 } from "./check-pipeline-job-health.mjs";
@@ -479,6 +482,125 @@ function writeWorkflow(root, file, source) {
   assert.deepEqual(runs.map((run) => run.id), [403, 402, 401, 400]);
   assert.equal(result.status, "alarm");
   assert.equal(result.firstFailingRunId, 402);
+}
+
+// --- Queue eviction is its own state, not a producer failure ----------------
+// 28 workflows share `group: fenok-data-writer-*` with cancel-in-progress:false.
+// GitHub keeps at most one run WAITING per group, so a third arrival evicts the
+// waiting one. The evicted run reports run-level `failure` with a job that has
+// conclusion `cancelled` and ZERO steps — it never executed a single line. On
+// 2026-07-24 that silently killed the GDELT news-tone slot (30107986538) and
+// the queue observability slot (30108630740) within 12 minutes of each other.
+// Counting it as a producer failure blames the wrong thing; passing it over
+// like an ordinary supersession hides a lost acquisition slot. It gets its own
+// class: skipped for the streak, surfaced by name.
+const jobsOf = (...jobs) => ({ jobs });
+const evictedJobs = jobsOf({ name: "fetch", conclusion: "cancelled", steps: [] });
+const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "Run", conclusion: "failure" }] });
+
+{
+  assert.equal(isQueueEvictedRun(evictedJobs.jobs), true, "cancelled job with zero steps never executed");
+  assert.equal(isQueueEvictedRun(ranJobs.jobs), false, "a job that ran steps is a real failure");
+  // The discriminator is ZERO STEPS, not the cancelled conclusion. Update
+  // Manifest runs 30151994315 and 30157494401 were both cancelled mid-flight
+  // with 26 steps each: real work, superseded. Reading those as evictions
+  // would launder genuine interruptions into "nothing happened".
+  assert.equal(
+    isQueueEvictedRun([{ conclusion: "cancelled", steps: new Array(26).fill({ name: "step" }) }]),
+    false,
+    "a cancelled job that entered steps ran; it was not evicted",
+  );
+  assert.equal(
+    isQueueEvictedRun([{ conclusion: "cancelled", steps: [{ name: "Set up job" }] }]),
+    false,
+    "even one entered step disproves eviction",
+  );
+  assert.equal(isQueueEvictedRun([]), false, "no job data proves nothing");
+  assert.equal(isQueueEvictedRun(null), false, "missing job data proves nothing");
+  assert.equal(
+    isQueueEvictedRun([{ conclusion: "cancelled", steps: [] }, { conclusion: "failure", steps: [{ name: "Run" }] }]),
+    false,
+    "one executed job means the run was not evicted",
+  );
+}
+
+{
+  // An evicted run must not inflate the streak: it says nothing about the producer.
+  const evicted = { ...F(2), queue_evicted: true };
+  const { streak, evictedRunUrls } = computeFailureStreak([evicted, F(1), S(0)]);
+  assert.equal(streak, 1, "an evicted run is not a producer failure");
+  assert.deepEqual(evictedRunUrls, ["https://gh/run/2"], "but it must be named, never silently dropped");
+}
+
+{
+  // Nor may it break a genuine streak the way a success does.
+  const { streak } = computeFailureStreak([F(3), { ...F(2), queue_evicted: true }, F(1)]);
+  assert.equal(streak, 2, "an evicted run between failures is transparent to the streak");
+}
+
+{
+  // The healthy path must not sprout eviction vocabulary.
+  const { evictedRunUrls } = computeFailureStreak([S(2), S(1)]);
+  assert.deepEqual(evictedRunUrls, []);
+}
+
+{
+  // evaluateWorkflow must carry the eviction out to the caller, not absorb it.
+  const result = evaluateWorkflow(
+    { file: "fetch-fenok-news-tone.yml", label: "News Tone", events: ["schedule"] },
+    [
+      { ...F(2), event: "schedule", queue_evicted: true },
+      { ...S(1), event: "schedule" },
+    ],
+  );
+  assert.equal(result.streak, 0, "eviction alone is not an alarm");
+  assert.deepEqual(result.queue_evicted_run_urls, ["https://gh/run/2"]);
+}
+
+// --- The classifier must actually be wired to run data ----------------------
+{
+  const asked = [];
+  const runs = await annotateQueueEvictions({
+    runs: [F(3), F(2), S(1)],
+    fetchJobsFn: async (id) => {
+      asked.push(id);
+      return id === 3 ? evictedJobs.jobs : ranJobs.jobs;
+    },
+  });
+  assert.deepEqual(asked, [3, 2], "only the leading failure-class prefix is inspected");
+  assert.equal(runs[0].queue_evicted, true);
+  assert.equal(runs[1].queue_evicted, undefined, "a run that executed steps is left alone");
+  assert.equal(runs[2].queue_evicted, undefined, "the success past the prefix is never fetched");
+}
+
+{
+  const asked = [];
+  await annotateQueueEvictions({
+    runs: [S(9), F(8)],
+    fetchJobsFn: async (id) => { asked.push(id); return []; },
+  });
+  assert.deepEqual(asked, [], "a healthy latest run spends no API calls at all");
+}
+
+{
+  const asked = [];
+  await annotateQueueEvictions({
+    runs: [F(9), F(8), F(7), F(6), F(5), F(4), F(3)],
+    fetchJobsFn: async (id) => { asked.push(id); return []; },
+    limit: QUEUE_EVICTION_INSPECTION_LIMIT,
+  });
+  assert.equal(asked.length, QUEUE_EVICTION_INSPECTION_LIMIT,
+    "a long red history must not turn one health check into a rate-limit incident");
+}
+
+{
+  // Fail-open: a job lookup that throws leaves the run-list verdict untouched.
+  const runs = await annotateQueueEvictions({
+    runs: [F(4)],
+    fetchJobsFn: async () => { throw new Error("HTTP 502"); },
+  });
+  assert.equal(runs[0].queue_evicted, undefined);
+  assert.equal(computeFailureStreak(runs).streak, 1, "an unreadable run stays a failure");
 }
 
 // 2 consecutive failures -> alarm

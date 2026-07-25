@@ -64,6 +64,19 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
       }))
       .sort((a, b) => String(a.file).localeCompare(String(b.file)))
     : [];
+  // A run GitHub evicted from the shared `fenok-data-writer` queue executed
+  // nothing, so it is not an incident and must never page. It is still a LOST
+  // acquisition slot, and on 2026-07-24 two of them disappeared with no surface
+  // able to show it. Counts only, sorted, no raw run evidence — consistent with
+  // the cadence-evidence policy below.
+  const queueEvictedWorkflows = workflows
+    .map((w) => ({
+      workflow: w?.file ?? null,
+      count: Array.isArray(w?.queue_evicted_run_urls) ? w.queue_evicted_run_urls.length : 0,
+    }))
+    .filter((row) => row.count > 0)
+    .sort((a, b) => String(a.workflow).localeCompare(String(b.workflow)));
+  const queueEvictedRunCount = queueEvictedWorkflows.reduce((sum, row) => sum + row.count, 0);
   const cadence_state_counts = Object.fromEntries(CADENCE_STATES.map((state) => [state, 0]));
   const watchedWorkflows = workflows.map((w) => {
     const cadence_status = CADENCE_STATES.includes(w?.cadence_status) ? w.cadence_status : "unknown";
@@ -114,6 +127,8 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
     cadence_state_counts,
     excluded_workflows: excludedWorkflows,
     unknown_workflows: unknownWorkflows,
+    queue_evicted_run_count: queueEvictedRunCount,
+    queue_evicted_workflows: queueEvictedWorkflows,
     last_firing: lastFiring,
     last_resolved_at: lastResolvedAt,
   };

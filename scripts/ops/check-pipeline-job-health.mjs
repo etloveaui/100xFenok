@@ -521,8 +521,19 @@ const TRANSPARENT_CONCLUSIONS = new Set(["cancelled", "skipped"]);
 export function computeFailureStreak(runs) {
   let streak = 0;
   let firstFailingIndex = null;
+  const evictedRunUrls = [];
   for (let i = 0; i < runs.length; i += 1) {
-    const conclusion = runs[i]?.conclusion;
+    const run = runs[i];
+    // A run GitHub evicted from the writer queue executed nothing, so it is
+    // evidence about contention, not about the producer. It must not inflate
+    // the streak and must not break one either — but it is named on the way
+    // past, because a lost acquisition slot that reads as ordinary noise is
+    // exactly how the 07-24 news-tone slot disappeared for a day.
+    if (run?.queue_evicted === true) {
+      if (run?.html_url) evictedRunUrls.push(run.html_url);
+      continue;
+    }
+    const conclusion = run?.conclusion;
     if (TRANSPARENT_CONCLUSIONS.has(conclusion)) continue;
     if (FAILURE_CONCLUSIONS.has(conclusion)) {
       streak += 1;
@@ -531,7 +542,24 @@ export function computeFailureStreak(runs) {
     }
     break;
   }
-  return { streak, firstFailingIndex };
+  return { streak, firstFailingIndex, evictedRunUrls };
+}
+
+/**
+ * True when GitHub never executed the run: every job was cancelled without
+ * entering a single step. That is the signature of concurrency-queue eviction —
+ * `cancel-in-progress: false` keeps at most ONE waiting run per group, so a
+ * third arrival cancels the one that was waiting. Absent or empty job data
+ * proves nothing and must not be read as eviction.
+ *
+ * Pure function — the test imports this directly.
+ *
+ * @param {Array<{conclusion: string, steps?: Array<unknown>}>|null|undefined} jobs
+ * @returns {boolean}
+ */
+export function isQueueEvictedRun(jobs) {
+  if (!Array.isArray(jobs) || jobs.length === 0) return false;
+  return jobs.every((job) => job?.conclusion === "cancelled" && (job?.steps?.length ?? 0) === 0);
 }
 
 /**
@@ -543,7 +571,7 @@ export function evaluateWorkflow(workflow, runs) {
     if (run?.event === "workflow_dispatch") return false;
     return !Array.isArray(workflow.events) || !run?.event || workflow.events.includes(run.event);
   });
-  const { streak, firstFailingIndex } = computeFailureStreak(countedRuns);
+  const { streak, firstFailingIndex, evictedRunUrls } = computeFailureStreak(countedRuns);
   const latest = countedRuns[0] || null;
   const failureStreakThreshold = workflow.failure_streak_threshold === SLOW_CADENCE_FAILURE_STREAK_THRESHOLD
     ? SLOW_CADENCE_FAILURE_STREAK_THRESHOLD
@@ -555,6 +583,7 @@ export function evaluateWorkflow(workflow, runs) {
     failure_streak_threshold: failureStreakThreshold,
     alarming: streak >= failureStreakThreshold,
     latestRunUrl: latest?.html_url || null,
+    queue_evicted_run_urls: evictedRunUrls,
   };
   if (workflow.events) base.events = workflow.events;
   if (countedRuns.length === 0) {
@@ -651,6 +680,38 @@ async function fetchCompletedRuns({ token, owner, repo, file, branch, event }) {
   return parseWorkflowRunsPayload(payload);
 }
 
+async function fetchRunJobs({ token, owner, repo, runId }) {
+  const segments = [owner, repo].map((segment) => encodeURIComponent(segment));
+  const url = `${GITHUB_API}/repos/${segments[0]}/${segments[1]}/actions/runs/${encodeURIComponent(runId)}/jobs?per_page=100`;
+  const response = await fetch(url, { headers: authHeaders(token) });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const payload = await response.json();
+  return Array.isArray(payload?.jobs) ? payload.jobs : [];
+}
+
+// Only the leading failure-class prefix can change a streak verdict, so that is
+// the only place worth spending job-level API calls. Capped so a workflow with a
+// long red history cannot turn one health check into a rate-limit incident, and
+// fail-open: a job lookup that errors leaves the run classified exactly as the
+// run list already classified it.
+export const QUEUE_EVICTION_INSPECTION_LIMIT = 5;
+
+export async function annotateQueueEvictions({ runs, fetchJobsFn, limit = QUEUE_EVICTION_INSPECTION_LIMIT }) {
+  if (!Array.isArray(runs) || typeof fetchJobsFn !== "function") return runs;
+  let inspected = 0;
+  for (const run of runs) {
+    if (!FAILURE_CONCLUSIONS.has(run?.conclusion)) break;
+    if (inspected >= limit) break;
+    inspected += 1;
+    try {
+      if (isQueueEvictedRun(await fetchJobsFn(run.id))) run.queue_evicted = true;
+    } catch {
+      // keep the run-list classification
+    }
+  }
+  return runs;
+}
+
 export async function main() {
   const token = process.env.GITHUB_TOKEN;
   const resultPath = process.env.PIPELINE_JOB_HEALTH_RESULT || "pipeline-job-health-result.json";
@@ -717,7 +778,10 @@ export async function main() {
           event,
         }));
       }
-      const runs = mergeWorkflowRunBatches(batches);
+      const runs = await annotateQueueEvictions({
+        runs: mergeWorkflowRunBatches(batches),
+        fetchJobsFn: (runId) => fetchRunJobs({ token, owner, repo, runId }),
+      });
       workflows.push(evaluateWorkflow(workflow, runs));
     } catch (error) {
       // A transient API failure must never itself alarm — report unknown, keep exit 0.
