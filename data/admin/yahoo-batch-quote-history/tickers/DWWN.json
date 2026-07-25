@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-24T23:12:37Z",
     "history_as_of": "2026-07-23",
-    "path": "data/yf/finance/DWWN.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DWWN.json",
     "payload_sha256": "f73bd0d985344f4370ec63ac29f6a583a0c6bb08beaf17805bbf8c6b6637e035",
     "quote_as_of": "2026-06-10T17:29:37Z",
     "source_as_of": "2026-06-10T17:29:37Z"
@@ -52,12 +52,12 @@
     "shard": "5/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-30T23:56:02Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-07-24T23:12:37Z",
+    "history_as_of": "2026-07-23",
     "path": "data/admin/yahoo-batch-quote-history/lkg/DWWN.json",
-    "payload_sha256": "83a8ab7cc76ac777f68b467efaff4ca8ea3d74c21135c9eb244602f36227c261",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "f73bd0d985344f4370ec63ac29f6a583a0c6bb08beaf17805bbf8c6b6637e035",
+    "quote_as_of": "2026-06-10T17:29:37Z",
+    "source_as_of": "2026-06-10T17:29:37Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-06-10T17:29:37Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 30,
+    "classified_at": "2026-07-25T00:24:00Z",
+    "classified_run_id": "30135937225",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "DWWN holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "DWWN holds LKG because Yahoo source date 2026-06-10T17:29:37Z is 30 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-06-10T17:29:37Z"
   },
   "ticker": "DWWN",
-  "updated_at": "2026-07-24T23:12:06Z"
+  "updated_at": "2026-07-25T00:24:00Z"
 }

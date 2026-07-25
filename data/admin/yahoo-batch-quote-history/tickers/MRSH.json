@@ -103,12 +103,26 @@
       "run_id": "29879427185",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 567,
+      "natural": true,
+      "observed_at": "2026-07-25T00:24:00Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "30135937225",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
     "fetched_at": "2026-07-22T00:52:33Z",
     "history_as_of": "2026-07-21",
-    "path": "data/yf/finance/MRSH.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MRSH.json",
     "payload_sha256": "4123fdaf7ce01719d3e6d50244a7f5ec55851386d212524dd02b8e7ad7720d27",
     "quote_as_of": "2026-07-21T20:00:02Z",
     "source_as_of": "2026-07-21"
@@ -117,17 +131,38 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 567,
     "natural": true,
-    "observed_at": "2026-07-22T01:10:12Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-07-25T00:24:00Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "29879427185",
+    "run_id": "30135937225",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "0/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-07-25T00:24:00Z",
+    "run_attempt": 1,
+    "run_id": "30135937225"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-22T00:52:33Z",
+    "history_as_of": "2026-07-21",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MRSH.json",
+    "payload_sha256": "4123fdaf7ce01719d3e6d50244a7f5ec55851386d212524dd02b8e7ad7720d27",
+    "quote_as_of": "2026-07-21T20:00:02Z",
+    "source_as_of": "2026-07-21"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -141,9 +176,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-21"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MRSH",
-  "updated_at": "2026-07-22T01:10:12Z"
+  "updated_at": "2026-07-25T00:24:00Z"
 }
