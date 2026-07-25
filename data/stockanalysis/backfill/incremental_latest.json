@@ -2,9 +2,9 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_backfill_select",
-  "generated_at": "2026-07-25T16:13:42Z",
+  "generated_at": "2026-07-25T16:38:19Z",
   "policy": {
-    "limit": 100,
+    "limit": 0,
     "offset": 0,
     "max_age_hours": null,
     "cooldown_days": 7,
@@ -18,247 +18,34 @@
     "min_daily_1y_rows": 200
   },
   "counts": {
-    "candidates": 4,
-    "selected": 4,
+    "candidates": 0,
+    "selected": 0,
     "missing": 0,
     "fallback_retry": 0,
-    "history_gap": 4,
+    "history_gap": 0,
     "inception_limited_history_gap": 0,
-    "total_history_gap": 4,
+    "total_history_gap": 0,
     "stale": 0,
     "cooldown_skipped": 0,
     "prior_failed_candidates": 0,
     "daily_1y_missing_file": 0,
-    "daily_1y_short_rows": 4,
+    "daily_1y_short_rows": 0,
     "offset_skipped": 0,
-    "scheduled_plan_rows": 4,
-    "ledger_tracked": 275,
-    "ledger_cooldown": 12
+    "scheduled_plan_rows": 0,
+    "ledger_tracked": 333,
+    "ledger_cooldown": 47
   },
-  "selected": [
-    {
-      "ticker": "MDCR",
-      "source": "fenok_edge_etf_daily1y_fetchable_plan",
-      "reason": "history_gap",
-      "age_hours": null,
-      "prior_failures": 0,
-      "priority": 0,
-      "reason_priority": 2,
-      "plan_order": 0,
-      "missing_history_periods": [
-        "daily_1y"
-      ],
-      "fetchable_missing_history_periods": [
-        "daily_1y"
-      ],
-      "inception_limited_history_periods": [],
-      "inception_date": null,
-      "daily_1y_actual_rows": 22,
-      "daily_1y_min_rows": 200,
-      "missing_file": false,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "pre_fetch_daily_1y_evidence": {
-        "row_count": 22,
-        "raw_row_count": 22,
-        "valid_unique_date_count": 22,
-        "invalid_or_duplicate_date_count": 0,
-        "earliest_observation": "2026-06-15",
-        "earliest_date": "2026-06-15",
-        "latest_observation": "2026-07-16",
-        "latest_date": "2026-07-16",
-        "span_days": 31,
-        "expected_trading_days": 24,
-        "expected_utc_weekdays_inclusive": 24,
-        "observed_trading_days": 22,
-        "density": 0.916667,
-        "max_internal_gap_days": 4,
-        "max_internal_calendar_gap_days": 4,
-        "latest_observation_age_days": 9,
-        "latest_observation_age_business_days": 6,
-        "latest_business_day_age": 6,
-        "latest_not_future": true,
-        "gates": {
-          "min_rows": true,
-          "density": true,
-          "max_internal_gap": true,
-          "latest_business_day_age": true
-        },
-        "evidence_pass": true,
-        "eligible": true
-      },
-      "pre_fetch_payload_fetched_at": "2026-07-17T23:58:41Z"
-    },
-    {
-      "ticker": "MSEP",
-      "source": "fenok_edge_etf_daily1y_fetchable_plan",
-      "reason": "history_gap",
-      "age_hours": null,
-      "prior_failures": 0,
-      "priority": 0,
-      "reason_priority": 2,
-      "plan_order": 1,
-      "missing_history_periods": [
-        "daily_1y"
-      ],
-      "fetchable_missing_history_periods": [
-        "daily_1y"
-      ],
-      "inception_limited_history_periods": [],
-      "inception_date": null,
-      "daily_1y_actual_rows": 22,
-      "daily_1y_min_rows": 200,
-      "missing_file": false,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "pre_fetch_daily_1y_evidence": {
-        "row_count": 22,
-        "raw_row_count": 22,
-        "valid_unique_date_count": 22,
-        "invalid_or_duplicate_date_count": 0,
-        "earliest_observation": "2026-06-15",
-        "earliest_date": "2026-06-15",
-        "latest_observation": "2026-07-16",
-        "latest_date": "2026-07-16",
-        "span_days": 31,
-        "expected_trading_days": 24,
-        "expected_utc_weekdays_inclusive": 24,
-        "observed_trading_days": 22,
-        "density": 0.916667,
-        "max_internal_gap_days": 4,
-        "max_internal_calendar_gap_days": 4,
-        "latest_observation_age_days": 9,
-        "latest_observation_age_business_days": 6,
-        "latest_business_day_age": 6,
-        "latest_not_future": true,
-        "gates": {
-          "min_rows": true,
-          "density": true,
-          "max_internal_gap": true,
-          "latest_business_day_age": true
-        },
-        "evidence_pass": true,
-        "eligible": true
-      },
-      "pre_fetch_payload_fetched_at": "2026-07-17T23:59:03Z"
-    },
-    {
-      "ticker": "SHRD",
-      "source": "fenok_edge_etf_daily1y_fetchable_plan",
-      "reason": "history_gap",
-      "age_hours": null,
-      "prior_failures": 0,
-      "priority": 0,
-      "reason_priority": 2,
-      "plan_order": 2,
-      "missing_history_periods": [
-        "daily_1y"
-      ],
-      "fetchable_missing_history_periods": [
-        "daily_1y"
-      ],
-      "inception_limited_history_periods": [],
-      "inception_date": null,
-      "daily_1y_actual_rows": 22,
-      "daily_1y_min_rows": 200,
-      "missing_file": false,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "pre_fetch_daily_1y_evidence": {
-        "row_count": 22,
-        "raw_row_count": 22,
-        "valid_unique_date_count": 22,
-        "invalid_or_duplicate_date_count": 0,
-        "earliest_observation": "2026-06-15",
-        "earliest_date": "2026-06-15",
-        "latest_observation": "2026-07-16",
-        "latest_date": "2026-07-16",
-        "span_days": 31,
-        "expected_trading_days": 24,
-        "expected_utc_weekdays_inclusive": 24,
-        "observed_trading_days": 22,
-        "density": 0.916667,
-        "max_internal_gap_days": 4,
-        "max_internal_calendar_gap_days": 4,
-        "latest_observation_age_days": 9,
-        "latest_observation_age_business_days": 6,
-        "latest_business_day_age": 6,
-        "latest_not_future": true,
-        "gates": {
-          "min_rows": true,
-          "density": true,
-          "max_internal_gap": true,
-          "latest_business_day_age": true
-        },
-        "evidence_pass": true,
-        "eligible": true
-      },
-      "pre_fetch_payload_fetched_at": "2026-07-18T00:02:35Z"
-    },
-    {
-      "ticker": "SLWS",
-      "source": "fenok_edge_etf_daily1y_fetchable_plan",
-      "reason": "history_gap",
-      "age_hours": null,
-      "prior_failures": 0,
-      "priority": 0,
-      "reason_priority": 2,
-      "plan_order": 3,
-      "missing_history_periods": [
-        "daily_1y"
-      ],
-      "fetchable_missing_history_periods": [
-        "daily_1y"
-      ],
-      "inception_limited_history_periods": [],
-      "inception_date": "2025-11-06",
-      "daily_1y_actual_rows": 172,
-      "daily_1y_min_rows": 200,
-      "missing_file": false,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": "2026-07-25T00:04:41Z",
-      "pre_fetch_daily_1y_evidence": {
-        "row_count": 172,
-        "raw_row_count": 172,
-        "valid_unique_date_count": 172,
-        "invalid_or_duplicate_date_count": 0,
-        "earliest_observation": "2025-11-06",
-        "earliest_date": "2025-11-06",
-        "latest_observation": "2026-07-16",
-        "latest_date": "2026-07-16",
-        "span_days": 252,
-        "expected_trading_days": 181,
-        "expected_utc_weekdays_inclusive": 181,
-        "observed_trading_days": 172,
-        "density": 0.950276,
-        "max_internal_gap_days": 4,
-        "max_internal_calendar_gap_days": 4,
-        "latest_observation_age_days": 9,
-        "latest_observation_age_business_days": 6,
-        "latest_business_day_age": 6,
-        "latest_not_future": true,
-        "gates": {
-          "min_rows": true,
-          "density": true,
-          "max_internal_gap": true,
-          "latest_business_day_age": true
-        },
-        "evidence_pass": true,
-        "eligible": true
-      },
-      "pre_fetch_payload_fetched_at": "2026-07-18T00:02:57Z"
-    }
-  ],
+  "selected": [],
   "cooldown": [],
   "inception_limited": [],
   "pending_ledger": {
     "path": "backfill/pending_ledger.json",
-    "generated_at": "2026-07-25T16:14:00Z",
+    "generated_at": "2026-07-25T16:46:22Z",
     "counts": {
-      "tracked": 275,
-      "cooldown": 12,
+      "tracked": 333,
+      "cooldown": 47,
       "provider_coverage_gaps": 0,
-      "updated": 4,
+      "updated": 99,
       "cleared": 0
     }
   }
