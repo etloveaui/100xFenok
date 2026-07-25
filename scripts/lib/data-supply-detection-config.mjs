@@ -336,7 +336,7 @@ const config = {
         }),
       ])],
       endpointContract: endpoint("fred_api", "observations_array", "/observations", "array"),
-      freshnessPolicy: freshness({ fold: "oldest", unit: "calendar_days", calendar: "utc", maxStaleness: 120 }),
+      freshnessPolicy: freshness({ fold: "oldest", unit: "calendar_days", calendar: "utc", maxStaleness: 250 }),
       affectedSurfaceIds: ["banking_liquidity", "rim_index_inputs"],
     }),
     lane({
@@ -593,7 +593,14 @@ const config = {
         price: "number",
         regularMarketTime: "number",
       })),
-      freshnessPolicy: freshness({ fold: "latest", unit: "hours", calendar: "utc", maxStaleness: 3 }),
+      // The stamp is a US regular-session quote time, so it freezes at the
+      // close and only moves at the next open. Judged in raw hours on the utc
+      // calendar this lane was stale roughly sixteen hours a day and every
+      // weekend - a permanent false alarm on a required lane. Judged in
+      // us_trading business days it is fresh through a normal overnight or
+      // weekend and still trips when the feed stops across trading days,
+      // matching every sibling market-data lane.
+      freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 1 }),
       affectedSurfaceIds: ["macro_tickers"],
     }),
     lane({

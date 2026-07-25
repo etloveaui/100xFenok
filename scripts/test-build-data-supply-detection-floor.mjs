@@ -529,6 +529,48 @@ function runConfigAndFixtureChecks() {
     "yahoo_private_options",
     "apewisdom_attention",
   ], "only attempt-proven lanes are live");
+  // yahoo_ticker_macro carries US market quote times. The stamp freezes at the
+  // regular-session close and does not move again until the next open, so an
+  // `hours` bound on the `utc` calendar reports the lane stale from 20:00Z
+  // until roughly 13:30Z the next trading day, plus the whole weekend.
+  // Measured across 2026-07-23..25: ready only inside the session, degraded in
+  // every one of 12 sampled off-session KPI rebuilds - about sixteen red hours
+  // a day, permanently. A required lane that is red most of the time teaches
+  // everyone to ignore the board. Every sibling market-data lane (sentiment,
+  // us_indices_daily, occ_options_volume, finra_short_volume,
+  // yahoo_private_options, nasdaq_giw_sox) is judged on us_trading business
+  // days for exactly this reason; this one was the outlier.
+  // `hours` cannot be rescued by a calendar: build-data-supply-detection-floor
+  // computes the hours age as raw elapsed milliseconds and never consults one.
+  {
+    const macro = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "yahoo_ticker_macro");
+    assert.notEqual(macro.freshness.unit, "hours",
+      "an hours bound cannot survive a normal overnight close");
+    assert.equal(macro.freshness.calendar, "us_trading",
+      "market quote times must be judged on the trading calendar");
+
+    const policy = {
+      unit: macro.freshness.unit,
+      calendar: macro.freshness.calendar,
+      max_staleness: macro.freshness.max_staleness,
+    };
+    const fridayClose = "2026-07-24T20:00:00Z";
+    const notStale = (now, why) => assert.equal(
+      evaluateFreshness(fridayClose, policy, now, calendarsFixture).reason, "ok", why);
+    notStale("2026-07-24T23:30:00Z", "the evening of the same trading day is not stale");
+    notStale("2026-07-25T05:00:00Z", "overnight before the next session is not stale");
+    notStale("2026-07-25T18:00:00Z", "Saturday is not stale");
+    notStale("2026-07-26T18:00:00Z", "Sunday is not stale");
+    notStale("2026-07-27T12:00:00Z", "Monday pre-open is not stale");
+    // Removing the false alarm must not buy a blind spot: a feed that stops
+    // producing across full trading days is a real outage and still trips.
+    assert.notEqual(
+      evaluateFreshness(fridayClose, policy, "2026-07-29T21:00:00Z", calendarsFixture).reason,
+      "ok",
+      "a quote stamp that has not moved for multiple trading days must still trip stale",
+    );
+  }
+
   assert.equal(treasuryTga.enforcement, "live");
   assert.equal(treasuryTga.kpi_required, true);
   assert.equal(fredYardeni.enforcement, "live");
@@ -567,6 +609,45 @@ function runConfigAndFixtureChecks() {
   assert.equal(treasuryTga.freshness.unit, "business_days");
   assert.equal(treasuryTga.freshness.calendar, "us_federal_business");
   assert.equal(treasuryTga.freshness.max_staleness, 2);
+  const fredBanking = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "fred_banking");
+  assert.equal(fredBanking.freshness.unit, "calendar_days");
+  assert.equal(fredBanking.freshness.fold, "oldest");
+  // The bound is sized from MEASURED publication lag, not from an assumed one.
+  // FRED realtime_start for DRALACBN's last six quarters: 138, 146, 143, 139,
+  // 140, 140 days after the observation date. So the latest observation reaches
+  // its maximum age the moment the NEXT quarter publishes: one quarter (~90d)
+  // plus that lag, i.e. ~236 days worst observed. 2026-01-01 is superseded
+  // around 2026-08-19, at age ~230. A 210-day bound would therefore have gone
+  // red again on 2026-07-30 and stayed red for three weeks - a postponement,
+  // not a fix. 250 clears the worst observed case with margin and still trips
+  // long before a genuinely missed quarter (~330 days).
+  assert.equal(fredBanking.freshness.max_staleness, 250,
+    "fred_banking bound must cover one quarter plus the measured worst publication lag");
+  // Mutation-proof: quarterly-aged source must survive the wait for the next
+  // release, and the old 120-day bound must still be proven wrong.
+  {
+    const bankingPolicy = {
+      unit: fredBanking.freshness.unit,
+      calendar: fredBanking.freshness.calendar,
+      max_staleness: fredBanking.freshness.max_staleness,
+    };
+    const today = evaluateFreshness("2026-01-01", bankingPolicy, "2026-07-25T00:00:00Z", calendarsFixture);
+    assert.equal(today.reason, "ok", "quarterly source must be ok today (age ~205)");
+    assert.ok(Number.isFinite(today.age) && today.age > 200, `quarterly age ~205 days, got ${today.age}`);
+    // The day before the next quarter is expected to publish is the real test:
+    // a bound that fails here buys three weeks of false red every quarter.
+    const eveOfNextRelease = evaluateFreshness("2026-01-01", bankingPolicy, "2026-08-19T00:00:00Z", calendarsFixture);
+    assert.equal(eveOfNextRelease.reason, "ok",
+      "the latest quarter must stay ok right up to the next measured release date");
+    // A genuinely missed quarter must still trip.
+    const missedQuarter = evaluateFreshness("2026-01-01", bankingPolicy, "2026-12-01T00:00:00Z", calendarsFixture);
+    assert.equal(missedQuarter.reason, "stale",
+      "a quarter that never arrives must still trip stale");
+    const tightPolicy = { ...bankingPolicy, max_staleness: 120 };
+    const stale120 = evaluateFreshness("2026-01-01", tightPolicy, "2026-07-25T00:00:00Z", calendarsFixture);
+    assert.equal(stale120.reason, "stale",
+      "same quarterly source must be stale at old 120-day bound — proves the mutation matters");
+  }
   assert.equal(treasuryTga.producer_members[0].cadence_calendar, "utc");
   for (const laneConfig of DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => !liveLaneIds.includes(item.id))) {
     assert.equal(laneConfig.enforcement, "shadow", `${laneConfig.id} stays shadow`);
