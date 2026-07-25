@@ -1,0 +1,20 @@
+# Regression fixture: an invented concurrency key. The YAML is well-formed, so
+# syntax validation passes it; GitHub Actions ignores the key silently while a
+# human reads it as configuration. `queue: max` lived in 28 real workflows and
+# was understood as a deep writer queue that does not exist.
+name: Invalid Unknown Concurrency Key
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: fixture-writer
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Noop
+        run: echo noop

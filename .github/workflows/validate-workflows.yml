@@ -11,6 +11,7 @@ on:
     paths:
       - '.github/workflows/**'
       - 'scripts/ops/fixtures/workflow-actionlint/**'
+      - 'scripts/ops/fixtures/workflow-concurrency/**'
       - 'scripts/ops/validate-workflow-actionlint.sh'
       - 'scripts/ops/validate-workflow-yaml.rb'
       - 'scripts/ops/check-pipeline-job-health.mjs'
@@ -25,6 +26,7 @@ on:
     paths:
       - '.github/workflows/**'
       - 'scripts/ops/fixtures/workflow-actionlint/**'
+      - 'scripts/ops/fixtures/workflow-concurrency/**'
       - 'scripts/ops/validate-workflow-actionlint.sh'
       - 'scripts/ops/validate-workflow-yaml.rb'
       - 'scripts/ops/check-pipeline-job-health.mjs'
@@ -49,6 +51,20 @@ jobs:
 
       - name: Parse workflow YAML
         run: ruby scripts/ops/validate-workflow-yaml.rb
+
+      # A guard nobody proves is a guard nobody has. The invented-key fixture
+      # must be rejected and the real-keys fixture must pass, so deleting the
+      # schema check cannot go green.
+      - name: Prove the concurrency-schema guard
+        run: |
+          set -euo pipefail
+          fixture_dir="scripts/ops/fixtures/workflow-concurrency"
+          if ruby scripts/ops/validate-workflow-yaml.rb "$fixture_dir/invalid-unknown-concurrency-key.yml" >/dev/null 2>&1; then
+            echo "FAIL regression fixture unexpectedly passed: unknown concurrency key" >&2
+            exit 1
+          fi
+          ruby scripts/ops/validate-workflow-yaml.rb "$fixture_dir/valid-concurrency.yml"
+          echo "PASS concurrency-schema guard rejects invented keys and accepts the real ones"
 
       - name: Validate lane manifest staging
         run: npm --prefix 100xfenok-next run qa:lane-manifest-staging
