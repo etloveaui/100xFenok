@@ -3229,6 +3229,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     for (const id of REQUIRED_SURFACE_IDS) assert.equal(out.surfaces.find((s) => s.id === id)?.stamp_evidence?.policy_version, 2, `${id} carries v2 member evidence`);
     const getSurfaceStamp = (id) => out.surfaces.find((s) => s.id === id)?.source_as_of;
     getSurfaceStamp.diagnostics = out.source_stamp_diagnostics;
+    getSurfaceStamp.full = out;
     return getSurfaceStamp;
   };
 
@@ -3268,6 +3269,32 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     assert.match(String(error?.stderr ?? error), /provider now publishes a date; reclassify surface to date_bearing/);
   }
   ok("#331: real generator uses upstream source dates and never promotes collection clocks");
+
+  // Cadence-derived freshness bounds: weekly-declared converter lanes must be
+  // judged against their DECLARED cadence + grace (detection-config
+  // freshness.max_staleness), never a tighter hardcoded constant — a weekly
+  // Friday export is legitimately ~7 days old mid-week. Mutation proof: the
+  // emitted bound is asserted against the LIVE declaration, so deleting the
+  // derivation and falling back to any diverging hardcoded constant fails.
+  const declaredMaxAge = (laneId) => DATA_SUPPLY_DETECTION_CONFIG.lanes
+    .find((lane) => lane.id === laneId)?.freshness?.max_staleness;
+  const daysAgo = (n) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
+  const freshnessRow = (run, surfaceId, label) => run.full.surfaces
+    .find((s) => s.id === surfaceId)?.checks.find((c) => c.label === label);
+
+  const midWeek = runGen({ rim: daysAgo(6), yard: daysAgo(6), screener: daysAgo(9), marketFacts: daysAgo(6), surfaces: `${daysAgo(1)}T02:23:02Z`, etfUniverse: `${daysAgo(1)}T22:37:04Z` });
+  const rimWeekly = freshnessRow(midWeek, "market_valuation", "RIM 입력 기준일");
+  assert.equal(rimWeekly.max_age_days, declaredMaxAge("benchmarks"), "RIM bound derives from the declared benchmarks weekly cadence+grace, not a hardcoded constant");
+  assert.equal(rimWeekly.calendar ?? null, null, "declared benchmarks freshness unit is calendar_days, not us_market business days");
+  assert.equal(rimWeekly.status, "ready", "6-day-old weekly RIM export is inside its declared cadence+grace");
+  const screenerWeekly = freshnessRow(midWeek, "screener", "스크리너 기준일");
+  assert.equal(screenerWeekly.max_age_days, declaredMaxAge("global_scouter"), "screener bound derives from the declared global_scouter weekly cadence+grace, not a hardcoded constant");
+  assert.equal(screenerWeekly.status, "ready", "9-day-old weekly screener export is inside its declared cadence+grace");
+
+  const overdue = runGen({ rim: daysAgo(20), yard: daysAgo(20), screener: daysAgo(20), marketFacts: daysAgo(20), surfaces: `${daysAgo(1)}T02:23:02Z`, etfUniverse: `${daysAgo(1)}T22:37:04Z` });
+  assert.equal(freshnessRow(overdue, "market_valuation", "RIM 입력 기준일").status, "stale", "weekly RIM source past cadence+grace still trips stale (no blind spot)");
+  assert.equal(freshnessRow(overdue, "screener", "스크리너 기준일").status, "stale", "weekly screener source past cadence+grace still trips stale (no blind spot)");
+  ok("weekly-declared lanes derive freshness bound from declared cadence+grace; overdue still trips stale");
 }
 
 // 27b. real v2 artifact -> builder -> checker integration and v2-only lineage.

@@ -341,6 +341,14 @@ const yardneyAsOf = latestDate(
 );
 const yardeniMaxAgeDays = DATA_SUPPLY_DETECTION_CONFIG.lanes
   .find((lane) => lane.id === "fred_yardeni")?.freshness?.max_staleness ?? 10;
+// Weekly converter lanes are judged against their DECLARED cadence + grace
+// (detection-config freshness.max_staleness), never a tighter hardcoded
+// constant: a weekly Friday export is legitimately ~7 days old mid-week, and
+// the surface still trips stale once the source outlives its declared rhythm.
+const benchmarksMaxAgeDays = DATA_SUPPLY_DETECTION_CONFIG.lanes
+  .find((lane) => lane.id === "benchmarks")?.freshness?.max_staleness ?? 14;
+const globalScouterMaxAgeDays = DATA_SUPPLY_DETECTION_CONFIG.lanes
+  .find((lane) => lane.id === "global_scouter")?.freshness?.max_staleness ?? 14;
 // Per-surface TRUE source stamps (contract §5). Only surfaces whose data inputs
 // carry genuine nested source dates get a real stamp; the rest stay null until
 // their upstream artifacts expose one (the KPI reports them pending, not fresh).
@@ -506,7 +514,7 @@ const surfaces = [
       check("소스 일치성", number(paritySummary.multi_candidate_fields) > 0 ? "partial" : "pending", `${number(paritySummary.multi_candidate_fields).toLocaleString("ko-KR")}개 복수 후보`, { count: number(paritySummary.multi_candidate_fields), reason: "차이·오래됨·부호 차이를 Data Lab에서 계속 노출" }),
       rimIndexReadyCheck("KOSPI", "KOSPI"),
       rimIndexReadyCheck("SOX", "SOX"),
-      freshness("RIM 입력 기준일", rimSourceAsOf, 2, { calendar: "us_market", missingReason: SOURCE_FLOOR_UNAVAILABLE }),
+      freshness("RIM 입력 기준일", rimSourceAsOf, benchmarksMaxAgeDays, { missingReason: SOURCE_FLOOR_UNAVAILABLE }),
       freshness("Yardeni 기준일", yardeniSourceAsOf, yardeniMaxAgeDays, { missingReason: SOURCE_FLOOR_UNAVAILABLE }),
       freshness("야후 원천 기준일", null, 8, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
       marketFactsCompletenessCheck("시장 데이터 원천 완전성"),
@@ -571,7 +579,7 @@ const surfaces = [
       check("기본 종목 테이블", exists("global-scouter/core/stocks_analyzer.json") ? "ready" : "unavailable", "stocks_analyzer"),
       check("필드 사용 감사", stockFieldManifest?.totals ? "ready" : "pending", `${number(stockFieldManifest?.totals?.fieldCount || stockFieldManifest?.totals?.fields).toLocaleString("ko-KR")}개 필드`, { count: number(stockFieldManifest?.totals?.fieldCount || stockFieldManifest?.totals?.fields) }),
       check("상세 패널", counts.globalScouterDetails > 0 ? "ready" : "pending", `${counts.globalScouterDetails.toLocaleString("ko-KR")}개 상세`, { count: counts.globalScouterDetails }),
-      freshness("스크리너 기준일", screenerSourceAsOf, 7, { missingReason: SOURCE_FLOOR_UNAVAILABLE }),
+      freshness("스크리너 기준일", screenerSourceAsOf, globalScouterMaxAgeDays, { missingReason: SOURCE_FLOOR_UNAVAILABLE }),
     ],
     "스크리너는 종목 발견 화면이며 필드 사용 감사와 함께 미사용 데이터를 줄여간다.",
     { as_of: screenerAsOf, ...sourceStamp(productStampEvidence.screener.date_bearing.source_floor_as_of), stamp_evidence: productStampEvidence.screener },
