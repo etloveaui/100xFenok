@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_backfill_plan",
-  "generated_at": "2026-07-25T16:14:11Z",
+  "generated_at": "2026-07-25T16:46:30Z",
   "mode": "history_gaps_only",
   "required_history_periods": [
     "daily_1y"
@@ -20,14 +20,14 @@
     "inception_limited_history_gap": 0,
     "terminal_limited_history_gap": 0,
     "total_history_gap": 0,
-    "cooldown_skipped": 4
+    "cooldown_skipped": 0
   },
   "etfs": [],
   "incremental_etf_backfill": {
     "schema_version": "stockanalysis/v1",
     "source": "stockanalysis",
     "operation": "incremental_etf_backfill_select",
-    "generated_at": "2026-07-25T16:14:11Z",
+    "generated_at": "2026-07-25T16:46:30Z",
     "policy": {
       "limit": 0,
       "offset": 0,
@@ -51,76 +51,15 @@
       "inception_limited_history_gap": 0,
       "total_history_gap": 0,
       "stale": 0,
-      "cooldown_skipped": 4,
+      "cooldown_skipped": 0,
       "prior_failed_candidates": 0,
       "daily_1y_missing_file": 0,
       "daily_1y_short_rows": 0,
       "offset_skipped": 0,
-      "scheduled_plan_rows": 4
+      "scheduled_plan_rows": 0
     },
     "selected": [],
-    "cooldown": [
-      {
-        "ticker": "MDCR",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "consecutive_failures": 0,
-        "next_attempt_after_utc": "2026-08-01T16:14:00Z",
-        "failure_reason": "successful StockAnalysis primary fetch still has 28 unique daily_1y dates (< 200)",
-        "plan_order": 0,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_date": null
-      },
-      {
-        "ticker": "MSEP",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "consecutive_failures": 0,
-        "next_attempt_after_utc": "2026-08-01T16:14:00Z",
-        "failure_reason": "successful StockAnalysis primary fetch still has 28 unique daily_1y dates (< 200)",
-        "plan_order": 1,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_date": null
-      },
-      {
-        "ticker": "SHRD",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "consecutive_failures": 0,
-        "next_attempt_after_utc": "2026-08-01T16:14:00Z",
-        "failure_reason": "successful StockAnalysis primary fetch still has 28 unique daily_1y dates (< 200)",
-        "plan_order": 2,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_date": null
-      },
-      {
-        "ticker": "SLWS",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "consecutive_failures": 0,
-        "next_attempt_after_utc": "2026-08-01T16:14:00Z",
-        "failure_reason": "successful StockAnalysis primary fetch still has 178 unique daily_1y dates (< 200)",
-        "plan_order": 3,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_date": "2025-11-06"
-      }
-    ],
+    "cooldown": [],
     "inception_limited": []
   }
 }

@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-07-25T16:28:17.983Z",
-  "classification_as_of": "2026-07-25T16:27:41.650Z",
+  "generated_at": "2026-07-25T17:01:26.114Z",
+  "classification_as_of": "2026-07-25T17:00:49.559Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -304,21 +304,11 @@
       "selection": "explicit full-primary daily_1y fetchable tickers; not the scored-ETF scheduled plan",
       "single_writer": true,
       "shard_size": 100,
-      "ticker_count": 422,
-      "shard_count": 5,
+      "ticker_count": 322,
+      "shard_count": 4,
       "shards": [
         {
           "shard": 1,
-          "ticker_count": 100,
-          "inputs": {
-            "history_gaps_only": "true",
-            "required_history_periods": "daily_1y",
-            "incremental_etf_limit": "100",
-            "etfs": "AAAU,AAPB,AAPR,AAPW,AAPX,ABXB,ACGR,ACLC,ACVU,AETH,AIOO,AJAN,AJUL,AKAF,AMDW,AMJB,AMUB,AMZO,AMZW,APOC,APPX,APRH,APRJ,APRT,APRW,ARKB,ARLU,ATMP,AUGU,AVGW,AVNV,BALT,BAPR,BAR,BAUG,BBB,BCCC,BDCX,BDCZ,BDEC,BETE,BETH,BFEB,BGLD,BITB,BITC,BITI,BITO,BITS,BJAN,BJUL,BJUN,BLST,BLTD,BMAR,BMAY,BNDW,BNDY,BNOV,BOCT,BOIL,BRKW,BRRR,BSEP,BSTP,BTC,BTCO,BTCW,BTRN,BUCK,CBOJ,CBOY,CBTJ,CBTY,CBXY,CEFD,CEGX,CERY,COIW,COM,CPNJ,CPNM,CPNQ,CPNS,CPRA,CPRJ,CPRO,CPRY,CPSA,CPSD,CPSF,CPSJ,CPSM,CPSN,CPSO,CPSP,CPSR,CPST,CPSU,CPSY"
-          }
-        },
-        {
-          "shard": 2,
           "ticker_count": 100,
           "inputs": {
             "history_gaps_only": "true",
@@ -328,7 +318,7 @@
           }
         },
         {
-          "shard": 3,
+          "shard": 2,
           "ticker_count": 100,
           "inputs": {
             "history_gaps_only": "true",
@@ -338,7 +328,7 @@
           }
         },
         {
-          "shard": 4,
+          "shard": 3,
           "ticker_count": 100,
           "inputs": {
             "history_gaps_only": "true",
@@ -348,7 +338,7 @@
           }
         },
         {
-          "shard": 5,
+          "shard": 4,
           "ticker_count": 22,
           "inputs": {
             "history_gaps_only": "true",
