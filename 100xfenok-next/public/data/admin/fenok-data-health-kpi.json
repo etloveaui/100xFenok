@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-07-25T00:16:33.378Z",
+  "generated_at": "2026-07-25T00:55:18.770Z",
   "status": "degraded",
   "status_label": "저하",
   "status_message": "11 required lane(s) are not ready; healthy lanes may still publish.",
@@ -22,7 +22,7 @@
   "runtime": {
     "projection": "kpi_runtime_projection.v2",
     "built_at": "2026-07-24T12:40:26.549Z",
-    "evaluated_at": "2026-07-25T00:16:33.378Z",
+    "evaluated_at": "2026-07-25T00:55:18.770Z",
     "verdict": "degraded",
     "slot_status": "degraded",
     "status_message": "9 retained missed slot(s) recovered by later authoritative ready full snapshot(s).",
@@ -38,7 +38,7 @@
     "fetch_cron_skip_detection": {
       "schema_version": "fetch-cron-attempt-coverage/v1",
       "mode": "shadow",
-      "evaluated_at": "2026-07-25T00:16:30.666Z",
+      "evaluated_at": "2026-07-25T00:55:16.005Z",
       "status": "warning",
       "deployment_blocking": false,
       "counts": {
@@ -111,7 +111,7 @@
       "required_surface_rows": [
         {
           "id": "stock_detail",
-          "source_as_of": "2026-07-21",
+          "source_as_of": "2026-07-23",
           "source_as_of_reason": null,
           "stamp_evidence": {
             "policy_version": 2,
@@ -119,7 +119,7 @@
               {
                 "id": "market_facts:core_surface",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-07-21"
+                "source_as_of": "2026-07-23"
               },
               {
                 "id": "stockanalysis:actions_recent",
@@ -311,14 +311,14 @@
               "stamped_count": 1,
               "missing_count": 0,
               "coverage_ratio": 1,
-              "source_floor_as_of": "2026-07-21"
+              "source_floor_as_of": "2026-07-23"
             },
             "dateless_by_provider": {
               "required_count": 23,
               "collection_fresh_count": 23,
               "stale_count": 0,
               "collected_at_floor": "2026-07-24T01:12:17Z",
-              "collection_age_hours": 23.071,
+              "collection_age_hours": 23.717,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -346,7 +346,7 @@
               {
                 "id": "market_facts:core_surface",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-07-21"
+                "source_as_of": "2026-07-23"
               }
             ],
             "date_bearing": {
@@ -517,7 +517,7 @@
               "collection_fresh_count": 16,
               "stale_count": 0,
               "collected_at_floor": "2026-07-24T01:12:32Z",
-              "collection_age_hours": 23.067,
+              "collection_age_hours": 23.713,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -527,7 +527,7 @@
         },
         {
           "id": "sectors",
-          "source_as_of": "2026-07-21",
+          "source_as_of": "2026-07-23",
           "source_as_of_reason": null,
           "stamp_evidence": {
             "policy_version": 2,
@@ -535,7 +535,7 @@
               {
                 "id": "market_facts:core_surface",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-07-21"
+                "source_as_of": "2026-07-23"
               },
               {
                 "id": "stockanalysis:industries_all",
@@ -567,14 +567,14 @@
               "stamped_count": 1,
               "missing_count": 0,
               "coverage_ratio": 1,
-              "source_floor_as_of": "2026-07-21"
+              "source_floor_as_of": "2026-07-23"
             },
             "dateless_by_provider": {
               "required_count": 3,
               "collection_fresh_count": 3,
               "stale_count": 0,
               "collected_at_floor": "2026-07-24T01:12:44Z",
-              "collection_age_hours": 23.064,
+              "collection_age_hours": 23.71,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -4232,7 +4232,7 @@
               "collection_fresh_count": 5,
               "stale_count": 0,
               "collected_at_floor": "2026-07-24T01:12:17Z",
-              "collection_age_hours": 23.071,
+              "collection_age_hours": 23.717,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -4295,7 +4295,7 @@
     {
       "source_id": "etf_daily1y_readiness_admin",
       "freshness_basis": ".generated_at",
-      "source_date": "2026-07-25T00:16:09.749Z",
+      "source_date": "2026-07-25T00:54:54.305Z",
       "unit": "hours",
       "calendar": "wall_clock",
       "max_staleness": 50,
@@ -4311,7 +4311,7 @@
       "calendar": "wall_clock",
       "max_staleness": 30,
       "required": true,
-      "age": 15.73,
+      "age": 16.38,
       "status": "ready"
     },
     {
@@ -4322,7 +4322,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 134.53,
+      "age": 135.17,
       "status": "ready"
     },
     {
@@ -4333,7 +4333,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 134.37,
+      "age": 135.02,
       "status": "ready"
     },
     {
@@ -4344,7 +4344,7 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 249.19,
+      "age": 249.83,
       "status": "ready"
     },
     {
@@ -4355,50 +4355,50 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 22.1,
+      "age": 22.75,
       "status": "ready"
     }
   ],
   "source_artifacts": [
     {
       "id": "fenok_edge_coverage_index",
-      "generated_at": "2026-07-25T00:15:59.304Z",
+      "generated_at": "2026-07-25T00:54:43.630Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "rim_index_inputs",
-      "generated_at": "2026-07-25T00:16:24.464Z",
+      "generated_at": "2026-07-25T00:55:09.381Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-07-25T00:16:26.069Z",
+      "generated_at": "2026-07-25T00:55:11.084Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "s0_finra_occ_mapping_ledger",
-      "generated_at": "2026-07-25T00:16:09.685Z",
+      "generated_at": "2026-07-25T00:54:54.235Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_daily1y_readiness_admin",
-      "generated_at": "2026-07-25T00:16:09.749Z",
+      "generated_at": "2026-07-25T00:54:54.305Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_core_daily_basket_admin",
-      "generated_at": "2026-07-25T00:15:50.614Z",
+      "generated_at": "2026-07-25T00:54:34.751Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "yahoo_batch_quote_history_state",
-      "generated_at": "2026-07-24T23:12:06Z",
+      "generated_at": "2026-07-25T00:38:39Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -4416,13 +4416,13 @@
     },
     {
       "id": "data_supply_detection_floor",
-      "generated_at": "2026-07-25T00:16:30.666Z",
+      "generated_at": "2026-07-25T00:55:16.005Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "yahoo_hourly_ticker_recovery_state",
-      "generated_at": "2026-07-24T22:15:52.683Z",
+      "generated_at": "2026-07-25T00:22:39.327Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -4452,7 +4452,7 @@
       "status_message": "S0 active stocks daily gate is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-25T00:15:59.304Z",
+      "as_of": "2026-07-25T00:54:43.630Z",
       "counts": {
         "active_total": 1178,
         "by_market": [
@@ -4591,10 +4591,10 @@
           "label": "asia_ex_taiwan_yf_daily_source_ready",
           "status": "ready",
           "status_label": "정상",
-          "detail": "91 / 91 · 2026-07-22",
+          "detail": "91 / 91 · 2026-07-24",
           "platform_blocking": false,
-          "source_date": "2026-07-22",
-          "age_days": 3,
+          "source_date": "2026-07-24",
+          "age_days": 1,
           "max_age_days": 4,
           "covered_count": 91,
           "denominator": 91,
@@ -4610,7 +4610,7 @@
       "status_message": "S1 candidate promotion gate is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-25T00:15:13.845Z",
+      "as_of": "2026-07-25T00:53:56.892Z",
       "counts": {
         "denominator": 1184,
         "current_public_stock": 1178,
@@ -4971,7 +4971,7 @@
           "label": "promotion artifact",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-25T00:15:13.845Z",
+          "detail": "2026-07-25T00:53:56.892Z",
           "platform_blocking": false
         },
         {
@@ -5028,7 +5028,7 @@
       "status_message": "ETF public scoring and daily gate is not ready: PUBLIC+DAILY+GATED: PUBLIC. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-25T00:16:09.749Z",
+      "as_of": "2026-07-25T00:54:54.305Z",
       "counts": {
         "eligible_etf_count": 4431,
         "scored_public_etf": 4431,
@@ -5105,20 +5105,20 @@
       "label": "Yahoo batch quote/history",
       "status": "degraded",
       "status_label": "저하",
-      "status_message": "Yahoo batch quote/history is not ready: active-universe state coverage: 2664 classified / 6729 active; 4065 untracked; oldest Yahoo source age: 96 / 6 business days; LKG primary: 012510.KS holds LKG after failing run 30055546565; source date 2026-06-25; payload hash 3afedd0593b21109b3c9a7d5459a8f1ef37be9498a2cbb7ba4740762f97e9410. 230360.KQ holds LKG after failing run 30055546565; source date 2026-06-10; payload hash 1045a62575964dd495119208688f18897b4819bfdea0ebe9b04b2cdd9c73bf8f. RAAY hold LKG because Yahoo source date 2026-03-06 is 96 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. RCLY hold LKG because Yahoo source date 2026-05-04 is 56 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CCRP hold LKG because Yahoo source date 2026-05-04 is 56 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CTRA hold LKG because Yahoo source date 2026-05-06 is 54 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XVO hold LKG because Yahoo source date 2026-06-03 is 35 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CTJN hold LKG because Yahoo source date 2026-06-09 is 31 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XEUR hold LKG because Yahoo source date 2026-06-09 is 31 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. 230360.KQ hold LKG because Yahoo source date 2026-06-10 is 32 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. QULL hold LKG because Yahoo source date 2026-06-11 is 29 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BRZX hold LKG because Yahoo source date 2026-06-15 is 27 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XPAV hold LKG because Yahoo source date 2026-06-15 is 27 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GASZ, GEQ, HULL, IREZ hold LKG because Yahoo source date 2026-06-17 is 25 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. WEBX hold LKG because Yahoo source date 2026-06-17 is 25 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FITZ, MIGO, THIR hold LKG because Yahoo source date 2026-06-18 is 24 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EMXX hold LKG because Yahoo source date 2026-06-24 is 21 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FREI, LOFF, MCHG, SPAL, SPCH, SSPC, TELG, TSEG hold LKG because Yahoo source date 2026-06-25 is 20 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. 012510.KS hold LKG because Yahoo source date 2026-06-25 is 21 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. WX hold LKG because Yahoo source date 2026-06-25 is 20 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CCPX hold LKG because Yahoo source date 2026-06-25 is 20 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FLAO, FLJJ, FNGU, IEF, IGPT, IGV, ITB, IWM, KORU, KPRO, LFEQ, MARU, MSTU, MUU, NVBU, NVDG, NVDL, OKLL, ORCX, PLTG, PTIR, QLD, QQQ, QTJA, ROM, SATS, SCHD, SGOV, SHY, SMH, SOXL, SOXX, SPY, SSO, TLT, TMF, TNA, TQQQ, TSLL, TSMG, UPRO, USD, USE, UTSL, UWM, VNQ, VOO, VOX, VOXP, VTI, XHB, XLB, XLC, XLE, XLF, XLI, XLK, XLP, XLRE, XLU, XLV, XLY, ZSB, ZSC hold LKG because Yahoo source date 2026-06-26 is 19 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FBTC, FEBU, FETH, FGDL, FSTB, FXA, FXB, FXC, FXE, FXF, FXY, GBTC, GCC, GDLC, GLD, GLDM, GLNK, GLTR, GMMA, GOOW, GOP, GPT, GSOL, GTOH, HIGH, HJUN, HODL, HOOW, HYSA, HYTI, HYTR, IAPR, IAU, IAUG, IAUM, IBIC, IBIH, IBIJ, IBIK, IBIL, IBIT, IBUF, IDEC, IDJN, IFEB, IGLD, IJAN, IJUL, IJUN, IMAR, IMAY, INOV, IOCT, ISEP, IVVW, IWMW, JAJL, JANT, JANU, JANW, JNEU, JOJO, JULH, JULJ, JULT, JULU, JULW, KAUG, KBUF, KCCA, KDEC, KFEB, KJAN, KJUL, KJUN, KMAR, KMAY, KNOV, KOCT, KSEP, KSPY, LAPR, LGCF, LJUL, LQTI, LTTI, MAGY, MAYU, MBCE, METW, MLPD, MSFW, MSTB, MSTQ, MSTW, NAPR, NAUG, NDEC, NFEB, NFLW, NJAN, NJUL, NJUN, NMAR, NMAY, NNOV, NOCT, NSEP, NVDW, OCTT, OCTU, OCTW, OILK, OPER, OPPJ, OUNZ, PALL, PAPR, PAUG, PDBA, PDBC, PDEC, PFEB, PJAN, PJUL, PJUN, PLTM, PLTW, PMAR, PMAY, PNOV, POCT, PPLT, PSEP, PSTP, PWRD, QBF, QBUF, QETH, QTAP, QTOC, RBUF, RDTE, ROMO, RSJN, RYLG, SEPU, SGOL, SIVR, SLV, SPBC, SPUC, TAGS, TBIL, TBJL, TBLL, TCAI, TETH, TFJL, THY, THYP, TILC, TJAN, TJUL, TNGY, TRUI, TRUO, TSLW, TSPY, TYA, UFIV, USDU, USFR, USG, USVN, UTEN, UTHY, UTWY, UX, VIXM, VIXY, WRTH, WTPI, XBIL, XDIV, XDQQ, XDSQ, XRPI, XSPC, XTJA, XTJL, XTOC, YBTC, YETH, ZALT, ZAPR, ZAUG, ZDEK, ZFEB, ZHOG, ZJAN, ZJUL, ZJUN, ZMAY, ZNOV, ZOCT, ZSEP, ZVOL hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JADB hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CIEI hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. TAJX hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FBX, FHIL, FOMG, FOTO, FPSX, FUSD, GFSG, HBMX, HPEL, JUNC, LADM, LASC, LRNX, MAUG, MDCR, MFEB, MMAR, MMAY, MNVR, MSEP, MSTC, NVC, PJUS, PLTL, QJN, RIZE, SCJN, SNDC, SPAX, TESC, TWSC, UCTX, UUPP, VDI, VUS, WDE hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ORO hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EPMV hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BLD hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FNG, KEYG, KEYX, MJUN, MNSX, MRA, MSIX, MTSG, NVPS, ONTX, OWN, PBSC, PCPP, QQJN, QTUP, RACK, RMBC, SCA, SIMX, SMHC, SMTG, TPLX, UMAL, UMCX, XIGV, XSHP hold LKG because Yahoo source date 2026-07-01 is 16 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BK, SNK hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. IDJL hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PQXV hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLYX hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BFJA hold LKG because Yahoo source date 2026-07-06 is 14 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PCSG hold LKG because Yahoo source date 2026-07-06 is 14 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. MMID hold LKG because Yahoo source date 2026-07-06 is 14 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GMEC, IOSX, JBLG, UN, VIAG hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. QQJL hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CRUC hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. QJL hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. SCJL hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JULC hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PRXI hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JANI hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FPAA, GAVA, GDOG, GDT, GDXW, GLDW, GOOL, GSUI, HBR, HJLY, HYPG, IBGM, IDMY, INYY, IONC, JELM, JUDB, JULI, KMEM, LCTO, LRCC, LTCC, LVIG, METG, MIC, MPWC, MSBT, MWHS, NFX, NUIF, NVTC, OCDB, OKLC, ONDC, ORAC, PCLC, PQX, PUL, QNTU, QSOL, RAM, RKX, RMBX, RONB, SLON, SOEZ, SOLC, SPCM, SPDF, SUIS, TCAN, TDOG, TDOT, TERC, TISC, TLDR, TOCT, TOXR, TPAY, TSEU, TSOL, TSUI, TSYW, TTMX, UBEW, UFOX, UNHW, VAVX, VBNB, VCHY, VDG, VDV, VSOL, WAGN, WAMA, WDIG, WDRN, XQTM, XRPC, XRPR hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CIVG hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CUST hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BHYB hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. APPC hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ABXB hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ARCM hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. USML hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAAD hold LKG because Yahoo source date 2026-07-09 is 11 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EFFE hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ACHX hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XKRE hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AMUB hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLEX hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XW hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. VYLD hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AKAF hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BFXU hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EPMB hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLUX hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAOX, VBX, XCOM hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. MGKX hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BAVA hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ACGO hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLIX hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAPX, AMJB, ASTY, BEX, BHYP, CBIL, EUVX, KBAB, MVPL, QBTX, QTAC, SMU, SNDQ, SUIL, TXXS, USAX, WYFL, XRP hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XAGI hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GLX hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. USX hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. COMD hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AINT hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLBX hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XVUG hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XHOA hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ABLG hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run.; Yahoo unavailable: DAY has a transient provider miss without LKG; retry queued for the next natural Yahoo run. HOLX has a transient provider miss without LKG; retry queued for the next natural Yahoo run. MMC has a transient provider miss without LKG; retry queued for the next natural Yahoo run.; Yahoo retry set: 527 active-universe retry candidate(s). Other lanes may publish.",
+      "status_message": "Yahoo batch quote/history is not ready: active-universe state coverage: 2664 classified / 6729 active; 4065 untracked; oldest Yahoo source age: 96 / 6 business days; current Yahoo attempt failures: run 30135937225: 10 failed; LKG primary: 012510.KS holds LKG after failing run 30135937225; source date 2026-06-25; payload hash 3afedd0593b21109b3c9a7d5459a8f1ef37be9498a2cbb7ba4740762f97e9410. 230360.KQ holds LKG after failing run 30135937225; source date 2026-06-10; payload hash 1045a62575964dd495119208688f18897b4819bfdea0ebe9b04b2cdd9c73bf8f. BK holds LKG after failing run 30135937225; source date 2026-07-02; payload hash 9a18aac9ec21b758f886d3106e54facef2cfb0011356353c84097bd3fc0c356c. BLD holds LKG after failing run 30135937225; source date 2026-06-30; payload hash bbff7f35e24be2fb2ec44fc8d58aa790e52705a75d2e8c2affa53bbec3269644. CTRA holds LKG after failing run 30135937225; source date 2026-05-06; payload hash c1557c52900d93608f067b98d2df714394a7322a8d53d674d3524d275ab36b27. MRSH holds LKG after failing run 30135937225; source date 2026-07-21; payload hash 4123fdaf7ce01719d3e6d50244a7f5ec55851386d212524dd02b8e7ad7720d27. SATS holds LKG after failing run 30135937225; source date 2026-06-26; payload hash 75215225bfcfa9bd68893c3d8555530bb8f048376263731f76e94231748a42d2. RAAY hold LKG because Yahoo source date 2026-03-06 is 96 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. RCLY hold LKG because Yahoo source date 2026-05-04 is 56 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CCRP hold LKG because Yahoo source date 2026-05-04 is 56 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CTRA hold LKG because Yahoo source date 2026-05-06 is 54 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XVO hold LKG because Yahoo source date 2026-06-03 is 35 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CTJN hold LKG because Yahoo source date 2026-06-09 is 31 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XEUR hold LKG because Yahoo source date 2026-06-09 is 31 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. 230360.KQ hold LKG because Yahoo source date 2026-06-10 is 32 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. DWWN hold LKG because Yahoo source date 2026-06-10 is 30 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. QULL hold LKG because Yahoo source date 2026-06-11 is 29 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BRZX hold LKG because Yahoo source date 2026-06-15 is 27 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XPAV hold LKG because Yahoo source date 2026-06-15 is 27 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GASZ, GEQ, HULL, IREZ hold LKG because Yahoo source date 2026-06-17 is 25 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. WEBX hold LKG because Yahoo source date 2026-06-17 is 25 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FITZ, MIGO, THIR hold LKG because Yahoo source date 2026-06-18 is 24 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EMXX hold LKG because Yahoo source date 2026-06-24 is 21 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FREI, LOFF, MCHG, SPAL, SPCH, SSPC, TELG, TSEG hold LKG because Yahoo source date 2026-06-25 is 20 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. 012510.KS hold LKG because Yahoo source date 2026-06-25 is 21 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. WX hold LKG because Yahoo source date 2026-06-25 is 20 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CCPX hold LKG because Yahoo source date 2026-06-25 is 20 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FLAO, FLJJ, FNGU, IEF, IGPT, IGV, ITB, IWM, KORU, KPRO, LFEQ, MARU, MSTU, MUU, NVBU, NVDG, NVDL, OKLL, ORCX, PLTG, PTIR, QLD, QQQ, QTJA, ROM, SATS, SCHD, SGOV, SHY, SMH, SOXL, SOXX, SPY, SSO, TLT, TMF, TNA, TQQQ, TSLL, TSMG, UPRO, USD, USE, UTSL, UWM, VNQ, VOO, VOX, VOXP, VTI, XHB, XLB, XLC, XLE, XLF, XLI, XLK, XLP, XLRE, XLU, XLV, XLY, ZSB, ZSC hold LKG because Yahoo source date 2026-06-26 is 19 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FBTC, FEBU, FETH, FGDL, FSTB, FXA, FXB, FXC, FXE, FXF, FXY, GBTC, GCC, GDLC, GLD, GLDM, GLNK, GLTR, GMMA, GOOW, GOP, GPT, GSOL, GTOH, HIGH, HJUN, HODL, HOOW, HYSA, HYTI, HYTR, IAPR, IAU, IAUG, IAUM, IBIC, IBIH, IBIJ, IBIK, IBIL, IBIT, IBUF, IDEC, IDJN, IFEB, IGLD, IJAN, IJUL, IJUN, IMAR, IMAY, INOV, IOCT, ISEP, IVVW, IWMW, JAJL, JANT, JANU, JANW, JNEU, JOJO, JULH, JULJ, JULT, JULU, JULW, KAUG, KBUF, KCCA, KDEC, KFEB, KJAN, KJUL, KJUN, KMAR, KMAY, KNOV, KOCT, KSEP, KSPY, LAPR, LGCF, LJUL, LQTI, LTTI, MAGY, MAYU, MBCE, METW, MLPD, MSFW, MSTB, MSTQ, MSTW, NAPR, NAUG, NDEC, NFEB, NFLW, NJAN, NJUL, NJUN, NMAR, NMAY, NNOV, NOCT, NSEP, NVDW, OCTT, OCTU, OCTW, OILK, OPER, OPPJ, OUNZ, PALL, PAPR, PAUG, PDBA, PDBC, PDEC, PFEB, PJAN, PJUL, PJUN, PLTM, PLTW, PMAR, PMAY, PNOV, POCT, PPLT, PSEP, PSTP, PWRD, QBF, QBUF, QETH, QTAP, QTOC, RBUF, RDTE, ROMO, RSJN, RYLG, SEPU, SGOL, SIVR, SLV, SPBC, SPUC, TAGS, TBIL, TBJL, TBLL, TCAI, TETH, TFJL, THY, THYP, TILC, TJAN, TJUL, TNGY, TRUI, TRUO, TSLW, TSPY, TYA, UFIV, USDU, USFR, USG, USVN, UTEN, UTHY, UTWY, UX, VIXM, VIXY, WRTH, WTPI, XBIL, XDIV, XDQQ, XDSQ, XRPI, XSPC, XTJA, XTJL, XTOC, YBTC, YETH, ZALT, ZAPR, ZAUG, ZDEK, ZFEB, ZHOG, ZJAN, ZJUL, ZJUN, ZMAY, ZNOV, ZOCT, ZSEP, ZVOL hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JADB hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CIEI hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. TAJX hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FBX, FHIL, FOMG, FOTO, FPSX, FUSD, GFSG, HBMX, HPEL, JUNC, LADM, LASC, LRNX, MAUG, MDCR, MFEB, MMAR, MMAY, MNVR, MSEP, MSTC, NVC, PJUS, PLTL, QJN, RIZE, SCJN, SNDC, SPAX, TESC, TWSC, UCTX, UUPP, VDI, VUS, WDE hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ORO hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EPMV hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BLD hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FNG, KEYG, KEYX, MJUN, MNSX, MRA, MSIX, MTSG, NVPS, ONTX, OWN, PBSC, PCPP, QQJN, QTUP, RACK, RMBC, SCA, SIMX, SMHC, SMTG, TPLX, UMAL, UMCX, XIGV, XSHP hold LKG because Yahoo source date 2026-07-01 is 16 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BK, SNK hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. IDJL hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PQXV hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLYX hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BFJA hold LKG because Yahoo source date 2026-07-06 is 14 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PCSG hold LKG because Yahoo source date 2026-07-06 is 14 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. MMID hold LKG because Yahoo source date 2026-07-06 is 14 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GMEC, IOSX, JBLG, UN, VIAG hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. QQJL hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CRUC hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. QJL hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. SCJL hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JULC hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PRXI hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JANI hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FPAA, GAVA, GDOG, GDT, GDXW, GLDW, GOOL, GSUI, HBR, HJLY, HYPG, IBGM, IDMY, INYY, IONC, JELM, JUDB, JULI, KMEM, LCTO, LRCC, LTCC, LVIG, METG, MIC, MPWC, MSBT, MWHS, NFX, NUIF, NVTC, OCDB, OKLC, ONDC, ORAC, PCLC, PQX, PUL, QNTU, QSOL, RAM, RKX, RMBX, RONB, SLON, SOEZ, SOLC, SPCM, SPDF, SUIS, TCAN, TDOG, TDOT, TERC, TISC, TLDR, TOCT, TOXR, TPAY, TSEU, TSOL, TSUI, TSYW, TTMX, UBEW, UFOX, UNHW, VAVX, VBNB, VCHY, VDG, VDV, VSOL, WAGN, WAMA, WDIG, WDRN, XQTM, XRPC, XRPR hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CIVG hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CUST hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BHYB hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. APPC hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ABXB hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ARCM hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. USML hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAAD hold LKG because Yahoo source date 2026-07-09 is 11 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EFFE hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ACHX hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XKRE hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AMUB hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLEX hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XW hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. VYLD hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AKAF hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BFXU hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EPMB hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLUX hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAOX, VBX, XCOM hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. MGKX hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BAVA hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ACGO hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLIX hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAPX, AMJB, ASTY, BEX, BHYP, CBIL, EUVX, KBAB, MVPL, QBTX, QTAC, SMU, SNDQ, SUIL, TXXS, USAX, WYFL, XRP hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XAGI hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GLX hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. USX hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. COMD hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AINT hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLBX hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XVUG hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XHOA hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ABLG hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run.; Yahoo unavailable: DAY has a transient provider miss without LKG; retry queued for the next natural Yahoo run. HOLX has a transient provider miss without LKG; retry queued for the next natural Yahoo run. MMC has a transient provider miss without LKG; retry queued for the next natural Yahoo run.; Yahoo retry set: 529 active-universe retry candidate(s). Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
       "as_of": "2026-03-06T19:02:43Z",
       "counts": {
         "active": 6729,
         "untracked": 4065,
-        "fresh": 2137,
-        "lkg": 524,
+        "fresh": 2135,
+        "lkg": 526,
         "pending_history": 0,
         "unavailable": 3,
-        "retry": 527,
-        "failed": 10,
-        "stale": 524,
+        "retry": 529,
+        "failed": 11,
+        "stale": 525,
         "oldest_source_date": "2026-03-06",
         "oldest_source_symbol": "RAAY",
         "oldest_source_age_business_days": 96,
@@ -5126,35 +5126,81 @@
       },
       "details": {
         "latest_attempt": {
-          "attempt_ref": "30132647097",
+          "attempt_ref": "30135937225",
           "attempt_number": 1,
           "event_name": "schedule",
-          "schedule": "0 22 * * 5",
+          "schedule": "20 23 * * 1-5",
           "natural": true,
-          "attempted": 140,
-          "successes": 140,
-          "failed": 0,
-          "failed_symbols": [],
-          "skipped": 0,
-          "fetch_attempts": 140,
+          "attempted": 1183,
+          "successes": 1117,
+          "failed": 10,
+          "failed_symbols": [
+            "012510.KS",
+            "230360.KQ",
+            "BK",
+            "BLD",
+            "CTRA",
+            "DAY",
+            "HOLX",
+            "MMC",
+            "MRSH",
+            "SATS"
+          ],
+          "skipped": 56,
+          "fetch_attempts": 1130,
           "promotion_deferrals": 0,
           "promotion_deferral_symbols": []
         },
-        "state_generated_at": "2026-07-24T23:12:06Z",
+        "state_generated_at": "2026-07-25T00:38:39Z",
         "lkg": [
           {
             "symbol": "012510.KS",
             "payload_sha256": "3afedd0593b21109b3c9a7d5459a8f1ef37be9498a2cbb7ba4740762f97e9410",
             "source_as_of": "2026-06-25T06:30:30Z",
-            "failure_attempt_ref": "30055546565",
-            "failure_observed_at": "2026-07-24T00:27:41Z"
+            "failure_attempt_ref": "30135937225",
+            "failure_observed_at": "2026-07-25T00:24:00Z"
           },
           {
             "symbol": "230360.KQ",
             "payload_sha256": "1045a62575964dd495119208688f18897b4819bfdea0ebe9b04b2cdd9c73bf8f",
             "source_as_of": "2026-06-10T06:30:30Z",
-            "failure_attempt_ref": "30055546565",
-            "failure_observed_at": "2026-07-24T00:27:41Z"
+            "failure_attempt_ref": "30135937225",
+            "failure_observed_at": "2026-07-25T00:24:00Z"
+          },
+          {
+            "symbol": "BK",
+            "payload_sha256": "9a18aac9ec21b758f886d3106e54facef2cfb0011356353c84097bd3fc0c356c",
+            "source_as_of": "2026-07-02",
+            "failure_attempt_ref": "30135937225",
+            "failure_observed_at": "2026-07-25T00:24:00Z"
+          },
+          {
+            "symbol": "BLD",
+            "payload_sha256": "bbff7f35e24be2fb2ec44fc8d58aa790e52705a75d2e8c2affa53bbec3269644",
+            "source_as_of": "2026-06-30T20:05:29Z",
+            "failure_attempt_ref": "30135937225",
+            "failure_observed_at": "2026-07-25T00:24:00Z"
+          },
+          {
+            "symbol": "CTRA",
+            "payload_sha256": "c1557c52900d93608f067b98d2df714394a7322a8d53d674d3524d275ab36b27",
+            "source_as_of": "2026-05-06",
+            "failure_attempt_ref": "30135937225",
+            "failure_observed_at": "2026-07-25T00:24:00Z"
+          },
+          {
+            "symbol": "MRSH",
+            "payload_sha256": "4123fdaf7ce01719d3e6d50244a7f5ec55851386d212524dd02b8e7ad7720d27",
+            "source_as_of": "2026-07-21",
+            "failure_attempt_ref": "30135937225",
+            "failure_observed_at": "2026-07-25T00:24:00Z"
+          },
+          {
+            "symbol": "SATS",
+            "payload_sha256": "75215225bfcfa9bd68893c3d8555530bb8f048376263731f76e94231748a42d2",
+            "source_as_of": "2026-06-26",
+            "failure_attempt_ref": "30135937225",
+            "failure_observed_at": "2026-07-25T00:24:00Z"
           }
         ],
         "stale_groups": [
@@ -5228,6 +5274,15 @@
             "expected_resolution": "next_natural_yahoo_run",
             "symbols": [
               "230360.KQ"
+            ]
+          },
+          {
+            "source_as_of": "2026-06-10T17:29:37Z",
+            "source_age_business_days": 30,
+            "max_source_age_business_days": 6,
+            "expected_resolution": "next_natural_yahoo_run",
+            "symbols": [
+              "DWWN"
             ]
           },
           {
@@ -6319,8 +6374,8 @@
         "unavailable": [
           {
             "symbol": "DAY",
-            "failure_attempt_ref": "30055546565",
-            "failure_observed_at": "2026-07-24T00:27:41Z",
+            "failure_attempt_ref": "30135937225",
+            "failure_observed_at": "2026-07-25T00:24:00Z",
             "failure_kind": "transient_provider_miss",
             "lkg_status": "absent",
             "data_loss": false,
@@ -6330,8 +6385,8 @@
           },
           {
             "symbol": "HOLX",
-            "failure_attempt_ref": "30055546565",
-            "failure_observed_at": "2026-07-24T00:27:41Z",
+            "failure_attempt_ref": "30135937225",
+            "failure_observed_at": "2026-07-25T00:24:00Z",
             "failure_kind": "transient_provider_miss",
             "lkg_status": "absent",
             "data_loss": false,
@@ -6341,8 +6396,8 @@
           },
           {
             "symbol": "MMC",
-            "failure_attempt_ref": "30055546565",
-            "failure_observed_at": "2026-07-24T00:27:41Z",
+            "failure_attempt_ref": "30135937225",
+            "failure_observed_at": "2026-07-25T00:24:00Z",
             "failure_kind": "transient_provider_miss",
             "lkg_status": "absent",
             "data_loss": false,
@@ -6362,7 +6417,7 @@
           "label": "Yahoo bounded state",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-24T23:12:06Z",
+          "detail": "2026-07-25T00:38:39Z",
           "platform_blocking": false
         },
         {
@@ -6378,7 +6433,7 @@
           "label": "current attempt evidence",
           "status": "ready",
           "status_label": "정상",
-          "detail": "run 30132647097: attempted=140, success=140, failed=0, skipped=0, fetch_attempts=140",
+          "detail": "run 30135937225: attempted=1183, success=1117, failed=10, skipped=56, fetch_attempts=1130",
           "platform_blocking": false
         },
         {
@@ -6408,9 +6463,9 @@
         {
           "id": "no_current_failures",
           "label": "current Yahoo attempt failures",
-          "status": "ready",
-          "status_label": "정상",
-          "detail": "run 30132647097: 0 failed",
+          "status": "blocked",
+          "status_label": "차단",
+          "detail": "run 30135937225: 10 failed",
           "platform_blocking": false
         },
         {
@@ -6418,7 +6473,7 @@
           "label": "LKG primary",
           "status": "blocked",
           "status_label": "차단",
-          "detail": "012510.KS holds LKG after failing run 30055546565; source date 2026-06-25; payload hash 3afedd0593b21109b3c9a7d5459a8f1ef37be9498a2cbb7ba4740762f97e9410. 230360.KQ holds LKG after failing run 30055546565; source date 2026-06-10; payload hash 1045a62575964dd495119208688f18897b4819bfdea0ebe9b04b2cdd9c73bf8f. RAAY hold LKG because Yahoo source date 2026-03-06 is 96 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. RCLY hold LKG because Yahoo source date 2026-05-04 is 56 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CCRP hold LKG because Yahoo source date 2026-05-04 is 56 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CTRA hold LKG because Yahoo source date 2026-05-06 is 54 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XVO hold LKG because Yahoo source date 2026-06-03 is 35 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CTJN hold LKG because Yahoo source date 2026-06-09 is 31 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XEUR hold LKG because Yahoo source date 2026-06-09 is 31 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. 230360.KQ hold LKG because Yahoo source date 2026-06-10 is 32 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. QULL hold LKG because Yahoo source date 2026-06-11 is 29 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BRZX hold LKG because Yahoo source date 2026-06-15 is 27 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XPAV hold LKG because Yahoo source date 2026-06-15 is 27 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GASZ, GEQ, HULL, IREZ hold LKG because Yahoo source date 2026-06-17 is 25 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. WEBX hold LKG because Yahoo source date 2026-06-17 is 25 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FITZ, MIGO, THIR hold LKG because Yahoo source date 2026-06-18 is 24 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EMXX hold LKG because Yahoo source date 2026-06-24 is 21 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FREI, LOFF, MCHG, SPAL, SPCH, SSPC, TELG, TSEG hold LKG because Yahoo source date 2026-06-25 is 20 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. 012510.KS hold LKG because Yahoo source date 2026-06-25 is 21 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. WX hold LKG because Yahoo source date 2026-06-25 is 20 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CCPX hold LKG because Yahoo source date 2026-06-25 is 20 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FLAO, FLJJ, FNGU, IEF, IGPT, IGV, ITB, IWM, KORU, KPRO, LFEQ, MARU, MSTU, MUU, NVBU, NVDG, NVDL, OKLL, ORCX, PLTG, PTIR, QLD, QQQ, QTJA, ROM, SATS, SCHD, SGOV, SHY, SMH, SOXL, SOXX, SPY, SSO, TLT, TMF, TNA, TQQQ, TSLL, TSMG, UPRO, USD, USE, UTSL, UWM, VNQ, VOO, VOX, VOXP, VTI, XHB, XLB, XLC, XLE, XLF, XLI, XLK, XLP, XLRE, XLU, XLV, XLY, ZSB, ZSC hold LKG because Yahoo source date 2026-06-26 is 19 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FBTC, FEBU, FETH, FGDL, FSTB, FXA, FXB, FXC, FXE, FXF, FXY, GBTC, GCC, GDLC, GLD, GLDM, GLNK, GLTR, GMMA, GOOW, GOP, GPT, GSOL, GTOH, HIGH, HJUN, HODL, HOOW, HYSA, HYTI, HYTR, IAPR, IAU, IAUG, IAUM, IBIC, IBIH, IBIJ, IBIK, IBIL, IBIT, IBUF, IDEC, IDJN, IFEB, IGLD, IJAN, IJUL, IJUN, IMAR, IMAY, INOV, IOCT, ISEP, IVVW, IWMW, JAJL, JANT, JANU, JANW, JNEU, JOJO, JULH, JULJ, JULT, JULU, JULW, KAUG, KBUF, KCCA, KDEC, KFEB, KJAN, KJUL, KJUN, KMAR, KMAY, KNOV, KOCT, KSEP, KSPY, LAPR, LGCF, LJUL, LQTI, LTTI, MAGY, MAYU, MBCE, METW, MLPD, MSFW, MSTB, MSTQ, MSTW, NAPR, NAUG, NDEC, NFEB, NFLW, NJAN, NJUL, NJUN, NMAR, NMAY, NNOV, NOCT, NSEP, NVDW, OCTT, OCTU, OCTW, OILK, OPER, OPPJ, OUNZ, PALL, PAPR, PAUG, PDBA, PDBC, PDEC, PFEB, PJAN, PJUL, PJUN, PLTM, PLTW, PMAR, PMAY, PNOV, POCT, PPLT, PSEP, PSTP, PWRD, QBF, QBUF, QETH, QTAP, QTOC, RBUF, RDTE, ROMO, RSJN, RYLG, SEPU, SGOL, SIVR, SLV, SPBC, SPUC, TAGS, TBIL, TBJL, TBLL, TCAI, TETH, TFJL, THY, THYP, TILC, TJAN, TJUL, TNGY, TRUI, TRUO, TSLW, TSPY, TYA, UFIV, USDU, USFR, USG, USVN, UTEN, UTHY, UTWY, UX, VIXM, VIXY, WRTH, WTPI, XBIL, XDIV, XDQQ, XDSQ, XRPI, XSPC, XTJA, XTJL, XTOC, YBTC, YETH, ZALT, ZAPR, ZAUG, ZDEK, ZFEB, ZHOG, ZJAN, ZJUL, ZJUN, ZMAY, ZNOV, ZOCT, ZSEP, ZVOL hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JADB hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CIEI hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. TAJX hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FBX, FHIL, FOMG, FOTO, FPSX, FUSD, GFSG, HBMX, HPEL, JUNC, LADM, LASC, LRNX, MAUG, MDCR, MFEB, MMAR, MMAY, MNVR, MSEP, MSTC, NVC, PJUS, PLTL, QJN, RIZE, SCJN, SNDC, SPAX, TESC, TWSC, UCTX, UUPP, VDI, VUS, WDE hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ORO hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EPMV hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BLD hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FNG, KEYG, KEYX, MJUN, MNSX, MRA, MSIX, MTSG, NVPS, ONTX, OWN, PBSC, PCPP, QQJN, QTUP, RACK, RMBC, SCA, SIMX, SMHC, SMTG, TPLX, UMAL, UMCX, XIGV, XSHP hold LKG because Yahoo source date 2026-07-01 is 16 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BK, SNK hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. IDJL hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PQXV hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLYX hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BFJA hold LKG because Yahoo source date 2026-07-06 is 14 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PCSG hold LKG because Yahoo source date 2026-07-06 is 14 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. MMID hold LKG because Yahoo source date 2026-07-06 is 14 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GMEC, IOSX, JBLG, UN, VIAG hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. QQJL hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CRUC hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. QJL hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. SCJL hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JULC hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PRXI hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JANI hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FPAA, GAVA, GDOG, GDT, GDXW, GLDW, GOOL, GSUI, HBR, HJLY, HYPG, IBGM, IDMY, INYY, IONC, JELM, JUDB, JULI, KMEM, LCTO, LRCC, LTCC, LVIG, METG, MIC, MPWC, MSBT, MWHS, NFX, NUIF, NVTC, OCDB, OKLC, ONDC, ORAC, PCLC, PQX, PUL, QNTU, QSOL, RAM, RKX, RMBX, RONB, SLON, SOEZ, SOLC, SPCM, SPDF, SUIS, TCAN, TDOG, TDOT, TERC, TISC, TLDR, TOCT, TOXR, TPAY, TSEU, TSOL, TSUI, TSYW, TTMX, UBEW, UFOX, UNHW, VAVX, VBNB, VCHY, VDG, VDV, VSOL, WAGN, WAMA, WDIG, WDRN, XQTM, XRPC, XRPR hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CIVG hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CUST hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BHYB hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. APPC hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ABXB hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ARCM hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. USML hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAAD hold LKG because Yahoo source date 2026-07-09 is 11 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EFFE hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ACHX hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XKRE hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AMUB hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLEX hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XW hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. VYLD hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AKAF hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BFXU hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EPMB hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLUX hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAOX, VBX, XCOM hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. MGKX hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BAVA hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ACGO hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLIX hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAPX, AMJB, ASTY, BEX, BHYP, CBIL, EUVX, KBAB, MVPL, QBTX, QTAC, SMU, SNDQ, SUIL, TXXS, USAX, WYFL, XRP hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XAGI hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GLX hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. USX hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. COMD hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AINT hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLBX hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XVUG hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XHOA hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ABLG hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run.",
+          "detail": "012510.KS holds LKG after failing run 30135937225; source date 2026-06-25; payload hash 3afedd0593b21109b3c9a7d5459a8f1ef37be9498a2cbb7ba4740762f97e9410. 230360.KQ holds LKG after failing run 30135937225; source date 2026-06-10; payload hash 1045a62575964dd495119208688f18897b4819bfdea0ebe9b04b2cdd9c73bf8f. BK holds LKG after failing run 30135937225; source date 2026-07-02; payload hash 9a18aac9ec21b758f886d3106e54facef2cfb0011356353c84097bd3fc0c356c. BLD holds LKG after failing run 30135937225; source date 2026-06-30; payload hash bbff7f35e24be2fb2ec44fc8d58aa790e52705a75d2e8c2affa53bbec3269644. CTRA holds LKG after failing run 30135937225; source date 2026-05-06; payload hash c1557c52900d93608f067b98d2df714394a7322a8d53d674d3524d275ab36b27. MRSH holds LKG after failing run 30135937225; source date 2026-07-21; payload hash 4123fdaf7ce01719d3e6d50244a7f5ec55851386d212524dd02b8e7ad7720d27. SATS holds LKG after failing run 30135937225; source date 2026-06-26; payload hash 75215225bfcfa9bd68893c3d8555530bb8f048376263731f76e94231748a42d2. RAAY hold LKG because Yahoo source date 2026-03-06 is 96 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. RCLY hold LKG because Yahoo source date 2026-05-04 is 56 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CCRP hold LKG because Yahoo source date 2026-05-04 is 56 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CTRA hold LKG because Yahoo source date 2026-05-06 is 54 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XVO hold LKG because Yahoo source date 2026-06-03 is 35 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CTJN hold LKG because Yahoo source date 2026-06-09 is 31 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XEUR hold LKG because Yahoo source date 2026-06-09 is 31 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. 230360.KQ hold LKG because Yahoo source date 2026-06-10 is 32 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. DWWN hold LKG because Yahoo source date 2026-06-10 is 30 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. QULL hold LKG because Yahoo source date 2026-06-11 is 29 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BRZX hold LKG because Yahoo source date 2026-06-15 is 27 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XPAV hold LKG because Yahoo source date 2026-06-15 is 27 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GASZ, GEQ, HULL, IREZ hold LKG because Yahoo source date 2026-06-17 is 25 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. WEBX hold LKG because Yahoo source date 2026-06-17 is 25 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FITZ, MIGO, THIR hold LKG because Yahoo source date 2026-06-18 is 24 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EMXX hold LKG because Yahoo source date 2026-06-24 is 21 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FREI, LOFF, MCHG, SPAL, SPCH, SSPC, TELG, TSEG hold LKG because Yahoo source date 2026-06-25 is 20 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. 012510.KS hold LKG because Yahoo source date 2026-06-25 is 21 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. WX hold LKG because Yahoo source date 2026-06-25 is 20 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CCPX hold LKG because Yahoo source date 2026-06-25 is 20 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FLAO, FLJJ, FNGU, IEF, IGPT, IGV, ITB, IWM, KORU, KPRO, LFEQ, MARU, MSTU, MUU, NVBU, NVDG, NVDL, OKLL, ORCX, PLTG, PTIR, QLD, QQQ, QTJA, ROM, SATS, SCHD, SGOV, SHY, SMH, SOXL, SOXX, SPY, SSO, TLT, TMF, TNA, TQQQ, TSLL, TSMG, UPRO, USD, USE, UTSL, UWM, VNQ, VOO, VOX, VOXP, VTI, XHB, XLB, XLC, XLE, XLF, XLI, XLK, XLP, XLRE, XLU, XLV, XLY, ZSB, ZSC hold LKG because Yahoo source date 2026-06-26 is 19 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FBTC, FEBU, FETH, FGDL, FSTB, FXA, FXB, FXC, FXE, FXF, FXY, GBTC, GCC, GDLC, GLD, GLDM, GLNK, GLTR, GMMA, GOOW, GOP, GPT, GSOL, GTOH, HIGH, HJUN, HODL, HOOW, HYSA, HYTI, HYTR, IAPR, IAU, IAUG, IAUM, IBIC, IBIH, IBIJ, IBIK, IBIL, IBIT, IBUF, IDEC, IDJN, IFEB, IGLD, IJAN, IJUL, IJUN, IMAR, IMAY, INOV, IOCT, ISEP, IVVW, IWMW, JAJL, JANT, JANU, JANW, JNEU, JOJO, JULH, JULJ, JULT, JULU, JULW, KAUG, KBUF, KCCA, KDEC, KFEB, KJAN, KJUL, KJUN, KMAR, KMAY, KNOV, KOCT, KSEP, KSPY, LAPR, LGCF, LJUL, LQTI, LTTI, MAGY, MAYU, MBCE, METW, MLPD, MSFW, MSTB, MSTQ, MSTW, NAPR, NAUG, NDEC, NFEB, NFLW, NJAN, NJUL, NJUN, NMAR, NMAY, NNOV, NOCT, NSEP, NVDW, OCTT, OCTU, OCTW, OILK, OPER, OPPJ, OUNZ, PALL, PAPR, PAUG, PDBA, PDBC, PDEC, PFEB, PJAN, PJUL, PJUN, PLTM, PLTW, PMAR, PMAY, PNOV, POCT, PPLT, PSEP, PSTP, PWRD, QBF, QBUF, QETH, QTAP, QTOC, RBUF, RDTE, ROMO, RSJN, RYLG, SEPU, SGOL, SIVR, SLV, SPBC, SPUC, TAGS, TBIL, TBJL, TBLL, TCAI, TETH, TFJL, THY, THYP, TILC, TJAN, TJUL, TNGY, TRUI, TRUO, TSLW, TSPY, TYA, UFIV, USDU, USFR, USG, USVN, UTEN, UTHY, UTWY, UX, VIXM, VIXY, WRTH, WTPI, XBIL, XDIV, XDQQ, XDSQ, XRPI, XSPC, XTJA, XTJL, XTOC, YBTC, YETH, ZALT, ZAPR, ZAUG, ZDEK, ZFEB, ZHOG, ZJAN, ZJUL, ZJUN, ZMAY, ZNOV, ZOCT, ZSEP, ZVOL hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JADB hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CIEI hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. TAJX hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FBX, FHIL, FOMG, FOTO, FPSX, FUSD, GFSG, HBMX, HPEL, JUNC, LADM, LASC, LRNX, MAUG, MDCR, MFEB, MMAR, MMAY, MNVR, MSEP, MSTC, NVC, PJUS, PLTL, QJN, RIZE, SCJN, SNDC, SPAX, TESC, TWSC, UCTX, UUPP, VDI, VUS, WDE hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ORO hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EPMV hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BLD hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FNG, KEYG, KEYX, MJUN, MNSX, MRA, MSIX, MTSG, NVPS, ONTX, OWN, PBSC, PCPP, QQJN, QTUP, RACK, RMBC, SCA, SIMX, SMHC, SMTG, TPLX, UMAL, UMCX, XIGV, XSHP hold LKG because Yahoo source date 2026-07-01 is 16 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BK, SNK hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. IDJL hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PQXV hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLYX hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BFJA hold LKG because Yahoo source date 2026-07-06 is 14 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PCSG hold LKG because Yahoo source date 2026-07-06 is 14 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. MMID hold LKG because Yahoo source date 2026-07-06 is 14 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GMEC, IOSX, JBLG, UN, VIAG hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. QQJL hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CRUC hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. QJL hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. SCJL hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JULC hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PRXI hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JANI hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FPAA, GAVA, GDOG, GDT, GDXW, GLDW, GOOL, GSUI, HBR, HJLY, HYPG, IBGM, IDMY, INYY, IONC, JELM, JUDB, JULI, KMEM, LCTO, LRCC, LTCC, LVIG, METG, MIC, MPWC, MSBT, MWHS, NFX, NUIF, NVTC, OCDB, OKLC, ONDC, ORAC, PCLC, PQX, PUL, QNTU, QSOL, RAM, RKX, RMBX, RONB, SLON, SOEZ, SOLC, SPCM, SPDF, SUIS, TCAN, TDOG, TDOT, TERC, TISC, TLDR, TOCT, TOXR, TPAY, TSEU, TSOL, TSUI, TSYW, TTMX, UBEW, UFOX, UNHW, VAVX, VBNB, VCHY, VDG, VDV, VSOL, WAGN, WAMA, WDIG, WDRN, XQTM, XRPC, XRPR hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CIVG hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CUST hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BHYB hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. APPC hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ABXB hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ARCM hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. USML hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAAD hold LKG because Yahoo source date 2026-07-09 is 11 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EFFE hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ACHX hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XKRE hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AMUB hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLEX hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XW hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. VYLD hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AKAF hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BFXU hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EPMB hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLUX hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAOX, VBX, XCOM hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. MGKX hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BAVA hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ACGO hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLIX hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAPX, AMJB, ASTY, BEX, BHYP, CBIL, EUVX, KBAB, MVPL, QBTX, QTAC, SMU, SNDQ, SUIL, TXXS, USAX, WYFL, XRP hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XAGI hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GLX hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. USX hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. COMD hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AINT hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLBX hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XVUG hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XHOA hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ABLG hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run.",
           "platform_blocking": false
         },
         {
@@ -6442,7 +6497,7 @@
           "label": "Yahoo retry set",
           "status": "blocked",
           "status_label": "차단",
-          "detail": "527 active-universe retry candidate(s)",
+          "detail": "529 active-universe retry candidate(s)",
           "platform_blocking": false
         }
       ]
@@ -6564,7 +6619,7 @@
       "status_message": "RIM inputs is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-25T00:16:24.464Z",
+      "as_of": "2026-07-25T00:55:09.381Z",
       "counts": {
         "required_ready": 4,
         "required_total": 4,
@@ -6719,7 +6774,7 @@
       "status_message": "Product surface freshness is not ready: stale surfaces: 2 stale; product surface true-date/collection taxonomy v2: etf_center:pending_true_date. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-25T00:16:26.069Z",
+      "as_of": "2026-07-25T00:55:11.084Z",
       "counts": {
         "surfaces": 7,
         "ready": 0,
@@ -6778,7 +6833,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-25T00:16:26.069Z",
+          "detail": "2026-07-25T00:55:11.084Z",
           "platform_blocking": false
         },
         {
@@ -6843,7 +6898,7 @@
       "status_message": "FINRA/OCC source gate is not ready: OCC current delivery: OCC target 2026-07-24 was unavailable (0 usable rows; 25 hard failures; threshold stop recorded); serving fallback dated 2026-07-23. Current run remains degraded across 3 non-empty batch(es).. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-25T00:16:09.685Z",
+      "as_of": "2026-07-25T00:54:54.235Z",
       "counts": {
         "active_us_total": 750,
         "plain_us_finra_denominator": 691,
@@ -6855,10 +6910,10 @@
       },
       "details": {
         "source_dates": {
-          "signals_generated_at": "2026-07-25T00:15:18.441Z",
+          "signals_generated_at": "2026-07-25T00:54:01.856Z",
           "finra_source_date": "20260723",
           "occ_source_date": "20260723",
-          "coverage_index_generated_at": "2026-07-25T00:15:59.304Z",
+          "coverage_index_generated_at": "2026-07-25T00:54:43.630Z",
           "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
         },
         "action_policy": [
@@ -6898,7 +6953,7 @@
           "label": "ledger acceptance",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-07-25T00:16:09.685Z",
+          "detail": "2026-07-25T00:54:54.235Z",
           "platform_blocking": true
         },
         {
@@ -6951,7 +7006,7 @@
       "status_message": "Daily automation and deploy gates is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-07-25T00:16:33.668Z",
+      "as_of": "2026-07-25T00:55:19.070Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
@@ -7543,7 +7598,7 @@
         "detection_reason": "stale",
         "recovery": {
           "lane_id": "yahoo_hourly_ticker",
-          "generated_at": "2026-07-24T22:15:52.683Z",
+          "generated_at": "2026-07-25T00:22:39.327Z",
           "keys": [
             "TQQQ.json",
             "SOXL.json"
@@ -7561,14 +7616,14 @@
           "promotion_deferral_details": [],
           "current_attempt": {
             "event_name": "schedule",
-            "observed_at": "2026-07-24T22:15:52.683Z",
+            "observed_at": "2026-07-25T00:22:39.327Z",
             "promotion_deferrals": 0,
             "promotion_deferral_keys": []
           }
         },
         "last_attempt": {
           "event_name": "schedule",
-          "observed_at": "2026-07-24T22:15:52.683Z"
+          "observed_at": "2026-07-25T00:22:39.327Z"
         },
         "last_attempt_reason": null
       },
@@ -7594,7 +7649,7 @@
           "label": "Recovery current attempt",
           "status": "ready",
           "status_label": "정상",
-          "detail": "run 30130373645",
+          "detail": "run 30135737389",
           "platform_blocking": false
         },
         {
@@ -8198,10 +8253,18 @@
     },
     {
       "lane_id": "yahoo_batch_quote_history",
+      "check_id": "no_current_failures",
+      "status": "blocked",
+      "label": "current Yahoo attempt failures",
+      "detail": "run 30135937225: 10 failed",
+      "required": true
+    },
+    {
+      "lane_id": "yahoo_batch_quote_history",
       "check_id": "no_lkg_primary",
       "status": "blocked",
       "label": "LKG primary",
-      "detail": "012510.KS holds LKG after failing run 30055546565; source date 2026-06-25; payload hash 3afedd0593b21109b3c9a7d5459a8f1ef37be9498a2cbb7ba4740762f97e9410. 230360.KQ holds LKG after failing run 30055546565; source date 2026-06-10; payload hash 1045a62575964dd495119208688f18897b4819bfdea0ebe9b04b2cdd9c73bf8f. RAAY hold LKG because Yahoo source date 2026-03-06 is 96 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. RCLY hold LKG because Yahoo source date 2026-05-04 is 56 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CCRP hold LKG because Yahoo source date 2026-05-04 is 56 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CTRA hold LKG because Yahoo source date 2026-05-06 is 54 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XVO hold LKG because Yahoo source date 2026-06-03 is 35 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CTJN hold LKG because Yahoo source date 2026-06-09 is 31 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XEUR hold LKG because Yahoo source date 2026-06-09 is 31 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. 230360.KQ hold LKG because Yahoo source date 2026-06-10 is 32 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. QULL hold LKG because Yahoo source date 2026-06-11 is 29 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BRZX hold LKG because Yahoo source date 2026-06-15 is 27 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XPAV hold LKG because Yahoo source date 2026-06-15 is 27 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GASZ, GEQ, HULL, IREZ hold LKG because Yahoo source date 2026-06-17 is 25 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. WEBX hold LKG because Yahoo source date 2026-06-17 is 25 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FITZ, MIGO, THIR hold LKG because Yahoo source date 2026-06-18 is 24 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EMXX hold LKG because Yahoo source date 2026-06-24 is 21 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FREI, LOFF, MCHG, SPAL, SPCH, SSPC, TELG, TSEG hold LKG because Yahoo source date 2026-06-25 is 20 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. 012510.KS hold LKG because Yahoo source date 2026-06-25 is 21 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. WX hold LKG because Yahoo source date 2026-06-25 is 20 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CCPX hold LKG because Yahoo source date 2026-06-25 is 20 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FLAO, FLJJ, FNGU, IEF, IGPT, IGV, ITB, IWM, KORU, KPRO, LFEQ, MARU, MSTU, MUU, NVBU, NVDG, NVDL, OKLL, ORCX, PLTG, PTIR, QLD, QQQ, QTJA, ROM, SATS, SCHD, SGOV, SHY, SMH, SOXL, SOXX, SPY, SSO, TLT, TMF, TNA, TQQQ, TSLL, TSMG, UPRO, USD, USE, UTSL, UWM, VNQ, VOO, VOX, VOXP, VTI, XHB, XLB, XLC, XLE, XLF, XLI, XLK, XLP, XLRE, XLU, XLV, XLY, ZSB, ZSC hold LKG because Yahoo source date 2026-06-26 is 19 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FBTC, FEBU, FETH, FGDL, FSTB, FXA, FXB, FXC, FXE, FXF, FXY, GBTC, GCC, GDLC, GLD, GLDM, GLNK, GLTR, GMMA, GOOW, GOP, GPT, GSOL, GTOH, HIGH, HJUN, HODL, HOOW, HYSA, HYTI, HYTR, IAPR, IAU, IAUG, IAUM, IBIC, IBIH, IBIJ, IBIK, IBIL, IBIT, IBUF, IDEC, IDJN, IFEB, IGLD, IJAN, IJUL, IJUN, IMAR, IMAY, INOV, IOCT, ISEP, IVVW, IWMW, JAJL, JANT, JANU, JANW, JNEU, JOJO, JULH, JULJ, JULT, JULU, JULW, KAUG, KBUF, KCCA, KDEC, KFEB, KJAN, KJUL, KJUN, KMAR, KMAY, KNOV, KOCT, KSEP, KSPY, LAPR, LGCF, LJUL, LQTI, LTTI, MAGY, MAYU, MBCE, METW, MLPD, MSFW, MSTB, MSTQ, MSTW, NAPR, NAUG, NDEC, NFEB, NFLW, NJAN, NJUL, NJUN, NMAR, NMAY, NNOV, NOCT, NSEP, NVDW, OCTT, OCTU, OCTW, OILK, OPER, OPPJ, OUNZ, PALL, PAPR, PAUG, PDBA, PDBC, PDEC, PFEB, PJAN, PJUL, PJUN, PLTM, PLTW, PMAR, PMAY, PNOV, POCT, PPLT, PSEP, PSTP, PWRD, QBF, QBUF, QETH, QTAP, QTOC, RBUF, RDTE, ROMO, RSJN, RYLG, SEPU, SGOL, SIVR, SLV, SPBC, SPUC, TAGS, TBIL, TBJL, TBLL, TCAI, TETH, TFJL, THY, THYP, TILC, TJAN, TJUL, TNGY, TRUI, TRUO, TSLW, TSPY, TYA, UFIV, USDU, USFR, USG, USVN, UTEN, UTHY, UTWY, UX, VIXM, VIXY, WRTH, WTPI, XBIL, XDIV, XDQQ, XDSQ, XRPI, XSPC, XTJA, XTJL, XTOC, YBTC, YETH, ZALT, ZAPR, ZAUG, ZDEK, ZFEB, ZHOG, ZJAN, ZJUL, ZJUN, ZMAY, ZNOV, ZOCT, ZSEP, ZVOL hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JADB hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CIEI hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. TAJX hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FBX, FHIL, FOMG, FOTO, FPSX, FUSD, GFSG, HBMX, HPEL, JUNC, LADM, LASC, LRNX, MAUG, MDCR, MFEB, MMAR, MMAY, MNVR, MSEP, MSTC, NVC, PJUS, PLTL, QJN, RIZE, SCJN, SNDC, SPAX, TESC, TWSC, UCTX, UUPP, VDI, VUS, WDE hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ORO hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EPMV hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BLD hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FNG, KEYG, KEYX, MJUN, MNSX, MRA, MSIX, MTSG, NVPS, ONTX, OWN, PBSC, PCPP, QQJN, QTUP, RACK, RMBC, SCA, SIMX, SMHC, SMTG, TPLX, UMAL, UMCX, XIGV, XSHP hold LKG because Yahoo source date 2026-07-01 is 16 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BK, SNK hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. IDJL hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PQXV hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLYX hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BFJA hold LKG because Yahoo source date 2026-07-06 is 14 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PCSG hold LKG because Yahoo source date 2026-07-06 is 14 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. MMID hold LKG because Yahoo source date 2026-07-06 is 14 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GMEC, IOSX, JBLG, UN, VIAG hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. QQJL hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CRUC hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. QJL hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. SCJL hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JULC hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PRXI hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JANI hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FPAA, GAVA, GDOG, GDT, GDXW, GLDW, GOOL, GSUI, HBR, HJLY, HYPG, IBGM, IDMY, INYY, IONC, JELM, JUDB, JULI, KMEM, LCTO, LRCC, LTCC, LVIG, METG, MIC, MPWC, MSBT, MWHS, NFX, NUIF, NVTC, OCDB, OKLC, ONDC, ORAC, PCLC, PQX, PUL, QNTU, QSOL, RAM, RKX, RMBX, RONB, SLON, SOEZ, SOLC, SPCM, SPDF, SUIS, TCAN, TDOG, TDOT, TERC, TISC, TLDR, TOCT, TOXR, TPAY, TSEU, TSOL, TSUI, TSYW, TTMX, UBEW, UFOX, UNHW, VAVX, VBNB, VCHY, VDG, VDV, VSOL, WAGN, WAMA, WDIG, WDRN, XQTM, XRPC, XRPR hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CIVG hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CUST hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BHYB hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. APPC hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ABXB hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ARCM hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. USML hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAAD hold LKG because Yahoo source date 2026-07-09 is 11 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EFFE hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ACHX hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XKRE hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AMUB hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLEX hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XW hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. VYLD hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AKAF hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BFXU hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EPMB hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLUX hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAOX, VBX, XCOM hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. MGKX hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BAVA hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ACGO hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLIX hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAPX, AMJB, ASTY, BEX, BHYP, CBIL, EUVX, KBAB, MVPL, QBTX, QTAC, SMU, SNDQ, SUIL, TXXS, USAX, WYFL, XRP hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XAGI hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GLX hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. USX hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. COMD hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AINT hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLBX hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XVUG hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XHOA hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ABLG hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run.",
+      "detail": "012510.KS holds LKG after failing run 30135937225; source date 2026-06-25; payload hash 3afedd0593b21109b3c9a7d5459a8f1ef37be9498a2cbb7ba4740762f97e9410. 230360.KQ holds LKG after failing run 30135937225; source date 2026-06-10; payload hash 1045a62575964dd495119208688f18897b4819bfdea0ebe9b04b2cdd9c73bf8f. BK holds LKG after failing run 30135937225; source date 2026-07-02; payload hash 9a18aac9ec21b758f886d3106e54facef2cfb0011356353c84097bd3fc0c356c. BLD holds LKG after failing run 30135937225; source date 2026-06-30; payload hash bbff7f35e24be2fb2ec44fc8d58aa790e52705a75d2e8c2affa53bbec3269644. CTRA holds LKG after failing run 30135937225; source date 2026-05-06; payload hash c1557c52900d93608f067b98d2df714394a7322a8d53d674d3524d275ab36b27. MRSH holds LKG after failing run 30135937225; source date 2026-07-21; payload hash 4123fdaf7ce01719d3e6d50244a7f5ec55851386d212524dd02b8e7ad7720d27. SATS holds LKG after failing run 30135937225; source date 2026-06-26; payload hash 75215225bfcfa9bd68893c3d8555530bb8f048376263731f76e94231748a42d2. RAAY hold LKG because Yahoo source date 2026-03-06 is 96 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. RCLY hold LKG because Yahoo source date 2026-05-04 is 56 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CCRP hold LKG because Yahoo source date 2026-05-04 is 56 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CTRA hold LKG because Yahoo source date 2026-05-06 is 54 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XVO hold LKG because Yahoo source date 2026-06-03 is 35 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CTJN hold LKG because Yahoo source date 2026-06-09 is 31 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XEUR hold LKG because Yahoo source date 2026-06-09 is 31 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. 230360.KQ hold LKG because Yahoo source date 2026-06-10 is 32 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. DWWN hold LKG because Yahoo source date 2026-06-10 is 30 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. QULL hold LKG because Yahoo source date 2026-06-11 is 29 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BRZX hold LKG because Yahoo source date 2026-06-15 is 27 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XPAV hold LKG because Yahoo source date 2026-06-15 is 27 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GASZ, GEQ, HULL, IREZ hold LKG because Yahoo source date 2026-06-17 is 25 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. WEBX hold LKG because Yahoo source date 2026-06-17 is 25 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FITZ, MIGO, THIR hold LKG because Yahoo source date 2026-06-18 is 24 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EMXX hold LKG because Yahoo source date 2026-06-24 is 21 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FREI, LOFF, MCHG, SPAL, SPCH, SSPC, TELG, TSEG hold LKG because Yahoo source date 2026-06-25 is 20 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. 012510.KS hold LKG because Yahoo source date 2026-06-25 is 21 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. WX hold LKG because Yahoo source date 2026-06-25 is 20 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CCPX hold LKG because Yahoo source date 2026-06-25 is 20 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FLAO, FLJJ, FNGU, IEF, IGPT, IGV, ITB, IWM, KORU, KPRO, LFEQ, MARU, MSTU, MUU, NVBU, NVDG, NVDL, OKLL, ORCX, PLTG, PTIR, QLD, QQQ, QTJA, ROM, SATS, SCHD, SGOV, SHY, SMH, SOXL, SOXX, SPY, SSO, TLT, TMF, TNA, TQQQ, TSLL, TSMG, UPRO, USD, USE, UTSL, UWM, VNQ, VOO, VOX, VOXP, VTI, XHB, XLB, XLC, XLE, XLF, XLI, XLK, XLP, XLRE, XLU, XLV, XLY, ZSB, ZSC hold LKG because Yahoo source date 2026-06-26 is 19 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FBTC, FEBU, FETH, FGDL, FSTB, FXA, FXB, FXC, FXE, FXF, FXY, GBTC, GCC, GDLC, GLD, GLDM, GLNK, GLTR, GMMA, GOOW, GOP, GPT, GSOL, GTOH, HIGH, HJUN, HODL, HOOW, HYSA, HYTI, HYTR, IAPR, IAU, IAUG, IAUM, IBIC, IBIH, IBIJ, IBIK, IBIL, IBIT, IBUF, IDEC, IDJN, IFEB, IGLD, IJAN, IJUL, IJUN, IMAR, IMAY, INOV, IOCT, ISEP, IVVW, IWMW, JAJL, JANT, JANU, JANW, JNEU, JOJO, JULH, JULJ, JULT, JULU, JULW, KAUG, KBUF, KCCA, KDEC, KFEB, KJAN, KJUL, KJUN, KMAR, KMAY, KNOV, KOCT, KSEP, KSPY, LAPR, LGCF, LJUL, LQTI, LTTI, MAGY, MAYU, MBCE, METW, MLPD, MSFW, MSTB, MSTQ, MSTW, NAPR, NAUG, NDEC, NFEB, NFLW, NJAN, NJUL, NJUN, NMAR, NMAY, NNOV, NOCT, NSEP, NVDW, OCTT, OCTU, OCTW, OILK, OPER, OPPJ, OUNZ, PALL, PAPR, PAUG, PDBA, PDBC, PDEC, PFEB, PJAN, PJUL, PJUN, PLTM, PLTW, PMAR, PMAY, PNOV, POCT, PPLT, PSEP, PSTP, PWRD, QBF, QBUF, QETH, QTAP, QTOC, RBUF, RDTE, ROMO, RSJN, RYLG, SEPU, SGOL, SIVR, SLV, SPBC, SPUC, TAGS, TBIL, TBJL, TBLL, TCAI, TETH, TFJL, THY, THYP, TILC, TJAN, TJUL, TNGY, TRUI, TRUO, TSLW, TSPY, TYA, UFIV, USDU, USFR, USG, USVN, UTEN, UTHY, UTWY, UX, VIXM, VIXY, WRTH, WTPI, XBIL, XDIV, XDQQ, XDSQ, XRPI, XSPC, XTJA, XTJL, XTOC, YBTC, YETH, ZALT, ZAPR, ZAUG, ZDEK, ZFEB, ZHOG, ZJAN, ZJUL, ZJUN, ZMAY, ZNOV, ZOCT, ZSEP, ZVOL hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JADB hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CIEI hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. TAJX hold LKG because Yahoo source date 2026-06-29 is 18 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FBX, FHIL, FOMG, FOTO, FPSX, FUSD, GFSG, HBMX, HPEL, JUNC, LADM, LASC, LRNX, MAUG, MDCR, MFEB, MMAR, MMAY, MNVR, MSEP, MSTC, NVC, PJUS, PLTL, QJN, RIZE, SCJN, SNDC, SPAX, TESC, TWSC, UCTX, UUPP, VDI, VUS, WDE hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ORO hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EPMV hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BLD hold LKG because Yahoo source date 2026-06-30 is 17 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FNG, KEYG, KEYX, MJUN, MNSX, MRA, MSIX, MTSG, NVPS, ONTX, OWN, PBSC, PCPP, QQJN, QTUP, RACK, RMBC, SCA, SIMX, SMHC, SMTG, TPLX, UMAL, UMCX, XIGV, XSHP hold LKG because Yahoo source date 2026-07-01 is 16 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BK, SNK hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. IDJL hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PQXV hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLYX hold LKG because Yahoo source date 2026-07-02 is 15 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BFJA hold LKG because Yahoo source date 2026-07-06 is 14 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PCSG hold LKG because Yahoo source date 2026-07-06 is 14 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. MMID hold LKG because Yahoo source date 2026-07-06 is 14 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GMEC, IOSX, JBLG, UN, VIAG hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. QQJL hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CRUC hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. QJL hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. SCJL hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JULC hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. PRXI hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. JANI hold LKG because Yahoo source date 2026-07-07 is 13 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. FPAA, GAVA, GDOG, GDT, GDXW, GLDW, GOOL, GSUI, HBR, HJLY, HYPG, IBGM, IDMY, INYY, IONC, JELM, JUDB, JULI, KMEM, LCTO, LRCC, LTCC, LVIG, METG, MIC, MPWC, MSBT, MWHS, NFX, NUIF, NVTC, OCDB, OKLC, ONDC, ORAC, PCLC, PQX, PUL, QNTU, QSOL, RAM, RKX, RMBX, RONB, SLON, SOEZ, SOLC, SPCM, SPDF, SUIS, TCAN, TDOG, TDOT, TERC, TISC, TLDR, TOCT, TOXR, TPAY, TSEU, TSOL, TSUI, TSYW, TTMX, UBEW, UFOX, UNHW, VAVX, VBNB, VCHY, VDG, VDV, VSOL, WAGN, WAMA, WDIG, WDRN, XQTM, XRPC, XRPR hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CIVG hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. CUST hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BHYB hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. APPC hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ABXB hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ARCM hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. USML hold LKG because Yahoo source date 2026-07-08 is 12 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAAD hold LKG because Yahoo source date 2026-07-09 is 11 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EFFE hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ACHX hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XKRE hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AMUB hold LKG because Yahoo source date 2026-07-10 is 10 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLEX hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XW hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. VYLD hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AKAF hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BFXU hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. EPMB hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLUX hold LKG because Yahoo source date 2026-07-13 is 9 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAOX, VBX, XCOM hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. MGKX hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. BAVA hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ACGO hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLIX hold LKG because Yahoo source date 2026-07-14 is 8 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AAPX, AMJB, ASTY, BEX, BHYP, CBIL, EUVX, KBAB, MVPL, QBTX, QTAC, SMU, SNDQ, SUIL, TXXS, USAX, WYFL, XRP hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XAGI hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. GLX hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. USX hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. COMD hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. AINT hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XLBX hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XVUG hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. XHOA hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run. ABLG hold LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; queued for the next natural Yahoo run.",
       "required": true
     },
     {
@@ -8217,7 +8280,7 @@
       "check_id": "retry_set_empty",
       "status": "blocked",
       "label": "Yahoo retry set",
-      "detail": "527 active-universe retry candidate(s)",
+      "detail": "529 active-universe retry candidate(s)",
       "required": true
     },
     {
