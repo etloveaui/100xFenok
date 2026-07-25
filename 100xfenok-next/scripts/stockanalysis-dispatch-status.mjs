@@ -46,6 +46,13 @@ function buildExplicitDaily1yDispatchPlan(tickers, shardSize = 100) {
       ticker_count: shardTickers.length,
       inputs: {
         ...DAILY_1Y_INPUTS,
+        // The explicit list IS the shard's work, so the incremental selector
+        // must stand down. fetch-stockanalysis.py rejects the dispatch when
+        // `len(etfs) + incremental_etf_limit > MAX_MANUAL_ETF_SHARD`; carrying
+        // the default limit alongside a full shard made every recommended
+        // dispatch exceed the cap and exit 1, which is why this plan had never
+        // once been run despite being recommended for weeks.
+        incremental_etf_limit: "0",
         etfs: shardTickers.join(","),
       },
     });

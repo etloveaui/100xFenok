@@ -9,6 +9,9 @@
  * unknown status must hard-fail so vocabulary drift can never silently pass again.
  */
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   assertCoverageContract,
@@ -181,6 +184,35 @@ console.log("# stockanalysis market-audit history-gap dispatch fixtures");
   assert.equal(dispatch.dispatch_plan.single_writer, true);
   assert.equal(dispatch.dispatch_plan.shard_size, 100);
   assert.deepEqual(dispatch.dispatch_plan.shards.map((shard) => shard.ticker_count), [100, 100, 5]);
+
+  // Every recommended shard must be one the executor will actually accept.
+  // fetch-stockanalysis.py enforces `len(etfs) + incremental_etf_limit <=
+  // MAX_MANUAL_ETF_SHARD` and exits 1 with "combined manual ETF shard exceeds
+  // N tickers". Recommending 100 explicit tickers AND incremental_etf_limit=100
+  // is 200 against a cap of 100 — rejected every single time, which is why this
+  // "manual dispatch recommended" plan had never once been run. An explicit
+  // ticker list IS the work; the incremental selector must stand down.
+  // The cap is read from the executor itself so the two can never drift apart.
+  const executorSource = fs.readFileSync(
+    path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../scripts/fetch-stockanalysis.py"),
+    "utf8",
+  );
+  const capMatch = executorSource.match(/^MAX_MANUAL_ETF_SHARD\s*=\s*(\d+)$/m);
+  assert.ok(capMatch, "the executor must still declare MAX_MANUAL_ETF_SHARD");
+  const executorCap = Number(capMatch[1]);
+  for (const shard of dispatch.dispatch_plan.shards) {
+    const explicitCount = shard.inputs.etfs.split(",").filter(Boolean).length;
+    const incremental = Number(shard.inputs.incremental_etf_limit);
+    assert.equal(incremental, 0, `shard ${shard.shard}: an explicit ticker list must not also request incremental fetches`);
+    assert.ok(
+      explicitCount + incremental <= executorCap,
+      `shard ${shard.shard}: ${explicitCount} explicit + ${incremental} incremental exceeds the executor cap ${executorCap}`,
+    );
+  }
+  assert.ok(
+    dispatch.dispatch_plan.shard_size <= executorCap,
+    "shard_size must never exceed the executor cap",
+  );
   assert.deepEqual(
     dispatch.dispatch_plan.shards.flatMap((shard) => shard.inputs.etfs.split(",")),
     fetchableTickers,
