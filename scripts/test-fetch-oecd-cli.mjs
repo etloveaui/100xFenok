@@ -54,8 +54,25 @@ assert.throws(() => parseOecdCsv(`${header}${rows}\nXXX,2026-06,100\n`), /unknow
     attemptId: "gh-501-1-oecd-cli",
   });
   assert.equal(result.exitCode, 2);
+  assert.match(result.failure_detail, /^Error: reset$/);
   assert.equal(fs.readFileSync(shadowPath, "utf8"), "shadow-sentinel\n");
   assert.equal(JSON.parse(fs.readFileSync(attemptShardPath, "utf8")).attempts[0].execution, "threw");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "oecd-cli-parse-failure-"));
+  const result = await runOecdCliShadow({
+    shadowPath: path.join(root, "shadow.json"),
+    parityReportPath: path.join(root, "parity.json"),
+    attemptShardPath: path.join(root, "attempt.json"),
+    canonicalPath: path.join(root, "missing.json"),
+    request: async () => ({ statusCode: 200, body: "provider-secret-body" }),
+    observedAt: "2026-07-20T00:00:00Z",
+    attemptId: "gh-502-1-oecd-cli",
+  });
+  assert.equal(result.exitCode, 2);
+  assert.match(result.failure_detail, /^Error: OECD CSV missing column REF_AREA$/);
+  assert.doesNotMatch(result.failure_detail, /provider-secret-body/);
 }
 
 console.log("test-fetch-oecd-cli: ok");

@@ -12,11 +12,14 @@ import {
   validAvailabilityMarker,
 } from "./run-fenok-private-options.mjs";
 
-function makeSummary(observedAt, { failedCount = 0 } = {}) {
+function makeSummary(observedAt, { failedCount = 0, diagnostic = null } = {}) {
   const rows = SCHEDULED_TICKERS.map((ticker, index) => ({
     ticker,
     status: index < failedCount ? "failed" : "ready",
-    ...(index < failedCount ? { reason: "provider_error" } : {
+    ...(index < failedCount ? {
+      reason: "provider_error",
+      ...(diagnostic ? { diagnostic } : {}),
+    } : {
       fetched_at: observedAt,
       expiry_count: 2,
       call_rows: 4,
@@ -212,6 +215,50 @@ function tempRoot(tag) {
       eventName: "workflow_dispatch",
       controlledFailureKey: "availability,other",
     }), /unknown controlled private options key/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
+{
+  const root = tempRoot("summary-detail");
+  try {
+    const diagnostic = "RuntimeError: provider endpoint moved";
+    const failed = runYahooPrivateOptions({
+      repoRoot: root,
+      observedAt: "2026-07-18T01:10:00Z",
+      runId: "summary-detail-run",
+      runAttempt: 1,
+      eventName: "schedule",
+      collect: () => makeSummary("2026-07-18T01:10:00Z", { failedCount: 8, diagnostic }),
+    });
+    assert.equal(failed.reason, "empty_payload");
+    assert.equal(failed.failure_detail, diagnostic);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
+{
+  const root = tempRoot("collector-throw-detail");
+  try {
+    const failed = runYahooPrivateOptions({
+      repoRoot: root,
+      observedAt: "2026-07-18T01:10:00Z",
+      runId: "collector-throw-run",
+      runAttempt: 1,
+      eventName: "schedule",
+      collect: () => {
+        throw new TypeError(
+          "collector exploded https://provider.example/options?token=secret-value",
+        );
+      },
+    });
+    assert.equal(failed.reason, "schema_drift");
+    assert.match(failed.failure_detail, /^TypeError: collector exploded/);
+    assert.match(failed.failure_detail, /\?\[redacted\]/);
+    assert.doesNotMatch(failed.failure_detail, /secret-value/);
+    assert(failed.failure_detail.length <= 320, "collector failure detail must stay bounded");
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

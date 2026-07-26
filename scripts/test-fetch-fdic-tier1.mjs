@@ -364,7 +364,51 @@ function assertValidShard(shard) {
 }
 
 {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fdic-tier1-diagnostic-"));
+  const paths = makePaths(root);
+  const secret = "fdic-secret-must-not-leak";
+  const failed = await runFdicTier1({
+    ...paths,
+    quarters: QUARTERS,
+    request: async () => {
+      throw Object.assign(new Error(`gateway reset token=${secret}`), { code: "ECONNRESET" });
+    },
+    observedAt: OBSERVED_AT,
+    attemptId: "fdic-tier1-diagnostic",
+    runId: "fdic-tier1-diagnostic",
+    sleep: async () => {},
+  });
+  assert.equal(failed.reason, "transport_error", "reason enum must remain stable");
+  assert.match(failed.failure_detail, /Error: gateway reset/, "caught error identity must reach the run result");
+  assert.match(failed.failure_detail, /token=\[redacted\]/, "diagnostic detail must redact secrets");
+  assert.doesNotMatch(failed.failure_detail, new RegExp(secret), "diagnostic detail must not leak a secret");
+  assert(failed.failure_detail.length <= 320, "diagnostic detail must stay bounded");
+  const shard = readJson(paths.attemptShardPath);
+  assertValidShard(shard);
+  assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema must remain unchanged");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fdic-tier1-controlled-no-detail-"));
+  const paths = makePaths(root);
+  const failed = await runFdicTier1({
+    ...paths,
+    quarters: QUARTERS,
+    request: async (_url, quarter) => response(200, fdicRows(quarter === QUARTERS[0] ? 12 : 14)),
+    controlledFailureKey: "latest",
+    eventName: "workflow_dispatch",
+    observedAt: OBSERVED_AT,
+    attemptId: "fdic-tier1-controlled-no-detail",
+    runId: "fdic-tier1-controlled-no-detail",
+    sleep: async () => {},
+  });
+  assert.equal(failed.failure_detail ?? null, null, "controlled synthetic failures must not invent diagnostic detail");
+}
+
+{
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fdic.yml"), "utf8");
+  const producer = fs.readFileSync(new URL("./fetch-fdic-tier1.mjs", import.meta.url), "utf8");
+  assert.match(producer, /diagnosticSuffix\(result\.failure_detail\)/, "CLI failures must append bounded diagnostic detail");
   assert.match(workflow, /node scripts\/test-fetch-fdic-tier1\.mjs/);
   assert.match(workflow, /node scripts\/fetch-fdic-tier1\.mjs/);
   assert.doesNotMatch(workflow, /node << ['"]?EOF/);

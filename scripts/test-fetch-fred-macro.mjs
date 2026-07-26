@@ -299,13 +299,19 @@ for (const failure of [
 }
 
 {
-  const transport = Object.assign(new Error("socket reset"), { code: "ECONNRESET" });
+  const secret = "fred-macro-secret-must-not-leak";
+  const transport = Object.assign(new Error(`socket reset token=${secret}`), { code: "ECONNRESET" });
   const { result, shard } = await runCase(async (_url, seriesId) => {
     if (seriesId === "WALCL") throw transport;
     return response(200, observations(seriesId));
   });
   assert.equal(result.reason, "transport_error");
+  assert.match(result.failure_detail, /Error: socket reset/, "caught error identity must reach the run result");
+  assert.match(result.failure_detail, /token=\[redacted\]/, "diagnostic detail must redact secrets");
+  assert.doesNotMatch(result.failure_detail, new RegExp(secret), "diagnostic detail must not leak a secret");
+  assert(result.failure_detail.length <= 320, "diagnostic detail must stay bounded");
   assertValidShard(shard);
+  assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema must remain unchanged");
   assert.deepEqual(shard.attempts[0], {
     lane_id: "fred_macro",
     member_id: null,
@@ -323,7 +329,47 @@ for (const failure of [
 }
 
 {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-macro-controlled-no-detail-"));
+  const paths = makePaths(root);
+  const failed = await runFredMacro({
+    ...paths,
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, observations(seriesId)),
+    controlledFailureKey: "WALCL",
+    eventName: "workflow_dispatch",
+    observedAt: OBSERVED_AT,
+    attemptId: "fred-macro-controlled-no-detail",
+    runId: "fred-macro-controlled-no-detail",
+    sleep: async () => {},
+  });
+  assert.equal(failed.failure_detail ?? null, null, "controlled synthetic failures must not invent diagnostic detail");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-macro-missing-key-detail-"));
+  const paths = makePaths(root);
+  const failed = await runFredMacro({
+    ...paths,
+    apiKey: "",
+    request: async () => {
+      throw new Error("missing-key path must not call the provider");
+    },
+    observedAt: OBSERVED_AT,
+    attemptId: "fred-macro-missing-key-detail",
+    runId: "fred-macro-missing-key-detail",
+    sleep: async () => {},
+  });
+  assert.equal(failed.reason, "unexpected_error", "missing credentials retain the stable reason enum");
+  assert.equal(failed.failure_detail, "FRED API key is unavailable", "generic missing-key failure needs a safe cause");
+  const shard = readJson(paths.attemptShardPath);
+  assertValidShard(shard);
+  assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema must remain unchanged");
+}
+
+{
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fred-macro.yml"), "utf8");
+  const producer = fs.readFileSync(new URL("./fetch-fred-macro.mjs", import.meta.url), "utf8");
+  assert.match(producer, /diagnosticSuffix\(result\.failure_detail\)/, "CLI failures must append bounded diagnostic detail");
   assert.match(workflow, /node scripts\/test-fetch-fred-macro\.mjs/);
   assert.match(workflow, /node scripts\/fetch-fred-macro\.mjs/);
   assert.doesNotMatch(workflow, /node << ['"]?EOF/);

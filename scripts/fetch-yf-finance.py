@@ -35,9 +35,19 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT_DIR = ROOT / "scripts"
+DIAGNOSTIC_DETAIL_LIMIT = 240
+_DIAGNOSTIC_URL = re.compile(r"https?://[^\s),;]+", re.IGNORECASE)
+_DIAGNOSTIC_BEARER = re.compile(r"\bBearer\s+[A-Za-z0-9._~+/-]+=*", re.IGNORECASE)
+_DIAGNOSTIC_SECRET = re.compile(
+    r"\b(api[_-]?key|access[_-]?token|token|secret|authorization|cookie|password)\b"
+    r"\s*[:=]\s*(?:\"[^\"]*\"|'[^']*'|[^\s,;]+)",
+    re.IGNORECASE,
+)
+_DIAGNOSTIC_PAYLOAD = re.compile(r"\b(body|payload|response)\b\s*[:=]\s*.+$", re.IGNORECASE)
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
@@ -105,6 +115,54 @@ class FetchTimeout(Exception):
 
 
 _SAFE_PROVIDER_FAILURES = ContextVar("safe_provider_failures", default=None)
+
+
+def _redact_diagnostic_url(match: re.Match) -> str:
+    try:
+        parsed = urlsplit(match.group(0))
+        hostname = parsed.hostname
+        port = parsed.port
+    except ValueError:
+        return "[redacted-url]"
+    if not hostname:
+        return "[redacted-url]"
+    host = f"[{hostname}]" if ":" in hostname and not hostname.startswith("[") else hostname
+    netloc = f"{host}:{port}" if port is not None else host
+    suffix = "?[redacted]" if parsed.query else ""
+    return f"{parsed.scheme}://{netloc}{parsed.path}{suffix}"
+
+
+def bounded_diagnostic_detail(error: object, limit: int = DIAGNOSTIC_DETAIL_LIMIT) -> str:
+    """Return a bounded, redacted error detail safe for the live batch log."""
+    if not isinstance(limit, int) or not 1 <= limit <= DIAGNOSTIC_DETAIL_LIMIT:
+        raise ValueError(f"diagnostic detail limit must be within 1..{DIAGNOSTIC_DETAIL_LIMIT}")
+    if isinstance(error, BaseException):
+        name = re.sub(r"[^A-Za-z0-9_.-]", "", type(error).__name__) or "Error"
+        message = str(error)
+    else:
+        name = ""
+        message = str(error or "unknown error")
+    message = " ".join(message.split())
+    message = _DIAGNOSTIC_URL.sub(_redact_diagnostic_url, message)
+    message = _DIAGNOSTIC_BEARER.sub("Bearer [redacted]", message)
+    message = _DIAGNOSTIC_SECRET.sub(r"\1=[redacted]", message)
+    message = _DIAGNOSTIC_PAYLOAD.sub(r"\1: [redacted]", message)
+    detail = f"{name}: {message or 'no message'}" if name else (message or "unknown error")
+    return detail[:limit]
+
+
+def bounded_failure_evidence(evidence: dict) -> dict:
+    """Copy attempt evidence with only safe diagnostic details at persistence boundaries."""
+    sanitized = dict(evidence)
+    sanitized["failures"] = [
+        {
+            **failure,
+            "error": bounded_diagnostic_detail(failure.get("error")),
+        }
+        for failure in (evidence.get("failures") or [])
+        if isinstance(failure, dict)
+    ]
+    return sanitized
 
 
 @contextmanager
@@ -547,7 +605,7 @@ def record_finance_failure(ticker, error):
         provider_path=f"data/yf/finance/{ticker}.json",
         observed_at=observed_at,
         reason_code="fetch_failed",
-        failure_detail=error,
+        failure_detail=bounded_diagnostic_detail(error),
         origin="manual",
     )
 
@@ -770,7 +828,7 @@ def safe(fn, default=None):
     except Exception as exc:
         failures = _SAFE_PROVIDER_FAILURES.get()
         if failures is not None and len(failures) < 6:
-            failures.append(f"{type(exc).__name__}: {exc}"[:500])
+            failures.append(bounded_diagnostic_detail(exc))
         return default
 
 
@@ -898,9 +956,9 @@ def fetch_with_retry(
                 return result
             last_err = "empty payload"
         except FetchTimeout as e:
-            last_err = str(e)
+            last_err = bounded_diagnostic_detail(str(e))
         except Exception as e:
-            last_err = str(e)
+            last_err = bounded_diagnostic_detail(str(e))
         failures.extend(
             {"attempt": attempt + 1, "error": error, "source": "provider_safe_call"}
             for error in safe_failures
@@ -2012,6 +2070,7 @@ def main():
                 "failures": [] if error is None else [{"attempt": 1, "error": error}],
                 "latency_ms": latency_ms,
             }
+        evidence = bounded_failure_evidence(evidence)
         promotion_deferral = None
         provider_observation = None
         if error is None:
@@ -2145,31 +2204,38 @@ def main():
                     size_kb = round(out_path.stat().st_size / 1024, 1)
                     print(f"[{idx}/{len(tickers)}] {ticker} OK {latency_ms}ms {size_kb}KB", flush=True)
             if error is not None:
+                failure_detail = bounded_diagnostic_detail(error)
                 if state_store and promotion_deferral is None:
-                    failure_row = {"ticker": ticker, "error": error, "failures": evidence.get("failures") or []}
+                    failure_row = {"ticker": ticker, "error": failure_detail, "failures": evidence.get("failures") or []}
                     state_store.record_failure(
                         ticker,
-                        error,
+                        failure_detail,
                         run_context,
                         universe_sources.get(ticker, []),
                         evidence,
                         failure_kind=yahoo_failure_kind(failure_row, event_name=args.event_name),
                     )
-                print(f"[{idx}/{len(tickers)}] {ticker} FAIL: {error[:80]}", flush=True)
+                print(f"[{idx}/{len(tickers)}] {ticker} FAIL: {failure_detail}", flush=True)
         else:
+            failure_detail = bounded_diagnostic_detail(error)
             record_finance_failure(ticker, error)
             if state_store:
-                failure_row = {"ticker": ticker, "error": error, "failures": evidence.get("failures") or []}
+                failure_row = {"ticker": ticker, "error": failure_detail, "failures": evidence.get("failures") or []}
                 state_store.record_failure(
                     ticker,
-                    error,
+                    failure_detail,
                     run_context,
                     universe_sources.get(ticker, []),
                     evidence,
                     failure_kind=yahoo_failure_kind(failure_row, event_name=args.event_name),
                 )
-            print(f"[{idx}/{len(tickers)}] {ticker} FAIL: {error[:80]}", flush=True)
-        result = {"ticker": ticker, "latency_ms": latency_ms, "error": error, "skipped": False}
+            print(f"[{idx}/{len(tickers)}] {ticker} FAIL: {failure_detail}", flush=True)
+        result = {
+            "ticker": ticker,
+            "latency_ms": latency_ms,
+            "error": bounded_diagnostic_detail(error) if error is not None else None,
+            "skipped": False,
+        }
         if error is not None:
             result["failure_kind"] = promotion_deferral or yahoo_failure_kind(
                 {"ticker": ticker, "error": error, "failures": evidence.get("failures") or []},

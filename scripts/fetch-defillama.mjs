@@ -25,6 +25,7 @@ import {
   isNaturalScheduleRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
+import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(__filename), "..");
@@ -84,7 +85,10 @@ async function evaluateEndpoint({ endpoint, request, sleep, controlledFailureEnd
       }
     } catch (error) {
       const kind = transportError(error) ? "transport" : "unexpected";
-      last = attemptResult(kind === "transport" ? "transport_error" : "unexpected_error", threwTuple(kind));
+      last = {
+        ...attemptResult(kind === "transport" ? "transport_error" : "unexpected_error", threwTuple(kind)),
+        failure_detail: boundedDiagnosticDetail(error),
+      };
     }
     if (last.status === "ready" || retry === MAX_RETRIES) return last;
   }
@@ -263,12 +267,16 @@ export async function runDefillama({
     const reason = systemicLkgFailureReason([result.reason, ...requestResults.map((row) => row.reason)])
       ?? (injectedEndpoint && !systemic ? "controlled_failure" : result.reason);
     const failure = lkgStore.recordFailure({ artifacts: lkgArtifacts, run, reason });
+    const failureDetail = reason === "controlled_failure"
+      ? null
+      : result.failure_detail ?? requestResults.find((row) => row.failure_detail)?.failure_detail ?? null;
     return {
       ok: false,
       reason,
       updated: false,
       attempt,
       retrySet: failure.retrySet,
+      ...(failureDetail ? { failure_detail: failureDetail } : {}),
       ...classifyLkgFailure({ reason, hasCompleteLkg: failure.hasCompleteLkg, systemic }),
     };
   }
@@ -350,7 +358,7 @@ async function main() {
   const result = await runDefillama();
   if (!result.ok) {
     const prefix = result.degraded ? "[degraded]" : "[corrupt]";
-    const message = `${prefix} DefiLlama stablecoins ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}`;
+    const message = `${prefix} DefiLlama stablecoins ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}${diagnosticSuffix(result.failure_detail)}`;
     if (result.degraded) console.log(message);
     else console.error(message);
     process.exitCode = result.exitCode ?? 2;

@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
 from pathlib import Path
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -57,6 +59,16 @@ class MalformedTicker(Ticker):
     def option_chain(self, expiry):
         del expiry
         return Chain(calls=[], puts=[])
+
+
+class ProviderFailureTicker(Ticker):
+    def option_chain(self, expiry):
+        del expiry
+        raise RuntimeError(
+            "income statement endpoint moved after schema change "
+            "https://provider.example/options?api_key=secret-value "
+            "Authorization: Bearer abc.def payload: {\"token\":\"secret-value\",\"rows\":[1,2,3]}"
+        )
 
 
 class PrivateOptionsCollectorTest(unittest.TestCase):
@@ -112,6 +124,41 @@ class PrivateOptionsCollectorTest(unittest.TestCase):
                 )
                 self.assertEqual(summary["ready_count"], 0)
                 self.assertEqual(summary["failed_count"], 1)
+
+    def test_provider_failure_keeps_a_bounded_sanitized_diagnostic_beside_reason(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                summary = COLLECTOR.collect_options(
+                    ["DASH"],
+                    output_dir=Path(tmp) / "raw",
+                    summary_path=Path(tmp) / "summary.json",
+                    ticker_factory=lambda _ticker: ProviderFailureTicker(),
+                    observed_at="2026-07-18T01:10:00Z",
+                    sleep_seconds=0,
+                )
+
+            failure = summary["results"][0]
+            diagnostic = failure["diagnostic"]
+            self.assertEqual(failure["reason"], "provider_error")
+            self.assertIn("RuntimeError: income statement endpoint moved", diagnostic)
+            self.assertLessEqual(len(diagnostic), 320)
+            self.assertNotIn("secret-value", diagnostic)
+            self.assertNotIn("abc.def", diagnostic)
+            self.assertNotIn('"rows"', diagnostic)
+            self.assertIn("[redacted]", diagnostic)
+            self.assertIn(diagnostic, stdout.getvalue())
+            self.assertEqual(
+                json.loads((Path(tmp) / "summary.json").read_text(encoding="utf-8"))["results"][0]["diagnostic"],
+                diagnostic,
+            )
+            self.assertEqual(len(COLLECTOR.bounded_diagnostic_detail(RuntimeError("x" * 1000))), 320)
+            userinfo = COLLECTOR.bounded_diagnostic_detail(
+                RuntimeError("request failed https://alice:supersecret@example.com/options")
+            )
+            self.assertNotIn("alice", userinfo)
+            self.assertNotIn("supersecret", userinfo)
+            self.assertIn("https://example.com/options", userinfo)
 
     def test_plan_only_creates_no_output_or_summary(self):
         with tempfile.TemporaryDirectory() as tmp:

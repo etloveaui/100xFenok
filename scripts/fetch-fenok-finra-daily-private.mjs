@@ -32,6 +32,7 @@ import {
   isNaturalScheduleRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
+import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -380,10 +381,32 @@ async function fetchResponseWithRetry(url, {
 
 function thrownEndpointResult(error) {
   const exceptionKind = transportError(error) ? "transport" : "unexpected";
-  return attemptResult(
-    exceptionKind === "transport" ? "transport_error" : "unexpected_error",
-    threwTuple(exceptionKind),
-  );
+  return {
+    ...attemptResult(
+      exceptionKind === "transport" ? "transport_error" : "unexpected_error",
+      threwTuple(exceptionKind),
+    ),
+    failure_detail: boundedDiagnosticDetail(error),
+  };
+}
+
+function attachEndpointResult(error, endpointResult) {
+  if (error && (typeof error === "object" || typeof error === "function")) {
+    if (!error.endpointResult) error.endpointResult = endpointResult;
+    if (endpointResult.failure_detail && !error.failure_detail) error.failure_detail = endpointResult.failure_detail;
+    return error;
+  }
+  const wrapped = new Error(String(error));
+  wrapped.endpointResult = endpointResult;
+  if (endpointResult.failure_detail) wrapped.failure_detail = endpointResult.failure_detail;
+  return wrapped;
+}
+
+function formatCliFailure(error) {
+  const endpointResult = error?.endpointResult;
+  const reason = endpointResult?.reason ?? "unexpected_error";
+  const detail = endpointResult?.failure_detail ?? boundedDiagnosticDetail(error);
+  return `[corrupt] FINRA daily ${reason}${diagnosticSuffix(detail)}`;
 }
 
 function stableAttemptId(prefix, observedAt) {
@@ -903,7 +926,7 @@ async function run(argv = process.argv.slice(2), {
         } catch (err) {
           const endpointResult = err?.endpointResult ?? thrownEndpointResult(err);
           endpointResults.push(endpointResult);
-          if (!isMissingFileError(err)) throw err;
+          if (!isMissingFileError(err)) throw attachEndpointResult(err, endpointResult);
           // Holiday or not-yet-published file inside the window: record and move on
           // instead of failing the whole run (and with it the downstream data push).
           skippedDates.push({ date: yyyymmdd, reason: `not_published (HTTP ${err.httpStatus})` });
@@ -1018,8 +1041,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       if (Number(summary.exit_code) > 0) process.exitCode = Number(summary.exit_code);
     })
     .catch((err) => {
-      console.error(err.stack || err.message);
-      process.exit(1);
+      console.error(formatCliFailure(err));
+      process.exitCode = 1;
     });
 }
 

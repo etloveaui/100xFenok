@@ -24,6 +24,7 @@ import {
   isNaturalScheduleRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
+import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -134,10 +135,13 @@ async function evaluateSeries({ request, apiKey, group, series, observedAt, slee
       });
     } catch (error) {
       const exceptionKind = transportError(error) ? "transport" : "unexpected";
-      last = attemptResult(
-        exceptionKind === "transport" ? "transport_error" : "unexpected_error",
-        threwTuple(exceptionKind),
-      );
+      last = {
+        ...attemptResult(
+          exceptionKind === "transport" ? "transport_error" : "unexpected_error",
+          threwTuple(exceptionKind),
+        ),
+        failure_detail: boundedDiagnosticDetail(error),
+      };
     }
     if (last.status === "ready") {
       const rows = usableObservations(last.document);
@@ -231,7 +235,10 @@ export async function runFredBanking({
 
   let requestResults;
   if (!apiKey) {
-    requestResults = [attemptResult("unexpected_error", threwTuple("unexpected"))];
+    requestResults = [{
+      ...attemptResult("unexpected_error", threwTuple("unexpected")),
+      failure_detail: "FRED API key is unavailable",
+    }];
   } else {
     requestResults = [];
     const targets = selectedGroups.flatMap((group) => group.series.map((series) => ({ group, series })));
@@ -255,7 +262,18 @@ export async function runFredBanking({
       ?? (injectedKey && !systemicOutage ? "controlled_failure" : worst.reason);
     const failure = lkgStore.recordFailure({ artifacts: lkgArtifacts, run, reason: failureReason });
     const outcome = classifyLkgFailure({ reason: failureReason, hasCompleteLkg: failure.hasCompleteLkg, systemic: systemicOutage });
-    return { ok: false, reason: failureReason, updated: false, attempt, retrySet: failure.retrySet, ...outcome };
+    const failureDetail = failureReason === "controlled_failure"
+      ? null
+      : worst.failure_detail ?? requestResults.find((row) => row.failure_detail)?.failure_detail ?? null;
+    return {
+      ok: false,
+      reason: failureReason,
+      updated: false,
+      attempt,
+      retrySet: failure.retrySet,
+      ...(failureDetail ? { failure_detail: failureDetail } : {}),
+      ...outcome,
+    };
   }
 
   const outputs = {};
@@ -373,7 +391,7 @@ async function main() {
   const result = await runFredBanking({ type: parseType(process.argv.slice(2)) });
   if (!result.ok) {
     const prefix = result.degraded ? "[degraded]" : "[corrupt]";
-    const message = `${prefix} FRED banking ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}`;
+    const message = `${prefix} FRED banking ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}${diagnosticSuffix(result.failure_detail)}`;
     if (result.degraded) console.log(message);
     else console.error(message);
     process.exitCode = result.exitCode ?? 2;

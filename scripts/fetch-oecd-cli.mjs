@@ -13,6 +13,7 @@ import {
   transportError,
   writeJsonAtomic,
 } from "./lib/data-supply-attempt-shard.mjs";
+import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, "..");
@@ -144,6 +145,7 @@ export async function runOecdCliShadow({
 } = {}) {
   let tuple;
   let payload = null;
+  let failureDetail = null;
   try {
     const response = await request(ENDPOINT);
     if (response.statusCode < 200 || response.statusCode >= 300) tuple = returnedTuple({ httpStatus: response.statusCode });
@@ -151,22 +153,31 @@ export async function runOecdCliShadow({
       try {
         payload = parseOecdCsv(response.body, observedAt);
         tuple = returnedTuple({ httpStatus: response.statusCode, decode: "ok", payload: "non_empty", assertions: [{ id: "sdmx_cli_rows", passed: true }] });
-      } catch {
+      } catch (error) {
+        failureDetail = boundedDiagnosticDetail(error);
         tuple = returnedTuple({ httpStatus: response.statusCode, decode: "ok", payload: "non_empty", assertions: [{ id: "sdmx_cli_rows", passed: false }] });
       }
     }
   } catch (error) {
+    failureDetail = boundedDiagnosticDetail(error);
     tuple = threwTuple(transportError(error) ? "transport" : "unexpected");
   }
   const row = buildAttemptRow({ laneId: LANE_ID, memberId: null, tuple, attemptId, observedAt });
   writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
-  if (payload === null) return { ok: false, updated: false, exitCode: 2, row };
+  if (payload === null) return { ok: false, updated: false, exitCode: 2, row, failure_detail: failureDetail };
   const parity = parityReport(payload, canonicalPath, observedAt);
   writePairAtomic([{ target: shadowPath, value: payload }, { target: parityReportPath, value: parity }]);
   return { ok: true, updated: true, exitCode: 0, row, parity };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runOecdCliShadow().then((result) => { console.log(JSON.stringify({ ok: result.ok, exit_code: result.exitCode })); process.exitCode = result.exitCode; })
+  runOecdCliShadow().then((result) => {
+    console.log(JSON.stringify({
+      ok: result.ok,
+      exit_code: result.exitCode,
+      failure_detail: result.failure_detail ?? null,
+    }));
+    process.exitCode = result.exitCode;
+  })
     .catch((error) => { console.error(error); process.exitCode = 2; });
 }

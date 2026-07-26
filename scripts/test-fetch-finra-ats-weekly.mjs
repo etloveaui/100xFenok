@@ -592,6 +592,41 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
   }
 }
 
+// Natural request failures preserve a bounded, redacted diagnostic beside the
+// stable reason without exposing credentials or provider payloads.
+{
+  const root = makeRoot("diagnostic-detail");
+  let calls = 0;
+  const result = await run({
+    repoRoot: root,
+    request: async ({ url }) => {
+      calls += 1;
+      if (url.includes("oauth2")) {
+        return {
+          statusCode: 200,
+          headers: {},
+          body: JSON.stringify({ access_token: "mock-token", token_type: "Bearer", expires_in: 3600 }),
+        };
+      }
+      throw new TypeError(
+        "weekly request exploded https://provider.example/data?client_secret=secret-value",
+      );
+    },
+    clientId: "client-id",
+    clientSecret: "client-secret",
+    eventName: "schedule",
+    runId: "diagnostic-detail",
+    observedAt: OBSERVED_AT,
+    referenceDate: REFERENCE_DATE,
+    attemptWriter: attemptSink([]),
+  });
+  assert(calls >= 2);
+  assert.match(result.failure_detail, /weekly request exploded/);
+  assert.match(result.failure_detail, /\?\[redacted\]/);
+  assert.doesNotMatch(result.failure_detail, /secret-value/);
+  assert(result.failure_detail.length <= 320, "FINRA failure detail must stay bounded");
+}
+
 // A partial partition keeps an existing complete marker as LKG, degrades exit
 // status to zero, and never promotes or rewrites the current marker.
 {

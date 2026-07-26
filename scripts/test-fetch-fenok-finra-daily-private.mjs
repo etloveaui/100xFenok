@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   applyFinraLkgStore,
@@ -131,10 +133,10 @@ assert.equal(manifest.collections.length, 1);
     "--dataset",
     "regsho-daily",
     "--date",
-    "2026-06-26",
+    "2000-01-03",
     "--no-write",
   ], {
-    request: async () => ({ statusCode: 200, body: sample }),
+    request: async () => ({ statusCode: 200, body: sample.replaceAll("20260626", "20000103") }),
     attemptShardPath,
     observedAt: "2026-07-15T03:00:00Z",
     attemptId: "finra-short-volume-test-1",
@@ -143,6 +145,76 @@ assert.equal(manifest.collections.length, 1);
   const shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
   assert.equal(shard.lane_id, "finra_short_volume");
   assert.deepEqual(shard.attempts[0].assertions, [{ id: "regsho_rows", passed: true }]);
+}
+
+{
+  // A natural request exception must retain its stable reason while exposing a
+  // bounded, secret-safe detail beside the thrown run result only. The attempt
+  // shard remains schema-stable and continues to carry only the tuple.
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-finra-diagnostic-"));
+  const attemptShardPath = path.join(tmpDir, "finra_short_volume.json");
+  const secret = "finra-secret-must-not-leak";
+  await assert.rejects(
+    () => run([
+      "--dataset",
+      "regsho-daily",
+      "--date",
+      "2000-01-03",
+      "--no-write",
+      "--retries",
+      "0",
+    ], {
+      request: async () => {
+        throw Object.assign(new Error(`gateway reset token=${secret}`), { code: "ECONNRESET" });
+      },
+      attemptShardPath,
+      observedAt: "2026-07-15T03:01:00Z",
+      attemptId: "finra-short-volume-diagnostic",
+    }),
+    (error) => {
+      assert.equal(error.endpointResult?.reason, "transport_error", "reason enum must remain stable");
+      assert.match(error.endpointResult?.failure_detail, /Error: gateway reset/, "caught error identity must reach the run failure");
+      assert.match(error.endpointResult?.failure_detail, /token=\[redacted\]/, "diagnostic detail must redact secrets");
+      assert.doesNotMatch(error.endpointResult?.failure_detail, new RegExp(secret), "diagnostic detail must not leak a secret");
+      assert(error.endpointResult?.failure_detail.length <= 320, "diagnostic detail must stay bounded");
+      return true;
+    },
+  );
+  const shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
+  assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema must remain unchanged");
+}
+
+{
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-finra-controlled-no-detail-"));
+  const attemptShardPath = path.join(tmpDir, "finra_short_volume.json");
+  const summary = await run([], {
+    controlledFailureLanes: "finra_short_volume",
+    eventName: "workflow_dispatch",
+    lkgRepoRoot: tmpDir,
+    markerPath: path.join(tmpDir, "data", "admin", "finra_short_volume", "current", "regsho_daily.json"),
+    attemptShardPath,
+    observedAt: "2026-07-15T03:02:00Z",
+    attemptId: "finra-short-volume-controlled-no-detail",
+  });
+  assert.equal(summary.controlled_failure, true);
+  assert.equal(summary.failure_detail ?? null, null, "controlled synthetic failures must not invent diagnostic detail");
+  const shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
+  assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema must remain unchanged");
+}
+
+{
+  // CLI must never print the raw exception stack because thrown messages can
+  // carry credential-shaped strings. This parse-only path never reaches FINRA.
+  const secret = "finra-cli-secret-must-not-leak";
+  const cli = spawnSync(process.execPath, [
+    path.join(path.dirname(fileURLToPath(import.meta.url)), "fetch-fenok-finra-daily-private.mjs"),
+    "--date",
+    `token=${secret}`,
+  ], { encoding: "utf8" });
+  assert.notEqual(cli.status, 0, "invalid input must fail the CLI");
+  assert.match(cli.stderr, /\[corrupt\] FINRA daily unexpected_error/, "CLI must retain a stable failure reason");
+  assert.match(cli.stderr, /token=\[redacted\]/, "CLI must redact diagnostic detail");
+  assert.doesNotMatch(cli.stderr, new RegExp(secret), "CLI must not print raw credential-shaped input");
 }
 
 // Shared workflow input is accepted only on dispatch. An OCC-only token must

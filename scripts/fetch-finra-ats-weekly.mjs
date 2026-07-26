@@ -18,6 +18,7 @@ import {
   threwTuple,
   writeAttemptShard,
 } from "./lib/data-supply-attempt-shard.mjs";
+import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -829,12 +830,31 @@ export async function run({
     const error = caught instanceof CollectorError
       ? caught
       : new CollectorError("unexpected_error", caught?.message ?? String(caught), { systemic: true });
+    const failureDetail = error.reason === "controlled_failure"
+      ? null
+      : boundedDiagnosticDetail(error);
     attempt = failureAttempt(error);
     try {
       const disposition = safeFailure(store, artifact, runContext, error);
-      response = { exit_code: disposition.exitCode, degraded: disposition.degraded, corrupt: disposition.corrupt, promoted: false, reason: error.reason, retry_set: disposition.retry_set };
+      response = {
+        exit_code: disposition.exitCode,
+        degraded: disposition.degraded,
+        corrupt: disposition.corrupt,
+        promoted: false,
+        reason: error.reason,
+        failure_detail: failureDetail,
+        retry_set: disposition.retry_set,
+      };
     } catch (stateError) {
-      response = { exit_code: 2, degraded: false, corrupt: true, promoted: false, reason: error.reason, state_error: stateError.message };
+      response = {
+        exit_code: 2,
+        degraded: false,
+        corrupt: true,
+        promoted: false,
+        reason: error.reason,
+        failure_detail: failureDetail,
+        state_error: boundedDiagnosticDetail(stateError),
+      };
     }
     return response;
   } finally {

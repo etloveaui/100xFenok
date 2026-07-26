@@ -131,7 +131,7 @@ async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE", runId = "
   const networkFailed = await runNasdaqGiwSox({
     ...paths,
     dates: DATES,
-    request: async () => { throw Object.assign(new Error("timeout"), { code: "ETIMEDOUT" }); },
+    request: async () => { throw Object.assign(new Error("timeout token=sox-secret-must-not-leak"), { code: "ETIMEDOUT" }); },
     observedAt: "2026-07-16T02:05:00.000Z",
     attemptId: "sox-network-attempt",
     runId: "sox-network-run",
@@ -140,6 +140,12 @@ async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE", runId = "
   });
   assert.equal(networkFailed.reason, "transport_error");
   assert.equal(networkFailed.exitCode, 0);
+  assert.match(networkFailed.failure_detail, /Error: timeout/, "caught error identity must reach the run result");
+  assert.match(networkFailed.failure_detail, /token=\[redacted\]/, "diagnostic detail must redact secrets");
+  assert.doesNotMatch(networkFailed.failure_detail, /sox-secret-must-not-leak/, "diagnostic detail must not leak a secret");
+  assert(networkFailed.failure_detail.length <= 320, "diagnostic detail must stay bounded");
+  const networkShard = assertValidShard(paths.attemptShardPath);
+  assert.equal(Object.hasOwn(networkShard, "failure_detail"), false, "attempt shard schema must remain unchanged");
 }
 
 {
@@ -165,6 +171,7 @@ async function seedBaseline(paths, { asOf = DATES[1], prefix = "BASE", runId = "
   assert.equal(failed.reason, "controlled_failure");
   assert.equal(failed.degraded, true);
   assert.equal(failed.exitCode, 0);
+  assert.equal(failed.failure_detail ?? null, null, "controlled synthetic failures must not invent diagnostic detail");
   assert.deepEqual(failed.retrySet, ["constituents"]);
   assert.deepEqual(fs.readFileSync(paths.canonicalPath), canonicalBefore);
   const attempt = assertValidShard(paths.attemptShardPath);
@@ -407,6 +414,8 @@ await assert.rejects(() => runNasdaqGiwSox({
 
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-nasdaq-giw-sox.yml"), "utf8");
+  const producer = fs.readFileSync(new URL("./fetch-nasdaq-giw-sox-constituents.mjs", import.meta.url), "utf8");
+  assert.match(producer, /diagnosticSuffix\(result\.failure_detail\)/, "CLI failures must append bounded diagnostic detail");
   assert.match(workflow, /node scripts\/test-fetch-nasdaq-giw-sox-constituents\.mjs/);
   assert.match(workflow, /controlled_failure_key/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE_KEY/);

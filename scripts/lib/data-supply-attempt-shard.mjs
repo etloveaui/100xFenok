@@ -8,6 +8,7 @@ import {
   validateAttemptShard,
 } from "../build-data-supply-detection-floor.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./data-supply-detection-config.mjs";
+import { boundedDiagnosticDetail } from "./diagnostic-detail.mjs";
 import { canonicalJson } from "./json-canonical.mjs";
 
 export { ATTEMPT_SHARD_SCHEMA };
@@ -240,7 +241,10 @@ export function worstRequestResult(rows) {
 export function classifyHttpResponse(response, { authRequired = false, decodeBody = JSON.parse } = {}) {
   const statusCode = response?.statusCode;
   if (!Number.isInteger(statusCode) || statusCode < 100 || statusCode > 599) {
-    return attemptResult("unexpected_error", threwTuple("unexpected"));
+    return {
+      ...attemptResult("unexpected_error", threwTuple("unexpected")),
+      failure_detail: "ResponseError: invalid or missing HTTP status",
+    };
   }
   if (statusCode === 401 || statusCode === 403) {
     return attemptResult("auth_error", returnedTuple({ httpStatus: statusCode, auth: "rejected" }));
@@ -259,12 +263,15 @@ export function classifyHttpResponse(response, { authRequired = false, decodeBod
   let document;
   try {
     document = decodeBody(String(response.body ?? ""));
-  } catch {
-    return attemptResult("decode_error", returnedTuple({
-      httpStatus: statusCode,
-      auth: authRequired ? "ok" : "not_applicable",
-      decode: "error",
-    }));
+  } catch (error) {
+    return {
+      ...attemptResult("decode_error", returnedTuple({
+        httpStatus: statusCode,
+        auth: authRequired ? "ok" : "not_applicable",
+        decode: "error",
+      })),
+      failure_detail: boundedDiagnosticDetail(error),
+    };
   }
   return attemptResult("ok", returnedTuple({
     httpStatus: statusCode,

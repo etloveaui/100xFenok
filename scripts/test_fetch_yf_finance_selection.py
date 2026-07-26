@@ -655,6 +655,141 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             "systemic_rate_limit",
         )
 
+    def test_safe_provider_failure_evidence_is_bounded_and_sanitized(self) -> None:
+        raw_error = (
+            "provider optional endpoint failed "
+            + "x" * 100
+            + " diagnostic-marker https://provider.example/quote?api_key=secret-value "
+            + "Authorization: Bearer abc.def payload: {\"token\":\"secret-value\",\"rows\":[1,2,3]}"
+        )
+
+        def swallowed_provider_error(*_args, **_kwargs):
+            self.fetcher.safe(lambda: (_ for _ in ()).throw(RuntimeError(raw_error)))
+            return {"info": {"symbol": "SAFE"}, "history_1y": None}, 1
+
+        self.fetcher.fetch_ticker = swallowed_provider_error
+        _data, _latency_ms, error, evidence = self.fetcher.fetch_with_retry(
+            "SAFE",
+            retries=0,
+            timeout_seconds=1,
+            include_evidence=True,
+        )
+
+        self.assertIsNone(error)
+        detail = evidence["failures"][0]["error"]
+        self.assertIn("RuntimeError: provider optional endpoint failed", detail)
+        self.assertLessEqual(len(detail), 240)
+        self.assertNotIn("secret-value", detail)
+        self.assertNotIn("abc.def", detail)
+        self.assertNotIn('"rows"', detail)
+
+    def test_record_finance_failure_uses_bounded_sanitized_detail(self) -> None:
+        raw_error = (
+            "provider failure "
+            + "x" * 1000
+            + " https://provider.example/quote?api_key=secret-value Authorization: Bearer abc.def"
+        )
+        captured = {}
+        self.fetcher.is_enrolled_stock_detail = lambda _ticker: True
+        self.fetcher.record_stock_detail_failure = lambda **kwargs: captured.update(kwargs)
+
+        self.fetcher.record_finance_failure("AAPL", raw_error)
+
+        detail = captured["failure_detail"]
+        self.assertEqual(len(detail), 240)
+        self.assertNotIn("secret-value", detail)
+        self.assertNotIn("abc.def", detail)
+
+    def test_failure_log_keeps_a_bounded_sanitized_diagnostic(self) -> None:
+        error = (
+            "ValueError: "
+            + "x" * 100
+            + " endpoint moved diagnostic-marker "
+            + "https://provider.example/quote?api_key=secret-value "
+            + "Authorization: Bearer abc.def payload: {\"token\":\"secret-value\",\"rows\":[1,2,3]}"
+        )
+        self.fetcher.fetch_with_retry = lambda *_args, **_kwargs: (
+            None,
+            0,
+            error,
+            {"attempts_used": 1, "failures": [{"attempt": 1, "error": error}], "latency_ms": 0},
+        )
+        stdout = io.StringIO()
+        original_argv, original_stdout = sys.argv, sys.stdout
+        try:
+            sys.argv = ["fetch-yf-finance.py", "--tickers", "FAIL", "--sleep", "0", "--retries", "0"]
+            sys.stdout = stdout
+            with self.assertRaises(SystemExit) as raised:
+                self.fetcher.main()
+        finally:
+            sys.argv, sys.stdout = original_argv, original_stdout
+
+        self.assertEqual(raised.exception.code, 2)
+        diagnostic = next(line.split("FAIL: ", 1)[1] for line in stdout.getvalue().splitlines() if "FAIL: " in line)
+        self.assertIn("endpoint moved diagnostic-marker", diagnostic)
+        self.assertLessEqual(len(diagnostic), 240)
+        self.assertNotIn("secret-value", diagnostic)
+        self.assertNotIn("abc.def", diagnostic)
+        self.assertNotIn('"rows"', diagnostic)
+        self.assertIn("[redacted]", diagnostic)
+        self.assertEqual(len(self.fetcher.bounded_diagnostic_detail("x" * 1000)), 240)
+        userinfo = self.fetcher.bounded_diagnostic_detail(
+            RuntimeError("request failed https://alice:supersecret@example.com/quote")
+        )
+        self.assertNotIn("alice", userinfo)
+        self.assertNotIn("supersecret", userinfo)
+        self.assertIn("https://example.com/quote", userinfo)
+        summary = json.loads((self.fetcher.OUT_DIR / "_summary.json").read_text(encoding="utf-8"))
+        persisted_error = summary["errors"][0]["error"]
+        self.assertLessEqual(len(persisted_error), 240)
+        self.assertNotIn("secret-value", persisted_error)
+        self.assertNotIn("abc.def", persisted_error)
+        self.assertNotIn('"rows"', persisted_error)
+
+    def test_batch_state_persists_only_bounded_sanitized_failure_details(self) -> None:
+        raw_error = (
+            "ValueError: "
+            + "x" * 100
+            + " diagnostic-marker https://provider.example/quote?api_key=secret-value "
+            + "Authorization: Bearer abc.def payload: {\"token\":\"secret-value\",\"rows\":[1,2,3]}"
+        )
+        self.fetcher.load_universe_sources = lambda **_kwargs: {"FAIL": ["test_fixture"]}
+        self.fetcher.fetch_with_retry = lambda *_args, **_kwargs: (
+            None,
+            0,
+            raw_error,
+            {"attempts_used": 1, "failures": [{"attempt": 1, "error": raw_error}], "latency_ms": 0},
+        )
+        stdout = io.StringIO()
+        original_argv, original_stdout = sys.argv, sys.stdout
+        try:
+            sys.argv = [
+                "fetch-yf-finance.py", "--tickers", "FAIL", "--record-batch-state",
+                "--run-id", "redaction-state", "--run-attempt", "1", "--event-name", "workflow_dispatch",
+                "--sleep", "0", "--retries", "0",
+            ]
+            sys.stdout = stdout
+            with self.assertRaises(SystemExit) as raised:
+                self.fetcher.main()
+        finally:
+            sys.argv, sys.stdout = original_argv, original_stdout
+
+        self.assertEqual(raised.exception.code, 2)
+        state = json.loads((self.fetcher.YAHOO_BATCH_STATE_ROOT / "tickers" / "FAIL.json").read_text(encoding="utf-8"))
+        serialized = "\n".join(
+            [
+                json.dumps(state),
+                (self.fetcher.YAHOO_BATCH_STATE_ROOT / "index.json").read_text(encoding="utf-8"),
+                (self.fetcher.OUT_DIR / "_summary.json").read_text(encoding="utf-8"),
+                stdout.getvalue(),
+            ]
+        )
+        self.assertLessEqual(len(state["latest_failure"]["error"]), 240)
+        self.assertIn("diagnostic-marker", state["latest_failure"]["error"])
+        self.assertNotIn("secret-value", serialized)
+        self.assertNotIn("abc.def", serialized)
+        self.assertNotIn('"rows"', serialized)
+
     def test_source_timestamps_are_provider_derived_and_distinct_from_fetch_time(self) -> None:
         payload = self.fetcher.decorate_finance_payload(
             ticker="AAPL",

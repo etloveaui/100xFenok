@@ -401,7 +401,38 @@ for (const failure of [
 }
 
 {
+  // A real request exception must keep its stable reason while carrying a
+  // bounded, secret-safe diagnostic beside the result only (never the shard).
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-defillama-diagnostic-"));
+  const secret = "defillama-secret-must-not-leak";
+  const failed = await runCase(root, {
+    runId: "diagnostic-natural-error",
+    request: async () => {
+      throw Object.assign(new Error(`socket closed token=${secret}`), { code: "ECONNRESET" });
+    },
+  });
+  assert.equal(failed.reason, "transport_error", "reason enum must remain stable");
+  assert.match(failed.failure_detail, /Error: socket closed/, "caught error identity must reach the run result");
+  assert.match(failed.failure_detail, /token=\[redacted\]/, "diagnostic detail must redact secrets");
+  assert.doesNotMatch(failed.failure_detail, new RegExp(secret), "diagnostic detail must not leak a secret");
+  assert(failed.failure_detail.length <= 320, "diagnostic detail must stay bounded");
+  const shard = readJson(paths(root).attemptShardPath);
+  assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema must remain unchanged");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-defillama-controlled-no-detail-"));
+  const failed = await runCase(root, {
+    runId: "diagnostic-controlled-error",
+    controlledFailureEndpoint: "chart",
+  });
+  assert.equal(failed.failure_detail ?? null, null, "controlled synthetic failures must not invent diagnostic detail");
+}
+
+{
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-defillama.yml"), "utf8");
+  const producerSource = fs.readFileSync(new URL("./fetch-defillama.mjs", import.meta.url), "utf8");
+  assert.match(producerSource, /diagnosticSuffix\(result\.failure_detail\)/, "CLI failures must append bounded diagnostic detail");
   const workflowCrons = [...workflow.matchAll(/^\s*-\s*cron:\s*['\"]([^'\"]+)['\"]\s*$/gm)]
     .map((match) => match[1]);
   const lane = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((row) => row.id === DEFILLAMA_LANE_ID);

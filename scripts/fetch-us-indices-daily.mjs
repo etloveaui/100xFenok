@@ -16,6 +16,7 @@ import {
   tupleStatus,
   writeJsonAtomic,
 } from "./lib/data-supply-attempt-shard.mjs";
+import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
 import { ProducerLkgStateStore } from "./lib/producer-lkg-state.mjs";
 import {
   classifyFloat32Change,
@@ -162,8 +163,13 @@ function classifyResponse(response, descriptor) {
   let document;
   try {
     document = JSON.parse(body);
-  } catch {
-    return { tuple: returnedTuple({ httpStatus: statusCode, decode: "error" }), rows: null, bodySha256 };
+  } catch (error) {
+    return {
+      tuple: returnedTuple({ httpStatus: statusCode, decode: "error" }),
+      rows: null,
+      failureDetail: boundedDiagnosticDetail(error),
+      bodySha256,
+    };
   }
   try {
     const rows = parseYahooChart(document, descriptor.symbol);
@@ -187,6 +193,7 @@ function classifyResponse(response, descriptor) {
       }),
       rows: null,
       error,
+      failureDetail: boundedDiagnosticDetail(error),
       bodySha256,
     };
   }
@@ -232,6 +239,7 @@ export async function runUsIndicesDaily({
         tuple: threwTuple(transportError(error) ? "transport" : "unexpected"),
         rows: null,
         error,
+        failureDetail: boundedDiagnosticDetail(error),
       });
     }
   }
@@ -246,7 +254,7 @@ export async function runUsIndicesDaily({
       const canonicalPath = path.join(canonicalRoot, key);
       store.recordFailure({
         key,
-        error: result.error?.message ?? tupleStatus(result.tuple),
+        error: result.failureDetail ?? tupleStatus(result.tuple),
         failureKind: result.tuple.execution === "threw" ? result.tuple.exception_kind : "schema_drift",
         fallbackBytes: fs.existsSync(canonicalPath) ? fs.readFileSync(canonicalPath) : null,
         canonicalRef: `data/indices/${key}`,
@@ -254,7 +262,15 @@ export async function runUsIndicesDaily({
       });
     }
     store.buildIndex({ keys: SERIES.map(({ key }) => `${key}.json`), run });
-    return { ok: false, updated: false, exitCode: 2, row, reason: tupleStatus(worst) };
+    const failedWorst = results.find((result) => result.tuple === worst);
+    return {
+      ok: false,
+      updated: false,
+      exitCode: 2,
+      row,
+      reason: tupleStatus(worst),
+      failure_detail: failedWorst?.failureDetail ?? null,
+    };
   }
 
   const candidates = [];
@@ -350,6 +366,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       updated: result.updated,
       exit_code: result.exitCode,
       reason: result.reason,
+      failure_detail: result.failure_detail ?? null,
       provider_revision_events: result.providerRevisions?.length ?? 0,
     }));
     process.exitCode = result.exitCode;

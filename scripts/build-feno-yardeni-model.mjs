@@ -24,6 +24,7 @@ import {
   classifyLkgFailure,
   isNaturalScheduleRun,
 } from "./lib/data-supply-lkg-store.mjs";
+import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -422,6 +423,7 @@ async function evaluateFredSeries({ request, apiKey, seriesId }) {
         threwTuple(exceptionKind),
       ),
       seriesId,
+      failure_detail: boundedDiagnosticDetail(error),
     };
   }
 }
@@ -629,7 +631,10 @@ export async function runFenoYardeni({
     // result, so worst != ready and the lane takes the genuine failure path.
     requestResults = FRED_SERIES.map(() => attemptResult("transport_error", threwTuple("transport")));
   } else if (!apiKey) {
-    requestResults = [attemptResult("unexpected_error", threwTuple("unexpected"))];
+    requestResults = [{
+      ...attemptResult("unexpected_error", threwTuple("unexpected")),
+      failure_detail: boundedDiagnosticDetail(new Error("FRED_API_KEY is required")),
+    }];
   } else {
     requestResults = [];
     for (const series of FRED_SERIES) {
@@ -653,8 +658,11 @@ export async function runFenoYardeni({
         }),
         fredSeries,
       };
-    } catch {
-      worst = attemptResult("unexpected_error", threwTuple("unexpected"));
+    } catch (error) {
+      worst = {
+        ...attemptResult("unexpected_error", threwTuple("unexpected")),
+        failure_detail: boundedDiagnosticDetail(error),
+      };
     }
   }
 
@@ -688,7 +696,14 @@ export async function runFenoYardeni({
         run: storeRun,
       })
       : null;
-    return { ok: false, reason: worst.reason, updated: false, attempt, lkg };
+    return {
+      ok: false,
+      reason: worst.reason,
+      failure_detail: worst.failure_detail ?? null,
+      updated: false,
+      attempt,
+      lkg,
+    };
   }
 
   if (check) {
@@ -743,9 +758,9 @@ async function main() {
       // corruption (no provable LKG, or a systemic break) exits non-zero.
       const exitCode = result.lkg?.exitCode ?? 2;
       if (exitCode !== 0) {
-        throw new Error(`FRED Yardeni fetch failed: ${result.reason}; no valid last-known-good retained`);
+        throw new Error(`FRED Yardeni fetch failed: ${result.reason}${diagnosticSuffix(result.failure_detail)}; no valid last-known-good retained`);
       }
-      console.warn(`[yardeni] degraded: ${result.reason}; retained last-known-good and parked retry`);
+      console.warn(`[yardeni] degraded: ${result.reason}${diagnosticSuffix(result.failure_detail)}; retained last-known-good and parked retry`);
       return;
     }
     console.log(JSON.stringify(result.report, null, 2));

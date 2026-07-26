@@ -288,7 +288,78 @@ function assertValidShard(shard) {
 }
 
 {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-banking-diagnostic-"));
+  const paths = makePaths(root);
+  const secret = "fred-banking-secret-must-not-leak";
+  const failed = await runFredBanking({
+    ...paths,
+    type: "daily",
+    apiKey: "test-key",
+    request: async (_url, seriesId) => {
+      if (seriesId === "DGS10") {
+        throw Object.assign(new Error(`socket reset token=${secret}`), { code: "ECONNRESET" });
+      }
+      return response(200, observations(seriesId));
+    },
+    observedAt: OBSERVED_AT,
+    attemptId: "fred-banking-diagnostic",
+    runId: "fred-banking-diagnostic",
+    sleep: async () => {},
+  });
+  assert.equal(failed.reason, "transport_error", "reason enum must remain stable");
+  assert.match(failed.failure_detail, /Error: socket reset/, "caught error identity must reach the run result");
+  assert.match(failed.failure_detail, /token=\[redacted\]/, "diagnostic detail must redact secrets");
+  assert.doesNotMatch(failed.failure_detail, new RegExp(secret), "diagnostic detail must not leak a secret");
+  assert(failed.failure_detail.length <= 320, "diagnostic detail must stay bounded");
+  const shard = readJson(paths.attemptShardPath);
+  assertValidShard(shard);
+  assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema must remain unchanged");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-banking-controlled-no-detail-"));
+  const paths = makePaths(root);
+  const failed = await runFredBanking({
+    ...paths,
+    type: "daily",
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, observations(seriesId)),
+    controlledFailureKey: "DGS10",
+    eventName: "workflow_dispatch",
+    observedAt: OBSERVED_AT,
+    attemptId: "fred-banking-controlled-no-detail",
+    runId: "fred-banking-controlled-no-detail",
+    sleep: async () => {},
+  });
+  assert.equal(failed.failure_detail ?? null, null, "controlled synthetic failures must not invent diagnostic detail");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-banking-missing-key-detail-"));
+  const paths = makePaths(root);
+  const failed = await runFredBanking({
+    ...paths,
+    type: "daily",
+    apiKey: "",
+    request: async () => {
+      throw new Error("missing-key path must not call the provider");
+    },
+    observedAt: OBSERVED_AT,
+    attemptId: "fred-banking-missing-key-detail",
+    runId: "fred-banking-missing-key-detail",
+    sleep: async () => {},
+  });
+  assert.equal(failed.reason, "unexpected_error", "missing credentials retain the stable reason enum");
+  assert.equal(failed.failure_detail, "FRED API key is unavailable", "generic missing-key failure needs a safe cause");
+  const shard = readJson(paths.attemptShardPath);
+  assertValidShard(shard);
+  assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema must remain unchanged");
+}
+
+{
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fred-banking.yml"), "utf8");
+  const producer = fs.readFileSync(new URL("./fetch-fred-banking.mjs", import.meta.url), "utf8");
+  assert.match(producer, /diagnosticSuffix\(result\.failure_detail\)/, "CLI failures must append bounded diagnostic detail");
   assert.match(workflow, /node scripts\/test-fetch-fred-banking\.mjs/);
   assert.match(workflow, /node scripts\/fetch-fred-banking\.mjs/);
   assert.doesNotMatch(workflow, /node << ['"]?EOF/);

@@ -213,6 +213,12 @@ function rowFor(memberId, index) {
 }
 
 {
+  const malformedStatus = classifyEndpointResponse({ statusCode: null, body: "" }, {
+    laneId: "finra_short_volume",
+  });
+  assert.equal(malformedStatus.reason, "unexpected_error");
+  assert.equal(malformedStatus.failure_detail, "ResponseError: invalid or missing HTTP status");
+
   const decoded = classifyEndpointResponse({
     statusCode: 200,
     body: "Date|Symbol|ShortVolume|ShortExemptVolume|TotalVolume|Market\n20260714|NVDA|10|0|100|Q\n",
@@ -229,6 +235,8 @@ function rowFor(memberId, index) {
   });
   assert.equal(malformed.reason, "decode_error");
   assert.equal(malformed.attempt.decode, "error");
+  assert.match(malformed.failure_detail, /^Error: bad header$/);
+  assert(malformed.failure_detail.length <= 320, "decode failure detail must stay bounded");
 }
 
 {

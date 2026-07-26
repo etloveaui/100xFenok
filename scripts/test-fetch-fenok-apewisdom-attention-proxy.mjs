@@ -25,6 +25,16 @@ const LANE_ID = "apewisdom_attention";
 const WORKFLOW_REL = ".github/workflows/fetch-fenok-apewisdom.yml";
 const OBSERVED_AT = "2026-07-24T13:17:00.000Z";
 
+const APEWISDOM_PRODUCER_SOURCE = fs.readFileSync(
+  path.join(REPO_ROOT, "scripts", "fetch-fenok-apewisdom-attention-proxy.mjs"),
+  "utf8",
+);
+assert.doesNotMatch(
+  APEWISDOM_PRODUCER_SOURCE,
+  /body\.slice\(0, 160\)/,
+  "secondary ApeWisdom HTTP errors must not embed provider response bodies",
+);
+
 const samplePages = [
   {
     count: 797,
@@ -164,6 +174,32 @@ function expectedAssertionIds(laneId) {
 // observation. The provider's HTTP Date is the sole source marker here; the
 // runner clock must never be substituted for it.
 {
+  const naturalFailureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "apewisdom-diagnostic-"));
+  const naturalFailurePaths = runnerPaths(naturalFailureRoot);
+  const naturalFailure = await runApeWisdomAttention({
+    ...naturalFailurePaths,
+    filter: "all-stocks",
+    maxPages: 1,
+    tickers: "NVDA,MSFT",
+    request: async () => {
+      const error = new Error("ApeWisdom socket reset Bearer secret-token https://apewisdom.example/feed?token=private");
+      error.code = "ECONNRESET";
+      throw error;
+    },
+    observedAt: OBSERVED_AT,
+    attemptId: "apewisdom-natural-diagnostic",
+    runId: "natural-diagnostic-run",
+    runAttempt: 1,
+    eventName: "schedule",
+  });
+  assert.equal(naturalFailure.reason, "transport_error");
+  assert.match(naturalFailure.failure_detail ?? "", /ApeWisdom socket reset/, "natural request failure retains a diagnostic detail");
+  assert.ok(naturalFailure.failure_detail.length <= 320, "diagnostic detail stays bounded");
+  assert.equal(naturalFailure.failure_detail.includes("secret-token"), false, "diagnostic detail redacts bearer credentials");
+  assert.equal(naturalFailure.failure_detail.includes("token=private"), false, "diagnostic detail redacts URL query values");
+  const naturalFailureShard = readJson(naturalFailurePaths.attemptShardPath);
+  assert.equal(Object.hasOwn(naturalFailureShard.attempts[0], "failure_detail"), false, "attempt shard schema remains unchanged");
+
   const missingDateRoot = fs.mkdtempSync(path.join(os.tmpdir(), "apewisdom-source-date-missing-"));
   const missingDate = await runApeWisdomAttention({
     ...runnerPaths(missingDateRoot),
@@ -281,6 +317,7 @@ function expectedAssertionIds(laneId) {
   assert.equal(failed.ok, false);
   assert.equal(failed.degraded, true);
   assert.equal(failed.corrupt, false);
+  assert.equal(failed.failure_detail, null, "controlled synthetic failures carry no diagnostic detail");
   assert.deepEqual(failed.retrySet, ["social_attention_proxy"]);
   assert.equal(fs.readFileSync(paths.canonicalPath, "utf8"), baselineBytes, "provider failure must retain the canonical LKG");
   const statePath = path.join(root, "data", "admin", LANE_ID, "index.json");

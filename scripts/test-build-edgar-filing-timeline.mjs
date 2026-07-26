@@ -148,6 +148,51 @@ assert.deepEqual(edgar.endpoint_contract.assertions, [{
   assert.equal(shard.attempts[0].execution, "threw");
 }
 
+// A naturally thrown SEC request retains a bounded, sanitized detail on the
+// returned failure object; the detection attempt shard remains schema-stable.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "edgar-emitter-diagnostic-"));
+  const paths = pathsFor(root);
+  const result = await runEdgarFilingTimeline({
+    argv: ["--tickers", "NVDA", "--sleep", "0"],
+    paths,
+    observedAt: OBSERVED_AT,
+    attemptId: "edgar-filings-test-diagnostic",
+    request: async (url) => {
+      if (url.includes("company_tickers")) return response(200, companyTickers());
+      const error = new Error("SEC submissions socket reset Bearer secret-token https://sec.example/submissions?token=private");
+      error.code = "ECONNRESET";
+      throw error;
+    },
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, "transport_error");
+  assert.match(result.failure_detail ?? "", /SEC submissions socket reset/, "natural request failure retains a diagnostic detail");
+  assert.ok(result.failure_detail.length <= 320, "diagnostic detail stays bounded");
+  assert.equal(result.failure_detail.includes("secret-token"), false, "diagnostic detail redacts bearer credentials");
+  assert.equal(result.failure_detail.includes("token=private"), false, "diagnostic detail redacts URL query values");
+  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
+  assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema remains unchanged");
+}
+
+// A resolved bootstrap with no matching ticker still reports the generic
+// unexpected_error with a safe, bounded detail instead of a blank cause.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "edgar-emitter-no-request-diagnostic-"));
+  const paths = pathsFor(root);
+  const result = await runEdgarFilingTimeline({
+    argv: ["--sleep", "0"],
+    paths,
+    observedAt: OBSERVED_AT,
+    attemptId: "edgar-filings-test-no-request-diagnostic",
+    request: async () => response(200, {}),
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, "unexpected_error");
+  assert.match(result.failure_detail ?? "", /no EDGAR submission endpoints were requested/, "no-request fallback retains a safe static detail");
+  assert.ok(result.failure_detail.length <= 320, "fallback detail stays bounded");
+}
+
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "edgar-emitter-guard-failure-"));
   const paths = pathsFor(root);

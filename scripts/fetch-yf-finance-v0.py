@@ -13,9 +13,11 @@ Sunset documented: 2026-06-22 (DS-P1-008)
 
 import argparse
 import json
+import re
 import sys
 import time
 from pathlib import Path
+from urllib.parse import urlsplit
 
 TICKERS = ["AAPL", "NVDA", "MSFT", "GOOGL", "AMZN", "META", "TSLA", "AVGO", "JPM", "LLY"]
 ROOT = Path(__file__).resolve().parent.parent
@@ -25,6 +27,49 @@ DEPRECATION_MESSAGE = (
     "Use scripts/fetch-yf-finance.py or .github/workflows/fetch-yf-finance.yml. "
     "Pass --allow-deprecated-v0 only for historical reproduction."
 )
+DIAGNOSTIC_DETAIL_LIMIT = 240
+_DIAGNOSTIC_URL = re.compile(r"https?://[^\s),;]+", re.IGNORECASE)
+_DIAGNOSTIC_BEARER = re.compile(r"\bBearer\s+[A-Za-z0-9._~+/-]+=*", re.IGNORECASE)
+_DIAGNOSTIC_SECRET = re.compile(
+    r"\b(api[_-]?key|access[_-]?token|token|secret|authorization|cookie|password)\b"
+    r"\s*[:=]\s*(?:\"[^\"]*\"|'[^']*'|[^\s,;]+)",
+    re.IGNORECASE,
+)
+_DIAGNOSTIC_PAYLOAD = re.compile(r"\b(body|payload|response)\b\s*[:=]\s*.+$", re.IGNORECASE)
+
+
+def _redact_diagnostic_url(match: re.Match) -> str:
+    try:
+        parsed = urlsplit(match.group(0))
+        hostname = parsed.hostname
+        port = parsed.port
+    except ValueError:
+        return "[redacted-url]"
+    if not hostname:
+        return "[redacted-url]"
+    host = f"[{hostname}]" if ":" in hostname and not hostname.startswith("[") else hostname
+    netloc = f"{host}:{port}" if port is not None else host
+    suffix = "?[redacted]" if parsed.query else ""
+    return f"{parsed.scheme}://{netloc}{parsed.path}{suffix}"
+
+
+def bounded_diagnostic_detail(error: object, limit: int = DIAGNOSTIC_DETAIL_LIMIT) -> str:
+    """Return a bounded, redacted detail for the legacy reproduction log."""
+    if not isinstance(limit, int) or not 1 <= limit <= DIAGNOSTIC_DETAIL_LIMIT:
+        raise ValueError(f"diagnostic detail limit must be within 1..{DIAGNOSTIC_DETAIL_LIMIT}")
+    if isinstance(error, BaseException):
+        name = re.sub(r"[^A-Za-z0-9_.-]", "", type(error).__name__) or "Error"
+        message = str(error)
+    else:
+        name = ""
+        message = str(error or "unknown error")
+    message = " ".join(message.split())
+    message = _DIAGNOSTIC_URL.sub(_redact_diagnostic_url, message)
+    message = _DIAGNOSTIC_BEARER.sub("Bearer [redacted]", message)
+    message = _DIAGNOSTIC_SECRET.sub(r"\1=[redacted]", message)
+    message = _DIAGNOSTIC_PAYLOAD.sub(r"\1: [redacted]", message)
+    detail = f"{name}: {message or 'no message'}" if name else (message or "unknown error")
+    return detail[:limit]
 
 
 def parse_args(argv=None):
@@ -138,20 +183,21 @@ def main(argv=None):
     for ticker in TICKERS:
         print(f"[fetch] {ticker} ...", end=" ", flush=True)
         data, latency_ms, error = fetch_ticker(ticker)
+        error_detail = bounded_diagnostic_detail(error) if error else error
 
         out_path = OUT_DIR / f"{ticker}.json"
         payload = {
             "ticker": ticker,
             "fetched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "latency_ms": latency_ms,
-            "error": error,
+            "error": error_detail,
             "data": data,
         }
         out_path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
 
-        status = "OK" if not error else f"ERR: {error[:60]}"
+        status = "OK" if not error else f"ERR: {error_detail}"
         print(f"{status} ({latency_ms}ms) -> {out_path}")
-        results.append({"ticker": ticker, "latency_ms": latency_ms, "error": error, "path": str(out_path)})
+        results.append({"ticker": ticker, "latency_ms": latency_ms, "error": error_detail, "path": str(out_path)})
 
         # Rate-limit safety: small sleep between tickers
         time.sleep(0.8)

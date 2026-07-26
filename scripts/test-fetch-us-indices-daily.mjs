@@ -414,10 +414,28 @@ assert.deepEqual(
     eventName: "schedule",
   });
   assert.equal(result.exitCode, 2);
+  assert.match(result.failure_detail, /^Error: reset$/);
   protectedPaths.forEach((filePath, index) => assert.deepEqual(fs.readFileSync(filePath), before[index]));
   const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
   assert.equal(shard.lane_id, "us_indices_daily");
   assert.equal(shard.attempts[0].execution, "threw");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-decode-detail-"));
+  const paths = pathsFor(root);
+  const result = await runUsIndicesDaily({
+    ...paths,
+    request: async (_url, key) => key === "nasdaq"
+      ? { statusCode: 200, body: "provider-secret-body" }
+      : response(200, yahooPayload("^GSPC", [["2026-07-17", 6210.2]])),
+    observedAt: OBSERVED_AT,
+    attemptId: "gh-403-1-us-indices",
+    eventName: "schedule",
+  });
+  assert.equal(result.exitCode, 2);
+  assert.match(result.failure_detail, /^SyntaxError:/);
+  assert.doesNotMatch(result.failure_detail, /provider-secret-body/);
 }
 
 {

@@ -30,6 +30,7 @@ import {
   classifyLkgFailure,
   isNaturalScheduleRun,
 } from "./lib/data-supply-lkg-store.mjs";
+import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -171,13 +172,13 @@ function fetchJson(url, { timeoutMs = 30000 } = {}) {
       });
       res.on("end", () => {
         if (res.statusCode < 200 || res.statusCode >= 300) {
-          reject(new Error(`HTTP ${res.statusCode}: ${body.slice(0, 160)}`));
+          reject(new Error(`HTTP ${res.statusCode}: provider response body omitted`));
           return;
         }
         try {
           resolve(JSON.parse(body));
-        } catch (err) {
-          reject(new Error(`Invalid JSON: ${err.message}`));
+        } catch {
+          reject(new Error("Invalid JSON provider response"));
         }
       });
     });
@@ -243,9 +244,12 @@ async function observeAttempt({ filter, controlledFailure, request = rawGet }) {
   } catch (err) {
     const kind = transportError(err) ? "transport" : "unexpected";
     return {
-      result: withEndpointAssertionIds(
-        attemptResult(kind === "transport" ? "transport_error" : "unexpected_error", threwTuple(kind)),
-      ),
+      result: {
+        ...withEndpointAssertionIds(
+          attemptResult(kind === "transport" ? "transport_error" : "unexpected_error", threwTuple(kind)),
+        ),
+        failure_detail: boundedDiagnosticDetail(err),
+      },
       document: null,
       response: null,
     };
@@ -676,18 +680,22 @@ export async function runApeWisdomAttention({
     }
     return lkgStore.recordFailure({ artifacts: [artifact], run, reason });
   };
-  const fail = (reason) => {
+  const fail = (reason, failureDetail = null) => {
     const failure = recordFailure(reason);
     return {
       ok: false,
       reason,
+      failure_detail: failureDetail,
       attempt,
       retrySet: failure.retrySet,
       ...classifyLkgFailure({ reason, hasCompleteLkg: failure.hasCompleteLkg }),
     };
   };
   if (observation.result.status !== "ready") {
-    return fail(controlled ? "controlled_failure" : observation.result.reason);
+    return fail(
+      controlled ? "controlled_failure" : observation.result.reason,
+      controlled ? null : observation.result.failure_detail ?? null,
+    );
   }
 
   const sourceAsOf = providerSourceAsOf(observation.response);
@@ -714,7 +722,10 @@ export async function runApeWisdomAttention({
       write: false,
     });
   } catch (error) {
-    return fail(transportError(error) ? "transport_error" : "unexpected_error");
+    return fail(
+      transportError(error) ? "transport_error" : "unexpected_error",
+      boundedDiagnosticDetail(error),
+    );
   }
   const serialized = serializeDocument(built.snapshot);
   const candidate = {
@@ -781,7 +792,7 @@ async function main() {
   const outcome = await runApeWisdomAttention(args);
   if (!outcome.ok) {
     const prefix = outcome.degraded ? "[degraded]" : "[corrupt]";
-    const message = `${prefix} ApeWisdom attention ${outcome.reason}; retry set: ${(outcome.retrySet ?? []).join(", ") || "none"}`;
+    const message = `${prefix} ApeWisdom attention ${outcome.reason}${diagnosticSuffix(outcome.failure_detail)}; retry set: ${(outcome.retrySet ?? []).join(", ") || "none"}`;
     if (outcome.degraded) console.log(message);
     else console.error(message);
     process.exitCode = outcome.exitCode ?? 2;

@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { ATTEMPT_SHARD_SCHEMA } from "./build-data-supply-detection-floor.mjs";
+import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -161,11 +162,14 @@ function classifyResponse(response) {
   let document;
   try {
     document = JSON.parse(String(response.body ?? ""));
-  } catch {
-    return result("decode_error", returnedTuple({
-      httpStatus: statusCode,
-      decode: "error",
-    }));
+  } catch (error) {
+    return {
+      ...result("decode_error", returnedTuple({
+        httpStatus: statusCode,
+        decode: "error",
+      })),
+      failure_detail: boundedDiagnosticDetail(error),
+    };
   }
   if (!Array.isArray(document?.data)) {
     return result("schema_drift", returnedTuple({
@@ -226,6 +230,7 @@ async function evaluateRequest(request, bucket, controlledFailureKey) {
       ...result(exceptionKind === "transport" ? "transport_error" : "unexpected_error", threwTuple(exceptionKind)),
       bucketKey: bucket.key,
       controlled: false,
+      failure_detail: boundedDiagnosticDetail(error),
     };
   }
 }
@@ -504,7 +509,16 @@ export async function runTreasuryTga({
       hasCompleteLkg: failure.hasCompleteLkg,
       systemic: systemicOutage || nonTransientHttp,
     });
-    return { ok: false, reason: failureReason, updated: false, attempt: row, retrySet: failure.retrySet, ...outcome };
+    const failureDetail = naturalWorst?.failure_detail ?? worst.failure_detail ?? null;
+    return {
+      ok: false,
+      reason: failureReason,
+      failure_detail: failureDetail,
+      updated: false,
+      attempt: row,
+      retrySet: failure.retrySet,
+      ...outcome,
+    };
   }
 
   const serialized = `${JSON.stringify(output, null, 2)}\n`;
@@ -607,7 +621,7 @@ async function main() {
   const resultValue = await runTreasuryTga();
   if (!resultValue.ok) {
     const prefix = resultValue.degraded ? "[degraded]" : "[corrupt]";
-    const message = `${prefix} Treasury TGA ${resultValue.reason}; retry set: ${(resultValue.retrySet || []).join(", ") || "none"}`;
+    const message = `${prefix} Treasury TGA ${resultValue.reason}; retry set: ${(resultValue.retrySet || []).join(", ") || "none"}${diagnosticSuffix(resultValue.failure_detail)}`;
     if (resultValue.degraded) console.log(message);
     else console.error(message);
     process.exitCode = resultValue.exitCode ?? 2;

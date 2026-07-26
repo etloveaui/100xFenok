@@ -13,6 +13,7 @@ import {
   libraryTuple,
   writeAttemptShard,
 } from "./lib/data-supply-attempt-shard.mjs";
+import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
 import {
   LaneLkgStore,
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
@@ -71,7 +72,10 @@ export function validCollectionSummary(summary) {
         || !Number.isInteger(row.put_rows) || row.put_rows < 1) return false;
     } else {
       failed += 1;
-      if (!exactKeys(row, ["ticker", "status", "reason"])
+      const legacyFailureKeys = exactKeys(row, ["ticker", "status", "reason"]);
+      const diagnosticFailureKeys = exactKeys(row, ["ticker", "status", "reason", "diagnostic"])
+        && typeof row.diagnostic === "string" && row.diagnostic.length > 0 && row.diagnostic.length <= 320;
+      if ((!legacyFailureKeys && !diagnosticFailureKeys)
         || !["empty_chain", "empty_expiries", "provider_error"].includes(row.reason)) return false;
     }
   }
@@ -196,11 +200,13 @@ export function runYahooPrivateOptions({
     sourceAsOf: markerSourceAsOf,
   };
   let summary;
+  let collectionFailureDetail = null;
   if (controlledKey === null) {
     try {
       summary = collect({ outputDir, summaryPath, observedAt });
-    } catch {
+    } catch (error) {
       summary = null;
+      collectionFailureDetail = boundedDiagnosticDetail(error);
     }
   }
   const summaryValid = validCollectionSummary(summary);
@@ -229,9 +235,13 @@ export function runYahooPrivateOptions({
     const stateReason = controlledKey !== null ? "controlled_failure" : summaryValid ? "provider_failure" : reason;
     const systemic = controlledKey === null && summaryValid && summary.failed_count === SCHEDULED_TICKERS.length;
     const failure = store.recordFailure({ artifacts: [descriptor], run, reason: stateReason });
+    const summaryFailureDetail = summaryValid
+      ? summary.results.find((row) => row?.status === "failed" && typeof row?.diagnostic === "string")?.diagnostic ?? null
+      : null;
     return {
       ok: false,
       reason,
+      failure_detail: collectionFailureDetail ?? summaryFailureDetail,
       attempt,
       retrySet: failure.retrySet,
       ...classifyLkgFailure({ reason: stateReason, hasCompleteLkg: failure.hasCompleteLkg, systemic }),

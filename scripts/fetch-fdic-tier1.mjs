@@ -24,6 +24,7 @@ import {
   isNaturalScheduleRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
+import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -153,6 +154,7 @@ async function evaluateQuarter({ request, quarter, controlledFailureQuarter }) {
         exceptionKind === "transport" ? "transport_error" : "unexpected_error",
         threwTuple(exceptionKind),
       ),
+      failure_detail: boundedDiagnosticDetail(error),
       quarter,
     };
   }
@@ -265,7 +267,18 @@ export async function runFdicTier1({
       ?? (injectedQuarter && !systemicOutage ? "controlled_failure" : worst.reason);
     const failure = lkgStore.recordFailure({ artifacts: lkgArtifacts, run, reason: failureReason });
     const outcome = classifyLkgFailure({ reason: failureReason, hasCompleteLkg: failure.hasCompleteLkg, systemic: systemicOutage });
-    return { ok: false, reason: failureReason, updated: false, attempt, retrySet: failure.retrySet, ...outcome };
+    const failureDetail = failureReason === "controlled_failure"
+      ? null
+      : worst.failure_detail ?? requestResults.find((row) => row.failure_detail)?.failure_detail ?? null;
+    return {
+      ok: false,
+      reason: failureReason,
+      updated: false,
+      attempt,
+      retrySet: failure.retrySet,
+      ...(failureDetail ? { failure_detail: failureDetail } : {}),
+      ...outcome,
+    };
   }
 
   const data = requestResults.map((row) => row.row).sort((a, b) => a.date.localeCompare(b.date));
@@ -337,7 +350,7 @@ async function main() {
   const result = await runFdicTier1();
   if (!result.ok) {
     const prefix = result.degraded ? "[degraded]" : "[corrupt]";
-    const message = `${prefix} FDIC Tier1 ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}`;
+    const message = `${prefix} FDIC Tier1 ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}${diagnosticSuffix(result.failure_detail)}`;
     if (result.degraded) console.log(message);
     else console.error(message);
     process.exitCode = result.exitCode ?? 2;

@@ -170,6 +170,10 @@ async function assertFailureCase({ failingResponse, expected, failingIndex = 1 }
   assert.equal(result.updated, false);
   assert.equal(result.reason, expected.reason);
   assert.equal(result.exitCode, 2);
+  if (expected.failureDetail) {
+    assert.match(result.failure_detail, expected.failureDetail);
+    assert(result.failure_detail.length <= 320, "Treasury failure detail must stay bounded");
+  }
   assert.equal(fs.existsSync(paths.canonicalPath), false);
   assert.equal(fs.existsSync(paths.publicPath), false);
   const row = assertShardShape(shard);
@@ -226,6 +230,7 @@ await assertFailureCase({
   failingResponse: response(200, "{not-json"),
   expected: {
     reason: "decode_error",
+    failureDetail: /^SyntaxError:/,
     row: {
       execution: "returned",
       http_status: 200,
@@ -274,6 +279,7 @@ await assertFailureCase({
   failingResponse: Object.assign(new Error("socket reset"), { code: "ECONNRESET" }),
   expected: {
     reason: "transport_error",
+    failureDetail: /^Error: socket reset$/,
     row: {
       execution: "threw",
       exception_kind: "transport",

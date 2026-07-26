@@ -230,6 +230,62 @@ function makeRunPaths(root) {
   assert.equal(row.rate_limited, true);
 }
 
+// Natural request/build failures preserve a bounded, sanitized explanation on
+// the runner result only. Detection attempt shards keep their fixed schema.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-yardeni-diagnostic-test-"));
+  const paths = makeRunPaths(root);
+  const transport = new Error("FRED socket reset Bearer secret-token https://fred.example/path?api_key=private");
+  transport.code = "ECONNRESET";
+  const result = await runFenoYardeni({
+    ...paths,
+    seedPayload,
+    privateSeedPayload: null,
+    benchmarkPayload,
+    apiKey: "test-key",
+    request: async () => { throw transport; },
+    observedAt: "2026-07-14T12:34:56.000Z",
+    attemptId: "fred-yardeni-diagnostic-request",
+  });
+  assert.equal(result.reason, "transport_error");
+  assert.match(result.failure_detail ?? "", /FRED socket reset/, "natural request failure retains a diagnostic detail");
+  assert.ok(result.failure_detail.length <= 320, "diagnostic detail stays bounded");
+  assert.equal(result.failure_detail.includes("secret-token"), false, "diagnostic detail redacts bearer credentials");
+  assert.equal(result.failure_detail.includes("api_key=private"), false, "diagnostic detail redacts URL query values");
+  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
+  assert.equal(Object.hasOwn(shard.attempts[0], "failure_detail"), false, "attempt shard schema remains unchanged");
+
+  const buildResult = await runFenoYardeni({
+    ...paths,
+    seedPayload,
+    privateSeedPayload: null,
+    benchmarkPayload: {},
+    apiKey: "test-key",
+    request: async (_url, seriesId) => response(200, {
+      observations: fredSeries[seriesId].map((row) => ({ date: row.date, value: String(row.value) })),
+    }),
+    observedAt: "2026-07-14T12:35:56.000Z",
+    attemptId: "fred-yardeni-diagnostic-build",
+  });
+  assert.equal(buildResult.reason, "unexpected_error");
+  assert.match(buildResult.failure_detail ?? "", /sections\.sp500\.data\[\] is required/, "natural build failure retains a diagnostic detail");
+  assert.ok(buildResult.failure_detail.length <= 320, "build diagnostic detail stays bounded");
+
+  const missingKey = await runFenoYardeni({
+    ...paths,
+    seedPayload,
+    privateSeedPayload: null,
+    benchmarkPayload,
+    apiKey: "",
+    request: async () => { throw new Error("missing FRED key must not request"); },
+    observedAt: "2026-07-14T12:36:56.000Z",
+    attemptId: "fred-yardeni-diagnostic-missing-key",
+  });
+  assert.equal(missingKey.reason, "unexpected_error");
+  assert.match(missingKey.failure_detail ?? "", /FRED_API_KEY is required/, "missing FRED credentials retain a safe static detail");
+  assert.ok(missingKey.failure_detail.length <= 320, "static diagnostic detail stays bounded");
+}
+
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fred-yardeni.yml"), "utf8");
   assert.match(workflow, /detection-attempts\/fred_yardeni\.json/);

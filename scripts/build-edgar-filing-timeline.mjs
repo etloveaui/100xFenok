@@ -40,6 +40,7 @@ import {
   classifyLkgFailure,
   isNaturalScheduleRun,
 } from "./lib/data-supply-lkg-store.mjs";
+import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -618,10 +619,20 @@ function writeIndex(paths, { manifests, updated, generatedAt }) {
 
 function thrownResult(error) {
   const exceptionKind = transportError(error) ? "transport" : "unexpected";
-  return attemptResult(
-    exceptionKind === "transport" ? "transport_error" : "unexpected_error",
-    threwTuple(exceptionKind),
-  );
+  return {
+    ...attemptResult(
+      exceptionKind === "transport" ? "transport_error" : "unexpected_error",
+      threwTuple(exceptionKind),
+    ),
+    failure_detail: boundedDiagnosticDetail(error),
+  };
+}
+
+function noSubmissionRequestResult() {
+  return {
+    ...attemptResult("unexpected_error", threwTuple("unexpected")),
+    failure_detail: boundedDiagnosticDetail(new Error("no EDGAR submission endpoints were requested")),
+  };
 }
 
 export async function runEdgarFilingTimeline({
@@ -690,18 +701,19 @@ export async function runEdgarFilingTimeline({
           run: storeRun,
         });
         if (lkgOutcome.corrupt) {
-          throw new Error(`SEC company ticker bootstrap failed: ${bootstrapResult.reason}; EDGAR LKG failure is corrupt: ${lkgOutcome.reason}`);
+          throw new Error(`SEC company ticker bootstrap failed: ${bootstrapResult.reason}${diagnosticSuffix(bootstrapResult.failure_detail)}; EDGAR LKG failure is corrupt: ${lkgOutcome.reason}`);
         }
         return {
           ok: false,
           reason: bootstrapResult.reason,
+          failure_detail: bootstrapResult.failure_detail ?? null,
           telemetry_status: bootstrapResult.status,
           telemetry_reason: bootstrapResult.reason,
           stats,
           lkg: lkgOutcome,
         };
       }
-      throw new Error(`SEC company ticker bootstrap failed: ${bootstrapResult.reason}`);
+      throw new Error(`SEC company ticker bootstrap failed: ${bootstrapResult.reason}${diagnosticSuffix(bootstrapResult.failure_detail)}`);
     }
     const cikMap = buildCikMap(company.rows);
     const existingManifests = loadExistingManifests(paths);
@@ -732,7 +744,7 @@ export async function runEdgarFilingTimeline({
       requestResults.push(endpointResult);
       if (endpointResult.status !== "ready") {
         stats.errors += 1;
-        console.warn(`  ${ticker}: SEC submissions ${endpointResult.reason}`);
+        console.warn(`  ${ticker}: SEC submissions ${endpointResult.reason}${diagnosticSuffix(endpointResult.failure_detail)}`);
       } else {
         const submissions = endpointResult.document;
         stats.fetched += 1;
@@ -772,7 +784,7 @@ export async function runEdgarFilingTimeline({
     if (manageLkg) {
       const telemetry = requestResults.length > 0
         ? worstRequestResult(requestResults)
-        : attemptResult("unexpected_error", threwTuple("unexpected"));
+        : noSubmissionRequestResult();
       lkgOutcome = applyEdgarLkgStore({
         repoRoot: lkgRepoRoot,
         markerPath: storeMarkerPath,
@@ -782,7 +794,7 @@ export async function runEdgarFilingTimeline({
         run: storeRun,
       });
       if (lkgOutcome.corrupt) {
-        throw new Error(`EDGAR LKG failure is corrupt: ${lkgOutcome.reason}`);
+        throw new Error(`EDGAR LKG failure is corrupt${diagnosticSuffix(telemetry.failure_detail)}: ${lkgOutcome.reason}`);
       }
     }
   } catch (error) {
@@ -792,7 +804,7 @@ export async function runEdgarFilingTimeline({
       ? worstRequestResult(requestResults)
       : bootstrapResult && bootstrapResult.status !== "ready"
         ? bootstrapResult
-        : attemptResult("unexpected_error", threwTuple("unexpected"));
+        : noSubmissionRequestResult();
     writeAttemptShard({
       laneId: "edgar_filings",
       attemptShardPath: paths.attemptShardPath,
@@ -806,7 +818,7 @@ export async function runEdgarFilingTimeline({
     ? worstRequestResult(requestResults)
     : bootstrapResult && bootstrapResult.status !== "ready"
       ? bootstrapResult
-      : attemptResult("unexpected_error", threwTuple("unexpected"));
+      : noSubmissionRequestResult();
   console.log(
     `edgar_filing_timeline: resolved=${stats.resolved} unresolved=${stats.unresolved} fetched=${stats.fetched} filings=${stats.filings} ready_preserved=${stats.readyPreserved} errors=${stats.errors}`,
   );
@@ -814,6 +826,7 @@ export async function runEdgarFilingTimeline({
   return {
     ok: produced,
     reason: produced ? "ok" : telemetry.reason === "ok" ? "unexpected_error" : telemetry.reason,
+    failure_detail: produced ? null : telemetry.failure_detail ?? null,
     telemetry_status: telemetry.status,
     telemetry_reason: telemetry.reason,
     stats,
@@ -833,7 +846,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     // DEC-264: a degraded lane (valid LKG retained, retry parked, KPI-named)
     // exits 0 so the workflow commits the honest retry state; only true
     // corruption (no provable LKG, or a systemic break) exits non-zero.
-    if (!result.ok) process.exitCode = result.lkg?.exitCode ?? 2;
+    if (!result.ok) {
+      const prefix = result.lkg?.degraded ? "[degraded]" : "[corrupt]";
+      console.warn(`${prefix} EDGAR filings ${result.reason}${diagnosticSuffix(result.failure_detail)}`);
+      process.exitCode = result.lkg?.exitCode ?? 2;
+    }
   }).catch((error) => {
     console.error(error instanceof Error ? error.stack || error.message : error);
     process.exitCode = 1;

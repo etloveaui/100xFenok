@@ -383,6 +383,7 @@ async function runLane(root, { series, request, run, controlledFailureKey = "" }
   const chaos = await runLane(root, { series: fredGen1, run: dispatchRun("chaos-run", "2026-07-18T10:00:00Z"), controlledFailureKey: "yardney_model" });
   assert.equal(chaos.ok, false);
   assert.equal(chaos.reason, "transport_error", "injection rides the real transport-error path, never a synthetic side path");
+  assert.equal(chaos.failure_detail, null, "controlled synthetic failures carry no diagnostic detail");
   assert.equal(chaos.lkg.kind, "failure");
   assert.equal(chaos.lkg.degraded, true);
   assert.equal(chaos.lkg.exitCode, 0);

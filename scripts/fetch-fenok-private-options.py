@@ -7,8 +7,10 @@ import argparse
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+import re
 import time
 from typing import Callable
+from urllib.parse import urlsplit
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -18,6 +20,15 @@ SCHEDULED_TICKERS = DEFAULT_REFERENCE_TICKERS
 OPTION_EXPIRIES = 2
 OPTION_ROWS = 40
 SUMMARY_SCHEMA = "fenok-private-options-collection-summary/v1"
+DIAGNOSTIC_DETAIL_LIMIT = 320
+_DIAGNOSTIC_URL = re.compile(r"https?://[^\s),;]+", re.IGNORECASE)
+_DIAGNOSTIC_BEARER = re.compile(r"\bBearer\s+[A-Za-z0-9._~+/-]+=*", re.IGNORECASE)
+_DIAGNOSTIC_SECRET = re.compile(
+    r"\b(api[_-]?key|access[_-]?token|token|secret|authorization|cookie|password)\b"
+    r"\s*[:=]\s*(?:\"[^\"]*\"|'[^']*'|[^\s,;]+)",
+    re.IGNORECASE,
+)
+_DIAGNOSTIC_PAYLOAD = re.compile(r"\b(body|payload|response)\b\s*[:=]\s*.+$", re.IGNORECASE)
 
 
 class EmptyExpiriesError(ValueError):
@@ -138,6 +149,40 @@ def _safe_reason(exc: Exception) -> str:
     return "provider_error"
 
 
+def _redact_diagnostic_url(match: re.Match) -> str:
+    try:
+        parsed = urlsplit(match.group(0))
+        hostname = parsed.hostname
+        port = parsed.port
+    except ValueError:
+        return "[redacted-url]"
+    if not hostname:
+        return "[redacted-url]"
+    host = f"[{hostname}]" if ":" in hostname and not hostname.startswith("[") else hostname
+    netloc = f"{host}:{port}" if port is not None else host
+    suffix = "?[redacted]" if parsed.query else ""
+    return f"{parsed.scheme}://{netloc}{parsed.path}{suffix}"
+
+
+def bounded_diagnostic_detail(error: object, limit: int = DIAGNOSTIC_DETAIL_LIMIT) -> str:
+    """Preserve a useful failure cause without exposing provider data or credentials."""
+    if not isinstance(limit, int) or not 1 <= limit <= DIAGNOSTIC_DETAIL_LIMIT:
+        raise ValueError(f"diagnostic detail limit must be within 1..{DIAGNOSTIC_DETAIL_LIMIT}")
+    if isinstance(error, BaseException):
+        name = re.sub(r"[^A-Za-z0-9_.-]", "", type(error).__name__) or "Error"
+        message = str(error)
+    else:
+        name = ""
+        message = str(error or "unknown error")
+    message = " ".join(message.split())
+    message = _DIAGNOSTIC_URL.sub(_redact_diagnostic_url, message)
+    message = _DIAGNOSTIC_BEARER.sub("Bearer [redacted]", message)
+    message = _DIAGNOSTIC_SECRET.sub(r"\1=[redacted]", message)
+    message = _DIAGNOSTIC_PAYLOAD.sub(r"\1: [redacted]", message)
+    detail = f"{name}: {message or 'no message'}" if name else (message or "unknown error")
+    return detail[:limit]
+
+
 def collect_options(
     tickers: list[str],
     *,
@@ -193,8 +238,9 @@ def collect_options(
             print(f"[{index}/{len(tickers)}] {ticker} OK expiries={len(options)}", flush=True)
         except Exception as exc:  # noqa: BLE001 - bounded collector reports all members.
             reason = _safe_reason(exc)
-            results.append({"ticker": ticker, "status": "failed", "reason": reason})
-            print(f"[{index}/{len(tickers)}] {ticker} FAIL {reason}", flush=True)
+            diagnostic = bounded_diagnostic_detail(exc)
+            results.append({"ticker": ticker, "status": "failed", "reason": reason, "diagnostic": diagnostic})
+            print(f"[{index}/{len(tickers)}] {ticker} FAIL {reason}: {diagnostic}", flush=True)
         if sleep_seconds > 0 and index < len(tickers):
             time.sleep(sleep_seconds)
 

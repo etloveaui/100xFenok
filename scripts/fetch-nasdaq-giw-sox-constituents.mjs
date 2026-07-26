@@ -22,6 +22,7 @@ import {
   isNaturalScheduleRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
+import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -139,6 +140,7 @@ async function evaluateTradeDate({ request, tradeDate, controlled }) {
         exceptionKind === "transport" ? "transport_error" : "unexpected_error",
         threwTuple(exceptionKind),
       ),
+      failure_detail: boundedDiagnosticDetail(error),
       tradeDate,
     };
   }
@@ -382,7 +384,18 @@ export async function runNasdaqGiwSox({
       hasCompleteLkg: failure.hasCompleteLkg,
       systemic: nonTransientHttp,
     });
-    return { ok: false, reason: failureReason, updated: false, attempt, retrySet: failure.retrySet, ...outcome };
+    const failureDetail = failureReason === "controlled_failure"
+      ? null
+      : folded.failure_detail ?? requestResults.find((row) => row.failure_detail)?.failure_detail ?? null;
+    return {
+      ok: false,
+      reason: failureReason,
+      updated: false,
+      attempt,
+      retrySet: failure.retrySet,
+      ...(failureDetail ? { failure_detail: failureDetail } : {}),
+      ...outcome,
+    };
   }
 
   const payload = buildPayload({ tradeDate: selected.tradeDate, rows: selected.rows, generatedAt: observedAt });
@@ -511,7 +524,7 @@ async function main() {
   });
   if (!result.ok) {
     const prefix = result.degraded ? "[degraded]" : "[corrupt]";
-    const message = `${prefix} Nasdaq GIW SOX ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}`;
+    const message = `${prefix} Nasdaq GIW SOX ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}${diagnosticSuffix(result.failure_detail)}`;
     if (result.degraded) console.log(message);
     else console.error(message);
     process.exitCode = result.exitCode ?? 2;
