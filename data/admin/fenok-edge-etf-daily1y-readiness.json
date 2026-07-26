@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-07-26T04:29:22.968Z",
-  "classification_as_of": "2026-07-26T04:28:49.028Z",
+  "generated_at": "2026-07-26T04:49:53.930Z",
+  "classification_as_of": "2026-07-26T04:49:16.538Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -304,27 +304,17 @@
       "selection": "explicit full-primary daily_1y fetchable tickers; not the scored-ETF scheduled plan",
       "single_writer": true,
       "shard_size": 100,
-      "ticker_count": 125,
-      "shard_count": 2,
+      "ticker_count": 25,
+      "shard_count": 1,
       "shards": [
         {
           "shard": 1,
-          "ticker_count": 100,
-          "inputs": {
-            "history_gaps_only": "true",
-            "required_history_periods": "daily_1y",
-            "incremental_etf_limit": "0",
-            "etfs": "EQQQ,FEAT,FIVY,PNOV,POCT,PPLT,PSEP,PSTP,PWRD,QBF,QBTX,QBUF,QETH,QQDN,QTAP,QTJA,QTOC,QULL,RBUF,RDTE,RGTU,RSJN,RYLG,SCDL,SCO,SDD,SEPU,SETH,SGOL,SHNY,SIVR,SKRE,SLON,SLV,SLVO,SMHB,SMU,SPBC,SPDN,SPUC,SPYU,SVXY,TAGS,TBIL,TBJL,TBLL,TEMT,TETH,TFJL,THY,TJAN,TJUL,TLTW,TNGY,TSL,TSLW,TSPY,TYA,UAPR,UAUG,UCIB,UDEC,UDN,UFEB,UFIV,UJAN,UJUL,UJUN,ULE,UMAY,UNOV,UOCT,USDU,USE,USEP,USFR,USG,USML,USOI,USVN,UTEN,UTHY,UTRE,UTWO,UTWY,UVXY,UX,UXRP,VIXM,VIXY,VXX,VXZ,VYLD,WAGN,WTPI,WXET,XBIL,XDIV,XDQQ,XDSQ"
-          }
-        },
-        {
-          "shard": 2,
           "ticker_count": 25,
           "inputs": {
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "0",
-            "etfs": "XDTE,XRPI,XTJA,XTJL,XTOC,YBTC,YCL,YCS,YETH,ZALT,ZAPR,ZAUG,ZDEK,ZFEB,ZHOG,ZJAN,ZJUL,ZJUN,ZMAY,ZNOV,ZOCT,ZSB,ZSC,ZSEP,ZVOL"
+            "etfs": "EQQQ,FEAT,FIVY,XTJL,XTOC,YBTC,YCL,YCS,YETH,ZALT,ZAPR,ZAUG,ZDEK,ZFEB,ZHOG,ZJAN,ZJUL,ZJUN,ZMAY,ZNOV,ZOCT,ZSB,ZSC,ZSEP,ZVOL"
           }
         }
       ]
