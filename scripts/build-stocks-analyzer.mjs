@@ -258,6 +258,20 @@ for (const [symbol, idx] of Object.entries(index.stocks)) {
 
   if (yfForwardRec) yfFallbackStats.matchedRows += 1;
 
+  // The converter deliberately nulls market-cap-over-statement ratios on rows
+  // where the workbook put market cap and the financial statements in different
+  // units (data_quality.affected_fields). Falling back to the company-master
+  // copy would silently restore the very number that was suppressed - measured:
+  // SKHY reached the screener at PBR 31.5 after the converter had nulled it,
+  // because `idx.pb ?? cmRec.pbr` treated the deliberate null as "missing".
+  // A suppressed field is a decision, not a gap, so it must not be back-filled.
+  const suppressedFields = new Set(
+    Array.isArray(idx?.data_quality?.affected_fields) ? idx.data_quality.affected_fields : [],
+  );
+  const preferIndex = (field, indexValue, fallbackValue) => (
+    suppressedFields.has(field) ? null : (toFiniteNumber(indexValue) ?? fallbackValue)
+  );
+
   merged.push({
     symbol,
     companyName: idx.n || cmRec.companyName || symbol,
@@ -267,7 +281,7 @@ for (const [symbol, idx] of Object.entries(index.stocks)) {
     price: toFiniteNumber(idx.p),
     marketCap: toFiniteNumber(idx.mc) ?? cmRec.marketCap,
     per: toFiniteNumber(idx.pe) ?? cmRec.per,
-    pbr: toFiniteNumber(idx.pb) ?? cmRec.pbr,
+    pbr: preferIndex("pbr", idx.pb, cmRec.pbr),
     dividendYield: toFiniteNumber(idx.dy),
     return12m: toFiniteNumber(idx.r12),
     roe: cmRec.roe,

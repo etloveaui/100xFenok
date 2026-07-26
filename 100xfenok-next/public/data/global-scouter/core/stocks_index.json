@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-26T16:30:30.820505",
+  "generated_at": "2026-07-26T16:56:20.691016",
   "source_date": "2026-07-24",
   "count": 1065,
   "stocks": {
@@ -107,9 +107,20 @@
       "p": 115.07,
       "mc": 1514228.97,
       "pe": 639.2777777777777,
-      "pb": 9.66,
+      "pb": null,
       "dy": 0.0,
-      "r12": null
+      "r12": null,
+      "data_quality": {
+        "code": "market_cap_not_comparable",
+        "detector": "scale_market_cap_all_null_with_equity_and_index_market_cap",
+        "action": "market_cap_statement_ratios_nulled",
+        "affected_fields": [
+          "pbr",
+          "pcr",
+          "psr"
+        ],
+        "raw_preserved": true
+      }
     },
     "META": {
       "n": "Meta Platforms Class A",
@@ -155,9 +166,20 @@
       "p": 154.57,
       "mc": 1101623.94511,
       "pe": 4.906984126984127,
-      "pb": 31.5,
+      "pb": null,
       "dy": null,
-      "r12": null
+      "r12": null,
+      "data_quality": {
+        "code": "unit_mismatch",
+        "detector": "scale_market_cap_all_null_with_equity_and_index_market_cap",
+        "action": "market_cap_statement_ratios_nulled",
+        "affected_fields": [
+          "pbr",
+          "pcr",
+          "psr"
+        ],
+        "raw_preserved": true
+      }
     },
     "MU": {
       "n": "Micron Technology",
@@ -625,7 +647,14 @@
       "pe": 17.412082957619475,
       "pb": 4.905648115325534,
       "dy": 0.014396685655100983,
-      "r12": null
+      "r12": null,
+      "data_quality": {
+        "code": "market_cap_scale_missing",
+        "detector": "scale_market_cap_all_null_with_equity_and_index_market_cap",
+        "action": "ratios_retained",
+        "affected_fields": [],
+        "raw_preserved": true
+      }
     },
     "RTX": {
       "n": "RTX",
