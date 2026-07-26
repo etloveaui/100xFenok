@@ -326,7 +326,10 @@ const effectiveEtfDetail = r2EtfCounts
 effectiveEtfDetail.coveragePct = pct(effectiveEtfDetail.available, effectiveEtfDetail.total);
 const paritySummary = sourceParity?.summary || marketAudit?.market_source_parity?.summary || {};
 const returnCoverage = marketAudit?.market_facts?.return_field_coverage || {};
-const generatedAt = new Date().toISOString();
+const generatedAt = process.env.PS_GENERATED_AT || new Date().toISOString();
+if (!Number.isFinite(new Date(generatedAt).getTime())) {
+  throw new Error(`PS_GENERATED_AT must be a valid timestamp, got ${JSON.stringify(generatedAt)}`);
+}
 const eventSurfaceAsOf = latestDate(surfaceIndex?.generated_at, surfaceIndex?.fetched_at);
 const etfAsOf = latestDate(etfUniverse?.generated_at, etfUniverse?.fetched_at, etfCoverage?.generated_at);
 const screenerAsOf = latestDate(stocksAnalyzer?.generated_at, stocksAnalyzer?.source_date, actionSummary?.generated_at);
@@ -382,10 +385,66 @@ const marketValuationSourceAsOf = oldestSourceDate([rimSourceAsOf, yardeniSource
 // Legacy aggregate stamps were collection dates promoted into source_as_of.
 const marketEventsSourceAsOf = null;
 const sectorsSourceAsOf = marketFactsCoreSourceAsOf;
-const etfCenterSourceAsOf = null;
 const etfDetailEntries = dataSupplyEtfIndex?.entries && typeof dataSupplyEtfIndex.entries === "object"
   ? Object.values(dataSupplyEtfIndex.entries)
   : [];
+const DEFERRED_RECONCILIATION_REASONS = new Set([
+  "quote_deferred_initial_reconcile",
+  "history_deferred_initial_reconcile",
+]);
+const etfDetailDateRows = etfDetailEntries.map((entry) => {
+  const ticker = String(entry?.ticker ?? "").trim();
+  const frozenSourceAsOf = trueSourceDate(entry?.source_as_of);
+  const safeTicker = /^[A-Za-z0-9._^=-]+$/.test(ticker);
+  const livePayload = safeTicker ? readJson(`stockanalysis/etfs/${ticker}.json`) : null;
+  const liveSourceAsOf = livePayload ? trueSourceDate(livePayload?.source_as_of) : null;
+  const sourceAsOf = liveSourceAsOf ?? frozenSourceAsOf;
+  const partialReasonCodes = Array.isArray(livePayload?.partial_reason_codes)
+    ? livePayload.partial_reason_codes
+    : [];
+  return {
+    ticker: ticker || "unknown",
+    source_as_of: sourceAsOf,
+    source: liveSourceAsOf != null ? "live_payload" : frozenSourceAsOf != null ? "frozen_index_fallback" : "missing",
+    recovered_from_live: frozenSourceAsOf == null && liveSourceAsOf != null,
+    deferred_reconciliation: partialReasonCodes.some((reason) => DEFERRED_RECONCILIATION_REASONS.has(reason)),
+  };
+});
+const etfDetailAgeRows = etfDetailDateRows
+  .map((row) => ({ ...row, age_days: ageDays(row.source_as_of, new Date(generatedAt).getTime()) }))
+  .filter((row) => row.age_days != null)
+  .sort((a, b) => a.age_days - b.age_days || a.ticker.localeCompare(b.ticker));
+const etfDetailAges = etfDetailAgeRows.map((row) => row.age_days);
+const medianAgeDays = etfDetailAges.length === 0
+  ? null
+  : etfDetailAges.length % 2 === 1
+    ? etfDetailAges[Math.floor(etfDetailAges.length / 2)]
+    : (etfDetailAges[etfDetailAges.length / 2 - 1] + etfDetailAges[etfDetailAges.length / 2]) / 2;
+const oldestEtfDetailMember = etfDetailAgeRows.length
+  ? [...etfDetailAgeRows].sort((a, b) => (
+      b.age_days - a.age_days
+      || String(a.source_as_of).localeCompare(String(b.source_as_of))
+      || a.ticker.localeCompare(b.ticker)
+    ))[0]
+  : null;
+const etfDetailDateResolution = {
+  enrollment_count: etfDetailDateRows.length,
+  live_date_count: etfDetailDateRows.filter((row) => row.source === "live_payload").length,
+  fallback_date_count: etfDetailDateRows.filter((row) => row.source === "frozen_index_fallback").length,
+  recovered_from_live_count: etfDetailDateRows.filter((row) => row.recovered_from_live).length,
+  missing_date_count: etfDetailDateRows.filter((row) => row.source === "missing").length,
+  age_histogram: {
+    days_0_7: etfDetailAgeRows.filter((row) => row.age_days <= 7).length,
+    days_8_30: etfDetailAgeRows.filter((row) => row.age_days >= 8 && row.age_days <= 30).length,
+    days_31_90: etfDetailAgeRows.filter((row) => row.age_days >= 31 && row.age_days <= 90).length,
+    over_90_days: etfDetailAgeRows.filter((row) => row.age_days > 90).length,
+  },
+  median_age_days: medianAgeDays,
+  oldest_member: oldestEtfDetailMember
+    ? { ticker: oldestEtfDetailMember.ticker, source_as_of: oldestEtfDetailMember.source_as_of }
+    : null,
+  deferred_reconciliation_member_count: etfDetailDateRows.filter((row) => row.deferred_reconciliation).length,
+};
 
 function marketFactsCompletenessCheck(label = "가격 원천 완전성") {
   if (marketFactsCoreComplete) {
@@ -440,11 +499,12 @@ const productStampEvidence = {
     ...datelessMembers(contractedSectorSurfaceNames),
   ]),
   etf_center: stampEvidence([
-    ...etfDetailEntries.map((entry) => dateMember(`etf_detail:${entry?.ticker ?? "unknown"}`, trueSourceDate(entry?.source_as_of))),
+    ...etfDetailDateRows.map((row) => dateMember(`etf_detail:${row.ticker}`, row.source_as_of)),
     ...datelessMembers(contractedEtfSurfaceNames),
   ]),
   screener: stampEvidence([dateMember("stocks_analyzer", screenerSourceAsOf)]),
 };
+const etfCenterSourceAsOf = productStampEvidence.etf_center.date_bearing.source_floor_as_of;
 
 function rimIndexReadyCheck(indexId, label) {
   const item = rimIndexInputs?.indices?.[indexId];
@@ -565,7 +625,7 @@ const surfaces = [
       check("ETF 상세", effectiveEtfDetail.available > 0 ? (effectiveEtfDetail.unavailable > 0 ? "partial" : "ready") : "unavailable", `${effectiveEtfDetail.available.toLocaleString("ko-KR")} / ${effectiveEtfDetail.total.toLocaleString("ko-KR")}개`, { count: effectiveEtfDetail.available, total: effectiveEtfDetail.total, missing: effectiveEtfDetail.unavailable, coverage_pct: effectiveEtfDetail.coveragePct, authority: r2EtfCounts ? "data_supply_r2_plus_strict_unenrolled_primary" : "legacy_coverage" }),
       check("기간 수익률", number(returnCoverage.return_1y?.etf) > 0 ? "ready" : "pending", `1Y ${number(returnCoverage.return_1y?.etf).toLocaleString("ko-KR")}개`, { count: number(returnCoverage.return_1y?.etf) }),
       check("신규·전략 ETF", etfSurfaces.surfaceCount > 0 ? "ready" : "pending", `${etfSurfaces.surfaceCount}개 항목 · ${etfSurfaces.rowCount.toLocaleString("ko-KR")}행`, { count: etfSurfaces.surfaceCount, rows: etfSurfaces.rowCount }),
-      freshness("ETF 집계 원천 기준일", etfCenterSourceAsOf, 7, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
+      freshness("ETF 상세 전체 구성원 원천 기준일", etfCenterSourceAsOf, 7, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
     ],
     "ETF는 제품 준비도가 높다. 남은 누락은 재시도/분류 대기 상태로 공개 화면과 Data Lab에 같이 드러낸다.",
     { as_of: etfAsOf, ...sourceStamp(productStampEvidence.etf_center.date_bearing.source_floor_as_of, NO_AGGREGATE_SOURCE_DATE), stamp_evidence: productStampEvidence.etf_center },
@@ -631,12 +691,14 @@ const payload = {
     stockanalysis_surface_domains: surfaceIndex?.source_as_of ?? null,
     stockanalysis_index_mirror: stockanalysisIndex?.source_as_of ?? null,
     etf_universe_source_as_of: etfCenterSourceAsOf,
+    etf_detail_date_resolution: etfDetailDateResolution,
   },
   source_files: [
     "computed/market_facts/index.json",
     "computed/market_data_audit.json",
     "computed/market_source_parity.json",
     "computed/data-supply/etf-detail/index.json",
+    "stockanalysis/etfs/*.json",
     "global-scouter/core/stocks_analyzer.json",
     "computed/stock_action_summary.json",
     "computed/rim-index/inputs.json",
