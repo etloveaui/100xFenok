@@ -803,6 +803,23 @@ function runConfigAndFixtureChecks() {
       "RED(b): a live lane reclassed out of detection_floor must fail the coverage guard by name");
   }
 
+  // The hourly schedule's grace is sized from MEASURED GitHub delivery, not
+  // from the cron we ask for. GitHub Actions schedules are best-effort and drop
+  // slots under load: across 59 consecutive scheduled deliveries of
+  // fetch-yahoo-ticker.yml (2026-07-19..25) the interval ran median 138 min,
+  // mean 149, p90 249, worst 280. A 2-hour grace was therefore exceeded by 64%
+  // of PERFECTLY NORMAL deliveries, so the lane read overdue two thirds of the
+  // time and the signal was noise. 6 hours clears the worst observed delivery
+  // with margin and still trips after roughly three consecutive misses. The
+  // cron stays hourly on purpose - that is what we ask for, and declaring less
+  // would hide any future improvement in delivery.
+  {
+    const hourly = calendarsFixture.schedules.find((row) => row.id === "hourly_at_05");
+    assert.equal(hourly.cron, "5 * * * *", "we still ask for hourly");
+    assert.deepEqual(hourly.grace, { unit: "hours", value: 6 },
+      "hourly grace must cover the measured worst GitHub delivery (280 min), not the nominal hour");
+  }
+
   assert.equal(validateAttemptEvidence(attemptsFixture), true);
   assert.equal(validateCalendars(calendarsFixture), undefined);
   const canonicalCalendars = readJson(CALENDAR_PATH);
