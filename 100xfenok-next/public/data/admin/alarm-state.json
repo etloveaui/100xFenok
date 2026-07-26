@@ -1,6 +1,6 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-07-25T22:13:32.840Z",
+  "generated_at": "2026-07-26T04:00:46.155Z",
   "status": "open",
   "open_incident_count": 2,
   "open_incidents": [
@@ -268,8 +268,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "suspected_skip"
+      ]
     },
     {
       "file": "fetch-yf-finance.yml",
@@ -384,8 +386,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 22,
-    "overdue": 3,
+    "not_due": 21,
+    "overdue": 4,
     "recovered": 0,
     "no_declaration": 7,
     "unknown": 0
@@ -410,9 +412,9 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "30177118030",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30177118030",
-    "observed_at": "2026-07-25T22:13:32.840Z",
+    "run_id": "30187042472",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30187042472",
+    "observed_at": "2026-07-26T04:00:46.155Z",
     "event": "schedule",
     "workflows": [
       "slickcharts-history.yml",
