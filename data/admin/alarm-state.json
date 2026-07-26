@@ -1,6 +1,6 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-07-26T04:00:46.155Z",
+  "generated_at": "2026-07-26T05:14:38.479Z",
   "status": "open",
   "open_incident_count": 2,
   "open_incidents": [
@@ -88,8 +88,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "suspected_skip"
+      ]
     },
     {
       "file": "fetch-edgar-filings.yml",
@@ -268,10 +270,8 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "overdue",
-      "cadence_evidence": [
-        "suspected_skip"
-      ]
+      "cadence_status": "not_due",
+      "cadence_evidence": []
     },
     {
       "file": "fetch-yf-finance.yml",
@@ -412,10 +412,10 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "30187042472",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30187042472",
-    "observed_at": "2026-07-26T04:00:46.155Z",
-    "event": "schedule",
+    "run_id": "30189033189",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30189033189",
+    "observed_at": "2026-07-26T05:14:38.479Z",
+    "event": "workflow_run",
     "workflows": [
       "slickcharts-history.yml",
       "slickcharts-monthly.yml"
