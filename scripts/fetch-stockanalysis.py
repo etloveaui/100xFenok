@@ -42,6 +42,7 @@ SCRIPT_DIR = ROOT / "scripts"
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
+from lib.diagnostic_detail import bounded_diagnostic_detail
 from data_supply_state import DataSupplyStateStore, canonical_sha256, deterministic_event_id
 from stockanalysis_recovery_state import (
     StockAnalysisRecoveryStateStore,
@@ -236,15 +237,31 @@ class StockAnalysisAttemptTracker:
                 "document": document,
             })
 
-    def record_yahoo_error(self, *, exception_kind: str, retry_count: int, latency_ms: float) -> None:
+    def record_yahoo_error(
+        self,
+        *,
+        exception_kind: str,
+        retry_count: int,
+        latency_ms: float,
+        error: object = None,
+    ) -> None:
+        # `exception_kind` is the stable vocabulary the detection floor reads and
+        # must not absorb free text. The identity of what actually threw travels
+        # beside it: run 30189547294 recorded threw/unexpected for 23 candidates
+        # with rate_limited=false and left no cause anywhere, so the lane could
+        # not be explained at all.
         if self.active:
-            self.yahoo_observations.append({
+            observation = {
                 "execution": "threw",
                 "exception_kind": exception_kind,
                 "retry_count": retry_count,
                 "latency_ms": latency_ms,
                 "outcome": "error",
-            })
+            }
+            detail = bounded_diagnostic_detail(error) if error is not None else None
+            if detail:
+                observation["failure_detail"] = detail
+            self.yahoo_observations.append(observation)
 
     def record_yahoo_returned_error(self, *, retry_count: int, latency_ms: float) -> None:
         if self.active:
@@ -5122,6 +5139,7 @@ def fetch_yahoo_etf_fallback(ticker: str, mirror_public: bool) -> dict:
                 ),
                 retry_count=retry_count,
                 latency_ms=library_latency_ms,
+                error=exc,
             )
         if isinstance(exc, ValueError):
             record_etf_detail_failure_observation(

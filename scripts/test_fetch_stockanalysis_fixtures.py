@@ -363,6 +363,52 @@ module.main()
             surface_args[surface_args.index("--attempt-id") + 1],
         )
 
+
+    def test_yahoo_fallback_error_carries_its_cause(self) -> None:
+        """A failed Yahoo fallback must say WHY, bounded and redacted.
+
+        Run 30189547294 recorded execution=threw / exception_kind=unexpected /
+        rate_limited=false for 23 candidates and left no cause anywhere - not in
+        the log, not in the attempt shard. The lane was unexplainable even after
+        the repo-wide diagnostics sweep, because this emission path sits in a
+        file the sweep was told not to touch. `exception_kind` stays the stable
+        vocabulary the detection floor consumes; the identity travels beside it.
+        """
+        tracker = self.fetcher.StockAnalysisAttemptTracker()
+        tracker.active = True
+        tracker.record_yahoo_candidate()
+        tracker.record_yahoo_error(
+            exception_kind="unexpected",
+            retry_count=0,
+            latency_ms=12.5,
+            error=ValueError("yahoo chart payload missing regularMarketTime"),
+        )
+        observation = tracker.yahoo_observations[-1]
+        self.assertEqual(observation["exception_kind"], "unexpected")
+        self.assertIn("ValueError", observation["failure_detail"])
+        self.assertIn("regularMarketTime", observation["failure_detail"])
+        self.assertLessEqual(len(observation["failure_detail"]), 320)
+
+    def test_yahoo_fallback_error_detail_redacts_credentials(self) -> None:
+        secret = "sk_live_A1b2C3d4E5f6G7h8I9j0"
+        tracker = self.fetcher.StockAnalysisAttemptTracker()
+        tracker.active = True
+        tracker.record_yahoo_candidate()
+        tracker.record_yahoo_error(
+            exception_kind="transport",
+            retry_count=1,
+            latency_ms=1.0,
+            error=ValueError(f"GET https://query.example.com/v8/chart?api_key={secret} failed"),
+        )
+        self.assertNotIn(secret, tracker.yahoo_observations[-1]["failure_detail"])
+
+    def test_yahoo_fallback_success_carries_no_failure_detail(self) -> None:
+        tracker = self.fetcher.StockAnalysisAttemptTracker()
+        tracker.active = True
+        tracker.record_yahoo_candidate()
+        tracker.record_yahoo_success({"ok": True}, retry_count=0, latency_ms=1.0)
+        self.assertNotIn("failure_detail", tracker.yahoo_observations[-1])
+
     def test_surface_unexpected_exception_after_success_emits_failure_observation(self) -> None:
         original_fetch = self.fetcher.fetch_table_surface_response
         original_run = self.fetcher.subprocess.run
@@ -478,6 +524,43 @@ module.main()
         self.assertEqual(envelope["candidate_count"], 0)
         self.assertFalse(envelope["fallback_enabled"])
         self.assertEqual(envelope["observations"], [])
+
+    def test_yahoo_thrown_error_wiring_carries_the_cause_to_the_observation(self) -> None:
+        """The real fetch path must hand the exception to the tracker.
+
+        Testing the recorder alone is not enough: dropping `error=exc` at the
+        call site leaves every recorder test green while every production
+        failure goes back to being unexplainable. That is the same two-hop gap
+        that let a workflow-key removal break the publish job earlier today, so
+        this exercises fetch_yahoo_etf_fallback itself.
+        """
+        original_loader = self.fetcher.load_yf_finance_module
+        original_tracker = self.fetcher.ATTEMPT_TRACKER
+
+        class ThrowingYahooModule:
+            @staticmethod
+            def fetch_with_retry(*_args, **_kwargs):
+                raise ValueError("yahoo chart payload missing regularMarketTime")
+
+        tracker = self.fetcher.StockAnalysisAttemptTracker()
+        tracker.configure(active=True, yahoo_enabled=True, run_id="127", run_attempt=1)
+        tracker.record_yahoo_candidate()
+        self.fetcher.ATTEMPT_TRACKER = tracker
+        self.fetcher.load_yf_finance_module = lambda: ThrowingYahooModule
+        try:
+            with self.assertRaises(Exception):
+                self.fetcher.fetch_yahoo_etf_fallback("MISS", mirror_public=False)
+        finally:
+            self.fetcher.load_yf_finance_module = original_loader
+            self.fetcher.ATTEMPT_TRACKER = original_tracker
+
+        observation = tracker.yahoo_observations[-1]
+        self.assertEqual(observation["execution"], "threw")
+        self.assertIn(
+            "regularMarketTime",
+            observation.get("failure_detail", ""),
+            "the thrown cause must reach the observation through the real call site",
+        )
 
     def test_yahoo_normal_returned_error_preserves_execution_and_library_evidence(self) -> None:
         original_loader = self.fetcher.load_yf_finance_module

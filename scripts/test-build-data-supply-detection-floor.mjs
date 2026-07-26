@@ -818,6 +818,17 @@ function runConfigAndFixtureChecks() {
     assert.equal(hourly.cron, "5 * * * *", "we still ask for hourly");
     assert.deepEqual(hourly.grace, { unit: "hours", value: 6 },
       "hourly grace must cover the measured worst GitHub delivery (280 min), not the nominal hour");
+    // Every hourly schedule meets the same GitHub, so every hourly schedule
+    // needs the same allowance. fetch-defillama.yml (`12 * * * *`) measured
+    // median 118 min / P90 187 / worst 260 over 48 intervals, with 100% of
+    // deliveries over the nominal hour - the identical distribution, and it
+    // sat on a 2-hour grace reading stale for no reason. A per-schedule
+    // allowance that only one schedule received is a fix that does not
+    // generalise, so this pins ALL of them.
+    for (const row of calendarsFixture.schedules.filter((entry) => /^\d+ \* \* \* \*$/.test(entry.cron))) {
+      assert.deepEqual(row.grace, { unit: "hours", value: 6 },
+        `${row.id}: hourly schedules face the same GitHub delivery and need the same measured grace`);
+    }
   }
 
   assert.equal(validateAttemptEvidence(attemptsFixture), true);
