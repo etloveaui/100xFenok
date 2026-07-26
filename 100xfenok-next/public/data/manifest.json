@@ -33,13 +33,13 @@
       "description": "Industry valuation data, extended US metrics, non-US regional metrics, ERP, credit ratings"
     },
     "global-scouter": {
-      "version": "2.3.0",
-      "updated": "2026-07-17",
+      "version": "2.4.0",
+      "updated": "2026-07-24",
       "update_frequency": "on-demand",
       "source": "Global Scouter Tool",
-      "file_count": 1082,
+      "file_count": 1083,
       "schema": true,
-      "description": "Stock screening (1,064), ETFs (22), indicators (1,068), raw preservation files (9) + FY+1~FY+3 forward/revision extensions"
+      "description": "Stock screening (1,065), ETFs (22), indicators (1,069 records) from the owner's weekly Global Scouter export"
     },
     "indices": {
       "version": "2.0.0",
@@ -166,6 +166,12 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-07-26",
+      "folder": "global-scouter",
+      "version": "2.4.0",
+      "change": "Weekly refresh from the owner-supplied 2026-07-24 Global Scouter workbook: 1,065 stocks (+1), 22 ETFs, 1,069 indicator records; stocks_analyzer and revision_movers rebuilt so the screener reads 2026-07-24 instead of 2026-07-17. New listing SKHY (SK hynix ADR) carries a market cap 29.23% above its own KOSPI line 000660.KS - source-faithful, flagged for the owner as a possible duplicate-company modelling question."
+    },
     {
       "date": "2026-07-21",
       "folder": "benchmarks",
@@ -712,7 +718,7 @@
     "on_new_file": "Add to folder schema.json files section",
     "version_format": "MAJOR.MINOR.PATCH (breaking.feature.fix)"
   },
-  "generatedAt": "2026-07-26T05:50:05Z",
+  "generatedAt": "2026-07-26T07:53:37Z",
   "categories": [
     {
       "name": "computed",
@@ -808,10 +814,10 @@
       "name": "global-scouter",
       "path": "/data/global-scouter/",
       "schemaVersion": "2.3.0",
-      "fileCount": 1082,
-      "lastUpdated": "2026-07-17",
+      "fileCount": 1083,
+      "lastUpdated": "2026-07-24",
       "lastUpdatedReason": null,
-      "notes": "Stock screening (1,064), ETFs (22), indicators (1,068), raw preservation files (9) + FY+1~FY+3 forward/revision extensions"
+      "notes": "Stock screening (1,065), ETFs (22), indicators (1,069 records) from the owner's weekly Global Scouter export"
     },
     {
       "name": "macro",

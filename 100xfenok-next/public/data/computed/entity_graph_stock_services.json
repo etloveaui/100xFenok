@@ -1,10 +1,10 @@
 {
   "schema_version": "data-entity-graph-stock-services/v1",
-  "generated_at": "2026-07-26T07:06:21.252Z",
+  "generated_at": "2026-07-26T07:53:42.711Z",
   "source_as_of": {
-    "stocks_analyzer": "2026-07-17",
-    "stock_action_index": "2026-07-17",
-    "market_facts": "2026-07-23",
+    "stocks_analyzer": "2026-07-24",
+    "stock_action_index": "2026-07-24",
+    "market_facts": null,
     "edgar_summaries": null,
     "sec_13f": "2026-Q1",
     "etf_universe": null
@@ -12,7 +12,7 @@
   "source_as_of_reason": {
     "stocks_analyzer": null,
     "stock_action_index": null,
-    "market_facts": null,
+    "market_facts": "producer has not emitted a complete source-date floor",
     "edgar_summaries": "provider publishes no aggregate source date",
     "sec_13f": null,
     "etf_universe": "provider publishes no aggregate source date"
@@ -26,9 +26,9 @@
     "sec13f": "sec13f:<UPPERCASE_SYMBOL>"
   },
   "totals": {
-    "stocks": 1064,
-    "with_single_stock_etfs": 87,
-    "single_stock_etfs": 181
+    "stocks": 1065,
+    "with_single_stock_etfs": 88,
+    "single_stock_etfs": 182
   },
   "stocks": {
     "AAL": {
@@ -2646,6 +2646,43 @@
       "as_of": {
         "etf_universe": null,
         "market_facts": "2026-07-24"
+      }
+    },
+    "SKHY": {
+      "target_key": "ticker:SKHY",
+      "ticker": "SKHY",
+      "route": "/stock/SKHY",
+      "single_stock_etfs": [
+        {
+          "etf_key": "etf:HYNX",
+          "target_key": "ticker:SKHY",
+          "ticker": "HYNX",
+          "label": "ETF Opportunities Trust - T-REX 2X Long SK Hynix Daily Target ETF",
+          "route": "/etfs/HYNX",
+          "category": "Equity",
+          "confidence": "high",
+          "classification_source": "stockanalysis.overview.description",
+          "raw_underlying": "SKHY",
+          "canonical_underlying_ticker": "SKHY",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "SKHY",
+          "resolution_note": null,
+          "market_facts": true,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": "2026-07-23"
+          }
+        }
+      ],
+      "as_of": {
+        "etf_universe": null,
+        "market_facts": null
       }
     },
     "IBM": {
