@@ -48,12 +48,12 @@ class FetchYfFinanceV0DiagnosticTest(unittest.TestCase):
 
         diagnostic = next(line.split("ERR: ", 1)[1].split(" (", 1)[0] for line in stdout.getvalue().splitlines() if "ERR: " in line)
         self.assertIn("endpoint moved diagnostic-marker", diagnostic)
-        self.assertLessEqual(len(diagnostic), 240)
+        self.assertLessEqual(len(diagnostic), 320)
         self.assertNotIn("secret-value", diagnostic)
         self.assertNotIn("abc.def", diagnostic)
         self.assertNotIn('"rows"', diagnostic)
         self.assertIn("[redacted]", diagnostic)
-        self.assertEqual(len(fetcher.bounded_diagnostic_detail("x" * 1000)), 240)
+        self.assertEqual(len(fetcher.bounded_diagnostic_detail("x" * 1000)), 320)
         userinfo = fetcher.bounded_diagnostic_detail(
             RuntimeError("request failed https://alice:supersecret@example.com/quote")
         )
@@ -61,7 +61,7 @@ class FetchYfFinanceV0DiagnosticTest(unittest.TestCase):
         self.assertNotIn("supersecret", userinfo)
         self.assertIn("https://example.com/quote", userinfo)
         for persisted_error in (payload["error"], summary["results"][0]["error"], summary["errors"][0]["error"]):
-            self.assertLessEqual(len(persisted_error), 240)
+            self.assertLessEqual(len(persisted_error), 320)
             self.assertNotIn("secret-value", persisted_error)
             self.assertNotIn("abc.def", persisted_error)
             self.assertNotIn('"rows"', persisted_error)

@@ -7,11 +7,16 @@ import argparse
 from datetime import datetime, timezone
 import json
 from pathlib import Path
-import re
+import sys
 import time
 from typing import Callable
-from urllib.parse import urlsplit
 
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from lib.diagnostic_detail import bounded_diagnostic_detail
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "_private" / "admin" / "fenok-flow" / "yf_options"
@@ -20,20 +25,6 @@ SCHEDULED_TICKERS = DEFAULT_REFERENCE_TICKERS
 OPTION_EXPIRIES = 2
 OPTION_ROWS = 40
 SUMMARY_SCHEMA = "fenok-private-options-collection-summary/v1"
-DIAGNOSTIC_DETAIL_LIMIT = 320
-_DIAGNOSTIC_URL = re.compile(r"https?://[^\s),;]+", re.IGNORECASE)
-_DIAGNOSTIC_BEARER = re.compile(r"\bBearer\s+[A-Za-z0-9._~+/-]+=*", re.IGNORECASE)
-_DIAGNOSTIC_SECRET = re.compile(
-    # The label may be decorated. `\b` never fires inside `client_secret`
-    # because `_` is a word character, and this repo authenticates FINRA with
-    # FINRA_API_CLIENT_ID / FINRA_API_CLIENT_SECRET. Over-redacting a log line
-    # costs nothing; leaking one costs everything.
-    r"([A-Za-z0-9_-]*(?:api[_-]?key|access[_-]?token|client[_-]?secret"
-    r"|token|secret|key|authorization|cookie|password)[A-Za-z0-9_-]*)"
-    r"\s*[:=]\s*(?:\"[^\"]*\"|'[^']*'|[^\s,;]+)",
-    re.IGNORECASE,
-)
-_DIAGNOSTIC_PAYLOAD = re.compile(r"\b(body|payload|response)\b\s*[:=]\s*.+$", re.IGNORECASE)
 
 
 class EmptyExpiriesError(ValueError):
@@ -152,40 +143,6 @@ def _safe_reason(exc: Exception) -> str:
     if isinstance(exc, EmptyChainError):
         return "empty_chain"
     return "provider_error"
-
-
-def _redact_diagnostic_url(match: re.Match) -> str:
-    try:
-        parsed = urlsplit(match.group(0))
-        hostname = parsed.hostname
-        port = parsed.port
-    except ValueError:
-        return "[redacted-url]"
-    if not hostname:
-        return "[redacted-url]"
-    host = f"[{hostname}]" if ":" in hostname and not hostname.startswith("[") else hostname
-    netloc = f"{host}:{port}" if port is not None else host
-    suffix = "?[redacted]" if parsed.query else ""
-    return f"{parsed.scheme}://{netloc}{parsed.path}{suffix}"
-
-
-def bounded_diagnostic_detail(error: object, limit: int = DIAGNOSTIC_DETAIL_LIMIT) -> str:
-    """Preserve a useful failure cause without exposing provider data or credentials."""
-    if not isinstance(limit, int) or not 1 <= limit <= DIAGNOSTIC_DETAIL_LIMIT:
-        raise ValueError(f"diagnostic detail limit must be within 1..{DIAGNOSTIC_DETAIL_LIMIT}")
-    if isinstance(error, BaseException):
-        name = re.sub(r"[^A-Za-z0-9_.-]", "", type(error).__name__) or "Error"
-        message = str(error)
-    else:
-        name = ""
-        message = str(error or "unknown error")
-    message = " ".join(message.split())
-    message = _DIAGNOSTIC_URL.sub(_redact_diagnostic_url, message)
-    message = _DIAGNOSTIC_BEARER.sub("Bearer [redacted]", message)
-    message = _DIAGNOSTIC_SECRET.sub(r"\1=[redacted]", message)
-    message = _DIAGNOSTIC_PAYLOAD.sub(r"\1: [redacted]", message)
-    detail = f"{name}: {message or 'no message'}" if name else (message or "unknown error")
-    return detail[:limit]
 
 
 def collect_options(

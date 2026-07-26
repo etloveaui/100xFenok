@@ -1,31 +1,21 @@
 #!/usr/bin/env python3
-"""Every copy of bounded_diagnostic_detail must redact the same credential shapes.
-
-The diagnostics sweep that made producer failures readable also duplicated this
-helper into three fetchers instead of sharing one, and the copies had already
-drifted apart by the time they landed. All three shipped the same hole: the
-label pattern required a word boundary, and `\\b` cannot fire inside
-`client_secret` because `_` is a word character - so the exact credential pair
-this repo uses for FINRA OAuth (FINRA_API_CLIENT_ID / FINRA_API_CLIENT_SECRET)
-would have been written to CI logs verbatim on the next failure.
-
-This test exists because the JavaScript copy was reviewed and the Python copies
-were not. It holds every copy to one battery, so a fix to one that misses the
-others fails here rather than in a log.
-
-Follow-up worth doing: collapse the three copies into one shared module. Until
-then, this is what keeps them honest.
-"""
+"""Shared diagnostic redaction contract and anti-duplication guard."""
 
 from __future__ import annotations
 
+import ast
+import importlib
 import importlib.util
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = ROOT / "scripts"
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
 
-COPIES = (
+SHARED_MODULE = "lib.diagnostic_detail"
+FETCHERS = (
     "scripts/fetch-fenok-private-options.py",
     "scripts/fetch-yf-finance-v0.py",
     "scripts/fetch-yf-finance.py",
@@ -50,9 +40,10 @@ CREDENTIAL_MESSAGES = (
 )
 
 
-def load(rel: str):
+def load_fetcher(rel: str):
     path = ROOT / rel
-    spec = importlib.util.spec_from_file_location(f"copy_{path.stem.replace('-', '_')}", path)
+    spec = importlib.util.spec_from_file_location(f"fetcher_{path.stem.replace('-', '_')}", path)
+    assert spec is not None and spec.loader is not None, f"{rel}: cannot build import spec"
     module = importlib.util.module_from_spec(spec)
     argv = sys.argv
     sys.argv = [str(path)]
@@ -64,21 +55,56 @@ def load(rel: str):
 
 
 def main() -> None:
+    try:
+        shared = importlib.import_module(SHARED_MODULE)
+    except ModuleNotFoundError as exc:
+        raise AssertionError("shared diagnostic module is missing: scripts/lib/diagnostic_detail.py") from exc
+    fn = getattr(shared, "bounded_diagnostic_detail", None)
+    assert fn is not None, "shared module does not export bounded_diagnostic_detail"
+    assert fn(None) == "unknown error", "shared helper changed the existing None diagnostic contract"
+
     checked = 0
-    for rel in COPIES:
-        module = load(rel)
-        fn = getattr(module, "bounded_diagnostic_detail", None)
-        assert fn is not None, f"{rel}: bounded_diagnostic_detail is missing"
-        for message in CREDENTIAL_MESSAGES:
-            detail = str(fn(ValueError(message)))
-            assert SECRET not in detail, f"{rel}: credential reached the detail for {message!r}"
-            checked += 1
-        # The detail must stay useful, not become a wall of [redacted].
-        plain = str(fn(ValueError("financial statement below field floor: overview annual rows=0")))
-        assert "field floor" in plain, f"{rel}: redaction destroyed an ordinary message"
-        # And it must stay bounded.
-        assert len(str(fn(ValueError("x" * 5000)))) <= 320, f"{rel}: detail is not bounded"
-    print(f"test_diagnostic_detail_redaction: ok ({len(COPIES)} copies, {checked} credential shapes)")
+    for message in CREDENTIAL_MESSAGES:
+        detail = str(fn(ValueError(message)))
+        assert SECRET not in detail, f"shared helper leaked a credential for {message!r}"
+        checked += 1
+    plain = str(fn(ValueError("financial statement below field floor: overview annual rows=0")))
+    assert "field floor" in plain, "redaction destroyed an ordinary message"
+    normalized = str(fn(ValueError("first\u0000second\nthird\tfourth")))
+    assert normalized == "ValueError: first second third fourth", "control/whitespace normalization drifted"
+    syntax = str(fn(SyntaxError('Unexpected token; "secret-provider-body" is not valid JSON')))
+    assert "secret-provider-body" not in syntax, "SyntaxError quoted provider text leaked"
+    assert len(str(fn(ValueError("x" * 5000)))) == 320, "shared detail is not bounded at 320"
+
+    for rel in FETCHERS:
+        path = ROOT / rel
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        definitions = [
+            node.lineno
+            for node in ast.walk(tree)
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            and node.name == "bounded_diagnostic_detail"
+        ]
+        assert not definitions, (
+            f"{rel}: re-defines bounded_diagnostic_detail at lines {definitions}; "
+            "import the shared helper instead"
+        )
+        imports_shared = any(
+            isinstance(node, ast.ImportFrom)
+            and node.module == SHARED_MODULE
+            and any(alias.name == "bounded_diagnostic_detail" for alias in node.names)
+            for node in ast.walk(tree)
+        )
+        assert imports_shared, f"{rel}: does not import bounded_diagnostic_detail from {SHARED_MODULE}"
+        module = load_fetcher(rel)
+        assert getattr(module, "bounded_diagnostic_detail", None) is fn, (
+            f"{rel}: callsite is not bound to the shared helper object"
+        )
+
+    print(
+        "test_diagnostic_detail_redaction: ok "
+        f"(1 shared module, {len(FETCHERS)} import-only callsites, {checked} credential shapes)"
+    )
 
 
 if __name__ == "__main__":

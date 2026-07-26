@@ -678,7 +678,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertIsNone(error)
         detail = evidence["failures"][0]["error"]
         self.assertIn("RuntimeError: provider optional endpoint failed", detail)
-        self.assertLessEqual(len(detail), 240)
+        self.assertLessEqual(len(detail), 320)
         self.assertNotIn("secret-value", detail)
         self.assertNotIn("abc.def", detail)
         self.assertNotIn('"rows"', detail)
@@ -696,7 +696,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.fetcher.record_finance_failure("AAPL", raw_error)
 
         detail = captured["failure_detail"]
-        self.assertEqual(len(detail), 240)
+        self.assertEqual(len(detail), 320)
         self.assertNotIn("secret-value", detail)
         self.assertNotIn("abc.def", detail)
 
@@ -727,12 +727,12 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(raised.exception.code, 2)
         diagnostic = next(line.split("FAIL: ", 1)[1] for line in stdout.getvalue().splitlines() if "FAIL: " in line)
         self.assertIn("endpoint moved diagnostic-marker", diagnostic)
-        self.assertLessEqual(len(diagnostic), 240)
+        self.assertLessEqual(len(diagnostic), 320)
         self.assertNotIn("secret-value", diagnostic)
         self.assertNotIn("abc.def", diagnostic)
         self.assertNotIn('"rows"', diagnostic)
         self.assertIn("[redacted]", diagnostic)
-        self.assertEqual(len(self.fetcher.bounded_diagnostic_detail("x" * 1000)), 240)
+        self.assertEqual(len(self.fetcher.bounded_diagnostic_detail("x" * 1000)), 320)
         userinfo = self.fetcher.bounded_diagnostic_detail(
             RuntimeError("request failed https://alice:supersecret@example.com/quote")
         )
@@ -741,7 +741,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertIn("https://example.com/quote", userinfo)
         summary = json.loads((self.fetcher.OUT_DIR / "_summary.json").read_text(encoding="utf-8"))
         persisted_error = summary["errors"][0]["error"]
-        self.assertLessEqual(len(persisted_error), 240)
+        self.assertLessEqual(len(persisted_error), 320)
         self.assertNotIn("secret-value", persisted_error)
         self.assertNotIn("abc.def", persisted_error)
         self.assertNotIn('"rows"', persisted_error)
@@ -784,7 +784,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
                 stdout.getvalue(),
             ]
         )
-        self.assertLessEqual(len(state["latest_failure"]["error"]), 240)
+        self.assertLessEqual(len(state["latest_failure"]["error"]), 320)
         self.assertIn("diagnostic-marker", state["latest_failure"]["error"])
         self.assertNotIn("secret-value", serialized)
         self.assertNotIn("abc.def", serialized)
