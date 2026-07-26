@@ -22,7 +22,10 @@ assert.equal(exactCount(source, "FINRA_API_CLIENT_SECRET: ${{ secrets.FINRA_API_
 assert.equal(source.includes("echo $FINRA_API_CLIENT"), false, "workflow must never echo FINRA secrets");
 assert.equal(exactCount(source, "group: fenok-data-writer-${{ github.ref }}"), 1);
 assert.equal(exactCount(source, "cancel-in-progress: false"), 1);
-assert.equal(exactCount(source, "queue: max"), 1);
+// `queue: max` is not a GitHub Actions concurrency key - it was ignored silently
+// while reading as a deep writer queue. The schema guard rejects it now, so the
+// contract pins its absence alongside the two real keys asserted above.
+assert.equal(exactCount(source, "queue: max"), 0, "the invented concurrency key must stay gone");
 assert.equal(exactCount(source, "node scripts/fetch-finra-ats-weekly.mjs"), 1);
 assert.equal(exactCount(source, "--workflow .github/workflows/fetch-finra-ats-weekly.yml"), 2);
 assert.equal(exactCount(source, "--stage always_if_exists"), 1);

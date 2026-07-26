@@ -199,7 +199,11 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertIn("timeout-minutes: 20", publish_body)
         self.assertIn("group: fenok-data-writer-refs/heads/main", publish_body)
         self.assertIn("cancel-in-progress: false", publish_body)
-        self.assertIn("queue: max", publish_body)
+        # `queue: max` is not a GitHub Actions concurrency key. It was pinned here
+        # while it sat in 28 workflows reading as a deep writer queue that does not
+        # exist; the schema guard in validate-workflow-yaml.rb now rejects it, so the
+        # contract pins its ABSENCE and the two real keys asserted above.
+        self.assertNotIn("queue: max", publish_body)
 
     def test_candidate_artifact_is_context_bound_and_immutable(self) -> None:
         for expected in (
