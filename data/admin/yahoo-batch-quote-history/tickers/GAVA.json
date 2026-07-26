@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 489,
+      "natural": true,
+      "observed_at": "2026-07-26T23:02:52Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30224292652",
+      "schedule": "0 22 * * 0",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T09:21:41Z",
-    "history_as_of": "2026-07-08",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GAVA.json",
-    "payload_sha256": "d452f68249d56b365acba3cd9c70120e82c41cb6ea2ca65ece20acda6f389b53",
-    "quote_as_of": "2026-07-08T20:00:00Z",
-    "source_as_of": "2026-07-08"
+    "fetched_at": "2026-07-26T23:03:42Z",
+    "history_as_of": "2026-07-24",
+    "path": "data/yf/finance/GAVA.json",
+    "payload_sha256": "d2edaffbe1c33d2b7873083b11d7013538834980717c5b564d7fce04a9821888",
+    "quote_as_of": "2026-07-24T20:00:00Z",
+    "source_as_of": "2026-07-24"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 489,
+    "natural": true,
+    "observed_at": "2026-07-26T23:02:52Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30224292652",
+    "schedule": "0 22 * * 0",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-07-09T09:21:41Z",
@@ -46,8 +59,20 @@
     "quote_as_of": "2026-07-08T20:00:00Z",
     "source_as_of": "2026-07-08"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-24",
+    "observed_at": "2026-07-26T23:02:52Z",
+    "payload_sha256": "bb3f1265257392b7ad8f0737622a0c9f52da18f7e6b1b1c650497365a4b2ad37",
+    "quote_as_of": "2026-07-24T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "30224292652",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-24"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "GAVA",
-  "updated_at": "2026-07-17T00:15:36Z"
+  "updated_at": "2026-07-26T23:02:52Z"
 }

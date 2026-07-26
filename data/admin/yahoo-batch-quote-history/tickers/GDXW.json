@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 601,
+      "natural": true,
+      "observed_at": "2026-07-26T23:02:52Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30224292652",
+      "schedule": "0 22 * * 0",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T09:21:49Z",
-    "history_as_of": "2026-07-08",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GDXW.json",
-    "payload_sha256": "a59071e433d42eee676eac90699d1d29caf8b8b135e7108da38eae1949a14cf6",
-    "quote_as_of": "2026-07-08T19:16:38Z",
-    "source_as_of": "2026-07-08"
+    "fetched_at": "2026-07-26T23:03:51Z",
+    "history_as_of": "2026-07-24",
+    "path": "data/yf/finance/GDXW.json",
+    "payload_sha256": "20bb7ab75417144f0d4f68eab7b1661fbdce87df39ad0eb9a2558406591346db",
+    "quote_as_of": "2026-07-24T19:57:51Z",
+    "source_as_of": "2026-07-24"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 601,
+    "natural": true,
+    "observed_at": "2026-07-26T23:02:52Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30224292652",
+    "schedule": "0 22 * * 0",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-07-09T09:21:49Z",
@@ -46,8 +59,20 @@
     "quote_as_of": "2026-07-08T19:16:38Z",
     "source_as_of": "2026-07-08"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-24",
+    "observed_at": "2026-07-26T23:02:52Z",
+    "payload_sha256": "f36d6fef54cb99bb23bf25693be0e6becd1c2d1035f29d1714adca6c91363560",
+    "quote_as_of": "2026-07-24T19:57:51Z",
+    "run_attempt": 1,
+    "run_id": "30224292652",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-24"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "GDXW",
-  "updated_at": "2026-07-17T00:15:36Z"
+  "updated_at": "2026-07-26T23:02:52Z"
 }
