@@ -31,7 +31,12 @@ DIAGNOSTIC_DETAIL_LIMIT = 240
 _DIAGNOSTIC_URL = re.compile(r"https?://[^\s),;]+", re.IGNORECASE)
 _DIAGNOSTIC_BEARER = re.compile(r"\bBearer\s+[A-Za-z0-9._~+/-]+=*", re.IGNORECASE)
 _DIAGNOSTIC_SECRET = re.compile(
-    r"\b(api[_-]?key|access[_-]?token|token|secret|authorization|cookie|password)\b"
+    # The label may be decorated. `\b` never fires inside `client_secret`
+    # because `_` is a word character, and this repo authenticates FINRA with
+    # FINRA_API_CLIENT_ID / FINRA_API_CLIENT_SECRET. Over-redacting a log line
+    # costs nothing; leaking one costs everything.
+    r"([A-Za-z0-9_-]*(?:api[_-]?key|access[_-]?token|client[_-]?secret"
+    r"|token|secret|key|authorization|cookie|password)[A-Za-z0-9_-]*)"
     r"\s*[:=]\s*(?:\"[^\"]*\"|'[^']*'|[^\s,;]+)",
     re.IGNORECASE,
 )
