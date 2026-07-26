@@ -5,6 +5,7 @@ import {
   ACTION_SCORE_CONFIG,
   actionFrom,
   clamp,
+  detectSecondaryDepositaryRepresentations,
   finite,
   marketScopeFromMarket,
   normalizeTicker,
@@ -652,6 +653,10 @@ function convictionMap(knownSymbols) {
 function buildStockActionIndex() {
   const stocksDoc = readJson("global-scouter/core/stocks_analyzer.json", {});
   const scouterRows = Array.isArray(stocksDoc?.data) ? stocksDoc.data : [];
+  const secondaryDepositaryRepresentations = detectSecondaryDepositaryRepresentations(
+    scouterRows,
+    stockDetail,
+  );
   const rows = [...scouterRows, ...marketFactStockRows(scouterRows)];
   const universe = readJson("slickcharts/universe.json", {});
   const universeMap = new Map(
@@ -679,7 +684,7 @@ function buildStockActionIndex() {
   const actionRows = rows
     .map((stock) => {
       const symbol = String(stock.symbol ?? "").trim().toUpperCase();
-      const normalized = normalizeTicker(symbol);
+      const normalized = normalizeTicker(symbol, secondaryDepositaryRepresentations);
       const marketScope = marketScopeFromMarket(normalized.market);
       const canonicalSector = canonicalSectorFromScouter(stock.sector);
       const estimateSnapshot = stockEstimateSnapshot(symbol);

@@ -43,7 +43,117 @@ export function round(value, digits = 4) {
   return finite(value) ? Number(value.toFixed(digits)) : null;
 }
 
-export function normalizeTicker(symbol) {
+export const SECONDARY_DEPOSITARY_CONFIG = Object.freeze({
+  minOverlapPerMetric: 3,
+  // SKHY/000660.KS measures 8.9%; a 10% ceiling rejects broad pairwise noise.
+  maxRelativeDispersion: 0.1,
+  // Bound reporting-unit/FX ratios to 0.1x..100x: SKHY's 14.2x passes,
+  // while the measured AZN/MSCI 0.05x artifact cannot define company identity.
+  minFinancialRatio: 0.1,
+  maxFinancialRatio: 100,
+});
+
+const DEPOSITARY_SECURITY_PATTERN = /\b(?:ADR|ADS|American Depositary|Depositary (?:Receipt|Share)s?)\b/i;
+const COMPANY_MATCH_FINANCIAL_PATHS = Object.freeze([
+  ["income_statement", "revenue"],
+  ["scale", "total_equity"],
+  ["scale", "total_assets"],
+]);
+
+export function isDepositarySecurityName(value) {
+  return typeof value === "string" && DEPOSITARY_SECURITY_PATTERN.test(value);
+}
+
+function median(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[middle - 1] + sorted[middle]) / 2
+    : sorted[middle];
+}
+
+function financialSeries(detail, section, metric) {
+  const values = detail?.[section]?.[metric];
+  return Array.isArray(values) ? values : [];
+}
+
+export function financialProportionalityEvidence(
+  depositaryDetail,
+  candidateDetail,
+  config = SECONDARY_DEPOSITARY_CONFIG,
+) {
+  const ratios = [];
+  for (const [section, metric] of COMPANY_MATCH_FINANCIAL_PATHS) {
+    const depositarySeries = financialSeries(depositaryDetail, section, metric);
+    const candidateSeries = financialSeries(candidateDetail, section, metric);
+    const overlap = [];
+    for (let index = 0; index < Math.min(depositarySeries.length, candidateSeries.length); index += 1) {
+      const depositaryValue = depositarySeries[index];
+      const candidateValue = candidateSeries[index];
+      if (!finite(depositaryValue) || depositaryValue <= 0) continue;
+      if (!finite(candidateValue) || candidateValue <= 0) continue;
+      overlap.push(candidateValue / depositaryValue);
+    }
+    if (overlap.length < config.minOverlapPerMetric) return null;
+    ratios.push(...overlap);
+  }
+
+  const financialRatio = median(ratios);
+  if (
+    financialRatio < config.minFinancialRatio
+    || financialRatio > config.maxFinancialRatio
+  ) {
+    return null;
+  }
+  const maxRelativeDispersion = Math.max(
+    ...ratios.map((value) => Math.abs(value - financialRatio) / financialRatio),
+  );
+  if (maxRelativeDispersion > config.maxRelativeDispersion) return null;
+  return {
+    financial_ratio: round(financialRatio, 6),
+    max_relative_dispersion: round(maxRelativeDispersion, 6),
+    compared_points: ratios.length,
+  };
+}
+
+export function detectSecondaryDepositaryRepresentations(
+  rows,
+  detailForSymbol,
+  config = SECONDARY_DEPOSITARY_CONFIG,
+) {
+  const classifications = new Map();
+  const candidates = rows.filter(
+    (row) => !isDepositarySecurityName(row?.companyName),
+  );
+  for (const depositaryRow of rows) {
+    const symbol = String(depositaryRow?.symbol ?? "").trim().toUpperCase();
+    if (!symbol || !isDepositarySecurityName(depositaryRow?.companyName)) continue;
+    const depositaryDetail = detailForSymbol(symbol);
+    if (!depositaryDetail) continue;
+
+    const matches = [];
+    for (const candidateRow of candidates) {
+      const homeSymbol = String(candidateRow?.symbol ?? "").trim().toUpperCase();
+      if (!homeSymbol || homeSymbol === symbol) continue;
+      const evidence = financialProportionalityEvidence(
+        depositaryDetail,
+        detailForSymbol(homeSymbol),
+        config,
+      );
+      if (evidence) matches.push({ home_symbol: homeSymbol, ...evidence });
+    }
+    matches.sort(
+      (a, b) => (
+        a.max_relative_dispersion - b.max_relative_dispersion
+        || a.home_symbol.localeCompare(b.home_symbol)
+      ),
+    );
+    if (matches.length > 0) classifications.set(symbol, matches[0]);
+  }
+  return classifications;
+}
+
+export function normalizeTicker(symbol, secondaryDepositaryRepresentations = null) {
   const raw = String(symbol ?? "").trim().toUpperCase();
   if (!raw) return { ticker_normalized: "", market: "unknown" };
   if (raw.endsWith(".KS")) return { ticker_normalized: raw.replace(".KS", ""), market: "KRX" };
@@ -53,6 +163,9 @@ export function normalizeTicker(symbol) {
   if (raw.endsWith(".SS")) return { ticker_normalized: raw.replace(".SS", ""), market: "SSE" };
   if (/^\d{4,6}$/.test(raw)) return { ticker_normalized: raw, market: "ASIA" };
   if (raw.includes(".")) return { ticker_normalized: raw.replace(".", "-"), market: "US_CLASS" };
+  if (secondaryDepositaryRepresentations?.has(raw)) {
+    return { ticker_normalized: raw, market: "US_CLASS" };
+  }
   return { ticker_normalized: raw, market: "US" };
 }
 
