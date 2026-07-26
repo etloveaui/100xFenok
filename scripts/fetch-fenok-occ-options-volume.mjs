@@ -828,9 +828,11 @@ async function loadOccSideWithEvidence({ ymd, ticker, side, noFetch, request, ca
     if (endpointResult && endpointResult.status !== "ready") {
       const status = endpointResult.expectedKind === "no_record"
         ? "no_record"
-        : ["rate_limited", "http_error", "transport_error"].includes(endpointResult.reason)
-          ? "transient_failed"
-          : "failed";
+        : endpointResult.expectedKind === "date_not_available"
+          ? "date_not_available"
+          : ["rate_limited", "http_error", "transport_error"].includes(endpointResult.reason)
+            ? "transient_failed"
+            : "failed";
       return {
         load,
         evidence: {
@@ -1061,6 +1063,7 @@ function summarizeTickerAvailability({ ticker, ymd, sideAttempts }) {
   else if (sideAttempts.every((attempt) => attempt.status === "no_record")) status = "no_record";
   else if (sideAttempts.some((attempt) => attempt.status === "cache_missing_no_fetch")) status = "cache_missing_no_fetch";
   else if (sideAttempts.some((attempt) => attempt.status === "transient_failed")) status = "transient_failed";
+  else if (sideAttempts.every((attempt) => attempt.status === "date_not_available")) status = "date_not_available";
   else if (sideAttempts.some((attempt) => attempt.status === "no_record")) status = "partial_no_record_or_form_gap";
   else if (sideAttempts.some((attempt) => attempt.status === "failed")) status = "failed";
   const acceptedForm = status === "options_activity_available" || (status === "partial_no_record_or_form_gap" && hasLoaded && hasNoRecord)
@@ -1103,6 +1106,9 @@ function buildCoverage(rows, attempts = []) {
       return acc;
     }, {}),
     failed_attempts: hardFailures.length,
+    date_not_available_attempts: unresolved.filter(
+      (attempt) => attempt?.status === "date_not_available",
+    ).length,
     unresolved_attempts: unresolved.length,
     stopped_fail_threshold: attempts.some((attempt) => attempt?.status === "stopped_fail_threshold"),
   };

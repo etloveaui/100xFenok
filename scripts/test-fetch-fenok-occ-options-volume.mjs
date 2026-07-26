@@ -188,6 +188,101 @@ for (const exact of [
   );
 }
 
+const dateNotAvailableBody = "Report date cannot be greater than 7/25/2026.";
+const futureDateTickers = Array.from(
+  { length: 25 },
+  (_, index) => `FUT${String(index + 1).padStart(2, "0")}`,
+);
+const futureDateRoot = fs.mkdtempSync(path.join(os.tmpdir(), "occ-date-not-available-"));
+const futureDateResult = await build(parseArgs([
+  "--tickers", futureDateTickers.join(","),
+  "--date", "20260726",
+  "--max-walkback-days", "0",
+  "--fail-threshold", "26",
+  "--sleep-ms", "0",
+  "--no-write",
+]), {
+  request: async () => ({ statusCode: 200, body: dateNotAvailableBody }),
+  cacheDir: path.join(futureDateRoot, "cache"),
+  attemptShardPath: path.join(futureDateRoot, "attempt.json"),
+  observedAt: "2026-07-26T12:30:00Z",
+  attemptId: "occ-date-not-available-25-test",
+});
+assert.equal(futureDateResult.date_attempts[0].hard_failure_count, 0);
+assert.equal(futureDateResult.date_attempts[0].stopped_fail_threshold, false);
+assert.equal(futureDateResult.date_attempts[0].status_counts.date_not_available, 25);
+assert.equal(futureDateResult.coverage.failed_attempts, 0);
+assert.equal(futureDateResult.coverage.date_not_available_attempts, 25);
+
+const noRecordRoot = fs.mkdtempSync(path.join(os.tmpdir(), "occ-no-record-control-"));
+const noRecordResult = await build(parseArgs([
+  "--tickers", "FTV",
+  "--date", "20260726",
+  "--max-walkback-days", "0",
+  "--sleep-ms", "0",
+  "--no-write",
+]), {
+  request: async () => ({ statusCode: 200, body: "No record(s) found" }),
+  cacheDir: path.join(noRecordRoot, "cache"),
+  attemptShardPath: path.join(noRecordRoot, "attempt.json"),
+  observedAt: "2026-07-26T12:31:00Z",
+  attemptId: "occ-no-record-control-test",
+});
+assert.equal(noRecordResult.date_attempts[0].hard_failure_count, 0);
+assert.equal(noRecordResult.date_attempts[0].status_counts.no_record, 1);
+assert.equal(noRecordResult.coverage.failed_attempts, 0);
+
+const hardFailureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "occ-hard-failure-control-"));
+const hardFailureResult = await build(parseArgs([
+  "--tickers", "ERR",
+  "--date", "20260726",
+  "--max-walkback-days", "0",
+  "--sleep-ms", "0",
+  "--no-write",
+]), {
+  request: async () => ({ statusCode: 500, body: "provider failure" }),
+  cacheDir: path.join(hardFailureRoot, "cache"),
+  attemptShardPath: path.join(hardFailureRoot, "attempt.json"),
+  observedAt: "2026-07-26T12:32:00Z",
+  attemptId: "occ-hard-failure-control-test",
+});
+assert.equal(hardFailureResult.date_attempts[0].hard_failure_count, 1);
+assert.equal(hardFailureResult.coverage.failed_attempts, 1);
+
+const mixedDateRoot = fs.mkdtempSync(path.join(os.tmpdir(), "occ-mixed-date-"));
+const mixedDateResult = await build(parseArgs([
+  "--tickers", "NVDA,FUTURE",
+  "--date", "20260726",
+  "--max-walkback-days", "0",
+  "--fail-threshold", "5",
+  "--sleep-ms", "0",
+  "--no-write",
+]), {
+  request: async (url) => {
+    const params = new URL(url).searchParams;
+    if (params.get("symbol") === "FUTURE") {
+      return { statusCode: 200, body: dateNotAvailableBody };
+    }
+    return {
+      statusCode: 200,
+      body: params.get("porc") === "C" ? callCsv : putCsv,
+    };
+  },
+  cacheDir: path.join(mixedDateRoot, "cache"),
+  attemptShardPath: path.join(mixedDateRoot, "attempt.json"),
+  observedAt: "2026-07-26T12:33:00Z",
+  attemptId: "occ-mixed-date-test",
+});
+assert.equal(mixedDateResult.batch_coverage.row_count, 1);
+assert.equal(mixedDateResult.batch_coverage.failed_attempts, 0);
+assert.equal(mixedDateResult.batch_coverage.date_not_available_attempts, 1);
+assert.equal(mixedDateResult.date_attempts[0].status_counts.options_activity_available, 1);
+assert.equal(mixedDateResult.date_attempts[0].status_counts.date_not_available, 1);
+assert(
+  mixedDateResult.reference_rows.some((row) => row.ticker === "NVDA"),
+  "the loaded ticker must remain accepted in a mixed date",
+);
+
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "occ-emitter-ready-"));
   const attemptShardPath = path.join(root, "occ_options_volume.json");
@@ -625,6 +720,41 @@ assert.equal(noRecordSummary.accepted_form_policy, null);
 assert.equal(noRecordSummary.scoring_row_eligible, false);
 assert.equal(noRecordSummary.coverage_row_eligible, false);
 assert.equal(noRecordSummary.no_listed_options_policy_status, "pending_owner_acceptance");
+
+const dateNotAvailableSummary = summarizeTickerAvailability({
+  ticker: "FUTURE",
+  ymd: "20260726",
+  sideAttempts: [
+    { ticker: "FUTURE", source_date: "20260726", side: "C", attempted_form: "FUTURE", status: "date_not_available" },
+    { ticker: "FUTURE", source_date: "20260726", side: "P", attempted_form: "FUTURE", status: "date_not_available" },
+  ],
+});
+assert.equal(dateNotAvailableSummary.status, "date_not_available");
+assert.equal(dateNotAvailableSummary.accepted_form, null);
+assert.equal(dateNotAvailableSummary.accepted_form_policy, null);
+assert.equal(dateNotAvailableSummary.no_listed_options_policy_status, null);
+assert.equal(dateNotAvailableSummary.evidence_policy, null);
+
+for (const [otherStatus, expectedStatus] of [
+  ["loaded", "unavailable"],
+  ["no_record", "partial_no_record_or_form_gap"],
+  ["cache_missing_no_fetch", "cache_missing_no_fetch"],
+  ["transient_failed", "transient_failed"],
+]) {
+  const prioritySummary = summarizeTickerAvailability({
+    ticker: "MIXED",
+    ymd: "20260726",
+    sideAttempts: [
+      { ticker: "MIXED", source_date: "20260726", side: "C", attempted_form: "MIXED", status: otherStatus },
+      { ticker: "MIXED", source_date: "20260726", side: "P", attempted_form: "MIXED", status: "date_not_available" },
+    ],
+  });
+  assert.equal(
+    prioritySummary.status,
+    expectedStatus,
+    `${otherStatus} must outrank a one-side date_not_available status`,
+  );
+}
 
 const partialNoRecordSummary = summarizeTickerAvailability({
   ticker: "ATO",
