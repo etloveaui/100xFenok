@@ -539,7 +539,14 @@ MONTH_NAME_TO_NUMBER = {
     "december": 12,
 }
 FINANCIAL_STATEMENT_PATHS = {
-    "income": "financials",
+    # /stocks/<t>/financials/ is the OVERVIEW page. StockAnalysis moved the
+    # income statement to its own path before 2026-07-24; the old one kept
+    # answering 200 with a well-formed payload carrying zero rows, so the daily
+    # stock-pair producer failed two nights running while the other three
+    # statements stayed healthy. Measured 2026-07-26 for AAPL: financials -> 0
+    # rows (statement "overview"), financials/income-statement -> 29 rows over
+    # 6 periods.
+    "income": "financials/income-statement",
     "balance_sheet": "financials/balance-sheet",
     "cash_flow": "financials/cash-flow-statement",
     "ratios": "financials/ratios",
@@ -2458,7 +2465,7 @@ def fetch_surfaces(
             )
 
         results.append(result)
-        status = "OK" if result["error"] is None else f"FAIL {result['error'][:80]}"
+        status = "OK" if result["error"] is None else f"FAIL {result['error'][:240]}"
         print(
             f"[surface {idx}/{len(surface_names)}] {name} {status} rows={result['rows']} {result['latency_ms']}ms",
             flush=True,
@@ -6052,7 +6059,7 @@ def _main() -> None:
             results.append(result)
             if kind == "stock" and stock_financial_detection_active:
                 ATTEMPT_TRACKER.record_stock_financial(result)
-            status = "OK" if result["error"] is None else f"FAIL {result['error'][:80]}"
+            status = "OK" if result["error"] is None else f"FAIL {result['error'][:240]}"
             if result["error"] is None and result.get("provider") == "yahoo_finance":
                 status = "YF_FALLBACK"
             if result.get("provider_availability_status") == "absent":

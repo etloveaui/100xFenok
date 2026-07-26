@@ -125,7 +125,38 @@ def main() -> None:
         assert_true(summary["field_count"] == normalized["field_count"], f"{label}: summary field_count mismatch")
         assert_true(summary["period_count"] == len(periods), f"{label}: summary period_count mismatch")
 
+    assert_statement_paths_serve_their_statement()
     print(f"PASS stockanalysis financial fixture invariants ({len(FIXTURE_CASES)} fixtures)")
+
+
+def assert_statement_paths_serve_their_statement() -> None:
+    """Each declared path must serve the statement its key promises.
+
+    StockAnalysis moved the income statement out of /stocks/<t>/financials/ into
+    /stocks/<t>/financials/income-statement/ sometime before 2026-07-24. The old
+    path kept returning HTTP 200 with a well-formed Svelte payload whose node
+    reports statement "overview" and carries ZERO rows, so the daily stock-pair
+    producer failed two nights running on `financial statement below field
+    floor: overview annual rows=0` while balance sheet, cash flow and ratios
+    stayed healthy (measured 2026-07-26: 0 / 39 / 35 / 35 map rows).
+
+    A path whose last segment does not match the statement it is supposed to
+    serve is exactly that failure, so it is pinned here rather than left to the
+    next provider move.
+    """
+    spec = importlib.util.spec_from_file_location(
+        "stockanalysis_fetcher", ROOT / "scripts" / "fetch-stockanalysis.py")
+    fetcher = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(fetcher)
+    paths = fetcher.FINANCIAL_STATEMENT_PATHS
+    assert_true(set(paths) == set(EXPECTED_NORMALIZED_STATEMENTS),
+                "statement path map and normalized-name map must cover the same statements")
+    for key, path in paths.items():
+        expected = EXPECTED_NORMALIZED_STATEMENTS[key]
+        assert_true(path.split("/")[-1] == expected,
+                    f"{key}: declared path {path!r} does not end in the statement it serves ({expected!r})")
+        assert_true(path != "financials",
+                    f"{key}: /financials/ is the overview page and carries no statement rows")
 
 
 if __name__ == "__main__":
