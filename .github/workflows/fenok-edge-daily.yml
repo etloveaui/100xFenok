@@ -45,7 +45,7 @@ on:
       occ_max_requests:
         description: 'Maximum OCC HTTP requests per run'
         required: false
-        default: '1500'
+        default: '2000'
       occ_fail_threshold:
         description: 'Maximum OCC hard failures before aborting'
         required: false
@@ -96,14 +96,14 @@ jobs:
           INPUT_CONTROLLED_FAILURE_LANES: ${{ github.event.inputs.controlled_failure_lanes || '' }}
           INPUT_FINRA_FROM: ${{ github.event.inputs.finra_from || '' }}
           INPUT_FINRA_TO: ${{ github.event.inputs.finra_to || '' }}
-          # Sequential same-run batches keep the 1500-request guard intact per
-          # batch: 250 tickers x up to 3 candidate dates x 2 sides = 1500.
+          # Sequential same-run batches keep the 2000-request guard intact per
+          # batch: 250 tickers x up to 4 dates x 2 sides = 2000.
           # An explicit occ_batch_index
           # dispatch input still forces the legacy single-batch mode.
           INPUT_OCC_BATCH_SIZE: ${{ github.event.inputs.occ_batch_size || '250' }}
           INPUT_OCC_BATCH_COUNT: ${{ github.event.inputs.occ_batch_count || '5' }}
           INPUT_OCC_BATCH_INDEX: ${{ github.event.inputs.occ_batch_index || '' }}
-          INPUT_OCC_MAX_REQUESTS: ${{ github.event.inputs.occ_max_requests || '1500' }}
+          INPUT_OCC_MAX_REQUESTS: ${{ github.event.inputs.occ_max_requests || '2000' }}
           INPUT_OCC_FAIL_THRESHOLD: ${{ github.event.inputs.occ_fail_threshold || '25' }}
           INPUT_OCC_SLEEP_MS: ${{ github.event.inputs.occ_sleep_ms || '250' }}
         shell: bash

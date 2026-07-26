@@ -104,6 +104,21 @@ assert.doesNotMatch(workflow, /git add -A/);
 assert.equal(inputNames.length, 11, "workflow_dispatch must expose exactly 11 inputs");
 assert.ok(inputNames.includes("controlled_failure_lanes"));
 assert.match(
+  dispatchInputs,
+  /occ_max_requests:[\s\S]*?default: '2000'/,
+  "OCC workflow_dispatch must expose the four-date 2000-request budget",
+);
+assert.match(
+  workflow,
+  /250 tickers x up to 4 dates x 2 sides = 2000\./,
+  "the OCC request-budget arithmetic must stay adjacent to the workflow setting",
+);
+assert.match(
+  workflow,
+  /INPUT_OCC_MAX_REQUESTS:\s*\$\{\{ github\.event\.inputs\.occ_max_requests \|\| '2000' \}\}/,
+  "scheduled OCC runs must default to the four-date 2000-request budget",
+);
+assert.match(
   workflow,
   /INPUT_CONTROLLED_FAILURE_LANES:\s*\$\{\{ github\.event\.inputs\.controlled_failure_lanes \|\| '' \}\}/,
 );

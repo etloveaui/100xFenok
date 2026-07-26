@@ -50,8 +50,10 @@ const CONTROLLED_FAILURE_LANE_IDS = Object.freeze([OCC_LANE_ID, "finra_short_vol
 const OCC_FRESHNESS_MARKER_SCHEMA = "fenok-occ-freshness-marker/v1";
 const DEFAULT_REFERENCE_TICKERS = ["DASH", "UNH", "PYPL", "RDDT", "COIN", "MU", "PLTR", "NVDA"];
 const DEFAULT_ALL_ELIGIBLE_BATCH_SIZE = 50;
-const DEFAULT_ALL_ELIGIBLE_MAX_REQUESTS = 100;
+const DEFAULT_ALL_ELIGIBLE_MAX_REQUESTS = 200;
 const DEFAULT_ALL_ELIGIBLE_FAIL_THRESHOLD = 5;
+const OCC_MISSING_DAY_LOOKBACK_TRADING_DAYS = 15;
+const OCC_MISSING_DAY_COVERAGE_RATIO = 0.6;
 const OCC_ENDPOINT = "https://marketdata.theocc.com/volume-query";
 const OCC_PERSISTENCE_POLICY = Object.freeze({
   schema_version: "occ-bounded-persistence/v1",
@@ -284,6 +286,159 @@ function candidateDates({ requestedDate, maxWalkbackDays }) {
   return out;
 }
 
+function compactOccSourceDate(value) {
+  const compact = String(value ?? "").replaceAll("-", "");
+  return /^\d{8}$/.test(compact) ? compact : null;
+}
+
+function median(values) {
+  const sorted = values.filter(Number.isFinite).sort((a, b) => a - b);
+  if (sorted.length === 0) return null;
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 1
+    ? sorted[middle]
+    : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
+function tradingDatesBetween(startYmd, endYmd) {
+  const start = compactOccSourceDate(startYmd);
+  const end = compactOccSourceDate(endYmd);
+  if (!start || !end || start > end) return [];
+  const cursor = new Date(`${isoFromYmd(start)}T00:00:00Z`);
+  const last = new Date(`${isoFromYmd(end)}T00:00:00Z`);
+  const out = [];
+  while (cursor <= last) {
+    const ymd = ymdFromDate(cursor);
+    if (isUsTradingDate(ymd)) out.push(ymd);
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return out;
+}
+
+function detectOccMissingTradingDays({
+  rows,
+  referenceYmd,
+  lookbackTradingDays = OCC_MISSING_DAY_LOOKBACK_TRADING_DAYS,
+  coverageRatio = OCC_MISSING_DAY_COVERAGE_RATIO,
+  excludeDates = [],
+}) {
+  const reference = compactOccSourceDate(referenceYmd);
+  const counts = new Map();
+  for (const row of Array.isArray(rows) ? rows : []) {
+    const sourceDate = compactOccSourceDate(row?.source_date);
+    if (!sourceDate || (reference && sourceDate > reference)) continue;
+    counts.set(sourceDate, (counts.get(sourceDate) ?? 0) + 1);
+  }
+  const observedDates = [...counts.keys()].sort();
+  const firstObserved = observedDates[0] ?? null;
+  const expectedDates = firstObserved && reference
+    ? tradingDatesBetween(firstObserved, reference)
+    : [];
+  const inLookbackDates = expectedDates.slice(-Math.max(0, Number(lookbackTradingDays) || 0));
+  const inLookbackSet = new Set(inLookbackDates);
+  const excluded = new Set(excludeDates.map(compactOccSourceDate).filter(Boolean));
+  const typicalRowCount = median(inLookbackDates
+    .map((sourceDate) => counts.get(sourceDate) ?? 0)
+    .filter((count) => count > 0));
+  const thresholdRowCount = Number.isFinite(typicalRowCount)
+    ? typicalRowCount * coverageRatio
+    : null;
+  const holes = Number.isFinite(thresholdRowCount)
+    ? expectedDates
+      .filter((sourceDate) => !excluded.has(sourceDate))
+      .map((sourceDate) => ({
+        source_date: isoFromYmd(sourceDate),
+        row_count: counts.get(sourceDate) ?? 0,
+        coverage_ratio: typicalRowCount > 0 ? (counts.get(sourceDate) ?? 0) / typicalRowCount : null,
+      }))
+      .filter((row) => row.row_count < thresholdRowCount)
+    : [];
+  return {
+    calendar_id: "us_trading",
+    calendar_fallback_used: false,
+    lookback_trading_days: Number(lookbackTradingDays),
+    coverage_threshold_ratio: coverageRatio,
+    typical_row_count: typicalRowCount,
+    threshold_row_count: thresholdRowCount,
+    in_lookback_holes: holes.filter((row) => inLookbackSet.has(compactOccSourceDate(row.source_date))),
+    outside_lookback_holes: holes.filter((row) => !inLookbackSet.has(compactOccSourceDate(row.source_date))),
+  };
+}
+
+function planOccMissingDayBackfill({
+  rows,
+  referenceYmd,
+  normalDates = [],
+  lookbackTradingDays = OCC_MISSING_DAY_LOOKBACK_TRADING_DAYS,
+  coverageRatio = OCC_MISSING_DAY_COVERAGE_RATIO,
+  previousCurrentAttempt = null,
+  attemptRef,
+  attemptNumber,
+}) {
+  const detection = detectOccMissingTradingDays({
+    rows,
+    referenceYmd,
+    lookbackTradingDays,
+    coverageRatio,
+    excludeDates: normalDates,
+  });
+  const sameRun = previousCurrentAttempt?.attempt_ref === String(attemptRef || "local")
+    && Number(previousCurrentAttempt?.attempt_number) === (Number(attemptNumber) || 1);
+  const pinnedSourceDate = sameRun
+    ? compactOccSourceDate(previousCurrentAttempt?.missing_day_backfill?.selected_source_date)
+    : null;
+  const oldestMissing = compactOccSourceDate(detection.in_lookback_holes[0]?.source_date);
+  const selected = pinnedSourceDate || oldestMissing;
+  return {
+    ...detection,
+    selection_basis: pinnedSourceDate ? "same_run_pinned" : oldestMissing ? "oldest_in_lookback" : "none",
+    selected_source_date: selected ? isoFromYmd(selected) : null,
+    extra_dates: selected ? [selected] : [],
+  };
+}
+
+function occMissingDayBackfillVisibility({
+  plan,
+  remaining,
+  attemptedSourceDate = null,
+  acceptedRows = 0,
+}) {
+  const selectedSourceDate = plan?.selected_source_date ?? null;
+  const backfilledSourceDate = acceptedRows > 0 ? attemptedSourceDate : null;
+  const holesBefore = (plan?.in_lookback_holes ?? []).map((row) => row.source_date);
+  const holesRemaining = (remaining?.in_lookback_holes ?? plan?.in_lookback_holes ?? [])
+    .map((row) => row.source_date);
+  const outsideLookbackHoles = (remaining?.outside_lookback_holes ?? plan?.outside_lookback_holes ?? [])
+    .map((row) => row.source_date);
+  let status = "no_missing_days";
+  if (selectedSourceDate && acceptedRows > 0) status = "backfilled";
+  else if (attemptedSourceDate) status = "attempted_no_usable_rows";
+  else if (selectedSourceDate || outsideLookbackHoles.length > 0) status = "holes_found_none_backfilled";
+  const message = status === "backfilled"
+    ? `OCC backfilled ${backfilledSourceDate}; ${holesRemaining.length} in-window hole(s) remain.`
+    : status === "attempted_no_usable_rows"
+      ? `OCC found ${selectedSourceDate} missing and attempted it, but no usable rows were backfilled; ${holesRemaining.length} in-window hole(s) remain.`
+      : status === "holes_found_none_backfilled"
+        ? `OCC found missing trading days but backfilled none; ${holesRemaining.length} in-window and ${outsideLookbackHoles.length} outside-lookback hole(s) remain.`
+        : "OCC found no missing trading days in the configured lookback.";
+  return {
+    status,
+    calendar_id: plan?.calendar_id ?? "us_trading",
+    calendar_fallback_used: plan?.calendar_fallback_used ?? false,
+    lookback_trading_days: plan?.lookback_trading_days ?? OCC_MISSING_DAY_LOOKBACK_TRADING_DAYS,
+    coverage_threshold_ratio: plan?.coverage_threshold_ratio ?? OCC_MISSING_DAY_COVERAGE_RATIO,
+    typical_row_count: plan?.typical_row_count ?? null,
+    selected_source_date: selectedSourceDate,
+    attempted_source_date: attemptedSourceDate,
+    backfilled_source_date: backfilledSourceDate,
+    accepted_rows: Number(acceptedRows) || 0,
+    holes_before: holesBefore,
+    holes_remaining: holesRemaining,
+    outside_lookback_holes: outsideLookbackHoles,
+    message,
+  };
+}
+
 function normalizeTicker(ticker) {
   return String(ticker ?? "").trim().toUpperCase();
 }
@@ -488,6 +643,12 @@ function resolveTickerUniverse(args) {
 
 function estimateMaxLiveRequests({ tickers, dates }) {
   return tickers.length * dates.length * 2;
+}
+
+function enforceOccRequestBudget({ estimatedMaxLiveRequests, maxRequests }) {
+  if (maxRequests > 0 && estimatedMaxLiveRequests > maxRequests) {
+    throw new Error(`OCC request budget exceeded: estimated ${estimatedMaxLiveRequests}, max ${maxRequests}. Use --plan-only, smaller --batch-size, or explicit approval.`);
+  }
 }
 
 function ensureDir(absPath) {
@@ -1140,6 +1301,7 @@ function buildOccBatchAttempt({
   targetYmd,
   servedYmd,
   dateAttempts,
+  missingDayBackfill = null,
   observedAt = isoNow(),
 }) {
   const targetSourceDate = targetYmd ? isoFromYmd(targetYmd) : null;
@@ -1171,6 +1333,7 @@ function buildOccBatchAttempt({
     fallback_active: status === "degraded_walkback",
     message,
     date_attempts: Array.isArray(dateAttempts) ? dateAttempts : [],
+    missing_day_backfill: missingDayBackfill,
   };
 }
 
@@ -1191,6 +1354,17 @@ function mergeOccCurrentAttempt(previous, batchAttempt) {
   const servedDates = [...new Set(nonEmpty.map((row) => row.served_source_date).filter(Boolean))].sort();
   const selectedTickers = nonEmpty.reduce((sum, row) => sum + Number(row.selected_tickers || 0), 0);
   const fallbackActive = nonEmpty.some((row) => row.status === "degraded_walkback");
+  const backfillBatches = nonEmpty
+    .map((row) => row.missing_day_backfill)
+    .filter((row) => row && typeof row === "object");
+  const latestBackfill = backfillBatches.at(-1) ?? null;
+  const selectedBackfillSourceDate = backfillBatches
+    .map((row) => row.selected_source_date)
+    .find(Boolean) ?? null;
+  const backfilledSourceDate = [...backfillBatches]
+    .reverse()
+    .map((row) => row.backfilled_source_date)
+    .find(Boolean) ?? null;
   const message = status === "ready_current"
     ? `OCC target ${worst.target_source_date} is current across ${nonEmpty.length} non-empty batch(es); no fallback is active.`
     : status === "degraded_walkback"
@@ -1208,6 +1382,13 @@ function mergeOccCurrentAttempt(previous, batchAttempt) {
     fallback_active: fallbackActive,
     selected_tickers: selectedTickers,
     message,
+    missing_day_backfill: latestBackfill
+      ? {
+        ...latestBackfill,
+        selected_source_date: selectedBackfillSourceDate,
+        backfilled_source_date: backfilledSourceDate,
+      }
+      : null,
     batch_retention_limit: 100,
     batches,
   };
@@ -1699,13 +1880,21 @@ async function build(args, {
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || "local",
   controlledFailureLanes = process.env.INPUT_CONTROLLED_FAILURE_LANES || "",
+  publishedOutput = undefined,
+  referenceDate = new Date(),
 } = {}) {
   const injectedLanes = parseControlledFailureLanes(controlledFailureLanes, eventName);
   const controlledOccFailure = injectedLanes.includes(OCC_LANE_ID);
   if (controlledOccFailure) validateOccControlledFailureMode(args);
   const universe = resolveTickerUniverse(args);
   const tickers = universe.tickers;
-  const dates = candidateDates({ requestedDate: args.date, maxWalkbackDays: args.maxWalkbackDays });
+  const dates = candidateDates({
+    requestedDate: args.date || ymdFromDate(referenceDate),
+    maxWalkbackDays: args.maxWalkbackDays,
+  });
+  const previousOutput = publishedOutput === undefined
+    ? readJson(OUTPUT_FILE, null)
+    : publishedOutput;
   const thresholdDiagnosticSourceDates = new Set();
   const manageLkg = shouldManageOccLkg({ args, universe, selectedTickers: tickers.length });
   const run = {
@@ -1714,7 +1903,22 @@ async function build(args, {
     eventName,
     observedAt,
   };
-  const estimatedMaxLiveRequests = estimateMaxLiveRequests({ tickers, dates });
+  const missingDayBackfillEnabled = args.allEligible && !args.date;
+  const missingDayBackfillPlan = missingDayBackfillEnabled
+    ? planOccMissingDayBackfill({
+      rows: previousOutput?.rows,
+      referenceYmd: dates[0],
+      normalDates: dates,
+      previousCurrentAttempt: previousOutput?.current_attempt,
+      attemptRef: run.runId,
+      attemptNumber: run.runAttempt,
+    })
+    : null;
+  const budgetDates = [...new Set([
+    ...dates,
+    ...(missingDayBackfillPlan?.extra_dates ?? []),
+  ])];
+  let estimatedMaxLiveRequests = estimateMaxLiveRequests({ tickers, dates: budgetDates });
   if (controlledOccFailure) {
     const disposition = controlledOccFailureDisposition({
       args,
@@ -1799,6 +2003,9 @@ async function build(args, {
       selected_tickers: tickers.length,
       sample: tickers.slice(0, 20),
       candidate_dates: dates,
+      missing_day_backfill: missingDayBackfillPlan
+        ? occMissingDayBackfillVisibility({ plan: missingDayBackfillPlan, remaining: null })
+        : null,
       batch: {
         batch_index: args.batchIndex,
         batch_size: args.batchSize,
@@ -1827,9 +2034,10 @@ async function build(args, {
   const endpointResults = [];
   const endpointDiagnostics = [];
   try {
-    if (!args.noFetch && args.maxRequests > 0 && estimatedMaxLiveRequests > args.maxRequests) {
-      throw new Error(`OCC request budget exceeded: estimated ${estimatedMaxLiveRequests}, max ${args.maxRequests}. Use --plan-only, smaller --batch-size, or explicit approval.`);
-    }
+    if (!args.noFetch) enforceOccRequestBudget({
+      estimatedMaxLiveRequests,
+      maxRequests: args.maxRequests,
+    });
 
     const dateAttempts = [];
     for (const ymd of dates) {
@@ -1871,17 +2079,20 @@ async function build(args, {
       const usableRows = result.rows.filter((row) => row.options_activity_proxy.total_volume > 0);
       if (usableRows.length === 0) {
         if (args.maxWalkbackDays === 0 || ymd === dates.at(-1)) {
+        const missingDayBackfill = missingDayBackfillPlan
+          ? occMissingDayBackfillVisibility({ plan: missingDayBackfillPlan, remaining: null })
+          : null;
         const batchAttempt = buildOccBatchAttempt({
-          attemptRef: process.env.GITHUB_RUN_ID || "local",
-          attemptNumber: process.env.GITHUB_RUN_ATTEMPT || 1,
+          attemptRef: run.runId,
+          attemptNumber: run.runAttempt,
           batchIndex: args.batchIndex,
           selectedTickers: tickers.length,
           targetYmd: dates[0],
           servedYmd: null,
           dateAttempts,
+          missingDayBackfill,
         });
         const currentAttempt = mergeOccCurrentAttempt(availability.current_attempt, batchAttempt);
-        const previousOutput = readJson(OUTPUT_FILE, null);
         const candidateDocument = previousOutput
           ? { ...previousOutput, current_attempt: currentAttempt }
           : null;
@@ -1920,6 +2131,9 @@ async function build(args, {
         }
         if (lkgRecovery?.updated) wrote = true;
         if (currentAttempt.status === "unavailable") console.log(`::warning:: ${currentAttempt.message}`);
+        if (missingDayBackfill?.status === "holes_found_none_backfilled") {
+          console.log(`::warning:: ${missingDayBackfill.message}`);
+        }
           return {
           output_file: `data/${OUTPUT_FILE}`,
           history_file: `data/${HISTORY_FILE}`,
@@ -1936,6 +2150,7 @@ async function build(args, {
             max_requests: args.maxRequests || null,
           },
           date_attempts: dateAttempts,
+          missing_day_backfill: missingDayBackfill,
           current_attempt: currentAttempt,
           lkg_recovery: lkgRecovery,
           availability_summary: {
@@ -1956,22 +2171,103 @@ async function build(args, {
       attempts: result.attempts,
       maxWalkbackDays: args.maxWalkbackDays,
       sleepMs: args.sleepMs,
-    });
+      });
+      let outputSnapshot = mergeOutputSnapshot(previousOutput, snapshot);
+      let finalAvailability = availability;
+      let backfillAttempt = null;
+      const executionBackfillPlan = missingDayBackfillEnabled
+        ? planOccMissingDayBackfill({
+          rows: outputSnapshot.rows,
+          referenceYmd: dates[0],
+          normalDates: dates,
+          previousCurrentAttempt: previousOutput?.current_attempt,
+          attemptRef: run.runId,
+          attemptNumber: run.runAttempt,
+        })
+        : null;
+      const selectedBackfillYmd = executionBackfillPlan?.extra_dates?.[0] ?? null;
+      estimatedMaxLiveRequests = estimateMaxLiveRequests({
+        tickers,
+        dates: [...new Set([...dates, ...(executionBackfillPlan?.extra_dates ?? [])])],
+      });
+      if (!args.noFetch) enforceOccRequestBudget({
+        estimatedMaxLiveRequests,
+        maxRequests: args.maxRequests,
+      });
+      if (selectedBackfillYmd && !args.noFetch) {
+        const backfillResult = await loadRowsForDate({
+          ymd: selectedBackfillYmd,
+          tickers,
+          noFetch: false,
+          sleepMs: args.sleepMs,
+          failThreshold: args.failThreshold,
+          request,
+          cacheDir,
+        });
+        endpointResults.push(...backfillResult.endpoint_results);
+        endpointDiagnostics.push(...backfillResult.endpoint_diagnostics);
+        backfillAttempt = summarizeDateAttempt(backfillResult);
+        if (reportOccThresholdStopDiagnostic({
+          dateAttempt: backfillAttempt,
+          endpointResults: backfillResult.endpoint_diagnostics,
+          batchIndex: args.batchIndex,
+        })) {
+          thresholdDiagnosticSourceDates.add(backfillAttempt.source_date);
+        }
+        finalAvailability = mergeAvailabilitySnapshot(finalAvailability, buildAvailabilitySnapshot({
+          ymd: selectedBackfillYmd,
+          generatedAt: isoNow(),
+          universe,
+          sideAttempts: backfillResult.side_attempts,
+          tickerAvailability: backfillResult.ticker_availability,
+          requestBudget: {
+            estimated_max_live_requests: estimatedMaxLiveRequests,
+            max_requests: args.maxRequests || null,
+          },
+        }));
+        const backfillUsableRows = backfillResult.rows
+          .filter((row) => row.options_activity_proxy.total_volume > 0);
+        if (backfillUsableRows.length > 0) {
+          outputSnapshot = mergeOutputSnapshot(outputSnapshot, buildSnapshot({
+            rows: backfillResult.rows,
+            ymd: selectedBackfillYmd,
+            generatedAt: isoNow(),
+            attempts: backfillResult.attempts,
+            maxWalkbackDays: 0,
+            sleepMs: args.sleepMs,
+          }));
+        }
+      }
+      const remainingMissingDays = executionBackfillPlan
+        ? detectOccMissingTradingDays({
+          rows: outputSnapshot.rows,
+          referenceYmd: dates[0],
+          excludeDates: dates,
+        })
+        : null;
+      const missingDayBackfill = executionBackfillPlan
+        ? occMissingDayBackfillVisibility({
+          plan: executionBackfillPlan,
+          remaining: remainingMissingDays,
+          attemptedSourceDate: backfillAttempt?.source_date ?? null,
+          acceptedRows: backfillAttempt?.usable_rows ?? 0,
+        })
+        : null;
       const batchAttempt = buildOccBatchAttempt({
-      attemptRef: process.env.GITHUB_RUN_ID || "local",
-      attemptNumber: process.env.GITHUB_RUN_ATTEMPT || 1,
+      attemptRef: run.runId,
+      attemptNumber: run.runAttempt,
       batchIndex: args.batchIndex,
       selectedTickers: tickers.length,
       targetYmd: dates[0],
       servedYmd: ymd,
       dateAttempts,
+      missingDayBackfill,
     });
-      const previousOutput = readJson(OUTPUT_FILE, null);
       snapshot.current_attempt = mergeOccCurrentAttempt(previousOutput?.current_attempt, batchAttempt);
-      const outputSnapshot = mergeOutputSnapshot(previousOutput, snapshot);
+      outputSnapshot.current_attempt = snapshot.current_attempt;
       const availabilityWithAttempt = {
-      ...availability,
-      current_attempt: mergeOccCurrentAttempt(availability.current_attempt, batchAttempt),
+      ...finalAvailability,
+      current_attempt: mergeOccCurrentAttempt(finalAvailability.current_attempt, batchAttempt),
     };
       const history = mergeHistory(outputSnapshot);
       const lkgRecovery = manageLkg
@@ -2004,6 +2300,12 @@ async function build(args, {
       if (outputSnapshot.current_attempt.status === "degraded_walkback") {
         console.log(`::warning:: ${outputSnapshot.current_attempt.message}`);
       }
+      if (missingDayBackfill?.status === "backfilled") {
+        console.log(`::notice:: ${missingDayBackfill.message}`);
+      } else if (missingDayBackfill?.status === "attempted_no_usable_rows"
+        || missingDayBackfill?.status === "holes_found_none_backfilled") {
+        console.log(`::warning:: ${missingDayBackfill.message}`);
+      }
       return {
       output_file: `data/${OUTPUT_FILE}`,
       history_file: `data/${HISTORY_FILE}`,
@@ -2020,6 +2322,7 @@ async function build(args, {
         max_requests: args.maxRequests || null,
       },
       date_attempts: dateAttempts,
+      missing_day_backfill: missingDayBackfill,
       current_attempt: outputSnapshot.current_attempt,
       lkg_recovery: lkgRecovery,
       reference_rows: outputSnapshot.rows.filter((row) => DEFAULT_REFERENCE_TICKERS.includes(row.ticker)),
@@ -2063,7 +2366,9 @@ export {
   candidateDates,
   classifyOccEndpointResponse,
   controlledOccFailureDisposition,
+  detectOccMissingTradingDays,
   directionFromOptionsVolume,
+  enforceOccRequestBudget,
   estimateMaxLiveRequests,
   loadAllEligibleUniverse,
   loadS0OccClassShareUniverse,
@@ -2085,6 +2390,7 @@ export {
   parseOccCsv,
   parseControlledFailureLanes,
   parseArgs,
+  planOccMissingDayBackfill,
   reduceOccEndpointResults,
   reportOccThresholdStopDiagnostic,
   retainLatestTickerSourceDates,
