@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-19T15:42:11.140Z",
-  "source_as_of": null,
-  "source_as_of_reason": "aggregate source floor unavailable because one or more article rows lack a usable seendate",
-  "status": "degraded",
+  "generated_at": "2026-07-26T15:51:59.515Z",
+  "source_as_of": "2026-07-16T17:00:00.000Z",
+  "source_as_of_reason": "partial coverage: aggregate source floor spans 3 dated row(s); 5 row(s) had no usable seendate and are not published",
+  "status": "ready",
   "formula_version": "fenok-news-tone-proxy-v0.1-gdelt-headlines",
   "public_surface_status": "private_admin_derived_only_not_public",
   "raw_policy": {
@@ -15,12 +15,24 @@
     "public_payload": null
   },
   "coverage": {
-    "row_count": 8,
-    "with_articles": 5,
-    "with_tone_score": 5,
+    "row_count": 3,
+    "with_articles": 3,
+    "with_tone_score": 3,
+    "unavailable_row_count": 5,
+    "unavailable_tickers": [
+      "COIN",
+      "DASH",
+      "NVDA",
+      "PLTR",
+      "UNH"
+    ],
     "errors": [
       {
         "ticker": "DASH",
+        "error": "HTTP 429: Please limit requests to one every 5 seconds or contact kalev.leetaru5@gmail.com for larger queries. All high-traffic users should switch to our ngrams dataset:"
+      },
+      {
+        "ticker": "UNH",
         "error": "HTTP 429: Please limit requests to one every 5 seconds or contact kalev.leetaru5@gmail.com for larger queries. All high-traffic users should switch to our ngrams dataset:"
       },
       {
@@ -30,54 +42,14 @@
       {
         "ticker": "PLTR",
         "error": "HTTP 429: Please limit requests to one every 5 seconds or contact kalev.leetaru5@gmail.com for larger queries. All high-traffic users should switch to our ngrams dataset:"
+      },
+      {
+        "ticker": "NVDA",
+        "error": "HTTP 429: Please limit requests to one every 5 seconds or contact kalev.leetaru5@gmail.com for larger queries. All high-traffic users should switch to our ngrams dataset:"
       }
     ]
   },
   "rows": [
-    {
-      "ticker": "DASH",
-      "company": "DoorDash Class A",
-      "as_of": null,
-      "as_of_reason": "GDELT articles do not expose a usable seendate",
-      "confidence": "very_low",
-      "coverage_ratio": 0,
-      "source_families": [
-        "GDELT DOC 2.0 ArtList"
-      ],
-      "direct_news_tone_proxy": {
-        "score_0_100": null,
-        "direction": "unavailable",
-        "basis": "private_gdelt_headline_lexical_proxy",
-        "positive_cue_count": 0,
-        "negative_cue_count": 0,
-        "cue_bearing_article_count": 0,
-        "article_count": 0,
-        "attention_score_0_100": null,
-        "caveat": "News headline tone proxy only; not social sentiment, not live social firehose, and entity matching can be noisy."
-      }
-    },
-    {
-      "ticker": "UNH",
-      "company": "UnitedHealth Group",
-      "as_of": "2026-07-16T17:00:00.000Z",
-      "as_of_reason": null,
-      "confidence": "medium",
-      "coverage_ratio": 1,
-      "source_families": [
-        "GDELT DOC 2.0 ArtList"
-      ],
-      "direct_news_tone_proxy": {
-        "score_0_100": 72.5,
-        "direction": "positive_headline_tilt",
-        "basis": "private_gdelt_headline_lexical_proxy",
-        "positive_cue_count": 9,
-        "negative_cue_count": 0,
-        "cue_bearing_article_count": 8,
-        "article_count": 25,
-        "attention_score_0_100": 100,
-        "caveat": "News headline tone proxy only; not social sentiment, not live social firehose, and entity matching can be noisy."
-      }
-    },
     {
       "ticker": "PYPL",
       "company": "PayPal Holdings",
@@ -103,7 +75,7 @@
     {
       "ticker": "RDDT",
       "company": "Reddit Class A",
-      "as_of": "2026-05-19T22:15:00.000Z",
+      "as_of": "2026-07-23T14:45:00.000Z",
       "as_of_reason": null,
       "confidence": "medium",
       "coverage_ratio": 1,
@@ -111,36 +83,14 @@
         "GDELT DOC 2.0 ArtList"
       ],
       "direct_news_tone_proxy": {
-        "score_0_100": 55,
+        "score_0_100": 52.5,
         "direction": "neutral_headline_tilt",
         "basis": "private_gdelt_headline_lexical_proxy",
-        "positive_cue_count": 2,
+        "positive_cue_count": 1,
         "negative_cue_count": 0,
-        "cue_bearing_article_count": 2,
+        "cue_bearing_article_count": 1,
         "article_count": 25,
         "attention_score_0_100": 100,
-        "caveat": "News headline tone proxy only; not social sentiment, not live social firehose, and entity matching can be noisy."
-      }
-    },
-    {
-      "ticker": "COIN",
-      "company": "Coinbase Global Class A",
-      "as_of": null,
-      "as_of_reason": "GDELT articles do not expose a usable seendate",
-      "confidence": "very_low",
-      "coverage_ratio": 0,
-      "source_families": [
-        "GDELT DOC 2.0 ArtList"
-      ],
-      "direct_news_tone_proxy": {
-        "score_0_100": null,
-        "direction": "unavailable",
-        "basis": "private_gdelt_headline_lexical_proxy",
-        "positive_cue_count": 0,
-        "negative_cue_count": 0,
-        "cue_bearing_article_count": 0,
-        "article_count": 0,
-        "attention_score_0_100": null,
         "caveat": "News headline tone proxy only; not social sentiment, not live social firehose, and entity matching can be noisy."
       }
     },
@@ -158,53 +108,9 @@
         "score_0_100": 75,
         "direction": "positive_headline_tilt",
         "basis": "private_gdelt_headline_lexical_proxy",
-        "positive_cue_count": 13,
+        "positive_cue_count": 11,
         "negative_cue_count": 1,
-        "cue_bearing_article_count": 10,
-        "article_count": 25,
-        "attention_score_0_100": 100,
-        "caveat": "News headline tone proxy only; not social sentiment, not live social firehose, and entity matching can be noisy."
-      }
-    },
-    {
-      "ticker": "PLTR",
-      "company": "Palantir Technologies Class A",
-      "as_of": null,
-      "as_of_reason": "GDELT articles do not expose a usable seendate",
-      "confidence": "very_low",
-      "coverage_ratio": 0,
-      "source_families": [
-        "GDELT DOC 2.0 ArtList"
-      ],
-      "direct_news_tone_proxy": {
-        "score_0_100": null,
-        "direction": "unavailable",
-        "basis": "private_gdelt_headline_lexical_proxy",
-        "positive_cue_count": 0,
-        "negative_cue_count": 0,
-        "cue_bearing_article_count": 0,
-        "article_count": 0,
-        "attention_score_0_100": null,
-        "caveat": "News headline tone proxy only; not social sentiment, not live social firehose, and entity matching can be noisy."
-      }
-    },
-    {
-      "ticker": "NVDA",
-      "company": "NVIDIA",
-      "as_of": "2026-07-18T09:45:00.000Z",
-      "as_of_reason": null,
-      "confidence": "medium",
-      "coverage_ratio": 1,
-      "source_families": [
-        "GDELT DOC 2.0 ArtList"
-      ],
-      "direct_news_tone_proxy": {
-        "score_0_100": 52.5,
-        "direction": "neutral_headline_tilt",
-        "basis": "private_gdelt_headline_lexical_proxy",
-        "positive_cue_count": 1,
-        "negative_cue_count": 0,
-        "cue_bearing_article_count": 1,
+        "cue_bearing_article_count": 8,
         "article_count": 25,
         "attention_score_0_100": 100,
         "caveat": "News headline tone proxy only; not social sentiment, not live social firehose, and entity matching can be noisy."

@@ -1,28 +1,30 @@
 {
   "schema_version": 1,
   "formula_version": "fenok-news-tone-proxy-v0.1-gdelt-headlines",
-  "generated_at": "2026-07-19T15:42:11.140Z",
+  "generated_at": "2026-07-26T15:51:59.515Z",
+  "raw_policy": {
+    "third_party_raw_public": false,
+    "rows_are_derived_only": true
+  },
+  "persistence_policy": {
+    "schema_version": "gdelt-news-tone-bounded-persistence/v1",
+    "basis": "provider_source_date",
+    "scope": "per_artifact",
+    "max_distinct_source_dates": 100,
+    "eviction": "oldest_source_date_first"
+  },
+  "persistence_state": {
+    "available_source_dates": 5,
+    "retained_source_dates": 5,
+    "pruned_source_dates": 0,
+    "legacy_unbound_rows_dropped": 3
+  },
   "rows": [
-    {
-      "ticker": "COIN",
-      "as_of": null,
-      "generated_at": "2026-07-19T15:42:11.140Z",
-      "directNewsToneProxyScore": null,
-      "newsAttentionScore": null,
-      "articleCount": 0
-    },
-    {
-      "ticker": "DASH",
-      "as_of": null,
-      "generated_at": "2026-07-19T15:42:11.140Z",
-      "directNewsToneProxyScore": null,
-      "newsAttentionScore": null,
-      "articleCount": 0
-    },
     {
       "ticker": "MU",
       "as_of": "2026-07-16T17:00:00.000Z",
-      "generated_at": "2026-07-19T15:42:11.140Z",
+      "source_date": "2026-07-16",
+      "generated_at": "2026-07-26T15:51:59.515Z",
       "directNewsToneProxyScore": 75,
       "newsAttentionScore": 100,
       "articleCount": 25
@@ -33,20 +35,14 @@
       "generated_at": "2026-07-19T15:42:11.140Z",
       "directNewsToneProxyScore": 52.5,
       "newsAttentionScore": 100,
-      "articleCount": 25
-    },
-    {
-      "ticker": "PLTR",
-      "as_of": null,
-      "generated_at": "2026-07-19T15:42:11.140Z",
-      "directNewsToneProxyScore": null,
-      "newsAttentionScore": null,
-      "articleCount": 0
+      "articleCount": 25,
+      "source_date": "2026-07-18"
     },
     {
       "ticker": "PYPL",
       "as_of": "2026-07-19T02:00:00.000Z",
-      "generated_at": "2026-07-19T15:42:11.140Z",
+      "source_date": "2026-07-19",
+      "generated_at": "2026-07-26T15:51:59.515Z",
       "directNewsToneProxyScore": 57.5,
       "newsAttentionScore": 100,
       "articleCount": 25
@@ -57,6 +53,16 @@
       "generated_at": "2026-07-19T15:42:11.140Z",
       "directNewsToneProxyScore": 55,
       "newsAttentionScore": 100,
+      "articleCount": 25,
+      "source_date": "2026-05-19"
+    },
+    {
+      "ticker": "RDDT",
+      "as_of": "2026-07-23T14:45:00.000Z",
+      "source_date": "2026-07-23",
+      "generated_at": "2026-07-26T15:51:59.515Z",
+      "directNewsToneProxyScore": 52.5,
+      "newsAttentionScore": 100,
       "articleCount": 25
     },
     {
@@ -65,7 +71,8 @@
       "generated_at": "2026-07-19T15:42:11.140Z",
       "directNewsToneProxyScore": 72.5,
       "newsAttentionScore": 100,
-      "articleCount": 25
+      "articleCount": 25,
+      "source_date": "2026-07-16"
     }
   ]
 }

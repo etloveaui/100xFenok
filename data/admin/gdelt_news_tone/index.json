@@ -1,32 +1,44 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "gdelt_news_tone",
-  "updated_at": "2026-07-25T15:53:14.450Z",
-  "retry_set": [
-    "news_tone_proxy"
-  ],
+  "updated_at": "2026-07-26T15:45:17.139Z",
+  "retry_set": [],
   "items": {
     "news_tone_proxy": {
       "key": "news_tone_proxy",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/gdelt_news_tone/lkg/news_tone_proxy.json",
-        "payload_sha256": "4d7ec325b40719b95f22bff606e1b70752b390852614ed834d39b1d9a4efe211",
-        "source_as_of": "2026-07-19T02:00:00.000Z"
+        "path": "data/computed/fenok_news_tone_proxy.json",
+        "payload_sha256": "e50716262ef46336e68060cfcd8e8562ce6dbe9249db60ccffbc6a41dcba2b1a",
+        "source_as_of": "2026-07-23T14:45:00.000Z"
       },
       "lkg": {
         "path": "data/admin/gdelt_news_tone/lkg/news_tone_proxy.json",
         "payload_sha256": "4d7ec325b40719b95f22bff606e1b70752b390852614ed834d39b1d9a4efe211",
         "source_as_of": "2026-07-19T02:00:00.000Z"
       },
-      "latest_failure": {
+      "updated_at": "2026-07-26T15:45:17.139Z",
+      "promotion_contract": "provider_observation/v2",
+      "provider_observation": {
+        "schema_version": "provider_observation/v2",
+        "payload_sha256": "cec7678162b97a6585eba132bc644656b498e283f3eeea283f65bacd29685a62",
+        "source_as_of": "2026-07-23T14:45:00.000Z",
+        "run_id": "30208843002",
+        "run_attempt": 1,
+        "observed_at": "2026-07-26T15:45:17.139Z"
+      },
+      "recovered_from_run_id": "30164248573",
+      "recovered_at": "2026-07-26T15:45:17.139Z",
+      "recovery_run_id": "30208843002",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "last_recovered_failure": {
         "run_id": "30164248573",
         "run_attempt": 1,
         "observed_at": "2026-07-25T15:53:14.450Z",
         "reason": "unexpected_error"
-      },
-      "updated_at": "2026-07-25T15:53:14.450Z"
+      }
     }
   }
 }
