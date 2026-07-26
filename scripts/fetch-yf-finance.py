@@ -1253,6 +1253,70 @@ def select_ticker_plan(
     return [*(retry if claim_retry else []), *regular]
 
 
+def select_campaign_or_rotation_plan(
+    regular_tickers,
+    untracked_regular,
+    retry_queue,
+    selected_universe,
+    *,
+    shard,
+    natural,
+    all_shards,
+    retry_limit,
+    stable_shards,
+    regular_limit,
+    untracked_limit,
+    shard_cycle_index,
+):
+    retry_set = set(retry_queue)
+
+    if untracked_limit is not None:
+        if untracked_limit < 0:
+            raise ValueError("untracked limit must be non-negative")
+        if regular_limit is not None and untracked_limit > regular_limit:
+            raise ValueError("untracked limit must not exceed regular limit")
+
+    def select(regular, cycle_index, page_limit=regular_limit, *, include_retries=True):
+        planned = [
+            *(
+                [ticker for ticker in retry_queue if ticker in selected_universe]
+                if include_retries
+                else []
+            ),
+            *regular,
+        ]
+        return select_ticker_plan(
+            planned,
+            retry_queue if include_retries else [],
+            shard=shard,
+            natural=natural if include_retries else False,
+            all_shards=all_shards,
+            retry_limit=retry_limit if include_retries else None,
+            stable_shards=stable_shards,
+            regular_limit=page_limit,
+            shard_cycle_index=cycle_index,
+        )
+
+    campaign = select(untracked_regular, 0, untracked_limit)
+    campaign_regular = [ticker for ticker in campaign if ticker not in retry_set]
+    if campaign_regular:
+        if regular_limit is None:
+            return campaign
+        maintenance_limit = regular_limit - len(campaign_regular)
+        if maintenance_limit <= 0:
+            return campaign
+        untracked_set = set(untracked_regular)
+        maintenance_candidates = [ticker for ticker in regular_tickers if ticker not in untracked_set]
+        maintenance = select(
+            maintenance_candidates,
+            shard_cycle_index,
+            maintenance_limit,
+            include_retries=False,
+        )
+        return [*campaign, *maintenance]
+    return select(regular_tickers, shard_cycle_index)
+
+
 def validate_explicit_tickers(values):
     tickers = [str(value).strip().upper() for value in values if str(value).strip()]
     invalid = [ticker for ticker in tickers if not SYMBOL_RE.fullmatch(ticker)]
@@ -1569,6 +1633,15 @@ def filter_history_gaps(tickers, min_rows):
     return selected
 
 
+def filter_untracked_candidates(tickers, state_store, active_universe):
+    untracked = state_store.untracked_tickers(active_universe)
+    return [ticker for ticker in tickers if ticker in untracked]
+
+
+def bootstrap_exclusions(tickers, *, untracked_only):
+    return set() if untracked_only else set(tickers)
+
+
 def write_empty_summary(profile, args, candidate_count, reason):
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     summary = {
@@ -1588,6 +1661,8 @@ def write_empty_summary(profile, args, candidate_count, reason):
         "priority": "stockanalysis_etf_aum" if args.stockanalysis_etfs else "ticker",
         "history_gaps_only": args.history_gaps_only,
         "history_min_rows": args.history_min_rows,
+        "untracked_only": args.untracked_only,
+        "untracked_limit": args.untracked_limit,
         "merge_existing": args.merge_existing,
         "empty_reason": reason,
         "errors": [],
@@ -1607,10 +1682,12 @@ def plan_summary(args, tickers, candidate_count):
         "priority": "stockanalysis_etf_aum" if args.stockanalysis_etfs else "ticker",
         "history_gaps_only": args.history_gaps_only,
         "history_min_rows": args.history_min_rows,
+        "untracked_only": args.untracked_only,
         "merge_existing": args.merge_existing,
         "limit": args.limit,
         "retry_limit": args.retry_limit,
         "regular_limit": args.regular_limit,
+        "untracked_limit": args.untracked_limit,
         "shard": args.shard,
         "shard_cycle_index": args.shard_cycle_index,
         "scheduled_weekday": args.scheduled_weekday,
@@ -1677,6 +1754,7 @@ def main():
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--retry-limit", type=int, default=None, help="reserve the remaining total limit for regular candidates after this many natural retries")
     parser.add_argument("--regular-limit", type=int, default=None, help="bounded regular candidates per stable-shard cycle page")
+    parser.add_argument("--untracked-limit", type=int, default=None, help="reserve up to N regular slots for the untracked-state campaign")
     parser.add_argument("--shard", type=str, default="", help="i/n e.g. 0/4")
     parser.add_argument("--shard-cycle-index", type=int, default=None, help="monotonic weekly cycle used to rotate bounded stable-shard pages")
     parser.add_argument("--scheduled-weekday", type=int, default=None, help="scheduled Sunday=0 weekday used to bind shard and delayed-run cycle")
@@ -1686,6 +1764,7 @@ def main():
     parser.add_argument("--stockanalysis-etfs", action="store_true", help="include the full StockAnalysis ETF universe/screener in the Yahoo candidate set")
     parser.add_argument("--history-gaps-only", action="store_true", help="fetch only tickers whose local payload lacks enough 1Y daily history for return facts")
     parser.add_argument("--history-min-rows", type=int, default=200, help="minimum history_1y rows needed to skip a ticker under --history-gaps-only")
+    parser.add_argument("--untracked-only", action="store_true", help="prioritize regular candidates with no Yahoo batch state before reserved maintenance capacity")
     parser.add_argument("--profile", choices=("daily", "core", "full", "etf"), default="full", help="daily=price/history only, core=legacy compact fields, full=bounded extra Yahoo-only depth, etf=fund-focused depth")
     parser.add_argument("--include-options", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--include-shares-full", action="store_true", help="fetch full share-count history sample; useful for buyback/dilution backfills")
@@ -1722,6 +1801,14 @@ def main():
             raise ValueError("retry limit must be non-negative")
         if args.regular_limit is not None and args.regular_limit <= 0:
             raise ValueError("regular limit must be positive")
+        if args.untracked_limit is not None and args.untracked_limit < 0:
+            raise ValueError("untracked limit must be non-negative")
+        if (
+            args.untracked_limit is not None
+            and args.regular_limit is not None
+            and args.untracked_limit > args.regular_limit
+        ):
+            raise ValueError("untracked limit must not exceed regular limit")
         if args.shard_cycle_index < 0:
             raise ValueError("shard cycle index must be non-negative")
         validate_ticker_plan_limits(args.limit, args.retry_limit, args.regular_limit)
@@ -1760,6 +1847,8 @@ def main():
 
     candidate_count = len(tickers)
     state_store = YahooBatchStateStore(YAHOO_BATCH_STATE_ROOT, OUT_DIR) if args.record_batch_state else None
+    if args.untracked_only and state_store is None:
+        parser.error("--untracked-only requires --record-batch-state")
     run_context = {
         "run_id": str(args.run_id),
         "run_attempt": args.run_attempt,
@@ -1775,7 +1864,7 @@ def main():
             active_universe,
             universe_sources,
             run_context,
-            exclude_tickers=set(tickers),
+            exclude_tickers=bootstrap_exclusions(tickers, untracked_only=args.untracked_only),
             source_age_business_days=freshness["ages"],
             max_source_business_days=freshness["max_source_business_days"],
         )
@@ -1785,18 +1874,36 @@ def main():
     if args.history_gaps_only:
         regular_tickers = filter_history_gaps(regular_tickers, args.history_min_rows)
     selected_universe = set(tickers)
-    planned_tickers = [*[ticker for ticker in retry_queue if ticker in selected_universe], *regular_tickers]
-    tickers = select_ticker_plan(
-        planned_tickers,
-        retry_queue,
-        shard=args.shard,
-        natural=args.natural_run,
-        all_shards=args.all_shards_run,
-        retry_limit=args.retry_limit,
-        stable_shards=args.stable_shards,
-        regular_limit=args.regular_limit,
-        shard_cycle_index=args.shard_cycle_index,
-    )
+
+    if args.untracked_only:
+        untracked_regular = filter_untracked_candidates(regular_tickers, state_store, active_universe)
+        tickers = select_campaign_or_rotation_plan(
+            regular_tickers,
+            untracked_regular,
+            retry_queue,
+            selected_universe,
+            shard=args.shard,
+            natural=args.natural_run,
+            all_shards=args.all_shards_run,
+            retry_limit=args.retry_limit,
+            stable_shards=args.stable_shards,
+            regular_limit=args.regular_limit,
+            untracked_limit=args.untracked_limit,
+            shard_cycle_index=args.shard_cycle_index,
+        )
+    else:
+        planned_tickers = [*[ticker for ticker in retry_queue if ticker in selected_universe], *regular_tickers]
+        tickers = select_ticker_plan(
+            planned_tickers,
+            retry_queue,
+            shard=args.shard,
+            natural=args.natural_run,
+            all_shards=args.all_shards_run,
+            retry_limit=args.retry_limit,
+            stable_shards=args.stable_shards,
+            regular_limit=args.regular_limit,
+            shard_cycle_index=args.shard_cycle_index,
+        )
     if args.limit:
         tickers = tickers[: args.limit]
 
@@ -2092,6 +2199,8 @@ def main():
         "priority": "stockanalysis_etf_aum" if args.stockanalysis_etfs else "ticker",
         "history_gaps_only": args.history_gaps_only,
         "history_min_rows": args.history_min_rows,
+        "untracked_only": args.untracked_only,
+        "untracked_limit": args.untracked_limit,
         "merge_existing": args.merge_existing,
         "candidate_count_before_filters": candidate_count,
         "errors": errors,

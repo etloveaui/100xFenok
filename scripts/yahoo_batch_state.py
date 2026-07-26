@@ -252,6 +252,13 @@ class YahooBatchStateStore:
     def retry_tickers(self, active_universe: set[str]) -> set[str]:
         return set(self.retry_tickers_ordered(active_universe))
 
+    def untracked_tickers(self, active_universe: set[str]) -> set[str]:
+        return {
+            ticker
+            for ticker in set(active_universe)
+            if _read_json(self._state_path(ticker)) is None
+        }
+
     def bootstrap_existing(
         self,
         active_universe: set[str],

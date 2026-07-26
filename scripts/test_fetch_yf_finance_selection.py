@@ -1571,6 +1571,129 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             ),
         )
 
+    def test_untracked_campaign_drains_a_mutating_shard_from_the_front(self) -> None:
+        tickers = [f"ETF{i:04d}" for i in range(4200)]
+        remaining = self.fetcher.select_ticker_plan(
+            tickers,
+            [],
+            shard="0/6",
+            stable_shards=True,
+        )
+        expected = set(remaining)
+        selected = []
+        while remaining:
+            batch = self.fetcher.select_ticker_plan(
+                remaining,
+                [],
+                regular_limit=100,
+                shard_cycle_index=0,
+            )
+            self.assertLessEqual(len(batch), 100)
+            selected.extend(batch)
+            batch_set = set(batch)
+            remaining = [ticker for ticker in remaining if ticker not in batch_set]
+
+        self.assertEqual(set(selected), expected)
+        self.assertEqual(len(selected), len(expected))
+
+    def test_untracked_campaign_falls_back_to_rotation_when_its_shard_is_empty(self) -> None:
+        tickers = [f"ETF{i:04d}" for i in range(200)]
+        shard_zero = [ticker for ticker in tickers if self.fetcher.stable_shard_index(ticker, 6) == 0]
+        shard_one = [ticker for ticker in tickers if self.fetcher.stable_shard_index(ticker, 6) == 1]
+        selected_universe = set(tickers)
+
+        campaign = self.fetcher.select_campaign_or_rotation_plan(
+            tickers,
+            shard_zero[:3],
+            [],
+            selected_universe,
+            shard="0/6",
+            natural=True,
+            all_shards=False,
+            retry_limit=40,
+            stable_shards=True,
+            regular_limit=100,
+            untracked_limit=100,
+            shard_cycle_index=4,
+        )
+        fallback = self.fetcher.select_campaign_or_rotation_plan(
+            tickers,
+            shard_one[:3],
+            [],
+            selected_universe,
+            shard="0/6",
+            natural=True,
+            all_shards=False,
+            retry_limit=40,
+            stable_shards=True,
+            regular_limit=100,
+            untracked_limit=100,
+            shard_cycle_index=0,
+        )
+
+        self.assertEqual(campaign[:3], shard_zero[:3])
+        self.assertEqual(set(campaign), set(shard_zero))
+        self.assertEqual(set(fallback), set(shard_zero))
+
+    def test_untracked_campaign_reserves_regular_maintenance_capacity(self) -> None:
+        tickers = [f"ETF{i:04d}" for i in range(1000)]
+        shard_zero = [
+            ticker
+            for ticker in tickers
+            if self.fetcher.stable_shard_index(ticker, 6) == 0
+        ]
+        untracked = shard_zero[:20]
+
+        selected = self.fetcher.select_campaign_or_rotation_plan(
+            tickers,
+            untracked,
+            [],
+            set(tickers),
+            shard="0/6",
+            natural=True,
+            all_shards=False,
+            retry_limit=40,
+            stable_shards=True,
+            regular_limit=10,
+            untracked_limit=6,
+            shard_cycle_index=0,
+        )
+
+        self.assertEqual(selected[:6], untracked[:6])
+        self.assertEqual(len(selected), 10)
+        self.assertTrue(set(selected[6:]).isdisjoint(untracked))
+
+    def test_untracked_campaign_does_not_reclassify_retries_as_maintenance(self) -> None:
+        retries = [f"RETRY{i:04d}" for i in range(60)]
+        regular = [f"ZZZ{i:04d}" for i in range(2000)]
+        shard_zero = [
+            ticker
+            for ticker in regular
+            if self.fetcher.stable_shard_index(ticker, 6) == 0
+        ]
+        untracked = shard_zero[:100]
+
+        selected = self.fetcher.select_campaign_or_rotation_plan(
+            regular,
+            untracked,
+            retries,
+            set([*retries, *regular]),
+            shard="0/6",
+            natural=True,
+            all_shards=False,
+            retry_limit=40,
+            stable_shards=True,
+            regular_limit=100,
+            untracked_limit=80,
+            shard_cycle_index=0,
+        )
+
+        self.assertEqual(selected[:40], retries[:40])
+        self.assertEqual(len([ticker for ticker in selected if ticker in untracked]), 80)
+        self.assertTrue(set(selected[40:]).isdisjoint(retries))
+        self.assertEqual(len(selected), 140)
+        self.assertEqual(len(set(selected)), 140)
+
     def test_full_active_scale_has_twelve_cycle_upper_bound(self) -> None:
         tickers = [f"ETF{i:04d}" for i in range(6722)]
         for shard_index in range(6):
@@ -1674,6 +1797,40 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(
             store.retry_tickers_ordered({"NEWEST", "OLDEST", "MIDDLE"}),
             ["OLDEST", "MIDDLE", "NEWEST"],
+        )
+
+    def test_scheduled_campaign_selects_only_untracked_regular_candidates(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(
+            self.root / "admin" / "yahoo-batch-quote-history",
+            self.fetcher.OUT_DIR,
+        )
+        write_json(store._state_path("TRACKED"), {
+            "schema_version": "yahoo-batch-quote-history-state/v1",
+            "ticker": "TRACKED",
+            "resolution_state": "fresh_primary",
+            "retry": False,
+            "attempts": [],
+        })
+        filter_candidates = getattr(
+            self.fetcher,
+            "filter_untracked_candidates",
+            lambda tickers, _store, _active: list(tickers),
+        )
+
+        self.assertEqual(
+            filter_candidates(["TRACKED", "UNTRACKED"], store, {"TRACKED", "UNTRACKED"}),
+            ["UNTRACKED"],
+            "scheduled Yahoo campaign must exclude state-tracked regular candidates",
+        )
+
+    def test_untracked_campaign_bootstraps_usable_local_payloads_before_selection(self) -> None:
+        self.assertEqual(
+            self.fetcher.bootstrap_exclusions(["LOCAL", "MISSING"], untracked_only=True),
+            set(),
+        )
+        self.assertEqual(
+            self.fetcher.bootstrap_exclusions(["LOCAL", "MISSING"], untracked_only=False),
+            {"LOCAL", "MISSING"},
         )
 
     def test_controlled_failure_scope_is_manual_targeted_and_stateful_only(self) -> None:
@@ -2124,8 +2281,12 @@ assert callable(namespace["load_universe"])
         self.assertIn("--scheduled-weekday", run_step)
         self.assertIn("YF_WEEKLY_ETF_RETRY_LIMIT:-40", run_step)
         self.assertIn("YF_WEEKLY_ETF_REGULAR_LIMIT:-100", run_step)
+        self.assertIn("YF_WEEKLY_ETF_UNTRACKED_LIMIT:-80", run_step)
+        self.assertIn('INPUT_UNTRACKED_ONLY="true"', run_step)
         self.assertIn("--retry-limit", run_step)
         self.assertIn("--regular-limit", run_step)
+        self.assertIn("--untracked-limit", run_step)
+        self.assertIn("--untracked-only", run_step)
         self.assertIn("--shard-cycle-index", run_step)
         self.assertIn("--stable-shards", run_step)
         self.assertNotIn("GITHUB_RUN_NUMBER", run_step)

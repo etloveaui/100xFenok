@@ -146,9 +146,11 @@ jobs:
           INPUT_STOCKS_ONLY: ${{ github.event.inputs.stocks_only || 'false' }}
           INPUT_HISTORY_GAPS_ONLY: ${{ github.event.inputs.history_gaps_only || 'false' }}
           INPUT_HISTORY_MIN_ROWS: ${{ github.event.inputs.history_min_rows || '200' }}
+          INPUT_UNTRACKED_ONLY: 'false'
           INPUT_PLAN_ONLY: ${{ github.event.inputs.plan_only || 'false' }}
           INPUT_RETRY_LIMIT: ''
           INPUT_REGULAR_LIMIT: ''
+          INPUT_UNTRACKED_LIMIT: ''
           INPUT_SHARD_CYCLE_INDEX: ''
           INPUT_SCHEDULED_WEEKDAY: ''
           INPUT_STABLE_SHARDS: 'false'
@@ -188,6 +190,7 @@ jobs:
               INPUT_LIMIT="${YF_WEEKLY_ETF_LIMIT:-140}"
               INPUT_RETRY_LIMIT="${YF_WEEKLY_ETF_RETRY_LIMIT:-40}"
               INPUT_REGULAR_LIMIT="${YF_WEEKLY_ETF_REGULAR_LIMIT:-100}"
+              INPUT_UNTRACKED_LIMIT="${YF_WEEKLY_ETF_UNTRACKED_LIMIT:-80}"
               INPUT_SHARD_CYCLE_INDEX="${YF_WEEKLY_ETF_SHARD_CYCLE_INDEX:-}"
               INPUT_SCHEDULED_WEEKDAY="$DAILY_INDEX"
               INPUT_STABLE_SHARDS="true"
@@ -200,6 +203,7 @@ jobs:
               INPUT_MAX_AGE_HOURS="${YF_WEEKLY_ETF_MAX_AGE_HOURS:-18}"
               INPUT_HISTORY_GAPS_ONLY="${YF_WEEKLY_ETF_HISTORY_GAPS_ONLY:-true}"
               INPUT_HISTORY_MIN_ROWS="${YF_WEEKLY_ETF_HISTORY_MIN_ROWS:-200}"
+              INPUT_UNTRACKED_ONLY="true"
               INPUT_STOCKANALYSIS_ETFS="${YF_WEEKLY_ETF_STOCKANALYSIS_ETFS:-true}"
               INPUT_STOCKS_ONLY="false"
             fi
@@ -212,6 +216,7 @@ jobs:
           if [ -n "$INPUT_LIMIT" ]; then ARGS="$ARGS --limit $INPUT_LIMIT"; fi
           if [ -n "$INPUT_RETRY_LIMIT" ]; then ARGS="$ARGS --retry-limit $INPUT_RETRY_LIMIT"; fi
           if [ -n "$INPUT_REGULAR_LIMIT" ]; then ARGS="$ARGS --regular-limit $INPUT_REGULAR_LIMIT"; fi
+          if [ -n "$INPUT_UNTRACKED_LIMIT" ]; then ARGS="$ARGS --untracked-limit $INPUT_UNTRACKED_LIMIT"; fi
           if [ -n "$INPUT_SHARD_CYCLE_INDEX" ]; then ARGS="$ARGS --shard-cycle-index $INPUT_SHARD_CYCLE_INDEX"; fi
           if [ -n "$INPUT_SCHEDULED_WEEKDAY" ]; then ARGS="$ARGS --scheduled-weekday $INPUT_SCHEDULED_WEEKDAY"; fi
           if [ "$INPUT_STABLE_SHARDS" = "true" ]; then ARGS="$ARGS --stable-shards"; fi
@@ -222,6 +227,7 @@ jobs:
           if [ "$INPUT_INCLUDE_SHARES_FULL" = "true" ]; then ARGS="$ARGS --include-shares-full"; fi
           if [ "$INPUT_STOCKANALYSIS_ETFS" = "true" ]; then ARGS="$ARGS --stockanalysis-etfs"; fi
           if [ "$INPUT_HISTORY_GAPS_ONLY" = "true" ]; then ARGS="$ARGS --history-gaps-only --history-min-rows ${INPUT_HISTORY_MIN_ROWS:-200}"; fi
+          if [ "$INPUT_UNTRACKED_ONLY" = "true" ]; then ARGS="$ARGS --untracked-only"; fi
           if [ "$INPUT_MERGE_EXISTING" = "true" ]; then ARGS="$ARGS --merge-existing"; fi
           if [ "$INPUT_PLAN_ONLY" = "true" ]; then ARGS="$ARGS --plan-only"; fi
           if [ "${INPUT_DAILY_ALL_SHARDS:-false}" = "true" ] && [ -z "$INPUT_SHARD" ]; then
