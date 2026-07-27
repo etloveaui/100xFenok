@@ -181,13 +181,27 @@ function daysBetweenIsoDates(startDate, endDate) {
   return Math.round((end - start) / 86400000);
 }
 
+// A provider's calendar date is a DATE, not an instant, and it must normalize to
+// the same day everywhere. Date.parse of a zoneless string like "April 1, 2026"
+// yields LOCAL midnight, so projecting it through toISOString moved it a day back
+// anywhere east of UTC: measured, this file resolved the Damodaran ERP source date
+// to 2026-04-01 on a UTC runner and 2026-03-31 in Asia/Seoul, which made
+// build-rim-index --check report the committed artifact stale on any developer
+// machine that is not on UTC. A string that carries its own time or offset is an
+// instant and keeps UTC projection.
+const ZONELESS_DATE_TEXT = /^(?!.*(?:[zZ]|[+-]\d{2}:?\d{2}|\d:\d))\D*\d/;
+
 function normalizeSourceDate(value, label) {
   if (isRealCalendarDate(value)) return value;
   const text = String(value ?? "").trim();
   if (!text) return null;
   const parsed = Date.parse(text);
   if (!Number.isFinite(parsed)) throw new Error(`${label}: invalid source date ${text}`);
-  return new Date(parsed).toISOString().slice(0, 10);
+  const instant = new Date(parsed);
+  if (!ZONELESS_DATE_TEXT.test(text)) return instant.toISOString().slice(0, 10);
+  const month = String(instant.getMonth() + 1).padStart(2, "0");
+  const day = String(instant.getDate()).padStart(2, "0");
+  return `${instant.getFullYear()}-${month}-${day}`;
 }
 
 function marketInputFreshness(asOf, generatedAt, { market, maxDays }) {

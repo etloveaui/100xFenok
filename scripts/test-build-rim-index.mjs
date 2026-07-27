@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -563,5 +564,35 @@ assert.equal(parseArgs(["--data-root", cliRoot]).dataRoot, path.resolve(cliRoot)
 assert.equal(parseArgs([`--data-root=${cliRoot}`]).dataRoot, path.resolve(cliRoot));
 assert.equal(parseArgs(["--public-data-root", cliPublicRoot]).publicDataRoot, path.resolve(cliPublicRoot));
 assert.equal(parseArgs([`--public-data-root=${cliPublicRoot}`]).publicDataRoot, path.resolve(cliPublicRoot));
+
+// A provider calendar date must resolve to the same day in every timezone. The
+// Damodaran ERP source_date is the zoneless string "April 1, 2026"; projecting its
+// locally-parsed midnight through toISOString resolved it to 2026-04-01 on a UTC
+// runner and 2026-03-31 in Asia/Seoul, so build-rim-index --check called the
+// committed artifact stale on any machine east of UTC. Run the real builder in two
+// zones and require identical observed source dates.
+{
+  const observedSourceDatesIn = (timeZone) => {
+    const result = spawnSync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        `import { buildRimIndexInputs } from ${JSON.stringify(path.join(__dirname, "build-rim-index.mjs"))};`
+        + "const built = buildRimIndexInputs({ generatedAt: '2099-01-01T00:00:00.000Z' });"
+        + "const dates = Object.entries(built.indices).flatMap(([id, item]) =>"
+        + "  Object.entries(item.observed ?? {}).map(([field, value]) => `${id}.${field}=${value?.as_of}`));"
+        + "console.log(JSON.stringify(dates.sort()));",
+      ],
+      { encoding: "utf8", env: { ...process.env, TZ: timeZone } },
+    );
+    assert.equal(result.status, 0, `builder must run under TZ=${timeZone}: ${result.stderr}`);
+    return JSON.parse(result.stdout.trim().split("\n").at(-1));
+  };
+  const seoul = observedSourceDatesIn("Asia/Seoul");
+  const utc = observedSourceDatesIn("UTC");
+  assert.ok(seoul.length > 0, "timezone fixture must observe source dates");
+  assert.deepEqual(seoul, utc, "observed source dates must not depend on the runner timezone");
+}
 
 console.log("test-build-rim-index: ok");
