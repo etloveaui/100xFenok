@@ -642,6 +642,105 @@ assert.deepEqual(
 }
 
 {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-fresh-retry-mixed-"));
+  const paths = pathsFor(root);
+  fs.mkdirSync(paths.canonicalRoot, { recursive: true });
+  fs.mkdirSync(paths.publicRoot, { recursive: true });
+  for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200 })) {
+    for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
+      fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify([{ date: "2026-07-16", value }])}\n`);
+    }
+  }
+  const seeded = await runUsIndicesDaily({
+    ...paths,
+    request: async (_url, key) => response(200, yahooPayload(
+      key === "sp500" ? "^GSPC" : "^IXIC",
+      key === "sp500"
+        ? [["2026-07-16", 6200], ["2026-07-17", 6210]]
+        : [["2026-07-16", 20200], ["2026-07-17", 20210]],
+    )),
+    observedAt: "2026-07-17T22:00:00Z",
+    attemptId: "gh-430-1-us-indices",
+    eventName: "schedule",
+  });
+  assert.equal(seeded.exitCode, 0);
+  const freshSp500 = JSON.parse(
+    fs.readFileSync(path.join(paths.stateRoot, "keys", "sp500.json"), "utf8"),
+  );
+  const oneFailed = await runUsIndicesDaily({
+    ...paths,
+    request: async (_url, key) => {
+      if (key === "nasdaq") throw new Error("isolated transport failure");
+      return response(200, yahooPayload("^GSPC", [["2026-07-18", 6220]]));
+    },
+    observedAt: "2026-07-18T12:00:00Z",
+    attemptId: "gh-431-1-us-indices",
+    eventName: "workflow_dispatch",
+  });
+  assert.equal(oneFailed.index.retry_keys.includes("nasdaq.json"), true);
+  assert.equal(oneFailed.index.retry_keys.includes("sp500.json"), false);
+  const canonicalBeforeMixed = ["sp500", "nasdaq"].map((key) =>
+    fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`)));
+  const publicBeforeMixed = ["sp500", "nasdaq"].map((key) =>
+    fs.readFileSync(path.join(paths.publicRoot, `${key}.json`)));
+  const mixed = await runUsIndicesDaily({
+    ...paths,
+    request: async (_url, key) => response(200, yahooPayload(
+      key === "sp500" ? "^GSPC" : "^IXIC",
+      key === "sp500"
+        ? [["2026-07-17", 6210], ["2026-07-18", 6220]]
+        : [["2026-07-17", 20210]],
+    )),
+    observedAt: "2026-07-18T22:00:00Z",
+    attemptId: "gh-432-1-us-indices",
+    eventName: "schedule",
+  });
+  assert.equal(mixed.exitCode, 0);
+  assert.equal(mixed.updated, false);
+  assert.equal(mixed.index.current_attempt.attempted, 2);
+  assert.equal(mixed.index.current_attempt.successes, 0);
+  assert.equal(mixed.index.current_attempt.promotion_deferrals, 2);
+  const deferredSp500 = JSON.parse(
+    fs.readFileSync(path.join(paths.stateRoot, "keys", "sp500.json"), "utf8"),
+  );
+  for (const field of ["updated_at", "last_run_id", "last_run_attempt", "last_event_name"]) {
+    assert.equal(
+      deferredSp500[field],
+      freshSp500[field],
+      `fresh V2 provider proof binding ${field} must survive atomic peer deferral`,
+    );
+  }
+  assert.equal(deferredSp500.latest_promotion_deferral.reason, "atomic_peer_deferral");
+  for (const [index, key] of ["sp500", "nasdaq"].entries()) {
+    assert.deepEqual(
+      fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`)),
+      canonicalBeforeMixed[index],
+      "fresh/retry mixed recovery cannot publish partial canonical bytes",
+    );
+    assert.deepEqual(
+      fs.readFileSync(path.join(paths.publicRoot, `${key}.json`)),
+      publicBeforeMixed[index],
+      "fresh/retry mixed recovery cannot publish partial public bytes",
+    );
+  }
+  const recovered = await runUsIndicesDaily({
+    ...paths,
+    request: async (_url, key) => response(200, yahooPayload(
+      key === "sp500" ? "^GSPC" : "^IXIC",
+      key === "sp500"
+        ? [["2026-07-17", 6210], ["2026-07-18", 6220]]
+        : [["2026-07-17", 20210], ["2026-07-18", 20220]],
+    )),
+    observedAt: "2026-07-21T22:00:00Z",
+    attemptId: "gh-433-1-us-indices",
+    eventName: "schedule",
+  });
+  assert.equal(recovered.exitCode, 0);
+  assert.equal(recovered.index.counts.unavailable, 0);
+  assert.deepEqual(recovered.index.retry_keys, []);
+}
+
+{
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-controlled-recovery-"));
   const paths = pathsFor(root);
   fs.mkdirSync(paths.canonicalRoot, { recursive: true });

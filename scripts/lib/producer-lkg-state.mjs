@@ -461,6 +461,7 @@ export class ProducerLkgStateStore {
 
   recordPromotionDeferral(plan) {
     const atomicPeerDeferral = plan?.reason === "atomic_peer_deferral";
+    const preservePublishedProofBinding = atomicPeerDeferral && plan?.prior?.retry !== true;
     if (!plan?.deferred || (!plan.prior?.retry && !atomicPeerDeferral)) {
       throw new Error("promotion deferral requires an active retry plan");
     }
@@ -474,10 +475,12 @@ export class ProducerLkgStateStore {
     }
     const state = {
       ...plan.prior,
-      updated_at: plan.run.observed_at,
-      last_run_id: String(plan.run.run_id),
-      last_run_attempt: Number(plan.run.run_attempt ?? 1),
-      last_event_name: plan.run.event_name ?? null,
+      ...(!preservePublishedProofBinding ? {
+        updated_at: plan.run.observed_at,
+        last_run_id: String(plan.run.run_id),
+        last_run_attempt: Number(plan.run.run_attempt ?? 1),
+        last_event_name: plan.run.event_name ?? null,
+      } : {}),
       latest_promotion_deferral: {
         run_id: String(plan.run.run_id),
         run_attempt: Number(plan.run.run_attempt ?? 1),
@@ -745,6 +748,13 @@ export class ProducerLkgStateStore {
         run,
       ))
       .map(({ key, state }) => ({ key, ...state.latest_promotion_deferral }));
+    const attemptedStates = states.filter(({ state }) =>
+      sameAttempt(state?.last_run_id, state?.last_run_attempt, run)
+      || sameAttempt(
+        state?.latest_promotion_deferral?.run_id,
+        state?.latest_promotion_deferral?.run_attempt,
+        run,
+      ));
     const lkgDetails = [];
     let unavailable = 0;
     for (const { key, state } of states) {
@@ -801,7 +811,7 @@ export class ProducerLkgStateStore {
         run_attempt: Number(run.run_attempt ?? 1),
         event_name: run.event_name ?? null,
         observed_at: run.observed_at,
-        attempted: states.filter(({ state }) => sameAttempt(state?.last_run_id, state?.last_run_attempt, run)).length,
+        attempted: attemptedStates.length,
         successes: states.filter(({ state }) => sameAttempt(state?.last_run_id, state?.last_run_attempt, run)
           && !sameAttempt(state?.latest_failure?.run_id, state?.latest_failure?.run_attempt, run)
           && !sameAttempt(

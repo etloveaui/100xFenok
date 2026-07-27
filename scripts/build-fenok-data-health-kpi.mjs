@@ -986,7 +986,8 @@ export function validateProducerRecoveryAttempt(index) {
         && detail.blocked_by_keys.length > 0
         && detail.blocked_by_keys.every((key) => typeof key === "string"
           && key !== detail.key
-          && deferralKeys.includes(key)),
+          && deferralKeys.includes(key)
+          && detailByKey.get(key)?.reason !== "atomic_peer_deferral"),
       `promotion deferral ${detail?.key ?? "<unknown>"} blocking keys are invalid`);
     }
     reject(isDetectionSourceStamp(detail?.source_as_of),

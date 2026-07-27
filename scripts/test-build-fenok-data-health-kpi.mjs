@@ -2378,6 +2378,11 @@ console.log("# KPI v2 runtime self-proof fixtures");
   delete atomicMissingBlocker.promotion_deferral_details[0].blocked_by_keys;
   assert.ok(validateProducerRecoveryAttempt(atomicMissingBlocker).reasons.some((reason) =>
     reason.includes("blocking keys are invalid")));
+  const atomicCycle = structuredClone(atomicMixed);
+  atomicCycle.promotion_deferral_details[1].reason = "atomic_peer_deferral";
+  atomicCycle.promotion_deferral_details[1].blocked_by_keys = ["sp500.json"];
+  assert.ok(validateProducerRecoveryAttempt(atomicCycle).reasons.some((reason) =>
+    reason.includes("blocking keys are invalid")));
   ok("hourly recovery validator rejects failed keys outside retry and source-less foreign conflicts");
 }
 
