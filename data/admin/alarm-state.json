@@ -1,9 +1,17 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-07-27T17:13:27.294Z",
+  "generated_at": "2026-07-27T19:42:03.730Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 4,
   "open_incidents": [
+    {
+      "workflow": "deploy-worker.yml",
+      "label": "Deploy Worker (Cloudflare)",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 30297612379,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30297612379"
+    },
     {
       "workflow": "fetch-stockanalysis.yml",
       "label": "Fetch StockAnalysis Data",
@@ -418,11 +426,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "30288194636",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30288194636",
-    "observed_at": "2026-07-27T17:13:27.294Z",
-    "event": "schedule",
+    "run_id": "30299272611",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30299272611",
+    "observed_at": "2026-07-27T19:42:03.730Z",
+    "event": "workflow_run",
     "workflows": [
+      "deploy-worker.yml",
       "fetch-stockanalysis.yml",
       "slickcharts-history.yml",
       "slickcharts-monthly.yml"
