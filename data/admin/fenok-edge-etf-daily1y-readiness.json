@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-07-27T03:05:41.929Z",
-  "classification_as_of": "2026-07-27T03:05:04.901Z",
+  "generated_at": "2026-07-27T03:57:59.534Z",
+  "classification_as_of": "2026-07-27T03:57:22.510Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -399,17 +399,17 @@
       "selection": "explicit full-primary daily_1y fetchable tickers; not the scored-ETF scheduled plan",
       "single_writer": true,
       "shard_size": 100,
-      "ticker_count": 5,
+      "ticker_count": 3,
       "shard_count": 1,
       "shards": [
         {
           "shard": 1,
-          "ticker_count": 5,
+          "ticker_count": 3,
           "inputs": {
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "0",
-            "etfs": "ESUM,FEAT,FIVY,PMTL,SFGV"
+            "etfs": "ESUM,PMTL,SFGV"
           }
         }
       ]
