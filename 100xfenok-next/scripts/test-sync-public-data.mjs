@@ -69,6 +69,17 @@ import { FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS } from "./check-fenok-public-mirror
     const covered = materializeSource.includes(bareForm) || (dataForm !== null && materializeSource.includes(dataForm));
     assert.equal(covered, true, `materialize_data_supply_public.py does not cover private root ${root} (#21 parity)`);
   }
+  const usageBuilderSource = fs.readFileSync(
+    fileURLToPath(new URL("../../scripts/build-phase2-closeout-indexes.mjs", import.meta.url)),
+    "utf8",
+  );
+  for (const root of derivedGuardRoots.filter((value) => !value.endsWith(".json"))) {
+    assert.equal(
+      usageBuilderSource.includes(`"${root}/"`),
+      true,
+      `data-usage manifest builder does not exclude private root ${root}`,
+    );
+  }
 }
 
 const DETECTION_FLOOR_REPORT = "admin/data-supply-detection-floor.json";

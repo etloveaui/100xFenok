@@ -81,6 +81,7 @@ const GENERATED_OUTPUTS = [
 ];
 const PRIVATE_DATA_SUPPLY_ROOTS = [
   "admin/data-supply-state/",
+  "admin/slickcharts-daily-delivery/",
   "yf/etf-details/",
   "yf/migration-evidence/",
 ];
