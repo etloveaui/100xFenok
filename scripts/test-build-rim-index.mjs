@@ -219,8 +219,28 @@ assert.equal(invalidSoxFreshness.status, "refresh_recommended");
 
 const currentSoxFixtureAsOf = readJson(path.join(dataRoot, "indices/nasdaq-giw-sox-constituents.json")).as_of;
 assert.match(currentSoxFixtureAsOf, /^\d{4}-\d{2}-\d{2}$/, "SOX fixture source date");
-const payload = buildRimIndexInputs({
+// This builder reads the LIVE data tree, so pinning the clock to one file's date
+// makes the test fail the moment any other source publishes past it - a weekly
+// benchmark refresh moved KOSPI to 2026-07-26 while this pin sat at the SOX file's
+// 2026-07-24 and every KOSPI field asserted "source as_of must not be after
+// generated_at". Discover the newest observed source date first, then pin to it,
+// which is the same defence the availability fixtures below already use.
+const newestObservedSourceAsOf = (built) => Object.values(built.indices)
+  .flatMap((item) => Object.values(item.observed ?? {}))
+  .map((field) => field?.as_of)
+  .filter((asOf) => typeof asOf === "string" && /^\d{4}-\d{2}-\d{2}$/.test(asOf))
+  .sort()
+  .at(-1);
+// Building is separate from validating, so this probe cannot trip the assertion
+// it exists to prevent.
+const soxProbeAsOf = newestObservedSourceAsOf(buildRimIndexInputs({
   generatedAt: `${currentSoxFixtureAsOf}T23:59:59.000Z`,
+}));
+const payloadPinAsOf = soxProbeAsOf && soxProbeAsOf > currentSoxFixtureAsOf
+  ? soxProbeAsOf
+  : currentSoxFixtureAsOf;
+const payload = buildRimIndexInputs({
+  generatedAt: `${payloadPinAsOf}T23:59:59.000Z`,
 });
 const validation = validateRimIndexInputs(payload);
 
