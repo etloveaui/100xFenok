@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 474,
+      "natural": true,
+      "observed_at": "2026-07-27T22:58:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30312518312",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T09:21:58Z",
-    "history_as_of": "2026-07-08",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/HBR.json",
-    "payload_sha256": "38361a72c584e93b30f23a1e47352936161d618b964a3d683061b32b658cf962",
-    "quote_as_of": "2026-07-08T20:00:00Z",
-    "source_as_of": "2026-07-08"
+    "fetched_at": "2026-07-27T22:58:46Z",
+    "history_as_of": "2026-07-27",
+    "path": "data/yf/finance/HBR.json",
+    "payload_sha256": "f05c93c50e54203ab0c6fccab7b079800b82c81a10bff5ec5918ef430aa5ecd9",
+    "quote_as_of": "2026-07-27T20:00:00Z",
+    "source_as_of": "2026-07-27"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 474,
+    "natural": true,
+    "observed_at": "2026-07-27T22:58:21Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30312518312",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-07-09T09:21:58Z",
@@ -46,8 +59,20 @@
     "quote_as_of": "2026-07-08T20:00:00Z",
     "source_as_of": "2026-07-08"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-27",
+    "observed_at": "2026-07-27T22:58:21Z",
+    "payload_sha256": "bb995bc52e7af414c5ac682a54097d66f451dbd3cd3a45ab6abef31ee05a78fd",
+    "quote_as_of": "2026-07-27T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "30312518312",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-27"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "HBR",
-  "updated_at": "2026-07-17T00:15:36Z"
+  "updated_at": "2026-07-27T22:58:21Z"
 }

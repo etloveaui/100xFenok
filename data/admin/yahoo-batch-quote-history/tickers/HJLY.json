@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 446,
+      "natural": true,
+      "observed_at": "2026-07-27T22:58:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30312518312",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T09:22:00Z",
-    "history_as_of": "2026-07-08",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/HJLY.json",
-    "payload_sha256": "75cf7270e33b85a6c627462847e1522456a6249868467ff1ca61cf74c26a2c68",
-    "quote_as_of": "2026-07-08T17:55:14Z",
-    "source_as_of": "2026-07-08"
+    "fetched_at": "2026-07-27T22:58:49Z",
+    "history_as_of": "2026-07-24",
+    "path": "data/yf/finance/HJLY.json",
+    "payload_sha256": "fd302826927bf5e47dd350d33832777e9cc8ea5d11e4252de85884cf8517b6d2",
+    "quote_as_of": "2026-07-24T16:48:53Z",
+    "source_as_of": "2026-07-24"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 446,
+    "natural": true,
+    "observed_at": "2026-07-27T22:58:21Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30312518312",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-07-09T09:22:00Z",
@@ -46,8 +59,20 @@
     "quote_as_of": "2026-07-08T17:55:14Z",
     "source_as_of": "2026-07-08"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-24",
+    "observed_at": "2026-07-27T22:58:21Z",
+    "payload_sha256": "71f28a6346bf2a6a51159f0853a11a3c21b19ac2084d1bfe15dce430b7515929",
+    "quote_as_of": "2026-07-24T16:48:53Z",
+    "run_attempt": 1,
+    "run_id": "30312518312",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-24"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "HJLY",
-  "updated_at": "2026-07-17T00:15:36Z"
+  "updated_at": "2026-07-27T22:58:21Z"
 }
