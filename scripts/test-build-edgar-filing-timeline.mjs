@@ -7,9 +7,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  EDGAR_PUBLICATION_JOURNAL_SCHEMA,
+  applyPersistenceToExistingManifest,
   mergeFilings,
+  recoverJsonBundleTransaction,
   retainLatestFilingDates,
   runEdgarFilingTimeline,
+  writeJsonBundleTransaction,
 } from "./build-edgar-filing-timeline.mjs";
 import { validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
@@ -91,6 +95,65 @@ assert.deepEqual(edgar.endpoint_contract.assertions, [{
   );
 }
 
+// A successful limited poll migrates every pre-existing ticker manifest, even
+// when that ticker was not queried in the current acquisition batch.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "edgar-emitter-tree-migration-"));
+  const paths = pathsFor(root);
+  const legacyAapl = {
+    schemaVersion: 1,
+    artifactType: "edgar_korean_summary_ticker_manifest",
+    ticker: "AAPL",
+    companyName: "APPLE INC",
+    cik: "0000320193",
+    updated: "2026-06-21",
+    source: "legacy source attribution",
+    summaryStatus: "partial",
+    filings: [{
+      accession: "0000320193-26-000001",
+      filingDate: "2026-06-20",
+      summaryPath: "/legacy/aapl-summary.md",
+      translationPath: null,
+    }],
+  };
+  const privateAapl = path.join(paths.summaryRoot, "by-ticker/aapl.json");
+  fs.mkdirSync(path.dirname(privateAapl), { recursive: true });
+  fs.writeFileSync(privateAapl, `${JSON.stringify(legacyAapl, null, 2)}\n`);
+
+  const result = await runEdgarFilingTimeline({
+    argv: ["--tickers", "NVDA", "--sleep", "0"],
+    paths,
+    observedAt: OBSERVED_AT,
+    attemptId: "edgar-filings-test-tree-migration",
+    request: async (url) => url.includes("company_tickers")
+      ? response(200, companyTickers())
+      : response(200, submissions()),
+  });
+
+  assert.equal(result.ok, true);
+  const migratedPrivate = JSON.parse(fs.readFileSync(privateAapl, "utf8"));
+  const migratedPublicPath = path.join(paths.publicSummaryRoot, "by-ticker/aapl.json");
+  const migratedPublic = JSON.parse(fs.readFileSync(migratedPublicPath, "utf8"));
+  assert.deepEqual(
+    fs.readFileSync(migratedPublicPath),
+    fs.readFileSync(privateAapl),
+    "unqueried ticker mirrors stay byte-equivalent after migration",
+  );
+  assert.deepEqual(migratedPublic, migratedPrivate);
+  assert.equal(migratedPrivate.updated, legacyAapl.updated, "unqueried acquisition timestamp is preserved");
+  assert.equal(migratedPrivate.source, legacyAapl.source, "unqueried provenance is preserved");
+  assert.equal(migratedPrivate.summaryStatus, legacyAapl.summaryStatus, "unqueried status is preserved");
+  assert.deepEqual(migratedPrivate.filings, legacyAapl.filings, "sparse unqueried filings are preserved");
+  assert.equal(migratedPrivate.persistence_policy.max_distinct_filing_dates_per_ticker, 100);
+  assert.deepEqual(migratedPrivate.persistence_state, {
+    distinct_filing_dates: 1,
+    filings_before: 1,
+    filings_retained: 1,
+    pruned_this_merge: 0,
+    total_pruned_filings: 0,
+  });
+}
+
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "edgar-emitter-plan-"));
   const paths = pathsFor(root);
@@ -107,6 +170,40 @@ assert.deepEqual(edgar.endpoint_contract.assertions, [{
   assert.equal(fs.existsSync(paths.attemptShardPath), true, "plan-only still emits attempt evidence");
   assert.equal(fs.existsSync(paths.edgarCachePath), false);
   assert.equal(fs.existsSync(path.join(paths.summaryRoot, "index.json")), false);
+}
+
+// If no ticker is acquired successfully, the pending tree migration is not
+// published; only the attempt evidence may change.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "edgar-emitter-migration-no-publish-"));
+  const paths = pathsFor(root);
+  const legacyAapl = {
+    ticker: "AAPL",
+    updated: "2026-06-21",
+    filings: [{ accession: "legacy-aapl", filingDate: "2026-06-20" }],
+  };
+  const privateAapl = path.join(paths.summaryRoot, "by-ticker/aapl.json");
+  fs.mkdirSync(path.dirname(privateAapl), { recursive: true });
+  fs.writeFileSync(privateAapl, `${JSON.stringify(legacyAapl, null, 2)}\n`);
+  const before = fs.readFileSync(privateAapl);
+
+  const result = await runEdgarFilingTimeline({
+    argv: ["--tickers", "NVDA", "--sleep", "0"],
+    paths,
+    observedAt: OBSERVED_AT,
+    attemptId: "edgar-filings-test-migration-no-publish",
+    request: async (url) => url.includes("company_tickers")
+      ? response(200, companyTickers())
+      : response(503, "unavailable"),
+  });
+
+  assert.equal(result.ok, false);
+  assert.deepEqual(fs.readFileSync(privateAapl), before, "failed acquisition leaves legacy canonical bytes untouched");
+  assert.equal(
+    fs.existsSync(path.join(paths.publicSummaryRoot, "by-ticker/aapl.json")),
+    false,
+    "failed acquisition does not create a migrated public mirror",
+  );
 }
 
 {
@@ -230,6 +327,242 @@ assert.deepEqual(edgar.endpoint_contract.assertions, [{
   assert.equal(shard.attempts[0].assertions[0].passed, true);
 }
 
+// Publication stages every private/public file before replacing any canonical
+// target. A failure preparing the public side must leave the private tree and
+// its index byte-identical instead of exposing a half-migrated tree.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "edgar-emitter-atomic-publication-"));
+  const paths = pathsFor(root);
+  const legacyAapl = {
+    ticker: "AAPL",
+    updated: "2026-06-21",
+    filings: [{ accession: "legacy-aapl", filingDate: "2026-06-20" }],
+  };
+  const privateAapl = path.join(paths.summaryRoot, "by-ticker/aapl.json");
+  const privateIndex = path.join(paths.summaryRoot, "index.json");
+  fs.mkdirSync(path.dirname(privateAapl), { recursive: true });
+  fs.writeFileSync(privateAapl, `${JSON.stringify(legacyAapl, null, 2)}\n`);
+  fs.writeFileSync(privateIndex, `${JSON.stringify({ tickers: ["AAPL"] }, null, 2)}\n`);
+  const aaplBefore = fs.readFileSync(privateAapl);
+  const indexBefore = fs.readFileSync(privateIndex);
+  const publicBlocker = path.join(root, "public-root-is-a-file");
+  fs.writeFileSync(publicBlocker, "not a directory", "utf8");
+  paths.publicSummaryRoot = publicBlocker;
+
+  await assert.rejects(() => runEdgarFilingTimeline({
+    argv: ["--tickers", "NVDA", "--sleep", "0"],
+    paths,
+    observedAt: OBSERVED_AT,
+    attemptId: "edgar-filings-test-atomic-publication",
+    request: async (url) => url.includes("company_tickers")
+      ? response(200, companyTickers())
+      : response(200, submissions()),
+  }));
+
+  assert.deepEqual(fs.readFileSync(privateAapl), aaplBefore, "private manifest rolls back before canonical replacement");
+  assert.deepEqual(fs.readFileSync(privateIndex), indexBefore, "private index remains byte-identical");
+  assert.deepEqual(
+    fs.readdirSync(path.dirname(privateAapl)).sort(),
+    ["aapl.json"],
+    "staged private files are cleaned after public preparation fails",
+  );
+}
+
+// A failure after canonical replacement begins restores every file already
+// replaced and removes the remaining staged files.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "edgar-emitter-atomic-rollback-"));
+  const first = path.join(root, "first.json");
+  const second = path.join(root, "second.json");
+  const journalPath = path.join(root, "transaction.json");
+  fs.writeFileSync(first, "{\"value\":\"old-first\"}\n");
+  fs.writeFileSync(second, "{\"value\":\"old-second\"}\n");
+  const firstBefore = fs.readFileSync(first);
+  const secondBefore = fs.readFileSync(second);
+  let renameCalls = 0;
+  const failingFileSystem = Object.create(fs);
+  failingFileSystem.renameSync = (...args) => {
+    renameCalls += 1;
+    if (renameCalls === 4) throw new Error("injected second-target rename failure");
+    return fs.renameSync(...args);
+  };
+
+  assert.throws(
+    () => writeJsonBundleTransaction([
+      { filePath: first, payload: { value: "new-first" } },
+      { filePath: second, payload: { value: "new-second" } },
+    ], { fileSystem: failingFileSystem, journalPath, allowedRoots: [root] }),
+    /injected second-target rename failure/,
+  );
+  assert.deepEqual(fs.readFileSync(first), firstBefore, "first replacement is rolled back");
+  assert.deepEqual(fs.readFileSync(second), secondBefore, "uncommitted second target is untouched");
+  assert.deepEqual(
+    fs.readdirSync(root).sort(),
+    ["first.json", "second.json"],
+    "transaction temp and rollback files are cleaned",
+  );
+}
+
+// If rollback itself is interrupted, the durable prepared journal keeps every
+// backup needed for the next invocation to restore the old generation.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "edgar-emitter-journal-recovery-"));
+  const first = path.join(root, "first.json");
+  const second = path.join(root, "second.json");
+  const journalPath = path.join(root, "transaction.json");
+  fs.writeFileSync(first, "{\"value\":\"old-first\"}\n");
+  fs.writeFileSync(second, "{\"value\":\"old-second\"}\n");
+  const firstBefore = fs.readFileSync(first);
+  const secondBefore = fs.readFileSync(second);
+  let renameCalls = 0;
+  const doublyFailingFileSystem = Object.create(fs);
+  doublyFailingFileSystem.renameSync = (...args) => {
+    renameCalls += 1;
+    if (renameCalls === 4 || renameCalls === 6) {
+      throw new Error(`injected rename failure ${renameCalls}`);
+    }
+    return fs.renameSync(...args);
+  };
+
+  assert.throws(
+    () => writeJsonBundleTransaction([
+      { filePath: first, payload: { value: "new-first" } },
+      { filePath: second, payload: { value: "new-second" } },
+    ], { fileSystem: doublyFailingFileSystem, journalPath, allowedRoots: [root] }),
+    /recovery journal retained/,
+  );
+  assert.equal(fs.existsSync(journalPath), true, "prepared journal survives incomplete rollback");
+  const pendingJournal = JSON.parse(fs.readFileSync(journalPath, "utf8"));
+  const staleLegacyJournalTemp = `${journalPath}.${pendingJournal.transaction_id}.tmp`;
+  const staleRolledBackJournalTemp = `${journalPath}.${pendingJournal.transaction_id}.rolled_back.tmp`;
+  fs.writeFileSync(staleLegacyJournalTemp, "interrupted legacy phase write");
+  fs.writeFileSync(staleRolledBackJournalTemp, "interrupted rolled-back phase write");
+  const recovery = recoverJsonBundleTransaction(journalPath, { allowedRoots: [root] });
+  assert.deepEqual(recovery, { recovered: true, phase: "rolled_back" });
+  assert.deepEqual(fs.readFileSync(first), firstBefore);
+  assert.deepEqual(fs.readFileSync(second), secondBefore);
+  assert.deepEqual(
+    fs.readdirSync(root).sort(),
+    ["first.json", "second.json"],
+    "one next-run recovery cleans journal, stale phase temps, backups, and staged files",
+  );
+}
+
+// A tampered recovery journal cannot target paths outside the two approved
+// summary roots.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "edgar-emitter-journal-scope-"));
+  const allowedRoot = path.join(root, "allowed");
+  const outside = path.join(root, "outside.json");
+  const journalPath = path.join(root, "transaction.json");
+  fs.mkdirSync(allowedRoot, { recursive: true });
+  fs.writeFileSync(outside, "{\"protected\":true}\n");
+  const outsideBefore = fs.readFileSync(outside);
+  const transactionId = "00000000-0000-4000-8000-000000000000";
+  const tempPath = path.join(root, `.outside.json.${transactionId}.0.tmp`);
+  fs.writeFileSync(journalPath, `${JSON.stringify({
+    schema_version: EDGAR_PUBLICATION_JOURNAL_SCHEMA,
+    transaction_id: transactionId,
+    phase: "prepared",
+    entries: [{
+      file_path: outside,
+      temp_path: tempPath,
+      backup_path: null,
+    }],
+  }, null, 2)}\n`);
+  assert.throws(
+    () => recoverJsonBundleTransaction(journalPath, { allowedRoots: [allowedRoot] }),
+    /journal contract is invalid/,
+  );
+  assert.deepEqual(fs.readFileSync(outside), outsideBefore);
+  assert.equal(fs.existsSync(journalPath), true, "invalid journal is retained for manual inspection");
+}
+
+// The initial write path enforces the same roots before creating a journal,
+// not only when a later recovery loads one.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "edgar-emitter-write-scope-"));
+  const allowedRoot = path.join(root, "allowed");
+  const outside = path.join(root, "outside.json");
+  const journalPath = path.join(root, "transaction.json");
+  fs.mkdirSync(allowedRoot, { recursive: true });
+  assert.throws(
+    () => writeJsonBundleTransaction([
+      { filePath: outside, payload: { escaped: true } },
+    ], { journalPath, allowedRoots: [allowedRoot] }),
+    /outside the allowed roots/,
+  );
+  assert.equal(fs.existsSync(outside), false);
+  assert.equal(fs.existsSync(journalPath), false);
+}
+
+// Lexically in-root paths are still rejected when an existing symlinked parent
+// resolves outside the approved root, for both fresh writes and journal replay.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "edgar-emitter-symlink-scope-"));
+  const allowedRoot = path.join(root, "allowed");
+  const outsideRoot = path.join(root, "outside");
+  const link = path.join(allowedRoot, "link");
+  const victim = path.join(outsideRoot, "victim.json");
+  const targetThroughLink = path.join(link, "victim.json");
+  const journalPath = path.join(root, "transaction.json");
+  fs.mkdirSync(allowedRoot, { recursive: true });
+  fs.mkdirSync(outsideRoot, { recursive: true });
+  fs.writeFileSync(victim, "{\"protected\":true}\n");
+  const victimBefore = fs.readFileSync(victim);
+  fs.symlinkSync(outsideRoot, link);
+
+  assert.throws(
+    () => writeJsonBundleTransaction([
+      { filePath: targetThroughLink, payload: { escaped: true } },
+    ], { journalPath, allowedRoots: [allowedRoot] }),
+    /outside the allowed roots/,
+  );
+
+  const transactionId = "00000000-0000-4000-8000-000000000000";
+  const tempPath = path.join(link, `.victim.json.${transactionId}.0.tmp`);
+  fs.writeFileSync(journalPath, `${JSON.stringify({
+    schema_version: EDGAR_PUBLICATION_JOURNAL_SCHEMA,
+    transaction_id: transactionId,
+    phase: "prepared",
+    entries: [{
+      file_path: targetThroughLink,
+      temp_path: tempPath,
+      backup_path: null,
+    }],
+  }, null, 2)}\n`);
+  assert.throws(
+    () => recoverJsonBundleTransaction(journalPath, { allowedRoots: [allowedRoot] }),
+    /journal contract is invalid/,
+  );
+  assert.deepEqual(fs.readFileSync(victim), victimBefore);
+  assert.equal(fs.existsSync(journalPath), true);
+}
+
+// A successful response with zero allowed forms still publishes the manifest
+// named by the index, preserving exact index/file parity.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "edgar-emitter-zero-qualified-"));
+  const paths = pathsFor(root);
+  const result = await runEdgarFilingTimeline({
+    argv: ["--tickers", "NVDA", "--sleep", "0"],
+    paths,
+    observedAt: OBSERVED_AT,
+    attemptId: "edgar-filings-test-zero-qualified",
+    request: async (url) => url.includes("company_tickers")
+      ? response(200, companyTickers())
+      : response(200, submissions(["S-1"])),
+  });
+  assert.equal(result.ok, true);
+  const index = JSON.parse(fs.readFileSync(path.join(paths.summaryRoot, "index.json"), "utf8"));
+  assert.deepEqual(index.tickers, ["NVDA"]);
+  const privateManifest = path.join(paths.summaryRoot, "by-ticker/nvda.json");
+  const publicManifest = path.join(paths.publicSummaryRoot, "by-ticker/nvda.json");
+  assert.equal(fs.existsSync(privateManifest), true);
+  assert.deepEqual(fs.readFileSync(privateManifest), fs.readFileSync(publicManifest));
+  assert.deepEqual(JSON.parse(fs.readFileSync(privateManifest, "utf8")).filings, []);
+}
+
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "edgar-emitter-drift-"));
   const paths = pathsFor(root);
@@ -348,6 +681,43 @@ assert.deepEqual(edgar.endpoint_contract.assertions, [{
 
   // retainLatestFilingDates rejects a non-positive cap outright.
   assert.throws(() => retainLatestFilingDates([], { max_distinct_filing_dates_per_ticker: 0 }), /invalid EDGAR persistence/);
+
+  // Existing-manifest migration preserves metadata, prunes once, and keeps the
+  // cumulative counter stable on subsequent applications.
+  const legacy = {
+    ticker: "NVDA",
+    updated: "2026-06-21",
+    source: "legacy source",
+    summaryStatus: "partial",
+    filings: Array.from({ length: 105 }, (_, index) => filing(index)),
+  };
+  const migrated = applyPersistenceToExistingManifest(legacy);
+  assert.equal(migrated.updated, legacy.updated);
+  assert.equal(migrated.source, legacy.source);
+  assert.equal(migrated.summaryStatus, legacy.summaryStatus);
+  assert.equal(migrated.filings.length, 100);
+  assert.equal(migrated.persistence_state.pruned_this_merge, 5);
+  assert.equal(migrated.persistence_state.total_pruned_filings, 5);
+  const migratedAgain = applyPersistenceToExistingManifest(migrated);
+  assert.deepEqual(migratedAgain.filings, migrated.filings);
+  assert.equal(migratedAgain.persistence_state.pruned_this_merge, 0);
+  assert.equal(migratedAgain.persistence_state.total_pruned_filings, 5);
+  assert.throws(
+    () => applyPersistenceToExistingManifest({
+      ticker: "BROKEN",
+      filings: [{ accession: "bad", filingDate: "2026-99-99" }],
+    }),
+    /invalid EDGAR persistence filingDate/,
+    "an unqueried malformed manifest blocks the full-tree migration",
+  );
+  assert.throws(
+    () => applyPersistenceToExistingManifest({
+      ticker: "NORMALIZED-BAD-DATE",
+      filings: [{ accession: "bad", filingDate: "2026-02-30" }],
+    }),
+    /invalid EDGAR persistence filingDate/,
+    "calendar-overflow dates must not pass through Date normalization",
+  );
 }
 
 console.log("test-build-edgar-filing-timeline: ok");

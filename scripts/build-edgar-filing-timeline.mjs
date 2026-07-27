@@ -14,7 +14,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import {
   loadJsonGuarded,
@@ -188,6 +188,291 @@ function writeJson(filePath, payload) {
   fs.writeFileSync(filePath, `${JSON.stringify(payload, null, 2)}\n`);
 }
 
+const EDGAR_PUBLICATION_JOURNAL_SCHEMA = "edgar-publication-transaction/v1";
+
+function publicationJournalPath(paths) {
+  return path.join(
+    path.dirname(paths.summaryRoot),
+    ".edgar-korean-summaries-publication-transaction.json",
+  );
+}
+
+function removeFiles(fileSystem, filePaths) {
+  const errors = [];
+  for (const filePath of filePaths) {
+    if (!filePath) continue;
+    try {
+      fileSystem.rmSync(filePath, { force: true });
+    } catch (error) {
+      errors.push(new Error(`${filePath}: ${error.message}`, { cause: error }));
+    }
+  }
+  return errors;
+}
+
+function writeTransactionJournal(fileSystem, journalPath, journal) {
+  fileSystem.mkdirSync(path.dirname(journalPath), { recursive: true });
+  const temporary = `${journalPath}.${journal.transaction_id}.${journal.phase}.tmp`;
+  const staleErrors = removeFiles(fileSystem, [temporary]);
+  if (staleErrors.length > 0) {
+    throw new AggregateError(staleErrors, "stale EDGAR publication journal temp cleanup failed");
+  }
+  try {
+    fileSystem.writeFileSync(temporary, `${JSON.stringify(journal, null, 2)}\n`, { flag: "wx" });
+    fileSystem.renameSync(temporary, journalPath);
+  } catch (error) {
+    const cleanupErrors = removeFiles(fileSystem, [temporary]);
+    if (cleanupErrors.length > 0) {
+      throw new AggregateError(
+        [error, ...cleanupErrors],
+        "EDGAR publication journal write and cleanup failed",
+      );
+    }
+    throw error;
+  }
+}
+
+function prospectiveRealPath(fileSystem, filePath) {
+  let ancestor = path.resolve(filePath);
+  const missing = [];
+  while (!fileSystem.existsSync(ancestor)) {
+    const parent = path.dirname(ancestor);
+    if (parent === ancestor) throw new Error(`no existing ancestor for path: ${filePath}`);
+    missing.unshift(path.basename(ancestor));
+    ancestor = parent;
+  }
+  return path.resolve(fileSystem.realpathSync(ancestor), ...missing);
+}
+
+function pathWithinRoots(fileSystem, filePath, allowedRoots) {
+  const resolved = prospectiveRealPath(fileSystem, filePath);
+  return allowedRoots.some((root) => {
+    const relative = path.relative(prospectiveRealPath(fileSystem, root), resolved);
+    return relative === "" || (!relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+  });
+}
+
+function loadTransactionJournal(fileSystem, journalPath, allowedRoots) {
+  let journal;
+  try {
+    journal = JSON.parse(fileSystem.readFileSync(journalPath, "utf8"));
+  } catch (error) {
+    throw new Error(`EDGAR publication journal is unreadable: ${error.message}`, { cause: error });
+  }
+  const validRoots = Array.isArray(allowedRoots) && allowedRoots.length > 0;
+  const journalTargets = new Set();
+  const validEntries = validRoots && Array.isArray(journal?.entries) && journal.entries.every((entry) => {
+    if (
+      typeof entry?.file_path !== "string"
+      || typeof entry?.temp_path !== "string"
+      || (entry.backup_path !== null && typeof entry.backup_path !== "string")
+      || !path.isAbsolute(entry.file_path)
+      || !path.isAbsolute(entry.temp_path)
+      || (entry.backup_path !== null && !path.isAbsolute(entry.backup_path))
+      || !pathWithinRoots(fileSystem, entry.file_path, allowedRoots)
+      || journalTargets.has(path.resolve(entry.file_path))
+      || path.dirname(path.resolve(entry.temp_path)) !== path.dirname(path.resolve(entry.file_path))
+      || !path.basename(entry.temp_path).startsWith(
+        `.${path.basename(entry.file_path)}.${journal.transaction_id}.`,
+      )
+      || !entry.temp_path.endsWith(".tmp")
+    ) return false;
+    journalTargets.add(path.resolve(entry.file_path));
+    return entry.backup_path === null || entry.backup_path === `${entry.temp_path}.backup`;
+  });
+  if (
+    journal?.schema_version !== EDGAR_PUBLICATION_JOURNAL_SCHEMA
+    || !["staging", "prepared", "committed", "rolled_back"].includes(journal.phase)
+    || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      journal.transaction_id ?? "",
+    )
+    || !validRoots
+    || !validEntries
+  ) {
+    throw new Error("EDGAR publication journal contract is invalid");
+  }
+  return journal;
+}
+
+function cleanupTransaction(fileSystem, journalPath, journal) {
+  const artifactPaths = journal.entries.flatMap((entry) => [
+    entry.temp_path,
+    entry.backup_path,
+    `${entry.temp_path}.restore`,
+  ]);
+  artifactPaths.push(
+    `${journalPath}.${journal.transaction_id}.tmp`,
+    ...["staging", "prepared", "committed", "rolled_back"].map(
+      (phase) => `${journalPath}.${journal.transaction_id}.${phase}.tmp`,
+    ),
+  );
+  const artifactErrors = removeFiles(fileSystem, artifactPaths);
+  if (artifactErrors.length > 0) {
+    throw new AggregateError(artifactErrors, "EDGAR publication transaction cleanup failed");
+  }
+  const journalErrors = removeFiles(fileSystem, [journalPath]);
+  if (journalErrors.length > 0) {
+    throw new AggregateError(journalErrors, "EDGAR publication journal cleanup failed");
+  }
+}
+
+function recoverJsonBundleTransaction(journalPath, {
+  fileSystem = fs,
+  allowedRoots,
+} = {}) {
+  if (
+    !Array.isArray(allowedRoots)
+    || allowedRoots.length === 0
+    || !path.isAbsolute(journalPath)
+    || !pathWithinRoots(
+      fileSystem,
+      journalPath,
+      [path.dirname(path.resolve(allowedRoots[0]))],
+    )
+  ) {
+    throw new Error("EDGAR publication journal path or allowed roots are invalid");
+  }
+  if (!fileSystem.existsSync(journalPath)) return { recovered: false, phase: null };
+  const journal = loadTransactionJournal(fileSystem, journalPath, allowedRoots);
+  if (["staging", "committed", "rolled_back"].includes(journal.phase)) {
+    cleanupTransaction(fileSystem, journalPath, journal);
+    return { recovered: true, phase: journal.phase };
+  }
+
+  const rollbackErrors = [];
+  for (const entry of [...journal.entries].reverse()) {
+    const restorePath = `${entry.temp_path}.restore`;
+    try {
+      if (entry.backup_path === null) {
+        fileSystem.rmSync(entry.file_path, { force: true });
+      } else {
+        if (!fileSystem.existsSync(entry.backup_path)) {
+          throw new Error(`missing EDGAR publication backup: ${entry.backup_path}`);
+        }
+        fileSystem.writeFileSync(
+          restorePath,
+          fileSystem.readFileSync(entry.backup_path),
+          { flag: "wx" },
+        );
+        fileSystem.renameSync(restorePath, entry.file_path);
+      }
+    } catch (error) {
+      rollbackErrors.push(new Error(`${entry.file_path}: ${error.message}`, { cause: error }));
+    } finally {
+      rollbackErrors.push(...removeFiles(fileSystem, [restorePath]));
+    }
+  }
+  if (rollbackErrors.length > 0) {
+    throw new AggregateError(
+      rollbackErrors,
+      "EDGAR publication rollback is incomplete; journal retained for the next run",
+    );
+  }
+  const rolledBack = { ...journal, phase: "rolled_back" };
+  writeTransactionJournal(fileSystem, journalPath, rolledBack);
+  cleanupTransaction(fileSystem, journalPath, rolledBack);
+  return { recovered: true, phase: "rolled_back" };
+}
+
+function writeJsonBundleTransaction(entries, {
+  fileSystem = fs,
+  journalPath,
+  allowedRoots,
+} = {}) {
+  if (!journalPath) throw new Error("EDGAR publication transaction requires a journal path");
+  if (!Array.isArray(allowedRoots) || allowedRoots.length === 0) {
+    throw new Error("EDGAR publication transaction requires allowed roots");
+  }
+  recoverJsonBundleTransaction(journalPath, { fileSystem, allowedRoots });
+  const seen = new Set();
+  const transactionId = randomUUID();
+  const staged = [];
+  let journalWritten = false;
+
+  for (const [index, entry] of entries.entries()) {
+    const resolvedTarget = path.resolve(entry.filePath);
+    if (
+      !path.isAbsolute(entry.filePath)
+      || !pathWithinRoots(fileSystem, resolvedTarget, allowedRoots)
+    ) {
+      throw new Error(`EDGAR publication target is outside the allowed roots: ${entry.filePath}`);
+    }
+    if (seen.has(resolvedTarget)) {
+      throw new Error(`duplicate EDGAR publication target: ${entry.filePath}`);
+    }
+    seen.add(resolvedTarget);
+    const tempPath = path.join(
+      path.dirname(resolvedTarget),
+      `.${path.basename(resolvedTarget)}.${transactionId}.${index}.tmp`,
+    );
+    const backupPath = fileSystem.existsSync(resolvedTarget)
+      ? `${tempPath}.backup`
+      : null;
+    staged.push({ ...entry, filePath: resolvedTarget, tempPath, backupPath });
+  }
+
+  let journal = {
+    schema_version: EDGAR_PUBLICATION_JOURNAL_SCHEMA,
+    transaction_id: transactionId,
+    phase: "staging",
+    entries: staged.map((entry) => ({
+      file_path: entry.filePath,
+      temp_path: entry.tempPath,
+      backup_path: entry.backupPath,
+    })),
+  };
+  try {
+    writeTransactionJournal(fileSystem, journalPath, journal);
+    journalWritten = true;
+    for (const entry of staged) {
+      fileSystem.mkdirSync(path.dirname(entry.filePath), { recursive: true });
+      if (entry.backupPath) {
+        fileSystem.writeFileSync(
+          entry.backupPath,
+          fileSystem.readFileSync(entry.filePath),
+          { flag: "wx" },
+        );
+      }
+      fileSystem.writeFileSync(
+        entry.tempPath,
+        `${JSON.stringify(entry.payload, null, 2)}\n`,
+        { flag: "wx" },
+      );
+    }
+    journal = { ...journal, phase: "prepared" };
+    writeTransactionJournal(fileSystem, journalPath, journal);
+    for (const entry of staged) {
+      fileSystem.renameSync(entry.tempPath, entry.filePath);
+    }
+    const committed = { ...journal, phase: "committed" };
+    writeTransactionJournal(fileSystem, journalPath, committed);
+    cleanupTransaction(fileSystem, journalPath, committed);
+  } catch (transactionError) {
+    if (!journalWritten) {
+      const cleanupErrors = removeFiles(
+        fileSystem,
+        staged.flatMap((entry) => [entry.tempPath, entry.backupPath]),
+      );
+      if (cleanupErrors.length > 0) {
+        throw new AggregateError(
+          [transactionError, ...cleanupErrors],
+          "EDGAR publication transaction setup and cleanup failed",
+        );
+      }
+      throw transactionError;
+    }
+    try {
+      recoverJsonBundleTransaction(journalPath, { fileSystem, allowedRoots });
+    } catch (rollbackError) {
+      throw new AggregateError(
+        [transactionError, rollbackError],
+        "EDGAR publication transaction failed; recovery journal retained",
+      );
+    }
+    throw transactionError;
+  }
+}
+
 function readExistingJson(filePath, fallback, guardFn) {
   return fs.existsSync(filePath) ? loadJsonGuarded(filePath, guardFn) : fallback;
 }
@@ -346,7 +631,13 @@ function isReadySummaryRow(row) {
 
 function assertValidFilingDate(value) {
   const text = String(value ?? "");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(text) || !Number.isFinite(Date.parse(text))) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+  const parsed = match ? new Date(`${text}T00:00:00Z`) : null;
+  if (
+    !parsed
+    || !Number.isFinite(parsed.getTime())
+    || parsed.toISOString().slice(0, 10) !== text
+  ) {
     throw new Error(`invalid EDGAR persistence filingDate: ${value}`);
   }
   return text;
@@ -375,6 +666,30 @@ function retainLatestFilingDates(filings, policy = EDGAR_PERSISTENCE_POLICY) {
       filings_retained: retained.length,
       pruned: rows.length - retained.length,
     },
+  };
+}
+
+// Upgrade every already-published ticker manifest through the same bounded
+// persistence contract used for newly fetched tickers. This lets the normal
+// limited universe poll migrate the entire canonical tree without pretending
+// that unqueried tickers were freshly acquired. Existing provenance/status
+// fields remain untouched; malformed dates fail the whole publication closed.
+function applyPersistenceToExistingManifest(manifest) {
+  const capped = retainLatestFilingDates(manifest?.filings);
+  const previousTotalPruned = Number(manifest?.persistence_state?.total_pruned_filings);
+  const prunedThisMigration = capped.stats.pruned;
+  return {
+    ...manifest,
+    persistence_policy: EDGAR_PERSISTENCE_POLICY,
+    persistence_state: {
+      distinct_filing_dates: capped.stats.distinct_filing_dates,
+      filings_before: capped.stats.filings_before,
+      filings_retained: capped.stats.filings_retained,
+      pruned_this_merge: prunedThisMigration,
+      total_pruned_filings: (Number.isFinite(previousTotalPruned) ? previousTotalPruned : 0)
+        + prunedThisMigration,
+    },
+    filings: capped.rows,
   };
 }
 
@@ -593,19 +908,21 @@ function applyEdgarLkgStore({ repoRoot: storeRepoRoot, markerPath, manifests, st
   return { kind: "success", updated: true, recovered, sourceAsOf };
 }
 
-function writeManifestMirror(paths, ticker, manifest) {
+function manifestMirrorEntries(paths, ticker, manifest) {
   const fileName = `${ticker.toLowerCase()}.json`;
-  writeJson(path.join(paths.summaryRoot, "by-ticker", fileName), manifest);
-  writeJson(path.join(paths.publicSummaryRoot, "by-ticker", fileName), manifest);
+  return [
+    { filePath: path.join(paths.summaryRoot, "by-ticker", fileName), payload: manifest },
+    { filePath: path.join(paths.publicSummaryRoot, "by-ticker", fileName), payload: manifest },
+  ];
 }
 
-function writeIndex(paths, { manifests, updated, generatedAt }) {
+function buildIndex({ manifests, updated, generatedAt }) {
   const tickers = [...manifests.keys()].sort();
   const byTicker = {};
   for (const ticker of tickers) {
     byTicker[ticker] = `/data/edgar-korean-summaries/by-ticker/${ticker.toLowerCase()}.json`;
   }
-  const payload = {
+  return {
     schemaVersion: 1,
     artifactType: "edgar_korean_summary_index",
     updated,
@@ -613,8 +930,26 @@ function writeIndex(paths, { manifests, updated, generatedAt }) {
     tickers,
     byTicker,
   };
-  writeJson(path.join(paths.summaryRoot, "index.json"), payload);
-  writeJson(path.join(paths.publicSummaryRoot, "index.json"), payload);
+}
+
+function writePublicationBundle(paths, {
+  manifests,
+  updated,
+  generatedAt,
+}) {
+  const entries = [];
+  for (const [ticker, manifest] of manifests) {
+    entries.push(...manifestMirrorEntries(paths, ticker, manifest));
+  }
+  const index = buildIndex({ manifests, updated, generatedAt });
+  entries.push(
+    { filePath: path.join(paths.summaryRoot, "index.json"), payload: index },
+    { filePath: path.join(paths.publicSummaryRoot, "index.json"), payload: index },
+  );
+  writeJsonBundleTransaction(entries, {
+    journalPath: publicationJournalPath(paths),
+    allowedRoots: [paths.summaryRoot, paths.publicSummaryRoot],
+  });
 }
 
 function thrownResult(error) {
@@ -659,6 +994,9 @@ export async function runEdgarFilingTimeline({
 
   try {
     args = parseArgs(argv);
+    recoverJsonBundleTransaction(publicationJournalPath(paths), {
+      allowedRoots: [paths.summaryRoot, paths.publicSummaryRoot],
+    });
     // Additive LKG recovery: engage only for the automatic weekly universe poll
     // (no --tickers override, no --full-universe, no --plan-only). Manual subset
     // polls, backfills, plan-only runs, and every caller without an explicit
@@ -717,7 +1055,12 @@ export async function runEdgarFilingTimeline({
     }
     const cikMap = buildCikMap(company.rows);
     const existingManifests = loadExistingManifests(paths);
-    const nextManifests = new Map(existingManifests);
+    const nextManifests = new Map(
+      [...existingManifests.entries()].map(([ticker, manifest]) => [
+        ticker,
+        applyPersistenceToExistingManifest(manifest),
+      ]),
+    );
 
     if (!args.planOnly) writeJson(paths.edgarCachePath, company.cache);
 
@@ -758,7 +1101,7 @@ export async function runEdgarFilingTimeline({
           limit: args.filingsPerTicker,
         });
         stats.filings += discoveredRows.length;
-        const existingManifest = existingManifests.get(ticker);
+        const existingManifest = nextManifests.get(ticker);
         const readyBefore = (existingManifest?.filings ?? []).filter(isReadySummaryRow).length;
         const manifest = mergeFilings({
           ticker,
@@ -771,14 +1114,17 @@ export async function runEdgarFilingTimeline({
         const readyAfter = manifest.filings.filter(isReadySummaryRow).length;
         stats.readyPreserved += Math.min(readyBefore, readyAfter);
         nextManifests.set(ticker, manifest);
-        if (!args.planOnly && manifest.filings.length > 0) writeManifestMirror(paths, ticker, manifest);
         console.log(`  ${ticker}: filings=${manifest.filings.length} ready=${readyAfter} cik=${cikRow.cik}`);
       }
       if (args.sleep > 0) await sleepFn(args.sleep * 1000);
     }
 
     if (!args.planOnly && stats.fetched > 0) {
-      writeIndex(paths, { manifests: nextManifests, updated, generatedAt: observedAt });
+      writePublicationBundle(paths, {
+        manifests: nextManifests,
+        updated,
+        generatedAt: observedAt,
+      });
     }
 
     if (manageLkg) {
@@ -858,6 +1204,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 }
 
 export {
+  applyPersistenceToExistingManifest,
   applyEdgarLkgStore,
   buildEdgarFreshnessMarker,
   edgarMarkerPathFor,
@@ -866,6 +1213,9 @@ export {
   mergeFilings,
   retainLatestFilingDates,
   validEdgarFreshnessMarker,
+  recoverJsonBundleTransaction,
+  writeJsonBundleTransaction,
+  EDGAR_PUBLICATION_JOURNAL_SCHEMA,
   EDGAR_FRESHNESS_MARKER_SCHEMA,
   EDGAR_LANE_ID,
   EDGAR_LKG_KEY,
