@@ -1,11 +1,9 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "sentiment",
-  "updated_at": "2026-07-27T15:37:07.551Z",
+  "updated_at": "2026-07-27T22:50:42.300Z",
   "retry_set": [
-    "cnn",
-    "crypto",
-    "move"
+    "cnn"
   ],
   "items": {
     "cnn": {
@@ -22,7 +20,7 @@
         "payload_sha256": "f705d10d057c81dc93702c0254a1b48fc1a1b776827582e6315a5be95b64381d",
         "source_as_of": "2026-07-27"
       },
-      "updated_at": "2026-07-27T15:35:09.917Z",
+      "updated_at": "2026-07-27T22:50:42.300Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
@@ -43,6 +41,12 @@
         "run_attempt": 1,
         "observed_at": "2026-07-27T15:35:09.917Z",
         "reason": "controlled_failure"
+      },
+      "latest_promotion_deferral": {
+        "run_id": "30312085310",
+        "run_attempt": 1,
+        "observed_at": "2026-07-27T22:50:42.300Z",
+        "reason": "recovery_not_advanced_by_provider"
       }
     },
     "cftc": {
@@ -54,7 +58,7 @@
         "payload_sha256": "90f3c8d0c14e897e5a1c43e6c4b4adcb0262693148d008445869ba3e550c4d06",
         "source_as_of": "2026-07-21"
       },
-      "updated_at": "2026-07-27T15:37:07.551Z",
+      "updated_at": "2026-07-27T22:50:42.300Z",
       "lkg": {
         "path": "data/admin/sentiment/lkg/cftc.json",
         "payload_sha256": "e3a5dd453618d71b0dea3d946a04ad171e92c70570906c62f1cb2a4ebe699f94",
@@ -65,9 +69,9 @@
         "schema_version": "provider_observation/v2",
         "payload_sha256": "025a3064ea9804f35212ed21653786f5bf945bddc40e7ca82cfc8c6ea34a87e9",
         "source_as_of": "2026-07-21",
-        "run_id": "30280775399",
+        "run_id": "30312085310",
         "run_attempt": 1,
-        "observed_at": "2026-07-27T15:37:07.551Z"
+        "observed_at": "2026-07-27T22:50:42.300Z"
       },
       "recovered_from_run_id": "29466936989",
       "recovered_at": "2026-07-17T23:36:00.434Z",
@@ -87,10 +91,10 @@
       "retry": false,
       "current": {
         "path": "data/admin/sentiment/current/vix.json",
-        "payload_sha256": "480b8923a657232be303bde18d400d142974008c3d18f1cf03d507281355bb06",
+        "payload_sha256": "2574760f5e971470361d0b52053f663e6baacaee71a9fd7fbe59bd4c9635bb3b",
         "source_as_of": "2026-07-27"
       },
-      "updated_at": "2026-07-27T15:37:07.551Z",
+      "updated_at": "2026-07-27T22:50:42.300Z",
       "lkg": {
         "path": "data/admin/sentiment/lkg/vix.json",
         "payload_sha256": "ee270df56219e53141ef5424f9dc7ef8d6b114e1b4905b991fc6f301fbcb5a89",
@@ -99,11 +103,11 @@
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "1e046c96059d775a08d9e6a7d642d3a0b2052ed48faa7f3eb6848947b6b9eecb",
+        "payload_sha256": "7183a34e8e176b9a6b009d4792cfabc28f4cf04f0bee36d508d3de1f6ea5272d",
         "source_as_of": "2026-07-27",
-        "run_id": "30280775399",
+        "run_id": "30312085310",
         "run_attempt": 1,
-        "observed_at": "2026-07-27T15:37:07.551Z"
+        "observed_at": "2026-07-27T22:50:42.300Z"
       },
       "recovered_from_run_id": "29467122930",
       "recovered_at": "2026-07-16T22:56:18.302Z",
@@ -119,14 +123,14 @@
     },
     "move": {
       "key": "move",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/sentiment/lkg/move.json",
-        "payload_sha256": "2254f76c8904babca187ca10e6d24e8640c415f0aa0bd87830ae53b03f74aa7d",
-        "source_as_of": "2026-07-24"
+        "path": "data/admin/sentiment/current/move.json",
+        "payload_sha256": "7dfb90f4eb3ca35efc2aea932d96e2e0c6515884e19990ec1a6efea5324f1140",
+        "source_as_of": "2026-07-27"
       },
-      "updated_at": "2026-07-27T15:37:07.551Z",
+      "updated_at": "2026-07-27T22:50:42.300Z",
       "lkg": {
         "path": "data/admin/sentiment/lkg/move.json",
         "payload_sha256": "2254f76c8904babca187ca10e6d24e8640c415f0aa0bd87830ae53b03f74aa7d",
@@ -135,50 +139,54 @@
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "35b0027c752cb08edf771567e7dfcbe27b5bea61e860ac8c543bd8ccb01f7652",
-        "source_as_of": "2026-07-17",
-        "run_id": "30280615811",
+        "payload_sha256": "3a8fc669db40c08241f7beaf1c14ef4e560fbec34efc994a6415bef6e898507f",
+        "source_as_of": "2026-07-27",
+        "run_id": "30312085310",
         "run_attempt": 1,
-        "observed_at": "2026-07-27T15:35:09.917Z"
+        "observed_at": "2026-07-27T22:50:42.300Z"
       },
       "last_recovered_failure": {
-        "run_id": "29467331258",
-        "run_attempt": 1,
-        "observed_at": "2026-07-16T02:49:18.719Z",
-        "reason": "controlled_failure"
-      },
-      "latest_failure": {
         "run_id": "30280775399",
         "run_attempt": 1,
         "observed_at": "2026-07-27T15:37:07.551Z",
         "reason": "controlled_failure"
-      }
+      },
+      "recovered_from_run_id": "30280775399",
+      "recovered_at": "2026-07-27T22:50:42.300Z",
+      "recovery_run_id": "30312085310",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule"
     },
     "crypto": {
       "key": "crypto",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/sentiment/lkg/crypto.json",
-        "payload_sha256": "255b8c805cd4afbb7683d435902efc0a915e1ed0ea9d81273155c3764ce218f9",
-        "source_as_of": "2026-07-24"
+        "path": "data/admin/sentiment/current/crypto.json",
+        "payload_sha256": "9a981343b5c4fec88e2ad0c26a1595151846476c85ddb8e9b939082cb32f174d",
+        "source_as_of": "2026-07-27"
       },
-      "updated_at": "2026-07-27T14:45:40.786Z",
+      "updated_at": "2026-07-27T22:50:42.300Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "7c35b011b9357290242fe1868c68103330deb71d9bd74647d02acdbc0d4db24e",
-        "source_as_of": "2026-07-24",
-        "run_id": "30132177018",
+        "payload_sha256": "d4f241041bef5505b80559513910a4756f49be4074b6ac0dc3c0fefa1d32be7a",
+        "source_as_of": "2026-07-27",
+        "run_id": "30312085310",
         "run_attempt": 1,
-        "observed_at": "2026-07-24T22:52:40.360Z"
+        "observed_at": "2026-07-27T22:50:42.300Z"
       },
       "lkg": {
         "path": "data/admin/sentiment/lkg/crypto.json",
         "payload_sha256": "255b8c805cd4afbb7683d435902efc0a915e1ed0ea9d81273155c3764ce218f9",
         "source_as_of": "2026-07-24"
       },
-      "latest_failure": {
+      "recovered_from_run_id": "30276485905",
+      "recovered_at": "2026-07-27T22:50:42.300Z",
+      "recovery_run_id": "30312085310",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "last_recovered_failure": {
         "run_id": "30276485905",
         "run_attempt": 1,
         "observed_at": "2026-07-27T14:45:40.786Z",
