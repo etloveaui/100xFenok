@@ -1,19 +1,21 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "oecd_cli",
-  "updated_at": "2026-07-27T11:01:46.292Z",
-  "retry_set": [],
+  "updated_at": "2026-07-27T11:55:16.105Z",
+  "retry_set": [
+    "oecd_cli"
+  ],
   "items": {
     "oecd_cli": {
       "key": "oecd_cli",
-      "resolution_state": "fresh_primary",
-      "retry": false,
+      "resolution_state": "lkg_primary",
+      "retry": true,
       "current": {
-        "path": "data/admin/oecd_cli/shadow/oecd-cli.json",
+        "path": "data/admin/oecd_cli/lkg/oecd_cli.json",
         "payload_sha256": "31aa16a2a4cf493377c9cd7a271d9ce053d3dbfa550761c7bf38d85edbbd5ffc",
         "source_as_of": "2026-06-01"
       },
-      "updated_at": "2026-07-27T11:01:46.292Z",
+      "updated_at": "2026-07-27T11:55:16.105Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
@@ -22,6 +24,17 @@
         "run_id": "30260263485",
         "run_attempt": 1,
         "observed_at": "2026-07-27T11:01:46.292Z"
+      },
+      "lkg": {
+        "path": "data/admin/oecd_cli/lkg/oecd_cli.json",
+        "payload_sha256": "31aa16a2a4cf493377c9cd7a271d9ce053d3dbfa550761c7bf38d85edbbd5ffc",
+        "source_as_of": "2026-06-01"
+      },
+      "latest_failure": {
+        "run_id": "30263715684",
+        "run_attempt": 1,
+        "observed_at": "2026-07-27T11:55:16.105Z",
+        "reason": "controlled_failure"
       }
     }
   }
