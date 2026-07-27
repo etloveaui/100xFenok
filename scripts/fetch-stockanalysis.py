@@ -3147,7 +3147,15 @@ def record_etf_detail_observation(
     observed_at: str,
     validation_status: str,
     reason_code: str,
+    collection_origin: str = "natural",
 ) -> dict:
+    if collection_origin not in {"natural", "manual"}:
+        raise ValueError("ETF detail collection origin must be natural or manual")
+    origin_fields = (
+        {"observation_origin": "natural"}
+        if collection_origin == "natural"
+        else {"observation_origin": "rebuild", "collection_origin": "manual"}
+    )
     row = {
         "schema_version": "data-supply-observation/v1",
         "provider": provider,
@@ -3161,7 +3169,7 @@ def record_etf_detail_observation(
         "observed_at": observed_at,
         "validation_status": validation_status,
         "reason_code": reason_code,
-        "observation_origin": "natural",
+        **origin_fields,
     }
     row["event_id"] = deterministic_event_id("observation", row)
     store = data_supply_store(provider_truth_root=STORAGE_ROOT)
@@ -3181,7 +3189,15 @@ def record_etf_detail_failure_observation(
     reason_code: str,
     failure_detail: str,
     failure_signature: dict | None = None,
+    collection_origin: str = "natural",
 ) -> dict:
+    if collection_origin not in {"natural", "manual"}:
+        raise ValueError("ETF detail collection origin must be natural or manual")
+    origin_fields = (
+        {"observation_origin": "natural"}
+        if collection_origin == "natural"
+        else {"observation_origin": "rebuild", "collection_origin": "manual"}
+    )
     observed_at = now_iso()
     failure_descriptor = {
         "provider": provider,
@@ -3205,7 +3221,7 @@ def record_etf_detail_failure_observation(
         "observed_at": observed_at,
         "validation_status": "invalid",
         "reason_code": reason_code,
-        "observation_origin": "natural",
+        **origin_fields,
         "payload_available": False,
         "failure_detail_sha256": failure_descriptor["failure_detail_sha256"],
     }
@@ -3229,6 +3245,7 @@ def record_etf_detail_unavailability_observation(
     ticker: str,
     provider_path: str,
     failure_detail: str,
+    collection_origin: str = "natural",
 ) -> dict:
     """Record provider absence as named availability evidence, not a fetch failure."""
     observed_at = now_iso()
@@ -3242,6 +3259,13 @@ def record_etf_detail_unavailability_observation(
         "reason_code": "provider_coverage_gap",
         "failure_detail_sha256": hashlib.sha256(failure_detail.encode("utf-8")).hexdigest(),
     }
+    if collection_origin not in {"natural", "manual"}:
+        raise ValueError("ETF detail collection origin must be natural or manual")
+    origin_fields = (
+        {"observation_origin": "natural"}
+        if collection_origin == "natural"
+        else {"observation_origin": "rebuild", "collection_origin": "manual"}
+    )
     row = {
         "schema_version": "data-supply-observation/v1",
         "provider": "stockanalysis",
@@ -3255,7 +3279,7 @@ def record_etf_detail_unavailability_observation(
         "observed_at": observed_at,
         "validation_status": "invalid",
         "reason_code": "provider_coverage_gap",
-        "observation_origin": "natural",
+        **origin_fields,
         "payload_available": False,
         "failure_detail_sha256": descriptor["failure_detail_sha256"],
         "availability_status": "provider_absent",
@@ -5161,7 +5185,11 @@ def yahoo_etf_payload(ticker: str, yf_payload: dict) -> dict:
     }
 
 
-def fetch_yahoo_etf_fallback(ticker: str, mirror_public: bool) -> dict:
+def fetch_yahoo_etf_fallback(
+    ticker: str,
+    mirror_public: bool,
+    collection_origin: str = "natural",
+) -> dict:
     retry_count = 0
     library_latency_ms = 0
     returned_error_recorded = False
@@ -5202,6 +5230,7 @@ def fetch_yahoo_etf_fallback(ticker: str, mirror_public: bool) -> dict:
             observed_at=fetched_at,
             validation_status="valid",
             reason_code="contract_valid",
+            collection_origin=collection_origin,
         )
         ATTEMPT_TRACKER.record_yahoo_success(
             data,
@@ -5237,6 +5266,7 @@ def fetch_yahoo_etf_fallback(ticker: str, mirror_public: bool) -> dict:
                     else "normalization_invalid"
                 ),
                 failure_detail=f"{type(exc).__name__}: {exc}",
+                collection_origin=collection_origin,
             )
         raise
 
@@ -5299,6 +5329,7 @@ def run_one(
     controlled_failure: bool = False,
     controlled_etf_detail_failure: bool = False,
     require_stock_financial_pair: bool = False,
+    collection_origin: str = "natural",
 ) -> dict:
     start = time.perf_counter()
     preserved_primary = False
@@ -5360,6 +5391,7 @@ def run_one(
                         ticker=ticker,
                         provider_path=f"data/stockanalysis/etfs/{ticker}.json",
                         failure_detail=stockanalysis_error,
+                        collection_origin=collection_origin,
                     )
                 else:
                     record_etf_detail_failure_observation(
@@ -5371,6 +5403,7 @@ def run_one(
                         reason_code=failure_reason,
                         failure_detail=stockanalysis_error,
                         failure_signature=failure_signature,
+                        collection_origin=collection_origin,
                     )
                 if not yf_fallback:
                     if provider_gap:
@@ -5389,7 +5422,11 @@ def run_one(
                         }
                     raise
                 try:
-                    payload = fetch_yahoo_etf_fallback(ticker, mirror_public)
+                    payload = fetch_yahoo_etf_fallback(
+                        ticker,
+                        mirror_public,
+                        collection_origin=collection_origin,
+                    )
                 except Exception as fallback_exc:
                     if provider_gap:
                         return {
@@ -5533,6 +5570,7 @@ def run_one(
                             else "schema_invalid"
                         ),
                         failure_detail=f"{type(exc).__name__}: {exc}",
+                        collection_origin=collection_origin,
                     )
                     raise
             stock_candidate = None
@@ -5590,6 +5628,7 @@ def run_one(
                     observed_at=observed_at,
                     validation_status=validation_status,
                     reason_code=reason_code,
+                    collection_origin=collection_origin,
                 )
             elif stock_candidate is not None and not pair_publish:
                 provider_path = OUT_DIR / rel_path
@@ -6155,6 +6194,9 @@ def _main() -> None:
                 ),
                 require_stock_financial_pair=(
                     kind == "stock" and args.require_stock_financial_pair
+                ),
+                collection_origin=(
+                    "natural" if args.event_name == "schedule" else "manual"
                 ),
             )
             results.append(result)

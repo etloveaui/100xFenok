@@ -1507,10 +1507,12 @@ module.main()
                 self.fail("controlled ETF detail failure must not call the provider")
 
             self.fetcher.fetch_etf = unexpected_fetch
-            self.fetcher.fetch_yahoo_etf_fallback = lambda _ticker, _mirror: {
-                "schema_version": "yf-etf-detail/v1",
-                "source": "yahoo_finance",
-            }
+            self.fetcher.fetch_yahoo_etf_fallback = (
+                lambda _ticker, _mirror, collection_origin="natural": {
+                    "schema_version": "yf-etf-detail/v1",
+                    "source": "yahoo_finance",
+                }
+            )
             try:
                 result = self.fetcher.run_one(
                     "etf",
@@ -1519,6 +1521,7 @@ module.main()
                     False,
                     yf_fallback=True,
                     controlled_etf_detail_failure=True,
+                    collection_origin="manual",
                 )
             finally:
                 self.fetcher.fetch_etf = original_fetch
@@ -1537,6 +1540,8 @@ module.main()
             self.assertEqual(observation["entity"], "TQQQ")
             self.assertEqual(observation["validation_status"], "invalid")
             self.assertEqual(observation["reason_code"], "fetch_failed")
+            self.assertEqual(observation["observation_origin"], "rebuild")
+            self.assertEqual(observation["collection_origin"], "manual")
             self.assertEqual(result["status"], "fallback_observed_primary_preserved")
             self.assertEqual(result["selected_provider"], "stockanalysis")
             self.assertFalse(result["canonical_write"])
@@ -3912,7 +3917,11 @@ module.main()
         def fake_fetch_etf(_ticker: str, _timeout: int) -> dict:
             raise urllib.error.URLError("HTTP Error 404: Not Found")
 
-        def fake_fallback(ticker: str, _mirror_public: bool) -> dict:
+        def fake_fallback(
+            ticker: str,
+            _mirror_public: bool,
+            collection_origin: str = "natural",
+        ) -> dict:
             return {
                 "schema_version": self.fetcher.SCHEMA_VERSION,
                 "source": "yahoo_finance",
