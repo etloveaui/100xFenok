@@ -1422,12 +1422,13 @@ module.main()
             )
 
     def test_etf_detail_controlled_failure_token_is_dispatch_only_single_and_explicit(self) -> None:
-        surfaces, universe, etf_details = self.fetcher.split_controlled_failure_targets(
-            "etf_detail:tqqq", "core"
+        surfaces, universe, etf_details, yahoo_etfs = self.fetcher.split_controlled_failure_targets(
+            "etf_detail:tqqq,yahoo_etf_fallback:soxl", "core"
         )
         self.assertEqual(surfaces, set())
         self.assertFalse(universe)
         self.assertEqual(etf_details, {"TQQQ"})
+        self.assertEqual(yahoo_etfs, {"SOXL"})
 
         self.fetcher.validate_controlled_etf_detail_failure_scope(
             {"TQQQ"},
@@ -1455,6 +1456,216 @@ module.main()
                     controlled_surfaces=controlled_surfaces,
                     controlled_universe=universe,
                 )
+
+    def test_yahoo_etf_fallback_controlled_token_is_separate_dispatch_only_and_exact(self) -> None:
+        surfaces, universe, etf_details, yahoo_etfs = self.fetcher.split_controlled_failure_targets(
+            "yahoo_etf_fallback:tqqq", "core"
+        )
+        self.assertEqual(surfaces, set())
+        self.assertFalse(universe)
+        self.assertEqual(etf_details, set())
+        self.assertEqual(yahoo_etfs, {"TQQQ"})
+
+        self.fetcher.validate_controlled_yahoo_etf_fallback_scope(
+            {"TQQQ"},
+            {"TQQQ"},
+            event_name="workflow_dispatch",
+            controlled_stocks=set(),
+            controlled_surfaces=set(),
+            controlled_universe=False,
+            controlled_stockanalysis_etfs=set(),
+        )
+        cases = [
+            ({"TQQQ"}, {"TQQQ"}, "schedule", set(), set(), False, set(), "workflow_dispatch"),
+            ({"TQQQ", "SOXL"}, {"TQQQ", "SOXL"}, "workflow_dispatch", set(), set(), False, set(), "exactly one"),
+            ({"TQQQ"}, {"TQQQ", "SOXL"}, "workflow_dispatch", set(), set(), False, set(), "exactly one explicit"),
+            ({"TQQQ"}, {"SOXL"}, "workflow_dispatch", set(), set(), False, set(), "exactly one explicit"),
+            ({"TQQQ"}, {"TQQQ"}, "workflow_dispatch", {"AAPL"}, set(), False, set(), "minimal scope"),
+            ({"TQQQ"}, {"TQQQ"}, "workflow_dispatch", set(), {"actions_recent"}, False, set(), "minimal scope"),
+            ({"TQQQ"}, {"TQQQ"}, "workflow_dispatch", set(), set(), True, set(), "minimal scope"),
+            ({"TQQQ"}, {"TQQQ"}, "workflow_dispatch", set(), set(), False, {"TQQQ"}, "minimal scope"),
+        ]
+        for targets, explicit, event, stocks, surfaces, universe, primary_etfs, message in cases:
+            with self.subTest(message=message), self.assertRaisesRegex(ValueError, message):
+                self.fetcher.validate_controlled_yahoo_etf_fallback_scope(
+                    targets,
+                    explicit,
+                    event_name=event,
+                    controlled_stocks=stocks,
+                    controlled_surfaces=surfaces,
+                    controlled_universe=universe,
+                    controlled_stockanalysis_etfs=primary_etfs,
+                )
+
+    def test_yahoo_etf_fallback_controlled_failure_retains_exact_lkg_without_providers(self) -> None:
+        original_outputs = self.fetcher.current_candidate_outputs()
+        original_fetch_etf = self.fetcher.fetch_etf
+        original_loader = self.fetcher.load_yf_finance_module
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fetcher.install_candidate_outputs(
+                self.fetcher.CandidateOutputs.from_root(root)
+            )
+            epoch = int(datetime(2026, 7, 27, 15, 15, 5, tzinfo=timezone.utc).timestamp())
+            provider = self.fetcher.build_yf_payload(
+                "TQQQ",
+                {
+                    "info": {
+                        "symbol": "TQQQ",
+                        "quoteType": "ETF",
+                        "currentPrice": 100.0,
+                        "previousClose": 99.0,
+                        "regularMarketTime": epoch,
+                    },
+                    "history_1y": [],
+                },
+                "2026-07-27T15:16:00Z",
+            )
+            canonical = self.fetcher.yahoo_etf_payload("TQQQ", provider)
+            canonical_path = self.fetcher.YF_ETF_DETAIL_OUT_DIR / "TQQQ.json"
+            self.fetcher.write_json(canonical_path, canonical)
+            before = canonical_path.read_bytes()
+
+            def unexpected_provider(*_args, **_kwargs):
+                self.fail("controlled Yahoo fallback failure must not call a provider")
+
+            self.fetcher.fetch_etf = unexpected_provider
+            self.fetcher.load_yf_finance_module = unexpected_provider
+            try:
+                result = self.fetcher.run_yahoo_etf_fallback_controlled_failure(
+                    "TQQQ",
+                    {
+                        "run_id": "yahoo-chaos",
+                        "run_attempt": 1,
+                        "event_name": "workflow_dispatch",
+                        "observed_at": "2026-07-28T00:00:00Z",
+                    },
+                )
+            finally:
+                self.fetcher.fetch_etf = original_fetch_etf
+                self.fetcher.load_yf_finance_module = original_loader
+                self.fetcher.install_candidate_outputs(original_outputs)
+
+            key = self.fetcher.yahoo_etf_fallback_key("TQQQ")
+            lkg_path = root / "data/admin/yahoo_etf_fallback/lkg" / f"{key}.json"
+            state_path = root / "data/admin/yahoo_etf_fallback/index.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertEqual(result["status"], "controlled_failure_retained_lkg")
+            self.assertEqual(canonical_path.read_bytes(), before)
+            self.assertEqual(lkg_path.read_bytes(), before)
+            self.assertEqual(state["lane_id"], "yahoo_etf_fallback")
+            self.assertEqual(len(state["retry_set"]), 1)
+            self.assertFalse((root / "data/admin/stockanalysis-recovery").exists())
+            self.assertFalse((root / "data/yf/finance/TQQQ.json").exists())
+
+    def test_yahoo_etf_fallback_natural_retry_collects_before_adapter_and_bypasses_primary(self) -> None:
+        original_outputs = self.fetcher.current_candidate_outputs()
+        original_loader = self.fetcher.load_yf_finance_module
+        original_invoke = self.fetcher.invoke_yahoo_etf_fallback_adapter
+        original_fetch_etf = self.fetcher.fetch_etf
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fetcher.install_candidate_outputs(
+                self.fetcher.CandidateOutputs.from_root(root)
+            )
+            old_epoch = int(datetime(2026, 7, 25, 15, 15, 5, tzinfo=timezone.utc).timestamp())
+            old_provider = self.fetcher.build_yf_payload(
+                "TQQQ",
+                {
+                    "info": {
+                        "symbol": "TQQQ",
+                        "quoteType": "ETF",
+                        "currentPrice": 100.0,
+                        "previousClose": 99.0,
+                        "regularMarketTime": old_epoch,
+                    },
+                    "history_1y": [],
+                },
+                "2026-07-25T15:16:00Z",
+            )
+            old_canonical = self.fetcher.yahoo_etf_payload("TQQQ", old_provider)
+            canonical_path = self.fetcher.YF_ETF_DETAIL_OUT_DIR / "TQQQ.json"
+            self.fetcher.write_json(canonical_path, old_canonical)
+            before = canonical_path.read_bytes()
+            self.fetcher.run_yahoo_etf_fallback_controlled_failure(
+                "TQQQ",
+                {
+                    "run_id": "yahoo-chaos",
+                    "run_attempt": 1,
+                    "event_name": "workflow_dispatch",
+                    "observed_at": "2026-07-28T00:00:00Z",
+                },
+            )
+            self.assertEqual(
+                self.fetcher.list_yahoo_etf_fallback_retry_targets(),
+                ["TQQQ"],
+            )
+
+            new_epoch = int(datetime(2026, 7, 26, 15, 15, 5, tzinfo=timezone.utc).timestamp())
+
+            class FakeYahooModule:
+                @staticmethod
+                def fetch_with_retry(*_args, **_kwargs):
+                    return (
+                        {
+                            "info": {
+                                "symbol": "TQQQ",
+                                "quoteType": "ETF",
+                                "currentPrice": 101.0,
+                                "previousClose": 100.0,
+                                "regularMarketTime": new_epoch,
+                            },
+                            "history_1y": [],
+                        },
+                        7,
+                        None,
+                        {"attempts_used": 1, "latency_ms": 7, "failures": []},
+                    )
+
+            def unexpected_primary(*_args, **_kwargs):
+                self.fail("Yahoo recovery must bypass the StockAnalysis primary")
+
+            observed_prewrite = []
+
+            def inspect_then_invoke(action: str, **kwargs):
+                if action == "promote":
+                    observed_prewrite.append(
+                        (
+                            canonical_path.read_bytes(),
+                            (root / "data/yf/finance/TQQQ.json").exists(),
+                        )
+                    )
+                return original_invoke(action, **kwargs)
+
+            self.fetcher.load_yf_finance_module = lambda: FakeYahooModule
+            self.fetcher.fetch_etf = unexpected_primary
+            self.fetcher.invoke_yahoo_etf_fallback_adapter = inspect_then_invoke
+            try:
+                result = self.fetcher.run_yahoo_etf_fallback_recovery(
+                    "TQQQ",
+                    False,
+                    {
+                        "run_id": "yahoo-recovery",
+                        "run_attempt": 1,
+                        "event_name": "schedule",
+                        "observed_at": "2026-07-28T16:00:00Z",
+                    },
+                )
+            finally:
+                self.fetcher.load_yf_finance_module = original_loader
+                self.fetcher.fetch_etf = original_fetch_etf
+                self.fetcher.invoke_yahoo_etf_fallback_adapter = original_invoke
+                self.fetcher.install_candidate_outputs(original_outputs)
+
+            state = json.loads(
+                (root / "data/admin/yahoo_etf_fallback/index.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(observed_prewrite, [(before, False)])
+            self.assertEqual(result["status"], "recovered")
+            self.assertNotEqual(canonical_path.read_bytes(), before)
+            self.assertTrue((root / "data/yf/finance/TQQQ.json").is_file())
+            self.assertEqual(state["retry_set"], [])
+            self.assertFalse((root / "data/admin/stockanalysis-recovery").exists())
 
     def test_etf_detail_controlled_failure_preflight_rejects_schedule(self) -> None:
         completed = subprocess.run(
@@ -1499,9 +1710,20 @@ module.main()
                 "ticker": "TQQQ",
                 "source_as_of": "2026-07-15T20:00:00Z",
                 "fetched_at": "2026-07-15T21:00:00Z",
+                "normalized": {"overview": {"aum": 1}},
             }
             self.fetcher.write_json(truth, lkg_payload)
             expected_bytes = truth.read_bytes()
+            store = self.fetcher.StockAnalysisRecoveryStateStore(
+                root / "data" / "admin" / "stockanalysis-recovery", root
+            )
+            chaos = {
+                "run_id": "etf-chaos",
+                "run_attempt": 1,
+                "event_name": "workflow_dispatch",
+                "natural": False,
+                "observed_at": "2026-07-16T08:00:00Z",
+            }
 
             def unexpected_fetch(*_args, **_kwargs):
                 self.fail("controlled ETF detail failure must not call the provider")
@@ -1522,6 +1744,8 @@ module.main()
                     yf_fallback=True,
                     controlled_etf_detail_failure=True,
                     collection_origin="manual",
+                    recovery_store=store,
+                    recovery_run=chaos,
                 )
             finally:
                 self.fetcher.fetch_etf = original_fetch
@@ -1535,6 +1759,9 @@ module.main()
             observation = json.loads(
                 next((root / "data" / "admin" / "data-supply-state" / "v1" / "history" / "observations").glob("*.jsonl")).read_text(encoding="utf-8")
             )
+            state = json.loads(
+                (store.root / "states" / "etf" / "TQQQ.json").read_text(encoding="utf-8")
+            )
             self.assertEqual(truth.read_bytes(), expected_bytes)
             self.assertEqual(observation["domain"], "etf_detail")
             self.assertEqual(observation["entity"], "TQQQ")
@@ -1546,10 +1773,267 @@ module.main()
             self.assertEqual(result["selected_provider"], "stockanalysis")
             self.assertFalse(result["canonical_write"])
             self.assertIsNone(result["error"])
+            self.assertTrue(state["retry"])
+            self.assertTrue(state["latest_failure"]["controlled"])
+            self.assertEqual(state["latest_failure"]["run_id"], "etf-chaos")
+            self.assertEqual(
+                (store.root / "lkg" / "etf" / "TQQQ.json").read_bytes(), expected_bytes
+            )
             self.assertIn(
                 "controlled failure injection for etf_detail:TQQQ",
                 result["stockanalysis_error"],
             )
+
+    def test_etf_natural_missing_source_stamp_defers_without_overwriting_lkg_or_failure(self) -> None:
+        original_fetch = self.fetcher.fetch_etf
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            original_dirs = (
+                self.fetcher.OUT_DIR,
+                self.fetcher.PUBLIC_DIR,
+                self.fetcher.DATA_SUPPLY_STATE_ROOT,
+            )
+            self.fetcher.OUT_DIR = root / "data" / "stockanalysis"
+            self.fetcher.PUBLIC_DIR = root / "public" / "stockanalysis"
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = root / "data" / "admin" / "data-supply-state" / "v1"
+            canonical = self.fetcher.OUT_DIR / "etfs" / "TQQQ.json"
+            canonical.parent.mkdir(parents=True)
+            retained = {
+                "schema_version": "stockanalysis/v1",
+                "source": "stockanalysis",
+                "asset_type": "etf",
+                "ticker": "TQQQ",
+                "source_as_of": "2026-07-15T20:00:00Z",
+                "fetched_at": "2026-07-15T21:00:00Z",
+                "normalized": {"overview": {"aum": 1}},
+            }
+            self.fetcher.write_json(canonical, retained)
+            retained_bytes = canonical.read_bytes()
+            store = self.fetcher.StockAnalysisRecoveryStateStore(
+                root / "data" / "admin" / "stockanalysis-recovery", root
+            )
+            store.record_failure(
+                "etf",
+                "TQQQ",
+                "controlled failure injection",
+                {
+                    "run_id": "etf-chaos",
+                    "run_attempt": 1,
+                    "event_name": "workflow_dispatch",
+                    "natural": False,
+                    "observed_at": "2026-07-16T08:00:00Z",
+                },
+                controlled=True,
+            )
+            self.fetcher.fetch_etf = lambda *_args, **_kwargs: {
+                "schema_version": "stockanalysis/v1",
+                "source": "stockanalysis",
+                "asset_type": "etf",
+                "ticker": "TQQQ",
+                "detail_status": "stockanalysis_partial",
+                "partial_reason_codes": ["holdings_surface_omits_holdings"],
+                "source_as_of": None,
+                "source_as_of_reason": "provider detail response carries no market observation date",
+                "fetched_at": "2026-07-16T23:00:00Z",
+                "normalized": {"overview": {"aum": 2}},
+            }
+            try:
+                result = self.fetcher.run_one(
+                    "etf",
+                    "TQQQ",
+                    1,
+                    False,
+                    recovery_store=store,
+                    recovery_run={
+                        "run_id": "etf-natural-1",
+                        "run_attempt": 1,
+                        "event_name": "schedule",
+                        "natural": True,
+                        "observed_at": "2026-07-16T23:00:00Z",
+                    },
+                )
+            finally:
+                self.fetcher.fetch_etf = original_fetch
+                (
+                    self.fetcher.OUT_DIR,
+                    self.fetcher.PUBLIC_DIR,
+                    self.fetcher.DATA_SUPPLY_STATE_ROOT,
+                ) = original_dirs
+
+            state = json.loads((store.root / "states" / "etf" / "TQQQ.json").read_text())
+            self.assertEqual(result["status"], "promotion_deferred")
+            self.assertTrue(result["recovery_deferred"])
+            self.assertFalse(result["canonical_write"])
+            self.assertEqual(canonical.read_bytes(), retained_bytes)
+            self.assertTrue(state["retry"])
+            self.assertEqual(state["latest_failure"]["run_id"], "etf-chaos")
+            self.assertEqual(state["last_attempt"]["outcome"], "promotion_deferred")
+
+    def test_etf_success_without_pending_recovery_does_not_create_recovery_state(self) -> None:
+        original_fetch = self.fetcher.fetch_etf
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            original_dirs = (
+                self.fetcher.OUT_DIR,
+                self.fetcher.PUBLIC_DIR,
+                self.fetcher.DATA_SUPPLY_STATE_ROOT,
+            )
+            self.fetcher.OUT_DIR = root / "data" / "stockanalysis"
+            self.fetcher.PUBLIC_DIR = root / "public" / "stockanalysis"
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = root / "data" / "admin" / "data-supply-state" / "v1"
+            store = self.fetcher.StockAnalysisRecoveryStateStore(
+                root / "data" / "admin" / "stockanalysis-recovery", root
+            )
+            self.fetcher.fetch_etf = lambda *_args, **_kwargs: {
+                "schema_version": "stockanalysis/v1",
+                "source": "stockanalysis",
+                "asset_type": "etf",
+                "ticker": "TQQQ",
+                "detail_status": "stockanalysis_partial",
+                "partial_reason_codes": ["holdings_surface_omits_holdings"],
+                "source_as_of": None,
+                "source_as_of_reason": "provider detail response carries no market observation date",
+                "fetched_at": "2026-07-16T23:00:00Z",
+                "normalized": {"overview": {"aum": 2}},
+            }
+            try:
+                result = self.fetcher.run_one(
+                    "etf",
+                    "TQQQ",
+                    1,
+                    False,
+                    recovery_store=store,
+                    recovery_run={
+                        "run_id": "normal-etf",
+                        "run_attempt": 1,
+                        "event_name": "schedule",
+                        "natural": True,
+                        "observed_at": "2026-07-16T23:00:00Z",
+                    },
+                )
+            finally:
+                self.fetcher.fetch_etf = original_fetch
+                (
+                    self.fetcher.OUT_DIR,
+                    self.fetcher.PUBLIC_DIR,
+                    self.fetcher.DATA_SUPPLY_STATE_ROOT,
+                ) = original_dirs
+
+            self.assertEqual(result["status"], "ok")
+            self.assertTrue(result["canonical_write"])
+            self.assertFalse((store.root / "states" / "etf" / "TQQQ.json").exists())
+
+    def test_etf_pending_recovery_blocks_dispatch_and_schedule_rerun_before_canonical_write(self) -> None:
+        original_fetch = self.fetcher.fetch_etf
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            original_dirs = (
+                self.fetcher.OUT_DIR,
+                self.fetcher.PUBLIC_DIR,
+                self.fetcher.DATA_SUPPLY_STATE_ROOT,
+            )
+            self.fetcher.OUT_DIR = root / "data" / "stockanalysis"
+            self.fetcher.PUBLIC_DIR = root / "public" / "stockanalysis"
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = root / "data" / "admin" / "data-supply-state" / "v1"
+            canonical = self.fetcher.OUT_DIR / "etfs" / "TQQQ.json"
+            canonical.parent.mkdir(parents=True)
+            retained = {
+                "schema_version": "stockanalysis/v1",
+                "source": "stockanalysis",
+                "asset_type": "etf",
+                "ticker": "TQQQ",
+                "source_as_of": "2026-07-15T00:00:00Z",
+                "fetched_at": "2026-07-15T21:00:00Z",
+                "normalized": {"overview": {"aum": 1}},
+            }
+            self.fetcher.write_json(canonical, retained)
+            retained_bytes = canonical.read_bytes()
+            store = self.fetcher.StockAnalysisRecoveryStateStore(
+                root / "data" / "admin" / "stockanalysis-recovery", root
+            )
+            store.record_failure(
+                "etf",
+                "TQQQ",
+                "controlled failure injection",
+                {
+                    "run_id": "etf-chaos",
+                    "run_attempt": 1,
+                    "event_name": "workflow_dispatch",
+                    "natural": False,
+                    "observed_at": "2026-07-16T08:00:00Z",
+                },
+                controlled=True,
+            )
+            advanced = {
+                **retained,
+                "source_as_of": "2026-07-16T00:00:00Z",
+                "fetched_at": "2026-07-16T23:00:00Z",
+                "normalized": {"overview": {"aum": 2}},
+                "raw": {"quote": {"td": "2026-07-16"}},
+            }
+            self.fetcher.fetch_etf = lambda *_args, **_kwargs: advanced
+            try:
+                results = [
+                    self.fetcher.run_one(
+                        "etf",
+                        "TQQQ",
+                        1,
+                        False,
+                        recovery_store=store,
+                        recovery_run=run,
+                    )
+                    for run in (
+                        {
+                            "run_id": "etf-manual",
+                            "run_attempt": 1,
+                            "event_name": "workflow_dispatch",
+                            "natural": False,
+                            "observed_at": "2026-07-16T23:00:00Z",
+                        },
+                        {
+                            "run_id": "etf-rerun",
+                            "run_attempt": 2,
+                            "event_name": "schedule",
+                            "natural": True,
+                            "observed_at": "2026-07-16T23:01:00Z",
+                        },
+                    )
+                ]
+                blocked_bytes = canonical.read_bytes()
+                recovered = self.fetcher.run_one(
+                    "etf",
+                    "TQQQ",
+                    1,
+                    False,
+                    recovery_store=store,
+                    recovery_run={
+                        "run_id": "etf-natural-1",
+                        "run_attempt": 1,
+                        "event_name": "schedule",
+                        "natural": True,
+                        "observed_at": "2026-07-16T23:02:00Z",
+                    },
+                )
+            finally:
+                self.fetcher.fetch_etf = original_fetch
+                (
+                    self.fetcher.OUT_DIR,
+                    self.fetcher.PUBLIC_DIR,
+                    self.fetcher.DATA_SUPPLY_STATE_ROOT,
+                ) = original_dirs
+
+            state = json.loads((store.root / "states" / "etf" / "TQQQ.json").read_text())
+            self.assertEqual([result["status"] for result in results], [
+                "recovery_promotion_blocked",
+                "recovery_promotion_blocked",
+            ])
+            self.assertTrue(all(result["recovery_deferred"] for result in results))
+            self.assertEqual(blocked_bytes, retained_bytes)
+            self.assertEqual(recovered["status"], "ok")
+            self.assertTrue(recovered["canonical_write"])
+            self.assertEqual(json.loads(canonical.read_text())["source_as_of"], "2026-07-16T00:00:00Z")
+            self.assertFalse(state["retry"])
+            self.assertEqual(state["recovered_from_run_id"], "etf-chaos")
 
     def test_workflow_dispatch_inputs_stay_within_github_limit(self) -> None:
         workflow = (
@@ -2146,11 +2630,12 @@ module.main()
                 return {
                     "stock": {"AMD", "AMZN", "META", "MSFT", "NVDA"},
                     "financial": {"AAPL", "NVDA"},
+                    "etf": {"TQQQ", "SOXL"},
                     "surface": {"actions_recent"},
                     "universe": {"etf_universe"},
                 }[kind]
 
-        stocks, financials, surfaces, retry_universe = self.fetcher.select_natural_recovery_targets(
+        stocks, financials, retry_etfs, surfaces, retry_universe = self.fetcher.select_natural_recovery_targets(
             FakeStore(),
             {"stock", "financial"},
             ["AAPL", "MSFT"],
@@ -2159,18 +2644,20 @@ module.main()
         )
         self.assertEqual(stocks, ["AAPL", "MSFT", "AMD"])
         self.assertEqual(financials, {"AAPL"})
+        self.assertEqual(retry_etfs, [])
         self.assertEqual(surfaces, [])
         self.assertFalse(retry_universe)
 
-        stocks, financials, surfaces, retry_universe = self.fetcher.select_natural_recovery_targets(
+        stocks, financials, retry_etfs, surfaces, retry_universe = self.fetcher.select_natural_recovery_targets(
             FakeStore(),
-            {"surface", "universe"},
+            {"etf", "surface", "universe"},
             [],
             ["market_gainers"],
             stock_limit=3,
         )
         self.assertEqual(stocks, [])
         self.assertEqual(financials, set())
+        self.assertEqual(retry_etfs, ["SOXL"])
         self.assertEqual(surfaces, ["actions_recent", "market_gainers"])
         self.assertTrue(retry_universe)
 

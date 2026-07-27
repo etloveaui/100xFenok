@@ -472,14 +472,24 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
-// StockAnalysis combines four required directories, optional attempt shards,
-// a modified/untracked YF dynamic set, and two exclusions nested inside staged roots.
+// StockAnalysis combines four required producer directories, the optional
+// dedicated Yahoo recovery directory and attempt shards, a modified/untracked
+// YF dynamic set, and two exclusions nested inside staged roots.
 {
   const fixture = makeFixture({ workflow: STOCKANALYSIS_WORKFLOW });
+  const etfRecoveryState = "data/admin/stockanalysis-recovery/states/etf/TQQQ.json";
+  writeJson(path.join(fixture.root, etfRecoveryState), {
+    schema_version: "stockanalysis-recovery-state/v1",
+    artifact_kind: "etf",
+    entity: "TQQQ",
+    retry: true,
+  });
+  fixture.materialized.always.push(etfRecoveryState);
   const always = run(fixture.root, "always_if_exists", [], STOCKANALYSIS_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=9 stage_selected=10 staged_index_total=9/);
+  assert.match(always.stdout, /declared=10 stage_selected=11 staged_index_total=11/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
+  assert.equal(cached(fixture.root).includes(etfRecoveryState), true);
   for (const excluded of fixture.materialized.exclude) {
     assert.equal(cached(fixture.root).includes(excluded), false, `${excluded} must remain unstaged`);
   }
@@ -492,7 +502,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   }
   const trackedAlways = run(tracked.root, "always_if_exists", [], STOCKANALYSIS_WORKFLOW);
   assert.equal(trackedAlways.status, 0, `${trackedAlways.stderr}\n${trackedAlways.stdout}`);
-  assert.match(trackedAlways.stdout, /declared=9 stage_selected=10 staged_index_total=9/);
+  assert.match(trackedAlways.stdout, /declared=10 stage_selected=11 staged_index_total=10/);
   assert.deepEqual(cached(tracked.root), tracked.materialized.always.sort());
 }
 

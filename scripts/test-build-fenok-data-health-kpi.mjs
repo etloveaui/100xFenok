@@ -1563,14 +1563,25 @@ console.log("# KPI v2 runtime self-proof fixtures");
   writeJson(path.join(tmp, "data", "admin", "stockanalysis-recovery", "index.json"), {
     schema_version: "stockanalysis-recovery-index/v1",
     generated_at: now,
+    counts_by_kind: {
+      stock: { tracked: 2 },
+      financial: { tracked: 1 },
+      etf: { tracked: 2 },
+      surface: { tracked: 2 },
+    },
     degraded_details: [
       { artifact_kind: "stock", entity: "AAPL", resolution_state: "lkg_primary", payload_sha256: "a".repeat(64), source_as_of: "2026-07-14T20:00:00Z", failure_run_id: "chaos-1", data_loss: false },
       { artifact_kind: "financial", entity: "IBM", resolution_state: "lkg_primary", payload_sha256: "b".repeat(64), source_as_of: "2026-06-30", failure_run_id: "chaos-1", data_loss: false },
+      { artifact_kind: "etf", entity: "TQQQ", resolution_state: "lkg_primary", payload_sha256: "f".repeat(64), source_as_of: "2026-07-14T20:00:00Z", failure_run_id: "chaos-etf", data_loss: false },
       { artifact_kind: "surface", entity: "earnings_calendar", resolution_state: "lkg_primary", payload_sha256: "c".repeat(64), source_as_of: null, failure_run_id: "chaos-1", data_loss: false },
     ],
     recovered_details: [
       { artifact_kind: "stock", entity: "MSFT", payload_sha256: "d".repeat(64), source_as_of: "2026-07-15T20:00:00Z", recovered_from_run_id: "chaos-0", recovered_at: now },
+      { artifact_kind: "etf", entity: "SOXL", payload_sha256: "g".repeat(64), source_as_of: "2026-07-15T20:00:00Z", recovered_from_run_id: "chaos-etf", recovered_at: now },
       { artifact_kind: "surface", entity: "actions_recent", payload_sha256: "e".repeat(64), source_as_of: null, recovered_from_run_id: "chaos-0", recovered_at: now },
+    ],
+    promotion_deferral_details: [
+      { artifact_kind: "etf", entity: "TQQQ", source_as_of: null, retained_source_as_of: "2026-07-14T20:00:00Z", reason_code: "source_not_advanced" },
     ],
     current_attempt: {
       run_id: "recovery-1",
@@ -1578,15 +1589,27 @@ console.log("# KPI v2 runtime self-proof fixtures");
       errors: [{ artifact_kind: "stock", entity: "AAPL", error: "PRIVATE PROVIDER ERROR" }],
     },
   });
-  const { root } = runBuilder(tmp, {}, now);
+  const { root, public: pub } = runBuilder(tmp, {}, now);
   const stockLane = root.lanes.find((item) => item.id === "stock_s1_candidate_gate");
+  const etfLane = root.lanes.find((item) => item.id === "etf_public_and_daily_gate");
   const surfaceLane = root.lanes.find((item) => item.id === "product_surface_freshness");
   assert.deepEqual(stockLane.details.stockanalysis_recovery.degraded_entities, ["AAPL", "IBM"]);
   assert.deepEqual(stockLane.details.stockanalysis_recovery.recovered_entities, ["MSFT"]);
+  assert.deepEqual(etfLane.details.stockanalysis_recovery.degraded_entities, ["TQQQ"]);
+  assert.deepEqual(etfLane.details.stockanalysis_recovery.recovered_entities, ["SOXL"]);
+  assert.equal(etfLane.details.stockanalysis_recovery.requested_kinds_present, true);
+  assert.deepEqual(etfLane.details.stockanalysis_recovery.promotion_deferrals, [{
+    artifact_kind: "etf",
+    entity: "TQQQ",
+    source_as_of: null,
+    retained_source_as_of: "2026-07-14T20:00:00Z",
+    reason_code: "source_not_advanced",
+  }]);
   assert.deepEqual(surfaceLane.details.stockanalysis_recovery.degraded_entities, ["earnings_calendar"]);
   assert.deepEqual(surfaceLane.details.stockanalysis_recovery.recovered_entities, ["actions_recent"]);
   assert.equal(root.source_artifacts.find((item) => item.id === "stockanalysis_recovery_state").generated_at, now);
   assert.equal(JSON.stringify(root).includes("PRIVATE PROVIDER ERROR"), false);
+  assert.equal(JSON.stringify(pub).includes("PRIVATE PROVIDER ERROR"), false);
   ok("StockAnalysis degraded/recovered entities are named in KPI evidence without raw errors");
 }
 
@@ -4221,6 +4244,16 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     `KPI recovery sources with no registry record: ${JSON.stringify(gate.undeclared_in_kpi)}`);
   assert.equal(gate.registry_store_count > 0 && gate.kpi_source_count > 0, true,
     "the gate must see a non-empty source set on both sides");
+  assert.equal(
+    RECOVERY_STATE_SOURCES.general_paths.yahoo_etf_fallback,
+    "admin/yahoo_etf_fallback/index.json",
+    "Yahoo ETF fallback must use its dedicated generic LKG state",
+  );
+  assert.equal(
+    RECOVERY_STATE_SOURCES.direct.stockanalysis_recovery,
+    "admin/stockanalysis-recovery/index.json",
+    "StockAnalysis row6 recovery must remain on its separate shared state",
+  );
   ok("lane-registry recovery-source completeness (both directions)");
 }
 

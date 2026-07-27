@@ -66,6 +66,18 @@ def financial_payload(ticker: str, period_as_of: str) -> dict:
     }
 
 
+def etf_payload(ticker: str, source_as_of: str | None) -> dict:
+    return {
+        "schema_version": "stockanalysis/v1",
+        "source": "stockanalysis",
+        "asset_type": "etf",
+        "ticker": ticker,
+        "source_as_of": source_as_of,
+        "fetched_at": "2026-07-15T23:00:00Z",
+        "normalized": {"overview": {"aum": 1}},
+    }
+
+
 def surface_payload(name: str, fetched_at: str, row: str, provider_date: str = "2026-07-14") -> dict:
     return {
         "schema_version": "stockanalysis/v1",
@@ -392,6 +404,105 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
                 "financial", "AAPL", advanced_source_old_fetch
             )
         )
+
+    def test_etf_recovery_requires_strict_provider_advance_and_defers_without_replacing_failure(self) -> None:
+        ticker = "TQQQ"
+        canonical = self.data_root / "etfs" / f"{ticker}.json"
+        retained_bytes = write_json(
+            canonical,
+            etf_payload(ticker, "2026-07-14T20:00:00Z"),
+        )
+
+        # ETF details are deliberately not bulk-bootstrapped; a recovery state
+        # begins only after a source-specific failure target exists.
+        self.assertEqual(self.store.bootstrap_existing(self.run_context("bootstrap")), 0)
+        failed = self.store.record_failure(
+            "etf",
+            ticker,
+            "controlled failure injection",
+            self.run_context("etf-chaos"),
+            controlled=True,
+        )
+        self.assertEqual(failed["resolution_state"], "lkg_primary")
+        self.assertTrue(failed["retry"])
+        self.assertTrue(failed["latest_failure"]["had_canonical_before_failure"])
+        self.assertEqual(
+            (self.state_root / "lkg" / "etf" / f"{ticker}.json").read_bytes(),
+            retained_bytes,
+        )
+
+        for candidate in (
+            etf_payload(ticker, "2026-07-14T20:00:00Z"),
+            etf_payload(ticker, None),
+            etf_payload(ticker, "2026-07-13T20:00:00Z"),
+        ):
+            with self.subTest(source_as_of=candidate["source_as_of"]):
+                self.assertFalse(
+                    self.store.recovery_candidate_advances("etf", ticker, candidate)
+                )
+
+        deferred = self.store.record_promotion_deferred(
+            "etf",
+            ticker,
+            etf_payload(ticker, "2026-07-14T20:00:00Z"),
+            {
+                **self.run_context("etf-natural-deferred"),
+                "event_name": "schedule",
+                "natural": True,
+            },
+        )
+        self.assertTrue(deferred["retry"])
+        self.assertEqual(deferred["latest_failure"]["run_id"], "etf-chaos")
+        self.assertEqual(deferred["last_attempt"]["outcome"], "promotion_deferred")
+
+        deferred_index = self.store.rebuild_index({
+            **self.run_context("etf-natural-deferred"),
+            "event_name": "schedule",
+            "natural": True,
+        })
+        self.assertEqual(deferred_index["current_attempt"]["promotion_deferred"], 1)
+        self.assertEqual(
+            deferred_index["promotion_deferral_details"],
+            [{
+                "artifact_kind": "etf",
+                "entity": ticker,
+                "source_as_of": "2026-07-14T20:00:00Z",
+                "retained_source_as_of": "2026-07-14T20:00:00Z",
+                "reason_code": "source_not_advanced",
+            }],
+        )
+
+        advanced = etf_payload(ticker, "2026-07-15T20:00:00Z")
+        write_json(canonical, advanced)
+        with self.assertRaisesRegex(ValueError, "natural schedule run"):
+            self.store.record_success(
+                "etf", ticker, advanced, self.run_context("etf-dispatch-cannot-recover")
+            )
+        with self.assertRaisesRegex(ValueError, "natural schedule run"):
+            self.store.record_success(
+                "etf",
+                ticker,
+                advanced,
+                {
+                    **self.run_context("etf-schedule-rerun", attempt=2),
+                    "event_name": "schedule",
+                    "natural": True,
+                },
+            )
+
+        recovered = self.store.record_success(
+            "etf",
+            ticker,
+            advanced,
+            {
+                **self.run_context("etf-natural-recovered"),
+                "event_name": "schedule",
+                "natural": True,
+            },
+        )
+        self.assertFalse(recovered["retry"])
+        self.assertEqual(recovered["recovered_from_run_id"], "etf-chaos")
+        self.assertEqual(recovered["recovery_run_id"], "etf-natural-recovered")
 
     def test_existing_payload_loss_is_corruption(self) -> None:
         self.seed_lane()

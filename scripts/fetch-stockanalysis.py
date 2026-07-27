@@ -21,6 +21,7 @@ Output:
 from __future__ import annotations
 
 import argparse
+import base64
 from datetime import datetime, timedelta, timezone
 import hashlib
 from html.parser import HTMLParser
@@ -46,6 +47,7 @@ from lib.diagnostic_detail import bounded_diagnostic_detail
 from data_supply_state import DataSupplyStateStore, canonical_sha256, deterministic_event_id
 from stockanalysis_recovery_state import (
     StockAnalysisRecoveryStateStore,
+    is_natural_schedule_run,
     validate_controlled_failure_scope,
 )
 
@@ -79,7 +81,7 @@ class CandidateOutputs:
     __slots__ = (
         "root", "stockanalysis", "stockanalysis_public", "yf_finance",
         "yf_finance_public", "yf_etf_details", "data_supply_state",
-        "detection_attempts", "recovery_state",
+        "detection_attempts", "recovery_state", "yahoo_etf_recovery_state",
     )
 
     def __init__(
@@ -93,6 +95,7 @@ class CandidateOutputs:
         data_supply_state: Path,
         detection_attempts: Path,
         recovery_state: Path,
+        yahoo_etf_recovery_state: Path,
     ) -> None:
         self.root = root
         self.stockanalysis = stockanalysis
@@ -103,6 +106,7 @@ class CandidateOutputs:
         self.data_supply_state = data_supply_state
         self.detection_attempts = detection_attempts
         self.recovery_state = recovery_state
+        self.yahoo_etf_recovery_state = yahoo_etf_recovery_state
 
     @classmethod
     def from_root(cls, root: Path) -> "CandidateOutputs":
@@ -117,6 +121,7 @@ class CandidateOutputs:
             data_supply_state=resolved / "data/admin/data-supply-state/v1",
             detection_attempts=resolved / "data/admin/data-supply-state/detection-attempts",
             recovery_state=resolved / "data/admin/stockanalysis-recovery",
+            yahoo_etf_recovery_state=resolved / "data/admin/yahoo_etf_fallback",
         )
 
     def all_output_paths(self) -> tuple[Path, ...]:
@@ -129,6 +134,7 @@ class CandidateOutputs:
             self.data_supply_state,
             self.detection_attempts,
             self.recovery_state,
+            self.yahoo_etf_recovery_state,
         )
 
 
@@ -143,6 +149,7 @@ YF_ETF_DETAIL_OUT_DIR = CANDIDATE_OUTPUTS.yf_etf_details
 DATA_SUPPLY_STATE_ROOT = CANDIDATE_OUTPUTS.data_supply_state
 STOCKANALYSIS_RECOVERY_ROOT = CANDIDATE_OUTPUTS.recovery_state
 STOCKANALYSIS_ATTEMPT_EMITTER = SCRIPT_DIR / "emit-stockanalysis-attempt.mjs"
+YAHOO_ETF_FALLBACK_RECOVERY_ADAPTER = SCRIPT_DIR / "yahoo-etf-fallback-recovery.mjs"
 SCHEMA_VERSION = "stockanalysis/v1"
 BASE_URL = "https://stockanalysis.com"
 SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,11}$")
@@ -2225,6 +2232,7 @@ def parse_surface_names(value: str, surface_set: str) -> list[str]:
 # validation (parse_surface_names would otherwise reject them).
 UNIVERSE_CONTROLLED_FAILURE_TOKEN = "etf_universe"
 ETF_DETAIL_CONTROLLED_FAILURE_PREFIX = "etf_detail:"
+YAHOO_ETF_FALLBACK_CONTROLLED_FAILURE_PREFIX = "yahoo_etf_fallback:"
 
 
 class ControlledETFDetailFailure(ValueError):
@@ -2234,9 +2242,10 @@ class ControlledETFDetailFailure(ValueError):
 def split_controlled_failure_targets(
     value: str,
     surface_set: str,
-) -> tuple[set[str], bool, set[str]]:
+) -> tuple[set[str], bool, set[str], set[str]]:
     controlled_universe = False
     controlled_etf_details: set[str] = set()
+    controlled_yahoo_etfs: set[str] = set()
     surface_tokens: list[str] = []
     for item in (value or "").split(","):
         token = item.strip()
@@ -2254,18 +2263,38 @@ def split_controlled_failure_targets(
                 )
             controlled_etf_details.add(ticker)
             continue
+        if lowered.startswith(YAHOO_ETF_FALLBACK_CONTROLLED_FAILURE_PREFIX):
+            ticker = clean_symbol(
+                token[len(YAHOO_ETF_FALLBACK_CONTROLLED_FAILURE_PREFIX):]
+            )
+            if ticker is None:
+                raise ValueError(
+                    "controlled Yahoo ETF fallback token must use yahoo_etf_fallback:TICKER"
+                )
+            controlled_yahoo_etfs.add(ticker)
+            continue
         surface_tokens.append(token)
     surfaces = set(
         parse_surface_names(",".join(surface_tokens), surface_set)
         if surface_tokens
         else []
     )
-    return surfaces, controlled_universe, controlled_etf_details
+    return (
+        surfaces,
+        controlled_universe,
+        controlled_etf_details,
+        controlled_yahoo_etfs,
+    )
 
 
 def split_controlled_failure_surfaces(value: str, surface_set: str) -> tuple[set[str], bool]:
     """Compatibility wrapper for existing surface/universe token callers."""
-    surfaces, controlled_universe, _etf_details = split_controlled_failure_targets(
+    (
+        surfaces,
+        controlled_universe,
+        _etf_details,
+        _yahoo_etfs,
+    ) = split_controlled_failure_targets(
         value,
         surface_set,
     )
@@ -2306,6 +2335,7 @@ def validate_controlled_etf_detail_failure_preflight(args: argparse.Namespace) -
         controlled_surfaces,
         controlled_universe_token,
         controlled_etfs,
+        controlled_yahoo_etfs,
     ) = split_controlled_failure_targets(
         args.controlled_failure_surfaces,
         args.surface_set,
@@ -2320,6 +2350,69 @@ def validate_controlled_etf_detail_failure_preflight(args: argparse.Namespace) -
             args.controlled_failure_universe or controlled_universe_token
         ),
     )
+    validate_controlled_yahoo_etf_fallback_scope(
+        controlled_yahoo_etfs,
+        set(parse_symbols(args.etfs)),
+        event_name=args.event_name,
+        controlled_stocks=set(parse_symbols(args.controlled_failure_tickers)),
+        controlled_surfaces=controlled_surfaces,
+        controlled_universe=(
+            args.controlled_failure_universe or controlled_universe_token
+        ),
+        controlled_stockanalysis_etfs=controlled_etfs,
+    )
+    if controlled_yahoo_etfs and any(
+        (
+            args.endpoint_canary,
+            args.discover_etf_universe,
+            args.fetch_surfaces,
+            args.universe_backfill,
+            args.incremental_etf_backfill,
+            args.reconcile_missing_etf_details,
+            args.coverage_only,
+            args.stocks_only,
+            bool(args.stocks),
+            args.fetch_financials,
+        )
+    ):
+        raise ValueError(
+            "controlled Yahoo ETF fallback failure requires minimal scope without unrelated producer work"
+        )
+
+
+def validate_controlled_yahoo_etf_fallback_scope(
+    controlled_etfs: set[str],
+    explicit_etfs: set[str],
+    *,
+    event_name: str,
+    controlled_stocks: set[str],
+    controlled_surfaces: set[str],
+    controlled_universe: bool,
+    controlled_stockanalysis_etfs: set[str],
+) -> None:
+    if not controlled_etfs:
+        return
+    if event_name != "workflow_dispatch":
+        raise ValueError(
+            "controlled Yahoo ETF fallback failures are restricted to workflow_dispatch"
+        )
+    if len(controlled_etfs) != 1:
+        raise ValueError(
+            "controlled Yahoo ETF fallback failure proof requires exactly one target"
+        )
+    if len(explicit_etfs) != 1 or controlled_etfs != explicit_etfs:
+        raise ValueError(
+            "controlled Yahoo ETF fallback failure proof requires exactly one explicit --etfs target"
+        )
+    if (
+        controlled_stocks
+        or controlled_surfaces
+        or controlled_universe
+        or controlled_stockanalysis_etfs
+    ):
+        raise ValueError(
+            "controlled Yahoo ETF fallback failure proof requires minimal scope without other recovery controls"
+        )
 
 
 def surface_stamp_membership(consumers: dict | None) -> dict[str, set[str]] | None:
@@ -4346,7 +4439,8 @@ def unique_symbols(items: list[str]) -> list[str]:
     return out
 
 
-NATURAL_RECOVERY_KINDS = frozenset({"stock", "financial", "surface", "universe"})
+NATURAL_RECOVERY_KINDS = frozenset({"stock", "financial", "etf", "surface", "universe"})
+ETF_DETAIL_RECOVERY_LIMIT = 1
 
 
 def parse_natural_recovery_kinds(value: str) -> set[str]:
@@ -4369,7 +4463,7 @@ def select_natural_recovery_targets(
     surface_names: list[str],
     *,
     stock_limit: int,
-) -> tuple[list[str], set[str], list[str], bool]:
+) -> tuple[list[str], set[str], list[str], list[str], bool]:
     retry_financials = store.retry_entities("financial") if "financial" in kinds else set()
     retry_stocks = store.retry_entities("stock") if "stock" in kinds else set()
     retry_stocks |= retry_financials
@@ -4378,6 +4472,12 @@ def select_natural_recovery_targets(
         selected_stocks = selected_stocks[:stock_limit]
     selected_set = set(selected_stocks)
     retry_financials &= selected_set
+
+    retry_etfs = (
+        sorted(store.retry_entities("etf"))[:ETF_DETAIL_RECOVERY_LIMIT]
+        if "etf" in kinds
+        else []
+    )
 
     retry_surfaces = []
     if "surface" in kinds:
@@ -4391,7 +4491,7 @@ def select_natural_recovery_targets(
         "universe" in kinds
         and "etf_universe" in store.retry_entities("universe")
     )
-    return selected_stocks, retry_financials, selected_surfaces, retry_universe
+    return selected_stocks, retry_financials, retry_etfs, selected_surfaces, retry_universe
 
 
 def load_surface_symbols(name: str) -> list[str]:
@@ -5318,6 +5418,233 @@ def fetch_yahoo_etf_fallback(
         raise
 
 
+def yahoo_etf_fallback_key(ticker: str) -> str:
+    normalized = clean_symbol(ticker)
+    if normalized != ticker:
+        raise ValueError(f"Yahoo ETF fallback ticker is invalid: {ticker}")
+    return f"ticker_{ticker.encode('utf-8').hex()}"
+
+
+def json_payload_bytes(payload: dict) -> bytes:
+    return (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+
+
+def invoke_yahoo_etf_fallback_adapter(
+    action: str,
+    *,
+    ticker: str | None = None,
+    run: dict | None = None,
+    candidate_bytes: bytes | None = None,
+    provider_bytes: bytes | None = None,
+    mirror_public: bool = False,
+) -> dict:
+    command: dict = {
+        "action": action,
+        "repo_root": str(STORAGE_ROOT),
+    }
+    if ticker is not None:
+        command["ticker"] = ticker
+    if run is not None:
+        command["run"] = run
+    if candidate_bytes is not None:
+        command["candidate_payload_base64"] = base64.b64encode(
+            candidate_bytes
+        ).decode("ascii")
+    if provider_bytes is not None:
+        command["provider_payload_base64"] = base64.b64encode(
+            provider_bytes
+        ).decode("ascii")
+    if mirror_public:
+        command["mirror_public"] = True
+    completed = subprocess.run(
+        ["node", str(YAHOO_ETF_FALLBACK_RECOVERY_ADAPTER)],
+        input=json.dumps(command, ensure_ascii=False, separators=(",", ":")),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        detail = (completed.stderr or completed.stdout or "adapter failed").strip()
+        raise RuntimeError(f"Yahoo ETF fallback recovery adapter failed: {detail}")
+    try:
+        result = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(
+            "Yahoo ETF fallback recovery adapter returned malformed JSON"
+        ) from exc
+    if not isinstance(result, dict):
+        raise RuntimeError("Yahoo ETF fallback recovery adapter result is not an object")
+    return result
+
+
+def list_yahoo_etf_fallback_retry_targets() -> list[str]:
+    result = invoke_yahoo_etf_fallback_adapter("retry_targets")
+    tickers = result.get("retry_targets")
+    if (
+        not isinstance(tickers, list)
+        or any(clean_symbol(str(ticker or "")) != ticker for ticker in tickers)
+        or tickers != sorted(set(tickers))
+    ):
+        raise RuntimeError("Yahoo ETF fallback recovery adapter returned invalid retry targets")
+    return tickers
+
+
+def run_yahoo_etf_fallback_controlled_failure(
+    ticker: str,
+    recovery_run: dict,
+) -> dict:
+    start = time.perf_counter()
+    ATTEMPT_TRACKER.record_yahoo_candidate()
+    result = invoke_yahoo_etf_fallback_adapter(
+        "record_controlled_failure",
+        ticker=ticker,
+        run=recovery_run,
+    )
+    controlled_error = RuntimeError(
+        f"controlled failure injection for yahoo_etf_fallback:{ticker}"
+    )
+    ATTEMPT_TRACKER.record_yahoo_error(
+        entity=ticker,
+        exception_kind="unexpected",
+        retry_count=0,
+        latency_ms=0,
+        error=controlled_error,
+    )
+    return {
+        "ticker": ticker,
+        "asset_type": "etf",
+        "status": "controlled_failure_retained_lkg",
+        "provider": "yahoo_finance",
+        "selected_provider": "yahoo_finance",
+        "canonical_write": False,
+        "path": None,
+        "candidate_path": f"data/yf/etf-details/{ticker}.json",
+        "financials_path": None,
+        "financials_error": None,
+        "latency_ms": round((time.perf_counter() - start) * 1000),
+        "stockanalysis_error": None,
+        "recovery_deferred": True,
+        "recovery_block_reason": result.get("reason"),
+        "error": None,
+    }
+
+
+def collect_yahoo_etf_fallback_recovery_candidate(ticker: str) -> dict:
+    module = load_yf_finance_module()
+    data, latency_ms, error, evidence = module.fetch_with_retry(
+        ticker,
+        profile="etf",
+        retries=0,
+        backoffs=(),
+        include_evidence=True,
+    )
+    retry_count = max(0, int((evidence or {}).get("attempts_used") or 1) - 1)
+    library_latency_ms = max(
+        0,
+        float((evidence or {}).get("latency_ms") or latency_ms or 0),
+    )
+    if error is not None or data is None:
+        ATTEMPT_TRACKER.record_yahoo_returned_error(
+            retry_count=retry_count,
+            latency_ms=library_latency_ms,
+        )
+        raise RuntimeError(error or "Yahoo fallback returned no data")
+    fetched_at = now_iso()
+    provider_payload = build_yf_payload(ticker, data, fetched_at)
+    candidate_payload = yahoo_etf_payload(ticker, provider_payload)
+    if provider_payload.get("source_as_of") is None:
+        raise ValueError("Yahoo ETF recovery provider source date is unavailable")
+    return {
+        "data": data,
+        "provider_payload": provider_payload,
+        "candidate_payload": candidate_payload,
+        "provider_bytes": json_payload_bytes(provider_payload),
+        "candidate_bytes": json_payload_bytes(candidate_payload),
+        "retry_count": retry_count,
+        "latency_ms": library_latency_ms,
+        "fetched_at": fetched_at,
+    }
+
+
+def run_yahoo_etf_fallback_recovery(
+    ticker: str,
+    mirror_public: bool,
+    recovery_run: dict,
+) -> dict:
+    start = time.perf_counter()
+    ATTEMPT_TRACKER.record_yahoo_candidate()
+    try:
+        collected = collect_yahoo_etf_fallback_recovery_candidate(ticker)
+        decision = invoke_yahoo_etf_fallback_adapter(
+            "promote",
+            ticker=ticker,
+            run=recovery_run,
+            candidate_bytes=collected["candidate_bytes"],
+            provider_bytes=collected["provider_bytes"],
+            mirror_public=mirror_public,
+        )
+    except Exception as exc:
+        ATTEMPT_TRACKER.record_yahoo_error(
+            entity=ticker,
+            exception_kind=(
+                "transport"
+                if isinstance(exc, (urllib.error.URLError, TimeoutError, OSError))
+                else "unexpected"
+            ),
+            retry_count=0,
+            latency_ms=round((time.perf_counter() - start) * 1000),
+            error=exc,
+        )
+        raise
+
+    ATTEMPT_TRACKER.record_yahoo_success(
+        collected["data"],
+        retry_count=collected["retry_count"],
+        latency_ms=collected["latency_ms"],
+    )
+    if decision.get("kind") == "success" and decision.get("updated") is True:
+        canonical_path = YF_ETF_DETAIL_OUT_DIR / f"{ticker}.json"
+        record_etf_detail_observation(
+            provider="yahoo_finance",
+            endpoint_family="yahoo_etf_detail",
+            ticker=ticker,
+            provider_path=f"data/yf/etf-details/{ticker}.json",
+            payload_path=canonical_path,
+            provider_schema=collected["candidate_payload"]["schema_version"],
+            source_as_of=collected["candidate_payload"]["source_as_of"],
+            observed_at=collected["fetched_at"],
+            validation_status="valid",
+            reason_code="contract_valid",
+            collection_origin="natural",
+        )
+        status = "recovered"
+        canonical_write = True
+        candidate_path = f"data/yf/etf-details/{ticker}.json"
+    elif decision.get("kind") == "deferred" and decision.get("updated") is False:
+        status = str(decision.get("reason") or "promotion_deferred")
+        canonical_write = False
+        candidate_path = None
+    else:
+        raise RuntimeError("Yahoo ETF fallback recovery adapter returned an invalid decision")
+    return {
+        "ticker": ticker,
+        "asset_type": "etf",
+        "status": status,
+        "provider": "yahoo_finance",
+        "selected_provider": "yahoo_finance" if canonical_write else None,
+        "canonical_write": canonical_write,
+        "path": None,
+        "candidate_path": candidate_path,
+        "financials_path": None,
+        "financials_error": None,
+        "latency_ms": round((time.perf_counter() - start) * 1000),
+        "stockanalysis_error": None,
+        "recovery_deferred": not canonical_write,
+        "recovery_block_reason": None if canonical_write else status,
+        "error": None,
+    }
+
+
 def classify_existing_etf_catalog(rel_path: str, mirror_public: bool) -> dict | None:
     path = OUT_DIR / rel_path
     if not path.exists():
@@ -5384,6 +5711,7 @@ def run_one(
     provider_availability_reason = None
     provider_response = None
     recovery_failure_recorded = False
+    etf_recovery_pending = False
     financials_error = None
     try:
         if kind == "etf":
@@ -5452,6 +5780,15 @@ def run_one(
                         failure_signature=failure_signature,
                         collection_origin=collection_origin,
                     )
+                if recovery_store is not None and recovery_run is not None:
+                    recovery_store.record_failure(
+                        "etf",
+                        ticker,
+                        stockanalysis_error,
+                        recovery_run,
+                        controlled=isinstance(exc, ControlledETFDetailFailure),
+                    )
+                    recovery_failure_recorded = True
                 if not yf_fallback:
                     if provider_gap:
                         return {
@@ -5600,6 +5937,10 @@ def run_one(
             stockanalysis_error = None
         if provider == "stockanalysis":
             if kind == "etf":
+                etf_recovery_pending = bool(
+                    recovery_store is not None
+                    and recovery_store.has_pending_recovery("etf", ticker)
+                )
                 try:
                     validate_stockanalysis_etf_payload(ticker, payload)
                 except ValueError as exc:
@@ -5620,6 +5961,55 @@ def run_one(
                         collection_origin=collection_origin,
                     )
                     raise
+                if etf_recovery_pending and (
+                    recovery_run is None or not is_natural_schedule_run(recovery_run)
+                ):
+                    return {
+                        "ticker": ticker,
+                        "asset_type": kind,
+                        "status": "recovery_promotion_blocked",
+                        "provider": "stockanalysis",
+                        "selected_provider": "stockanalysis",
+                        "canonical_write": False,
+                        "path": f"etfs/{ticker}.json",
+                        "candidate_path": None,
+                        "financials_path": None,
+                        "financials_error": None,
+                        "latency_ms": round((time.perf_counter() - start) * 1000),
+                        "stockanalysis_error": None,
+                        "provider_availability_status": provider_availability_status,
+                        "provider_availability_reason": provider_availability_reason,
+                        "provider_response": provider_response,
+                        "recovery_deferred": True,
+                        "recovery_block_reason": "natural_schedule_attempt_one_required",
+                        "error": None,
+                    }
+                if (
+                    etf_recovery_pending
+                    and recovery_store is not None
+                    and recovery_run is not None
+                    and not recovery_store.recovery_candidate_advances("etf", ticker, payload)
+                ):
+                    recovery_store.record_promotion_deferred("etf", ticker, payload, recovery_run)
+                    return {
+                        "ticker": ticker,
+                        "asset_type": kind,
+                        "status": "promotion_deferred",
+                        "provider": "stockanalysis",
+                        "selected_provider": "stockanalysis",
+                        "canonical_write": False,
+                        "path": f"etfs/{ticker}.json",
+                        "candidate_path": None,
+                        "financials_path": None,
+                        "financials_error": None,
+                        "latency_ms": round((time.perf_counter() - start) * 1000),
+                        "stockanalysis_error": None,
+                        "provider_availability_status": provider_availability_status,
+                        "provider_availability_reason": provider_availability_reason,
+                        "provider_response": provider_response,
+                        "recovery_deferred": True,
+                        "error": None,
+                    }
             stock_candidate = None
             stock_observed_at = None
             if kind == "stock" and stock_supply.is_enrolled_stock_detail(ticker):
@@ -5701,6 +6091,13 @@ def run_one(
                 and recovery_run is not None
             ):
                 recovery_store.record_success("stock", ticker, payload, recovery_run)
+            if (
+                kind == "etf"
+                and etf_recovery_pending
+                and recovery_store is not None
+                and recovery_run is not None
+            ):
+                recovery_store.record_success("etf", ticker, payload, recovery_run)
             if pair_publish:
                 publish_stock_financial_pair(
                     ticker,
@@ -5753,13 +6150,13 @@ def run_one(
         }
     except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError) as exc:
         if (
-            kind == "stock"
+            kind in {"stock", "etf"}
             and recovery_store is not None
             and recovery_run is not None
             and not recovery_failure_recorded
         ):
             recovery_store.record_failure(
-                "stock", ticker, f"{type(exc).__name__}: {exc}", recovery_run
+                kind, ticker, f"{type(exc).__name__}: {exc}", recovery_run
             )
         return {
             "ticker": ticker,
@@ -5772,13 +6169,13 @@ def run_one(
         }
     except RuntimeError as exc:
         if (
-            kind == "stock"
+            kind in {"stock", "etf"}
             and recovery_store is not None
             and recovery_run is not None
             and not recovery_failure_recorded
         ):
             recovery_store.record_failure(
-                "stock", ticker, f"{type(exc).__name__}: {exc}", recovery_run
+                kind, ticker, f"{type(exc).__name__}: {exc}", recovery_run
             )
         return {
             "ticker": ticker,
@@ -5823,10 +6220,16 @@ def finalize_recovery_state(
             + "; ".join(assessment["reasons"]),
             flush=True,
         )
-    if index["recovered_tickers"] or index["recovered_surfaces"] or index["recovered_universes"]:
+    if (
+        index["recovered_tickers"]
+        or index["recovered_etfs"]
+        or index["recovered_surfaces"]
+        or index["recovered_universes"]
+    ):
         print(
             "[recovered] StockAnalysis self-recovery: "
             f"tickers={','.join(index['recovered_tickers']) or '-'} "
+            f"etfs={','.join(index['recovered_etfs']) or '-'} "
             f"surfaces={','.join(index['recovered_surfaces']) or '-'} "
             f"universes={','.join(index['recovered_universes']) or '-'}",
             flush=True,
@@ -5862,14 +6265,14 @@ def _main() -> None:
     parser.add_argument("--surfaces", default="", help="comma-separated surface override; default = --surface-set")
     parser.add_argument("--surfaces-only", action="store_true", help="only refresh surfaces; do not deep-fetch ETF/stock payloads")
     parser.add_argument("--controlled-failure-tickers", default="", help="workflow_dispatch-only stock recovery chaos targets; must be explicit --stocks")
-    parser.add_argument("--controlled-failure-surfaces", default="", help="workflow_dispatch-only surface recovery chaos targets; must be explicit --surfaces. Reserved token 'etf_universe' routes the universe chaos here (GitHub caps dispatch inputs at 25)")
+    parser.add_argument("--controlled-failure-surfaces", default="", help="workflow_dispatch-only recovery chaos targets. Reserved tokens: etf_universe, etf_detail:TICKER, yahoo_etf_fallback:TICKER (GitHub caps dispatch inputs at 25)")
     parser.add_argument("--controlled-failure-universe", action="store_true", help="workflow_dispatch-only ETF universe recovery chaos target; requires --discover-etf-universe (also selectable via the 'etf_universe' token in --controlled-failure-surfaces)")
     parser.add_argument("--run-id", default=os.environ.get("GITHUB_RUN_ID", "local"))
     parser.add_argument("--run-attempt", type=int, default=int(os.environ.get("GITHUB_RUN_ATTEMPT", "1")))
     parser.add_argument("--event-name", default=os.environ.get("GITHUB_EVENT_NAME", "local"))
     parser.add_argument("--event-schedule", default=os.environ.get("EVENT_SCHEDULE", ""))
     parser.add_argument("--natural-run", action="store_true", help="prepend StockAnalysis recovery retry artifacts")
-    parser.add_argument("--natural-recovery-kinds", default="all", help="comma-separated natural recovery kinds: stock,financial,surface,universe; none disables recovery prepending")
+    parser.add_argument("--natural-recovery-kinds", default="all", help="comma-separated natural recovery kinds: stock,financial,etf,surface,universe; none disables recovery prepending")
     parser.add_argument("--stock-limit", type=int, default=0, help="maximum explicit plus recovery stock targets; 0 = unbounded manual behavior")
     parser.add_argument("--require-stock-financial-pair", action="store_true", help="fail a stock target before writing unless its coherent financial pair was collected")
     parser.add_argument("--offset", type=int, default=0, help="ETF offset for universe backfill chunking")
@@ -5956,6 +6359,7 @@ def _main() -> None:
         controlled_failure_surfaces,
         controlled_failure_universe_token,
         controlled_failure_etfs,
+        controlled_failure_yahoo_etfs,
     ) = split_controlled_failure_targets(
         args.controlled_failure_surfaces,
         args.surface_set,
@@ -6007,6 +6411,18 @@ def _main() -> None:
         run_id=args.run_id,
         run_attempt=args.run_attempt,
     )
+    if controlled_failure_yahoo_etfs:
+        controlled_ticker = next(iter(controlled_failure_yahoo_etfs))
+        result = run_yahoo_etf_fallback_controlled_failure(
+            controlled_ticker,
+            recovery_run,
+        )
+        print(
+            f"[yahoo-etf-fallback-controlled] {controlled_ticker} "
+            f"{result['status']} {result['latency_ms']}ms",
+            flush=True,
+        )
+        return
     stock_financial_detection_active = should_emit_stock_financial_detection(args, stocks)
     if stock_financial_detection_active:
         ATTEMPT_TRACKER.start_stock_financial(len(stocks))
@@ -6058,14 +6474,20 @@ def _main() -> None:
 
     recovery_store = None
     retry_financials: set[str] = set()
-    if stocks or surface_names or args.discover_etf_universe or args.natural_run:
+    retry_etfs: list[str] = []
+    yahoo_retry_etfs = (
+        list_yahoo_etf_fallback_retry_targets()
+        if args.natural_run and "etf" in natural_recovery_kinds
+        else []
+    )
+    if stocks or explicit_etfs or surface_names or args.discover_etf_universe or args.natural_run:
         recovery_store = StockAnalysisRecoveryStateStore(
             STOCKANALYSIS_RECOVERY_ROOT,
             OUT_DIR.parent.parent,
         )
         recovery_store.bootstrap_existing(recovery_run)
         if args.natural_run:
-            stocks, retry_financials, surface_names, retry_universe = (
+            stocks, retry_financials, retry_etfs, surface_names, retry_universe = (
                 select_natural_recovery_targets(
                     recovery_store,
                     natural_recovery_kinds,
@@ -6155,11 +6577,18 @@ def _main() -> None:
         if args.limit_etfs:
             etfs = etfs[: args.limit_etfs]
         validate_selected_manual_etfs(args, etfs)
+    if yahoo_retry_etfs or retry_etfs:
+        etfs = unique_symbols(yahoo_retry_etfs + retry_etfs + etfs)
+        validate_selected_manual_etfs(args, etfs)
     incremental_summary = None
     if args.incremental_etf_backfill and not args.universe_backfill and not args.stocks_only:
         incremental_summary = incremental_etf_backfill_candidates(
             universe_payload=universe_payload,
-            limit=args.incremental_etf_limit,
+            limit=max(
+                0,
+                args.incremental_etf_limit
+                - len(set(yahoo_retry_etfs) | set(retry_etfs)),
+            ),
             max_age_hours=args.incremental_etf_max_age_hours,
             offset=args.offset,
             exclude=set(etfs),
@@ -6216,36 +6645,43 @@ def _main() -> None:
     stop_reason = None
     for kind, symbols in (("etf", etfs), ("stock", stocks)):
         for idx, ticker in enumerate(symbols, 1):
-            result = run_one(
-                kind,
-                ticker,
-                args.timeout,
-                mirror_public,
-                include_financials=(
-                    kind == "stock"
-                    and (args.fetch_financials or ticker in retry_financials)
-                ),
-                yf_fallback=(
-                    kind == "etf"
-                    and args.yf_etf_fallback
-                    and not args.reconcile_missing_etf_details
-                ),
-                include_etf_history=not args.reconcile_missing_etf_details,
-                recovery_store=recovery_store if kind == "stock" else None,
-                recovery_run=recovery_run if kind == "stock" else None,
-                controlled_failure=(
-                    kind == "stock" and ticker in controlled_failure_tickers
-                ),
-                controlled_etf_detail_failure=(
-                    kind == "etf" and ticker in controlled_failure_etfs
-                ),
-                require_stock_financial_pair=(
-                    kind == "stock" and args.require_stock_financial_pair
-                ),
-                collection_origin=(
-                    "natural" if args.event_name == "schedule" else "manual"
-                ),
-            )
+            if kind == "etf" and ticker in yahoo_retry_etfs:
+                result = run_yahoo_etf_fallback_recovery(
+                    ticker,
+                    mirror_public,
+                    recovery_run,
+                )
+            else:
+                result = run_one(
+                    kind,
+                    ticker,
+                    args.timeout,
+                    mirror_public,
+                    include_financials=(
+                        kind == "stock"
+                        and (args.fetch_financials or ticker in retry_financials)
+                    ),
+                    yf_fallback=(
+                        kind == "etf"
+                        and args.yf_etf_fallback
+                        and not args.reconcile_missing_etf_details
+                    ),
+                    include_etf_history=not args.reconcile_missing_etf_details,
+                    recovery_store=recovery_store if kind in {"stock", "etf"} else None,
+                    recovery_run=recovery_run if kind in {"stock", "etf"} else None,
+                    controlled_failure=(
+                        kind == "stock" and ticker in controlled_failure_tickers
+                    ),
+                    controlled_etf_detail_failure=(
+                        kind == "etf" and ticker in controlled_failure_etfs
+                    ),
+                    require_stock_financial_pair=(
+                        kind == "stock" and args.require_stock_financial_pair
+                    ),
+                    collection_origin=(
+                        "natural" if args.event_name == "schedule" else "manual"
+                    ),
+                )
             results.append(result)
             if kind == "stock" and stock_financial_detection_active:
                 ATTEMPT_TRACKER.record_stock_financial(result)
@@ -6435,9 +6871,11 @@ def _main() -> None:
                 "artifact_id": "stockanalysis_recovery_state",
                 "counts": recovery_index.get("counts"),
                 "degraded_tickers": recovery_index.get("degraded_tickers"),
+                "degraded_etfs": recovery_index.get("degraded_etfs"),
                 "degraded_surfaces": recovery_index.get("degraded_surfaces"),
                 "degraded_universes": recovery_index.get("degraded_universes"),
                 "recovered_tickers": recovery_index.get("recovered_tickers"),
+                "recovered_etfs": recovery_index.get("recovered_etfs"),
                 "recovered_surfaces": recovery_index.get("recovered_surfaces"),
                 "recovered_universes": recovery_index.get("recovered_universes"),
                 "current_attempt": recovery_index.get("current_attempt"),

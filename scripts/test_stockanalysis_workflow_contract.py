@@ -71,7 +71,7 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             self.text,
         )
 
-    def test_etf_detail_failure_proof_is_single_target_and_skips_unrelated_fetches(self) -> None:
+    def test_etf_failure_proofs_are_separate_single_target_and_skip_unrelated_fetches(self) -> None:
         control_input = re.search(
             r"controlled_failure_surfaces:\n(?P<body>(?:\s+.*\n){1,5})",
             self.text,
@@ -79,9 +79,10 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertIsNotNone(control_input)
         self.assertIn("Owner-approved failure proof", control_input.group("body"))
         self.assertIn("etf_detail:TQQQ", control_input.group("body"))
+        self.assertIn("yahoo_etf_fallback:TQQQ", control_input.group("body"))
 
         proof_profile = re.search(
-            r'if \[ "\$ETF_DETAIL_FAILURE_PROOF" = "true" \]; then(?P<body>.*?)\n\s*elif ',
+            r'if \[ "\$ETF_DETAIL_FAILURE_PROOF" = "true" \] \|\| \[ "\$YAHOO_ETF_FAILURE_PROOF" = "true" \]; then(?P<body>.*?)\n\s*elif ',
             self.text,
             flags=re.DOTALL,
         )
@@ -99,6 +100,9 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             'if [ "${INPUT_YF_ETF_FALLBACK:-true}" = "true" ]; then',
             body,
         )
+        self.assertIn('YAHOO_ETF_FAILURE_PROOF="true"', self.text)
+        self.assertIn("data/admin/yahoo_etf_fallback", self.text)
+        self.assertIn("node scripts/test-yahoo-etf-fallback-recovery.mjs", self.text)
         for unexpected in (
             "--endpoint-canary",
             "--discover-etf-universe",
@@ -113,8 +117,8 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         for schedule, scope in (
             ("20 21 * * *", "stock,financial"),
             ("50 22 * * 1-5", "none"),
-            ("50 23 * * 1-5", "surface"),
-            ("20 23 * * 0", "surface,universe"),
+            ("50 23 * * 1-5", "etf,surface"),
+            ("20 23 * * 0", "etf,surface,universe"),
         ):
             self.assertIsNotNone(
                 re.search(

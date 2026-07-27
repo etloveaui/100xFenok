@@ -265,29 +265,31 @@ const lanes = [
   }),
   record({
     id: "yahoo_etf_fallback",
-    label: "Yahoo ETF fallback candidate",
+    label: "Yahoo ETF fallback",
     owner_workflow: ".github/workflows/fetch-stockanalysis.yml",
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "daily", provider: "yahoo/stockanalysis (shared workflow)" },
+    cadence: { kind: "daily", provider: "yahoo finance (StockAnalysis workflow)" },
     enforcement: "live",
-    // privacy_class describes ADMIN-STORE routing (what EXCLUDED_PUBLIC_DATA_ROOTS
-    // withholds): the shared StockAnalysis store syncs to public today. The lane's
-    // private canonical (data/yf/etf-details) is withheld separately — visible in
-    // roots.public_mirror being empty — outside this gate's admin/* scope.
-    privacy_class: "public_mirror",
-    admin_store: "data/admin/stockanalysis-recovery",
+    privacy_class: "private",
+    public_mirror_allowed: false,
+    admin_store: "data/admin/yahoo_etf_fallback",
     detection_attempt: attemptShard("yahoo_etf_fallback"),
-    canonical_outputs: ["data/yf/etf-details"],
+    canonical_outputs: ["data/yf/etf-details", "data/yf/finance"],
     public_mirror: [],
     commit_shards: [
       attemptShard("yahoo_etf_fallback"),
+      "data/admin/yahoo_etf_fallback",
       "data/yf/etf-details",
-      "data/admin/stockanalysis-recovery",
+      "data/yf/finance",
     ],
-    recovery_store: "data/admin/stockanalysis-recovery/index.json",
-    kpi_recovery_shape: "direct",
-    declared_exception: "shares the StockAnalysis recovery store with stockanalysis_etf_universe, stockanalysis_stock_financial, and stockanalysis_surfaces (store is multi-kind: stock/financial/surface/universe)",
+    recovery_store: "data/admin/yahoo_etf_fallback/index.json",
+    kpi_recovery_shape: "general",
+    declared_exception: "data/yf/finance is a ticker-partitioned namespace shared with the separate Yahoo batch producer; this workflow stages only its artifact-declared changed ticker files",
+    script_sources: [
+      "scripts/fetch-stockanalysis.py",
+      "scripts/yahoo-etf-fallback-recovery.mjs",
+    ],
   }),
   record({
     id: "stockanalysis_etf_universe",
@@ -309,7 +311,7 @@ const lanes = [
     ],
     recovery_store: "data/admin/stockanalysis-recovery/index.json",
     kpi_recovery_shape: "direct",
-    declared_exception: "shares the StockAnalysis recovery store with yahoo_etf_fallback, stockanalysis_stock_financial, and stockanalysis_surfaces (store is multi-kind: stock/financial/surface/universe)",
+    declared_exception: "shares the StockAnalysis recovery store with stockanalysis_stock_financial and stockanalysis_surfaces (store is multi-kind: stock/financial/etf/surface/universe)",
   }),
   record({
     id: "stockanalysis_stock_financial",
@@ -360,7 +362,7 @@ const lanes = [
     ],
     recovery_store: "data/admin/stockanalysis-recovery/index.json",
     kpi_recovery_shape: "direct",
-    declared_exception: "shares the StockAnalysis recovery store with yahoo_etf_fallback, stockanalysis_etf_universe, and stockanalysis_stock_financial (store is multi-kind: stock/financial/surface/universe)",
+    declared_exception: "shares the StockAnalysis recovery store with stockanalysis_etf_universe and stockanalysis_stock_financial (store is multi-kind: stock/financial/etf/surface/universe)",
   }),
   record({
     id: "yahoo_ticker_macro",
@@ -1322,6 +1324,7 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_
     commitSpec("data/yf/etf-details", "directory", true),
     commitSpec("data/admin/data-supply-state/v1", "directory", true),
     commitSpec("data/admin/stockanalysis-recovery", "directory", true),
+    commitSpec("data/admin/yahoo_etf_fallback", "directory", false),
     commitSpec("data/admin/data-supply-state/detection-attempts/yahoo_etf_fallback.json", "file"),
     commitSpec("data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json", "file"),
     commitSpec("data/admin/data-supply-state/detection-attempts/stockanalysis_stock_financial.json", "file"),

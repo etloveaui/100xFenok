@@ -96,7 +96,7 @@ on:
         required: false
         default: ''
       controlled_failure_surfaces:
-        description: 'Owner-approved failure proof: dispatch-only recovery chaos targets. Use etf_detail:TQQQ for exactly one explicit ETF detail; etf_universe remains the ETF universe token; surface names must be explicit (GitHub caps dispatch inputs at 25)'
+        description: 'Owner-approved failure proof: dispatch-only. Use etf_detail:TQQQ for StockAnalysis row6 or yahoo_etf_fallback:TQQQ for Yahoo row4; each requires that one exact explicit ETF. etf_universe remains separate (GitHub caps dispatch inputs at 25)'
         required: false
         default: ''
       offset:
@@ -192,6 +192,7 @@ jobs:
           INPUT_REQUIRE_STOCK_FINANCIAL_PAIR="false"
           INPUT_ISOLATED_STOCK_SCHEDULE="false"
           ETF_DETAIL_FAILURE_PROOF="false"
+          YAHOO_ETF_FAILURE_PROOF="false"
           if [ "$EVENT_NAME" = "schedule" ]; then
             INPUT_FETCH_FINANCIALS="false"
             INPUT_DISCOVER_UNIVERSE="false"
@@ -239,14 +240,14 @@ jobs:
               INPUT_FETCH_SURFACES="true"
               INPUT_SURFACE_SET="${STOCKANALYSIS_DAILY_SURFACE_SET:-core}"
               INPUT_CORE_BASKET_REFRESH="${STOCKANALYSIS_DAILY_CORE_BASKET_REFRESH:-true}"
-              NATURAL_RECOVERY_KINDS="surface"
+              NATURAL_RECOVERY_KINDS="etf,surface"
               if [ "$EVENT_SCHEDULE" = "20 23 * * 0" ]; then
                 # BACKLOG #331: one complete weekly universe collection. Current
                 # measured universe is 11 pages; 100 preserves headroom without
                 # turning weekday bounded runs into broad discovery.
                 INPUT_DISCOVER_UNIVERSE="true"
                 INPUT_MAX_UNIVERSE_PAGES="100"
-                NATURAL_RECOVERY_KINDS="surface,universe"
+                NATURAL_RECOVERY_KINDS="etf,surface,universe"
               fi
             else
               echo "unknown StockAnalysis schedule: $EVENT_SCHEDULE" >&2
@@ -264,25 +265,32 @@ jobs:
             case "${INPUT_CONTROLLED_FAILURE_SURFACES:-}" in
               *[eE][tT][fF]_[dD][eE][tT][aA][iI][lL]:*)
                 ETF_DETAIL_FAILURE_PROOF="true"
-                INPUT_STOCKS=""
-                INPUT_STOCKS_ONLY="false"
-                INPUT_FETCH_FINANCIALS="false"
-                INPUT_DISCOVER_UNIVERSE="false"
-                INPUT_UNIVERSE_BACKFILL="false"
-                INPUT_INCREMENTAL_ETF_BACKFILL="false"
-                INPUT_INCREMENTAL_ETF_LIMIT="0"
-                INPUT_RECONCILE_MISSING_ETF_DETAILS="false"
-                INPUT_HISTORY_GAP_PLAN="false"
-                INPUT_CORE_BASKET_REFRESH="false"
-                INPUT_HISTORY_GAPS_ONLY="false"
-                INPUT_REQUIRED_HISTORY_PERIODS=""
-                INPUT_FETCH_SURFACES="false"
-                INPUT_SURFACE_SET=""
-                INPUT_SURFACES=""
-                INPUT_OFFSET="0"
-                INPUT_LIMIT_ETFS="1"
                 ;;
             esac
+            case "${INPUT_CONTROLLED_FAILURE_SURFACES:-}" in
+              *[yY][aA][hH][oO][oO]_[eE][tT][fF]_[fF][aA][lL][lL][bB][aA][cC][kK]:*)
+                YAHOO_ETF_FAILURE_PROOF="true"
+                ;;
+            esac
+            if [ "$ETF_DETAIL_FAILURE_PROOF" = "true" ] || [ "$YAHOO_ETF_FAILURE_PROOF" = "true" ]; then
+              INPUT_STOCKS=""
+              INPUT_STOCKS_ONLY="false"
+              INPUT_FETCH_FINANCIALS="false"
+              INPUT_DISCOVER_UNIVERSE="false"
+              INPUT_UNIVERSE_BACKFILL="false"
+              INPUT_INCREMENTAL_ETF_BACKFILL="false"
+              INPUT_INCREMENTAL_ETF_LIMIT="0"
+              INPUT_RECONCILE_MISSING_ETF_DETAILS="false"
+              INPUT_HISTORY_GAP_PLAN="false"
+              INPUT_CORE_BASKET_REFRESH="false"
+              INPUT_HISTORY_GAPS_ONLY="false"
+              INPUT_REQUIRED_HISTORY_PERIODS=""
+              INPUT_FETCH_SURFACES="false"
+              INPUT_SURFACE_SET=""
+              INPUT_SURFACES=""
+              INPUT_OFFSET="0"
+              INPUT_LIMIT_ETFS="1"
+            fi
           fi
           {
             echo "EFFECTIVE_HISTORY_GAPS_ONLY=${INPUT_HISTORY_GAPS_ONLY:-false}"
@@ -301,7 +309,7 @@ jobs:
           if [ "${INPUT_CORE_BASKET_REFRESH:-false}" = "true" ]; then
             INPUT_ETFS="$(node -e 'const fs = require("fs"); const payload = JSON.parse(fs.readFileSync("data/admin/fenok-etf-core-daily-basket.json", "utf8")); const tickers = Array.isArray(payload.daily_refresh_universe?.tickers) ? payload.daily_refresh_universe.tickers : (Array.isArray(payload.rows) ? payload.rows.map((row) => row && row.ticker) : []); const seen = new Set(); const out = []; for (const raw of tickers) { const ticker = String(raw || "").trim().toUpperCase(); if (ticker && !seen.has(ticker)) { seen.add(ticker); out.push(ticker); } } if (!out.length) { console.error("Core Basket refresh requested, but no tickers were found"); process.exit(1); } process.stdout.write(out.join(","));')"
           fi
-          if [ "$ETF_DETAIL_FAILURE_PROOF" = "true" ]; then
+          if [ "$ETF_DETAIL_FAILURE_PROOF" = "true" ] || [ "$YAHOO_ETF_FAILURE_PROOF" = "true" ]; then
             ARGS="--sleep ${INPUT_SLEEP:-0.25} --etfs=${INPUT_ETFS} --controlled-failure-surfaces $INPUT_CONTROLLED_FAILURE_SURFACES --limit-etfs 1"
             if [ "${INPUT_YF_ETF_FALLBACK:-true}" = "true" ]; then
               ARGS="$ARGS --yf-etf-fallback"
@@ -477,7 +485,8 @@ jobs:
               data/yf/finance \
               data/yf/etf-details \
               data/admin/data-supply-state \
-              data/admin/stockanalysis-recovery
+              data/admin/stockanalysis-recovery \
+              data/admin/yahoo_etf_fallback
 
             APPLY_JSON="$(
               python3 scripts/stockanalysis_artifact.py apply \
@@ -502,6 +511,7 @@ jobs:
             rsync -a --checksum --delete data/stockanalysis/surfaces/ "$PROJECTION_ORACLE/"
             python3 -m unittest scripts/test_fetch_stockanalysis_fixtures.py
             python3 scripts/test_stockanalysis_recovery_state.py
+            node scripts/test-yahoo-etf-fallback-recovery.mjs
             node scripts/test-stockanalysis-attempt-emitter.mjs
             STOCKANALYSIS_SOURCE_SURFACE_DIR="data/stockanalysis/surfaces" \
               STOCKANALYSIS_PROJECTION_ORACLE_DIR="$PROJECTION_ORACLE" \

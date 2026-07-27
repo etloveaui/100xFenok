@@ -1229,6 +1229,10 @@ function buildStockS0Lane(coverageIndex) {
 
 function stockanalysisRecoveryEvidence(state, kinds) {
   const allowed = new Set(kinds);
+  const countsByKind = state?.counts_by_kind && typeof state.counts_by_kind === "object"
+    ? state.counts_by_kind
+    : {};
+  const requestedKinds = [...allowed].sort();
   const degraded = (Array.isArray(state?.degraded_details) ? state.degraded_details : [])
     .filter((item) => allowed.has(item?.artifact_kind))
     .slice(0, 40)
@@ -1254,16 +1258,31 @@ function stockanalysisRecoveryEvidence(state, kinds) {
     }));
   const currentErrors = (Array.isArray(state?.current_attempt?.errors) ? state.current_attempt.errors : [])
     .filter((item) => allowed.has(item?.artifact_kind));
+  const promotionDeferrals = (Array.isArray(state?.promotion_deferral_details)
+    ? state.promotion_deferral_details
+    : [])
+    .filter((item) => allowed.has(item?.artifact_kind))
+    .slice(0, 40)
+    .map((item) => ({
+      artifact_kind: item?.artifact_kind ?? null,
+      entity: item?.entity ?? null,
+      source_as_of: item?.source_as_of ?? null,
+      retained_source_as_of: item?.retained_source_as_of ?? null,
+      reason_code: item?.reason_code ?? null,
+    }));
   return {
     state_present: Boolean(state),
     generated_at: state?.generated_at ?? null,
     current_attempt_ref: state?.current_attempt?.run_id ?? null,
     current_attempt_number: number(state?.current_attempt?.run_attempt, 1),
     current_failed_count: currentErrors.length,
+    tracked_kinds: requestedKinds.filter((kind) => Object.hasOwn(countsByKind, kind)),
+    requested_kinds_present: requestedKinds.every((kind) => Object.hasOwn(countsByKind, kind)),
     degraded,
     recovered,
     degraded_entities: [...new Set(degraded.map((item) => item.entity).filter(Boolean))].sort(),
     recovered_entities: [...new Set(recovered.map((item) => item.entity).filter(Boolean))].sort(),
+    promotion_deferrals: promotionDeferrals,
   };
 }
 
@@ -1297,11 +1316,12 @@ function buildStockS1Lane(coverageIndex, stockanalysisRecovery) {
   });
 }
 
-export function buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCoreBasket) {
+export function buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCoreBasket, stockanalysisRecovery) {
   const track = trackById(coverageIndex, "etf_scoring_lane");
   const counts = track?.evidence_based_readiness?.counts || {};
   const daily = etfDaily1y?.daily_1y_readiness || {};
   const core = etfCoreBasket?.readiness || {};
+  const recovery = stockanalysisRecoveryEvidence(stockanalysisRecovery, ["etf"]);
   const routeText = readText("100xfenok-next/src/app/api/data/fenok-etf-signals/[ticker]/route.ts");
   const staleRouteCaveat = /not PUBLIC\/DAILY\/GATED/i.test(routeText);
   return lane("etf_public_and_daily_gate", "ETF public scoring and daily gate", [
@@ -1311,6 +1331,8 @@ export function buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCor
     diagnosticCheck("fetchable_plan_empty", "full scored-ETF exact fetchable plan", number(etfFetchablePlan?.counts?.fetchable) === 0 && (etfFetchablePlan?.tickers || []).length === 0, `${number(etfFetchablePlan?.counts?.fetchable)} fetchable`, { service_gate: false }),
     check("core_basket_ready", "ETF core daily basket", bool(core.core_daily_basket_ready) && number(core.stale_selected_count) === 0 && number(core.selected_count) >= number(core.min_selected_count), `${number(core.fresh_selected_count)} fresh / ${number(core.selected_count)} selected`),
     check("route_caveat_consistent", "ETF API public label", !staleRouteCaveat, staleRouteCaveat ? "route still says not PUBLIC/DAILY/GATED" : "route caveat matches ready public lane"),
+    diagnosticCheck("stockanalysis_recovery_state_present", "StockAnalysis ETF primary recovery state", recovery.requested_kinds_present, recovery.generated_at || "missing", { service_gate: false }),
+    diagnosticCheck("stockanalysis_retry_empty", "StockAnalysis ETF primary retry set", recovery.degraded.length === 0, `${recovery.degraded.length} deferred: ${recovery.degraded_entities.join(", ") || "none"}`, { service_gate: false }),
   ], {
     counts: {
       eligible_etf_count: number(counts.eligible_etf_count || track?.denominator),
@@ -1325,6 +1347,7 @@ export function buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCor
     details: {
       full_daily_1y_diagnostic_service_gate: etfDaily1y?.raw_policy?.service_gate === true,
       exact_plan_batch_count: number(etfFetchablePlan?.bounded_batches?.batch_count),
+      stockanalysis_recovery: recovery,
     },
     asOf: etfDaily1y?.generated_at || coverageIndex?.generated_at || null,
   });
@@ -2336,7 +2359,7 @@ export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, r
   const lanes = [
     buildStockS0Lane(coverageIndex),
     buildStockS1Lane(coverageIndex, stockanalysisRecovery),
-    buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCoreBasket),
+    buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCoreBasket, stockanalysisRecovery),
     buildYahooBatchLane(yahooBatchState, nowIso),
     buildSlickChartsDeliveryLane(nowIso, { assessment: slickchartsDelivery }),
     buildRimLane(rimInputs, nasdaqGiwSoxRecovery),
