@@ -1,0 +1,58 @@
+{
+  "schema_version": "fenok_krx_public_bridge_history.v1",
+  "source": "KRX_OPEN_API",
+  "market": "Korea",
+  "public_serving": true,
+  "aggregate_only": true,
+  "per_issuer_rows": false,
+  "raw_public": false,
+  "license_or_terms_note": "KRX usage permission granted by owner 2026-07-19; public serving of derived/aggregate surfaces authorized; raw per-issuer row redistribution still governed per-slice.",
+  "generated_at": "2026-07-27T13:26:26.281Z",
+  "latest_source_date": "2026-07-24",
+  "persistence_policy": {
+    "schema_version": "krx-bridge-bounded-persistence/v1",
+    "basis": "provider_source_date",
+    "scope": "per_public_safe_bridge_history",
+    "max_distinct_source_dates": 100,
+    "eviction": "oldest_source_date_first"
+  },
+  "persistence_state": {
+    "available_source_dates": 1,
+    "retained_source_dates": 1,
+    "pruned_source_dates": 0,
+    "last_run_pruned_source_dates": 0
+  },
+  "rows": [
+    {
+      "source_date": "2026-07-24",
+      "as_of": "2026-07-24",
+      "generated_at": "2026-07-27T13:26:26.281Z",
+      "latest_run": {
+        "run_id": "krx_daily_20260726",
+        "endpoint_count": 31,
+        "attempted_call_count": 31,
+        "summary": {
+          "total_files": 31,
+          "success_files": 31,
+          "empty_files": 0,
+          "failed_files": 0
+        }
+      },
+      "derived_rim_inputs": {
+        "status": "ready",
+        "missing": []
+      },
+      "public_outputs": {
+        "index_closes": {
+          "status": "ready",
+          "row_count": 131
+        },
+        "kosdaq_market_cap": {
+          "status": "ready",
+          "issuer_count": 1821,
+          "top_n_weight": 0.179191385437
+        }
+      }
+    }
+  ]
+}

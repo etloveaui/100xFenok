@@ -1,32 +1,44 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "krx",
-  "updated_at": "2026-07-27T09:07:20.006Z",
-  "retry_set": [
-    "bridge"
-  ],
+  "updated_at": "2026-07-27T13:26:02.693Z",
+  "retry_set": [],
   "items": {
     "bridge": {
       "key": "bridge",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/krx/lkg/bridge.json",
-        "payload_sha256": "98b84069c2330e9600fcaea6cd0896c88a8b5365fa2c4e74c0cc2cdade6fa74b",
-        "source_as_of": "2026-07-23"
+        "path": "data/admin/fenok-edge-korea-krx-daily-index.json",
+        "payload_sha256": "08af93c9ef4f4db2ba37959975b4c1df7c04d4d1e585f50209b9d2d7e7175390",
+        "source_as_of": "2026-07-24"
       },
       "lkg": {
         "path": "data/admin/krx/lkg/bridge.json",
         "payload_sha256": "98b84069c2330e9600fcaea6cd0896c88a8b5365fa2c4e74c0cc2cdade6fa74b",
         "source_as_of": "2026-07-23"
       },
-      "latest_failure": {
+      "updated_at": "2026-07-27T13:26:02.693Z",
+      "promotion_contract": "provider_observation/v2",
+      "provider_observation": {
+        "schema_version": "provider_observation/v2",
+        "payload_sha256": "08af93c9ef4f4db2ba37959975b4c1df7c04d4d1e585f50209b9d2d7e7175390",
+        "source_as_of": "2026-07-24",
+        "run_id": "30270187601",
+        "run_attempt": 1,
+        "observed_at": "2026-07-27T13:26:02.693Z"
+      },
+      "recovered_from_run_id": "30252012390",
+      "recovered_at": "2026-07-27T13:26:02.693Z",
+      "recovery_run_id": "30270187601",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "last_recovered_failure": {
         "run_id": "30252012390",
         "run_attempt": 1,
         "observed_at": "2026-07-27T09:07:20.006Z",
         "reason": "http_error"
-      },
-      "updated_at": "2026-07-27T09:07:20.006Z"
+      }
     }
   }
 }
