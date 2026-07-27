@@ -4141,6 +4141,7 @@ def etf_detail_backfill_reason(
     ticker: str,
     max_age_hours: float,
     required_history_periods: tuple[str, ...] = (),
+    latest_primary_observation: dict | None = None,
 ) -> tuple[str | None, float | None]:
     payload = read_json(OUT_DIR / "etfs" / f"{ticker}.json")
     if payload is None:
@@ -4149,6 +4150,12 @@ def etf_detail_backfill_reason(
     detail_status = payload.get("detail_status")
     source_provider = payload.get("source_provider")
     age_hours = payload_age_hours(payload)
+    if (
+        isinstance(latest_primary_observation, dict)
+        and latest_primary_observation.get("validation_status") == "invalid"
+        and latest_primary_observation.get("reason_code") != "provider_coverage_gap"
+    ):
+        return "invalid", age_hours
     if source != "stockanalysis" or source_provider == "yahoo_finance" or detail_status == "yf_fallback":
         return "fallback_retry", age_hours
     if required_history_periods and missing_history_periods(payload, required_history_periods):
@@ -4156,6 +4163,39 @@ def etf_detail_backfill_reason(
     if max_age_hours > 0 and (age_hours is None or age_hours >= max_age_hours):
         return "stale", age_hours
     return None, age_hours
+
+
+def latest_stockanalysis_etf_detail_observations() -> dict[str, dict]:
+    latest: dict[str, dict] = {}
+    history_root = DATA_SUPPLY_STATE_ROOT / "history" / "observations"
+    if not history_root.is_dir():
+        return latest
+    for history_path in sorted(history_root.glob("*.jsonl")):
+        for raw_line in history_path.read_text(encoding="utf-8").splitlines():
+            try:
+                row = json.loads(raw_line)
+            except json.JSONDecodeError:
+                continue
+            if (
+                not isinstance(row, dict)
+                or row.get("provider") != "stockanalysis"
+                or row.get("domain") != "etf_detail"
+                or row.get("validation_status") not in {"valid", "invalid"}
+            ):
+                continue
+            ticker = clean_symbol(row.get("entity"))
+            observed_at = parse_iso_timestamp(row.get("observed_at"))
+            if ticker is None or observed_at is None:
+                continue
+            prior = latest.get(ticker)
+            prior_observed_at = (
+                parse_iso_timestamp(prior.get("observed_at"))
+                if isinstance(prior, dict)
+                else None
+            )
+            if prior_observed_at is None or observed_at > prior_observed_at:
+                latest[ticker] = row
+    return latest
 
 
 def is_daily_1y_history_gap_mode(required_history_periods: tuple[str, ...], history_gaps_only: bool) -> bool:
@@ -4659,13 +4699,19 @@ def incremental_etf_backfill_candidates(
     seen = set()
     source_priority = {"new_etfs": 0, "etf_universe": 1, "etf_screener": 2}
     reason_priority = {"missing": 0, "invalid": 0, "fallback_retry": 1, "history_gap": 2, "stale": 3}
+    latest_primary_observations = latest_stockanalysis_etf_detail_observations()
 
     for source_name, symbols in sources:
         for ticker in unique_symbols(symbols):
             if ticker in seen or ticker in exclude:
                 continue
             pending_entry = pending_entries.get(ticker)
-            reason, age_hours = etf_detail_backfill_reason(ticker, max_age_hours, required_history_periods)
+            reason, age_hours = etf_detail_backfill_reason(
+                ticker,
+                max_age_hours,
+                required_history_periods,
+                latest_primary_observations.get(ticker),
+            )
             if reason is None or (history_gaps_only and reason != "history_gap"):
                 continue
             if pending_entry_in_cooldown(pending_entry, now_dt, cooldown_days, cooldown_failure_threshold):
@@ -4739,13 +4785,14 @@ def incremental_etf_backfill_candidates(
             "selection": (
                 "primary StockAnalysis ETF detail files missing required history_periods only"
                 if history_gaps_only
-                else "never-fetched missing ETF details first, lower prior failures before retries, then Yahoo fallback retries, then multi-year history gaps, then stale records; new_etfs are prioritized within each reason/failure bucket, then etf_universe, then etf_screener-only rows"
+                else "never-fetched or latest-observation-invalid ETF details first, lower prior failures before retries, then Yahoo fallback retries, then multi-year history gaps, then stale records; new_etfs are prioritized within each reason/failure bucket, then etf_universe, then etf_screener-only rows"
             ),
         },
         "counts": {
             "candidates": len(candidates),
             "selected": len(selected),
             "missing": sum(1 for row in candidates if row["reason"] == "missing"),
+            "invalid": sum(1 for row in candidates if row["reason"] == "invalid"),
             "fallback_retry": sum(1 for row in candidates if row["reason"] == "fallback_retry"),
             "history_gap": sum(1 for row in candidates if row["reason"] == "history_gap"),
             "inception_limited_history_gap": len(inception_limited_rows),

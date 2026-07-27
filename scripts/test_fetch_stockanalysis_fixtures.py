@@ -2426,6 +2426,66 @@ module.main()
         self.assertEqual(selected["OLD"], "stale")
         self.assertEqual(summary["counts"]["selected"], 3)
 
+    def test_incremental_etf_backfill_retries_latest_invalid_primary_observation(self) -> None:
+        original_out_dir = self.fetcher.OUT_DIR
+        original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                out_dir = root / "data" / "stockanalysis"
+                state_root = root / "data" / "admin" / "data-supply-state" / "v1"
+                self.fetcher.OUT_DIR = out_dir
+                self.fetcher.DATA_SUPPLY_STATE_ROOT = state_root
+                (out_dir / "surfaces").mkdir(parents=True)
+                (out_dir / "etfs").mkdir(parents=True)
+                (out_dir / "surfaces" / "new_etfs.json").write_text(
+                    json.dumps({"records": [{"s": "TQQQ", "n": "ProShares UltraPro QQQ"}]}),
+                    encoding="utf-8",
+                )
+                (out_dir / "etfs" / "TQQQ.json").write_text(
+                    json.dumps(
+                        {
+                            "source": "stockanalysis",
+                            "source_provider": "stockanalysis",
+                            "detail_status": "stockanalysis",
+                            "fetched_at": datetime.now(timezone.utc).isoformat(),
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                history_root = state_root / "history" / "observations"
+                history_root.mkdir(parents=True)
+                (history_root / "2026-07-27.jsonl").write_text(
+                    json.dumps(
+                        {
+                            "provider": "stockanalysis",
+                            "domain": "etf_detail",
+                            "entity": "TQQQ",
+                            "observed_at": "2026-07-27T15:15:04Z",
+                            "validation_status": "invalid",
+                            "reason_code": "fetch_failed",
+                        }
+                    )
+                    + "\n",
+                    encoding="utf-8",
+                )
+
+                summary = self.fetcher.incremental_etf_backfill_candidates(
+                    universe_payload={"records": []},
+                    limit=10,
+                    max_age_hours=720,
+                    exclude=set(),
+                )
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
+
+        self.assertEqual(
+            [(row["ticker"], row["reason"]) for row in summary["selected"]],
+            [("TQQQ", "invalid")],
+        )
+        self.assertEqual(summary["counts"]["invalid"], 1)
+
     def test_incremental_etf_backfill_prioritizes_missing_universe_before_fallback_retry(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
         with tempfile.TemporaryDirectory() as tmp:
