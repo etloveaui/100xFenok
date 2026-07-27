@@ -1,26 +1,27 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "sentiment",
-  "updated_at": "2026-07-27T14:45:40.786Z",
+  "updated_at": "2026-07-27T15:35:09.917Z",
   "retry_set": [
+    "cnn",
     "crypto"
   ],
   "items": {
     "cnn": {
       "key": "cnn",
-      "resolution_state": "fresh_primary",
-      "retry": false,
+      "resolution_state": "lkg_primary",
+      "retry": true,
       "current": {
-        "path": "data/admin/sentiment/current/cnn.json",
+        "path": "data/admin/sentiment/lkg/cnn.json",
         "payload_sha256": "f705d10d057c81dc93702c0254a1b48fc1a1b776827582e6315a5be95b64381d",
         "source_as_of": "2026-07-27"
       },
       "lkg": {
         "path": "data/admin/sentiment/lkg/cnn.json",
-        "payload_sha256": "09b40bc7579a77c4703d4bb5f14e380b976b87e9e55730c3cfa4578e1409a247",
-        "source_as_of": "2026-07-15"
+        "payload_sha256": "f705d10d057c81dc93702c0254a1b48fc1a1b776827582e6315a5be95b64381d",
+        "source_as_of": "2026-07-27"
       },
-      "updated_at": "2026-07-27T14:45:40.786Z",
+      "updated_at": "2026-07-27T15:35:09.917Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
@@ -30,15 +31,16 @@
         "run_attempt": 1,
         "observed_at": "2026-07-27T14:45:40.786Z"
       },
-      "recovered_from_run_id": "29466697911",
-      "recovered_at": "2026-07-16T22:56:18.302Z",
-      "recovery_run_id": "29540525975",
-      "recovery_run_attempt": 1,
-      "recovery_event_name": "schedule",
       "last_recovered_failure": {
         "run_id": "29466697911",
         "run_attempt": 1,
         "observed_at": "2026-07-16T02:34:03.796Z",
+        "reason": "controlled_failure"
+      },
+      "latest_failure": {
+        "run_id": "30280615811",
+        "run_attempt": 1,
+        "observed_at": "2026-07-27T15:35:09.917Z",
         "reason": "controlled_failure"
       }
     },
@@ -51,7 +53,7 @@
         "payload_sha256": "90f3c8d0c14e897e5a1c43e6c4b4adcb0262693148d008445869ba3e550c4d06",
         "source_as_of": "2026-07-21"
       },
-      "updated_at": "2026-07-27T14:45:40.786Z",
+      "updated_at": "2026-07-27T15:35:09.917Z",
       "lkg": {
         "path": "data/admin/sentiment/lkg/cftc.json",
         "payload_sha256": "e3a5dd453618d71b0dea3d946a04ad171e92c70570906c62f1cb2a4ebe699f94",
@@ -62,9 +64,9 @@
         "schema_version": "provider_observation/v2",
         "payload_sha256": "025a3064ea9804f35212ed21653786f5bf945bddc40e7ca82cfc8c6ea34a87e9",
         "source_as_of": "2026-07-21",
-        "run_id": "30276485905",
+        "run_id": "30280615811",
         "run_attempt": 1,
-        "observed_at": "2026-07-27T14:45:40.786Z"
+        "observed_at": "2026-07-27T15:35:09.917Z"
       },
       "recovered_from_run_id": "29466936989",
       "recovered_at": "2026-07-17T23:36:00.434Z",
@@ -84,10 +86,10 @@
       "retry": false,
       "current": {
         "path": "data/admin/sentiment/current/vix.json",
-        "payload_sha256": "fef6cb25a7ca1e4e0757750d1a8493c512225d1684f83cd8d9390c2c1585753d",
+        "payload_sha256": "480b8923a657232be303bde18d400d142974008c3d18f1cf03d507281355bb06",
         "source_as_of": "2026-07-27"
       },
-      "updated_at": "2026-07-27T14:45:40.786Z",
+      "updated_at": "2026-07-27T15:35:09.917Z",
       "lkg": {
         "path": "data/admin/sentiment/lkg/vix.json",
         "payload_sha256": "ee270df56219e53141ef5424f9dc7ef8d6b114e1b4905b991fc6f301fbcb5a89",
@@ -96,11 +98,11 @@
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "1c5e16953ed1060acaf3b164fccc9c0f0af781f3acce1a9a483a7f38c37d25f8",
+        "payload_sha256": "1e046c96059d775a08d9e6a7d642d3a0b2052ed48faa7f3eb6848947b6b9eecb",
         "source_as_of": "2026-07-27",
-        "run_id": "30276485905",
+        "run_id": "30280615811",
         "run_attempt": 1,
-        "observed_at": "2026-07-27T14:45:40.786Z"
+        "observed_at": "2026-07-27T15:35:09.917Z"
       },
       "recovered_from_run_id": "29467122930",
       "recovered_at": "2026-07-16T22:56:18.302Z",
@@ -123,7 +125,7 @@
         "payload_sha256": "2254f76c8904babca187ca10e6d24e8640c415f0aa0bd87830ae53b03f74aa7d",
         "source_as_of": "2026-07-24"
       },
-      "updated_at": "2026-07-27T14:45:40.786Z",
+      "updated_at": "2026-07-27T15:35:09.917Z",
       "lkg": {
         "path": "data/admin/sentiment/lkg/move.json",
         "payload_sha256": "1b2585748a95621a7f53db1a4ff072e63f7fb9e4ea210301905cb6a7399b38f5",
@@ -134,9 +136,9 @@
         "schema_version": "provider_observation/v2",
         "payload_sha256": "35b0027c752cb08edf771567e7dfcbe27b5bea61e860ac8c543bd8ccb01f7652",
         "source_as_of": "2026-07-17",
-        "run_id": "30276485905",
+        "run_id": "30280615811",
         "run_attempt": 1,
-        "observed_at": "2026-07-27T14:45:40.786Z"
+        "observed_at": "2026-07-27T15:35:09.917Z"
       },
       "recovered_from_run_id": "29467331258",
       "recovered_at": "2026-07-16T22:56:18.302Z",
