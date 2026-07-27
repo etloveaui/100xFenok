@@ -526,7 +526,7 @@ function runFixture(options = {}) {
   assert.equal(lane.owner_workflow, ".github/workflows/fetch-damodaran-shadow.yml");
   assert.equal(lane.privacy_class, "public_mirror");
   assert.equal(lane.lane_class, "detection_floor");
-  assert.equal(lane.enforcement, "shadow");
+  assert.equal(lane.enforcement, "live");
   assert.deepStrictEqual(lane.cadence.provenance, {
     kind: "github_workflow",
     evidence: ".github/workflows/fetch-damodaran-shadow.yml",
