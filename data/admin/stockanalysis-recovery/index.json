@@ -1,14 +1,15 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-07-27T17:39:30Z",
+  "generated_at": "2026-07-27T18:34:59Z",
   "counts": {
-    "tracked": 118,
+    "tracked": 119,
     "fresh": 84,
-    "lkg": 34,
+    "lkg": 35,
     "unavailable": 0,
-    "retry": 34,
-    "failed": 2,
-    "recovered": 0
+    "retry": 35,
+    "failed": 1,
+    "recovered": 0,
+    "promotion_deferred": 0
   },
   "counts_by_kind": {
     "stock": {
@@ -21,6 +22,13 @@
     "financial": {
       "tracked": 43,
       "fresh": 42,
+      "lkg": 1,
+      "unavailable": 0,
+      "retry": 1
+    },
+    "etf": {
+      "tracked": 1,
+      "fresh": 0,
       "lkg": 1,
       "unavailable": 0,
       "retry": 1
@@ -176,6 +184,10 @@
     {
       "artifact_kind": "financial",
       "entity": "AAPL"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "TQQQ"
     }
   ],
   "degraded_details": [
@@ -518,6 +530,16 @@
       "failure_run_id": "30290132699",
       "failure_observed_at": "2026-07-27T17:39:30Z",
       "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "TQQQ",
+      "resolution_state": "lkg_primary",
+      "payload_sha256": "dee3cf1ed890751ca5cfa3e864e27ec6f7ed01db939e89d8e7cf8a7d9f853b10",
+      "source_as_of": "2026-07-16T20:00:00Z",
+      "failure_run_id": "30294312998",
+      "failure_observed_at": "2026-07-27T18:34:59Z",
+      "data_loss": false
     }
   ],
   "degraded_tickers": [
@@ -557,36 +579,36 @@
   ],
   "degraded_surfaces": [],
   "degraded_universes": [],
+  "degraded_etfs": [
+    "TQQQ"
+  ],
   "recovered_details": [],
   "recovered_tickers": [],
   "recovered_surfaces": [],
   "recovered_universes": [],
+  "recovered_etfs": [],
+  "promotion_deferral_details": [],
   "current_attempt": {
-    "run_id": "30290132699",
+    "run_id": "30294312998",
     "run_attempt": 1,
     "event_name": "workflow_dispatch",
     "schedule": "",
     "natural": false,
-    "attempted": 2,
+    "attempted": 1,
     "successes": 0,
-    "failed": 2,
+    "failed": 1,
     "recovered": 0,
+    "promotion_deferred": 0,
     "errors": [
       {
-        "artifact_kind": "stock",
-        "entity": "AAPL",
-        "error": "RuntimeError: controlled failure injection for stock:AAPL",
-        "controlled": true,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "AAPL",
-        "error": "RuntimeError: controlled failure injection for financial:AAPL",
+        "artifact_kind": "etf",
+        "entity": "TQQQ",
+        "error": "ControlledETFDetailFailure: controlled failure injection for etf_detail:TQQQ",
         "controlled": true,
         "data_loss": false
       }
     ],
-    "success_rows": []
+    "success_rows": [],
+    "promotion_deferrals": []
   }
 }

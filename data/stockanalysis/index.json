@@ -1,7 +1,7 @@
 {
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
-  "generated_at": "2026-07-27T17:39:40Z",
+  "generated_at": "2026-07-27T18:35:12Z",
   "source_as_of": {
     "surfaces": {
       "market_events": null,
@@ -26,19 +26,19 @@
     "etf_detail_missing": 0,
     "etf_detail_coverage_pct": 100.0,
     "etf_detail_primary_pct": 100.0,
-    "etfs_requested": 0,
-    "stocks_requested": 1,
+    "etfs_requested": 1,
+    "stocks_requested": 0,
     "surfaces_requested": 0,
     "surfaces_ok": 0,
     "surfaces_failed": 0,
-    "financials_requested": 1,
+    "financials_requested": 0,
     "financials_ok": 0,
-    "financials_failed": 1,
-    "ok": 0,
-    "failed": 1,
-    "hard_failed": 1,
+    "financials_failed": 0,
+    "ok": 1,
+    "failed": 0,
+    "hard_failed": 0,
     "etfs_stockanalysis_ok": 0,
-    "etfs_yahoo_fallback_ok": 0,
+    "etfs_yahoo_fallback_ok": 1,
     "etfs_provider_available": 0,
     "etfs_provider_absent": 0,
     "etfs_still_pending": 0,
@@ -50,18 +50,27 @@
   },
   "results": [
     {
-      "ticker": "AAPL",
-      "asset_type": "stock",
-      "status": "error",
-      "provider": null,
-      "path": null,
-      "latency_ms": 11,
-      "error": "RuntimeError: controlled failure injection for stock:AAPL"
+      "ticker": "TQQQ",
+      "asset_type": "etf",
+      "status": "fallback_observed_primary_preserved",
+      "provider": "yahoo_finance",
+      "selected_provider": "stockanalysis",
+      "canonical_write": false,
+      "path": "etfs/TQQQ.json",
+      "candidate_path": "data/yf/etf-details/TQQQ.json",
+      "financials_path": null,
+      "financials_error": null,
+      "latency_ms": 5223,
+      "stockanalysis_error": "ControlledETFDetailFailure: controlled failure injection for etf_detail:TQQQ",
+      "provider_availability_status": null,
+      "provider_availability_reason": null,
+      "provider_response": null,
+      "error": null
     }
   ],
   "etf_detail_coverage": {
     "path": "coverage/etf_detail.json",
-    "generated_at": "2026-07-27T17:39:40Z",
+    "generated_at": "2026-07-27T18:35:12Z",
     "status": "pass",
     "counts": {
       "candidate_total": 5545,
@@ -100,13 +109,14 @@
   "recovery": {
     "artifact_id": "stockanalysis_recovery_state",
     "counts": {
-      "tracked": 118,
+      "tracked": 119,
       "fresh": 84,
-      "lkg": 34,
+      "lkg": 35,
       "unavailable": 0,
-      "retry": 34,
-      "failed": 2,
-      "recovered": 0
+      "retry": 35,
+      "failed": 1,
+      "recovered": 0,
+      "promotion_deferred": 0
     },
     "degraded_tickers": [
       "AAPL",
@@ -143,38 +153,37 @@
       "WMT",
       "XOM"
     ],
+    "degraded_etfs": [
+      "TQQQ"
+    ],
     "degraded_surfaces": [],
     "degraded_universes": [],
     "recovered_tickers": [],
+    "recovered_etfs": [],
     "recovered_surfaces": [],
     "recovered_universes": [],
     "current_attempt": {
-      "run_id": "30290132699",
+      "run_id": "30294312998",
       "run_attempt": 1,
       "event_name": "workflow_dispatch",
       "schedule": "",
       "natural": false,
-      "attempted": 2,
+      "attempted": 1,
       "successes": 0,
-      "failed": 2,
+      "failed": 1,
       "recovered": 0,
+      "promotion_deferred": 0,
       "errors": [
         {
-          "artifact_kind": "stock",
-          "entity": "AAPL",
-          "error": "RuntimeError: controlled failure injection for stock:AAPL",
-          "controlled": true,
-          "data_loss": false
-        },
-        {
-          "artifact_kind": "financial",
-          "entity": "AAPL",
-          "error": "RuntimeError: controlled failure injection for financial:AAPL",
+          "artifact_kind": "etf",
+          "entity": "TQQQ",
+          "error": "ControlledETFDetailFailure: controlled failure injection for etf_detail:TQQQ",
           "controlled": true,
           "data_loss": false
         }
       ],
-      "success_rows": []
+      "success_rows": [],
+      "promotion_deferrals": []
     }
   },
   "stop_reason": null
