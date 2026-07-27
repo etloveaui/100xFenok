@@ -1,0 +1,30 @@
+{
+  "schema_version": "us-indices-persistence-state/v1",
+  "lane_id": "us_indices_daily",
+  "updated_at": "2026-07-27T22:55:09.730Z",
+  "run_id": "30312327287",
+  "run_attempt": 1,
+  "event_name": "schedule",
+  "persistence_policy": {
+    "schema_version": "us-indices-bounded-persistence/v1",
+    "basis": "distinct_provider_date_per_series",
+    "max_distinct_provider_dates_per_series": 15000,
+    "eviction": "oldest_provider_date_first"
+  },
+  "series": {
+    "sp500": {
+      "available_distinct_provider_dates": 11736,
+      "retained_distinct_provider_dates": 11736,
+      "pruned_distinct_provider_dates": 0,
+      "first_retained_source_date": "1980-01-02",
+      "last_retained_source_date": "2026-07-27"
+    },
+    "nasdaq": {
+      "available_distinct_provider_dates": 11736,
+      "retained_distinct_provider_dates": 11736,
+      "pruned_distinct_provider_dates": 0,
+      "first_retained_source_date": "1980-01-02",
+      "last_retained_source_date": "2026-07-27"
+    }
+  }
+}
