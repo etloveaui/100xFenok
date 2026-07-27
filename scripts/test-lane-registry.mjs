@@ -139,8 +139,13 @@ function clone(value) {
   const roots = declaredAdminRoots();
   assert.deepEqual(
     [...(roots.get("data/admin/stockanalysis-recovery") ?? [])].sort(),
-    ["stockanalysis_etf_universe", "stockanalysis_stock_financial", "stockanalysis_surfaces", "yahoo_etf_fallback"].sort(),
+    ["stockanalysis_etf_universe", "stockanalysis_stock_financial", "stockanalysis_surfaces"].sort(),
     "the StockAnalysis recovery store must list every claimant lane",
+  );
+  assert.deepEqual(
+    [...(roots.get("data/admin/yahoo_etf_fallback") ?? [])],
+    ["yahoo_etf_fallback"],
+    "the private Yahoo ETF fallback store must have exactly its own lane claimant",
   );
   // every recovery_store-bearing lane's index lives under its admin root
   for (const lane of LANE_REGISTRY.lanes) {
@@ -409,6 +414,7 @@ function clone(value) {
       "fred_yardeni",
       "occ_options_volume",
       "yahoo_private_options",
+      "yahoo_etf_fallback",
       // #366 proxy-lane wiring (2026-07-19): admin stores are declared but
       // reserved — shard-only producers write nothing there until a future
       // recovery-state slice; they stay pending indefinitely by design.

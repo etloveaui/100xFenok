@@ -116,7 +116,10 @@ export function checkWorkflowCommitShardsAgainstRegistry({
     if (repoRoot === null) throw new Error("repoRoot is required to scan declared script_sources");
     for (const sourcePath of scriptSources) {
       const sourceText = fs.readFileSync(path.join(repoRoot, sourcePath), "utf8");
-      const scriptAllowlist = extractWorkflowShardAllowlist(sourceText);
+      // A declared source may build paths from constants while a sibling source
+      // or the workflow carries the literal allowlist. Require coverage from the
+      // combined scope below, not independently from every implementation file.
+      const scriptAllowlist = extractWorkflowShardAllowlist(sourceText, { required: false });
       allowlistAll = [...new Set([...allowlistAll, ...scriptAllowlist])].sort();
     }
   }
