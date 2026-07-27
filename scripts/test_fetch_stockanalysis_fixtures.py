@@ -536,6 +536,26 @@ module.main()
         """
         original_loader = self.fetcher.load_yf_finance_module
         original_tracker = self.fetcher.ATTEMPT_TRACKER
+        original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
+        real_observations_root = original_state_root / "history" / "observations"
+        real_today_path = (
+            real_observations_root
+            / f"{datetime.now(timezone.utc).date().isoformat()}.jsonl"
+        )
+
+        def snapshot_real_observations() -> dict[str, bytes]:
+            if not real_observations_root.exists():
+                return {}
+            return {
+                path.relative_to(real_observations_root).as_posix(): path.read_bytes()
+                for path in sorted(real_observations_root.rglob("*"))
+                if path.is_file()
+            }
+
+        real_observations_before = snapshot_real_observations()
+        real_today_before = (
+            real_today_path.read_bytes() if real_today_path.exists() else None
+        )
 
         class ThrowingYahooModule:
             @staticmethod
@@ -548,11 +568,29 @@ module.main()
         self.fetcher.ATTEMPT_TRACKER = tracker
         self.fetcher.load_yf_finance_module = lambda: ThrowingYahooModule
         try:
-            with self.assertRaises(Exception):
-                self.fetcher.fetch_yahoo_etf_fallback("MISS", mirror_public=False)
+            with tempfile.TemporaryDirectory() as tmp:
+                self.fetcher.DATA_SUPPLY_STATE_ROOT = (
+                    Path(tmp) / "data" / "admin" / "data-supply-state" / "v1"
+                )
+                self.assertNotEqual(
+                    self.fetcher.DATA_SUPPLY_STATE_ROOT,
+                    original_state_root,
+                    "the thrown-error test must redirect data-supply state before exercising the real fetch path",
+                )
+                with self.assertRaises(Exception):
+                    self.fetcher.fetch_yahoo_etf_fallback("MISS", mirror_public=False)
+                temp_history = list(
+                    (
+                        self.fetcher.DATA_SUPPLY_STATE_ROOT
+                        / "history"
+                        / "observations"
+                    ).glob("*.jsonl")
+                )
+                self.assertEqual(len(temp_history), 1)
         finally:
             self.fetcher.load_yf_finance_module = original_loader
             self.fetcher.ATTEMPT_TRACKER = original_tracker
+            self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
 
         observation = tracker.yahoo_observations[-1]
         self.assertEqual(observation["execution"], "threw")
@@ -560,6 +598,12 @@ module.main()
             "regularMarketTime",
             observation.get("failure_detail", ""),
             "the thrown cause must reach the observation through the real call site",
+        )
+        self.assertEqual(snapshot_real_observations(), real_observations_before)
+        self.assertEqual(
+            real_today_path.read_bytes() if real_today_path.exists() else None,
+            real_today_before,
+            "the thrown-error test must leave today's real observation file byte-identical",
         )
 
     def test_yahoo_normal_returned_error_preserves_execution_and_library_evidence(self) -> None:
