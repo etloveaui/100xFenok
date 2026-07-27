@@ -3958,6 +3958,7 @@ module.main()
         original_out_dir = self.fetcher.OUT_DIR
         original_public_dir = self.fetcher.PUBLIC_DIR
         original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
+        original_recovery_root = self.fetcher.STOCKANALYSIS_RECOVERY_ROOT
         original_run_one = self.fetcher.run_one
         original_argv = sys.argv
         original_stdout = sys.stdout
@@ -3968,6 +3969,9 @@ module.main()
                 self.fetcher.OUT_DIR = out_dir
                 self.fetcher.PUBLIC_DIR = temp_root / "public" / "stockanalysis"
                 self.fetcher.DATA_SUPPLY_STATE_ROOT = temp_root / "data" / "admin" / "data-supply-state" / "v1"
+                self.fetcher.STOCKANALYSIS_RECOVERY_ROOT = (
+                    temp_root / "data" / "admin" / "stockanalysis-recovery"
+                )
                 (out_dir / "etf_universe.json").parent.mkdir(parents=True)
                 (out_dir / "etf_universe.json").write_text(
                     json.dumps({
@@ -4052,6 +4056,7 @@ module.main()
             self.fetcher.OUT_DIR = original_out_dir
             self.fetcher.PUBLIC_DIR = original_public_dir
             self.fetcher.DATA_SUPPLY_STATE_ROOT = original_state_root
+            self.fetcher.STOCKANALYSIS_RECOVERY_ROOT = original_recovery_root
             self.fetcher.run_one = original_run_one
             sys.argv = original_argv
             sys.stdout = original_stdout
