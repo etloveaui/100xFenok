@@ -44,6 +44,7 @@ FORBIDDEN_PUBLIC_TOKENS = (
     b"_private/",
     b"admin/data-supply-state/",
     b"data/admin/data-supply-state/",
+    b"admin/slickcharts-daily-delivery/",
     b"yf/migration-evidence/",
     b"yf/etf-details/",
     b"providers/",
@@ -58,6 +59,7 @@ FORBIDDEN_PUBLIC_TOKENS = (
 USAGE_MANIFEST_TOKENS = (
     b"admin/data-supply-state/",
     b"data/admin/data-supply-state/",
+    b"admin/slickcharts-daily-delivery/",
     b"yf/migration-evidence/",
     b"yf/etf-details/",
 )

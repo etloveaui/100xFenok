@@ -662,9 +662,9 @@ try {
   assert.equal(rehearsal.removedDestinationExactFiles, 5);
   assert.deepEqual([...rehearsal.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...rehearsal.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
-  assert.equal(rehearsal.excludedSourceRoots, 13);
-  assert.equal(rehearsal.removedDestinationRoots, 13);
-  assert.equal(rehearsal.removedDestinationFiles, 13);
+  assert.equal(rehearsal.excludedSourceRoots, 14);
+  assert.equal(rehearsal.removedDestinationRoots, 14);
+  assert.equal(rehearsal.removedDestinationFiles, 14);
   assert.deepEqual(snapshotNode(sourceRoot), sourceBeforeDryRun, "dry-run must not mutate source bytes");
   assert.deepEqual(snapshotNode(destinationRoot), destinationBeforeDryRun, "dry-run must not mutate destination bytes");
   assert.equal(fs.existsSync(path.join(destinationRoot, "safe/keep.json")), false);
@@ -674,10 +674,10 @@ try {
 
   const result = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(result.filesCopied, 4);
-  assert.equal(result.excludedSourceRoots, 13);
+  assert.equal(result.excludedSourceRoots, 14);
   assert.equal(result.excludedSourceFiles, 5);
-  assert.equal(result.removedDestinationRoots, 13);
-  assert.equal(result.removedDestinationFiles, 13);
+  assert.equal(result.removedDestinationRoots, 14);
+  assert.equal(result.removedDestinationFiles, 14);
   assert.equal(result.removedDestinationExactFiles, 5);
   assert.deepEqual([...result.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...result.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
@@ -711,7 +711,7 @@ try {
   const destinationBeforeRerun = snapshotNode(destinationRoot);
   const rerun = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(rerun.filesCopied, 4);
-  assert.equal(rerun.excludedSourceRoots, 13);
+  assert.equal(rerun.excludedSourceRoots, 14);
   assert.equal(rerun.excludedSourceFiles, 5);
   assert.equal(rerun.removedDestinationRoots, 0);
   assert.equal(rerun.removedDestinationFiles, 0);

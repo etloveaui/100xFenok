@@ -33,6 +33,7 @@ const FORBIDDEN_RAW_PATTERNS = [
 
 export const FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS = [
   "admin/data-supply-state",
+  "admin/slickcharts-daily-delivery",
   // Private derived proxies (apewisdom_attention / gdelt_news_tone lanes) must
   // never reach the public mirror.
   "computed/fenok_news_tone_proxy.json",
@@ -50,6 +51,7 @@ const FORBIDDEN_PUBLIC_TOKENS = [
   "\"private_manifest_file\"",
   "\"manifest_file\"",
   "admin/data-supply-state/",
+  "admin/slickcharts-daily-delivery/",
   "data/yf/migration-evidence/",
 ];
 
