@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-s0-finra-occ-mapping-ledger/v0.1",
-  "generated_at": "2026-07-27T14:34:50.609Z",
+  "generated_at": "2026-07-27T16:43:19.755Z",
   "generated_by": "scripts/audit-fenok-s0-source-gaps.mjs --write-ledger",
   "purpose": "Durable no-fetch control-plane ledger for S0 FINRA/OCC rows that are source-ready by daily market data but need explicit universe mapping, symbol normalization, or null-evidence semantics before flow/options proxy metrics can be required.",
   "raw_policy": {
@@ -12,7 +12,7 @@
   },
   "source_audit": {
     "schema_version": "fenok-s0-source-gap-audit/v0.2",
-    "generated_at": "2026-07-27T14:34:50.609Z",
+    "generated_at": "2026-07-27T16:43:19.755Z",
     "input_files": {
       "active_signals": "data/computed/fenok_signals.json",
       "finra_flow_proxy": "data/computed/fenok_flow_proxies.json",
@@ -21,10 +21,10 @@
       "flow_backfill_index": "data/admin/fenok-flow-backfill-index.json"
     },
     "source_dates": {
-      "signals_generated_at": "2026-07-27T14:33:58.376Z",
+      "signals_generated_at": "2026-07-27T16:42:39.175Z",
       "finra_source_date": "20260724",
       "occ_source_date": "20260723",
-      "coverage_index_generated_at": "2026-07-27T14:34:39.940Z",
+      "coverage_index_generated_at": "2026-07-27T16:43:11.528Z",
       "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
     },
     "acceptance_ok": true
@@ -39,7 +39,7 @@
     "plain_us_finra_denominator": 691,
     "plain_us_finra_source_ready": 691,
     "finra_excluded_us_class_or_non_plain_daily_ready": 60,
-    "finra_mapping_required_missing_row": 51,
+    "finra_mapping_required_missing_row": 50,
     "finra_source_ready_no_reported_row": 3,
     "finra_low_confidence_placeholder_policy_rows": 9,
     "plain_us_occ_denominator": 691,
@@ -1828,22 +1828,6 @@
           "currency": null,
           "country": null,
           "sector": null
-        }
-      },
-      {
-        "ticker": "SKHY",
-        "company": "SK hynix American Depositary Shares",
-        "market": "US_CLASS",
-        "market_scope": "us",
-        "category": "non_plain_or_foreign_suffix_requires_universe_mapping",
-        "local_evidence": {
-          "yf_finance_file": "data/yf/finance/SKHY.json",
-          "market_facts_file": "data/computed/market_facts/tickers/SKHY.json",
-          "market_facts_asset_type": "stock",
-          "exchange": "NMS",
-          "currency": "USD",
-          "country": null,
-          "sector": "Technology"
         }
       }
     ],

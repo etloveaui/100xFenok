@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-occ-options-availability/v0.1",
-  "generated_at": "2026-07-25T04:01:45.272Z",
+  "generated_at": "2026-07-27T15:25:40.127Z",
   "formula_version": "fenok-occ-options-volume-v0.2-volume-skew-calibration",
   "purpose": "Derived OCC availability evidence. No raw CSV rows or private cache paths.",
   "raw_policy": {
@@ -8,13 +8,13 @@
     "raw_rows_included": false,
     "private_artifact_paths_included": false
   },
-  "source_date": "20260723",
+  "source_date": "20260727",
   "collection_mode": "all_eligible_batched",
-  "selected_tickers": 191,
-  "eligible_count": 691,
+  "selected_tickers": 1,
+  "eligible_count": 692,
   "request_budget": {
-    "estimated_max_live_requests": 764,
-    "max_requests": 1500
+    "estimated_max_live_requests": 4,
+    "max_requests": 8
   },
   "side_attempts": [
     {
@@ -281,6 +281,28 @@
       "no_fetch": false,
       "status": "failed",
       "error_class": "failed",
+      "error": "decode_error"
+    },
+    {
+      "ticker": "A",
+      "source_date": "20260727",
+      "side": "C",
+      "attempted_form": "A",
+      "cache_hit": false,
+      "no_fetch": false,
+      "status": "date_not_available",
+      "error_class": "date_not_available",
+      "error": "decode_error"
+    },
+    {
+      "ticker": "A",
+      "source_date": "20260727",
+      "side": "P",
+      "attempted_form": "A",
+      "cache_hit": false,
+      "no_fetch": false,
+      "status": "date_not_available",
+      "error_class": "date_not_available",
       "error": "decode_error"
     },
     {
@@ -139608,6 +139630,24 @@
       "evidence_policy": null
     },
     {
+      "ticker": "A",
+      "source_date": "20260727",
+      "attempted_forms": [
+        "A"
+      ],
+      "accepted_form": null,
+      "accepted_form_policy": null,
+      "scoring_row_eligible": false,
+      "coverage_row_eligible": false,
+      "no_listed_options_policy_status": null,
+      "status": "date_not_available",
+      "side_statuses": {
+        "C": "date_not_available",
+        "P": "date_not_available"
+      },
+      "evidence_policy": null
+    },
+    {
       "ticker": "AA",
       "source_date": "20260630",
       "attempted_forms": [
@@ -262917,13 +262957,13 @@
     "retained_tickers": 693,
     "collections": {
       "rows": {
-        "before": 6938,
-        "retained": 6938,
+        "before": 6939,
+        "retained": 6939,
         "pruned": 0
       },
       "side_attempts": {
-        "before": 13876,
-        "retained": 13876,
+        "before": 13878,
+        "retained": 13878,
         "pruned": 0
       }
     },
@@ -262931,127 +262971,115 @@
     "total_pruned_rows": 0
   },
   "current_attempt": {
-    "attempt_ref": "30142874895",
+    "attempt_ref": "30279842211",
     "attempt_number": 1,
-    "observed_at": "2026-07-25T04:01:45.369Z",
-    "target_source_date": "2026-07-24",
-    "served_source_date": "2026-07-23",
-    "status": "degraded_walkback",
-    "fallback_active": true,
-    "selected_tickers": 691,
-    "message": "OCC target 2026-07-24 was unavailable (0 usable rows; 25 hard failures; threshold stop recorded); serving fallback dated 2026-07-23. Current run remains degraded across 3 non-empty batch(es).",
+    "observed_at": "2026-07-27T15:25:40.216Z",
+    "target_source_date": "2026-07-27",
+    "served_source_date": null,
+    "status": "unavailable",
+    "fallback_active": false,
+    "selected_tickers": 1,
+    "message": "OCC target 2026-07-27 is unavailable (0 usable rows); no fallback in the allowed window was usable. Current run has an unavailable non-empty batch.",
+    "missing_day_backfill": {
+      "status": "holes_found_none_backfilled",
+      "calendar_id": "us_trading",
+      "calendar_fallback_used": false,
+      "lookback_trading_days": 15,
+      "coverage_threshold_ratio": 0.6,
+      "typical_row_count": 682,
+      "selected_source_date": "2026-07-08",
+      "attempted_source_date": null,
+      "backfilled_source_date": null,
+      "accepted_rows": 0,
+      "holes_before": [
+        "2026-07-08",
+        "2026-07-09",
+        "2026-07-20",
+        "2026-07-21",
+        "2026-07-24"
+      ],
+      "holes_remaining": [
+        "2026-07-08",
+        "2026-07-09",
+        "2026-07-20",
+        "2026-07-21",
+        "2026-07-24"
+      ],
+      "outside_lookback_holes": [
+        "2026-06-29",
+        "2026-06-30",
+        "2026-07-01",
+        "2026-07-02"
+      ],
+      "message": "OCC found missing trading days but backfilled none; 5 in-window and 4 outside-lookback hole(s) remain."
+    },
     "batch_retention_limit": 100,
     "batches": [
       {
         "batch_index": 0,
-        "selected_tickers": 250,
-        "target_source_date": "2026-07-24",
-        "served_source_date": "2026-07-23",
-        "status": "degraded_walkback",
-        "fallback_active": true,
-        "message": "OCC target 2026-07-24 was unavailable (0 usable rows; 25 hard failures; threshold stop recorded); serving fallback dated 2026-07-23.",
+        "selected_tickers": 1,
+        "target_source_date": "2026-07-27",
+        "served_source_date": null,
+        "status": "unavailable",
+        "fallback_active": false,
+        "message": "OCC target 2026-07-27 is unavailable (0 usable rows); no fallback in the allowed window was usable.",
         "date_attempts": [
           {
-            "source_date": "2026-07-24",
+            "source_date": "2026-07-27",
             "accepted_rows": 0,
             "usable_rows": 0,
             "status_counts": {
-              "failed": 25
-            },
-            "hard_failure_count": 25,
-            "stopped_fail_threshold": true
-          },
-          {
-            "source_date": "2026-07-23",
-            "accepted_rows": 248,
-            "usable_rows": 248,
-            "status_counts": {
-              "options_activity_available": 242,
-              "partial_no_record_or_form_gap": 6,
-              "no_record": 2
+              "date_not_available": 1
             },
             "hard_failure_count": 0,
             "stopped_fail_threshold": false
           }
-        ]
-      },
-      {
-        "batch_index": 1,
-        "selected_tickers": 250,
-        "target_source_date": "2026-07-24",
-        "served_source_date": "2026-07-23",
-        "status": "degraded_walkback",
-        "fallback_active": true,
-        "message": "OCC target 2026-07-24 was unavailable (0 usable rows; 25 hard failures; threshold stop recorded); serving fallback dated 2026-07-23.",
-        "date_attempts": [
-          {
-            "source_date": "2026-07-24",
-            "accepted_rows": 0,
-            "usable_rows": 0,
-            "status_counts": {
-              "failed": 25
-            },
-            "hard_failure_count": 25,
-            "stopped_fail_threshold": true
-          },
-          {
-            "source_date": "2026-07-23",
-            "accepted_rows": 247,
-            "usable_rows": 247,
-            "status_counts": {
-              "options_activity_available": 237,
-              "partial_no_record_or_form_gap": 10,
-              "no_record": 3
-            },
-            "hard_failure_count": 0,
-            "stopped_fail_threshold": false
-          }
-        ]
-      },
-      {
-        "batch_index": 2,
-        "selected_tickers": 191,
-        "target_source_date": "2026-07-24",
-        "served_source_date": "2026-07-23",
-        "status": "degraded_walkback",
-        "fallback_active": true,
-        "message": "OCC target 2026-07-24 was unavailable (0 usable rows; 25 hard failures; threshold stop recorded); serving fallback dated 2026-07-23.",
-        "date_attempts": [
-          {
-            "source_date": "2026-07-24",
-            "accepted_rows": 0,
-            "usable_rows": 0,
-            "status_counts": {
-              "failed": 25
-            },
-            "hard_failure_count": 25,
-            "stopped_fail_threshold": true
-          },
-          {
-            "source_date": "2026-07-23",
-            "accepted_rows": 189,
-            "usable_rows": 189,
-            "status_counts": {
-              "options_activity_available": 182,
-              "partial_no_record_or_form_gap": 7,
-              "no_record": 2
-            },
-            "hard_failure_count": 0,
-            "stopped_fail_threshold": false
-          }
-        ]
+        ],
+        "missing_day_backfill": {
+          "status": "holes_found_none_backfilled",
+          "calendar_id": "us_trading",
+          "calendar_fallback_used": false,
+          "lookback_trading_days": 15,
+          "coverage_threshold_ratio": 0.6,
+          "typical_row_count": 682,
+          "selected_source_date": "2026-07-08",
+          "attempted_source_date": null,
+          "backfilled_source_date": null,
+          "accepted_rows": 0,
+          "holes_before": [
+            "2026-07-08",
+            "2026-07-09",
+            "2026-07-20",
+            "2026-07-21",
+            "2026-07-24"
+          ],
+          "holes_remaining": [
+            "2026-07-08",
+            "2026-07-09",
+            "2026-07-20",
+            "2026-07-21",
+            "2026-07-24"
+          ],
+          "outside_lookback_holes": [
+            "2026-06-29",
+            "2026-06-30",
+            "2026-07-01",
+            "2026-07-02"
+          ],
+          "message": "OCC found missing trading days but backfilled none; 5 in-window and 4 outside-lookback hole(s) remain."
+        }
       }
     ]
   },
-  "previous_generated_at": "2026-07-25T03:59:30.687Z",
+  "previous_generated_at": "2026-07-25T04:01:45.272Z",
   "upsert_policy": {
     "key": [
       "ticker",
       "source_date",
       "attempted_forms"
     ],
-    "replaced_rows": 191,
-    "added_rows": 191,
-    "cumulative_rows": 6938
+    "replaced_rows": 0,
+    "added_rows": 1,
+    "cumulative_rows": 6939
   }
 }

@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-27T14:33:58.376Z",
+  "generated_at": "2026-07-27T16:42:39.175Z",
   "source_file": "computed/stock_action_index.json",
   "source_date": "2026-07-24",
   "source_date_reason": null,
-  "source_generated_at": "2026-07-27T14:33:56.566Z",
+  "source_generated_at": "2026-07-27T16:42:37.766Z",
   "source_score_contract": "action-score-v0.3.1",
   "formula_version": "fenok-native-signals-v0.2.3-common-basis",
   "contract_doc": "docs/planning/CONTRACT_fenok_native_signals_v0_2_phase_a_20260628.md",
@@ -50,8 +50,8 @@
       "volume_liquidity_trend": 1177,
       "short_term_relative_strength": 1177,
       "net_options_proxy": 686,
-      "off_exchange_activity_proxy": 688,
-      "short_pressure_proxy": 688
+      "off_exchange_activity_proxy": 689,
+      "short_pressure_proxy": 689
     },
     "confidence_counts": {
       "high": 1013,
@@ -437316,7 +437316,8 @@
         "slickcharts/stocks-returns.json",
         "stockanalysis/financials/*.json",
         "yf/finance/{TICKER}.json",
-        "yf/finance/SPY.json"
+        "yf/finance/SPY.json",
+        "computed/fenok_flow_proxies.json"
       ],
       "stock_action_context": {
         "action_score": 49,
@@ -437618,24 +437619,41 @@
           "caveat": "Options activity proxy requires an OCC listed-options volume row; no raw OCC CSV is public."
         },
         "off_exchange_activity_proxy": {
-          "score_0_100": null,
-          "direction": "unavailable",
-          "coverage_ratio": 0,
-          "confidence": "low",
+          "score_0_100": 45.79,
+          "direction": "normal_activity",
+          "coverage_ratio": 1,
+          "confidence": "high",
           "basis": "computed_fenok_flow_proxies_off_exchange_activity_proxy",
-          "caveat": "Off-exchange activity proxy uses FINRA reported off-exchange volume share; it is not ATS-only dark-pool flow.",
-          "source_date": null,
-          "components": null
+          "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent.",
+          "source_date": "20260724",
+          "components": {
+            "score_0_100": 45.79,
+            "direction": "normal_activity",
+            "off_exchange_share": 0.433178,
+            "finra_total_volume": 11234857.6395,
+            "consolidated_volume": 25935911,
+            "consolidated_volume_date": "2026-07-24",
+            "caveat": "FINRA reported off-exchange bucket proxy versus local consolidated volume; not true ATS-only dark-pool prints and not directional intent."
+          }
         },
         "short_pressure_proxy": {
-          "score_0_100": null,
-          "direction": "unavailable",
-          "coverage_ratio": 0,
-          "confidence": "low",
+          "score_0_100": 21.74,
+          "direction": "normal",
+          "coverage_ratio": 1,
+          "confidence": "high",
           "basis": "computed_fenok_flow_proxies_short_pressure_proxy",
-          "caveat": "Short-volume pressure proxy uses FINRA reported short-sale volume share; it is not short interest.",
-          "source_date": null,
-          "components": null
+          "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction.",
+          "source_date": "20260724",
+          "components": {
+            "score_0_100": 21.74,
+            "direction": "normal",
+            "short_volume_ratio": 0.386542,
+            "short_exempt_ratio": 0.00195,
+            "short_volume": 4342747.1407,
+            "short_exempt_volume": 21910,
+            "total_volume": 11234857.6395,
+            "caveat": "FINRA reported short-sale volume share; not short interest, borrow fee, utilization, or buy/sell direction."
+          }
         }
       }
     },
