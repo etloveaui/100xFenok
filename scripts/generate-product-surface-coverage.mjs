@@ -374,10 +374,28 @@ const marketFactsCoreSourceAsOf = oldestSourceDate([marketFactsIndex?.core_surfa
 const marketFactsFullUniverseFloor = oldestSourceDate([marketFactsIndex?.full_universe_floor_as_of]);
 const marketFactsSourceDiagnostics = marketFactsIndex?.source_stamp_diagnostics || {};
 const marketFactsCoreMemberCount = number(marketFactsSourceDiagnostics.core_member_count);
+const marketFactsCoreStampedCount = number(marketFactsSourceDiagnostics.core_price_stamped_count);
 const marketFactsCoreMissingCount = number(marketFactsSourceDiagnostics.core_price_missing_count);
 const marketFactsCoreMissingTickers = Array.isArray(marketFactsSourceDiagnostics.core_price_missing_tickers)
   ? marketFactsSourceDiagnostics.core_price_missing_tickers.filter((ticker) => typeof ticker === "string" && ticker.trim())
   : [];
+const marketFactsCoreAbsentFromIndexCount = number(marketFactsSourceDiagnostics.core_price_absent_from_index_count);
+const marketFactsCoreAbsentFromIndexTickers = Array.isArray(marketFactsSourceDiagnostics.core_price_absent_from_index_tickers)
+  ? marketFactsSourceDiagnostics.core_price_absent_from_index_tickers.filter((ticker) => typeof ticker === "string" && ticker.trim())
+  : [];
+if (
+  marketFactsCoreStampedCount
+  + marketFactsCoreMissingCount
+  + marketFactsCoreAbsentFromIndexCount
+  !== marketFactsCoreMemberCount
+) {
+  throw new Error(
+    "market_facts core price diagnostic invariant violated: "
+    + `stamped=${marketFactsCoreStampedCount} + missing=${marketFactsCoreMissingCount} `
+    + `+ absent_from_index=${marketFactsCoreAbsentFromIndexCount} `
+    + `!= members=${marketFactsCoreMemberCount}`,
+  );
+}
 const marketFactsCoreComplete = marketFactsSourceDiagnostics.core_price_source_complete === true;
 const stockDetailSourceAsOf = marketFactsCoreSourceAsOf;
 const marketValuationSourceAsOf = oldestSourceDate([rimSourceAsOf, yardeniSourceAsOf, marketFactsCoreSourceAsOf]);
@@ -454,16 +472,32 @@ function marketFactsCompletenessCheck(label = "가격 원천 완전성") {
     });
   }
   if (marketFactsCoreMemberCount > 0) {
-    const samples = marketFactsCoreMissingTickers.slice(0, 10);
+    const missingSamples = marketFactsCoreMissingTickers.slice(0, 10);
+    const absentSamples = marketFactsCoreAbsentFromIndexTickers.slice(0, 10);
+    const detailParts = [];
+    if (marketFactsCoreMissingCount > 0) {
+      detailParts.push(
+        `${marketFactsCoreMissingCount.toLocaleString("ko-KR")}개 기준일 미확인`
+        + `${missingSamples.length ? `: ${missingSamples.join(", ")}` : ""}`,
+      );
+    }
+    if (marketFactsCoreAbsentFromIndexCount > 0) {
+      detailParts.push(
+        `${marketFactsCoreAbsentFromIndexCount.toLocaleString("ko-KR")}개 인덱스 행 없음`
+        + `${absentSamples.length ? `: ${absentSamples.join(", ")}` : ""}`,
+      );
+    }
     return check(
       label,
       "partial",
-      `${marketFactsCoreMissingCount.toLocaleString("ko-KR")}개 기준일 미확인${samples.length ? `: ${samples.join(", ")}` : ""}`,
+      detailParts.join(" · ") || "핵심 티커 가격 원천 완전성 플래그 불일치",
       {
         count: marketFactsCoreMemberCount,
         missing: marketFactsCoreMissingCount,
         missing_tickers: marketFactsCoreMissingTickers,
-        reason: "one or more core tickers have no provider source date",
+        absent_from_index: marketFactsCoreAbsentFromIndexCount,
+        absent_from_index_tickers: marketFactsCoreAbsentFromIndexTickers,
+        reason: "one or more core tickers have no provider source date or no market-facts index row",
       },
     );
   }
@@ -687,6 +721,8 @@ const payload = {
     market_facts_core_price_source_complete: marketFactsCoreComplete,
     market_facts_core_price_missing_count: marketFactsCoreMissingCount,
     market_facts_core_price_missing_tickers: marketFactsCoreMissingTickers,
+    market_facts_core_price_absent_from_index_count: marketFactsCoreAbsentFromIndexCount,
+    market_facts_core_price_absent_from_index_tickers: marketFactsCoreAbsentFromIndexTickers,
     full_universe_floor_sla_bound: false,
     stockanalysis_surface_domains: surfaceIndex?.source_as_of ?? null,
     stockanalysis_index_mirror: stockanalysisIndex?.source_as_of ?? null,

@@ -3188,6 +3188,12 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   const runGen = (seed) => {
     const tmp = mkTmp("real-generator");
     const w = (rel, o) => writeJson(path.join(tmp, "data", ...rel), o);
+    const marketFactsAbsentTickers = seed.marketFactsAbsentTickers ?? [];
+    const marketFactsMissingTickers = seed.marketFacts
+      ? []
+      : marketFactsAbsentTickers.length
+        ? []
+        : ["MISSING"];
     w(["computed", "rim-index", "inputs.json"], { indices: { KOSPI: { observed: { price: { as_of: seed.rim } } }, SOX: { observed: { price: { as_of: seed.rim } } } } });
     w(["yardney", "yardney_model.json"], { data: [{ date: seed.yard }] });
     w(["global-scouter", "core", "stocks_analyzer.json"], { source_date: seed.screener });
@@ -3196,11 +3202,13 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
       core_surface_source_as_of: seed.marketFacts,
       full_universe_floor_as_of: seed.marketFactsFloor ?? seed.marketFacts,
       source_stamp_diagnostics: {
-        core_member_count: 1,
+        core_member_count: seed.marketFactsMemberCount ?? 1,
         core_price_stamped_count: seed.marketFacts ? 1 : 0,
-        core_price_missing_count: seed.marketFacts ? 0 : 1,
-        core_price_missing_tickers: seed.marketFacts ? [] : ["MISSING"],
-        core_price_source_complete: Boolean(seed.marketFacts),
+        core_price_missing_count: marketFactsMissingTickers.length,
+        core_price_missing_tickers: marketFactsMissingTickers,
+        core_price_absent_from_index_count: marketFactsAbsentTickers.length,
+        core_price_absent_from_index_tickers: marketFactsAbsentTickers,
+        core_price_source_complete: Boolean(seed.marketFacts) && marketFactsAbsentTickers.length === 0,
       },
       rows: [],
     });
@@ -3262,6 +3270,49 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   assert.equal(partial("sectors"), null, "no market_facts stamp -> sectors null (OLDEST-required fail-closed)");
   assert.equal(partial("market_events"), null, "market_events remains an honest aggregate null");
   assert.equal(partial("etf_center"), null, "no market_facts stamp -> ETF center null");
+  assert.equal(partial.diagnostics.market_facts_core_price_missing_count, 1);
+  assert.deepEqual(partial.diagnostics.market_facts_core_price_missing_tickers, ["MISSING"]);
+  assert.equal(partial.diagnostics.market_facts_core_price_absent_from_index_count, 0);
+  assert.deepEqual(partial.diagnostics.market_facts_core_price_absent_from_index_tickers, []);
+
+  const absent = runGen({
+    rim: "2026-07-03",
+    yard: "2026-07-03",
+    screener: "2026-07-02",
+    marketFacts: undefined,
+    marketFactsAbsentTickers: ["SKHY"],
+    surfaces: "2026-07-09T02:23:02Z",
+    etfUniverse: "2026-07-07T22:37:04Z",
+  });
+  assert.equal(absent("stock_detail"), null, "absent core member keeps the strict market-facts source floor null");
+  assert.equal(absent.diagnostics.market_facts_core_price_missing_count, 0);
+  assert.deepEqual(absent.diagnostics.market_facts_core_price_missing_tickers, []);
+  assert.equal(absent.diagnostics.market_facts_core_price_absent_from_index_count, 1);
+  assert.deepEqual(absent.diagnostics.market_facts_core_price_absent_from_index_tickers, ["SKHY"]);
+  const absentCheck = absent.full.surfaces
+    .find((surface) => surface.id === "market_valuation")
+    .checks.find((item) => item.label === "시장 데이터 원천 완전성");
+  assert.equal(absentCheck.missing, 0, "present-but-unstamped count keeps its existing meaning");
+  assert.equal(absentCheck.absent_from_index, 1);
+  assert.deepEqual(absentCheck.absent_from_index_tickers, ["SKHY"]);
+  assert.match(absentCheck.detail, /SKHY/, "the deploy-facing diagnostic names the absent core member");
+  try {
+    runGen({
+      rim: "2026-07-03",
+      yard: "2026-07-03",
+      screener: "2026-07-02",
+      marketFacts: "2026-07-08",
+      marketFactsMemberCount: 2,
+      surfaces: "2026-07-09T02:23:02Z",
+      etfUniverse: "2026-07-07T22:37:04Z",
+    });
+    assert.fail("an unreconciled market-facts diagnostic partition must hard-fail");
+  } catch (error) {
+    assert.match(
+      String(error?.stderr ?? error),
+      /core price diagnostic invariant violated: stamped=1 \+ missing=0 \+ absent_from_index=0 != members=2/,
+    );
+  }
   try {
     runGen({ rim: "2026-07-03", yard: "2026-07-03", screener: "2026-07-02", marketFacts: "2026-07-08", surfaces: "2026-07-09T02:23:02Z", etfUniverse: "2026-07-07T22:37:04Z", datelessSourceAsOf: "2026-07-09" });
     assert.fail("dateless provider date appearance must hard-fail the generator");

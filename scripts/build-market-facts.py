@@ -254,7 +254,9 @@ def market_fact_source_stamps(rows: list[dict], core_members: set[str] | None, t
     if not row_tickers or not all(row_tickers) or len(set(row_tickers)) != len(row_tickers):
         return {"core_surface_source_as_of": None, "full_universe_floor_as_of": None, "source_stamp_diagnostics": {"status": "invalid_index_rows"}}
     row_set = set(row_tickers)
-    core_valid = bool(core_members) and set(core_members).issubset(row_set)
+    core_member_set = set(core_members or [])
+    core_price_absent_from_index = sorted(core_member_set - row_set)
+    core_valid = bool(core_members) and core_member_set.issubset(row_set)
     full_dates: list[str] = []
     core_dates: list[str] = []
     core_price_missing: list[str] = []
@@ -280,6 +282,19 @@ def market_fact_source_stamps(rows: list[dict], core_members: set[str] | None, t
                 core_price_stamped += 1
             else:
                 core_price_missing.append(ticker)
+    core_member_count = len(core_member_set)
+    core_partition_count = (
+        core_price_stamped
+        + len(core_price_missing)
+        + len(core_price_absent_from_index)
+    )
+    if core_partition_count != core_member_count:
+        raise AssertionError(
+            "core price diagnostic invariant violated: "
+            f"stamped={core_price_stamped} + missing={len(core_price_missing)} "
+            f"+ absent_from_index={len(core_price_absent_from_index)} "
+            f"!= members={core_member_count}"
+        )
     return {
         "core_surface_source_as_of": (
             min(core_dates)
@@ -292,10 +307,12 @@ def market_fact_source_stamps(rows: list[dict], core_members: set[str] | None, t
             else None
         ),
         "source_stamp_diagnostics": {
-            "core_member_count": len(core_members or []),
+            "core_member_count": core_member_count,
             "core_price_stamped_count": core_price_stamped,
             "core_price_missing_count": len(core_price_missing),
             "core_price_missing_tickers": core_price_missing,
+            "core_price_absent_from_index_count": len(core_price_absent_from_index),
+            "core_price_absent_from_index_tickers": core_price_absent_from_index,
             "core_price_source_complete": core_valid and len(core_price_missing) == 0,
             "full_fact_stamped_count": len(full_dates),
             "full_fact_missing_stamp_count": missing_fact_stamps,
