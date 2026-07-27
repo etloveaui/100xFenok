@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-07-27T16:43:19.809Z",
-  "classification_as_of": "2026-07-27T16:42:51.068Z",
+  "generated_at": "2026-07-27T17:06:28.987Z",
+  "classification_as_of": "2026-07-27T17:05:57.910Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -399,17 +399,27 @@
       "selection": "explicit full-primary daily_1y fetchable tickers; not the scored-ETF scheduled plan",
       "single_writer": true,
       "shard_size": 100,
-      "ticker_count": 3,
-      "shard_count": 1,
+      "ticker_count": 132,
+      "shard_count": 2,
       "shards": [
         {
           "shard": 1,
-          "ticker_count": 3,
+          "ticker_count": 100,
           "inputs": {
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "0",
-            "etfs": "ESUM,PMTL,SFGV"
+            "etfs": "AAPR,AAPW,AAPX,AETH,AIOO,AJAN,AJUL,AKAF,AMDW,AMJB,AMUB,AMZW,APOC,APPX,ARKB,ARLU,ATMP,AUGU,AVGW,BBB,BCCC,BDCX,BDCZ,BETE,BETH,BITB,BLST,BLTD,BNDY,BRKW,BRRR,BTC,BTCO,BTCW,BTRN,CBOJ,CBOY,CBTJ,CBTY,CBXY,CEFD,CEGX,CERY,COIW,CPNJ,CPNM,CPNQ,CPNS,CPRA,CPRJ,CPRO,CPRY,CPSA,CPSD,CPSF,CPSJ,CPSM,CPSN,CPSO,CPSP,CPSR,CPST,CPSU,CPSY,CXRN,DECU,DGP,DGZ,DHSB,DJP,DULL,DVIN,DVQQ,DVRE,DVSP,DVUT,DVXB,DVXC,DVXE,DVXF,DVXK,DVXP,DVXV,DVXY,DZZ,EALT,EBUF,EETH,ESUM,ETH,ETHA,ETHD,ETHT,ETHV,ETHW,EZBC,EZET,FBTC,FEBU,FETH"
+          }
+        },
+        {
+          "shard": 2,
+          "ticker_count": 32,
+          "inputs": {
+            "history_gaps_only": "true",
+            "required_history_periods": "daily_1y",
+            "incremental_etf_limit": "0",
+            "etfs": "FLAO,FLJJ,GBTC,GDXD,GDXU,GEVX,GLDI,GMMA,GOOW,GOOX,GPT,GRN,HDLB,HFSP,HODL,HOOW,HYSA,HYTI,IAUG,IBIC,IBIH,IBIJ,IBIK,IBIL,IBIT,IBUF,IDEC,IFEB,IFED,IJUN,PMTL,SFGV"
           }
         }
       ]
