@@ -747,9 +747,10 @@ const lanes = [
     },
     // First workflow commit: 2026-07-20 00:05:41 +0900.
     activated_at: "2026-07-19T15:05:41Z",
-    // Registry enforcement is the detection-floor switch, not producer
-    // ownership. This shadow lane has a fail-closed owner guard instead.
-    enforcement: "shadow",
+    // Promoted after run 30249876677 emitted the healthy current bundle,
+    // bounded history, recovery index, attempt shard, and six byte-identical
+    // canonical/public pairs.
+    enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/damodaran",
     detection_attempt: attemptShard("damodaran"),

@@ -164,13 +164,15 @@ function clone(value) {
     assert.deepEqual(byClass, { detection_floor: 28, auxiliary: 4 }, "lane_class partition drifted");
     assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "auxiliary",
       "yahoo_batch_quote_history remains auxiliary (not a detection-floor lane)");
-    for (const id of ["benchmarks", "global_scouter", "damodaran"]) {
+    for (const id of ["benchmarks", "global_scouter"]) {
       const converterLane = registryLaneById(id);
       assert.ok(converterLane, `${id} converter lane is registered`);
       assert.equal(converterLane.lane_class, "detection_floor", `${id} belongs to the detection floor`);
       assert.equal(converterLane.cadence.kind, "weekly", `${id} carries its declared weekly cadence`);
       assert.equal(converterLane.enforcement, "shadow", `${id} remains shadow until separately promoted`);
     }
+    assert.equal(registryLaneById("damodaran").enforcement, "live",
+      "Damodaran is live after the emitted healthy bundle/history/public parity run");
     assert.equal(registryLaneById("benchmarks").owner_workflow, null,
       "Benchmark cadence is declared by the external converter payload, not a fabricated workflow");
     assert.equal(registryLaneById("global_scouter").owner_workflow, null,

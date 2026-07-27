@@ -459,11 +459,13 @@ function runConfigAndFixtureChecks() {
   const benchmarks = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "benchmarks");
   const globalScouter = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "global_scouter");
   const damodaran = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "damodaran");
-  for (const converterLane of [benchmarks, globalScouter, damodaran]) {
+  for (const converterLane of [benchmarks, globalScouter]) {
     assert.ok(converterLane, "converter-fed detection lane exists");
     assert.equal(converterLane.enforcement, "shadow");
     assert.equal(converterLane.kpi_required, false);
   }
+  assert.equal(damodaran.enforcement, "live");
+  assert.equal(damodaran.kpi_required, true);
   for (const converterLane of [benchmarks, globalScouter]) {
     assert.equal(converterLane.producer_members[0].workflow, null,
       `${converterLane.id} does not fabricate an attempt-emitting GitHub workflow`);
@@ -538,6 +540,7 @@ function runConfigAndFixtureChecks() {
     "us_indices_daily",
     "slickcharts",
     "edgar_filings",
+    "damodaran",
     "finra_short_volume",
     "occ_options_volume",
     "yahoo_private_options",
