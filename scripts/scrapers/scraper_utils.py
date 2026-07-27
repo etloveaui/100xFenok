@@ -18,6 +18,7 @@ Reference: docs/planning/slickcharts-data-pipeline.md
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -72,8 +73,10 @@ def _returned_attempt_tuple(
     decode: str = "not_attempted",
     payload: str = "not_available",
     assertions: Optional[List[Dict[str, Any]]] = None,
+    provider_date: Optional[str] = None,
+    response_sha256: Optional[str] = None,
 ) -> Dict[str, Any]:
-    return {
+    row = {
         "execution": "returned",
         "exception_kind": None,
         "http_status": status,
@@ -83,6 +86,10 @@ def _returned_attempt_tuple(
         "payload": payload,
         "assertions": assertions or [],
     }
+    if provider_date is not None or response_sha256 is not None:
+        row["provider_date"] = provider_date
+        row["response_sha256"] = response_sha256
+    return row
 
 
 def _threw_attempt_tuple(exception_kind: str) -> Dict[str, Any]:
@@ -131,9 +138,21 @@ def _provider_throttled_attempt_tuple(status: int) -> Dict[str, Any]:
     )
 
 
-def _html_attempt_tuple(status: int, html: str) -> Dict[str, Any]:
+def _html_attempt_tuple(
+    status: int,
+    html: str,
+    *,
+    provider_date: Optional[str] = None,
+) -> Dict[str, Any]:
+    response_sha256 = hashlib.sha256(html.encode("utf-8")).hexdigest()
     if not html.strip():
-        return _returned_attempt_tuple(status, decode="ok", payload="empty")
+        return _returned_attempt_tuple(
+            status,
+            decode="ok",
+            payload="empty",
+            provider_date=provider_date,
+            response_sha256=response_sha256,
+        )
     soup = BeautifulSoup(html, "html.parser")
     has_rows = any(row.find("td") is not None for row in soup.select("table tr"))
     return _returned_attempt_tuple(
@@ -141,6 +160,8 @@ def _html_attempt_tuple(status: int, html: str) -> Dict[str, Any]:
         decode="ok",
         payload="non_empty",
         assertions=[{"id": "table_rows", "passed": has_rows}],
+        provider_date=provider_date,
+        response_sha256=response_sha256,
     )
 
 
@@ -257,7 +278,11 @@ def fetch_html_playwright(
             if is_cloudflare_challenge(status, response_headers, html) or (challenge_detector and challenge_detector(html)):
                 raise ProviderThrottledError(url, status, attempt)
 
-            _emit_attempt_tuple(_html_attempt_tuple(status, html))
+            _emit_attempt_tuple(_html_attempt_tuple(
+                status,
+                html,
+                provider_date=response_headers.get("date"),
+            ))
             return html
         except ProviderThrottledError as exc:
             last_error = exc
@@ -352,7 +377,11 @@ def fetch_html(
                     response=response,
                 )
             response.raise_for_status()
-            _emit_attempt_tuple(_html_attempt_tuple(response.status_code, html))
+            _emit_attempt_tuple(_html_attempt_tuple(
+                response.status_code,
+                html,
+                provider_date=response.headers.get("Date"),
+            ))
             return html
         except requests.RequestException as exc:
             last_error = exc

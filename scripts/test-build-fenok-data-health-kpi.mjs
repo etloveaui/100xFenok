@@ -58,6 +58,7 @@ import { buildFetchCronAttemptCoverage } from "./build-data-supply-detection-flo
 import { deriveProductSurfaceStampEvidence } from "./lib/product-surface-stamp-v2.mjs";
 import { ProducerLkgStateStore } from "./lib/producer-lkg-state.mjs";
 import { checkKpiRecoverySourcesAgainstRegistry } from "./check-lane-registry-kpi.mjs";
+import { bootstrapSlickchartsCompositeIndex } from "./lib/slickcharts-composite-recovery.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BUILDER = path.join(__dirname, "build-fenok-data-health-kpi.mjs");
@@ -68,6 +69,45 @@ const DETECTION_CALENDARS = path.join(__dirname, "fixtures", "data_supply", "det
 const KPI_REL = path.join("admin", "fenok-data-health-kpi.json");
 const DETECTION_BASELINE_REPORT = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report;
 const DETECTION_CALENDAR_FIXTURE = JSON.parse(fs.readFileSync(DETECTION_CALENDARS, "utf8"));
+const REPO_ROOT = path.resolve(__dirname, "..");
+
+function readySlickchartsCompositeIndex(
+  generatedAt = "2026-07-14T11:00:00Z",
+  repoRoot = REPO_ROOT,
+) {
+  const run = {
+    run_id: "slickcharts-fixture",
+    run_attempt: 1,
+    event_name: "schedule",
+    observed_at: generatedAt,
+    head_sha: "a".repeat(40),
+  };
+  const index = bootstrapSlickchartsCompositeIndex({ repoRoot, run });
+  const providerObservedAt = new Date(generatedAt).toISOString();
+  for (const member of Object.values(index.members)) {
+    member.resolution_state = "fresh_primary";
+    member.retry = false;
+    member.provider_observation = {
+      kind: "http_date_receipt_set",
+      receipt_count: 1,
+      source_floor: providerObservedAt,
+      source_ceiling: providerObservedAt,
+      content_set_sha256: "c".repeat(64),
+      receipt_set_sha256: "b".repeat(64),
+    };
+  }
+  index.composite_state = "ready";
+  index.retry_members = [];
+  index.current_attempt = {
+    run_id: run.run_id,
+    run_attempt: 1,
+    event_name: "schedule",
+    observed_at: generatedAt,
+    member_id: "daily",
+    decision: "candidate_promoted",
+  };
+  return index;
+}
 function fixtureDetectionReport(evaluatedAt) {
   const report = structuredClone(DETECTION_BASELINE_REPORT);
   report.generated_at = typeof evaluatedAt === "string"
@@ -947,9 +987,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   const recoveryAware = buildDetectionFloorLanes(report(), {
     yahoo_ticker_macro: yahooRecovery,
     us_indices_daily: recoveryIndex("us_indices_daily", ["sp500.json", "nasdaq.json"]),
-    slickcharts: recoveryIndex("slickcharts_daily_delivery", [
-      "gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json",
-    ]),
+    slickcharts: readySlickchartsCompositeIndex(),
   });
   assert.equal(recoveryAware.find((item) => item.id === "yahoo_ticker_macro")?.status, "degraded");
   const usIndicesRecovery = recoveryAware.find((item) => item.id === "us_indices_daily");
@@ -958,6 +996,36 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   assert.equal(usIndicesRecovery?.checks.find((item) => item.id === "recovery_retry_set_empty")?.status, "ready");
   assert.equal(recoveryAware.find((item) => item.id === "slickcharts")?.status, "ready");
   assert.equal(recoveryAware.find((item) => item.id === "treasury_tga")?.checks.some((item) => item.id.startsWith("recovery_")), false);
+
+  const slickchartsLiveRoot = fs.mkdtempSync(path.join(os.tmpdir(), "slickcharts-kpi-live-"));
+  fs.mkdirSync(path.join(slickchartsLiveRoot, "data"), { recursive: true });
+  fs.cpSync(
+    path.join(REPO_ROOT, "data", "slickcharts"),
+    path.join(slickchartsLiveRoot, "data", "slickcharts"),
+    { recursive: true },
+  );
+  const liveBoundIndex = readySlickchartsCompositeIndex("2026-07-14T11:00:00Z", slickchartsLiveRoot);
+  const liveBoundLane = mapDetectionFloorRow(
+    row("slickcharts"),
+    liveBoundIndex,
+    { slickchartsRepoRoot: slickchartsLiveRoot },
+  );
+  assert.equal(liveBoundLane.status, "ready");
+  for (const member of Object.keys(liveBoundIndex.members)) {
+    const relative = liveBoundIndex.members[member].bundle.files[0].path;
+    const target = path.join(slickchartsLiveRoot, relative);
+    const original = fs.readFileSync(target);
+    fs.writeFileSync(target, `${member}-mutated`);
+    const diverged = mapDetectionFloorRow(
+      row("slickcharts"),
+      liveBoundIndex,
+      { slickchartsRepoRoot: slickchartsLiveRoot },
+    );
+    assert.equal(diverged.status, "degraded");
+    assert.equal(diverged.checks.find((item) => item.id === "recovery_lkg_integrity")?.status, "blocked");
+    fs.writeFileSync(target, original);
+  }
+  fs.rmSync(slickchartsLiveRoot, { recursive: true, force: true });
 
   const missingRecovery = mapDetectionFloorRow(row("slickcharts"), null);
   assert.equal(missingRecovery.status, "degraded");
@@ -1062,9 +1130,8 @@ const TARGET_RECOVERY_FIXTURES = Object.freeze({
     keys: ["sp500.json", "nasdaq.json"],
   },
   slickcharts: {
-    relPath: "slickcharts-daily-delivery",
-    laneId: "slickcharts_daily_delivery",
-    keys: ["gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json"],
+    relPath: "slickcharts-composite-recovery",
+    composite: true,
   },
 });
 
@@ -1100,7 +1167,11 @@ function readyDetectionProjection(id, now) {
     artifact: { status: "ready", reason: "ok", source_as_of: providerDateless ? null : "2026-07-10" },
   };
   const recovery = TARGET_RECOVERY_FIXTURES[id];
-  return mapDetectionFloorRow(row, recovery ? readyRecoveryIndex(recovery.laneId, recovery.keys, now) : undefined);
+  return mapDetectionFloorRow(row, recovery
+    ? recovery.composite
+      ? readySlickchartsCompositeIndex(now)
+      : readyRecoveryIndex(recovery.laneId, recovery.keys, now)
+    : undefined);
 }
 
 // HERMETIC ready core — synthesized in-process with ZERO inheritance from the repo's
@@ -1299,6 +1370,19 @@ function writeReadyRecoveryIndex(tmp, relPath, laneId, keys, generatedAt = "2026
   writeJson(path.join(tmp, "data", "admin", relPath, "index.json"), readyRecoveryIndex(laneId, keys, generatedAt));
 }
 
+function writeReadySlickchartsComposite(tmp, generatedAt = "2026-07-14T11:00:00Z") {
+  fs.mkdirSync(path.join(tmp, "data"), { recursive: true });
+  fs.cpSync(
+    path.join(REPO_ROOT, "data", "slickcharts"),
+    path.join(tmp, "data", "slickcharts"),
+    { recursive: true },
+  );
+  writeJson(
+    path.join(tmp, "data", "admin", "slickcharts-composite-recovery", "index.json"),
+    readySlickchartsCompositeIndex(generatedAt, tmp),
+  );
+}
+
 function hourlyDeferralRecoveryIndex(generatedAt) {
   return {
     schema_version: "producer-lkg-index/v2",
@@ -1345,7 +1429,11 @@ function installHourlyRecoveryLane(root, index) {
 
 function writeReadyTargetRecoveryIndexes(tmp, generatedAt) {
   for (const recovery of Object.values(TARGET_RECOVERY_FIXTURES)) {
-    writeReadyRecoveryIndex(tmp, recovery.relPath, recovery.laneId, recovery.keys, generatedAt);
+    if (recovery.composite) {
+      writeReadySlickchartsComposite(tmp, generatedAt);
+    } else {
+      writeReadyRecoveryIndex(tmp, recovery.relPath, recovery.laneId, recovery.keys, generatedAt);
+    }
   }
 }
 
@@ -1510,9 +1598,7 @@ console.log("# KPI v2 runtime self-proof fixtures");
   writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), installedReport);
   writeReadyRecoveryIndex(tmp, "yahoo-hourly-ticker", "yahoo_hourly_ticker", ["TQQQ.json", "SOXL.json"]);
   writeReadyRecoveryIndex(tmp, "us-indices-daily", "us_indices_daily", ["sp500.json", "nasdaq.json"]);
-  writeReadyRecoveryIndex(tmp, "slickcharts-daily-delivery", "slickcharts_daily_delivery", [
-    "gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json",
-  ]);
+  writeReadySlickchartsComposite(tmp);
   const { root, public: pub } = runBuilder(tmp, {}, now);
   assert.equal(root.totals.lanes, 31);
   for (const laneConfig of DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live")) {
@@ -1532,7 +1618,7 @@ console.log("# KPI v2 runtime self-proof fixtures");
     public_safe: false,
   });
   assert.equal(root.source_artifacts.find((item) => item.id === "yahoo_hourly_ticker_recovery_state")?.generated_at, "2026-07-14T11:00:00Z");
-  assert.equal(root.source_artifacts.find((item) => item.id === "slickcharts_daily_delivery_recovery_state")?.generated_at, "2026-07-14T11:00:00Z");
+  assert.equal(root.source_artifacts.find((item) => item.id === "slickcharts_composite_recovery_state")?.generated_at, "2026-07-14T11:00:00Z");
   const publicYahooRecovery = pub.lanes.find((item) => item.id === "yahoo_ticker_macro")?.details?.recovery;
   assert.deepEqual(Object.keys(publicYahooRecovery).sort(), [
     "counts", "current_attempt", "generated_at", "keys", "lane_id", "promotion_deferral_details", "retry_keys",
@@ -1586,6 +1672,14 @@ console.log("# KPI v2 runtime self-proof fixtures");
   assert.equal(publicPreActivationProbe.pre_activation_lane_ids.includes("finra_ats_weekly"), false);
   assert.equal(JSON.stringify(publicPreActivationProbe).includes(".github/workflows/"), false);
   assert.equal(root.deployment_integrity.blockers.some((item) => /fetch_cron/i.test(`${item.lane_id}/${item.check_id}`)), false);
+
+  const liveMutationTarget = path.join(tmp, "data", "slickcharts", "gainers.json");
+  const liveMutationBaseline = fs.readFileSync(liveMutationTarget);
+  fs.writeFileSync(liveMutationTarget, "{\"mutated\":true}\n");
+  const liveMutationCheck = runChecker(tmp, now);
+  assert.equal(liveMutationCheck.exit, 1);
+  assert.match(liveMutationCheck.stderr, /live owned bundle differs from recovery index/);
+  fs.writeFileSync(liveMutationTarget, liveMutationBaseline);
 
   const malformed = mkTmp("detection-floor-live-malformed-json");
   fs.writeFileSync(path.join(malformed, "data", "admin", "data-supply-detection-floor.json"), "{", "utf8");
@@ -4146,7 +4240,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     { id: "occ_options_availability", public_mirror: true, public_safe: true },
     { id: "data_supply_detection_floor", public_mirror: false, public_safe: false },
     { id: "yahoo_hourly_ticker_recovery_state", public_mirror: false, public_safe: false },
-    { id: "slickcharts_daily_delivery_recovery_state", public_mirror: false, public_safe: false },
+    { id: "slickcharts_composite_recovery_state", public_mirror: false, public_safe: false },
   ];
   const actual = payload.source_artifacts.map((row) => ({
     id: row.id,
@@ -4165,7 +4259,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   // (a) value-changing recovery-source injection: an injected slickcharts
   // source path must flow into the artifact's generated_at (vs the canonical
   // slickcharts store), proving the seam reaches the projection end to end.
-  const canonicalSox = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "data", "admin", "slickcharts-daily-delivery", "index.json"), "utf8"));
+  const canonicalSox = readySlickchartsCompositeIndex("2026-07-14T11:00:00Z");
   const injectedSox = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "data", "admin", "yahoo-hourly-ticker", "index.json"), "utf8"));
   const injectedSources = Object.freeze({
     ...RECOVERY_STATE_SOURCES,
@@ -4175,7 +4269,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     }),
   });
   const payloadInjected = buildPayload("2026-07-19T05:00:00Z", null, null, injectedSources);
-  const soxArtifact = payloadInjected.source_artifacts.find((row) => row.id === "slickcharts_daily_delivery_recovery_state");
+  const soxArtifact = payloadInjected.source_artifacts.find((row) => row.id === "slickcharts_composite_recovery_state");
   assert.equal(soxArtifact.generated_at, injectedSox.generated_at,
     "an injected recovery-source path must flow into the artifact generated_at");
   assert.notEqual(soxArtifact.generated_at, canonicalSox.generated_at,

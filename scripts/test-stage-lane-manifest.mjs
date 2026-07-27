@@ -372,34 +372,44 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 }
 
-// The full history merge publishes its attempt shard, four canonical files,
-// and the per-symbol directory; single-symbol attempts stay shard-only.
+// History always persists attempt/composite state; canonical files are selected
+// only after the composite finalizer accepts the full member bundle.
 {
   const fixture = makeFixture({ workflow: SLICKCHARTS_HISTORY_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_HISTORY_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=6 stage_selected=6 staged_index_total=6/);
+  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
+  const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_HISTORY_WORKFLOW);
+  assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
+  assert.match(success.stdout, /declared=5 stage_selected=5 staged_index_total=7/);
+  assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
-// Monthly SlickCharts stages the attempt shard, 21 required outputs, and the
-// optional one-off 1929 crash output through one always-published stage.
+// Monthly data stays behind the same accepted-composite success gate.
 {
   const fixture = makeFixture({ workflow: SLICKCHARTS_MONTHLY_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_MONTHLY_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=23 stage_selected=23 staged_index_total=23/);
+  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
+  const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_MONTHLY_WORKFLOW);
+  assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
+  assert.match(success.stdout, /declared=22 stage_selected=22 staged_index_total=24/);
+  assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
-// Weekly SlickCharts has no degraded-data branch: its attempt shard and four
-// required checked-in outputs are one always-published manifest stage.
+// Weekly data also stays behind the accepted-composite success gate.
 {
   const fixture = makeFixture({ workflow: SLICKCHARTS_WEEKLY_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_WEEKLY_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=5 stage_selected=5 staged_index_total=5/);
+  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
+  const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_WEEKLY_WORKFLOW);
+  assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
+  assert.match(success.stdout, /declared=4 stage_selected=4 staged_index_total=6/);
+  assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
 // Daily SlickCharts always persists the merged attempt/recovery state, while
@@ -408,12 +418,12 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: SLICKCHARTS_DAILY_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_DAILY_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
+  assert.match(always.stdout, /declared=3 stage_selected=3 staged_index_total=3/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_DAILY_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=5 stage_selected=5 staged_index_total=7/);
+  assert.match(success.stdout, /declared=5 stage_selected=5 staged_index_total=8/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 

@@ -35,6 +35,11 @@ on:
         description: 'Single symbol (only if batch=single)'
         required: false
         type: string
+      controlled_failure_after_fetch:
+        description: 'Dispatch-only composite recovery exercise after a complete merge'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -129,6 +134,17 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Configure composite recovery paths
+        run: |
+          echo "SLICKCHARTS_COMPOSITE_SNAPSHOT_DIR=$RUNNER_TEMP/slickcharts-composite-symbols-baseline" >> "$GITHUB_ENV"
+          echo "SLICKCHARTS_COMPOSITE_STATUS_PATH=$RUNNER_TEMP/slickcharts-composite-symbols-status.json" >> "$GITHUB_ENV"
+
+      - name: Prepare composite member baseline
+        run: |
+          node scripts/slickcharts-composite-recovery.mjs prepare \
+            --member symbols \
+            --snapshot "$SLICKCHARTS_COMPOSITE_SNAPSHOT_DIR"
+
       - name: Verify lane-registry commit-shard contract
         run: node scripts/test-slickcharts-commit-shards.mjs
 
@@ -159,6 +175,13 @@ jobs:
             data/slickcharts/symbols-S-Z.json \
             --output data/slickcharts/symbols.json \
             --cumulative
+          python scripts/scrapers/symbol-scraper.py \
+            --merge \
+            data/slickcharts/symbols-A-D.json \
+            data/slickcharts/symbols-E-L.json \
+            data/slickcharts/symbols-M-R.json \
+            data/slickcharts/symbols-S-Z.json \
+            --output data/slickcharts/symbols-all.json
 
       - name: Clean up batch files
         run: |
@@ -166,6 +189,12 @@ jobs:
           rm -f data/slickcharts/symbols-E-L.json
           rm -f data/slickcharts/symbols-M-R.json
           rm -f data/slickcharts/symbols-S-Z.json
+
+      - name: Exercise controlled composite degradation
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.controlled_failure_after_fetch }}
+        run: |
+          echo "::error::Controlled SlickCharts symbols composite failure"
+          exit 1
 
       - name: Emit SlickCharts symbols attempt
         if: ${{ always() }}
@@ -176,6 +205,17 @@ jobs:
             --outcome "${{ needs.scrape-batch.result }}" \
             --outcome "${{ job.status }}" \
             --row "$RUNNER_TEMP/slickcharts-symbols-row.json"
+
+      - name: Finalize SlickCharts composite recovery
+        if: ${{ always() }}
+        run: |
+          node scripts/slickcharts-composite-recovery.mjs finalize \
+            --member symbols \
+            --snapshot "$SLICKCHARTS_COMPOSITE_SNAPSHOT_DIR" \
+            --row "$RUNNER_TEMP/slickcharts-symbols-row.json" \
+            --receipts artifacts \
+            --status "$SLICKCHARTS_COMPOSITE_STATUS_PATH" \
+            --full-run "${{ (github.event_name == 'schedule' || github.event.inputs.batch == 'ALL') && 'true' || 'false' }}"
 
       - name: Commit and push changes
         if: ${{ always() }}
@@ -190,8 +230,10 @@ jobs:
             "chore: update SlickCharts symbols $(date -u +%Y-%m-%d)" \
             --manifest-workflow .github/workflows/slickcharts-symbols.yml \
             --manifest-always always_if_exists \
+            --manifest-data success_if_exists \
             -- \
-            data/slickcharts/symbols.json
+            data/slickcharts/symbols.json \
+            data/slickcharts/symbols-all.json
 
   # Single symbol scraping for testing
   scrape-single:

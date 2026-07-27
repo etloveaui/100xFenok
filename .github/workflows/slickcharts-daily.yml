@@ -52,6 +52,8 @@ jobs:
           echo "SLICKCHARTS_DAILY_OUTCOMES_PATH=$RUNNER_TEMP/slickcharts-daily-outcomes.jsonl" >> "$GITHUB_ENV"
           echo "SLICKCHARTS_RECOVERY_SNAPSHOT_DIR=$RUNNER_TEMP/slickcharts-daily-baseline" >> "$GITHUB_ENV"
           echo "SLICKCHARTS_RECOVERY_STATUS_PATH=$RUNNER_TEMP/slickcharts-daily-recovery-status.json" >> "$GITHUB_ENV"
+          echo "SLICKCHARTS_COMPOSITE_SNAPSHOT_DIR=$RUNNER_TEMP/slickcharts-composite-daily-baseline" >> "$GITHUB_ENV"
+          echo "SLICKCHARTS_COMPOSITE_STATUS_PATH=$RUNNER_TEMP/slickcharts-composite-daily-status.json" >> "$GITHUB_ENV"
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -75,10 +77,18 @@ jobs:
         run: |
           node scripts/test-producer-lkg-state.mjs
           node scripts/test-slickcharts-daily-recovery.mjs
+          node scripts/test-slickcharts-composite-recovery.mjs
           node scripts/test-slickcharts-commit-shards.mjs
+          python scripts/test_slickcharts_provider_receipts.py
 
       - name: Prepare per-file LKG baseline
         run: node scripts/slickcharts-daily-recovery.mjs prepare --snapshot-dir "$SLICKCHARTS_RECOVERY_SNAPSHOT_DIR"
+
+      - name: Prepare composite member baseline
+        run: |
+          node scripts/slickcharts-composite-recovery.mjs prepare \
+            --member daily \
+            --snapshot "$SLICKCHARTS_COMPOSITE_SNAPSHOT_DIR"
 
       - name: Install dependencies
         run: |
@@ -179,6 +189,17 @@ jobs:
             --outcomes-file "$SLICKCHARTS_DAILY_OUTCOMES_PATH" \
             --outcome "${{ job.status }}" \
             --row "$RUNNER_TEMP/slickcharts-daily-row.json"
+
+      - name: Finalize SlickCharts composite recovery
+        if: ${{ always() }}
+        run: |
+          node scripts/slickcharts-composite-recovery.mjs finalize \
+            --member daily \
+            --snapshot "$SLICKCHARTS_COMPOSITE_SNAPSHOT_DIR" \
+            --row "$RUNNER_TEMP/slickcharts-daily-row.json" \
+            --receipts "$SLICKCHARTS_ATTEMPT_EVENTS_PATH" \
+            --status "$SLICKCHARTS_COMPOSITE_STATUS_PATH" \
+            --full-run "${{ (github.event_name == 'schedule' || github.event.inputs.scraper == 'all') && 'true' || 'false' }}"
 
       - name: Commit and push changes
         if: ${{ always() }}

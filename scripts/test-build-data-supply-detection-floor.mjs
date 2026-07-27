@@ -780,6 +780,7 @@ function runConfigAndFixtureChecks() {
     const LIB_FILES = [
       "json-canonical.mjs",
       "fenok-proxy-formula-contract.mjs",
+      "slickcharts-composite-recovery.mjs",
       "data-supply-detection-config.mjs",
     ];
     const loadConfigWithRegistry = (mutateRegistry) => {

@@ -419,6 +419,7 @@ function clone(value) {
       "oecd_cli",
       "krx",
       "finra_ats_weekly",
+      "slickcharts",
     ]);
     for (const row of summary.absent_store_roots) {
       assert.ok(pendingLanes.has(row.lane), `unexpected absent store: ${row.lane} (${row.path})`);

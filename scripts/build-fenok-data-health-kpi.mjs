@@ -7,6 +7,11 @@ import {
 } from "./build-data-supply-detection-floor.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
+import {
+  SLICKCHARTS_COMPOSITE_MEMBERS,
+  inspectSlickchartsCompositeLiveIntegrity,
+  validateSlickchartsCompositeIndex,
+} from "./lib/slickcharts-composite-recovery.mjs";
 import { EXCLUDED_PUBLIC_DATA_FILES, EXCLUDED_PUBLIC_DATA_ROOTS } from "../100xfenok-next/scripts/sync-public-data.mjs";
 import { FORBIDDEN_PATTERNS, FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS } from "../100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs";
 import { projectPublicKpi } from "./lib/kpi-runtime-projection.mjs";
@@ -657,7 +662,7 @@ const DETECTION_REASON_STATUS = Object.freeze({
 const DETECTION_RECOVERY_CONFIG = Object.freeze({
   yahoo_ticker_macro: { lane_id: "yahoo_hourly_ticker", keys: ["TQQQ.json", "SOXL.json"] },
   us_indices_daily: { lane_id: "us_indices_daily", keys: ["sp500.json", "nasdaq.json"] },
-  slickcharts: { lane_id: "slickcharts_daily_delivery", keys: ["gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json"] },
+  slickcharts: { lane_id: "slickcharts", kind: "composite_v1", members: SLICKCHARTS_COMPOSITE_MEMBERS },
 });
 
 function isDetectionSourceStamp(value) {
@@ -879,6 +884,29 @@ export function compactRecoveryIndex(index) {
   };
 }
 
+export function compactSlickchartsCompositeIndex(index) {
+  try {
+    validateSlickchartsCompositeIndex(index);
+  } catch {
+    return null;
+  }
+  return {
+    lane_id: index.lane_id,
+    generated_at: index.generated_at,
+    composite_state: index.composite_state,
+    active_generation_id: index.active_composite.generation_id,
+    retained_generation_id: index.retained_composite?.generation_id ?? null,
+    members: Object.fromEntries(SLICKCHARTS_COMPOSITE_MEMBERS.map((member) => [member, {
+      resolution_state: index.members[member].resolution_state,
+      retry: index.members[member].retry,
+      file_count: index.members[member].bundle?.file_count ?? 0,
+      last_recovery: index.members[member].last_recovery,
+    }])),
+    retry_members: index.retry_members,
+    current_attempt: index.current_attempt,
+  };
+}
+
 export function validateProducerRecoveryAttempt(index) {
   const reasons = [];
   const reject = (condition, reason) => {
@@ -951,9 +979,54 @@ export function validateProducerRecoveryAttempt(index) {
   return { valid: reasons.length === 0, reasons };
 }
 
-function recoveryChecks(laneId, index) {
+function recoveryChecks(laneId, index, { slickchartsRepoRoot = null } = {}) {
   const config = DETECTION_RECOVERY_CONFIG[laneId];
   if (!config) return { checks: [], details: null };
+  if (config.kind === "composite_v1") {
+    let valid = false;
+    let validationReason = null;
+    try {
+      valid = validateSlickchartsCompositeIndex(index);
+    } catch (error) {
+      validationReason = error.message;
+    }
+    const current = valid
+      && typeof index.current_attempt?.run_id === "string"
+      && index.current_attempt.run_id !== ""
+      && index.current_attempt.run_attempt >= 1
+      && ["schedule", "workflow_dispatch"].includes(index.current_attempt.event_name)
+      && isDetectionSourceStamp(index.current_attempt.observed_at)
+      && config.members.includes(index.current_attempt.member_id);
+    const retryEmpty = valid && index.retry_members.length === 0 && index.composite_state === "ready";
+    let liveIntegrity = { valid: slickchartsRepoRoot === null, mismatches: [] };
+    if (valid && slickchartsRepoRoot !== null) {
+      try {
+        liveIntegrity = inspectSlickchartsCompositeLiveIntegrity(slickchartsRepoRoot, index);
+      } catch (error) {
+        liveIntegrity = { valid: false, mismatches: [{ member: "composite", reason: error.message }] };
+      }
+    }
+    const lkgIntegrity = valid && liveIntegrity.valid && Object.values(index.members).every((member) => member.bundle !== null
+      && /^[a-f0-9]{64}$/u.test(member.bundle.tree_sha256)
+      && member.bundle.files.every((row) => /^[a-f0-9]{64}$/u.test(row.sha256)));
+    return {
+      checks: [
+        check("recovery_state_present", "Recovery state", valid,
+          valid ? "5 exact hash-bound workflow members are named" : validationReason ?? "composite recovery index is missing"),
+        check("recovery_current_attempt", "Recovery current attempt", current,
+          current ? `run ${index.current_attempt.run_id}` : "current composite attempt is missing or malformed"),
+        check("recovery_retry_set_empty", "Recovery retry set", retryEmpty,
+          retryEmpty ? "retry set is empty" : `${index?.retry_members?.length ?? 0} member(s) remain unresolved`),
+        check("recovery_lkg_integrity", "Recovery LKG integrity", lkgIntegrity,
+          lkgIntegrity
+            ? "all five live member bundles match their path- and sha256-bound index"
+            : liveIntegrity.mismatches.length > 0
+              ? `live bundle mismatch: ${liveIntegrity.mismatches.map((row) => row.member).join(", ")}`
+              : "composite member binding is missing or malformed"),
+      ],
+      details: valid ? compactSlickchartsCompositeIndex(index) : null,
+    };
+  }
   const present = ["producer-lkg-index/v1", "producer-lkg-index/v2"].includes(index?.schema_version)
     && index?.lane_id === config.lane_id
     && Number(index?.counts?.keys) === config.keys.length
@@ -1012,7 +1085,7 @@ export const LAST_ATTEMPT_STORELESS_DETAIL = Object.freeze({
   last_attempt_reason: "lane has no recovery store",
 });
 
-export function mapDetectionFloorRow(row, recoveryState = undefined) {
+export function mapDetectionFloorRow(row, recoveryState = undefined, options = {}) {
   const laneId = typeof row?.id === "string" && row.id !== "" ? row.id : "<unknown>";
   if (!row || typeof row !== "object" || Array.isArray(row)) {
     throw new Error(`detection floor ${laneId} row is malformed`);
@@ -1043,7 +1116,7 @@ export function mapDetectionFloorRow(row, recoveryState = undefined) {
   const targetRecovery = Object.hasOwn(DETECTION_RECOVERY_CONFIG, row.id) && recoveryState !== undefined;
   const recoveryRetrySet = targetRecovery ? null : projectRecoveryRetrySet(recoveryState, row.id);
   const recoveryRecovered = targetRecovery ? null : projectRecoveryRecoveredSet(recoveryState, row.id);
-  const recovery = targetRecovery ? recoveryChecks(row.id, recoveryState) : null;
+  const recovery = targetRecovery ? recoveryChecks(row.id, recoveryState, options) : null;
   const result = lane(row.id, row.label, [
     check(
       "detection_floor_status",
@@ -1076,7 +1149,7 @@ export function mapDetectionFloorRow(row, recoveryState = undefined) {
   };
 }
 
-export function buildDetectionFloorLanes(report, recoveryStates = undefined) {
+export function buildDetectionFloorLanes(report, recoveryStates = undefined, options = {}) {
   const liveLaneConfigs = DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live");
   if (report === null || report === undefined) {
     return liveLaneConfigs.map((laneConfig) => mapDetectionFloorRow({
@@ -1087,7 +1160,7 @@ export function buildDetectionFloorLanes(report, recoveryStates = undefined) {
       status: "unobserved",
       reason: "workflow_unobserved",
       artifact: { status: "unobserved", reason: "workflow_unobserved", source_as_of: null },
-    }, recoveryStates === undefined ? undefined : recoveryStates[laneConfig.id] ?? null));
+    }, recoveryStates === undefined ? undefined : recoveryStates[laneConfig.id] ?? null, options));
   }
   validateDetectionReport(report);
   if (report?.schema_version !== "data-supply-detection-floor/v1" || !Array.isArray(report?.lanes)) {
@@ -1096,7 +1169,11 @@ export function buildDetectionFloorLanes(report, recoveryStates = undefined) {
   return liveLaneConfigs.map((laneConfig) => {
     const matches = report.lanes.filter((item) => item?.id === laneConfig.id);
     if (matches.length !== 1) throw new Error(`detection floor ${laneConfig.id} cardinality is ${matches.length}`);
-    return mapDetectionFloorRow(matches[0], recoveryStates === undefined ? undefined : recoveryStates[laneConfig.id] ?? null);
+    return mapDetectionFloorRow(
+      matches[0],
+      recoveryStates === undefined ? undefined : recoveryStates[laneConfig.id] ?? null,
+      options,
+    );
   });
 }
 
@@ -2145,7 +2222,7 @@ function deriveRecoveryStateSources() {
     if (lane.kpi_recovery_shape === "general") {
       generalLaneIds.push(lane.id);
       generalPaths[lane.id] = relativePath;
-    } else if (lane.kpi_recovery_shape === "keyed_v2") {
+    } else if (lane.kpi_recovery_shape === "keyed_v2" || lane.kpi_recovery_shape === "composite_v1") {
       nonstandard[lane.id] = relativePath;
     } else if (lane.kpi_recovery_shape === "direct") {
       const key = lane.roots.admin_store.split("/").at(-1).replaceAll("-", "_");
@@ -2183,7 +2260,7 @@ const SOURCE_ARTIFACT_SPECS = Object.freeze([
   { id: "occ_options_availability", path: "computed/fenok_occ_options_availability.json", kind: "computed" },
   { id: "data_supply_detection_floor", path: "admin/data-supply-detection-floor.json", kind: "admin_manifest" },
   { id: "yahoo_hourly_ticker_recovery_state", kind: "recovery_index" },
-  { id: "slickcharts_daily_delivery_recovery_state", kind: "recovery_index" },
+  { id: "slickcharts_composite_recovery_state", kind: "recovery_index" },
 ]);
 
 function pathWithin(path, root) {
@@ -2220,7 +2297,7 @@ function buildSourceArtifacts(loaded) {
     yahoo_batch_quote_history_state: loaded.yahooBatchState,
     stockanalysis_recovery_state: loaded.stockanalysisRecovery,
     yahoo_hourly_ticker_recovery_state: loaded.detectionRecovery.yahoo_ticker_macro,
-    slickcharts_daily_delivery_recovery_state: loaded.detectionRecovery.slickcharts,
+    slickcharts_composite_recovery_state: loaded.detectionRecovery.slickcharts,
   };
   return SOURCE_ARTIFACT_SPECS.map((spec) => ({
     id: spec.id,
@@ -2267,7 +2344,7 @@ export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, r
     buildFinraOccLane(finraOccLedger, occAvailability),
     buildAutomationLane(),
     buildPublicMirrorLane(rimInputs),
-    ...buildDetectionFloorLanes(detectionFloor, recoveryStates),
+    ...buildDetectionFloorLanes(detectionFloor, recoveryStates, { slickchartsRepoRoot: path.dirname(DATA_ROOT) }),
   ];
   // #365 P2: last_attempt is uniform across every lane. Detection-floor lanes set
   // it from their injected recovery state; the remaining composite/platform lanes

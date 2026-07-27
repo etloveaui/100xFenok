@@ -10,11 +10,12 @@
 
 import { createHash } from "node:crypto";
 import { canonicalJson } from "./json-canonical.mjs";
+import { SLICKCHARTS_MEMBER_PATHS } from "./slickcharts-composite-recovery.mjs";
 
 export const LANE_REGISTRY_SCHEMA = "lane-registry/v2";
 export const STORE_KINDS = Object.freeze(["marker", "payload", "artifact_only"]);
 export const LANE_CLASSES = Object.freeze(["detection_floor", "auxiliary"]);
-export const KPI_RECOVERY_SHAPES = Object.freeze(["general", "keyed_v2", "direct"]);
+export const KPI_RECOVERY_SHAPES = Object.freeze(["general", "keyed_v2", "composite_v1", "direct"]);
 export const ENFORCEMENTS = Object.freeze(["live", "shadow"]);
 export const PRIVACY_CLASSES = Object.freeze(["private", "public_mirror", "public_safe_aggregate"]);
 export const CADENCE_KINDS = Object.freeze(["hourly", "daily", "weekly", "monthly", "quarterly", "mixed", "unknown"]);
@@ -536,28 +537,19 @@ const lanes = [
     cadence: { kind: "daily", provider: "slickcharts (us_trading_days)" },
     enforcement: "live",
     privacy_class: "public_mirror",
-    admin_store: "data/admin/slickcharts-daily-delivery",
+    admin_store: "data/admin/slickcharts-composite-recovery",
     detection_attempt: attemptShard("slickcharts"),
-    canonical_outputs: [
-      "data/slickcharts/gainers.json",
-      "data/slickcharts/losers.json",
-      "data/slickcharts/treasury.json",
-      "data/slickcharts/currency.json",
-      "data/slickcharts/mortgage.json",
-    ],
+    canonical_outputs: Object.values(SLICKCHARTS_MEMBER_PATHS).flat().map((spec) => spec.path),
     public_mirror: ["100xfenok-next/public/data/slickcharts"],
     commit_shards: [
       attemptShard("slickcharts"),
       "data/admin/slickcharts-daily-delivery",
-      "data/slickcharts/gainers.json",
-      "data/slickcharts/losers.json",
-      "data/slickcharts/treasury.json",
-      "data/slickcharts/currency.json",
-      "data/slickcharts/mortgage.json",
+      "data/admin/slickcharts-composite-recovery",
+      ...SLICKCHARTS_MEMBER_PATHS.daily.map((spec) => spec.path),
     ],
-    recovery_store: "data/admin/slickcharts-daily-delivery/index.json",
-    kpi_recovery_shape: "keyed_v2",
-    declared_exception: "producer-lkg-index/v2 keyed store (5 delivery keys), committed via scripts/publish-slickcharts-attempt.sh; projected via the KPI detectionRecovery map",
+    recovery_store: "data/admin/slickcharts-composite-recovery/index.json",
+    kpi_recovery_shape: "composite_v1",
+    declared_exception: "hash-bound five-member composite LKG index; daily per-file delivery state remains a separate row-10 compatibility store",
     // Script-side publisher: the commit allowlist lives in the publish script,
     // not the workflow YAML. slickcharts-daily is the primary owner and commits
     // the full admin store; the other four members share the same lane and
@@ -567,7 +559,10 @@ const lanes = [
       ["weekly", "monthly", "history", "symbols"].map((member) => [
         `.github/workflows/slickcharts-${member}.yml`,
         {
-          commit_shards: ["data/admin/data-supply-state/detection-attempts/slickcharts.json"],
+          commit_shards: [
+            "data/admin/data-supply-state/detection-attempts/slickcharts.json",
+            "data/admin/slickcharts-composite-recovery",
+          ],
           script_sources: ["scripts/publish-slickcharts-attempt.sh"],
         },
       ]),
@@ -976,6 +971,12 @@ const lanes = [
 // (DEC-266 discipline: statically declared, never runtime-inferred).
 const declared_exceptions = [
   {
+    path: "data/admin/slickcharts-daily-delivery",
+    kind: "root",
+    reason: "row-10 compatibility per-file delivery LKG; row-9 recovery authority is the separate five-member composite store",
+    owner: "slickcharts-daily",
+  },
+  {
     path: "data/admin/data-supply-state",
     kind: "root",
     reason: "shared detection-floor state root (attempt shards + provider-observation objects); not a lane store",
@@ -1146,6 +1147,9 @@ Object.assign(workflow_policies, {
   ".github/workflows/slickcharts-weekly.yml": policy(["slickcharts"], {
     always_if_exists: [
       commitSpec("data/admin/data-supply-state/detection-attempts/slickcharts.json", "file"),
+      commitSpec("data/admin/slickcharts-composite-recovery", "directory"),
+    ],
+    success_if_exists: [
       commitSpec("data/slickcharts/sp500.json", "file", true),
       commitSpec("data/slickcharts/magnificent7.json", "file", true),
       commitSpec("data/slickcharts/etf.json", "file", true),
@@ -1155,12 +1159,19 @@ Object.assign(workflow_policies, {
   ".github/workflows/slickcharts-symbols.yml": policy(["slickcharts"], {
     always_if_exists: [
       commitSpec("data/admin/data-supply-state/detection-attempts/slickcharts.json", "file"),
+      commitSpec("data/admin/slickcharts-composite-recovery", "directory"),
+    ],
+    success_if_exists: [
       commitSpec("data/slickcharts/symbols.json", "file", true),
+      commitSpec("data/slickcharts/symbols-all.json", "file", true),
     ],
   }),
   ".github/workflows/slickcharts-history.yml": policy(["slickcharts"], {
     always_if_exists: [
       commitSpec("data/admin/data-supply-state/detection-attempts/slickcharts.json", "file"),
+      commitSpec("data/admin/slickcharts-composite-recovery", "directory"),
+    ],
+    success_if_exists: [
       commitSpec("data/slickcharts/stocks-returns.json", "file", true),
       commitSpec("data/slickcharts/stocks-dividends.json", "file", true),
       commitSpec("data/slickcharts/stocks-dividends-recent.json", "file", true),
@@ -1171,6 +1182,9 @@ Object.assign(workflow_policies, {
   ".github/workflows/slickcharts-monthly.yml": policy(["slickcharts"], {
     always_if_exists: [
       commitSpec("data/admin/data-supply-state/detection-attempts/slickcharts.json", "file"),
+      commitSpec("data/admin/slickcharts-composite-recovery", "directory"),
+    ],
+    success_if_exists: [
       ...[
         "sp500-returns.json",
         "sp500-returns-details.json",

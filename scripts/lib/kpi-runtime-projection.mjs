@@ -61,6 +61,29 @@ function projectLaneRecoveryDetails(doc) {
     }
     const recovery = lane?.details?.recovery;
     if (!recovery || typeof recovery !== "object" || Array.isArray(recovery)) continue;
+    if (recovery.lane_id === "slickcharts" && typeof recovery.composite_state === "string") {
+      lane.details.recovery = {
+        lane_id: "slickcharts",
+        generated_at: recovery.generated_at ?? null,
+        composite_state: recovery.composite_state,
+        members: Object.fromEntries(Object.entries(recovery.members ?? {}).map(([member, row]) => [member, {
+          resolution_state: row?.resolution_state ?? null,
+          retry: row?.retry ?? null,
+          file_count: row?.file_count ?? 0,
+          recovered_at: row?.last_recovery?.recovered_at ?? null,
+          recovery_run_attempt: row?.last_recovery?.recovery_run_attempt ?? null,
+          recovery_event_name: row?.last_recovery?.recovery_event_name ?? null,
+        }])),
+        retry_members: Array.isArray(recovery.retry_members) ? recovery.retry_members : [],
+        current_attempt: recovery.current_attempt ? {
+          event_name: recovery.current_attempt.event_name ?? null,
+          observed_at: recovery.current_attempt.observed_at ?? null,
+          member_id: recovery.current_attempt.member_id ?? null,
+          decision: recovery.current_attempt.decision ?? null,
+        } : null,
+      };
+      continue;
+    }
     lane.details.recovery = {
       lane_id: recovery.lane_id ?? null,
       generated_at: recovery.generated_at ?? null,

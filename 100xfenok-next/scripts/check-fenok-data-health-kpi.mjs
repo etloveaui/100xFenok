@@ -37,6 +37,7 @@ import {
   slaStatusForAge,
   classifyProductSurface,
   compactRecoveryIndex,
+  compactSlickchartsCompositeIndex,
   formatRecoveryRetryEvidence,
   projectRecoveryRecoveredSet,
   projectRecoveryRetrySet,
@@ -44,6 +45,7 @@ import {
 } from "../../scripts/build-fenok-data-health-kpi.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "../../scripts/lib/data-supply-detection-config.mjs";
 import { buildFetchCronAttemptCoverage } from "../../scripts/build-data-supply-detection-floor.mjs";
+import { inspectSlickchartsCompositeLiveIntegrity } from "../../scripts/lib/slickcharts-composite-recovery.mjs";
 
 const APP_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const REPO_ROOT = path.resolve(APP_ROOT, "..");
@@ -458,7 +460,6 @@ export function checkRecoveryStateSources(rootDoc, rootKpiPath, errors) {
   for (const [laneId, stateDir] of [
     ["yahoo_ticker_macro", "yahoo-hourly-ticker"],
     ["us_indices_daily", "us-indices-daily"],
-    ["slickcharts", "slickcharts-daily-delivery"],
   ]) {
     const state = readOptionalJson(path.join(adminRoot, stateDir, "index.json"));
     const lane = lanesById.get(laneId);
@@ -470,6 +471,29 @@ export function checkRecoveryStateSources(rootDoc, rootKpiPath, errors) {
       `${laneId}: raw recovery current attempt is internally inconsistent (${attemptValidation.reasons.join("; ")})`);
     push(errors, JSON.stringify(actual) === JSON.stringify(expected),
       `${laneId}: KPI recovery evidence does not match its source index`);
+  }
+  {
+    const state = readOptionalJson(path.join(adminRoot, "slickcharts-composite-recovery", "index.json"));
+    const lane = lanesById.get("slickcharts");
+    if (state !== null || lane?.details?.recovery != null) {
+      const expected = compactSlickchartsCompositeIndex(state);
+      let liveIntegrity = { valid: false, mismatches: [{ member: "composite", reason: "state_missing" }] };
+      if (expected !== null) {
+        try {
+          liveIntegrity = inspectSlickchartsCompositeLiveIntegrity(path.resolve(adminRoot, "..", ".."), state);
+        } catch (error) {
+          liveIntegrity = { valid: false, mismatches: [{ member: "composite", reason: error.message }] };
+        }
+      }
+      push(errors, expected !== null, "slickcharts: raw composite recovery index is invalid");
+      push(errors, JSON.stringify(lane?.details?.recovery ?? null) === JSON.stringify(expected),
+        "slickcharts: KPI composite recovery evidence does not match its source index");
+      push(errors, liveIntegrity.valid,
+        `slickcharts: live owned bundle differs from recovery index (${liveIntegrity.mismatches.map((row) => row.member).join(", ")})`);
+      const integrityCheck = lane?.checks?.find((row) => row?.id === "recovery_lkg_integrity");
+      push(errors, integrityCheck?.status === (liveIntegrity.valid ? "ready" : "blocked"),
+        "slickcharts: recovery_lkg_integrity does not match live owned files");
+    }
   }
   {
     const state = readOptionalJson(path.join(adminRoot, "yahoo-batch-quote-history", "index.json"));

@@ -13,7 +13,8 @@ import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SHARD = "data/admin/data-supply-state/detection-attempts/slickcharts.json";
-const STATE_ROOT = "data/admin/slickcharts-daily-delivery";
+const DAILY_STATE_ROOT = "data/admin/slickcharts-daily-delivery";
+const COMPOSITE_STATE_ROOT = "data/admin/slickcharts-composite-recovery";
 
 // primary: daily owns shard + full admin store
 {
@@ -25,10 +26,10 @@ const STATE_ROOT = "data/admin/slickcharts-daily-delivery";
   assert.equal(gate.ok, true, JSON.stringify({ missing: gate.missing_in_workflow, undeclared: gate.undeclared_in_workflow }));
   assert.deepEqual(gate.lanes, ["slickcharts"], "slickcharts-daily must be the lane's primary owner");
   assert.equal(gate.scope, "primary");
-  assert.equal(gate.declared_count, 2, "daily declares the shard and the admin store root");
+  assert.equal(gate.declared_count, 3, "daily declares the shard, composite store, and compatibility daily store");
 }
 
-// callers: the other four members own only their merged shard row
+// callers: the other four members own their merged shard row and composite state
 for (const member of ["weekly", "monthly", "history", "symbols"]) {
   const rel = `.github/workflows/slickcharts-${member}.yml`;
   const gate = checkWorkflowCommitShardsAgainstRegistry({
@@ -39,7 +40,7 @@ for (const member of ["weekly", "monthly", "history", "symbols"]) {
   assert.equal(gate.ok, true, `${member}: ${JSON.stringify({ missing: gate.missing_in_workflow, undeclared: gate.undeclared_in_workflow })}`);
   assert.deepEqual(gate.lanes, ["slickcharts"], `${member} must resolve to the shared slickcharts lane`);
   assert.equal(gate.scope, "caller", `${member} must be a declared caller workflow, not the primary`);
-  assert.equal(gate.declared_count, 1, `${member} declares only its merged shard row`);
+  assert.equal(gate.declared_count, 2, `${member} declares its merged shard row and composite state`);
   assert.ok(gate.allowlist_count >= 2, `${member}'s publish script is scanned for the shard and store paths`);
 }
 
@@ -47,7 +48,8 @@ for (const member of ["weekly", "monthly", "history", "symbols"]) {
 {
   const script = fs.readFileSync(path.join(REPO_ROOT, "scripts", "publish-slickcharts-attempt.sh"), "utf8");
   assert.match(script, new RegExp(SHARD.replaceAll("/", "\\/").replaceAll(".", "\\.")));
-  assert.match(script, new RegExp(STATE_ROOT.replaceAll("/", "\\/")));
+  assert.match(script, new RegExp(DAILY_STATE_ROOT.replaceAll("/", "\\/")));
+  assert.match(script, new RegExp(COMPOSITE_STATE_ROOT.replaceAll("/", "\\/")));
 }
 
 console.log("test-slickcharts-commit-shards: ok");

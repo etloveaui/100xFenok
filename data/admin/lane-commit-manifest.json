@@ -1,5 +1,5 @@
 {
-  "registry_digest": "cfe7cd999b914b3a2d3c6e5189ae759c8aa05b7bb9cc4ff7da31be5747c4d331",
+  "registry_digest": "3c2c335f72f1080546d6ca05bb0ef3c452d4613453916e15ab891565315cfebc",
   "registry_schema": "lane-registry/v2",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -1430,6 +1430,11 @@
             "kind": "directory",
             "path": "data/admin/slickcharts-daily-delivery",
             "required": false
+          },
+          {
+            "kind": "directory",
+            "path": "data/admin/slickcharts-composite-recovery",
+            "required": false
           }
         ],
         "required_on_success": [],
@@ -1476,6 +1481,14 @@
             "required": false
           },
           {
+            "kind": "directory",
+            "path": "data/admin/slickcharts-composite-recovery",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
             "kind": "file",
             "path": "data/slickcharts/stocks-returns.json",
             "required": true
@@ -1501,8 +1514,6 @@
             "required": true
           }
         ],
-        "required_on_success": [],
-        "success_if_exists": [],
         "success_verify_not_plan_if_exists": []
       }
     },
@@ -1518,6 +1529,14 @@
             "path": "data/admin/data-supply-state/detection-attempts/slickcharts.json",
             "required": false
           },
+          {
+            "kind": "directory",
+            "path": "data/admin/slickcharts-composite-recovery",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
           {
             "kind": "file",
             "path": "data/slickcharts/sp500-returns.json",
@@ -1629,8 +1648,6 @@
             "required": false
           }
         ],
-        "required_on_success": [],
-        "success_if_exists": [],
         "success_verify_not_plan_if_exists": []
       }
     },
@@ -1647,13 +1664,24 @@
             "required": false
           },
           {
-            "kind": "file",
-            "path": "data/slickcharts/symbols.json",
-            "required": true
+            "kind": "directory",
+            "path": "data/admin/slickcharts-composite-recovery",
+            "required": false
           }
         ],
         "required_on_success": [],
-        "success_if_exists": [],
+        "success_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/slickcharts/symbols.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/slickcharts/symbols-all.json",
+            "required": true
+          }
+        ],
         "success_verify_not_plan_if_exists": []
       }
     },
@@ -1669,6 +1697,14 @@
             "path": "data/admin/data-supply-state/detection-attempts/slickcharts.json",
             "required": false
           },
+          {
+            "kind": "directory",
+            "path": "data/admin/slickcharts-composite-recovery",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
           {
             "kind": "file",
             "path": "data/slickcharts/sp500.json",
@@ -1690,8 +1726,6 @@
             "required": true
           }
         ],
-        "required_on_success": [],
-        "success_if_exists": [],
         "success_verify_not_plan_if_exists": []
       }
     },

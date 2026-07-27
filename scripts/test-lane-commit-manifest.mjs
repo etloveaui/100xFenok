@@ -290,6 +290,7 @@ assert.deepEqual(slickchartsDaily.lanes, ["slickcharts"]);
 assert.deepEqual(slickchartsDaily.stages.always_if_exists, [
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/slickcharts.json", required: false },
   { kind: "directory", path: "data/admin/slickcharts-daily-delivery", required: false },
+  { kind: "directory", path: "data/admin/slickcharts-composite-recovery", required: false },
 ]);
 assert.deepEqual(slickchartsDaily.stages.success_if_exists, [
   { kind: "file", path: "data/slickcharts/gainers.json", required: false },
@@ -304,26 +305,34 @@ const slickchartsWeekly = manifest.workflows[".github/workflows/slickcharts-week
 assert.deepEqual(slickchartsWeekly.lanes, ["slickcharts"]);
 assert.deepEqual(slickchartsWeekly.stages.always_if_exists, [
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/slickcharts.json", required: false },
+  { kind: "directory", path: "data/admin/slickcharts-composite-recovery", required: false },
+]);
+assert.deepEqual(slickchartsWeekly.stages.success_if_exists, [
   { kind: "file", path: "data/slickcharts/sp500.json", required: true },
   { kind: "file", path: "data/slickcharts/magnificent7.json", required: true },
   { kind: "file", path: "data/slickcharts/etf.json", required: true },
   { kind: "file", path: "data/slickcharts/berkshire.json", required: true },
 ]);
-assert.deepEqual(slickchartsWeekly.stages.success_if_exists, []);
 assert.deepEqual(slickchartsWeekly.exclude, []);
 
 const slickchartsSymbols = manifest.workflows[".github/workflows/slickcharts-symbols.yml"];
 assert.deepEqual(slickchartsSymbols.lanes, ["slickcharts"]);
 assert.deepEqual(slickchartsSymbols.stages.always_if_exists, [
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/slickcharts.json", required: false },
-  { kind: "file", path: "data/slickcharts/symbols.json", required: true },
+  { kind: "directory", path: "data/admin/slickcharts-composite-recovery", required: false },
 ]);
-assert.deepEqual(slickchartsSymbols.stages.success_if_exists, []);
+assert.deepEqual(slickchartsSymbols.stages.success_if_exists, [
+  { kind: "file", path: "data/slickcharts/symbols.json", required: true },
+  { kind: "file", path: "data/slickcharts/symbols-all.json", required: true },
+]);
 assert.deepEqual(slickchartsSymbols.exclude, []);
 const slickchartsMonthly = manifest.workflows[".github/workflows/slickcharts-monthly.yml"];
 assert.deepEqual(slickchartsMonthly.lanes, ["slickcharts"]);
 assert.deepEqual(slickchartsMonthly.stages.always_if_exists, [
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/slickcharts.json", required: false },
+  { kind: "directory", path: "data/admin/slickcharts-composite-recovery", required: false },
+]);
+assert.deepEqual(slickchartsMonthly.stages.success_if_exists, [
   { kind: "file", path: "data/slickcharts/sp500-returns.json", required: true },
   { kind: "file", path: "data/slickcharts/sp500-returns-details.json", required: true },
   { kind: "file", path: "data/slickcharts/nasdaq100-returns.json", required: true },
@@ -347,20 +356,21 @@ assert.deepEqual(slickchartsMonthly.stages.always_if_exists, [
   { kind: "file", path: "data/slickcharts/inflation.json", required: true },
   { kind: "file", path: "data/slickcharts/1929crash.json", required: false },
 ]);
-assert.deepEqual(slickchartsMonthly.stages.success_if_exists, []);
 assert.deepEqual(slickchartsMonthly.exclude, []);
 
 const slickchartsHistory = manifest.workflows[".github/workflows/slickcharts-history.yml"];
 assert.deepEqual(slickchartsHistory.lanes, ["slickcharts"]);
 assert.deepEqual(slickchartsHistory.stages.always_if_exists, [
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/slickcharts.json", required: false },
+  { kind: "directory", path: "data/admin/slickcharts-composite-recovery", required: false },
+]);
+assert.deepEqual(slickchartsHistory.stages.success_if_exists, [
   { kind: "file", path: "data/slickcharts/stocks-returns.json", required: true },
   { kind: "file", path: "data/slickcharts/stocks-dividends.json", required: true },
   { kind: "file", path: "data/slickcharts/stocks-dividends-recent.json", required: true },
   { kind: "file", path: "data/slickcharts/stocks-dividends-historical.json", required: true },
   { kind: "directory", path: "data/slickcharts/stocks", required: true },
 ]);
-assert.deepEqual(slickchartsHistory.stages.success_if_exists, []);
 assert.deepEqual(slickchartsHistory.exclude, []);
 
 const buildStocksAnalyzer = manifest.workflows[".github/workflows/build-stocks-analyzer.yml"];

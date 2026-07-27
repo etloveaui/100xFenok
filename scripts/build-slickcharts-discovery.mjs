@@ -17,6 +17,7 @@ const PATHS = {
   gainers: path.join(ROOT, "data/slickcharts/gainers.json"),
   losers: path.join(ROOT, "data/slickcharts/losers.json"),
   universe: path.join(ROOT, "data/slickcharts/universe.json"),
+  compositeIndex: path.join(ROOT, "data/admin/slickcharts-composite-recovery/index.json"),
   analyzer: path.join(ROOT, "data/global-scouter/core/stocks_analyzer.json"),
   slickIndex: path.join(ROOT, "data/global-scouter/core/slick_index.json"),
   output: path.join(ROOT, "data/slickcharts/discovery-summary.json"),
@@ -30,6 +31,27 @@ function loadJson(filePath) {
 function writeJson(filePath, payload) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+}
+
+function loadCompositeGeneration() {
+  if (!fs.existsSync(PATHS.compositeIndex)) {
+    return { generation_id: null, composite_state: "unavailable", verified: false };
+  }
+  const index = loadJson(PATHS.compositeIndex);
+  const generationId = index?.active_composite?.generation_id;
+  if (
+    index?.schema_version !== "slickcharts-composite-lkg-index/v1"
+    || index?.lane_id !== "slickcharts"
+    || typeof generationId !== "string"
+    || !/^[a-f0-9]{64}$/u.test(generationId)
+  ) {
+    throw new Error("Invalid SlickCharts composite generation contract");
+  }
+  return {
+    generation_id: generationId,
+    composite_state: index.composite_state ?? null,
+    verified: index.composite_state === "ready",
+  };
 }
 
 function finite(value) {
@@ -139,11 +161,13 @@ function main() {
   const universe = loadJson(PATHS.universe);
   const analyzer = loadJson(PATHS.analyzer);
   const slickIndex = loadJson(PATHS.slickIndex);
+  const sourceCompositeGeneration = loadCompositeGeneration();
   const analyzerMap = stockMaps(analyzer);
 
   const payload = {
     generated_at: new Date().toISOString(),
     source: "slickcharts",
+    source_composite_generation: sourceCompositeGeneration,
     source_files: {
       gainers: { updated: gainers.updated ?? null, bytes: fs.statSync(PATHS.gainers).size },
       losers: { updated: losers.updated ?? null, bytes: fs.statSync(PATHS.losers).size },

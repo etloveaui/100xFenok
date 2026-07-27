@@ -28,6 +28,11 @@ on:
           - etf
           - berkshire
           - sp500
+      controlled_failure_after_fetch:
+        description: 'Dispatch-only composite recovery exercise after a complete fetch'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -43,7 +48,10 @@ jobs:
 
     steps:
       - name: Configure attempt telemetry path
-        run: echo "SLICKCHARTS_ATTEMPT_EVENTS_PATH=$RUNNER_TEMP/slickcharts-weekly-attempt-events.jsonl" >> "$GITHUB_ENV"
+        run: |
+          echo "SLICKCHARTS_ATTEMPT_EVENTS_PATH=$RUNNER_TEMP/slickcharts-weekly-attempt-events.jsonl" >> "$GITHUB_ENV"
+          echo "SLICKCHARTS_COMPOSITE_SNAPSHOT_DIR=$RUNNER_TEMP/slickcharts-composite-weekly-baseline" >> "$GITHUB_ENV"
+          echo "SLICKCHARTS_COMPOSITE_STATUS_PATH=$RUNNER_TEMP/slickcharts-composite-weekly-status.json" >> "$GITHUB_ENV"
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -62,6 +70,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+
+      - name: Prepare composite member baseline
+        run: |
+          node scripts/slickcharts-composite-recovery.mjs prepare \
+            --member weekly \
+            --snapshot "$SLICKCHARTS_COMPOSITE_SNAPSHOT_DIR"
 
       - name: Verify lane-registry commit-shard contract
         run: node scripts/test-slickcharts-commit-shards.mjs
@@ -104,6 +118,12 @@ jobs:
             --output data/slickcharts/berkshire.json \
             --pretty
 
+      - name: Exercise controlled composite degradation
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.controlled_failure_after_fetch }}
+        run: |
+          echo "::error::Controlled SlickCharts weekly composite failure"
+          exit 1
+
       - name: Emit SlickCharts weekly attempt
         if: ${{ always() }}
         run: |
@@ -112,6 +132,17 @@ jobs:
             --events "$SLICKCHARTS_ATTEMPT_EVENTS_PATH" \
             --outcome "${{ job.status }}" \
             --row "$RUNNER_TEMP/slickcharts-weekly-row.json"
+
+      - name: Finalize SlickCharts composite recovery
+        if: ${{ always() }}
+        run: |
+          node scripts/slickcharts-composite-recovery.mjs finalize \
+            --member weekly \
+            --snapshot "$SLICKCHARTS_COMPOSITE_SNAPSHOT_DIR" \
+            --row "$RUNNER_TEMP/slickcharts-weekly-row.json" \
+            --receipts "$SLICKCHARTS_ATTEMPT_EVENTS_PATH" \
+            --status "$SLICKCHARTS_COMPOSITE_STATUS_PATH" \
+            --full-run "${{ (github.event_name == 'schedule' || github.event.inputs.scraper == 'all') && 'true' || 'false' }}"
 
       - name: Commit and push changes
         if: ${{ always() }}
@@ -126,6 +157,7 @@ jobs:
             "chore: update SlickCharts weekly data $(date -u +%Y-%m-%d)" \
             --manifest-workflow .github/workflows/slickcharts-weekly.yml \
             --manifest-always always_if_exists \
+            --manifest-data success_if_exists \
             -- \
             data/slickcharts/sp500.json \
             data/slickcharts/magnificent7.json \
