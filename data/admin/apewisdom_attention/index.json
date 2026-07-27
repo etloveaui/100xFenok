@@ -1,19 +1,21 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "apewisdom_attention",
-  "updated_at": "2026-07-26T14:44:55.537Z",
-  "retry_set": [],
+  "updated_at": "2026-07-27T06:39:45.175Z",
+  "retry_set": [
+    "social_attention_proxy"
+  ],
   "items": {
     "social_attention_proxy": {
       "key": "social_attention_proxy",
-      "resolution_state": "fresh_primary",
-      "retry": false,
+      "resolution_state": "lkg_primary",
+      "retry": true,
       "current": {
-        "path": "data/computed/fenok_social_attention_proxy.json",
+        "path": "data/admin/apewisdom_attention/lkg/social_attention_proxy.json",
         "payload_sha256": "a4eb545a7913c7f239b8ab0354ec936209d453ec00d240bcfc61a56f210a4e0a",
         "source_as_of": "2026-07-26T14:44:56.000Z"
       },
-      "updated_at": "2026-07-26T14:44:55.537Z",
+      "updated_at": "2026-07-27T06:39:45.175Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
@@ -22,6 +24,17 @@
         "run_id": "30206695899",
         "run_attempt": 1,
         "observed_at": "2026-07-26T14:44:55.537Z"
+      },
+      "lkg": {
+        "path": "data/admin/apewisdom_attention/lkg/social_attention_proxy.json",
+        "payload_sha256": "a4eb545a7913c7f239b8ab0354ec936209d453ec00d240bcfc61a56f210a4e0a",
+        "source_as_of": "2026-07-26T14:44:56.000Z"
+      },
+      "latest_failure": {
+        "run_id": "30243411730",
+        "run_attempt": 1,
+        "observed_at": "2026-07-27T06:39:45.175Z",
+        "reason": "controlled_failure"
       }
     }
   }
