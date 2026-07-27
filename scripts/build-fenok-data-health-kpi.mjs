@@ -1102,6 +1102,169 @@ export const LAST_ATTEMPT_STORELESS_DETAIL = Object.freeze({
   last_attempt_reason: "lane has no recovery store",
 });
 
+const KPI_SOURCE_STATUS_SCHEMA = "fenok-kpi-source-status/v1";
+const SOURCE_STATUS_SPECS = Object.freeze({
+  crypto_fear_greed: Object.freeze({
+    label: "Alternative.me crypto fear and greed",
+    artifact_id: "sentiment_crypto",
+  }),
+  slickcharts_treasury: Object.freeze({
+    label: "SlickCharts Treasury yield",
+    artifact_id: "slickcharts_daily_treasury",
+  }),
+});
+
+function validSourceStatusSha(value) {
+  return typeof value === "string" && /^[a-f0-9]{64}$/u.test(value);
+}
+
+function missingSourceStatus(sourceId) {
+  const spec = SOURCE_STATUS_SPECS[sourceId];
+  return {
+    schema_version: KPI_SOURCE_STATUS_SCHEMA,
+    source_id: sourceId,
+    label: spec.label,
+    artifact_id: spec.artifact_id,
+    status: "unobserved",
+    source_as_of: null,
+    observed_at: null,
+    resolution_state: "unobserved",
+    retry: null,
+    status_message: `${spec.label} has no source-bound recovery state yet.`,
+  };
+}
+
+function projectedSourceStatus(sourceId, item) {
+  const spec = SOURCE_STATUS_SPECS[sourceId];
+  const status = item.resolution_state === "fresh_primary"
+    ? "ready"
+    : item.resolution_state === "lkg_primary"
+      ? "degraded"
+      : "unavailable";
+  const sourceAsOf = item.current?.source_as_of ?? null;
+  const statusMessage = status === "ready"
+    ? `${spec.label} is ready.`
+    : status === "degraded"
+      ? `${spec.label} is serving retained LKG and awaits natural recovery.`
+      : `${spec.label} is unavailable and awaits a valid source observation.`;
+  return {
+    schema_version: KPI_SOURCE_STATUS_SCHEMA,
+    source_id: sourceId,
+    label: spec.label,
+    artifact_id: spec.artifact_id,
+    status,
+    source_as_of: sourceAsOf,
+    observed_at: item.observed_at,
+    resolution_state: item.resolution_state,
+    retry: item.retry,
+    status_message: statusMessage,
+  };
+}
+
+function validateSourceStateItem({
+  sourceId,
+  item,
+  canonicalRef,
+  lkgRef,
+}) {
+  if (!item || typeof item !== "object" || Array.isArray(item)
+    || !["fresh_primary", "lkg_primary", "unavailable"].includes(item.resolution_state)
+    || typeof item.retry !== "boolean"
+    || !isDetectionSourceStamp(item.observed_at)) {
+    throw new Error(`${sourceId} source-state binding is malformed`);
+  }
+  if (item.resolution_state === "unavailable") {
+    if (item.retry !== true || item.current !== null || item.lkg !== null) {
+      throw new Error(`${sourceId} unavailable source-state binding is malformed`);
+    }
+    return;
+  }
+  if (!item.current || !item.lkg
+    || !validSourceStatusSha(item.current.payload_sha256)
+    || !validSourceStatusSha(item.lkg.payload_sha256)
+    || !isDetectionSourceStamp(item.current.source_as_of)
+    || !isDetectionSourceStamp(item.lkg.source_as_of)
+    || item.lkg.path !== lkgRef) {
+    throw new Error(`${sourceId} payload binding is malformed`);
+  }
+  if (item.resolution_state === "fresh_primary"
+    && (item.retry !== false || item.current.path !== canonicalRef)) {
+    throw new Error(`${sourceId} fresh source-state binding is malformed`);
+  }
+  if (item.resolution_state === "lkg_primary"
+    && (item.retry !== true || item.current.path !== lkgRef
+      || item.current.payload_sha256 !== item.lkg.payload_sha256
+      || item.current.source_as_of !== item.lkg.source_as_of)) {
+    throw new Error(`${sourceId} retained source-state binding is malformed`);
+  }
+}
+
+export function projectRequiredSourceStatuses({
+  sentimentState,
+  slickchartsTreasuryState,
+}) {
+  let crypto = missingSourceStatus("crypto_fear_greed");
+  if (sentimentState !== null && sentimentState !== undefined) {
+    if (sentimentState?.schema_version !== "data-supply-lkg-state/v1"
+      || sentimentState?.lane_id !== "sentiment"
+      || !Array.isArray(sentimentState?.retry_set)
+      || !sentimentState?.items
+      || typeof sentimentState.items !== "object"
+      || Array.isArray(sentimentState.items)) {
+      throw new Error("crypto_fear_greed source-state binding is malformed");
+    }
+    if (sentimentState.items.crypto === undefined) {
+      if (sentimentState.retry_set.includes("crypto")) {
+        throw new Error("crypto_fear_greed retry binding is malformed");
+      }
+    } else {
+      if (sentimentState.items.crypto?.key !== "crypto") {
+        throw new Error("crypto_fear_greed source-state binding is malformed");
+      }
+      const item = {
+        ...sentimentState.items.crypto,
+        observed_at: sentimentState.items.crypto.updated_at ?? sentimentState.updated_at,
+      };
+      validateSourceStateItem({
+        sourceId: "crypto_fear_greed",
+        item,
+        canonicalRef: "data/admin/sentiment/current/crypto.json",
+        lkgRef: "data/admin/sentiment/lkg/crypto.json",
+      });
+      if (item.retry !== sentimentState.retry_set.includes("crypto")) {
+        throw new Error("crypto_fear_greed retry binding is malformed");
+      }
+      crypto = projectedSourceStatus("crypto_fear_greed", item);
+    }
+  }
+
+  let treasury = missingSourceStatus("slickcharts_treasury");
+  if (slickchartsTreasuryState !== null && slickchartsTreasuryState !== undefined) {
+    if (slickchartsTreasuryState?.schema_version !== "producer-lkg-key-state/v1"
+      || slickchartsTreasuryState?.lane_id !== "slickcharts_daily_delivery"
+      || slickchartsTreasuryState?.key !== "treasury.json"
+      || slickchartsTreasuryState?.canonical_ref !== "data/slickcharts/treasury.json") {
+      throw new Error("slickcharts_treasury source-state binding is malformed");
+    }
+    const item = {
+      ...slickchartsTreasuryState,
+      observed_at: slickchartsTreasuryState.updated_at,
+    };
+    validateSourceStateItem({
+      sourceId: "slickcharts_treasury",
+      item,
+      canonicalRef: "data/slickcharts/treasury.json",
+      lkgRef: "data/admin/slickcharts-daily-delivery/lkg/treasury.json",
+    });
+    treasury = projectedSourceStatus("slickcharts_treasury", item);
+  }
+
+  return {
+    sentiment: { crypto_fear_greed: crypto },
+    slickcharts: { slickcharts_treasury: treasury },
+  };
+}
+
 export function mapDetectionFloorRow(row, recoveryState = undefined, options = {}) {
   const laneId = typeof row?.id === "string" && row.id !== "" ? row.id : "<unknown>";
   if (!row || typeof row !== "object" || Array.isArray(row)) {
@@ -2370,8 +2533,29 @@ export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, r
     Object.entries(recoverySources.nonstandard)
       .map(([laneId, sourcePath]) => [laneId, readOptionalJsonStrict(sourcePath)]),
   );
+  const slickchartsTreasuryState = readOptionalJsonStrict(
+    "admin/slickcharts-daily-delivery/keys/treasury.json",
+  );
   const recoveryStates = { ...generalRecoveryStates, ...detectionRecovery };
+  const requiredSourceStatuses = projectRequiredSourceStatuses({
+    sentimentState: recoveryStates.sentiment ?? null,
+    slickchartsTreasuryState,
+  });
   const slickchartsDelivery = assessSlickChartsDelivery(nowIso);
+
+  const detectionFloorLanes = buildDetectionFloorLanes(
+    detectionFloor,
+    recoveryStates,
+    { slickchartsRepoRoot: path.dirname(DATA_ROOT) },
+  );
+  for (const [laneId, sourceStatuses] of Object.entries(requiredSourceStatuses)) {
+    const target = detectionFloorLanes.find((item) => item.id === laneId);
+    if (!target) throw new Error(`required source-status parent lane ${laneId} is missing`);
+    target.details = {
+      ...target.details,
+      source_statuses: sourceStatuses,
+    };
+  }
 
   const lanes = [
     buildStockS0Lane(coverageIndex),
@@ -2384,7 +2568,7 @@ export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, r
     buildFinraOccLane(finraOccLedger, occAvailability),
     buildAutomationLane(),
     buildPublicMirrorLane(rimInputs),
-    ...buildDetectionFloorLanes(detectionFloor, recoveryStates, { slickchartsRepoRoot: path.dirname(DATA_ROOT) }),
+    ...detectionFloorLanes,
   ];
   // #365 P2: last_attempt is uniform across every lane. Detection-floor lanes set
   // it from their injected recovery state; the remaining composite/platform lanes

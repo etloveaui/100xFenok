@@ -40,6 +40,7 @@ import {
   buildPayload,
   enumerateDueSlots,
   deriveMissedSlots,
+  projectRequiredSourceStatuses,
   validateProducerRecoveryAttempt,
   RECOVERY_STATE_SOURCES,
 } from "./build-fenok-data-health-kpi.mjs";
@@ -51,6 +52,7 @@ import {
   checkPublicProjection,
   checkDetectionFloorLane,
   checkRecoveryStateSources,
+  checkSourceStatusProjections,
 } from "../100xfenok-next/scripts/check-fenok-data-health-kpi.mjs";
 import { projectFenokDataHealthKpiPublicMirror } from "../100xfenok-next/sync-static-overrides.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
@@ -1235,6 +1237,32 @@ function readyCoreV2(now) {
       ],
     } : {}),
   }));
+  const readySourceStatus = (sourceId, label, artifactId) => ({
+    schema_version: "fenok-kpi-source-status/v1",
+    source_id: sourceId,
+    label,
+    artifact_id: artifactId,
+    status: "ready",
+    source_as_of: now.slice(0, 10),
+    observed_at: now,
+    resolution_state: "fresh_primary",
+    retry: false,
+    status_message: `${label} is ready.`,
+  });
+  lanes.find((item) => item.id === "sentiment").details.source_statuses = {
+    crypto_fear_greed: readySourceStatus(
+      "crypto_fear_greed",
+      "Alternative.me crypto fear and greed",
+      "sentiment_crypto",
+    ),
+  };
+  lanes.find((item) => item.id === "slickcharts").details.source_statuses = {
+    slickcharts_treasury: readySourceStatus(
+      "slickcharts_treasury",
+      "SlickCharts Treasury yield",
+      "slickcharts_daily_treasury",
+    ),
+  };
   return {
     schema_version: "fenok-data-health-kpi/v2",
     generated_at: now,
@@ -1552,6 +1580,126 @@ function v2Doc(runtime, extra = {}) {
 }
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
+
+console.log("# source-specific KPI projection fixtures");
+
+{
+  const cryptoState = {
+    schema_version: "data-supply-lkg-state/v1",
+    lane_id: "sentiment",
+    updated_at: "2026-07-28T22:04:00.000Z",
+    retry_set: [],
+    items: {
+      crypto: {
+        key: "crypto",
+        resolution_state: "fresh_primary",
+        retry: false,
+        current: {
+          path: "data/admin/sentiment/current/crypto.json",
+          payload_sha256: "a".repeat(64),
+          source_as_of: "2026-07-28",
+        },
+        lkg: {
+          path: "data/admin/sentiment/lkg/crypto.json",
+          payload_sha256: "b".repeat(64),
+          source_as_of: "2026-07-24",
+        },
+        updated_at: "2026-07-28T22:04:00.000Z",
+      },
+    },
+  };
+  const treasuryState = {
+    schema_version: "producer-lkg-key-state/v1",
+    lane_id: "slickcharts_daily_delivery",
+    key: "treasury.json",
+    updated_at: "2026-07-28T06:03:00.000Z",
+    resolution_state: "fresh_primary",
+    retry: false,
+    current: {
+      path: "data/slickcharts/treasury.json",
+      payload_sha256: "c".repeat(64),
+      source_as_of: "2026-07-28",
+    },
+    lkg: {
+      path: "data/admin/slickcharts-daily-delivery/lkg/treasury.json",
+      payload_sha256: "d".repeat(64),
+      source_as_of: "2026-07-27",
+    },
+    canonical_ref: "data/slickcharts/treasury.json",
+  };
+  const projected = projectRequiredSourceStatuses({
+    sentimentState: cryptoState,
+    slickchartsTreasuryState: treasuryState,
+  });
+  assert.deepEqual(projected.sentiment.crypto_fear_greed, {
+    schema_version: "fenok-kpi-source-status/v1",
+    source_id: "crypto_fear_greed",
+    label: "Alternative.me crypto fear and greed",
+    artifact_id: "sentiment_crypto",
+    status: "ready",
+    source_as_of: "2026-07-28",
+    observed_at: "2026-07-28T22:04:00.000Z",
+    resolution_state: "fresh_primary",
+    retry: false,
+    status_message: "Alternative.me crypto fear and greed is ready.",
+  });
+  assert.deepEqual(projected.slickcharts.slickcharts_treasury, {
+    schema_version: "fenok-kpi-source-status/v1",
+    source_id: "slickcharts_treasury",
+    label: "SlickCharts Treasury yield",
+    artifact_id: "slickcharts_daily_treasury",
+    status: "ready",
+    source_as_of: "2026-07-28",
+    observed_at: "2026-07-28T06:03:00.000Z",
+    resolution_state: "fresh_primary",
+    retry: false,
+    status_message: "SlickCharts Treasury yield is ready.",
+  });
+
+  const retained = structuredClone(treasuryState);
+  retained.resolution_state = "lkg_primary";
+  retained.retry = true;
+  retained.current = structuredClone(retained.lkg);
+  const retainedProjected = projectRequiredSourceStatuses({
+    sentimentState: cryptoState,
+    slickchartsTreasuryState: retained,
+  });
+  assert.equal(retainedProjected.slickcharts.slickcharts_treasury.status, "degraded");
+  assert.match(retainedProjected.slickcharts.slickcharts_treasury.status_message, /retained LKG/i);
+
+  const missingProjected = projectRequiredSourceStatuses({
+    sentimentState: null,
+    slickchartsTreasuryState: null,
+  });
+  assert.equal(missingProjected.sentiment.crypto_fear_greed.status, "unobserved");
+  assert.equal(missingProjected.slickcharts.slickcharts_treasury.status, "unobserved");
+
+  const badTreasury = structuredClone(treasuryState);
+  badTreasury.canonical_ref = "data/slickcharts/gainers.json";
+  assert.throws(() => projectRequiredSourceStatuses({
+    sentimentState: cryptoState,
+    slickchartsTreasuryState: badTreasury,
+  }), /slickcharts_treasury.*binding/i);
+
+  const errors = [];
+  checkSourceStatusProjections({
+    lanes: [
+      { id: "sentiment", details: { source_statuses: projected.sentiment } },
+      { id: "slickcharts", details: { source_statuses: projected.slickcharts } },
+    ],
+  }, errors);
+  assert.deepEqual(errors, []);
+  const tampered = structuredClone(projected);
+  tampered.sentiment.crypto_fear_greed.retry = true;
+  checkSourceStatusProjections({
+    lanes: [
+      { id: "sentiment", details: { source_statuses: tampered.sentiment } },
+      { id: "slickcharts", details: { source_statuses: tampered.slickcharts } },
+    ],
+  }, errors);
+  assert.ok(errors.some((entry) => /crypto_fear_greed.*retry/i.test(entry)));
+  ok("source-specific KPI projections bind crypto and Treasury state without payload hashes");
+}
 
 console.log("# KPI v2 runtime self-proof fixtures");
 

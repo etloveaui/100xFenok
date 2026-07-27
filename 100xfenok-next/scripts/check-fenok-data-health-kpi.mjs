@@ -82,6 +82,20 @@ const FORBIDDEN_PUBLIC_TOKENS = [
   "\"manifest_file\"",
   "\"tickers\"",
 ];
+const REQUIRED_SOURCE_STATUS_PROJECTIONS = Object.freeze({
+  sentiment: Object.freeze({
+    crypto_fear_greed: Object.freeze({
+      label: "Alternative.me crypto fear and greed",
+      artifact_id: "sentiment_crypto",
+    }),
+  }),
+  slickcharts: Object.freeze({
+    slickcharts_treasury: Object.freeze({
+      label: "SlickCharts Treasury yield",
+      artifact_id: "slickcharts_daily_treasury",
+    }),
+  }),
+});
 
 function getArg(flag) {
   const eq = process.argv.find((a) => a.startsWith(`${flag}=`));
@@ -587,6 +601,61 @@ function ageHoursBetween(fromIso, nowIso) {
 
 // ── shared lane/shape validation (v1 + v2) ──────────────────────────────────
 
+export function checkSourceStatusProjections(payload, errors) {
+  const lanesById = new Map((payload?.lanes || []).map((lane) => [lane?.id, lane]));
+  for (const [laneId, sourceSpecs] of Object.entries(REQUIRED_SOURCE_STATUS_PROJECTIONS)) {
+    const sourceStatuses = lanesById.get(laneId)?.details?.source_statuses;
+    for (const [sourceId, spec] of Object.entries(sourceSpecs)) {
+      const row = sourceStatuses?.[sourceId];
+      const prefix = `${laneId}/${sourceId}`;
+      push(errors, row?.schema_version === "fenok-kpi-source-status/v1",
+        `${prefix}: schema_version is invalid`);
+      push(errors, row?.source_id === sourceId, `${prefix}: source_id is invalid`);
+      push(errors, row?.label === spec.label, `${prefix}: label is invalid`);
+      push(errors, row?.artifact_id === spec.artifact_id, `${prefix}: artifact_id is invalid`);
+      push(errors, ["ready", "degraded", "unavailable", "unobserved"].includes(row?.status),
+        `${prefix}: status is invalid`);
+      push(errors, typeof row?.status_message === "string" && row.status_message.length > 0,
+        `${prefix}: status_message is missing`);
+      push(errors, row?.source_as_of === null
+        || (typeof row?.source_as_of === "string"
+          && (isRealCalendarDate(row.source_as_of)
+            || (Number.isFinite(new Date(row.source_as_of).getTime())
+              && isRealCalendarDate(row.source_as_of.slice(0, 10))))),
+      `${prefix}: source_as_of is invalid`);
+      push(errors, row?.observed_at === null
+        || (typeof row?.observed_at === "string"
+          && /Z$/u.test(row.observed_at)
+          && Number.isFinite(new Date(row.observed_at).getTime())),
+      `${prefix}: observed_at is invalid`);
+      if (row?.status === "ready") {
+        push(errors, row.resolution_state === "fresh_primary",
+          `${prefix}: ready resolution_state must be fresh_primary`);
+        push(errors, row.retry === false, `${prefix}: ready retry must be false`);
+        push(errors, row.source_as_of !== null && row.observed_at !== null,
+          `${prefix}: ready source evidence is incomplete`);
+      } else if (row?.status === "degraded") {
+        push(errors, row.resolution_state === "lkg_primary",
+          `${prefix}: degraded resolution_state must be lkg_primary`);
+        push(errors, row.retry === true, `${prefix}: degraded retry must be true`);
+        push(errors, row.source_as_of !== null && row.observed_at !== null,
+          `${prefix}: degraded source evidence is incomplete`);
+      } else if (row?.status === "unavailable") {
+        push(errors, row.resolution_state === "unavailable",
+          `${prefix}: unavailable resolution_state is invalid`);
+        push(errors, row.retry === true, `${prefix}: unavailable retry must be true`);
+      } else if (row?.status === "unobserved") {
+        push(errors, row.resolution_state === "unobserved",
+          `${prefix}: unobserved resolution_state is invalid`);
+        push(errors, row.retry === null && row.source_as_of === null && row.observed_at === null,
+          `${prefix}: unobserved source evidence must be null`);
+      }
+      push(errors, !JSON.stringify(row ?? {}).includes("payload_sha256"),
+        `${prefix}: private payload hash leaked into source status`);
+    }
+  }
+}
+
 function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
   const isV2 = expectedVersion === SCHEMA_VERSION_V2;
   push(errors, payload?.schema_version === expectedVersion, `schema_version must be ${expectedVersion}, got ${payload?.schema_version ?? "missing"}`);
@@ -604,6 +673,7 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
   push(errors, Array.isArray(payload?.lanes) && payload.lanes.length >= REQUIRED_LANES.size, "lanes are required");
 
   const lanesById = new Map((payload?.lanes || []).map((lane) => [lane?.id, lane]));
+  if (isV2) checkSourceStatusProjections(payload, errors);
   const platformBlockingKeys = new Set(PLATFORM_BLOCKING_CHECK_KEYS);
   const derivedIntegrityBlockers = [];
   let derivedRequiredNotReady = 0;
