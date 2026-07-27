@@ -1,36 +1,39 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "apewisdom_attention",
-  "updated_at": "2026-07-27T06:39:45.175Z",
-  "retry_set": [
-    "social_attention_proxy"
-  ],
+  "updated_at": "2026-07-27T15:51:14.577Z",
+  "retry_set": [],
   "items": {
     "social_attention_proxy": {
       "key": "social_attention_proxy",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/apewisdom_attention/lkg/social_attention_proxy.json",
-        "payload_sha256": "a4eb545a7913c7f239b8ab0354ec936209d453ec00d240bcfc61a56f210a4e0a",
-        "source_as_of": "2026-07-26T14:44:56.000Z"
+        "path": "data/computed/fenok_social_attention_proxy.json",
+        "payload_sha256": "effb99e1550b88d31f08a31d2e9ee5164b8e910ff7563864daa16d4e376f8d10",
+        "source_as_of": "2026-07-27T15:51:14.000Z"
       },
-      "updated_at": "2026-07-27T06:39:45.175Z",
+      "updated_at": "2026-07-27T15:51:14.577Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "6ccf489f4e79b390e848ac1bb803975bccad6bb798863e8ca68444c9b93203ad",
-        "source_as_of": "2026-07-26T14:44:56.000Z",
-        "run_id": "30206695899",
+        "payload_sha256": "09cebd5e402e6663d4c2b6ff73faba54bfe013e71e0ad256631e52ad9b120734",
+        "source_as_of": "2026-07-27T15:51:14.000Z",
+        "run_id": "30281873095",
         "run_attempt": 1,
-        "observed_at": "2026-07-26T14:44:55.537Z"
+        "observed_at": "2026-07-27T15:51:14.577Z"
       },
       "lkg": {
         "path": "data/admin/apewisdom_attention/lkg/social_attention_proxy.json",
         "payload_sha256": "a4eb545a7913c7f239b8ab0354ec936209d453ec00d240bcfc61a56f210a4e0a",
         "source_as_of": "2026-07-26T14:44:56.000Z"
       },
-      "latest_failure": {
+      "recovered_from_run_id": "30243411730",
+      "recovered_at": "2026-07-27T15:51:14.577Z",
+      "recovery_run_id": "30281873095",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "last_recovered_failure": {
         "run_id": "30243411730",
         "run_attempt": 1,
         "observed_at": "2026-07-27T06:39:45.175Z",
