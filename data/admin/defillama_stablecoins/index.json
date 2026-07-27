@@ -1,19 +1,21 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "defillama_stablecoins",
-  "updated_at": "2026-07-27T07:56:17.782Z",
-  "retry_set": [],
+  "updated_at": "2026-07-27T12:24:36.857Z",
+  "retry_set": [
+    "stablecoins"
+  ],
   "items": {
     "stablecoins": {
       "key": "stablecoins",
-      "resolution_state": "fresh_primary",
-      "retry": false,
+      "resolution_state": "lkg_primary",
+      "retry": true,
       "current": {
-        "path": "data/macro/stablecoins.json",
+        "path": "data/admin/defillama_stablecoins/lkg/stablecoins.json",
         "payload_sha256": "8904f128efa6f980dffb2e686a6c4e605ffb09d722f2ca7c4ed257dd6d922bb5",
         "source_as_of": "2026-07-27"
       },
-      "updated_at": "2026-07-27T07:56:17.782Z",
+      "updated_at": "2026-07-27T12:24:36.857Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
@@ -22,6 +24,17 @@
         "run_id": "30247401487",
         "run_attempt": 1,
         "observed_at": "2026-07-27T07:56:17.782Z"
+      },
+      "lkg": {
+        "path": "data/admin/defillama_stablecoins/lkg/stablecoins.json",
+        "payload_sha256": "8904f128efa6f980dffb2e686a6c4e605ffb09d722f2ca7c4ed257dd6d922bb5",
+        "source_as_of": "2026-07-27"
+      },
+      "latest_failure": {
+        "run_id": "30265715989",
+        "run_attempt": 1,
+        "observed_at": "2026-07-27T12:24:36.857Z",
+        "reason": "controlled_failure"
       }
     }
   }
