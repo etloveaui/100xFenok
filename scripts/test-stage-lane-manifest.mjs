@@ -568,7 +568,8 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
 }
 
 // KRX always publishes its attempt shard plus recovery state; successful
-// fetches additionally publish the admin bridge plus the two aggregate slices.
+// fetches additionally publish the admin bridge, bounded bridge history, and
+// the two aggregate slices.
 {
   const fixture = makeFixture({ workflow: KRX_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], KRX_WORKFLOW);
@@ -582,12 +583,13 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
 
   const success = run(fixture.root, "success_if_exists", [], KRX_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=3 stage_selected=3 staged_index_total=6/);
+  assert.match(success.stdout, /declared=4 stage_selected=4 staged_index_total=7/);
   assert.deepEqual(cached(fixture.root), [
     "data/admin/data-supply-state/detection-attempts/krx.json",
     "data/admin/fenok-edge-korea-krx-daily-index.json",
     "data/admin/krx/index.json",
     "data/admin/krx/lkg/bridge.json",
+    "data/computed/fenok-edge-korea-krx-bridge-history.json",
     "data/computed/fenok-edge-korea-krx-index-daily.json",
     "data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json",
   ].sort());

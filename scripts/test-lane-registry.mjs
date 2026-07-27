@@ -310,7 +310,16 @@ function clone(value) {
     const krx = registryLaneById("krx");
     assert.equal(krx.enforcement, "shadow", "KRX stays shadow until a natural workflow run commits attempt evidence");
     assert.equal(krx.roots.detection_attempt, "data/admin/data-supply-state/detection-attempts/krx.json");
-    assert.deepEqual(krx.roots.public_mirror, ["100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json"]);
+    assert.deepEqual(krx.roots.canonical_outputs, [
+      "data/admin/fenok-edge-korea-krx-daily-index.json",
+      "data/computed/fenok-edge-korea-krx-bridge-history.json",
+      "data/computed/fenok-edge-korea-krx-index-daily.json",
+      "data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json",
+    ]);
+    assert.deepEqual(krx.roots.public_mirror, [
+      "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json",
+      "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json",
+    ]);
   }
   const floorException = LANE_REGISTRY.declared_exceptions
     .find((entry) => entry.path === "data/admin/data-supply-detection-floor.json");

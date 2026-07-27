@@ -632,6 +632,8 @@ try {
   write(sourceRoot, "safe/keep.json", '{"safe":true}\n');
   const krxSlice2Body = '{"schema_version":"fenok_krx_public_kosdaq_market_cap_aggregate.v1","aggregate_only":true}\n';
   write(sourceRoot, "computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json", krxSlice2Body);
+  const krxHistoryBody = '{"schema_version":"fenok_krx_public_bridge_history.v1","aggregate_only":true,"per_issuer_rows":false,"raw_public":false,"rows":[]}\n';
+  write(sourceRoot, "computed/fenok-edge-korea-krx-bridge-history.json", krxHistoryBody);
   const sourceReportPath = write(sourceRoot, DETECTION_FLOOR_REPORT, '{"schema_version":"data-supply-detection-floor/v1"}\n');
   write(sourceRoot, "yf/finance/AAA.json", '{"public":true}\n');
   seedPrivateRoots(sourceRoot, destinationRoot);
@@ -650,7 +652,7 @@ try {
   assert.equal(rehearsal.dryRun, true);
   assert.equal(
     rehearsal.filesCopied,
-    3,
+    4,
     "public-safe files must copy while the canonical detection-floor report stays excluded",
   );
   // Exact-file exclusion set (order-insensitive contract; membership + count
@@ -671,7 +673,7 @@ try {
   assert.equal(fs.readFileSync(safeAdminSiblingPath, "utf8"), '{"sibling":true}\n');
 
   const result = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
-  assert.equal(result.filesCopied, 3);
+  assert.equal(result.filesCopied, 4);
   assert.equal(result.excludedSourceRoots, 13);
   assert.equal(result.excludedSourceFiles, 5);
   assert.equal(result.removedDestinationRoots, 13);
@@ -684,6 +686,11 @@ try {
     fs.readFileSync(path.join(destinationRoot, "computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json"), "utf8"),
     krxSlice2Body,
     "Slice 2 canonical aggregate must be copied byte-identically to the public mirror",
+  );
+  assert.equal(
+    fs.readFileSync(path.join(destinationRoot, "computed/fenok-edge-korea-krx-bridge-history.json"), "utf8"),
+    krxHistoryBody,
+    "bounded KRX history must be copied byte-identically to the public mirror",
   );
   assert.equal(fs.readFileSync(path.join(destinationRoot, "yf/finance/AAA.json"), "utf8"), '{"public":true}\n');
   assert.equal(fs.existsSync(path.join(destinationRoot, "admin/data-supply-state")), false);
@@ -703,7 +710,7 @@ try {
 
   const destinationBeforeRerun = snapshotNode(destinationRoot);
   const rerun = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
-  assert.equal(rerun.filesCopied, 3);
+  assert.equal(rerun.filesCopied, 4);
   assert.equal(rerun.excludedSourceRoots, 13);
   assert.equal(rerun.excludedSourceFiles, 5);
   assert.equal(rerun.removedDestinationRoots, 0);

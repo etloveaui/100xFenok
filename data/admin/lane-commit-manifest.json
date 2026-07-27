@@ -1,5 +1,5 @@
 {
-  "registry_digest": "aa641b08bcb1fc578e7f5c1bafa66a018d716bc2d52a0bf29f04e2211be05ee3",
+  "registry_digest": "9f1de41155874da9db03b15d79d4baf891921cb84b0342d2ba1e34acb56b8d2f",
   "registry_schema": "lane-registry/v2",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -57,6 +57,7 @@
       "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json",
       "100xfenok-next/public/data/slickcharts",
       "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json",
+      "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json",
       "100xfenok-next/public/data/admin/fenok-edge-coverage-index.json",
       "100xfenok-next/public/data/admin/data-usage-manifest.json",
       "100xfenok-next/public/data/admin/product-surface-coverage.json",
@@ -104,6 +105,14 @@
         "mode": "cp_file",
         "required": true,
         "source": "data/admin/fenok-edge-korea-krx-daily-index.json",
+        "trailing_slash": false
+      },
+      {
+        "delete": false,
+        "destination": "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json",
+        "mode": "cp_file",
+        "required": false,
+        "source": "data/computed/fenok-edge-korea-krx-bridge-history.json",
         "trailing_slash": false
       },
       {
@@ -459,6 +468,11 @@
           {
             "kind": "file",
             "path": "data/admin/fenok-edge-korea-krx-daily-index.json",
+            "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/fenok-edge-korea-krx-bridge-history.json",
             "required": true
           },
           {
@@ -1949,6 +1963,11 @@
           {
             "kind": "file",
             "path": "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json",
             "required": false
           },
           {

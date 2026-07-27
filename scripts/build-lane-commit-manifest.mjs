@@ -115,6 +115,17 @@ const UPDATE_MANIFEST_MATERIALIZATIONS = [
     trailing_slash: false,
   },
   {
+    // The first healthy KRX observation creates this bounded public-safe
+    // history. Keep the route optional until that producer has run, then copy
+    // it byte-for-byte on every Update Manifest materialization.
+    source: "data/computed/fenok-edge-korea-krx-bridge-history.json",
+    destination: "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json",
+    mode: "cp_file",
+    delete: false,
+    required: false,
+    trailing_slash: false,
+  },
+  {
     source: "data/computed/fenok_occ_options_availability.json",
     destination: "100xfenok-next/public/data/computed/fenok_occ_options_availability.json",
     mode: "cp_file",
@@ -186,6 +197,7 @@ const CENTRAL_COMMIT_PATHS = [
   "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json",
   "100xfenok-next/public/data/slickcharts",
   "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json",
+  "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json",
   "100xfenok-next/public/data/admin/fenok-edge-coverage-index.json",
   "100xfenok-next/public/data/admin/data-usage-manifest.json",
   "100xfenok-next/public/data/admin/product-surface-coverage.json",
@@ -271,7 +283,7 @@ export function validateLaneCommitManifest(manifest, { registry = LANE_REGISTRY 
     if (seenCentral.has(pathValue)) fail(`central_commit_paths duplicates ${pathValue}`);
     seenCentral.add(pathValue);
   }
-  if (!Array.isArray(update.materializations) || update.materializations.length !== 7) fail("materializations must contain exactly seven routes");
+  if (!Array.isArray(update.materializations) || update.materializations.length !== 8) fail("materializations must contain exactly eight routes");
   for (const [index, route] of update.materializations.entries()) {
     const routeKeys = Object.keys(route).sort();
     if (JSON.stringify(routeKeys) !== JSON.stringify(["delete", "destination", "mode", "required", "source", "trailing_slash"])) fail(`materializations[${index}] keys are invalid`);

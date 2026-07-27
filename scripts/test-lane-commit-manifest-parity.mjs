@@ -72,7 +72,7 @@ for (const workflowRel of enumerateCommitCapableWorkflows()) {
     if (workflowRel === UPDATE_MANIFEST_WORKFLOW && stage === "always_if_exists") {
       assert.deepEqual(specs.map((spec) => spec.path), manifest.update_manifest.central_commit_paths);
       assert.deepEqual(specs.filter((spec) => spec.kind === "directory").map((spec) => spec.path), UPDATE_MANIFEST_CENTRAL_DIRECTORIES);
-      assert.equal(specs.filter((spec) => spec.kind === "file").length, 56);
+      assert.equal(specs.filter((spec) => spec.kind === "file").length, 57);
       assert.equal(specs.every((spec) => spec.required === false), true);
       assert.match(workflowText, /node scripts\/stage-update-manifest-central\.mjs --(?:check|stage)/);
       continue;
@@ -100,7 +100,7 @@ for (const triggerPath of manifest.update_manifest.trigger_paths) {
 const centralHelperText = fs.readFileSync(path.join(REPO_ROOT, UPDATE_MANIFEST_CENTRAL_HELPER), "utf8");
 assert.match(centralHelperText, /manifest\.update_manifest\.central_commit_paths/);
 assert.match(centralHelperText, /buildLaneCommitManifest\(\)\.update_manifest\.central_commit_paths/);
-assert.match(centralHelperText, /central_commit_paths must contain exactly 60 unique paths/);
+assert.match(centralHelperText, /central_commit_paths must contain exactly 61 unique paths/);
 assert.match(updateManifestText, /stage-update-manifest-central\.mjs --check/);
 assert.match(updateManifestText, /stage-update-manifest-central\.mjs --stage/);
 

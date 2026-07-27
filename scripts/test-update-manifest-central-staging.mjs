@@ -33,13 +33,14 @@ const EXPECTED_PATHS = [
   "100xfenok-next/public/data/computed/rim-index/inputs.json", "100xfenok-next/public/data/yf/finance",
   "100xfenok-next/public/data/stockanalysis", "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json",
   "100xfenok-next/public/data/slickcharts", "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json",
+  "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json",
   "100xfenok-next/public/data/admin/fenok-edge-coverage-index.json", "100xfenok-next/public/data/admin/data-usage-manifest.json",
   "100xfenok-next/public/data/admin/product-surface-coverage.json", "100xfenok-next/public/data/admin/fenok-data-health-kpi.json",
   "100xfenok-next/public/data/admin/lane-registry-projection.json", "100xfenok-next/public/data/manifest.json",
   "100xfenok-next/src/generated/static-route-manifest.ts",
 ];
 
-assert.equal(EXPECTED_PATHS.length, 60);
+assert.equal(EXPECTED_PATHS.length, 61);
 assert.deepEqual(manifest.update_manifest.central_commit_paths, EXPECTED_PATHS);
 const centralSpecs = manifest.workflows[".github/workflows/update-manifest.yml"].stages.always_if_exists;
 assert.deepEqual(centralSpecs.map((spec) => spec.path), EXPECTED_PATHS);
@@ -49,7 +50,7 @@ assert.deepEqual(centralSpecs.filter((spec) => spec.kind === "directory").map((s
   "100xfenok-next/public/data/stockanalysis",
   "100xfenok-next/public/data/slickcharts",
 ]);
-assert.equal(centralSpecs.filter((spec) => spec.kind === "file").length, 56);
+assert.equal(centralSpecs.filter((spec) => spec.kind === "file").length, 57);
 assert.equal(centralSpecs.every((spec) => spec.required === false), true);
 assert.equal(fs.existsSync(helperPath), true);
 assert.equal((workflow.match(/node scripts\/stage-update-manifest-central\.mjs/g) ?? []).length, 5);
@@ -114,7 +115,7 @@ function runHelper(fixture, mode) {
   const fixture = makeFixture();
   const result = runHelper(fixture, "--check");
   assert.equal(result.status, 3, `${result.stderr}\n${result.stdout}`);
-  assert.match(result.stdout, /declared=60 changed=0 staged=0/);
+  assert.match(result.stdout, /declared=61 changed=0 staged=0/);
   assert.notEqual(runHelper(fixture, "--stage").status, 0);
 }
 

@@ -7,6 +7,7 @@ import path from "node:path";
 import {
   KRX_LKG_KEY,
   KRX_LANE_ID,
+  MAX_KRX_BRIDGE_HISTORY_SOURCE_DATES,
   applyKrxLkgContract,
   buildBridgeIndex,
   buildConfig,
@@ -15,9 +16,12 @@ import {
   endpointClass,
   generateWeekdayDates,
   getRowCount,
+  inspectKrxProviderSourceDate,
+  mergeKrxBridgeHistory,
   parseArgs,
   run,
   validKrxBridge,
+  validKrxBridgeHistory,
   validateRun,
   writeGithubOutputs,
 } from "./fetch-fenok-krx-daily-private.mjs";
@@ -29,6 +33,14 @@ assert.equal(endpointClass("stk_isu_base_info"), "snapshot");
 assert.equal(endpointClass("sri_bond_info"), "snapshot");
 assert.equal(getRowCount({ OutBlock_1: [{ ISU_CD: "005930" }, { ISU_CD: "000660" }] }), 2);
 assert.equal(getRowCount({ respCode: "NO_DATA", respMsg: "empty" }), 0);
+assert.deepEqual(
+  inspectKrxProviderSourceDate({ OutBlock_1: [{ BAS_DD: "20260629" }, { BAS_DD: "2026-06-29" }] }, "20260629"),
+  { status: "verified", source_date: "2026-06-29", source_field: "BAS_DD" },
+);
+assert.deepEqual(
+  inspectKrxProviderSourceDate({ OutBlock_1: [{ BAS_DD: "20260626" }] }, "20260629"),
+  { status: "mismatch", source_date: "2026-06-26", source_field: "BAS_DD" },
+);
 
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-krx-github-output-"));
@@ -367,7 +379,33 @@ assert.equal(getRowCount({ respCode: "NO_DATA", respMsg: "empty" }), 0);
     ],
   }, config);
   assert.ok(errors.some((item) => item.includes("endpoint=ksq_bydd_trd") && item.includes("minimum=10")));
-  assert.equal(errors.some((item) => item.includes("endpoint=stk_bydd_trd")), false);
+  assert.equal(errors.some((item) => item.includes("required KRX issuer daily rows are empty for 2026-06-29: endpoint=stk_bydd_trd")), false);
+}
+
+// KRX bridge promotion is fail-closed when an actual response BAS_DD differs
+// from the requested date. The validation examines the response-derived field,
+// not the request's basDd alone.
+{
+  const config = buildConfig(parseArgs(["--end-date", "20260629"]));
+  const bridgeSourceEndpoints = [
+    "krx_dd_trd",
+    "kospi_dd_trd",
+    "kosdaq_dd_trd",
+    "stk_bydd_trd",
+    "ksq_bydd_trd",
+    "kts_bydd_trd",
+  ];
+  const files = bridgeSourceEndpoints.map((apiId) => ({
+    date: "2026-06-29",
+    api_id: apiId,
+    row_count: apiId === "ksq_bydd_trd" ? 10 : 1,
+    provider_source_date_status: "verified",
+    provider_source_date: "2026-06-29",
+  }));
+  files[0].provider_source_date_status = "mismatch";
+  files[0].provider_source_date = "2026-06-26";
+  const errors = validateRun({ summary: { failed_files: 0 }, files }, config);
+  assert.ok(errors.some((item) => item.includes("endpoint=krx_dd_trd") && item.includes("status=mismatch") && item.includes("source_date=2026-06-26")));
 }
 
 function recoveryBridge(asOf, runId) {
@@ -386,12 +424,17 @@ function recoveryBridge(asOf, runId) {
     latest_run: {
       run_id: runId,
       attempted_call_count: 31,
+      endpoint_count: 31,
       summary: {
         total_files: 31,
         success_files: 31,
         empty_files: 0,
         failed_files: 0,
       },
+    },
+    derived_rim_inputs: {
+      status: "ready",
+      missing: [],
     },
   };
 }
@@ -430,6 +473,7 @@ function recoveryPaths(root) {
   return {
     repoRoot: root,
     bridgeIndexPath: path.join(root, "data/admin/fenok-edge-korea-krx-daily-index.json"),
+    publicBridgeHistoryPath: path.join(root, "data/computed/fenok-edge-korea-krx-bridge-history.json"),
     publicIndexClosesPath: path.join(root, "data/computed/fenok-edge-korea-krx-index-daily.json"),
     publicKosdaqMarketCapPath: path.join(root, "data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json"),
   };
@@ -440,11 +484,21 @@ function recoveryRun(runId, observedAt, eventName = "schedule", runAttempt = 1) 
 }
 
 function applyReady(root, asOf, runId, eventName = "schedule", runAttempt = 1, extra = {}) {
+  const paths = recoveryPaths(root);
+  const bridgeDocument = recoveryBridge(asOf, runId);
+  const publicIndexCloses = recoveryIndex(asOf);
+  const publicKosdaqMarketCap = recoveryKosdaq(asOf);
   return applyKrxLkgContract({
-    ...recoveryPaths(root),
-    bridgeDocument: recoveryBridge(asOf, runId),
-    publicIndexCloses: recoveryIndex(asOf),
-    publicKosdaqMarketCap: recoveryKosdaq(asOf),
+    ...paths,
+    bridgeDocument,
+    publicBridgeHistory: mergeKrxBridgeHistory({
+      bridgeDocument,
+      publicIndexCloses,
+      publicKosdaqMarketCap,
+      previousHistory: readOptionalJson(paths.publicBridgeHistoryPath),
+    }),
+    publicIndexCloses,
+    publicKosdaqMarketCap,
     run: recoveryRun(runId, `${asOf}T10:31:01.000Z`, eventName, runAttempt),
     ...extra,
   });
@@ -452,6 +506,109 @@ function applyReady(root, asOf, runId, eventName = "schedule", runAttempt = 1, e
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function readOptionalJson(filePath) {
+  if (!fs.existsSync(filePath)) return null;
+  try {
+    return readJson(filePath);
+  } catch {
+    return null;
+  }
+}
+
+// The public-safe bridge history is keyed by the provider's KRX source date:
+// an observed revision replaces that date, while an over-cap series evicts the
+// oldest source date deterministically.
+{
+  const historyFor = (asOf, runId, previousHistory = null) => mergeKrxBridgeHistory({
+    bridgeDocument: recoveryBridge(asOf, runId),
+    publicIndexCloses: recoveryIndex(asOf),
+    publicKosdaqMarketCap: recoveryKosdaq(asOf),
+    previousHistory,
+  });
+  const first = historyFor("2026-01-02", "first-observation");
+  const deduped = historyFor("2026-01-02", "replacement-observation", first);
+  assert.equal(validKrxBridgeHistory(deduped), true);
+  assert.equal(deduped.rows.length, 1);
+  assert.equal(deduped.rows[0].latest_run.run_id, "replacement-observation");
+  const leaked = structuredClone(deduped);
+  leaked.rows[0].private_path = "_private/admin/forbidden.json";
+  assert.equal(validKrxBridgeHistory(leaked), false, "history rows are allowlist-shaped and public-safe");
+
+  let history = null;
+  const sourceDates = Array.from({ length: MAX_KRX_BRIDGE_HISTORY_SOURCE_DATES + 1 }, (_, index) => (
+    new Date(Date.UTC(2026, 0, index + 1)).toISOString().slice(0, 10)
+  ));
+  for (const [index, asOf] of sourceDates.entries()) {
+    history = historyFor(asOf, `history-${index}`, history);
+  }
+  assert.equal(validKrxBridgeHistory(history), true);
+  assert.equal(history.rows.length, MAX_KRX_BRIDGE_HISTORY_SOURCE_DATES);
+  assert.equal(history.persistence_state.available_source_dates, MAX_KRX_BRIDGE_HISTORY_SOURCE_DATES + 1);
+  assert.equal(history.persistence_state.pruned_source_dates, 1);
+  assert.equal(history.persistence_state.last_run_pruned_source_dates, 1);
+  assert.equal(history.rows[0].source_date, sourceDates[1]);
+  assert.equal(history.rows.at(-1).source_date, sourceDates.at(-1));
+  const nextDate = new Date(Date.UTC(2026, 0, MAX_KRX_BRIDGE_HISTORY_SOURCE_DATES + 2)).toISOString().slice(0, 10);
+  const afterSecondPrune = historyFor(nextDate, "second-prune", history);
+  assert.equal(afterSecondPrune.persistence_state.pruned_source_dates, 2);
+  assert.equal(afterSecondPrune.persistence_state.last_run_pruned_source_dates, 1);
+  const replacement = historyFor(nextDate, "same-date-replacement", afterSecondPrune);
+  assert.equal(replacement.persistence_state.pruned_source_dates, 2);
+  assert.equal(replacement.persistence_state.last_run_pruned_source_dates, 0);
+  assert.equal(replacement.rows.at(-1).latest_run.run_id, "same-date-replacement");
+  const prunedReplay = historyFor(sourceDates[0], "already-pruned-replay", replacement);
+  assert.deepEqual(prunedReplay.rows, replacement.rows);
+  assert.equal(prunedReplay.persistence_state.available_source_dates, replacement.persistence_state.available_source_dates);
+  assert.equal(prunedReplay.persistence_state.pruned_source_dates, replacement.persistence_state.pruned_source_dates);
+  assert.equal(prunedReplay.persistence_state.last_run_pruned_source_dates, 0);
+  assert.equal(JSON.stringify(history).includes("_private/"), false);
+}
+
+// A historical dispatch cannot roll a clean current canonical bridge backward.
+// The bounded history may correctly ignore the old replay, but all four output
+// files must remain byte-identical as one promotion unit.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-krx-source-regression-"));
+  const paths = recoveryPaths(root);
+  assert.equal(applyReady(root, "2026-07-16", "current-run").kind, "success");
+  const before = [
+    paths.bridgeIndexPath,
+    paths.publicBridgeHistoryPath,
+    paths.publicIndexClosesPath,
+    paths.publicKosdaqMarketCapPath,
+  ].map((target) => fs.readFileSync(target));
+  const regressed = applyReady(root, "2026-01-02", "historical-dispatch", "workflow_dispatch");
+  assert.equal(regressed.kind, "not_promotable");
+  assert.equal(regressed.reason, "provider_source_regression");
+  assert.equal(regressed.degraded, false);
+  [
+    paths.bridgeIndexPath,
+    paths.publicBridgeHistoryPath,
+    paths.publicIndexClosesPath,
+    paths.publicKosdaqMarketCapPath,
+  ].forEach((target, index) => assert.deepEqual(fs.readFileSync(target), before[index]));
+
+  // Durable state remains an independent monotonic floor if the current
+  // canonical bridge bytes are malformed.
+  fs.writeFileSync(paths.bridgeIndexPath, '{"as_of": "not-valid-json"');
+  const malformedBefore = [
+    paths.bridgeIndexPath,
+    paths.publicBridgeHistoryPath,
+    paths.publicIndexClosesPath,
+    paths.publicKosdaqMarketCapPath,
+  ].map((target) => fs.readFileSync(target));
+  const stateFloorRejected = applyReady(root, "2026-01-03", "historical-after-corruption", "workflow_dispatch");
+  assert.equal(stateFloorRejected.kind, "not_promotable");
+  assert.equal(stateFloorRejected.reason, "provider_source_regression");
+  [
+    paths.bridgeIndexPath,
+    paths.publicBridgeHistoryPath,
+    paths.publicIndexClosesPath,
+    paths.publicKosdaqMarketCapPath,
+  ].forEach((target, index) => assert.deepEqual(fs.readFileSync(target), malformedBefore[index]));
+  fs.rmSync(root, { recursive: true, force: true });
 }
 
 // Strict bridge validation rejects an invalid calendar date or a non-zero
@@ -476,6 +633,7 @@ function readJson(filePath) {
   const seed = applyReady(root, "2026-07-14", "seed-run");
   assert.equal(seed.kind, "success");
   const bridgeBefore = fs.readFileSync(paths.bridgeIndexPath);
+  const historyBefore = fs.readFileSync(paths.publicBridgeHistoryPath);
 
   const failed = applyKrxLkgContract({
     ...paths,
@@ -488,24 +646,29 @@ function readJson(filePath) {
   assert.equal(failed.corrupt, false);
   assert.deepEqual(failed.retry_set, [KRX_LKG_KEY]);
   assert.deepEqual(fs.readFileSync(paths.bridgeIndexPath), bridgeBefore);
+  assert.deepEqual(fs.readFileSync(paths.publicBridgeHistoryPath), historyBefore);
 
   const dispatch = applyReady(root, "2026-07-16", "manual-run", "workflow_dispatch");
   assert.equal(dispatch.kind, "recovery_requires_schedule");
   assert.deepEqual(fs.readFileSync(paths.bridgeIndexPath), bridgeBefore);
+  assert.deepEqual(fs.readFileSync(paths.publicBridgeHistoryPath), historyBefore);
 
   const retryAttempt = applyReady(root, "2026-07-16", "schedule-retry", "schedule", 2);
   assert.equal(retryAttempt.kind, "recovery_requires_schedule");
   assert.deepEqual(fs.readFileSync(paths.bridgeIndexPath), bridgeBefore);
+  assert.deepEqual(fs.readFileSync(paths.publicBridgeHistoryPath), historyBefore);
 
   const sameSource = applyReady(root, "2026-07-14", "same-source-run");
   assert.equal(sameSource.kind, "not_promotable");
   assert.equal(sameSource.reason, "recovery_not_advanced_by_provider");
   assert.deepEqual(fs.readFileSync(paths.bridgeIndexPath), bridgeBefore);
+  assert.deepEqual(fs.readFileSync(paths.publicBridgeHistoryPath), historyBefore);
 
   const recovered = applyReady(root, "2026-07-16", "natural-recovery-run");
   assert.equal(recovered.kind, "success");
   assert.equal(recovered.recovered, true);
   assert.equal(readJson(paths.bridgeIndexPath).as_of, "2026-07-16");
+  assert.equal(readJson(paths.publicBridgeHistoryPath).latest_source_date, "2026-07-16");
   const state = readJson(path.join(root, "data/admin", KRX_LANE_ID, "index.json"));
   assert.deepEqual(state.retry_set, []);
   assert.equal(state.items[KRX_LKG_KEY].recovered_from_run_id, "chaos-run");
@@ -515,13 +678,14 @@ function readJson(filePath) {
 }
 
 // A partial tracked-output write is rolled back before the failure state is
-// recorded. None of the three tracked bytes may advance independently.
+// recorded. None of the four tracked bytes may advance independently.
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-krx-output-rollback-"));
   const paths = recoveryPaths(root);
   applyReady(root, "2026-07-14", "seed-run");
   const protectedPaths = [
     paths.bridgeIndexPath,
+    paths.publicBridgeHistoryPath,
     paths.publicIndexClosesPath,
     paths.publicKosdaqMarketCapPath,
   ];
@@ -536,7 +700,7 @@ function readJson(filePath) {
     renameSync(source, target) {
       if (protectedPaths.includes(path.resolve(target))) {
         trackedRenames += 1;
-        if (trackedRenames === 2) throw new Error("injected second-output rename failure");
+        if (trackedRenames === 3) throw new Error("injected third-output rename failure");
       }
       return fs.renameSync(source, target);
     },
@@ -551,6 +715,31 @@ function readJson(filePath) {
   fs.rmSync(root, { recursive: true, force: true });
 }
 
+// Corrupt prior history never blocks a later healthy KRX observation. A
+// controlled failure leaves the corrupt bytes intact; the next natural,
+// advancing healthy run deterministically replaces them with the current
+// public-safe provider-date history.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-krx-corrupt-history-"));
+  const paths = recoveryPaths(root);
+  assert.equal(applyReady(root, "2026-07-14", "seed-run").kind, "success");
+  const corruptBytes = Buffer.from('{"rows": [not-valid-json');
+  fs.writeFileSync(paths.publicBridgeHistoryPath, corruptBytes);
+  const controlled = applyKrxLkgContract({
+    ...paths,
+    run: recoveryRun("controlled-after-corruption", "2026-07-15T10:31:01.000Z", "workflow_dispatch"),
+    controlledFailure: true,
+  });
+  assert.equal(controlled.kind, "failure");
+  assert.deepEqual(fs.readFileSync(paths.publicBridgeHistoryPath), corruptBytes, "failure path must not heal or overwrite history");
+  const healed = applyReady(root, "2026-07-16", "healthy-heal-run");
+  assert.equal(healed.kind, "success");
+  const history = readJson(paths.publicBridgeHistoryPath);
+  assert.equal(validKrxBridgeHistory(history), true);
+  assert.deepEqual(history.rows.map((row) => row.source_date), ["2026-07-16"]);
+  fs.rmSync(root, { recursive: true, force: true });
+}
+
 // State-commit failure is in the same rollback boundary as the tracked outputs.
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-krx-state-rollback-"));
@@ -558,6 +747,7 @@ function readJson(filePath) {
   applyReady(root, "2026-07-14", "seed-run");
   const before = [
     paths.bridgeIndexPath,
+    paths.publicBridgeHistoryPath,
     paths.publicIndexClosesPath,
     paths.publicKosdaqMarketCapPath,
   ].map((target) => fs.readFileSync(target));
@@ -569,6 +759,7 @@ function readJson(filePath) {
   assert.equal(failed.kind, "failure");
   [
     paths.bridgeIndexPath,
+    paths.publicBridgeHistoryPath,
     paths.publicIndexClosesPath,
     paths.publicKosdaqMarketCapPath,
   ].forEach((target, index) => assert.deepEqual(fs.readFileSync(target), before[index]));
@@ -584,6 +775,7 @@ function readJson(filePath) {
   const paths = recoveryPaths(root);
   applyReady(root, "2026-07-14", "seed-run");
   const bridgeBefore = fs.readFileSync(paths.bridgeIndexPath);
+  const historyBefore = fs.readFileSync(paths.publicBridgeHistoryPath);
   const controlled = await run([
     "--end-date", "20260715",
     "--bridge-index", paths.bridgeIndexPath,
@@ -600,6 +792,7 @@ function readJson(filePath) {
   assert.equal(controlled.attempt_outcome, "failure");
   assert.equal(controlled.exit_code, 0);
   assert.deepEqual(fs.readFileSync(paths.bridgeIndexPath), bridgeBefore);
+  assert.deepEqual(fs.readFileSync(paths.publicBridgeHistoryPath), historyBefore);
   await assert.rejects(() => run([
     "--end-date", "20260715",
     "--bridge-index", paths.bridgeIndexPath,

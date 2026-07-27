@@ -19,6 +19,7 @@ const EXPECTED_ROUTES = [
   { source: "data/stockanalysis", destination: "100xfenok-next/public/data/stockanalysis", mode: "rsync_tree", delete: true, required: true, trailing_slash: true },
   { source: "data/indices/nasdaq-giw-sox-constituents.json", destination: "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json", mode: "cp_file", delete: false, required: true, trailing_slash: false },
   { source: "data/admin/fenok-edge-korea-krx-daily-index.json", destination: "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json", mode: "cp_file", delete: false, required: true, trailing_slash: false },
+  { source: "data/computed/fenok-edge-korea-krx-bridge-history.json", destination: "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json", mode: "cp_file", delete: false, required: false, trailing_slash: false },
   { source: "data/computed/fenok_occ_options_availability.json", destination: "100xfenok-next/public/data/computed/fenok_occ_options_availability.json", mode: "cp_file", delete: false, required: true, trailing_slash: false },
   { source: "data/computed/market_facts/index.json", destination: "100xfenok-next/public/data/computed/market_facts/index.json", mode: "cp_file", delete: false, required: true, trailing_slash: false },
 ];
@@ -45,7 +46,7 @@ assert.equal(fs.existsSync(path.join(root, "scripts/materialize-update-manifest-
 const helperPath = path.join(root, "scripts/materialize-update-manifest-routes.mjs");
 const routes = manifest.update_manifest.materializations;
 const orderedModes = orderMaterializations(routes).map((route) => route.mode);
-assert.deepEqual(orderedModes, ["cp_file", "cp_file", "cp_file", "cp_file", "rsync_tree", "rsync_tree", "rsync_tree"]);
+assert.deepEqual(orderedModes, ["cp_file", "cp_file", "cp_file", "cp_file", "cp_file", "rsync_tree", "rsync_tree", "rsync_tree"]);
 
 function write(target, contents) {
   fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -88,7 +89,7 @@ function runHelper(fixture, args) {
   }
   const result = runHelper(fixture, ["--all"]);
   assert.equal(result.status, 0, `${result.stderr}\n${result.stdout}`);
-  assert.match(result.stdout, /selected=7 materialized=7/);
+  assert.match(result.stdout, /selected=8 materialized=8/);
   for (const route of routes) {
     const source = path.join(fixture.repoRoot, route.source);
     const destination = path.join(fixture.repoRoot, route.destination);
@@ -101,12 +102,41 @@ function runHelper(fixture, args) {
   }
 }
 
+// A missing optional source removes an existing public mirror so stale bytes
+// cannot survive after the canonical source has disappeared.
+{
+  const fixture = makeFixture();
+  const optionalRoute = routes.find((route) => route.required === false);
+  assert.ok(optionalRoute);
+  const source = path.join(fixture.repoRoot, optionalRoute.source);
+  const destination = path.join(fixture.repoRoot, optionalRoute.destination);
+  write(destination, "stale optional mirror\n");
+  fs.rmSync(source);
+  const result = runHelper(fixture, ["--all"]);
+  assert.equal(result.status, 0, `${result.stderr}\n${result.stdout}`);
+  assert.match(result.stdout, /selected=8 materialized=8/);
+  assert.equal(fs.existsSync(destination), false);
+}
+
+// An optional source and destination that are both absent are a no-op; the
+// remaining required routes still materialize.
+{
+  const fixture = makeFixture();
+  const optionalRoute = routes.find((route) => route.required === false);
+  assert.ok(optionalRoute);
+  fs.rmSync(path.join(fixture.repoRoot, optionalRoute.source));
+  const result = runHelper(fixture, ["--all"]);
+  assert.equal(result.status, 0, `${result.stderr}\n${result.stdout}`);
+  assert.match(result.stdout, /selected=8 materialized=7/);
+  assert.equal(fs.existsSync(path.join(fixture.repoRoot, optionalRoute.destination)), false);
+}
+
 // Every selected route is preflighted before the first destructive rsync.
 {
   const fixture = makeFixture();
   const stale = path.join(fixture.repoRoot, routes[0].destination, "stale.json");
   write(stale, "must survive failed preflight\n");
-  fs.rmSync(path.join(fixture.repoRoot, routes.at(-1).source));
+  fs.rmSync(path.join(fixture.repoRoot, routes[0].source), { recursive: true });
   const result = runHelper(fixture, ["--all"]);
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /required source is missing/);

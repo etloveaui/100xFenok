@@ -105,24 +105,32 @@ export function validateMaterializationRoutes({ repoRoot, routes }) {
     assertNoSymlinkComponents(sourceAbs, sourceAllow, `routes[${index}] source`);
     assertNoSymlinkComponents(destinationAbs, destinationAllow, `routes[${index}] destination`);
     const sourceStat = lstatIfExists(sourceAbs);
+    const destinationStat = lstatIfExists(destinationAbs);
+    if (destinationStat?.isSymbolicLink()) fail(`routes[${index}] destination contains a symlink`);
+    if (destinationStat && route.mode === "cp_file" && !destinationStat.isFile()) fail(`routes[${index}] cp_file destination is not a file`);
+    if (destinationStat && route.mode === "rsync_tree" && !destinationStat.isDirectory()) fail(`routes[${index}] rsync_tree destination is not a directory`);
+    if (route.mode === "rsync_tree" && destinationStat) {
+      assertTreeHasNoSymlinks(destinationAbs, `routes[${index}] destination`);
+    }
     if (!sourceStat) {
       if (route.required) fail(`routes[${index}] required source is missing`);
-      prepared.push({ ...route, sourceAbs, destinationAbs, skip: true });
+      prepared.push({
+        ...route,
+        sourceAbs,
+        destinationAbs,
+        skip: true,
+        removeStaleDestination: destinationStat !== null,
+      });
       continue;
     }
     if (sourceStat.isSymbolicLink()) fail(`routes[${index}] source contains a symlink`);
     if (route.mode === "cp_file" && !sourceStat.isFile()) fail(`routes[${index}] cp_file source is not a file`);
     if (route.mode === "rsync_tree" && !sourceStat.isDirectory()) fail(`routes[${index}] rsync_tree source is not a directory`);
     if (route.mode === "rsync_tree" && !treeContainsFile(sourceAbs)) fail(`routes[${index}] rsync_tree source is empty`);
-    const destinationStat = lstatIfExists(destinationAbs);
-    if (destinationStat?.isSymbolicLink()) fail(`routes[${index}] destination contains a symlink`);
-    if (destinationStat && route.mode === "cp_file" && !destinationStat.isFile()) fail(`routes[${index}] cp_file destination is not a file`);
-    if (destinationStat && route.mode === "rsync_tree" && !destinationStat.isDirectory()) fail(`routes[${index}] rsync_tree destination is not a directory`);
     if (route.mode === "rsync_tree") {
       assertTreeHasNoSymlinks(sourceAbs, `routes[${index}] source`);
-      if (destinationStat) assertTreeHasNoSymlinks(destinationAbs, `routes[${index}] destination`);
     }
-    prepared.push({ ...route, sourceAbs, destinationAbs, skip: false });
+    prepared.push({ ...route, sourceAbs, destinationAbs, skip: false, removeStaleDestination: false });
   }
   return { repoRoot: resolvedRepo, prepared };
 }
@@ -216,7 +224,14 @@ export function materializeUpdateManifestRoutes(options) {
   if (options.validateOnly) return { count: selected.length, digest: manifest.registry_digest, materialized: 0 };
   let materialized = 0;
   for (const route of orderMaterializations(selected)) {
-    if (route.skip) continue;
+    if (route.skip) {
+      if (route.removeStaleDestination) {
+        if (route.mode === "cp_file") fs.unlinkSync(route.destinationAbs);
+        else fs.rmSync(route.destinationAbs, { recursive: true });
+        materialized += 1;
+      }
+      continue;
+    }
     if (route.mode === "cp_file") {
       fs.mkdirSync(path.dirname(route.destinationAbs), { recursive: true });
       fs.copyFileSync(route.sourceAbs, route.destinationAbs);

@@ -321,9 +321,24 @@ try {
   assert.match(yahooLegacy.stderr, /Yahoo-marked legacy ETF detail is forbidden/);
   fs.rmSync(path.join(appRoot, "public/data/stockanalysis"), { recursive: true, force: true });
 
+  const krxHistoryRelativePath = "public/data/computed/fenok-edge-korea-krx-bridge-history.json";
+  const publicKrxHistory = jsonBody({
+    schema_version: "fenok_krx_public_bridge_history.v1",
+    aggregate_only: true,
+    per_issuer_rows: false,
+    raw_public: false,
+    rows: [],
+  });
+  writeFixture(krxHistoryRelativePath, publicKrxHistory);
   writeValidProjection();
   const validProjection = runGuard();
   assert.equal(validProjection.status, 0, validProjection.stderr || validProjection.stdout);
+
+  writeFixture(krxHistoryRelativePath, jsonBody({ ...JSON.parse(publicKrxHistory), private_path: "_private/admin/krx/raw.json" }));
+  const leakedKrxHistory = runGuard();
+  assert.notEqual(leakedKrxHistory.status, 0, "guard must reject a private path leaked through public KRX history");
+  assert.match(leakedKrxHistory.stderr, /fenok-edge-korea-krx-bridge-history\.json: unsafe token _private\//);
+  writeFixture(krxHistoryRelativePath, publicKrxHistory);
 
   writeFixture("public/data/computed/data-supply/etf-detail/payloads/ORPHAN.json", "{}\n");
   const orphanProjection = runGuard();
