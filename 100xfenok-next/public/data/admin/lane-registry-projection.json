@@ -1,6 +1,6 @@
 {
   "schema_version": "lane-registry-projection/v1",
-  "generated_at": "2026-07-27T17:59:01.578Z",
+  "generated_at": "2026-07-27T19:49:57.638Z",
   "source_schema_version": "lane-registry/v2",
   "purpose": "Admin-safe lane metadata projection for the owner data dashboard. Metadata only — no store roots, attempt/recovery paths, or repo directory structure.",
   "lane_count": 32,
@@ -79,14 +79,14 @@
     },
     {
       "id": "yahoo_etf_fallback",
-      "label": "Yahoo ETF fallback candidate",
+      "label": "Yahoo ETF fallback",
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "yahoo/stockanalysis (shared workflow)"
+        "provider": "yahoo finance (StockAnalysis workflow)"
       },
       "enforcement": "live",
-      "privacy_class": "public_mirror",
+      "privacy_class": "private",
       "owner_workflow": "fetch-stockanalysis.yml"
     },
     {

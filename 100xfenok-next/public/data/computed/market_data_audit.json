@@ -293,7 +293,7 @@
     }
   },
   "market_source_parity": {
-    "generated_at": "2026-07-27T17:57:36Z",
+    "generated_at": "2026-07-27T19:48:32Z",
     "summary": {
       "inspected_ticker_files": 6765,
       "fields": 19,
@@ -304,21 +304,21 @@
         "agreement": 21706,
         "scale_mismatch": 47,
         "sign_divergence": 644,
-        "stale": 5485,
-        "value_drift": 3042
+        "stale": 5486,
+        "value_drift": 3041
       },
-      "stale_rows": 5485,
+      "stale_rows": 5486,
       "scale_mismatch_rows": 47,
       "sign_divergence_rows": 644
     }
   },
   "incremental_etf": {
-    "status": "fail",
+    "status": "warn",
     "has_run_evidence": true,
     "index_file_exists": true,
     "proof_file_exists": true,
     "plan_file_exists": true,
-    "index_generated_at": "2026-07-27T17:39:40Z",
+    "index_generated_at": "2026-07-27T18:35:12Z",
     "proof_generated_at": "2026-07-27T02:08:33Z",
     "plan_generated_at": "2026-07-27T02:08:44Z",
     "counts": {
@@ -337,13 +337,14 @@
       "pending_ledger_tracked": 481,
       "pending_ledger_cooldown": 133,
       "etfs_stockanalysis_ok": 0,
-      "etfs_yahoo_fallback_ok": 0,
+      "etfs_yahoo_fallback_ok": 1,
       "etfs_still_pending": 0,
-      "hard_failed": 1,
+      "hard_failed": 0,
       "market_facts_yf_fallback": 506
     },
     "notes": [
-      "incremental_plan_available"
+      "incremental_plan_available",
+      "cooldown_active"
     ]
   }
 }
