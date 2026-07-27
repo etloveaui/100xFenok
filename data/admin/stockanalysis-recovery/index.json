@@ -1,30 +1,30 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-07-27T18:34:59Z",
+  "generated_at": "2026-07-27T22:30:57Z",
   "counts": {
     "tracked": 119,
-    "fresh": 84,
-    "lkg": 35,
+    "fresh": 86,
+    "lkg": 33,
     "unavailable": 0,
-    "retry": 35,
-    "failed": 1,
-    "recovered": 0,
+    "retry": 33,
+    "failed": 0,
+    "recovered": 2,
     "promotion_deferred": 0
   },
   "counts_by_kind": {
     "stock": {
       "tracked": 49,
-      "fresh": 16,
-      "lkg": 33,
+      "fresh": 17,
+      "lkg": 32,
       "unavailable": 0,
-      "retry": 33
+      "retry": 32
     },
     "financial": {
       "tracked": 43,
-      "fresh": 42,
-      "lkg": 1,
+      "fresh": 43,
+      "lkg": 0,
       "unavailable": 0,
-      "retry": 1
+      "retry": 0
     },
     "etf": {
       "tracked": 1,
@@ -49,10 +49,6 @@
     }
   },
   "retry_artifacts": [
-    {
-      "artifact_kind": "stock",
-      "entity": "AAPL"
-    },
     {
       "artifact_kind": "stock",
       "entity": "ABBV"
@@ -182,25 +178,11 @@
       "entity": "XOM"
     },
     {
-      "artifact_kind": "financial",
-      "entity": "AAPL"
-    },
-    {
       "artifact_kind": "etf",
       "entity": "TQQQ"
     }
   ],
   "degraded_details": [
-    {
-      "artifact_kind": "stock",
-      "entity": "AAPL",
-      "resolution_state": "lkg_primary",
-      "payload_sha256": "357dd603b2f34c676b662527fbdaa4fba7559618bc358e834ee85de5d5cf7d65",
-      "source_as_of": "2026-07-23T20:00:00Z",
-      "failure_run_id": "30290132699",
-      "failure_observed_at": "2026-07-27T17:39:30Z",
-      "data_loss": false
-    },
     {
       "artifact_kind": "stock",
       "entity": "ABBV",
@@ -522,16 +504,6 @@
       "data_loss": false
     },
     {
-      "artifact_kind": "financial",
-      "entity": "AAPL",
-      "resolution_state": "lkg_primary",
-      "payload_sha256": "31ef0fbe674218caa6f4f59d810b67ee87f25f6dc69ac984f21af00cca0cbcd5",
-      "source_as_of": "2026-03-28",
-      "failure_run_id": "30290132699",
-      "failure_observed_at": "2026-07-27T17:39:30Z",
-      "data_loss": false
-    },
-    {
       "artifact_kind": "etf",
       "entity": "TQQQ",
       "resolution_state": "lkg_primary",
@@ -543,7 +515,6 @@
     }
   ],
   "degraded_tickers": [
-    "AAPL",
     "ABBV",
     "AMAT",
     "AMD",
@@ -582,33 +553,131 @@
   "degraded_etfs": [
     "TQQQ"
   ],
-  "recovered_details": [],
-  "recovered_tickers": [],
+  "recovered_details": [
+    {
+      "artifact_kind": "stock",
+      "entity": "AAPL",
+      "payload_sha256": "621c15cad80804c6e40c943071c68f491ca3f4609eabe44ab226dd7b43c4846a",
+      "source_as_of": "2026-07-27T20:00:00Z",
+      "recovered_from_run_id": "30290132699",
+      "recovery_run_id": "30310917326",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "recovered_at": "2026-07-27T22:30:57Z"
+    },
+    {
+      "artifact_kind": "financial",
+      "entity": "AAPL",
+      "payload_sha256": "1088616b6a16162ecfadf6d0901323c5bbd5c8d9a5aead220237961d08c2ae5f",
+      "source_as_of": "2026-03-28",
+      "recovered_from_run_id": "30290132699",
+      "recovery_run_id": "30310917326",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "recovered_at": "2026-07-27T22:30:57Z"
+    }
+  ],
+  "recovered_tickers": [
+    "AAPL"
+  ],
   "recovered_surfaces": [],
   "recovered_universes": [],
   "recovered_etfs": [],
   "promotion_deferral_details": [],
   "current_attempt": {
-    "run_id": "30294312998",
+    "run_id": "30310917326",
     "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "schedule": "",
-    "natural": false,
-    "attempted": 1,
-    "successes": 0,
-    "failed": 1,
-    "recovered": 0,
+    "event_name": "schedule",
+    "schedule": "20 21 * * *",
+    "natural": true,
+    "attempted": 16,
+    "successes": 16,
+    "failed": 0,
+    "recovered": 2,
     "promotion_deferred": 0,
-    "errors": [
+    "errors": [],
+    "success_rows": [
       {
-        "artifact_kind": "etf",
-        "entity": "TQQQ",
-        "error": "ControlledETFDetailFailure: controlled failure injection for etf_detail:TQQQ",
-        "controlled": true,
-        "data_loss": false
+        "artifact_kind": "stock",
+        "entity": "AAPL",
+        "outcome": "recovered"
+      },
+      {
+        "artifact_kind": "stock",
+        "entity": "AMZN",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "stock",
+        "entity": "GOOGL",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "stock",
+        "entity": "JPM",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "stock",
+        "entity": "META",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "stock",
+        "entity": "MSFT",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "stock",
+        "entity": "NVDA",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "stock",
+        "entity": "TSLA",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "financial",
+        "entity": "AAPL",
+        "outcome": "recovered"
+      },
+      {
+        "artifact_kind": "financial",
+        "entity": "AMZN",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "financial",
+        "entity": "GOOGL",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "financial",
+        "entity": "JPM",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "financial",
+        "entity": "META",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "financial",
+        "entity": "MSFT",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "financial",
+        "entity": "NVDA",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "financial",
+        "entity": "TSLA",
+        "outcome": "fresh"
       }
     ],
-    "success_rows": [],
     "promotion_deferrals": []
   }
 }
