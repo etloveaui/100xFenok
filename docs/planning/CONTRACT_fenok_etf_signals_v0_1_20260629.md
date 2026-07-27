@@ -9,12 +9,12 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 - `data/computed/fenok_etf_signals.json` is the internal ETF lane payload.
 - `data/computed/fenok_etf_signals_summary.json` is the compact public summary.
 - `coverage.scored_public_etf` is now non-zero for eligible vanilla ETFs.
-- Current local scored denominator: 4,526 eligible vanilla ETFs out of 5,479 StockAnalysis ETF records and 5,359 market-facts ETF candidates.
+- Current local scored denominator: 4,431 eligible vanilla ETFs out of 5,580 collected ETF candidates.
 - ETF rows must remain absent from `data/computed/fenok_signals.json`.
 - UI/API consumption and a public summary mirror are now verified by the named ETF gate, so the coverage index can hold `public=true`.
-- The full scored-ETF lane is a public surface plus rolling universe-health/backfill diagnostic. Current diagnostic evidence: `4,526 = 3,684 complete + 2 fetchable + 770 inception-limited + 70 terminal-limited`; the two fetchable gaps keep this full-universe diagnostic lane degraded.
-- ETF Core Daily Basket is the implemented ETF service DAILY/GATED sublane. It does not reuse the full `4,526` scored ETF denominator for a daily-ready claim. Current local regeneration is `1,569` structural candidates -> `98` selected core refresh tickers, `98` fresh and `0` stale, so `etf_core_daily_basket_ready=true`.
-- This is not a full-universe paid-ready ETF claim. Paid-ready wording for broad ETF scoring still requires explicit owner approval of the product scope; current service readiness is Core Basket scoped.
+- The full scored-ETF lane is PUBLIC/DAILY/GATED on the exact `4,431` scored eligible denominator: `4,431 = 3,642 complete + 0 fetchable + 740 inception-limited + 49 terminal-limited`. The two broader full-primary gaps, `FEAT` and `FIVY`, sit outside this exact scored plan and remain visible diagnostic/backfill work.
+- ETF Core Daily Basket is a separate ETF service DAILY/GATED sublane with its own selected denominator. Current local regeneration is `1,574` structural candidates -> `100` selected core refresh tickers, `100` fresh and `0` stale, so `etf_core_daily_basket_ready=true`; this result does not set or clear full S3.
+- This is not a full-universe paid-ready ETF claim. Paid-ready wording for broad ETF scoring still requires explicit owner approval of the product scope; full scored-lane and Core Basket readiness remain separately named claims.
 
 ## Signal Families
 
@@ -101,23 +101,23 @@ classification catalog and owner-approved schema.
   - requires the `new_etf_radar_only` exclusion count to match the current overlap between New ETF Radar and the scored ETF signal universe
 - `npm --prefix 100xfenok-next run qa:fenok-edge-readiness`
   - includes the ETF signal gate, ETF action-index gate, Core Basket gate, New ETF Radar gate, and ETF daily 1Y dispatch-plan gate
-  - fails closed if the ETF public surface, freshness evidence, Core Basket evidence, New ETF Radar watchlist-only contract, fetchable required-history gate, fetchable daily 1Y history-continuity gate, action-index privacy gate, or dispatch-plan privacy gate regresses
+  - fails closed if the ETF public surface, scored-lane freshness/count equation/exact daily-1Y gate, separately named Core Basket track, New ETF Radar watchlist-only contract, action-index privacy gate, or dispatch-plan privacy gate regresses; broader full-primary gaps remain required visible diagnostics but do not block full S3
 
 ## Readiness Flip Criteria
 
 - `public=true` after the ETF route/card, compact public summary, and public mirror are all verified by `qa:fenok-etf-signal-gate`; file presence alone is not enough.
-- Full `etf_scoring_lane.daily=true` is allowed when the exact scored-ETF daily-1Y fetchable gap is zero and the coverage/readiness gates agree; inception-limited and recent provider-terminal rows stay tracked but do not block by themselves.
-- ETF service daily readiness is claimed only through `etf_core_daily_basket_ready=true`, with `selected_count >= 75`, `stale_selected_count=0`, fresh generated artifacts, and the Core Basket QA gate.
-- ETF service gated readiness requires the Core Basket gate plus the general edge readiness gate to pass; it must not depend on all `4,526` scored ETFs having complete daily 1Y history.
+- Full `etf_scoring_lane.daily=true` is determined only from evidence measured over the scored eligible ETF denominator: the ETF signal and history artifacts are fresh, the exact scored-ETF daily-1Y fetchable gap is zero, the exact-plan count equation matches the scored denominator, and the scored-lane public/QA gates agree. Broader full-primary gaps outside the scored denominator remain visible diagnostic/backfill work and do not block this scored-lane flag.
+- Core Daily Basket daily readiness is reported only through its separate `etf_core_daily_basket_ready=true` track, with `selected_count >= 75`, `stale_selected_count=0`, fresh generated artifacts, and the Core Basket QA gate.
+- Core Daily Basket gated readiness requires its own gate plus the general edge readiness gate to pass; neither result can alter full `etf_scoring_lane.daily/gated`.
 - `public_done_claim_allowed=true` only when `source_available`, `normalized`, `joined_to_target_universe`, `scored`, `public`, `daily`, and `gated` are all true.
-- Current status: full ETF scoring surface is PUBLIC but not DAILY/GATED while two fetchable gaps remain; ETF Core Daily Basket is the service target and is currently green (`98 fresh / 0 stale`). The durable full-universe diagnostic evidence is `data/admin/fenok-edge-etf-daily1y-readiness.json`, currently proving `4526 = 3684 complete + 2 fetchable + 770 inception-limited + 70 terminal-limited` for the scored ETF denominator.
+- Current status: the full ETF scoring lane is PUBLIC/DAILY/GATED because the exact scored-ETF daily-1Y fetchable gap is zero and its scored-denominator gates agree. The broader full-primary report still has two fetchable rows, `FEAT` and `FIVY`, outside the exact scored plan; they remain explicit diagnostic/backfill work and do not alter full S3 readiness. ETF Core Daily Basket readiness is reported separately.
 
 ## Core Daily Basket Sublane
 
-- Purpose: provide the service DAILY/GATED ETF set without making the over-broad `4,526`-ETF universe a launch blocker.
-- Readiness label: `etf_core_daily_basket_ready`; do not flip full `S3 ETF daily_ready`.
-- Current generated selection: `1,569` structural candidates -> `98` selected core refresh tickers (`50` Equity, `34` Fixed Income, `6` Alternatives, `6` Asset Allocation, `2` Commodity).
-- Current readiness: `fresh_selected_count=98`, `stale_selected_count=0`, blockers `[]`; therefore `core_daily_basket_ready=true`.
+- Purpose: provide a separately measured service DAILY/GATED ETF set without redefining the full scored-lane denominator.
+- Readiness label: `etf_core_daily_basket_ready`. Core Daily Basket is a separate ETF service DAILY/GATED sublane; its readiness must not set, clear, or substitute for full `etf_scoring_lane.daily/gated` in either direction.
+- Current generated selection: `1,574` structural candidates -> `100` selected core refresh tickers (`50` Equity, `35` Fixed Income, `6` Alternatives, `7` Asset Allocation, `2` Commodity).
+- Current readiness: `fresh_selected_count=100`, `stale_selected_count=0`, blockers `[]`; therefore `core_daily_basket_ready=true`.
 - Exclusions by default: leveraged, inverse, single-stock, single-stock/concentrated derivative-income strategy, low-confidence classification, broken-history rows, and stale quote/volume rows.
 - Candidate buckets: broad US equity, sector, factor/style/dividend, international, fixed income, commodity/currency, alternatives, and asset-allocation funds.
 - Minimum proof before inclusion:
@@ -139,10 +139,10 @@ classification catalog and owner-approved schema.
   - `stockanalysis_etfs=true`
   - `history_gaps_only=true`
   - one rolling shard per schedule, currently capped at 140 tickers per run
-- The `etf_no_fetchable_daily_1y_gap` gate counts full scored-ETF diagnostic rows with fewer than 200 daily history rows, excluding inception-limited and recent provider-terminal rows. It is currently `2`, so the full-universe diagnostic remains degraded while those exact gaps stay in the private dispatch plan.
+- The `etf_no_fetchable_daily_1y_gap` gate counts rows inside the exact scored ETF plan with fewer than 200 daily history rows, excluding inception-limited and recent provider-terminal rows. It is currently `0`, so the scored-denominator gate is green. The two full-primary rows, `FEAT` and `FIVY`, are outside this exact plan and remain visible only in the separate diagnostic/backfill output.
 - For StockAnalysis S3 backfill, `--history-gaps-only --required-history-periods daily_1y` must stay bound to `data/admin/fenok-edge-etf-daily1y-fetchable-plan.json`; it is not a generic ETF missing/fallback retry sweep.
 - `qa:fenok-etf-daily1y-readiness` must pass before any full-universe daily-readiness claim; it checks the generated count equation and keeps the artifact admin-only.
-- This is a bounded rotating shard for universe health, not the Core Basket service refresh gate.
+- This is a bounded rotating shard for scored-universe health, independent of the separately reported Core Basket service refresh gate.
 
 ## Owner-Gated Daily 1Y Dispatch Plan
 

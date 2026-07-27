@@ -19,6 +19,7 @@ import {
   recomputeFenokEdgeSourceAsOf,
   shouldPreserveKoreaPrivateEvidence,
 } from "./lib/fenok-edge-source-stamp.mjs";
+import { buildEtfScoringLaneReadiness } from "./lib/etf-readiness-gate.mjs";
 import {
   reconcileTaiwanCurrentUniverseDenominator,
   selectExplicitTaiwanRows,
@@ -641,11 +642,14 @@ function computeEtfReadinessEvidence() {
   const fetchableGap = Number(etfHistoryGap.fetchable_required_history) || 0;
   const missingGap = Number(etfHistoryGap.missing_required_history) || 0;
   const inceptionLimitedGap = Number(etfHistoryGap.inception_limited_required_history) || 0;
+  const terminalLimitedGap = Number(etfHistoryGap.terminal_limited_required_history) || 0;
   const daily1yGap = asObject(etfHistoryGap.daily_1y_gap);
   const scoredDaily1yGap = asObject(daily1yGap.scored_etfs);
+  const completeDaily1y = Number(etfDaily1yExactPlan.counts?.complete) || 0;
   const fetchableDaily1yGap = Number(etfDaily1yExactPlan.counts?.fetchable) || 0;
   const inceptionLimitedDaily1yGap = Number(etfDaily1yExactPlan.counts?.inception_limited) || 0;
   const terminalLimitedDaily1yGap = Number(etfDaily1yExactPlan.counts?.terminal_limited) || 0;
+  const exactPlanScoredCount = Number(etfDaily1yExactPlan.counts?.scored_etf_count) || 0;
   const historyGapDaily1yMatches = (
     etfDaily1yExactPlan.classification_as_of === etfHistoryGap.classification_as_of
     && Number(scoredDaily1yGap.scored_etf_count) === Number(etfDaily1yExactPlan.counts?.scored_etf_count)
@@ -654,46 +658,36 @@ function computeEtfReadinessEvidence() {
     && Number(scoredDaily1yGap.terminal_limited) === terminalLimitedDaily1yGap
   );
   const publicReady = Boolean(etfSignalGate.public_surface_proof?.ready && etfScoredPublic > 0);
-  const dailyChecks = [
-    {
-      id: "etf_signal_summary_fresh",
-      ok: signalAgeHours != null && signalAgeHours <= maxAgeHours,
-      generated_at: etfSignals.generated_at ?? null,
-      age_hours: signalAgeHours,
-      max_age_hours: maxAgeHours,
-    },
-    {
-      id: "etf_history_gap_report_fresh",
-      ok: historyGapAgeHours != null && historyGapAgeHours <= maxAgeHours,
-      generated_at: etfHistoryGap.generated_at ?? null,
-      age_hours: historyGapAgeHours,
-      max_age_hours: maxAgeHours,
-    },
-    {
-      id: "etf_no_fetchable_required_history_gap",
-      ok: fetchableGap === 0,
-      fetchable_required_history: fetchableGap,
-      missing_required_history: missingGap,
-      inception_limited_required_history: inceptionLimitedGap,
-      caveat: "Inception-limited gaps are allowed; fetchable required-history gaps keep daily=false.",
-    },
-    {
-      id: "etf_no_fetchable_daily_1y_gap",
-      ok: fetchableDaily1yGap === 0,
-      classification_as_of: etfDaily1yExactPlan.classification_as_of,
-      fetchable_daily_1y_gap: fetchableDaily1yGap,
-      inception_limited_daily_1y_gap: inceptionLimitedDaily1yGap,
-      terminal_limited_daily_1y_gap: terminalLimitedDaily1yGap,
-      history_gap_report_match: historyGapDaily1yMatches,
-      claim_scope: "full_scored_etf_universe_diagnostic",
-      service_gate: false,
-      caveat: "Full scored-ETF daily 1Y continuity is a rolling diagnostic/backfill track. It must not block ETF Core Daily Basket service readiness; only immediately fetchable gaps keep the full-universe diagnostic lane daily=false.",
-    },
-  ];
-  const serviceDailyChecks = dailyChecks.filter((check) => check.service_gate !== false);
-  const diagnosticDailyChecks = dailyChecks.filter((check) => check.service_gate === false);
-  const dailyReady = serviceDailyChecks.every((check) => check.ok);
-  const gatedReady = publicReady && dailyReady && etfSignalGate.ok;
+  const dailyReadiness = buildEtfScoringLaneReadiness({
+    signalGeneratedAt: etfSignals.generated_at,
+    signalAgeHours,
+    historyGapGeneratedAt: etfHistoryGap.generated_at,
+    historyGapAgeHours,
+    maxAgeHours,
+    publicReady,
+    qaGateOk: etfSignalGate.ok,
+    classificationAsOf: etfDaily1yExactPlan.classification_as_of,
+    scoredDenominatorCount: etfEligible,
+    exactPlanScoredCount,
+    scoredCompleteDaily1y: completeDaily1y,
+    scoredFetchableDaily1yGap: fetchableDaily1yGap,
+    scoredInceptionLimitedDaily1yGap: inceptionLimitedDaily1yGap,
+    scoredTerminalLimitedDaily1yGap: terminalLimitedDaily1yGap,
+    exactPlanCountEquationOk: etfDaily1yExactPlan.counts?.equation_ok === true,
+    historyGapDaily1yMatches,
+    fullPrimaryFetchableRequiredHistory: fetchableGap,
+    fullPrimaryMissingRequiredHistory: missingGap,
+    fullPrimaryInceptionLimitedRequiredHistory: inceptionLimitedGap,
+    fullPrimaryTerminalLimitedRequiredHistory: terminalLimitedGap,
+    fullPrimaryFetchableRows: Array.isArray(etfHistoryGap.samples?.fetchable)
+      ? etfHistoryGap.samples.fetchable
+      : [],
+  });
+  const dailyChecks = dailyReadiness.dailyChecks;
+  const serviceDailyChecks = dailyReadiness.serviceChecks;
+  const diagnosticDailyChecks = dailyReadiness.diagnosticChecks;
+  const dailyReady = dailyReadiness.dailyReady;
+  const gatedReady = dailyReadiness.gatedReady;
   return {
     classification_as_of: etfDaily1yExactPlan.classification_as_of,
     public_ready: publicReady,
@@ -702,14 +696,14 @@ function computeEtfReadinessEvidence() {
     gate_ok: etfSignalGate.ok,
     public_surface_proof: etfSignalGate.public_surface_proof ?? null,
     public_surface_errors: etfSignalGate.errors ?? [],
-    service_gate_scope: "ETF Core Daily Basket owns ETF service DAILY/GATED readiness; full scored-ETF daily 1Y continuity stays diagnostic until explicitly promoted.",
+    service_gate_scope: "Full ETF S3 uses only the exact scored eligible denominator. Full-primary gaps are diagnostic, and Core Daily Basket readiness is a separate track that cannot flip full S3.",
     daily_checks: dailyChecks,
+    scoring_lane_checks: dailyReadiness.scoringLaneChecks,
+    gated_checks: dailyReadiness.gatedChecks,
     service_daily_checks: serviceDailyChecks,
     diagnostic_backlog_checks: diagnosticDailyChecks,
     blockers: [
-      ...(!publicReady ? ["public_surface_proof"] : []),
-      ...serviceDailyChecks.filter((check) => !check.ok).map((check) => check.id),
-      ...(!etfSignalGate.ok ? ["qa_fenok_etf_signal_gate"] : []),
+      ...dailyReadiness.gatedBlockers,
       ...(!gatedReady ? ["gated_ready"] : []),
     ],
     diagnostic_backlog: diagnosticDailyChecks
@@ -720,11 +714,17 @@ function computeEtfReadinessEvidence() {
       eligible_etf_count: etfEligible,
       public_summary_rows: etfSignalGate.counts?.public_summary?.rows ?? null,
       internal_summary_rows: etfSignalGate.counts?.internal_summary?.rows ?? null,
+      scored_denominator_count: etfEligible,
+      exact_plan_scored_count: exactPlanScoredCount,
+      complete_daily_1y: completeDaily1y,
       fetchable_required_history: fetchableGap,
+      missing_required_history: missingGap,
       inception_limited_required_history: inceptionLimitedGap,
+      terminal_limited_required_history: terminalLimitedGap,
       fetchable_daily_1y_gap: fetchableDaily1yGap,
       inception_limited_daily_1y_gap: inceptionLimitedDaily1yGap,
       terminal_limited_daily_1y_gap: terminalLimitedDaily1yGap,
+      exact_plan_count_equation_ok: etfDaily1yExactPlan.counts?.equation_ok === true,
       history_gap_report_match: historyGapDaily1yMatches,
     },
   };
@@ -779,7 +779,7 @@ function computeEtfCoreDailyBasketEvidence() {
         ? "ready"
         : "blocked_refresh_needed",
     blockers: [...new Set(blockers.filter(Boolean))],
-    caveat: "Core Daily Basket is a smaller ETF sublane. It does not flip full etf_scoring_lane daily/gated readiness.",
+    caveat: "Core Daily Basket is a separate ETF service sublane. It does not flip full etf_scoring_lane daily/gated readiness in either direction.",
   };
 }
 
@@ -1414,7 +1414,7 @@ const index = {
           daily: etfReadinessEvidence.daily_ready,
           gated: etfReadinessEvidence.gated_ready,
         },
-        caveat: "ETF scores are public-surfaced by the named ETF gate. Full-universe DAILY/GATED remains a diagnostic/backlog track; ETF service DAILY/GATED is evaluated by the Core Daily Basket sublane.",
+        caveat: "Full ETF DAILY/GATED is evaluated on the exact scored eligible denominator. Full-primary gaps remain diagnostic, and Core Daily Basket readiness is reported on its separate track.",
         extra: {
           evidence_based_readiness: etfReadinessEvidence,
         },
@@ -1549,7 +1549,14 @@ const index = {
         fetchable_required_history: Number(etfHistoryGap.fetchable_required_history) || 0,
         inception_limited_required_history: Number(etfHistoryGap.inception_limited_required_history) || 0,
         status: etfReadinessEvidence.daily_checks.find((check) => check.id === "etf_no_fetchable_required_history_gap")?.ok ? "ready" : "blocked_fetchable_gap",
-        caveat: "Fetchable required-history gaps keep ETF daily=false. Inception-limited gaps are tracked but do not block daily readiness by themselves.",
+        missing_required_history: Number(etfHistoryGap.missing_required_history) || 0,
+        terminal_limited_required_history: Number(etfHistoryGap.terminal_limited_required_history) || 0,
+        fetchable_rows: Array.isArray(etfHistoryGap.samples?.fetchable)
+          ? etfHistoryGap.samples.fetchable
+          : [],
+        claim_scope: "full_primary_etf_universe_diagnostic",
+        service_gate: false,
+        caveat: "Full-primary gaps outside the scored denominator stay visible for diagnostic backfill and do not block full ETF S3.",
       },
       {
         id: "etf_daily_1y_gap",
@@ -1560,9 +1567,9 @@ const index = {
         terminal_limited_daily_1y_gap: etfReadinessEvidence.counts.terminal_limited_daily_1y_gap,
         history_gap_report_match: etfReadinessEvidence.counts.history_gap_report_match,
         status: etfReadinessEvidence.daily_checks.find((check) => check.id === "etf_no_fetchable_daily_1y_gap")?.ok ? "ready" : "blocked_fetchable_daily_gap",
-        claim_scope: "full_scored_etf_universe_diagnostic",
-        service_gate: false,
-        caveat: "Full scored-ETF daily 1Y continuity is a diagnostic/backfill track, not the ETF Core Daily Basket service gate.",
+        claim_scope: "scored_eligible_etf_denominator",
+        service_gate: true,
+        caveat: "The exact scored daily-1Y gap is a full ETF S3 gate and is independent of Core Daily Basket readiness.",
       },
       {
         id: "etf_core_daily_basket",
@@ -1572,7 +1579,7 @@ const index = {
         fresh_selected_count: etfCoreDailyBasketEvidence.counts.fresh_selected_count,
         stale_selected_count: etfCoreDailyBasketEvidence.counts.stale_selected_count,
         status: etfCoreDailyBasketEvidence.status,
-        caveat: "This is the ETF service daily/gated target. Full ETF daily 1Y gaps stay in the separate rolling diagnostic/backfill lane.",
+        caveat: "This separately named service sublane uses its own selected denominator and cannot set, clear, or substitute for full ETF S3.",
       },
       {
         id: "taiwan_universe_mapping",
