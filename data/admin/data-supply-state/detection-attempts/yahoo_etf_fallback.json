@@ -1,24 +1,29 @@
 {
-  "schema_version": "data-supply-detection-attempt-shard/v1",
+  "schema_version": "data-supply-detection-attempt-shard/v2",
   "lane_id": "yahoo_etf_fallback",
   "attempts": [
     {
       "lane_id": "yahoo_etf_fallback",
       "member_id": null,
-      "attempt_id": "stockanalysis-yahoo-30231407096-1",
-      "observed_at": "2026-07-27T02:08:43Z",
-      "execution": "threw",
-      "exception_kind": "unexpected",
+      "attempt_id": "stockanalysis-yahoo-30278167219-1",
+      "observed_at": "2026-07-27T15:05:39Z",
+      "execution": "returned",
+      "exception_kind": null,
       "http_status": null,
       "auth": "not_applicable",
       "rate_limited": false,
-      "decode": "not_attempted",
-      "payload": "not_available",
-      "assertions": [],
-      "candidates": 2,
+      "decode": "ok",
+      "payload": "non_empty",
+      "assertions": [
+        {
+          "id": "yahoo_etf_identity",
+          "passed": true
+        }
+      ],
+      "candidates": 1,
       "retry_count": 0,
-      "latency_ms": 2198,
-      "outcome": "error"
+      "latency_ms": 1967,
+      "outcome": "success"
     }
   ]
 }
