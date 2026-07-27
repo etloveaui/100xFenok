@@ -1,33 +1,54 @@
 {
   "schema_version": "producer-lkg-index/v2",
   "lane_id": "us_indices_daily",
-  "generated_at": "2026-07-24T23:10:50.065Z",
+  "generated_at": "2026-07-27T07:33:36.216Z",
   "keys": [
     "sp500.json",
     "nasdaq.json"
   ],
   "counts": {
     "keys": 2,
-    "fresh": 2,
-    "lkg": 0,
-    "retry": 0,
+    "fresh": 0,
+    "lkg": 2,
+    "retry": 2,
     "unavailable": 0,
-    "failed": 0,
+    "failed": 2,
     "recovered": 0
   },
-  "retry_keys": [],
-  "lkg_details": [],
+  "retry_keys": [
+    "sp500.json",
+    "nasdaq.json"
+  ],
+  "lkg_details": [
+    {
+      "key": "sp500.json",
+      "payload_sha256": "5902e102a3c7d69986c5ed7fa13eca5c93cce98963ea360ac6b5e3c4055a3838",
+      "source_as_of": "2026-07-24",
+      "failure_run_id": "30246526864",
+      "failure_run_attempt": 1
+    },
+    {
+      "key": "nasdaq.json",
+      "payload_sha256": "c7e46738b2cdf90206b3c572c0d396384786efb84b4cfb190840b2a2b014eee5",
+      "source_as_of": "2026-07-24",
+      "failure_run_id": "30246526864",
+      "failure_run_attempt": 1
+    }
+  ],
   "recovery_details": [],
   "promotion_deferral_details": [],
   "current_attempt": {
-    "run_id": "30132319595",
+    "run_id": "30246526864",
     "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-07-24T23:10:50.065Z",
+    "event_name": "workflow_dispatch",
+    "observed_at": "2026-07-27T07:33:36.216Z",
     "attempted": 2,
-    "successes": 2,
-    "failed": 0,
-    "failed_keys": [],
+    "successes": 0,
+    "failed": 2,
+    "failed_keys": [
+      "sp500.json",
+      "nasdaq.json"
+    ],
     "promotion_deferrals": 0,
     "promotion_deferral_keys": []
   }
