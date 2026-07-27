@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph-stock-index/v1",
-  "generated_at": "2026-07-27T04:17:18.997Z",
+  "generated_at": "2026-07-27T05:19:33.598Z",
   "source_as_of": {
     "stocks_analyzer": "2026-07-24",
     "stock_action_index": "2026-07-24",
@@ -28,7 +28,7 @@
   "totals": {
     "stocks": 1065,
     "with_market_facts": 1065,
-    "with_filings": 201,
+    "with_filings": 202,
     "with_sec_13f": 456,
     "with_index_membership": 415,
     "with_single_stock_etfs": 88
@@ -763,12 +763,12 @@
       },
       "flags": {
         "market_facts": true,
-        "filings": false,
+        "filings": true,
         "sec_13f": false,
         "index_membership": false,
         "single_stock_etfs": true
       },
-      "connection_count": 1,
+      "connection_count": 2,
       "service_count": 1,
       "as_of": {
         "profile": "2026-07-24",
@@ -781,6 +781,10 @@
         {
           "type": "belongs_to_sector",
           "target": "sector:Technology"
+        },
+        {
+          "type": "has_filing_summary",
+          "target": "filing:SKHY"
         },
         {
           "type": "referenced_by_single_stock_etf",

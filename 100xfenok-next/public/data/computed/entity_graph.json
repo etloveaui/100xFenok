@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph/v1",
-  "generated_at": "2026-07-27T04:17:18.997Z",
+  "generated_at": "2026-07-27T05:19:33.598Z",
   "source_as_of": {
     "stocks_analyzer": "2026-07-24",
     "stock_action_index": "2026-07-24",
@@ -40,10 +40,10 @@
     "etfs": 5479,
     "sectors": 10,
     "etf_categories": 7,
-    "filing_nodes": 201,
+    "filing_nodes": 202,
     "sec13f_nodes": 1052,
     "stocks_with_market_facts": 1065,
-    "stocks_with_filings": 201,
+    "stocks_with_filings": 202,
     "stocks_with_13f": 456,
     "stocks_with_single_stock_etfs": 88,
     "etfs_with_market_facts": 5479
@@ -2606,18 +2606,24 @@
           "stocks_analyzer": true,
           "stock_action_index": true,
           "market_facts": true,
-          "edgar_summary": false,
+          "edgar_summary": true,
           "sec_13f": false
         },
         "service_flags": [
           "screener",
-          "stock_detail"
+          "stock_detail",
+          "filings"
         ],
         "relations": [
           {
             "type": "belongs_to_sector",
             "target": "sector:Technology",
             "source": "stock_action_index.canonicalSector"
+          },
+          {
+            "type": "has_filing_summary",
+            "target": "filing:SKHY",
+            "source": "edgar-korean-summaries"
           },
           {
             "type": "referenced_by_single_stock_etf",
@@ -269972,6 +269978,14 @@
         "type": "filing",
         "ticker": "SHW",
         "route": "/stock/SHW?tab=filings",
+        "source": "edgar-korean-summaries",
+        "as_of": null
+      },
+      {
+        "id": "filing:SKHY",
+        "type": "filing",
+        "ticker": "SKHY",
+        "route": "/stock/SKHY?tab=filings",
         "source": "edgar-korean-summaries",
         "as_of": null
       },
