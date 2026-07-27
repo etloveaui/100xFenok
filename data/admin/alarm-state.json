@@ -1,6 +1,6 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-07-27T14:23:57.573Z",
+  "generated_at": "2026-07-27T17:13:27.294Z",
   "status": "open",
   "open_incident_count": 3,
   "open_incidents": [
@@ -61,8 +61,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "attempt_gap"
+      ]
     },
     {
       "file": "fenok-edge-krx-daily.yml",
@@ -390,8 +392,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 23,
-    "overdue": 2,
+    "not_due": 22,
+    "overdue": 3,
     "recovered": 0,
     "no_declaration": 7,
     "unknown": 0
@@ -416,10 +418,10 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "30274766619",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30274766619",
-    "observed_at": "2026-07-27T14:23:57.573Z",
-    "event": "workflow_run",
+    "run_id": "30288194636",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30288194636",
+    "observed_at": "2026-07-27T17:13:27.294Z",
+    "event": "schedule",
     "workflows": [
       "fetch-stockanalysis.yml",
       "slickcharts-history.yml",
