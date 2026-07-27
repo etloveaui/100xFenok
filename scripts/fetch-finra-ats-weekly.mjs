@@ -42,6 +42,13 @@ const SUMMARY_TYPES = Object.freeze(["ATS_W_SMBL", "OTC_W_SMBL"]);
 const RAW_SCHEMA = "fenok-finra-ats-weekly-raw/v1";
 const HISTORY_LIMIT = 26;
 const PAGE_LIMIT = 5000;
+export const FINRA_ATS_PERSISTENCE_POLICY = Object.freeze({
+  schema_version: "finra-ats-bounded-persistence/v1",
+  basis: "summary_start_date",
+  scope: "admin_raw_week_documents",
+  max_retained_weeks: HISTORY_LIMIT,
+  eviction: "oldest_summary_start_date_first",
+});
 
 export function writeGitHubOutputs(summary, outputPath = process.env.GITHUB_OUTPUT) {
   if (!outputPath) return false;
@@ -436,9 +443,58 @@ function rawWeekPathFor(repoRoot, summaryStartDate) {
   return path.join(weeksRootFor(repoRoot), `${summaryStartDate}.json`);
 }
 
-export function buildMarker({ generatedAt, partitions }) {
+function exactPersistencePolicy(policy) {
+  if (!policy || typeof policy !== "object" || Array.isArray(policy)) return false;
+  const expectedKeys = Object.keys(FINRA_ATS_PERSISTENCE_POLICY).sort();
+  const actualKeys = Object.keys(policy).sort();
+  return actualKeys.length === expectedKeys.length
+    && actualKeys.every((key, index) => key === expectedKeys[index])
+    && expectedKeys.every((key) => policy[key] === FINRA_ATS_PERSISTENCE_POLICY[key]);
+}
+
+function validPersistenceState(state) {
+  const expectedKeys = [
+    "applied",
+    "available_weeks",
+    "newest_retained_week",
+    "oldest_retained_week",
+    "pruned_weeks",
+    "retained_weeks",
+  ];
+  if (!state || typeof state !== "object" || Array.isArray(state)
+    || JSON.stringify(Object.keys(state).sort()) !== JSON.stringify(expectedKeys)) return false;
+  return (
+    Number.isInteger(state.available_weeks)
+    && Number.isInteger(state.retained_weeks)
+    && Number.isInteger(state.pruned_weeks)
+    && state.available_weeks >= 0
+    && state.retained_weeks >= 0
+    && state.retained_weeks <= FINRA_ATS_PERSISTENCE_POLICY.max_retained_weeks
+    && state.pruned_weeks >= 0
+    && state.retained_weeks === Math.min(
+      state.available_weeks,
+      FINRA_ATS_PERSISTENCE_POLICY.max_retained_weeks,
+    )
+    && state.pruned_weeks === Math.max(
+      state.available_weeks - FINRA_ATS_PERSISTENCE_POLICY.max_retained_weeks,
+      0,
+    )
+    && state.applied === true
+    && (state.retained_weeks === 0
+      ? state.oldest_retained_week === null && state.newest_retained_week === null
+      : isoDate(state.oldest_retained_week)
+        && isoDate(state.newest_retained_week)
+        && (state.retained_weeks !== 1 || state.oldest_retained_week === state.newest_retained_week)
+        && state.oldest_retained_week <= state.newest_retained_week)
+  );
+}
+
+export function buildMarker({ generatedAt, partitions, persistenceState }) {
   if (!Array.isArray(partitions) || partitions.length !== 2 || !partitions.every((partition) => Array.isArray(partition.rows))) {
     throw new Error("complete T1 and T2/OTCE partitions are required for marker");
+  }
+  if (!validPersistenceState(persistenceState)) {
+    throw new Error("FINRA ATS persistence state is required for marker");
   }
   const normalized = partitions.map((partition) => ({
     tier_group: partition.tier_group,
@@ -459,6 +515,8 @@ export function buildMarker({ generatedAt, partitions }) {
     raw_public: false,
     public_mirror_allowed: false,
     rows_included: false,
+    persistence_policy: FINRA_ATS_PERSISTENCE_POLICY,
+    persistence_state: persistenceState,
     counts: {
       total_rows: t1.row_count + t2Otce.row_count,
       t1_rows: t1.row_count,
@@ -474,6 +532,10 @@ export function validMarker(marker) {
     || !isoDate(marker.source_as_of) || typeof marker.generated_at !== "string" || !marker.generated_at.endsWith("Z")
     || marker.raw_public !== false || marker.public_mirror_allowed !== false || marker.rows_included !== false
     || Object.hasOwn(marker, "rows") || !Array.isArray(marker.partitions) || marker.partitions.length !== 2) return false;
+  const hasPolicy = Object.hasOwn(marker, "persistence_policy");
+  const hasState = Object.hasOwn(marker, "persistence_state");
+  if (hasPolicy !== hasState) return false;
+  if (hasPolicy && (!exactPersistencePolicy(marker.persistence_policy) || !validPersistenceState(marker.persistence_state))) return false;
   const counts = marker.counts;
   if (!counts || ![counts.total_rows, counts.t1_rows, counts.t2_otce_rows].every((value) => Number.isInteger(value) && value >= 0)
     || counts.total_rows !== counts.t1_rows + counts.t2_otce_rows) return false;
@@ -487,6 +549,14 @@ export function validMarker(marker) {
   }
   const t1 = marker.partitions.find((partition) => partition.tier_group === "t1");
   const t2Otce = marker.partitions.find((partition) => partition.tier_group === "t2_otce");
+  if (hasState) {
+    const partitionDates = new Set([t1.summary_start_date, t2Otce.summary_start_date]);
+    if (marker.persistence_state.retained_weeks < partitionDates.size
+      || [...partitionDates].some((date) => (
+        date < marker.persistence_state.oldest_retained_week
+        || date > marker.persistence_state.newest_retained_week
+      ))) return false;
+  }
   return groups.size === 2 && t1.row_count === counts.t1_rows && t2Otce.row_count === counts.t2_otce_rows
     && marker.source_as_of === [t1.summary_start_date, t2Otce.summary_start_date].sort()[0];
 }
@@ -526,17 +596,30 @@ export function validRawWeekDocument(document) {
   return Number.isInteger(partitionRows) && partitionRows === document.rows.length;
 }
 
-export function retainRawWeeks(entries, limit = HISTORY_LIMIT) {
-  if (!Array.isArray(entries) || !Number.isInteger(limit) || limit < 1) throw new Error("FINRA ATS raw-week retention inputs are invalid");
+export function retainRawWeeks(entries, policy = FINRA_ATS_PERSISTENCE_POLICY) {
+  if (!Array.isArray(entries) || !exactPersistencePolicy(policy)) throw new Error("FINRA ATS raw-week retention inputs are invalid");
+  const limit = policy.max_retained_weeks;
   const byDate = new Map();
   for (const document of entries) {
     if (!validRawWeekDocument(document)) throw new Error("invalid FINRA ATS raw-week entry");
     const prior = byDate.get(document.summary_start_date);
     if (!prior || String(document.generated_at) >= String(prior.generated_at)) byDate.set(document.summary_start_date, document);
   }
+  const selected = [...byDate.values()]
+    .sort((a, b) => b.summary_start_date.localeCompare(a.summary_start_date))
+    .slice(0, limit);
+  const state = {
+    available_weeks: byDate.size,
+    retained_weeks: selected.length,
+    pruned_weeks: Math.max(0, byDate.size - selected.length),
+    oldest_retained_week: selected.length > 0 ? selected.at(-1).summary_start_date : null,
+    newest_retained_week: selected.length > 0 ? selected[0].summary_start_date : null,
+    applied: true,
+  };
   return {
-    entries: [...byDate.values()].sort((a, b) => b.summary_start_date.localeCompare(a.summary_start_date)).slice(0, limit),
-    pruned: Math.max(0, byDate.size - limit),
+    entries: selected,
+    persistence_state: state,
+    pruned: state.pruned_weeks,
   };
 }
 
@@ -575,8 +658,10 @@ function readWeeksStrict(repoRoot) {
   return entries;
 }
 
-function writeWeeks(repoRoot, entries, priorEntries) {
-  const retained = retainRawWeeks(entries);
+function writeWeeks(repoRoot, retained, priorEntries) {
+  if (!retained || !Array.isArray(retained.entries) || !validPersistenceState(retained.persistence_state)) {
+    throw new Error("FINRA ATS retained-week plan is invalid");
+  }
   const retainedDates = new Set(retained.entries.map((document) => document.summary_start_date));
   for (const document of retained.entries) {
     atomicWrite(rawWeekPathFor(repoRoot, document.summary_start_date), `${JSON.stringify(document, null, 2)}\n`);
@@ -781,6 +866,19 @@ export async function run({
       const observed = !t1.complete ? t1.status_code : t2Otce.status_code;
       throw new CollectorError("partial_partition", "one or more FINRA ATS weekly partitions were unavailable after walkback", { statusCode: observed ?? null });
     }
+    const rawWeeks = rawWeekDocuments({
+      generatedAt: observedAt,
+      targets,
+      t1,
+      t2Otce,
+      budget,
+      universe,
+      authPath: token.auth_path,
+    });
+    const retainedWeeks = retainRawWeeks([
+      ...rawWeeks,
+      ...priorWeeks.map((entry) => entry.document),
+    ]);
     const marker = buildMarker({
       generatedAt: observedAt,
       partitions: [
@@ -792,6 +890,7 @@ export async function run({
           rows: t2Otce.rows,
         },
       ],
+      persistenceState: retainedWeeks.persistence_state,
     });
     const markerBytes = Buffer.from(`${JSON.stringify(marker, null, 2)}\n`, "utf8");
     const candidate = {
@@ -830,16 +929,7 @@ export async function run({
 
     // All provider pages and both tier-delay groups are complete before the
     // first candidate write. No partial raw/current candidate is materialized.
-    const rawWeeks = rawWeekDocuments({
-      generatedAt: observedAt,
-      targets,
-      t1,
-      t2Otce,
-      budget,
-      universe,
-      authPath: token.auth_path,
-    });
-    writeWeeks(resolvedRoot, [...rawWeeks, ...priorWeeks.map((entry) => entry.document)], priorWeeks);
+    writeWeeks(resolvedRoot, retainedWeeks, priorWeeks);
     atomicWrite(markerPath, markerBytes);
     const success = store.recordSuccess({ artifacts: [candidate], run: runContext });
     attempt = successAttempt([...t1.rows, ...t2Otce.rows]);

@@ -8,6 +8,7 @@ import {
   ATTEMPT_ASSERTION_IDS,
   FINRA_ATS_LANE_ID,
   FINRA_ATS_MARKER_SCHEMA,
+  FINRA_ATS_PERSISTENCE_POLICY,
   FINRA_ATS_SYMBOL_BATCH_SIZE,
   MAX_REQUESTS,
   batchTrackedSymbols,
@@ -71,6 +72,24 @@ function writeJson(filePath, payload) {
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function persistenceState(dates) {
+  const sorted = [...new Set(dates)].sort();
+  return {
+    available_weeks: sorted.length,
+    retained_weeks: sorted.length,
+    pruned_weeks: 0,
+    oldest_retained_week: sorted[0] ?? null,
+    newest_retained_week: sorted.at(-1) ?? null,
+    applied: true,
+  };
+}
+
+function addDays(value, days) {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
 }
 
 function row(symbol, week, tier, type = "ATS_W_SMBL") {
@@ -388,6 +407,10 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
     [["T1"], ["T2", "OTCE"]],
   );
   const marker = readJson(markerPathFor(root));
+  const expectedPersistenceState = persistenceState([
+    targets.t1.target_week_start,
+    targets.t2_otce.target_week_start,
+  ]);
   assert.deepEqual(marker, {
     schema_version: FINRA_ATS_MARKER_SCHEMA,
     lane_id: FINRA_ATS_LANE_ID,
@@ -396,6 +419,8 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
     raw_public: false,
     public_mirror_allowed: false,
     rows_included: false,
+    persistence_policy: FINRA_ATS_PERSISTENCE_POLICY,
+    persistence_state: expectedPersistenceState,
     counts: { total_rows: 4, t1_rows: 2, t2_otce_rows: 2 },
     partitions: [
       { tier_group: "t1", tier_identifiers: ["T1"], summary_start_date: targets.t1.target_week_start, row_count: 2 },
@@ -409,6 +434,8 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
   assert.equal(fs.existsSync(t2OtceRawPath), true);
   const t2OtceRaw = readJson(t2OtceRawPath);
   assert.equal(validRawWeekDocument(t2OtceRaw), true);
+  assert.equal(Object.hasOwn(t2OtceRaw, "persistence_policy"), false);
+  assert.equal(Object.hasOwn(t2OtceRaw, "persistence_state"), false);
   const wrongWeekStartDate = structuredClone(t2OtceRaw);
   wrongWeekStartDate.rows[0].weekStartDate = "2026-01-01";
   assert.equal(validRawWeekDocument(wrongWeekStartDate), false);
@@ -709,7 +736,78 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
   assert.equal(retained.entries.length, 26);
   assert.equal(retained.entries[0].summary_start_date, "2025-01-30");
   assert.equal(retained.entries.at(-1).summary_start_date, "2025-01-05");
+  assert.deepEqual(retained.persistence_state, {
+    available_weeks: 30,
+    retained_weeks: 26,
+    pruned_weeks: 4,
+    oldest_retained_week: "2025-01-05",
+    newest_retained_week: "2025-01-30",
+    applied: true,
+  });
+  assert.equal(retained.entries.every((document) => (
+    !Object.hasOwn(document, "persistence_policy")
+      && !Object.hasOwn(document, "persistence_state")
+  )), true);
   assert.throws(() => retainRawWeeks([{ nope: true }]), /invalid FINRA ATS raw-week entry/);
+}
+
+// A promoted run applies that exact plan to disk: the marker describes the
+// pre-eviction candidate count while the admin raw tree contains only the 26
+// newest distinct weeks. Raw documents themselves remain immutable evidence.
+{
+  const root = makeRoot("retention-write");
+  const first = await runSuccess(root);
+  assert.equal(first.result.promoted, true);
+  const weeksRoot = path.join(root, "data", "admin", "finra-ats", "weeks");
+  const templatePath = path.join(weeksRoot, `${first.targets.t1.target_week_start}.json`);
+  const template = readJson(templatePath);
+  const syntheticDates = Array.from({ length: 30 }, (_, index) => addDays("2025-01-06", index * 7));
+  for (const date of syntheticDates) {
+    const document = structuredClone(template);
+    document.summary_start_date = date;
+    document.generated_at = "2025-12-31T00:00:00.000Z";
+    document.partitions.forEach((partition) => {
+      partition.summary_start_date = date;
+    });
+    document.rows.forEach((entry) => {
+      entry.weekStartDate = date;
+      entry.summaryStartDate = date;
+    });
+    writeJson(path.join(weeksRoot, `${date}.json`), document);
+  }
+
+  const second = await runSuccess(root, {
+    observedAt: "2026-08-21T12:00:00.000Z",
+    referenceDate: new Date("2026-08-21T12:00:00.000Z"),
+  });
+  assert.equal(second.result.promoted, true);
+  const retainedFiles = fs.readdirSync(weeksRoot).sort();
+  const retainedDates = retainedFiles.map((name) => path.basename(name, ".json"));
+  const expectedRetainedDates = [...new Set([
+    ...syntheticDates,
+    first.targets.t1.target_week_start,
+    first.targets.t2_otce.target_week_start,
+    second.targets.t1.target_week_start,
+    second.targets.t2_otce.target_week_start,
+  ])].sort().slice(-26);
+  assert.equal(retainedFiles.length, 26);
+  assert.deepEqual(retainedDates, expectedRetainedDates);
+  assert.equal(fs.existsSync(path.join(weeksRoot, `${syntheticDates[0]}.json`)), false);
+  assert.equal(fs.existsSync(path.join(weeksRoot, `${syntheticDates.at(-1)}.json`)), true);
+  const marker = readJson(markerPathFor(root));
+  assert.deepEqual(marker.persistence_state, {
+    available_weeks: 34,
+    retained_weeks: 26,
+    pruned_weeks: 8,
+    oldest_retained_week: retainedDates[0],
+    newest_retained_week: retainedDates.at(-1),
+    applied: true,
+  });
+  assert.equal(retainedFiles.every((name) => {
+    const document = readJson(path.join(weeksRoot, name));
+    return !Object.hasOwn(document, "persistence_policy")
+      && !Object.hasOwn(document, "persistence_state");
+  }), true);
 }
 
 // The raw-week evidence directory is closed-world: unexpected files,
@@ -763,12 +861,41 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
 {
   const marker = buildMarker({
     generatedAt: OBSERVED_AT,
+    persistenceState: persistenceState(["2026-06-29", "2026-06-15"]),
     partitions: [
       { tier_group: "t1", tier_identifiers: ["T1"], summary_start_date: "2026-06-29", rows: [row("AAPL", "2026-06-29", "T1")] },
       { tier_group: "t2_otce", tier_identifiers: ["T2", "OTCE"], summary_start_date: "2026-06-15", rows: [row("AAPL", "2026-06-15", "T2")] },
     ],
   });
   assert.equal(validMarker(marker), true);
+  const legacyMarker = structuredClone(marker);
+  delete legacyMarker.persistence_policy;
+  delete legacyMarker.persistence_state;
+  assert.equal(validMarker(legacyMarker), true, "pre-policy LKG markers remain readable during rollout");
+  const missingState = structuredClone(marker);
+  delete missingState.persistence_state;
+  assert.equal(validMarker(missingState), false);
+  assert.equal(validMarker({
+    ...marker,
+    persistence_policy: {
+      ...FINRA_ATS_PERSISTENCE_POLICY,
+      max_retained_weeks: 27,
+    },
+  }), false);
+  assert.equal(validMarker({
+    ...marker,
+    persistence_state: {
+      ...marker.persistence_state,
+      retained_weeks: 1,
+    },
+  }), false);
+  assert.equal(validMarker({
+    ...marker,
+    persistence_state: {
+      ...marker.persistence_state,
+      oldest_retained_week: "2026-06-22",
+    },
+  }), false, "both partition weeks must lie inside the declared retained range");
   assert.equal(validMarker({ ...marker, raw_public: true }), false);
   assert.equal(validMarker({ ...marker, public_mirror_allowed: true }), false);
   assert.equal(Object.hasOwn(marker, "rows"), false);
