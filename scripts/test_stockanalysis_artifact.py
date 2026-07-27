@@ -11,6 +11,7 @@ import stat
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -113,6 +114,119 @@ class StockAnalysisArtifactTest(unittest.TestCase):
         self.assertEqual((self.root / "data/stockanalysis/a.json").read_text(), '{"value":2}\n')
         run("git", "add", "--", "data/stockanalysis", cwd=self.root)
         self.helper.audit_staged_paths(self.root, self.artifact)
+
+    def test_source_growth_after_hash_fails_pack_with_path_and_sizes(self) -> None:
+        target = self.candidate / "data/stockanalysis/a.json"
+        target.write_text('{"value":2}\n')
+        original_sha256_file = self.helper.sha256_file
+        grew = False
+
+        def hash_then_grow(path: Path) -> str:
+            nonlocal grew
+            digest = original_sha256_file(path)
+            if path == target and not grew:
+                with path.open("ab") as handle:
+                    handle.write(b'{"late":1}\n')
+                grew = True
+            return digest
+
+        with mock.patch.object(self.helper, "sha256_file", side_effect=hash_then_grow):
+            with self.assertRaisesRegex(
+                ValueError,
+                (
+                    "artifact source changed after initial hash and before copy: "
+                    "data/stockanalysis/a.json; size_at_hash=12; size_before_copy=23"
+                ),
+            ):
+                self.pack()
+        self.assertFalse((self.artifact / "manifest.json").exists())
+
+    def test_hash_before_copy_mutant_recreates_self_inconsistent_artifact(self) -> None:
+        target = self.candidate / "data/stockanalysis/a.json"
+        target.write_text('{"value":2}\n')
+        original_sha256_file = self.helper.sha256_file
+        grew = False
+
+        def hash_then_grow(path: Path) -> str:
+            nonlocal grew
+            digest = original_sha256_file(path)
+            if path == target and not grew:
+                with path.open("ab") as handle:
+                    handle.write(b'{"late":1}\n')
+                grew = True
+            return digest
+
+        def unsafe_hash_before_copy(
+            *,
+            source: Path,
+            target: Path,
+            rel: str,
+            size_at_hash: int,
+            digest_at_hash: str,
+            mtime_ns_at_hash: int,
+            inode_at_hash: int,
+        ) -> tuple[int, str, int, int, int]:
+            del rel, size_at_hash, mtime_ns_at_hash, inode_at_hash
+            target.parent.mkdir(parents=True, exist_ok=True)
+            self.helper.shutil.copy2(source, target)
+            copied_source = source.stat()
+            return (
+                copied_source.st_size,
+                digest_at_hash,
+                copied_source.st_size,
+                copied_source.st_mtime_ns,
+                copied_source.st_ino,
+            )
+
+        with (
+            mock.patch.object(self.helper, "sha256_file", side_effect=hash_then_grow),
+            mock.patch.object(
+                self.helper,
+                "copy_file_consistently",
+                side_effect=unsafe_hash_before_copy,
+            ),
+        ):
+            manifest = self.pack()
+
+        row = manifest["files"][0]
+        packed = self.artifact / "files" / row["path"]
+        self.assertNotEqual(row["sha256"], original_sha256_file(packed))
+        with self.assertRaisesRegex(
+            ValueError,
+            "artifact hash or size mismatch: data/stockanalysis/a.json",
+        ):
+            self.apply()
+        print("mutation hash-before-copy: pack_succeeded=true manifest_matches_payload=false")
+
+    def test_source_growth_after_copy_fails_before_manifest(self) -> None:
+        target = self.candidate / "data/stockanalysis/a.json"
+        target.write_text('{"value":2}\n')
+        original_copy = self.helper.copy_file_consistently
+        grew = False
+
+        def copy_then_grow(**kwargs):
+            nonlocal grew
+            result = original_copy(**kwargs)
+            if kwargs["source"] == target and not grew:
+                with target.open("ab") as handle:
+                    handle.write(b'{"late":1}\n')
+                grew = True
+            return result
+
+        with mock.patch.object(
+            self.helper,
+            "copy_file_consistently",
+            side_effect=copy_then_grow,
+        ):
+            with self.assertRaisesRegex(
+                ValueError,
+                (
+                    "artifact source changed after copy and before manifest: "
+                    "data/stockanalysis/a.json; size_after_copy=12; "
+                    "size_before_manifest=23"
+                ),
+            ):
+                self.pack()
 
     def test_runtime_lock_files_are_not_artifact_payload(self) -> None:
         repo_lock = self.root / "data/admin/data-supply-state/v1/domains/stock_detail/.lock"

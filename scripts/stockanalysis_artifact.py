@@ -45,6 +45,61 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def copy_file_consistently(
+    *,
+    source: Path,
+    target: Path,
+    rel: str,
+    size_at_hash: int,
+    digest_at_hash: str,
+    mtime_ns_at_hash: int,
+    inode_at_hash: int,
+) -> tuple[int, str, int, int, int]:
+    before_copy = source.lstat()
+    if (
+        before_copy.st_size != size_at_hash
+        or before_copy.st_mtime_ns != mtime_ns_at_hash
+        or before_copy.st_ino != inode_at_hash
+    ):
+        fail(
+            "artifact source changed after initial hash and before copy: "
+            f"{rel}; size_at_hash={size_at_hash}; size_before_copy={before_copy.st_size}"
+        )
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    digest = hashlib.sha256()
+    copied_size = 0
+    with source.open("rb") as source_handle, target.open("wb") as target_handle:
+        for chunk in iter(lambda: source_handle.read(1024 * 1024), b""):
+            target_handle.write(chunk)
+            digest.update(chunk)
+            copied_size += len(chunk)
+    shutil.copystat(source, target, follow_symlinks=False)
+
+    after_copy = source.lstat()
+    copied_digest = digest.hexdigest()
+    if (
+        after_copy.st_size != before_copy.st_size
+        or after_copy.st_mtime_ns != before_copy.st_mtime_ns
+        or after_copy.st_ino != before_copy.st_ino
+        or copied_size != after_copy.st_size
+        or copied_digest != digest_at_hash
+    ):
+        fail(
+            "artifact source changed while copying after initial hash: "
+            f"{rel}; size_at_hash={size_at_hash}; "
+            f"size_before_copy={before_copy.st_size}; "
+            f"size_after_copy={after_copy.st_size}; copied_size={copied_size}"
+        )
+    return (
+        copied_size,
+        copied_digest,
+        after_copy.st_size,
+        after_copy.st_mtime_ns,
+        after_copy.st_ino,
+    )
+
+
 def run_git(repo_root: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess:
     return subprocess.run(
         ["git", *args],
@@ -279,16 +334,30 @@ def pack_artifact(
     missing = repository_owned_files(repo, specs, excludes) - set(leaves)
     if missing:
         fail(f"candidate deletion is forbidden: {sorted(missing)[0]}")
-    changed: list[tuple[str, Path, int, str]] = []
+    changed: list[tuple[str, Path, int, str, int, int]] = []
     total = 0
     for rel, path in sorted(leaves.items()):
         source = repo / rel
+        before_hash = path.lstat()
         digest = sha256_file(path)
-        if source.is_file() and sha256_file(source) == digest:
+        after_hash = path.lstat()
+        changed_during_hash = (
+            after_hash.st_size != before_hash.st_size
+            or after_hash.st_mtime_ns != before_hash.st_mtime_ns
+            or after_hash.st_ino != before_hash.st_ino
+        )
+        if not changed_during_hash and source.is_file() and sha256_file(source) == digest:
             continue
-        size = path.stat().st_size
+        size = before_hash.st_size
         total += size
-        changed.append((rel, path, size, digest))
+        changed.append((
+            rel,
+            path,
+            size,
+            digest,
+            before_hash.st_mtime_ns,
+            before_hash.st_ino,
+        ))
     if len(changed) > MAX_FILE_COUNT or total > MAX_TOTAL_BYTES:
         fail("artifact file count or total size exceeds the safety limit")
     if artifact.exists():
@@ -296,11 +365,54 @@ def pack_artifact(
     files_root = artifact / "files"
     files_root.mkdir(parents=True)
     file_rows = []
-    for rel, source, size, digest in changed:
+    packed_sources: list[tuple[str, Path, int, int, int]] = []
+    total = 0
+    for rel, source, size, digest, mtime_ns, inode in changed:
         target = files_root / rel
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target)
-        file_rows.append({"path": rel, "sha256": digest, "size": size})
+        (
+            copied_size,
+            copied_digest,
+            source_size_after_copy,
+            source_mtime_after_copy,
+            source_inode_after_copy,
+        ) = copy_file_consistently(
+            source=source,
+            target=target,
+            rel=rel,
+            size_at_hash=size,
+            digest_at_hash=digest,
+            mtime_ns_at_hash=mtime_ns,
+            inode_at_hash=inode,
+        )
+        total += copied_size
+        if total > MAX_TOTAL_BYTES:
+            fail("artifact file count or total size exceeds the safety limit")
+        file_rows.append({"path": rel, "sha256": copied_digest, "size": copied_size})
+        packed_sources.append((
+            rel,
+            source,
+            source_size_after_copy,
+            source_mtime_after_copy,
+            source_inode_after_copy,
+        ))
+    for rel, source, size_after_copy, mtime_after_copy, inode_after_copy in packed_sources:
+        try:
+            before_manifest = source.lstat()
+        except FileNotFoundError:
+            fail(
+                "artifact source disappeared after copy and before manifest: "
+                f"{rel}; size_after_copy={size_after_copy}"
+            )
+        if (
+            before_manifest.st_size != size_after_copy
+            or before_manifest.st_mtime_ns != mtime_after_copy
+            or before_manifest.st_ino != inode_after_copy
+        ):
+            fail(
+                "artifact source changed after copy and before manifest: "
+                f"{rel}; size_after_copy={size_after_copy}; "
+                f"size_before_manifest={before_manifest.st_size}"
+            )
     manifest = {
         "protocol": PROTOCOL,
         "workflow": workflow,
