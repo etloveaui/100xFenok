@@ -713,7 +713,7 @@ const config = {
     }),
     lane({
       id: "oecd_cli",
-      label: "OECD composite leading indicators shadow",
+      label: "OECD composite leading indicators",
       members: [registryMember("oecd_cli", ["0 8 1 * *"], [
         artifact("oecd_cli_shadow", "data/admin/oecd_cli/shadow/oecd-cli.json", {
           schemaVersion: schemaVersion("/schema_version", "oecd-cli-shadow/v1"),

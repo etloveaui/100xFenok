@@ -472,7 +472,9 @@ const lanes = [
     cadence: { kind: "monthly", provider: "OECD SDMX DF_CLI" },
     // First workflow commit: 2026-07-20 23:20:11 +0900.
     activated_at: "2026-07-20T14:20:11Z",
-    enforcement: "shadow",
+    // Promoted after dispatch run 30260263485 committed a complete HTTP-200
+    // attempt, all 22 bounded series, parity evidence, and fresh state.
+    enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/oecd_cli",
     detection_attempt: attemptShard("oecd_cli"),
@@ -487,7 +489,7 @@ const lanes = [
     ],
     recovery_store: "data/admin/oecd_cli/index.json",
     kpi_recovery_shape: "general",
-    declared_exception: "admin-only shadow until composite activity-surveys ownership and OECD redistribution terms are resolved",
+    declared_exception: "admin-only live lane; raw public mirroring stays disabled across the composite activity-surveys and third-party metadata boundary",
     script_sources: ["scripts/fetch-oecd-cli.mjs"],
   }),
   record({

@@ -538,6 +538,7 @@ function runConfigAndFixtureChecks() {
     "sentiment",
     "nasdaq_giw_sox",
     "us_indices_daily",
+    "oecd_cli",
     "slickcharts",
     "edgar_filings",
     "damodaran",
@@ -614,7 +615,8 @@ function runConfigAndFixtureChecks() {
     "data/indices/nasdaq.json",
   ]);
   const oecdCli = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "oecd_cli");
-  assert.equal(oecdCli.enforcement, "shadow");
+  assert.equal(oecdCli.enforcement, "live");
+  assert.equal(oecdCli.kpi_required, true);
   assert.deepEqual(oecdCli.producer_members[0].schedule, ["0 8 1 * *"]);
   assert.equal(oecdCli.producer_members[0].artifact_contracts[0].path, "data/admin/oecd_cli/shadow/oecd-cli.json");
   const krx = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "krx");

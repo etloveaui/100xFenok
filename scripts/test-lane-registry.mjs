@@ -306,7 +306,8 @@ function clone(value) {
     assert.match(workflowSource, /atomic (?:cutover|GAS ownership cutover)/,
       "the workflow must document the atomic GAS-to-Yahoo ownership cutover");
     const oecd = registryLaneById("oecd_cli");
-    assert.equal(oecd.enforcement, "shadow");
+    assert.equal(oecd.enforcement, "live",
+      "OECD is live after its complete bounded private attempt was committed");
     assert.deepEqual(oecd.roots.canonical_outputs, ["data/admin/oecd_cli/shadow/oecd-cli.json"]);
     assert.deepEqual(oecd.roots.public_mirror, []);
     const krx = registryLaneById("krx");
