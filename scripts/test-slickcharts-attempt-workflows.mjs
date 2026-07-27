@@ -39,6 +39,17 @@ for (const member of ["history", "symbols"]) {
   assert.match(daily, /scripts\/slickcharts-daily-recovery\.mjs prepare/);
   assert.match(daily, /scripts\/slickcharts-daily-recovery\.mjs finalize/);
   assert.match(daily, /node scripts\/test-slickcharts-daily-recovery\.mjs/);
+  assert.match(daily, /pip install requests beautifulsoup4 playwright/);
+  assert.ok(
+    daily.indexOf("pip install requests beautifulsoup4 playwright")
+      < daily.indexOf("python scripts/test_slickcharts_provider_receipts.py"),
+    "provider-receipt tests must run after their requests/BeautifulSoup imports are installed",
+  );
+  assert.ok(
+    daily.indexOf("python scripts/test_slickcharts_provider_receipts.py")
+      < daily.indexOf("playwright install chromium --with-deps"),
+    "the browser install may remain after lightweight contract tests",
+  );
   assert.match(daily, /-- python scripts\/scrapers\/currency-scraper\.py/,
     "daily producer must route currency fetches through the shared UTF-8 decoder");
   assert.match(

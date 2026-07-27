@@ -73,8 +73,12 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Install Python packages
+        run: pip install requests beautifulsoup4 playwright
+
       - name: Test per-file LKG recovery contracts
         run: |
+          node scripts/test-slickcharts-attempt-workflows.mjs
           node scripts/test-producer-lkg-state.mjs
           node scripts/test-slickcharts-daily-recovery.mjs
           node scripts/test-slickcharts-composite-recovery.mjs
@@ -90,10 +94,8 @@ jobs:
             --member daily \
             --snapshot "$SLICKCHARTS_COMPOSITE_SNAPSHOT_DIR"
 
-      - name: Install dependencies
-        run: |
-          pip install requests beautifulsoup4 playwright
-          playwright install chromium --with-deps
+      - name: Install Chromium dependencies
+        run: playwright install chromium --with-deps
 
       # Gainers - cumulative mode
       - name: Run Gainers scraper
