@@ -786,6 +786,7 @@ export async function runNewsTone({
   attemptShardPath = path.join(repoRootPath, "data", "admin", "data-supply-state", "detection-attempts", `${LANE_ID}.json`),
   observeAttemptFn = observeAttempt,
   buildFn = build,
+  sleepFn = sleep,
 } = {}) {
   const write = args.noWrite !== true;
   const run = runContext({ runId, runAttempt, eventName, observedAt });
@@ -852,6 +853,15 @@ export async function runNewsTone({
   if (result.status !== "ready") {
     writeResult();
     return retainFailure(result.reason);
+  }
+
+  // The reachability probe and the first reference-ticker fetch hit the same
+  // rate-limited GDELT endpoint. Honor the per-request spacing between those
+  // two phases as well as between ticker fetches; otherwise the first ticker
+  // can consume its retries before the documented five-second window clears.
+  const probeCooldownMs = args.noFetch === true ? 0 : Number(args.sleepMs ?? 0);
+  if (Number.isFinite(probeCooldownMs) && probeCooldownMs > 0) {
+    await sleepFn(probeCooldownMs);
   }
 
   let built;

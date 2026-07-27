@@ -752,4 +752,39 @@ const toneRow = (ticker, asOf, articleCount = 1) => ({
   assert.equal(outcome.failure_detail ?? null, null);
 }
 
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-probe-cooldown-"));
+  const events = [];
+  const outcome = await runNewsTone({
+    repoRoot: root,
+    args: {
+      noWrite: true,
+      noFetch: false,
+      maxRecords: 25,
+      retries: 0,
+      retryBackoffMs: 1,
+      sleepMs: 5500,
+    },
+    observedAt: "2026-07-25T15:53:14.450Z",
+    runId: "gdelt-probe-cooldown",
+    runAttempt: 1,
+    eventName: "schedule",
+    attemptId: "gdelt-probe-cooldown-1",
+    observeAttemptFn: async () => {
+      events.push("probe");
+      return readyProbe();
+    },
+    sleepFn: async (milliseconds) => {
+      events.push(`sleep:${milliseconds}`);
+    },
+    buildFn: async () => {
+      events.push("build");
+      return toneSnapshot({ latestSourceAsOf: "2026-07-23T12:00:00.000Z" });
+    },
+  });
+  assert.equal(outcome.ok, true);
+  assert.deepEqual(events, ["probe", "sleep:5500", "build"],
+    "the first ticker fetch must wait one provider interval after the reachability probe");
+}
+
 console.log("test-fetch-fenok-news-tone-proxy: ok");
