@@ -1,9 +1,9 @@
 # Benchmarks Data
 
 > **Source**: Bloomberg Terminal (weekly update)
-> **Period**: 2010-01-01 ~ 2026-07-17 (15+ years, 864 S&P 500 data points)
+> **Period**: 2010-07-02 ~ 2026-05-15 (15+ years, 829 data points)
 > **Version**: 3.8.0
-> **Last Update**: 2026-07-21
+> **Last Update**: 2026-05-25
 
 ---
 
@@ -13,11 +13,11 @@
 |------|-------------|----------|
 | `us.json` | US Major Indices | `sp500`, `nasdaq100`, `nasdaq_composite`, `russell2000` |
 | `us_sectors.json` | GICS 11 Sectors + Housing | `energy`, `materials`, `industrials`, `consumer_discretionary`, `consumer_staples`, `health_care`, `financials`, `information_technology`, `communication_services`, `utilities`, `real_estate`, `homebuilders` |
-| `micro_sectors.json` | Micro Sectors | `philadelphia_semi`, `us_regional_banks`, `hang_seng_tech`, `us_biotech`, `kosdaq_150`, `과창판_(star50_index)` |
+| `micro_sectors.json` | Micro Sectors | `philadelphia_semi`, `us_regional_banks`, `hang_seng_tech`, `us_biotech`, `kosdaq_150` |
 | `developed.json` | Developed Markets | `euro_stoxx_50`, `topix`, `hong_kong`, `nikkei` |
 | `emerging.json` | Emerging Markets | `shanghai`, `india_sensex`, `kospi`, `brazil`, `vietnam`, `hang_seng_h` |
 | `msci.json` | MSCI Indices | `world`, `developed`, `emerging`, `china`, `india`, `korea` |
-| `summaries.json` | Momentum, Yearly Returns, Source Summaries | 38 sections × price legacy views + 2,404 metric summary values |
+| `summaries.json` | Momentum, Yearly Returns, Source Summaries | 37 sections × price legacy views + 2,353 metric summary values |
 
 ---
 
@@ -129,16 +129,6 @@ console.log(summaries.source_summaries.sp500.momentum.best_pe_ratio.ytd); // val
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 3.8.0 | 2026-07-21 | Weekly update (2026-07-17 source): 32,019 records (+38), 2010-01-01 ~ 2026-07-17, 38 sections, 864 S&P 500 data points; DEC-275 floor preserved (source starts 2010-09-03); source_summaries remain 2,404 non-null + 66 null; ISO-week dup drops=0. |
-| 3.8.0 | 2026-07-13 | Weekly update (2026-07-10 source): 31,981 records (+38), 2010-01-01 ~ 2026-07-10, 38 sections, 863 S&P 500 data points; DEC-275 floor preserved (source starts 2010-08-27); source_summaries remain 2,404 non-null + 66 null; ISO-week dup drops=0. |
-| 3.8.0 | 2026-07-09 | Re-ran the 2026-07-03 source workbook from inbox; regenerated benchmark JSON metadata and re-verified DEC-275 history preservation at 31,943 records, 2010-01-01 ~ 2026-07-03, 38 sections, 862 S&P 500 data points; source_summaries remain 2,404 non-null + 66 null. |
-| 3.8.0 | 2026-07-06 | Weekly data update (2026-07-03 source): micro_sectors +1 section 과창판 (STAR50 Index, 311 rows from 2020-07-24); 31,943 records (+348), 2010-01-01 ~ 2026-07-03, 38 sections, 862 S&P 500 data points; DEC-275 floor preserved (source trimmed to 2010-08-20); source_summaries 2,404 non-null + 66 null; ISO-week dup drops=0. |
-| 3.8.0 | 2026-06-29 | Weekly data update (2026-06-26 source): 31,595 records (+37), 2010-01-01 ~ 2026-06-28, 37 sections, 861 S&P 500 data points; source_summaries 2,353 non-null + 52 null preserved; dup_section_weeks=0. |
-| 3.8.0 | 2026-06-22 | Weekly update (2026-06-19 source) + DEC-275 history-preservation merge: 31,558 records, 2010-01-01 ~ 2026-06-21, 37 sections, 860 S&P 500 data points. Restored the pre-window floor to 2010-01-01 (source had trimmed to 2010-08-06) via source-wins + floor-only + ISO-week grid guard; dup_section_weeks=0. |
-| 3.8.0 | 2026-06-15 | Weekly data update (2026-06-12 source): 31,521 records (+1,080), 2010-01-01 ~ 2026-06-14, 37 sections, 859 S&P 500 data points |
-| 3.8.0 | 2026-06-08 | Weekly data update (2026-06-05 source): 30,441 records (+1), 2010-07-23 ~ 2026-06-05, 37 sections, 829 S&P 500 data points |
-| 3.8.0 | 2026-06-05 | Weekly data update (2026-05-29 source): 30,440 records (+1), 2010-07-16 ~ 2026-05-29, 37 sections, 829 S&P 500 data points |
-| 3.8.0 | 2026-05-27 | Weekly data update (2026-05-22 source): 30,439 records (+1), 2010-07-09 ~ 2026-05-22, 37 sections, 829 data points per index |
 | 3.8.0 | 2026-05-25 | Added backward-compatible `source_summaries` with 1W/1M/3M/6M/YTD and yearly changes for px_last, EPS, PER, PBR, and ROE; source coverage: 2,353 non-null values + 52 null placeholders |
 | 3.7.0 | 2026-05-21 | Weekly data update (2026-05-15 source): 30,438 records (+1), 2010-07-02 ~ 2026-05-15, 37 sections, 829 data points per index |
 | 3.7.0 | 2026-05-11 | Weekly data update (2026-05-08 source): 30,437 records (+1), 2010-06-25 ~ 2026-05-08, 37 sections, 829 data points per index |

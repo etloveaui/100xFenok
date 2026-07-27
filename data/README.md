@@ -35,7 +35,7 @@
 
 ### Valuation Data (benchmarks/, damodaran/)
 - Bloomberg Terminal P/E, P/B, ROE (15yr history)
-- Benchmarks latest: 32,019 records, 2010-01-01 ~ 2026-07-17, 38 sections (micro_sectors +과창판 STAR50), 864 S&P 500 data points (DEC-275 history-preservation merge)
+- Benchmarks latest: 32,057 records, 2010-01-01 ~ 2026-07-26, 38 sections (micro_sectors +과창판 STAR50), 865 S&P 500 data points (DEC-275 history-preservation merge)
 - Benchmarks v3.8: `summaries.json` includes 1W/1M/3M/6M/YTD and yearly source summaries for price, EPS, PER, PBR, and ROE (2,404 non-null values + 66 null placeholders)
 - Damodaran: industries (96 w/ beta, margins, EVA), extended US industry metrics (11 datasets), non-US regional metrics (7 regions x 17 datasets), ERP (178 countries, Apr 2026), historical ERP (66 years), credit ratings
 - Yardney: Feno Yardeni S&P 500 fair value model, 1,890 weekly public valuation records through 2026-07-17, latest fair value 6,296.15 and premium +18.45%; all benchmark rows matched FRED yield observations; raw bond-yield components are excluded from public payloads
