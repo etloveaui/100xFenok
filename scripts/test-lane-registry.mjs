@@ -76,6 +76,13 @@ function clone(value) {
     ["false public mirror flag with a mirror", (draft) => {
       draft.lanes.find((row) => row.id === "finra_ats_weekly").roots.public_mirror = ["100xfenok-next/public/leak.json"];
     }],
+    ["public canonical outside canonical outputs", (draft) => {
+      draft.lanes.find((row) => row.id === "yahoo_etf_fallback").public_canonical_outputs = ["data/yf/not-canonical"];
+    }],
+    ["public canonical on a public lane", (draft) => {
+      const lane = draft.lanes.find((row) => row.id === "stockanalysis_etf_universe");
+      lane.public_canonical_outputs = [lane.roots.canonical_outputs[0]];
+    }],
     ["missing lane_class", (draft) => { delete draft.lanes[0].lane_class; }],
     ["invalid lane_class", (draft) => { draft.lanes[0].lane_class = "sometimes"; }],
     ["recovery store without shape", (draft) => {
@@ -146,6 +153,11 @@ function clone(value) {
     [...(roots.get("data/admin/yahoo_etf_fallback") ?? [])],
     ["yahoo_etf_fallback"],
     "the private Yahoo ETF fallback store must have exactly its own lane claimant",
+  );
+  assert.deepEqual(
+    registryLaneById("yahoo_etf_fallback").public_canonical_outputs,
+    ["data/yf/finance"],
+    "the shared Yahoo finance namespace must remain explicitly public while ETF details stay private",
   );
   // every recovery_store-bearing lane's index lives under its admin root
   for (const lane of LANE_REGISTRY.lanes) {

@@ -69,6 +69,7 @@ function record({
   commit_shards = [],
   recovery_store = null,
   declared_exception = null,
+  public_canonical_outputs,
   script_sources,
   caller_workflows,
   kpi_recovery_shape,
@@ -93,6 +94,7 @@ function record({
     commit_shards,
     recovery_store,
     declared_exception,
+    ...(public_canonical_outputs !== undefined ? { public_canonical_outputs } : {}),
     ...(script_sources !== undefined ? { script_sources } : {}),
     ...(caller_workflows !== undefined ? { caller_workflows } : {}),
     ...(kpi_recovery_shape !== undefined ? { kpi_recovery_shape } : {}),
@@ -286,6 +288,7 @@ const lanes = [
     recovery_store: "data/admin/yahoo_etf_fallback/index.json",
     kpi_recovery_shape: "general",
     declared_exception: "data/yf/finance is a ticker-partitioned namespace shared with the separate Yahoo batch producer; this workflow stages only its artifact-declared changed ticker files",
+    public_canonical_outputs: ["data/yf/finance"],
     script_sources: [
       "scripts/fetch-stockanalysis.py",
       "scripts/yahoo-etf-fallback-recovery.mjs",
@@ -1445,6 +1448,7 @@ const LANE_RECORD_OPTIONAL_KEYS = Object.freeze([
   "caller_workflows",
   "kpi_recovery_shape",
   "public_mirror_allowed",
+  "public_canonical_outputs",
 ]);
 
 function exactKeys(value, expected, context) {
@@ -1568,6 +1572,24 @@ function validateLaneRecord(laneValue) {
   }
   validatePathList(laneValue.roots.canonical_outputs, `${context}.roots.canonical_outputs`);
   validatePathList(laneValue.roots.public_mirror, `${context}.roots.public_mirror`);
+  if (laneValue.public_canonical_outputs !== undefined) {
+    validatePathList(
+      laneValue.public_canonical_outputs,
+      `${context}.public_canonical_outputs`,
+      { allowEmpty: false },
+    );
+    if (laneValue.privacy_class !== "private"
+      || laneValue.roots.public_mirror.length !== 0
+      || laneValue.public_mirror_allowed !== false
+      || laneValue.declared_exception === null) {
+      fail(`${context}.public_canonical_outputs requires a documented private lane with public_mirror_allowed=false and an empty public mirror`);
+    }
+    for (const publicOutput of laneValue.public_canonical_outputs) {
+      if (!laneValue.roots.canonical_outputs.includes(publicOutput)) {
+        fail(`${context}.public_canonical_outputs must be a subset of roots.canonical_outputs`);
+      }
+    }
+  }
   validatePathList(laneValue.commit_shards, `${context}.commit_shards`);
   if (laneValue.recovery_store !== null && !validRepoRelativePath(laneValue.recovery_store)) {
     fail(`${context}.recovery_store is invalid`);

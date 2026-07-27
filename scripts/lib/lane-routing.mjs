@@ -7,16 +7,18 @@
 //   - excluded public data ROOTS (sync-public-data): declared exception roots
 //     + admin_store of every privacy_class:"private" lane + directory-shaped
 //     non-admin canonical_outputs of private lanes whose public_mirror is
-//     empty;
+//     empty, excluding explicitly declared public_canonical_outputs;
 //   - excluded public data FILES (sync-public-data): declared exception files
 //     explicitly flagged public_sync:"exclude" (may_be_absent remains a
 //     compatibility shorthand for the historical detection-floor report)
 //     + file-shaped (.json) non-admin canonical_outputs of mirrorless private
-//     lanes — the sync consumer requires roots to be directories on disk;
+//     lanes, excluding explicitly declared public_canonical_outputs — the sync
+//     consumer requires roots to be directories on disk;
 //   - forbidden private data-supply roots (mirror guard): declared exception
 //     roots + non-admin canonical_outputs of private lanes whose public_mirror
-//     is empty (lane admin stores are NOT here by design — they never reach
-//     the mirror because the sync list above withholds them).
+//     is empty, excluding explicitly declared public_canonical_outputs (lane
+//     admin stores are NOT here by design — they never reach the mirror
+//     because the sync list above withholds them).
 
 import { LANE_REGISTRY, declaredExceptionPaths } from "./lane-registry.mjs";
 
@@ -45,7 +47,8 @@ function laneCanonicalPrivateRoots(registry) {
   // like OCC where availability mirrors but volume/history stay private).
   return registry.lanes
     .filter((lane) => lane.roots.public_mirror.length === 0)
-    .flatMap((lane) => lane.roots.canonical_outputs)
+    .flatMap((lane) => lane.roots.canonical_outputs
+      .filter((candidate) => !(lane.public_canonical_outputs ?? []).includes(candidate)))
     .filter((candidate) => !candidate.startsWith("data/admin/"));
 }
 

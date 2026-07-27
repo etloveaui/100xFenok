@@ -55,6 +55,12 @@ import { FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS } from "./check-fenok-public-mirror
     `registry-derived sync files diverge from the hand list: derived=${JSON.stringify(derivedFiles)} hand=${JSON.stringify(EXCLUDED_PUBLIC_DATA_FILES)}`);
   assert.equal(setEqual(derivedGuardRoots, FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS), true,
     `registry-derived guard roots diverge from the hand list: derived=${JSON.stringify(derivedGuardRoots)} hand=${JSON.stringify(FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS)}`);
+  for (const derived of [derivedRoots, derivedGuardRoots]) {
+    assert.equal(derived.includes("yf/finance"), false,
+      "the shared public Yahoo finance namespace must not derive as private");
+    assert.equal(derived.includes("yf/etf-details"), true,
+      "the private Yahoo ETF detail namespace must remain withheld");
+  }
 
   // materialize.py coverage: every derived private root must be covered by the
   // Python private-token lists (either path form) — the third consumer of the
@@ -673,9 +679,9 @@ try {
   assert.equal(rehearsal.removedDestinationExactFiles, 5);
   assert.deepEqual([...rehearsal.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...rehearsal.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
-  assert.equal(rehearsal.excludedSourceRoots, 14);
-  assert.equal(rehearsal.removedDestinationRoots, 14);
-  assert.equal(rehearsal.removedDestinationFiles, 14);
+  assert.equal(rehearsal.excludedSourceRoots, EXCLUDED_PUBLIC_DATA_ROOTS.length);
+  assert.equal(rehearsal.removedDestinationRoots, EXCLUDED_PUBLIC_DATA_ROOTS.length);
+  assert.equal(rehearsal.removedDestinationFiles, EXCLUDED_PUBLIC_DATA_ROOTS.length);
   assert.deepEqual(snapshotNode(sourceRoot), sourceBeforeDryRun, "dry-run must not mutate source bytes");
   assert.deepEqual(snapshotNode(destinationRoot), destinationBeforeDryRun, "dry-run must not mutate destination bytes");
   assert.equal(fs.existsSync(path.join(destinationRoot, "safe/keep.json")), false);
@@ -685,10 +691,10 @@ try {
 
   const result = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(result.filesCopied, 4);
-  assert.equal(result.excludedSourceRoots, 14);
+  assert.equal(result.excludedSourceRoots, EXCLUDED_PUBLIC_DATA_ROOTS.length);
   assert.equal(result.excludedSourceFiles, 5);
-  assert.equal(result.removedDestinationRoots, 14);
-  assert.equal(result.removedDestinationFiles, 14);
+  assert.equal(result.removedDestinationRoots, EXCLUDED_PUBLIC_DATA_ROOTS.length);
+  assert.equal(result.removedDestinationFiles, EXCLUDED_PUBLIC_DATA_ROOTS.length);
   assert.equal(result.removedDestinationExactFiles, 5);
   assert.deepEqual([...result.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...result.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
@@ -722,7 +728,7 @@ try {
   const destinationBeforeRerun = snapshotNode(destinationRoot);
   const rerun = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(rerun.filesCopied, 4);
-  assert.equal(rerun.excludedSourceRoots, 14);
+  assert.equal(rerun.excludedSourceRoots, EXCLUDED_PUBLIC_DATA_ROOTS.length);
   assert.equal(rerun.excludedSourceFiles, 5);
   assert.equal(rerun.removedDestinationRoots, 0);
   assert.equal(rerun.removedDestinationFiles, 0);
