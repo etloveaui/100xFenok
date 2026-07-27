@@ -18,6 +18,7 @@ import {
   parseYahooChart,
   retainLatestSeriesRows,
   runUsIndicesDaily,
+  seriesContainsProviderObservation,
   US_INDICES_MAX_SERIES_DATES,
   US_INDICES_PERSISTENCE_POLICY,
   withFileRollback,
@@ -74,6 +75,22 @@ assert.deepEqual(mergeSeries(parsed, parsed), parsed, "same-date replay is idemp
 assert.throws(
   () => mergeSeries([{ date: "2026-07-17", value: 6210.2 }], [{ date: "2026-07-17", value: 1 }]),
   /conflicting value/,
+);
+assert.equal(
+  seriesContainsProviderObservation(
+    [{ date: "2026-07-17", value: 6210.2 }],
+    [{ date: "2026-07-17", value: 6210.21 }],
+  ),
+  true,
+  "a policy-tolerated same-date observation remains bound into the settled candidate",
+);
+assert.equal(
+  seriesContainsProviderObservation(
+    [{ date: "2026-07-17", value: 6210.2 }],
+    [{ date: "2026-07-18", value: 6220.2 }],
+  ),
+  false,
+  "a provider date missing from the candidate is not contained",
 );
 assert.equal(US_INDICES_MAX_SERIES_DATES, 15_000);
 assert.deepEqual(US_INDICES_PERSISTENCE_POLICY, {
@@ -489,6 +506,8 @@ assert.deepEqual(
     paths.persistencePath,
   ];
   const before = payloadPaths.map((filePath) => fs.readFileSync(filePath));
+  const providerReceiptRoot = path.join(paths.stateRoot, "provider-observations");
+  const receiptsBefore = fs.readdirSync(providerReceiptRoot).sort();
   let commitCalls = 0;
   const failed = await runUsIndicesDaily({
     ...paths,
@@ -517,6 +536,11 @@ assert.deepEqual(
   payloadPaths.forEach((filePath, index) => {
     assert.deepEqual(fs.readFileSync(filePath), before[index], `${filePath} payload bytes must roll back`);
   });
+  assert.deepEqual(
+    fs.readdirSync(providerReceiptRoot).sort(),
+    receiptsBefore,
+    "provider receipt creation must roll back with canonical/public/state publication",
+  );
   const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
   assert.equal(shard.attempts[0].execution, "threw");
   assert.equal(shard.attempts[0].exception_kind, "unexpected");
@@ -664,6 +688,95 @@ assert.deepEqual(
       "controlled failure must retain canonical bytes",
     );
   });
+  const sameSource = await runUsIndicesDaily({
+    ...paths,
+    request: async (_url, key) => response(200, yahooPayload(
+      key === "sp500" ? "^GSPC" : "^IXIC",
+      key === "sp500" ? [["2026-07-17", 6210]] : [["2026-07-17", 20210]],
+    )),
+    observedAt: "2026-07-18T20:00:00Z",
+    attemptId: "gh-422-1-us-indices",
+    eventName: "schedule",
+  });
+  assert.equal(sameSource.exitCode, 0);
+  assert.equal(sameSource.degraded, true);
+  assert.equal(sameSource.updated, false);
+  assert.equal(sameSource.reason, "recovery_not_advanced_by_provider");
+  assert.equal(sameSource.index.current_attempt.failed, 0);
+  assert.equal(sameSource.index.current_attempt.promotion_deferrals, 2);
+  assert.equal(sameSource.index.counts.retry, 2);
+  for (const key of ["sp500", "nasdaq"]) {
+    const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8"));
+    assert.equal(state.latest_failure.run_id, "421", "same-source deferral preserves the controlled failure");
+    assert.equal(state.latest_failure.failure_kind, "controlled_failure");
+    assert.equal(state.latest_promotion_deferral.reason, "recovery_not_advanced_by_provider");
+  }
+  canonicalBefore.forEach((bytes, index) => assert.deepEqual(
+    fs.readFileSync(path.join(paths.canonicalRoot, `${["sp500", "nasdaq"][index]}.json`)),
+    bytes,
+    "same-source deferral cannot publish canonical bytes",
+  ));
+
+  for (const [eventName, attemptId, observedAt] of [
+    ["workflow_dispatch", "gh-423-1-us-indices", "2026-07-18T20:30:00Z"],
+    ["schedule", "gh-424-2-us-indices", "2026-07-18T21:00:00Z"],
+  ]) {
+    const nonNatural = await runUsIndicesDaily({
+      ...paths,
+      request: async (_url, key) => response(200, yahooPayload(
+        key === "sp500" ? "^GSPC" : "^IXIC",
+        key === "sp500"
+          ? [["2026-07-17", 6210], ["2026-07-18", 6220]]
+          : [["2026-07-17", 20210], ["2026-07-18", 20220]],
+      )),
+      observedAt,
+      attemptId,
+      eventName,
+    });
+    assert.equal(nonNatural.exitCode, 0);
+    assert.equal(nonNatural.updated, false);
+    assert.equal(nonNatural.reason, "recovery_requires_schedule");
+    assert.equal(nonNatural.index.current_attempt.promotion_deferrals, 2);
+    for (const key of ["sp500", "nasdaq"]) {
+      const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8"));
+      assert.equal(state.latest_failure.run_id, "421", "dispatch/attempt 2 cannot replace the controlled failure");
+    }
+  }
+
+  for (const [key, values] of Object.entries({
+    sp500: [6200, 6210, 6220, 6230],
+    nasdaq: [20200, 20210, 20220, 20230],
+  })) {
+    fs.writeFileSync(path.join(paths.canonicalRoot, `${key}.json`), `${JSON.stringify(
+      values.map((value, index) => ({ date: `2026-07-${String(16 + index).padStart(2, "0")}`, value })),
+      null,
+      2,
+    )}\n`);
+  }
+  const foreignWriter = await runUsIndicesDaily({
+    ...paths,
+    request: async (_url, key) => response(200, yahooPayload(
+      key === "sp500" ? "^GSPC" : "^IXIC",
+      key === "sp500"
+        ? [["2026-07-17", 6210], ["2026-07-18", 6220]]
+        : [["2026-07-17", 20210], ["2026-07-18", 20220]],
+    )),
+    observedAt: "2026-07-18T21:30:00Z",
+    attemptId: "gh-425-1-us-indices",
+    eventName: "schedule",
+  });
+  assert.equal(foreignWriter.exitCode, 0);
+  assert.equal(foreignWriter.reason, "foreign_writer_conflict");
+  assert.equal(foreignWriter.index.current_attempt.failed, 0);
+  for (const key of ["sp500", "nasdaq"]) {
+    const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8"));
+    assert.equal(state.latest_failure.run_id, "421");
+    assert.equal(state.latest_promotion_deferral.reason, "foreign_writer_conflict");
+  }
+  canonicalBefore.forEach((bytes, index) => fs.writeFileSync(
+    path.join(paths.canonicalRoot, `${["sp500", "nasdaq"][index]}.json`),
+    bytes,
+  ));
   const recovered = await runUsIndicesDaily({
     ...paths,
     request: async (_url, key) => response(200, yahooPayload(
@@ -673,12 +786,25 @@ assert.deepEqual(
         : [["2026-07-17", 20210], ["2026-07-18", 20220]],
     )),
     observedAt: "2026-07-18T22:00:00Z",
-    attemptId: "gh-422-1-us-indices",
+    attemptId: "gh-426-1-us-indices",
     eventName: "schedule",
   });
   assert.equal(recovered.exitCode, 0);
   assert.equal(recovered.index.counts.recovered, 2);
   assert.deepEqual(recovered.index.retry_keys, []);
+  for (const key of ["sp500", "nasdaq"]) {
+    const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8"));
+    assert.notEqual(
+      state.provider_observation.payload_sha256,
+      state.current.payload_sha256,
+      "the current provider response hash must remain distinct from merged canonical history",
+    );
+    assert.equal(fs.existsSync(path.join(
+      paths.stateRoot,
+      "provider-observations",
+      `${state.provider_observation.payload_sha256}.json`,
+    )), true);
+  }
   await assert.rejects(() => runUsIndicesDaily({
     ...paths,
     controlledFailure: "transport",

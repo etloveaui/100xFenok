@@ -216,7 +216,23 @@ Acceptance criteria for the governor:
 - Generated-data writers that touch overlapping Fenok Edge artifacts are serialized by the shared `fenok-data-writer-${{ github.ref }}` concurrency group. This was added after run `28981832204` proved that separate Edge/KRX queues can both pass data rebuilds but fail at commit time with real generated-JSON rebase conflicts. The fix commit `2556a02882` passed workflow YAML validation in run `28982488893`.
 - Fenok Edge daily then runs `npm --prefix 100xfenok-next run sync-static`, which rebuilds `data/computed/rim-index/inputs.json` and its Next public mirror.
 - Bot-authored generated-data commits do not start push-triggered deploy runs on their own because of GitHub recursion guards. `Update Manifest` now requests `actions: write` and dispatches `Deploy Worker (Cloudflare)` after a generated-data commit, while the scheduled deploy remains the safety-net reconciliation path.
-- Every workflow that commits refreshed data now follows the same writer contract: `actions: write`, shared `fenok-data-writer-${{ github.ref }}` concurrency, guarded rebase retry before push (`pull` failure aborts the in-progress rebase before the next attempt), and an explicit post-push workflow dispatch. Edge/YF/StockAnalysis/SlickCharts/macro/FRED/Yardeni/DefiLlama/Sentiment/FDIC/TGA/Yahoo ticker/global-scouter/13F writers dispatch `update-manifest.yml`; EDGAR dispatches `deploy-worker.yml` directly because it updates `data/manifest.json` and the static route manifest inside its own run.
+- Generated-data writers use `actions: write`, guarded rebase retry before push
+  (`pull` failure aborts the in-progress rebase before the next attempt), and an
+  explicit post-push workflow dispatch. Writers whose commit paths can overlap
+  remain in `fenok-data-writer-${{ github.ref }}`. Sentiment and US-index
+  acquisition use separate lane-scoped concurrency groups because their owned
+  paths are disjoint and their coincident 22:00 UTC schedules otherwise compete
+  for GitHub's single pending slot; Update Manifest remains globally serialized.
+  Edge/YF/StockAnalysis/SlickCharts/macro/FRED/Yardeni/DefiLlama/Sentiment/FDIC/
+  TGA/Yahoo ticker/global-scouter/13F writers dispatch `update-manifest.yml`;
+  EDGAR dispatches `deploy-worker.yml` directly because it updates
+  `data/manifest.json` and the static route manifest inside its own run.
+- StockAnalysis-primary ETF details and Yahoo ETF fallback details use separate
+  retry/LKG state. Controlled proof is dispatch-only and exact-one
+  (`etf_detail:TICKER` vs `yahoo_etf_fallback:TICKER`); promotion requires a
+  natural schedule attempt 1 with a strictly advancing provider source stamp.
+  Dispatches, reruns, non-advancing candidates, and foreign-writer conflicts
+  retain the prior canonical bytes and retry lineage.
 - 2026-07-09 verification: manual YF daily all-shards run `28989900069` succeeded with `daily_all_shards=true`, `profile=daily`, `merge_existing=true`, and produced `data/yf/finance/_summary.json` with `count=1248`, `ok=1248`, `failed=0`. Follow-up data commits `3a0af30821`, `0eec550af4`, and bot manifest commit `cd5b7013c5` were pulled to main; final explicit Worker deploy `28991274708` on `cd5b7013c5` passed build/deploy/public smokes. Live Worker verification returned the same YF summary and fresh RIM inputs from `/data/computed/rim-index/inputs.json`.
 - RIM QA accepts both valid KOSPI operating states: `backlog_blocked` when no KRX bridge is available in the checkout, and `secondary_input_only` with KRX exact weights/KTS 10Y when the bridge is present.
 - YF daily, Fenok Edge daily, Fenok Edge KRX daily, and StockAnalysis daily must pass `npm --prefix 100xfenok-next run qa:fenok-edge-readiness` before committing. Scheduled Edge/KRX/YF/StockAnalysis workflows also run the strict `npm --prefix 100xfenok-next run qa:fenok-s0-daily-gated` gate directly before committing.

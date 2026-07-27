@@ -32,7 +32,7 @@ const bytes = (sourceAsOf, value = 1) => Buffer.from(`${JSON.stringify({
   value,
 }, null, 2)}\n`);
 const parse = (payloadBytes) => JSON.parse(payloadBytes.toString("utf8"));
-const makeStore = (rootPath) => new ProducerLkgStateStore({
+const makeStore = (rootPath, candidateContainsObservation = undefined) => new ProducerLkgStateStore({
   root: rootPath,
   laneId: "fixture_lane",
   publicRoot: "data/admin/fixture-lane",
@@ -42,6 +42,7 @@ const makeStore = (rootPath) => new ProducerLkgStateStore({
   progressMarker(_key, payload) {
     return payload?.source_as_of ?? null;
   },
+  ...(candidateContainsObservation ? { candidateContainsObservation } : {}),
 });
 const store = makeStore(stateRoot);
 
@@ -319,6 +320,103 @@ function v2Args(targetStore, sourceAsOf, value, currentRun, candidateBytes = nul
   });
   assert.equal(postRecoveryFailure.lkg.source_as_of, "2026-07-16");
   assert.deepEqual(fs.readFileSync(lkgPath), laterBytes, "the next failure captures the exact published fresh primary as its new LKG");
+}
+
+{
+  const distinctRoot = path.join(root, "provider-observation-distinct-payload");
+  const distinctStore = makeStore(
+    distinctRoot,
+    (candidate, provider) => candidate?.observations?.some((row) =>
+      row?.source_as_of === provider?.source_as_of && row?.value === provider?.value) === true,
+  );
+  const retainedBytes = bytes("2026-07-14", 1);
+  distinctStore.recordCandidate({
+    key: "alpha.json",
+    payloadBytes: retainedBytes,
+    canonicalRef: "data/source/alpha.json",
+    run: run("distinct-seed"),
+  });
+  distinctStore.recordFailure({
+    key: "alpha.json",
+    error: "controlled",
+    failureKind: "controlled",
+    fallbackBytes: retainedBytes,
+    canonicalRef: "data/source/alpha.json",
+    run: run("distinct-chaos"),
+  });
+  const providerBytes = bytes("2026-07-15", 2);
+  const providerPayload = parse(providerBytes);
+  const candidateBytes = Buffer.from(`${JSON.stringify({
+    ...providerPayload,
+    value: 999,
+    observations: [providerPayload],
+  }, null, 2)}\n`);
+  const currentRun = naturalRun("distinct-recovery", "2026-07-15T03:00:00Z");
+  const recovered = distinctStore.recordCandidate({
+    key: "alpha.json",
+    payloadBytes: candidateBytes,
+    canonicalRef: "data/source/alpha.json",
+    run: currentRun,
+    providerObservation: distinctStore.buildProviderObservation({
+      key: "alpha.json",
+      payloadBytes: providerBytes,
+      run: currentRun,
+    }),
+  });
+  assert.equal(recovered.accepted, true);
+  assert.notEqual(
+    recovered.state.provider_observation.payload_sha256,
+    recovered.state.current.payload_sha256,
+    "provider receipt hash must remain distinct from the merged canonical hash",
+  );
+  assert.equal(recovered.state.provider_observation.candidate_payload_sha256, recovered.state.current.payload_sha256);
+  assert.equal(distinctStore.inspectState("alpha.json").kind, "valid");
+  const distinctIndex = distinctStore.buildIndex({ keys: ["alpha.json"], run: currentRun });
+  assert.equal(distinctIndex.counts.fresh, 1, "buildIndex must retain a valid distinct provider receipt state");
+  const receiptPath = distinctStore.providerObservationPath(recovered.state.provider_observation.payload_sha256);
+  assert.deepEqual(fs.readFileSync(receiptPath), providerBytes, "provider receipt bytes are independently retained");
+  const receiptBeforeTamper = fs.readFileSync(receiptPath);
+  fs.writeFileSync(receiptPath, bytes("2026-07-15", 777));
+  assert.equal(distinctStore.inspectState("alpha.json").kind, "corrupt", "provider receipt tampering is corruption");
+  fs.writeFileSync(receiptPath, receiptBeforeTamper);
+  assert.equal(distinctStore.inspectState("alpha.json").kind, "valid");
+
+  const missingObservationBytes = Buffer.from(`${JSON.stringify({
+    ...providerPayload,
+    value: 1000,
+    observations: [],
+  }, null, 2)}\n`);
+  const rejectedRun = naturalRun("distinct-missing-observation", "2026-07-15T04:00:00Z");
+  const rejected = distinctStore.planCandidate({
+    key: "alpha.json",
+    payloadBytes: missingObservationBytes,
+    canonicalRef: "data/source/alpha.json",
+    run: rejectedRun,
+    providerObservation: distinctStore.buildProviderObservation({
+      key: "alpha.json",
+      payloadBytes: providerBytes,
+      run: rejectedRun,
+    }),
+  });
+  assert.equal(rejected.accepted, false);
+  assert.equal(rejected.reason, "provider_observation_not_contained");
+
+  const legacyRoot = path.join(root, "provider-observation-v2-legacy-inline-equivalence");
+  const legacyStore = makeStore(legacyRoot);
+  const legacyRun = naturalRun("legacy-v2-seed", "2026-07-15T05:00:00Z");
+  const legacyCommit = legacyStore.recordCandidate(v2Args(legacyStore, "2026-07-15", 3, legacyRun));
+  const legacyStatePath = path.join(legacyRoot, "keys", "alpha.json");
+  const legacyState = JSON.parse(fs.readFileSync(legacyStatePath, "utf8"));
+  delete legacyState.provider_observation.payload_ref;
+  delete legacyState.provider_observation.candidate_payload_sha256;
+  fs.writeFileSync(legacyStatePath, `${JSON.stringify(legacyState, null, 2)}\n`);
+  fs.rmSync(legacyStore.providerObservationPath(legacyCommit.state.provider_observation.payload_sha256));
+  assert.equal(
+    legacyStore.inspectState("alpha.json").kind,
+    "valid",
+    "existing v2 states whose provider and canonical hashes matched remain readable",
+  );
+  assert.equal(legacyStore.buildIndex({ keys: ["alpha.json"], run: legacyRun }).counts.fresh, 1);
 }
 
 {

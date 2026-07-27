@@ -123,6 +123,35 @@ export class ProducerLkgStateStore {
     return path.join(this.root, "promotion-contracts", key);
   }
 
+  providerObservationPath(payloadSha256) {
+    if (!validSha256(payloadSha256)) throw new Error(`invalid provider observation sha256: ${String(payloadSha256)}`);
+    return path.join(this.root, "provider-observations", `${payloadSha256}.json`);
+  }
+
+  #providerObservationRef(payloadSha256) {
+    return `${this.publicRoot}/provider-observations/${payloadSha256}.json`;
+  }
+
+  #inspectPersistedProviderPayload(key, proof) {
+    if (!Object.hasOwn(proof ?? {}, "payload_ref")) return { valid: null, legacy: true };
+    if (proof.payload_ref !== this.#providerObservationRef(proof.payload_sha256)) {
+      return { valid: false, legacy: false };
+    }
+    let payloadBytes;
+    try {
+      payloadBytes = fs.readFileSync(this.providerObservationPath(proof.payload_sha256));
+    } catch {
+      return { valid: false, legacy: false };
+    }
+    const inspected = this.inspectPayload(key, payloadBytes);
+    return {
+      valid: inspected.valid
+        && inspected.payload_sha256 === proof.payload_sha256
+        && inspected.source_as_of === proof.source_as_of,
+      legacy: false,
+    };
+  }
+
   #inspectPromotionAnchor(key) {
     let anchor;
     try {
@@ -236,6 +265,7 @@ export class ProducerLkgStateStore {
     }
     if (state.promotion_contract === PRODUCER_PROMOTION_CONTRACT_V2) {
       const proof = state.provider_observation;
+      const persistedProof = this.#inspectPersistedProviderPayload(key, proof);
       const proofRun = proof && {
         run_id: proof.run_id,
         run_attempt: proof.run_attempt,
@@ -243,6 +273,9 @@ export class ProducerLkgStateStore {
         observed_at: proof.observed_at,
       };
       const recoveryProof = state.recovery_observation;
+      const persistedRecoveryProof = recoveryProof
+        ? this.#inspectPersistedProviderPayload(key, recoveryProof)
+        : { valid: null, legacy: true };
       const recoveryProofRun = recoveryProof && {
         run_id: recoveryProof.run_id,
         run_attempt: recoveryProof.run_attempt,
@@ -254,7 +287,11 @@ export class ProducerLkgStateStore {
         || !validSha256(proof.payload_sha256)
         || !validSourceMarker(proof.source_as_of)
         || !validRun(proofRun)
-        || proof.payload_sha256 !== state.current.payload_sha256
+        || (persistedProof.legacy
+          ? proof.payload_sha256 !== state.current.payload_sha256
+          : (persistedProof.valid !== true
+            || !validSha256(proof.candidate_payload_sha256)
+            || proof.candidate_payload_sha256 !== state.current.payload_sha256))
         || proof.source_as_of !== state.current.source_as_of
         || proof.run_id !== String(state.last_run_id)
         || Number(proof.run_attempt ?? 1) !== Number(state.last_run_attempt ?? 1)
@@ -266,7 +303,9 @@ export class ProducerLkgStateStore {
           || recoveryProof?.schema_version !== PRODUCER_PROMOTION_CONTRACT_V2
           || promotionAnchor.recovery_observation_sha256 !== sha256(Buffer.from(JSON.stringify(recoveryProof)))
           || !validSha256(recoveryProof?.payload_sha256)
+          || (!persistedRecoveryProof.legacy && !validSha256(recoveryProof?.candidate_payload_sha256))
           || !validSourceMarker(recoveryProof?.source_as_of)
+          || (!persistedRecoveryProof.legacy && persistedRecoveryProof.valid !== true)
           || !validRun(recoveryProofRun)
           || recoveryProof.recovered_from_run_id !== state.recovered_from_run_id
           || state.recovery_run_id !== recoveryProof.run_id
@@ -376,6 +415,14 @@ export class ProducerLkgStateStore {
         key, payloadBytes, canonicalRef, run, providerObservation };
     }
     const prior = priorInspection.state;
+    const providerContained = provider === null || (
+      inspected.source_as_of === provider.source_as_of
+      && this.candidateContainsObservation(inspected.payload, provider.payload) === true
+    );
+    if (!providerContained && prior?.retry !== true) {
+      return { accepted: false, deferred: false, corrupt: false, reason: "provider_observation_not_contained",
+        key, payloadBytes, canonicalRef, run, providerObservation, inspected, provider, prior };
+    }
     if (prior?.retry === true && !isNaturalRun(run)) {
       if (prior.resolution_state === "lkg_primary") {
         const retained = this.validRetainedLkg(key, prior);
@@ -394,8 +441,7 @@ export class ProducerLkgStateStore {
           error: `retained LKG is invalid: ${retained.reason}`, key, payloadBytes, canonicalRef, run, providerObservation };
       }
       if (provider !== null) {
-        if (inspected.source_as_of !== provider.source_as_of
-          || this.candidateContainsObservation(inspected.payload, provider.payload) !== true) {
+        if (!providerContained) {
           return { accepted: false, deferred: true, corrupt: false, reason: "foreign_writer_conflict",
             key, payloadBytes, canonicalRef, run, providerObservation, inspected, provider, prior };
         }
@@ -461,10 +507,15 @@ export class ProducerLkgStateStore {
     const recoveredAt = prior?.retry === true && recoveredFromRunId
       ? run.observed_at
       : prior?.recovered_at ?? null;
+    const providerObservationRef = providerObservation
+      ? this.#providerObservationRef(providerObservation.payload_sha256)
+      : null;
     const recoveryObservation = prior?.retry === true && recoveredFromRunId && providerObservation
       ? {
           schema_version: providerObservation.schema_version,
           payload_sha256: providerObservation.payload_sha256,
+          candidate_payload_sha256: inspected.payload_sha256,
+          payload_ref: providerObservationRef,
           source_as_of: providerObservation.source_as_of,
           run_id: providerObservation.run_id,
           run_attempt: providerObservation.run_attempt,
@@ -474,6 +525,17 @@ export class ProducerLkgStateStore {
         }
       : prior?.recovery_observation ?? null;
     const preserveRetainedLkg = prior?.retry === true && prior?.resolution_state === "lkg_primary";
+    if (providerObservation) {
+      const receiptPath = this.providerObservationPath(providerObservation.payload_sha256);
+      if (fs.existsSync(receiptPath)) {
+        const existing = fs.readFileSync(receiptPath);
+        if (!existing.equals(providerObservation.payloadBytes)) {
+          throw new Error(`${key}: provider observation receipt hash collision`);
+        }
+      } else {
+        writeBytesAtomic(receiptPath, providerObservation.payloadBytes);
+      }
+    }
     if (!preserveRetainedLkg) writeBytesAtomic(this.lkgPath(key), payloadBytes);
     const lkg = preserveRetainedLkg
       ? { ...prior.lkg }
@@ -512,6 +574,8 @@ export class ProducerLkgStateStore {
       state.provider_observation = {
         schema_version: providerObservation.schema_version,
         payload_sha256: providerObservation.payload_sha256,
+        candidate_payload_sha256: inspected.payload_sha256,
+        payload_ref: providerObservationRef,
         source_as_of: providerObservation.source_as_of,
         run_id: providerObservation.run_id,
         run_attempt: providerObservation.run_attempt,

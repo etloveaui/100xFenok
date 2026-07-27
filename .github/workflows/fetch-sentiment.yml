@@ -22,7 +22,10 @@ permissions:
   actions: write
 
 concurrency:
-  group: fenok-data-writer-${{ github.ref }}
+  # This lane owns disjoint sentiment paths and rebases before push. Keeping
+  # acquisition outside the one-pending global writer group prevents the
+  # 22:00 sentiment/YF/US-indices schedules from cancelling one another.
+  group: fenok-data-writer-sentiment-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:

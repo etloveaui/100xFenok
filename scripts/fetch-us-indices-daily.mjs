@@ -167,6 +167,17 @@ function seriesBytes(rows) {
   return Buffer.from(`${JSON.stringify(rows, null, 2)}\n`);
 }
 
+export function seriesContainsProviderObservation(candidate, provider) {
+  if (!Array.isArray(candidate) || !Array.isArray(provider)) return false;
+  const candidateByDate = new Map(candidate.map((row) => [row.date, row]));
+  return provider.every((observation) => {
+    const retained = candidateByDate.get(observation.date);
+    return validRow(retained)
+      && validRow(observation)
+      && withinParityTolerance(retained.value, observation.value);
+  });
+}
+
 function stateStore(root) {
   return new ProducerLkgStateStore({
     root,
@@ -174,6 +185,7 @@ function stateStore(root) {
     publicRoot: "data/admin/us-indices-daily",
     validatePayload: (_key, payload) => Array.isArray(payload) && payload.length > 0 && payload.every(validRow),
     progressMarker: (_key, payload) => payload.at(-1)?.date ?? null,
+    candidateContainsObservation: seriesContainsProviderObservation,
   });
 }
 
@@ -303,7 +315,7 @@ export function writeUsIndicesGitHubOutputs(result, outputPath = process.env.GIT
   fs.appendFileSync(outputPath, `rollback_failed=${result?.rollback_failed === true}\n`);
 }
 
-function transactionPaths({ canonicalRoot, publicRoot, stateRoot, persistencePath }) {
+function transactionPaths({ canonicalRoot, publicRoot, stateRoot, persistencePath, candidates = [] }) {
   return [
     ...SERIES.flatMap(({ key }) => [
       path.join(canonicalRoot, `${key}.json`),
@@ -312,6 +324,10 @@ function transactionPaths({ canonicalRoot, publicRoot, stateRoot, persistencePat
       path.join(stateRoot, "lkg", `${key}.json`),
       path.join(stateRoot, "promotion-contracts", `${key}.json`),
     ]),
+    ...candidates
+      .map(({ candidate }) => candidate?.providerObservation?.payload_sha256)
+      .filter((payloadSha256) => typeof payloadSha256 === "string")
+      .map((payloadSha256) => path.join(stateRoot, "provider-observations", `${payloadSha256}.json`)),
     path.join(stateRoot, "index.json"),
     persistencePath,
   ];
@@ -489,14 +505,14 @@ export async function runUsIndicesDaily({
       const retained = retainLatestSeriesRows(merged);
       persistenceStates[result.descriptor.key] = retained.persistence_state;
       const payloadBytes = seriesBytes(retained.rows);
+      const providerBytes = seriesBytes(result.rows);
       const candidate = store.planCandidate({
         key,
         payloadBytes,
         canonicalRef: `data/indices/${key}`,
         run,
-        providerObservation: store.buildProviderObservation({ key, payloadBytes, run }),
+        providerObservation: store.buildProviderObservation({ key, payloadBytes: providerBytes, run }),
       });
-      if (!candidate.accepted) throw new Error(`${key}: live candidate rejected: ${candidate.reason}`);
       candidates.push({ candidate, canonicalPath, publicPath, bytes: payloadBytes });
     }
   } catch (error) {
@@ -537,6 +553,42 @@ export async function runUsIndicesDaily({
     };
   }
 
+  const rejectedCandidates = candidates.filter(({ candidate }) => !candidate.accepted);
+  if (rejectedCandidates.length > 0) {
+    const allDeferred = rejectedCandidates.every(({ candidate }) => candidate.deferred === true);
+    if (!allDeferred) {
+      const rejected = rejectedCandidates[0].candidate;
+      return recordPipelineFailure(new Error(`${rejected.key}: live candidate rejected: ${rejected.reason}`));
+    }
+    const row = buildAttemptRow({ laneId: LANE_ID, memberId: null, tuple: worst, attemptId, observedAt });
+    writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
+    let deferredIndex;
+    try {
+      deferredIndex = withFileRollbackFn(
+        transactionPaths({ canonicalRoot, publicRoot, stateRoot, persistencePath }),
+        () => {
+          for (const { candidate } of rejectedCandidates) store.recordPromotionDeferral(candidate);
+          return buildIndexFn(store, keys, run);
+        },
+      );
+    } catch (error) {
+      return recordPipelineFailure(error, { rollbackFailed: error?.rollbackFailed === true });
+    }
+    return {
+      ok: false,
+      updated: false,
+      degraded: true,
+      corrupt: false,
+      exitCode: 0,
+      row,
+      reason: rejectedCandidates[0].candidate.reason,
+      index: deferredIndex,
+      persistence: null,
+      providerRevisions,
+      rollback_failed: false,
+    };
+  }
+
   const row = buildAttemptRow({ laneId: LANE_ID, memberId: null, tuple: worst, attemptId, observedAt });
   writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
   const persistence = {
@@ -552,7 +604,7 @@ export async function runUsIndicesDaily({
   let index;
   try {
     index = withFileRollbackFn(
-      transactionPaths({ canonicalRoot, publicRoot, stateRoot, persistencePath }),
+      transactionPaths({ canonicalRoot, publicRoot, stateRoot, persistencePath, candidates }),
       () => {
         writeTargetsAtomic([
           ...candidates.flatMap(({ canonicalPath, publicPath, bytes }) => [
