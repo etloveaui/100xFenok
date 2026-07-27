@@ -1,29 +1,29 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-07-25T01:12:56Z",
+  "generated_at": "2026-07-27T17:39:30Z",
   "counts": {
     "tracked": 118,
-    "fresh": 86,
-    "lkg": 32,
+    "fresh": 84,
+    "lkg": 34,
     "unavailable": 0,
-    "retry": 32,
-    "failed": 0,
+    "retry": 34,
+    "failed": 2,
     "recovered": 0
   },
   "counts_by_kind": {
     "stock": {
       "tracked": 49,
-      "fresh": 17,
-      "lkg": 32,
+      "fresh": 16,
+      "lkg": 33,
       "unavailable": 0,
-      "retry": 32
+      "retry": 33
     },
     "financial": {
       "tracked": 43,
-      "fresh": 43,
-      "lkg": 0,
+      "fresh": 42,
+      "lkg": 1,
       "unavailable": 0,
-      "retry": 0
+      "retry": 1
     },
     "surface": {
       "tracked": 25,
@@ -41,6 +41,10 @@
     }
   },
   "retry_artifacts": [
+    {
+      "artifact_kind": "stock",
+      "entity": "AAPL"
+    },
     {
       "artifact_kind": "stock",
       "entity": "ABBV"
@@ -168,9 +172,23 @@
     {
       "artifact_kind": "stock",
       "entity": "XOM"
+    },
+    {
+      "artifact_kind": "financial",
+      "entity": "AAPL"
     }
   ],
   "degraded_details": [
+    {
+      "artifact_kind": "stock",
+      "entity": "AAPL",
+      "resolution_state": "lkg_primary",
+      "payload_sha256": "357dd603b2f34c676b662527fbdaa4fba7559618bc358e834ee85de5d5cf7d65",
+      "source_as_of": "2026-07-23T20:00:00Z",
+      "failure_run_id": "30290132699",
+      "failure_observed_at": "2026-07-27T17:39:30Z",
+      "data_loss": false
+    },
     {
       "artifact_kind": "stock",
       "entity": "ABBV",
@@ -490,9 +508,20 @@
       "failure_run_id": "29624561317",
       "failure_observed_at": "2026-07-18T01:18:00Z",
       "data_loss": false
+    },
+    {
+      "artifact_kind": "financial",
+      "entity": "AAPL",
+      "resolution_state": "lkg_primary",
+      "payload_sha256": "31ef0fbe674218caa6f4f59d810b67ee87f25f6dc69ac984f21af00cca0cbcd5",
+      "source_as_of": "2026-03-28",
+      "failure_run_id": "30290132699",
+      "failure_observed_at": "2026-07-27T17:39:30Z",
+      "data_loss": false
     }
   ],
   "degraded_tickers": [
+    "AAPL",
     "ABBV",
     "AMAT",
     "AMD",
@@ -533,142 +562,31 @@
   "recovered_surfaces": [],
   "recovered_universes": [],
   "current_attempt": {
-    "run_id": "30137985555",
+    "run_id": "30290132699",
     "run_attempt": 1,
-    "event_name": "schedule",
-    "schedule": "50 23 * * 1-5",
-    "natural": true,
-    "attempted": 25,
-    "successes": 25,
-    "failed": 0,
+    "event_name": "workflow_dispatch",
+    "schedule": "",
+    "natural": false,
+    "attempted": 2,
+    "successes": 0,
+    "failed": 2,
     "recovered": 0,
-    "errors": [],
-    "success_rows": [
+    "errors": [
       {
-        "artifact_kind": "surface",
-        "entity": "actions_recent",
-        "outcome": "fresh"
+        "artifact_kind": "stock",
+        "entity": "AAPL",
+        "error": "RuntimeError: controlled failure injection for stock:AAPL",
+        "controlled": true,
+        "data_loss": false
       },
       {
-        "artifact_kind": "surface",
-        "entity": "actions_splits",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "earnings_calendar",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "etf_provider_blackrock",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "etf_provider_proshares",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "etf_screener",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "industries",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "industries_all",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "industry_semiconductors",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "ipos_calendar",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "ipos_filings",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "ipos_recent",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "ipos_statistics",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "ipos_withdrawn",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "list_bitcoin_etfs",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_active",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_afterhours",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_gainers",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_gainers_month",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_gainers_week",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_losers",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_losers_ytd",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_premarket",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "new_etfs",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "sector_technology",
-        "outcome": "fresh"
+        "artifact_kind": "financial",
+        "entity": "AAPL",
+        "error": "RuntimeError: controlled failure injection for financial:AAPL",
+        "controlled": true,
+        "data_loss": false
       }
-    ]
+    ],
+    "success_rows": []
   }
 }
