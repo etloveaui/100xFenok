@@ -5,25 +5,22 @@
     {
       "lane_id": "yahoo_etf_fallback",
       "member_id": null,
-      "attempt_id": "stockanalysis-yahoo-30294312998-1",
-      "observed_at": "2026-07-27T18:35:12Z",
-      "execution": "returned",
-      "exception_kind": null,
+      "attempt_id": "stockanalysis-yahoo-30294770417-1",
+      "observed_at": "2026-07-27T18:41:14Z",
+      "execution": "threw",
+      "exception_kind": "unexpected",
       "http_status": null,
       "auth": "not_applicable",
       "rate_limited": false,
-      "decode": "ok",
-      "payload": "non_empty",
-      "assertions": [
-        {
-          "id": "yahoo_etf_identity",
-          "passed": true
-        }
-      ],
+      "decode": "not_attempted",
+      "payload": "not_available",
+      "assertions": [],
       "candidates": 1,
       "retry_count": 0,
-      "latency_ms": 1079,
-      "outcome": "success"
+      "latency_ms": 0,
+      "outcome": "error",
+      "failure_entity": "TQQQ",
+      "failure_detail": "RuntimeError: controlled failure injection for yahoo_etf_fallback:TQQQ"
     }
   ]
 }
