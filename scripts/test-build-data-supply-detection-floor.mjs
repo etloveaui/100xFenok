@@ -481,6 +481,20 @@ function runConfigAndFixtureChecks() {
   assert.equal(damodaran.producer_members[0].workflow, ".github/workflows/fetch-damodaran-shadow.yml");
   assert.deepEqual(damodaran.producer_members[0].schedule, ["17 11 * * 6"]);
   assert.equal(damodaran.producer_members[0].cadence_calendar, "utc");
+  assert.equal(damodaran.producer_members[0].activated_at, "2026-07-19T15:05:41Z");
+  assert.equal(damodaran.endpoint_contract.transport, "library");
+  assert.deepEqual(damodaran.endpoint_contract.assertions, [{
+    id: "owner_guard_match",
+    kind: "exact",
+    pointer: "/status",
+    value: "match",
+  }]);
+  const activatedOecdCli = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "oecd_cli");
+  assert.equal(activatedOecdCli.producer_members[0].activated_at, "2026-07-20T14:20:11Z");
+  const stockFinancialLane = DATA_SUPPLY_DETECTION_CONFIG.lanes
+    .find((item) => item.id === "stockanalysis_stock_financial");
+  assert.equal(stockFinancialLane.endpoint_contract.transport, "library");
+  assert.equal(Object.hasOwn(stockFinancialLane.producer_members[0], "activated_at"), false);
   const slickcharts = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "slickcharts");
   assert.deepEqual(slickcharts.producer_members.map((item) => item.id), ["daily", "weekly", "monthly", "history", "symbols"]);
   assert.deepEqual(
@@ -736,6 +750,9 @@ function runConfigAndFixtureChecks() {
     (value) => { const member = value.lanes.find((item) => item.id === "benchmarks").producer_members[0]; member.artifact_contracts[0].assertions = member.artifact_contracts[0].assertions.filter((row) => row.pointer !== "/metadata/update_frequency"); },
     (value) => { const member = value.lanes.find((item) => item.id === "benchmarks").producer_members[0]; member.artifact_contracts[0].assertions.find((row) => row.pointer === "/metadata/update_frequency").value = "monthly"; },
     (value) => { const member = value.lanes.find((item) => item.id === "global_scouter").producer_members[0]; member.schedule = ["0 0 * * 1"]; member.cadence_calendar = "utc"; },
+    (value) => {
+      value.lanes.find((item) => item.id === "damodaran").producer_members[0].activated_at = "2026-02-31T00:00:00Z";
+    },
     (value) => { value.lanes[0].enforcement = "invalid"; },
     (value) => { value.lanes[0].kpi_required = false; },
     (value) => { value.lanes[0].enforcement = "shadow"; value.lanes[0].kpi_required = false; },

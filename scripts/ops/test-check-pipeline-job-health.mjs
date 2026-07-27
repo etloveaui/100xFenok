@@ -21,7 +21,11 @@ import {
   isQueueEvictedRun,
   mergeWorkflowRunBatches,
   parseWorkflowRunsPayload,
+  runtimeSlotKey,
 } from "./check-pipeline-job-health.mjs";
+
+assert.equal(runtimeSlotKey("update-manifest.yml", "30 2 * * *", null), null);
+assert.equal(runtimeSlotKey("update-manifest.yml", "30 2 * * *", ""), null);
 
 // Runs are most-recent-first, matching the GitHub API `workflow_runs` ordering.
 const F = (id) => ({ id, conclusion: "failure", html_url: `https://gh/run/${id}`, run_started_at: `t${id}` });
@@ -225,6 +229,16 @@ function writeWorkflow(root, file, source) {
         { workflow: ".github/workflows/overdue.yml", member_id: "overdue_member", cron: "0 2 * * *", state: "suspected_skip", expected_at: "2026-07-22T02:00:00.000Z" },
         { workflow: ".github/workflows/update-manifest.yml", member_id: "recovered_member", cron: "30 2 * * *", state: "attempt_gap", expected_at: "2026-07-21T02:30:00.000Z" },
       ],
+      pre_activation_members: [
+        {
+          lane_id: "unknown_lane",
+          member_id: "unknown_member",
+          workflow: ".github/workflows/unknown.yml",
+          cron: "0 3 * * *",
+          activated_at: "2026-07-23T00:00:00Z",
+          first_eligible_at: "2026-07-24T03:00:00.000Z",
+        },
+      ],
     },
     kpiRuntime: {
       slots: { missed_slot_keys: [recoveredSlot], satisfied_slot_keys: [recoverySlot] },
@@ -240,11 +254,11 @@ function writeWorkflow(root, file, source) {
     calendars,
   });
   assert.deepEqual(projection.state_counts, {
-    not_due: 1,
+    not_due: 2,
     overdue: 1,
     recovered: 1,
     no_declaration: 1,
-    unknown: 1,
+    unknown: 0,
   });
   assert.deepEqual(
     projection.workflows.map((row) => [row.file, row.state, row.evidence]),
@@ -253,7 +267,7 @@ function writeWorkflow(root, file, source) {
       ["overdue.yml", "overdue", ["suspected_skip"]],
       ["update-manifest.yml", "recovered", ["attempt_gap"]],
       ["no-declaration.yml", "no_declaration", []],
-      ["unknown.yml", "unknown", []],
+      ["unknown.yml", "not_due", []],
     ],
   );
   const joined = attachWorkflowCadence([{ file: "overdue.yml", label: "Overdue", status: "ok" }], projection);

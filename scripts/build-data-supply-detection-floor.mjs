@@ -728,23 +728,52 @@ function graceElapsed(occurrenceEpoch, nowEpoch, grace, calendar) {
   return now.hour * 60 + now.minute >= occurrence.hour * 60 + occurrence.minute;
 }
 
-function latestDueOccurrence(schedule, nowEpoch, calendar, calendars) {
+function firstEligibleOccurrence(schedule, activatedAtEpoch, calendar) {
+  const parsed = parseCron(schedule.cron);
+  let cursor = Math.ceil(activatedAtEpoch / 60_000) * 60_000;
+  const ceiling = cursor + 400 * 86_400_000;
+  while (cursor <= ceiling) {
+    if (cronMatches(cursor, parsed, calendar)) return cursor;
+    cursor += 60_000;
+  }
+  fail("calendar_error", `no activation-eligible occurrence found for ${schedule.id}`);
+}
+
+function latestDueOccurrence(
+  schedule,
+  nowEpoch,
+  calendar,
+  calendars,
+  activatedAtEpoch = null,
+) {
   let cache = scheduleOccurrenceCache.get(calendars);
   if (!cache) {
     cache = new Map();
     scheduleOccurrenceCache.set(calendars, cache);
   }
-  const key = `${schedule.id}:${nowEpoch}`;
+  const key = `${schedule.id}:${nowEpoch}:${activatedAtEpoch ?? "unbounded"}`;
   if (cache.has(key)) return cache.get(key);
   const parsed = parseCron(schedule.cron);
   let cursor = Math.floor(nowEpoch / 60_000) * 60_000;
-  const floor = cursor - 400 * 86_400_000;
+  const searchFloor = cursor - 400 * 86_400_000;
+  const floor = activatedAtEpoch === null
+    ? searchFloor
+    : Math.max(searchFloor, Math.ceil(activatedAtEpoch / 60_000) * 60_000);
   while (cursor >= floor) {
     if (cronMatches(cursor, parsed, calendar) && graceElapsed(cursor, nowEpoch, schedule.grace, calendar)) {
       cache.set(key, cursor);
       return cursor;
     }
     cursor -= 60_000;
+  }
+  if (activatedAtEpoch !== null) {
+    const firstEligibleEpoch = firstEligibleOccurrence(schedule, activatedAtEpoch, calendar);
+    if (nowEpoch >= firstEligibleEpoch) {
+      cache.set(key, firstEligibleEpoch);
+      return firstEligibleEpoch;
+    }
+    cache.set(key, null);
+    return null;
   }
   fail("calendar_error", `no due occurrence found for ${schedule.id}`);
 }
@@ -781,6 +810,7 @@ export function buildFetchCronAttemptCoverage({
   const evaluatedAt = report?.generated_at ?? nowValue;
   const now = strictUtc(evaluatedAt, report ? "report.generated_at" : "nowValue");
   const rows = [];
+  const preActivationMembers = [];
   let scheduledMembers = 0;
 
   config.lanes.forEach((lane, laneIndex) => {
@@ -802,6 +832,9 @@ export function buildFetchCronAttemptCoverage({
         ? null
         : strictUtc(endpoint.observed_at, `${lane.id}:${member.id}.observed_at`).epoch;
       const calendar = calendarById(calendars, member.cadence_calendar);
+      const activatedAt = member.activated_at === undefined
+        ? null
+        : strictUtc(member.activated_at, `${lane.id}:${member.id}.activated_at`);
 
       for (const cron of member.schedule) {
         const matches = calendars.schedules.filter((schedule) => (
@@ -811,7 +844,27 @@ export function buildFetchCronAttemptCoverage({
           fail("calendar_error", `cron ${cron} must have exactly one grace contract`);
         }
         const schedule = matches[0];
-        const expectedEpoch = latestDueOccurrence(schedule, now.epoch, calendar, calendars);
+        const firstEligibleEpoch = activatedAt === null
+          ? null
+          : firstEligibleOccurrence(schedule, activatedAt.epoch, calendar);
+        const expectedEpoch = latestDueOccurrence(
+          schedule,
+          now.epoch,
+          calendar,
+          calendars,
+          activatedAt?.epoch ?? null,
+        );
+        if (expectedEpoch === null) {
+          preActivationMembers.push({
+            lane_id: lane.id,
+            member_id: member.id,
+            workflow: member.workflow,
+            cron,
+            activated_at: activatedAt.value,
+            first_eligible_at: new Date(firstEligibleEpoch).toISOString(),
+          });
+          continue;
+        }
         rows.push({
           lane_id: lane.id,
           member_id: member.id,
@@ -861,6 +914,7 @@ export function buildFetchCronAttemptCoverage({
     status: counts.suspected_skips > 0 || counts.attempt_gaps > 0 ? "warning" : "ready",
     deployment_blocking: false,
     counts,
+    pre_activation_members: preActivationMembers,
     rows,
   };
 }

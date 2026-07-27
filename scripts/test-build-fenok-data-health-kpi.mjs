@@ -1542,17 +1542,45 @@ console.log("# KPI v2 runtime self-proof fixtures");
   assert.equal(rootCronShadow.deployment_blocking, false);
   assert.deepEqual(rootCronShadow.counts, {
     scheduled_members: 29,
-    schedule_bindings: 32,
-    observed: 29,
+    schedule_bindings: 30,
+    observed: 27,
     suspected_skips: 3,
     attempt_gaps: 0,
   });
-  assert.equal(rootCronShadow.rows.length, 32);
+  assert.equal(rootCronShadow.rows.length, 30);
+  assert.deepEqual(publicCronShadow.pre_activation_lane_ids, ["damodaran", "oecd_cli"]);
   assert.deepEqual(publicCronShadow.suspected_skip_lane_ids, ["apewisdom_attention", "finra_ats_weekly", "gdelt_news_tone"]);
   assert.deepEqual(publicCronShadow.attempt_gap_lane_ids, []);
   assert.equal(Object.hasOwn(publicCronShadow, "rows"), false);
   assert.equal(JSON.stringify(publicCronShadow).includes(".github/workflows/"), false);
   assert.equal(JSON.stringify(publicCronShadow).includes("43 14 * * *"), false);
+  const publicPreActivationProbe = projectRuntime({
+    ...root.runtime,
+    fetch_cron_skip_detection: {
+      ...rootCronShadow,
+      pre_activation_members: [
+        {
+          lane_id: "oecd_cli",
+          member_id: "oecd_cli",
+          workflow: ".github/workflows/fetch-oecd-cli.yml",
+          cron: "0 8 1 * *",
+          activated_at: "2026-07-20T14:20:11Z",
+          first_eligible_at: "2026-08-01T08:00:00.000Z",
+        },
+        {
+          lane_id: "finra_ats_weekly",
+          member_id: "finra_ats",
+          workflow: ".github/workflows/fetch-finra-ats-weekly.yml",
+          cron: "43 14 * * *",
+          activated_at: "2026-07-20T00:00:00Z",
+          first_eligible_at: "2026-07-21T14:43:00.000Z",
+        },
+      ],
+    },
+  }, now).fetch_cron_skip_detection;
+  assert.deepEqual(publicPreActivationProbe.pre_activation_lane_ids, ["oecd_cli"]);
+  assert.equal(publicPreActivationProbe.pre_activation_lane_ids.includes("finra_ats_weekly"), false);
+  assert.equal(JSON.stringify(publicPreActivationProbe).includes(".github/workflows/"), false);
   assert.equal(root.deployment_integrity.blockers.some((item) => /fetch_cron/i.test(`${item.lane_id}/${item.check_id}`)), false);
 
   const malformed = mkTmp("detection-floor-live-malformed-json");

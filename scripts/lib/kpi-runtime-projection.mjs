@@ -14,12 +14,19 @@
 
 import { PUBLIC_RUNTIME_DENY_KEYS } from "./kpi-contract-constants.mjs";
 import { classifyRuntimeSlotRecoveries, classifyRuntimeSlots } from "./kpi-runtime-slots.mjs";
+import { LANE_REGISTRY } from "./lane-registry.mjs";
 
 export const PUBLIC_PROJECTION_VERSION = "kpi_runtime_projection.v2";
 
 // Canonical deny-key list lives in kpi-contract-constants.mjs; re-exported here
 // for existing importers of the projection module.
 export { PUBLIC_RUNTIME_DENY_KEYS };
+
+const PUBLIC_PRE_ACTIVATION_LANE_IDS = new Set(
+  LANE_REGISTRY.lanes
+    .filter((lane) => lane.public_mirror_allowed !== false)
+    .map((lane) => lane.id),
+);
 
 function deepClone(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -90,6 +97,9 @@ function ageHours(fromIso, nowIso) {
 
 function projectFetchCronSkipDetection(diagnostic) {
   const rows = Array.isArray(diagnostic?.rows) ? diagnostic.rows : [];
+  const preActivationMembers = Array.isArray(diagnostic?.pre_activation_members)
+    ? diagnostic.pre_activation_members
+    : [];
   const laneIds = (state) => [...new Set(rows
     .filter((row) => row?.state === state && typeof row?.lane_id === "string")
     .map((row) => row.lane_id))].sort();
@@ -100,6 +110,10 @@ function projectFetchCronSkipDetection(diagnostic) {
     status: diagnostic?.status ?? null,
     deployment_blocking: diagnostic?.deployment_blocking === true,
     counts: deepClone(diagnostic?.counts ?? null),
+    pre_activation_lane_ids: [...new Set(preActivationMembers
+      .filter((row) => typeof row?.lane_id === "string"
+        && PUBLIC_PRE_ACTIVATION_LANE_IDS.has(row.lane_id))
+      .map((row) => row.lane_id))].sort(),
     suspected_skip_lane_ids: laneIds("suspected_skip"),
     attempt_gap_lane_ids: laneIds("attempt_gap"),
   };

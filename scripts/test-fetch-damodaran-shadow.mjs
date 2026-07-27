@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import * as DamodaranProducer from "./fetch-damodaran-shadow.mjs";
+import { validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import { buildLaneCommitManifest } from "./build-lane-commit-manifest.mjs";
 import { LANE_REGISTRY, registryLaneById } from "./lib/lane-registry.mjs";
 import {
@@ -79,9 +80,54 @@ function ownerBundle() {
   };
 }
 
+function spawnFixture({
+  status = 0,
+  mismatch = false,
+  noBundle = false,
+  error = null,
+  throws = null,
+} = {}) {
+  return (_command, args) => {
+    if (throws) throw throws;
+    const outputDir = args[args.indexOf("--output-dir") + 1];
+    const bundlePath = args[args.indexOf("--bundle") + 1];
+    if (!noBundle) {
+      const bundle = ownerBundle();
+      fs.mkdirSync(outputDir, { recursive: true });
+      for (const [index, file] of FILE_NAMES.entries()) {
+        const payload = mismatch && index === 0
+          ? { ...bundle.payloads[file], value: 999 }
+          : bundle.payloads[file];
+        fs.writeFileSync(path.join(outputDir, file), `${JSON.stringify(payload, null, 2)}\n`);
+      }
+      fs.writeFileSync(bundlePath, `${JSON.stringify(bundle, null, 2)}\n`);
+    }
+    return { status, signal: null, stderr: "", error };
+  };
+}
+
+function runFixture(options = {}) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "damodaran-run-test-"));
+  const reportPath = path.join(root, "owner-guard.json");
+  const attemptShardPath = path.join(root, "damodaran.json");
+  const canonicalRoot = path.join(root, "canonical");
+  let tick = 0;
+  const run = () => DamodaranProducer.runDamodaranShadow({
+    reportPath,
+    attemptShardPath,
+    canonicalRoot,
+    spawn: spawnFixture(options),
+    observedAt: "2026-07-27T01:02:03Z",
+    attemptId: "damodaran-fixture-attempt",
+    now: () => 1_000 + tick++ * 250,
+  });
+  return { root, reportPath, attemptShardPath, canonicalRoot, run };
+}
+
 {
   assert.equal(typeof DamodaranProducer.guardProducedFiles, "function", "owner guard must be exported");
   assert.equal(typeof DamodaranProducer.promoteProducedFiles, "function", "guarded promotion must be exported");
+  assert.equal(typeof DamodaranProducer.runDamodaranShadow, "function", "attempt-writing runner must be exported");
   assert.equal(DamodaranProducer.SCHEMA_VERSION, "damodaran-owner-guard/v1");
 
   const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "damodaran-owner-test-"));
@@ -129,6 +175,79 @@ function ownerBundle() {
 }
 
 {
+  const fixtureRun = runFixture();
+  const result = fixtureRun.run();
+  assert.equal(result.exitCode, 0);
+  assert.equal(result.report.status, "match");
+  assert.deepStrictEqual(result.row.assertions, [{ id: "owner_guard_match", passed: true }]);
+  assert.equal(result.row.execution, "returned");
+  assert.equal(result.row.outcome, "success");
+  assert.equal(result.row.candidates, 6);
+  assert.equal(result.row.latency_ms, 250);
+  assert.equal(
+    fs.readFileSync(fixtureRun.reportPath, "utf8"),
+    `${JSON.stringify(result.report, null, 2)}\n`,
+    "attempt evidence must not change owner-guard serialization",
+  );
+  const shard = JSON.parse(fs.readFileSync(fixtureRun.attemptShardPath, "utf8"));
+  assert.equal(validateAttemptShard(shard, "damodaran"), true);
+  fs.rmSync(fixtureRun.root, { recursive: true, force: true });
+}
+
+{
+  const fixtureRun = runFixture({ mismatch: true });
+  fs.mkdirSync(fixtureRun.canonicalRoot, { recursive: true });
+  fs.writeFileSync(path.join(fixtureRun.canonicalRoot, FILE_NAMES[0]), '{"sentinel":"keep"}\n');
+  const result = fixtureRun.run();
+  assert.equal(result.exitCode, 2);
+  assert.equal(result.report.status, "mismatch");
+  assert.deepStrictEqual(result.row.assertions, [{ id: "owner_guard_match", passed: false }]);
+  assert.equal(result.row.outcome, "success");
+  assert.deepStrictEqual(
+    JSON.parse(fs.readFileSync(path.join(fixtureRun.canonicalRoot, FILE_NAMES[0]), "utf8")),
+    { sentinel: "keep" },
+  );
+  fs.rmSync(fixtureRun.root, { recursive: true, force: true });
+}
+
+{
+  const fixtureRun = runFixture({ status: 1, noBundle: true });
+  const result = fixtureRun.run();
+  assert.equal(result.exitCode, 1);
+  assert.equal(result.row.execution, "returned");
+  assert.equal(result.row.outcome, "error");
+  assert.equal(Object.hasOwn(result.row, "failure_entity"), false);
+  assert.equal(Object.hasOwn(result.row, "failure_detail"), false);
+  fs.rmSync(fixtureRun.root, { recursive: true, force: true });
+}
+
+{
+  const fixtureRun = runFixture({
+    status: null,
+    noBundle: true,
+    error: new Error("converter spawn failed at https://example.invalid/private?token=secret"),
+  });
+  const result = fixtureRun.run();
+  assert.equal(result.exitCode, 1);
+  assert.equal(result.row.execution, "threw");
+  assert.equal(result.row.exception_kind, "unexpected");
+  assert.equal(result.row.failure_entity, "damodaran_converter");
+  assert.match(result.row.failure_detail, /^Error:/);
+  assert.equal(result.row.failure_detail.includes("secret"), false);
+  fs.rmSync(fixtureRun.root, { recursive: true, force: true });
+}
+
+{
+  const fixtureRun = runFixture({ throws: new Error("owner guard exploded") });
+  assert.throws(fixtureRun.run, /owner guard exploded/);
+  const shard = JSON.parse(fs.readFileSync(fixtureRun.attemptShardPath, "utf8"));
+  assert.equal(validateAttemptShard(shard, "damodaran"), true);
+  assert.equal(shard.attempts[0].execution, "threw");
+  assert.equal(shard.attempts[0].failure_entity, "damodaran_owner_guard");
+  fs.rmSync(fixtureRun.root, { recursive: true, force: true });
+}
+
+{
   const workflowPath = path.join(REPO_ROOT, ".github", "workflows", "fetch-damodaran-shadow.yml");
   const workflow = fs.readFileSync(workflowPath, "utf8");
 
@@ -146,8 +265,21 @@ function ownerBundle() {
   assert.doesNotMatch(workflow, /rsync[^\n]+--delete[^\n]+data\/damodaran\//);
   assert.match(
     workflow,
+    /scripts\/stage-lane-manifest\.sh[\s\\]+--workflow \.github\/workflows\/fetch-damodaran-shadow\.yml[\s\\]+--stage always_if_exists/,
+  );
+  assert.match(
+    workflow,
     /scripts\/stage-lane-manifest\.sh[\s\\]+--workflow \.github\/workflows\/fetch-damodaran-shadow\.yml[\s\\]+--stage required_on_success/,
   );
+  assert.match(workflow, /id:\s*fetch/);
+  assert.match(workflow, /id:\s*mirror/);
+  assert.match(workflow, /FETCH_OUTCOME:\s*\$\{\{ steps\.fetch\.outcome \}\}/);
+  assert.match(workflow, /MIRROR_OUTCOME:\s*\$\{\{ steps\.mirror\.outcome \}\}/);
+  assert.match(
+    workflow,
+    /if \[\[ "\$FETCH_OUTCOME" == "success" && "\$MIRROR_OUTCOME" == "success" \]\]; then[\s\S]+--stage required_on_success/,
+  );
+  assert.match(workflow, /if:\s*\$\{\{ always\(\) \}\}[\s\S]+--stage always_if_exists/);
   assert.doesNotMatch(workflow, /continue-on-error:/);
   assert.doesNotMatch(workflow, /git add/);
   assert.match(workflow, /PUBLISHED=false/);
@@ -168,11 +300,20 @@ function ownerBundle() {
   });
   assert.deepStrictEqual(lane.roots.canonical_outputs, DamodaranProducer.CANONICAL_RELATIVE_PATHS);
   assert.deepStrictEqual(lane.roots.public_mirror, DamodaranProducer.PUBLIC_MIRROR_RELATIVE_PATHS);
+  assert.equal(
+    lane.roots.detection_attempt,
+    "data/admin/data-supply-state/detection-attempts/damodaran.json",
+  );
+  assert.equal(lane.commit_shards.includes(lane.roots.detection_attempt), true);
 
   const manifest = buildLaneCommitManifest(LANE_REGISTRY);
   const policy = manifest.workflows[".github/workflows/fetch-damodaran-shadow.yml"];
   assert.deepStrictEqual(policy.lanes, ["damodaran"]);
-  assert.deepStrictEqual(policy.stages.always_if_exists, []);
+  assert.deepStrictEqual(policy.stages.always_if_exists, [{
+    path: "data/admin/data-supply-state/detection-attempts/damodaran.json",
+    kind: "file",
+    required: false,
+  }]);
   assert.deepStrictEqual(policy.stages.success_if_exists, []);
   assert.deepStrictEqual(policy.stages.required_on_success, [
     { path: "data/admin/damodaran/owner-guard.json", kind: "file", required: true },

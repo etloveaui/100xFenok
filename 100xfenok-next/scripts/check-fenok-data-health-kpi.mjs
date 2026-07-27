@@ -148,7 +148,8 @@ function checkFetchCronSkipDetection(runtime, { errors, warnings }, buildNow) {
   if (!diagnostic || typeof diagnostic !== "object" || Array.isArray(diagnostic)) return;
 
   push(errors, hasExactKeys(diagnostic, [
-    "schema_version", "mode", "evaluated_at", "status", "deployment_blocking", "counts", "rows",
+    "schema_version", "mode", "evaluated_at", "status", "deployment_blocking", "counts",
+    "pre_activation_members", "rows",
   ]), "fetch cron shadow diagnostic shape is not exact");
   push(errors, diagnostic.schema_version === "fetch-cron-attempt-coverage/v1",
     "fetch cron shadow schema_version is invalid");
@@ -176,11 +177,40 @@ function checkFetchCronSkipDetection(runtime, { errors, warnings }, buildNow) {
     errors.push(`fetch cron canonical schedule projection failed: ${error.message}`);
   }
   const expectedBindings = canonicalDefinition?.rows ?? [];
+  const expectedPreActivation = canonicalDefinition?.pre_activation_members ?? [];
   const expectedMembers = canonicalDefinition?.counts?.scheduled_members ?? 0;
   const rows = Array.isArray(diagnostic.rows) ? diagnostic.rows : [];
+  const preActivationMembers = Array.isArray(diagnostic.pre_activation_members)
+    ? diagnostic.pre_activation_members
+    : [];
   push(errors, Array.isArray(diagnostic.rows), "fetch cron shadow rows must be an array");
+  push(errors, Array.isArray(diagnostic.pre_activation_members),
+    "fetch cron shadow pre_activation_members must be an array");
   push(errors, rows.length === expectedBindings.length,
     `fetch cron shadow binding denominator mismatch: ${rows.length} vs ${expectedBindings.length}`);
+  preActivationMembers.forEach((row, index) => {
+    push(errors, hasExactKeys(row, [
+      "lane_id", "member_id", "workflow", "cron", "activated_at", "first_eligible_at",
+    ]), `fetch cron pre_activation_members[${index}] shape is not exact`);
+    const activatedMs = new Date(row?.activated_at).getTime();
+    const firstEligibleMs = new Date(row?.first_eligible_at).getTime();
+    push(errors, Number.isFinite(activatedMs),
+      `fetch cron pre_activation_members[${index}].activated_at is invalid`);
+    push(errors, Number.isFinite(firstEligibleMs) && firstEligibleMs >= activatedMs,
+      `fetch cron pre_activation_members[${index}].first_eligible_at is invalid`);
+  });
+  push(errors, JSON.stringify(preActivationMembers) === JSON.stringify(expectedPreActivation),
+    "fetch cron pre_activation_members does not match canonical activation projection");
+
+  const bindingKey = (row) => `${row?.lane_id}\u0000${row?.member_id}\u0000${row?.workflow}\u0000${row?.cron}`;
+  const emittedBindingKeys = new Set(rows.map(bindingKey));
+  const preActivationBindingKeys = preActivationMembers.map(bindingKey);
+  push(errors, preActivationBindingKeys.every((key) => !emittedBindingKeys.has(key)),
+    "fetch cron emitted rows and pre_activation_members must be disjoint");
+  push(errors,
+    rows.length + preActivationMembers.length
+      === expectedBindings.length + expectedPreActivation.length,
+    "fetch cron emitted and preactivation bindings do not exhaust canonical declarations");
 
   const states = { observed: 0, suspected_skip: 0, attempt_gap: 0 };
   const groupObserved = new Map();

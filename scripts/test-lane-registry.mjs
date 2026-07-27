@@ -52,6 +52,9 @@ function clone(value) {
     ["duplicate lane id", (draft) => { draft.lanes.push(clone(draft.lanes[0])); }],
     ["unknown key on a record", (draft) => { draft.lanes[0].surprise = true; }],
     ["bad lane id", (draft) => { draft.lanes[0].id = "Bad Id"; }],
+    ["impossible activation date", (draft) => {
+      draft.lanes.find((row) => row.id === "damodaran").activated_at = "2026-02-31T00:00:00Z";
+    }],
     ["absolute store path", (draft) => { draft.lanes[0].roots.admin_store = "/etc/passwd"; }],
     ["path escape", (draft) => { draft.lanes[0].roots.admin_store = "data/admin/../secret"; }],
     ["artifact_only with a store", (draft) => {

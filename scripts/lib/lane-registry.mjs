@@ -40,6 +40,16 @@ function validRepoRelativePath(value) {
     && !value.endsWith("/");
 }
 
+function isStrictUtcTimestamp(value) {
+  if (typeof value !== "string"
+    || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(value)) {
+    return false;
+  }
+  const parsed = new Date(value);
+  return Number.isFinite(parsed.getTime())
+    && parsed.toISOString() === value.replace(/Z$/, ".000Z");
+}
+
 function record({
   id,
   label,
@@ -47,6 +57,7 @@ function record({
   store_kind,
   lane_class,
   cadence,
+  activated_at,
   enforcement,
   privacy_class,
   public_mirror_allowed,
@@ -68,6 +79,7 @@ function record({
     store_kind,
     lane_class,
     cadence,
+    ...(activated_at !== undefined ? { activated_at } : {}),
     enforcement,
     privacy_class,
     ...(public_mirror_allowed !== undefined ? { public_mirror_allowed } : {}),
@@ -458,6 +470,8 @@ const lanes = [
     store_kind: "payload",
     lane_class: "detection_floor",
     cadence: { kind: "monthly", provider: "OECD SDMX DF_CLI" },
+    // First workflow commit: 2026-07-20 23:20:11 +0900.
+    activated_at: "2026-07-20T14:20:11Z",
     enforcement: "shadow",
     privacy_class: "private",
     admin_store: "data/admin/oecd_cli",
@@ -716,12 +730,14 @@ const lanes = [
       provider: "NYU Stern Damodaran owner guard",
       provenance: { kind: "github_workflow", evidence: ".github/workflows/fetch-damodaran-shadow.yml" },
     },
+    // First workflow commit: 2026-07-20 00:05:41 +0900.
+    activated_at: "2026-07-19T15:05:41Z",
     // Registry enforcement is the detection-floor switch, not producer
     // ownership. This shadow lane has a fail-closed owner guard instead.
     enforcement: "shadow",
     privacy_class: "public_mirror",
     admin_store: "data/admin/damodaran",
-    detection_attempt: null,
+    detection_attempt: attemptShard("damodaran"),
     canonical_outputs: [
       "data/damodaran/industries.json",
       "data/damodaran/historical_erp.json",
@@ -739,6 +755,7 @@ const lanes = [
       "100xfenok-next/public/data/damodaran/industry_metrics_regions.json",
     ],
     commit_shards: [
+      attemptShard("damodaran"),
       "data/admin/damodaran/owner-guard.json",
       "data/damodaran/industries.json",
       "data/damodaran/historical_erp.json",
@@ -1288,6 +1305,9 @@ workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = policy(["krx"]
   ],
 });
 workflow_policies[".github/workflows/fetch-damodaran-shadow.yml"] = policy(["damodaran"], {
+  always_if_exists: [
+    commitSpec(attemptShard("damodaran"), "file", false),
+  ],
   required_on_success: [
     commitSpec("data/admin/damodaran/owner-guard.json", "file", true),
     ...[
@@ -1369,6 +1389,7 @@ const LANE_RECORD_KEYS = Object.freeze([
   "declared_exception",
 ]);
 const LANE_RECORD_OPTIONAL_KEYS = Object.freeze([
+  "activated_at",
   "script_sources",
   "caller_workflows",
   "kpi_recovery_shape",
@@ -1443,6 +1464,10 @@ function validateLaneRecord(laneValue) {
   ];
   exactKeys(laneValue, expectedKeys, context);
   if (!LANE_ID_RE.test(laneValue.id)) fail(`${context} id is invalid`);
+  if (laneValue.activated_at !== undefined
+    && !isStrictUtcTimestamp(laneValue.activated_at)) {
+    fail(`${context}.activated_at must be a strict UTC timestamp when present`);
+  }
   if (typeof laneValue.label !== "string" || laneValue.label.length === 0) fail(`${context} label is required`);
   if (laneValue.owner_workflow !== null
     && (typeof laneValue.owner_workflow !== "string" || !laneValue.owner_workflow.startsWith(".github/workflows/"))) {

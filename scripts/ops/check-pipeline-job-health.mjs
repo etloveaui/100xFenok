@@ -380,7 +380,8 @@ export function assertDeclaredScheduleGraceContracts({
   return declarations;
 }
 
-function runtimeSlotKey(workflow, cron, expectedAt) {
+export function runtimeSlotKey(workflow, cron, expectedAt) {
+  if (typeof expectedAt !== "string" || expectedAt.length === 0) return null;
   const expected = new Date(expectedAt);
   if (!Number.isFinite(expected.getTime())) return null;
   const stamp = expected.toISOString().replace(/:\d{2}\.\d{3}Z$/, "Z");
@@ -432,11 +433,19 @@ export function deriveWorkflowCadenceProjection({
 
   const coverageRows = Array.isArray(coverage?.rows) ? coverage.rows : null;
   const coverageByBinding = new Map();
+  const preActivationBindings = new Set();
   if (coverageRows) {
     for (const row of coverageRows) {
       const workflow = workflowFileFromDeclaration(row?.workflow);
       if (!workflow || typeof row?.cron !== "string" || typeof row?.member_id !== "string") continue;
       coverageByBinding.set(`${workflow}\u0000${row.cron}\u0000${row.member_id}`, row);
+    }
+    for (const row of Array.isArray(coverage?.pre_activation_members)
+      ? coverage.pre_activation_members
+      : []) {
+      const workflow = workflowFileFromDeclaration(row?.workflow);
+      if (!workflow || typeof row?.cron !== "string" || typeof row?.member_id !== "string") continue;
+      preActivationBindings.add(`${workflow}\u0000${row.cron}\u0000${row.member_id}`);
     }
   }
   const recoveredSlots = recoveredRuntimeSlotKeys(kpiRuntime);
@@ -452,9 +461,18 @@ export function deriveWorkflowCadenceProjection({
     } else if (!coverageRows) {
       state = "unknown";
     } else {
-      const rows = declared.map((entry) => coverageByBinding.get(`${entry.workflow}\u0000${entry.cron}\u0000${entry.member_id}`) ?? null);
-      if (rows.some((row) => row === null)) {
+      const rows = [];
+      let hasUnknownBinding = false;
+      for (const entry of declared) {
+        const key = `${entry.workflow}\u0000${entry.cron}\u0000${entry.member_id}`;
+        const row = coverageByBinding.get(key);
+        if (row) rows.push(row);
+        else if (!preActivationBindings.has(key)) hasUnknownBinding = true;
+      }
+      if (hasUnknownBinding) {
         state = "unknown";
+      } else if (rows.length === 0) {
+        state = "not_due";
       } else {
         ({ state, evidence } = cadenceEvidenceFromRows(rows, recoveredSlots));
       }

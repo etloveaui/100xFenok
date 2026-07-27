@@ -81,6 +81,16 @@ const SOURCE_SELECTOR_KINDS = new Set(["pointer", "max_array_field", "max_object
 const CADENCE_DECLARATION_KINDS = new Set(["github_workflow", "owner_contract", "payload_field"]);
 const OWNER_CONTRACT_RE = /^[a-z][a-z0-9._:/-]{2,127}$/;
 
+function isStrictUtcTimestamp(value) {
+  if (typeof value !== "string"
+    || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(value)) {
+    return false;
+  }
+  const parsed = new Date(value);
+  return Number.isFinite(parsed.getTime())
+    && parsed.toISOString() === value.replace(/Z$/, ".000Z");
+}
+
 function artifact(id, path, { schemaVersion = null, sourceSelector, assertions, selection = path.includes("*") ? "all" : "single" }) {
   return {
     id,
@@ -182,6 +192,7 @@ function member(
   artifactContracts,
   cadenceCalendar = workflow === null ? null : "utc",
   cadenceDeclaration = workflow === null ? null : { kind: "github_workflow", evidence: workflow },
+  activatedAt = undefined,
 ) {
   return {
     id,
@@ -189,6 +200,7 @@ function member(
     schedule,
     cadence_calendar: cadenceCalendar,
     cadence_declaration: cadenceDeclaration,
+    ...(activatedAt !== undefined ? { activated_at: activatedAt } : {}),
     artifact_contracts: artifactContracts,
   };
 }
@@ -198,7 +210,15 @@ function registryMember(id, schedule, artifactContracts, cadenceCalendar = "utc"
   if (!registryLane || registryLane.owner_workflow === null) {
     throw new TypeError(`detection member ${id} has no registry-owned workflow`);
   }
-  return member(id, registryLane.owner_workflow, schedule, artifactContracts, cadenceCalendar);
+  return member(
+    id,
+    registryLane.owner_workflow,
+    schedule,
+    artifactContracts,
+    cadenceCalendar,
+    undefined,
+    registryLane.activated_at,
+  );
 }
 
 function externalMember(id, cadenceDeclaration, artifactContracts) {
@@ -924,6 +944,7 @@ const config = {
       endpointContract: endpointAssertion(
         "damodaran_converter",
         exactAssertion("owner_guard_match", "/status", "match"),
+        "library",
       ),
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 10 }),
       affectedSurfaceIds: ["market_valuation", "stock_detail", "regime"],
@@ -1224,8 +1245,16 @@ function validateArtifactContract(contract, context) {
 }
 
 function validateMember(memberValue, context) {
-  exactKeys(memberValue, ["id", "workflow", "schedule", "cadence_calendar", "cadence_declaration", "artifact_contracts"], context);
+  exactKeys(memberValue, [
+    "id", "workflow", "schedule", "cadence_calendar", "cadence_declaration",
+    ...(Object.hasOwn(memberValue, "activated_at") ? ["activated_at"] : []),
+    "artifact_contracts",
+  ], context);
   requireIdentifier(memberValue.id, `${context}.id`);
+  if (memberValue.activated_at !== undefined
+    && !isStrictUtcTimestamp(memberValue.activated_at)) {
+    fail(`${context}.activated_at must be a strict UTC timestamp`);
+  }
   if (memberValue.workflow !== null && !WORKFLOW_RE.test(memberValue.workflow)) fail(`${context}.workflow is invalid`);
   if (memberValue.cadence_declaration !== null) {
     exactKeys(memberValue.cadence_declaration, ["kind", "evidence"], `${context}.cadence_declaration`);

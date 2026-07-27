@@ -68,19 +68,73 @@ const scheduledMembers = DATA_SUPPLY_DETECTION_CONFIG.lanes
 const scheduleBindings = scheduledMembers.reduce((sum, member) => sum + member.schedule.length, 0);
 assert.equal(scheduledMembers.length, 29);
 assert.equal(scheduleBindings, 32);
+assert.equal(
+  DATA_SUPPLY_DETECTION_CONFIG.lanes.find((lane) => lane.id === "damodaran")
+    ?.producer_members[0]?.activated_at,
+  "2026-07-19T15:05:41Z",
+);
+assert.equal(
+  DATA_SUPPLY_DETECTION_CONFIG.lanes.find((lane) => lane.id === "oecd_cli")
+    ?.producer_members[0]?.activated_at,
+  "2026-07-20T14:20:11Z",
+);
 
-// Baseline includes two owner-declared scheduled members with no attempt row.
+// The baseline predates two newly declared workflows. They remain in the
+// declaration denominator but must not manufacture expected_at rows.
 const coverage = buildFetchCronAttemptCoverage({ report: baseline, calendars });
 assert.equal(coverage.schema_version, "fetch-cron-attempt-coverage/v1");
 assert.equal(coverage.mode, "shadow");
 assert.equal(coverage.deployment_blocking, false);
 assert.deepEqual(coverage.counts, {
   scheduled_members: 29,
-  schedule_bindings: 32,
-  observed: 29,
+  schedule_bindings: 30,
+  observed: 27,
   suspected_skips: 3,
   attempt_gaps: 0,
 });
+assert.deepEqual(coverage.pre_activation_members, [
+  {
+    lane_id: "oecd_cli",
+    member_id: "oecd_cli",
+    workflow: ".github/workflows/fetch-oecd-cli.yml",
+    cron: "0 8 1 * *",
+    activated_at: "2026-07-20T14:20:11Z",
+    first_eligible_at: "2026-08-01T08:00:00.000Z",
+  },
+  {
+    lane_id: "damodaran",
+    member_id: "damodaran",
+    workflow: ".github/workflows/fetch-damodaran-shadow.yml",
+    cron: "17 11 * * 6",
+    activated_at: "2026-07-19T15:05:41Z",
+    first_eligible_at: "2026-07-25T11:17:00.000Z",
+  },
+]);
+assert.equal(coverage.rows.some((row) => row.lane_id === "oecd_cli"), false);
+assert.equal(coverage.rows.some((row) => row.lane_id === "damodaran"), false);
+const configWithoutActivation = clone(DATA_SUPPLY_DETECTION_CONFIG);
+for (const lane of configWithoutActivation.lanes.filter((row) => (
+  row.id === "oecd_cli" || row.id === "damodaran"
+))) delete lane.producer_members[0].activated_at;
+const unboundedCoverage = buildFetchCronAttemptCoverage({
+  report: null,
+  calendars,
+  nowValue: baseline.generated_at,
+  config: configWithoutActivation,
+});
+const boundedMissingReportCoverage = buildFetchCronAttemptCoverage({
+  report: null,
+  calendars,
+  nowValue: baseline.generated_at,
+});
+const unaffectedRows = (document) => document.rows.filter((row) => (
+  row.lane_id !== "oecd_cli" && row.lane_id !== "damodaran"
+));
+assert.deepEqual(
+  unaffectedRows(boundedMissingReportCoverage),
+  unaffectedRows(unboundedCoverage),
+  "activation declarations must not alter any undeclared lane row",
+);
 assert.equal(coverage.status, "warning");
 assert.equal(rowOf(coverage, "gdelt_news_tone").state, "suspected_skip");
 assert.equal(rowOf(coverage, "apewisdom_attention").state, "suspected_skip");
@@ -127,6 +181,20 @@ assert.equal(laterCoverage.status, "warning");
 assert.ok(laterCoverage.counts.suspected_skips > 2);
 assert.equal(Object.hasOwn(rowOf(laterCoverage, "gdelt_news_tone"), "event_name"), false);
 
+// Once the first activation-eligible Damodaran slot has passed its declared
+// grace, the ordinary finite row returns. OECD remains preactivation.
+const postActivationCoverage = buildFetchCronAttemptCoverage({
+  report: null,
+  calendars,
+  nowValue: "2026-07-27T04:00:00Z",
+});
+assert.equal(rowOf(postActivationCoverage, "damodaran").expected_at, "2026-07-25T11:17:00.000Z");
+assert.equal(rowOf(postActivationCoverage, "damodaran").state, "suspected_skip");
+assert.deepEqual(
+  postActivationCoverage.pre_activation_members.map((row) => row.lane_id),
+  ["oecd_cli"],
+);
+
 const missingReportCoverage = buildFetchCronAttemptCoverage({
   report: null,
   calendars,
@@ -136,9 +204,9 @@ assert.equal(missingReportCoverage.deployment_blocking, false);
 assert.equal(missingReportCoverage.status, "warning");
 assert.deepEqual(missingReportCoverage.counts, {
   scheduled_members: 29,
-  schedule_bindings: 32,
+  schedule_bindings: 30,
   observed: 0,
-  suspected_skips: 32,
+  suspected_skips: 30,
   attempt_gaps: 0,
 });
 

@@ -7,8 +7,17 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
+import {
+  attemptResult,
+  defaultAttemptId,
+  libraryTuple,
+  writeAttemptShard,
+} from "./lib/data-supply-attempt-shard.mjs";
 
 export const SCHEMA_VERSION = "damodaran-owner-guard/v1";
+export const ATTEMPT_SHARD_RELATIVE_PATH =
+  "data/admin/data-supply-state/detection-attempts/damodaran.json";
 export const FILE_NAMES = Object.freeze([
   "industries.json",
   "historical_erp.json",
@@ -39,6 +48,7 @@ const REPO_ROOT = path.resolve(SCRIPT_DIR, "..");
 export const REPORT_RELATIVE_PATH = process.env.DAMODARAN_SHADOW_REPORT
   ?? "data/admin/damodaran/owner-guard.json";
 const REPORT_PATH = path.join(REPO_ROOT, REPORT_RELATIVE_PATH);
+const ATTEMPT_SHARD_PATH = path.join(REPO_ROOT, ATTEMPT_SHARD_RELATIVE_PATH);
 const PRODUCER_PATH = path.join(
   SCRIPT_DIR,
   "lib",
@@ -250,78 +260,161 @@ export function buildReport(bundle, producerResult, guard) {
   };
 }
 
-export function main() {
-  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "damodaran-shadow-"));
-  const outputDir = path.join(temporaryRoot, "converter-output");
-  const bundlePath = path.join(temporaryRoot, "bundle.json");
-  const canonicalRoot = path.join(REPO_ROOT, "data", "damodaran");
+function resultForReport(report, producerResult, latencyMs) {
+  if (producerResult?.error) {
+    return attemptResult("unexpected_error", libraryTuple({
+      execution: "threw",
+      exceptionKind: "unexpected",
+      candidates: FILE_NAMES.length,
+      retryCount: 0,
+      latencyMs,
+      outcome: "error",
+      failureEntity: "damodaran_converter",
+      failureDetail: boundedDiagnosticDetail(producerResult.error),
+    }));
+  }
+  if (report.status === "match" || report.status === "mismatch") {
+    const passed = report.status === "match";
+    return attemptResult(passed ? "ok" : "schema_drift", libraryTuple({
+      candidates: FILE_NAMES.length,
+      retryCount: 0,
+      latencyMs,
+      outcome: "success",
+      decode: "ok",
+      payload: "non_empty",
+      assertions: [{ id: "owner_guard_match", passed }],
+    }));
+  }
+  return attemptResult("unexpected_error", libraryTuple({
+    candidates: FILE_NAMES.length,
+    retryCount: 0,
+    latencyMs,
+    outcome: "error",
+  }));
+}
+
+function thrownResult(error, latencyMs) {
+  return attemptResult("unexpected_error", libraryTuple({
+    execution: "threw",
+    exceptionKind: "unexpected",
+    candidates: FILE_NAMES.length,
+    retryCount: 0,
+    latencyMs,
+    outcome: "error",
+    failureEntity: "damodaran_owner_guard",
+    failureDetail: boundedDiagnosticDetail(error),
+  }));
+}
+
+export function runDamodaranShadow({
+  reportPath = REPORT_PATH,
+  attemptShardPath = ATTEMPT_SHARD_PATH,
+  canonicalRoot = path.join(REPO_ROOT, "data", "damodaran"),
+  spawn = spawnSync,
+  observedAt = new Date().toISOString(),
+  attemptId = defaultAttemptId("damodaran", observedAt),
+  now = Date.now,
+} = {}) {
+  const startedAt = now();
   let report;
+  let producerResult;
 
   try {
-    const producerResult = spawnSync(
-      process.env.PYTHON || "python3",
-      [PRODUCER_PATH, "--output-dir", outputDir, "--bundle", bundlePath],
-      {
-        cwd: REPO_ROOT,
-        encoding: "utf8",
-        maxBuffer: 32 * 1024 * 1024,
-        timeout: 45 * 60 * 1000,
-      },
-    );
+    const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "damodaran-shadow-"));
+    const outputDir = path.join(temporaryRoot, "converter-output");
+    const bundlePath = path.join(temporaryRoot, "bundle.json");
+    try {
+      producerResult = spawn(
+        process.env.PYTHON || "python3",
+        [PRODUCER_PATH, "--output-dir", outputDir, "--bundle", bundlePath],
+        {
+          cwd: REPO_ROOT,
+          encoding: "utf8",
+          maxBuffer: 32 * 1024 * 1024,
+          timeout: 45 * 60 * 1000,
+        },
+      );
 
-    if (fs.existsSync(bundlePath)) {
-      const bundle = readJson(bundlePath);
-      let guard = guardProducedFiles(bundle, outputDir);
-      if (producerResult.status === 0 && guard.status === "match") {
-        try {
-          guard = promoteProducedFiles({ bundle, producedRoot: outputDir, canonicalRoot });
-        } catch (error) {
+      if (fs.existsSync(bundlePath)) {
+        const bundle = readJson(bundlePath);
+        let guard = guardProducedFiles(bundle, outputDir);
+        if (producerResult.status === 0 && guard.status === "match") {
+          try {
+            guard = promoteProducedFiles({ bundle, producedRoot: outputDir, canonicalRoot });
+          } catch (error) {
+            guard = {
+              status: "blocked",
+              summary: { match: 0, mismatch: 0, blocked: FILE_NAMES.length },
+              files: blockedRows(`${error.name}: ${error.message}`),
+            };
+          }
+        } else if (producerResult.status !== 0 && guard.status === "match") {
           guard = {
             status: "blocked",
             summary: { match: 0, mismatch: 0, blocked: FILE_NAMES.length },
-            files: blockedRows(`${error.name}: ${error.message}`),
+            files: blockedRows(`producer exited ${producerResult.status ?? "without status"}`),
           };
         }
-      } else if (producerResult.status !== 0 && guard.status === "match") {
-        guard = {
+        report = buildReport(bundle, producerResult, guard);
+      } else {
+        const reason = producerResult.error
+          ? `${producerResult.error.name}: ${producerResult.error.message}`
+          : `producer exited ${producerResult.status ?? "without status"}`;
+        report = {
+          schema_version: SCHEMA_VERSION,
+          fetched_at: new Date().toISOString(),
           status: "blocked",
-          summary: { match: 0, mismatch: 0, blocked: FILE_NAMES.length },
-          files: blockedRows(`producer exited ${producerResult.status ?? "without status"}`),
+          mode: "owner_guard",
+          ownership_flip: true,
+          guard_target: "producer_bundle_vs_generated_files",
+          committed_root: "data/damodaran",
+          public_mirror: "100xfenok-next/public/data/damodaran",
+          ignored_compare_paths: [],
+          conditional_get: { used: false, reason: "producer did not return a bundle" },
+          producer: {
+            exit_code: producerResult.status,
+            signal: producerResult.signal,
+            stderr_tail: producerResult.stderr?.slice(-2000) || null,
+          },
+          summary: { match: 0, mismatch: 0, blocked: FILE_NAMES.length, request_count: 0 },
+          files: blockedRows(reason),
         };
       }
-      report = buildReport(bundle, producerResult, guard);
-    } else {
-      const reason = producerResult.error
-        ? `${producerResult.error.name}: ${producerResult.error.message}`
-        : `producer exited ${producerResult.status ?? "without status"}`;
-      report = {
-        schema_version: SCHEMA_VERSION,
-        fetched_at: new Date().toISOString(),
-        status: "blocked",
-        mode: "owner_guard",
-        ownership_flip: true,
-        guard_target: "producer_bundle_vs_generated_files",
-        committed_root: "data/damodaran",
-        public_mirror: "100xfenok-next/public/data/damodaran",
-        ignored_compare_paths: [],
-        conditional_get: { used: false, reason: "producer did not return a bundle" },
-        producer: {
-          exit_code: producerResult.status,
-          signal: producerResult.signal,
-          stderr_tail: producerResult.stderr?.slice(-2000) || null,
-        },
-        summary: { match: 0, mismatch: 0, blocked: FILE_NAMES.length, request_count: 0 },
-        files: blockedRows(reason),
-      };
+    } finally {
+      fs.rmSync(temporaryRoot, { recursive: true, force: true });
     }
-  } finally {
-    fs.rmSync(temporaryRoot, { recursive: true, force: true });
+    atomicWriteJson(reportPath, report);
+  } catch (error) {
+    const latencyMs = Math.max(0, Math.round(now() - startedAt));
+    writeAttemptShard({
+      laneId: "damodaran",
+      attemptShardPath,
+      observedAt,
+      attemptId,
+      result: thrownResult(error, latencyMs),
+    });
+    throw error;
   }
 
-  atomicWriteJson(REPORT_PATH, report);
-  console.log(JSON.stringify(report.summary));
-  if (report.status === "match") return 0;
-  return report.status === "mismatch" ? 2 : 1;
+  const latencyMs = Math.max(0, Math.round(now() - startedAt));
+  const row = writeAttemptShard({
+    laneId: "damodaran",
+    attemptShardPath,
+    observedAt,
+    attemptId,
+    result: resultForReport(report, producerResult, latencyMs),
+  });
+  return {
+    exitCode: report.status === "match" ? 0 : report.status === "mismatch" ? 2 : 1,
+    report,
+    row,
+  };
+}
+
+export function main() {
+  const result = runDamodaranShadow();
+  console.log(JSON.stringify(result.report.summary));
+  return result.exitCode;
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
