@@ -2068,6 +2068,26 @@ function runWorkflowBridgeChecks() {
     /(?:^| )npm run cf:build:steps(?: |$)/,
     "cf:build delegates to the guard-frozen cf:build:steps chain",
   );
+  assert.equal(
+    workflow.split('max_identity_attempts="${SMOKE_POST_IDENTITY_MAX_ATTEMPTS:-36}"').length - 1,
+    3,
+    "all post-identity route smokes inherit the 180-second propagation window",
+  );
+  assert.equal(
+    workflow.split('for attempt in $(seq 1 "$max_identity_attempts"); do').length - 1,
+    3,
+    "all post-identity route smokes use the bounded propagation retry count",
+  );
+  assert.equal(
+    workflow.split('[ "$attempt" -eq "$max_identity_attempts" ] || sleep 5').length - 1,
+    3,
+    "all post-identity route smokes sleep only between bounded retries",
+  );
+  assert.equal(
+    workflow.includes("for attempt in 1 2 3; do"),
+    false,
+    "post-identity route smokes must not regress to a 15-second propagation window",
+  );
   const publicBuildIndex = packageScripts["sync-static"].indexOf("npm run build:data-supply-public");
   const derivedIndex = packageScripts["sync-static"].indexOf("npm run reconcile:derived");
   assert.ok(

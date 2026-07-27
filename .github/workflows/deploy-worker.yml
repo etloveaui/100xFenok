@@ -384,7 +384,8 @@ jobs:
         run: |
           set -euo pipefail
           observed_build_id="unavailable"
-          for attempt in 1 2 3; do
+          max_identity_attempts="${SMOKE_POST_IDENTITY_MAX_ATTEMPTS:-36}"
+          for attempt in $(seq 1 "$max_identity_attempts"); do
             if observed_build_id="$(curl -fsS --connect-timeout 5 --max-time 15 \
               -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
               "$QA_BASE_URL/BUILD_ID?cb=stockanalysis-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${attempt}-${GITHUB_SHA}" \
@@ -392,7 +393,7 @@ jobs:
               break
             fi
             echo "::warning::StockAnalysis smoke rejected bundle identity on attempt $attempt: expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id"
-            [ "$attempt" -eq 3 ] || sleep 5
+            [ "$attempt" -eq "$max_identity_attempts" ] || sleep 5
           done
           if [ "$observed_build_id" != "$EXPECTED_BUILD_ID" ]; then
             echo "::error::StockAnalysis smoke cannot prove it is reading this deploy: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id"
@@ -411,7 +412,8 @@ jobs:
         run: |
           set -euo pipefail
           observed_build_id="unavailable"
-          for attempt in 1 2 3; do
+          max_identity_attempts="${SMOKE_POST_IDENTITY_MAX_ATTEMPTS:-36}"
+          for attempt in $(seq 1 "$max_identity_attempts"); do
             if observed_build_id="$(curl -fsS --connect-timeout 5 --max-time 15 \
               -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
               "$QA_BASE_URL/BUILD_ID?cb=iframe-public-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${attempt}-${GITHUB_SHA}" \
@@ -419,7 +421,7 @@ jobs:
               break
             fi
             echo "::warning::Public iframe smoke rejected bundle identity on attempt $attempt: expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id"
-            [ "$attempt" -eq 3 ] || sleep 5
+            [ "$attempt" -eq "$max_identity_attempts" ] || sleep 5
           done
           if [ "$observed_build_id" != "$EXPECTED_BUILD_ID" ]; then
             echo "::error::Public iframe smoke cannot prove it is reading this deploy: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id"
@@ -438,7 +440,8 @@ jobs:
         run: |
           set -euo pipefail
           observed_build_id="unavailable"
-          for attempt in 1 2 3; do
+          max_identity_attempts="${SMOKE_POST_IDENTITY_MAX_ATTEMPTS:-36}"
+          for attempt in $(seq 1 "$max_identity_attempts"); do
             if observed_build_id="$(curl -fsS --connect-timeout 5 --max-time 15 \
               -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
               "$QA_BASE_URL/BUILD_ID?cb=iframe-admin-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${attempt}-${GITHUB_SHA}" \
@@ -446,7 +449,7 @@ jobs:
               break
             fi
             echo "::warning::Admin iframe smoke rejected bundle identity on attempt $attempt: expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id"
-            [ "$attempt" -eq 3 ] || sleep 5
+            [ "$attempt" -eq "$max_identity_attempts" ] || sleep 5
           done
           if [ "$observed_build_id" != "$EXPECTED_BUILD_ID" ]; then
             echo "::error::Admin iframe smoke cannot prove it is reading this deploy: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID observed_build_id=$observed_build_id"
