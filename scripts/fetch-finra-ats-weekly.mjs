@@ -370,8 +370,8 @@ async function fetchSymbolBatch({ request, accessToken, budget, universe, symbol
     const body = buildWeeklySummaryBody({ symbols, weekStartDate, tiers, offset });
     const page = await requestPage({ request, accessToken, budget, body, endpoint });
     if (page.kind === "empty") {
-      if (offset === 0 && page.total === 0) return { kind: "empty", rows: [] };
-      if (offset === 0 && page.statusCode === 204) return { kind: "empty", rows: [] };
+      if (offset === 0 && page.total === 0) return { kind: "empty", statusCode: page.statusCode, rows: [] };
+      if (offset === 0 && page.statusCode === 204) return { kind: "empty", statusCode: page.statusCode, rows: [] };
       throw new CollectorError("schema_drift", "pagination header mismatch: premature empty page", { statusCode: page.statusCode, systemic: true });
     }
     if (total === null) total = page.total;
@@ -392,17 +392,20 @@ async function fetchSymbolBatch({ request, accessToken, budget, universe, symbol
 
 async function fetchCandidate({ request, accessToken, budget, universe, weekStartDate, tiers, endpoint }) {
   const rows = [];
+  let observedStatus = null;
   for (const symbols of batchTrackedSymbols(universe.query_symbols)) {
     const batch = await fetchSymbolBatch({ request, accessToken, budget, universe, symbols, weekStartDate, tiers, endpoint });
     if (batch.kind === "ready") rows.push(...batch.rows);
+    else if (Number.isInteger(batch.statusCode)) observedStatus = batch.statusCode;
   }
-  return rows.length === 0 ? { kind: "empty", rows: [] } : { kind: "ready", rows };
+  return rows.length === 0 ? { kind: "empty", statusCode: observedStatus, rows: [] } : { kind: "ready", rows };
 }
 
 export async function collectPartition({ request = defaultRequest, accessToken, budget, universe, partition, endpoint = WEEKLY_SUMMARY_ENDPOINT }) {
   if (!partition || !Array.isArray(partition.tier_identifiers) || !Array.isArray(partition.walkback_week_starts)) {
     throw new CollectorError("schema_drift", "weekly summary partition is invalid", { systemic: true });
   }
+  let observedStatus = null;
   for (const weekStartDate of partition.walkback_week_starts) {
     const candidate = await fetchCandidate({
       request,
@@ -416,8 +419,9 @@ export async function collectPartition({ request = defaultRequest, accessToken, 
     if (candidate.kind === "ready") {
       return { complete: true, summary_start_date: weekStartDate, rows: candidate.rows, tier_identifiers: [...partition.tier_identifiers] };
     }
+    if (Number.isInteger(candidate.statusCode)) observedStatus = candidate.statusCode;
   }
-  return { complete: false, reason: "empty_after_walkback", rows: [], tier_identifiers: [...partition.tier_identifiers] };
+  return { complete: false, reason: "empty_after_walkback", rows: [], tier_identifiers: [...partition.tier_identifiers], status_code: observedStatus };
 }
 
 export function markerPathFor(repoRoot = DEFAULT_REPO_ROOT) {
@@ -667,7 +671,16 @@ function controlledFailureRequested(value, eventName) {
 }
 
 function failureAttempt(error) {
-  if (error?.reason === "controlled_failure") return attemptResult("transport_error", threwTuple("transport"));
+  // The shard schema only accepts a failure diagnostic on a threw tuple, so
+  // the diagnostic rides the threw branches. Returned tuples keep their
+  // schema-pinned shape and carry no entity/detail: classifyAttempt re-derives
+  // the detection reason from the tuple shape, and a known empty payload must
+  // stay empty_payload rather than collapse into unexpected_error.
+  const diagnostic = {
+    failure_entity: FINRA_ATS_LANE_ID,
+    failure_detail: boundedDiagnosticDetail(error),
+  };
+  if (error?.reason === "controlled_failure") return attemptResult("transport_error", { ...threwTuple("transport"), ...diagnostic });
   if (error?.reason === "auth_error") return attemptResult("auth_error", returnedTuple({ httpStatus: error.statusCode ?? 401, auth: "rejected" }));
   if (error?.reason === "rate_limited") return attemptResult("rate_limited", returnedTuple({ httpStatus: error.statusCode ?? 429, auth: error.auth ?? "ok", rateLimited: true }));
   if (error?.reason === "schema_drift" || error?.reason === "budget_exceeded") {
@@ -681,15 +694,20 @@ function failureAttempt(error) {
   }
   if (error?.reason === "partial_partition") {
     return attemptResult("empty_payload", returnedTuple({
-      httpStatus: 204,
+      // The observed provider status is carried up from the walkback. The 204
+      // default fires only when no response was observed at all (an empty
+      // query universe produces no requests).
+      httpStatus: error.statusCode ?? 204,
       auth: error.auth ?? "ok",
       decode: "ok",
       payload: "empty",
       assertions: ATTEMPT_ASSERTION_IDS.map((id) => ({ id, passed: false })),
     }));
   }
-  if (error?.reason === "http_error") return attemptResult("http_error", returnedTuple({ httpStatus: error.statusCode ?? 500, auth: error.auth ?? "ok" }));
-  return attemptResult("unexpected_error", threwTuple("unexpected"));
+  // auth is not_applicable here: the token was accepted (a rejection throws
+  // auth_error above), so the non-2xx failure is not an auth verdict.
+  if (error?.reason === "http_error") return attemptResult("http_error", returnedTuple({ httpStatus: error.statusCode ?? 500, auth: "not_applicable" }));
+  return attemptResult("unexpected_error", { ...threwTuple("unexpected"), ...diagnostic });
 }
 
 function successAttempt(rows) {
@@ -760,7 +778,8 @@ export async function run({
       endpoint: weeklySummaryEndpoint,
     });
     if (!t1.complete || !t2Otce.complete) {
-      throw new CollectorError("partial_partition", "one or more FINRA ATS weekly partitions were unavailable after walkback");
+      const observed = !t1.complete ? t1.status_code : t2Otce.status_code;
+      throw new CollectorError("partial_partition", "one or more FINRA ATS weekly partitions were unavailable after walkback", { statusCode: observed ?? null });
     }
     const marker = buildMarker({
       generatedAt: observedAt,

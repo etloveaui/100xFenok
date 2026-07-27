@@ -26,6 +26,7 @@ import {
   validRawWeekDocument,
   writeGitHubOutputs,
 } from "./fetch-finra-ats-weekly.mjs";
+import { classifyAttempt } from "./build-data-supply-detection-floor.mjs";
 
 const OBSERVED_AT = "2026-07-24T01:00:00.000Z";
 const REFERENCE_DATE = new Date("2026-07-24T12:00:00.000Z");
@@ -793,6 +794,138 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
     referenceDate: new Date("2026-07-31T12:00:00.000Z"),
   });
   assert.equal(scheduled.result.promoted, true, "only a natural schedule run may promote an advanced recovery");
+}
+
+// An incomplete partition is a returned empty-payload tuple whose http_status
+// is the OBSERVED provider answer carried up from the walkback, never a
+// fabricated constant. classifyAttempt must re-derive empty_payload from the
+// shard row - the detection floor reads that derived reason, not the CLI one.
+{
+  const shardPath = (root) => path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "finra_ats.json");
+  const runPartial = async (tag, failTierResponses) => {
+    const root = makeRoot(tag);
+    const targets = summaryTargets(REFERENCE_DATE);
+    const responses = successResponses(targets);
+    for (const [tier, tierResponses] of Object.entries(failTierResponses)) responses[tier] = tierResponses;
+    const { request } = makeRequestMock(responses);
+    const result = await run({
+      repoRoot: root,
+      request,
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      eventName: "schedule",
+      runId: `partial-diagnostic-${tag}`,
+      observedAt: OBSERVED_AT,
+      referenceDate: REFERENCE_DATE,
+    });
+    assert.equal(result.exit_code, 2);
+    assert.equal(result.reason, "partial_partition");
+    return readJson(shardPath(root)).attempts[0];
+  };
+  const emptyPages = (count) => Array.from({ length: count }, () => pageResponse([], { total: 0 }));
+  const noContent = (count) => Array.from({ length: count }, () => ({ statusCode: 204, headers: {}, body: "" }));
+
+  // A 200 with zero rows records 200.
+  const zeroRows = await runPartial("partial-observed-200", { T2: emptyPages(3) });
+  assert.equal(zeroRows.execution, "returned");
+  assert.equal(zeroRows.http_status, 200);
+  assert.equal(zeroRows.payload, "empty");
+  assert.deepEqual(zeroRows.assertions, ATTEMPT_ASSERTION_IDS.map((id) => ({ id, passed: false })));
+  assert.equal(Object.hasOwn(zeroRows, "failure_entity"), false, "returned tuples carry no diagnostic");
+  assert.equal(classifyAttempt(zeroRows).reason, "empty_payload");
+
+  // A provider 204 records 204. Both empty shapes classify as empty_payload,
+  // never unexpected_error.
+  const noContentRows = await runPartial("partial-observed-204", { T1: noContent(3) });
+  assert.equal(noContentRows.http_status, 204);
+  assert.equal(classifyAttempt(noContentRows).reason, "empty_payload");
+
+  // Both partitions incomplete: the shard records the first incomplete
+  // partition's observed status and still classifies as empty_payload.
+  const both = await runPartial("partial-observed-both", { T1: noContent(3), T2: emptyPages(3) });
+  assert.equal(both.http_status, 204);
+  assert.equal(classifyAttempt(both).reason, "empty_payload");
+}
+
+// A provider non-2xx failure is a returned tuple with auth not_applicable:
+// the token was accepted, so the failure is not an auth verdict. Before the
+// fix this tuple carried auth "ok" and the validating writer threw from the
+// finally block, masking the response.
+{
+  const root = makeRoot("http-error-shard");
+  const targets = summaryTargets(REFERENCE_DATE);
+  const responses = successResponses(targets);
+  responses.T1 = [{ statusCode: 500, headers: {}, body: "server error" }];
+  const { request } = makeRequestMock(responses);
+  const result = await run({
+    repoRoot: root,
+    request,
+    clientId: "client-id",
+    clientSecret: "client-secret",
+    eventName: "schedule",
+    runId: "http-error-shard",
+    observedAt: OBSERVED_AT,
+    referenceDate: REFERENCE_DATE,
+  });
+  assert.equal(result.exit_code, 2);
+  assert.equal(result.reason, "http_error");
+  const shard = readJson(path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "finra_ats.json"));
+  const attempt = shard.attempts[0];
+  assert.equal(attempt.execution, "returned");
+  assert.equal(attempt.http_status, 500);
+  assert.equal(attempt.auth, "not_applicable");
+  assert.equal(classifyAttempt(attempt).reason, "http_error");
+}
+
+// A thrown non-CollectorError lands in the fallthrough branch: the entity
+// defaults to the lane id and the bounded detail redacts every credential
+// form before it reaches the shard.
+{
+  const root = makeRoot("threw-diagnostic-redaction");
+  const secrets = [
+    "finra-live-secret",
+    "bare-key-value",
+    "abcdef123456TOKEN",
+    "url-embedded-secret",
+    "tok-value",
+    "pw-value",
+    "auth-value",
+    "session-cookie-value",
+    "plain-secret-value",
+  ];
+  const result = await run({
+    repoRoot: root,
+    request: async ({ url }) => {
+      if (url.includes("oauth2")) {
+        return { statusCode: 200, headers: {}, body: JSON.stringify({ access_token: "mock-token", token_type: "Bearer", expires_in: 3600 }) };
+      }
+      throw new TypeError(
+        "weekly exploded client_secret=finra-live-secret key=bare-key-value"
+          + " Bearer abcdef123456TOKEN https://provider.example/data?api_key=url-embedded-secret"
+          + " access_token=tok-value password=pw-value authorization: auth-value"
+          + " cookie=session-cookie-value secret=plain-secret-value",
+      );
+    },
+    clientId: "client-id",
+    clientSecret: "client-secret",
+    eventName: "schedule",
+    runId: "threw-diagnostic-redaction",
+    observedAt: OBSERVED_AT,
+    referenceDate: REFERENCE_DATE,
+  });
+  assert.equal(result.exit_code, 2);
+  assert.equal(result.reason, "transport_error");
+  const shard = readJson(path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "finra_ats.json"));
+  const attempt = shard.attempts[0];
+  assert.equal(attempt.execution, "threw");
+  assert.equal(attempt.exception_kind, "unexpected");
+  assert.equal(attempt.failure_entity, FINRA_ATS_LANE_ID);
+  assert.equal(classifyAttempt(attempt).reason, "unexpected_error");
+  assert.match(attempt.failure_detail, /^CollectorError: FINRA weekly summary request failed: weekly exploded /);
+  assert(attempt.failure_detail.length <= 320, "shard failure detail must stay bounded");
+  for (const secret of secrets) {
+    assert(!attempt.failure_detail.includes(secret), `shard failure detail leaked ${secret}`);
+  }
 }
 
 console.log("fetch-finra-ats-weekly tests passed");
