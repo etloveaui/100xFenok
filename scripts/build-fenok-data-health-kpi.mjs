@@ -961,7 +961,10 @@ export function validateProducerRecoveryAttempt(index) {
   reject(orderedSubset(deferralKeys), "current promotion_deferral_keys are not an ordered unique key subset");
   reject(failedKeys.every((key) => !deferralKeys.includes(key)), "failed and promotion-deferral keys overlap");
   reject(current?.promotion_deferrals === deferralKeys.length, "promotion deferral count does not match its keys");
-  reject(deferralKeys.every((key) => index?.retry_keys?.includes(key)), "promotion deferral key is missing from retry_keys");
+  const detailByKey = new Map(details.map((detail) => [detail?.key, detail]));
+  reject(deferralKeys.every((key) => index?.retry_keys?.includes(key)
+    || detailByKey.get(key)?.reason === "atomic_peer_deferral"),
+  "promotion deferral key is missing from retry_keys");
   reject(details.length === deferralKeys.length
     && JSON.stringify(details.map((row) => row?.key)) === JSON.stringify(deferralKeys),
   "promotion deferral details do not match current keys");
@@ -971,8 +974,21 @@ export function validateProducerRecoveryAttempt(index) {
       && detail?.event_name === current?.event_name
       && detail?.observed_at === current?.observed_at,
     `promotion deferral ${detail?.key ?? "<unknown>"} is not bound to the current run`);
-    reject(["recovery_requires_schedule", "foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(detail?.reason),
+    reject([
+      "recovery_requires_schedule",
+      "foreign_writer_conflict",
+      "recovery_not_advanced_by_provider",
+      "atomic_peer_deferral",
+    ].includes(detail?.reason),
       `promotion deferral ${detail?.key ?? "<unknown>"} reason is invalid`);
+    if (detail?.reason === "atomic_peer_deferral") {
+      reject(Array.isArray(detail?.blocked_by_keys)
+        && detail.blocked_by_keys.length > 0
+        && detail.blocked_by_keys.every((key) => typeof key === "string"
+          && key !== detail.key
+          && deferralKeys.includes(key)),
+      `promotion deferral ${detail?.key ?? "<unknown>"} blocking keys are invalid`);
+    }
     reject(isDetectionSourceStamp(detail?.source_as_of),
       `promotion deferral ${detail?.key ?? "<unknown>"} source_as_of is invalid`);
   }

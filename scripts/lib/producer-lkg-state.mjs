@@ -460,7 +460,18 @@ export class ProducerLkgStateStore {
   }
 
   recordPromotionDeferral(plan) {
-    if (!plan?.deferred || !plan.prior?.retry) throw new Error("promotion deferral requires an active retry plan");
+    const atomicPeerDeferral = plan?.reason === "atomic_peer_deferral";
+    if (!plan?.deferred || (!plan.prior?.retry && !atomicPeerDeferral)) {
+      throw new Error("promotion deferral requires an active retry plan");
+    }
+    if (atomicPeerDeferral && (
+      !plan.prior
+      || !Array.isArray(plan.blocked_by_keys)
+      || plan.blocked_by_keys.length === 0
+      || plan.blocked_by_keys.some((key) => typeof key !== "string" || key === plan.key)
+    )) {
+      throw new Error("atomic peer deferral requires a prior state and distinct blocking keys");
+    }
     const state = {
       ...plan.prior,
       updated_at: plan.run.observed_at,
@@ -474,6 +485,7 @@ export class ProducerLkgStateStore {
         observed_at: plan.run.observed_at,
         source_as_of: plan.provider?.source_as_of ?? plan.inspected?.source_as_of ?? null,
         reason: plan.reason,
+        ...(atomicPeerDeferral ? { blocked_by_keys: [...new Set(plan.blocked_by_keys)] } : {}),
       },
     };
     writeJsonAtomic(this.statePath(plan.key), state);

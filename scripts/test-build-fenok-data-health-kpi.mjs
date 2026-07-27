@@ -2351,6 +2351,33 @@ console.log("# KPI v2 runtime self-proof fixtures");
   const missingSourceResult = validateProducerRecoveryAttempt(missingSource);
   assert.equal(missingSourceResult.valid, false);
   assert.ok(missingSourceResult.reasons.some((reason) => reason.includes("source_as_of is invalid")));
+
+  const atomicMixed = readyRecoveryIndex("us_indices_daily", ["sp500.json", "nasdaq.json"]);
+  atomicMixed.counts = { keys: 2, fresh: 1, lkg: 1, retry: 1, unavailable: 0, failed: 0, recovered: 0 };
+  atomicMixed.retry_keys = ["nasdaq.json"];
+  atomicMixed.lkg_details = [{
+    key: "nasdaq.json", payload_sha256: "b".repeat(64), source_as_of: "2026-07-17",
+    failure_run_id: "us-failure", failure_run_attempt: 1,
+  }];
+  atomicMixed.promotion_deferral_details = [{
+    key: "sp500.json", run_id: "us-current", run_attempt: 1, event_name: "schedule",
+    observed_at: atomicMixed.generated_at, source_as_of: "2026-07-18",
+    reason: "atomic_peer_deferral", blocked_by_keys: ["nasdaq.json"],
+  }, {
+    key: "nasdaq.json", run_id: "us-current", run_attempt: 1, event_name: "schedule",
+    observed_at: atomicMixed.generated_at, source_as_of: "2026-07-17",
+    reason: "recovery_not_advanced_by_provider",
+  }];
+  atomicMixed.current_attempt = {
+    run_id: "us-current", run_attempt: 1, event_name: "schedule", observed_at: atomicMixed.generated_at,
+    attempted: 2, successes: 0, failed: 0, failed_keys: [],
+    promotion_deferrals: 2, promotion_deferral_keys: ["sp500.json", "nasdaq.json"],
+  };
+  assert.deepEqual(validateProducerRecoveryAttempt(atomicMixed), { valid: true, reasons: [] });
+  const atomicMissingBlocker = structuredClone(atomicMixed);
+  delete atomicMissingBlocker.promotion_deferral_details[0].blocked_by_keys;
+  assert.ok(validateProducerRecoveryAttempt(atomicMissingBlocker).reasons.some((reason) =>
+    reason.includes("blocking keys are invalid")));
   ok("hourly recovery validator rejects failed keys outside retry and source-less foreign conflicts");
 }
 

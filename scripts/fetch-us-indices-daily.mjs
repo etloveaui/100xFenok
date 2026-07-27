@@ -562,12 +562,22 @@ export async function runUsIndicesDaily({
     }
     const row = buildAttemptRow({ laneId: LANE_ID, memberId: null, tuple: worst, attemptId, observedAt });
     writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
+    const blockedByKeys = rejectedCandidates.map(({ candidate }) => candidate.key);
+    const atomicCandidates = candidates.map(({ candidate }) => candidate.accepted
+      ? {
+          ...candidate,
+          accepted: false,
+          deferred: true,
+          reason: "atomic_peer_deferral",
+          blocked_by_keys: blockedByKeys,
+        }
+      : candidate);
     let deferredIndex;
     try {
       deferredIndex = withFileRollbackFn(
         transactionPaths({ canonicalRoot, publicRoot, stateRoot, persistencePath }),
         () => {
-          for (const { candidate } of rejectedCandidates) store.recordPromotionDeferral(candidate);
+          for (const candidate of atomicCandidates) store.recordPromotionDeferral(candidate);
           return buildIndexFn(store, keys, run);
         },
       );

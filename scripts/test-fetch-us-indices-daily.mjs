@@ -665,6 +665,8 @@ assert.deepEqual(
   });
   const canonicalBefore = ["sp500", "nasdaq"].map((key) =>
     fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`)));
+  const publicBefore = ["sp500", "nasdaq"].map((key) =>
+    fs.readFileSync(path.join(paths.publicRoot, `${key}.json`)));
   const failed = await runUsIndicesDaily({
     ...paths,
     request: async () => {
@@ -688,6 +690,56 @@ assert.deepEqual(
       "controlled failure must retain canonical bytes",
     );
   });
+  const recoveryStateBeforeMixed = Object.fromEntries(["sp500", "nasdaq"].map((key) => [
+    key,
+    JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8")),
+  ]));
+  const mixedSource = await runUsIndicesDaily({
+    ...paths,
+    request: async (_url, key) => response(200, yahooPayload(
+      key === "sp500" ? "^GSPC" : "^IXIC",
+      key === "sp500"
+        ? [["2026-07-17", 6210], ["2026-07-18", 6220]]
+        : [["2026-07-17", 20210]],
+    )),
+    observedAt: "2026-07-18T19:30:00Z",
+    attemptId: "gh-4211-1-us-indices",
+    eventName: "schedule",
+  });
+  assert.equal(mixedSource.exitCode, 0);
+  assert.equal(mixedSource.degraded, true);
+  assert.equal(mixedSource.updated, false);
+  assert.equal(mixedSource.index.current_attempt.attempted, 2);
+  assert.equal(mixedSource.index.current_attempt.successes, 0);
+  assert.equal(mixedSource.index.current_attempt.failed, 0);
+  assert.equal(mixedSource.index.current_attempt.promotion_deferrals, 2);
+  assert.deepEqual(mixedSource.index.current_attempt.promotion_deferral_keys, ["sp500.json", "nasdaq.json"]);
+  assert.deepEqual(
+    mixedSource.index.promotion_deferral_details.map(({ key, reason, blocked_by_keys: blockedByKeys }) => ({
+      key,
+      reason,
+      blocked_by_keys: blockedByKeys,
+    })),
+    [
+      { key: "sp500.json", reason: "atomic_peer_deferral", blocked_by_keys: ["nasdaq.json"] },
+      { key: "nasdaq.json", reason: "recovery_not_advanced_by_provider", blocked_by_keys: undefined },
+    ],
+  );
+  for (const [index, key] of ["sp500", "nasdaq"].entries()) {
+    assert.deepEqual(
+      fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`)),
+      canonicalBefore[index],
+      "mixed recovery cannot publish partial canonical bytes",
+    );
+    assert.deepEqual(
+      fs.readFileSync(path.join(paths.publicRoot, `${key}.json`)),
+      publicBefore[index],
+      "mixed recovery cannot publish partial public bytes",
+    );
+    const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8"));
+    assert.deepEqual(state.latest_failure, recoveryStateBeforeMixed[key].latest_failure);
+    assert.deepEqual(state.lkg, recoveryStateBeforeMixed[key].lkg);
+  }
   const sameSource = await runUsIndicesDaily({
     ...paths,
     request: async (_url, key) => response(200, yahooPayload(
