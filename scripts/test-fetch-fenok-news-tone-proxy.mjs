@@ -12,6 +12,7 @@ import {
   computeTone,
   cueCounts,
   GDELT_HISTORY_PERSISTENCE_POLICY,
+  main,
   MAX_GDELT_HISTORY_SOURCE_DATES,
   mergeHistory,
   observeAttempt,
@@ -437,6 +438,24 @@ for (const firstFailure of [
 }
 
 {
+  const errors = [];
+  const exitCode = await main({
+    argv: ["--reference-only"],
+    runNewsToneFn: async () => ({
+      ok: false,
+      reason: "rate_limited",
+      retrySet: ["news_tone_proxy"],
+      exitCode: 2,
+    }),
+    error: (message) => errors.push(message),
+  });
+  assert.equal(exitCode, 2, "the CLI must propagate an unrecoverable producer exit code");
+  assert.deepEqual(errors, [
+    "[degraded] GDELT news tone rate_limited; retry set: news_tone_proxy",
+  ]);
+}
+
+{
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-dateless-"));
   const baseline = toneSnapshot({ latestSourceAsOf: "2026-07-23T12:00:00.000Z" });
   await runLkgCase(root, baseline, { runId: "dateless-seed" });
@@ -496,6 +515,7 @@ for (const firstFailure of [
 // --- Workflow contract (owned producer wiring, #366) ------------------------
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, WORKFLOW_REL), "utf8");
+  const producer = fs.readFileSync(path.join(REPO_ROOT, "scripts", "fetch-fenok-news-tone-proxy.mjs"), "utf8");
   assert.match(workflow, /node scripts\/test-fetch-fenok-news-tone-proxy\.mjs/);
   assert.match(workflow, /node scripts\/fetch-fenok-news-tone-proxy\.mjs/);
   assert.match(workflow, /controlled_failure/);
@@ -503,6 +523,11 @@ for (const firstFailure of [
   assert.match(workflow, /--reference-only --retries 2 --retry-backoff-ms 6500/);
   assert.match(workflow, new RegExp(`detection-attempts/${LANE_ID}\\.json`));
   assert.match(workflow, /data\/computed\/fenok_news_tone_proxy\.json/);
+  assert.match(
+    producer,
+    /main\(\)[\s\S]*?\.then\(\(exitCode\) => \{[\s\S]*?process\.exitCode = exitCode;/,
+    "the executable entrypoint must map main's returned status onto the process",
+  );
   assert.match(workflow, /data\/computed\/fenok_news_tone_proxy_history\.json/);
   assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
   assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);

@@ -923,16 +923,21 @@ export async function runNewsTone({
   };
 }
 
-async function main() {
-  const args = parseArgs(process.argv.slice(2));
-  const result = await runNewsTone({ args });
+export async function main({
+  argv = process.argv.slice(2),
+  runNewsToneFn = runNewsTone,
+  log = console.log,
+  error = console.error,
+} = {}) {
+  const args = parseArgs(argv);
+  const result = await runNewsToneFn({ args });
   if (!result.ok) {
     const detail = result.failure_detail ? `; error: ${result.failure_detail}` : "";
-    console.error(`[degraded] GDELT news tone ${result.reason}; retry set: ${result.retrySet.join(", ") || "none"}${detail}`);
-    return;
+    error(`[degraded] GDELT news tone ${result.reason}; retry set: ${result.retrySet.join(", ") || "none"}${detail}`);
+    return Number.isInteger(result.exitCode) ? result.exitCode : 1;
   }
   const snapshot = result.snapshot;
-  console.log(JSON.stringify({
+  log(JSON.stringify({
     output_file: `data/${OUTPUT_FILE}`,
     history_file: `data/${HISTORY_FILE}`,
     wrote: !args.noWrite,
@@ -945,13 +950,18 @@ async function main() {
       confidence: row.confidence,
     })),
   }, null, 2));
+  return 0;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  main().catch((err) => {
-    console.error(err.stack || err.message);
-    process.exit(1);
-  });
+  main()
+    .then((exitCode) => {
+      process.exitCode = exitCode;
+    })
+    .catch((err) => {
+      console.error(err.stack || err.message);
+      process.exitCode = 1;
+    });
 }
 
 export {
