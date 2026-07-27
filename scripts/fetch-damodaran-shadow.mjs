@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -14,6 +15,13 @@ import {
   libraryTuple,
   writeAttemptShard,
 } from "./lib/data-supply-attempt-shard.mjs";
+import {
+  LaneLkgStore,
+  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+  buildProviderObservationV2,
+  classifyLkgFailure,
+  isNaturalScheduleRun,
+} from "./lib/data-supply-lkg-store.mjs";
 
 export const SCHEMA_VERSION = "damodaran-owner-guard/v1";
 export const ATTEMPT_SHARD_RELATIVE_PATH =
@@ -42,6 +50,14 @@ export const PUBLIC_MIRROR_RELATIVE_PATHS = Object.freeze([
   "100xfenok-next/public/data/damodaran/industry_metrics.json",
   "100xfenok-next/public/data/damodaran/industry_metrics_regions.json",
 ]);
+export const DAMODARAN_HISTORY_LIMIT = 52;
+export const DAMODARAN_PERSISTENCE_POLICY = Object.freeze({
+  schema_version: "damodaran-bounded-persistence/v1",
+  basis: "successful_provider_bundle",
+  max_bundle_observations: DAMODARAN_HISTORY_LIMIT,
+  eviction: "oldest_provider_bundle_first",
+});
+const DAMODARAN_BUNDLE_SCHEMA = "damodaran-current-bundle/v1";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, "..");
@@ -136,6 +152,239 @@ function atomicWriteJson(filePath, payload) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(temporaryPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
   fs.renameSync(temporaryPath, filePath);
+}
+
+function snapshotFiles(filePaths) {
+  return filePaths.map((filePath) => ({
+    filePath,
+    bytes: fs.existsSync(filePath) ? fs.readFileSync(filePath) : null,
+  }));
+}
+
+function restoreFiles(snapshot) {
+  for (const { filePath, bytes } of snapshot) {
+    if (bytes === null) {
+      fs.rmSync(filePath, { force: true });
+      continue;
+    }
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, bytes);
+  }
+}
+
+function providerSourceDate(value) {
+  if (typeof value !== "string" || value.trim() === "") return null;
+  const normalized = value.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/u.test(normalized)) {
+    const parsed = new Date(`${normalized}T00:00:00.000Z`);
+    return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === normalized
+      ? normalized
+      : null;
+  }
+  const match = normalized.match(/^([A-Za-z]+)(?:\s+(\d{1,2}),)?\s+(\d{4})$/u);
+  if (!match) return null;
+  const monthIndex = [
+    "january", "february", "march", "april", "may", "june",
+    "july", "august", "september", "october", "november", "december",
+  ].indexOf(match[1].toLowerCase());
+  const day = Number(match[2] ?? 1);
+  const year = Number(match[3]);
+  if (monthIndex < 0 || !Number.isInteger(day) || day < 1 || day > 31) return null;
+  const parsed = new Date(Date.UTC(year, monthIndex, day));
+  return parsed.getUTCFullYear() === year && parsed.getUTCMonth() === monthIndex && parsed.getUTCDate() === day
+    ? parsed.toISOString().slice(0, 10)
+    : null;
+}
+
+function payloadSourceAsOf(payload) {
+  return providerSourceDate(payload?.metadata?.source_date);
+}
+
+export function buildDamodaranBundle(payloads) {
+  if (!payloads || typeof payloads !== "object" || Array.isArray(payloads)
+    || Object.keys(payloads).length !== FILE_NAMES.length
+    || FILE_NAMES.some((file) => !isObject(payloads[file]) || Array.isArray(payloads[file]))) {
+    throw new Error("Damodaran bundle requires all six provider payloads");
+  }
+  const sourceDates = FILE_NAMES.map((file) => payloadSourceAsOf(payloads[file]));
+  if (sourceDates.some((value) => value === null)) {
+    throw new Error("Damodaran bundle requires provider source dates on all payloads");
+  }
+  return {
+    schema_version: DAMODARAN_BUNDLE_SCHEMA,
+    source_as_of: sourceDates.sort().at(-1),
+    persistence_policy: DAMODARAN_PERSISTENCE_POLICY,
+    files: Object.fromEntries(FILE_NAMES.map((file) => [file, structuredClone(payloads[file])])),
+  };
+}
+
+export function validDamodaranBundle(document) {
+  if (document?.schema_version !== DAMODARAN_BUNDLE_SCHEMA
+    || !/^\d{4}-\d{2}-\d{2}$/u.test(document?.source_as_of)
+    || JSON.stringify(document?.persistence_policy) !== JSON.stringify(DAMODARAN_PERSISTENCE_POLICY)
+    || !document?.files || typeof document.files !== "object" || Array.isArray(document.files)
+    || Object.keys(document.files).length !== FILE_NAMES.length
+    || FILE_NAMES.some((file) => !isObject(document.files[file]) || Array.isArray(document.files[file]))) {
+    return false;
+  }
+  const sourceDates = FILE_NAMES.map((file) => payloadSourceAsOf(document.files[file]));
+  return sourceDates.every((value) => value !== null) && sourceDates.sort().at(-1) === document.source_as_of;
+}
+
+function damodaranProviderProgressVector(bundle) {
+  if (!validDamodaranBundle(bundle)) throw new Error("Damodaran provider progress bundle is invalid");
+  return Object.fromEntries(FILE_NAMES.map((file) => [file, payloadSourceAsOf(bundle.files[file])]));
+}
+
+export function evaluateDamodaranProviderProgress(retainedBundle, candidateBundle) {
+  const retained = damodaranProviderProgressVector(retainedBundle);
+  const candidate = damodaranProviderProgressVector(candidateBundle);
+  const regressedFiles = FILE_NAMES.filter((file) => candidate[file] < retained[file]);
+  const advancedFiles = FILE_NAMES.filter((file) => candidate[file] > retained[file]);
+  if (regressedFiles.length > 0) {
+    return {
+      eligible: false,
+      reason: "recovery_provider_regression",
+      regressed_files: regressedFiles,
+      advanced_files: advancedFiles,
+    };
+  }
+  if (advancedFiles.length === 0) {
+    return {
+      eligible: false,
+      reason: "recovery_not_advanced_by_provider",
+      regressed_files: [],
+      advanced_files: [],
+    };
+  }
+  return {
+    eligible: true,
+    reason: "ok",
+    regressed_files: [],
+    advanced_files: advancedFiles,
+  };
+}
+
+function retainedDamodaranBundle(repoRoot, store, item) {
+  const expectedPath = "data/admin/damodaran/lkg/damodaran.json";
+  if (item?.lkg?.path !== expectedPath
+    || !store.validRetainedLkg("damodaran", validDamodaranBundle, (document) => document?.source_as_of ?? null)) {
+    throw new Error("Damodaran retained LKG is invalid");
+  }
+  const bundle = readJson(path.join(repoRoot, expectedPath));
+  if (!validDamodaranBundle(bundle)) throw new Error("Damodaran retained LKG bundle is invalid");
+  return bundle;
+}
+
+function recordSuccessWithVectorDecision(store, input, vectorDecision) {
+  if (vectorDecision?.eligible !== true) return store.recordSuccess(input);
+  const evaluatePromotionCandidates = store.evaluatePromotionCandidates;
+  store.evaluatePromotionCandidates = (artifacts) => artifacts.map((artifact) => ({
+    key: artifact.key,
+    eligible: true,
+    reason: "ok",
+    artifact,
+  }));
+  try {
+    return store.recordSuccess(input);
+  } finally {
+    store.evaluatePromotionCandidates = evaluatePromotionCandidates;
+  }
+}
+
+function bundleBytes(bundle) {
+  return Buffer.from(`${JSON.stringify(bundle, null, 2)}\n`);
+}
+
+function bundleHistoryRow(bundle, run) {
+  return {
+    source_as_of: bundle.source_as_of,
+    observed_at: run.observedAt,
+    run_id: run.runId,
+    run_attempt: run.runAttempt,
+    event_name: run.eventName,
+    file_sha256: Object.fromEntries(FILE_NAMES.map((file) => [
+      file,
+      createHash("sha256").update(JSON.stringify(bundle.files[file])).digest("hex"),
+    ])),
+  };
+}
+
+export function appendDamodaranHistory(existing, bundle, run) {
+  if (!Array.isArray(existing) || !validDamodaranBundle(bundle)
+    || typeof run?.runId !== "string" || run.runId === ""
+    || !Number.isInteger(run?.runAttempt) || run.runAttempt < 1
+    || typeof run?.eventName !== "string" || run.eventName === ""
+    || typeof run?.observedAt !== "string" || !Number.isFinite(Date.parse(run.observedAt))
+    || existing.some((item) => (
+      !/^\d{4}-\d{2}-\d{2}$/u.test(item?.source_as_of)
+      || typeof item?.observed_at !== "string" || !Number.isFinite(Date.parse(item.observed_at))
+      || typeof item?.run_id !== "string" || item.run_id === ""
+      || !Number.isInteger(item?.run_attempt) || item.run_attempt < 1
+      || typeof item?.event_name !== "string" || item.event_name === ""
+      || !item?.file_sha256 || typeof item.file_sha256 !== "object" || Array.isArray(item.file_sha256)
+      || Object.keys(item.file_sha256).length !== FILE_NAMES.length
+      || FILE_NAMES.some((file) => !/^[0-9a-f]{64}$/u.test(item.file_sha256[file]))
+    ))) {
+    throw new Error("Damodaran history contract is invalid");
+  }
+  const row = bundleHistoryRow(bundle, run);
+  const identity = `${row.source_as_of}:${JSON.stringify(row.file_sha256)}`;
+  const byIdentity = new Map(existing.map((item) => [
+    `${item?.source_as_of}:${JSON.stringify(item?.file_sha256)}`,
+    item,
+  ]));
+  byIdentity.set(identity, row);
+  const available = [...byIdentity.values()].sort((left, right) => (
+    String(left.source_as_of).localeCompare(String(right.source_as_of))
+      || String(left.observed_at).localeCompare(String(right.observed_at))
+      || String(left.run_id).localeCompare(String(right.run_id))
+  ));
+  const observations = available.slice(-DAMODARAN_HISTORY_LIMIT);
+  return {
+    schema_version: "damodaran-bundle-history/v1",
+    persistence_policy: DAMODARAN_PERSISTENCE_POLICY,
+    persistence_state: {
+      available_bundle_observations: available.length,
+      retained_bundle_observations: observations.length,
+      pruned_bundle_observations: available.length - observations.length,
+    },
+    observations,
+  };
+}
+
+function promoteProducedBytes({ bytesByFile, canonicalRoot }) {
+  if (!bytesByFile || FILE_NAMES.some((file) => !Buffer.isBuffer(bytesByFile[file]))) {
+    throw new Error("Damodaran promotion requires all six verified byte payloads");
+  }
+  fs.mkdirSync(canonicalRoot, { recursive: true });
+  const staged = FILE_NAMES.map((file) => {
+    const targetPath = path.join(canonicalRoot, file);
+    const temporaryPath = path.join(canonicalRoot, `.${file}.${process.pid}.tmp`);
+    fs.writeFileSync(temporaryPath, bytesByFile[file]);
+    return { targetPath, temporaryPath, prior: fs.existsSync(targetPath) ? fs.readFileSync(targetPath) : null };
+  });
+  try {
+    for (const row of staged) fs.renameSync(row.temporaryPath, row.targetPath);
+  } catch (error) {
+    for (const row of staged) {
+      fs.rmSync(row.temporaryPath, { force: true });
+      if (row.prior === null) fs.rmSync(row.targetPath, { force: true });
+      else fs.writeFileSync(row.targetPath, row.prior);
+    }
+    throw error;
+  }
+}
+
+function bootstrapCurrentBundle(canonicalRoot, currentBundlePath) {
+  try {
+    const payloads = Object.fromEntries(FILE_NAMES.map((file) => [file, readJson(path.join(canonicalRoot, file))]));
+    const bundle = buildDamodaranBundle(payloads);
+    atomicWriteJson(currentBundlePath, bundle);
+    return bundle;
+  } catch {
+    return null;
+  }
 }
 
 function blockedRows(message) {
@@ -307,40 +556,75 @@ function thrownResult(error, latencyMs) {
 }
 
 export function runDamodaranShadow({
-  reportPath = REPORT_PATH,
-  attemptShardPath = ATTEMPT_SHARD_PATH,
-  canonicalRoot = path.join(REPO_ROOT, "data", "damodaran"),
+  repoRoot = REPO_ROOT,
+  reportPath = path.join(repoRoot, REPORT_RELATIVE_PATH),
+  attemptShardPath = path.join(repoRoot, ATTEMPT_SHARD_RELATIVE_PATH),
+  canonicalRoot = path.join(repoRoot, "data", "damodaran"),
+  currentBundlePath = path.join(repoRoot, "data", "admin", "damodaran", "current", "damodaran.json"),
+  historyPath = path.join(repoRoot, "data", "admin", "damodaran", "history.json"),
   spawn = spawnSync,
   observedAt = new Date().toISOString(),
   attemptId = defaultAttemptId("damodaran", observedAt),
+  runId = process.env.GITHUB_RUN_ID || String(attemptId),
+  runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
+  eventName = process.env.GITHUB_EVENT_NAME || "local",
+  controlledFailure = process.env.INPUT_CONTROLLED_FAILURE === "true",
+  lkgStoreFactory = ({ repoRoot: storeRoot, laneId }) => new LaneLkgStore({
+    repoRoot: storeRoot,
+    laneId,
+  }),
   now = Date.now,
 } = {}) {
+  if (controlledFailure && eventName !== "workflow_dispatch") {
+    throw new Error("controlled Damodaran failure requires workflow_dispatch");
+  }
   const startedAt = now();
+  const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
+  const store = lkgStoreFactory({ repoRoot, laneId: "damodaran" });
+  const artifact = {
+    key: "damodaran",
+    canonicalPath: currentBundlePath,
+    validateDocument: validDamodaranBundle,
+    sourceAsOf: (document) => document?.source_as_of ?? null,
+  };
   let report;
   let producerResult;
+  let candidateBundle = null;
+  let verifiedBytes = null;
 
   try {
     const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "damodaran-shadow-"));
     const outputDir = path.join(temporaryRoot, "converter-output");
     const bundlePath = path.join(temporaryRoot, "bundle.json");
     try {
-      producerResult = spawn(
-        process.env.PYTHON || "python3",
-        [PRODUCER_PATH, "--output-dir", outputDir, "--bundle", bundlePath],
-        {
-          cwd: REPO_ROOT,
-          encoding: "utf8",
-          maxBuffer: 32 * 1024 * 1024,
-          timeout: 45 * 60 * 1000,
-        },
-      );
+      producerResult = controlledFailure
+        ? {
+          status: null,
+          signal: null,
+          stderr: "",
+          error: new Error("controlled failure"),
+        }
+        : spawn(
+          process.env.PYTHON || "python3",
+          [PRODUCER_PATH, "--output-dir", outputDir, "--bundle", bundlePath],
+          {
+            cwd: repoRoot,
+            encoding: "utf8",
+            maxBuffer: 32 * 1024 * 1024,
+            timeout: 45 * 60 * 1000,
+          },
+        );
 
       if (fs.existsSync(bundlePath)) {
         const bundle = readJson(bundlePath);
         let guard = guardProducedFiles(bundle, outputDir);
         if (producerResult.status === 0 && guard.status === "match") {
           try {
-            guard = promoteProducedFiles({ bundle, producedRoot: outputDir, canonicalRoot });
+            candidateBundle = buildDamodaranBundle(bundle.payloads);
+            verifiedBytes = Object.fromEntries(FILE_NAMES.map((file) => [
+              file,
+              fs.readFileSync(path.join(outputDir, file)),
+            ]));
           } catch (error) {
             guard = {
               status: "blocked",
@@ -383,7 +667,6 @@ export function runDamodaranShadow({
     } finally {
       fs.rmSync(temporaryRoot, { recursive: true, force: true });
     }
-    atomicWriteJson(reportPath, report);
   } catch (error) {
     const latencyMs = Math.max(0, Math.round(now() - startedAt));
     writeAttemptShard({
@@ -393,9 +676,166 @@ export function runDamodaranShadow({
       attemptId,
       result: thrownResult(error, latencyMs),
     });
+    bootstrapCurrentBundle(canonicalRoot, currentBundlePath);
+    store.recordFailure({
+      artifacts: [artifact],
+      run,
+      reason: "unexpected_error",
+    });
     throw error;
   }
 
+  let recoveryResult = null;
+  if (candidateBundle && report.status === "match") {
+    const payloadBytes = bundleBytes(candidateBundle);
+    const validateDocument = validDamodaranBundle;
+    const deriveSourceAsOf = (document) => document?.source_as_of ?? null;
+    const candidate = {
+      key: "damodaran",
+      currentRelativePath: "data/admin/damodaran/current/damodaran.json",
+      payloadBytes,
+      sourceAsOf: candidateBundle.source_as_of,
+      validateDocument,
+      deriveSourceAsOf,
+      promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+      provider_observation: buildProviderObservationV2({
+        payloadBytes,
+        sourceAsOf: candidateBundle.source_as_of,
+        validateDocument,
+        deriveSourceAsOf,
+        candidateContainsObservation: (candidateDocument, providerDocument) => (
+          JSON.stringify(candidateDocument) === JSON.stringify(providerDocument)
+        ),
+        run,
+      }),
+    };
+    const before = store.stateSnapshot().items.damodaran;
+    let vectorDecision = null;
+    if (before?.retry === true && !isNaturalScheduleRun(run)) {
+      recoveryResult = {
+        ok: false,
+        degraded: true,
+        corrupt: false,
+        exitCode: 0,
+        reason: "recovery_requires_schedule",
+        retrySet: store.stateSnapshot().retry_set,
+      };
+    } else {
+      if (before?.retry === true && before?.resolution_state === "lkg_primary") {
+        vectorDecision = evaluateDamodaranProviderProgress(
+          retainedDamodaranBundle(repoRoot, store, before),
+          candidateBundle,
+        );
+      }
+      const decision = vectorDecision ?? store.evaluatePromotionCandidates([candidate], run)[0];
+      if (!decision.eligible) {
+        if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)) {
+          store.recordPromotionDeferral({ artifacts: [candidate], run, reason: decision.reason });
+        }
+        recoveryResult = {
+          ok: false,
+          degraded: true,
+          corrupt: false,
+          exitCode: 0,
+          reason: decision.reason,
+          retrySet: store.stateSnapshot().retry_set,
+        };
+      } else {
+        try {
+          let existingHistory = [];
+          if (fs.existsSync(historyPath)) {
+            const historyDocument = readJson(historyPath);
+            if (historyDocument?.schema_version !== "damodaran-bundle-history/v1"
+              || JSON.stringify(historyDocument?.persistence_policy) !== JSON.stringify(DAMODARAN_PERSISTENCE_POLICY)
+              || !Array.isArray(historyDocument?.observations)
+              || historyDocument.observations.length > DAMODARAN_HISTORY_LIMIT
+              || historyDocument?.persistence_state?.retained_bundle_observations
+                !== historyDocument.observations.length
+              || historyDocument?.persistence_state?.available_bundle_observations
+                !== historyDocument.persistence_state.retained_bundle_observations
+                  + historyDocument.persistence_state.pruned_bundle_observations) {
+              throw new Error("Damodaran history contract is invalid");
+            }
+            existingHistory = historyDocument.observations;
+          }
+          const history = appendDamodaranHistory(existingHistory, candidateBundle, run);
+          const transactionSnapshot = snapshotFiles([
+            ...FILE_NAMES.map((file) => path.join(canonicalRoot, file)),
+            currentBundlePath,
+            historyPath,
+            store.statePath,
+          ]);
+          let success;
+          try {
+            promoteProducedBytes({ bytesByFile: verifiedBytes, canonicalRoot });
+            atomicWriteJson(currentBundlePath, candidateBundle);
+            atomicWriteJson(historyPath, history);
+            success = recordSuccessWithVectorDecision(
+              store,
+              { artifacts: [candidate], run },
+              vectorDecision,
+            );
+          } catch (error) {
+            restoreFiles(transactionSnapshot);
+            throw error;
+          }
+          recoveryResult = {
+            ok: true,
+            degraded: false,
+            corrupt: false,
+            exitCode: 0,
+            reason: "ok",
+            retrySet: success.retrySet,
+            recovered: success.state.items.damodaran?.recovered_at === observedAt,
+          };
+        } catch (error) {
+          report = {
+            ...report,
+            status: "blocked",
+            summary: { ...report.summary, match: 0, blocked: FILE_NAMES.length },
+            files: blockedRows(`${error.name}: ${error.message}`),
+          };
+          candidateBundle = null;
+          const failure = store.recordFailure({
+            artifacts: [artifact],
+            run,
+            reason: "unexpected_error",
+          });
+          const classification = classifyLkgFailure({
+            reason: "unexpected_error",
+            hasCompleteLkg: failure.hasCompleteLkg,
+          });
+          recoveryResult = {
+            ok: false,
+            degraded: classification.degraded,
+            corrupt: classification.corrupt,
+            exitCode: classification.exitCode,
+            reason: "unexpected_error",
+            retrySet: failure.retrySet,
+          };
+        }
+      }
+    }
+  }
+
+  if (!recoveryResult && report.status !== "match") {
+    bootstrapCurrentBundle(canonicalRoot, currentBundlePath);
+    const reason = controlledFailure
+      ? "controlled_failure"
+      : report.status === "mismatch" ? "schema_drift" : "unexpected_error";
+    const failure = store.recordFailure({ artifacts: [artifact], run, reason });
+    const classification = classifyLkgFailure({ reason, hasCompleteLkg: failure.hasCompleteLkg });
+    recoveryResult = {
+      ok: false,
+      degraded: classification.degraded,
+      corrupt: classification.corrupt,
+      exitCode: classification.exitCode,
+      reason,
+      retrySet: failure.retrySet,
+    };
+  }
+
+  atomicWriteJson(reportPath, report);
   const latencyMs = Math.max(0, Math.round(now() - startedAt));
   const row = writeAttemptShard({
     laneId: "damodaran",
@@ -405,9 +845,10 @@ export function runDamodaranShadow({
     result: resultForReport(report, producerResult, latencyMs),
   });
   return {
-    exitCode: report.status === "match" ? 0 : report.status === "mismatch" ? 2 : 1,
+    exitCode: recoveryResult?.exitCode ?? (report.status === "match" ? 0 : 2),
     report,
     row,
+    recovery: recoveryResult,
   };
 }
 

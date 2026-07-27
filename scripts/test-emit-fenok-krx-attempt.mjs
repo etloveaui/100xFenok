@@ -23,7 +23,14 @@ function successBridge() {
     schema_version: "fenok-edge-korea-krx-bridge/v1",
     generated_at: "2026-07-20T10:31:00.000Z",
     source: "KRX_OPEN_API",
+    market: "Korea",
+    raw_public: false,
     as_of: "2026-07-17",
+    freshness: {
+      as_of: "2026-07-17",
+      source_date_min: "2026-07-17",
+      source_date_max: "2026-07-17",
+    },
     latest_run: {
       run_id: "krx_daily_20260717",
       attempted_call_count: 31,
@@ -41,8 +48,13 @@ const lane = registryLaneById(LANE_ID);
 assert.ok(lane, "KRX must be registered before the producer can emit a valid shard");
 assert.equal(lane.owner_workflow, WORKFLOW);
 assert.equal(lane.enforcement, "shadow", "emitter-first: KRX stays shadow until a real committed shard lands");
+assert.equal(lane.roots.admin_store, "data/admin/krx");
 assert.equal(lane.roots.detection_attempt, "data/admin/data-supply-state/detection-attempts/krx.json");
+assert.equal(lane.recovery_store, "data/admin/krx/index.json");
+assert.equal(lane.kpi_recovery_shape, "general");
 assert.ok(lane.commit_shards.includes("data/admin/data-supply-state/detection-attempts/krx.json"));
+assert.ok(lane.commit_shards.includes("data/admin/krx/index.json"));
+assert.ok(lane.commit_shards.includes("data/admin/krx/lkg/bridge.json"));
 
 const configLane = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((row) => row.id === LANE_ID);
 assert.ok(configLane, "KRX must enter the detection-floor denominator");
@@ -116,11 +128,17 @@ assert.equal(configLane.endpoint_contract.transport, "library");
 
 const workflowText = fs.readFileSync(new URL("../.github/workflows/fenok-edge-krx-daily.yml", import.meta.url), "utf8");
 assert.match(workflowText, /id: krx_fetch/);
-assert.match(workflowText, /steps\.krx_fetch\.outcome/);
+assert.match(workflowText, /controlled_failure:/);
+assert.match(workflowText, /INPUT_CONTROLLED_FAILURE/);
+assert.match(workflowText, /--controlled-failure/);
+assert.match(workflowText, /steps\.krx_fetch\.outputs\.attempt_outcome \|\| steps\.krx_fetch\.outcome/);
 assert.match(workflowText, /emit-fenok-krx-attempt\.mjs/);
 assert.match(workflowText, /detection-attempts\/krx\.json/);
 assert.match(workflowText, /if: \$\{\{ always\(\)/, "failure evidence must still reach the emitter/commit path");
 assert.match(workflowText, /--stage always_if_exists/);
 assert.match(workflowText, /--stage success_if_exists/);
+assert.match(workflowText, /git add -- data\/admin\/krx\/index\.json/);
+assert.match(workflowText, /git add -- data\/admin\/krx\/lkg\/bridge\.json/);
+assert.match(workflowText, /if \[ "\$KRX_FETCH_OUTCOME" = "success" \]; then/);
 
 console.log("test-emit-fenok-krx-attempt: ok");

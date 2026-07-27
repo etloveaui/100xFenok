@@ -577,15 +577,17 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     const value = structuredClone(JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report);
     // The canonical baseline keeps ApeWisdom honestly unobserved because its
     // fixture has no attempt row. Adapter unit cases need an all-ready live
-    // projection, so synthesize only that row and keep aggregates coherent.
-    const ape = value.lanes.find((item) => item.id === "apewisdom_attention");
-    ape.status = "ready";
-    ape.reason = "ok";
-    ape.endpoint = { status: "ready", reason: "ok", observed_at: value.generated_at };
-    value.counts.ready += 1;
-    value.counts.unobserved -= 1;
-    value.counts.producer_members_ready += 1;
-    value.counts.producer_members_unobserved -= 1;
+    // projection, so synthesize only that row.
+    for (const id of ["apewisdom_attention"]) {
+      const proxy = value.lanes.find((item) => item.id === id);
+      proxy.status = "ready";
+      proxy.reason = "ok";
+      proxy.endpoint = { status: "ready", reason: "ok", observed_at: value.generated_at };
+      value.counts.ready += 1;
+      value.counts.unobserved -= 1;
+      value.counts.producer_members_ready += 1;
+      value.counts.producer_members_unobserved -= 1;
+    }
     if (laneId !== null) {
       const index = value.lanes.findIndex((item) => item.id === laneId);
       value.lanes[index] = { ...value.lanes[index], ...overrides };

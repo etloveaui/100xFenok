@@ -19,12 +19,14 @@ import {
   runNewsTone,
   validToneSnapshot,
 } from "./fetch-fenok-news-tone-proxy.mjs";
+import { classifyAttempt } from "./build-data-supply-detection-floor.mjs";
 import { attemptResult, returnedTuple, threwTuple } from "./lib/data-supply-attempt-shard.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const LANE_ID = "gdelt_news_tone";
 const WORKFLOW_REL = ".github/workflows/fetch-fenok-news-tone.yml";
+const REFERENCE_TICKERS = ["DASH", "UNH", "PYPL", "RDDT", "COIN", "MU", "PLTR", "NVDA"];
 
 assert.equal(cleanCompanyName("NVIDIA CORP Class A"), "NVIDIA A");
 assert.equal(queryForTicker("NVDA", "NVIDIA CORP"), '"NVIDIA"');
@@ -72,19 +74,31 @@ function toneSnapshot({ latestSourceAsOf, sourceFloor = "2026-07-20T12:00:00.000
     source_as_of_reason: null,
     status: "ready",
     formula_version: "fenok-news-tone-proxy-v0.1-gdelt-headlines",
-    coverage: { row_count: 2, with_articles: 2, with_tone_score: 2, errors: [] },
-    rows: [
-      {
-        ticker: "DASH",
-        as_of: sourceFloor,
-        direct_news_tone_proxy: { score_0_100: 55, attention_score_0_100: 4, article_count: 1 },
+    coverage: {
+      expected_tickers: REFERENCE_TICKERS,
+      expected_row_count: REFERENCE_TICKERS.length,
+      observed_row_count: REFERENCE_TICKERS.length,
+      row_count: REFERENCE_TICKERS.length,
+      with_articles: REFERENCE_TICKERS.length,
+      with_tone_score: REFERENCE_TICKERS.length,
+      unavailable_row_count: 0,
+      unavailable_tickers: [],
+      missing_tickers: [],
+      duplicate_tickers: [],
+      unexpected_tickers: [],
+      invalid_ticker_row_count: 0,
+      complete: true,
+      errors: [],
+    },
+    rows: REFERENCE_TICKERS.map((ticker) => ({
+      ticker,
+      as_of: ticker === "NVDA" ? latestSourceAsOf : sourceFloor,
+      direct_news_tone_proxy: {
+        score_0_100: ticker === "NVDA" ? 60 : 55,
+        attention_score_0_100: ticker === "NVDA" ? 8 : 4,
+        article_count: ticker === "NVDA" ? 2 : 1,
       },
-      {
-        ticker: "NVDA",
-        as_of: latestSourceAsOf,
-        direct_news_tone_proxy: { score_0_100: 60, attention_score_0_100: 8, article_count: 2 },
-      },
-    ],
+    })),
   };
 }
 
@@ -410,6 +424,10 @@ for (const firstFailure of [
     probe: transportProbe,
   });
   assert.equal(failed.reason, "transport_error");
+  assert.equal(failed.retained, false);
+  assert.equal(failed.degraded, false);
+  assert.equal(failed.corrupt, true);
+  assert.equal(failed.exitCode, 2, "a failed run without a complete exact-basket LKG must fail closed");
   const shard = JSON.parse(fs.readFileSync(
     path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "gdelt_news_tone.json"),
     "utf8",
@@ -461,14 +479,18 @@ for (const firstFailure of [
     observedAt: "2026-07-24T20:00:00.000Z",
     probe: rateLimitedProbe,
   });
-  assert.equal(failed.retained, true, "a rate-limited first post-deploy run seeds LKG from the prior dated canonical");
+  assert.equal(failed.retained, false, "a partial legacy canonical is not a complete exact-basket LKG");
+  assert.equal(failed.degraded, false);
+  assert.equal(failed.corrupt, true);
+  assert.equal(failed.exitCode, 2);
   assert.equal(fs.readFileSync(canonicalPath, "utf8"), before);
   const state = JSON.parse(fs.readFileSync(
     path.join(root, "data", "admin", "gdelt_news_tone", "index.json"),
     "utf8",
   ));
-  assert.equal(state.items.news_tone_proxy.lkg.source_as_of, "2026-07-23T12:00:00.000Z",
-    "legacy LKG seed uses only the newest valid provider article seendate");
+  assert.equal(state.items.news_tone_proxy.resolution_state, "unavailable");
+  assert.equal(state.items.news_tone_proxy.retry, true);
+  assert.equal(state.items.news_tone_proxy.lkg ?? null, null);
 }
 
 // --- Workflow contract (owned producer wiring, #366) ------------------------
@@ -505,15 +527,10 @@ for (const firstFailure of [
   assert.deepEqual(gate.lanes.sort(), [LANE_ID].sort(), "registry lane attribution for this workflow");
 }
 
-// --- Partial success: publish the rows the provider actually dated -----------
-// GDELT rate-limits per-ticker queries. The fetch loop already degrades a
-// rate-limited ticker into an article-less row on purpose, but the document
-// assembly then treated one undated row as poisoning the whole snapshot:
-// source_as_of went null, status went degraded, and runNewsTone answered
-// empty_payload — discarding every ticker that HAD been fetched. That is the
-// all-or-nothing disease DEC-264 already removed from the StockAnalysis lane.
-// An undated row is not evidence, so it is dropped from the published document
-// and counted; a dated row is evidence, so it publishes.
+// --- Complete-reference readiness -------------------------------------------
+// The live score is a fixed reference-basket comparison. A 3/8 partial basket
+// remains useful diagnostic evidence, but it cannot be ready or replace the
+// prior complete LKG.
 const toneRow = (ticker, asOf, articleCount = 1) => ({
   ticker,
   as_of: asOf,
@@ -528,26 +545,33 @@ const toneRow = (ticker, asOf, articleCount = 1) => ({
 
 {
   const doc = buildSnapshotDocument({
-    rows: [
-      toneRow("DASH", "2026-07-25T02:00:00.000Z"),
-      toneRow("PYPL", null, 0),
-    ],
-    errors: [{ ticker: "PYPL", error: "GDELT 429" }],
+    expectedTickers: REFERENCE_TICKERS,
+    rows: REFERENCE_TICKERS.map((ticker, index) => (
+      index < 3 ? toneRow(ticker, `2026-07-${String(25 - index).padStart(2, "0")}T02:00:00.000Z`) : toneRow(ticker, null, 0)
+    )),
+    errors: REFERENCE_TICKERS.slice(3).map((ticker) => ({ ticker, error: "GDELT 429" })),
     generatedAt: "2026-07-25T15:53:14.450Z",
   });
-  assert.equal(doc.status, "ready", "one dated row is enough to publish");
-  assert.deepEqual(doc.rows.map((row) => row.ticker), ["DASH"], "undated rows are not published");
-  assert.equal(doc.source_as_of, "2026-07-25T02:00:00.000Z");
-  assert.equal(doc.coverage.row_count, 1);
-  assert.equal(doc.coverage.unavailable_row_count, 1, "the dropped ticker must stay counted, not vanish");
-  assert.deepEqual(doc.coverage.unavailable_tickers, ["PYPL"]);
+  assert.equal(doc.status, "degraded", "3/8 reference coverage must not be live-scoreable");
+  assert.deepEqual(doc.rows.map((row) => row.ticker), REFERENCE_TICKERS.slice(0, 3));
+  assert.equal(doc.source_as_of, "2026-07-23T02:00:00.000Z");
+  assert.deepEqual(doc.coverage.expected_tickers, REFERENCE_TICKERS);
+  assert.equal(doc.coverage.expected_row_count, 8);
+  assert.equal(doc.coverage.observed_row_count, 8);
+  assert.equal(doc.coverage.row_count, 3);
+  assert.equal(doc.coverage.unavailable_row_count, 5, "unavailable references stay explicit");
+  assert.deepEqual(doc.coverage.unavailable_tickers, REFERENCE_TICKERS.slice(3).sort());
+  assert.deepEqual(doc.coverage.missing_tickers, []);
+  assert.deepEqual(doc.coverage.duplicate_tickers, []);
+  assert.equal(doc.coverage.complete, false);
   assert.match(doc.source_as_of_reason, /partial/i, "a partial floor must say so");
-  assert.equal(validToneSnapshot(doc), true, "a partial document is still promotable evidence");
+  assert.equal(validToneSnapshot(doc), false, "a partial document must never promote");
 }
 
 {
   // Nothing dated at all is a real acquisition failure: publish nothing.
   const doc = buildSnapshotDocument({
+    expectedTickers: ["DASH", "PYPL"],
     rows: [toneRow("DASH", null, 0), toneRow("PYPL", null, 0)],
     errors: [{ ticker: "DASH", error: "GDELT 429" }, { ticker: "PYPL", error: "GDELT 429" }],
     generatedAt: "2026-07-25T15:53:14.450Z",
@@ -555,36 +579,112 @@ const toneRow = (ticker, asOf, articleCount = 1) => ({
   assert.equal(doc.status, "degraded");
   assert.deepEqual(doc.rows, []);
   assert.equal(doc.source_as_of, null);
+  assert.equal(doc.coverage.expected_row_count, 2);
   assert.equal(doc.coverage.unavailable_row_count, 2);
+  assert.equal(doc.coverage.complete, false);
   assert.equal(validToneSnapshot(doc), false, "an empty document must never promote");
 }
 
 {
-  // The healthy path must not acquire partial vocabulary it does not need.
+  // Only the exact fixed reference set is live-promotable.
   const doc = buildSnapshotDocument({
-    rows: [toneRow("DASH", "2026-07-25T02:00:00.000Z"), toneRow("PYPL", "2026-07-24T02:00:00.000Z")],
+    expectedTickers: REFERENCE_TICKERS,
+    rows: REFERENCE_TICKERS.map((ticker, index) => (
+      toneRow(ticker, `2026-07-${String(25 - index).padStart(2, "0")}T02:00:00.000Z`)
+    )),
     errors: [],
     generatedAt: "2026-07-25T15:53:14.450Z",
   });
   assert.equal(doc.status, "ready");
-  assert.equal(doc.coverage.row_count, 2);
+  assert.deepEqual(doc.coverage.expected_tickers, REFERENCE_TICKERS);
+  assert.equal(doc.coverage.expected_row_count, 8);
+  assert.equal(doc.coverage.observed_row_count, 8);
+  assert.equal(doc.coverage.row_count, 8);
   assert.equal(doc.coverage.unavailable_row_count, 0);
+  assert.deepEqual(doc.coverage.missing_tickers, []);
+  assert.deepEqual(doc.coverage.duplicate_tickers, []);
+  assert.deepEqual(doc.coverage.unexpected_tickers, []);
+  assert.equal(doc.coverage.complete, true);
   assert.equal(doc.source_as_of_reason, null);
-  assert.equal(doc.source_as_of, "2026-07-24T02:00:00.000Z", "floor stays the oldest dated row");
+  assert.equal(doc.source_as_of, "2026-07-18T02:00:00.000Z", "floor stays the oldest dated row");
+  assert.equal(validToneSnapshot(doc), true);
 }
 
 {
-  // The history merge must never again receive a row it will reject: a partial
-  // document's rows are all dated, so the merge is throw-free by construction.
-  const doc = buildSnapshotDocument({
-    rows: [toneRow("DASH", "2026-07-25T02:00:00.000Z"), toneRow("PYPL", null, 0)],
-    errors: [{ ticker: "PYPL", error: "GDELT 429" }],
+  const omitted = buildSnapshotDocument({
+    expectedTickers: REFERENCE_TICKERS,
+    rows: REFERENCE_TICKERS.slice(0, -1).map((ticker) => toneRow(ticker, "2026-07-25T02:00:00.000Z")),
+    errors: [],
     generatedAt: "2026-07-25T15:53:14.450Z",
   });
-  const merged = mergeHistory(doc, {
-    history: { schema_version: 1, persistence_policy: GDELT_HISTORY_PERSISTENCE_POLICY, rows: [] },
+  assert.equal(omitted.status, "degraded");
+  assert.equal(omitted.coverage.expected_row_count, 8);
+  assert.equal(omitted.coverage.observed_row_count, 7);
+  assert.deepEqual(omitted.coverage.missing_tickers, ["NVDA"]);
+  assert.deepEqual(omitted.coverage.unavailable_tickers, ["NVDA"]);
+  assert.equal(validToneSnapshot(omitted), false, "an omitted reference row must never promote");
+}
+
+{
+  const duplicate = buildSnapshotDocument({
+    expectedTickers: REFERENCE_TICKERS,
+    rows: [
+      ...REFERENCE_TICKERS.map((ticker) => toneRow(ticker, "2026-07-25T02:00:00.000Z")),
+      toneRow("DASH", "2026-07-25T02:00:00.000Z"),
+    ],
+    errors: [],
+    generatedAt: "2026-07-25T15:53:14.450Z",
   });
-  assert.deepEqual([...new Set(merged.rows.map((row) => row.ticker))], ["DASH"]);
+  assert.equal(duplicate.status, "degraded");
+  assert.equal(duplicate.coverage.expected_row_count, 8);
+  assert.equal(duplicate.coverage.observed_row_count, 9);
+  assert.deepEqual(duplicate.coverage.missing_tickers, []);
+  assert.deepEqual(duplicate.coverage.duplicate_tickers, ["DASH"]);
+  assert.equal(validToneSnapshot(duplicate), false, "a duplicate reference row must never promote");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-reference-coverage-"));
+  const complete = buildSnapshotDocument({
+    expectedTickers: REFERENCE_TICKERS,
+    rows: REFERENCE_TICKERS.map((ticker, index) => (
+      toneRow(ticker, `2026-07-${String(18 + index).padStart(2, "0")}T02:00:00.000Z`)
+    )),
+    errors: [],
+    generatedAt: "2026-07-25T15:53:14.450Z",
+  });
+  const seeded = await runLkgCase(root, complete, { runId: "complete-eight-seed" });
+  assert.equal(seeded.ok, true, "8/8 reference coverage remains promotable");
+  const shardPath = path.join(
+    root, "data", "admin", "data-supply-state", "detection-attempts", "gdelt_news_tone.json",
+  );
+  const completeShard = JSON.parse(fs.readFileSync(shardPath, "utf8"));
+  assert.equal(classifyAttempt(completeShard.attempts[0]).status, "ready",
+    "the detection floor keeps complete reference coverage ready");
+  const canonicalPath = path.join(root, "data", "computed", "fenok_news_tone_proxy.json");
+  const beforePartial = fs.readFileSync(canonicalPath, "utf8");
+
+  const partial = buildSnapshotDocument({
+    expectedTickers: REFERENCE_TICKERS,
+    rows: REFERENCE_TICKERS.map((ticker, index) => (
+      index < 3 ? toneRow(ticker, `2026-07-${String(26 - index).padStart(2, "0")}T02:00:00.000Z`) : toneRow(ticker, null, 0)
+    )),
+    errors: REFERENCE_TICKERS.slice(3).map((ticker) => ({ ticker, error: "GDELT 429" })),
+    generatedAt: "2026-07-26T15:53:14.450Z",
+  });
+  const rejected = await runLkgCase(root, partial, {
+    runId: "partial-three-of-eight",
+    observedAt: "2026-07-26T15:53:14.450Z",
+  });
+  assert.equal(rejected.reason, "schema_drift");
+  assert.equal(rejected.degraded, true);
+  assert.equal(fs.readFileSync(canonicalPath, "utf8"), beforePartial,
+    "3/8 collection must retain the prior complete canonical");
+  const shard = JSON.parse(fs.readFileSync(shardPath, "utf8"));
+  assert.deepEqual(shard.attempts[0].assertions, [{ id: "articles_array", passed: false }],
+    "the attempt floor must not report ready when reference coverage is partial");
+  assert.equal(classifyAttempt(shard.attempts[0]).status, "drift",
+    "the detection floor must reject partial reference coverage");
 }
 
 // --- Thrown-builder failures must carry the error identity out ---------------

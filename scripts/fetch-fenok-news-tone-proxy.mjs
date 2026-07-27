@@ -439,28 +439,71 @@ async function build(args, { dataRootPath = dataRoot, privateRootPath = privateR
       if (!args.noFetch && args.sleepMs > 0) await sleep(args.sleepMs);
     }
   }
-  const snapshot = buildSnapshotDocument({ rows, errors, generatedAt: isoNow() });
+  const snapshot = buildSnapshotDocument({
+    rows,
+    errors,
+    generatedAt: isoNow(),
+    expectedTickers: tickers,
+  });
   return { snapshot, history: mergeHistory(snapshot, { dataRootPath }) };
 }
 
-// The fetch loop turns a rate-limited ticker into an article-less row on
-// purpose. Assembling the document used to let one such row poison everything:
-// the aggregate floor required EVERY row to be dated, so a single 429 sent
-// source_as_of to null, status to degraded, and the caller to empty_payload —
-// throwing away every ticker the provider HAD answered, and making the history
-// merge throw on the undated row it was handed. Publish what the provider
-// actually dated, and keep the rest as a named count rather than a silent loss.
-export function buildSnapshotDocument({ rows = [], errors = [], generatedAt }) {
-  const datedRows = rows.filter((row) => validRfc3339Utc(row?.as_of));
-  const unavailableTickers = rows
-    .filter((row) => !validRfc3339Utc(row?.as_of))
-    .map((row) => row?.ticker)
+// The fetch loop turns an unavailable ticker into an article-less row. Keep the
+// dated evidence in the candidate document for diagnostics/history assembly,
+// but fail readiness unless every requested reference has a provider timestamp.
+// A partial reference basket is not comparable with the complete live basket
+// and must never replace its LKG.
+export function buildSnapshotDocument({
+  rows = [],
+  errors = [],
+  generatedAt,
+  expectedTickers = DEFAULT_REFERENCE_TICKERS,
+}) {
+  if (!Array.isArray(expectedTickers)) {
+    throw new Error("GDELT expected ticker universe must be an array");
+  }
+  const expectedUniverse = expectedTickers.map(normalizeTicker);
+  if (expectedUniverse.length === 0
+    || expectedUniverse.some((ticker) => ticker === "")
+    || new Set(expectedUniverse).size !== expectedUniverse.length) {
+    throw new Error("GDELT expected ticker universe must be non-empty and unique");
+  }
+  const expectedSet = new Set(expectedUniverse);
+  const observedTickers = rows.map((row) => normalizeTicker(row?.ticker));
+  const observedCounts = observedTickers.reduce((counts, ticker) => {
+    counts.set(ticker, (counts.get(ticker) ?? 0) + 1);
+    return counts;
+  }, new Map());
+  const missingTickers = expectedUniverse.filter((ticker) => !observedCounts.has(ticker));
+  const duplicateTickers = [...observedCounts]
+    .filter(([, count]) => count > 1)
+    .map(([ticker]) => ticker)
+    .filter(Boolean)
     .sort();
+  const unexpectedTickers = [...new Set(observedTickers)]
+    .filter((ticker) => ticker !== "" && !expectedSet.has(ticker))
+    .sort();
+  const invalidTickerRowCount = observedTickers.filter((ticker) => ticker === "").length;
+  const datedRows = rows.filter((row) => validRfc3339Utc(row?.as_of));
+  const unavailableTickers = [...new Set([
+    ...missingTickers,
+    ...rows
+      .filter((row) => expectedSet.has(normalizeTicker(row?.ticker)) && !validRfc3339Utc(row?.as_of))
+      .map((row) => normalizeTicker(row?.ticker)),
+  ])].sort();
   // Oldest dated row: the floor must never claim freshness a row cannot back.
   const sourceAsOf = datedRows.length > 0
     ? [...datedRows.map((row) => row.as_of)].sort().at(0)
     : null;
-  const partial = sourceAsOf !== null && unavailableTickers.length > 0;
+  const complete = rows.length === expectedUniverse.length
+    && datedRows.length === expectedUniverse.length
+    && invalidTickerRowCount === 0
+    && rows.every((row) => row?.ticker === normalizeTicker(row?.ticker))
+    && missingTickers.length === 0
+    && duplicateTickers.length === 0
+    && unexpectedTickers.length === 0
+    && unavailableTickers.length === 0;
+  const partial = sourceAsOf !== null && !complete;
   return {
     schema_version: 1,
     generated_at: generatedAt,
@@ -468,10 +511,11 @@ export function buildSnapshotDocument({ rows = [], errors = [], generatedAt }) {
     source_as_of_reason: sourceAsOf
       ? (partial
         ? `partial coverage: aggregate source floor spans ${datedRows.length} dated row(s); `
-          + `${unavailableTickers.length} row(s) had no usable seendate and are not published`
+          + `${missingTickers.length} expected ticker(s) missing, ${duplicateTickers.length} duplicated, `
+          + `${unexpectedTickers.length} unexpected, and ${unavailableTickers.length} unavailable`
         : null)
       : "aggregate source floor unavailable because no article row carries a usable seendate",
-    status: sourceAsOf === null ? "degraded" : "ready",
+    status: complete ? "ready" : "degraded",
     formula_version: FORMULA_VERSION,
     public_surface_status: "private_admin_derived_only_not_public",
     raw_policy: {
@@ -483,11 +527,19 @@ export function buildSnapshotDocument({ rows = [], errors = [], generatedAt }) {
       public_payload: null,
     },
     coverage: {
+      expected_tickers: expectedUniverse,
+      expected_row_count: expectedUniverse.length,
+      observed_row_count: rows.length,
       row_count: datedRows.length,
       with_articles: datedRows.filter((row) => row.direct_news_tone_proxy.article_count > 0).length,
       with_tone_score: datedRows.filter((row) => row.direct_news_tone_proxy.score_0_100 != null).length,
       unavailable_row_count: unavailableTickers.length,
       unavailable_tickers: unavailableTickers,
+      missing_tickers: missingTickers,
+      duplicate_tickers: duplicateTickers,
+      unexpected_tickers: unexpectedTickers,
+      invalid_ticker_row_count: invalidTickerRowCount,
+      complete,
       errors,
     },
     rows: datedRows,
@@ -584,9 +636,43 @@ function latestRowSourceAsOf(snapshot) {
   return values.at(-1) ?? null;
 }
 
+function hasCompleteReferenceCoverage(snapshot) {
+  const coverage = snapshot?.coverage;
+  const expectedTickers = coverage?.expected_tickers;
+  const observedTickers = Array.isArray(snapshot?.rows)
+    ? snapshot.rows.map((row) => row?.ticker)
+    : [];
+  const expectedSet = Array.isArray(expectedTickers) ? new Set(expectedTickers) : new Set();
+  const observedSet = new Set(observedTickers);
+  return coverage?.complete === true
+    && Array.isArray(expectedTickers)
+    && expectedSet.size === expectedTickers.length
+    && expectedSet.size === DEFAULT_REFERENCE_TICKERS.length
+    && DEFAULT_REFERENCE_TICKERS.every((ticker) => expectedSet.has(ticker))
+    && Number.isInteger(coverage.expected_row_count)
+    && coverage.expected_row_count === DEFAULT_REFERENCE_TICKERS.length
+    && coverage.observed_row_count === coverage.expected_row_count
+    && coverage.row_count === coverage.expected_row_count
+    && coverage.unavailable_row_count === 0
+    && Array.isArray(coverage.unavailable_tickers)
+    && coverage.unavailable_tickers.length === 0
+    && Array.isArray(coverage.missing_tickers)
+    && coverage.missing_tickers.length === 0
+    && Array.isArray(coverage.duplicate_tickers)
+    && coverage.duplicate_tickers.length === 0
+    && Array.isArray(coverage.unexpected_tickers)
+    && coverage.unexpected_tickers.length === 0
+    && coverage.invalid_ticker_row_count === 0
+    && Array.isArray(snapshot?.rows)
+    && snapshot.rows.length === coverage.expected_row_count
+    && observedSet.size === observedTickers.length
+    && expectedTickers.every((ticker) => observedSet.has(ticker));
+}
+
 function validToneSnapshot(snapshot) {
   return snapshot?.schema_version === 1
     && snapshot?.status === "ready"
+    && hasCompleteReferenceCoverage(snapshot)
     && Array.isArray(snapshot?.rows)
     && snapshot.rows.length > 0
     && snapshot.rows.every((row) => (
@@ -597,24 +683,21 @@ function validToneSnapshot(snapshot) {
     && latestRowSourceAsOf(snapshot) !== null;
 }
 
+function withSnapshotReadinessAssertion(result, snapshot, reason = "schema_drift") {
+  if (result.status !== "ready" || validToneSnapshot(snapshot)) return result;
+  const hasArticlesAssertion = result.attempt.assertions.some((assertion) => assertion.id === "articles_array");
+  return attemptResult(reason, {
+    ...result.attempt,
+    assertions: hasArticlesAssertion
+      ? result.attempt.assertions.map((assertion) => (
+        assertion.id === "articles_array" ? { ...assertion, passed: false } : assertion
+      ))
+      : [{ id: "articles_array", passed: false }],
+  });
+}
+
 function snapshotSourceAsOf(snapshot) {
   return validToneSnapshot(snapshot) ? latestRowSourceAsOf(snapshot) : null;
-}
-
-// A pre-LKG canonical can legitimately be the old degraded shape: it may have
-// some unavailable ticker rows while still retaining dated GDELT rows. Failure
-// handling may seed LKG from that oldest canonical, but it is never promotable
-// recovery evidence. New candidates stay under validToneSnapshot above.
-function validLegacyLkgCanonical(snapshot) {
-  return snapshot?.schema_version === 1
-    && Array.isArray(snapshot?.rows)
-    && snapshot.rows.length > 0
-    && snapshot.rows.every((row) => row?.direct_news_tone_proxy && typeof row.ticker === "string")
-    && latestRowSourceAsOf(snapshot) !== null;
-}
-
-function legacyLkgCanonicalSourceAsOf(snapshot) {
-  return validLegacyLkgCanonical(snapshot) ? latestRowSourceAsOf(snapshot) : null;
 }
 
 function providerObservationFromSnapshot(snapshot) {
@@ -650,8 +733,8 @@ function snapshotArtifact(repoRootPath) {
   return {
     key: LKG_ARTIFACT_KEY,
     canonicalPath: path.join(repoRootPath, "data", OUTPUT_FILE),
-    validateDocument: validLegacyLkgCanonical,
-    sourceAsOf: legacyLkgCanonicalSourceAsOf,
+    validateDocument: validToneSnapshot,
+    sourceAsOf: snapshotSourceAsOf,
   };
 }
 
@@ -713,11 +796,10 @@ export async function runNewsTone({
     retries: args.retries,
     retryBackoffMs: args.retryBackoffMs,
   });
-  const result = withEndpointAssertions(observed.result);
-
-  if (write) {
-    writeAttemptShard({ laneId: LANE_ID, attemptShardPath, observedAt, attemptId, result });
-  }
+  let result = withEndpointAssertions(observed.result);
+  const writeResult = () => {
+    if (write) writeAttemptShard({ laneId: LANE_ID, attemptShardPath, observedAt, attemptId, result });
+  };
 
   // `reason` is the stable vocabulary the LKG store and the detection floor
   // consume, so it must not absorb free text. The identity of whatever actually
@@ -733,28 +815,44 @@ export async function runNewsTone({
   const retainFailure = (reason, error = null) => {
     const failure_detail = failureDetailOf(error);
     if (!write) {
-      return { ok: false, reason, failure_detail, degraded: true, exitCode: 0, retrySet: [], result };
+      return {
+        ok: false,
+        reason,
+        failure_detail,
+        degraded: false,
+        corrupt: true,
+        exitCode: 2,
+        retrySet: [],
+        retained: false,
+        result,
+      };
     }
     const failure = store.recordFailure({
       artifacts: [snapshotArtifact(repoRootPath)],
       run,
       reason,
     });
-    // GDELT remains a shadow/non-KPI lane. A retained LKG must keep provider
-    // degradation graceful even when the upstream failure is a 429.
+    // GDELT remains graceful only when the retained artifact is a complete,
+    // exact reference basket. Partial/legacy candidates cannot make a failed
+    // current attempt recoverable.
+    const retained = failure.hasCompleteLkg === true;
     return {
       ok: false,
       reason,
       failure_detail,
-      degraded: true,
-      exitCode: 0,
+      degraded: retained,
+      corrupt: !retained,
+      exitCode: retained ? 0 : 2,
       retrySet: failure.retrySet,
-      retained: failure.hasCompleteLkg,
+      retained,
       result,
     };
   };
 
-  if (result.status !== "ready") return retainFailure(result.reason);
+  if (result.status !== "ready") {
+    writeResult();
+    return retainFailure(result.reason);
+  }
 
   let built;
   try {
@@ -763,10 +861,14 @@ export async function runNewsTone({
       privateRootPath: path.join(repoRootPath, "_private", "admin", "fenok-flow", "gdelt_news"),
     });
   } catch (err) {
+    result = withSnapshotReadinessAssertion(result, null, "unexpected_error");
+    writeResult();
     return retainFailure("unexpected_error", err);
   }
   const snapshot = built?.snapshot ?? built;
-  if (snapshot?.status !== "ready") return retainFailure("empty_payload");
+  result = withSnapshotReadinessAssertion(result, snapshot);
+  writeResult();
+  if (result.status !== "ready") return retainFailure(result.reason);
 
   let candidate;
   try {

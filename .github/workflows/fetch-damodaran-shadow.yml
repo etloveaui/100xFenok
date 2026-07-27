@@ -5,6 +5,12 @@ on:
     # UTC Saturday 11:17 = KST Saturday 20:17, after the Yardeni weekly slot.
     - cron: '17 11 * * 6'
   workflow_dispatch:
+    inputs:
+      controlled_failure:
+        description: 'Dispatch-only Damodaran LKG chaos injection'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -44,6 +50,8 @@ jobs:
 
       - name: Fetch and guard Damodaran payloads
         id: fetch
+        env:
+          INPUT_CONTROLLED_FAILURE: ${{ github.event.inputs.controlled_failure || 'false' }}
         run: node scripts/fetch-damodaran-shadow.mjs
 
       - name: Preserve Damodaran guard report

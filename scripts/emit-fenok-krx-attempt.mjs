@@ -9,13 +9,13 @@ import {
   libraryTuple,
   writeAttemptShard,
 } from "./lib/data-supply-attempt-shard.mjs";
+import { validKrxBridge } from "./fetch-fenok-krx-daily-private.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, "..");
 const LANE_ID = "krx";
 const DEFAULT_BRIDGE_INDEX_PATH = path.join(REPO_ROOT, "data/admin/fenok-edge-korea-krx-daily-index.json");
 const DEFAULT_ATTEMPT_SHARD_PATH = path.join(REPO_ROOT, "data/admin/data-supply-state/detection-attempts/krx.json");
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/u;
 
 function failBridge(message) {
   throw new Error(`KRX bridge contract: ${message}`);
@@ -28,23 +28,13 @@ function readSuccessBridge(bridgeIndexPath, observedAt) {
   } catch (error) {
     failBridge(`unreadable JSON at ${bridgeIndexPath}: ${error.message}`);
   }
-  if (bridge?.schema_version !== "fenok-edge-korea-krx-bridge/v1") failBridge("schema_version is invalid");
-  if (bridge.source !== "KRX_OPEN_API") failBridge("source is invalid");
-  if (!DATE_RE.test(bridge.as_of) || !Number.isFinite(Date.parse(`${bridge.as_of}T00:00:00Z`))) failBridge("as_of is invalid");
+  if (!validKrxBridge(bridge)) failBridge("document is invalid");
   const generatedAtMs = Date.parse(bridge.generated_at);
   const observedAtMs = Date.parse(observedAt);
   if (!Number.isFinite(generatedAtMs) || !bridge.generated_at.endsWith("Z")) failBridge("generated_at is invalid");
   if (!Number.isFinite(observedAtMs) || !observedAt.endsWith("Z")) failBridge("observedAt is invalid");
 
-  const attempted = bridge.latest_run?.attempted_call_count;
-  const summary = bridge.latest_run?.summary;
-  if (!Number.isSafeInteger(attempted) || attempted < 1) failBridge("attempted_call_count is invalid");
-  if (!summary || !Number.isSafeInteger(summary.total_files) || summary.total_files !== attempted) failBridge("summary.total_files does not match attempted_call_count");
-  for (const key of ["success_files", "empty_files", "failed_files"]) {
-    if (!Number.isSafeInteger(summary[key]) || summary[key] < 0) failBridge(`summary.${key} is invalid`);
-  }
-  if (summary.failed_files !== 0) failBridge("summary.failed_files must be zero for success");
-  if (summary.success_files + summary.empty_files !== summary.total_files) failBridge("summary file counts do not balance");
+  const attempted = bridge.latest_run.attempted_call_count;
 
   return {
     candidates: attempted,

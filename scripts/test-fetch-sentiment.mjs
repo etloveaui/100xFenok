@@ -13,7 +13,10 @@ import {
   cryptoSourceStamp,
   SENTIMENT_LKG_SOURCE_FILES,
   SENTIMENT_LKG_SOURCE_KEYS,
+  SENTIMENT_MAX_DISTINCT_SOURCE_DATES,
+  SENTIMENT_PERSISTENCE_POLICY,
   recordSentimentAttemptTuple,
+  retainLatestDistinctSourceDates,
   runSentiment,
 } from "./fetch-sentiment.mjs";
 import { evaluateEndpointAssertions, returnedTuple } from "./lib/data-supply-attempt-shard.mjs";
@@ -46,6 +49,57 @@ assert.deepEqual(cryptoSourceStamp(null), {
   source_as_of: null,
   source_as_of_reason: "alternative.me data[0].timestamp is missing or invalid",
 });
+assert.equal(SENTIMENT_MAX_DISTINCT_SOURCE_DATES, 10_000);
+assert.deepEqual(SENTIMENT_PERSISTENCE_POLICY, {
+  schema_version: "sentiment-bounded-persistence/v1",
+  basis: "distinct_source_date_per_file",
+  max_distinct_source_dates_per_file: 10_000,
+  eviction: "oldest_source_date_first",
+});
+
+{
+  const rows = Array.from({ length: SENTIMENT_MAX_DISTINCT_SOURCE_DATES + 1 }, (_, index) => ({
+    date: new Date(Date.UTC(2026, 0, index + 1)).toISOString().slice(0, 10),
+    value: index,
+  }));
+  const retained = retainLatestDistinctSourceDates(rows);
+  assert.equal(retained.rows.length, SENTIMENT_MAX_DISTINCT_SOURCE_DATES);
+  assert.equal(retained.rows[0].date, "2026-01-02");
+  assert.deepEqual(retained.persistence_state, {
+    available_distinct_source_dates: 10_001,
+    retained_distinct_source_dates: 10_000,
+    pruned_distinct_source_dates: 1,
+    retained_rows: 10_000,
+  });
+  assert.deepEqual(
+    retainLatestDistinctSourceDates(retained.rows),
+    {
+      rows: retained.rows,
+      persistence_state: {
+        available_distinct_source_dates: 10_000,
+        retained_distinct_source_dates: 10_000,
+        pruned_distinct_source_dates: 0,
+        retained_rows: 10_000,
+      },
+    },
+    "bounded persistence must be idempotent",
+  );
+  assert.throws(
+    () => retainLatestDistinctSourceDates([{ date: "fetch-day", value: 1 }]),
+    /valid source date/,
+  );
+  assert.throws(
+    () => retainLatestDistinctSourceDates([{ date: "2026-02-31", value: 1 }]),
+    /valid source date/,
+  );
+  assert.throws(
+    () => retainLatestDistinctSourceDates([
+      { date: "2026-01-01", value: 1 },
+      { date: "2026-01-01", value: 2 },
+    ]),
+    /unique source dates/,
+  );
+}
 
 function resultRow(file, date, value) {
   const array = [{ date, value }];
@@ -106,6 +160,7 @@ async function runCase(root, {
   runId = "baseline-run",
   runAttempt = 1,
   observedAt = "2026-07-14T22:00:00.000Z",
+  recordSuccessFn = undefined,
 } = {}) {
   return runSentiment({
     ...makePaths(root),
@@ -116,6 +171,7 @@ async function runCase(root, {
     runAttempt,
     observedAt,
     attemptId: `sentiment-${runId}`,
+    ...(recordSuccessFn ? { recordSuccessFn } : {}),
     quiet: true,
   });
 }
@@ -135,7 +191,18 @@ async function runCase(root, {
     assert.equal(state.items[key].resolution_state, "fresh_primary");
     assert.equal(state.items[key].retry, false);
     assert.equal(state.items[key].promotion_contract, "provider_observation/v2");
-    assert.equal(fs.existsSync(path.join(root, "data", "admin", "sentiment", "current", `${key}.json`)), true);
+    const bundle = readJson(path.join(root, "data", "admin", "sentiment", "current", `${key}.json`));
+    assert.equal(bundle.schema_version, "sentiment-source-bundle/v2");
+    assert.deepEqual(bundle.persistence_policy, SENTIMENT_PERSISTENCE_POLICY);
+    for (const [fileName, rows] of Object.entries(bundle.files)) {
+      const persistenceState = bundle.persistence_state.files[fileName];
+      assert.equal(persistenceState.retained_distinct_source_dates, new Set(rows.map((row) => row.date)).size);
+      assert.equal(persistenceState.retained_rows, rows.length);
+      assert(
+        persistenceState.retained_distinct_source_dates <= SENTIMENT_MAX_DISTINCT_SOURCE_DATES,
+        `${key}/${fileName} exceeded the persistence bound`,
+      );
+    }
   }
   assert.deepEqual(
     readJson(path.join(root, "data", "admin", "sentiment", "source-observations", "crypto.json")),
@@ -218,6 +285,41 @@ async function runCase(root, {
     eventName: "schedule",
     runId: "invalid-schedule-chaos",
   }), /workflow_dispatch/);
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sentiment-state-write-rollback-"));
+  await runCase(root);
+  const paths = makePaths(root);
+  const canonicalVix = path.join(paths.outputDirs[0], "vix.json");
+  const publicVix = path.join(paths.outputDirs[1], "vix.json");
+  const currentVix = path.join(root, "data", "admin", "sentiment", "current", "vix.json");
+  const before = Object.fromEntries([canonicalVix, publicVix, currentVix].map((filePath) => [
+    filePath,
+    fs.readFileSync(filePath),
+  ]));
+
+  const failed = await runCase(root, {
+    date: "2026-07-15",
+    runId: "state-write-failure",
+    observedAt: "2026-07-15T22:00:00.000Z",
+    recordSuccessFn: ({ store, artifacts, run }) => {
+      const committed = store.recordSuccess({ artifacts, run });
+      if (artifacts[0].key === "vix") throw new Error("injected state write failure after commit");
+      return committed;
+    },
+  });
+  assert.equal(failed.ok, false);
+  assert.equal(failed.corrupt, true);
+  assert.equal(failed.exitCode, 2);
+  for (const [filePath, bytes] of Object.entries(before)) {
+    assert.deepEqual(fs.readFileSync(filePath), bytes, `${filePath} must roll back when recovery-state commit fails`);
+  }
+  const state = readJson(path.join(root, "data", "admin", "sentiment", "index.json"));
+  assert.equal(state.items.vix.resolution_state, "lkg_primary");
+  assert.equal(state.items.vix.current.source_as_of, "2026-07-14");
+  assert.equal(state.items.vix.lkg.source_as_of, "2026-07-14");
+  assert.equal(state.items.vix.latest_failure.run_id, "state-write-failure");
 }
 
 {

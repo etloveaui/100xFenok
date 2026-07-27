@@ -6,7 +6,8 @@
  * dashboard sentiment series frozen because there was NO fetch cron. Pulls the
  * same free sources and MERGES-BY-DATE into the existing arrays — today's date
  * is updated in place if present, otherwise appended and the array re-sorted.
- * History is NEVER overwritten.
+ * Each file retains the latest 10,000 distinct provider dates; older dates are
+ * evicted deterministically without truncating the existing long-range charts.
  *
  * Targets (array of { date, ... } objects, written to BOTH the repo-root SSOT
  * `data/sentiment/` and the Next.js build mirror `100xfenok-next/public/data/sentiment/`):
@@ -90,7 +91,14 @@ export const SENTIMENT_LKG_SOURCE_FILES = Object.freeze({
   crypto: Object.freeze(['crypto-fear-greed.json']),
 });
 export const SENTIMENT_LKG_SOURCE_KEYS = Object.freeze(Object.keys(SENTIMENT_LKG_SOURCE_FILES));
-const SENTIMENT_BUNDLE_SCHEMA = 'sentiment-source-bundle/v1';
+export const SENTIMENT_MAX_DISTINCT_SOURCE_DATES = 10_000;
+export const SENTIMENT_PERSISTENCE_POLICY = Object.freeze({
+  schema_version: 'sentiment-bounded-persistence/v1',
+  basis: 'distinct_source_date_per_file',
+  max_distinct_source_dates_per_file: SENTIMENT_MAX_DISTINCT_SOURCE_DATES,
+  eviction: 'oldest_source_date_first',
+});
+const SENTIMENT_BUNDLE_SCHEMA = 'sentiment-source-bundle/v2';
 const SENTIMENT_SOURCE_OBSERVATION_SCHEMA = 'sentiment-source-observation/v1';
 
 const CNN_PROXY_URL = 'https://fed-proxy.etloveaui.workers.dev/cnn';
@@ -211,11 +219,92 @@ function mergeByDate(existing, entry) {
   return { array: arr, action, before, after: arr.length };
 }
 
+export function retainLatestDistinctSourceDates(
+  rows,
+  maxDistinctDates = SENTIMENT_MAX_DISTINCT_SOURCE_DATES,
+) {
+  if (!Array.isArray(rows)) throw new Error('sentiment persistence rows must be an array');
+  if (!Number.isInteger(maxDistinctDates) || maxDistinctDates < 1) {
+    throw new Error('sentiment persistence bound must be a positive integer');
+  }
+  for (const row of rows) {
+    const parsedDate = row && typeof row === 'object' && /^\d{4}-\d{2}-\d{2}$/.test(row.date)
+      ? new Date(`${row.date}T00:00:00.000Z`)
+      : new Date(Number.NaN);
+    if (!Number.isFinite(parsedDate.getTime()) || parsedDate.toISOString().slice(0, 10) !== row.date) {
+      throw new Error('sentiment persistence requires a valid source date on every row');
+    }
+  }
+  if (new Set(rows.map((row) => row.date)).size !== rows.length) {
+    throw new Error('sentiment persistence requires unique source dates per file');
+  }
+  const availableDates = [...new Set(rows.map((row) => row.date))].sort();
+  const retainedDates = availableDates.slice(-maxDistinctDates);
+  const retainedDateSet = new Set(retainedDates);
+  const retainedRows = rows.filter((row) => retainedDateSet.has(row.date));
+  return {
+    rows: retainedRows,
+    persistence_state: {
+      available_distinct_source_dates: availableDates.length,
+      retained_distinct_source_dates: retainedDates.length,
+      pruned_distinct_source_dates: availableDates.length - retainedDates.length,
+      retained_rows: retainedRows.length,
+    },
+  };
+}
+
+function applyBoundedPersistence(results) {
+  return results.map((result) => {
+    const retained = retainLatestDistinctSourceDates(result.array);
+    return {
+      ...result,
+      array: retained.rows,
+      after: retained.rows.length,
+      persistence_state: retained.persistence_state,
+    };
+  });
+}
+
 function writeAll(fileName, array, outputDirs = DEFAULT_OUTPUT_DIRS) {
   const json = JSON.stringify(array, null, 2) + '\n';
   for (const dir of outputDirs) {
     fs.mkdirSync(dir, { recursive: true });
     atomicWrite(path.join(dir, fileName), json);
+  }
+}
+
+function snapshotFiles(filePaths) {
+  return [...new Set(filePaths)].map((filePath) => ({
+    filePath,
+    bytes: fs.existsSync(filePath) ? fs.readFileSync(filePath) : null,
+  }));
+}
+
+function restoreFiles(snapshots) {
+  for (const { filePath, bytes } of snapshots) {
+    if (bytes === null) {
+      fs.rmSync(filePath, { force: true });
+      continue;
+    }
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    atomicWrite(filePath, bytes);
+  }
+}
+
+function withFileRollback(filePaths, action) {
+  const snapshots = snapshotFiles(filePaths);
+  try {
+    return action();
+  } catch (error) {
+    try {
+      restoreFiles(snapshots);
+    } catch (rollbackError) {
+      throw new AggregateError(
+        [error, rollbackError],
+        `sentiment publication rollback failed: ${rollbackError.message}`,
+      );
+    }
+    throw error;
   }
 }
 
@@ -495,6 +584,13 @@ function buildSourceBundle(key, fileNames, results) {
     schema_version: SENTIMENT_BUNDLE_SCHEMA,
     source_key: key,
     source_as_of: sourceAsOf,
+    persistence_policy: SENTIMENT_PERSISTENCE_POLICY,
+    persistence_state: {
+      files: Object.fromEntries(fileNames.map((fileName) => {
+        const result = results.find((item) => item.file === fileName);
+        return [fileName, result?.persistence_state ?? null];
+      })),
+    },
     files,
   };
 }
@@ -504,12 +600,23 @@ function buildProviderBundle(key, fileNames, results) {
   if (byFile.size !== fileNames.length || fileNames.some((fileName) => !validSeriesArray(byFile.get(fileName)))) {
     throw new Error(`${key}: incomplete or invalid current-run provider observation`);
   }
-  const files = Object.fromEntries(fileNames.map((fileName) => [fileName, byFile.get(fileName)]));
+  const retainedByFile = Object.fromEntries(fileNames.map((fileName) => [
+    fileName,
+    retainLatestDistinctSourceDates(byFile.get(fileName)),
+  ]));
+  const files = Object.fromEntries(fileNames.map((fileName) => [fileName, retainedByFile[fileName].rows]));
   const sourceAsOf = sourceAsOfFromFiles(files);
   return {
     schema_version: SENTIMENT_BUNDLE_SCHEMA,
     source_key: key,
     source_as_of: sourceAsOf,
+    persistence_policy: SENTIMENT_PERSISTENCE_POLICY,
+    persistence_state: {
+      files: Object.fromEntries(fileNames.map((fileName) => [
+        fileName,
+        retainedByFile[fileName].persistence_state,
+      ])),
+    },
     files,
   };
 }
@@ -527,9 +634,25 @@ function sourceBundleContainsObservation(candidateDocument, providerDocument) {
 function validSourceBundle(key, fileNames, document) {
   if (document?.schema_version !== SENTIMENT_BUNDLE_SCHEMA || document?.source_key !== key
     || !document.files || typeof document.files !== 'object' || Array.isArray(document.files)) return false;
+  if (JSON.stringify(document.persistence_policy) !== JSON.stringify(SENTIMENT_PERSISTENCE_POLICY)
+    || !document.persistence_state?.files
+    || typeof document.persistence_state.files !== 'object'
+    || Array.isArray(document.persistence_state.files)) return false;
   const actualNames = Object.keys(document.files);
   if (actualNames.length !== fileNames.length || fileNames.some((fileName) => !validSeriesArray(document.files[fileName]))) {
     return false;
+  }
+  for (const fileName of fileNames) {
+    const rows = document.files[fileName];
+    const state = document.persistence_state.files[fileName];
+    const distinctDates = new Set(rows.map((row) => row.date)).size;
+    if (!state || rows.length !== distinctDates || rows.length > SENTIMENT_MAX_DISTINCT_SOURCE_DATES
+      || state.retained_distinct_source_dates !== distinctDates
+      || state.retained_rows !== rows.length
+      || !Number.isInteger(state.available_distinct_source_dates)
+      || !Number.isInteger(state.pruned_distinct_source_dates)
+      || state.available_distinct_source_dates
+        !== state.retained_distinct_source_dates + state.pruned_distinct_source_dates) return false;
   }
   return sourceAsOfFromFiles(document.files) === document.source_as_of;
 }
@@ -595,6 +718,10 @@ function writeCryptoSourceObservation(repoRoot, { sourceAsOf, sourceAsOfReason, 
   );
 }
 
+function cryptoSourceObservationPath(repoRoot) {
+  return path.join(repoRoot, 'data', 'admin', 'sentiment', 'source-observations', 'crypto.json');
+}
+
 function bundleArtifact(repoRoot, source) {
   return {
     key: source.key,
@@ -630,13 +757,33 @@ function publishSourceResults(results, outputDirs) {
   for (const result of results) writeAll(result.file, result.array, outputDirs);
 }
 
+function sourcePublicationPaths({ repoRoot, outputDirs, source, results, lkgStore }) {
+  const paths = results.flatMap((result) => outputDirs.map((dir) => path.join(dir, result.file)));
+  if (source.lkg === true) {
+    paths.push(currentBundlePath(repoRoot, source.key), lkgStore.statePath);
+  }
+  if (source.key === 'crypto') paths.push(cryptoSourceObservationPath(repoRoot));
+  return paths;
+}
+
 function bootstrapCurrentBundle(repoRoot, source, outputDirs) {
-  const files = Object.fromEntries(source.fileNames.map((fileName) => [fileName, readExisting(fileName, outputDirs)]));
+  const retainedByFile = Object.fromEntries(source.fileNames.map((fileName) => [
+    fileName,
+    retainLatestDistinctSourceDates(readExisting(fileName, outputDirs)),
+  ]));
+  const files = Object.fromEntries(source.fileNames.map((fileName) => [fileName, retainedByFile[fileName].rows]));
   if (source.fileNames.some((fileName) => !validSeriesArray(files[fileName]))) return false;
   const bundle = {
     schema_version: SENTIMENT_BUNDLE_SCHEMA,
     source_key: source.key,
     source_as_of: sourceAsOfFromFiles(files),
+    persistence_policy: SENTIMENT_PERSISTENCE_POLICY,
+    persistence_state: {
+      files: Object.fromEntries(source.fileNames.map((fileName) => [
+        fileName,
+        retainedByFile[fileName].persistence_state,
+      ])),
+    },
     files,
   };
   if (!validSourceBundle(source.key, source.fileNames, bundle)) return false;
@@ -658,6 +805,7 @@ export async function runSentiment({
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || 'local',
   controlledFailureSource = process.env.INPUT_CONTROLLED_FAILURE_SOURCE || '',
+  recordSuccessFn = ({ store, artifacts, run }) => store.recordSuccess({ artifacts, run }),
   quiet = false,
 } = {}) {
   sentimentAttemptTuples = [];
@@ -689,7 +837,7 @@ export async function runSentiment({
         throw new Error('controlled failure');
       }
       const readExistingFn = (fileName) => readExisting(fileName, outputDirs);
-      const results = await source.run(readExistingFn);
+      const results = applyBoundedPersistence(await source.run(readExistingFn));
       const sourceTuples = sentimentAttemptTuples.slice(tupleCountBefore);
       if (sourceTuples.length === 0) throw new Error('source returned without current-attempt evidence');
       if (sourceTuples.some((tuple) => tupleStatus(tuple) !== 'ready')) {
@@ -705,13 +853,6 @@ export async function runSentiment({
         throw new Error('schema_drift');
       }
       measuredSourceGroups.push(measuredGroup);
-      if (source.key === 'crypto') {
-        writeCryptoSourceObservation(repoRoot, {
-          sourceAsOf: results[0]?.sample?.date ?? null,
-          sourceAsOfReason: null,
-          run,
-        });
-      }
 
       if (source.lkg === true) {
         const bundle = buildSourceBundle(source.key, source.fileNames, results);
@@ -739,12 +880,36 @@ export async function runSentiment({
           failCount++;
           continue;
         }
-        publishSourceResults(results, outputDirs);
-        atomicWrite(currentBundlePath(repoRoot, source.key), serialized);
-        const success = lkgStore.recordSuccess({ artifacts: [candidate], run });
+        const success = withFileRollback(
+          sourcePublicationPaths({ repoRoot, outputDirs, source, results, lkgStore }),
+          () => {
+            if (source.key === 'crypto') {
+              writeCryptoSourceObservation(repoRoot, {
+                sourceAsOf: results[0]?.sample?.date ?? null,
+                sourceAsOfReason: null,
+                run,
+              });
+            }
+            publishSourceResults(results, outputDirs);
+            atomicWrite(currentBundlePath(repoRoot, source.key), serialized);
+            return recordSuccessFn({ store: lkgStore, artifacts: [candidate], run });
+          },
+        );
         if (success.state.items[source.key]?.recovered_at === observedAt) recoveredSources.push(source.key);
       } else {
-        publishSourceResults(results, outputDirs);
+        withFileRollback(
+          sourcePublicationPaths({ repoRoot, outputDirs, source, results, lkgStore }),
+          () => {
+            if (source.key === 'crypto') {
+              writeCryptoSourceObservation(repoRoot, {
+                sourceAsOf: results[0]?.sample?.date ?? null,
+                sourceAsOfReason: null,
+                run,
+              });
+            }
+            publishSourceResults(results, outputDirs);
+          },
+        );
       }
       okCount++;
       sourceOutcomes.push({ key: source.key, status: 'ready', reason: 'ok' });

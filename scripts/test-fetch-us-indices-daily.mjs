@@ -16,7 +16,12 @@ import {
 import {
   mergeSeries,
   parseYahooChart,
+  retainLatestSeriesRows,
   runUsIndicesDaily,
+  US_INDICES_MAX_SERIES_DATES,
+  US_INDICES_PERSISTENCE_POLICY,
+  withFileRollback,
+  writeUsIndicesGitHubOutputs,
 } from "./fetch-us-indices-daily.mjs";
 
 const OBSERVED_AT = "2026-07-20T22:00:00Z";
@@ -40,10 +45,12 @@ function response(statusCode, payload) {
 }
 
 function pathsFor(root) {
+  const stateRoot = path.join(root, "data", "admin", "us-indices-daily");
   return {
     canonicalRoot: path.join(root, "data", "indices"),
     publicRoot: path.join(root, "public", "data", "indices"),
-    stateRoot: path.join(root, "data", "admin", "us-indices-daily"),
+    stateRoot,
+    persistencePath: path.join(stateRoot, "persistence.json"),
     attemptShardPath: path.join(root, "attempts", "us_indices_daily.json"),
   };
 }
@@ -68,6 +75,33 @@ assert.throws(
   () => mergeSeries([{ date: "2026-07-17", value: 6210.2 }], [{ date: "2026-07-17", value: 1 }]),
   /conflicting value/,
 );
+assert.equal(US_INDICES_MAX_SERIES_DATES, 15_000);
+assert.deepEqual(US_INDICES_PERSISTENCE_POLICY, {
+  schema_version: "us-indices-bounded-persistence/v1",
+  basis: "distinct_provider_date_per_series",
+  max_distinct_provider_dates_per_series: 15_000,
+  eviction: "oldest_provider_date_first",
+});
+
+{
+  const rows = Array.from({ length: US_INDICES_MAX_SERIES_DATES + 1 }, (_, index) => ({
+    date: new Date(Date.UTC(1980, 0, index + 1)).toISOString().slice(0, 10),
+    value: 100 + index,
+  }));
+  const retained = retainLatestSeriesRows(rows);
+  assert.equal(retained.rows.length, US_INDICES_MAX_SERIES_DATES);
+  assert.equal(retained.rows[0].date, "1980-01-02");
+  assert.equal(retained.persistence_state.pruned_distinct_provider_dates, 1);
+  assert.deepEqual(
+    retainLatestSeriesRows(retained.rows).rows,
+    retained.rows,
+    "bounded index persistence must be idempotent",
+  );
+  assert.throws(
+    () => retainLatestSeriesRows([{ date: "2026-02-31", value: 1 }]),
+    /valid date/,
+  );
+}
 
 {
   const providerRevisions = [];
@@ -233,6 +267,11 @@ assert.deepEqual(
     assert.deepEqual(publicMirror, canonical, `${key} public mirror must be byte-identical`);
     assert.equal(JSON.parse(canonical).length, 2);
   }
+  const persistence = JSON.parse(fs.readFileSync(paths.persistencePath, "utf8"));
+  assert.deepEqual(persistence.persistence_policy, US_INDICES_PERSISTENCE_POLICY);
+  assert.deepEqual(Object.keys(persistence.series), ["sp500", "nasdaq"]);
+  assert.equal(persistence.series.sp500.retained_distinct_provider_dates, 2);
+  assert.equal(persistence.series.sp500.pruned_distinct_provider_dates, 0);
   assert.equal(fs.existsSync(path.join(paths.stateRoot, "shadow")), false, "live producer must not write shadow paths");
   assert.equal(fs.existsSync(path.join(paths.stateRoot, "parity-report.json")), false, "retired parity must not be emitted live");
 
@@ -422,6 +461,232 @@ assert.deepEqual(
 }
 
 {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-state-write-rollback-"));
+  const paths = pathsFor(root);
+  fs.mkdirSync(paths.canonicalRoot, { recursive: true });
+  fs.mkdirSync(paths.publicRoot, { recursive: true });
+  for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200 })) {
+    for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
+      fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify([{ date: "2026-07-16", value }])}\n`);
+    }
+  }
+  const request = async (_url, key) => response(200, yahooPayload(
+    key === "sp500" ? "^GSPC" : "^IXIC",
+    key === "sp500"
+      ? [["2026-07-16", 6200], ["2026-07-17", 6210]]
+      : [["2026-07-16", 20200], ["2026-07-17", 20210]],
+  ));
+  await runUsIndicesDaily({
+    ...paths,
+    request,
+    observedAt: "2026-07-17T22:00:00Z",
+    attemptId: "gh-410-1-us-indices",
+    eventName: "schedule",
+  });
+  const payloadPaths = [
+    ...[paths.canonicalRoot, paths.publicRoot].flatMap((rootPath) =>
+      ["sp500", "nasdaq"].map((key) => path.join(rootPath, `${key}.json`))),
+    paths.persistencePath,
+  ];
+  const before = payloadPaths.map((filePath) => fs.readFileSync(filePath));
+  let commitCalls = 0;
+  const failed = await runUsIndicesDaily({
+    ...paths,
+    request: async (_url, key) => response(200, yahooPayload(
+      key === "sp500" ? "^GSPC" : "^IXIC",
+      key === "sp500"
+        ? [["2026-07-17", 6210], ["2026-07-18", 6220]]
+        : [["2026-07-17", 20210], ["2026-07-18", 20220]],
+    )),
+    observedAt: "2026-07-18T22:00:00Z",
+    attemptId: "gh-411-1-us-indices",
+    eventName: "schedule",
+    commitCandidateFn: (store, candidate) => {
+      const committed = store.commitCandidate(candidate);
+      commitCalls += 1;
+      if (commitCalls === 1) throw new Error("injected state write failure after first key");
+      return committed;
+    },
+  });
+  assert.equal(failed.ok, false);
+  assert.equal(failed.degraded, true);
+  assert.equal(failed.exitCode, 0);
+  assert.equal(failed.index.counts.lkg, 2);
+  assert.equal(failed.index.counts.retry, 2);
+  assert.deepEqual(failed.index.retry_keys, ["sp500.json", "nasdaq.json"]);
+  payloadPaths.forEach((filePath, index) => {
+    assert.deepEqual(fs.readFileSync(filePath), before[index], `${filePath} payload bytes must roll back`);
+  });
+  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
+  assert.equal(shard.attempts[0].execution, "threw");
+  assert.equal(shard.attempts[0].exception_kind, "unexpected");
+  for (const key of ["sp500", "nasdaq"]) {
+    const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8"));
+    assert.equal(state.resolution_state, "lkg_primary");
+    assert.equal(state.retry, true);
+    assert.equal(state.latest_failure?.run_id, "411");
+    assert.equal(state.latest_failure?.failure_kind, "unexpected");
+  }
+}
+
+{
+  let rollbackError;
+  try {
+    withFileRollback(
+      [],
+      () => { throw new Error("publication failed"); },
+      () => { throw new Error("restore failed"); },
+    );
+  } catch (error) {
+    rollbackError = error;
+  }
+  assert.equal(rollbackError instanceof AggregateError, true);
+  assert.equal(rollbackError.rollbackFailed, true);
+
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-rollback-failure-"));
+  const paths = pathsFor(root);
+  fs.mkdirSync(paths.canonicalRoot, { recursive: true });
+  fs.mkdirSync(paths.publicRoot, { recursive: true });
+  for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200 })) {
+    for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
+      fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify([{ date: "2026-07-16", value }])}\n`);
+    }
+  }
+  const result = await runUsIndicesDaily({
+    ...paths,
+    request: async (_url, key) => response(200, yahooPayload(
+      key === "sp500" ? "^GSPC" : "^IXIC",
+      key === "sp500"
+        ? [["2026-07-16", 6200], ["2026-07-17", 6210]]
+        : [["2026-07-16", 20200], ["2026-07-17", 20210]],
+    )),
+    observedAt: "2026-07-17T22:00:00Z",
+    attemptId: "gh-412-1-us-indices",
+    eventName: "schedule",
+    withFileRollbackFn: (filePaths, action) => withFileRollback(
+      filePaths,
+      () => {
+        action();
+        throw new Error("injected publication failure after writes");
+      },
+      () => { throw new Error("injected restore failure"); },
+    ),
+  });
+  assert.equal(result.exitCode, 2);
+  assert.equal(result.degraded, false);
+  assert.equal(result.corrupt, true);
+  assert.equal(result.rollback_failed, true);
+  assert.equal(result.index, null);
+  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
+  assert.equal(shard.attempts[0].execution, "threw");
+  const outputPath = path.join(root, "github-output.txt");
+  writeUsIndicesGitHubOutputs(result, outputPath);
+  assert.equal(fs.readFileSync(outputPath, "utf8"), "rollback_failed=true\n");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-malformed-canonical-"));
+  const paths = pathsFor(root);
+  fs.mkdirSync(paths.canonicalRoot, { recursive: true });
+  fs.writeFileSync(path.join(paths.canonicalRoot, "sp500.json"), "{\n");
+  fs.writeFileSync(
+    path.join(paths.canonicalRoot, "nasdaq.json"),
+    `${JSON.stringify([{ date: "2026-07-16", value: 20200 }])}\n`,
+  );
+  const result = await runUsIndicesDaily({
+    ...paths,
+    request: async (_url, key) => response(200, yahooPayload(
+      key === "sp500" ? "^GSPC" : "^IXIC",
+      key === "sp500"
+        ? [["2026-07-17", 6210]]
+        : [["2026-07-17", 20210]],
+    )),
+    observedAt: "2026-07-17T22:00:00Z",
+    attemptId: "gh-413-1-us-indices",
+    eventName: "schedule",
+  });
+  assert.equal(result.exitCode, 2);
+  assert.equal(result.corrupt, true);
+  assert.equal(result.index.counts.retry, 2);
+  assert.equal(result.index.counts.unavailable, 1);
+  assert.equal(result.index.counts.lkg, 1);
+  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
+  assert.equal(shard.attempts[0].execution, "threw");
+  for (const key of ["sp500", "nasdaq"]) {
+    assert.equal(fs.existsSync(path.join(paths.stateRoot, "keys", `${key}.json`)), true);
+  }
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-controlled-recovery-"));
+  const paths = pathsFor(root);
+  fs.mkdirSync(paths.canonicalRoot, { recursive: true });
+  fs.mkdirSync(paths.publicRoot, { recursive: true });
+  for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200 })) {
+    for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
+      fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify([{ date: "2026-07-16", value }])}\n`);
+    }
+  }
+  await runUsIndicesDaily({
+    ...paths,
+    request: async (_url, key) => response(200, yahooPayload(
+      key === "sp500" ? "^GSPC" : "^IXIC",
+      key === "sp500"
+        ? [["2026-07-16", 6200], ["2026-07-17", 6210]]
+        : [["2026-07-16", 20200], ["2026-07-17", 20210]],
+    )),
+    observedAt: "2026-07-17T22:00:00Z",
+    attemptId: "gh-420-1-us-indices",
+    eventName: "schedule",
+  });
+  const canonicalBefore = ["sp500", "nasdaq"].map((key) =>
+    fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`)));
+  const failed = await runUsIndicesDaily({
+    ...paths,
+    request: async () => {
+      throw new Error("controlled failure must not contact Yahoo");
+    },
+    controlledFailure: "transport",
+    observedAt: "2026-07-18T12:00:00Z",
+    attemptId: "gh-421-1-us-indices",
+    eventName: "workflow_dispatch",
+  });
+  assert.equal(failed.reason, "controlled_failure");
+  assert.equal(failed.degraded, true);
+  assert.equal(failed.corrupt, false);
+  assert.equal(failed.exitCode, 0);
+  assert.equal(failed.index.counts.lkg, 2);
+  assert.equal(failed.index.counts.retry, 2);
+  canonicalBefore.forEach((bytes, index) => {
+    assert.deepEqual(
+      fs.readFileSync(path.join(paths.canonicalRoot, `${["sp500", "nasdaq"][index]}.json`)),
+      bytes,
+      "controlled failure must retain canonical bytes",
+    );
+  });
+  const recovered = await runUsIndicesDaily({
+    ...paths,
+    request: async (_url, key) => response(200, yahooPayload(
+      key === "sp500" ? "^GSPC" : "^IXIC",
+      key === "sp500"
+        ? [["2026-07-17", 6210], ["2026-07-18", 6220]]
+        : [["2026-07-17", 20210], ["2026-07-18", 20220]],
+    )),
+    observedAt: "2026-07-18T22:00:00Z",
+    attemptId: "gh-422-1-us-indices",
+    eventName: "schedule",
+  });
+  assert.equal(recovered.exitCode, 0);
+  assert.equal(recovered.index.counts.recovered, 2);
+  assert.deepEqual(recovered.index.retry_keys, []);
+  await assert.rejects(() => runUsIndicesDaily({
+    ...paths,
+    controlledFailure: "transport",
+    eventName: "schedule",
+  }), /requires workflow_dispatch/);
+}
+
+{
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-decode-detail-"));
   const paths = pathsFor(root);
   const result = await runUsIndicesDaily({
@@ -460,6 +725,16 @@ assert.deepEqual(
     /npm --prefix 100xfenok-next run qa:us-indices-daily/,
     "workflow must invoke the package-script hop",
   );
+  assert.match(workflow, /controlled_failure:/);
+  assert.match(workflow, /INPUT_CONTROLLED_FAILURE:/);
+  assert.match(workflow, /ROLLBACK_FAILED: \$\{\{ steps\.fetch_indices\.outputs\.rollback_failed \|\| 'false' \}\}/);
+  assert.match(workflow, /if \[\[ "\$ROLLBACK_FAILED" == "true" \]\]; then/);
+  assert.match(
+    workflow,
+    /git add -- data\/admin\/data-supply-state\/detection-attempts\/us_indices_daily\.json/,
+    "rollback failure must publish only fail-closed attempt evidence",
+  );
+  assert.match(workflow, /"\$FETCH_OUTCOME" == "success" && "\$ROLLBACK_FAILED" != "true"/);
 
   function assertLiveProducerSource(source) {
     assert.match(source, /if \(!Array\.isArray\(providerRevisions\) \|\| !seriesKey\) throw new Error\(`conflicting value for existing date \$\{row\.date\}`\);/,

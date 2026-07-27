@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: '0 22 * * 1-5'
   workflow_dispatch:
+    inputs:
+      controlled_failure:
+        description: 'Dispatch-only LKG chaos injection; use transport'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -33,6 +39,8 @@ jobs:
       # The former GAS comparator and historical report remain dormant only.
       - name: Fetch Yahoo index closes to canonical and public mirrors atomically
         id: fetch_indices
+        env:
+          INPUT_CONTROLLED_FAILURE: ${{ github.event.inputs.controlled_failure || '' }}
         run: node scripts/fetch-us-indices-daily.mjs
 
       - name: Commit live data and attempt evidence
@@ -40,6 +48,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           FETCH_OUTCOME: ${{ steps.fetch_indices.outcome }}
+          ROLLBACK_FAILED: ${{ steps.fetch_indices.outputs.rollback_failed || 'false' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -49,10 +58,16 @@ jobs:
           if [[ "$FETCH_OUTCOME" != "success" ]]; then
             RECOVERY_EXIT=2
           fi
-          scripts/stage-lane-manifest.sh \
-            --workflow .github/workflows/fetch-us-indices-daily.yml \
-            --stage always_if_exists
-          if [[ "$FETCH_OUTCOME" == "success" ]]; then
+          if [[ "$ROLLBACK_FAILED" == "true" ]]; then
+            # A failed restore makes the recovery directory unpublishable.
+            # Persist only the fail-closed attempt evidence.
+            git add -- data/admin/data-supply-state/detection-attempts/us_indices_daily.json
+          else
+            scripts/stage-lane-manifest.sh \
+              --workflow .github/workflows/fetch-us-indices-daily.yml \
+              --stage always_if_exists
+          fi
+          if [[ "$FETCH_OUTCOME" == "success" && "$ROLLBACK_FAILED" != "true" ]]; then
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-us-indices-daily.yml \
               --stage success_if_exists

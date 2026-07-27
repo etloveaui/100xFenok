@@ -51,6 +51,11 @@ on:
         description: 'Allow empty KOSPI/KOSDAQ issuer daily rows'
         required: false
         default: 'false'
+      controlled_failure:
+        description: 'Dispatch-only KRX bridge LKG failure injection'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -93,10 +98,11 @@ jobs:
           INPUT_KRX_SLEEP_MS: ${{ github.event.inputs.krx_sleep_ms || '250' }}
           INPUT_KRX_FAIL_THRESHOLD: ${{ github.event.inputs.krx_fail_threshold || '0' }}
           INPUT_ALLOW_EMPTY_DAILY: ${{ github.event.inputs.allow_empty_daily || 'false' }}
+          INPUT_CONTROLLED_FAILURE: ${{ github.event.inputs.controlled_failure || 'false' }}
         shell: bash
         run: |
           KRX_END_DATE="${INPUT_KRX_END_DATE:-$(TZ=Asia/Seoul date -d '1 day ago' +%Y%m%d)}"
-          if [ -n "$INPUT_KRX_END_DATE" ]; then
+          if [ "$INPUT_CONTROLLED_FAILURE" = "true" ] || [ -n "$INPUT_KRX_END_DATE" ]; then
             KRX_AUTO_WALKBACK_DAYS=0
           else
             KRX_AUTO_WALKBACK_DAYS="${INPUT_KRX_WALKBACK_DAYS:-5}"
@@ -114,6 +120,7 @@ jobs:
           echo "FENOK_KRX_PLAN_ONLY=${INPUT_PLAN_ONLY:-false}" >> "$GITHUB_ENV"
           echo "FENOK_KRX_NO_FETCH=${INPUT_NO_FETCH:-false}" >> "$GITHUB_ENV"
           echo "FENOK_KRX_ALLOW_EMPTY_DAILY=${INPUT_ALLOW_EMPTY_DAILY:-false}" >> "$GITHUB_ENV"
+          echo "FENOK_KRX_CONTROLLED_FAILURE=${INPUT_CONTROLLED_FAILURE:-false}" >> "$GITHUB_ENV"
 
       - name: Refresh KRX private daily source
         id: krx_fetch
@@ -132,29 +139,88 @@ jobs:
           if [ "${FENOK_KRX_PLAN_ONLY:-false}" = "true" ]; then ARGS+=("--plan-only"); fi
           if [ "${FENOK_KRX_NO_FETCH:-false}" = "true" ]; then ARGS+=("--no-fetch"); fi
           if [ "${FENOK_KRX_ALLOW_EMPTY_DAILY:-false}" = "true" ]; then ARGS+=("--allow-empty-daily"); fi
+          if [ "${FENOK_KRX_CONTROLLED_FAILURE:-false}" = "true" ]; then ARGS+=("--controlled-failure"); fi
           BASE_END="${{ steps.window.outputs.krx_end_date }}"
           WALKBACK_DAYS="${{ steps.window.outputs.krx_auto_walkback_days }}"
           BASE_ISO="${BASE_END:0:4}-${BASE_END:4:2}-${BASE_END:6:2}"
+          STEP_OUTPUT="$GITHUB_OUTPUT"
+          FINAL_CANDIDATE_OUTPUT="$(mktemp)"
+          CANDIDATE_OUTPUT=""
+          WORST_EXIT_CODE=0
+          trap 'rm -f "$FINAL_CANDIDATE_OUTPUT" "${CANDIDATE_OUTPUT:-}"' EXIT
           for offset in $(seq 0 "$WALKBACK_DAYS"); do
             CANDIDATE="$(date -u -d "${BASE_ISO} -${offset} day" +%Y%m%d)"
             RUN_ID="krx_daily_${CANDIDATE}"
+            CANDIDATE_OUTPUT="$(mktemp)"
             echo "Trying KRX basDd=${CANDIDATE} (offset=${offset}/${WALKBACK_DAYS})"
-            if node scripts/fetch-fenok-krx-daily-private.mjs \
+            if GITHUB_OUTPUT="$CANDIDATE_OUTPUT" node scripts/fetch-fenok-krx-daily-private.mjs \
               "--end-date" "$CANDIDATE" \
               "--run-id" "$RUN_ID" \
               "${ARGS[@]}"; then
+              NODE_EXIT_CODE=0
+            else
+              NODE_EXIT_CODE=$?
+            fi
+            CANDIDATE_OUTCOME="$(awk -F= '$1 == "attempt_outcome" { value=$2 } END { print value }' "$CANDIDATE_OUTPUT")"
+            CANDIDATE_UPDATED="$(awk -F= '$1 == "recovery_updated" { value=$2 } END { print value }' "$CANDIDATE_OUTPUT")"
+            CANDIDATE_EXIT_CODE="$(awk -F= '$1 == "recovery_exit_code" { value=$2 } END { print value }' "$CANDIDATE_OUTPUT")"
+            if [ "$CANDIDATE_OUTCOME" != "success" ] && [ "$CANDIDATE_OUTCOME" != "failure" ]; then
+              CANDIDATE_OUTCOME=failure
+              CANDIDATE_UPDATED=false
+              CANDIDATE_EXIT_CODE=2
+              {
+                echo "attempt_outcome=failure"
+                echo "recovery_updated=false"
+                echo "recovery_exit_code=2"
+                echo "recovery_reason=missing_candidate_output"
+              } > "$CANDIDATE_OUTPUT"
+            fi
+            case "$CANDIDATE_EXIT_CODE" in
+              0|1|2) ;;
+              *) CANDIDATE_EXIT_CODE=2 ;;
+            esac
+            if [ "$NODE_EXIT_CODE" -gt "$CANDIDATE_EXIT_CODE" ]; then
+              CANDIDATE_EXIT_CODE="$NODE_EXIT_CODE"
+            fi
+            if [ "$CANDIDATE_EXIT_CODE" -gt "$WORST_EXIT_CODE" ]; then
+              WORST_EXIT_CODE="$CANDIDATE_EXIT_CODE"
+            fi
+            if [ "$CANDIDATE_OUTCOME" = "success" ] && [ "$CANDIDATE_EXIT_CODE" -ne 0 ]; then
+              CANDIDATE_OUTCOME=failure
+              CANDIDATE_UPDATED=false
+              {
+                echo "attempt_outcome=failure"
+                echo "recovery_updated=false"
+                echo "recovery_exit_code=${CANDIDATE_EXIT_CODE}"
+                echo "recovery_reason=contradictory_success_exit_code"
+              } >> "$CANDIDATE_OUTPUT"
+            fi
+            cp "$CANDIDATE_OUTPUT" "$FINAL_CANDIDATE_OUTPUT"
+            if [ "${FENOK_KRX_PLAN_ONLY:-false}" = "true" ]; then
+              cat "$FINAL_CANDIDATE_OUTPUT" >> "$STEP_OUTPUT"
+              exit "$NODE_EXIT_CODE"
+            fi
+            if [ "$CANDIDATE_OUTCOME" = "success" ] && [ "$CANDIDATE_UPDATED" = "true" ] && [ "$CANDIDATE_EXIT_CODE" -eq 0 ] && [ "$NODE_EXIT_CODE" -eq 0 ]; then
+              cat "$FINAL_CANDIDATE_OUTPUT" >> "$STEP_OUTPUT"
               echo "Resolved KRX basDd=${CANDIDATE}"
               exit 0
             fi
-            echo "::warning::KRX basDd=${CANDIDATE} failed validation; trying previous date if available"
+            rm -f "$CANDIDATE_OUTPUT"
+            CANDIDATE_OUTPUT=""
+            echo "::warning::KRX basDd=${CANDIDATE} did not promote (outcome=${CANDIDATE_OUTCOME}, updated=${CANDIDATE_UPDATED}); trying previous date if available"
           done
+          cat "$FINAL_CANDIDATE_OUTPUT" >> "$STEP_OUTPUT"
+          if [ "$WORST_EXIT_CODE" -eq 0 ]; then
+            echo "::warning::KRX walkback exhausted with retained LKG; canonical outputs were preserved"
+            exit 0
+          fi
           echo "KRX fetch failed for ${BASE_END} and ${WALKBACK_DAYS} walkback day(s)"
-          exit 1
+          exit "$WORST_EXIT_CODE"
 
       - name: Emit KRX detection attempt
         if: ${{ always() && env.FENOK_KRX_PLAN_ONLY != 'true' }}
         env:
-          KRX_FETCH_OUTCOME: ${{ steps.krx_fetch.outcome }}
+          KRX_FETCH_OUTCOME: ${{ steps.krx_fetch.outputs.attempt_outcome || steps.krx_fetch.outcome }}
         run: |
           node scripts/emit-fenok-krx-attempt.mjs \
             --outcome "$KRX_FETCH_OUTCOME" \
@@ -166,7 +232,7 @@ jobs:
       - name: Commit and push KRX source evidence
         if: ${{ always() && env.FENOK_KRX_PLAN_ONLY != 'true' }}
         env:
-          KRX_FETCH_OUTCOME: ${{ steps.krx_fetch.outcome }}
+          KRX_FETCH_OUTCOME: ${{ steps.krx_fetch.outputs.attempt_outcome || steps.krx_fetch.outcome }}
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
@@ -178,6 +244,14 @@ jobs:
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fenok-edge-krx-daily.yml \
             --stage always_if_exists
+          # Keep recovery state on the always path: a retained failure must
+          # persist even though canonical/computed payloads are success-only.
+          if [ -f data/admin/krx/index.json ]; then
+            git add -- data/admin/krx/index.json
+          fi
+          if [ -f data/admin/krx/lkg/bridge.json ]; then
+            git add -- data/admin/krx/lkg/bridge.json
+          fi
           if [ "$KRX_FETCH_OUTCOME" = "success" ]; then
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fenok-edge-krx-daily.yml \

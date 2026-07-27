@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: '0 8 1 * *'
   workflow_dispatch:
+    inputs:
+      controlled_failure:
+        description: 'Dispatch-only OECD LKG chaos injection'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -26,6 +32,8 @@ jobs:
         run: node scripts/test-fetch-oecd-cli.mjs
       - name: Fetch OECD CLI shadow
         id: fetch_oecd
+        env:
+          INPUT_CONTROLLED_FAILURE: ${{ github.event.inputs.controlled_failure || 'false' }}
         run: node scripts/fetch-oecd-cli.mjs
       - name: Commit OECD evidence
         if: ${{ always() }}

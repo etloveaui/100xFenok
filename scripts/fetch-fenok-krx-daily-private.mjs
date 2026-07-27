@@ -9,12 +9,23 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { isDeepStrictEqual } from "node:util";
 import { fileURLToPath } from "node:url";
+
+import {
+  LaneLkgStore,
+  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+  buildProviderObservationV2,
+  classifyLkgFailure,
+  isNaturalScheduleRun,
+} from "./lib/data-supply-lkg-store.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
 const MARKET = "Korea";
 const SOURCE = "KRX_OPEN_API";
+export const KRX_LANE_ID = "krx";
+export const KRX_LKG_KEY = "bridge";
 const BASE_URL = "https://data-dbg.krx.co.kr/svc/apis";
 const SCRIPT_PATH = "scripts/fetch-fenok-krx-daily-private.mjs";
 const BRIDGE_INDEX_DEFAULT = "data/admin/fenok-edge-korea-krx-daily-index.json";
@@ -120,6 +131,7 @@ function usage() {
     "  --no-write                       Do not write raw/manifests/bridge index.",
     "  --allow-large-run                Allow calls above --max-calls.",
     "  --allow-empty-daily              Do not fail on empty KOSPI/KOSDAQ daily issuer rows.",
+    "  --controlled-failure             Dispatch-only LKG failure injection; no provider or output mutation.",
     "  --scheduled-run                  Mark bridge index as cron-installed.",
   ].join("\n");
 }
@@ -144,6 +156,7 @@ function parseArgs(argv) {
     allowLargeRun: parseBooleanEnv("KRX_ALLOW_LARGE_RUN", false),
     bridgeIndex: process.env.KRX_BRIDGE_INDEX || BRIDGE_INDEX_DEFAULT,
     concurrency: Number.parseInt(process.env.KRX_CONCURRENCY || String(DEFAULT_CONCURRENCY), 10),
+    controlledFailure: parseBooleanEnv("INPUT_CONTROLLED_FAILURE", false),
     days: Number.parseInt(process.env.KRX_DAYS || String(DEFAULT_DAYS), 10),
     endDate: process.env.KRX_END_DATE || "",
     failThreshold: Number.parseInt(process.env.KRX_FAIL_THRESHOLD || String(DEFAULT_FAIL_THRESHOLD), 10),
@@ -167,6 +180,7 @@ function parseArgs(argv) {
     }
     if (arg === "--allow-empty-daily") args.allowEmptyDaily = true;
     else if (arg === "--allow-large-run") args.allowLargeRun = true;
+    else if (arg === "--controlled-failure") args.controlledFailure = true;
     else if (arg === "--no-fetch") args.noFetch = true;
     else if (arg === "--no-write") args.noWrite = true;
     else if (arg === "--plan-only") args.planOnly = true;
@@ -315,6 +329,146 @@ function compactDate(value) {
 function readOptionalJson(filePath) {
   if (!fs.existsSync(filePath)) return null;
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function validIsoDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/u.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
+function validUtc(value) {
+  return typeof value === "string" && value.endsWith("Z") && Number.isFinite(Date.parse(value));
+}
+
+export function validKrxBridge(document) {
+  if (document?.schema_version !== "fenok-edge-korea-krx-bridge/v1"
+    || document?.source !== SOURCE
+    || document?.market !== MARKET
+    || document?.raw_public !== false
+    || !validIsoDate(document?.as_of)
+    || !validUtc(document?.generated_at)
+    || document?.freshness?.as_of !== document.as_of
+    || !validIsoDate(document?.freshness?.source_date_min)
+    || !validIsoDate(document?.freshness?.source_date_max)
+    || document.freshness.source_date_min > document.freshness.source_date_max
+    || document.freshness.source_date_max !== document.as_of) {
+    return false;
+  }
+  const attempted = document?.latest_run?.attempted_call_count;
+  const summary = document?.latest_run?.summary;
+  return Number.isSafeInteger(attempted) && attempted > 0
+    && Number.isSafeInteger(summary?.total_files) && summary.total_files === attempted
+    && Number.isSafeInteger(summary?.success_files) && summary.success_files >= 0
+    && Number.isSafeInteger(summary?.empty_files) && summary.empty_files >= 0
+    && summary?.failed_files === 0
+    && summary.success_files + summary.empty_files === summary.total_files;
+}
+
+export function krxBridgeSourceAsOf(document) {
+  return validKrxBridge(document) ? document.as_of : null;
+}
+
+function validKrxPublicIndexCloses(document, sourceAsOf) {
+  return document?.schema_version === "fenok_krx_public_index_daily.v1"
+    && document?.source === SOURCE
+    && document?.market === MARKET
+    && document?.aggregate_only === true
+    && document?.per_issuer_rows === false
+    && document?.raw_public === false
+    && document?.status === "ready"
+    && document?.as_of === sourceAsOf
+    && Number.isSafeInteger(document?.row_count)
+    && document.row_count > 0
+    && Array.isArray(document?.indices)
+    && document.indices.length === document.row_count;
+}
+
+function validKrxKosdaqMarketCap(document, sourceAsOf) {
+  return document?.schema_version === "fenok_krx_public_kosdaq_market_cap_aggregate.v1"
+    && document?.source === SOURCE
+    && document?.market === "KOSDAQ"
+    && document?.aggregate_only === true
+    && document?.per_issuer_rows === false
+    && document?.raw_public === false
+    && document?.status === "ready"
+    && document?.as_of === sourceAsOf
+    && Number.isSafeInteger(document?.issuer_count)
+    && document.issuer_count >= PUBLIC_KOSDAQ_TOP_N
+    && finite(document?.top_n_weight)
+    && document.top_n_weight >= 0
+    && document.top_n_weight <= 1;
+}
+
+function jsonBytes(document) {
+  return Buffer.from(`${JSON.stringify(document, null, 2)}\n`);
+}
+
+function relativeInside(root, targetPath) {
+  const relative = path.relative(path.resolve(root), path.resolve(targetPath)).split(path.sep).join("/");
+  if (relative === ".." || relative.startsWith("../") || path.isAbsolute(relative)) {
+    throw new Error(`KRX recovery target must stay inside repo root: ${targetPath}`);
+  }
+  return relative;
+}
+
+function restoreTargets(rows, io) {
+  const failures = [];
+  for (const row of rows) {
+    try {
+      io.rmSync(row.temporaryPath, { force: true });
+      if (row.priorBytes === null) io.rmSync(row.targetPath, { force: true });
+      else io.writeFileSync(row.targetPath, row.priorBytes);
+    } catch (error) {
+      failures.push(`${row.targetPath}: ${shortErrorMessage(error)}`);
+    }
+  }
+  if (failures.length > 0) {
+    throw new Error(`KRX output rollback failed: ${failures.join("; ")}`);
+  }
+}
+
+export function commitKrxOutputsWithRollback(entries, commitState, io = fs) {
+  if (!Array.isArray(entries) || entries.length === 0 || typeof commitState !== "function") {
+    throw new Error("KRX output transaction requires entries and a state commit");
+  }
+  const targets = new Set();
+  const staged = [];
+  try {
+    for (const { targetPath, bytes } of entries) {
+      if (typeof targetPath !== "string" || targetPath.length === 0 || !Buffer.isBuffer(bytes)) {
+        throw new Error("KRX output transaction entry is invalid");
+      }
+      const resolved = path.resolve(targetPath);
+      if (targets.has(resolved)) throw new Error(`duplicate KRX output target: ${resolved}`);
+      targets.add(resolved);
+      io.mkdirSync(path.dirname(resolved), { recursive: true });
+      const temporaryPath = `${resolved}.${process.pid}.${Math.random().toString(16).slice(2)}.tmp`;
+      const row = {
+        targetPath: resolved,
+        temporaryPath,
+        priorBytes: io.existsSync(resolved) ? io.readFileSync(resolved) : null,
+      };
+      staged.push(row);
+      io.writeFileSync(temporaryPath, bytes, { mode: 0o600 });
+    }
+  } catch (error) {
+    for (const row of staged) io.rmSync(row.temporaryPath, { force: true });
+    throw error;
+  }
+  try {
+    for (const row of staged) io.renameSync(row.temporaryPath, row.targetPath);
+    return commitState();
+  } catch (error) {
+    try {
+      restoreTargets(staged, io);
+    } catch (rollbackError) {
+      throw new AggregateError([error, rollbackError], "KRX output transaction and rollback failed");
+    }
+    throw error;
+  } finally {
+    for (const row of staged) io.rmSync(row.temporaryPath, { force: true });
+  }
 }
 
 function hasKrErrorPayload(data) {
@@ -957,9 +1111,175 @@ function validateRun(manifest, config) {
   return errors;
 }
 
-async function run(argv = process.argv.slice(2)) {
+function krxFailureResult({ store, artifact, run, reason, error = null }) {
+  const failure = store.recordFailure({ artifacts: [artifact], run, reason });
+  const classification = classifyLkgFailure({
+    reason,
+    hasCompleteLkg: failure.hasCompleteLkg,
+  });
+  return {
+    kind: "failure",
+    ok: false,
+    updated: false,
+    attempt_outcome: "failure",
+    reason,
+    retry_set: failure.retrySet,
+    degraded: classification.degraded,
+    corrupt: classification.corrupt,
+    exit_code: classification.exitCode,
+    ...(error ? { error: shortErrorMessage(error) } : {}),
+  };
+}
+
+export function applyKrxLkgContract({
+  repoRoot = REPO_ROOT,
+  bridgeIndexPath,
+  publicIndexClosesPath,
+  publicKosdaqMarketCapPath,
+  bridgeDocument = null,
+  publicIndexCloses = null,
+  publicKosdaqMarketCap = null,
+  run,
+  failureReason = null,
+  controlledFailure = false,
+  store = new LaneLkgStore({ repoRoot, laneId: KRX_LANE_ID }),
+  io = fs,
+}) {
+  if (controlledFailure && run?.eventName !== "workflow_dispatch") {
+    throw new Error("controlled KRX failure requires workflow_dispatch");
+  }
+  const artifact = {
+    key: KRX_LKG_KEY,
+    canonicalPath: bridgeIndexPath,
+    validateDocument: validKrxBridge,
+    sourceAsOf: krxBridgeSourceAsOf,
+  };
+  if (controlledFailure || failureReason) {
+    return krxFailureResult({
+      store,
+      artifact,
+      run,
+      reason: controlledFailure ? "controlled_failure" : failureReason,
+    });
+  }
+  if (!validKrxBridge(bridgeDocument)
+    || !validKrxPublicIndexCloses(publicIndexCloses, bridgeDocument?.as_of)
+    || !validKrxKosdaqMarketCap(publicKosdaqMarketCap, bridgeDocument?.as_of)) {
+    return krxFailureResult({ store, artifact, run, reason: "schema_drift" });
+  }
+
+  const payloadBytes = jsonBytes(bridgeDocument);
+  const currentRelativePath = relativeInside(repoRoot, bridgeIndexPath);
+  const candidate = {
+    key: KRX_LKG_KEY,
+    currentRelativePath,
+    payloadBytes,
+    sourceAsOf: bridgeDocument.as_of,
+    validateDocument: validKrxBridge,
+    deriveSourceAsOf: krxBridgeSourceAsOf,
+    promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+    provider_observation: buildProviderObservationV2({
+      payloadBytes,
+      sourceAsOf: bridgeDocument.as_of,
+      validateDocument: validKrxBridge,
+      deriveSourceAsOf: krxBridgeSourceAsOf,
+      candidateContainsObservation: isDeepStrictEqual,
+      run,
+    }),
+  };
+
+  const before = store.stateSnapshot().items[KRX_LKG_KEY];
+  if (before?.retry === true && !isNaturalScheduleRun(run)) {
+    return {
+      kind: "recovery_requires_schedule",
+      ok: false,
+      updated: false,
+      attempt_outcome: "failure",
+      reason: "recovery_requires_schedule",
+      retry_set: store.stateSnapshot().retry_set,
+      degraded: true,
+      corrupt: false,
+      exit_code: 0,
+    };
+  }
+  const [decision] = store.evaluatePromotionCandidates([candidate], run);
+  if (!decision.eligible) {
+    if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)) {
+      store.recordPromotionDeferral({ artifacts: [candidate], run, reason: decision.reason });
+    }
+    return {
+      kind: "not_promotable",
+      ok: false,
+      updated: false,
+      attempt_outcome: "failure",
+      reason: decision.reason,
+      retry_set: store.stateSnapshot().retry_set,
+      degraded: true,
+      corrupt: false,
+      exit_code: 0,
+    };
+  }
+
+  try {
+    const success = commitKrxOutputsWithRollback([
+      { targetPath: bridgeIndexPath, bytes: payloadBytes },
+      { targetPath: publicIndexClosesPath, bytes: jsonBytes(publicIndexCloses) },
+      { targetPath: publicKosdaqMarketCapPath, bytes: jsonBytes(publicKosdaqMarketCap) },
+    ], () => store.recordSuccess({ artifacts: [candidate], run }), io);
+    return {
+      kind: "success",
+      ok: true,
+      updated: true,
+      attempt_outcome: "success",
+      reason: "ok",
+      retry_set: success.retrySet,
+      recovered: success.state.items[KRX_LKG_KEY]?.recovered_at === run.observedAt,
+      degraded: false,
+      corrupt: false,
+      exit_code: 0,
+    };
+  } catch (error) {
+    return krxFailureResult({
+      store,
+      artifact,
+      run,
+      reason: "unexpected_error",
+      error,
+    });
+  }
+}
+
+function runContext(config, dependencies) {
+  const observedAt = dependencies.observedAt ?? new Date().toISOString();
+  return {
+    runId: String(dependencies.runId ?? process.env.GITHUB_RUN_ID ?? config.runId),
+    runAttempt: Number(dependencies.runAttempt ?? process.env.GITHUB_RUN_ATTEMPT ?? 1),
+    eventName: dependencies.eventName ?? process.env.GITHUB_EVENT_NAME ?? "local",
+    observedAt,
+  };
+}
+
+async function run(argv = process.argv.slice(2), dependencies = {}) {
   const config = buildConfig(parseArgs(argv));
   if (config.planOnly) return buildPlan(config);
+  const lkgRepoRoot = dependencies.lkgRepoRoot ?? REPO_ROOT;
+  const recoveryRun = runContext(config, dependencies);
+  if (config.controlledFailure) {
+    return {
+      ...(applyKrxLkgContract({
+        repoRoot: lkgRepoRoot,
+        bridgeIndexPath: config.bridgeIndexPath,
+        publicIndexClosesPath: config.publicIndexClosesPath,
+        publicKosdaqMarketCapPath: config.publicKosdaqMarketCapPath,
+        run: recoveryRun,
+        controlledFailure: true,
+      })),
+      controlled_failure: true,
+      run_id: config.runId,
+      dates: config.dates,
+      bridge_index: repoRel(config.bridgeIndexPath),
+    };
+  }
   if (config.requestBudget.status !== "within_budget") throw new Error(`KRX request budget blocked: ${JSON.stringify(config.requestBudget)}`);
 
   const authKey = process.env.KRX_OPEN_API_AUTH_KEY;
@@ -1046,6 +1366,7 @@ async function run(argv = process.argv.slice(2)) {
   manifest.validation_errors = validateRun(manifest, config);
   manifest.ok = manifest.validation_errors.length === 0;
 
+  let recovery = null;
   if (!config.noWrite) {
     for (const [group, groupManifest] of Object.entries(groupManifests)) {
       const groupDir = path.join(config.outputRoot, group);
@@ -1054,22 +1375,36 @@ async function run(argv = process.argv.slice(2)) {
     }
     fs.writeFileSync(path.join(config.outputRoot, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
 
-    const bridgeIndex = buildBridgeIndex(manifest, groupManifests, config);
-    ensureDir(path.dirname(config.bridgeIndexPath));
-    fs.writeFileSync(config.bridgeIndexPath, `${JSON.stringify(bridgeIndex, null, 2)}\n`, "utf8");
-
-    // Slice 1: public-safe aggregate index closes (data/computed, mirrored).
-    const publicIndexCloses = buildKrxPublicIndexCloses(manifest, config);
-    ensureDir(path.dirname(config.publicIndexClosesPath));
-    fs.writeFileSync(config.publicIndexClosesPath, `${JSON.stringify(publicIndexCloses, null, 2)}\n`, "utf8");
-
-    const publicKosdaqMarketCap = buildKrxPublicKosdaqMarketCapAggregate(manifest, config);
-    ensureDir(path.dirname(config.publicKosdaqMarketCapPath));
-    fs.writeFileSync(config.publicKosdaqMarketCapPath, `${JSON.stringify(publicKosdaqMarketCap, null, 2)}\n`, "utf8");
+    if (manifest.ok) {
+      const bridgeIndex = buildBridgeIndex(manifest, groupManifests, config);
+      const publicIndexCloses = buildKrxPublicIndexCloses(manifest, config);
+      const publicKosdaqMarketCap = buildKrxPublicKosdaqMarketCapAggregate(manifest, config);
+      recovery = applyKrxLkgContract({
+        repoRoot: lkgRepoRoot,
+        bridgeIndexPath: config.bridgeIndexPath,
+        publicIndexClosesPath: config.publicIndexClosesPath,
+        publicKosdaqMarketCapPath: config.publicKosdaqMarketCapPath,
+        bridgeDocument: bridgeIndex,
+        publicIndexCloses,
+        publicKosdaqMarketCap,
+        run: recoveryRun,
+      });
+    } else {
+      recovery = applyKrxLkgContract({
+        repoRoot: lkgRepoRoot,
+        bridgeIndexPath: config.bridgeIndexPath,
+        publicIndexClosesPath: config.publicIndexClosesPath,
+        publicKosdaqMarketCapPath: config.publicKosdaqMarketCapPath,
+        run: recoveryRun,
+        failureReason: manifest.summary.failed_files > config.failThreshold ? "http_error" : "schema_drift",
+      });
+    }
   }
 
   const result = {
-    ok: manifest.ok,
+    ok: manifest.ok && (config.noWrite || recovery?.ok === true),
+    attempt_outcome: (config.noWrite ? manifest.ok : recovery?.ok === true) ? "success" : "failure",
+    exit_code: config.noWrite ? (manifest.ok ? 0 : 2) : (recovery?.exit_code ?? 2),
     run_id: config.runId,
     dates: config.dates,
     output_root: repoRel(config.outputRoot),
@@ -1079,19 +1414,35 @@ async function run(argv = process.argv.slice(2)) {
     summary: manifest.summary,
     validation_errors: manifest.validation_errors,
     wrote: !config.noWrite,
+    recovery,
   };
 
   console.log(JSON.stringify(result, null, 2));
   return result;
 }
 
+function writeGithubOutputs(result, outputPath = process.env.GITHUB_OUTPUT) {
+  if (!outputPath) return;
+  const attemptOutcome = result?.attempt_outcome ?? (result?.ok === true ? "success" : "failure");
+  const recoveryUpdated = result?.updated === true || result?.recovery?.updated === true;
+  fs.appendFileSync(outputPath, [
+    `attempt_outcome=${attemptOutcome}`,
+    `recovery_updated=${recoveryUpdated}`,
+    `recovery_exit_code=${Number(result?.exit_code ?? (result?.ok === true ? 0 : 2))}`,
+    `recovery_reason=${String(result?.recovery?.reason ?? result?.reason ?? (result?.ok === true ? "ok" : "unexpected_error"))}`,
+    "",
+  ].join("\n"));
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   run().then((result) => {
     if (result?.mode === "plan_only") console.log(JSON.stringify(result, null, 2));
-    if (result?.ok === false) process.exitCode = 1;
+    writeGithubOutputs(result);
+    process.exitCode = Number(result?.exit_code ?? (result?.ok === false ? 1 : 0));
   }).catch((error) => {
     console.error(shortErrorMessage(error));
-    process.exit(1);
+    writeGithubOutputs({ ok: false, attempt_outcome: "failure", exit_code: 2, reason: "unexpected_error" });
+    process.exitCode = 2;
   });
 }
 
@@ -1108,4 +1459,5 @@ export {
   parseArgs,
   run,
   validateRun,
+  writeGithubOutputs,
 };

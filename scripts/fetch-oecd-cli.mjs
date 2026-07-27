@@ -14,11 +14,25 @@ import {
   writeJsonAtomic,
 } from "./lib/data-supply-attempt-shard.mjs";
 import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
+import {
+  LaneLkgStore,
+  PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+  buildProviderObservationV2,
+  classifyLkgFailure,
+  isNaturalScheduleRun,
+} from "./lib/data-supply-lkg-store.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, "..");
 const LANE_ID = "oecd_cli";
 const ATTEMPT_SHARD_RELATIVE_PATH = "data/admin/data-supply-state/detection-attempts/oecd_cli.json";
+export const OECD_MAX_MONTHS_PER_SERIES = 240;
+export const OECD_PERSISTENCE_POLICY = Object.freeze({
+  schema_version: "oecd-cli-bounded-persistence/v1",
+  basis: "monthly_provider_period_per_series",
+  max_months_per_series: OECD_MAX_MONTHS_PER_SERIES,
+  eviction: "oldest_provider_period_first",
+});
 export const OECD_SERIES = Object.freeze({
   AUS: "australia", BRA: "brazil", CAN: "canada", CHN: "china", FRA: "france",
   G20: "g20", G7: "g7", DEU: "germany", IND: "india", IDN: "indonesia",
@@ -63,6 +77,38 @@ function csvRows(text) {
   return rows;
 }
 
+function validSourceDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/u.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
+export function retainLatestOecdMonths(values, maxMonths = OECD_MAX_MONTHS_PER_SERIES) {
+  if (!Array.isArray(values) || !values.every((row) => validSourceDate(row?.date) && Number.isFinite(row?.value))) {
+    throw new Error("OECD persistence requires valid monthly observations");
+  }
+  if (!Number.isInteger(maxMonths) || maxMonths < 1) {
+    throw new Error("OECD persistence bound must be a positive integer");
+  }
+  const byDate = new Map();
+  for (const row of values) {
+    if (byDate.has(row.date)) throw new Error("duplicate OECD periods");
+    byDate.set(row.date, { ...row });
+  }
+  const available = [...byDate.values()].sort((left, right) => left.date.localeCompare(right.date));
+  const retained = available.slice(-maxMonths);
+  return {
+    rows: retained,
+    persistence_state: {
+      available_months: available.length,
+      retained_months: retained.length,
+      pruned_months: available.length - retained.length,
+      first_retained_source_date: retained[0]?.date ?? null,
+      last_retained_source_date: retained.at(-1)?.date ?? null,
+    },
+  };
+}
+
 export function parseOecdCsv(text, observedAt = null) {
   const rows = csvRows(String(text));
   const header = rows.shift() ?? [];
@@ -76,30 +122,150 @@ export function parseOecdCsv(text, observedAt = null) {
     if (!Object.hasOwn(OECD_SERIES, code)) throw new Error(`unknown OECD area ${code}`);
     const period = row[index.TIME_PERIOD];
     const value = Number(row[index.OBS_VALUE]);
-    if (!/^\d{4}-\d{2}$/u.test(period) || !Number.isFinite(value)) throw new Error(`invalid OECD observation ${code}:${period}`);
+    if (!/^\d{4}-\d{2}$/u.test(period) || !validSourceDate(`${period}-01`) || !Number.isFinite(value)) {
+      throw new Error(`invalid OECD observation ${code}:${period}`);
+    }
     series[OECD_SERIES[code]].push({ date: `${period}-01`, value });
   }
   const missing = Object.entries(series).filter(([, values]) => values.length === 0).map(([key]) => key);
   if (missing.length > 0) throw new Error(`missing OECD series: ${missing.join(", ")}`);
-  for (const values of Object.values(series)) {
-    values.sort((left, right) => left.date.localeCompare(right.date));
-    if (new Set(values.map((row) => row.date)).size !== values.length) throw new Error("duplicate OECD periods");
-  }
-  const periods = [...new Set(Object.values(series).flatMap((values) => values.map((row) => row.date)))].sort();
+  const retainedBySeries = Object.fromEntries(Object.entries(series).map(([key, values]) => [
+    key,
+    retainLatestOecdMonths(values),
+  ]));
+  const retainedSeries = Object.fromEntries(Object.entries(retainedBySeries).map(([key, retained]) => [
+    key,
+    retained.rows,
+  ]));
+  const periods = [...new Set(Object.values(retainedSeries).flatMap((values) => values.map((row) => row.date)))].sort();
   return {
     schema_version: "oecd-cli-shadow/v1",
     source: "OECD SDMX DF_CLI",
     source_endpoint: "OECD.SDD.STES,DSD_STES@DF_CLI",
     generated_at: observedAt,
     latest_date: periods.at(-1),
-    latest_values: Object.fromEntries(Object.entries(series).map(([key, values]) => [key, values.at(-1).value])),
-    series,
+    latest_values: Object.fromEntries(Object.entries(retainedSeries).map(([key, values]) => [key, values.at(-1).value])),
+    persistence_policy: OECD_PERSISTENCE_POLICY,
+    persistence_state: {
+      series: Object.fromEntries(Object.entries(retainedBySeries).map(([key, retained]) => [
+        key,
+        retained.persistence_state,
+      ])),
+    },
+    series: retainedSeries,
     records: periods.map((date) => ({
       date,
       period: date.slice(0, 7),
-      values: Object.fromEntries(Object.entries(series).filter(([, values]) => values.some((row) => row.date === date)).map(([key, values]) => [key, values.find((row) => row.date === date).value])),
+      values: Object.fromEntries(Object.entries(retainedSeries).filter(([, values]) => values.some((row) => row.date === date)).map(([key, values]) => [key, values.find((row) => row.date === date).value])),
     })),
   };
+}
+
+export function validOecdPayload(document) {
+  if (document?.schema_version !== "oecd-cli-shadow/v1"
+    || !validSourceDate(document?.latest_date)
+    || JSON.stringify(document?.persistence_policy) !== JSON.stringify(OECD_PERSISTENCE_POLICY)
+    || !document?.series || typeof document.series !== "object" || Array.isArray(document.series)
+    || !document?.persistence_state?.series
+    || !document?.latest_values || typeof document.latest_values !== "object" || Array.isArray(document.latest_values)
+    || !Array.isArray(document?.records) || document.records.length === 0) return false;
+  const keys = Object.values(OECD_SERIES);
+  if (Object.keys(document.series).length !== keys.length
+    || Object.keys(document.latest_values).length !== keys.length
+    || keys.some((key) => !Array.isArray(document.series[key]) || document.series[key].length === 0)) {
+    return false;
+  }
+  for (const key of keys) {
+    const rows = document.series[key];
+    const state = document.persistence_state.series[key];
+    const sortedDates = rows.map((row) => row.date).toSorted();
+    if (!rows.every((row) => validSourceDate(row?.date) && Number.isFinite(row?.value))
+      || rows.length > OECD_MAX_MONTHS_PER_SERIES
+      || new Set(rows.map((row) => row.date)).size !== rows.length
+      || JSON.stringify(rows.map((row) => row.date)) !== JSON.stringify(sortedDates)
+      || !state
+      || state.retained_months !== rows.length
+      || state.available_months !== state.retained_months + state.pruned_months
+      || state.first_retained_source_date !== rows[0]?.date
+      || state.last_retained_source_date !== rows.at(-1)?.date
+      || document.latest_values[key] !== rows.at(-1)?.value) return false;
+  }
+  const periods = [...new Set(Object.values(document.series)
+    .flatMap((rows) => rows.map((row) => row.date)))].sort();
+  const expectedRecords = periods.map((date) => ({
+    date,
+    period: date.slice(0, 7),
+    values: Object.fromEntries(Object.entries(document.series)
+      .filter(([, rows]) => rows.some((row) => row.date === date))
+      .map(([key, rows]) => [key, rows.find((row) => row.date === date).value])),
+  }));
+  return periods.at(-1) === document.latest_date
+    && JSON.stringify(document.records) === JSON.stringify(expectedRecords);
+}
+
+function oecdProviderProgressVector(document) {
+  if (!validOecdPayload(document)) throw new Error("OECD provider progress payload is invalid");
+  return Object.fromEntries(Object.values(OECD_SERIES).map((key) => [
+    key,
+    document.series[key].at(-1).date,
+  ]));
+}
+
+export function evaluateOecdProviderProgress(retainedPayload, candidatePayload) {
+  const retained = oecdProviderProgressVector(retainedPayload);
+  const candidate = oecdProviderProgressVector(candidatePayload);
+  const keys = Object.values(OECD_SERIES);
+  const regressedSeries = keys.filter((key) => candidate[key] < retained[key]);
+  const advancedSeries = keys.filter((key) => candidate[key] > retained[key]);
+  if (regressedSeries.length > 0) {
+    return {
+      eligible: false,
+      reason: "recovery_provider_regression",
+      regressed_series: regressedSeries,
+      advanced_series: advancedSeries,
+    };
+  }
+  if (advancedSeries.length === 0) {
+    return {
+      eligible: false,
+      reason: "recovery_not_advanced_by_provider",
+      regressed_series: [],
+      advanced_series: [],
+    };
+  }
+  return {
+    eligible: true,
+    reason: "ok",
+    regressed_series: [],
+    advanced_series: advancedSeries,
+  };
+}
+
+function retainedOecdPayload(repoRoot, store, item) {
+  const expectedPath = "data/admin/oecd_cli/lkg/oecd_cli.json";
+  if (item?.lkg?.path !== expectedPath
+    || !store.validRetainedLkg("oecd_cli", validOecdPayload, (document) => document?.latest_date ?? null)) {
+    throw new Error("OECD retained LKG is invalid");
+  }
+  const payload = JSON.parse(fs.readFileSync(path.join(repoRoot, expectedPath), "utf8"));
+  if (!validOecdPayload(payload)) throw new Error("OECD retained LKG payload is invalid");
+  return payload;
+}
+
+function recordSuccessWithVectorDecision(store, input, vectorDecision) {
+  if (vectorDecision?.eligible !== true) return store.recordSuccess(input);
+  const evaluatePromotionCandidates = store.evaluatePromotionCandidates;
+  store.evaluatePromotionCandidates = (artifacts) => artifacts.map((artifact) => ({
+    key: artifact.key,
+    eligible: true,
+    reason: "ok",
+    artifact,
+  }));
+  try {
+    return store.recordSuccess(input);
+  } finally {
+    store.evaluatePromotionCandidates = evaluatePromotionCandidates;
+  }
 }
 
 function parityReport(shadow, canonicalPath, observedAt) {
@@ -134,7 +300,26 @@ function writePairAtomic(entries) {
   }
 }
 
+function snapshotFiles(filePaths) {
+  return filePaths.map((filePath) => ({
+    filePath,
+    bytes: fs.existsSync(filePath) ? fs.readFileSync(filePath) : null,
+  }));
+}
+
+function restoreFiles(snapshot) {
+  for (const { filePath, bytes } of snapshot) {
+    if (bytes === null) {
+      fs.rmSync(filePath, { force: true });
+      continue;
+    }
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, bytes);
+  }
+}
+
 export async function runOecdCliShadow({
+  repoRoot = REPO_ROOT,
   shadowPath = path.join(REPO_ROOT, "data/admin/oecd_cli/shadow/oecd-cli.json"),
   parityReportPath = path.join(REPO_ROOT, "data/admin/oecd_cli/parity-report.json"),
   attemptShardPath = path.join(REPO_ROOT, ATTEMPT_SHARD_RELATIVE_PATH),
@@ -142,11 +327,23 @@ export async function runOecdCliShadow({
   request = requestBytes,
   observedAt = new Date().toISOString(),
   attemptId = `gh-${process.env.GITHUB_RUN_ID ?? Date.now()}-${process.env.GITHUB_RUN_ATTEMPT ?? 1}-oecd-cli`,
+  runId = process.env.GITHUB_RUN_ID || String(attemptId),
+  runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
+  eventName = process.env.GITHUB_EVENT_NAME || "local",
+  controlledFailure = process.env.INPUT_CONTROLLED_FAILURE === "true",
+  lkgStoreFactory = ({ repoRoot: storeRoot, laneId }) => new LaneLkgStore({
+    repoRoot: storeRoot,
+    laneId,
+  }),
 } = {}) {
+  if (controlledFailure && eventName !== "workflow_dispatch") {
+    throw new Error("controlled OECD failure requires workflow_dispatch");
+  }
   let tuple;
   let payload = null;
   let failureDetail = null;
   try {
+    if (controlledFailure) throw Object.assign(new Error("controlled failure"), { code: "ECONNRESET" });
     const response = await request(ENDPOINT);
     if (response.statusCode < 200 || response.statusCode >= 300) tuple = returnedTuple({ httpStatus: response.statusCode });
     else {
@@ -162,12 +359,133 @@ export async function runOecdCliShadow({
     failureDetail = boundedDiagnosticDetail(error);
     tuple = threwTuple(transportError(error) ? "transport" : "unexpected");
   }
-  const row = buildAttemptRow({ laneId: LANE_ID, memberId: null, tuple, attemptId, observedAt });
+  let row = buildAttemptRow({ laneId: LANE_ID, memberId: null, tuple, attemptId, observedAt });
   writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
-  if (payload === null) return { ok: false, updated: false, exitCode: 2, row, failure_detail: failureDetail };
-  const parity = parityReport(payload, canonicalPath, observedAt);
-  writePairAtomic([{ target: shadowPath, value: payload }, { target: parityReportPath, value: parity }]);
-  return { ok: true, updated: true, exitCode: 0, row, parity };
+  const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
+  const store = lkgStoreFactory({ repoRoot, laneId: LANE_ID });
+  const artifact = {
+    key: "oecd_cli",
+    canonicalPath: shadowPath,
+    validateDocument: validOecdPayload,
+    sourceAsOf: (document) => document?.latest_date ?? null,
+  };
+  const failUnexpected = (error) => {
+    row = buildAttemptRow({
+      laneId: LANE_ID,
+      memberId: null,
+      tuple: threwTuple("unexpected"),
+      attemptId,
+      observedAt,
+    });
+    writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
+    store.recordFailure({
+      artifacts: [artifact],
+      run,
+      reason: "unexpected_error",
+    });
+    throw error;
+  };
+  if (payload === null) {
+    const reason = controlledFailure
+      ? "controlled_failure"
+      : (tuple.execution === "threw" ? "transport_error" : "schema_drift");
+    const failure = store.recordFailure({ artifacts: [artifact], run, reason });
+    const classification = classifyLkgFailure({ reason, hasCompleteLkg: failure.hasCompleteLkg });
+    return {
+      ok: false,
+      updated: false,
+      degraded: classification.degraded,
+      corrupt: classification.corrupt,
+      exitCode: classification.exitCode,
+      row,
+      failure_detail: failureDetail,
+      retrySet: failure.retrySet,
+    };
+  }
+  try {
+    if (!validOecdPayload(payload)) throw new Error("OECD normalized payload failed persistence validation");
+    const payloadBytes = Buffer.from(`${JSON.stringify(payload, null, 2)}\n`);
+    const candidate = {
+      key: "oecd_cli",
+      currentRelativePath: "data/admin/oecd_cli/shadow/oecd-cli.json",
+      payloadBytes,
+      sourceAsOf: payload.latest_date,
+      validateDocument: validOecdPayload,
+      deriveSourceAsOf: (document) => document?.latest_date ?? null,
+      promotion_contract: PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
+      provider_observation: buildProviderObservationV2({
+        payloadBytes,
+        sourceAsOf: payload.latest_date,
+        validateDocument: validOecdPayload,
+        deriveSourceAsOf: (document) => document?.latest_date ?? null,
+        candidateContainsObservation: (candidateDocument, providerDocument) => (
+          JSON.stringify(candidateDocument) === JSON.stringify(providerDocument)
+        ),
+        run,
+      }),
+    };
+    const before = store.stateSnapshot().items.oecd_cli;
+    let vectorDecision = null;
+    if (before?.retry === true && !isNaturalScheduleRun(run)) {
+      return {
+        ok: false,
+        updated: false,
+        degraded: true,
+        corrupt: false,
+        exitCode: 0,
+        row,
+        reason: "recovery_requires_schedule",
+        retrySet: store.stateSnapshot().retry_set,
+      };
+    }
+    if (before?.retry === true && before?.resolution_state === "lkg_primary") {
+      vectorDecision = evaluateOecdProviderProgress(
+        retainedOecdPayload(repoRoot, store, before),
+        payload,
+      );
+    }
+    const decision = vectorDecision ?? store.evaluatePromotionCandidates([candidate], run)[0];
+    if (!decision.eligible) {
+      if (["foreign_writer_conflict", "recovery_not_advanced_by_provider"].includes(decision.reason)) {
+        store.recordPromotionDeferral({ artifacts: [candidate], run, reason: decision.reason });
+      }
+      return {
+        ok: false,
+        updated: false,
+        degraded: true,
+        corrupt: false,
+        exitCode: 0,
+        row,
+        reason: decision.reason,
+        retrySet: store.stateSnapshot().retry_set,
+      };
+    }
+    const parity = parityReport(payload, canonicalPath, observedAt);
+    const transactionSnapshot = snapshotFiles([shadowPath, parityReportPath, store.statePath]);
+    let success;
+    try {
+      writePairAtomic([{ target: shadowPath, value: payload }, { target: parityReportPath, value: parity }]);
+      success = recordSuccessWithVectorDecision(
+        store,
+        { artifacts: [candidate], run },
+        vectorDecision,
+      );
+    } catch (error) {
+      restoreFiles(transactionSnapshot);
+      throw error;
+    }
+    return {
+      ok: true,
+      updated: true,
+      exitCode: 0,
+      row,
+      parity,
+      retrySet: success.retrySet,
+      recovered: success.state.items.oecd_cli?.recovered_at === observedAt,
+    };
+  } catch (error) {
+    return failUnexpected(error);
+  }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

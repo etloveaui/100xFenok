@@ -478,8 +478,15 @@ const lanes = [
     detection_attempt: attemptShard("oecd_cli"),
     canonical_outputs: ["data/admin/oecd_cli/shadow/oecd-cli.json"],
     public_mirror: [],
-    commit_shards: [attemptShard("oecd_cli"), "data/admin/oecd_cli/shadow/oecd-cli.json", "data/admin/oecd_cli/parity-report.json"],
-    recovery_store: null,
+    commit_shards: [
+      attemptShard("oecd_cli"),
+      "data/admin/oecd_cli/index.json",
+      "data/admin/oecd_cli/lkg/oecd_cli.json",
+      "data/admin/oecd_cli/shadow/oecd-cli.json",
+      "data/admin/oecd_cli/parity-report.json",
+    ],
+    recovery_store: "data/admin/oecd_cli/index.json",
+    kpi_recovery_shape: "general",
     declared_exception: "admin-only shadow until composite activity-surveys ownership and OECD redistribution terms are resolved",
     script_sources: ["scripts/fetch-oecd-cli.mjs"],
   }),
@@ -492,7 +499,7 @@ const lanes = [
     cadence: { kind: "daily", provider: "KRX Open API (Korea trading days)" },
     enforcement: "shadow",
     privacy_class: "public_safe_aggregate",
-    admin_store: "data/admin/fenok-edge-korea-krx",
+    admin_store: "data/admin/krx",
     detection_attempt: attemptShard("krx"),
     canonical_outputs: [
       "data/admin/fenok-edge-korea-krx-daily-index.json",
@@ -502,11 +509,14 @@ const lanes = [
     public_mirror: ["100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json"],
     commit_shards: [
       attemptShard("krx"),
+      "data/admin/krx/index.json",
+      "data/admin/krx/lkg/bridge.json",
       "data/admin/fenok-edge-korea-krx-daily-index.json",
       "data/computed/fenok-edge-korea-krx-index-daily.json",
       "data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json",
     ],
-    recovery_store: null,
+    recovery_store: "data/admin/krx/index.json",
+    kpi_recovery_shape: "general",
     declared_exception: "emitter-first shadow lane; promote only after a natural workflow run commits valid attempt evidence",
     script_sources: ["scripts/fetch-fenok-krx-daily-private.mjs", "scripts/emit-fenok-krx-attempt.mjs"],
   }),
@@ -757,6 +767,10 @@ const lanes = [
     commit_shards: [
       attemptShard("damodaran"),
       "data/admin/damodaran/owner-guard.json",
+      "data/admin/damodaran/index.json",
+      "data/admin/damodaran/current/damodaran.json",
+      "data/admin/damodaran/lkg/damodaran.json",
+      "data/admin/damodaran/history.json",
       "data/damodaran/industries.json",
       "data/damodaran/historical_erp.json",
       "data/damodaran/credit_ratings.json",
@@ -770,8 +784,8 @@ const lanes = [
       "100xfenok-next/public/data/damodaran/industry_metrics.json",
       "100xfenok-next/public/data/damodaran/industry_metrics_regions.json",
     ],
-    recovery_store: null,
-    declared_exception: "owner-guard honesty store has no LKG promotion path; exact six-file producer and canonical/public parity are fail-closed",
+    recovery_store: "data/admin/damodaran/index.json",
+    kpi_recovery_shape: "general",
     script_sources: ["scripts/fetch-damodaran-shadow.mjs"],
   }),
   record({
@@ -905,9 +919,8 @@ const lanes = [
   record({
     id: "gdelt_news_tone",
     label: "GDELT news tone proxy",
-    // Shadow producer with the same bounded LaneLkgStore recovery contract as
-    // other provider-backed lanes. This adds recovery machinery without changing
-    // enforcement or KPI promotion.
+    // The bounded LKG contract is implemented, but promotion remains shadow
+    // until a post-completeness-gate natural run proves the full reference set.
     owner_workflow: ".github/workflows/fetch-fenok-news-tone.yml",
     store_kind: "marker",
     lane_class: "detection_floor",
@@ -1239,7 +1252,11 @@ workflow_policies[".github/workflows/fetch-us-indices-daily.yml"] = policy(["us_
   ],
 });
 workflow_policies[".github/workflows/fetch-oecd-cli.yml"] = policy(["oecd_cli"], {
-  always_if_exists: [commitSpec("data/admin/data-supply-state/detection-attempts/oecd_cli.json", "file")],
+  always_if_exists: [
+    commitSpec("data/admin/data-supply-state/detection-attempts/oecd_cli.json", "file"),
+    commitSpec("data/admin/oecd_cli/index.json", "file"),
+    commitSpec("data/admin/oecd_cli/lkg/oecd_cli.json", "file"),
+  ],
   success_if_exists: [
     commitSpec("data/admin/oecd_cli/shadow/oecd-cli.json", "file"),
     commitSpec("data/admin/oecd_cli/parity-report.json", "file"),
@@ -1295,6 +1312,8 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_
 workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = policy(["krx"], {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/krx.json", "file"),
+    commitSpec("data/admin/krx/index.json", "file"),
+    commitSpec("data/admin/krx/lkg/bridge.json", "file"),
   ],
   success_if_exists: [
     commitSpec("data/admin/fenok-edge-korea-krx-daily-index.json", "file", true),
@@ -1307,6 +1326,10 @@ workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = policy(["krx"]
 workflow_policies[".github/workflows/fetch-damodaran-shadow.yml"] = policy(["damodaran"], {
   always_if_exists: [
     commitSpec(attemptShard("damodaran"), "file", false),
+    commitSpec("data/admin/damodaran/index.json", "file", false),
+    commitSpec("data/admin/damodaran/current/damodaran.json", "file", false),
+    commitSpec("data/admin/damodaran/lkg/damodaran.json", "file", false),
+    commitSpec("data/admin/damodaran/history.json", "file", false),
   ],
   required_on_success: [
     commitSpec("data/admin/damodaran/owner-guard.json", "file", true),
