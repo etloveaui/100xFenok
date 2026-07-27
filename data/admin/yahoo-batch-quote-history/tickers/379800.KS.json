@@ -61,7 +61,7 @@
   "current": {
     "fetched_at": "2026-07-19T23:00:04Z",
     "history_as_of": "2026-07-16",
-    "path": "data/yf/finance/379800.KS.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/379800.KS.json",
     "payload_sha256": "5d5c815d707f6f0baa5cd59f08e75185ba6a6d292f18df6314ab20cc54863352",
     "quote_as_of": "2026-07-16T06:30:28Z",
     "source_as_of": "2026-07-16"
@@ -114,12 +114,12 @@
     "shard": "0/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-27T23:31:47Z",
-    "history_as_of": "2026-06-26",
+    "fetched_at": "2026-07-19T23:00:04Z",
+    "history_as_of": "2026-07-16",
     "path": "data/admin/yahoo-batch-quote-history/lkg/379800.KS.json",
-    "payload_sha256": "d3c3b3d841e2fec443ab4343e2b3bb7b2524fc3a37dc2144ff8762cfc81fa7ff",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-26"
+    "payload_sha256": "5d5c815d707f6f0baa5cd59f08e75185ba6a6d292f18df6314ab20cc54863352",
+    "quote_as_of": "2026-07-16T06:30:28Z",
+    "source_as_of": "2026-07-16"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -133,19 +133,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-16"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 11,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-27T01:53:07Z",
+    "classified_run_id": "30230385192",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "379800.KS holds LKG because Yahoo source date 2026-06-26 is 11 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "379800.KS holds LKG because Yahoo source date 2026-07-16 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-26"
+    "source_as_of": "2026-07-16"
   },
   "ticker": "379800.KS",
-  "updated_at": "2026-07-19T22:59:54Z"
+  "updated_at": "2026-07-27T01:53:07Z"
 }

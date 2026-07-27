@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-07-19T23:02:48Z",
     "history_as_of": "2026-07-17",
-    "path": "data/yf/finance/APXM.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/APXM.json",
     "payload_sha256": "e77ee2e779dbd6b7365588b48654459c40e587b4c7da89ef68e258c6006c5aba",
     "quote_as_of": "2026-07-16T14:55:32Z",
     "source_as_of": "2026-07-16T14:55:32Z"
@@ -38,6 +38,14 @@
     "schedule": "0 22 * * 0",
     "shard": "0/6"
   },
+  "lkg": {
+    "fetched_at": "2026-07-19T23:02:48Z",
+    "history_as_of": "2026-07-17",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/APXM.json",
+    "payload_sha256": "e77ee2e779dbd6b7365588b48654459c40e587b4c7da89ef68e258c6006c5aba",
+    "quote_as_of": "2026-07-16T14:55:32Z",
+    "source_as_of": "2026-07-16T14:55:32Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-16T14:55:32Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-07-27T01:53:07Z",
+    "classified_run_id": "30230385192",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "APXM holds LKG because Yahoo source date 2026-07-16T14:55:32Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-16T14:55:32Z"
+  },
   "ticker": "APXM",
-  "updated_at": "2026-07-19T22:59:54Z"
+  "updated_at": "2026-07-27T01:53:07Z"
 }

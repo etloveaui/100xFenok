@@ -82,13 +82,12 @@
   "current": {
     "fetched_at": "2026-07-17T00:20:57Z",
     "history_as_of": "2026-07-16",
-    "path": "data/yf/finance/VOOX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VOOX.json",
     "payload_sha256": "6642c1afc448940812500575923f5368392fa12c1409dea6458f464bce1359a0",
     "quote_as_of": "2026-07-16T17:56:45Z",
     "source_as_of": "2026-07-16"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -105,12 +104,12 @@
     "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T19:30:28Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-17T00:20:57Z",
+    "history_as_of": "2026-07-16",
     "path": "data/admin/yahoo-batch-quote-history/lkg/VOOX.json",
-    "payload_sha256": "3ab1c86eb888259073d573f109a97809c099ac36fc7202e0ae73cfba2aa69214",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "6642c1afc448940812500575923f5368392fa12c1409dea6458f464bce1359a0",
+    "quote_as_of": "2026-07-16T17:56:45Z",
+    "source_as_of": "2026-07-16"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -124,19 +123,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-16"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-27T01:53:07Z",
+    "classified_run_id": "30230385192",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "VOOX holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "VOOX holds LKG because Yahoo source date 2026-07-16 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-16"
   },
   "ticker": "VOOX",
-  "updated_at": "2026-07-17T00:15:36Z"
+  "updated_at": "2026-07-27T01:53:07Z"
 }

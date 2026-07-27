@@ -82,13 +82,12 @@
   "current": {
     "fetched_at": "2026-07-17T00:24:17Z",
     "history_as_of": "2026-07-16",
-    "path": "data/yf/finance/UPAL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/UPAL.json",
     "payload_sha256": "21ca4190398066b74ac3c3e3c7051fe64722598b76a2334326aad8d8089de3ff",
     "quote_as_of": "2026-07-16T17:21:20Z",
     "source_as_of": "2026-07-16"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -105,12 +104,12 @@
     "shard": "1/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T16:17:55Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-17T00:24:17Z",
+    "history_as_of": "2026-07-16",
     "path": "data/admin/yahoo-batch-quote-history/lkg/UPAL.json",
-    "payload_sha256": "db461eaa9d8db2059d5bbf0c400c35efd161f8a0e3d089264bdd85241b0f127f",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "21ca4190398066b74ac3c3e3c7051fe64722598b76a2334326aad8d8089de3ff",
+    "quote_as_of": "2026-07-16T17:21:20Z",
+    "source_as_of": "2026-07-16"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -124,19 +123,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-16"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-27T01:53:07Z",
+    "classified_run_id": "30230385192",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "UPAL holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "UPAL holds LKG because Yahoo source date 2026-07-16 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-16"
   },
   "ticker": "UPAL",
-  "updated_at": "2026-07-17T00:21:09Z"
+  "updated_at": "2026-07-27T01:53:07Z"
 }

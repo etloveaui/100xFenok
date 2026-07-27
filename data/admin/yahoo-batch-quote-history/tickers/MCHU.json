@@ -69,13 +69,12 @@
   "current": {
     "fetched_at": "2026-07-17T00:30:19Z",
     "history_as_of": "2026-07-16",
-    "path": "data/yf/finance/MCHU.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MCHU.json",
     "payload_sha256": "16a5c1a7cb336e61f5d91d40fa30709e1b055ef9726ff877f371f27bbeae714f",
     "quote_as_of": "2026-07-16T20:00:00Z",
     "source_as_of": "2026-07-16"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -92,12 +91,12 @@
     "shard": "3/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T15:42:26Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-17T00:30:19Z",
+    "history_as_of": "2026-07-16",
     "path": "data/admin/yahoo-batch-quote-history/lkg/MCHU.json",
-    "payload_sha256": "a244ca7662075e3f46234a71d5e54ed420995b5349718603370072c1e8ffee63",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "16a5c1a7cb336e61f5d91d40fa30709e1b055ef9726ff877f371f27bbeae714f",
+    "quote_as_of": "2026-07-16T20:00:00Z",
+    "source_as_of": "2026-07-16"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -111,19 +110,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-16"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-27T01:53:07Z",
+    "classified_run_id": "30230385192",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "MCHU holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "MCHU holds LKG because Yahoo source date 2026-07-16 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-16"
   },
   "ticker": "MCHU",
-  "updated_at": "2026-07-17T00:28:16Z"
+  "updated_at": "2026-07-27T01:53:07Z"
 }
