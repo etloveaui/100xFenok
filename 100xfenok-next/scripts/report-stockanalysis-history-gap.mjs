@@ -11,6 +11,11 @@ import {
   daily1yClassificationProjection,
   daily1ySeriesEvidence,
 } from "../../scripts/lib/etf-daily1y-history-classifier.mjs";
+import {
+  pendingDaily1yTerminalSource,
+  RECENT_TERMINAL_MAX_AGE_HOURS,
+  timestampAgeHours,
+} from "../../scripts/lib/etf-daily1y-pending-policy.mjs";
 
 const ROOT = process.cwd();
 const SOURCE_DIR = path.resolve(ROOT, "..", "data", "stockanalysis");
@@ -59,7 +64,6 @@ const REPORT_PROFILE = {
   required_history_periods: REQUIRED_PERIODS.slice().sort(),
 };
 const ENFORCE_INCREMENTAL_PLAN = REQUIRED_PERIODS.join(",") === DEFAULT_REQUIRED_PERIODS.join(",");
-const RECENT_TERMINAL_MAX_AGE_HOURS = 48;
 
 function parseArgs(argv) {
   const flags = new Set();
@@ -221,45 +225,10 @@ function earliestHistoryDate(rows) {
   return earliest;
 }
 
-function parseTimestamp(value) {
-  if (typeof value === "string" && value.trim()) {
-    const parsed = Date.parse(value);
-    return Number.isFinite(parsed) ? new Date(parsed) : null;
-  }
-  if (typeof value === "number" && Number.isFinite(value)) {
-    const ms = value > 10_000_000_000 ? value : value * 1000;
-    const parsed = new Date(ms);
-    return Number.isFinite(parsed.valueOf()) ? parsed : null;
-  }
-  return null;
-}
-
-function ageHours(value, now = new Date()) {
-  const parsed = parseTimestamp(value);
-  if (!parsed) return null;
-  return Math.max(0, (now.valueOf() - parsed.valueOf()) / 36e5);
-}
-
-function hasRecentPendingFailure(entry, now = new Date()) {
-  const reason = String(entry?.failure_reason || "");
-  if (!reason) return false;
-  const lastAge = ageHours(entry?.last_attempt_utc, now);
-  if (lastAge != null && lastAge <= RECENT_TERMINAL_MAX_AGE_HOURS) return true;
-  const nextAttempt = parseTimestamp(entry?.next_attempt_after_utc);
-  return Boolean(nextAttempt && nextAttempt > now);
-}
-
 function terminalDaily1yGapSource(payload, pendingEntry = null, now = new Date()) {
-  const reason = String(pendingEntry?.failure_reason || "");
-  if (hasRecentPendingFailure(pendingEntry, now)) {
-    if (pendingEntry?.failure_class === "successful_short_history") {
-      return "successful_short_history_cooldown";
-    }
-    if (reason.includes("quoteType is not ETF/MUTUALFUND")) return "provider_rejected_non_etf";
-    if (reason.includes("HTTP Error 404")) return "source_unavailable_recent_failure";
-    return "provider_recent_failure";
-  }
-  const fetchedAge = ageHours(payload?.fetched_at, now);
+  const pendingSource = pendingDaily1yTerminalSource(pendingEntry, now);
+  if (pendingSource) return pendingSource;
+  const fetchedAge = timestampAgeHours(payload?.fetched_at, now);
   if (fetchedAge != null && fetchedAge <= RECENT_TERMINAL_MAX_AGE_HOURS) {
     if (isYahooFallbackDetail(payload)) return "yahoo_fallback_recent_short_rows";
     if (isPrimaryStockAnalysisDetail(payload)) return "stockanalysis_recent_short_rows";

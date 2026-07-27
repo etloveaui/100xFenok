@@ -151,6 +151,37 @@ const recentProviderFailure = {
   last_attempt_utc: "2026-07-08T18:00:00Z",
   failure_reason: "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
 };
+const providerAbsentFutureProbe = {
+  last_attempt_utc: "2026-07-01T00:00:00Z",
+  availability_status: "provider_absent",
+  failure_class: "provider_coverage_gap",
+  failure_reason: null,
+  next_probe_after_utc: "2026-07-10T00:00:00Z",
+  next_attempt_after_utc: "2026-07-10T00:00:00Z",
+};
+const providerAbsentElapsedProbe = {
+  ...providerAbsentFutureProbe,
+  next_probe_after_utc: "2026-07-08T00:00:00Z",
+  next_attempt_after_utc: "2026-07-08T00:00:00Z",
+};
+const providerAbsentByStatusOnly = {
+  ...providerAbsentFutureProbe,
+  failure_class: null,
+};
+const providerAbsentByClassOnly = {
+  ...providerAbsentFutureProbe,
+  availability_status: null,
+};
+const retryTimestampWithoutTerminalEvidence = {
+  last_attempt_utc: "2026-07-01T00:00:00Z",
+  failure_reason: null,
+  next_probe_after_utc: "2026-07-10T00:00:00Z",
+  next_attempt_after_utc: "2026-07-10T00:00:00Z",
+};
+const elapsedNonEtfFailure = {
+  last_attempt_utc: "2026-07-01T00:00:00Z",
+  failure_reason: "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+};
 
 function writeFixture(rootDir, relPath, payload) {
   const target = path.join(rootDir, relPath);
@@ -304,6 +335,19 @@ assert.deepEqual(classifyDaily1yGap(recentStockAnalysisShortRows, currentNow).te
 assert.equal(classifyDaily1yGap(recentStockAnalysisShortRows, currentNow).terminalLimitSource, "stockanalysis_recent_short_rows");
 assert.deepEqual(classifyDaily1yGap(oldYahooFallback, currentNow, recentProviderFailure).terminalLimited, ["daily_1y"]);
 assert.equal(classifyDaily1yGap(oldYahooFallback, currentNow, recentProviderFailure).terminalLimitSource, "provider_rejected_non_etf");
+assert.deepEqual(classifyDaily1yGap(oldYahooFallback, currentNow, providerAbsentFutureProbe).terminalLimited, ["daily_1y"]);
+assert.equal(
+  classifyDaily1yGap(oldYahooFallback, currentNow, providerAbsentFutureProbe).terminalLimitSource,
+  "source_unavailable_recent_failure",
+);
+assert.deepEqual(classifyDaily1yGap(oldYahooFallback, currentNow, providerAbsentElapsedProbe).fetchable, ["daily_1y"]);
+assert.deepEqual(classifyDaily1yGap(oldYahooFallback, currentNow, providerAbsentByStatusOnly).terminalLimited, ["daily_1y"]);
+assert.deepEqual(classifyDaily1yGap(oldYahooFallback, currentNow, providerAbsentByClassOnly).terminalLimited, ["daily_1y"]);
+assert.deepEqual(
+  classifyDaily1yGap(oldYahooFallback, currentNow, retryTimestampWithoutTerminalEvidence).fetchable,
+  ["daily_1y"],
+);
+assert.deepEqual(classifyDaily1yGap(oldYahooFallback, currentNow, elapsedNonEtfFailure).fetchable, ["daily_1y"]);
 
 const denseRecentRows = weekdayRows(25, "2026-06-01");
 const denseRecentYfRows = weekdayRows(25, "2026-06-02");
