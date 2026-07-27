@@ -378,6 +378,7 @@ module.main()
         tracker.active = True
         tracker.record_yahoo_candidate()
         tracker.record_yahoo_error(
+            entity="MISS",
             exception_kind="unexpected",
             retry_count=0,
             latency_ms=12.5,
@@ -385,6 +386,7 @@ module.main()
         )
         observation = tracker.yahoo_observations[-1]
         self.assertEqual(observation["exception_kind"], "unexpected")
+        self.assertEqual(observation["entity"], "MISS")
         self.assertIn("ValueError", observation["failure_detail"])
         self.assertIn("regularMarketTime", observation["failure_detail"])
         self.assertLessEqual(len(observation["failure_detail"]), 320)
@@ -395,6 +397,7 @@ module.main()
         tracker.active = True
         tracker.record_yahoo_candidate()
         tracker.record_yahoo_error(
+            entity="MISS",
             exception_kind="transport",
             retry_count=1,
             latency_ms=1.0,
