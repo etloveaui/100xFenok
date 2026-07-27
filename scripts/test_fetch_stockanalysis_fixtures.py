@@ -933,6 +933,79 @@ module.main()
         with self.assertRaisesRegex(ValueError, "invalid_type:count"):
             self.fetcher.validate_svelte_detail_contract(wrong_type, "holdings")
 
+    def test_holdings_contract_drift_records_bounded_shape_signature_without_values(self) -> None:
+        unique_nodes = [
+            {"data": [{f"key_{index:02d}": 1}, f"provider-value-{index:02d}"]}
+            for index in range(18)
+        ]
+        payload = {"nodes": [*unique_nodes, unique_nodes[0]]}
+
+        with self.assertRaises(ValueError) as caught:
+            self.fetcher.validate_svelte_detail_contract(payload, "holdings")
+
+        self.assertEqual(
+            str(caught.exception),
+            "svelte_contract_drift:holdings:missing_required:holdings",
+        )
+        signature = caught.exception.failure_signature
+        self.assertEqual(signature["schema_version"], "svelte-contract-failure-signature/v1")
+        self.assertEqual(signature["surface"], "holdings")
+        self.assertEqual(signature["decoded_candidate_count"], 19)
+        self.assertEqual(signature["unique_candidate_key_set_count"], 18)
+        self.assertEqual(
+            signature["candidate_key_sets"],
+            [[f"key_{index:02d}"] for index in range(16)],
+        )
+        self.assertTrue(signature["candidate_key_sets_truncated"])
+        self.assertEqual(
+            signature["required_key_value_types"],
+            {"holdings": ["missing"]},
+        )
+        serialized = json.dumps(signature, sort_keys=True)
+        self.assertNotIn("provider-value", serialized)
+        with self.assertRaises(ValueError) as empty:
+            self.fetcher.validate_svelte_detail_contract({"nodes": []}, "holdings")
+        self.assertEqual(
+            empty.exception.failure_signature["required_key_value_types"],
+            {"holdings": ["missing"]},
+        )
+
+        original_fetch_etf = self.fetcher.fetch_etf
+        saved_outputs = self.fetcher.current_candidate_outputs()
+        self.fetcher.fetch_etf = lambda _ticker, _timeout: (_ for _ in ()).throw(
+            caught.exception
+        )
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                candidate = Path(tmp) / "candidate"
+                candidate.mkdir()
+                outputs = self.fetcher.configure_candidate_outputs(candidate)
+                result = self.fetcher.run_one(
+                    "etf",
+                    "SHAPE",
+                    timeout=1,
+                    mirror_public=False,
+                    yf_fallback=False,
+                )
+                history_files = list(
+                    (outputs.data_supply_state / "history" / "observations").glob("*.jsonl")
+                )
+                observations = [
+                    json.loads(line)
+                    for line in history_files[0].read_text(encoding="utf-8").splitlines()
+                ]
+        finally:
+            self.fetcher.fetch_etf = original_fetch_etf
+            self.fetcher.install_candidate_outputs(saved_outputs)
+
+        self.assertEqual(result["status"], "error")
+        self.assertEqual(
+            result["error"],
+            "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        )
+        self.assertEqual(len(observations), 1)
+        self.assertEqual(observations[0]["failure_signature"], signature)
+
     def test_etf_detail_paths_use_lowercase_svelte_routes(self) -> None:
         overview = json.loads((FIXTURE_DIR / "etf_overview__data.fixture.json").read_text())
         holdings = json.loads((FIXTURE_DIR / "etf_holdings__data.fixture.json").read_text())

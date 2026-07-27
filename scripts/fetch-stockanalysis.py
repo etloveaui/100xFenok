@@ -1493,6 +1493,76 @@ ETF_DETAIL_SURFACE_CONTRACTS = {
     },
 }
 ETF_DETAIL_DECODER = "svelte_devalue_node/v1"
+SVELTE_FAILURE_SIGNATURE_SCHEMA_VERSION = "svelte-contract-failure-signature/v1"
+SVELTE_FAILURE_SIGNATURE_MAX_KEY_SETS = 16
+SVELTE_FAILURE_SIGNATURE_MAX_KEYS_PER_SET = 24
+SVELTE_FAILURE_SIGNATURE_MAX_KEY_NAME_CHARS = 64
+
+
+def _bounded_svelte_key_name(key: object) -> str:
+    if not isinstance(key, str):
+        return f"<{type(key).__name__}-key>"
+    cleaned = re.sub(r"[\x00-\x1f\x7f]", "?", key)
+    return cleaned[:SVELTE_FAILURE_SIGNATURE_MAX_KEY_NAME_CHARS]
+
+
+def _svelte_value_type_name(value: object) -> str:
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "bool"
+    if isinstance(value, dict):
+        return "object"
+    if isinstance(value, list):
+        return "array"
+    if isinstance(value, str):
+        return "string"
+    if isinstance(value, int):
+        return "integer"
+    if isinstance(value, float):
+        return "number"
+    return "other"
+
+
+def svelte_contract_failure_signature(
+    surface: str,
+    decoded_candidates: list[dict],
+    required_types: dict,
+) -> dict:
+    """Summarize candidate shapes without retaining provider values."""
+    key_sets = []
+    keys_truncated = False
+    for candidate in decoded_candidates:
+        full_key_set = sorted({_bounded_svelte_key_name(key) for key in candidate})
+        if len(full_key_set) > SVELTE_FAILURE_SIGNATURE_MAX_KEYS_PER_SET:
+            keys_truncated = True
+        key_sets.append(tuple(full_key_set[:SVELTE_FAILURE_SIGNATURE_MAX_KEYS_PER_SET]))
+    unique_key_sets = sorted(set(key_sets))
+    required_key_value_types = {
+        key: sorted(
+            {
+                _svelte_value_type_name(candidate[key]) if key in candidate else "missing"
+                for candidate in decoded_candidates
+            }
+            or {"missing"}
+        )
+        for key in sorted(required_types)
+    }
+    return {
+        "schema_version": SVELTE_FAILURE_SIGNATURE_SCHEMA_VERSION,
+        "surface": surface,
+        "decoded_candidate_count": len(decoded_candidates),
+        "unique_candidate_key_set_count": len(unique_key_sets),
+        "candidate_key_sets": [
+            list(key_set)
+            for key_set in unique_key_sets[:SVELTE_FAILURE_SIGNATURE_MAX_KEY_SETS]
+        ],
+        "candidate_key_sets_truncated": (
+            keys_truncated
+            or len(unique_key_sets) > SVELTE_FAILURE_SIGNATURE_MAX_KEY_SETS
+        ),
+        "required_key_value_types": required_key_value_types,
+    }
 
 
 def validate_svelte_detail_contract(payload: dict, surface: str) -> dict:
@@ -1545,9 +1615,14 @@ def validate_svelte_detail_contract(payload: dict, surface: str) -> dict:
 
     present = sorted({key for decoded in decoded_candidates for key in decoded})
     missing = sorted(set(required_types) - set(present))
-    raise ValueError(
-        f"svelte_contract_drift:{surface}:missing_required:{','.join(missing)}"
+    code = f"svelte_contract_drift:{surface}:missing_required:{','.join(missing)}"
+    error = ValueError(code)
+    error.failure_signature = svelte_contract_failure_signature(
+        surface,
+        decoded_candidates,
+        required_types,
     )
+    raise error
 
 
 def fetch_svelte_detail(
@@ -3105,6 +3180,7 @@ def record_etf_detail_failure_observation(
     provider_schema: str,
     reason_code: str,
     failure_detail: str,
+    failure_signature: dict | None = None,
 ) -> dict:
     observed_at = now_iso()
     failure_descriptor = {
@@ -3133,6 +3209,8 @@ def record_etf_detail_failure_observation(
         "payload_available": False,
         "failure_detail_sha256": failure_descriptor["failure_detail_sha256"],
     }
+    if failure_signature is not None:
+        row["failure_signature"] = failure_signature
     row["event_id"] = deterministic_event_id("observation", row)
     data_supply_store(provider_truth_root=STORAGE_ROOT).record_observation(row)
     return row
@@ -5262,6 +5340,7 @@ def run_one(
                 )
             except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError) as exc:
                 stockanalysis_error = f"{type(exc).__name__}: {exc}"
+                failure_signature = getattr(exc, "failure_signature", None)
                 provider_gap = is_expected_missing_error(stockanalysis_error)
                 ATTEMPT_TRACKER.record_yahoo_candidate()
                 failure_reason = (
@@ -5291,6 +5370,7 @@ def run_one(
                         provider_schema=SCHEMA_VERSION,
                         reason_code=failure_reason,
                         failure_detail=stockanalysis_error,
+                        failure_signature=failure_signature,
                     )
                 if not yf_fallback:
                     if provider_gap:
