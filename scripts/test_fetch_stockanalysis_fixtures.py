@@ -1480,6 +1480,7 @@ module.main()
 
     def test_etf_detail_controlled_failure_uses_detail_observation_path_without_fetching(self) -> None:
         original_fetch = self.fetcher.fetch_etf
+        original_fallback = self.fetcher.fetch_yahoo_etf_fallback
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             original_dirs = (
@@ -1506,17 +1507,22 @@ module.main()
                 self.fail("controlled ETF detail failure must not call the provider")
 
             self.fetcher.fetch_etf = unexpected_fetch
+            self.fetcher.fetch_yahoo_etf_fallback = lambda _ticker, _mirror: {
+                "schema_version": "yf-etf-detail/v1",
+                "source": "yahoo_finance",
+            }
             try:
                 result = self.fetcher.run_one(
                     "etf",
                     "TQQQ",
                     1,
                     False,
-                    yf_fallback=False,
+                    yf_fallback=True,
                     controlled_etf_detail_failure=True,
                 )
             finally:
                 self.fetcher.fetch_etf = original_fetch
+                self.fetcher.fetch_yahoo_etf_fallback = original_fallback
                 (
                     self.fetcher.OUT_DIR,
                     self.fetcher.PUBLIC_DIR,
@@ -1531,7 +1537,14 @@ module.main()
             self.assertEqual(observation["entity"], "TQQQ")
             self.assertEqual(observation["validation_status"], "invalid")
             self.assertEqual(observation["reason_code"], "fetch_failed")
-            self.assertIn("controlled failure injection for etf_detail:TQQQ", result["error"])
+            self.assertEqual(result["status"], "fallback_observed_primary_preserved")
+            self.assertEqual(result["selected_provider"], "stockanalysis")
+            self.assertFalse(result["canonical_write"])
+            self.assertIsNone(result["error"])
+            self.assertIn(
+                "controlled failure injection for etf_detail:TQQQ",
+                result["stockanalysis_error"],
+            )
 
     def test_workflow_dispatch_inputs_stay_within_github_limit(self) -> None:
         workflow = (

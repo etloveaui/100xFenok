@@ -276,7 +276,6 @@ jobs:
                 INPUT_CORE_BASKET_REFRESH="false"
                 INPUT_HISTORY_GAPS_ONLY="false"
                 INPUT_REQUIRED_HISTORY_PERIODS=""
-                INPUT_YF_ETF_FALLBACK="false"
                 INPUT_FETCH_SURFACES="false"
                 INPUT_SURFACE_SET=""
                 INPUT_SURFACES=""
@@ -303,7 +302,12 @@ jobs:
             INPUT_ETFS="$(node -e 'const fs = require("fs"); const payload = JSON.parse(fs.readFileSync("data/admin/fenok-etf-core-daily-basket.json", "utf8")); const tickers = Array.isArray(payload.daily_refresh_universe?.tickers) ? payload.daily_refresh_universe.tickers : (Array.isArray(payload.rows) ? payload.rows.map((row) => row && row.ticker) : []); const seen = new Set(); const out = []; for (const raw of tickers) { const ticker = String(raw || "").trim().toUpperCase(); if (ticker && !seen.has(ticker)) { seen.add(ticker); out.push(ticker); } } if (!out.length) { console.error("Core Basket refresh requested, but no tickers were found"); process.exit(1); } process.stdout.write(out.join(","));')"
           fi
           if [ "$ETF_DETAIL_FAILURE_PROOF" = "true" ]; then
-            ARGS="--sleep ${INPUT_SLEEP:-0.25} --etfs=${INPUT_ETFS} --controlled-failure-surfaces $INPUT_CONTROLLED_FAILURE_SURFACES --limit-etfs 1 --fail-on-error"
+            ARGS="--sleep ${INPUT_SLEEP:-0.25} --etfs=${INPUT_ETFS} --controlled-failure-surfaces $INPUT_CONTROLLED_FAILURE_SURFACES --limit-etfs 1"
+            if [ "${INPUT_YF_ETF_FALLBACK:-true}" = "true" ]; then
+              ARGS="$ARGS --yf-etf-fallback"
+            else
+              ARGS="$ARGS --fail-on-error"
+            fi
           elif [ "${INPUT_RECONCILE_MISSING_ETF_DETAILS:-false}" = "true" ]; then
             ARGS="--sleep ${INPUT_SLEEP:-0.25} --endpoint-canary --reconcile-missing-etf-details --incremental-etf-limit ${INPUT_RECONCILE_MISSING_ETF_LIMIT:-0}"
             if [ -n "$INPUT_ETFS" ]; then ARGS="$ARGS --etfs $INPUT_ETFS"; fi

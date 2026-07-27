@@ -91,9 +91,14 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             "--etfs=${INPUT_ETFS}",
             "--controlled-failure-surfaces $INPUT_CONTROLLED_FAILURE_SURFACES",
             "--limit-etfs 1",
+            '--yf-etf-fallback"',
             "--fail-on-error",
         ):
             self.assertIn(expected, body)
+        self.assertIn(
+            'if [ "${INPUT_YF_ETF_FALLBACK:-true}" = "true" ]; then',
+            body,
+        )
         for unexpected in (
             "--endpoint-canary",
             "--discover-etf-universe",
