@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import {
+  ATTEMPT_SCHEMA,
   ATTEMPT_SHARD_SCHEMA,
   validateAttemptEvidence,
   validateAttemptShard,
@@ -12,7 +13,6 @@ import { boundedDiagnosticDetail } from "./diagnostic-detail.mjs";
 import { canonicalJson } from "./json-canonical.mjs";
 
 export { ATTEMPT_SHARD_SCHEMA };
-const ATTEMPT_SCHEMA = "data-supply-detection-attempts/v1";
 
 // Shared producer support. Keep this ordering identical to
 // build-data-supply-detection-floor.mjs and
@@ -86,8 +86,10 @@ export function libraryTuple({
   decode = "not_attempted",
   payload = "not_available",
   assertions = [],
+  failureEntity,
+  failureDetail,
 }) {
-  return {
+  const tuple = {
     execution,
     exception_kind: exceptionKind,
     http_status: null,
@@ -101,6 +103,11 @@ export function libraryTuple({
     latency_ms: latencyMs,
     outcome,
   };
+  if (failureEntity !== undefined || failureDetail !== undefined) {
+    tuple.failure_entity = failureEntity;
+    tuple.failure_detail = failureDetail;
+  }
+  return tuple;
 }
 
 export function threwTuple(exceptionKind) {
@@ -154,8 +161,23 @@ export function foldWorstTuples(tuples) {
     const worstSeverity = STATUS_SEVERITY[tupleStatus(worst)];
     if (currentSeverity > worstSeverity) return current;
     if (currentSeverity < worstSeverity) return worst;
-    if (current.outcome && worst.outcome && current.candidates > worst.candidates) return current;
-    return worst;
+    const selected = current.outcome && worst.outcome && current.candidates > worst.candidates
+      ? current
+      : worst;
+    const diagnostic = Object.hasOwn(selected, "failure_detail")
+      ? selected
+      : Object.hasOwn(current, "failure_detail")
+        ? current
+        : Object.hasOwn(worst, "failure_detail")
+          ? worst
+          : null;
+    return diagnostic === null || diagnostic === selected
+      ? selected
+      : {
+          ...selected,
+          failure_entity: diagnostic.failure_entity,
+          failure_detail: diagnostic.failure_detail,
+        };
   });
 }
 
@@ -185,6 +207,10 @@ export function buildAttemptRow({ laneId, memberId, tuple, attemptId = null, obs
     for (const key of ["retry_reason", "retry_count", "retry_wait_ms"]) {
       if (Object.hasOwn(tuple, key)) row[key] = tuple[key];
     }
+  }
+  if (Object.hasOwn(tuple, "failure_detail")) {
+    row.failure_entity = tuple.failure_entity;
+    row.failure_detail = tuple.failure_detail;
   }
   validateAttemptEvidence({ schema_version: ATTEMPT_SCHEMA, attempts: [row] });
   return row;
@@ -499,6 +525,10 @@ function tupleFromAttemptRow(row) {
     for (const key of ["retry_reason", "retry_count", "retry_wait_ms"]) {
       if (Object.hasOwn(row, key)) tuple[key] = row[key];
     }
+  }
+  if (Object.hasOwn(row, "failure_detail")) {
+    tuple.failure_entity = row.failure_entity;
+    tuple.failure_detail = row.failure_detail;
   }
   return tuple;
 }

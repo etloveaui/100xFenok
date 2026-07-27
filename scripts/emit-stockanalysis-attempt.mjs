@@ -16,6 +16,7 @@ import {
   writeMergedAttemptShard,
 } from "./lib/data-supply-attempt-shard.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
+import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -46,6 +47,24 @@ function finiteNonNegative(value, field) {
 function integerNonNegative(value, field) {
   if (!Number.isSafeInteger(value) || value < 0) throw new Error(`${field} must be a non-negative integer`);
   return value;
+}
+
+function failureEntity(value, field) {
+  const entity = typeof value === "string" ? value.trim().toUpperCase() : "";
+  if (!/^[A-Z0-9][A-Z0-9._-]{0,95}$/.test(entity)) {
+    throw new Error(`${field} must identify the failed entity`);
+  }
+  return entity;
+}
+
+function failureDetail(value, field) {
+  const raw = typeof value === "string" ? value.trim() : "";
+  const separator = raw.indexOf(":");
+  if (separator < 1) throw new Error(`${field} must contain exception class plus message`);
+  const name = raw.slice(0, separator).trim();
+  const message = raw.slice(separator + 1).trim();
+  if (!name || !message) throw new Error(`${field} must contain exception class plus message`);
+  return boundedDiagnosticDetail({ name, message });
 }
 
 function classifyHttpObservation(laneId, observation) {
@@ -117,6 +136,12 @@ function classifyLibraryEnvelope(laneId, envelope) {
     latencyMs += observationLatencyMs;
     if (observation.execution === "threw") {
       const exceptionKind = observation.exception_kind === "transport" ? "transport" : "unexpected";
+      const diagnostic = laneId === "yahoo_etf_fallback"
+        ? {
+            failureEntity: failureEntity(observation.entity, `observations[${index}].entity`),
+            failureDetail: failureDetail(observation.failure_detail, `observations[${index}].failure_detail`),
+          }
+        : {};
       return libraryTuple({
         execution: "threw",
         exceptionKind,
@@ -124,6 +149,7 @@ function classifyLibraryEnvelope(laneId, envelope) {
         retryCount: observationRetryCount,
         latencyMs: observationLatencyMs,
         outcome: "error",
+        ...diagnostic,
       });
     }
     if (observation.execution === "returned" && observation.outcome === "error") {

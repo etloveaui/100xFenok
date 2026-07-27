@@ -19,14 +19,18 @@ export const FIXTURE_ROOT = path.join(REPO_ROOT, "scripts", "fixtures", "data_su
 export const CALENDAR_PATH = path.join(REPO_ROOT, "scripts", "lib", "data-supply-detection-calendars.json");
 export const REPORT_BASENAME = "data-supply-detection-floor.json";
 export const REPORT_SCHEMA = "data-supply-detection-floor/v1";
-export const ATTEMPT_SCHEMA = "data-supply-detection-attempts/v1";
-export const ATTEMPT_SHARD_SCHEMA = "data-supply-detection-attempt-shard/v1";
+export const ATTEMPT_SCHEMA = "data-supply-detection-attempts/v2";
+export const ATTEMPT_SHARD_SCHEMA = "data-supply-detection-attempt-shard/v2";
+const LEGACY_ATTEMPT_SCHEMA = "data-supply-detection-attempts/v1";
+const LEGACY_ATTEMPT_SHARD_SCHEMA = "data-supply-detection-attempt-shard/v1";
 
 const HEX_16 = /^[0-9a-f]{16}$/;
 const RFC3339_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 const IDENTIFIER = /^[a-z][a-z0-9_]{0,63}$/;
 const ATTEMPT_IDENTIFIER = /^[a-z][a-z0-9_-]{0,95}$/;
+const FAILURE_ENTITY = /^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$/;
+const FAILURE_DETAIL = /^[A-Za-z0-9_.-]+: [^\u0000-\u001f\u007f]+$/;
 const FINAL_REASON_CODES = new Set([
   "ok",
   "declared_cadence",
@@ -81,6 +85,10 @@ const HTTP_RETRY_KEYS = Object.freeze([
   "retry_reason",
   "retry_count",
   "retry_wait_ms",
+]);
+const FAILURE_DIAGNOSTIC_KEYS = Object.freeze([
+  "failure_entity",
+  "failure_detail",
 ]);
 const HTTP_RETRY_ATTEMPT_KEYS = Object.freeze([
   ...ATTEMPT_KEYS,
@@ -997,7 +1005,11 @@ export function validateConfigCalendarBindings(config, calendars) {
 
 export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION_CONFIG) {
   exactKeys(document, ["schema_version", "attempts"], "attempt evidence");
-  if (document.schema_version !== ATTEMPT_SCHEMA || !Array.isArray(document.attempts)) fail("schema_error", "attempt evidence schema is invalid");
+  if (!new Set([LEGACY_ATTEMPT_SCHEMA, ATTEMPT_SCHEMA]).has(document.schema_version)
+    || !Array.isArray(document.attempts)) {
+    fail("schema_error", "attempt evidence schema is invalid");
+  }
+  const diagnosticSchema = document.schema_version === ATTEMPT_SCHEMA;
   const laneMap = new Map(config.lanes.map((lane) => [lane.id, lane]));
   const seen = new Set();
   const attemptIds = new Set();
@@ -1006,9 +1018,17 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
     if (!lane) fail("schema_error", `unknown attempt lane ${row.lane_id}`);
     const libraryTransport = lane.endpoint_contract.transport === "library";
     const hasHttpRetryEvidence = !libraryTransport && HTTP_RETRY_KEYS.some((field) => Object.hasOwn(row, field));
+    const hasFailureEntity = Object.hasOwn(row, "failure_entity");
+    const hasFailureDetail = Object.hasOwn(row, "failure_detail");
+    if (hasFailureEntity !== hasFailureDetail) {
+      fail("schema_error", `attempts[${index}] failure diagnostic must contain both entity and detail`);
+    }
+    const failureDiagnosticKeys = diagnosticSchema && hasFailureEntity ? FAILURE_DIAGNOSTIC_KEYS : [];
     exactKeys(row, libraryTransport
       ? LIBRARY_ATTEMPT_KEYS
-      : (hasHttpRetryEvidence ? HTTP_RETRY_ATTEMPT_KEYS : ATTEMPT_KEYS), `attempts[${index}]`);
+        .concat(failureDiagnosticKeys)
+      : (hasHttpRetryEvidence ? HTTP_RETRY_ATTEMPT_KEYS : ATTEMPT_KEYS)
+        .concat(failureDiagnosticKeys), `attempts[${index}]`);
     const composite = lane.monitoring_mode === "composite";
     const memberIds = new Set(lane.producer_members.map((member) => member.id));
     if (composite ? !memberIds.has(row.member_id) : row.member_id !== null) fail("schema_error", `invalid attempt member for ${lane.id}`);
@@ -1021,6 +1041,16 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
     if (!new Set(["ok", "error", "not_attempted"]).has(row.decode)) fail("schema_error", `${key} decode is invalid`);
     if (!new Set(["non_empty", "empty", "not_available"]).has(row.payload)) fail("schema_error", `${key} payload is invalid`);
     if (typeof row.rate_limited !== "boolean" || !Array.isArray(row.assertions)) fail("schema_error", `${key} typed fields are invalid`);
+    if (hasFailureEntity && (
+      row.execution !== "threw"
+      || typeof row.failure_entity !== "string"
+      || !FAILURE_ENTITY.test(row.failure_entity)
+      || typeof row.failure_detail !== "string"
+      || row.failure_detail.length > 320
+      || !FAILURE_DETAIL.test(row.failure_detail)
+    )) {
+      fail("schema_error", `${key} failure diagnostic is invalid`);
+    }
     if (hasHttpRetryEvidence && (
       row.execution !== "returned"
       || row.retry_reason !== "rate_limited"
@@ -1134,7 +1164,12 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
 
 export function validateAttemptShard(document, expectedLaneId, config = DATA_SUPPLY_DETECTION_CONFIG) {
   exactKeys(document, ["schema_version", "lane_id", "attempts"], "attempt shard");
-  if (document.schema_version !== ATTEMPT_SHARD_SCHEMA || document.lane_id !== expectedLaneId || !IDENTIFIER.test(expectedLaneId)) {
+  const evidenceSchema = document.schema_version === ATTEMPT_SHARD_SCHEMA
+    ? ATTEMPT_SCHEMA
+    : document.schema_version === LEGACY_ATTEMPT_SHARD_SCHEMA
+      ? LEGACY_ATTEMPT_SCHEMA
+      : null;
+  if (evidenceSchema === null || document.lane_id !== expectedLaneId || !IDENTIFIER.test(expectedLaneId)) {
     fail("schema_error", "attempt shard schema/filename identity is invalid");
   }
   const lane = config.lanes.find((candidate) => candidate.id === expectedLaneId);
@@ -1142,7 +1177,7 @@ export function validateAttemptShard(document, expectedLaneId, config = DATA_SUP
   if (!Array.isArray(document.attempts) || document.attempts.some((row) => row?.lane_id !== expectedLaneId)) {
     fail("schema_error", `${expectedLaneId} shard contains cross-lane evidence`);
   }
-  validateAttemptEvidence({ schema_version: ATTEMPT_SCHEMA, attempts: document.attempts }, config);
+  validateAttemptEvidence({ schema_version: evidenceSchema, attempts: document.attempts }, config);
   const expectedMembers = lane.monitoring_mode === "composite"
     ? lane.producer_members.map((member) => member.id)
     : [null];

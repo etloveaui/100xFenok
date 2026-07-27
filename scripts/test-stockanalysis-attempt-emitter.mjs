@@ -192,6 +192,84 @@ try {
   assert.equal(returnedError.outcome, "error");
   assert.equal(classifyAttempt(returnedError).reason, "unexpected_error");
 
+  const secret = "sk_live_A1b2C3d4E5f6G7h8I9j0";
+  const yahooThrown = emitStockAnalysisAttempt({
+    laneId: "yahoo_etf_fallback",
+    shardRoot: root,
+    attemptId: "gh-902-thrown-1",
+    observedAt: OBSERVED_AT,
+    envelope: {
+      transport: "library",
+      candidate_count: 3,
+      observations: [
+        {
+          execution: "returned",
+          retry_count: 0,
+          latency_ms: 10,
+          outcome: "success",
+          document: { info: { symbol: "SPY", quoteType: "ETF" } },
+        },
+        {
+          entity: "MISS",
+          execution: "threw",
+          exception_kind: "unexpected",
+          retry_count: 0,
+          latency_ms: 12.5,
+          outcome: "error",
+          failure_detail: `ValueError: chart missing regularMarketTime key=${secret} client_secret=${secret}`,
+        },
+        {
+          execution: "returned",
+          retry_count: 1,
+          latency_ms: 20,
+          outcome: "success",
+          document: { info: { symbol: "QQQ", quoteType: "ETF" } },
+        },
+      ],
+    },
+  });
+  assert.equal(yahooThrown.execution, "threw");
+  assert.equal(yahooThrown.exception_kind, "unexpected",
+    "diagnostic detail must not replace the stable reason vocabulary");
+  assert.equal(yahooThrown.candidates, 3);
+  assert.equal(yahooThrown.failure_entity, "MISS");
+  assert.match(yahooThrown.failure_detail, /^ValueError: chart missing regularMarketTime/);
+  assert.match(yahooThrown.failure_detail, /key=\[redacted\]/);
+  assert.match(yahooThrown.failure_detail, /client_secret=\[redacted\]/);
+  assert.doesNotMatch(yahooThrown.failure_detail, new RegExp(secret));
+  assert(yahooThrown.failure_detail.length <= 320);
+  assert.equal(classifyAttempt(yahooThrown).reason, "unexpected_error");
+  assert.equal(classifyAttempt(yahooThrown).status, "unavailable",
+    "one thrown observation must continue to degrade the lane");
+  const thrownShard = readShard(root, "yahoo_etf_fallback");
+  assert.equal(thrownShard.schema_version, "data-supply-detection-attempt-shard/v2");
+  assert.equal(validateAttemptShard(thrownShard, "yahoo_etf_fallback"), true);
+  const missingThrownDetail = structuredClone(thrownShard);
+  delete missingThrownDetail.attempts[0].failure_detail;
+  assert.throws(
+    () => validateAttemptShard(missingThrownDetail, "yahoo_etf_fallback"),
+    /failure|keys must be exactly/,
+    "the versioned shard schema must reject a half-present diagnostic",
+  );
+  assert.throws(() => emitStockAnalysisAttempt({
+    laneId: "yahoo_etf_fallback",
+    shardRoot: root,
+    attemptId: "gh-902-silent-thrown-1",
+    observedAt: OBSERVED_AT,
+    envelope: {
+      transport: "library",
+      candidate_count: 1,
+      observations: [{
+        execution: "threw",
+        exception_kind: "unexpected",
+        retry_count: 0,
+        latency_ms: 1,
+        outcome: "error",
+      }],
+    },
+  }), /entity|failure_detail/,
+  "a per-entity Yahoo throw must not be persisted silently");
+
   const producerFailure = emitStockAnalysisAttempt({
     laneId: "yahoo_etf_fallback",
     shardRoot: root,
@@ -227,6 +305,8 @@ try {
   });
   assert.equal(yahooReady.http_status, null);
   assert.equal(yahooReady.outcome, "success");
+  assert.equal(Object.hasOwn(yahooReady, "failure_entity"), false);
+  assert.equal(Object.hasOwn(yahooReady, "failure_detail"), false);
   assert.deepEqual(yahooReady.assertions, [{ id: "yahoo_etf_identity", passed: true }]);
   assert.equal(classifyAttempt(yahooReady).reason, "ok");
 

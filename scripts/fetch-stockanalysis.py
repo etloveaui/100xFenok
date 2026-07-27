@@ -240,6 +240,7 @@ class StockAnalysisAttemptTracker:
     def record_yahoo_error(
         self,
         *,
+        entity: str,
         exception_kind: str,
         retry_count: int,
         latency_ms: float,
@@ -252,6 +253,7 @@ class StockAnalysisAttemptTracker:
         # not be explained at all.
         if self.active:
             observation = {
+                "entity": str(entity).strip().upper(),
                 "execution": "threw",
                 "exception_kind": exception_kind,
                 "retry_count": retry_count,
@@ -5132,6 +5134,7 @@ def fetch_yahoo_etf_fallback(ticker: str, mirror_public: bool) -> dict:
     except Exception as exc:
         if not returned_error_recorded:
             ATTEMPT_TRACKER.record_yahoo_error(
+                entity=ticker,
                 exception_kind=(
                     "transport"
                     if isinstance(exc, (urllib.error.URLError, TimeoutError, OSError))

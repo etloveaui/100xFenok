@@ -7,7 +7,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
-import { validateAttemptEvidence, validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
+import {
+  ATTEMPT_SCHEMA,
+  ATTEMPT_SHARD_SCHEMA,
+  validateAttemptEvidence,
+  validateAttemptShard,
+} from "./build-data-supply-detection-floor.mjs";
 import {
   FRED_MACRO_SERIES,
   runFredMacro,
@@ -51,7 +56,7 @@ function readJson(filePath) {
 function assertValidShard(shard) {
   assert.equal(validateAttemptShard(shard, shard.lane_id), true);
   assert.equal(validateAttemptEvidence({
-    schema_version: "data-supply-detection-attempts/v1",
+    schema_version: ATTEMPT_SCHEMA,
     attempts: shard.attempts,
   }), true);
 }
@@ -81,7 +86,7 @@ async function runCase(request) {
   assert.deepEqual(fs.readFileSync(paths.canonicalPath), fs.readFileSync(paths.publicPath));
   const output = readJson(paths.canonicalPath);
   assert.deepEqual(Object.keys(output.series), FRED_MACRO_SERIES.map((row) => row.id));
-  assert.equal(shard.schema_version, "data-supply-detection-attempt-shard/v1");
+  assert.equal(shard.schema_version, ATTEMPT_SHARD_SCHEMA);
   assert.equal(shard.lane_id, "fred_macro");
   assert.equal(shard.attempts.length, 1);
   assertValidShard(shard);
