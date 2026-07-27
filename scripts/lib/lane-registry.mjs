@@ -500,7 +500,9 @@ const lanes = [
     store_kind: "payload",
     lane_class: "detection_floor",
     cadence: { kind: "daily", provider: "KRX Open API (Korea trading days)" },
-    enforcement: "shadow",
+    // Natural schedule run 30270187601 committed complete attempt evidence,
+    // a fresh canonical payload, and attempt-1 provider-advancing recovery.
+    enforcement: "live",
     privacy_class: "public_safe_aggregate",
     admin_store: "data/admin/krx",
     detection_attempt: attemptShard("krx"),
@@ -525,7 +527,6 @@ const lanes = [
     ],
     recovery_store: "data/admin/krx/index.json",
     kpi_recovery_shape: "general",
-    declared_exception: "emitter-first shadow lane; promote only after a natural workflow run commits valid attempt evidence",
     script_sources: ["scripts/fetch-fenok-krx-daily-private.mjs", "scripts/emit-fenok-krx-attempt.mjs"],
   }),
   record({

@@ -19,7 +19,7 @@ const gate = checkWorkflowCommitShardsAgainstRegistry({
   workflowRel: ".github/workflows/fenok-edge-krx-daily.yml",
   repoRoot,
 });
-assert.deepEqual(gate.lanes, ["krx"], "KRX must be attributed to its shadow lane");
+assert.deepEqual(gate.lanes, ["krx"], "KRX must be attributed to its live lane");
 assert.deepEqual(gate.missing_in_workflow, [],
   `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
 assert.deepEqual(gate.undeclared_in_workflow, [],

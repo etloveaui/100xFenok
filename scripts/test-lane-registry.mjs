@@ -311,7 +311,7 @@ function clone(value) {
     assert.deepEqual(oecd.roots.canonical_outputs, ["data/admin/oecd_cli/shadow/oecd-cli.json"]);
     assert.deepEqual(oecd.roots.public_mirror, []);
     const krx = registryLaneById("krx");
-    assert.equal(krx.enforcement, "shadow", "KRX stays shadow until a natural workflow run commits attempt evidence");
+    assert.equal(krx.enforcement, "live", "KRX is live after natural run 30270187601 committed valid attempt evidence");
     assert.equal(krx.roots.detection_attempt, "data/admin/data-supply-state/detection-attempts/krx.json");
     assert.deepEqual(krx.roots.canonical_outputs, [
       "data/admin/fenok-edge-korea-krx-daily-index.json",

@@ -606,6 +606,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     "nasdaq_giw_sox",
     "us_indices_daily",
     "oecd_cli",
+    "krx",
     "slickcharts",
     "edgar_filings",
     "damodaran",
@@ -1600,7 +1601,7 @@ console.log("# KPI v2 runtime self-proof fixtures");
   writeReadyRecoveryIndex(tmp, "us-indices-daily", "us_indices_daily", ["sp500.json", "nasdaq.json"]);
   writeReadySlickchartsComposite(tmp);
   const { root, public: pub } = runBuilder(tmp, {}, now);
-  assert.equal(root.totals.lanes, 31);
+  assert.equal(root.totals.lanes, 32);
   for (const laneConfig of DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live")) {
     const mapped = root.lanes.find((item) => item.id === laneConfig.id);
     const sourceRow = installedReport.lanes.find((item) => item.id === laneConfig.id);

@@ -728,7 +728,7 @@ const config = {
     }),
     lane({
       id: "krx",
-      label: "KRX Open API daily shadow",
+      label: "KRX Open API daily",
       members: [registryMember("krx", ["30 10 * * 1-5"], [
         artifact("krx_daily_bridge", "data/admin/fenok-edge-korea-krx-daily-index.json", {
           schemaVersion: schemaVersion("/schema_version", "fenok-edge-korea-krx-bridge/v1"),

@@ -539,6 +539,7 @@ function runConfigAndFixtureChecks() {
     "nasdaq_giw_sox",
     "us_indices_daily",
     "oecd_cli",
+    "krx",
     "slickcharts",
     "edgar_filings",
     "damodaran",
@@ -620,8 +621,8 @@ function runConfigAndFixtureChecks() {
   assert.deepEqual(oecdCli.producer_members[0].schedule, ["0 8 1 * *"]);
   assert.equal(oecdCli.producer_members[0].artifact_contracts[0].path, "data/admin/oecd_cli/shadow/oecd-cli.json");
   const krx = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "krx");
-  assert.equal(krx.enforcement, "shadow");
-  assert.equal(krx.kpi_required, false);
+  assert.equal(krx.enforcement, "live");
+  assert.equal(krx.kpi_required, true);
   assert.deepEqual(krx.producer_members[0].schedule, ["30 10 * * 1-5"]);
   assert.equal(krx.producer_members[0].artifact_contracts[0].path, "data/admin/fenok-edge-korea-krx-daily-index.json");
   assert.equal(krx.endpoint_contract.transport, "library");
