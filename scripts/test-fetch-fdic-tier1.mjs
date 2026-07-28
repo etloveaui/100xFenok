@@ -11,6 +11,7 @@ import { validateAttemptEvidence, validateAttemptShard } from "./build-data-supp
 import {
   FDIC_PERSISTENCE_POLICY,
   MAX_QUARTERS,
+  latestClosedQuarter,
   migrateFdicPersistenceDocument,
   retainLatestQuarters,
   runFdicPersistenceMigration,
@@ -55,6 +56,12 @@ function assertValidShard(shard) {
     schema_version: "data-supply-detection-attempts/v1",
     attempts: shard.attempts,
   }), true);
+}
+
+{
+  assert.equal(latestClosedQuarter(new Date("2026-06-30T23:59:59.999Z")), "20260331");
+  assert.equal(latestClosedQuarter(new Date("2026-07-01T00:00:00.000Z")), "20260630");
+  assert.equal(latestClosedQuarter(new Date("2026-01-01T00:00:00.000Z")), "20251231");
 }
 
 {
@@ -216,6 +223,113 @@ function assertValidShard(shard) {
     retained_quarters: MAX_QUARTERS,
     pruned_quarters: 1,
   });
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fdic-tier1-unpublished-probe-"));
+  const paths = makePaths(root);
+  const calls = [];
+  const result = await runFdicTier1({
+    ...paths,
+    quarters: QUARTERS,
+    probeQuarter: "20260630",
+    request: async (_url, quarter) => {
+      calls.push(quarter);
+      return quarter === "20260630"
+        ? response(200, { data: [] })
+        : response(200, fdicRows(quarter === QUARTERS[0] ? 12 : 14));
+    },
+    observedAt: OBSERVED_AT,
+    attemptId: `${ATTEMPT_ID}-unpublished-probe`,
+    sleep: async () => {},
+  });
+  assert.equal(result.ok, true, "an unpublished optional quarter must not degrade confirmed history");
+  assert.deepEqual(calls, [...QUARTERS, "20260630"]);
+  assert.deepEqual(result.probe, {
+    quarter: "20260630",
+    status: "not_yet_published",
+    reason: "empty_payload",
+  });
+  const output = readJson(paths.canonicalPath);
+  assert.equal(output.data.at(-1).date, "2026-03-31");
+  assert.equal(output.persistence_state.available_quarters, QUARTERS.length);
+  assertValidShard(readJson(paths.attemptShardPath));
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fdic-tier1-published-probe-"));
+  const paths = makePaths(root);
+  const result = await runFdicTier1({
+    ...paths,
+    quarters: QUARTERS,
+    probeQuarter: "20260630",
+    request: async (_url, quarter) => response(200, fdicRows(quarter === "20260630" ? 16 : 14)),
+    observedAt: OBSERVED_AT,
+    attemptId: `${ATTEMPT_ID}-published-probe`,
+    sleep: async () => {},
+  });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.probe, {
+    quarter: "20260630",
+    status: "included",
+    reason: "ready",
+  });
+  const output = readJson(paths.canonicalPath);
+  assert.equal(output.data.at(-1).date, "2026-06-30");
+  assert.equal(output.persistence_state.available_quarters, QUARTERS.length + 1);
+  assert.equal(output.persistence_state.retained_quarters, QUARTERS.length + 1);
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fdic-tier1-probe-retention-"));
+  const paths = makePaths(root);
+  const quarterEnds = ["0331", "0630", "0930", "1231"];
+  const fullWindow = Array.from({ length: MAX_QUARTERS }, (_, index) => {
+    const year = 2006 + Math.floor(index / 4);
+    return `${year}${quarterEnds[index % 4]}`;
+  });
+  const probeQuarter = "20260331";
+  const result = await runFdicTier1({
+    ...paths,
+    quarters: fullWindow,
+    probeQuarter,
+    request: async () => response(200, fdicRows(14)),
+    observedAt: OBSERVED_AT,
+    attemptId: `${ATTEMPT_ID}-probe-retention`,
+    sleep: async () => {},
+  });
+  assert.equal(result.ok, true);
+  const output = readJson(paths.canonicalPath);
+  assert.equal(output.data.length, MAX_QUARTERS);
+  assert.equal(output.data[0].date, "2006-06-30", "a discovered quarter evicts the oldest retained quarter");
+  assert.equal(output.data.at(-1).date, "2026-03-31");
+  assert.deepEqual(output.persistence_state, {
+    available_quarters: MAX_QUARTERS + 1,
+    retained_quarters: MAX_QUARTERS,
+    pruned_quarters: 1,
+  });
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fdic-tier1-failed-probe-"));
+  const paths = makePaths(root);
+  const result = await runFdicTier1({
+    ...paths,
+    quarters: QUARTERS,
+    probeQuarter: "20260630",
+    request: async (_url, quarter) => {
+      if (quarter === "20260630") throw Object.assign(new Error("probe unavailable"), { code: "ECONNRESET" });
+      return response(200, fdicRows(14));
+    },
+    observedAt: OBSERVED_AT,
+    attemptId: `${ATTEMPT_ID}-failed-probe`,
+    sleep: async () => {},
+  });
+  assert.equal(result.ok, true, "an optional discovery failure must not invalidate confirmed quarters");
+  assert.equal(result.probe.quarter, "20260630");
+  assert.equal(result.probe.status, "failed");
+  assert.equal(result.probe.reason, "transport_error");
+  assert.equal(readJson(paths.canonicalPath).data.at(-1).date, "2026-03-31");
 }
 
 {
@@ -414,10 +528,10 @@ function assertValidShard(shard) {
   assert.equal(notAdvanced.degraded, true);
   assert.equal(readJson(statePath).items.fdic_tier1.resolution_state, "lkg_primary");
 
-  const advancedQuarters = [...QUARTERS, "20260630"];
   const manualAdvanced = await runFdicTier1({
     ...paths,
-    quarters: advancedQuarters,
+    quarters: QUARTERS,
+    probeQuarter: "20260630",
     request: async (_url, quarter) => response(200, fdicRows(quarter === "20260630" ? 16 : 14)),
     eventName: "workflow_dispatch",
     observedAt: "2026-07-14T14:00:00.000Z",
@@ -433,7 +547,8 @@ function assertValidShard(shard) {
 
   const recovered = await runFdicTier1({
     ...paths,
-    quarters: advancedQuarters,
+    quarters: QUARTERS,
+    probeQuarter: "20260630",
     request: async (_url, quarter) => response(200, fdicRows(quarter === "20260630" ? 16 : 14)),
     eventName: "schedule",
     observedAt: "2026-07-14T14:30:00.000Z",
@@ -508,6 +623,8 @@ function assertValidShard(shard) {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fdic.yml"), "utf8");
   const producer = fs.readFileSync(new URL("./fetch-fdic-tier1.mjs", import.meta.url), "utf8");
   assert.match(producer, /diagnosticSuffix\(result\.failure_detail\)/, "CLI failures must append bounded diagnostic detail");
+  assert.match(producer, /probeQuarter:\s*latestClosedQuarter\(new Date\(observedAt\)\)/,
+    "the real CLI path must probe the latest fully closed quarter");
   assert.match(workflow, /node scripts\/test-fetch-fdic-tier1\.mjs/);
   assert.match(workflow, /node scripts\/fetch-fdic-tier1\.mjs/);
   assert.doesNotMatch(workflow, /node << ['"]?EOF/);

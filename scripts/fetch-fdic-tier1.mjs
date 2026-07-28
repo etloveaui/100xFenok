@@ -91,6 +91,23 @@ export function generateQuarters(now = new Date()) {
   return quarters;
 }
 
+export function latestClosedQuarter(now = new Date()) {
+  const instant = new Date(now);
+  if (!Number.isFinite(instant.getTime())) throw new Error("invalid FDIC quarter probe clock");
+  const year = instant.getUTCFullYear();
+  const candidates = [];
+  for (let candidateYear = year - 1; candidateYear <= year; candidateYear += 1) {
+    for (const suffix of ["0331", "0630", "0930", "1231"]) {
+      const month = Number(suffix.slice(0, 2));
+      const day = Number(suffix.slice(2));
+      const closedAfterMs = Date.UTC(candidateYear, month - 1, day + 1);
+      if (closedAfterMs <= instant.getTime()) candidates.push(`${candidateYear}${suffix}`);
+    }
+  }
+  if (candidates.length === 0) throw new Error("unable to derive latest closed FDIC quarter");
+  return candidates.sort().at(-1);
+}
+
 function buildUrl(quarter) {
   const params = new URLSearchParams({
     limit: "10000",
@@ -324,6 +341,7 @@ export async function runFdicTier1({
   publicPath = path.join(REPO_ROOT, "100xfenok-next", "public", "data", "macro", "fdic-tier1.json"),
   attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", "fdic_tier1.json"),
   quarters = generateQuarters(),
+  probeQuarter = null,
   request = requestBytes,
   observedAt = new Date().toISOString(),
   attemptId = defaultAttemptId("fdic-tier1", observedAt),
@@ -334,8 +352,14 @@ export async function runFdicTier1({
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 } = {}) {
   if (!Array.isArray(quarters) || quarters.length === 0) throw new Error("FDIC quarter list must be non-empty");
+  if (probeQuarter !== null && !validQuarterIdentifier(probeQuarter)) {
+    throw new Error(`invalid FDIC probe quarter: ${probeQuarter}`);
+  }
   const retention = retainLatestQuarters(quarters);
   const retainedQuarters = retention.quarters;
+  if (probeQuarter !== null && !retainedQuarters.includes(probeQuarter) && probeQuarter <= retainedQuarters.at(-1)) {
+    throw new Error(`FDIC probe quarter must be newer than retained history: ${probeQuarter}`);
+  }
   const injectedQuarter = controlledFailureQuarter(controlledFailureKey.trim(), eventName, retainedQuarters);
   const lkgStore = new LaneLkgStore({ repoRoot, laneId: "fdic_tier1" });
   const lkgArtifacts = [{
@@ -350,23 +374,23 @@ export async function runFdicTier1({
     requestResults.push(await evaluateQuarter({ request, quarter, controlledFailureQuarter: injectedQuarter }));
     if (index < retainedQuarters.length - 1) await sleep(300);
   }
-  const worst = worstRequestResult(requestResults);
-  const attempt = writeAttemptShard({
-    laneId: "fdic_tier1",
-    attemptShardPath,
-    observedAt,
-    attemptId,
-    result: worst,
-  });
-  if (worst.status !== "ready") {
+  const baselineWorst = worstRequestResult(requestResults);
+  if (baselineWorst.status !== "ready") {
+    const attempt = writeAttemptShard({
+      laneId: "fdic_tier1",
+      attemptShardPath,
+      observedAt,
+      attemptId,
+      result: baselineWorst,
+    });
     const systemicOutage = allNaturalRequestsFailed(requestResults, (row) => row.quarter === injectedQuarter);
-    const failureReason = systemicLkgFailureReason([worst.reason, ...requestResults.map((row) => row.reason)])
-      ?? (injectedQuarter && !systemicOutage ? "controlled_failure" : worst.reason);
+    const failureReason = systemicLkgFailureReason([baselineWorst.reason, ...requestResults.map((row) => row.reason)])
+      ?? (injectedQuarter && !systemicOutage ? "controlled_failure" : baselineWorst.reason);
     const failure = lkgStore.recordFailure({ artifacts: lkgArtifacts, run, reason: failureReason });
     const outcome = classifyLkgFailure({ reason: failureReason, hasCompleteLkg: failure.hasCompleteLkg, systemic: systemicOutage });
     const failureDetail = failureReason === "controlled_failure"
       ? null
-      : worst.failure_detail ?? requestResults.find((row) => row.failure_detail)?.failure_detail ?? null;
+      : baselineWorst.failure_detail ?? requestResults.find((row) => row.failure_detail)?.failure_detail ?? null;
     return {
       ok: false,
       reason: failureReason,
@@ -378,13 +402,50 @@ export async function runFdicTier1({
     };
   }
 
-  const data = requestResults.map((row) => row.row).sort((a, b) => a.date.localeCompare(b.date));
+  let probe = null;
+  let acceptedProbeResult = null;
+  if (probeQuarter !== null) {
+    if (retainedQuarters.includes(probeQuarter)) {
+      probe = { quarter: probeQuarter, status: "already_included", reason: "ready" };
+    } else {
+      await sleep(300);
+      const probeResult = await evaluateQuarter({
+        request,
+        quarter: probeQuarter,
+        controlledFailureQuarter: null,
+      });
+      if (probeResult.status === "ready") {
+        acceptedProbeResult = probeResult;
+        probe = { quarter: probeQuarter, status: "included", reason: "ready" };
+      } else if (probeResult.reason === "empty_payload") {
+        probe = { quarter: probeQuarter, status: "not_yet_published", reason: probeResult.reason };
+      } else {
+        probe = { quarter: probeQuarter, status: "failed", reason: probeResult.reason };
+      }
+    }
+  }
+
+  const acceptedResults = acceptedProbeResult === null
+    ? requestResults
+    : [...requestResults, acceptedProbeResult];
+  const attempt = writeAttemptShard({
+    laneId: "fdic_tier1",
+    attemptShardPath,
+    observedAt,
+    attemptId,
+    result: worstRequestResult(acceptedResults),
+  });
+  const availableQuarters = acceptedProbeResult === null ? quarters : [...quarters, probeQuarter];
+  const finalRetention = retainLatestQuarters(availableQuarters);
+  const rowByQuarter = new Map(acceptedResults.map((row) => [row.quarter, row.row]));
+  const data = finalRetention.quarters.map((quarter) => rowByQuarter.get(quarter));
+  if (data.some((row) => row == null)) throw new Error("FDIC retained quarter is missing a fetched row");
   const output = {
     updated: observedAt,
     source: "FDIC",
     description: "Average Tier 1 Capital Ratio (RBC1AAJ)",
     persistence_policy: FDIC_PERSISTENCE_POLICY,
-    persistence_state: retention.persistence_state,
+    persistence_state: finalRetention.persistence_state,
     data,
   };
   const serialized = `${JSON.stringify(output, null, 2)}\n`;
@@ -413,6 +474,7 @@ export async function runFdicTier1({
       updated: false,
       attempt,
       retrySet: recoveryState.retry_set,
+      probe,
       degraded: true,
       corrupt: false,
       exitCode: 0,
@@ -431,6 +493,7 @@ export async function runFdicTier1({
       updated: false,
       attempt,
       retrySet: lkgStore.stateSnapshot().retry_set,
+      probe,
       degraded: true,
       corrupt: false,
       exitCode: 0,
@@ -440,7 +503,7 @@ export async function runFdicTier1({
   atomicWrite(publicPath, serialized);
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
   const recovered = success.state.items.fdic_tier1?.recovered_at === observedAt;
-  return { ok: true, reason: "ok", updated: true, attempt, quarters: data.length, recovered };
+  return { ok: true, reason: "ok", updated: true, attempt, quarters: data.length, recovered, probe };
 }
 
 async function main() {
@@ -453,16 +516,27 @@ async function main() {
     );
     return;
   }
-  const result = await runFdicTier1();
+  const observedAt = new Date().toISOString();
+  const result = await runFdicTier1({
+    observedAt,
+    probeQuarter: latestClosedQuarter(new Date(observedAt)),
+  });
+  const probeSuffix = result.probe?.status === "included"
+    ? `; discovered latest closed quarter ${result.probe.quarter}`
+    : result.probe?.status === "not_yet_published"
+      ? `; latest closed quarter ${result.probe.quarter} not yet published`
+      : result.probe?.status === "failed"
+        ? `; latest closed quarter probe ${result.probe.quarter} failed (${result.probe.reason})`
+        : "";
   if (!result.ok) {
     const prefix = result.degraded ? "[degraded]" : "[corrupt]";
-    const message = `${prefix} FDIC Tier1 ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}${diagnosticSuffix(result.failure_detail)}`;
+    const message = `${prefix} FDIC Tier1 ${result.reason}; retry set: ${(result.retrySet || []).join(", ") || "none"}${probeSuffix}${diagnosticSuffix(result.failure_detail)}`;
     if (result.degraded) console.log(message);
     else console.error(message);
     process.exitCode = result.exitCode ?? 2;
     return;
   }
-  console.log(`Saved ${result.quarters} FDIC quarters and current-attempt evidence${result.recovered ? "; recovered from LKG" : ""}`);
+  console.log(`Saved ${result.quarters} FDIC quarters and current-attempt evidence${result.recovered ? "; recovered from LKG" : ""}${probeSuffix}`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
