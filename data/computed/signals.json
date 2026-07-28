@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-07-27T16:42:37.737Z",
-  "as_of": "2026-07-27",
+  "generated_at": "2026-07-28T04:23:38.422Z",
+  "as_of": "2026-07-28",
   "engine": {
     "name": "macro-monitor-computed-signals",
     "version": "1.0.0",
@@ -94,20 +94,20 @@
   },
   "signals": {
     "liquidity_flow": {
-      "status": "stable",
-      "overallStatus": "stable",
-      "overallLabel": "STABLE",
+      "status": "falling",
+      "overallStatus": "falling",
+      "overallLabel": "FALLING",
       "m2YoY": 6.11,
       "m2Total": 23052.3,
-      "netLiquidity": 5911.3,
-      "netLiquidityDelta": -9.1,
-      "weeklyNetFlow": -9.1,
-      "stablecoinMcap": 306.16986975038003,
+      "netLiquidity": 5869.5,
+      "netLiquidityDelta": -50.9,
+      "weeklyNetFlow": -50.9,
+      "stablecoinMcap": 306.30193001034,
       "scM2Ratio": 1.33,
       "walcl": 6747.4,
-      "tga": 835.4,
+      "tga": 877.2,
       "rrp": 0.7,
-      "netFlow": -9.1,
+      "netFlow": -50.9,
       "components": {
         "m2_yoy": {
           "value": 6.11,
@@ -115,9 +115,9 @@
           "status": "rising"
         },
         "net_liquidity_wow": {
-          "value": -9.1,
+          "value": -50.9,
           "unit": "B USD",
-          "status": "stable"
+          "status": "falling"
         },
         "stablecoin_m2_ratio": {
           "value": 1.33,
@@ -128,13 +128,13 @@
       "metrics": {
         "m2_yoy_pct": 6.11,
         "m2_total_b": 23052.3,
-        "net_liquidity_b": 5911.3,
-        "weekly_net_flow_b": -9.1,
-        "stablecoin_mcap_b": 306.2,
+        "net_liquidity_b": 5869.5,
+        "weekly_net_flow_b": -50.9,
+        "stablecoin_mcap_b": 306.3,
         "sc_m2_ratio_pct": 1.33
       },
       "formula": "net_liquidity_b = WALCL/1000 - TGA/1000 - RRPONTSYD",
-      "as_of": "2026-07-27",
+      "as_of": "2026-07-28",
       "source_files": [
         "data/macro/fred-macro.json",
         "data/macro/tga.json",
@@ -207,13 +207,13 @@
       "warn_active": 0,
       "warn_near": 0,
       "values": {
-        "vix": 19.14,
-        "move": 76.82,
+        "vix": 18.67,
+        "move": 77.21,
         "cnn_fg": 39.5,
         "aaii_bearish": 42.3,
         "aaii_spread": -12.699999999999996,
         "cftc_net": -6823,
-        "crypto_fg": 28,
+        "crypto_fg": 30,
         "putcall_ratio": 0.83
       },
       "combos": [
@@ -229,7 +229,7 @@
               "operator": ">=",
               "value": 40,
               "label": "VIX >= 40",
-              "current": 19.14,
+              "current": 18.67,
               "status": "unmet"
             }
           ],
@@ -289,7 +289,7 @@
               "operator": ">=",
               "value": 30,
               "label": "VIX >= 30",
-              "current": 19.14,
+              "current": 18.67,
               "status": "unmet"
             },
             {
@@ -325,7 +325,7 @@
               "operator": ">=",
               "value": 30,
               "label": "VIX >= 30",
-              "current": 19.14,
+              "current": 18.67,
               "status": "unmet"
             },
             {
@@ -394,7 +394,7 @@
               "operator": "<",
               "value": 15,
               "label": "VIX < 15",
-              "current": 19.14,
+              "current": 18.67,
               "status": "unmet"
             },
             {
@@ -429,7 +429,7 @@
               "operator": "<",
               "value": 15,
               "label": "VIX < 15",
-              "current": 19.14,
+              "current": 18.67,
               "status": "unmet"
             },
             {

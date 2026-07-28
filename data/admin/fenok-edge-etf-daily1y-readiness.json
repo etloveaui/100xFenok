@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-07-27T21:36:03.109Z",
-  "classification_as_of": "2026-07-27T21:35:25.771Z",
+  "generated_at": "2026-07-28T04:24:31.622Z",
+  "classification_as_of": "2026-07-28T04:23:55.282Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -27,34 +27,29 @@
     "denominator": 4431,
     "daily_1y_complete": 3642,
     "daily_1y_missing": 789,
-    "daily_1y_fetchable": 27,
-    "inception_limited_daily_1y_gap": 734,
-    "terminal_limited_daily_1y_gap": 28,
+    "daily_1y_fetchable": 4,
+    "inception_limited_daily_1y_gap": 738,
+    "terminal_limited_daily_1y_gap": 47,
     "fetchable_breakdown": {
       "counts": {
-        "stockanalysis_short_rows": 27
+        "stockanalysis_short_rows": 4
       },
       "samples": {
         "stockanalysis_short_rows": [
-          "AMUN",
-          "CMAY",
-          "CRUX",
-          "DDFY",
-          "DDTY",
-          "DUSG",
-          "EDGQ",
-          "EDGX",
-          "ESUM",
-          "IBCB"
+          "ASCI",
+          "DHLX",
+          "IBTR",
+          "QQMY"
         ]
       }
     },
     "terminal_limited_breakdown": {
       "data_supply_unavailable": 16,
-      "provider_history_start_limited": 7,
-      "provider_rejected_non_etf": 5
+      "provider_history_start_limited": 11,
+      "provider_rejected_non_etf": 18,
+      "stockanalysis_recent_short_rows": 2
     },
-    "etf_no_fetchable_daily_1y_gap": 27,
+    "etf_no_fetchable_daily_1y_gap": 4,
     "count_equation": "daily_1y_complete + daily_1y_fetchable + inception_limited_daily_1y_gap + terminal_limited_daily_1y_gap == denominator",
     "count_equation_ok": true,
     "no_fetchable_daily_1y_gap": false,
@@ -73,95 +68,47 @@
     "summary_count_ok": true,
     "coverage_index_count_ok": true,
     "coverage_index_daily_check_count_ok": true,
-    "coverage_index_fetchable_daily_1y_gap": 27,
-    "coverage_index_inception_limited_daily_1y_gap": 734,
-    "coverage_index_terminal_limited_daily_1y_gap": 28,
+    "coverage_index_fetchable_daily_1y_gap": 4,
+    "coverage_index_inception_limited_daily_1y_gap": 738,
+    "coverage_index_terminal_limited_daily_1y_gap": 47,
     "history_gap_report_count_ok": true,
     "history_gap_classification_clock_match": true,
     "coverage_index_classification_clock_match": true,
     "coverage_index_daily_check_classification_clock_match": true,
     "history_gap_report_scored_etf_count": 4431,
-    "history_gap_report_fetchable_daily_1y_gap": 27,
-    "history_gap_report_inception_limited_daily_1y_gap": 734,
-    "history_gap_report_terminal_limited_daily_1y_gap": 28
+    "history_gap_report_fetchable_daily_1y_gap": 4,
+    "history_gap_report_inception_limited_daily_1y_gap": 738,
+    "history_gap_report_terminal_limited_daily_1y_gap": 47
   },
   "samples": {
     "fetchable": [
       {
-        "ticker": "AMUN",
-        "actual_rows": 180,
+        "ticker": "ASCI",
+        "actual_rows": 181,
         "missing_file": false,
         "inception_date": "2025-10-21",
         "classification_reason": "unconfirmed_short_history",
         "effective_start_source": null
       },
       {
-        "ticker": "CMAY",
-        "actual_rows": 47,
+        "ticker": "DHLX",
+        "actual_rows": 196,
+        "missing_file": false,
+        "inception_date": "2025-09-30",
+        "classification_reason": "unconfirmed_short_history",
+        "effective_start_source": null
+      },
+      {
+        "ticker": "IBTR",
+        "actual_rows": 73,
         "missing_file": false,
         "inception_date": null,
         "classification_reason": "unconfirmed_short_history",
         "effective_start_source": null
       },
       {
-        "ticker": "CRUX",
-        "actual_rows": 80,
-        "missing_file": false,
-        "inception_date": "2026-03-17",
-        "classification_reason": "unconfirmed_short_history",
-        "effective_start_source": null
-      },
-      {
-        "ticker": "DDFY",
-        "actual_rows": 47,
-        "missing_file": false,
-        "inception_date": null,
-        "classification_reason": "unconfirmed_short_history",
-        "effective_start_source": null
-      },
-      {
-        "ticker": "DDTY",
-        "actual_rows": 47,
-        "missing_file": false,
-        "inception_date": null,
-        "classification_reason": "unconfirmed_short_history",
-        "effective_start_source": null
-      },
-      {
-        "ticker": "DUSG",
-        "actual_rows": 44,
-        "missing_file": false,
-        "inception_date": "2026-05-07",
-        "classification_reason": "unconfirmed_short_history",
-        "effective_start_source": null
-      },
-      {
-        "ticker": "EDGQ",
-        "actual_rows": 0,
-        "missing_file": false,
-        "inception_date": null,
-        "classification_reason": "unconfirmed_short_history",
-        "effective_start_source": null
-      },
-      {
-        "ticker": "EDGX",
-        "actual_rows": 0,
-        "missing_file": false,
-        "inception_date": null,
-        "classification_reason": "unconfirmed_short_history",
-        "effective_start_source": null
-      },
-      {
-        "ticker": "ESUM",
-        "actual_rows": 0,
-        "missing_file": false,
-        "inception_date": null,
-        "classification_reason": "unconfirmed_short_history",
-        "effective_start_source": null
-      },
-      {
-        "ticker": "IBCB",
-        "actual_rows": 72,
+        "ticker": "QQMY",
+        "actual_rows": 48,
         "missing_file": false,
         "inception_date": null,
         "classification_reason": "unconfirmed_short_history",
@@ -260,8 +207,8 @@
         "effective_start_source": null
       },
       {
-        "ticker": "ASCI",
-        "actual_rows": 181,
+        "ticker": "AMUN",
+        "actual_rows": 190,
         "missing_file": false,
         "inception_date": "2025-10-21",
         "classification_reason": "provider_history_start_limited",
@@ -300,6 +247,14 @@
         "effective_start_source": null
       },
       {
+        "ticker": "CRUX",
+        "actual_rows": 90,
+        "missing_file": false,
+        "inception_date": "2026-03-17",
+        "classification_reason": "provider_history_start_limited",
+        "effective_start_source": null
+      },
+      {
         "ticker": "CUST",
         "actual_rows": 0,
         "missing_file": true,
@@ -308,23 +263,15 @@
         "effective_start_source": null
       },
       {
-        "ticker": "DHLX",
-        "actual_rows": 196,
+        "ticker": "DUSG",
+        "actual_rows": 54,
         "missing_file": false,
-        "inception_date": "2025-09-30",
+        "inception_date": "2026-05-07",
         "classification_reason": "provider_history_start_limited",
         "effective_start_source": null
       },
       {
         "ticker": "DWUS",
-        "actual_rows": 0,
-        "missing_file": true,
-        "inception_date": null,
-        "classification_reason": null,
-        "effective_start_source": null
-      },
-      {
-        "ticker": "FPAS",
         "actual_rows": 0,
         "missing_file": true,
         "inception_date": null,
@@ -377,12 +324,12 @@
   },
   "exact_fetchable_plan": {
     "output": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
-    "fetchable_count": 27,
-    "ticker_count": 27,
+    "fetchable_count": 4,
+    "ticker_count": 4,
     "can_drive_bounded_ticker_batches": true,
     "batch_count": 1,
     "default_batch_size": 120,
-    "yf_local_crosscheck_gap_count": 3651,
+    "yf_local_crosscheck_gap_count": 3592,
     "yf_local_crosscheck_matches": false,
     "caveat": "The exact readiness blocker is effective ETF detail daily_1y continuity: true StockAnalysis primary first, then the verified R2 active selection. Raw local YF is cross-check-only and is never treated as selected authority."
   },
@@ -399,7 +346,7 @@
       "selection": "explicit full-primary daily_1y fetchable tickers; not the scored-ETF scheduled plan",
       "single_writer": true,
       "shard_size": 100,
-      "ticker_count": 132,
+      "ticker_count": 190,
       "shard_count": 2,
       "shards": [
         {
@@ -409,17 +356,17 @@
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "0",
-            "etfs": "AAPR,AAPW,AAPX,AETH,AIOO,AJAN,AJUL,AKAF,AMDW,AMJB,AMUB,AMZW,APOC,APPX,ARKB,ARLU,ATMP,AUGU,AVGW,BBB,BCCC,BDCX,BDCZ,BETE,BETH,BITB,BLST,BLTD,BNDY,BRKW,BRRR,BTC,BTCO,BTCW,BTRN,CBOJ,CBOY,CBTJ,CBTY,CBXY,CEFD,CEGX,CERY,COIW,CPNJ,CPNM,CPNQ,CPNS,CPRA,CPRJ,CPRO,CPRY,CPSA,CPSD,CPSF,CPSJ,CPSM,CPSN,CPSO,CPSP,CPSR,CPST,CPSU,CPSY,CXRN,DECU,DGP,DGZ,DHSB,DJP,DULL,DVIN,DVQQ,DVRE,DVSP,DVUT,DVXB,DVXC,DVXE,DVXF,DVXK,DVXP,DVXV,DVXY,DZZ,EALT,EBUF,EETH,ESUM,ETH,ETHA,ETHD,ETHT,ETHV,ETHW,EZBC,EZET,FBTC,FEBU,FETH"
+            "etfs": "AAPR,AAPW,AAPX,AETH,AIOO,AJAN,AJUL,AKAF,AMDW,AMJB,AMUB,AMZW,APOC,APPX,ARKB,ARLU,ATMP,AUGU,AVGW,BBB,BCCC,BDCX,BDCZ,BETE,BETH,BITB,BLST,BLTD,BNDY,BRKW,BRRR,BTC,BTCO,BTCW,BTRN,CBOJ,CBOY,CBTJ,CBTY,CBXY,CEFD,CEGX,CERY,COIW,CPNJ,CPNM,CPNQ,CPNS,CPRA,CPRJ,CPRO,CPRY,CPSA,CPSD,CPSF,CPSJ,CPSM,CPSN,CPSO,CPSP,CPSR,CPST,CPSU,CPSY,CXRN,DECU,DGP,DGZ,DHSB,DJP,DULL,DVIN,DVQQ,DVRE,DVSP,DVUT,DVXB,DVXC,DVXE,DVXF,DVXK,DVXP,DVXV,DVXY,DZZ,EALT,EBUF,EETH,ETH,ETHA,ETHD,ETHT,ETHV,ETHW,EZBC,EZET,FBTC,FEBU,FETH,FLAO"
           }
         },
         {
           "shard": 2,
-          "ticker_count": 32,
+          "ticker_count": 90,
           "inputs": {
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "0",
-            "etfs": "FLAO,FLJJ,GBTC,GDXD,GDXU,GEVX,GLDI,GMMA,GOOW,GOOX,GPT,GRN,HDLB,HFSP,HODL,HOOW,HYSA,HYTI,IAUG,IBIC,IBIH,IBIJ,IBIK,IBIL,IBIT,IBUF,IDEC,IFEB,IFED,IJUN,PMTL,SFGV"
+            "etfs": "FLJJ,GBTC,GDXD,GDXU,GEVX,GLDI,GMMA,GOOW,GOOX,GPT,GRN,HDLB,HFSP,HODL,HOOW,HYSA,HYTI,IAUG,IBIC,IBIH,IBIJ,IBIK,IBIL,IBIT,IBUF,IDEC,IFEB,IFED,IJUN,IMAR,IMAY,INOV,ISEP,IVVW,IWDL,IWFL,IWML,IWMW,JAJL,JANU,JNEU,JULU,KAUG,KBAB,KBUF,KDEC,KFEB,KJUN,KMAR,KMAY,KMLI,KNOV,KPDD,KPRO,KSEP,KSPY,LAPR,LGCF,LJUL,LQTI,LTTI,MAGX,MAGY,MARU,MAYU,METW,MLPB,MLPD,MLPR,MSFW,MSFX,MSTW,MTUL,MVPL,MVRL,NAUG,NDEC,NFEB,NFLW,NJUN,NMAR,NMAY,NNOV,NSEP,NVBU,NVDW,OCTU,PFFL,PLTW,PMTL"
           }
         }
       ]

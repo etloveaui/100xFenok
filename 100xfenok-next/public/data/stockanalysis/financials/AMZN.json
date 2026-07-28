@@ -3,7 +3,7 @@
   "source": "stockanalysis",
   "asset_type": "stock",
   "ticker": "AMZN",
-  "fetched_at": "2026-07-23T22:18:51Z",
+  "fetched_at": "2026-07-27T22:31:05Z",
   "role": "financial statement cross-check candidate; not valuation SSOT",
   "statements": {
     "annual": {
@@ -13,9 +13,9 @@
         "period": "annual",
         "head": {
           "heading": "Income Statement",
-          "title": "Amazon (AMZN) Financials & Income Statement",
-          "description": "Detailed annual and quarterly financials and income statement for Amazon (AMZN). See many years of revenue, expenses and profits or losses.",
-          "url": "/stocks/amzn/financials/"
+          "title": "Amazon (AMZN) Income Statement",
+          "description": "Detailed annual and quarterly income statement for Amazon (AMZN). See many years of revenue, expenses and profits or losses.",
+          "url": "/stocks/amzn/financials/income-statement/"
         },
         "details": {
           "source": "fai",
@@ -23,7 +23,7 @@
           "fiscalYear": "January - December",
           "fiscalYearShort": "Jan - Dec",
           "reportingFrequency": null,
-          "lastTradingDay": "Jul 23, 2026",
+          "lastTradingDay": "Jul 27, 2026",
           "currency": "USD"
         },
         "periods": [
@@ -54,19 +54,6 @@
               574785000000,
               513983000000,
               469822000000
-            ]
-          },
-          {
-            "field": "revenueGrowth",
-            "title": "Revenue Growth (YoY)",
-            "format": "growth",
-            "values": [
-              0.14218,
-              0.12378,
-              0.10991,
-              0.1183,
-              0.094,
-              0.21695
             ]
           },
           {
@@ -278,19 +265,6 @@
             ]
           },
           {
-            "field": "netIncomeGrowth",
-            "title": "Net Income Growth",
-            "format": "growth",
-            "values": [
-              0.3769,
-              0.31093,
-              0.94735,
-              null,
-              null,
-              0.56411
-            ]
-          },
-          {
             "field": "sharesBasic",
             "title": "Shares Outstanding (Basic)",
             "format": "reduce_precision",
@@ -314,19 +288,6 @@
               10492000000,
               10189000000,
               10296000000
-            ]
-          },
-          {
-            "field": "sharesYoY",
-            "title": "Shares Change (YoY)",
-            "format": "inverted-growth",
-            "values": [
-              0.00886,
-              0.00989,
-              0.02183,
-              0.02974,
-              -0.01039,
-              0.00941
             ]
           },
           {
@@ -356,19 +317,6 @@
             ]
           },
           {
-            "field": "epsGrowth",
-            "title": "EPS Growth",
-            "format": "growth",
-            "values": [
-              0.36156,
-              0.29656,
-              0.9069,
-              null,
-              null,
-              0.54913
-            ]
-          },
-          {
             "field": "fcf",
             "title": "Free Cash Flow",
             "format": null,
@@ -379,19 +327,6 @@
               32217000000,
               -16893000000,
               -14726000000
-            ]
-          },
-          {
-            "field": "fcfGrowth",
-            "title": "Free Cash Flow Growth",
-            "format": "growth",
-            "values": [
-              null,
-              -0.76595,
-              0.02052,
-              null,
-              null,
-              null
             ]
           },
           {
@@ -525,8 +460,8 @@
             ]
           }
         ],
-        "field_count": 37,
-        "endpoint": "/stocks/amzn/financials/__data.json"
+        "field_count": 32,
+        "endpoint": "/stocks/amzn/financials/income-statement/__data.json"
       },
       "balance_sheet": {
         "ticker": "AMZN",
@@ -544,7 +479,7 @@
           "fiscalYear": "January - December",
           "fiscalYearShort": "Jan - Dec",
           "reportingFrequency": null,
-          "lastTradingDay": "Jul 23, 2026",
+          "lastTradingDay": "Jul 27, 2026",
           "currency": "USD"
         },
         "periods": [
@@ -601,19 +536,6 @@
               86780000000,
               70026000000,
               96049000000
-            ]
-          },
-          {
-            "field": "totalcashGrowth",
-            "title": "Cash Growth",
-            "format": "growth",
-            "values": [
-              0.51313,
-              0.21568,
-              0.16619,
-              0.23925,
-              -0.27093,
-              0.13808
             ]
           },
           {
@@ -1007,7 +929,7 @@
             ]
           }
         ],
-        "field_count": 34,
+        "field_count": 33,
         "endpoint": "/stocks/amzn/financials/balance-sheet/__data.json"
       },
       "cash_flow": {
@@ -1026,7 +948,7 @@
           "fiscalYear": "January - December",
           "fiscalYearShort": "Jan - Dec",
           "reportingFrequency": null,
-          "lastTradingDay": "Jul 23, 2026",
+          "lastTradingDay": "Jul 27, 2026",
           "currency": "USD"
         },
         "periods": [
@@ -1190,19 +1112,6 @@
             ]
           },
           {
-            "field": "ocfGrowth",
-            "title": "Operating Cash Flow Growth",
-            "format": "growth",
-            "values": [
-              0.30401,
-              0.20398,
-              0.36413,
-              0.81695,
-              0.00917,
-              -0.29876
-            ]
-          },
-          {
             "field": "capex",
             "title": "Capital Expenditures",
             "format": null,
@@ -1229,7 +1138,7 @@
             ]
           },
           {
-            "field": "cash_flow_statement_purchases_of_investments",
+            "field": "purchasesOfInvestments",
             "title": "Purchases of Investments",
             "format": null,
             "values": [
@@ -1398,8 +1307,8 @@
             ]
           },
           {
-            "field": "cash_flow_statement_effect_of_exchange_rate_changes_on_cash_and_cash_equivalents",
-            "title": "Effect of Exchange Rate Changes on Cash and Cash Equivalents",
+            "field": "exchangeRateAdjustments",
+            "title": "Foreign Exchange Rate Adjustments",
             "format": null,
             "values": [
               747000000,
@@ -1434,19 +1343,6 @@
               32217000000,
               -16893000000,
               -14726000000
-            ]
-          },
-          {
-            "field": "fcfGrowth",
-            "title": "Free Cash Flow Growth",
-            "format": "growth",
-            "values": [
-              null,
-              -0.76595,
-              0.02052,
-              null,
-              null,
-              null
             ]
           },
           {
@@ -1502,7 +1398,7 @@
             ]
           }
         ],
-        "field_count": 35,
+        "field_count": 33,
         "endpoint": "/stocks/amzn/financials/cash-flow-statement/__data.json"
       },
       "ratios": {
@@ -1521,7 +1417,7 @@
           "fiscalYear": "January - December",
           "fiscalYearShort": "Jan - Dec",
           "reportingFrequency": null,
-          "lastTradingDay": "Jul 23, 2026",
+          "lastTradingDay": "Jul 27, 2026",
           "currency": null
         },
         "periods": [
@@ -1546,7 +1442,7 @@
             "title": "Market Cap",
             "format": "reduce_precision",
             "values": [
-              2513506190816,
+              2489087552396,
               2476929420000,
               2323998270000,
               1577593020000,
@@ -1555,24 +1451,11 @@
             ]
           },
           {
-            "field": "marketCapGrowth",
-            "title": "Market Cap Growth",
-            "format": "growth",
-            "values": [
-              0.032525008452429775,
-              0.06581,
-              0.47313,
-              0.83371,
-              -0.49284,
-              0.03485
-            ]
-          },
-          {
             "field": "ev",
             "title": "Enterprise Value",
             "format": null,
             "values": [
-              2605957190816,
+              2584980827416,
               2506887420000,
               2353696270000,
               1626424020000,
@@ -1585,7 +1468,7 @@
             "title": "Last Close Price",
             "format": "ratio",
             "values": [
-              233.66,
+              231.39,
               230.82,
               219.39,
               151.94,
@@ -1598,7 +1481,7 @@
             "title": "PE Ratio",
             "format": "ratio",
             "values": [
-              27.945007440122023,
+              27.75963227307508,
               32.1925,
               39.6727,
               52.3931,
@@ -1611,7 +1494,7 @@
             "title": "Forward PE",
             "format": "ratio",
             "values": [
-              27.936728081397433,
+              27.751407836057343,
               31.014,
               37.455,
               45.346,
@@ -1624,7 +1507,7 @@
             "title": "PEG Ratio",
             "format": "ratio",
             "values": [
-              1.3116,
+              1.3029,
               1.814,
               1.686,
               1.679,
@@ -1637,7 +1520,7 @@
             "title": "PS Ratio",
             "format": "ratio",
             "values": [
-              3.38394,
+              3.3557,
               3.45494,
               3.64286,
               2.74467,
@@ -1650,7 +1533,7 @@
             "title": "PB Ratio",
             "format": "ratio",
             "values": [
-              5.68613,
+              5.64841,
               6.02564,
               8.12672,
               7.8147,
@@ -1663,7 +1546,7 @@
             "title": "P/TBV Ratio",
             "format": "ratio",
             "values": [
-              6.057,
+              5.998,
               6.444,
               8.947,
               8.902,
@@ -1689,7 +1572,7 @@
             "title": "P/OCF Ratio",
             "format": "ratio",
             "values": [
-              16.92243,
+              16.78121,
               17.754,
               20.0557,
               18.5717,
@@ -1702,7 +1585,7 @@
             "title": "EV/Sales Ratio",
             "format": "ratio",
             "values": [
-              3.5084,
+              3.48016,
               3.49673,
               3.68942,
               2.82962,
@@ -1715,7 +1598,7 @@
             "title": "EV/EBITDA Ratio",
             "format": "ratio",
             "values": [
-              16.71975,
+              16.58517,
               17.2022,
               19.3899,
               19.0192,
@@ -1728,7 +1611,7 @@
             "title": "EV/EBIT Ratio",
             "format": "ratio",
             "values": [
-              30.50686,
+              30.2613,
               31.3459,
               34.3139,
               44.1339,
@@ -1936,7 +1819,7 @@
             "title": "Earnings Yield",
             "format": "percentage",
             "values": [
-              0.036124,
+              0.036427999999999995,
               0.0310632,
               0.0252063,
               0.0190865,
@@ -1984,7 +1867,7 @@
             ]
           }
         ],
-        "field_count": 34,
+        "field_count": 33,
         "endpoint": "/stocks/amzn/financials/ratios/__data.json"
       }
     },
@@ -1995,9 +1878,9 @@
         "period": "quarterly",
         "head": {
           "heading": "Income Statement",
-          "title": "Amazon (AMZN) Financials & Income Statement",
-          "description": "Detailed annual and quarterly financials and income statement for Amazon (AMZN). See many years of revenue, expenses and profits or losses.",
-          "url": "/stocks/amzn/financials/"
+          "title": "Amazon (AMZN) Income Statement",
+          "description": "Detailed annual and quarterly income statement for Amazon (AMZN). See many years of revenue, expenses and profits or losses.",
+          "url": "/stocks/amzn/financials/income-statement/"
         },
         "details": {
           "source": "fai",
@@ -2005,7 +1888,7 @@
           "fiscalYear": "January - December",
           "fiscalYearShort": "Jan - Dec",
           "reportingFrequency": null,
-          "lastTradingDay": "Jul 23, 2026",
+          "lastTradingDay": "Jul 27, 2026",
           "currency": "USD"
         },
         "periods": [
@@ -2078,33 +1961,6 @@
               137412000000,
               110812000000,
               113080000000
-            ]
-          },
-          {
-            "field": "revenueGrowth",
-            "title": "Revenue Growth (YoY)",
-            "format": "growth",
-            "values": [
-              0.16607,
-              0.13629,
-              0.13402,
-              0.1333,
-              0.0862,
-              0.10491,
-              0.11038,
-              0.10116,
-              0.12528,
-              0.13912,
-              0.12574,
-              0.10846,
-              0.09373,
-              0.08581,
-              0.147,
-              0.07211,
-              0.07304,
-              0.09444,
-              0.15255,
-              0.27182
             ]
           },
           {
@@ -2540,33 +2396,6 @@
             ]
           },
           {
-            "field": "netIncomeGrowth",
-            "title": "Net Income Growth",
-            "format": "growth",
-            "values": [
-              0.76651,
-              0.05939,
-              0.38224,
-              0.34698,
-              0.64193,
-              0.88291,
-              0.55157,
-              0.99778,
-              2.28846,
-              37.21583,
-              2.43976,
-              null,
-              null,
-              -0.98059,
-              -0.08999,
-              null,
-              null,
-              0.98325,
-              -0.5015,
-              0.4835
-            ]
-          },
-          {
             "field": "sharesBasic",
             "title": "Shares Outstanding (Basic)",
             "format": "reduce_precision",
@@ -2618,33 +2447,6 @@
               10324000000,
               10309000000,
               10286000000
-            ]
-          },
-          {
-            "field": "sharesYoY",
-            "title": "Shares Change (YoY)",
-            "format": "inverted-growth",
-            "values": [
-              0.0075,
-              0.00854,
-              0.01025,
-              0.00915,
-              0.01153,
-              0.01517,
-              0.01676,
-              0.02479,
-              0.03122,
-              0.0293,
-              0.02197,
-              0.02693,
-              0.0173,
-              -0.00155,
-              0.00213,
-              -0.01079,
-              -0.00867,
-              0.00624,
-              0.00674,
-              0.01041
             ]
           },
           {
@@ -2702,33 +2504,6 @@
             ]
           },
           {
-            "field": "epsGrowth",
-            "title": "EPS Growth",
-            "format": "growth",
-            "values": [
-              0.74843,
-              0.04839,
-              0.36364,
-              0.33333,
-              0.62245,
-              0.86,
-              0.52128,
-              0.93846,
-              2.16129,
-              32.33333,
-              2.35714,
-              null,
-              null,
-              -0.97842,
-              -0.09677,
-              null,
-              null,
-              0.97303,
-              -0.49879,
-              0.47573
-            ]
-          },
-          {
             "field": "fcf",
             "title": "Free Cash Flow",
             "format": null,
@@ -2753,33 +2528,6 @@
               3151000000,
               -8435000000,
               -1573000000
-            ]
-          },
-          {
-            "field": "fcfGrowth",
-            "title": "Free Cash Flow Growth",
-            "format": "growth",
-            "values": [
-              null,
-              -0.16094,
-              -0.87168,
-              -0.95666,
-              null,
-              -0.36141,
-              -0.6165,
-              0.52579,
-              null,
-              1.2158,
-              null,
-              null,
-              null,
-              2.9927,
-              null,
-              null,
-              null,
-              -0.79812,
-              null,
-              null
             ]
           },
           {
@@ -3053,8 +2801,8 @@
             ]
           }
         ],
-        "field_count": 37,
-        "endpoint": "/stocks/amzn/financials/__data.json?p=quarterly"
+        "field_count": 32,
+        "endpoint": "/stocks/amzn/financials/income-statement/__data.json?p=quarterly"
       },
       "balance_sheet": {
         "ticker": "AMZN",
@@ -3072,7 +2820,7 @@
           "fiscalYear": "January - December",
           "fiscalYearShort": "Jan - Dec",
           "reportingFrequency": null,
-          "lastTradingDay": "Jul 23, 2026",
+          "lastTradingDay": "Jul 27, 2026",
           "currency": "USD"
         },
         "periods": [
@@ -3199,33 +2947,6 @@
               96049000000,
               78988000000,
               89894000000
-            ]
-          },
-          {
-            "field": "totalcashGrowth",
-            "title": "Cash Growth",
-            "format": "growth",
-            "values": [
-              0.51313,
-              0.21568,
-              0.0698,
-              0.04589,
-              0.11156,
-              0.16619,
-              0.37217,
-              0.39272,
-              0.32092,
-              0.23925,
-              0.09388,
-              0.0537,
-              -0.02983,
-              -0.27093,
-              -0.25733,
-              -0.32465,
-              -0.09397,
-              0.13808,
-              0.15476,
-              0.25918
             ]
           },
           {
@@ -4039,7 +3760,7 @@
             ]
           }
         ],
-        "field_count": 34,
+        "field_count": 33,
         "endpoint": "/stocks/amzn/financials/balance-sheet/__data.json?p=quarterly"
       },
       "cash_flow": {
@@ -4058,7 +3779,7 @@
           "fiscalYear": "January - December",
           "fiscalYearShort": "Jan - Dec",
           "reportingFrequency": null,
-          "lastTradingDay": "Jul 23, 2026",
+          "lastTradingDay": "Jul 27, 2026",
           "currency": "USD"
         },
         "periods": [
@@ -4404,33 +4125,6 @@
             ]
           },
           {
-            "field": "ocfGrowth",
-            "title": "Operating Cash Flow Growth",
-            "format": "growth",
-            "values": [
-              0.52994,
-              0.19333,
-              0.36787,
-              0.28614,
-              -0.10395,
-              0.07467,
-              0.22407,
-              0.53441,
-              2.96596,
-              0.45563,
-              0.86049,
-              0.83781,
-              null,
-              0.32088,
-              0.55941,
-              -0.29493,
-              null,
-              -0.27423,
-              -0.38875,
-              -0.38295
-            ]
-          },
-          {
             "field": "capex",
             "title": "Capital Expenditures",
             "format": null,
@@ -4485,7 +4179,7 @@
             ]
           },
           {
-            "field": "cash_flow_statement_purchases_of_investments",
+            "field": "purchasesOfInvestments",
             "title": "Purchases of Investments",
             "format": null,
             "values": [
@@ -4836,8 +4530,8 @@
             ]
           },
           {
-            "field": "cash_flow_statement_effect_of_exchange_rate_changes_on_cash_and_cash_equivalents",
-            "title": "Effect of Exchange Rate Changes on Cash and Cash Equivalents",
+            "field": "exchangeRateAdjustments",
+            "title": "Foreign Exchange Rate Adjustments",
             "format": null,
             "values": [
               -1000000,
@@ -4914,33 +4608,6 @@
               3151000000,
               -8435000000,
               -1573000000
-            ]
-          },
-          {
-            "field": "fcfGrowth",
-            "title": "Free Cash Flow Growth",
-            "format": "growth",
-            "values": [
-              null,
-              -0.16094,
-              -0.87168,
-              -0.95666,
-              null,
-              -0.36141,
-              -0.6165,
-              0.52579,
-              null,
-              1.2158,
-              null,
-              null,
-              null,
-              2.9927,
-              null,
-              null,
-              null,
-              -0.79812,
-              null,
-              null
             ]
           },
           {
@@ -5052,7 +4719,7 @@
             ]
           }
         ],
-        "field_count": 35,
+        "field_count": 33,
         "endpoint": "/stocks/amzn/financials/cash-flow-statement/__data.json?p=quarterly"
       },
       "ratios": {
@@ -5071,7 +4738,7 @@
           "fiscalYear": "January - December",
           "fiscalYearShort": "Jan - Dec",
           "reportingFrequency": null,
-          "lastTradingDay": "Jul 23, 2026",
+          "lastTradingDay": "Jul 27, 2026",
           "currency": null
         },
         "periods": [
@@ -5124,7 +4791,7 @@
             "title": "Market Cap",
             "format": "reduce_precision",
             "values": [
-              2513506190816,
+              2489087552396,
               2239735580000,
               2476929420000,
               2341694749138,
@@ -5147,38 +4814,11 @@
             ]
           },
           {
-            "field": "marketCapGrowth",
-            "title": "Market Cap Growth",
-            "format": "growth",
-            "values": [
-              0.07475,
-              0.1092,
-              0.06581,
-              0.19565,
-              0.15366,
-              0.07607,
-              0.47313,
-              0.49146,
-              0.50788,
-              0.77103,
-              0.83371,
-              0.13952,
-              0.24305,
-              -0.36146,
-              -0.49284,
-              -0.30809,
-              -0.37869,
-              0.06411,
-              0.03485,
-              0.05365
-            ]
-          },
-          {
             "field": "ev",
             "title": "Enterprise Value",
             "format": null,
             "values": [
-              2605957190816,
+              2584980827416,
               2306534580000,
               2506887420000,
               2382916749138,
@@ -5205,7 +4845,7 @@
             "title": "Last Close Price",
             "format": "ratio",
             "values": [
-              233.66,
+              231.39,
               208.27,
               230.82,
               219.57,
@@ -5232,7 +4872,7 @@
             "title": "PE Ratio",
             "format": "ratio",
             "values": [
-              27.945007440122023,
+              27.75963227307508,
               24.9127,
               32.1925,
               31.0127,
@@ -5259,7 +4899,7 @@
             "title": "Forward PE",
             "format": "ratio",
             "values": [
-              27.936728081397433,
+              27.751407836057343,
               26.953,
               31.014,
               31.898,
@@ -5286,7 +4926,7 @@
             "title": "PEG Ratio",
             "format": "ratio",
             "values": [
-              1.3116,
+              1.3029,
               1.434,
               1.814,
               1.903,
@@ -5313,7 +4953,7 @@
             "title": "PS Ratio",
             "format": "ratio",
             "values": [
-              3.38394,
+              3.3557,
               3.01536,
               3.45494,
               3.38723,
@@ -5340,7 +4980,7 @@
             "title": "PB Ratio",
             "format": "ratio",
             "values": [
-              5.68613,
+              5.64841,
               5.06826,
               6.02564,
               6.33522,
@@ -5367,7 +5007,7 @@
             "title": "P/TBV Ratio",
             "format": "ratio",
             "values": [
-              6.057,
+              5.998,
               5.412,
               6.466,
               6.875,
@@ -5421,7 +5061,7 @@
             "title": "P/OCF Ratio",
             "format": "ratio",
             "values": [
-              16.92243,
+              16.78121,
               15.0792,
               17.754,
               17.9178,
@@ -5448,7 +5088,7 @@
             "title": "EV/Sales Ratio",
             "format": "ratio",
             "values": [
-              3.5084,
+              3.48016,
               3.10529,
               3.49673,
               3.44686,
@@ -5475,7 +5115,7 @@
             "title": "EV/EBITDA Ratio",
             "format": "ratio",
             "values": [
-              16.71975,
+              16.58517,
               14.7987,
               17.2022,
               17.2529,
@@ -5502,7 +5142,7 @@
             "title": "EV/EBIT Ratio",
             "format": "ratio",
             "values": [
-              30.50686,
+              30.2613,
               27.0016,
               31.3459,
               31.2715,
@@ -5934,7 +5574,7 @@
             "title": "Earnings Yield",
             "format": "percentage",
             "values": [
-              0.036124,
+              0.036427999999999995,
               0.0401402,
               0.0310632,
               0.0322448,
@@ -6038,7 +5678,7 @@
             ]
           }
         ],
-        "field_count": 34,
+        "field_count": 33,
         "endpoint": "/stocks/amzn/financials/ratios/__data.json?p=quarterly"
       }
     }
@@ -6046,44 +5686,44 @@
   "summary": {
     "annual": {
       "income": {
-        "field_count": 37,
+        "field_count": 32,
         "period_count": 6,
         "period": "annual"
       },
       "balance_sheet": {
-        "field_count": 34,
+        "field_count": 33,
         "period_count": 6,
         "period": "annual"
       },
       "cash_flow": {
-        "field_count": 35,
+        "field_count": 33,
         "period_count": 6,
         "period": "annual"
       },
       "ratios": {
-        "field_count": 34,
+        "field_count": 33,
         "period_count": 6,
         "period": "annual"
       }
     },
     "quarterly": {
       "income": {
-        "field_count": 37,
+        "field_count": 32,
         "period_count": 20,
         "period": "quarterly"
       },
       "balance_sheet": {
-        "field_count": 34,
+        "field_count": 33,
         "period_count": 20,
         "period": "quarterly"
       },
       "cash_flow": {
-        "field_count": 35,
+        "field_count": 33,
         "period_count": 20,
         "period": "quarterly"
       },
       "ratios": {
-        "field_count": 34,
+        "field_count": 33,
         "period_count": 20,
         "period": "quarterly"
       }
