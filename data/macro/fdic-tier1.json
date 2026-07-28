@@ -2,6 +2,18 @@
   "updated": "2026-07-14T14:55:51.727Z",
   "source": "FDIC",
   "description": "Average Tier 1 Capital Ratio (RBC1AAJ)",
+  "persistence_policy": {
+    "schema_version": "fdic-bounded-persistence/v1",
+    "basis": "quarter_end",
+    "scope": "series",
+    "max_retained_quarters": 80,
+    "eviction": "oldest_quarter_first"
+  },
+  "persistence_state": {
+    "available_quarters": 69,
+    "retained_quarters": 69,
+    "pruned_quarters": 0
+  },
   "data": [
     {
       "date": "2009-03-31",
