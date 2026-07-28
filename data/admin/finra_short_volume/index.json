@@ -1,29 +1,27 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "finra_short_volume",
-  "updated_at": "2026-07-27T15:25:38.694Z",
-  "retry_set": [
-    "regsho_daily"
-  ],
+  "updated_at": "2026-07-28T03:46:05.233Z",
+  "retry_set": [],
   "items": {
     "regsho_daily": {
       "key": "regsho_daily",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/finra_short_volume/lkg/regsho_daily.json",
-        "payload_sha256": "0507c5af4ca17660d097d8403a2fca3b4562358cf2b678105b7c6e4da5af2a95",
-        "source_as_of": "2026-07-24"
+        "path": "data/admin/finra_short_volume/current/regsho_daily.json",
+        "payload_sha256": "38e76a9a05a7f12f1aa4c331cd22f070aaca93bd941738efe6b697d51ec547b2",
+        "source_as_of": "2026-07-27"
       },
-      "updated_at": "2026-07-27T15:25:38.694Z",
+      "updated_at": "2026-07-28T03:46:05.233Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "0507c5af4ca17660d097d8403a2fca3b4562358cf2b678105b7c6e4da5af2a95",
-        "source_as_of": "2026-07-24",
-        "run_id": "30142874895",
+        "payload_sha256": "38e76a9a05a7f12f1aa4c331cd22f070aaca93bd941738efe6b697d51ec547b2",
+        "source_as_of": "2026-07-27",
+        "run_id": "30326779896",
         "run_attempt": 1,
-        "observed_at": "2026-07-25T03:52:50.610Z"
+        "observed_at": "2026-07-28T03:46:05.233Z"
       },
       "lkg": {
         "path": "data/admin/finra_short_volume/lkg/regsho_daily.json",
@@ -31,17 +29,16 @@
         "source_as_of": "2026-07-24"
       },
       "last_recovered_failure": {
-        "run_id": "29643409763",
-        "run_attempt": 1,
-        "observed_at": "2026-07-18T12:03:03.229Z",
-        "reason": "controlled_failure"
-      },
-      "latest_failure": {
         "run_id": "30279842211",
         "run_attempt": 1,
         "observed_at": "2026-07-27T15:25:38.694Z",
         "reason": "controlled_failure"
-      }
+      },
+      "recovered_from_run_id": "30279842211",
+      "recovered_at": "2026-07-28T03:46:05.233Z",
+      "recovery_run_id": "30326779896",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule"
     }
   }
 }
