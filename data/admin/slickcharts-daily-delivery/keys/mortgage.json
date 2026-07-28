@@ -2,42 +2,36 @@
   "schema_version": "producer-lkg-key-state/v1",
   "lane_id": "slickcharts_daily_delivery",
   "key": "mortgage.json",
-  "updated_at": "2026-07-27T16:53:43.288Z",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "updated_at": "2026-07-28T08:43:16.742Z",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "current": {
-    "path": "data/admin/slickcharts-daily-delivery/lkg/mortgage.json",
-    "payload_sha256": "a47c8327d9a86edc178fdc07c2222f7a00c69379a2aac326241f7b79492141bd",
-    "source_as_of": "2026-07-27"
+    "path": "data/slickcharts/mortgage.json",
+    "payload_sha256": "61026ab1bfa5593e55c594577128916b0973548e613329755fc806552c80ba05",
+    "source_as_of": "2026-07-28"
   },
+  "canonical_ref": "data/slickcharts/mortgage.json",
   "lkg": {
     "path": "data/admin/slickcharts-daily-delivery/lkg/mortgage.json",
     "payload_sha256": "a47c8327d9a86edc178fdc07c2222f7a00c69379a2aac326241f7b79492141bd",
     "source_as_of": "2026-07-27"
   },
-  "canonical_ref": "data/slickcharts/mortgage.json",
-  "latest_failure": {
+  "latest_failure": null,
+  "recovered_from_run_id": "30285019322",
+  "recovery_run_id": "30343230102",
+  "recovery_run_attempt": 1,
+  "recovery_event_name": "schedule",
+  "recovered_at": "2026-07-28T08:43:16.742Z",
+  "last_run_id": "30343230102",
+  "last_run_attempt": 1,
+  "last_event_name": "schedule",
+  "promotion_contract": "legacy_source_marker/v1",
+  "last_recovered_failure": {
     "run_id": "30285019322",
     "run_attempt": 1,
     "event_name": "workflow_dispatch",
     "observed_at": "2026-07-27T16:31:30.918Z",
     "failure_kind": "unexpected",
     "error": "selected scraper has no outcome after job status failure"
-  },
-  "recovered_from_run_id": "29417722033",
-  "recovery_run_id": "29483031623",
-  "recovery_run_attempt": 1,
-  "recovery_event_name": "schedule",
-  "recovered_at": "2026-07-16T08:20:53.303Z",
-  "last_run_id": "30286602995",
-  "last_run_attempt": 1,
-  "last_event_name": "workflow_dispatch",
-  "latest_promotion_deferral": {
-    "run_id": "30286602995",
-    "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-07-27T16:53:43.288Z",
-    "source_as_of": "2026-07-27",
-    "reason": "recovery_requires_schedule"
   }
 }

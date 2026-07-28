@@ -2,42 +2,36 @@
   "schema_version": "producer-lkg-key-state/v1",
   "lane_id": "slickcharts_daily_delivery",
   "key": "currency.json",
-  "updated_at": "2026-07-27T16:53:43.288Z",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "updated_at": "2026-07-28T08:43:16.742Z",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "current": {
-    "path": "data/admin/slickcharts-daily-delivery/lkg/currency.json",
-    "payload_sha256": "16a4a754e674542bec8c4033daa4bae48aebff522b8930698524f8787878ec06",
-    "source_as_of": "2026-07-27"
+    "path": "data/slickcharts/currency.json",
+    "payload_sha256": "3cc1b893405892e7f034faebc3db5791a50c6256748f2f928b0e8edecd989c6f",
+    "source_as_of": "2026-07-28"
   },
+  "canonical_ref": "data/slickcharts/currency.json",
   "lkg": {
     "path": "data/admin/slickcharts-daily-delivery/lkg/currency.json",
     "payload_sha256": "16a4a754e674542bec8c4033daa4bae48aebff522b8930698524f8787878ec06",
     "source_as_of": "2026-07-27"
   },
-  "canonical_ref": "data/slickcharts/currency.json",
-  "latest_failure": {
+  "latest_failure": null,
+  "recovered_from_run_id": "30285019322",
+  "recovery_run_id": "30343230102",
+  "recovery_run_attempt": 1,
+  "recovery_event_name": "schedule",
+  "recovered_at": "2026-07-28T08:43:16.742Z",
+  "last_run_id": "30343230102",
+  "last_run_attempt": 1,
+  "last_event_name": "schedule",
+  "promotion_contract": "legacy_source_marker/v1",
+  "last_recovered_failure": {
     "run_id": "30285019322",
     "run_attempt": 1,
     "event_name": "workflow_dispatch",
     "observed_at": "2026-07-27T16:31:30.918Z",
     "failure_kind": "unexpected",
     "error": "selected scraper has no outcome after job status failure"
-  },
-  "recovered_from_run_id": "29417722033",
-  "recovery_run_id": "29483031623",
-  "recovery_run_attempt": 1,
-  "recovery_event_name": "schedule",
-  "recovered_at": "2026-07-16T08:20:53.303Z",
-  "last_run_id": "30286602995",
-  "last_run_attempt": 1,
-  "last_event_name": "workflow_dispatch",
-  "latest_promotion_deferral": {
-    "run_id": "30286602995",
-    "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-07-27T16:53:43.288Z",
-    "source_as_of": "2026-07-27",
-    "reason": "recovery_requires_schedule"
   }
 }

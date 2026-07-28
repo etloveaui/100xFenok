@@ -1,7 +1,7 @@
 {
   "schema_version": "producer-lkg-index/v2",
   "lane_id": "slickcharts_daily_delivery",
-  "generated_at": "2026-07-27T16:53:43.288Z",
+  "generated_at": "2026-07-28T08:43:16.742Z",
   "keys": [
     "gainers.json",
     "losers.json",
@@ -11,159 +11,73 @@
   ],
   "counts": {
     "keys": 5,
-    "fresh": 0,
-    "lkg": 5,
-    "retry": 5,
+    "fresh": 5,
+    "lkg": 0,
+    "retry": 0,
     "unavailable": 0,
-    "failed": 1,
-    "recovered": 0
+    "failed": 0,
+    "recovered": 5
   },
-  "retry_keys": [
-    "gainers.json",
-    "losers.json",
-    "treasury.json",
-    "currency.json",
-    "mortgage.json"
-  ],
-  "lkg_details": [
-    {
-      "key": "gainers.json",
-      "payload_sha256": "c016cca8f14935bf97a7eb47a3c5cbe28c9a5dd427b11c6db6c5572a70c8c01b",
-      "source_as_of": "2026-07-27",
-      "failure_run_id": "30285019322",
-      "failure_run_attempt": 1
-    },
-    {
-      "key": "losers.json",
-      "payload_sha256": "687c9ba762b8f536c919edf3dc47a6b7e1d2fe021ac17b54505f4df51012f9c1",
-      "source_as_of": "2026-07-27",
-      "failure_run_id": "30285019322",
-      "failure_run_attempt": 1
-    },
-    {
-      "key": "treasury.json",
-      "payload_sha256": "85eac2477659276b0b12b370f9f137416ba1aaa65649bee8ff95b172e5d7cbb3",
-      "source_as_of": "2026-07-27",
-      "failure_run_id": "30286602995",
-      "failure_run_attempt": 1
-    },
-    {
-      "key": "currency.json",
-      "payload_sha256": "16a4a754e674542bec8c4033daa4bae48aebff522b8930698524f8787878ec06",
-      "source_as_of": "2026-07-27",
-      "failure_run_id": "30285019322",
-      "failure_run_attempt": 1
-    },
-    {
-      "key": "mortgage.json",
-      "payload_sha256": "a47c8327d9a86edc178fdc07c2222f7a00c69379a2aac326241f7b79492141bd",
-      "source_as_of": "2026-07-27",
-      "failure_run_id": "30285019322",
-      "failure_run_attempt": 1
-    }
-  ],
+  "retry_keys": [],
+  "lkg_details": [],
   "recovery_details": [
     {
       "key": "gainers.json",
-      "recovered_from_run_id": "29417722033",
-      "recovery_run_id": "29483031623",
+      "recovered_from_run_id": "30285019322",
+      "recovery_run_id": "30343230102",
       "recovery_run_attempt": 1,
       "recovery_event_name": "schedule",
-      "recovered_at": "2026-07-16T08:20:53.303Z",
-      "source_as_of": "2026-07-27"
+      "recovered_at": "2026-07-28T08:43:16.742Z",
+      "source_as_of": "2026-07-28"
     },
     {
       "key": "losers.json",
-      "recovered_from_run_id": "29417722033",
-      "recovery_run_id": "29483031623",
+      "recovered_from_run_id": "30285019322",
+      "recovery_run_id": "30343230102",
       "recovery_run_attempt": 1,
       "recovery_event_name": "schedule",
-      "recovered_at": "2026-07-16T08:20:53.303Z",
-      "source_as_of": "2026-07-27"
+      "recovered_at": "2026-07-28T08:43:16.742Z",
+      "source_as_of": "2026-07-28"
     },
     {
       "key": "treasury.json",
-      "recovered_from_run_id": "29417722033",
-      "recovery_run_id": "29483031623",
+      "recovered_from_run_id": "30286602995",
+      "recovery_run_id": "30343230102",
       "recovery_run_attempt": 1,
       "recovery_event_name": "schedule",
-      "recovered_at": "2026-07-16T08:20:53.303Z",
-      "source_as_of": "2026-07-27"
+      "recovered_at": "2026-07-28T08:43:16.742Z",
+      "source_as_of": "2026-07-28"
     },
     {
       "key": "currency.json",
-      "recovered_from_run_id": "29417722033",
-      "recovery_run_id": "29483031623",
+      "recovered_from_run_id": "30285019322",
+      "recovery_run_id": "30343230102",
       "recovery_run_attempt": 1,
       "recovery_event_name": "schedule",
-      "recovered_at": "2026-07-16T08:20:53.303Z",
-      "source_as_of": "2026-07-27"
+      "recovered_at": "2026-07-28T08:43:16.742Z",
+      "source_as_of": "2026-07-28"
     },
     {
       "key": "mortgage.json",
-      "recovered_from_run_id": "29417722033",
-      "recovery_run_id": "29483031623",
+      "recovered_from_run_id": "30285019322",
+      "recovery_run_id": "30343230102",
       "recovery_run_attempt": 1,
       "recovery_event_name": "schedule",
-      "recovered_at": "2026-07-16T08:20:53.303Z",
-      "source_as_of": "2026-07-27"
+      "recovered_at": "2026-07-28T08:43:16.742Z",
+      "source_as_of": "2026-07-28"
     }
   ],
-  "promotion_deferral_details": [
-    {
-      "key": "gainers.json",
-      "run_id": "30286602995",
-      "run_attempt": 1,
-      "event_name": "workflow_dispatch",
-      "observed_at": "2026-07-27T16:53:43.288Z",
-      "source_as_of": "2026-07-27",
-      "reason": "recovery_requires_schedule"
-    },
-    {
-      "key": "losers.json",
-      "run_id": "30286602995",
-      "run_attempt": 1,
-      "event_name": "workflow_dispatch",
-      "observed_at": "2026-07-27T16:53:43.288Z",
-      "source_as_of": "2026-07-27",
-      "reason": "recovery_requires_schedule"
-    },
-    {
-      "key": "currency.json",
-      "run_id": "30286602995",
-      "run_attempt": 1,
-      "event_name": "workflow_dispatch",
-      "observed_at": "2026-07-27T16:53:43.288Z",
-      "source_as_of": "2026-07-27",
-      "reason": "recovery_requires_schedule"
-    },
-    {
-      "key": "mortgage.json",
-      "run_id": "30286602995",
-      "run_attempt": 1,
-      "event_name": "workflow_dispatch",
-      "observed_at": "2026-07-27T16:53:43.288Z",
-      "source_as_of": "2026-07-27",
-      "reason": "recovery_requires_schedule"
-    }
-  ],
+  "promotion_deferral_details": [],
   "current_attempt": {
-    "run_id": "30286602995",
+    "run_id": "30343230102",
     "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-07-27T16:53:43.288Z",
+    "event_name": "schedule",
+    "observed_at": "2026-07-28T08:43:16.742Z",
     "attempted": 5,
-    "successes": 0,
-    "failed": 1,
-    "failed_keys": [
-      "treasury.json"
-    ],
-    "promotion_deferrals": 4,
-    "promotion_deferral_keys": [
-      "gainers.json",
-      "losers.json",
-      "currency.json",
-      "mortgage.json"
-    ]
+    "successes": 5,
+    "failed": 0,
+    "failed_keys": [],
+    "promotion_deferrals": 0,
+    "promotion_deferral_keys": []
   }
 }

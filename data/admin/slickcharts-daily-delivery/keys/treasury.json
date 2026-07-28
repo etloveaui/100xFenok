@@ -2,34 +2,36 @@
   "schema_version": "producer-lkg-key-state/v1",
   "lane_id": "slickcharts_daily_delivery",
   "key": "treasury.json",
-  "updated_at": "2026-07-27T16:53:43.288Z",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "updated_at": "2026-07-28T08:43:16.742Z",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "current": {
-    "path": "data/admin/slickcharts-daily-delivery/lkg/treasury.json",
-    "payload_sha256": "85eac2477659276b0b12b370f9f137416ba1aaa65649bee8ff95b172e5d7cbb3",
-    "source_as_of": "2026-07-27"
+    "path": "data/slickcharts/treasury.json",
+    "payload_sha256": "c62eb8ad1eb8c43ab6edddae871a559eb35cf3a413ac67f68acb373a1ab51496",
+    "source_as_of": "2026-07-28"
   },
+  "canonical_ref": "data/slickcharts/treasury.json",
   "lkg": {
     "path": "data/admin/slickcharts-daily-delivery/lkg/treasury.json",
     "payload_sha256": "85eac2477659276b0b12b370f9f137416ba1aaa65649bee8ff95b172e5d7cbb3",
     "source_as_of": "2026-07-27"
   },
-  "canonical_ref": "data/slickcharts/treasury.json",
-  "latest_failure": {
+  "latest_failure": null,
+  "recovered_from_run_id": "30286602995",
+  "recovery_run_id": "30343230102",
+  "recovery_run_attempt": 1,
+  "recovery_event_name": "schedule",
+  "recovered_at": "2026-07-28T08:43:16.742Z",
+  "last_run_id": "30343230102",
+  "last_run_attempt": 1,
+  "last_event_name": "schedule",
+  "promotion_contract": "legacy_source_marker/v1",
+  "last_recovered_failure": {
     "run_id": "30286602995",
     "run_attempt": 1,
     "event_name": "workflow_dispatch",
     "observed_at": "2026-07-27T16:53:43.288Z",
     "failure_kind": "controlled",
     "error": "owner-approved workflow_dispatch chaos injection"
-  },
-  "recovered_from_run_id": "29417722033",
-  "recovery_run_id": "29483031623",
-  "recovery_run_attempt": 1,
-  "recovery_event_name": "schedule",
-  "recovered_at": "2026-07-16T08:20:53.303Z",
-  "last_run_id": "30286602995",
-  "last_run_attempt": 1,
-  "last_event_name": "workflow_dispatch"
+  }
 }
