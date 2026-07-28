@@ -1,36 +1,39 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "yahoo_private_options",
-  "updated_at": "2026-07-27T14:58:09.603Z",
-  "retry_set": [
-    "availability"
-  ],
+  "updated_at": "2026-07-28T04:34:53.087Z",
+  "retry_set": [],
   "items": {
     "availability": {
       "key": "availability",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/yahoo_private_options/lkg/availability.json",
-        "payload_sha256": "acf679d69ff789a28da81f0ab2b96ce78a8ddee1be8e47a5d0944456a17091ac",
-        "source_as_of": "2026-07-25T04:41:45.391Z"
+        "path": "data/computed/fenok_yahoo_private_options_availability.json",
+        "payload_sha256": "d41bc3e8cc6ac2ffdbadae4d8065bf4c3f6ce7419b64240f8bfdb360e1b20a97",
+        "source_as_of": "2026-07-28T04:34:53.087Z"
       },
-      "updated_at": "2026-07-27T14:58:09.603Z",
+      "updated_at": "2026-07-28T04:34:53.087Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "b9e9980fd6e95ac404c006d6b62741e4281ea471881b1f97aa84c69ad9b8a305",
-        "source_as_of": "2026-07-25T04:41:45.391Z",
-        "run_id": "30144031071",
+        "payload_sha256": "2c05690d49feb54a224b050a4915b71285d3a1ef6e5f4e34cb63e24385c7932e",
+        "source_as_of": "2026-07-28T04:34:53.087Z",
+        "run_id": "30328744869",
         "run_attempt": 1,
-        "observed_at": "2026-07-25T04:41:45.391Z"
+        "observed_at": "2026-07-28T04:34:53.087Z"
       },
       "lkg": {
         "path": "data/admin/yahoo_private_options/lkg/availability.json",
         "payload_sha256": "acf679d69ff789a28da81f0ab2b96ce78a8ddee1be8e47a5d0944456a17091ac",
         "source_as_of": "2026-07-25T04:41:45.391Z"
       },
-      "latest_failure": {
+      "recovered_from_run_id": "30277571998",
+      "recovered_at": "2026-07-28T04:34:53.087Z",
+      "recovery_run_id": "30328744869",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "last_recovered_failure": {
         "run_id": "30277571998",
         "run_attempt": 1,
         "observed_at": "2026-07-27T14:58:09.603Z",
