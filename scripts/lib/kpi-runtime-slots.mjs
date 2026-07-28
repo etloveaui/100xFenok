@@ -1,4 +1,8 @@
-import { TRACKED_CRONS } from "./kpi-contract-constants.mjs";
+import {
+  CADENCE,
+  SOURCE_WORKFLOW_CRONS,
+  TRACKED_CRONS,
+} from "./kpi-contract-constants.mjs";
 
 const DEFERRAL_KEYS = Object.freeze([
   "declared_at",
@@ -132,7 +136,12 @@ function recoveryForMiss(miss, history, satisfied) {
       return { entry, recovered_by: "scheduled_slot" };
     }
 
-    if (entry?.slot_key == null
+    const canonicalDispatchSource = isCanonicalTrackedSlot(parsedRecovery)
+      && SOURCE_WORKFLOW_CRONS[parsedRecovery.workflow_file]?.includes(parsedRecovery.cron)
+      && builtAtMs >= parsedRecovery.occurrence_ms
+      && builtAtMs - parsedRecovery.occurrence_ms <= CADENCE.slot_grace_minutes * 60000
+      && satisfied.has(entry.slot_key);
+    if ((entry?.slot_key == null || canonicalDispatchSource)
       && FULL_SNAPSHOT_RECOVERY_WORKFLOWS[parsedMiss.workflow_file] === entry.workflow) {
       return { entry, recovered_by: "dispatch_snapshot" };
     }

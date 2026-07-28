@@ -4084,6 +4084,38 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   assert.ok(dispatchWarnings.some((message) => /dispatch_snapshot:1/.test(message)),
     "checker warning names dispatch recovery evidence");
 
+  const pathBMiss = "update-manifest.yml:30 2 * * *@2026-07-14T02:30Z";
+  const pathBSlot = "fenok-edge-daily.yml:30 0 * * 2-6@2026-07-14T00:30Z";
+  const pathBRuntime = structuredClone(runtime);
+  pathBRuntime.slots.missed_slot_keys = [pathBMiss];
+  pathBRuntime.slots.satisfied_slot_keys = [pathBSlot];
+  pathBRuntime.successful_snapshot_history = [{
+    built_at: "2026-07-14T05:00:00.000Z", slot_key: pathBSlot, run_id: "path-b-recovery",
+    run_attempt: 1, workflow: "Update Manifest", status: "ready", duration_ms: 30,
+  }];
+  assert.equal(classifyRuntimeSlots(pathBRuntime).status, "degraded",
+    "a ready attempt-1 Path B full snapshot recovers the Update Manifest miss");
+  assert.deepEqual(classifyRuntimeSlotRecoveries(pathBRuntime), [{
+    missed_slot_key: pathBMiss,
+    recovered_by: "dispatch_snapshot",
+  }], "Path B keeps its source slot while the full snapshot is labeled as dispatch recovery");
+  pathBRuntime.slots.satisfied_slot_keys = [];
+  assert.equal(classifyRuntimeSlots(pathBRuntime).status, "blocked",
+    "an unsatisfied source slot cannot forge Path B full-snapshot recovery");
+  pathBRuntime.slots.satisfied_slot_keys = [pathBSlot];
+  pathBRuntime.successful_snapshot_history[0].built_at = "2026-07-14T06:30:00.001Z";
+  assert.equal(classifyRuntimeSlots(pathBRuntime).status, "blocked",
+    "a stale source-slot replay beyond envelope grace cannot forge Path B recovery");
+  const futurePathBSlot = "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-07-14T10:30Z";
+  pathBRuntime.slots.satisfied_slot_keys = [futurePathBSlot];
+  pathBRuntime.successful_snapshot_history[0] = {
+    ...pathBRuntime.successful_snapshot_history[0],
+    built_at: "2026-07-14T10:00:00.000Z",
+    slot_key: futurePathBSlot,
+  };
+  assert.equal(classifyRuntimeSlots(pathBRuntime).status, "blocked",
+    "a snapshot built before its claimed source slot cannot forge Path B recovery");
+
   dispatchRuntime.successful_snapshot_history[0].run_attempt = 2;
   assert.equal(classifyRuntimeSlots(dispatchRuntime).status, "blocked",
     "dispatch retries do not weaken the run_attempt===1 bar");
