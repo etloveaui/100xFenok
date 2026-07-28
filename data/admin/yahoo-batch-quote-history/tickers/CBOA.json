@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-07-26T23:04:29Z",
     "history_as_of": "2026-07-24",
-    "path": "data/yf/finance/CBOA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CBOA.json",
     "payload_sha256": "ae971541fb0e23afeb5c918cc1246e6680c4273d4ed8462e9b06a96548db7e19",
     "quote_as_of": "2026-07-17T18:29:30Z",
     "source_as_of": "2026-07-17T18:29:30Z"
@@ -38,6 +38,14 @@
     "schedule": "0 22 * * 0",
     "shard": "0/6"
   },
+  "lkg": {
+    "fetched_at": "2026-07-26T23:04:29Z",
+    "history_as_of": "2026-07-24",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CBOA.json",
+    "payload_sha256": "ae971541fb0e23afeb5c918cc1246e6680c4273d4ed8462e9b06a96548db7e19",
+    "quote_as_of": "2026-07-17T18:29:30Z",
+    "source_as_of": "2026-07-17T18:29:30Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-17T18:29:30Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-07-28T00:14:11Z",
+    "classified_run_id": "30316637722",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "CBOA holds LKG because Yahoo source date 2026-07-17T18:29:30Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-17T18:29:30Z"
+  },
   "ticker": "CBOA",
-  "updated_at": "2026-07-26T23:02:52Z"
+  "updated_at": "2026-07-28T00:14:11Z"
 }

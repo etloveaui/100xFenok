@@ -69,13 +69,12 @@
   "current": {
     "fetched_at": "2026-07-18T00:44:33Z",
     "history_as_of": "2026-07-17",
-    "path": "data/yf/finance/KRWX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/KRWX.json",
     "payload_sha256": "2c017b5ba4d5caeb0c4ce5c6cb01724fae34cde088794ed5e5f248e10faa00b5",
     "quote_as_of": "2026-07-17T19:37:18Z",
     "source_as_of": "2026-07-17"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -92,12 +91,12 @@
     "shard": "1/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T19:29:59Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-18T00:44:33Z",
+    "history_as_of": "2026-07-17",
     "path": "data/admin/yahoo-batch-quote-history/lkg/KRWX.json",
-    "payload_sha256": "15e2feb786e0864266bb741cd391a45e439114d9ed6dffe88f0e8209c4d4fa22",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "2c017b5ba4d5caeb0c4ce5c6cb01724fae34cde088794ed5e5f248e10faa00b5",
+    "quote_as_of": "2026-07-17T19:37:18Z",
+    "source_as_of": "2026-07-17"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -111,19 +110,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-17"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-28T00:14:11Z",
+    "classified_run_id": "30316637722",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "KRWX holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "KRWX holds LKG because Yahoo source date 2026-07-17 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-17"
   },
   "ticker": "KRWX",
-  "updated_at": "2026-07-18T00:42:07Z"
+  "updated_at": "2026-07-28T00:14:11Z"
 }

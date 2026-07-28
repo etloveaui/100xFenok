@@ -322,6 +322,39 @@
       "run_id": "30135937225",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-28T00:14:11Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "30316637722",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -342,7 +375,7 @@
     "failures": [
       {
         "attempt": 1,
-        "error": "KeyError: 'exchangeTimezoneName'",
+        "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       },
       {
@@ -351,7 +384,7 @@
       },
       {
         "attempt": 2,
-        "error": "KeyError: 'exchangeTimezoneName'",
+        "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       },
       {
@@ -361,10 +394,10 @@
     ],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-25T00:24:00Z",
+    "observed_at": "2026-07-28T00:14:11Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "30135937225",
+    "run_id": "30316637722",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -377,7 +410,7 @@
     "failures": [
       {
         "attempt": 1,
-        "error": "KeyError: 'exchangeTimezoneName'",
+        "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       },
       {
@@ -386,7 +419,7 @@
       },
       {
         "attempt": 2,
-        "error": "KeyError: 'exchangeTimezoneName'",
+        "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       },
       {
@@ -395,9 +428,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-07-25T00:24:00Z",
+    "observed_at": "2026-07-28T00:14:11Z",
     "run_attempt": 1,
-    "run_id": "30135937225"
+    "run_id": "30316637722"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:49:09Z",
@@ -421,5 +454,5 @@
     "source_as_of": "2026-05-06"
   },
   "ticker": "CTRA",
-  "updated_at": "2026-07-25T00:24:00Z"
+  "updated_at": "2026-07-28T00:14:11Z"
 }

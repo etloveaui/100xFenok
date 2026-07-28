@@ -108,13 +108,12 @@
   "current": {
     "fetched_at": "2026-07-18T00:49:28Z",
     "history_as_of": "2026-07-17",
-    "path": "data/yf/finance/XNDX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/XNDX.json",
     "payload_sha256": "050830eb506b742d86d6fcf1017b25f449bbae97eaa2bed5291c06d8c90dfdfe",
     "quote_as_of": "2026-07-17T19:59:59Z",
     "source_as_of": "2026-07-17"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
@@ -131,12 +130,12 @@
     "shard": "4/5"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T16:20:53Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-07-18T00:49:28Z",
+    "history_as_of": "2026-07-17",
     "path": "data/admin/yahoo-batch-quote-history/lkg/XNDX.json",
-    "payload_sha256": "a5c891b2220fb3e1ffda10f5ede107186bc7f1feb0ec5b5e756fb605ee6b1fd3",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "050830eb506b742d86d6fcf1017b25f449bbae97eaa2bed5291c06d8c90dfdfe",
+    "quote_as_of": "2026-07-17T19:59:59Z",
+    "source_as_of": "2026-07-17"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -150,19 +149,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-17"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-28T00:14:11Z",
+    "classified_run_id": "30316637722",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "XNDX holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "XNDX holds LKG because Yahoo source date 2026-07-17 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-07-17"
   },
   "ticker": "XNDX",
-  "updated_at": "2026-07-18T00:52:19Z"
+  "updated_at": "2026-07-28T00:14:11Z"
 }
