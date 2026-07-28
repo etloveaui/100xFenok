@@ -7,6 +7,11 @@ on:
     - cron: '0 6 1-7 * 1'
   workflow_dispatch:
     inputs:
+      persistence_migration_only:
+        description: 'Metadata-only bounded-persistence migration; preserves data and recovery state'
+        required: false
+        default: false
+        type: boolean
       controlled_failure_key:
         description: 'Dispatch-only chaos key (latest or an owned quarter)'
         required: false
@@ -39,6 +44,7 @@ jobs:
       - name: Fetch FDIC Tier1 data and persist attempt evidence
         id: fetch_fdic
         env:
+          INPUT_PERSISTENCE_MIGRATION_ONLY: ${{ github.event.inputs.persistence_migration_only || 'false' }}
           INPUT_CONTROLLED_FAILURE_KEY: ${{ github.event.inputs.controlled_failure_key || '' }}
         run: node scripts/fetch-fdic-tier1.mjs
 

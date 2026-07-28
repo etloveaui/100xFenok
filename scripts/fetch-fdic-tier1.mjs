@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -213,6 +214,102 @@ function validFdicDocument(document) {
     && available === retained + pruned;
 }
 
+export function migrateFdicPersistenceDocument(document) {
+  if (!validFdicDocument(document)) throw new Error("FDIC persistence migration source is invalid");
+  const hasPolicy = Object.prototype.hasOwnProperty.call(document, "persistence_policy");
+  const hasState = Object.prototype.hasOwnProperty.call(document, "persistence_state");
+  if (hasPolicy || hasState) {
+    if (!hasPolicy || !hasState || !exactFdicPersistencePolicy(document.persistence_policy)) {
+      throw new Error("FDIC persistence migration source has partial or invalid metadata");
+    }
+    return { changed: false, document: structuredClone(document) };
+  }
+
+  const byQuarter = new Map();
+  const quarters = document.data.map((row) => {
+    const quarter = row.date.replaceAll("-", "");
+    if (byQuarter.has(quarter)) throw new Error(`duplicate FDIC quarter identifier: ${quarter}`);
+    byQuarter.set(quarter, structuredClone(row));
+    return quarter;
+  });
+  const retained = retainLatestQuarters(quarters);
+  const migrated = {
+    updated: document.updated,
+    source: document.source,
+    description: document.description,
+    persistence_policy: FDIC_PERSISTENCE_POLICY,
+    persistence_state: retained.persistence_state,
+    data: retained.quarters.map((quarter) => byQuarter.get(quarter)),
+  };
+  if (!validFdicDocument(migrated)) throw new Error("FDIC persistence migration output is invalid");
+  return { changed: true, document: migrated };
+}
+
+export function runFdicPersistenceMigration({
+  canonicalPath = path.join(REPO_ROOT, "data", "macro", "fdic-tier1.json"),
+  publicPath = path.join(REPO_ROOT, "100xfenok-next", "public", "data", "macro", "fdic-tier1.json"),
+  eventName = process.env.GITHUB_EVENT_NAME || "local",
+  read = (targetPath) => fs.readFileSync(targetPath),
+  write = (targetPath, bytes) => atomicWrite(targetPath, bytes),
+} = {}) {
+  if (eventName !== "workflow_dispatch") {
+    throw new Error("FDIC persistence migration requires workflow_dispatch");
+  }
+  const canonicalBefore = Buffer.from(read(canonicalPath));
+  const publicBefore = Buffer.from(read(publicPath));
+  if (!canonicalBefore.equals(publicBefore)) {
+    throw new Error("FDIC persistence migration requires byte-identical canonical and public mirrors");
+  }
+  let source;
+  try {
+    source = JSON.parse(canonicalBefore.toString("utf8"));
+  } catch {
+    throw new Error("FDIC persistence migration source is invalid JSON");
+  }
+  const migrated = migrateFdicPersistenceDocument(source);
+  if (!migrated.changed) {
+    return {
+      ok: true,
+      reason: "already_migrated",
+      updated: false,
+      quarters: migrated.document.data.length,
+      pruned: migrated.document.persistence_state.pruned_quarters,
+    };
+  }
+
+  const bytes = Buffer.from(`${JSON.stringify(migrated.document, null, 2)}\n`);
+  const targets = [
+    { targetPath: canonicalPath, before: canonicalBefore },
+    { targetPath: publicPath, before: publicBefore },
+  ];
+  try {
+    for (const target of targets) write(target.targetPath, bytes);
+  } catch (error) {
+    const rollbackErrors = [];
+    for (const target of targets) {
+      try {
+        atomicWrite(target.targetPath, target.before);
+      } catch (rollbackError) {
+        rollbackErrors.push(rollbackError);
+      }
+    }
+    if (rollbackErrors.length > 0) {
+      throw new AggregateError(
+        [error, ...rollbackErrors],
+        `FDIC persistence migration failed and rollback was incomplete: ${error.message}`,
+      );
+    }
+    throw error;
+  }
+  return {
+    ok: true,
+    reason: "migrated",
+    updated: true,
+    quarters: migrated.document.data.length,
+    pruned: migrated.document.persistence_state.pruned_quarters,
+  };
+}
+
 function controlledFailureQuarter(controlledFailureKey, eventName, quarters) {
   if (!controlledFailureKey) return null;
   if (eventName !== "workflow_dispatch") throw new Error("controlled failure requires workflow_dispatch");
@@ -347,6 +444,15 @@ export async function runFdicTier1({
 }
 
 async function main() {
+  if ((process.env.INPUT_PERSISTENCE_MIGRATION_ONLY || "").trim().toLowerCase() === "true") {
+    const result = runFdicPersistenceMigration();
+    console.log(
+      result.updated
+        ? `Migrated FDIC persistence metadata for ${result.quarters} quarters; pruned ${result.pruned}`
+        : `FDIC persistence metadata already current for ${result.quarters} quarters`,
+    );
+    return;
+  }
   const result = await runFdicTier1();
   if (!result.ok) {
     const prefix = result.degraded ? "[degraded]" : "[corrupt]";

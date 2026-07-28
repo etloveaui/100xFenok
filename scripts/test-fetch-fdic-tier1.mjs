@@ -11,7 +11,9 @@ import { validateAttemptEvidence, validateAttemptShard } from "./build-data-supp
 import {
   FDIC_PERSISTENCE_POLICY,
   MAX_QUARTERS,
+  migrateFdicPersistenceDocument,
   retainLatestQuarters,
+  runFdicPersistenceMigration,
   runFdicTier1,
 } from "./fetch-fdic-tier1.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
@@ -85,6 +87,103 @@ function assertValidShard(shard) {
     /duplicate FDIC quarter identifier/,
     "duplicates fail closed before oldest-quarter slicing",
   );
+}
+
+{
+  const quarterEnds = ["0331", "0630", "0930", "1231"];
+  const data = Array.from({ length: MAX_QUARTERS + 1 }, (_, index) => {
+    const year = 2006 + Math.floor(index / 4);
+    const suffix = quarterEnds[index % 4];
+    return {
+      date: `${year}-${suffix.slice(0, 2)}-${suffix.slice(2)}`,
+      value: 12 + index / 100,
+      banks: 5_000 - index,
+    };
+  });
+  const legacy = {
+    updated: "2026-07-14T14:55:51.727Z",
+    source: "FDIC",
+    description: "Average Tier 1 Capital Ratio (RBC1AAJ)",
+    data,
+  };
+  const migrated = migrateFdicPersistenceDocument(legacy);
+  assert.equal(migrated.document.updated, legacy.updated, "metadata migration preserves acquisition time");
+  assert.equal(migrated.document.data.length, MAX_QUARTERS);
+  assert.equal(migrated.document.data[0].date, data[1].date, "oldest quarter is evicted");
+  assert.deepEqual(migrated.document.persistence_policy, FDIC_PERSISTENCE_POLICY);
+  assert.deepEqual(migrated.document.persistence_state, {
+    available_quarters: MAX_QUARTERS + 1,
+    retained_quarters: MAX_QUARTERS,
+    pruned_quarters: 1,
+  });
+  const migratedAgain = migrateFdicPersistenceDocument(migrated.document);
+  assert.equal(migratedAgain.changed, false, "metadata migration is idempotent");
+  assert.deepEqual(migratedAgain.document, migrated.document);
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fdic-tier1-persistence-migration-"));
+  const paths = makePaths(root);
+  fs.mkdirSync(path.dirname(paths.canonicalPath), { recursive: true });
+  fs.mkdirSync(path.dirname(paths.publicPath), { recursive: true });
+  const legacy = {
+    updated: "2026-07-14T14:55:51.727Z",
+    source: "FDIC",
+    description: "Average Tier 1 Capital Ratio (RBC1AAJ)",
+    data: [
+      { date: "2025-12-31", value: 13, banks: 2 },
+      { date: "2026-03-31", value: 15, banks: 2 },
+    ],
+  };
+  const legacyBytes = `${JSON.stringify(legacy, null, 2)}\n`;
+  fs.writeFileSync(paths.canonicalPath, legacyBytes);
+  fs.writeFileSync(paths.publicPath, legacyBytes);
+
+  assert.throws(
+    () => runFdicPersistenceMigration({ ...paths, eventName: "schedule" }),
+    /workflow_dispatch/,
+    "metadata migration is explicit dispatch-only maintenance",
+  );
+  const result = runFdicPersistenceMigration({ ...paths, eventName: "workflow_dispatch" });
+  assert.equal(result.ok, true);
+  assert.equal(result.updated, true);
+  assert.deepEqual(fs.readFileSync(paths.canonicalPath), fs.readFileSync(paths.publicPath));
+  const migrated = readJson(paths.canonicalPath);
+  assert.deepEqual(migrated.data, legacy.data, "in-bound current data is byte-value preserved");
+  assert.deepEqual(migrated.persistence_policy, FDIC_PERSISTENCE_POLICY);
+
+  const idempotent = runFdicPersistenceMigration({ ...paths, eventName: "workflow_dispatch" });
+  assert.equal(idempotent.updated, false);
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fdic-tier1-persistence-migration-rollback-"));
+  const paths = makePaths(root);
+  fs.mkdirSync(path.dirname(paths.canonicalPath), { recursive: true });
+  fs.mkdirSync(path.dirname(paths.publicPath), { recursive: true });
+  const canonicalBytes = `${JSON.stringify({
+    updated: "2026-07-14T14:55:51.727Z",
+    source: "FDIC",
+    description: "Average Tier 1 Capital Ratio (RBC1AAJ)",
+    data: [{ date: "2026-03-31", value: 15, banks: 2 }],
+  }, null, 2)}\n`;
+  fs.writeFileSync(paths.canonicalPath, canonicalBytes);
+  fs.writeFileSync(paths.publicPath, canonicalBytes);
+  let writes = 0;
+  assert.throws(
+    () => runFdicPersistenceMigration({
+      ...paths,
+      eventName: "workflow_dispatch",
+      write: (targetPath, bytes) => {
+        writes += 1;
+        if (writes === 2) throw new Error("injected public write failure");
+        fs.writeFileSync(targetPath, bytes);
+      },
+    }),
+    /injected public write failure/,
+  );
+  assert.equal(fs.readFileSync(paths.canonicalPath, "utf8"), canonicalBytes, "canonical rollback is byte-identical");
+  assert.equal(fs.readFileSync(paths.publicPath, "utf8"), canonicalBytes, "public rollback is byte-identical");
 }
 
 {
@@ -416,6 +515,8 @@ function assertValidShard(shard) {
   assert.match(workflow, /detection-attempts\/fdic_tier1\.json/);
   assert.match(workflow, /controlled_failure_key/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE_KEY/);
+  assert.match(workflow, /persistence_migration_only:/);
+  assert.match(workflow, /INPUT_PERSISTENCE_MIGRATION_ONLY:/);
   assert.match(workflow, /data\/admin\/fdic_tier1\/index\.json/);
   assert.match(workflow, /data\/admin\/fdic_tier1\/lkg\/fdic_tier1\.json/);
   assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
