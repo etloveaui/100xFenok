@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 824,
+      "natural": true,
+      "observed_at": "2026-07-28T23:07:58Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30406712544",
+      "schedule": "0 22 * * 2",
+      "shard": "2/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T00:01:37Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/KAUG.json",
-    "payload_sha256": "80e4258305ee3a7c20747f120775f1b12bafb2a4d825650d7f13e367da3c62d5",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-07-28T23:09:07Z",
+    "history_as_of": "2026-07-28",
+    "path": "data/yf/finance/KAUG.json",
+    "payload_sha256": "d1886924a0ba15c5f33b109f388023f6e436eed495bd78e321b276c4e40c1100",
+    "quote_as_of": "2026-07-28T19:55:20Z",
+    "source_as_of": "2026-07-28"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 824,
+    "natural": true,
+    "observed_at": "2026-07-28T23:07:58Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30406712544",
+    "schedule": "0 22 * * 2",
+    "shard": "2/6"
   },
   "lkg": {
     "fetched_at": "2026-06-30T00:01:37Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-28",
+    "observed_at": "2026-07-28T23:07:58Z",
+    "payload_sha256": "c3f6a1f666783aca4b29b3148a2d058b1944effb0b443c489efdc8e3d3c8cfb7",
+    "quote_as_of": "2026-07-28T19:55:20Z",
+    "run_attempt": 1,
+    "run_id": "30406712544",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-28"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "KAUG",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-28T23:07:58Z"
 }

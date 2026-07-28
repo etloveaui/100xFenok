@@ -12,13 +12,26 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 486,
+      "natural": true,
+      "observed_at": "2026-07-28T23:07:58Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30406712544",
+      "schedule": "0 22 * * 2",
+      "shard": "2/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T09:22:19Z",
-    "history_as_of": "2026-07-08",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/JADB.json",
-    "payload_sha256": "cb60203012881066898dac528834aa8250cf2b7e80c0f5d2f1d5ca8f4f160fc4",
+    "fetched_at": "2026-07-28T23:08:37Z",
+    "history_as_of": "2026-07-27",
+    "path": "data/yf/finance/JADB.json",
+    "payload_sha256": "bae64a9cf26df729359fcbfd670a5baede0b479f8b24183d0a734507cf559fc8",
     "quote_as_of": "2026-06-29T16:05:02Z",
     "source_as_of": "2026-06-29T16:05:02Z"
   },
@@ -26,17 +39,17 @@
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 486,
+    "natural": true,
+    "observed_at": "2026-07-28T23:07:58Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30406712544",
+    "schedule": "0 22 * * 2",
+    "shard": "2/6"
   },
   "lkg": {
     "fetched_at": "2026-07-09T09:22:19Z",
@@ -46,8 +59,20 @@
     "quote_as_of": "2026-06-29T16:05:02Z",
     "source_as_of": "2026-06-29T16:05:02Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-27",
+    "observed_at": "2026-07-28T23:07:58Z",
+    "payload_sha256": "64fd5790ed6a76eb5382f8398499072cd07c88f61fd09f44fb635f6d3270e6eb",
+    "quote_as_of": "2026-06-29T16:05:02Z",
+    "run_attempt": 1,
+    "run_id": "30406712544",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-06-29T16:05:02Z"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-29T16:05:02Z"
   },
   "ticker": "JADB",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-28T23:07:58Z"
 }

@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 619,
+      "natural": true,
+      "observed_at": "2026-07-28T23:07:58Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30406712544",
+      "schedule": "0 22 * * 2",
+      "shard": "2/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T00:01:43Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/KCCA.json",
-    "payload_sha256": "a4cb2cf9ba94331fb146e4f7d9a777c799a6983e3a20b8cc9d7d1045d50cc2b2",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-07-28T23:09:11Z",
+    "history_as_of": "2026-07-28",
+    "path": "data/yf/finance/KCCA.json",
+    "payload_sha256": "26bd85cc69d00da7f376a52c70d4a4755694d90ac90f2134ebe577a7da2f34e0",
+    "quote_as_of": "2026-07-28T20:00:00Z",
+    "source_as_of": "2026-07-28"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 619,
+    "natural": true,
+    "observed_at": "2026-07-28T23:07:58Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30406712544",
+    "schedule": "0 22 * * 2",
+    "shard": "2/6"
   },
   "lkg": {
     "fetched_at": "2026-06-30T00:01:43Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-28",
+    "observed_at": "2026-07-28T23:07:58Z",
+    "payload_sha256": "1a9d964e51d859b068c84e82581f0b8ecefb0675736a4ff78f0b4b9ced6c7bd8",
+    "quote_as_of": "2026-07-28T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "30406712544",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-28"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "KCCA",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-28T23:07:58Z"
 }
