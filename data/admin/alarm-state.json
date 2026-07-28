@@ -1,6 +1,6 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-07-28T06:21:12.821Z",
+  "generated_at": "2026-07-28T11:56:05.893Z",
   "status": "open",
   "open_incident_count": 2,
   "open_incidents": [
@@ -174,10 +174,8 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "overdue",
-      "cadence_evidence": [
-        "suspected_skip"
-      ]
+      "cadence_status": "not_due",
+      "cadence_evidence": []
     },
     {
       "file": "fetch-fred-yardeni.yml",
@@ -264,8 +262,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "suspected_skip"
+      ]
     },
     {
       "file": "fetch-yf-finance.yml",
@@ -406,9 +406,9 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "30334451804",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30334451804",
-    "observed_at": "2026-07-28T06:21:12.821Z",
+    "run_id": "30356708436",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30356708436",
+    "observed_at": "2026-07-28T11:56:05.893Z",
     "event": "workflow_run",
     "workflows": [
       "slickcharts-history.yml",
