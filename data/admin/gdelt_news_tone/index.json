@@ -1,24 +1,22 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "gdelt_news_tone",
-  "updated_at": "2026-07-27T16:51:10.375Z",
-  "retry_set": [
-    "news_tone_proxy"
-  ],
+  "updated_at": "2026-07-28T16:23:19.621Z",
+  "retry_set": [],
   "items": {
     "news_tone_proxy": {
       "key": "news_tone_proxy",
-      "resolution_state": "unavailable",
-      "retry": true,
-      "updated_at": "2026-07-27T16:51:10.375Z",
+      "resolution_state": "fresh_primary",
+      "retry": false,
+      "updated_at": "2026-07-28T16:23:19.621Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "cec7678162b97a6585eba132bc644656b498e283f3eeea283f65bacd29685a62",
-        "source_as_of": "2026-07-23T14:45:00.000Z",
-        "run_id": "30208843002",
+        "payload_sha256": "7f0bd425bc9f4a24a5a5b0d19762789864a6d89c12ccd9c15343d55f934e5ff8",
+        "source_as_of": "2026-07-28T16:17:00.000Z",
+        "run_id": "30377923524",
         "run_attempt": 1,
-        "observed_at": "2026-07-26T15:45:17.139Z"
+        "observed_at": "2026-07-28T16:23:19.621Z"
       },
       "last_recovered_failure": {
         "run_id": "30164248573",
@@ -26,11 +24,10 @@
         "observed_at": "2026-07-25T15:53:14.450Z",
         "reason": "unexpected_error"
       },
-      "latest_failure": {
-        "run_id": "30286408332",
-        "run_attempt": 1,
-        "observed_at": "2026-07-27T16:51:10.375Z",
-        "reason": "rate_limited"
+      "current": {
+        "path": "data/computed/fenok_news_tone_proxy.json",
+        "payload_sha256": "c4c185f6ff0f2a82147f1b0dcbe03b7183f1fa7f025c5c91b9f2aa9759ecf98f",
+        "source_as_of": "2026-07-28T16:17:00.000Z"
       }
     }
   }
