@@ -78,6 +78,9 @@ const LEGACY_TOC_ROOT = "https://storage.googleapis.com/data.gdeltproject.org/gd
 const LEGACY_TOC_LOOKBACK_HOURS = 24;
 const LEGACY_TOC_FETCH_CONCURRENCY = 20;
 const MAX_LEGACY_TOC_BYTES = 2 * 1024 * 1024;
+const MAX_LEGACY_TOC_DECOMPRESSED_BYTES = 2 * 1024 * 1024;
+const MAX_LEGACY_TOC_TOTAL_DECOMPRESSED_BYTES = 64 * 1024 * 1024;
+const MAX_LEGACY_TOC_REQUESTS = 500;
 
 const POSITIVE_CUES = [
   "beat", "beats", "upgrade", "upgraded", "raises", "raised", "record", "strong",
@@ -440,6 +443,12 @@ function parseLegacyTocJsonl(text) {
   return records;
 }
 
+function decodeLegacyTocGzip(body) {
+  return zlib.gunzipSync(body, {
+    maxOutputLength: MAX_LEGACY_TOC_DECOMPRESSED_BYTES,
+  }).toString("utf8");
+}
+
 function hasAtLeastOneLegacyArticle(articlesByTicker, expectedTickers) {
   return expectedTickers.every((ticker) => (articlesByTicker[ticker] ?? []).length > 0);
 }
@@ -452,8 +461,9 @@ async function fetchLegacyTocRecords({
   concurrency = LEGACY_TOC_FETCH_CONCURRENCY,
   rawGetBufferFn = rawGetBuffer,
 }) {
-  const urls = legacyTocCandidateUrls(observedAt, lookbackHours);
+  const urls = legacyTocCandidateUrls(observedAt, lookbackHours).slice(0, MAX_LEGACY_TOC_REQUESTS);
   const records = [];
+  let totalDecompressedBytes = 0;
   const batchSize = Math.max(1, Number(concurrency) || LEGACY_TOC_FETCH_CONCURRENCY);
   for (let index = 0; index < urls.length; index += batchSize) {
     const batch = urls.slice(index, index + batchSize);
@@ -461,12 +471,20 @@ async function fetchLegacyTocRecords({
       try {
         const response = await rawGetBufferFn(url);
         if (response.statusCode !== 200) return [];
-        return parseLegacyTocJsonl(zlib.gunzipSync(response.body).toString("utf8"));
+        const text = decodeLegacyTocGzip(response.body);
+        return { byteLength: Buffer.byteLength(text), records: parseLegacyTocJsonl(text) };
       } catch {
         return [];
       }
     }));
-    for (const batchRecords of responses) records.push(...batchRecords);
+    for (const response of responses) {
+      if (Array.isArray(response)) continue;
+      if (totalDecompressedBytes + response.byteLength > MAX_LEGACY_TOC_TOTAL_DECOMPRESSED_BYTES) {
+        return records;
+      }
+      totalDecompressedBytes += response.byteLength;
+      records.push(...response.records);
+    }
     const articlesByTicker = collectLegacyTocArticles(records, { expectedTickers, maxRecords });
     if (hasAtLeastOneLegacyArticle(articlesByTicker, expectedTickers)) break;
   }
@@ -1061,7 +1079,11 @@ export async function runNewsTone({
   };
 
   let built = null;
-  if (result.reason === "rate_limited" && controlledFailure !== true && args.noFetch === false) {
+  const primaryRetryCount = Number(result.attempt.retry_count ?? 0);
+  if (result.reason === "rate_limited"
+    && primaryRetryCount >= 1
+    && controlledFailure !== true
+    && args.noFetch === false) {
     try {
       const fallbackBuilt = await fallbackFn({
         repoRoot: repoRootPath,
@@ -1077,10 +1099,11 @@ export async function runNewsTone({
           payload: "non_empty",
           assertions: [{ id: "articles_array", passed: true }],
         }));
-        const retryCount = Number(result.attempt.retry_count ?? 0);
-        result = retryCount > 0
-          ? withRetryEvidence(readyFallback, retryCount, Number(result.attempt.retry_wait_ms ?? 0))
-          : readyFallback;
+        result = withRetryEvidence(
+          readyFallback,
+          primaryRetryCount,
+          Number(result.attempt.retry_wait_ms ?? 0),
+        );
       }
     } catch {
       // The DOC API 429 remains the authoritative failure when the bounded
@@ -1212,6 +1235,7 @@ export {
   collectLegacyTocArticles,
   computeTone,
   cueCounts,
+  decodeLegacyTocGzip,
   fetchJsonWithRetry,
   GDELT_HISTORY_PERSISTENCE_POLICY,
   MAX_GDELT_HISTORY_SOURCE_DATES,

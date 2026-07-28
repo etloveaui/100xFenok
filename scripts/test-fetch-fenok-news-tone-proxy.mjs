@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import zlib from "node:zlib";
 import { fileURLToPath } from "node:url";
 
 import {
@@ -13,6 +14,7 @@ import {
   collectLegacyTocArticles,
   computeTone,
   cueCounts,
+  decodeLegacyTocGzip,
   GDELT_HISTORY_PERSISTENCE_POLICY,
   main,
   matchLegacyTocTickers,
@@ -83,6 +85,11 @@ assert.equal(articleSeenAt("20260628T123456Z"), "2026-06-28T12:34:56.000Z");
   });
   assert.equal(articles.NVDA.length, 1, "legacy TOC URLs are deduplicated and bounded per ticker");
   assert.equal(articles.NVDA[0].seendate, "2026-07-28T02:47:00.000Z");
+  assert.throws(
+    () => decodeLegacyTocGzip(zlib.gzipSync(Buffer.alloc(2 * 1024 * 1024 + 1))),
+    /larger than|output length|Cannot create/,
+    "a compressed TOC payload cannot expand beyond the per-file decompression ceiling",
+  );
 }
 
 {
@@ -194,6 +201,15 @@ const rateLimitedProbe = () => ({
   result: attemptResult("rate_limited", returnedTuple({
     httpStatus: 429,
     rateLimited: true,
+  })),
+});
+const rateLimitedAfterRetryProbe = () => ({
+  result: attemptResult("rate_limited", returnedTuple({
+    httpStatus: 429,
+    rateLimited: true,
+    retryReason: "rate_limited",
+    retryCount: 2,
+    retryWaitMs: 19500,
   })),
 });
 const transportProbe = () => ({ result: attemptResult("transport_error", threwTuple("transport")) });
@@ -356,7 +372,7 @@ for (const firstFailure of [
     runId: "gdelt-fallback-success",
     runAttempt: 1,
     eventName: "schedule",
-    observeAttemptFn: async () => rateLimitedProbe(),
+    observeAttemptFn: async () => rateLimitedAfterRetryProbe(),
     fallbackFn: async () => {
       calls.push("fallback");
       return { snapshot: fallbackSnapshot };
@@ -369,7 +385,35 @@ for (const firstFailure of [
   assert.equal(outcome.ok, true);
   assert.equal(outcome.reason, "ok");
   assert.equal(outcome.result.status, "ready");
+  assert.equal(outcome.result.attempt.http_status, 200);
+  assert.equal(outcome.result.attempt.retry_reason, "rate_limited",
+    "the ready fallback shard must preserve the initiating DOC API rate limit");
+  assert.equal(outcome.result.attempt.retry_count, 2);
+  assert.equal(outcome.result.attempt.retry_wait_ms, 19500);
   assert.deepEqual(calls, ["fallback"]);
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-no-retry-fallback-"));
+  let fallbackCalls = 0;
+  const outcome = await runNewsTone({
+    repoRoot: root,
+    args: { noWrite: true, noFetch: false, maxRecords: 25, retries: 0, retryBackoffMs: 1 },
+    observedAt: "2026-07-28T03:00:00.000Z",
+    runId: "gdelt-no-retry-fallback",
+    runAttempt: 1,
+    eventName: "schedule",
+    observeAttemptFn: async () => rateLimitedProbe(),
+    fallbackFn: async () => {
+      fallbackCalls += 1;
+      return { snapshot: toneSnapshot({ latestSourceAsOf: "2026-07-28T02:47:00.000Z" }) };
+    },
+  });
+  assert.equal(outcome.reason, "rate_limited");
+  assert.equal(outcome.result.attempt.http_status, 429);
+  assert.equal(outcome.result.attempt.rate_limited, true);
+  assert.equal(fallbackCalls, 0,
+    "a no-retry 429 cannot be overwritten by a fallback tuple with no primary-failure evidence");
 }
 
 {
@@ -386,7 +430,7 @@ for (const firstFailure of [
     runId: "gdelt-fallback-partial",
     runAttempt: 1,
     eventName: "schedule",
-    observeAttemptFn: async () => rateLimitedProbe(),
+    observeAttemptFn: async () => rateLimitedAfterRetryProbe(),
     fallbackFn: async () => ({ snapshot: partialSnapshot }),
   });
   assert.equal(outcome.ok, false);
