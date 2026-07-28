@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-07-28T04:24:31.622Z",
-  "classification_as_of": "2026-07-28T04:23:55.282Z",
+  "generated_at": "2026-07-28T05:41:41.321Z",
+  "classification_as_of": "2026-07-28T05:41:04.630Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -346,8 +346,8 @@
       "selection": "explicit full-primary daily_1y fetchable tickers; not the scored-ETF scheduled plan",
       "single_writer": true,
       "shard_size": 100,
-      "ticker_count": 190,
-      "shard_count": 2,
+      "ticker_count": 298,
+      "shard_count": 3,
       "shards": [
         {
           "shard": 1,
@@ -361,12 +361,22 @@
         },
         {
           "shard": 2,
-          "ticker_count": 90,
+          "ticker_count": 100,
           "inputs": {
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "0",
-            "etfs": "FLJJ,GBTC,GDXD,GDXU,GEVX,GLDI,GMMA,GOOW,GOOX,GPT,GRN,HDLB,HFSP,HODL,HOOW,HYSA,HYTI,IAUG,IBIC,IBIH,IBIJ,IBIK,IBIL,IBIT,IBUF,IDEC,IFEB,IFED,IJUN,IMAR,IMAY,INOV,ISEP,IVVW,IWDL,IWFL,IWML,IWMW,JAJL,JANU,JNEU,JULU,KAUG,KBAB,KBUF,KDEC,KFEB,KJUN,KMAR,KMAY,KMLI,KNOV,KPDD,KPRO,KSEP,KSPY,LAPR,LGCF,LJUL,LQTI,LTTI,MAGX,MAGY,MARU,MAYU,METW,MLPB,MLPD,MLPR,MSFW,MSFX,MSTW,MTUL,MVPL,MVRL,NAUG,NDEC,NFEB,NFLW,NJUN,NMAR,NMAY,NNOV,NSEP,NVBU,NVDW,OCTU,PFFL,PLTW,PMTL"
+            "etfs": "FLJJ,GBTC,GDXD,GDXU,GEVX,GLDI,GMMA,GOOW,GOOX,GPT,GRN,HDLB,HFSP,HODL,HOOW,HYSA,HYTI,IAUG,IBIC,IBIH,IBIJ,IBIK,IBIL,IBIT,IBUF,IDEC,IFEB,IFED,IJUN,IMAR,IMAY,INOV,ISEP,IVVW,IWDL,IWFL,IWML,IWMW,JAJL,JANU,JNEU,JULU,KAUG,KBAB,KBUF,KDEC,KFEB,KJUN,KMAR,KMAY,KMLI,KNOV,KPDD,KPRO,KSEP,KSPY,LAPR,LGCF,LJUL,LQTI,LTTI,MAGX,MAGY,MARU,MAYU,METW,MLPB,MLPD,MLPR,MSFW,MSFX,MSTW,MTUL,MVPL,MVRL,NAUG,NDEC,NFEB,NFLW,NJUN,NMAR,NMAY,NNOV,NSEP,NVBU,NVDW,OCTU,PFFL,PLTW,PMTL,PSTP,PWRD,QBF,QBTX,QBUF,QETH,QQDN,QTAP,QTJA,QTOC"
+          }
+        },
+        {
+          "shard": 3,
+          "ticker_count": 98,
+          "inputs": {
+            "history_gaps_only": "true",
+            "required_history_periods": "daily_1y",
+            "incremental_etf_limit": "0",
+            "etfs": "QULL,RBUF,RDTE,RGTU,RSJN,RYLG,SCDL,SCO,SDD,SEPU,SETH,SGOL,SHNY,SIVR,SKRE,SLON,SLV,SLVO,SMHB,SMU,SPBC,SPDN,SPUC,SPYU,SVXY,TAGS,TBIL,TBJL,TBLL,TEMT,TETH,TFJL,THY,TJAN,TJUL,TLTW,TNGY,TSL,TSLW,TSPY,TYA,UAPR,UAUG,UCIB,UDEC,UDN,UFEB,UFIV,UJAN,UJUL,UJUN,ULE,UMAY,UNOV,UOCT,USE,USEP,USG,USML,USOI,USVN,UTEN,UTHY,UTRE,UTWO,UTWY,UVXY,UX,UXRP,VIXM,VIXY,VXX,VXZ,VYLD,WAGN,WTPI,WXET,XBIL,XDIV,XDQQ,XDSQ,XDTE,XRPI,YBTC,YETH,ZALT,ZAPR,ZAUG,ZDEK,ZFEB,ZJAN,ZJUL,ZJUN,ZMAY,ZNOV,ZOCT,ZSC,ZSEP"
           }
         }
       ]
