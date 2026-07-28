@@ -8,9 +8,18 @@ import { fileURLToPath } from "node:url";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 import { buildLaneCommitManifest } from "./build-lane-commit-manifest.mjs";
 import { enumerateCommitCapableWorkflows } from "./check-lane-commit-manifest-inventory.mjs";
+import { canonicalJson } from "./lib/json-canonical.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const manifest = buildLaneCommitManifest(LANE_REGISTRY);
+const persistedManifest = JSON.parse(
+  fs.readFileSync(path.join(REPO_ROOT, "data/admin/lane-commit-manifest.json"), "utf8"),
+);
+assert.equal(
+  canonicalJson(persistedManifest),
+  canonicalJson(manifest),
+  "data/admin/lane-commit-manifest.json must match the canonical registry-derived manifest",
+);
 const UPDATE_MANIFEST_WORKFLOW = ".github/workflows/update-manifest.yml";
 const UPDATE_MANIFEST_CENTRAL_HELPER = "scripts/stage-update-manifest-central.mjs";
 const LANE_STAGE_HELPER = "scripts/stage-lane-manifest.sh";
