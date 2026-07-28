@@ -7,12 +7,15 @@ import { fileURLToPath } from "node:url";
 
 import {
   articleSeenAt,
+  buildLegacyTocSnapshot,
   buildSnapshotDocument,
   cleanCompanyName,
+  collectLegacyTocArticles,
   computeTone,
   cueCounts,
   GDELT_HISTORY_PERSISTENCE_POLICY,
   main,
+  matchLegacyTocTickers,
   MAX_GDELT_HISTORY_SOURCE_DATES,
   mergeHistory,
   observeAttempt,
@@ -34,6 +37,82 @@ assert.equal(queryForTicker("NVDA", "NVIDIA CORP"), '"NVIDIA"');
 assert.deepEqual(cueCounts("Analyst upgrades company after strong profit growth"), { positive: 3, negative: 0 });
 assert.deepEqual(cueCounts("Company falls after weak warning and lawsuit"), { positive: 0, negative: 4 });
 assert.equal(articleSeenAt("20260628T123456Z"), "2026-06-28T12:34:56.000Z");
+
+{
+  assert.deepEqual(
+    matchLegacyTocTickers({
+      title: "Reddit expands partnership with NVIDIA",
+      url: "https://example.test/reddit-nvidia",
+    }),
+    ["RDDT", "NVDA"],
+  );
+  assert.deepEqual(
+    matchLegacyTocTickers({
+      title: "Redditch manufacturer acquires microntroladores supplier",
+      url: "https://example.test/redditch-microntroladores",
+    }),
+    [],
+    "word-boundary aliases must not create false Reddit or Micron matches",
+  );
+}
+
+{
+  const records = [
+    {
+      date: "2026-07-28T02:47:00.000Z",
+      lang: "en",
+      title: "NVIDIA launches strong new platform",
+      url: "https://example.test/nvidia-launch",
+    },
+    {
+      date: "2026-07-28T02:47:00.000Z",
+      lang: "en",
+      title: "NVIDIA launches strong new platform",
+      url: "https://example.test/nvidia-launch",
+    },
+    {
+      date: "2026-07-28T02:31:00.000Z",
+      lang: "en",
+      title: "NVIDIA expands partnership",
+      url: "https://example.test/nvidia-partnership",
+    },
+  ];
+  const articles = collectLegacyTocArticles(records, {
+    expectedTickers: ["NVDA"],
+    maxRecords: 1,
+  });
+  assert.equal(articles.NVDA.length, 1, "legacy TOC URLs are deduplicated and bounded per ticker");
+  assert.equal(articles.NVDA[0].seendate, "2026-07-28T02:47:00.000Z");
+}
+
+{
+  const companyNames = {
+    DASH: "DoorDash",
+    UNH: "UnitedHealth",
+    PYPL: "PayPal",
+    RDDT: "Reddit",
+    COIN: "Coinbase",
+    MU: "Micron",
+    PLTR: "Palantir",
+    NVDA: "NVIDIA",
+  };
+  const records = Object.entries(companyNames).map(([ticker, company], index) => ({
+    date: `2026-07-28T0${Math.floor(index / 6)}:${String(10 + index).padStart(2, "0")}:00.000Z`,
+    lang: "en",
+    title: `${company} reports strong growth`,
+    url: `https://example.test/${ticker.toLowerCase()}-growth`,
+  }));
+  const snapshot = buildLegacyTocSnapshot({
+    records,
+    expectedTickers: REFERENCE_TICKERS,
+    companyNames,
+    generatedAt: "2026-07-28T03:00:00.000Z",
+  });
+  assert.equal(snapshot.status, "ready");
+  assert.equal(snapshot.coverage.complete, true);
+  assert.deepEqual(snapshot.rows.map((row) => row.ticker), REFERENCE_TICKERS);
+  assert(snapshot.rows.every((row) => row.source_families.includes("GDELT Web Legacy NGrams TOC")));
+}
 
 const positive = computeTone({
   ticker: "TEST",
@@ -264,6 +343,56 @@ for (const firstFailure of [
   assert.equal(observed.result.reason, "transport_error");
   assert.equal(calls, 0);
   assert.deepEqual(sleeps, []);
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-fallback-"));
+  const fallbackSnapshot = toneSnapshot({ latestSourceAsOf: "2026-07-28T02:47:00.000Z" });
+  const calls = [];
+  const outcome = await runNewsTone({
+    repoRoot: root,
+    args: { noWrite: true, noFetch: false, maxRecords: 25, retries: 0, retryBackoffMs: 1 },
+    observedAt: "2026-07-28T03:00:00.000Z",
+    runId: "gdelt-fallback-success",
+    runAttempt: 1,
+    eventName: "schedule",
+    observeAttemptFn: async () => rateLimitedProbe(),
+    fallbackFn: async () => {
+      calls.push("fallback");
+      return { snapshot: fallbackSnapshot };
+    },
+    buildFn: async () => {
+      calls.push("doc-build");
+      throw new Error("DOC builder must not run after fallback success");
+    },
+  });
+  assert.equal(outcome.ok, true);
+  assert.equal(outcome.reason, "ok");
+  assert.equal(outcome.result.status, "ready");
+  assert.deepEqual(calls, ["fallback"]);
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-gdelt-news-tone-fallback-partial-"));
+  const partialSnapshot = buildSnapshotDocument({
+    generatedAt: "2026-07-28T03:00:00.000Z",
+    expectedTickers: REFERENCE_TICKERS,
+    rows: [toneSnapshot({ latestSourceAsOf: "2026-07-28T02:47:00.000Z" }).rows.at(-1)],
+  });
+  const outcome = await runNewsTone({
+    repoRoot: root,
+    args: { noWrite: true, noFetch: false, maxRecords: 25, retries: 0, retryBackoffMs: 1 },
+    observedAt: "2026-07-28T03:00:00.000Z",
+    runId: "gdelt-fallback-partial",
+    runAttempt: 1,
+    eventName: "schedule",
+    observeAttemptFn: async () => rateLimitedProbe(),
+    fallbackFn: async () => ({ snapshot: partialSnapshot }),
+  });
+  assert.equal(outcome.ok, false);
+  assert.equal(outcome.reason, "rate_limited",
+    "an incomplete TOC basket must preserve the initiating DOC API rate-limit failure");
+  assert.equal(outcome.result.status, "unavailable");
 }
 
 // --- Bounded LKG / promotion / retention (Class-B) ---------------------------

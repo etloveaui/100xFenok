@@ -9,12 +9,14 @@
 import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
+import zlib from "node:zlib";
 import { fileURLToPath } from "node:url";
 
 import {
   attemptResult,
   classifyEndpointResponse,
   defaultAttemptId,
+  returnedTuple,
   threwTuple,
   transportError,
   writeAttemptShard,
@@ -51,6 +53,31 @@ const GDELT_HISTORY_PERSISTENCE_POLICY = Object.freeze({
 });
 const LKG_ARTIFACT_KEY = "news_tone_proxy";
 const DEFAULT_REFERENCE_TICKERS = ["DASH", "UNH", "PYPL", "RDDT", "COIN", "MU", "PLTR", "NVDA"];
+const LEGACY_TOC_COMPANY_NAMES = Object.freeze({
+  DASH: "DoorDash",
+  UNH: "UnitedHealth",
+  PYPL: "PayPal",
+  RDDT: "Reddit",
+  COIN: "Coinbase",
+  MU: "Micron",
+  PLTR: "Palantir",
+  NVDA: "NVIDIA",
+});
+const LEGACY_TOC_ALIASES = Object.freeze({
+  DASH: [/\bdoordash\b/i],
+  UNH: [/\bunitedhealth(?:care)?\b/i],
+  PYPL: [/\bpaypal\b/i],
+  RDDT: [/\breddit\b/i],
+  COIN: [/\bcoinbase\b/i],
+  MU: [/\bmicron\b/i],
+  PLTR: [/\bpalantir\b/i],
+  NVDA: [/\bnvidia\b/i],
+});
+const LEGACY_TOC_SOURCE_FAMILY = "GDELT Web Legacy NGrams TOC";
+const LEGACY_TOC_ROOT = "https://storage.googleapis.com/data.gdeltproject.org/gdeltv5/weblegacy/ngrams";
+const LEGACY_TOC_LOOKBACK_HOURS = 24;
+const LEGACY_TOC_FETCH_CONCURRENCY = 20;
+const MAX_LEGACY_TOC_BYTES = 2 * 1024 * 1024;
 
 const POSITIVE_CUES = [
   "beat", "beats", "upgrade", "upgraded", "raises", "raised", "record", "strong",
@@ -207,6 +234,29 @@ function rawGet(url, { timeoutMs = 30000 } = {}) {
   });
 }
 
+function rawGetBuffer(url, { timeoutMs = 30000, maxBytes = MAX_LEGACY_TOC_BYTES } = {}) {
+  return new Promise((resolve, reject) => {
+    const req = https.get(url, { headers: { "User-Agent": "FenokResearch/1.0" } }, (res) => {
+      const chunks = [];
+      let byteLength = 0;
+      res.on("data", (chunk) => {
+        byteLength += chunk.length;
+        if (byteLength > maxBytes) {
+          req.destroy(new Error(`response exceeded ${maxBytes} bytes`));
+          return;
+        }
+        chunks.push(chunk);
+      });
+      res.on("end", () => resolve({
+        statusCode: res.statusCode ?? 0,
+        body: Buffer.concat(chunks),
+      }));
+    });
+    req.on("error", reject);
+    req.setTimeout(timeoutMs, () => req.destroy(new Error(`timeout after ${timeoutMs}ms`)));
+  });
+}
+
 function gdeltDocUrl(query, maxRecords) {
   const url = new URL("https://api.gdeltproject.org/api/v2/doc/doc");
   url.searchParams.set("query", query);
@@ -293,6 +343,163 @@ function queryForTicker(ticker, company) {
   const cleaned = cleanCompanyName(company);
   if (cleaned && cleaned.length >= 4) return `"${cleaned}"`;
   return `"${ticker}"`;
+}
+
+function legacyTocText(record) {
+  return `${String(record?.title ?? "")} ${String(record?.url ?? "")}`;
+}
+
+function matchLegacyTocTickers(record, {
+  expectedTickers = DEFAULT_REFERENCE_TICKERS,
+  aliases = LEGACY_TOC_ALIASES,
+} = {}) {
+  const text = legacyTocText(record);
+  return expectedTickers.filter((ticker) => (
+    Array.isArray(aliases[ticker]) && aliases[ticker].some((pattern) => pattern.test(text))
+  ));
+}
+
+function collectLegacyTocArticles(records, {
+  expectedTickers = DEFAULT_REFERENCE_TICKERS,
+  maxRecords = 25,
+} = {}) {
+  const boundedMaxRecords = Math.max(1, Number(maxRecords) || 25);
+  const articlesByTicker = Object.fromEntries(expectedTickers.map((ticker) => [ticker, []]));
+  const seenUrlsByTicker = Object.fromEntries(expectedTickers.map((ticker) => [ticker, new Set()]));
+  const newestFirst = [...records].sort((a, b) => String(b?.date ?? "").localeCompare(String(a?.date ?? "")));
+  for (const record of newestFirst) {
+    if (record?.lang && record.lang !== "en") continue;
+    const seendate = articleSeenAt(record?.date);
+    const title = String(record?.title ?? "").trim();
+    const url = String(record?.url ?? "").trim();
+    if (!seendate || !title || !url) continue;
+    for (const ticker of matchLegacyTocTickers(record, { expectedTickers })) {
+      if (articlesByTicker[ticker].length >= boundedMaxRecords || seenUrlsByTicker[ticker].has(url)) continue;
+      seenUrlsByTicker[ticker].add(url);
+      articlesByTicker[ticker].push({ title, url, seendate });
+    }
+  }
+  return articlesByTicker;
+}
+
+function buildLegacyTocSnapshot({
+  records,
+  expectedTickers = DEFAULT_REFERENCE_TICKERS,
+  companyNames = LEGACY_TOC_COMPANY_NAMES,
+  maxRecords = 25,
+  generatedAt = isoNow(),
+}) {
+  const articlesByTicker = collectLegacyTocArticles(records, { expectedTickers, maxRecords });
+  const rows = expectedTickers.map((ticker) => computeTone({
+    ticker,
+    company: companyNames[ticker] ?? ticker,
+    payload: {
+      source_families: [LEGACY_TOC_SOURCE_FAMILY],
+      articles: articlesByTicker[ticker] ?? [],
+    },
+  }));
+  const errors = expectedTickers
+    .filter((ticker) => (articlesByTicker[ticker] ?? []).length === 0)
+    .map((ticker) => ({ ticker, error: "legacy_toc_no_matching_article" }));
+  return buildSnapshotDocument({ rows, errors, generatedAt, expectedTickers });
+}
+
+function compactUtcTimestamp(value) {
+  return value.toISOString().replace(/\D/g, "").slice(0, 14);
+}
+
+function legacyTocCandidateUrls(observedAt, lookbackHours = LEGACY_TOC_LOOKBACK_HOURS) {
+  const observed = new Date(observedAt);
+  if (!Number.isFinite(observed.getTime())) throw new Error("legacy TOC observedAt must be a valid timestamp");
+  const stepMs = 15 * 60 * 1000;
+  const minuteMs = 60 * 1000;
+  const floorMs = Math.floor(observed.getTime() / stepMs) * stepMs;
+  const oldestMs = observed.getTime() - lookbackHours * 60 * 60 * 1000;
+  const urls = [];
+  for (let baseMs = floorMs; baseMs >= oldestMs - stepMs; baseMs -= stepMs) {
+    for (let offset = 4; offset >= 0; offset -= 1) {
+      const candidateMs = baseMs + offset * minuteMs;
+      if (candidateMs > observed.getTime() || candidateMs < oldestMs) continue;
+      const timestamp = compactUtcTimestamp(new Date(candidateMs));
+      urls.push(`${LEGACY_TOC_ROOT}/${timestamp}.toc.json.gz`);
+    }
+  }
+  return urls;
+}
+
+function parseLegacyTocJsonl(text) {
+  const records = [];
+  for (const line of String(text ?? "").split("\n")) {
+    if (!line.trim()) continue;
+    try {
+      records.push(JSON.parse(line));
+    } catch {
+      // One malformed line must not discard an otherwise valid provider file.
+    }
+  }
+  return records;
+}
+
+function hasAtLeastOneLegacyArticle(articlesByTicker, expectedTickers) {
+  return expectedTickers.every((ticker) => (articlesByTicker[ticker] ?? []).length > 0);
+}
+
+async function fetchLegacyTocRecords({
+  observedAt,
+  expectedTickers = DEFAULT_REFERENCE_TICKERS,
+  maxRecords = 25,
+  lookbackHours = LEGACY_TOC_LOOKBACK_HOURS,
+  concurrency = LEGACY_TOC_FETCH_CONCURRENCY,
+  rawGetBufferFn = rawGetBuffer,
+}) {
+  const urls = legacyTocCandidateUrls(observedAt, lookbackHours);
+  const records = [];
+  const batchSize = Math.max(1, Number(concurrency) || LEGACY_TOC_FETCH_CONCURRENCY);
+  for (let index = 0; index < urls.length; index += batchSize) {
+    const batch = urls.slice(index, index + batchSize);
+    const responses = await Promise.all(batch.map(async (url) => {
+      try {
+        const response = await rawGetBufferFn(url);
+        if (response.statusCode !== 200) return [];
+        return parseLegacyTocJsonl(zlib.gunzipSync(response.body).toString("utf8"));
+      } catch {
+        return [];
+      }
+    }));
+    for (const batchRecords of responses) records.push(...batchRecords);
+    const articlesByTicker = collectLegacyTocArticles(records, { expectedTickers, maxRecords });
+    if (hasAtLeastOneLegacyArticle(articlesByTicker, expectedTickers)) break;
+  }
+  return records;
+}
+
+async function buildWebLegacyFallback({
+  repoRoot: repoRootPath,
+  args,
+  observedAt,
+  rawGetBufferFn = rawGetBuffer,
+}) {
+  const expectedTickers = DEFAULT_REFERENCE_TICKERS.filter((ticker) => (
+    !args.tickers || args.tickers.split(",").map(normalizeTicker).includes(ticker)
+  ));
+  const records = await fetchLegacyTocRecords({
+    observedAt,
+    expectedTickers,
+    maxRecords: args.maxRecords,
+    rawGetBufferFn,
+  });
+  const snapshot = buildLegacyTocSnapshot({
+    records,
+    expectedTickers,
+    maxRecords: args.maxRecords,
+    generatedAt: observedAt,
+  });
+  if (!validToneSnapshot(snapshot)) return { snapshot };
+  const dataRootPath = path.join(repoRootPath, "data");
+  return {
+    snapshot,
+    history: mergeHistory(snapshot, { dataRootPath }),
+  };
 }
 
 function cachePathForTicker(ticker, privateRootPath = privateRoot) {
@@ -394,7 +601,9 @@ function computeTone({ ticker, company, payload }) {
     as_of_reason: sourceSeenAt ? null : "GDELT articles do not expose a usable seendate",
     confidence: articleCount >= 15 ? "medium" : articleCount >= 5 ? "low" : "very_low",
     coverage_ratio: Math.round(Math.min(1, articleCount / 25) * 100) / 100,
-    source_families: ["GDELT DOC 2.0 ArtList"],
+    source_families: Array.isArray(payload.source_families) && payload.source_families.length > 0
+      ? payload.source_families
+      : ["GDELT DOC 2.0 ArtList"],
     direct_news_tone_proxy: {
       score_0_100: score == null ? null : Math.round(score * 100) / 100,
       direction: score == null ? "unavailable" : score >= 58 ? "positive_headline_tilt" : score <= 42 ? "negative_headline_tilt" : "neutral_headline_tilt",
@@ -785,6 +994,7 @@ export async function runNewsTone({
   controlledFailure = (process.env.INPUT_CONTROLLED_FAILURE || "").trim() === "transport",
   attemptShardPath = path.join(repoRootPath, "data", "admin", "data-supply-state", "detection-attempts", `${LANE_ID}.json`),
   observeAttemptFn = observeAttempt,
+  fallbackFn = buildWebLegacyFallback,
   buildFn = build,
   sleepFn = sleep,
 } = {}) {
@@ -850,6 +1060,34 @@ export async function runNewsTone({
     };
   };
 
+  let built = null;
+  if (result.reason === "rate_limited" && controlledFailure !== true && args.noFetch === false) {
+    try {
+      const fallbackBuilt = await fallbackFn({
+        repoRoot: repoRootPath,
+        args,
+        observedAt,
+      });
+      const fallbackSnapshot = fallbackBuilt?.snapshot ?? fallbackBuilt;
+      if (validToneSnapshot(fallbackSnapshot)) {
+        built = fallbackBuilt;
+        const readyFallback = attemptResult("ok", returnedTuple({
+          httpStatus: 200,
+          decode: "ok",
+          payload: "non_empty",
+          assertions: [{ id: "articles_array", passed: true }],
+        }));
+        const retryCount = Number(result.attempt.retry_count ?? 0);
+        result = retryCount > 0
+          ? withRetryEvidence(readyFallback, retryCount, Number(result.attempt.retry_wait_ms ?? 0))
+          : readyFallback;
+      }
+    } catch {
+      // The DOC API 429 remains the authoritative failure when the bounded
+      // provider-owned fallback cannot produce a complete reference basket.
+    }
+  }
+
   if (result.status !== "ready") {
     writeResult();
     return retainFailure(result.reason);
@@ -859,21 +1097,22 @@ export async function runNewsTone({
   // rate-limited GDELT endpoint. Honor the per-request spacing between those
   // two phases as well as between ticker fetches; otherwise the first ticker
   // can consume its retries before the documented five-second window clears.
-  const probeCooldownMs = args.noFetch === true ? 0 : Number(args.sleepMs ?? 0);
+  const probeCooldownMs = built !== null || args.noFetch === true ? 0 : Number(args.sleepMs ?? 0);
   if (Number.isFinite(probeCooldownMs) && probeCooldownMs > 0) {
     await sleepFn(probeCooldownMs);
   }
 
-  let built;
-  try {
-    built = await buildFn(args, {
-      dataRootPath: path.join(repoRootPath, "data"),
-      privateRootPath: path.join(repoRootPath, "_private", "admin", "fenok-flow", "gdelt_news"),
-    });
-  } catch (err) {
-    result = withSnapshotReadinessAssertion(result, null, "unexpected_error");
-    writeResult();
-    return retainFailure("unexpected_error", err);
+  if (built === null) {
+    try {
+      built = await buildFn(args, {
+        dataRootPath: path.join(repoRootPath, "data"),
+        privateRootPath: path.join(repoRootPath, "_private", "admin", "fenok-flow", "gdelt_news"),
+      });
+    } catch (err) {
+      result = withSnapshotReadinessAssertion(result, null, "unexpected_error");
+      writeResult();
+      return retainFailure("unexpected_error", err);
+    }
   }
   const snapshot = built?.snapshot ?? built;
   result = withSnapshotReadinessAssertion(result, snapshot);
@@ -887,7 +1126,7 @@ export async function runNewsTone({
     return retainFailure("schema_drift", err);
   }
   if (!write) {
-    return { ok: true, reason: "ok", degraded: false, exitCode: 0, retrySet: [], snapshot };
+    return { ok: true, reason: "ok", degraded: false, exitCode: 0, retrySet: [], snapshot, result };
   }
   const decisions = store.evaluatePromotionCandidates([candidate], run);
   const decision = decisions[0];
@@ -941,6 +1180,8 @@ export async function main({
     output_file: `data/${OUTPUT_FILE}`,
     history_file: `data/${HISTORY_FILE}`,
     wrote: !args.noWrite,
+    source_as_of: snapshotSourceAsOf(snapshot),
+    source_families: [...new Set(snapshot.rows.flatMap((row) => row.source_families ?? []))].sort(),
     coverage: snapshot.coverage,
     rows: snapshot.rows.map((row) => ({
       ticker: row.ticker,
@@ -966,7 +1207,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
 export {
   articleSeenAt,
+  buildLegacyTocSnapshot,
   cleanCompanyName,
+  collectLegacyTocArticles,
   computeTone,
   cueCounts,
   fetchJsonWithRetry,
@@ -974,6 +1217,7 @@ export {
   MAX_GDELT_HISTORY_SOURCE_DATES,
   latestArticleSeenAt,
   mergeHistory,
+  matchLegacyTocTickers,
   observeAttempt,
   queryForTicker,
   snapshotSourceAsOf,
