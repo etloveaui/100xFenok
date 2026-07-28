@@ -179,6 +179,34 @@ function ymdFromDate(date) {
   return `${y}${m}${d}`;
 }
 
+function defaultOccTargetYmd(referenceDate = new Date()) {
+  if (!(referenceDate instanceof Date) || !Number.isFinite(referenceDate.getTime())) {
+    throw new Error("invalid OCC reference date");
+  }
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(referenceDate);
+  const value = (type) => Number(parts.find((part) => part.type === type)?.value);
+  const localDate = new Date(Date.UTC(
+    value("year"),
+    value("month") - 1,
+    value("day"),
+  ));
+  // Exact OCC release time remains unverified, so use the existing conservative
+  // 18:00 ET placeholder until empirical polling can replace it. Before then,
+  // the current New York trading date is not treated as a completed provider day.
+  if (value("hour") < 18) localDate.setUTCDate(localDate.getUTCDate() - 1);
+  while (!isUsTradingDate(ymdFromDate(localDate))) {
+    localDate.setUTCDate(localDate.getUTCDate() - 1);
+  }
+  return ymdFromDate(localDate);
+}
+
 function isoFromYmd(ymd) {
   return `${ymd.slice(0, 4)}-${ymd.slice(4, 6)}-${ymd.slice(6, 8)}`;
 }
@@ -1756,11 +1784,12 @@ function applyOccLkgStore({
     // corrupt-classified hard failure that took the whole edge-daily workflow
     // down on 2026-07-21 and 07-22 (runs 29799765665, 29889729136).
     const systemicCandidates = effectiveEndpointResults.filter((row) => row?.expectedUnavailable !== true);
+    const reducedFailureReason = reduced.reason === "ok" ? null : reduced.reason;
     const reason = controlledFailure
       ? "controlled_failure"
       : systemicLkgFailureReason(systemicCandidates.map((row) => row?.reason))
-        ?? reduced.reason
-        ?? "workflow_unobserved";
+        ?? reducedFailureReason
+        ?? "source_date_unavailable";
     const failure = store.recordFailure({ artifacts: [artifact], run, reason });
     return {
       kind: "failure",
@@ -1889,7 +1918,7 @@ async function build(args, {
   const universe = resolveTickerUniverse(args);
   const tickers = universe.tickers;
   const dates = candidateDates({
-    requestedDate: args.date || ymdFromDate(referenceDate),
+    requestedDate: args.date || defaultOccTargetYmd(referenceDate),
     maxWalkbackDays: args.maxWalkbackDays,
   });
   const previousOutput = publishedOutput === undefined
@@ -2366,6 +2395,7 @@ export {
   candidateDates,
   classifyOccEndpointResponse,
   controlledOccFailureDisposition,
+  defaultOccTargetYmd,
   detectOccMissingTradingDays,
   directionFromOptionsVolume,
   enforceOccRequestBudget,

@@ -398,10 +398,19 @@ const failureEndpoints = [classifyOccEndpointResponse({ statusCode: 500, body: "
     candidateDocument: staleDocument,
     dates: ["20260703", "20260702", "20260701"],
     currentAttempt: staleDocument.current_attempt,
-    endpointResults: failureEndpoints,
+    endpointResults: [{
+      status: "ready",
+      reason: "ok",
+      expectedUnavailable: false,
+    }],
     run: naturalRun("stale-run", "2026-07-03T12:00:00.000Z"),
   });
   assert.equal(stale.kind, "failure");
+  assert.equal(
+    stale.reason,
+    "source_date_unavailable",
+    "a stale walkback must not record a successful endpoint reason as the LKG failure reason",
+  );
   assert.deepEqual(stale.retrySet, [OCC_LKG_KEY]);
 }
 

@@ -14,6 +14,7 @@ import {
   buildRowsForTest,
   candidateDates,
   classifyOccEndpointResponse,
+  defaultOccTargetYmd,
   detectOccMissingTradingDays,
   enforceOccRequestBudget,
   estimateMaxLiveRequests,
@@ -384,6 +385,26 @@ assert.deepEqual(
   candidateDates({ requestedDate: "20260705", maxWalkbackDays: 0 }),
   ["20260703"],
 );
+assert.equal(
+  defaultOccTargetYmd(new Date("2026-07-28T00:30:00Z")),
+  "20260727",
+  "the early-UTC schedule must target the completed New York trading date",
+);
+assert.equal(
+  defaultOccTargetYmd(new Date("2026-07-28T15:00:00Z")),
+  "20260727",
+  "a New York trading day before the 18:00 provider cutoff must target the prior trading date",
+);
+assert.equal(
+  defaultOccTargetYmd(new Date("2026-07-28T23:00:00Z")),
+  "20260728",
+  "a New York trading day after the 18:00 provider cutoff may target the same date",
+);
+assert.equal(
+  defaultOccTargetYmd(new Date("2026-07-05T23:00:00Z")),
+  "20260702",
+  "weekend and observed-holiday dates must walk back to the latest trading date",
+);
 assert.deepEqual(
   applyTickerBatch(["A", "B", "C", "D", "E"], { batchSize: 2, batchIndex: 1 }),
   ["C", "D"],
@@ -525,7 +546,7 @@ assert.deepEqual(
     attemptId: "occ-missing-day-integration",
     runId: "history-hole-run",
     runAttempt: 1,
-    referenceDate: new Date("2026-07-24T12:30:00Z"),
+    referenceDate: new Date("2026-07-24T23:00:00Z"),
     publishedOutput: {
       rows: occHistoryRows({ 20260708: 0, 20260720: 0 }),
       current_attempt: null,
