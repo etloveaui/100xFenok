@@ -2,45 +2,27 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_pending_ledger",
-  "generated_at": "2026-07-27T23:48:16Z",
+  "generated_at": "2026-07-28T01:18:09Z",
   "policy": {
     "cooldown_days": 7,
     "failure_threshold": 3,
     "rule": "record provider coverage gaps separately from fetch failures; provider-absent ETFs are degraded and re-probed after cooldown, while failed primary attempts and evidence-eligible successful-but-short daily_1y observations retain fair retry rotation"
   },
   "counts": {
-    "tracked": 481,
+    "tracked": 487,
     "cooldown": 158,
     "provider_coverage_gaps": 2,
-    "updated": 25,
+    "updated": 7,
     "cleared": 0
   },
   "updated": [
-    "AMUN",
-    "CMAY",
-    "CRUX",
-    "DDFY",
-    "DDTY",
-    "DUSG",
+    "BHYP",
+    "CPAG",
+    "CPHY",
     "EDGQ",
-    "EDGX",
-    "ESUM",
-    "IBCB",
-    "IBHM",
-    "KRYP",
-    "MAYC",
-    "RAAR",
-    "RAAY",
-    "RCLR",
-    "RCLY",
-    "REGS",
-    "RMHY",
-    "SFGV",
-    "TFGZ",
-    "TLG",
-    "TOT",
-    "WTIB",
-    "XLII"
+    "IBGM",
+    "IBIM",
+    "LVIG"
   ],
   "cleared": [],
   "entries": {
@@ -656,6 +638,16 @@
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
+    "BHYP": {
+      "ticker": "BHYP",
+      "last_attempt_utc": "2026-07-28T01:18:09Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
+      "last_provider": "yahoo_finance"
+    },
     "BITB": {
       "ticker": "BITB",
       "last_attempt_utc": "2026-07-25T16:46:22Z",
@@ -1108,6 +1100,26 @@
       "failure_class": "hard_error",
       "consecutive_failures": 3,
       "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "last_status": "fallback_observed_primary_preserved",
+      "last_provider": "yahoo_finance"
+    },
+    "CPAG": {
+      "ticker": "CPAG",
+      "last_attempt_utc": "2026-07-28T01:18:09Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "fallback_observed_primary_preserved",
+      "last_provider": "yahoo_finance"
+    },
+    "CPHY": {
+      "ticker": "CPHY",
+      "last_attempt_utc": "2026-07-28T01:18:09Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
@@ -1798,11 +1810,11 @@
     },
     "EDGQ": {
       "ticker": "EDGQ",
-      "last_attempt_utc": "2026-07-27T23:48:16Z",
+      "last_attempt_utc": "2026-07-28T01:18:09Z",
       "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
       "failure_class": "hard_error",
-      "consecutive_failures": 3,
-      "next_attempt_after_utc": "2026-08-03T23:48:16Z",
+      "consecutive_failures": 4,
+      "next_attempt_after_utc": "2026-08-04T01:18:09Z",
       "last_status": "error",
       "last_provider": "yahoo_finance"
     },
@@ -2693,6 +2705,16 @@
       "last_status": "ok",
       "last_provider": "stockanalysis"
     },
+    "IBGM": {
+      "ticker": "IBGM",
+      "last_attempt_utc": "2026-07-28T01:18:09Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "fallback_observed_primary_preserved",
+      "last_provider": "yahoo_finance"
+    },
     "IBHM": {
       "ticker": "IBHM",
       "last_attempt_utc": "2026-07-27T23:48:16Z",
@@ -2784,6 +2806,16 @@
       "consecutive_failures": 1,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
+      "last_provider": "yahoo_finance"
+    },
+    "IBIM": {
+      "ticker": "IBIM",
+      "last_attempt_utc": "2026-07-28T01:18:09Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "error",
       "last_provider": "yahoo_finance"
     },
     "IBIT": {
@@ -3402,6 +3434,16 @@
     "LTTI": {
       "ticker": "LTTI",
       "last_attempt_utc": "2026-07-26T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "fallback_observed_primary_preserved",
+      "last_provider": "yahoo_finance"
+    },
+    "LVIG": {
+      "ticker": "LVIG",
+      "last_attempt_utc": "2026-07-28T01:18:09Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
       "consecutive_failures": 1,

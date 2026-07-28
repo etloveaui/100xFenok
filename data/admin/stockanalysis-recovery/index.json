@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-07-27T23:46:39Z",
+  "generated_at": "2026-07-28T01:07:08Z",
   "counts": {
-    "tracked": 132,
+    "tracked": 138,
     "fresh": 86,
-    "lkg": 46,
+    "lkg": 52,
     "unavailable": 0,
-    "retry": 46,
-    "failed": 13,
+    "retry": 52,
+    "failed": 7,
     "recovered": 0,
     "promotion_deferred": 0
   },
@@ -27,11 +27,11 @@
       "retry": 0
     },
     "etf": {
-      "tracked": 14,
+      "tracked": 20,
       "fresh": 0,
-      "lkg": 14,
+      "lkg": 20,
       "unavailable": 0,
-      "retry": 14
+      "retry": 20
     },
     "surface": {
       "tracked": 25,
@@ -179,6 +179,18 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "BHYP"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "CPAG"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "CPHY"
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "EDGQ"
     },
     {
@@ -191,7 +203,19 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "IBGM"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "IBIM"
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "KRYP"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "LVIG"
     },
     {
       "artifact_kind": "etf",
@@ -557,12 +581,42 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "BHYP",
+      "resolution_state": "lkg_primary",
+      "payload_sha256": "398a737b2e41298f0d5b81201faa83894192e93e5d5741cafb9c2f9ad45a924a",
+      "source_as_of": null,
+      "failure_run_id": "30319268781",
+      "failure_observed_at": "2026-07-28T01:07:08Z",
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "CPAG",
+      "resolution_state": "lkg_primary",
+      "payload_sha256": "6033cb7e671049e54f01a02c0d3e46f9529e16e6d3fcdede1b43e7ee32193342",
+      "source_as_of": null,
+      "failure_run_id": "30319268781",
+      "failure_observed_at": "2026-07-28T01:07:08Z",
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "CPHY",
+      "resolution_state": "lkg_primary",
+      "payload_sha256": "8d245a95ebec60653d839f185c5ab6cc9aa5612f50347a6f6845d1fc8ade83d4",
+      "source_as_of": null,
+      "failure_run_id": "30319268781",
+      "failure_observed_at": "2026-07-28T01:07:08Z",
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "EDGQ",
       "resolution_state": "lkg_primary",
       "payload_sha256": "db544d780f49c66f814c27bdff9bb7495ac234cdb3015e430e53b90d4ae67327",
       "source_as_of": "2026-07-14T00:00:00Z",
-      "failure_run_id": "30315163373",
-      "failure_observed_at": "2026-07-27T23:46:39Z",
+      "failure_run_id": "30319268781",
+      "failure_observed_at": "2026-07-28T01:07:08Z",
       "data_loss": false
     },
     {
@@ -587,12 +641,42 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "IBGM",
+      "resolution_state": "lkg_primary",
+      "payload_sha256": "aea357812bb35b268c238015914c4f708605818c3f087923ba9d7bf49c87513b",
+      "source_as_of": null,
+      "failure_run_id": "30319268781",
+      "failure_observed_at": "2026-07-28T01:07:08Z",
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "IBIM",
+      "resolution_state": "lkg_primary",
+      "payload_sha256": "0767b39b2b73102fafe467534a013e242cdde50f811a904e284d495687633ec3",
+      "source_as_of": null,
+      "failure_run_id": "30319268781",
+      "failure_observed_at": "2026-07-28T01:07:08Z",
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "KRYP",
       "resolution_state": "lkg_primary",
       "payload_sha256": "b0d5d35ee0b63a8dc21b9511f1a58579aa2dde123cb04dad88f85c9959565e9a",
       "source_as_of": "2026-07-15T00:00:00Z",
       "failure_run_id": "30315163373",
       "failure_observed_at": "2026-07-27T23:46:39Z",
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "LVIG",
+      "resolution_state": "lkg_primary",
+      "payload_sha256": "d48c4be7cdc3548e388acf061b8a52e65839b1ba4e06951c964acf2309479131",
+      "source_as_of": null,
+      "failure_run_id": "30319268781",
+      "failure_observed_at": "2026-07-28T01:07:08Z",
       "data_loss": false
     },
     {
@@ -733,10 +817,16 @@
   "degraded_surfaces": [],
   "degraded_universes": [],
   "degraded_etfs": [
+    "BHYP",
+    "CPAG",
+    "CPHY",
     "EDGQ",
     "EDGX",
     "ESUM",
+    "IBGM",
+    "IBIM",
     "KRYP",
+    "LVIG",
     "RAAR",
     "RAAY",
     "RCLR",
@@ -755,17 +845,38 @@
   "recovered_etfs": [],
   "promotion_deferral_details": [],
   "current_attempt": {
-    "run_id": "30315163373",
+    "run_id": "30319268781",
     "run_attempt": 1,
     "event_name": "schedule",
-    "schedule": "50 22 * * 1-5",
+    "schedule": "50 23 * * 1-5",
     "natural": true,
-    "attempted": 13,
-    "successes": 0,
-    "failed": 13,
+    "attempted": 32,
+    "successes": 25,
+    "failed": 7,
     "recovered": 0,
     "promotion_deferred": 0,
     "errors": [
+      {
+        "artifact_kind": "etf",
+        "entity": "BHYP",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "controlled": false,
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "CPAG",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "controlled": false,
+        "data_loss": false
+      },
+      {
+        "artifact_kind": "etf",
+        "entity": "CPHY",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "controlled": false,
+        "data_loss": false
+      },
       {
         "artifact_kind": "etf",
         "entity": "EDGQ",
@@ -775,90 +886,153 @@
       },
       {
         "artifact_kind": "etf",
-        "entity": "EDGX",
+        "entity": "IBGM",
         "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
         "controlled": false,
         "data_loss": false
       },
       {
         "artifact_kind": "etf",
-        "entity": "ESUM",
+        "entity": "IBIM",
         "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
         "controlled": false,
         "data_loss": false
       },
       {
         "artifact_kind": "etf",
-        "entity": "KRYP",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "RAAR",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "RAAY",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "RCLR",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "RCLY",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "RMHY",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "SFGV",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "TOT",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "WTIB",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "etf",
-        "entity": "XLII",
+        "entity": "LVIG",
         "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
         "controlled": false,
         "data_loss": false
       }
     ],
-    "success_rows": [],
+    "success_rows": [
+      {
+        "artifact_kind": "surface",
+        "entity": "actions_recent",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "actions_splits",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "earnings_calendar",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "etf_provider_blackrock",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "etf_provider_proshares",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "etf_screener",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "industries",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "industries_all",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "industry_semiconductors",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "ipos_calendar",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "ipos_filings",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "ipos_recent",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "ipos_statistics",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "ipos_withdrawn",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "list_bitcoin_etfs",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_active",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_afterhours",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_gainers",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_gainers_month",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_gainers_week",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_losers",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_losers_ytd",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_premarket",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "new_etfs",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "sector_technology",
+        "outcome": "fresh"
+      }
+    ],
     "promotion_deferrals": []
   }
 }

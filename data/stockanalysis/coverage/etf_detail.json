@@ -2,8 +2,8 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-07-27T23:48:22Z",
-  "status": "pass",
+  "generated_at": "2026-07-28T01:18:17Z",
+  "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
     "detail_file": "data/stockanalysis/etfs/{TICKER}.json",
@@ -17,41 +17,67 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5545,
+    "candidate_total": 5547,
     "source_breakdown": {
       "etf_universe": 5479,
-      "etf_screener": 5541,
+      "etf_screener": 5542,
       "new_etfs": 100
     },
-    "detail_files": 5577,
-    "covered_detail_files": 5545,
-    "missing_detail_files": 0,
+    "detail_files": 5578,
+    "covered_detail_files": 5546,
+    "missing_detail_files": 1,
     "extra_detail_files": 32,
-    "stockanalysis_detail_files": 5577,
+    "stockanalysis_detail_files": 5578,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 100.0,
-    "primary_stockanalysis_pct": 100.0,
+    "coverage_pct": 99.98,
+    "primary_stockanalysis_pct": 99.98,
     "missing_by_source": {
       "etf_universe": 0,
-      "etf_screener": 0,
+      "etf_screener": 1,
       "new_etfs": 0
     },
-    "missing_status_breakdown": {},
-    "missing_failure_breakdown": {},
-    "missing_availability_breakdown": {},
-    "pending_tracked": 481,
+    "missing_status_breakdown": {
+      "untracked": 1
+    },
+    "missing_failure_breakdown": {
+      "untracked": 1
+    },
+    "missing_availability_breakdown": {
+      "unprobed": 1
+    },
+    "pending_tracked": 487,
     "pending_cooldown": 158,
     "pending_tracked_missing": 0,
     "provider_coverage_gaps": 2
   },
-  "missing_reason_summary": {},
-  "missing_status_summary": {},
-  "missing_availability_summary": {},
-  "missing_reason_samples": {},
-  "missing_status_samples": {},
-  "missing_availability_samples": {},
-  "missing_tickers": [],
+  "missing_reason_summary": {
+    "untracked": 1
+  },
+  "missing_status_summary": {
+    "untracked": 1
+  },
+  "missing_availability_summary": {
+    "unprobed": 1
+  },
+  "missing_reason_samples": {
+    "untracked": [
+      "HWIV"
+    ]
+  },
+  "missing_status_samples": {
+    "untracked": [
+      "HWIV"
+    ]
+  },
+  "missing_availability_samples": {
+    "unprobed": [
+      "HWIV"
+    ]
+  },
+  "missing_tickers": [
+    "HWIV"
+  ],
   "provider_absent_tickers": [],
   "yahoo_fallback_tickers": [],
   "invalid_detail_tickers": [],
@@ -90,7 +116,12 @@
     "TSLO"
   ],
   "samples": {
-    "missing": [],
+    "missing": [
+      "HWIV"
+    ],
+    "missing_untracked": [
+      "HWIV"
+    ],
     "yahoo_fallback": [],
     "extra": [
       "AAUM",

@@ -1,32 +1,44 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "yahoo_etf_fallback",
-  "updated_at": "2026-07-27T18:41:13Z",
-  "retry_set": [
-    "ticker_54515151"
-  ],
+  "updated_at": "2026-07-28T01:07:08Z",
+  "retry_set": [],
   "items": {
     "ticker_54515151": {
       "key": "ticker_54515151",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/yahoo_etf_fallback/lkg/ticker_54515151.json",
-        "payload_sha256": "2c3819c77abc4f19cc3920e9070ba978231efd62606c1d2c1b30e332b628c748",
-        "source_as_of": "2026-07-27T18:34:59Z"
+        "path": "data/yf/etf-details/TQQQ.json",
+        "payload_sha256": "8bc7ed00566ecd9596d5eafc71ecd8e98accafcc551e99a9d31b260d56080906",
+        "source_as_of": "2026-07-27T20:00:00Z"
       },
       "lkg": {
         "path": "data/admin/yahoo_etf_fallback/lkg/ticker_54515151.json",
         "payload_sha256": "2c3819c77abc4f19cc3920e9070ba978231efd62606c1d2c1b30e332b628c748",
         "source_as_of": "2026-07-27T18:34:59Z"
       },
-      "latest_failure": {
+      "updated_at": "2026-07-28T01:07:08Z",
+      "promotion_contract": "provider_observation/v2",
+      "provider_observation": {
+        "schema_version": "provider_observation/v2",
+        "payload_sha256": "68feb9e656a17e59e766c91f5ea809bcf006427aa7d6f1c76c0840521d202fa2",
+        "source_as_of": "2026-07-27T20:00:00Z",
+        "run_id": "30319268781",
+        "run_attempt": 1,
+        "observed_at": "2026-07-28T01:07:08Z"
+      },
+      "recovered_from_run_id": "30294770417",
+      "recovered_at": "2026-07-28T01:07:08Z",
+      "recovery_run_id": "30319268781",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "last_recovered_failure": {
         "run_id": "30294770417",
         "run_attempt": 1,
         "observed_at": "2026-07-27T18:41:13Z",
         "reason": "controlled_failure"
-      },
-      "updated_at": "2026-07-27T18:41:13Z"
+      }
     }
   }
 }
