@@ -616,14 +616,15 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     "occ_options_volume",
     "yahoo_private_options",
     "apewisdom_attention",
+    "gdelt_news_tone",
   ];
   assert.deepEqual(liveConfigs.map((item) => item.id), liveLaneIds);
   const report = (laneId = null, overrides = {}) => {
     const value = structuredClone(JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report);
-    // The canonical baseline keeps ApeWisdom honestly unobserved because its
-    // fixture has no attempt row. Adapter unit cases need an all-ready live
-    // projection, so synthesize only that row.
-    for (const id of ["apewisdom_attention"]) {
+    // The canonical baseline keeps ApeWisdom and GDELT honestly unobserved
+    // because their fixtures have no attempt rows. Adapter unit cases need an
+    // all-ready live projection, so synthesize only those rows.
+    for (const id of ["apewisdom_attention", "gdelt_news_tone"]) {
       const proxy = value.lanes.find((item) => item.id === id);
       proxy.status = "ready";
       proxy.reason = "ok";
@@ -1772,11 +1773,11 @@ console.log("# KPI v2 runtime self-proof fixtures");
   writeReadyRecoveryIndex(tmp, "us-indices-daily", "us_indices_daily", ["sp500.json", "nasdaq.json"]);
   writeReadySlickchartsComposite(tmp);
   const { root, public: pub } = runBuilder(tmp, {}, now);
-  assert.equal(root.totals.lanes, 32);
+  assert.equal(root.totals.lanes, 33);
   for (const laneConfig of DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live")) {
     const mapped = root.lanes.find((item) => item.id === laneConfig.id);
     const sourceRow = installedReport.lanes.find((item) => item.id === laneConfig.id);
-    const baselineUnobserved = laneConfig.id === "apewisdom_attention";
+    const baselineUnobserved = ["apewisdom_attention", "gdelt_news_tone"].includes(laneConfig.id);
     assert.equal(mapped.status, baselineUnobserved ? "degraded" : "ready");
     assert.equal(mapped.reason, baselineUnobserved ? "workflow_unobserved" : "ok");
     assert.equal(mapped.artifact.source_as_of, sourceRow.artifact.source_as_of);

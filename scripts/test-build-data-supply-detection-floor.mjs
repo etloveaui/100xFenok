@@ -456,6 +456,9 @@ function runConfigAndFixtureChecks() {
     ["weekly_summary_rows", "weekly_summary_row_shape"],
   );
   assert.equal(finraAtsWeekly.freshness.max_staleness, 42);
+  const gdeltNewsTone = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "gdelt_news_tone");
+  assert.equal(gdeltNewsTone.enforcement, "live");
+  assert.equal(gdeltNewsTone.kpi_required, true);
   const benchmarks = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "benchmarks");
   const globalScouter = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "global_scouter");
   const damodaran = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "damodaran");
@@ -547,6 +550,7 @@ function runConfigAndFixtureChecks() {
     "occ_options_volume",
     "yahoo_private_options",
     "apewisdom_attention",
+    "gdelt_news_tone",
   ], "only attempt-proven lanes are live");
   // yahoo_ticker_macro carries US market quote times. The stamp freezes at the
   // regular-session close and does not move again until the next open, so an

@@ -216,10 +216,10 @@ function clone(value) {
       },
       {
         id: "gdelt_news_tone",
-        enforcement: "shadow",
+        enforcement: "live",
         recoveryStore: "data/admin/gdelt_news_tone/index.json",
         lkgShard: "data/admin/gdelt_news_tone/lkg/news_tone_proxy.json",
-        kpiRequired: false,
+        kpiRequired: true,
       },
     ]) {
       const recoveryLane = registryLaneById(id);

@@ -928,13 +928,14 @@ const lanes = [
   record({
     id: "gdelt_news_tone",
     label: "GDELT news tone proxy",
-    // The bounded LKG contract is implemented, but promotion remains shadow
-    // until a post-completeness-gate natural run proves the full reference set.
+    // Live after natural run 30208843002 committed a full-reference recovery
+    // from failed natural run 30164248573. Current provider failures remain
+    // visible as lane-local degraded state without blocking unrelated publication.
     owner_workflow: ".github/workflows/fetch-fenok-news-tone.yml",
     store_kind: "marker",
     lane_class: "detection_floor",
     cadence: { kind: "daily", provider: "gdelt" },
-    enforcement: "shadow",
+    enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/gdelt_news_tone",
     detection_attempt: attemptShard("gdelt_news_tone"),
