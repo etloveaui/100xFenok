@@ -1,46 +1,43 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "defillama_stablecoins",
-  "updated_at": "2026-07-28T00:10:48.604Z",
-  "retry_set": [
-    "stablecoins"
-  ],
+  "updated_at": "2026-07-28T03:35:18.017Z",
+  "retry_set": [],
   "items": {
     "stablecoins": {
       "key": "stablecoins",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/defillama_stablecoins/lkg/stablecoins.json",
-        "payload_sha256": "8904f128efa6f980dffb2e686a6c4e605ffb09d722f2ca7c4ed257dd6d922bb5",
-        "source_as_of": "2026-07-27"
+        "path": "data/macro/stablecoins.json",
+        "payload_sha256": "f90c1d713f27f7297c8c89f2101e1f3e76663417a78f855865640a185287efa4",
+        "source_as_of": "2026-07-28"
       },
-      "updated_at": "2026-07-28T00:10:48.604Z",
+      "updated_at": "2026-07-28T03:35:18.017Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "8904f128efa6f980dffb2e686a6c4e605ffb09d722f2ca7c4ed257dd6d922bb5",
-        "source_as_of": "2026-07-27",
-        "run_id": "30247401487",
+        "payload_sha256": "f90c1d713f27f7297c8c89f2101e1f3e76663417a78f855865640a185287efa4",
+        "source_as_of": "2026-07-28",
+        "run_id": "30326279764",
         "run_attempt": 1,
-        "observed_at": "2026-07-27T07:56:17.782Z"
+        "observed_at": "2026-07-28T03:35:18.017Z"
       },
       "lkg": {
         "path": "data/admin/defillama_stablecoins/lkg/stablecoins.json",
         "payload_sha256": "8904f128efa6f980dffb2e686a6c4e605ffb09d722f2ca7c4ed257dd6d922bb5",
         "source_as_of": "2026-07-27"
       },
-      "latest_failure": {
+      "recovered_from_run_id": "30265715989",
+      "recovered_at": "2026-07-28T03:35:18.017Z",
+      "recovery_run_id": "30326279764",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "last_recovered_failure": {
         "run_id": "30265715989",
         "run_attempt": 1,
         "observed_at": "2026-07-27T12:24:36.857Z",
         "reason": "controlled_failure"
-      },
-      "latest_promotion_deferral": {
-        "run_id": "30316470599",
-        "run_attempt": 1,
-        "observed_at": "2026-07-28T00:10:48.604Z",
-        "reason": "recovery_not_advanced_by_provider"
       }
     }
   }
