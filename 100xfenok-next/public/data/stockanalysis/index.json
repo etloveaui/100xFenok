@@ -1,7 +1,7 @@
 {
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
-  "generated_at": "2026-07-28T22:29:02Z",
+  "generated_at": "2026-07-28T23:43:17Z",
   "source_as_of": {
     "surfaces": {
       "market_events": null,
@@ -26,177 +26,105 @@
     "etf_detail_missing": 1,
     "etf_detail_coverage_pct": 99.98,
     "etf_detail_primary_pct": 99.98,
-    "etfs_requested": 0,
-    "stocks_requested": 8,
+    "etfs_requested": 4,
+    "stocks_requested": 0,
     "surfaces_requested": 0,
     "surfaces_ok": 0,
     "surfaces_failed": 0,
-    "financials_requested": 8,
-    "financials_ok": 8,
+    "financials_requested": 0,
+    "financials_ok": 0,
     "financials_failed": 0,
-    "ok": 8,
+    "ok": 4,
     "failed": 0,
     "hard_failed": 0,
-    "etfs_stockanalysis_ok": 0,
+    "etfs_stockanalysis_ok": 4,
     "etfs_yahoo_fallback_ok": 0,
-    "etfs_provider_available": 0,
+    "etfs_provider_available": 4,
     "etfs_provider_absent": 0,
     "etfs_still_pending": 0,
-    "incremental_etf_backfill_candidates": 0,
-    "incremental_etf_backfill_selected": 0,
+    "incremental_etf_backfill_candidates": 4,
+    "incremental_etf_backfill_selected": 4,
     "incremental_etf_cooldown_skipped": 0,
-    "incremental_etf_ledger_tracked": 0,
-    "incremental_etf_ledger_cooldown": 0
+    "incremental_etf_ledger_tracked": 486,
+    "incremental_etf_ledger_cooldown": 161
   },
   "results": [
     {
-      "ticker": "AAPL",
-      "asset_type": "stock",
+      "ticker": "ASCI",
+      "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
       "selected_provider": "stockanalysis",
       "canonical_write": true,
-      "path": "stocks/AAPL.json",
+      "path": "etfs/ASCI.json",
       "candidate_path": null,
-      "financials_path": "financials/AAPL.json",
+      "financials_path": null,
       "financials_error": null,
-      "latency_ms": 1521,
+      "latency_ms": 4602,
       "stockanalysis_error": null,
-      "provider_availability_status": null,
-      "provider_availability_reason": null,
-      "provider_response": null,
+      "provider_availability_status": "available",
+      "provider_availability_reason": "provider_detail_contract_valid",
+      "provider_response": "HTTP 200 contract valid",
       "error": null
     },
     {
-      "ticker": "NVDA",
-      "asset_type": "stock",
+      "ticker": "DHLX",
+      "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
       "selected_provider": "stockanalysis",
       "canonical_write": true,
-      "path": "stocks/NVDA.json",
+      "path": "etfs/DHLX.json",
       "candidate_path": null,
-      "financials_path": "financials/NVDA.json",
+      "financials_path": null,
       "financials_error": null,
-      "latency_ms": 1530,
+      "latency_ms": 4176,
       "stockanalysis_error": null,
-      "provider_availability_status": null,
-      "provider_availability_reason": null,
-      "provider_response": null,
+      "provider_availability_status": "available",
+      "provider_availability_reason": "provider_detail_contract_valid",
+      "provider_response": "HTTP 200 contract valid",
       "error": null
     },
     {
-      "ticker": "MSFT",
-      "asset_type": "stock",
+      "ticker": "IBTR",
+      "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
       "selected_provider": "stockanalysis",
       "canonical_write": true,
-      "path": "stocks/MSFT.json",
+      "path": "etfs/IBTR.json",
       "candidate_path": null,
-      "financials_path": "financials/MSFT.json",
+      "financials_path": null,
       "financials_error": null,
-      "latency_ms": 1635,
+      "latency_ms": 4078,
       "stockanalysis_error": null,
-      "provider_availability_status": null,
-      "provider_availability_reason": null,
-      "provider_response": null,
+      "provider_availability_status": "available",
+      "provider_availability_reason": "provider_partial_detail_contract_valid",
+      "provider_response": "HTTP 200 partial contract valid",
       "error": null
     },
     {
-      "ticker": "AMZN",
-      "asset_type": "stock",
+      "ticker": "QQMY",
+      "asset_type": "etf",
       "status": "ok",
       "provider": "stockanalysis",
       "selected_provider": "stockanalysis",
       "canonical_write": true,
-      "path": "stocks/AMZN.json",
+      "path": "etfs/QQMY.json",
       "candidate_path": null,
-      "financials_path": "financials/AMZN.json",
+      "financials_path": null,
       "financials_error": null,
-      "latency_ms": 1412,
+      "latency_ms": 4051,
       "stockanalysis_error": null,
-      "provider_availability_status": null,
-      "provider_availability_reason": null,
-      "provider_response": null,
-      "error": null
-    },
-    {
-      "ticker": "GOOGL",
-      "asset_type": "stock",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "selected_provider": "stockanalysis",
-      "canonical_write": true,
-      "path": "stocks/GOOGL.json",
-      "candidate_path": null,
-      "financials_path": "financials/GOOGL.json",
-      "financials_error": null,
-      "latency_ms": 1702,
-      "stockanalysis_error": null,
-      "provider_availability_status": null,
-      "provider_availability_reason": null,
-      "provider_response": null,
-      "error": null
-    },
-    {
-      "ticker": "META",
-      "asset_type": "stock",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "selected_provider": "stockanalysis",
-      "canonical_write": true,
-      "path": "stocks/META.json",
-      "candidate_path": null,
-      "financials_path": "financials/META.json",
-      "financials_error": null,
-      "latency_ms": 1538,
-      "stockanalysis_error": null,
-      "provider_availability_status": null,
-      "provider_availability_reason": null,
-      "provider_response": null,
-      "error": null
-    },
-    {
-      "ticker": "TSLA",
-      "asset_type": "stock",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "selected_provider": "stockanalysis",
-      "canonical_write": true,
-      "path": "stocks/TSLA.json",
-      "candidate_path": null,
-      "financials_path": "financials/TSLA.json",
-      "financials_error": null,
-      "latency_ms": 1380,
-      "stockanalysis_error": null,
-      "provider_availability_status": null,
-      "provider_availability_reason": null,
-      "provider_response": null,
-      "error": null
-    },
-    {
-      "ticker": "JPM",
-      "asset_type": "stock",
-      "status": "ok",
-      "provider": "stockanalysis",
-      "selected_provider": "stockanalysis",
-      "canonical_write": true,
-      "path": "stocks/JPM.json",
-      "candidate_path": null,
-      "financials_path": "financials/JPM.json",
-      "financials_error": null,
-      "latency_ms": 1618,
-      "stockanalysis_error": null,
-      "provider_availability_status": null,
-      "provider_availability_reason": null,
-      "provider_response": null,
+      "provider_availability_status": "available",
+      "provider_availability_reason": "provider_partial_detail_contract_valid",
+      "provider_response": "HTTP 200 partial contract valid",
       "error": null
     }
   ],
   "etf_detail_coverage": {
     "path": "coverage/etf_detail.json",
-    "generated_at": "2026-07-28T22:29:02Z",
+    "generated_at": "2026-07-28T23:43:17Z",
     "status": "warn",
     "counts": {
       "candidate_total": 5547,
@@ -228,15 +156,288 @@
       "missing_availability_breakdown": {
         "unprobed": 1
       },
-      "pending_tracked": 487,
-      "pending_cooldown": 158,
+      "pending_tracked": 486,
+      "pending_cooldown": 161,
       "pending_tracked_missing": 0,
       "provider_coverage_gaps": 2
     }
   },
   "surface_results": null,
-  "incremental_etf_backfill": null,
-  "pending_ledger": null,
+  "incremental_etf_backfill": {
+    "schema_version": "stockanalysis/v1",
+    "source": "stockanalysis",
+    "operation": "incremental_etf_backfill_select",
+    "generated_at": "2026-07-28T23:42:51Z",
+    "policy": {
+      "limit": 120,
+      "offset": 0,
+      "max_age_hours": null,
+      "cooldown_days": 7,
+      "cooldown_failure_threshold": 3,
+      "required_history_periods": [
+        "daily_1y"
+      ],
+      "history_gaps_only": true,
+      "selection": "exact Fenok Edge scored-ETF daily_1y fetchable plan; includes missing detail files and daily_1y row-count gaps below min rows",
+      "plan_path": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
+      "min_daily_1y_rows": 200
+    },
+    "counts": {
+      "candidates": 4,
+      "selected": 4,
+      "missing": 0,
+      "fallback_retry": 0,
+      "history_gap": 4,
+      "inception_limited_history_gap": 0,
+      "total_history_gap": 4,
+      "stale": 0,
+      "cooldown_skipped": 0,
+      "prior_failed_candidates": 0,
+      "daily_1y_missing_file": 0,
+      "daily_1y_short_rows": 4,
+      "offset_skipped": 0,
+      "scheduled_plan_rows": 4,
+      "ledger_tracked": 486,
+      "ledger_cooldown": 161
+    },
+    "selected": [
+      {
+        "ticker": "ASCI",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 0,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": "2025-10-21",
+        "daily_1y_actual_rows": 181,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": "2026-07-21T00:04:14Z",
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 181,
+          "raw_row_count": 181,
+          "valid_unique_date_count": 181,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2025-10-21",
+          "earliest_date": "2025-10-21",
+          "latest_observation": "2026-07-13",
+          "latest_date": "2026-07-13",
+          "span_days": 265,
+          "expected_trading_days": 190,
+          "expected_utc_weekdays_inclusive": 190,
+          "observed_trading_days": 181,
+          "density": 0.952632,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 15,
+          "latest_observation_age_business_days": 11,
+          "latest_business_day_age": 11,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": true,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": false
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-13T23:52:22Z"
+      },
+      {
+        "ticker": "DHLX",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 1,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": "2025-09-30",
+        "daily_1y_actual_rows": 196,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": "2026-07-21T00:04:14Z",
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 196,
+          "raw_row_count": 196,
+          "valid_unique_date_count": 196,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2025-09-30",
+          "earliest_date": "2025-09-30",
+          "latest_observation": "2026-07-13",
+          "latest_date": "2026-07-13",
+          "span_days": 286,
+          "expected_trading_days": 205,
+          "expected_utc_weekdays_inclusive": 205,
+          "observed_trading_days": 196,
+          "density": 0.956098,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 15,
+          "latest_observation_age_business_days": 11,
+          "latest_business_day_age": 11,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": true,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": false
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-13T23:54:24Z"
+      },
+      {
+        "ticker": "IBTR",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 2,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 73,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": "2026-07-21T00:04:14Z",
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 73,
+          "raw_row_count": 73,
+          "valid_unique_date_count": 73,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2026-03-27",
+          "earliest_date": "2026-03-27",
+          "latest_observation": "2026-07-13",
+          "latest_date": "2026-07-13",
+          "span_days": 108,
+          "expected_trading_days": 77,
+          "expected_utc_weekdays_inclusive": 77,
+          "observed_trading_days": 73,
+          "density": 0.948052,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 15,
+          "latest_observation_age_business_days": 11,
+          "latest_business_day_age": 11,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": true,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": false
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-13T23:57:41Z"
+      },
+      {
+        "ticker": "QQMY",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "reason": "history_gap",
+        "age_hours": null,
+        "prior_failures": 0,
+        "priority": 0,
+        "reason_priority": 2,
+        "plan_order": 3,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_limited_history_periods": [],
+        "inception_date": null,
+        "daily_1y_actual_rows": 48,
+        "daily_1y_min_rows": 200,
+        "missing_file": false,
+        "pending_consecutive_failures": 0,
+        "pending_next_attempt_after_utc": "2026-07-21T00:04:14Z",
+        "pre_fetch_daily_1y_evidence": {
+          "row_count": 48,
+          "raw_row_count": 48,
+          "valid_unique_date_count": 48,
+          "invalid_or_duplicate_date_count": 0,
+          "earliest_observation": "2026-05-04",
+          "earliest_date": "2026-05-04",
+          "latest_observation": "2026-07-13",
+          "latest_date": "2026-07-13",
+          "span_days": 70,
+          "expected_trading_days": 51,
+          "expected_utc_weekdays_inclusive": 51,
+          "observed_trading_days": 48,
+          "density": 0.941176,
+          "max_internal_gap_days": 4,
+          "max_internal_calendar_gap_days": 4,
+          "latest_observation_age_days": 15,
+          "latest_observation_age_business_days": 11,
+          "latest_business_day_age": 11,
+          "latest_not_future": true,
+          "gates": {
+            "min_rows": true,
+            "density": true,
+            "max_internal_gap": true,
+            "latest_business_day_age": false
+          },
+          "evidence_pass": false,
+          "eligible": false
+        },
+        "pre_fetch_payload_fetched_at": "2026-07-13T23:59:44Z"
+      }
+    ],
+    "cooldown": [],
+    "inception_limited": [],
+    "pending_ledger": {
+      "path": "backfill/pending_ledger.json",
+      "generated_at": "2026-07-28T23:43:09Z",
+      "counts": {
+        "tracked": 486,
+        "cooldown": 161,
+        "provider_coverage_gaps": 2,
+        "updated": 3,
+        "cleared": 1
+      }
+    }
+  },
+  "pending_ledger": {
+    "path": "backfill/pending_ledger.json",
+    "counts": {
+      "tracked": 486,
+      "cooldown": 161,
+      "provider_coverage_gaps": 2,
+      "updated": 3,
+      "cleared": 1
+    }
+  },
   "missing_detail_reconcile": null,
   "recovery": {
     "artifact_id": "stockanalysis_recovery_state",
@@ -313,99 +514,18 @@
     "recovered_surfaces": [],
     "recovered_universes": [],
     "current_attempt": {
-      "run_id": "30404596391",
+      "run_id": "30408766744",
       "run_attempt": 1,
       "event_name": "schedule",
-      "schedule": "20 21 * * *",
+      "schedule": "50 22 * * 1-5",
       "natural": true,
-      "attempted": 16,
-      "successes": 16,
+      "attempted": 0,
+      "successes": 0,
       "failed": 0,
       "recovered": 0,
       "promotion_deferred": 0,
       "errors": [],
-      "success_rows": [
-        {
-          "artifact_kind": "stock",
-          "entity": "AAPL",
-          "outcome": "fresh"
-        },
-        {
-          "artifact_kind": "stock",
-          "entity": "AMZN",
-          "outcome": "fresh"
-        },
-        {
-          "artifact_kind": "stock",
-          "entity": "GOOGL",
-          "outcome": "fresh"
-        },
-        {
-          "artifact_kind": "stock",
-          "entity": "JPM",
-          "outcome": "fresh"
-        },
-        {
-          "artifact_kind": "stock",
-          "entity": "META",
-          "outcome": "fresh"
-        },
-        {
-          "artifact_kind": "stock",
-          "entity": "MSFT",
-          "outcome": "fresh"
-        },
-        {
-          "artifact_kind": "stock",
-          "entity": "NVDA",
-          "outcome": "fresh"
-        },
-        {
-          "artifact_kind": "stock",
-          "entity": "TSLA",
-          "outcome": "fresh"
-        },
-        {
-          "artifact_kind": "financial",
-          "entity": "AAPL",
-          "outcome": "fresh"
-        },
-        {
-          "artifact_kind": "financial",
-          "entity": "AMZN",
-          "outcome": "fresh"
-        },
-        {
-          "artifact_kind": "financial",
-          "entity": "GOOGL",
-          "outcome": "fresh"
-        },
-        {
-          "artifact_kind": "financial",
-          "entity": "JPM",
-          "outcome": "fresh"
-        },
-        {
-          "artifact_kind": "financial",
-          "entity": "META",
-          "outcome": "fresh"
-        },
-        {
-          "artifact_kind": "financial",
-          "entity": "MSFT",
-          "outcome": "fresh"
-        },
-        {
-          "artifact_kind": "financial",
-          "entity": "NVDA",
-          "outcome": "fresh"
-        },
-        {
-          "artifact_kind": "financial",
-          "entity": "TSLA",
-          "outcome": "fresh"
-        }
-      ],
+      "success_rows": [],
       "promotion_deferrals": []
     }
   },

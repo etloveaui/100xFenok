@@ -1,6 +1,6 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-07-28T23:28:44Z",
+  "generated_at": "2026-07-29T00:00:55Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6766,
@@ -9,11 +9,11 @@
     "divergence_rows": 32091,
     "percent_scale_warnings": 57,
     "diagnosis_counts": {
-      "agreement": 21163,
+      "agreement": 21161,
       "scale_mismatch": 57,
       "sign_divergence": 760,
       "stale": 6682,
-      "value_drift": 3429
+      "value_drift": 3431
     },
     "stale_rows": 6682,
     "scale_mismatch_rows": 57,
@@ -8950,43 +8950,6 @@
       }
     },
     {
-      "ticker": "DHLX",
-      "asset_type": "etf",
-      "field": "change",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 2,
-      "relative_spread_pct": 192.87475,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": 0.08
-        },
-        {
-          "source": "yf",
-          "value": -0.0742998
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 192.87475,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.quote"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 7.0,
-        "yf": 0.0
-      }
-    },
-    {
       "ticker": "AALG",
       "asset_type": "etf",
       "field": "change",
@@ -9475,43 +9438,6 @@
         "stockanalysis.quote": 40.0,
         "yf": 0.0,
         "yf.derived": 0.0
-      }
-    },
-    {
-      "ticker": "DHLX",
-      "asset_type": "etf",
-      "field": "change_pct",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 2,
-      "relative_spread_pct": 191.905167,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": 0.6
-        },
-        {
-          "source": "yf",
-          "value": -0.551431
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 191.905167,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.quote"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 7.0,
-        "yf": 0.0
       }
     },
     {
@@ -10146,6 +10072,80 @@
       "freshness": {
         "stockanalysis.quote": 25.0,
         "yf": 0.0
+      }
+    },
+    {
+      "ticker": "CORB",
+      "asset_type": "etf",
+      "field": "change",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 2,
+      "relative_spread_pct": 188.888778,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": 0.09
+        },
+        {
+          "source": "yf",
+          "value": -0.0799999
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 188.888778,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "stockanalysis.quote"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.quote",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.quote": 32.0,
+        "yf": 0.0
+      }
+    },
+    {
+      "ticker": "CGV",
+      "asset_type": "etf",
+      "field": "return_3m",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 188.762165,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -4.787969642540194
+        },
+        {
+          "source": "stockanalysis.detail.history",
+          "value": 5.3941560061709
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 188.762165,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "stockanalysis.detail.history"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 2,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.history": 35.0
       }
     }
   ],
@@ -12939,52 +12939,6 @@
       }
     },
     {
-      "ticker": "DHLX",
-      "asset_type": "etf",
-      "field": "return_ytd",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 4,
-      "relative_spread_pct": 185.0676,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": 1.967200194665523
-        },
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": 1.514
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": 1.514
-        },
-        {
-          "source": "yf",
-          "value": -1.67345
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 185.0676,
-      "fresh_spread_pct": 185.0676,
-      "stale_sources": [
-        "stockanalysis.detail.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 5,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.performance": 7.0,
-        "yf": 0.0
-      }
-    },
-    {
       "ticker": "BLOX",
       "asset_type": "etf",
       "field": "return_ytd",
@@ -14197,6 +14151,41 @@
       "freshness": {
         "yf.history_1y": 1.0,
         "stockanalysis.detail.history": 0.0
+      }
+    },
+    {
+      "ticker": "298380.KQ",
+      "asset_type": "stock",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 177.273509,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": 8.459214501510575
+        },
+        {
+          "source": "yf",
+          "value": -10.947108
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 177.273509,
+      "fresh_spread_pct": 177.273509,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "yf": 0.0
       }
     }
   ]
