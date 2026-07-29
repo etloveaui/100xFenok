@@ -2,27 +2,46 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_pending_ledger",
-  "generated_at": "2026-07-28T23:43:09Z",
+  "generated_at": "2026-07-29T01:22:16Z",
   "policy": {
     "cooldown_days": 7,
     "failure_threshold": 3,
     "rule": "record provider coverage gaps separately from fetch failures; provider-absent ETFs are degraded and re-probed after cooldown, while failed primary attempts and evidence-eligible successful-but-short daily_1y observations retain fair retry rotation"
   },
   "counts": {
-    "tracked": 486,
-    "cooldown": 161,
+    "tracked": 488,
+    "cooldown": 155,
     "provider_coverage_gaps": 2,
-    "updated": 3,
-    "cleared": 1
+    "updated": 24,
+    "cleared": 0
   },
   "updated": [
-    "ASCI",
-    "IBTR",
-    "QQMY"
+    "AAPR",
+    "AAPW",
+    "AAPX",
+    "AETH",
+    "AIOO",
+    "AJAN",
+    "AJUL",
+    "AKAF",
+    "AMDW",
+    "AMZW",
+    "APOC",
+    "ARKB",
+    "ARLU",
+    "AUGU",
+    "AVGW",
+    "BBB",
+    "BCCC",
+    "BETE",
+    "BETH",
+    "BHYP",
+    "BITB",
+    "BLST",
+    "TLDR",
+    "TSYW"
   ],
-  "cleared": [
-    "DHLX"
-  ],
+  "cleared": [],
   "entries": {
     "AAAU": {
       "ticker": "AAAU",
@@ -46,30 +65,30 @@
     },
     "AAPR": {
       "ticker": "AAPR",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
     "AAPW": {
       "ticker": "AAPW",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
     "AAPX": {
       "ticker": "AAPX",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
@@ -116,60 +135,60 @@
     },
     "AETH": {
       "ticker": "AETH",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
     "AIOO": {
       "ticker": "AIOO",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
     "AJAN": {
       "ticker": "AJAN",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
     "AJUL": {
       "ticker": "AJUL",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
     "AKAF": {
       "ticker": "AKAF",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
     "AMDW": {
       "ticker": "AMDW",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
@@ -249,20 +268,20 @@
     },
     "AMZW": {
       "ticker": "AMZW",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
     "APOC": {
       "ticker": "APOC",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
@@ -319,20 +338,20 @@
     },
     "ARKB": {
       "ticker": "ARKB",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
     "ARLU": {
       "ticker": "ARLU",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
@@ -392,20 +411,20 @@
     },
     "AUGU": {
       "ticker": "AUGU",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
     "AVGW": {
       "ticker": "AVGW",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
@@ -462,20 +481,20 @@
     },
     "BBB": {
       "ticker": "BBB",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
     "BCCC": {
       "ticker": "BCCC",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
@@ -512,20 +531,20 @@
     },
     "BETE": {
       "ticker": "BETE",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
     "BETH": {
       "ticker": "BETH",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
@@ -638,20 +657,20 @@
     },
     "BHYP": {
       "ticker": "BHYP",
-      "last_attempt_utc": "2026-07-28T01:18:09Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "error",
       "last_provider": "yahoo_finance"
     },
     "BITB": {
       "ticker": "BITB",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
@@ -728,10 +747,10 @@
     },
     "BLST": {
       "ticker": "BLST",
-      "last_attempt_utc": "2026-07-25T16:46:22Z",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
@@ -5130,6 +5149,16 @@
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
+    "TLDR": {
+      "ticker": "TLDR",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "fallback_observed_primary_preserved",
+      "last_provider": "yahoo_finance"
+    },
     "TLG": {
       "ticker": "TLG",
       "last_attempt_utc": "2026-07-27T23:48:16Z",
@@ -5278,6 +5307,16 @@
     "TSPY": {
       "ticker": "TSPY",
       "last_attempt_utc": "2026-07-26T04:27:02Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+      "failure_class": "hard_error",
+      "consecutive_failures": 1,
+      "next_attempt_after_utc": null,
+      "last_status": "fallback_observed_primary_preserved",
+      "last_provider": "yahoo_finance"
+    },
+    "TSYW": {
+      "ticker": "TSYW",
+      "last_attempt_utc": "2026-07-29T01:22:16Z",
       "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
       "failure_class": "hard_error",
       "consecutive_failures": 1,
