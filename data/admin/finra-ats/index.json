@@ -1,22 +1,28 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "finra_ats_weekly",
-  "updated_at": "2026-07-24T03:44:12.361Z",
-  "retry_set": [
-    "weekly-summary"
-  ],
+  "updated_at": "2026-07-29T13:11:20.885Z",
+  "retry_set": [],
   "items": {
     "weekly-summary": {
       "key": "weekly-summary",
-      "resolution_state": "unavailable",
-      "retry": true,
-      "latest_failure": {
-        "run_id": "30063899022",
-        "run_attempt": 1,
-        "observed_at": "2026-07-24T03:44:12.361Z",
-        "reason": "partial_partition"
+      "resolution_state": "fresh_primary",
+      "retry": false,
+      "updated_at": "2026-07-29T13:11:20.885Z",
+      "current": {
+        "path": "data/admin/finra-ats/current/weekly-summary.json",
+        "payload_sha256": "14947b890df5df5fa979662afb5fe1bfa2c6f0c678bf7307995f0dec2257e678",
+        "source_as_of": "2026-06-22"
       },
-      "updated_at": "2026-07-24T03:44:12.361Z"
+      "promotion_contract": "provider_observation/v2",
+      "provider_observation": {
+        "schema_version": "provider_observation/v2",
+        "payload_sha256": "14947b890df5df5fa979662afb5fe1bfa2c6f0c678bf7307995f0dec2257e678",
+        "source_as_of": "2026-06-22",
+        "run_id": "30454777675",
+        "run_attempt": 1,
+        "observed_at": "2026-07-29T13:11:20.885Z"
+      }
     }
   }
 }
