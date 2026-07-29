@@ -1,6 +1,6 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-07-28T14:43:42.252Z",
+  "generated_at": "2026-07-29T00:12:47.257Z",
   "status": "open",
   "open_incident_count": 2,
   "open_incidents": [
@@ -229,8 +229,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "attempt_gap"
+      ]
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -378,8 +380,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 25,
-    "overdue": 0,
+    "not_due": 24,
+    "overdue": 1,
     "recovered": 0,
     "no_declaration": 7,
     "unknown": 0
@@ -404,9 +406,9 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "30369679833",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30369679833",
-    "observed_at": "2026-07-28T14:43:42.252Z",
+    "run_id": "30410394966",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30410394966",
+    "observed_at": "2026-07-29T00:12:47.257Z",
     "event": "schedule",
     "workflows": [
       "slickcharts-history.yml",
