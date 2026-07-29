@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-07-29T22:17:11Z",
+  "generated_at": "2026-07-29T23:43:48Z",
   "counts": {
-    "tracked": 161,
+    "tracked": 164,
     "fresh": 87,
-    "lkg": 74,
+    "lkg": 77,
     "unavailable": 0,
-    "retry": 74,
-    "failed": 0,
+    "retry": 77,
+    "failed": 3,
     "recovered": 0,
     "promotion_deferred": 0
   },
@@ -27,11 +27,11 @@
       "retry": 0
     },
     "etf": {
-      "tracked": 43,
+      "tracked": 46,
       "fresh": 1,
-      "lkg": 42,
+      "lkg": 45,
       "unavailable": 0,
-      "retry": 42
+      "retry": 45
     },
     "surface": {
       "tracked": 25,
@@ -295,11 +295,23 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "IDEQ"
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "KRYP"
     },
     {
       "artifact_kind": "etf",
       "entity": "LVIG"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "PHYS"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "PSLV"
     },
     {
       "artifact_kind": "etf",
@@ -959,6 +971,16 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "IDEQ",
+      "resolution_state": "lkg_primary",
+      "payload_sha256": "9d54b9e0b94dd37fb0033a973907969189f57b4dca21b5ae6da3168890c894ba",
+      "source_as_of": "2025-11-01T00:00:00Z",
+      "failure_run_id": "30500382017",
+      "failure_observed_at": "2026-07-29T23:43:48Z",
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "KRYP",
       "resolution_state": "lkg_primary",
       "payload_sha256": "b0d5d35ee0b63a8dc21b9511f1a58579aa2dde123cb04dad88f85c9959565e9a",
@@ -975,6 +997,26 @@
       "source_as_of": null,
       "failure_run_id": "30319268781",
       "failure_observed_at": "2026-07-28T01:07:08Z",
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "PHYS",
+      "resolution_state": "lkg_primary",
+      "payload_sha256": "ada4b37a926c87f5fc0ed7293f0a74c9501203e01c3b700e4473151ce0dda7f1",
+      "source_as_of": "2025-10-31T00:00:00Z",
+      "failure_run_id": "30500382017",
+      "failure_observed_at": "2026-07-29T23:43:48Z",
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "PSLV",
+      "resolution_state": "lkg_primary",
+      "payload_sha256": "304901d5846aa03ee3d8260df6ee7ce93f52e378b0ed765759c4d0558950710b",
+      "source_as_of": "2025-10-31T00:00:00Z",
+      "failure_run_id": "30500382017",
+      "failure_observed_at": "2026-07-29T23:43:48Z",
       "data_loss": false
     },
     {
@@ -1154,8 +1196,11 @@
     "ESUM",
     "IBGM",
     "IBIM",
+    "IDEQ",
     "KRYP",
     "LVIG",
+    "PHYS",
+    "PSLV",
     "RAAR",
     "RAAY",
     "RCLR",
@@ -1175,99 +1220,40 @@
   "recovered_etfs": [],
   "promotion_deferral_details": [],
   "current_attempt": {
-    "run_id": "30495499317",
+    "run_id": "30500382017",
     "run_attempt": 1,
     "event_name": "schedule",
-    "schedule": "20 21 * * *",
+    "schedule": "50 22 * * 1-5",
     "natural": true,
-    "attempted": 16,
-    "successes": 16,
-    "failed": 0,
+    "attempted": 3,
+    "successes": 0,
+    "failed": 3,
     "recovered": 0,
     "promotion_deferred": 0,
-    "errors": [],
-    "success_rows": [
+    "errors": [
       {
-        "artifact_kind": "stock",
-        "entity": "AAPL",
-        "outcome": "fresh"
+        "artifact_kind": "etf",
+        "entity": "IDEQ",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "controlled": false,
+        "data_loss": false
       },
       {
-        "artifact_kind": "stock",
-        "entity": "AMZN",
-        "outcome": "fresh"
+        "artifact_kind": "etf",
+        "entity": "PHYS",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "controlled": false,
+        "data_loss": false
       },
       {
-        "artifact_kind": "stock",
-        "entity": "GOOGL",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "JPM",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "META",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "MSFT",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "NVDA",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "TSLA",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "AAPL",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "AMZN",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "GOOGL",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "JPM",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "META",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "MSFT",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "NVDA",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "TSLA",
-        "outcome": "fresh"
+        "artifact_kind": "etf",
+        "entity": "PSLV",
+        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "controlled": false,
+        "data_loss": false
       }
     ],
+    "success_rows": [],
     "promotion_deferrals": []
   }
 }
