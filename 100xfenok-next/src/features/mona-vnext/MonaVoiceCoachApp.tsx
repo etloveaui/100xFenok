@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MonaWindDown, { type WindDownPhase } from "@/components/admin-live/MonaWindDown";
-import MonaVnextEntry from "@/components/admin-live/MonaVnextEntry";
 import {
   createInitialLessonState,
   pickNextExpression,
@@ -44,6 +43,10 @@ import {
   buildMasteryEvent,
   type MonaVnextCorrectionCandidate,
 } from "@/features/mona-vnext/memory/srsBridge";
+import {
+  applyProductVerdict,
+  createProductQuest,
+} from "@/features/mona-vnext/product/gameSession";
 import { isMonaTeacherRuntimeActive } from "@/features/mona-vnext/product/productPolicy";
 import { buildTeacherRealtimeTextInput } from "@/features/mona-vnext/teacher/effectEmitter";
 import {
@@ -165,18 +168,26 @@ function buildWindDownMessage(status: ReturnType<typeof useGeminiLiveSession>["s
   return "마이크를 켜면 오늘 문장부터 바로 시작할게.";
 }
 
+function formatWindDownError(error: string | null | undefined) {
+  if (!error) return null;
+  const normalized = error.toLowerCase();
+  if (normalized.includes("requested device not found") || normalized.includes("notfounderror")) {
+    return "마이크를 찾지 못했어. iPhone 설정에서 마이크 연결을 확인해줘.";
+  }
+  if (normalized.includes("permission") || normalized.includes("notallowederror")) {
+    return "마이크 사용이 꺼져 있어. Safari 설정에서 마이크를 허용해줘.";
+  }
+  if (normalized.includes("network") || normalized.includes("socket") || normalized.includes("connection")) {
+    return "연결이 불안정해. 잠깐 뒤 다시 시작해줘.";
+  }
+  return "잠시 문제가 생겼어. 설정을 확인하고 다시 시작해줘.";
+}
+
 function buildFinalEventMessage(reason: FinalizeReason) {
   if (reason === "strict-stop") return "Mona vNext session finalized by strict stop phrase.";
   if (reason === "reconnect-failed") return "Mona vNext session finalized after reconnect failure.";
   if (reason === "pagehide") return "Mona vNext session finalized by pagehide.";
   return "Mona vNext session finalized by owner/dev control.";
-}
-
-function isWindDownSettingsLocked(status: ReturnType<typeof useGeminiLiveSession>["status"]) {
-  return status === "connecting"
-    || status === "setup-wait"
-    || status === "listening"
-    || status === "stopping";
 }
 
 function buildWindDownCard(lessonState: MonaVnextLessonState): ExpressionCard {
@@ -242,6 +253,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
   // conversation saves can set it; partial-event logging never does.
   const [persistenceState, setPersistenceState] = useState(() => createInitialPersistenceState());
   const [answerVerdict, setAnswerVerdict] = useState<MonaVnextAnswerVerdict | null>(null);
+  const [productQuest, setProductQuest] = useState(() => createProductQuest());
   const [resumeOffer, setResumeOffer] = useState<ResumeOffer | null>(null);
   const [studyMode, setStudyMode] = useState<StudyMode>("drill");
   const [correctionCandidates, setCorrectionCandidates] = useState<MonaVnextCorrectionCandidate[]>([]);
@@ -642,6 +654,10 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
             type: "EVAL_RESULT",
             verdict,
           }, { trigger: `EVAL_RESULT_${evaluation.answerMatch?.tier ?? "miss"}` });
+          const productAnswerMatch = evaluation.answerMatch;
+          if (surface === "winddown" && productAnswerMatch) {
+            setProductQuest((current) => applyProductVerdict(current, productAnswerMatch.tier));
+          }
           masteryEvent = buildMasteryEvent({
             expressionId: currentLesson.expression.id,
             verdict,
@@ -774,6 +790,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
     postMemoryAdvisory,
     p15Gates,
     sessionSettings,
+    surface,
     teacherActive,
   ]);
 
@@ -930,6 +947,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
       sessionFinalizedRef.current = false;
       hardStopHandledRef.current = false;
       setAnswerVerdict(null);
+      if (!activeResumeOffer) setProductQuest(createProductQuest());
       setPersistenceState(createInitialPersistenceState());
       autoStartConversationRef.current = null;
       bufferEvent({
@@ -1261,24 +1279,25 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
     || [...transcriptState.turns].reverse().find((turn) => Boolean(turn.modelText))?.modelText
     || null;
   const micDeadWarning = live.metrics.micDead ? "마이크가 안 들려. 입력 장치나 권한을 확인해줘." : null;
-  const windDownError = persistenceState.conversationSaveError ?? micDeadWarning ?? live.metrics.lastError;
+  const windDownError = formatWindDownError(
+    persistenceState.conversationSaveError ?? micDeadWarning ?? live.metrics.lastError,
+  );
 
   if (surface === "winddown") {
-    const settingsLocked = isWindDownSettingsLocked(live.status);
     return (
       <MonaWindDown
         phase={mapWindDownPhase(live.status)}
-        modeLabel="메인"
         message={buildWindDownMessage(live.status)}
         card={live.session ? windDownCard : null}
         coachLine={latestCoachLine}
         errorText={windDownError}
         answerVisible={lessonState.englishVisible}
+        answerVerdict={p15Gates.answerMatcher ? answerVerdict : null}
+        quest={productQuest}
         voiceName={voiceName}
         vadPreset={vadPreset}
         onVoiceChange={setVoiceName}
         onVadChange={setVadPreset}
-        settingsSlot={<MonaVnextEntry locked={settingsLocked} />}
         resumeOffer={Boolean(resumeOffer)}
         onStart={live.start}
         onStop={stopSession}

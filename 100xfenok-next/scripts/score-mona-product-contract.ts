@@ -78,7 +78,13 @@ function checkMainUsesTeacherRuntime() {
   assert.equal(isMonaVnextFeatureEnabled(MONA_VNEXT_APP_OWNED_NEXT_MATERIAL_GATE, "winddown"), true);
   assert.ok(appSource.includes("resumeOffer={Boolean(resumeOffer)}"));
   assert.ok(appSource.includes("onResume={resumeTeacherSession}"));
+  assert.ok(appSource.includes("formatWindDownError("));
   assert.ok(productShellSource.includes("이어서 하기"));
+  assert.ok(productShellSource.includes("lumi-mascot.webp"));
+  assert.ok(productShellSource.includes("<LazyMotion"));
+  assert.ok(productShellSource.includes("quest.completedSteps"));
+  assert.ok(productShellSource.includes("@media (prefers-reduced-motion: reduce)"));
+  assert.ok(productShellSource.includes("오늘의 5문장 시작"));
   return "main and debug surfaces share the app-owned teacher runtime";
 }
 

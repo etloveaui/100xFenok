@@ -2,20 +2,32 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import Image from "next/image";
+import { AnimatePresence, domAnimation, LazyMotion, m, useReducedMotion } from "motion/react";
+import type { MonaVnextAnswerMatchTier } from "@/features/mona-vnext/coach/answerMatcher";
+import type { ProductQuestState } from "@/features/mona-vnext/product/gameSession";
 import type { ExpressionCard } from "@/components/admin-live/AdminLiveBench";
 
 export type WindDownPhase = "boot" | "ready" | "connecting" | "live" | "stopped" | "blocked";
 
 type WindDownTheme = "light" | "dark";
 
+type AnswerVerdict = {
+  tier: MonaVnextAnswerMatchTier;
+  symbol: string;
+  label: string;
+  detail: string;
+};
+
 type Props = {
   phase: WindDownPhase;
-  modeLabel?: string;
   message: string;
   card: ExpressionCard | null;
   coachLine: string | null;
   errorText: string | null;
   answerVisible?: boolean;
+  answerVerdict?: AnswerVerdict | null;
+  quest?: ProductQuestState;
   voiceName: string;
   vadPreset: string;
   onVoiceChange: (voice: string) => void;
@@ -32,71 +44,81 @@ type Props = {
 const THEME_STORAGE_KEY = "winddown-theme";
 const VOICE_STORAGE_KEY = "winddown-voice";
 const VAD_STORAGE_KEY = "winddown-vad";
+const EMPTY_QUEST: ProductQuestState = {
+  targetSteps: 5,
+  completedSteps: 0,
+  xp: 0,
+  lastReward: null,
+  isComplete: false,
+};
 
 const VOICE_CHOICES = [
-  { id: "Achernar", label: "포근한 목소리", hint: "기본" },
-  { id: "Aoede", label: "가벼운 목소리", hint: "산뜻" },
-  { id: "Kore", label: "차분한 목소리", hint: "또렷" },
+  { id: "Achernar", label: "포근하게", hint: "기본" },
+  { id: "Aoede", label: "가볍게", hint: "산뜻" },
+  { id: "Kore", label: "차분하게", hint: "또렷" },
 ];
 
 const WAIT_CHOICES: Array<{ id: "relaxed" | "balanced"; label: string; hint: string }> = [
-  { id: "relaxed", label: "여유 있게", hint: "생각할 틈을 줘" },
+  { id: "relaxed", label: "여유 있게", hint: "생각할 틈" },
   { id: "balanced", label: "보통", hint: "조금 빠르게" },
 ];
 
 const WEEKDAY_PLAN: Record<number, { day: string; theme: string }> = {
-  0: { day: "일요일", theme: "주간 복습 테스트" },
+  0: { day: "일요일", theme: "주간 복습" },
   1: { day: "월요일", theme: "회사 · 업무" },
-  2: { day: "화요일", theme: "가족 · 친구 일상" },
-  3: { day: "수요일", theme: "혼잣말 · 감정" },
-  4: { day: "목요일", theme: "외출 · 쇼핑 · 식당" },
-  5: { day: "금요일", theme: "회사 · 업무 심화" },
+  2: { day: "화요일", theme: "가족 · 친구" },
+  3: { day: "수요일", theme: "감정 · 혼잣말" },
+  4: { day: "목요일", theme: "외출 · 식당" },
+  5: { day: "금요일", theme: "업무 심화" },
   6: { day: "토요일", theme: "자유 주제" },
 };
 
 const PALETTES: Record<WindDownTheme, Record<string, string>> = {
   light: {
-    "--wd-bg": "#faf6ef",
-    "--wd-wash": "radial-gradient(120% 90% at 70% 0%, #f3ecff 0%, rgba(243,236,255,0) 55%), radial-gradient(100% 80% at 10% 100%, #fdeede 0%, rgba(253,238,222,0) 50%)",
-    "--wd-ink": "#3a3440",
-    "--wd-muted": "#9b93a4",
-    "--wd-card": "#fffefa",
-    "--wd-line": "#eae2d4",
-    "--wd-accent": "#7c6fb0",
-    "--wd-accent-soft": "#efeaf9",
-    "--wd-apricot": "#c4773f",
-    "--wd-apricot-soft": "#fbeede",
-    "--wd-shadow": "0 24px 48px -20px rgba(124,111,176,0.25)",
+    "--wd-bg": "#f7f2ff",
+    "--wd-wash": "radial-gradient(100% 70% at 12% 0%, rgba(255,199,153,.6), transparent 52%), radial-gradient(85% 65% at 100% 15%, rgba(182,159,255,.58), transparent 58%)",
+    "--wd-ink": "#2b2340",
+    "--wd-muted": "#756d88",
+    "--wd-card": "rgba(255,255,255,.82)",
+    "--wd-card-solid": "#fffdfd",
+    "--wd-line": "rgba(87,67,124,.13)",
+    "--wd-accent": "#7257c7",
+    "--wd-accent-2": "#a66ced",
+    "--wd-accent-soft": "#eee8ff",
+    "--wd-apricot": "#d56c37",
+    "--wd-apricot-soft": "#fff0e5",
+    "--wd-shadow": "0 24px 64px -28px rgba(72,45,126,.42)",
   },
   dark: {
-    "--wd-bg": "#1a1726",
-    "--wd-wash": "radial-gradient(120% 90% at 70% 0%, #262040 0%, rgba(38,32,64,0) 55%), radial-gradient(100% 80% at 10% 100%, #2a2030 0%, rgba(42,32,48,0) 50%)",
-    "--wd-ink": "#ede7f4",
-    "--wd-muted": "#8d84a0",
-    "--wd-card": "#241f33",
-    "--wd-line": "#37304a",
-    "--wd-accent": "#a99bd9",
-    "--wd-accent-soft": "#2e2745",
-    "--wd-apricot": "#d9a176",
-    "--wd-apricot-soft": "#3a2d28",
-    "--wd-shadow": "0 24px 48px -20px rgba(0,0,0,0.55)",
+    "--wd-bg": "#120f21",
+    "--wd-wash": "radial-gradient(95% 70% at 10% 0%, rgba(116,75,165,.48), transparent 56%), radial-gradient(95% 75% at 100% 10%, rgba(234,135,96,.24), transparent 60%)",
+    "--wd-ink": "#f8f3ff",
+    "--wd-muted": "#aaa0bd",
+    "--wd-card": "rgba(39,31,58,.78)",
+    "--wd-card-solid": "#241d36",
+    "--wd-line": "rgba(232,220,255,.12)",
+    "--wd-accent": "#ae91ff",
+    "--wd-accent-2": "#d39eff",
+    "--wd-accent-soft": "rgba(165,130,255,.15)",
+    "--wd-apricot": "#ffad75",
+    "--wd-apricot-soft": "rgba(255,161,103,.14)",
+    "--wd-shadow": "0 28px 72px -28px rgba(0,0,0,.72)",
   },
 };
 
 const CARD_STATE_LABEL: Record<ExpressionCard["state"], string> = {
-  prompt: "먼저 말해보기",
-  reveal: "자연스러운 영어",
-  drill: "다시 잡기",
+  prompt: "내 영어로 말하기",
+  reveal: "자연스러운 표현",
+  drill: "한 번 더",
 };
 
-const FLOW_STEPS = ["말하기", "영어 공개", "따라하기"];
-
-function cardFlowStep(card: ExpressionCard | null) {
-  if (!card) return -1;
-  if (card.state === "prompt") return 0;
-  if (card.state === "reveal") return 1;
-  return 2;
-}
+const VERDICT_STYLE: Record<MonaVnextAnswerMatchTier, { emoji: string; label: string; color: string; bg: string }> = {
+  canonical: { emoji: "✨", label: "정확해!", color: "#2d8d62", bg: "rgba(77,203,139,.16)" },
+  variant: { emoji: "🌟", label: "이 표현도 좋아!", color: "#6e55c6", bg: "rgba(162,130,255,.17)" },
+  close: { emoji: "🔥", label: "거의 다 왔어!", color: "#c56d28", bg: "rgba(255,161,80,.17)" },
+  miss: { emoji: "🌱", label: "좋아, 같이 고쳐보자", color: "#567194", bg: "rgba(111,155,210,.16)" },
+  garbage: { emoji: "🎙️", label: "잘 못 들었어", color: "#787184", bg: "rgba(140,132,152,.14)" },
+};
 
 function studyPlanLine(): string {
   const shifted = new Date(Date.now() - 4 * 60 * 60 * 1000);
@@ -104,24 +126,68 @@ function studyPlanLine(): string {
   return `${plan.day} · ${plan.theme}`;
 }
 
+function createAudioContext() {
+  if (typeof window === "undefined") return null;
+  const AudioContextClass = window.AudioContext
+    ?? (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  return AudioContextClass ? new AudioContextClass() : null;
+}
+
+function playVerdictChime(context: AudioContext, tier: MonaVnextAnswerMatchTier) {
+  if (tier === "garbage" || context.state !== "running") return;
+  const now = context.currentTime;
+  const notes = tier === "miss" ? [220] : tier === "close" ? [523.25, 587.33] : [523.25, 659.25];
+
+  notes.forEach((frequency, index) => {
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const startsAt = now + index * 0.09;
+    oscillator.type = "sine";
+    oscillator.frequency.value = frequency;
+    gain.gain.setValueAtTime(0.0001, startsAt);
+    gain.gain.exponentialRampToValueAtTime(0.055, startsAt + 0.018);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startsAt + 0.17);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(startsAt);
+    oscillator.stop(startsAt + 0.18);
+  });
+}
+
 export default function MonaWindDown({
-  phase, modeLabel = "vNext", message, card, coachLine, errorText, answerVisible = false,
-  voiceName, vadPreset, onVoiceChange, onVadChange,
+  phase,
+  message,
+  card,
+  coachLine,
+  errorText,
+  answerVisible = false,
+  answerVerdict = null,
+  quest = EMPTY_QUEST,
+  voiceName,
+  vadPreset,
+  onVoiceChange,
+  onVadChange,
   settingsSlot,
   resumeOffer = false,
-  onStart, onStop, onResume, onRevealAnswer, onNext,
+  onStart,
+  onStop,
+  onResume,
+  onRevealAnswer,
+  onNext,
 }: Props) {
   const [theme, setTheme] = useState<WindDownTheme>(() => {
-    if (typeof window === "undefined") return "light";
+    if (typeof window === "undefined") return "dark";
     try {
       const saved = window.localStorage.getItem(THEME_STORAGE_KEY);
-      return saved === "dark" || saved === "light" ? saved : "light";
+      return saved === "dark" || saved === "light" ? saved : "dark";
     } catch {
-      return "light";
+      return "dark";
     }
   });
   const [sheetOpen, setSheetOpen] = useState(false);
   const prefsAppliedRef = useRef(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (prefsAppliedRef.current || phase === "boot") return;
@@ -132,16 +198,32 @@ export default function MonaWindDown({
       const savedVad = window.localStorage.getItem(VAD_STORAGE_KEY);
       if (savedVad === "relaxed" || savedVad === "balanced") onVadChange(savedVad);
     } catch {
-      // storage unavailable — keep presets
+      // Storage can be unavailable in private browsing.
     }
-  }, [phase, onVoiceChange, onVadChange]);
+  }, [phase, onVadChange, onVoiceChange]);
+
+  useEffect(() => {
+    if (!answerVerdict) return;
+    const context = audioContextRef.current;
+    if (context) playVerdictChime(context, answerVerdict.tier);
+  }, [answerVerdict, quest.completedSteps]);
+
+  useEffect(() => () => {
+    void audioContextRef.current?.close();
+  }, []);
+
+  const planLine = useMemo(() => studyPlanLine(), []);
+  const live = phase === "live";
+  const busy = phase === "connecting" || phase === "boot";
+  const progress = Math.round((quest.completedSteps / quest.targetSteps) * 100);
+  const verdictStyle = answerVerdict ? VERDICT_STYLE[answerVerdict.tier] : null;
 
   const pickVoice = (id: string) => {
     onVoiceChange(id);
     try {
       window.localStorage.setItem(VOICE_STORAGE_KEY, id);
     } catch {
-      // ignore
+      // Keep the in-memory setting.
     }
   };
 
@@ -150,7 +232,7 @@ export default function MonaWindDown({
     try {
       window.localStorage.setItem(VAD_STORAGE_KEY, id);
     } catch {
-      // ignore
+      // Keep the in-memory setting.
     }
   };
 
@@ -160,346 +242,402 @@ export default function MonaWindDown({
       try {
         window.localStorage.setItem(THEME_STORAGE_KEY, next);
       } catch {
-        // ignore
+        // Keep the in-memory setting.
       }
       return next;
     });
   };
 
-  const applySettings = () => {
-    setSheetOpen(false);
+  const beginSession = () => {
+    const context = audioContextRef.current ?? createAudioContext();
+    audioContextRef.current = context;
+    if (context?.state === "suspended") void context.resume();
+    onStart();
   };
 
-  const planLine = useMemo(() => studyPlanLine(), []);
-  const live = phase === "live";
-  const busy = phase === "connecting" || phase === "boot";
-  const activeFlowStep = cardFlowStep(card);
-  const controlDisabled = !card || !live || busy || !onRevealAnswer || !onNext;
-
-  const buttonLabel = phase === "live"
-    ? "듣고 있어 · 누르면 마침"
-    : phase === "connecting"
-      ? "연결하는 중"
-      : phase === "boot"
-        ? "준비 확인 중"
-        : phase === "blocked"
-          ? "지금은 시작할 수 없어"
-          : phase === "stopped"
-            ? "다시 시작"
-            : "마이크 켜기";
+  const primaryLabel = phase === "connecting"
+    ? "루미가 연결 중이야"
+    : phase === "boot"
+      ? "오늘 문장을 준비 중이야"
+      : phase === "blocked"
+        ? errorText?.includes("찾지 못했어")
+          ? "마이크 연결을 확인해줘"
+          : "마이크 권한을 확인해줘"
+        : phase === "stopped"
+          ? "새 퀘스트 시작"
+          : "오늘의 5문장 시작";
 
   return (
-    <div
-      data-wd-theme={theme}
-      style={PALETTES[theme] as React.CSSProperties}
-      className="fixed inset-0 z-[70] flex flex-col overflow-hidden bg-[var(--wd-bg)] text-[var(--wd-ink)] transition-colors duration-500"
-    >
-      <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "var(--wd-wash)" }} />
+    <LazyMotion features={domAnimation} strict>
+      <div
+        data-wd-theme={theme}
+        style={PALETTES[theme] as React.CSSProperties}
+        className="fixed inset-0 z-[70] flex min-h-[100dvh] flex-col overflow-hidden bg-[var(--wd-bg)] text-[var(--wd-ink)]"
+      >
+        <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "var(--wd-wash)" }} />
+        <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.055] wd-stars" />
 
-      <header className="relative flex items-start justify-between px-6 pt-[max(env(safe-area-inset-top),20px)]">
-        <div className="wd-enter" style={{ animationDelay: "60ms" }}>
-          <p className="font-[family-name:var(--font-wd-serif)] text-[26px] font-medium tracking-tight">
-            Wind-Down
-          </p>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <p className="text-[13px] font-medium tracking-[0.08em] text-[var(--wd-muted)]">{planLine}</p>
-            <span className="rounded-full border border-[var(--wd-line)] bg-[var(--wd-card)] px-2 py-0.5 text-[11px] font-semibold text-[var(--wd-accent)]">
-              {modeLabel}
+        <header className="relative z-[1] px-5 pt-[max(env(safe-area-inset-top),16px)]">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-black tracking-[0.23em] text-[var(--wd-accent)]">WIND DOWN</p>
+              <p className="mt-1 text-[13px] font-semibold text-[var(--wd-muted)]">{planLine}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="rounded-full border border-[var(--wd-line)] bg-[var(--wd-card)] px-3 py-2 text-[12px] font-black backdrop-blur-xl">
+                <span aria-hidden>✨</span> {quest.xp} XP
+              </div>
+              <button
+                type="button"
+                onClick={() => setSheetOpen(true)}
+                aria-label="설정 열기"
+                className="flex h-[44px] w-[44px] items-center justify-center rounded-full border border-[var(--wd-line)] bg-[var(--wd-card)] backdrop-blur-xl transition active:scale-95"
+              >
+                <svg aria-hidden width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                  <line x1="4" y1="8" x2="20" y2="8" />
+                  <circle cx="9" cy="8" r="2.5" fill="var(--wd-card-solid)" />
+                  <line x1="4" y1="16" x2="20" y2="16" />
+                  <circle cx="15" cy="16" r="2.5" fill="var(--wd-card-solid)" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-4 flex items-center gap-3">
+            <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--wd-line)]">
+              <m.div
+                className="h-full rounded-full bg-gradient-to-r from-[var(--wd-accent)] to-[var(--wd-apricot)]"
+                initial={false}
+                animate={{ width: `${progress}%` }}
+                transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 170, damping: 24 }}
+              />
+            </div>
+            <span className="text-[12px] font-black tabular-nums text-[var(--wd-muted)]">
+              {quest.completedSteps}/{quest.targetSteps}
             </span>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setSheetOpen(true)}
-            aria-label="설정 열기"
-            className="wd-enter flex min-h-11 min-w-11 items-center justify-center rounded-full border border-[var(--wd-line)] bg-[var(--wd-card)] shadow-sm transition-transform active:scale-95"
-            style={{ animationDelay: "100ms" }}
-          >
-            <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-              <line x1="4" y1="8" x2="20" y2="8" />
-              <circle cx="9" cy="8" r="2.4" fill="var(--wd-card)" />
-              <line x1="4" y1="16" x2="20" y2="16" />
-              <circle cx="15" cy="16" r="2.4" fill="var(--wd-card)" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label={theme === "light" ? "어둡게 보기" : "밝게 보기"}
-            className="wd-enter flex min-h-11 min-w-11 items-center justify-center rounded-full border border-[var(--wd-line)] bg-[var(--wd-card)] text-[18px] shadow-sm transition-transform active:scale-95"
-            style={{ animationDelay: "140ms" }}
-          >
-            {theme === "light" ? "☾" : "☀"}
-          </button>
-        </div>
-      </header>
+        </header>
 
-      <main className="relative flex flex-1 flex-col items-center justify-center gap-6 px-6">
-        {resumeOffer && onResume ? (
-          <section className="wd-card-in w-full max-w-[420px] rounded-2xl border border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] px-5 py-4">
-            <p className="text-[14px] font-semibold text-[var(--wd-ink)]">
-              연결이 끊겼지만, 하던 문장은 그대로 있어.
-            </p>
-            <button
-              type="button"
-              onClick={onResume}
-              className="mt-3 min-h-11 w-full rounded-xl bg-[var(--wd-accent)] px-4 text-[14px] font-semibold text-white transition active:scale-[0.98]"
+        <main className="relative z-[1] flex flex-1 flex-col overflow-y-auto overscroll-contain px-5 pb-4">
+          {resumeOffer && onResume ? (
+            <m.section
+              initial={reduceMotion ? false : { opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 rounded-2xl border border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] p-4 backdrop-blur-xl"
             >
-              이어서 하기
-            </button>
+              <p className="text-[14px] font-bold">하던 문장은 그대로 기억하고 있어.</p>
+              <button
+                type="button"
+                onClick={onResume}
+                className="mt-3 min-h-11 w-full rounded-xl bg-[var(--wd-accent)] px-4 text-[14px] font-black text-[#171021] transition active:scale-[.98]"
+              >
+                이어서 하기
+              </button>
+            </m.section>
+          ) : null}
+
+          <section className="mx-auto mt-2 flex w-full max-w-[460px] items-center justify-center gap-1">
+            <m.div
+              className="relative h-[134px] w-[142px] shrink-0"
+              animate={reduceMotion ? undefined : live ? { y: [0, -5, 0], rotate: [-1.2, 1.2, -1.2] } : { y: [0, -3, 0] }}
+              transition={reduceMotion ? undefined : { duration: live ? 2.6 : 4, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <m.div
+                aria-hidden
+                className="absolute inset-[24px] rounded-full bg-[var(--wd-accent)] blur-2xl"
+                animate={reduceMotion ? undefined : live ? { opacity: [0.22, 0.55, 0.22], scale: [0.9, 1.16, 0.9] } : { opacity: 0.16 }}
+                transition={reduceMotion ? undefined : { duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+              />
+              {/* Generated specifically for WIND DOWN; no third-party character asset. */}
+              <Image
+                src="/winddown/lumi-mascot.webp"
+                width={768}
+                height={768}
+                alt="달빛 영어 코치 루미"
+                priority
+                className="relative z-[1] h-full w-full object-contain drop-shadow-[0_18px_22px_rgba(0,0,0,.28)]"
+              />
+            </m.div>
+
+            <div className="relative min-w-0 flex-1 rounded-3xl rounded-bl-md border border-[var(--wd-line)] bg-[var(--wd-card)] px-4 py-3 backdrop-blur-xl">
+              <p className="text-[11px] font-black tracking-[.12em] text-[var(--wd-accent)]">
+                {live ? "루미가 듣고 있어" : "오늘의 코치 · 루미"}
+              </p>
+              <p className="mt-1 line-clamp-3 text-[13px] font-semibold leading-relaxed text-[var(--wd-muted)]">
+                {errorText ?? coachLine ?? message}
+              </p>
+              {live ? (
+                <span className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-bold text-[var(--wd-apricot)]">
+                  <span className="wd-listen-dot h-2 w-2 rounded-full bg-current" />
+                  천천히 말해도 괜찮아
+                </span>
+              ) : null}
+            </div>
           </section>
+
+          <AnimatePresence mode="wait">
+            {quest.isComplete ? (
+              <m.section
+                key="quest-complete"
+                initial={reduceMotion ? false : { opacity: 0, scale: 0.94, y: 16 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="mx-auto w-full max-w-[460px] rounded-[30px] border border-[var(--wd-line)] bg-[var(--wd-card)] p-7 text-center backdrop-blur-xl"
+                style={{ boxShadow: "var(--wd-shadow)" }}
+              >
+                <div className="text-5xl" aria-hidden>🌙</div>
+                <p className="mt-4 text-[12px] font-black tracking-[.16em] text-[var(--wd-accent)]">QUEST COMPLETE</p>
+                <h1 className="mt-2 text-[27px] font-black tracking-tight">오늘 5문장 완료!</h1>
+                <p className="mt-2 text-[14px] font-semibold text-[var(--wd-muted)]">
+                  짧게 끝냈지만, 오늘 영어는 분명히 쌓였어.
+                </p>
+                <div className="mx-auto mt-5 inline-flex rounded-full bg-[var(--wd-apricot-soft)] px-4 py-2 text-[14px] font-black text-[var(--wd-apricot)]">
+                  +{quest.xp} XP
+                </div>
+                <button
+                  type="button"
+                  onClick={onStop}
+                  className="mt-6 min-h-14 w-full rounded-2xl bg-gradient-to-r from-[var(--wd-accent)] to-[var(--wd-accent-2)] px-5 text-[15px] font-black text-[#171021] shadow-lg transition active:scale-[.98]"
+                >
+                  오늘은 여기까지
+                </button>
+              </m.section>
+            ) : (
+              <m.section
+                key={card ? `card-${card.updatedAt}` : "welcome"}
+                initial={reduceMotion ? false : { opacity: 0, y: 14, rotateX: -4 }}
+                animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
+                transition={{ duration: reduceMotion ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
+                aria-live="polite"
+                className="mx-auto w-full max-w-[460px] rounded-[30px] border border-[var(--wd-line)] bg-[var(--wd-card)] p-6 backdrop-blur-xl"
+                style={{ boxShadow: "var(--wd-shadow)", transformPerspective: 800 }}
+              >
+                {card ? (
+                  <>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="rounded-full bg-[var(--wd-accent-soft)] px-3 py-1.5 text-[11px] font-black tracking-[.08em] text-[var(--wd-accent)]">
+                        {CARD_STATE_LABEL[card.state]}
+                      </span>
+                      <span className="text-[11px] font-bold text-[var(--wd-muted)]">
+                        {quest.completedSteps + 1}번째 문장
+                      </span>
+                    </div>
+
+                    <h1 className="mt-5 text-[24px] font-black leading-snug tracking-tight">{card.ko}</h1>
+
+                    {card.state === "prompt" ? (
+                      <p className="mt-4 rounded-2xl border border-[var(--wd-line)] bg-[var(--wd-bg)]/40 px-4 py-3 text-[14px] font-semibold leading-relaxed text-[var(--wd-muted)]">
+                        네 영어로 먼저 말해봐. 막히면 정답을 살짝 열어도 돼.
+                      </p>
+                    ) : null}
+
+                    {(card.state === "reveal" || card.state === "drill") && card.en ? (
+                      <div className="mt-5">
+                        <p className="text-[10px] font-black tracking-[.16em] text-[var(--wd-apricot)]">NATURAL ENGLISH</p>
+                        <p className="mt-2 text-[25px] font-black leading-snug tracking-tight">{card.en}</p>
+                        {card.pron ? <p className="mt-2 text-[13px] font-semibold text-[var(--wd-muted)]">{card.pron}</p> : null}
+                      </div>
+                    ) : null}
+
+                    <AnimatePresence>
+                      {verdictStyle && answerVerdict ? (
+                        <m.div
+                          key={`${answerVerdict.tier}-${quest.completedSteps}`}
+                          initial={reduceMotion ? false : { opacity: 0, scale: 0.88, y: 8 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.96 }}
+                          className="mt-5 flex items-center gap-3 rounded-2xl px-4 py-3"
+                          style={{ color: verdictStyle.color, background: verdictStyle.bg }}
+                        >
+                          <span className="text-2xl" aria-hidden>{verdictStyle.emoji}</span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[14px] font-black">{verdictStyle.label}</p>
+                            <p className="mt-0.5 line-clamp-2 text-[12px] font-semibold opacity-80">{answerVerdict.detail}</p>
+                          </div>
+                          {answerVerdict.tier !== "garbage" && quest.lastReward ? (
+                            <span className="shrink-0 rounded-full bg-white/55 px-2.5 py-1 text-[11px] font-black">
+                              +{quest.lastReward}
+                            </span>
+                          ) : null}
+                        </m.div>
+                      ) : null}
+                    </AnimatePresence>
+
+                    {live && onRevealAnswer && onNext ? (
+                      <div className="mt-5 grid grid-cols-[.8fr_1.2fr] gap-3">
+                        <button
+                          type="button"
+                          onClick={onRevealAnswer}
+                          className="min-h-12 rounded-2xl border border-[var(--wd-line)] bg-[var(--wd-card-solid)] px-3 text-[13px] font-black text-[var(--wd-ink)] transition active:scale-[.98]"
+                        >
+                          {answerVisible ? "정답 다시" : "정답 보기"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={onNext}
+                          className="min-h-12 rounded-2xl bg-[var(--wd-accent)] px-3 text-[14px] font-black text-[#171021] transition active:scale-[.98]"
+                        >
+                          다음 문장
+                        </button>
+                      </div>
+                    ) : null}
+                  </>
+                ) : (
+                  <div className="py-2 text-center">
+                    <p className="text-[11px] font-black tracking-[.16em] text-[var(--wd-accent)]">5 MINUTE QUEST</p>
+                    <h1 className="mt-3 text-[26px] font-black tracking-tight">하루 다섯 문장이면 충분해.</h1>
+                    <p className="mx-auto mt-3 max-w-[330px] text-[14px] font-semibold leading-relaxed text-[var(--wd-muted)]">
+                      부담 없이 말하고, 바로 고치고, 작은 보상까지 받고 끝내자.
+                    </p>
+                  </div>
+                )}
+              </m.section>
+            )}
+          </AnimatePresence>
+        </main>
+
+        {!quest.isComplete ? (
+          <footer className="relative z-[2] px-5 pb-[max(env(safe-area-inset-bottom),18px)] pt-2">
+            {live ? (
+              <button
+                type="button"
+                onClick={onStop}
+                className="mx-auto flex min-h-12 w-full max-w-[460px] items-center justify-center gap-3 rounded-2xl border border-[var(--wd-line)] bg-[var(--wd-card)] px-4 text-[13px] font-black text-[var(--wd-muted)] backdrop-blur-xl transition active:scale-[.98]"
+              >
+                <span className="relative flex h-3 w-3">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--wd-apricot)] opacity-50 motion-reduce:animate-none" />
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-[var(--wd-apricot)]" />
+                </span>
+                마이크 켜짐 · 오늘 그만하기
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={beginSession}
+                disabled={busy || phase === "blocked"}
+                className="mx-auto flex min-h-16 w-full max-w-[460px] items-center justify-center gap-3 rounded-[22px] bg-gradient-to-r from-[var(--wd-accent)] to-[var(--wd-accent-2)] px-5 text-[15px] font-black text-[#171021] shadow-[0_16px_36px_-18px_rgba(163,126,255,.9)] transition active:scale-[.98] disabled:opacity-50"
+              >
+                {busy ? (
+                  <span className="wd-spin h-5 w-5 rounded-full border-2 border-current border-t-transparent" />
+                ) : (
+                  <svg aria-hidden width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <rect x="9" y="3" width="6" height="11" rx="3" />
+                    <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+                  </svg>
+                )}
+                {primaryLabel}
+              </button>
+            )}
+          </footer>
         ) : null}
 
-        <section
-          key={card ? card.updatedAt : "idle"}
-          aria-live="polite"
-          className="wd-card-in w-full max-w-[420px] rounded-[28px] border border-[var(--wd-line)] bg-[var(--wd-card)] px-7 py-8"
-          style={{ boxShadow: "var(--wd-shadow)" }}
-        >
-          {card ? (
-            <>
-              <div className="flex items-center justify-between">
-                <span className="rounded-full bg-[var(--wd-accent-soft)] px-3 py-1 text-[11px] font-semibold tracking-[0.14em] text-[var(--wd-accent)]">
-                  {CARD_STATE_LABEL[card.state]}
-                </span>
-                {card.state === "prompt" && (
-                  <span className="text-[12px] font-semibold text-[var(--wd-muted)]">영어 숨김</span>
-                )}
-                {card.state === "reveal" && (
-                  <span className="text-[12px] font-semibold text-[var(--wd-muted)]">한 번 따라 말하기</span>
-                )}
-                {card.state === "drill" && (
-                  <span className="text-[12px] font-semibold text-[var(--wd-muted)]">천천히</span>
-                )}
+        {sheetOpen ? (
+          <div className="absolute inset-0 z-20 flex flex-col justify-end" role="dialog" aria-modal="true" aria-label="학습 설정">
+            <button
+              type="button"
+              aria-label="설정 닫기"
+              onClick={() => setSheetOpen(false)}
+              className="absolute inset-0 bg-black/45 backdrop-blur-[3px]"
+            />
+            <m.div
+              initial={reduceMotion ? false : { y: 50, opacity: 0.7 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="relative rounded-t-[30px] border-t border-[var(--wd-line)] bg-[var(--wd-card-solid)] px-6 pb-[max(env(safe-area-inset-bottom),22px)] pt-3"
+              style={{ boxShadow: "0 -20px 54px -22px rgba(0,0,0,.7)" }}
+            >
+              <button
+                type="button"
+                onClick={() => setSheetOpen(false)}
+                aria-label="설정 적용하고 닫기"
+                className="mx-auto flex min-h-8 w-20 items-center justify-center rounded-full"
+              >
+                <span aria-hidden className="h-1 w-10 rounded-full bg-[var(--wd-line)]" />
+              </button>
+
+              <div className="mt-3 flex items-center justify-between">
+                <h2 className="text-[20px] font-black">내 밤에 맞추기</h2>
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="min-h-[44px] rounded-full border border-[var(--wd-line)] px-4 text-[13px] font-black"
+                >
+                  {theme === "dark" ? "☀ 밝게" : "☾ 어둡게"}
+                </button>
               </div>
 
-              <p className="mt-5 text-[25px] font-semibold leading-snug">{card.ko}</p>
-
-              <div className="mt-5 grid grid-cols-3 gap-2" aria-hidden>
-                {FLOW_STEPS.map((step, index) => (
-                  <span
-                    key={step}
-                    className={`h-8 rounded-full border px-2 text-[11px] font-semibold leading-8 ${
-                      activeFlowStep === index
+              <p className="mt-6 text-[11px] font-black tracking-[.14em] text-[var(--wd-muted)]">코치 목소리</p>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {VOICE_CHOICES.map((choice) => (
+                  <button
+                    key={choice.id}
+                    type="button"
+                    onClick={() => pickVoice(choice.id)}
+                    className={`min-h-14 rounded-2xl border px-2 transition active:scale-[.97] ${
+                      voiceName === choice.id
                         ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]"
                         : "border-[var(--wd-line)] text-[var(--wd-muted)]"
                     }`}
                   >
-                    {step}
-                  </span>
+                    <span className="block text-[13px] font-black">{choice.label}</span>
+                    <span className="mt-0.5 block text-[10px] font-semibold">{choice.hint}</span>
+                  </button>
                 ))}
               </div>
 
-              {card.state === "prompt" && (
-                <p className="mt-5 rounded-2xl border border-[var(--wd-line)] bg-[var(--wd-bg)]/65 px-4 py-3 text-[15px] font-medium leading-relaxed text-[var(--wd-muted)]">
-                  영어는 네가 먼저 말한 뒤 보여줄게.
-                </p>
-              )}
+              <p className="mt-5 text-[11px] font-black tracking-[.14em] text-[var(--wd-muted)]">내 말 기다리기</p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {WAIT_CHOICES.map((choice) => (
+                  <button
+                    key={choice.id}
+                    type="button"
+                    onClick={() => pickWait(choice.id)}
+                    className={`min-h-14 rounded-2xl border transition active:scale-[.97] ${
+                      vadPreset === choice.id
+                        ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]"
+                        : "border-[var(--wd-line)] text-[var(--wd-muted)]"
+                    }`}
+                  >
+                    <span className="block text-[13px] font-black">{choice.label}</span>
+                    <span className="mt-0.5 block text-[10px] font-semibold">{choice.hint}</span>
+                  </button>
+                ))}
+              </div>
 
-              {card.state === "reveal" && card.en && (
-                <>
-                  <p className="mt-5 text-[12px] font-semibold tracking-[0.14em] text-[var(--wd-muted)]">TARGET</p>
-                  <p className="mt-2 font-[family-name:var(--font-wd-serif)] text-[28px] font-medium leading-snug">
-                    {card.en}
-                  </p>
-                  <p className="mt-4 text-[15px] font-medium leading-relaxed text-[var(--wd-muted)]">
-                    낮은 목소리로 한 번만 따라 말해봐.
-                  </p>
-                </>
-              )}
-              {card.state === "reveal" && card.pron && (
-                <p className="mt-3 text-[15px] font-medium text-[var(--wd-muted)]">{card.pron}</p>
-              )}
+              {settingsSlot ? <div className="mt-5">{settingsSlot}</div> : null}
 
-              {card.state === "drill" && (
-                <>
-                  {card.en ? (
-                    <p className="mt-5 font-[family-name:var(--font-wd-serif)] text-[25px] font-medium leading-snug">
-                      {card.en}
-                    </p>
-                  ) : null}
-                  <p className="mt-5 inline-block rounded-2xl bg-[var(--wd-apricot-soft)] px-4 py-2 text-[15px] font-semibold text-[var(--wd-apricot)]">
-                    {card.drillHint ?? "같은 문장을 천천히 다시 잡아보자"}
-                  </p>
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              <p className="font-[family-name:var(--font-wd-serif)] text-[22px] font-medium leading-relaxed">
-                Tonight&rsquo;s sentences are waiting.
-              </p>
-              <p className="mt-4 text-[15px] leading-relaxed text-[var(--wd-muted)]">
-                마이크를 켜고 낮은 목소리로 &ldquo;시작&rdquo;이라고 말하면
-                오늘의 문장을 가져올게.
-              </p>
-            </>
-          )}
-        </section>
-
-        <p className="min-h-[44px] max-w-[400px] px-2 text-center text-[14px] leading-relaxed text-[var(--wd-muted)]">
-          {errorText ?? coachLine ?? message}
-        </p>
-
-        {card ? (
-          <div className="wd-enter grid w-full max-w-[420px] grid-cols-2 gap-3" style={{ animationDelay: "180ms" }}>
-            <button
-              type="button"
-              onClick={onRevealAnswer}
-              disabled={controlDisabled}
-              className="min-h-12 rounded-2xl border border-[var(--wd-line)] bg-[var(--wd-card)] px-3 text-[14px] font-semibold text-[var(--wd-ink)] shadow-sm transition active:scale-[0.98] disabled:opacity-45"
-            >
-              {answerVisible ? "정답 다시 보기" : "정답 보기"}
-            </button>
-            <button
-              type="button"
-              onClick={onNext}
-              disabled={controlDisabled}
-              className="min-h-12 rounded-2xl bg-[var(--wd-accent)] px-3 text-[14px] font-semibold text-white shadow-sm transition active:scale-[0.98] disabled:opacity-45"
-            >
-              다음
-            </button>
+              <button
+                type="button"
+                onClick={() => setSheetOpen(false)}
+                className="mt-6 min-h-13 w-full rounded-2xl bg-[var(--wd-accent)] px-4 text-[14px] font-black text-[#171021] transition active:scale-[.98]"
+              >
+                이대로 할게
+              </button>
+            </m.div>
           </div>
         ) : null}
-      </main>
 
-      <footer className="relative flex flex-col items-center gap-3 px-6 pb-[max(env(safe-area-inset-bottom),24px)]">
-        <button
-          type="button"
-          onClick={live ? onStop : onStart}
-          disabled={busy || phase === "blocked"}
-          aria-label={buttonLabel}
-          className={`flex h-[84px] w-[84px] items-center justify-center rounded-full transition-all duration-300 active:scale-95 disabled:opacity-50 ${
-            live
-              ? "wd-breathe bg-[var(--wd-accent)] text-white"
-              : "border-2 border-[var(--wd-accent)] bg-[var(--wd-card)] text-[var(--wd-accent)]"
-          }`}
-          style={live ? { boxShadow: "0 0 0 10px var(--wd-accent-soft), var(--wd-shadow)" } : { boxShadow: "var(--wd-shadow)" }}
-        >
-          {busy ? (
-            <span className="wd-spin inline-block h-7 w-7 rounded-full border-2 border-current border-t-transparent" />
-          ) : live ? (
-            <span aria-hidden className="inline-block h-7 w-7 rounded-[8px] bg-white" />
-          ) : (
-            <svg aria-hidden width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-              <rect x="9" y="3" width="6" height="11" rx="3" />
-              <path d="M5 11a7 7 0 0 0 14 0" />
-              <path d="M12 18v3" />
-            </svg>
-          )}
-        </button>
-        <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--wd-muted)]">{buttonLabel}</p>
-      </footer>
-
-      {sheetOpen && (
-        <div className="absolute inset-0 z-10 flex flex-col justify-end" role="dialog" aria-label="설정">
-          <button
-            type="button"
-            aria-label="설정 닫기"
-            onClick={() => setSheetOpen(false)}
-            className="wd-fade absolute inset-0 bg-black/25 backdrop-blur-[2px]"
-          />
-          <div
-            className="wd-sheet-in relative rounded-t-[28px] border-t border-[var(--wd-line)] bg-[var(--wd-card)] px-7 pb-[max(env(safe-area-inset-bottom),24px)] pt-3"
-            style={{ boxShadow: "0 -18px 48px -18px rgba(0,0,0,0.35)" }}
-          >
-            <button
-              type="button"
-              onClick={applySettings}
-              aria-label="설정 적용하고 닫기"
-              className="mx-auto flex min-h-8 w-20 items-center justify-center rounded-full transition active:scale-95"
-            >
-              <span aria-hidden className="h-1 w-10 rounded-full bg-[var(--wd-line)]" />
-            </button>
-
-            <p className="mt-5 text-[12px] font-semibold tracking-[0.14em] text-[var(--wd-muted)]">목소리</p>
-            <div className="mt-3 flex gap-2">
-              {VOICE_CHOICES.map((choice) => (
-                <button
-                  key={choice.id}
-                  type="button"
-                  onClick={() => pickVoice(choice.id)}
-                  className={`flex min-h-14 flex-1 flex-col items-center justify-center rounded-2xl border transition-all active:scale-[0.97] ${
-                    voiceName === choice.id
-                      ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]"
-                      : "border-[var(--wd-line)] text-[var(--wd-muted)]"
-                  }`}
-                >
-                  <span className="text-[14px] font-semibold">{choice.label}</span>
-                  <span className="mt-0.5 text-[11px]">{choice.hint}</span>
-                </button>
-              ))}
-            </div>
-
-            <p className="mt-6 text-[12px] font-semibold tracking-[0.14em] text-[var(--wd-muted)]">내 말 기다리기</p>
-            <div className="mt-3 flex gap-2">
-              {WAIT_CHOICES.map((choice) => (
-                <button
-                  key={choice.id}
-                  type="button"
-                  onClick={() => pickWait(choice.id)}
-                  className={`flex min-h-14 flex-1 flex-col items-center justify-center rounded-2xl border transition-all active:scale-[0.97] ${
-                    vadPreset === choice.id
-                      ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]"
-                      : "border-[var(--wd-line)] text-[var(--wd-muted)]"
-                  }`}
-                >
-                  <span className="text-[14px] font-semibold">{choice.label}</span>
-                  <span className="mt-0.5 text-[11px]">{choice.hint}</span>
-                </button>
-              ))}
-            </div>
-
-            {settingsSlot ? (
-              <div className="mt-6">
-                {settingsSlot}
-              </div>
-            ) : null}
-
-            <p className="mt-5 min-h-[18px] text-center text-[12px] text-[var(--wd-muted)]">
-              {live ? "대화 중이라 다음 시작부터 적용돼" : "바로 적용돼"}
-            </p>
-            <button
-              type="button"
-              onClick={applySettings}
-              className="mt-4 min-h-12 w-full rounded-2xl bg-[var(--wd-accent)] px-4 text-[14px] font-semibold text-white shadow-sm transition active:scale-[0.98]"
-            >
-              적용
-            </button>
-          </div>
-        </div>
-      )}
-
-      <style>{`
-        @keyframes wd-enter {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .wd-enter { opacity: 0; animation: wd-enter 600ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-        @keyframes wd-card-in {
-          from { opacity: 0; transform: translateY(14px) scale(0.985); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .wd-card-in { animation: wd-card-in 420ms cubic-bezier(0.22, 1, 0.36, 1); }
-        @keyframes wd-breathe {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
-        }
-        .wd-breathe { animation: wd-breathe 3s ease-in-out infinite; }
-        @keyframes wd-spin { to { transform: rotate(360deg); } }
-        .wd-spin { animation: wd-spin 0.9s linear infinite; }
-        @keyframes wd-fade { from { opacity: 0; } to { opacity: 1; } }
-        .wd-fade { animation: wd-fade 240ms ease-out; }
-        @keyframes wd-sheet-in {
-          from { transform: translateY(28px); opacity: 0.6; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        .wd-sheet-in { animation: wd-sheet-in 320ms cubic-bezier(0.22, 1, 0.36, 1); }
-        @media (prefers-reduced-motion: reduce) {
-          .wd-enter, .wd-card-in, .wd-breathe, .wd-spin { animation-duration: 0.01ms; animation-iteration-count: 1; }
-        }
-      `}</style>
-    </div>
+        <style>{`
+          .wd-stars {
+            background-image:
+              radial-gradient(circle at 14% 18%, currentColor 0 1px, transparent 1.5px),
+              radial-gradient(circle at 82% 22%, currentColor 0 1px, transparent 1.5px),
+              radial-gradient(circle at 68% 72%, currentColor 0 1px, transparent 1.5px),
+              radial-gradient(circle at 22% 78%, currentColor 0 1px, transparent 1.5px);
+            background-size: 120px 120px, 170px 170px, 150px 150px, 190px 190px;
+          }
+          @keyframes wd-listen {
+            0%, 100% { opacity: .35; transform: scale(.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+          }
+          .wd-listen-dot { animation: wd-listen 1.35s ease-in-out infinite; }
+          @keyframes wd-spin { to { transform: rotate(360deg); } }
+          .wd-spin { animation: wd-spin .8s linear infinite; }
+          @media (prefers-reduced-motion: reduce) {
+            .wd-listen-dot, .wd-spin { animation-duration: .01ms; animation-iteration-count: 1; }
+          }
+        `}</style>
+      </div>
+    </LazyMotion>
   );
 }

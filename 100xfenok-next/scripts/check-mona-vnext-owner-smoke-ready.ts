@@ -65,10 +65,9 @@ function checkSourceInvariants(): Check[] {
   const legacyVnextEntryInSettings = adminLiveBench.includes("settingsSlot={mode === \"mona\" ? (")
     && adminLiveBench.includes("<MonaVnextEntry locked={settingsLocked} />")
     && !/normalizedCoachConfig\.tester === "owner"\s*\?\s*\(\s*<MonaVnextEntry/.test(adminLiveBench);
-  const winddownVnextEntryInSettings = monaVoiceCoachApp.includes("MonaVnextEntry")
-    && monaVoiceCoachApp.includes("settingsSlot={<MonaVnextEntry locked={settingsLocked} />}");
-  const vnextEntryInSettings = legacyVnextEntryInSettings
-    && winddownVnextEntryInSettings
+  const productHidesDebugEntry = !monaVoiceCoachApp.includes("MonaVnextEntry")
+    && !monaVoiceCoachApp.includes("settingsSlot=");
+  const vnextEntryInLegacySettings = legacyVnextEntryInSettings
     && monaVnextEntry.includes("href=\"/winddown-vnext\"")
     && monaVnextEntry.includes("실험 테스트 열기");
   const vnextFiles = [
@@ -126,9 +125,9 @@ function checkSourceInvariants(): Check[] {
       "/winddown-legacy keeps the previous AdminLiveBench rollback runtime",
     ),
     check(
-      "settings-vnext-entry",
-      vnextEntryInSettings ? "PASS" : "FAIL",
-      "Mona settings renders MonaVnextEntry to /winddown-vnext without owner-tester visibility gate",
+      "product-no-debug-entry",
+      productHidesDebugEntry && vnextEntryInLegacySettings ? "PASS" : "FAIL",
+      "main product hides debug navigation while the legacy admin bench keeps its tester entry",
     ),
     check(
       "vnext-no-production-write-path",

@@ -728,20 +728,26 @@ function checkFeatureGates(): Result {
     : fail("feature-gates", "feature gate isolation semantics regressed");
 }
 
-function checkDebugOnlyAnswerVerdictSource(): Result {
+function checkProductAnswerVerdictSource(): Result {
   const appSource = readFileSync(path.join(process.cwd(), "src/features/mona-vnext/MonaVoiceCoachApp.tsx"), "utf8");
+  const productShellSource = readFileSync(path.join(process.cwd(), "src/components/admin-live/MonaWindDown.tsx"), "utf8");
   const shellSource = readFileSync(path.join(process.cwd(), "src/features/mona-vnext/ui/WindDownVnextShell.tsx"), "utf8");
   const cardSource = readFileSync(path.join(process.cwd(), "src/features/mona-vnext/ui/ExpressionCard.tsx"), "utf8");
-  const ok = appSource.includes("answerVerdict={p15Gates.answerMatcher ? answerVerdict : null}")
+  const gatedVerdictWiring = appSource.match(
+    /answerVerdict=\{p15Gates\.answerMatcher \? answerVerdict : null\}/g,
+  )?.length ?? 0;
+  const ok = gatedVerdictWiring === 2
     && !appSource.includes("answerVerdict={answerVerdict}")
     && appSource.includes("buildNextLessonPrompt(nextLesson, p15Gates.appOwnedNextMaterial)")
+    && productShellSource.includes("answerVerdict?: AnswerVerdict | null")
+    && productShellSource.includes("VERDICT_STYLE[answerVerdict.tier]")
     && shellSource.includes("answerVerdict: MonaVnextAnswerVerdict | null")
     && shellSource.includes("verdict={answerVerdict}")
     && cardSource.includes("verdict.symbol")
     && cardSource.includes("verdict.label");
   return ok
-    ? pass("debug-only-answer-verdict", "matcher verdict chip is wired only through the debug vNext shell")
-    : fail("debug-only-answer-verdict", "answer verdict can leak outside the debug shell or app-owned next guard is missing");
+    ? pass("product-answer-verdict", "matcher verdict is visible in both product and debug shells")
+    : fail("product-answer-verdict", "product verdict wiring or app-owned next guard is missing");
 }
 
 const results = [
@@ -771,7 +777,7 @@ const results = [
   checkPersistenceFailureVisibility(),
   checkPersistenceSeveritySplit(),
   checkFeatureGates(),
-  checkDebugOnlyAnswerVerdictSource(),
+  checkProductAnswerVerdictSource(),
 ];
 
 for (const result of results) {
