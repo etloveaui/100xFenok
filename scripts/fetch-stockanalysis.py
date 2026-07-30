@@ -444,6 +444,15 @@ DEFAULT_INCREMENTAL_ETF_LIMIT = 120
 DEFAULT_INCREMENTAL_ETF_MAX_AGE_HOURS = 720
 DEFAULT_INCREMENTAL_ETF_COOLDOWN_DAYS = 7
 DEFAULT_INCREMENTAL_ETF_COOLDOWN_FAILURES = 3
+NATURAL_GENERAL_INCREMENTAL_LIMIT = 40
+NATURAL_GENERAL_MIN_AUM = 50_000_000
+NATURAL_GENERAL_MIN_DOLLAR_VOLUME = 1_000_000
+NATURAL_GENERAL_INCREMENTAL_QUOTAS = {
+    "new_listings": 10,
+    "owner_default_leveraged_focus": 10,
+    "market_liquid_or_holdings_stale": 10,
+    "rotating_tail": 10,
+}
 UNIVERSE_RECOVERY_MAX_PAGES = 100
 PENDING_LEDGER_REL_PATH = "backfill/pending_ledger.json"
 INCREMENTAL_PLAN_REL_PATH = "backfill/incremental_plan_latest.json"
@@ -4759,6 +4768,259 @@ def attach_etf_detail_coverage_to_index(coverage: dict, mirror_public: bool) -> 
     write_payload("index.json", index, mirror_public)
 
 
+def etf_incremental_source_records(universe_payload: dict | None) -> list[tuple[str, list[dict]]]:
+    """Load the existing incremental sources while retaining ranking evidence."""
+    universe_records = (
+        (universe_payload or {}).get("records")
+        if isinstance((universe_payload or {}).get("records"), list)
+        else []
+    )
+    if not universe_records:
+        stored_universe = read_json(OUT_DIR / "etf_universe.json") or {}
+        universe_records = stored_universe.get("records") if isinstance(stored_universe.get("records"), list) else []
+
+    def surface_records(name: str) -> list[dict]:
+        payload = read_json(OUT_DIR / "surfaces" / f"{name}.json") or {}
+        records = payload.get("records") if isinstance(payload.get("records"), list) else []
+        return [row for row in records if isinstance(row, dict)]
+
+    return [
+        ("new_etfs", surface_records("new_etfs")),
+        ("etf_universe", [row for row in universe_records if isinstance(row, dict)]),
+        ("etf_screener", surface_records("etf_screener")),
+    ]
+
+
+def etf_incremental_priority_contexts(
+    source_records: list[tuple[str, list[dict]]],
+    *,
+    max_age_hours: float,
+    now_dt: datetime,
+) -> dict[str, dict]:
+    """Combine already-local source facts for the scheduled general selector."""
+    contexts: dict[str, dict] = {}
+    for source_name, records in source_records:
+        for record in records:
+            ticker = row_ticker(record)
+            if not ticker:
+                continue
+            context = contexts.setdefault(
+                ticker,
+                {
+                    "sources": set(),
+                    "aum": None,
+                    "price": None,
+                    "volume": None,
+                    "dollar_volume": None,
+                    "record": {},
+                },
+            )
+            context["sources"].add(source_name)
+            context["record"] = {**context["record"], **record}
+            for key, target in (
+                ("aum", "aum"),
+                ("assets", "aum"),
+                ("price", "price"),
+                ("volume", "volume"),
+            ):
+                value = parse_suffix_number(record.get(key))
+                if value is not None and (context[target] is None or value > context[target]):
+                    context[target] = value
+
+    for ticker, context in contexts.items():
+        payload = read_json(OUT_DIR / "etfs" / f"{ticker}.json")
+        normalized = payload.get("normalized") if isinstance(payload, dict) and isinstance(payload.get("normalized"), dict) else {}
+        overview = normalized.get("overview") if isinstance(normalized.get("overview"), dict) else {}
+        quote = normalized.get("quote") if isinstance(normalized.get("quote"), dict) else {}
+        record_classification = (
+            context["record"].get("classification")
+            if isinstance(context["record"].get("classification"), dict)
+            else {}
+        )
+        payload_classification = (
+            normalized.get("classification")
+            if isinstance(normalized.get("classification"), dict)
+            else {}
+        )
+        context["leveraged_focus"] = any(
+            classification.get("is_leveraged") is True
+            and (parse_suffix_number(classification.get("leverage_factor")) or 0) > 1
+            for classification in (record_classification, payload_classification)
+        )
+        for value, target in (
+            (overview.get("aum"), "aum"),
+            (quote.get("p"), "price"),
+            (quote.get("v"), "volume"),
+        ):
+            parsed = parse_suffix_number(value)
+            if parsed is not None and (context[target] is None or parsed > context[target]):
+                context[target] = parsed
+
+        holdings_updated = normalized.get("holdings_updated")
+        holdings_dt = parse_stockanalysis_date(holdings_updated)
+        context["holdings_stale"] = bool(
+            payload is not None
+            and (
+                holdings_dt is None
+                or (
+                    max_age_hours > 0
+                    and (now_dt - holdings_dt).total_seconds() / 3600 >= max_age_hours
+                )
+            )
+        )
+        if context["price"] is not None and context["volume"] is not None:
+            context["dollar_volume"] = context["price"] * context["volume"]
+    return contexts
+
+
+def incremental_candidate_sort_key(row: dict) -> tuple:
+    return (
+        row["reason_priority"],
+        row["prior_failures"],
+        row["priority"],
+        -(row["age_hours"] or 0),
+        row["ticker"],
+    )
+
+
+def select_natural_general_incremental_candidates(
+    candidates: list[dict],
+    contexts: dict[str, dict],
+    *,
+    now_dt: datetime,
+    limit: int,
+) -> tuple[list[dict], dict]:
+    """Split the fixed scheduled 40-name retry budget across sibling needs."""
+    core_symbols = set(load_core_daily_basket_symbols())
+    buckets = {name: [] for name in NATURAL_GENERAL_INCREMENTAL_QUOTAS}
+    default_focus = set(DEFAULT_ETFS)
+    residual_rows = []
+    for row in candidates:
+        ticker = row["ticker"]
+        context = contexts.get(ticker) or {}
+        if "new_etfs" in context.get("sources", set()):
+            bucket = "new_listings"
+        elif ticker in default_focus or context.get("leveraged_focus"):
+            bucket = "owner_default_leveraged_focus"
+        else:
+            residual_rows.append(row)
+            continue
+        buckets[bucket].append(row)
+
+    buckets["new_listings"].sort(key=incremental_candidate_sort_key)
+    buckets["owner_default_leveraged_focus"].sort(
+        key=lambda row: (
+            0 if row["ticker"] in default_focus else 1,
+            *incremental_candidate_sort_key(row),
+        )
+    )
+    market_ranked = [
+        row
+        for row in residual_rows
+        if row["ticker"] not in core_symbols
+        and (
+            (contexts.get(row["ticker"], {}).get("aum") or 0) >= NATURAL_GENERAL_MIN_AUM
+            or (contexts.get(row["ticker"], {}).get("dollar_volume") or 0)
+            >= NATURAL_GENERAL_MIN_DOLLAR_VOLUME
+            or contexts.get(row["ticker"], {}).get("holdings_stale")
+        )
+    ]
+    market_ranked.sort(
+        key=lambda row: (
+            -(contexts.get(row["ticker"], {}).get("aum") or 0),
+            -(contexts.get(row["ticker"], {}).get("dollar_volume") or 0),
+            *incremental_candidate_sort_key(row),
+        )
+    )
+    market_tickers = {
+        row["ticker"]
+        for row in market_ranked[: NATURAL_GENERAL_INCREMENTAL_QUOTAS["market_liquid_or_holdings_stale"]]
+    }
+    buckets["market_liquid_or_holdings_stale"] = [
+        row for row in market_ranked if row["ticker"] in market_tickers
+    ]
+    buckets["rotating_tail"] = [
+        row for row in residual_rows if row["ticker"] not in market_tickers
+    ]
+    buckets["rotating_tail"].sort(key=incremental_candidate_sort_key)
+
+    tail = buckets["rotating_tail"]
+    ordinal = now_dt.date().toordinal()
+    reserved_tail_count = min(
+        len(tail),
+        max(
+            NATURAL_GENERAL_INCREMENTAL_QUOTAS["rotating_tail"],
+            limit
+            - sum(len(buckets[name]) for name in NATURAL_GENERAL_INCREMENTAL_QUOTAS if name != "rotating_tail"),
+        ),
+    )
+    tail_start_index = (ordinal * reserved_tail_count) % len(tail) if tail else 0
+    rotated_tail = tail[tail_start_index:] + tail[:tail_start_index]
+    ordered_buckets = {
+        **buckets,
+        "rotating_tail": rotated_tail,
+    }
+    selected: list[dict] = []
+    selected_tickers = set()
+    selected_counts = {name: 0 for name in NATURAL_GENERAL_INCREMENTAL_QUOTAS}
+
+    def append(row: dict, bucket: str, selection_reason: str) -> None:
+        ticker = row["ticker"]
+        if ticker in selected_tickers or len(selected) >= limit:
+            return
+        selected_tickers.add(ticker)
+        selected_counts[bucket] += 1
+        selected.append(
+            {
+                **row,
+                "selection_bucket": bucket,
+                "selection_reason": selection_reason,
+            }
+        )
+
+    for bucket, quota in NATURAL_GENERAL_INCREMENTAL_QUOTAS.items():
+        for row in ordered_buckets[bucket][:quota]:
+            append(row, bucket, "scheduled_quota")
+
+    for bucket in NATURAL_GENERAL_INCREMENTAL_QUOTAS:
+        for row in ordered_buckets[bucket]:
+            if len(selected) >= limit:
+                break
+            append(row, bucket, "fallback_fill")
+
+    quota_policy = {
+        "scheduled_total_limit": NATURAL_GENERAL_INCREMENTAL_LIMIT,
+        "remaining_selector_limit": limit,
+        **NATURAL_GENERAL_INCREMENTAL_QUOTAS,
+        "fallback_fill": "remaining eligible candidates in deterministic sibling order",
+    }
+    eligible_counts = {
+        name: len(rows)
+        for name, rows in buckets.items()
+    }
+    return selected, {
+        "profile": "natural_non_history_general_40",
+        "quota_policy": quota_policy,
+        "eligible_counts": {
+            **eligible_counts,
+            "market_ranked_candidates": len(market_ranked),
+            "total": len(candidates),
+        },
+        "selected_counts": {
+            **selected_counts,
+            "total": len(selected),
+        },
+        "cursor": {
+            "strategy": "utc_day_ordinal_times_reserved_window_modulo_tail_count",
+            "date": now_dt.date().isoformat(),
+            "ordinal": ordinal,
+            "eligible_count": len(tail),
+            "reserved_window_count": reserved_tail_count,
+            "start_index": tail_start_index,
+        },
+    }
+
+
 def incremental_etf_backfill_candidates(
     universe_payload: dict | None,
     limit: int,
@@ -4771,6 +5033,7 @@ def incremental_etf_backfill_candidates(
     now_dt: datetime | None = None,
     required_history_periods: tuple[str, ...] = (),
     history_gaps_only: bool = False,
+    natural_general_priority: bool = False,
 ) -> dict:
     exclude = exclude or set()
     now_dt = now_dt or datetime.now(timezone.utc)
@@ -4790,10 +5053,10 @@ def incremental_etf_backfill_candidates(
                 now_dt,
             )
 
+    source_records = etf_incremental_source_records(universe_payload)
     sources = [
-        ("new_etfs", load_surface_symbols("new_etfs")),
-        ("etf_universe", [row.get("ticker") for row in (universe_payload or {}).get("records") or []] or load_etf_universe_symbols()),
-        ("etf_screener", load_surface_symbols("etf_screener")),
+        (source_name, [row_ticker(row) for row in records])
+        for source_name, records in source_records
     ]
     candidates = []
     cooldown_rows = []
@@ -4863,16 +5126,22 @@ def incremental_etf_backfill_candidates(
                     row["pre_fetch_payload_fetched_at"] = payload.get("fetched_at") if isinstance(payload, dict) else None
             candidates.append(row)
 
-    candidates.sort(
-        key=lambda row: (
-            row["reason_priority"],
-            row["prior_failures"],
-            row["priority"],
-            -(row["age_hours"] or 0),
-            row["ticker"],
+    candidates.sort(key=incremental_candidate_sort_key)
+    priority_selector = None
+    if natural_general_priority and 0 <= limit <= NATURAL_GENERAL_INCREMENTAL_LIMIT:
+        contexts = etf_incremental_priority_contexts(
+            source_records,
+            max_age_hours=max_age_hours,
+            now_dt=now_dt,
         )
-    )
-    selected = candidates[:limit] if limit > 0 else candidates
+        selected, priority_selector = select_natural_general_incremental_candidates(
+            candidates,
+            contexts,
+            now_dt=now_dt,
+            limit=limit,
+        )
+    else:
+        selected = candidates[:limit] if limit > 0 else candidates
     return {
         "schema_version": SCHEMA_VERSION,
         "source": "stockanalysis",
@@ -4888,6 +5157,8 @@ def incremental_etf_backfill_candidates(
             "selection": (
                 "primary StockAnalysis ETF detail files missing required history_periods only"
                 if history_gaps_only
+                else "scheduled natural non-history 40-name quota across new listings, owner/default leveraged focus, market-liquid or holdings-stale ETFs outside core, and a deterministic rotating tail"
+                if priority_selector is not None
                 else "never-fetched or latest-observation-invalid ETF details first, lower prior failures before retries, then Yahoo fallback retries, then multi-year history gaps, then stale records; new_etfs are prioritized within each reason/failure bucket, then etf_universe, then etf_screener-only rows"
             ),
         },
@@ -4913,6 +5184,7 @@ def incremental_etf_backfill_candidates(
         "cooldown": cooldown_rows,
         "inception_limited": inception_limited_rows,
         "terminal_limited": terminal_limited_rows,
+        **({"priority_selector": priority_selector} if priority_selector is not None else {}),
     }
 
 
@@ -6488,7 +6760,8 @@ def _main() -> None:
             STOCKANALYSIS_RECOVERY_ROOT,
             OUT_DIR.parent.parent,
         )
-        recovery_store.bootstrap_existing(recovery_run)
+        if not args.plan_only:
+            recovery_store.bootstrap_existing(recovery_run)
         if args.natural_run:
             stocks, retry_financials, retry_etfs, surface_names, retry_universe = (
                 select_natural_recovery_targets(
@@ -6599,6 +6872,13 @@ def _main() -> None:
             cooldown_failure_threshold=args.incremental_etf_cooldown_failures,
             required_history_periods=required_history_periods,
             history_gaps_only=args.history_gaps_only,
+            natural_general_priority=(
+                args.natural_run
+                and args.event_name == "schedule"
+                and not args.history_gaps_only
+                and not required_history_periods
+                and args.incremental_etf_limit == NATURAL_GENERAL_INCREMENTAL_LIMIT
+            ),
         )
         if (
             args.event_name != "schedule"

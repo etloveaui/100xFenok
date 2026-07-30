@@ -477,7 +477,7 @@ export function buildEtfCoreDailyBasket({
       etf_signal_summary: sourceSummary.generated_at ?? null,
       etf_action_index: sourceAction.generated_at ?? null,
       etf_detail_coverage: sourceDetailCoverage.generated_at ?? null,
-      new_etfs: sourceNewEtfs.generated_at ?? null,
+      new_etfs: sourceNewEtfs.generated_at ?? sourceNewEtfs.fetched_at ?? null,
     },
     raw_policy: {
       public: false,

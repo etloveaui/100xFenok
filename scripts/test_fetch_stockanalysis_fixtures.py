@@ -2938,6 +2938,177 @@ module.main()
         self.assertEqual(selected["OLD"], "stale")
         self.assertEqual(summary["counts"]["selected"], 3)
 
+    def test_natural_general_incremental_priority_rotates_tail_and_records_evidence(self) -> None:
+        """The scheduled 40-name general budget serves each freshness sibling.
+
+        This intentionally does not use the daily_1y plan path: the ordinary
+        scheduled profile must keep its fixed 40-name budget while giving new
+        listings, owner/default focus, liquid ETFs, and the residual tail a
+        deterministic share.  A short new-listing bucket proves unused quota
+        falls through to the rotating tail instead of shrinking the run.
+        """
+        original_out_dir = self.fetcher.OUT_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                out_dir = Path(tmp) / "stockanalysis"
+                self.fetcher.OUT_DIR = out_dir
+                (out_dir / "surfaces").mkdir(parents=True)
+                new_tickers = [f"NEW{index}" for index in range(1, 4)]
+                default_focus = [
+                    "SSO", "QLD", "DDM", "ROM", "UPRO",
+                    "TQQQ", "SOXL", "TNA", "USD", "UWM",
+                ]
+                classified_leveraged = "LEVX"
+                liquid_tickers = [f"LIQ{index}" for index in range(1, 11)]
+                tail_tickers = [f"TAIL{index}" for index in range(1, 31)]
+                (out_dir / "surfaces" / "new_etfs.json").write_text(
+                    json.dumps({"records": [{"s": ticker, "n": f"{ticker} ETF"} for ticker in new_tickers]}),
+                    encoding="utf-8",
+                )
+                (out_dir / "surfaces" / "etf_screener.json").write_text(
+                    json.dumps(
+                        {
+                            "records": [
+                                {"s": ticker, "n": f"{ticker} ETF", "aum": 5_000_000_000 + index, "volume": 2_000_000 + index}
+                                for index, ticker in enumerate(liquid_tickers)
+                            ]
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                universe_payload = {
+                    "records": [
+                        *({"ticker": ticker, "name": f"{ticker} ETF"} for ticker in default_focus),
+                        {
+                            "ticker": classified_leveraged,
+                            "name": "Classified Leveraged ETF",
+                            "classification": {
+                                "is_leveraged": True,
+                                "leverage_factor": 2.0,
+                                "is_inverse": False,
+                            },
+                        },
+                        *({"ticker": ticker, "name": f"{ticker} ETF"} for ticker in liquid_tickers),
+                        *({"ticker": ticker, "name": f"{ticker} ETF"} for ticker in tail_tickers),
+                    ]
+                }
+                now_dt = datetime(2026, 7, 30, tzinfo=timezone.utc)
+                summary = self.fetcher.incremental_etf_backfill_candidates(
+                    universe_payload=universe_payload,
+                    limit=40,
+                    max_age_hours=168,
+                    exclude=set(),
+                    now_dt=now_dt,
+                    natural_general_priority=True,
+                )
+                repeated = self.fetcher.incremental_etf_backfill_candidates(
+                    universe_payload=universe_payload,
+                    limit=40,
+                    max_age_hours=168,
+                    exclude=set(),
+                    now_dt=now_dt,
+                    natural_general_priority=True,
+                )
+                next_day = self.fetcher.incremental_etf_backfill_candidates(
+                    universe_payload=universe_payload,
+                    limit=40,
+                    max_age_hours=168,
+                    exclude=set(),
+                    now_dt=now_dt + timedelta(days=1),
+                    natural_general_priority=True,
+                )
+        finally:
+            self.fetcher.OUT_DIR = original_out_dir
+
+        selected = summary["selected"]
+        selector = summary["priority_selector"]
+        self.assertEqual(len(selected), 40)
+        self.assertEqual(len({row["ticker"] for row in selected}), 40)
+        self.assertEqual(
+            selector["quota_policy"],
+            {
+                "scheduled_total_limit": 40,
+                "remaining_selector_limit": 40,
+                "new_listings": 10,
+                "owner_default_leveraged_focus": 10,
+                "market_liquid_or_holdings_stale": 10,
+                "rotating_tail": 10,
+                "fallback_fill": "remaining eligible candidates in deterministic sibling order",
+            },
+        )
+        self.assertEqual(
+            selector["eligible_counts"],
+            {
+                "new_listings": 3,
+                "owner_default_leveraged_focus": 11,
+                "market_liquid_or_holdings_stale": 10,
+                "rotating_tail": 30,
+                "market_ranked_candidates": 10,
+                "total": 54,
+            },
+        )
+        self.assertEqual(selector["selected_counts"], {
+            "new_listings": 3,
+            "owner_default_leveraged_focus": 11,
+            "market_liquid_or_holdings_stale": 10,
+            "rotating_tail": 16,
+            "total": 40,
+        })
+        self.assertEqual(selector["cursor"], {
+            "strategy": "utc_day_ordinal_times_reserved_window_modulo_tail_count",
+            "date": "2026-07-30",
+            "ordinal": now_dt.date().toordinal(),
+            "eligible_count": 30,
+            "reserved_window_count": 16,
+            "start_index": (now_dt.date().toordinal() * 16) % 30,
+        })
+        self.assertTrue(all(row["selection_bucket"] for row in selected))
+        self.assertTrue(all(row["selection_reason"] for row in selected))
+        scheduled_owner = [
+            row["ticker"]
+            for row in selected
+            if row["selection_bucket"] == "owner_default_leveraged_focus"
+            and row["selection_reason"] == "scheduled_quota"
+        ]
+        self.assertEqual(set(scheduled_owner), set(default_focus))
+        self.assertEqual(
+            [(row["ticker"], row["selection_bucket"], row["selection_reason"]) for row in selected],
+            [(row["ticker"], row["selection_bucket"], row["selection_reason"]) for row in repeated["selected"]],
+        )
+        current_tail = {
+            row["ticker"] for row in selected if row["selection_bucket"] == "rotating_tail"
+        }
+        next_tail = {
+            row["ticker"] for row in next_day["selected"] if row["selection_bucket"] == "rotating_tail"
+        }
+        self.assertNotEqual(current_tail, next_tail)
+        self.assertEqual(current_tail | next_tail, set(tail_tickers))
+
+        recovery_reduced = self.fetcher.incremental_etf_backfill_candidates(
+            universe_payload=universe_payload,
+            limit=39,
+            max_age_hours=168,
+            exclude=set(),
+            now_dt=now_dt,
+            natural_general_priority=True,
+        )
+        self.assertEqual(len(recovery_reduced["selected"]), 39)
+        self.assertEqual(
+            recovery_reduced["priority_selector"]["quota_policy"]["remaining_selector_limit"],
+            39,
+        )
+
+        plan = self.fetcher.build_incremental_etf_backfill_plan(
+            [row["ticker"] for row in selected],
+            summary,
+            (),
+            history_gaps_only=False,
+        )
+        self.assertEqual(
+            plan["incremental_etf_backfill"]["priority_selector"],
+            selector,
+        )
+
     def test_incremental_etf_backfill_retries_latest_invalid_primary_observation(self) -> None:
         original_out_dir = self.fetcher.OUT_DIR
         original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT

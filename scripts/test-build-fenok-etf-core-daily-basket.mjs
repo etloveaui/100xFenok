@@ -48,6 +48,25 @@ assert.ok(
   "Core Basket must explicitly exclude single-stock/concentrated derivative-income ETF strategies",
 );
 
+{
+  const fetchedAt = "2026-06-29T23:45:00.000Z";
+  const withDatelessNewEtfSurface = buildEtfCoreDailyBasket({
+    generatedAt,
+    now: generatedAt,
+    newEtfs: {
+      generated_at: null,
+      fetched_at: fetchedAt,
+      source_as_of: null,
+      records: [],
+    },
+  });
+  assert.equal(
+    withDatelessNewEtfSurface.admin.source_generated_at.new_etfs,
+    fetchedAt,
+    "dateless new-ETF surfaces must expose acquisition age through fetched_at",
+  );
+}
+
 for (const row of admin.rows) {
   assert.equal(row.asset_type, "etf", `${row.ticker}: asset_type`);
   assert.equal(row.core_candidate_allowed, true, `${row.ticker}: core candidate`);
