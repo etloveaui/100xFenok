@@ -12,6 +12,7 @@ import {
 } from "@/lib/server/data-supply-etf-detail";
 import { recordTypedUnavailableResponse } from "@/lib/server/data-supply-etf-telemetry";
 import { withResponseCache } from "@/lib/server/response-cache";
+import { BUILD_VERSION } from "@/generated/build-version";
 
 const STOCKANALYSIS_CACHE_HEADERS = {
   "Cache-Control": "public, s-maxage=300, stale-while-revalidate=900",
@@ -33,7 +34,12 @@ export async function buildEtfResponse(resolution: EtfDetailResolution, ticker: 
     );
   }
   if (resolution.kind === "shard") {
-    return NextResponse.json(resolution.payload, { headers: STOCKANALYSIS_CACHE_HEADERS });
+    return new Response(resolution.document.raw, {
+      headers: {
+        ...STOCKANALYSIS_CACHE_HEADERS,
+        "Content-Type": "application/json",
+      },
+    });
   }
   if (resolution.kind === "unavailable") {
     const representation = buildUnavailableEtfRepresentation(ticker, resolution.dataSupply);
@@ -60,6 +66,38 @@ export async function buildEtfResponse(resolution: EtfDetailResolution, ticker: 
   );
 }
 
+export async function getEtfResponse(
+  ticker: string,
+  buildVersion = BUILD_VERSION,
+  resolve = resolveDataSupplyEtfDetail,
+) {
+  return withResponseCache(
+    `stockanalysis:etfs:${buildVersion}:${ticker}`,
+    300,
+    async () => {
+      const resolution = await resolve(ticker);
+      const response = await buildEtfResponse(resolution, ticker);
+      if (
+        resolution.kind === "unavailable"
+        && response.status === 503
+        && response.headers.get("X-100x-Data-Supply-SLO") === "typed-unavailable"
+      ) {
+        recordTypedUnavailableResponse({
+          ticker,
+          cacheStatus: "MISS",
+          stateObservedAt: resolution.stateObservedAt,
+        });
+      }
+      return response;
+    },
+    {
+      isCacheable: (response) => response.ok
+        || (response.status === 503 && response.headers.get("X-100x-Data-Supply-SLO") === "typed-unavailable"),
+      preserveCacheControl: true,
+    },
+  );
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ assetType: string; ticker: string }> },
@@ -79,32 +117,7 @@ export async function GET(
   }
 
   if (normalizedAssetKind === "etfs") {
-    const resolution = await resolveDataSupplyEtfDetail(normalizedTicker);
-    const digest = resolution.projectionDigest ?? "guard-unavailable";
-    const negative = resolution.kind === "unavailable";
-    const response = await withResponseCache(
-      `stockanalysis:etfs:${negative ? "unavailable" : "payload"}:${normalizedTicker}:${digest}`,
-      negative ? 60 : 300,
-      () => buildEtfResponse(resolution, normalizedTicker),
-      {
-        isCacheable: (response) => response.ok
-          || (response.status === 503 && response.headers.get("X-100x-Data-Supply-SLO") === "typed-unavailable"),
-        preserveCacheControl: true,
-        bypassCache: resolution.kind === "shard_unavailable" || resolution.kind === "error",
-      },
-    );
-    if (
-      resolution.kind === "unavailable"
-      && response.status === 503
-      && response.headers.get("X-100x-Data-Supply-SLO") === "typed-unavailable"
-    ) {
-      recordTypedUnavailableResponse({
-        ticker: normalizedTicker,
-        cacheStatus: response.headers.get("X-100x-Cache"),
-        stateObservedAt: resolution.stateObservedAt,
-      });
-    }
-    return response;
+    return getEtfResponse(normalizedTicker);
   }
 
   return withResponseCache(
