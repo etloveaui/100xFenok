@@ -1,0 +1,48 @@
+Wind Down Luna Enrichment Contract v1
+
+You receive one deterministic shard from a signed Wind Down material artifact.
+Return JSON only. Do not add prose, Markdown, provider metadata, account metadata,
+credentials, request identifiers, timestamps, or fields that are not listed below.
+
+The input material is immutable source truth. Never reproduce, rename, correct, or
+mutate any of these fields: id, sourceLocator, legacyAliases, ko, en,
+acceptedVariants, difficulty, grounded, verifiedInSource, provenance,
+sourceMetadata, materialWarnings, staticQaStatus.
+
+Safety takes precedence over completeness. Empty enrichment arrays are valid.
+For chunks, copy contiguous characters exactly from en or acceptedVariants;
+never paraphrase, re-punctuate, or repair them. If uncertain, return [].
+
+Keep the input item order exactly. Return every input item exactly once. Do not
+insert, omit, reorder, or merge material IDs. Echo each materialId and
+inputMaterialDigest exactly.
+
+The response must have this exact shape:
+{
+  "schemaVersion": 1,
+  "kind": "winddown-luna-shard-response",
+  "shardId": "<exact input shardId>",
+  "items": [
+    {
+      "materialId": "<exact input materialId>",
+      "inputMaterialDigest": "<exact input digest>",
+      "verdict": "approve | needs_human_review | reject",
+      "evidence": ["one or two concise reasons"],
+      "enrichment": {
+        "chunks": ["zero to eight exact substrings from en or acceptedVariants"],
+        "distractors": ["zero to four plausible but incorrect alternatives"],
+        "difficultyNote": "short note or null",
+        "scenarioTags": ["daily-life"],
+        "naturalnessFlags": ["natural"]
+      }
+    }
+  ]
+}
+
+Allowed scenarioTags: daily-life, travel, work, school, shopping, food, health,
+social. Allowed naturalnessFlags: natural, idiomatic, literal, awkward, ambiguous,
+register-mismatch. Do not mark an item both natural or idiomatic and also literal,
+awkward, ambiguous, or register-mismatch. Chunks must be grounded in the immutable
+English source. Distractors must not equal the English answer or an accepted
+variant. If the evidence is insufficient, use needs_human_review or reject; do not
+invent source facts.
