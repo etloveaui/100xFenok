@@ -15,8 +15,7 @@ import { buildLaneRegistryProjection, projectLane, PROJECTION_SCHEMA } from "./b
 // Path/privacy markers that must never appear in the admin-safe projection.
 // Markers are PATH-shaped on purpose: "_private/" (the private-root prefix), not
 // bare "_private" — the lane id "yahoo_private_options" legitimately contains
-// "_private" and is NOT a path leak. Likewise cadence.provider legitimately
-// contains text like "daily/weekly", so this is not a bare "/" ban.
+// "_private" and is NOT a path leak.
 const FORBIDDEN = ["_private/", "data/admin", ".github/", "100xfenok-next", "public/data", "canonical_outputs", "recovery_store", "commit_shards"];
 
 function privacyViolations(jsonString) {
@@ -54,6 +53,8 @@ for (const lane of projection.lanes) {
     assert.ok(lane.owner_workflow.endsWith(".yml"), `lane ${lane.id}: owner_workflow basename should be a .yml`);
   }
   assert.ok(lane.cadence && typeof lane.cadence.kind === "string", `lane ${lane.id}: cadence.kind required`);
+  assert.deepEqual(Object.keys(lane.cadence), ["kind", "provider"], `lane ${lane.id}: projection cadence has an exact display shape`);
+  assert.equal(typeof lane.cadence.provider, "string", `lane ${lane.id}: provider display label required`);
 }
 
 // Spot-check a known lane against the source record.
@@ -63,6 +64,7 @@ assert.equal(projected.owner_workflow, "fetch-fred-macro.yml", "basename derivat
 assert.equal(projected.label, "FRED macro");
 assert.equal(projected.privacy_class, "public_mirror");
 assert.equal(projected.enforcement, "live");
+assert.equal(projected.cadence.provider, "FRED");
 assert.ok(!("roots" in projected) && !("recovery_store" in projected), "no path fields carried");
 
 console.log(JSON.stringify({ ok: true, lanes: projection.lanes.length, red_markers_stripped: rawViolations }, null, 2));

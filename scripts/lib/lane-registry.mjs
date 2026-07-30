@@ -12,9 +12,17 @@ import { createHash } from "node:crypto";
 import { canonicalJson } from "./json-canonical.mjs";
 import { SLICKCHARTS_MEMBER_PATHS } from "./slickcharts-composite-recovery.mjs";
 
-export const LANE_REGISTRY_SCHEMA = "lane-registry/v2";
+export const LANE_REGISTRY_SCHEMA = "lane-registry/v3";
 export const STORE_KINDS = Object.freeze(["marker", "payload", "artifact_only"]);
 export const LANE_CLASSES = Object.freeze(["detection_floor", "auxiliary"]);
+export const PROVIDER_CLASSES = Object.freeze([
+  "external_data",
+  "owner_managed_data",
+  "platform_proxy",
+  "platform_runtime",
+  "platform_storage",
+]);
+export const PROVIDER_ROLES = Object.freeze(["source", "transport", "runtime", "storage"]);
 export const KPI_RECOVERY_SHAPES = Object.freeze(["general", "keyed_v2", "composite_v1", "direct"]);
 export const ENFORCEMENTS = Object.freeze(["live", "shadow"]);
 export const PRIVACY_CLASSES = Object.freeze(["private", "public_mirror", "public_safe_aggregate"]);
@@ -55,6 +63,8 @@ function record({
   id,
   label,
   owner_workflow,
+  provider_members,
+  provider_refs,
   store_kind,
   lane_class,
   cadence,
@@ -78,6 +88,8 @@ function record({
     id,
     label,
     owner_workflow,
+    provider_members,
+    provider_refs,
     store_kind,
     lane_class,
     cadence,
@@ -104,6 +116,35 @@ function record({
 const ATTEMPT_ROOT = "data/admin/data-supply-state/detection-attempts";
 const attemptShard = (laneId) => `${ATTEMPT_ROOT}/${laneId}.json`;
 
+const providers = [
+  { id: "fred", label: "FRED", class: "external_data" },
+  { id: "fdic", label: "FDIC", class: "external_data" },
+  { id: "treasury_fiscal_data", label: "Treasury FiscalData", class: "external_data" },
+  { id: "defillama", label: "DefiLlama", class: "external_data" },
+  { id: "yahoo_finance", label: "Yahoo Finance", class: "external_data" },
+  { id: "stockanalysis", label: "StockAnalysis", class: "external_data" },
+  { id: "cnn_fear_and_greed", label: "CNN Fear & Greed", class: "external_data" },
+  { id: "cftc", label: "CFTC", class: "external_data" },
+  { id: "alternative_me", label: "Alternative.me", class: "external_data" },
+  { id: "nasdaq_indexes", label: "Nasdaq Indexes", class: "external_data" },
+  { id: "oecd", label: "OECD", class: "external_data" },
+  { id: "krx", label: "KRX", class: "external_data" },
+  { id: "slickcharts", label: "Slickcharts", class: "external_data" },
+  { id: "sec_edgar", label: "SEC EDGAR", class: "external_data" },
+  { id: "bloomberg_terminal", label: "Bloomberg Terminal", class: "external_data" },
+  { id: "nyu_stern_damodaran", label: "NYU Stern Damodaran", class: "external_data" },
+  { id: "finra", label: "FINRA", class: "external_data" },
+  { id: "occ", label: "OCC", class: "external_data" },
+  { id: "apewisdom", label: "ApeWisdom", class: "external_data" },
+  { id: "gdelt", label: "GDELT", class: "external_data" },
+  { id: "mona_life_ssot", label: "Mona Life SSOT", class: "owner_managed_data" },
+  { id: "global_scouter", label: "Global Scouter", class: "owner_managed_data" },
+  { id: "fenok_ticker_api", label: "Fenok ticker API", class: "platform_proxy" },
+  { id: "fenok_cnn_proxy", label: "Fenok CNN proxy", class: "platform_proxy" },
+  { id: "local_mac_bridge", label: "Local Mac bridge", class: "platform_runtime" },
+  { id: "cloudflare_kv", label: "Cloudflare KV", class: "platform_storage" },
+];
+
 // --- Lane records (verified against origin/main, 2026-07-18) -----------------
 
 const lanes = [
@@ -111,9 +152,11 @@ const lanes = [
     id: "fred_macro",
     label: "FRED macro",
     owner_workflow: ".github/workflows/fetch-fred-macro.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "fred", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "daily", provider: "fred" },
+    cadence: { kind: "daily" },
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/fred_macro",
@@ -134,9 +177,11 @@ const lanes = [
     id: "fred_banking",
     label: "FRED banking",
     owner_workflow: ".github/workflows/fetch-fred-banking.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "fred", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "mixed", provider: "fred (daily/weekly/monthly/quarterly series)" },
+    cadence: { kind: "mixed" },
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/fred_banking",
@@ -176,9 +221,11 @@ const lanes = [
     id: "fred_yardeni",
     label: "Feno Yardeni model (FRED WAAA/WBAA)",
     owner_workflow: ".github/workflows/fetch-fred-yardeni.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "fred", role: "source", members: null }],
     store_kind: "marker",
     lane_class: "detection_floor",
-    cadence: { kind: "weekly", provider: "fred weekly (Friday observations)" },
+    cadence: { kind: "weekly" },
     enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/fred_yardeni",
@@ -200,9 +247,11 @@ const lanes = [
     id: "fdic_tier1",
     label: "FDIC Tier-1",
     owner_workflow: ".github/workflows/fetch-fdic.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "fdic", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "quarterly", provider: "fdic (first-Monday cron)" },
+    cadence: { kind: "quarterly" },
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/fdic_tier1",
@@ -223,9 +272,11 @@ const lanes = [
     id: "treasury_tga",
     label: "Treasury FiscalData TGA",
     owner_workflow: ".github/workflows/fetch-treasury-tga.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "treasury_fiscal_data", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "daily", provider: "fiscaldata.treasury.gov" },
+    cadence: { kind: "daily" },
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/treasury_tga",
@@ -246,9 +297,11 @@ const lanes = [
     id: "defillama_stablecoins",
     label: "DefiLlama stablecoins",
     owner_workflow: ".github/workflows/fetch-defillama.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "defillama", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "daily", provider: "defillama" },
+    cadence: { kind: "daily" },
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/defillama_stablecoins",
@@ -269,9 +322,11 @@ const lanes = [
     id: "yahoo_etf_fallback",
     label: "Yahoo ETF fallback",
     owner_workflow: ".github/workflows/fetch-stockanalysis.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "yahoo_finance", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "daily", provider: "yahoo finance (StockAnalysis workflow)" },
+    cadence: { kind: "daily" },
     enforcement: "live",
     privacy_class: "private",
     public_mirror_allowed: false,
@@ -298,9 +353,11 @@ const lanes = [
     id: "stockanalysis_etf_universe",
     label: "StockAnalysis ETF universe",
     owner_workflow: ".github/workflows/fetch-stockanalysis.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "stockanalysis", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "daily", provider: "stockanalysis (shared workflow)" },
+    cadence: { kind: "daily" },
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/stockanalysis-recovery",
@@ -320,9 +377,11 @@ const lanes = [
     id: "stockanalysis_stock_financial",
     label: "StockAnalysis bounded stock and financial pairs",
     owner_workflow: ".github/workflows/fetch-stockanalysis.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "stockanalysis", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "daily", provider: "stockanalysis (bounded 8-pair shared workflow schedule)" },
+    cadence: { kind: "daily" },
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/stockanalysis-recovery",
@@ -349,9 +408,11 @@ const lanes = [
     id: "stockanalysis_surfaces",
     label: "StockAnalysis public surfaces",
     owner_workflow: ".github/workflows/fetch-stockanalysis.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "stockanalysis", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "daily", provider: "stockanalysis (shared workflow surface schedules)" },
+    cadence: { kind: "daily" },
     enforcement: "shadow",
     privacy_class: "public_mirror",
     admin_store: "data/admin/stockanalysis-recovery",
@@ -371,9 +432,14 @@ const lanes = [
     id: "yahoo_ticker_macro",
     label: "Yahoo hourly ticker snapshot",
     owner_workflow: ".github/workflows/fetch-yahoo-ticker.yml",
+    provider_members: null,
+    provider_refs: [
+      { provider_id: "yahoo_finance", role: "source", members: null },
+      { provider_id: "fenok_ticker_api", role: "transport", members: null },
+    ],
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "hourly", provider: "yahoo (TQQQ/SOXL keys)" },
+    cadence: { kind: "hourly" },
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/yahoo-hourly-ticker",
@@ -394,9 +460,17 @@ const lanes = [
     id: "sentiment",
     label: "Sentiment bundle (CNN/VIX/MOVE/CFTC/crypto)",
     owner_workflow: ".github/workflows/fetch-sentiment.yml",
+    provider_members: ["cnn", "cftc", "vix", "move", "crypto"],
+    provider_refs: [
+      { provider_id: "cnn_fear_and_greed", role: "source", members: ["cnn"] },
+      { provider_id: "fenok_cnn_proxy", role: "transport", members: ["cnn"] },
+      { provider_id: "cftc", role: "source", members: ["cftc"] },
+      { provider_id: "yahoo_finance", role: "source", members: ["vix", "move"] },
+      { provider_id: "alternative_me", role: "source", members: ["crypto"] },
+    ],
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "daily", provider: "multi-source sentiment" },
+    cadence: { kind: "daily" },
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/sentiment",
@@ -419,9 +493,11 @@ const lanes = [
     id: "nasdaq_giw_sox",
     label: "Nasdaq GIW SOX constituents",
     owner_workflow: ".github/workflows/fetch-nasdaq-giw-sox.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "nasdaq_indexes", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "daily", provider: "nasdaq GIW (us_trading_days)" },
+    cadence: { kind: "daily" },
     enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/nasdaq_giw_sox",
@@ -442,9 +518,11 @@ const lanes = [
     id: "us_indices_daily",
     label: "US index daily close (S&P 500 / NASDAQ)",
     owner_workflow: ".github/workflows/fetch-us-indices-daily.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "yahoo_finance", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "daily", provider: "yahoo chart v8 (^GSPC/^IXIC, us_trading_days)" },
+    cadence: { kind: "daily" },
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/us-indices-daily",
@@ -473,9 +551,11 @@ const lanes = [
     id: "oecd_cli",
     label: "OECD composite leading indicators",
     owner_workflow: ".github/workflows/fetch-oecd-cli.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "oecd", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "monthly", provider: "OECD SDMX DF_CLI" },
+    cadence: { kind: "monthly" },
     // First workflow commit: 2026-07-20 23:20:11 +0900.
     activated_at: "2026-07-20T14:20:11Z",
     // Promoted after dispatch run 30260263485 committed a complete HTTP-200
@@ -502,9 +582,11 @@ const lanes = [
     id: "krx",
     label: "KRX Open API daily",
     owner_workflow: ".github/workflows/fenok-edge-krx-daily.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "krx", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "daily", provider: "KRX Open API (Korea trading days)" },
+    cadence: { kind: "daily" },
     // Natural schedule run 30270187601 committed complete attempt evidence,
     // a fresh canonical payload, and attempt-1 provider-advancing recovery.
     enforcement: "live",
@@ -538,9 +620,11 @@ const lanes = [
     id: "slickcharts",
     label: "SlickCharts daily delivery (composite lane)",
     owner_workflow: ".github/workflows/slickcharts-daily.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "slickcharts", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "daily", provider: "slickcharts (us_trading_days)" },
+    cadence: { kind: "daily" },
     enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/slickcharts-composite-recovery",
@@ -578,9 +662,11 @@ const lanes = [
     id: "edgar_filings",
     label: "SEC EDGAR filing timeline",
     owner_workflow: ".github/workflows/fetch-edgar-filings.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "sec_edgar", role: "source", members: null }],
     store_kind: "marker",
     lane_class: "detection_floor",
-    cadence: { kind: "weekly", provider: "sec edgar (Monday 00:40Z poll)" },
+    cadence: { kind: "weekly" },
     enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/edgar_filings",
@@ -606,9 +692,11 @@ const lanes = [
     id: "sec_13f",
     label: "SEC 13F (ownerless artifact lane)",
     owner_workflow: null,
+    provider_members: null,
+    provider_refs: [{ provider_id: "sec_edgar", role: "source", members: null }],
     store_kind: "artifact_only",
     lane_class: "detection_floor",
-    cadence: { kind: "quarterly", provider: "sec 13f" },
+    cadence: { kind: "quarterly" },
     enforcement: "shadow",
     privacy_class: "public_mirror",
     admin_store: null,
@@ -623,6 +711,8 @@ const lanes = [
     id: "admin_live_voice_logs",
     label: "Admin Live conversation logs (Mac mini bridge, local-only)",
     owner_workflow: null,
+    provider_members: null,
+    provider_refs: [{ provider_id: "local_mac_bridge", role: "runtime", members: null }],
     store_kind: "artifact_only",
     lane_class: "auxiliary",
     cadence: { kind: "unknown" },
@@ -643,6 +733,11 @@ const lanes = [
     id: "mona_production_study_state",
     label: "Mona production study state (mona-life SSOT, symlinked)",
     owner_workflow: null,
+    provider_members: null,
+    provider_refs: [
+      { provider_id: "mona_life_ssot", role: "source", members: null },
+      { provider_id: "local_mac_bridge", role: "runtime", members: null },
+    ],
     store_kind: "artifact_only",
     lane_class: "auxiliary",
     cadence: { kind: "unknown" },
@@ -663,6 +758,8 @@ const lanes = [
     id: "mona_vnext_kv",
     label: "Mona vNext KV / local namespace (owner-test only, production writes disabled)",
     owner_workflow: null,
+    provider_members: null,
+    provider_refs: [{ provider_id: "cloudflare_kv", role: "storage", members: null }],
     store_kind: "artifact_only",
     lane_class: "auxiliary",
     cadence: { kind: "unknown" },
@@ -685,11 +782,12 @@ const lanes = [
     id: "benchmarks",
     label: "Bloomberg benchmark converter payloads",
     owner_workflow: null,
+    provider_members: null,
+    provider_refs: [{ provider_id: "bloomberg_terminal", role: "source", members: null }],
     store_kind: "artifact_only",
     lane_class: "detection_floor",
     cadence: {
       kind: "weekly",
-      provider: "owner-run fenok-benchmarks converter",
       provenance: { kind: "payload_field", evidence: "/metadata/update_frequency" },
     },
     enforcement: "shadow",
@@ -720,11 +818,12 @@ const lanes = [
     id: "global_scouter",
     label: "Global Scouter converter payload",
     owner_workflow: null,
+    provider_members: null,
+    provider_refs: [{ provider_id: "global_scouter", role: "source", members: null }],
     store_kind: "artifact_only",
     lane_class: "detection_floor",
     cadence: {
       kind: "weekly",
-      provider: "owner-run global-scouter converter",
       provenance: { kind: "payload_field", evidence: "/update_frequency" },
     },
     enforcement: "shadow",
@@ -741,11 +840,12 @@ const lanes = [
     id: "damodaran",
     label: "Damodaran valuation data",
     owner_workflow: ".github/workflows/fetch-damodaran-shadow.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "nyu_stern_damodaran", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "detection_floor",
     cadence: {
       kind: "weekly",
-      provider: "NYU Stern Damodaran owner guard",
       provenance: { kind: "github_workflow", evidence: ".github/workflows/fetch-damodaran-shadow.yml" },
     },
     // First workflow commit: 2026-07-20 00:05:41 +0900.
@@ -801,9 +901,11 @@ const lanes = [
     id: "finra_short_volume",
     label: "FINRA RegSHO daily short volume",
     owner_workflow: ".github/workflows/fenok-edge-daily.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "finra", role: "source", members: null }],
     store_kind: "marker",
     lane_class: "detection_floor",
-    cadence: { kind: "daily", provider: "finra (us_trading_days)" },
+    cadence: { kind: "daily" },
     enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/finra_short_volume",
@@ -824,9 +926,11 @@ const lanes = [
     id: "finra_ats_weekly",
     label: "FINRA delayed ATS/OTC weekly summary",
     owner_workflow: ".github/workflows/fetch-finra-ats-weekly.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "finra", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "detection_floor",
-    cadence: { kind: "weekly", provider: "finra otc transparency" },
+    cadence: { kind: "weekly" },
     enforcement: "shadow",
     privacy_class: "private",
     public_mirror_allowed: false,
@@ -849,9 +953,11 @@ const lanes = [
     id: "occ_options_volume",
     label: "OCC options volume",
     owner_workflow: ".github/workflows/fenok-edge-daily.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "occ", role: "source", members: null }],
     store_kind: "marker",
     lane_class: "detection_floor",
-    cadence: { kind: "daily", provider: "occ (us_trading_days)" },
+    cadence: { kind: "daily" },
     enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/occ_options_volume",
@@ -875,9 +981,11 @@ const lanes = [
     id: "yahoo_private_options",
     label: "Yahoo private options availability",
     owner_workflow: ".github/workflows/fetch-fenok-private-options.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "yahoo_finance", role: "source", members: null }],
     store_kind: "marker",
     lane_class: "detection_floor",
-    cadence: { kind: "daily", provider: "yahoo finance targeted options (us_trading_days)" },
+    cadence: { kind: "daily" },
     enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/yahoo_private_options",
@@ -903,9 +1011,11 @@ const lanes = [
     // Flip evidence remains committed shard 06df6f18be from scheduled run
     // 29691115685 (DEC-266).
     owner_workflow: ".github/workflows/fetch-fenok-apewisdom.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "apewisdom", role: "source", members: null }],
     store_kind: "marker",
     lane_class: "detection_floor",
-    cadence: { kind: "daily", provider: "apewisdom" },
+    cadence: { kind: "daily" },
     enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/apewisdom_attention",
@@ -932,9 +1042,11 @@ const lanes = [
     // from failed natural run 30164248573. Current provider failures remain
     // visible as lane-local degraded state without blocking unrelated publication.
     owner_workflow: ".github/workflows/fetch-fenok-news-tone.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "gdelt", role: "source", members: null }],
     store_kind: "marker",
     lane_class: "detection_floor",
-    cadence: { kind: "daily", provider: "gdelt" },
+    cadence: { kind: "daily" },
     enforcement: "live",
     privacy_class: "private",
     admin_store: "data/admin/gdelt_news_tone",
@@ -958,9 +1070,11 @@ const lanes = [
     id: "yahoo_batch_quote_history",
     label: "Yahoo batch quote/history",
     owner_workflow: ".github/workflows/fetch-yf-finance.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "yahoo_finance", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "auxiliary",
-    cadence: { kind: "daily", provider: "yahoo" },
+    cadence: { kind: "daily" },
     enforcement: "shadow",
     privacy_class: "public_mirror",
     admin_store: "data/admin/yahoo-batch-quote-history",
@@ -1433,6 +1547,8 @@ const LANE_RECORD_KEYS = Object.freeze([
   "id",
   "label",
   "owner_workflow",
+  "provider_members",
+  "provider_refs",
   "store_kind",
   "lane_class",
   "cadence",
@@ -1529,6 +1645,70 @@ function validateLaneRecord(laneValue) {
     && (typeof laneValue.owner_workflow !== "string" || !laneValue.owner_workflow.startsWith(".github/workflows/"))) {
     fail(`${context} owner_workflow must be null or a .github/workflows/ path`);
   }
+  let providerMemberSet = null;
+  if (laneValue.provider_members !== null) {
+    if (!Array.isArray(laneValue.provider_members) || laneValue.provider_members.length === 0) {
+      fail(`${context}.provider_members must be null or a non-empty array`);
+    }
+    providerMemberSet = new Set();
+    for (const member of laneValue.provider_members) {
+      if (!LANE_ID_RE.test(member)) fail(`${context}.provider_members member is invalid`);
+      if (providerMemberSet.has(member)) fail(`${context}.provider_members duplicates ${member}`);
+      providerMemberSet.add(member);
+    }
+  }
+  if (!Array.isArray(laneValue.provider_refs) || laneValue.provider_refs.length === 0) {
+    fail(`${context}.provider_refs must be a non-empty array`);
+  }
+  const seenProviderRefs = new Set();
+  for (const ref of laneValue.provider_refs) {
+    exactKeys(ref, ["provider_id", "role", "members"], `${context}.provider_refs`);
+    if (!LANE_ID_RE.test(ref.provider_id)) fail(`${context}.provider_refs provider_id is invalid`);
+    if (!PROVIDER_ROLES.includes(ref.role)) fail(`${context}.provider_refs role is invalid`);
+    if (seenProviderRefs.has(ref.provider_id)) {
+      fail(`${context}.provider_refs duplicates ${ref.provider_id}`);
+    }
+    seenProviderRefs.add(ref.provider_id);
+    if (ref.members !== null) {
+      if (!Array.isArray(ref.members) || ref.members.length === 0) {
+        fail(`${context}.provider_refs members must be null or a non-empty array`);
+      }
+      if (providerMemberSet === null) {
+        fail(`${context}.provider_refs members require provider_members`);
+      }
+      const seenMembers = new Set();
+      for (const member of ref.members) {
+        if (!LANE_ID_RE.test(member)) fail(`${context}.provider_refs member is invalid`);
+        if (seenMembers.has(member)) fail(`${context}.provider_refs duplicates member ${member}`);
+        if (!providerMemberSet.has(member)) {
+          fail(`${context}.provider_refs contains undeclared member ${member}`);
+        }
+        seenMembers.add(member);
+      }
+    }
+  }
+  if (!laneValue.provider_refs.some((ref) => ref.role !== "transport")) {
+    fail(`${context}.provider_refs must include a non-transport dependency`);
+  }
+  if (providerMemberSet !== null) {
+    const sourceMemberOwners = new Map();
+    for (const ref of laneValue.provider_refs.filter((entry) => entry.role === "source")) {
+      if (ref.members === null) {
+        fail(`${context}.provider_refs source members must be explicit when provider_members is declared`);
+      }
+      for (const member of ref.members) {
+        if (sourceMemberOwners.has(member)) {
+          fail(`${context}.provider_refs source member ${member} has multiple owners`);
+        }
+        sourceMemberOwners.set(member, ref.provider_id);
+      }
+    }
+    const declaredMembers = [...providerMemberSet].sort();
+    const coveredMembers = [...sourceMemberOwners.keys()].sort();
+    if (JSON.stringify(declaredMembers) !== JSON.stringify(coveredMembers)) {
+      fail(`${context}.provider_refs source members must exactly cover provider_members`);
+    }
+  }
   if (!STORE_KINDS.includes(laneValue.store_kind)) fail(`${context} store_kind is invalid`);
   if (!LANE_CLASSES.includes(laneValue.lane_class)) fail(`${context} lane_class is invalid`);
   if (laneValue.store_kind === "artifact_only") {
@@ -1552,9 +1732,11 @@ function validateLaneRecord(laneValue) {
   if (typeof laneValue.cadence?.kind !== "string" || !CADENCE_KINDS.includes(laneValue.cadence.kind)) {
     fail(`${context} cadence.kind is invalid`);
   }
-  if (laneValue.cadence.provider !== undefined && typeof laneValue.cadence.provider !== "string") {
-    fail(`${context} cadence.provider must be a string when present`);
-  }
+  exactKeys(
+    laneValue.cadence,
+    ["kind", ...(laneValue.cadence.provenance !== undefined ? ["provenance"] : [])],
+    `${context}.cadence`,
+  );
   if (laneValue.cadence.provenance !== undefined) {
     exactKeys(laneValue.cadence.provenance, ["kind", "evidence"], `${context}.cadence.provenance`);
     if (!CADENCE_PROVENANCE_KINDS.includes(laneValue.cadence.provenance.kind)) {
@@ -1626,14 +1808,47 @@ function validateLaneRecord(laneValue) {
 }
 
 export function validateLaneRegistry(registry) {
-  exactKeys(registry, ["schema_version", "lanes", "declared_exceptions", "workflow_classes", "workflow_policies"], "registry");
+  exactKeys(registry, ["schema_version", "providers", "lanes", "declared_exceptions", "workflow_classes", "workflow_policies"], "registry");
   if (registry.schema_version !== LANE_REGISTRY_SCHEMA) fail("schema_version is invalid");
+  if (!Array.isArray(registry.providers) || registry.providers.length === 0) {
+    fail("providers must be a non-empty array");
+  }
+  const providerById = new Map();
+  for (const provider of registry.providers) {
+    exactKeys(provider, ["id", "label", "class"], `provider ${provider?.id ?? "<unknown>"}`);
+    if (!LANE_ID_RE.test(provider.id)) fail(`provider id is invalid: ${String(provider.id)}`);
+    if (providerById.has(provider.id)) fail(`duplicate provider id ${provider.id}`);
+    if (typeof provider.label !== "string" || provider.label.length === 0) {
+      fail(`provider ${provider.id} label is required`);
+    }
+    if (!PROVIDER_CLASSES.includes(provider.class)) fail(`provider ${provider.id} class is invalid`);
+    providerById.set(provider.id, provider);
+  }
   if (!Array.isArray(registry.lanes) || registry.lanes.length === 0) fail("lanes must be a non-empty array");
   const seenIds = new Set();
+  const referencedProviderIds = new Set();
+  const roleByProviderClass = {
+    external_data: "source",
+    owner_managed_data: "source",
+    platform_proxy: "transport",
+    platform_runtime: "runtime",
+    platform_storage: "storage",
+  };
   for (const laneValue of registry.lanes) {
     validateLaneRecord(laneValue);
     if (seenIds.has(laneValue.id)) fail(`duplicate lane id ${laneValue.id}`);
     seenIds.add(laneValue.id);
+    for (const ref of laneValue.provider_refs) {
+      const provider = providerById.get(ref.provider_id);
+      if (!provider) fail(`lane ${laneValue.id}.provider_refs contains unknown provider ${ref.provider_id}`);
+      if (roleByProviderClass[provider.class] !== ref.role) {
+        fail(`lane ${laneValue.id}.provider_refs role ${ref.role} is invalid for ${provider.class} provider ${provider.id}`);
+      }
+      referencedProviderIds.add(ref.provider_id);
+    }
+  }
+  for (const provider of registry.providers) {
+    if (!referencedProviderIds.has(provider.id)) fail(`provider ${provider.id} is unreferenced`);
   }
   const directByKey = new Map();
   for (const laneValue of registry.lanes) {
@@ -1710,6 +1925,7 @@ function deepFreeze(value) {
 
 const registry = {
   schema_version: LANE_REGISTRY_SCHEMA,
+  providers,
   lanes,
   declared_exceptions,
   workflow_classes,
@@ -1727,6 +1943,23 @@ export function registryDigest() {
 
 export function registryLaneById(id) {
   return LANE_REGISTRY.lanes.find((laneValue) => laneValue.id === id) ?? null;
+}
+
+export function registryProviderById(id) {
+  return LANE_REGISTRY.providers.find((provider) => provider.id === id) ?? null;
+}
+
+export function providerBlastRadius(providerId, registryValue = LANE_REGISTRY) {
+  if (!registryValue.providers.some((provider) => provider.id === providerId)) {
+    fail(`unknown provider ${String(providerId)}`);
+  }
+  return registryValue.lanes.flatMap((laneValue) => laneValue.provider_refs
+    .filter((ref) => ref.provider_id === providerId)
+    .map((ref) => ({
+      lane_id: laneValue.id,
+      role: ref.role,
+      members: ref.members,
+    })));
 }
 
 // Map of data/admin first-level roots -> owning lane ids (shared stores list all).

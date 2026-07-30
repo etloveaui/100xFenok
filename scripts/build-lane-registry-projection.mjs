@@ -33,14 +33,19 @@ export const PROJECTION_SCHEMA = "lane-registry-projection/v1";
 // The ONLY fields that cross into the projection. Anything path-shaped
 // (roots, commit_shards, recovery_store, canonical_outputs, public_mirror) is
 // deliberately dropped; owner_workflow is reduced to its basename.
-export function projectLane(lane) {
+export function projectLane(lane, providerRecords = LANE_REGISTRY.providers) {
+  const providerById = new Map(providerRecords.map((provider) => [provider.id, provider]));
+  const providerLabels = lane.provider_refs.map((ref) => providerById.get(ref.provider_id)?.label);
+  if (providerLabels.some((label) => typeof label !== "string" || label.length === 0)) {
+    throw new Error(`lane-registry projection: unresolved provider for lane ${lane.id}`);
+  }
   return {
     id: lane.id,
     label: lane.label,
     store_kind: lane.store_kind,
     cadence: {
       kind: lane.cadence?.kind ?? "unknown",
-      provider: lane.cadence?.provider ?? null,
+      provider: providerLabels.join(" + "),
     },
     enforcement: lane.enforcement,
     privacy_class: lane.privacy_class,
@@ -56,7 +61,7 @@ export function buildLaneRegistryProjection(registry = LANE_REGISTRY) {
     purpose:
       "Admin-safe lane metadata projection for the owner data dashboard. Metadata only — no store roots, attempt/recovery paths, or repo directory structure.",
     lane_count: registry.lanes.length,
-    lanes: registry.lanes.map(projectLane),
+    lanes: registry.lanes.map((lane) => projectLane(lane, registry.providers)),
   };
 }
 

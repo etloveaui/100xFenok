@@ -1,7 +1,7 @@
 {
   "schema_version": "lane-registry-projection/v1",
-  "generated_at": "2026-07-30T10:14:45.837Z",
-  "source_schema_version": "lane-registry/v2",
+  "generated_at": "2026-07-30T10:28:36.915Z",
+  "source_schema_version": "lane-registry/v3",
   "purpose": "Admin-safe lane metadata projection for the owner data dashboard. Metadata only — no store roots, attempt/recovery paths, or repo directory structure.",
   "lane_count": 32,
   "lanes": [
@@ -11,7 +11,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "fred"
+        "provider": "FRED"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -23,7 +23,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "mixed",
-        "provider": "fred (daily/weekly/monthly/quarterly series)"
+        "provider": "FRED"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -35,7 +35,7 @@
       "store_kind": "marker",
       "cadence": {
         "kind": "weekly",
-        "provider": "fred weekly (Friday observations)"
+        "provider": "FRED"
       },
       "enforcement": "live",
       "privacy_class": "private",
@@ -47,7 +47,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "quarterly",
-        "provider": "fdic (first-Monday cron)"
+        "provider": "FDIC"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -59,7 +59,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "fiscaldata.treasury.gov"
+        "provider": "Treasury FiscalData"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -71,7 +71,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "defillama"
+        "provider": "DefiLlama"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -83,7 +83,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "yahoo finance (StockAnalysis workflow)"
+        "provider": "Yahoo Finance"
       },
       "enforcement": "live",
       "privacy_class": "private",
@@ -95,7 +95,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "stockanalysis (shared workflow)"
+        "provider": "StockAnalysis"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -107,7 +107,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "stockanalysis (bounded 8-pair shared workflow schedule)"
+        "provider": "StockAnalysis"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -119,7 +119,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "stockanalysis (shared workflow surface schedules)"
+        "provider": "StockAnalysis"
       },
       "enforcement": "shadow",
       "privacy_class": "public_mirror",
@@ -131,7 +131,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "hourly",
-        "provider": "yahoo (TQQQ/SOXL keys)"
+        "provider": "Yahoo Finance + Fenok ticker API"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -143,7 +143,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "multi-source sentiment"
+        "provider": "CNN Fear & Greed + Fenok CNN proxy + CFTC + Yahoo Finance + Alternative.me"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -155,7 +155,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "nasdaq GIW (us_trading_days)"
+        "provider": "Nasdaq Indexes"
       },
       "enforcement": "live",
       "privacy_class": "private",
@@ -167,7 +167,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "yahoo chart v8 (^GSPC/^IXIC, us_trading_days)"
+        "provider": "Yahoo Finance"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -179,7 +179,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "monthly",
-        "provider": "OECD SDMX DF_CLI"
+        "provider": "OECD"
       },
       "enforcement": "live",
       "privacy_class": "private",
@@ -191,7 +191,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "KRX Open API (Korea trading days)"
+        "provider": "KRX"
       },
       "enforcement": "live",
       "privacy_class": "public_safe_aggregate",
@@ -203,7 +203,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "slickcharts (us_trading_days)"
+        "provider": "Slickcharts"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -215,7 +215,7 @@
       "store_kind": "marker",
       "cadence": {
         "kind": "weekly",
-        "provider": "sec edgar (Monday 00:40Z poll)"
+        "provider": "SEC EDGAR"
       },
       "enforcement": "live",
       "privacy_class": "private",
@@ -227,7 +227,7 @@
       "store_kind": "artifact_only",
       "cadence": {
         "kind": "quarterly",
-        "provider": "sec 13f"
+        "provider": "SEC EDGAR"
       },
       "enforcement": "shadow",
       "privacy_class": "public_mirror",
@@ -239,7 +239,7 @@
       "store_kind": "artifact_only",
       "cadence": {
         "kind": "unknown",
-        "provider": null
+        "provider": "Local Mac bridge"
       },
       "enforcement": "shadow",
       "privacy_class": "private",
@@ -251,7 +251,7 @@
       "store_kind": "artifact_only",
       "cadence": {
         "kind": "unknown",
-        "provider": null
+        "provider": "Mona Life SSOT + Local Mac bridge"
       },
       "enforcement": "shadow",
       "privacy_class": "private",
@@ -263,7 +263,7 @@
       "store_kind": "artifact_only",
       "cadence": {
         "kind": "unknown",
-        "provider": null
+        "provider": "Cloudflare KV"
       },
       "enforcement": "shadow",
       "privacy_class": "private",
@@ -275,7 +275,7 @@
       "store_kind": "artifact_only",
       "cadence": {
         "kind": "weekly",
-        "provider": "owner-run fenok-benchmarks converter"
+        "provider": "Bloomberg Terminal"
       },
       "enforcement": "shadow",
       "privacy_class": "public_mirror",
@@ -287,7 +287,7 @@
       "store_kind": "artifact_only",
       "cadence": {
         "kind": "weekly",
-        "provider": "owner-run global-scouter converter"
+        "provider": "Global Scouter"
       },
       "enforcement": "shadow",
       "privacy_class": "public_mirror",
@@ -299,7 +299,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "weekly",
-        "provider": "NYU Stern Damodaran owner guard"
+        "provider": "NYU Stern Damodaran"
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
@@ -311,7 +311,7 @@
       "store_kind": "marker",
       "cadence": {
         "kind": "daily",
-        "provider": "finra (us_trading_days)"
+        "provider": "FINRA"
       },
       "enforcement": "live",
       "privacy_class": "private",
@@ -323,7 +323,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "weekly",
-        "provider": "finra otc transparency"
+        "provider": "FINRA"
       },
       "enforcement": "shadow",
       "privacy_class": "private",
@@ -335,7 +335,7 @@
       "store_kind": "marker",
       "cadence": {
         "kind": "daily",
-        "provider": "occ (us_trading_days)"
+        "provider": "OCC"
       },
       "enforcement": "live",
       "privacy_class": "private",
@@ -347,7 +347,7 @@
       "store_kind": "marker",
       "cadence": {
         "kind": "daily",
-        "provider": "yahoo finance targeted options (us_trading_days)"
+        "provider": "Yahoo Finance"
       },
       "enforcement": "live",
       "privacy_class": "private",
@@ -359,7 +359,7 @@
       "store_kind": "marker",
       "cadence": {
         "kind": "daily",
-        "provider": "apewisdom"
+        "provider": "ApeWisdom"
       },
       "enforcement": "live",
       "privacy_class": "private",
@@ -371,7 +371,7 @@
       "store_kind": "marker",
       "cadence": {
         "kind": "daily",
-        "provider": "gdelt"
+        "provider": "GDELT"
       },
       "enforcement": "live",
       "privacy_class": "private",
@@ -383,7 +383,7 @@
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
-        "provider": "yahoo"
+        "provider": "Yahoo Finance"
       },
       "enforcement": "shadow",
       "privacy_class": "public_mirror",

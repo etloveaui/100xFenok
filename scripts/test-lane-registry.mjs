@@ -17,8 +17,10 @@ import {
   LANE_REGISTRY_SCHEMA,
   declaredAdminRoots,
   declaredExceptionPaths,
+  providerBlastRadius,
   registryDigest,
   registryLaneById,
+  registryProviderById,
   validateLaneRegistry,
 } from "./lib/lane-registry.mjs";
 import { checkLaneRegistryCompleteness } from "./check-lane-registry-completeness.mjs";
@@ -50,6 +52,29 @@ function clone(value) {
   const base = clone(LANE_REGISTRY);
   const cases = [
     ["duplicate lane id", (draft) => { draft.lanes.push(clone(draft.lanes[0])); }],
+    ["duplicate provider id", (draft) => { draft.providers.push(clone(draft.providers[0])); }],
+    ["unknown provider class", (draft) => { draft.providers[0].class = "mystery"; }],
+    ["duplicate provider reference", (draft) => {
+      draft.lanes[0].provider_refs.push(clone(draft.lanes[0].provider_refs[0]));
+    }],
+    ["unknown provider reference", (draft) => {
+      draft.lanes[0].provider_refs[0].provider_id = "missing_provider";
+    }],
+    ["empty provider references", (draft) => { draft.lanes[0].provider_refs = []; }],
+    ["invalid provider role", (draft) => { draft.lanes[0].provider_refs[0].role = "backup"; }],
+    ["provider class and role mismatch", (draft) => { draft.lanes[0].provider_refs[0].role = "transport"; }],
+    ["duplicate provider members", (draft) => {
+      draft.lanes.find((row) => row.id === "sentiment").provider_refs[0].members = ["cnn", "cnn"];
+    }],
+    ["undeclared provider member", (draft) => {
+      draft.lanes.find((row) => row.id === "sentiment").provider_refs[3].members = ["vixx", "move"];
+    }],
+    ["missing provider member coverage", (draft) => {
+      draft.lanes.find((row) => row.id === "sentiment").provider_refs[3].members = ["vix"];
+    }],
+    ["unreferenced provider", (draft) => {
+      draft.providers.push({ id: "unused_provider", label: "Unused provider", class: "external_data" });
+    }],
     ["unknown key on a record", (draft) => { draft.lanes[0].surprise = true; }],
     ["bad lane id", (draft) => { draft.lanes[0].id = "Bad Id"; }],
     ["impossible activation date", (draft) => {
@@ -69,6 +94,7 @@ function clone(value) {
     ["undeclared exception kind", (draft) => { draft.declared_exceptions[0].kind = "directory"; }],
     ["duplicate exception", (draft) => { draft.declared_exceptions.push(clone(draft.declared_exceptions[0])); }],
     ["invalid cadence", (draft) => { draft.lanes[0].cadence.kind = "fortnightly"; }],
+    ["legacy cadence provider text", (draft) => { draft.lanes[0].cadence.provider = "fred"; }],
     ["invalid privacy class", (draft) => { draft.lanes[0].privacy_class = "publicish"; }],
     ["non-boolean public mirror flag", (draft) => {
       draft.lanes.find((row) => row.id === "finra_ats_weekly").public_mirror_allowed = "false";
@@ -115,6 +141,49 @@ function clone(value) {
 {
   const detectionIds = DATA_SUPPLY_DETECTION_CONFIG.lanes.map((lane) => lane.id).sort();
   const registryIds = LANE_REGISTRY.lanes.map((lane) => lane.id).sort();
+  assert.equal(registryProviderById("fred")?.label, "FRED");
+  assert.throws(
+    () => providerBlastRadius("missing_provider"),
+    /unknown provider/,
+    "unknown provider lookups must not silently report an empty blast radius",
+  );
+  assert.deepEqual(
+    providerBlastRadius("fred"),
+    [
+      { lane_id: "fred_macro", role: "source", members: null },
+      { lane_id: "fred_banking", role: "source", members: null },
+      { lane_id: "fred_yardeni", role: "source", members: null },
+    ],
+    "all FRED lanes must share one stable provider identity",
+  );
+  assert.deepEqual(
+    providerBlastRadius("yahoo_finance").map((entry) => entry.lane_id),
+    [
+      "yahoo_etf_fallback",
+      "yahoo_ticker_macro",
+      "sentiment",
+      "us_indices_daily",
+      "yahoo_private_options",
+      "yahoo_batch_quote_history",
+    ],
+    "Yahoo blast radius must be queryable without cadence free-text parsing",
+  );
+  assert.deepEqual(
+    registryLaneById("sentiment").provider_members,
+    ["cnn", "cftc", "vix", "move", "crypto"],
+    "the sentiment lane member universe is an explicit closed set",
+  );
+  assert.deepEqual(
+    registryLaneById("sentiment").provider_refs,
+    [
+      { provider_id: "cnn_fear_and_greed", role: "source", members: ["cnn"] },
+      { provider_id: "fenok_cnn_proxy", role: "transport", members: ["cnn"] },
+      { provider_id: "cftc", role: "source", members: ["cftc"] },
+      { provider_id: "yahoo_finance", role: "source", members: ["vix", "move"] },
+      { provider_id: "alternative_me", role: "source", members: ["crypto"] },
+    ],
+    "the multi-source sentiment lane must declare direct sources and its proxy boundary",
+  );
   for (const id of detectionIds) {
     assert.ok(registryIds.includes(id), `detection lane ${id} is missing from the registry`);
   }
@@ -237,9 +306,11 @@ function clone(value) {
         id: "finra_ats_weekly",
         label: "FINRA delayed ATS/OTC weekly summary",
         owner_workflow: ".github/workflows/fetch-finra-ats-weekly.yml",
+        provider_members: null,
+        provider_refs: [{ provider_id: "finra", role: "source", members: null }],
         store_kind: "payload",
         lane_class: "detection_floor",
-        cadence: { kind: "weekly", provider: "finra otc transparency" },
+        cadence: { kind: "weekly" },
         enforcement: "shadow",
         privacy_class: "private",
         public_mirror_allowed: false,
@@ -270,6 +341,8 @@ function clone(value) {
       assert.deepEqual(
         {
           owner_workflow: lane.owner_workflow,
+          provider_members: lane.provider_members,
+          provider_refs: lane.provider_refs,
           store_kind: lane.store_kind,
           lane_class: lane.lane_class,
           cadence: lane.cadence,
@@ -281,6 +354,15 @@ function clone(value) {
         },
         {
           owner_workflow: null,
+          provider_members: null,
+          provider_refs: id === "admin_live_voice_logs"
+            ? [{ provider_id: "local_mac_bridge", role: "runtime", members: null }]
+            : id === "mona_production_study_state"
+              ? [
+                  { provider_id: "mona_life_ssot", role: "source", members: null },
+                  { provider_id: "local_mac_bridge", role: "runtime", members: null },
+                ]
+              : [{ provider_id: "cloudflare_kv", role: "storage", members: null }],
           store_kind: "artifact_only",
           lane_class: "auxiliary",
           cadence: { kind: "unknown" },
