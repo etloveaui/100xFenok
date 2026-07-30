@@ -66,6 +66,10 @@ let DATA_ROOT = DATA_ROOT_ARG
 let PUBLIC_DATA_ROOT = DATA_ROOT_ARG
   ? path.join(DATA_ROOT_ARG, "public", "data")
   : path.join(ROOT, "100xfenok-next", "public", "data");
+const SLICKCHARTS_REPO_ROOT_ARG = getArg("--slickcharts-repo-root");
+const SLICKCHARTS_REPO_ROOT = SLICKCHARTS_REPO_ROOT_ARG
+  ? path.resolve(SLICKCHARTS_REPO_ROOT_ARG)
+  : path.dirname(DATA_ROOT);
 
 function resolveNow() {
   const fake = process.env.KPI_FAKE_NOW;
@@ -2546,7 +2550,7 @@ export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, r
   const detectionFloorLanes = buildDetectionFloorLanes(
     detectionFloor,
     recoveryStates,
-    { slickchartsRepoRoot: path.dirname(DATA_ROOT) },
+    { slickchartsRepoRoot: SLICKCHARTS_REPO_ROOT },
   );
   for (const [laneId, sourceStatuses] of Object.entries(requiredSourceStatuses)) {
     const target = detectionFloorLanes.find((item) => item.id === laneId);

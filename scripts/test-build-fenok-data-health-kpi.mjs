@@ -72,6 +72,24 @@ const KPI_REL = path.join("admin", "fenok-data-health-kpi.json");
 const DETECTION_BASELINE_REPORT = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report;
 const DETECTION_CALENDAR_FIXTURE = JSON.parse(fs.readFileSync(DETECTION_CALENDARS, "utf8"));
 const REPO_ROOT = path.resolve(__dirname, "..");
+const TEMP_ROOTS = new Set();
+
+function cleanupTempRoots() {
+  let failed = false;
+  for (const tmp of TEMP_ROOTS) {
+    try {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    } catch (error) {
+      failed = true;
+      console.error(`[cleanup] failed to remove ${tmp}: ${error.message}`);
+    }
+  }
+  TEMP_ROOTS.clear();
+  if (failed) process.exitCode = 1;
+}
+
+// Covers normal exit and uncaught throws. SIGTERM/SIGKILL remain outside this process-level fence.
+process.once("exit", cleanupTempRoots);
 
 function readySlickchartsCompositeIndex(
   generatedAt = "2026-07-14T11:00:00Z",
@@ -293,7 +311,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
 // while malformed/non-finite JSON and universe identity corruption stay global.
 {
   const now = "2026-07-13T12:00:00.000Z";
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "slick-kpi-"));
+  const tmp = mkTmp("slickcharts-delivery");
   const dataRoot = path.join(tmp, "data");
   const base = path.join(dataRoot, "slickcharts");
   const fresh = "2026-07-13T11:00:00+00:00";
@@ -1001,8 +1019,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   assert.equal(recoveryAware.find((item) => item.id === "slickcharts")?.status, "ready");
   assert.equal(recoveryAware.find((item) => item.id === "treasury_tga")?.checks.some((item) => item.id.startsWith("recovery_")), false);
 
-  const slickchartsLiveRoot = fs.mkdtempSync(path.join(os.tmpdir(), "slickcharts-kpi-live-"));
-  fs.mkdirSync(path.join(slickchartsLiveRoot, "data"), { recursive: true });
+  const slickchartsLiveRoot = mkTmp("slickcharts-live-mutation");
   fs.cpSync(
     path.join(REPO_ROOT, "data", "slickcharts"),
     path.join(slickchartsLiveRoot, "data", "slickcharts"),
@@ -1030,6 +1047,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     fs.writeFileSync(target, original);
   }
   fs.rmSync(slickchartsLiveRoot, { recursive: true, force: true });
+  TEMP_ROOTS.delete(slickchartsLiveRoot);
 
   const missingRecovery = mapDetectionFloorRow(row("slickcharts"), null);
   assert.equal(missingRecovery.status, "degraded");
@@ -1385,6 +1403,7 @@ function baseEnv() {
 
 function mkTmp(name) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), `kpi-v2-${name}-`));
+  TEMP_ROOTS.add(dir);
   fs.mkdirSync(path.join(dir, "data", "admin"), { recursive: true });
   fs.mkdirSync(path.join(dir, "data", "computed", "rim-index"), { recursive: true });
   fs.mkdirSync(path.join(dir, "public", "data", "admin"), { recursive: true });
@@ -1400,16 +1419,19 @@ function writeReadyRecoveryIndex(tmp, relPath, laneId, keys, generatedAt = "2026
   writeJson(path.join(tmp, "data", "admin", relPath, "index.json"), readyRecoveryIndex(laneId, keys, generatedAt));
 }
 
-function writeReadySlickchartsComposite(tmp, generatedAt = "2026-07-14T11:00:00Z") {
-  fs.mkdirSync(path.join(tmp, "data"), { recursive: true });
-  fs.cpSync(
-    path.join(REPO_ROOT, "data", "slickcharts"),
-    path.join(tmp, "data", "slickcharts"),
-    { recursive: true },
-  );
+function writeReadySlickchartsComposite(
+  tmp,
+  generatedAt = "2026-07-14T11:00:00Z",
+  slickchartsRepoRoot = REPO_ROOT,
+) {
   writeJson(
     path.join(tmp, "data", "admin", "slickcharts-composite-recovery", "index.json"),
-    readySlickchartsCompositeIndex(generatedAt, tmp),
+    readySlickchartsCompositeIndex(generatedAt, slickchartsRepoRoot),
+  );
+  assert.equal(
+    fs.existsSync(path.join(tmp, "data", "slickcharts")),
+    false,
+    "SlickCharts fixtures must reuse the read-only repository tree instead of copying it per case",
   );
 }
 
@@ -1507,10 +1529,19 @@ function seedFinraOccLedger(tmp, { finra, occ }) {
   });
 }
 
-function runBuilder(tmp, env, nowIso, { expectExit = 0 } = {}) {
+function runBuilder(tmp, env, nowIso, {
+  expectExit = 0,
+  slickchartsRepoRoot = REPO_ROOT,
+} = {}) {
   let status = 0;
   try {
-    execFileSync("node", [BUILDER, "--data-root", tmp], {
+    execFileSync("node", [
+      BUILDER,
+      "--data-root",
+      tmp,
+      "--slickcharts-repo-root",
+      slickchartsRepoRoot,
+    ], {
       env: { ...baseEnv(), ...env, KPI_FAKE_NOW: nowIso },
       stdio: ["ignore", "pipe", "pipe"],
     });
@@ -1525,8 +1556,18 @@ function runBuilder(tmp, env, nowIso, { expectExit = 0 } = {}) {
   };
 }
 
-function runChecker(tmp, nowIso, { strict = false, context = "deploy" } = {}) {
-  const args = [CHECKER, "--data-root", tmp];
+function runChecker(tmp, nowIso, {
+  strict = false,
+  context = "deploy",
+  slickchartsRepoRoot = REPO_ROOT,
+} = {}) {
+  const args = [
+    CHECKER,
+    "--data-root",
+    tmp,
+    "--slickcharts-repo-root",
+    slickchartsRepoRoot,
+  ];
   if (strict) args.push("--strict");
   args.push(`--context=${context}`);
   try {
@@ -1767,12 +1808,18 @@ console.log("# KPI v2 runtime self-proof fixtures");
 {
   const now = "2026-07-14T12:00:00.000Z";
   const tmp = mkTmp("detection-floor-live-installed");
+  const slickchartsLiveRoot = mkTmp("detection-floor-live-mutation");
+  fs.cpSync(
+    path.join(REPO_ROOT, "data", "slickcharts"),
+    path.join(slickchartsLiveRoot, "data", "slickcharts"),
+    { recursive: true },
+  );
   const installedReport = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report;
   writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), installedReport);
   writeReadyRecoveryIndex(tmp, "yahoo-hourly-ticker", "yahoo_hourly_ticker", ["TQQQ.json", "SOXL.json"]);
   writeReadyRecoveryIndex(tmp, "us-indices-daily", "us_indices_daily", ["sp500.json", "nasdaq.json"]);
-  writeReadySlickchartsComposite(tmp);
-  const { root, public: pub } = runBuilder(tmp, {}, now);
+  writeReadySlickchartsComposite(tmp, "2026-07-14T11:00:00Z", slickchartsLiveRoot);
+  const { root, public: pub } = runBuilder(tmp, {}, now, { slickchartsRepoRoot: slickchartsLiveRoot });
   assert.equal(root.totals.lanes, 33);
   for (const laneConfig of DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live")) {
     const mapped = root.lanes.find((item) => item.id === laneConfig.id);
@@ -1846,13 +1893,15 @@ console.log("# KPI v2 runtime self-proof fixtures");
   assert.equal(JSON.stringify(publicPreActivationProbe).includes(".github/workflows/"), false);
   assert.equal(root.deployment_integrity.blockers.some((item) => /fetch_cron/i.test(`${item.lane_id}/${item.check_id}`)), false);
 
-  const liveMutationTarget = path.join(tmp, "data", "slickcharts", "gainers.json");
+  const liveMutationTarget = path.join(slickchartsLiveRoot, "data", "slickcharts", "gainers.json");
   const liveMutationBaseline = fs.readFileSync(liveMutationTarget);
   fs.writeFileSync(liveMutationTarget, "{\"mutated\":true}\n");
-  const liveMutationCheck = runChecker(tmp, now);
+  const liveMutationCheck = runChecker(tmp, now, { slickchartsRepoRoot: slickchartsLiveRoot });
   assert.equal(liveMutationCheck.exit, 1);
   assert.match(liveMutationCheck.stderr, /live owned bundle differs from recovery index/);
   fs.writeFileSync(liveMutationTarget, liveMutationBaseline);
+  fs.rmSync(slickchartsLiveRoot, { recursive: true, force: true });
+  TEMP_ROOTS.delete(slickchartsLiveRoot);
 
   const malformed = mkTmp("detection-floor-live-malformed-json");
   fs.writeFileSync(path.join(malformed, "data", "admin", "data-supply-detection-floor.json"), "{", "utf8");
@@ -3787,7 +3836,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     for (const badPending of [{ pending_since: 123, ever_stamped: false }, { pending_since: "2026-07-01T00:00:00Z", ever_stamped: "yes" }, { pending_since: "garbage", ever_stamped: false }]) {
       const tmp = mkCorrupt(badPending);
       let status = 0;
-      try { execFileSync("node", [BUILDER, "--data-root", tmp], { env: { ...baseEnv(), KPI_FAKE_NOW: now, GITHUB_EVENT_NAME: "push", GITHUB_WORKFLOW_REF: "o/r/.github/workflows/deploy-worker.yml@refs/heads/main", GITHUB_RUN_ID: "pc", GITHUB_RUN_ATTEMPT: "1" }, stdio: ["ignore", "pipe", "pipe"] }); }
+      try { execFileSync("node", [BUILDER, "--data-root", tmp, "--slickcharts-repo-root", REPO_ROOT], { env: { ...baseEnv(), KPI_FAKE_NOW: now, GITHUB_EVENT_NAME: "push", GITHUB_WORKFLOW_REF: "o/r/.github/workflows/deploy-worker.yml@refs/heads/main", GITHUB_RUN_ID: "pc", GITHUB_RUN_ATTEMPT: "1" }, stdio: ["ignore", "pipe", "pipe"] }); }
       catch (e) { status = e.status ?? 1; }
       assert.equal(status, 1, `corrupt prior v2 pending ${JSON.stringify(badPending)} -> build hard-fails`);
     }

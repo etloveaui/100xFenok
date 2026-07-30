@@ -494,7 +494,11 @@ export function checkRecoveryStateSources(rootDoc, rootKpiPath, errors) {
       let liveIntegrity = { valid: false, mismatches: [{ member: "composite", reason: "state_missing" }] };
       if (expected !== null) {
         try {
-          liveIntegrity = inspectSlickchartsCompositeLiveIntegrity(path.resolve(adminRoot, "..", ".."), state);
+          const injectedRepoRoot = getArg("--slickcharts-repo-root");
+          liveIntegrity = inspectSlickchartsCompositeLiveIntegrity(
+            injectedRepoRoot ? path.resolve(injectedRepoRoot) : path.resolve(adminRoot, "..", ".."),
+            state,
+          );
         } catch (error) {
           liveIntegrity = { valid: false, mismatches: [{ member: "composite", reason: error.message }] };
         }
