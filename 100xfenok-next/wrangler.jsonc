@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "100xfenok",
-  "main": ".open-next/worker.js",
+  "main": "worker.ts",
   "compatibility_date": "2026-05-16",
   "compatibility_flags": [
     "nodejs_compat",
@@ -17,6 +17,22 @@
       "binding": "MONA_VNEXT_KV",
       "id": "9ca9cc74a4f341aeaa231fa67db65302",
       "preview_id": "67dd8748c45d4cce9770f1bf761ecaa4"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "WINDDOWN_REVIEW_COORDINATOR",
+        "class_name": "WindDownReviewCoordinator"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1-winddown-review-coordinator",
+      "new_sqlite_classes": [
+        "WindDownReviewCoordinator"
+      ]
     }
   ],
   "analytics_engine_datasets": [

@@ -14,7 +14,12 @@ import {
   classifyMonaVnextLearningProfile,
   createEmptyMonaVnextLearningProfile,
   normalizeMonaVnextLearningProfile,
+  type MonaVnextLearningProfile,
 } from "@/features/mona-vnext/memory/fsrsLearningProfile";
+import {
+  appendMonaVnextLearningEventsThroughCoordinator,
+  readMonaVnextLearningProfileThroughCoordinator,
+} from "@/features/mona-vnext/memory/learningProfileCoordinatorClient";
 import { createMonaVnextObjectStore } from "@/features/mona-vnext/storage/objectStore";
 
 type MemoryCheckpoint = {
@@ -189,17 +194,21 @@ export async function appendMonaVnextMemoryCheckpoint(args: Record<string, unkno
     await store.writeText(relPath, raw);
     const learningEvents = checkpoint.advisory.learningEvents ?? [];
     if (learningEvents.length > 0) {
-      const existingRaw = await store.readText(LEARNING_PROFILE_PATH);
-      const existing = existingRaw
-        ? normalizeMonaVnextLearningProfile(JSON.parse(existingRaw))
-        : createEmptyMonaVnextLearningProfile();
-      const learningProfile = applyMonaVnextLearningEvents(existing, learningEvents);
-      await store.writeText(LEARNING_PROFILE_PATH, `${JSON.stringify({
-        ...learningProfile,
-        namespace: MONA_VNEXT_DATA_NAMESPACE,
-        tester: "owner",
-        productionWriteEnabled: false,
-      }, null, 2)}\n`);
+      if (store.backend === "cloudflare-kv") {
+        await appendMonaVnextLearningEventsThroughCoordinator(learningEvents);
+      } else {
+        const existingRaw = await store.readText(LEARNING_PROFILE_PATH);
+        const existing = existingRaw
+          ? normalizeMonaVnextLearningProfile(JSON.parse(existingRaw))
+          : createEmptyMonaVnextLearningProfile();
+        const learningProfile = applyMonaVnextLearningEvents(existing, learningEvents);
+        await store.writeText(LEARNING_PROFILE_PATH, `${JSON.stringify({
+          ...learningProfile,
+          namespace: MONA_VNEXT_DATA_NAMESPACE,
+          tester: "owner",
+          productionWriteEnabled: false,
+        }, null, 2)}\n`);
+      }
     }
     return {
       ok: true,
@@ -218,10 +227,15 @@ export async function appendMonaVnextMemoryCheckpoint(args: Record<string, unkno
 
 export async function readMonaVnextLearningProfile(now = new Date()) {
   const store = await createMonaVnextObjectStore();
-  const raw = await store.readText(LEARNING_PROFILE_PATH);
-  const profile = raw
-    ? normalizeMonaVnextLearningProfile(JSON.parse(raw))
-    : createEmptyMonaVnextLearningProfile();
+  let profile: MonaVnextLearningProfile;
+  if (store.backend === "cloudflare-kv") {
+    profile = await readMonaVnextLearningProfileThroughCoordinator();
+  } else {
+    const raw = await store.readText(LEARNING_PROFILE_PATH);
+    profile = raw
+      ? normalizeMonaVnextLearningProfile(JSON.parse(raw))
+      : createEmptyMonaVnextLearningProfile();
+  }
   const selection = classifyMonaVnextLearningProfile(profile, now);
   return {
     updatedAt: profile.updatedAt,
