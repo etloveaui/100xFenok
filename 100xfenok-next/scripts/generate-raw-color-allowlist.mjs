@@ -77,6 +77,13 @@ function categoryForPath(relPath) {
     };
   }
 
+  if (relPath === "src/generated/winddown-published-lkg.ts") {
+    return {
+      category: "metadata-color",
+      note: "Generated language-learning content is data, not component styling; color words remain source text.",
+    };
+  }
+
   if (relPath === "src/app/admin/page.tsx" || relPath === "src/app/admin/personal/page.tsx") {
     return {
       category: "admin-internal",
