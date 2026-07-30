@@ -2217,6 +2217,9 @@ module.main()
         self.assertLess(retry_build.index(report_command), retry_build.index(basket_command))
 
         materialize_command = "node scripts/materialize-update-manifest-routes.mjs --all"
+        shard_projector_command = (
+            "node 100xfenok-next/scripts/sync-public-data.mjs --write --etf-shards-only"
+        )
         validate_materialization_command = (
             f"{materialize_command} --validate-only --assert-no-untracked"
         )
@@ -2241,13 +2244,17 @@ module.main()
         initial_materialize = exact_line_index(initial_build, materialize_command)
         retry_validate = exact_line_index(retry_build, validate_materialization_command)
         retry_materialize = exact_line_index(retry_build, materialize_command)
-        self.assertLess(initial_materialize, containing_line_index(initial_build, override_command))
+        initial_shard_projector = exact_line_index(initial_build, shard_projector_command)
+        retry_shard_projector = exact_line_index(retry_build, shard_projector_command)
+        self.assertLess(initial_materialize, initial_shard_projector)
+        self.assertLess(initial_shard_projector, containing_line_index(initial_build, override_command))
         self.assertLess(containing_line_index(initial_build, override_command), exact_line_index(initial_build, kpi_command))
         self.assertLess(retry_validate, retry_materialize)
-        self.assertLess(retry_materialize, containing_line_index(retry_build, override_command))
+        self.assertLess(retry_materialize, retry_shard_projector)
+        self.assertLess(retry_shard_projector, containing_line_index(retry_build, override_command))
         self.assertLess(containing_line_index(retry_build, override_command), exact_line_index(retry_build, kpi_command))
         self.assertEqual(manifest.count(override_command), 2)
-        self.assertNotIn("sync-public-data.mjs --write", manifest)
+        self.assertEqual(manifest.count(shard_projector_command), 2)
         self.assertEqual(manifest.count("check-fenok-public-mirror-guard.mjs"), 2)
         self.assertNotIn(
             "rsync -a --checksum --delete data/stockanalysis/ 100xfenok-next/public/data/stockanalysis/",
