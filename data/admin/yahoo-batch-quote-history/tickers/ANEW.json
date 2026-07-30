@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-07-24T23:14:05Z",
     "history_as_of": "2026-07-23",
-    "path": "data/yf/finance/ANEW.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ANEW.json",
     "payload_sha256": "89876bf4bce1011c83a176a16eb3ff2f4aa95018a627a4023d68aeea9b0021df",
     "quote_as_of": "2026-07-21T14:23:16Z",
     "source_as_of": "2026-07-21T14:23:16Z"
@@ -38,6 +38,14 @@
     "schedule": "0 22 * * 5",
     "shard": "5/6"
   },
+  "lkg": {
+    "fetched_at": "2026-07-24T23:14:05Z",
+    "history_as_of": "2026-07-23",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ANEW.json",
+    "payload_sha256": "89876bf4bce1011c83a176a16eb3ff2f4aa95018a627a4023d68aeea9b0021df",
+    "quote_as_of": "2026-07-21T14:23:16Z",
+    "source_as_of": "2026-07-21T14:23:16Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-21T14:23:16Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-07-30T00:35:13Z",
+    "classified_run_id": "30502016705",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "ANEW holds LKG because Yahoo source date 2026-07-21T14:23:16Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-21T14:23:16Z"
+  },
   "ticker": "ANEW",
-  "updated_at": "2026-07-24T23:12:06Z"
+  "updated_at": "2026-07-30T00:35:13Z"
 }

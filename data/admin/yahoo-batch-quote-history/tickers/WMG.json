@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -212,15 +199,28 @@
       "run_id": "30316637722",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 419,
+      "natural": true,
+      "observed_at": "2026-07-30T00:42:51Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30502016705",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-28T00:28:11Z",
-    "history_as_of": "2026-07-27",
+    "fetched_at": "2026-07-30T00:46:22Z",
+    "history_as_of": "2026-07-29",
     "path": "data/yf/finance/WMG.json",
-    "payload_sha256": "3db3be62833b157c647ccfe4be70af1d5cfd0e08afc75bc5b51e93618be9550f",
-    "quote_as_of": "2026-07-27T20:00:01Z",
-    "source_as_of": "2026-07-27"
+    "payload_sha256": "ee861a3efa012d24cd8aa76c19f3c2024cbfef864e98fafda4fdccb2b78675dd",
+    "quote_as_of": "2026-07-29T20:00:00Z",
+    "source_as_of": "2026-07-29"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -230,14 +230,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 535,
+    "latency_ms": 419,
     "natural": true,
-    "observed_at": "2026-07-28T00:24:39Z",
+    "observed_at": "2026-07-30T00:42:51Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30316637722",
+    "run_id": "30502016705",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "2/5"
   },
   "last_recovered_failure": {
     "attempts_used": 2,
@@ -292,14 +292,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-27",
-    "observed_at": "2026-07-28T00:24:39Z",
-    "payload_sha256": "2c64033b21d36e661cec03993cd740a7b79f8aad3c178768cd3156b3871d9aec",
-    "quote_as_of": "2026-07-27T20:00:01Z",
+    "history_as_of": "2026-07-29",
+    "observed_at": "2026-07-30T00:42:51Z",
+    "payload_sha256": "e635ce6c78ae7ae3d2c8cedf44d517ad0fdb6bf68eb73c3045a3745e8c5f6fa4",
+    "quote_as_of": "2026-07-29T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30316637722",
+    "run_id": "30502016705",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-27"
+    "source_as_of": "2026-07-29"
   },
   "recovered_at": "2026-07-18T00:37:10Z",
   "recovered_from_run_id": "29544227703",
@@ -310,5 +310,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "WMG",
-  "updated_at": "2026-07-28T00:24:39Z"
+  "updated_at": "2026-07-30T00:42:51Z"
 }

@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-21T23:05:19Z",
     "history_as_of": "2026-07-20",
-    "path": "data/yf/finance/BRCE.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BRCE.json",
     "payload_sha256": "cd863eb0d8f80ef8b3c12fd97657bf8997a133e2acb74c8f08157247d705cd45",
     "quote_as_of": "2026-07-20T19:29:31Z",
     "source_as_of": "2026-07-20"
@@ -52,12 +52,12 @@
     "shard": "2/6"
   },
   "lkg": {
-    "fetched_at": "2026-07-09T09:20:26Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-07-21T23:05:19Z",
+    "history_as_of": "2026-07-20",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BRCE.json",
-    "payload_sha256": "1a3e365dd943c63148e175bc6bf77d495a0f85d21579d8af8f04db589798226a",
-    "quote_as_of": "2026-07-08T19:59:46Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "cd863eb0d8f80ef8b3c12fd97657bf8997a133e2acb74c8f08157247d705cd45",
+    "quote_as_of": "2026-07-20T19:29:31Z",
+    "source_as_of": "2026-07-20"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-20"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-07-17T00:15:36Z",
-    "classified_run_id": "29544227703",
+    "age_business_days": 8,
+    "classified_at": "2026-07-30T00:35:13Z",
+    "classified_run_id": "30502016705",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BRCE holds LKG because Yahoo source date 2026-07-08 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BRCE holds LKG because Yahoo source date 2026-07-20 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-08"
+    "source_as_of": "2026-07-20"
   },
   "ticker": "BRCE",
-  "updated_at": "2026-07-21T23:04:26Z"
+  "updated_at": "2026-07-30T00:35:13Z"
 }

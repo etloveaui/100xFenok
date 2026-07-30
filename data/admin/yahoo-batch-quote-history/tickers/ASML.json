@@ -129,12 +129,26 @@
       "run_id": "30316637722",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 467,
+      "natural": true,
+      "observed_at": "2026-07-30T00:35:13Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "30502016705",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
     "fetched_at": "2026-07-28T00:16:18Z",
     "history_as_of": "2026-07-27",
-    "path": "data/yf/finance/ASML.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ASML.json",
     "payload_sha256": "e5f872639099605e2666970ad353aac6099669734ce885749b9f5bd242602eda",
     "quote_as_of": "2026-07-27T20:00:01Z",
     "source_as_of": "2026-07-27"
@@ -146,16 +160,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 460,
+    "latency_ms": 467,
     "natural": true,
-    "observed_at": "2026-07-28T00:14:11Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-30T00:35:13Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "30316637722",
+    "run_id": "30502016705",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-07-30T00:35:13Z",
+    "run_attempt": 1,
+    "run_id": "30502016705"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-28T00:16:18Z",
+    "history_as_of": "2026-07-27",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ASML.json",
+    "payload_sha256": "e5f872639099605e2666970ad353aac6099669734ce885749b9f5bd242602eda",
+    "quote_as_of": "2026-07-27T20:00:01Z",
+    "source_as_of": "2026-07-27"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -169,9 +204,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-27"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "ASML",
-  "updated_at": "2026-07-28T00:14:11Z"
+  "updated_at": "2026-07-30T00:35:13Z"
 }

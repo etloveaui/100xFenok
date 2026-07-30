@@ -18,53 +18,74 @@
       "run_id": "30230385192",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 419,
+      "natural": true,
+      "observed_at": "2026-07-30T00:35:13Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30502016705",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-30T00:50:04Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "30502016705",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-27T01:53:19Z",
-    "history_as_of": "2026-07-24",
+    "fetched_at": "2026-07-30T00:38:48Z",
+    "history_as_of": "2026-07-29",
     "path": "data/yf/finance/SKHY.json",
-    "payload_sha256": "8a657a5cc3f8b300b22611b4583d3c479fb9fdcb94ff24d03e2f02aa521da14f",
-    "quote_as_of": "2026-07-24T20:00:01Z",
-    "source_as_of": "2026-07-24"
+    "payload_sha256": "c9aa2c61999d93f4b792b3e9ecdada76cde998874aa07b52164a24d0d301e608",
+    "quote_as_of": "2026-07-29T20:00:00Z",
+    "source_as_of": "2026-07-29"
   },
   "discovered_from": [
-    "global_scouter_stock"
+    "global_scouter_stock",
+    "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "event_name": "workflow_dispatch",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "ImportError: `Import lxml` failed. Use pip or conda to install the lxml package.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 3408,
-    "natural": false,
-    "observed_at": "2026-07-27T01:53:07Z",
-    "outcome": "fresh",
+    "attempts_used": 0,
+    "event_name": "schedule",
+    "failures": [],
+    "latency_ms": 0,
+    "natural": true,
+    "observed_at": "2026-07-30T00:50:04Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "30230385192",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30502016705",
+    "schedule": "20 23 * * 1-5",
+    "shard": "4/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-27T01:53:07Z",
-    "payload_sha256": "e32732a92ac40cce203599c53641fcde787d262f9618ed470845cd4196793e9b",
-    "quote_as_of": "2026-07-24T20:00:01Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-07-29",
+    "observed_at": "2026-07-30T00:35:13Z",
+    "payload_sha256": "4983ac67ad2e9658f71dc9619dea1fb679627cd61b7f0c0830b624a7a6253a6c",
+    "quote_as_of": "2026-07-29T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30230385192",
+    "run_id": "30502016705",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-07-29"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "SKHY",
-  "updated_at": "2026-07-27T01:53:07Z"
+  "updated_at": "2026-07-30T00:50:04Z"
 }

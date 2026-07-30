@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-07-21T23:06:44Z",
     "history_as_of": "2026-07-21",
-    "path": "data/yf/finance/AMEI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AMEI.json",
     "payload_sha256": "b446acccdb1119b35e5603a978ba8abe342d281b17fdd59c07a42f225fe4eb01",
     "quote_as_of": "2026-07-21T20:00:01Z",
     "source_as_of": "2026-07-21"
@@ -65,12 +65,12 @@
     "shard": "2/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-30T23:53:44Z",
-    "history_as_of": "2026-06-30",
+    "fetched_at": "2026-07-21T23:06:44Z",
+    "history_as_of": "2026-07-21",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AMEI.json",
-    "payload_sha256": "1af7811ed42a02c7330f1afcf01e28bd3b71e6096aef9860fbd373fcb9d3e306",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-30"
+    "payload_sha256": "b446acccdb1119b35e5603a978ba8abe342d281b17fdd59c07a42f225fe4eb01",
+    "quote_as_of": "2026-07-21T20:00:01Z",
+    "source_as_of": "2026-07-21"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-21"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-30T00:35:13Z",
+    "classified_run_id": "30502016705",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "AMEI holds LKG because Yahoo source date 2026-06-30 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AMEI holds LKG because Yahoo source date 2026-07-21 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-30"
+    "source_as_of": "2026-07-21"
   },
   "ticker": "AMEI",
-  "updated_at": "2026-07-21T23:04:26Z"
+  "updated_at": "2026-07-30T00:35:13Z"
 }

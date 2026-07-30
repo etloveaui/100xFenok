@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-20T23:04:01Z",
     "history_as_of": "2026-07-20",
-    "path": "data/yf/finance/AVGX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AVGX.json",
     "payload_sha256": "dd8e632307df26c03145504af4d3f08b59006572a146e2e0fec3237ecd1980cc",
     "quote_as_of": "2026-07-20T20:00:01Z",
     "source_as_of": "2026-07-20"
@@ -53,12 +53,12 @@
     "shard": "1/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-27T23:42:52Z",
-    "history_as_of": "2026-06-26",
+    "fetched_at": "2026-07-20T23:04:01Z",
+    "history_as_of": "2026-07-20",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AVGX.json",
-    "payload_sha256": "a11d3097ccb51ad4bd33db67a05a6ded93e5757c4f9de6c78734ce1f71e5d6dc",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-26"
+    "payload_sha256": "dd8e632307df26c03145504af4d3f08b59006572a146e2e0fec3237ecd1980cc",
+    "quote_as_of": "2026-07-20T20:00:01Z",
+    "source_as_of": "2026-07-20"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -72,19 +72,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-20"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 10,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 8,
+    "classified_at": "2026-07-30T00:35:13Z",
+    "classified_run_id": "30502016705",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "AVGX holds LKG because Yahoo source date 2026-06-26 is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AVGX holds LKG because Yahoo source date 2026-07-20 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-26"
+    "source_as_of": "2026-07-20"
   },
   "ticker": "AVGX",
-  "updated_at": "2026-07-20T23:03:20Z"
+  "updated_at": "2026-07-30T00:35:13Z"
 }

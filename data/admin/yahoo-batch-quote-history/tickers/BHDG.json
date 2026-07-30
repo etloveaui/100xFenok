@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-07-21T23:08:48Z",
     "history_as_of": "2026-07-21",
-    "path": "data/yf/finance/BHDG.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BHDG.json",
     "payload_sha256": "f7510eb36fba0b728b3e770c70d85aed69ca4fc3e026f7ca9c68141c3d117441",
     "quote_as_of": "2026-07-21T20:00:00Z",
     "source_as_of": "2026-07-21"
@@ -38,6 +38,14 @@
     "schedule": "0 22 * * 2",
     "shard": "2/6"
   },
+  "lkg": {
+    "fetched_at": "2026-07-21T23:08:48Z",
+    "history_as_of": "2026-07-21",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BHDG.json",
+    "payload_sha256": "f7510eb36fba0b728b3e770c70d85aed69ca4fc3e026f7ca9c68141c3d117441",
+    "quote_as_of": "2026-07-21T20:00:00Z",
+    "source_as_of": "2026-07-21"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-21"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-07-30T00:35:13Z",
+    "classified_run_id": "30502016705",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "BHDG holds LKG because Yahoo source date 2026-07-21 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-21"
+  },
   "ticker": "BHDG",
-  "updated_at": "2026-07-21T23:04:26Z"
+  "updated_at": "2026-07-30T00:35:13Z"
 }

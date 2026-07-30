@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-21T23:05:39Z",
     "history_as_of": "2026-07-21",
-    "path": "data/yf/finance/BSGT.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BSGT.json",
     "payload_sha256": "bc79bfe755758358b80483cee7e1c3511070d422116faa67edc5f37b0dc6f1bc",
     "quote_as_of": "2026-07-21T20:00:00Z",
     "source_as_of": "2026-07-21"
@@ -52,12 +52,12 @@
     "shard": "2/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:50:17Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-07-21T23:05:39Z",
+    "history_as_of": "2026-07-21",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BSGT.json",
-    "payload_sha256": "91644d83f034b103d29aa7bb7f00f832c90940cef5611fa2c3f448c92599c4ab",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "bc79bfe755758358b80483cee7e1c3511070d422116faa67edc5f37b0dc6f1bc",
+    "quote_as_of": "2026-07-21T20:00:00Z",
+    "source_as_of": "2026-07-21"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-21"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-30T00:35:13Z",
+    "classified_run_id": "30502016705",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BSGT holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BSGT holds LKG because Yahoo source date 2026-07-21 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-07-21"
   },
   "ticker": "BSGT",
-  "updated_at": "2026-07-21T23:04:26Z"
+  "updated_at": "2026-07-30T00:35:13Z"
 }

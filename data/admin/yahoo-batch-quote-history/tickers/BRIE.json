@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-21T23:05:24Z",
     "history_as_of": "2026-07-21",
-    "path": "data/yf/finance/BRIE.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BRIE.json",
     "payload_sha256": "c3180a81ffd5508434efd1737a8323a4584990e2051d9cc9682ba5ea35115ce1",
     "quote_as_of": "2026-07-21T19:59:53Z",
     "source_as_of": "2026-07-21"
@@ -52,12 +52,12 @@
     "shard": "2/6"
   },
   "lkg": {
-    "fetched_at": "2026-07-09T09:20:31Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-07-21T23:05:24Z",
+    "history_as_of": "2026-07-21",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BRIE.json",
-    "payload_sha256": "bede0871110d0bef950a111a80a396b8a0742741d3d04d12eac42ffcdd675044",
-    "quote_as_of": "2026-07-08T19:59:52Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "c3180a81ffd5508434efd1737a8323a4584990e2051d9cc9682ba5ea35115ce1",
+    "quote_as_of": "2026-07-21T19:59:53Z",
+    "source_as_of": "2026-07-21"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-21"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-07-17T00:15:36Z",
-    "classified_run_id": "29544227703",
+    "classified_at": "2026-07-30T00:35:13Z",
+    "classified_run_id": "30502016705",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BRIE holds LKG because Yahoo source date 2026-07-08 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BRIE holds LKG because Yahoo source date 2026-07-21 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-08"
+    "source_as_of": "2026-07-21"
   },
   "ticker": "BRIE",
-  "updated_at": "2026-07-21T23:04:26Z"
+  "updated_at": "2026-07-30T00:35:13Z"
 }

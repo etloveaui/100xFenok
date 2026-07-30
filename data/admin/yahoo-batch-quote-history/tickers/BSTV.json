@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-21T23:05:52Z",
     "history_as_of": "2026-07-21",
-    "path": "data/yf/finance/BSTV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BSTV.json",
     "payload_sha256": "821d22bc41b2768319a985bb8bcd0b8188d124c5e5cac52106c7648b437c0d7f",
     "quote_as_of": "2026-07-21T20:00:00Z",
     "source_as_of": "2026-07-21"
@@ -52,12 +52,12 @@
     "shard": "2/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:50:30Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-07-21T23:05:52Z",
+    "history_as_of": "2026-07-21",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BSTV.json",
-    "payload_sha256": "a0cbf667022ab377e245119302acd3aad2dacb278d21a1f4b03b77e236a6177d",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "821d22bc41b2768319a985bb8bcd0b8188d124c5e5cac52106c7648b437c0d7f",
+    "quote_as_of": "2026-07-21T20:00:00Z",
+    "source_as_of": "2026-07-21"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-21"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-30T00:35:13Z",
+    "classified_run_id": "30502016705",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BSTV holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BSTV holds LKG because Yahoo source date 2026-07-21 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-07-21"
   },
   "ticker": "BSTV",
-  "updated_at": "2026-07-21T23:04:26Z"
+  "updated_at": "2026-07-30T00:35:13Z"
 }
