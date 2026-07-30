@@ -5,6 +5,7 @@ import { FATAL_MARKERS, SMOKE_PAGE_ROUTES } from "./qa-route-catalog.mjs";
 import { DEPLOY_SMOKE_ATTEMPTS, fetchTextWithBoundedRetry } from "./deploy-smoke-retry.mjs";
 import { PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS } from "../../scripts/lib/kpi-contract-constants.mjs";
 import { validateProductSurfaceCoverageV2Artifact } from "../../scripts/lib/product-surface-stamp-v2.mjs";
+import { STOCKANALYSIS_ETF_SHARD_COUNT } from "../src/lib/stockanalysis-etf-shard.mjs";
 
 const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
 const TIMEOUT_MS = Number(process.env.QA_STOCKANALYSIS_TIMEOUT_MS || 25000);
@@ -320,10 +321,10 @@ export function validateEtfRetirementStaticManifest(manifest) {
     };
   }
 
-  if (!Array.isArray(manifest.shards) || manifest.shards.length !== 128) {
-    fail(`ETF shard-only manifest must declare exactly 128 shards; received ${Array.isArray(manifest.shards) ? manifest.shards.length : "non-array"}`);
+  if (!Array.isArray(manifest.shards) || manifest.shards.length !== STOCKANALYSIS_ETF_SHARD_COUNT) {
+    fail(`ETF shard-only manifest must declare exactly ${STOCKANALYSIS_ETF_SHARD_COUNT} shards; received ${Array.isArray(manifest.shards) ? manifest.shards.length : "non-array"}`);
   }
-  if (manifest.shard_count !== 128 || manifest.payload_count !== 5586) {
+  if (manifest.shard_count !== STOCKANALYSIS_ETF_SHARD_COUNT || manifest.payload_count !== 5586) {
     fail(`ETF shard-only manifest count mismatch: shard_count=${manifest.shard_count}, payload_count=${manifest.payload_count}`);
   }
   return {

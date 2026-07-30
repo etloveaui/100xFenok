@@ -4,7 +4,7 @@ import path from "node:path";
 import { normalizeForFilePath } from "@/lib/ticker";
 import {
   sha256Text,
-  stockanalysisEtfPayloadDocumentResultFromShard,
+  stockanalysisEtfPayloadDocumentResultFromVerifiedShard,
   stockanalysisEtfShardManifestEntry,
   stockanalysisEtfShardManifestIsValid,
 } from "../stockanalysis-etf-shard.mjs";
@@ -290,7 +290,7 @@ export async function getStockanalysisEtfShardDocument(
         snapshotId,
       };
     }
-    const result = stockanalysisEtfPayloadDocumentResultFromShard(
+    const result = stockanalysisEtfPayloadDocumentResultFromVerifiedShard(
       shardDocument.value,
       selected.ticker,
       selected.entry.member_count,

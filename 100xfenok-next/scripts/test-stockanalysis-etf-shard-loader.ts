@@ -6,7 +6,11 @@ import path from "node:path";
 
 import { syncStockanalysisEtfShardProjection } from "./sync-public-data.mjs";
 import {
+  STOCKANALYSIS_ETF_SHARD_ALGORITHM,
+  STOCKANALYSIS_ETF_SHARD_COUNT,
+  STOCKANALYSIS_ETF_SHARD_SCHEMA,
   stockanalysisEtfManifestSha256,
+  stockanalysisEtfPayloadDocumentResultFromVerifiedShard,
   stockanalysisEtfShardId,
 } from "../src/lib/stockanalysis-etf-shard.mjs";
 
@@ -95,7 +99,7 @@ async function main() {
     write(path.join(sourceRoot, "stockanalysis", "etfs", "TQQQ.json"), canonicalRaw);
     const initial = syncStockanalysisEtfShardProjection({ sourceRoot, destinationRoot, logger: () => {} });
     assert.equal(initial.stockanalysisEtfTickerFiles, 1);
-    assert.equal(initial.stockanalysisEtfShardFiles, 128);
+    assert.equal(initial.stockanalysisEtfShardFiles, STOCKANALYSIS_ETF_SHARD_COUNT);
     assert.equal(initial.stockanalysisEtfManifestFiles, 1);
 
     const initialManifestRaw = fs.readFileSync(path.join(shardRoot(destinationRoot), "index.json"), "utf8");
@@ -166,7 +170,9 @@ async function main() {
 
     const duplicateShardId = readManifest(destinationRoot);
     duplicateShardId.shards[stockanalysisEtfShardId("TQQQ")].id =
-      duplicateShardId.shards[(stockanalysisEtfShardId("TQQQ") + 1) % 128].id;
+      duplicateShardId.shards[
+        (stockanalysisEtfShardId("TQQQ") + 1) % STOCKANALYSIS_ETF_SHARD_COUNT
+      ].id;
     writeManifest(destinationRoot, duplicateShardId);
     assert.equal((await getStockanalysisEtfShardDocument("TQQQ")).kind, "shard_integrity_unavailable");
     fs.rmSync(shardRoot(destinationRoot), { recursive: true, force: true });
@@ -197,7 +203,7 @@ async function main() {
 
     const wrongShardId = readManifest(destinationRoot);
     rewriteSelectedShard(destinationRoot, wrongShardId, "TQQQ", (shard) => {
-      shard.shard_id = (shard.shard_id + 1) % 128;
+      shard.shard_id = (shard.shard_id + 1) % STOCKANALYSIS_ETF_SHARD_COUNT;
     });
     assert.equal((await getStockanalysisEtfShardDocument("TQQQ")).kind, "shard_integrity_unavailable");
     fs.rmSync(shardRoot(destinationRoot), { recursive: true, force: true });
@@ -248,6 +254,31 @@ async function main() {
       trueAbsence.payload_count -= 1;
     });
     assert.equal((await getStockanalysisEtfShardDocument("TQQQ")).kind, "ticker_not_found");
+
+    const selectedRaw = canonicalRaw;
+    const selectedShardId = stockanalysisEtfShardId("TQQQ");
+    const unrelatedTicker = Array.from({ length: 100_000 }, (_, index) => `X${index}`)
+      .find((candidate) => stockanalysisEtfShardId(candidate) === selectedShardId);
+    assert.ok(unrelatedTicker);
+    let unrelatedRawRead = false;
+    const runtimeFastPath = stockanalysisEtfPayloadDocumentResultFromVerifiedShard({
+      schema_version: STOCKANALYSIS_ETF_SHARD_SCHEMA,
+      shard_algorithm: STOCKANALYSIS_ETF_SHARD_ALGORITHM,
+      shard_count: STOCKANALYSIS_ETF_SHARD_COUNT,
+      shard_id: selectedShardId,
+      entries: {
+        TQQQ: { raw: selectedRaw, sha256: sha256(selectedRaw) },
+        [unrelatedTicker]: {
+          get raw() {
+            unrelatedRawRead = true;
+            throw new Error("runtime fast path read an unrelated payload");
+          },
+          sha256: "0".repeat(64),
+        },
+      },
+    }, "TQQQ", 2);
+    assert.equal(runtimeFastPath.kind, "ok");
+    assert.equal(unrelatedRawRead, false);
 
     console.log("test-stockanalysis-etf-shard-loader: ok");
   } finally {

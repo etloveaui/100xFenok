@@ -19,6 +19,7 @@ import {
   stockanalysisEtfManifestSha256,
   stockanalysisEtfShardFileNameForId,
   stockanalysisEtfShardId,
+  stockanalysisEtfSnapshotId,
   stockanalysisEtfSourceBindingSha256,
   stockanalysisEtfTickerKey,
 } from "../src/lib/stockanalysis-etf-shard.mjs";
@@ -431,7 +432,7 @@ function buildStockanalysisEtfShardProjection(sourceRoot) {
   revalidateSourceBindings([sourceBinding], "after StockAnalysis ETF projection");
 
   const sourceSha256 = stockanalysisEtfSourceBindingSha256(sourceRows);
-  const snapshotId = sourceSha256;
+  const snapshotId = stockanalysisEtfSnapshotId(sourceSha256);
   const shardFiles = shards.map((entriesByTicker, shardId) => {
     const body = `${JSON.stringify({
       schema_version: STOCKANALYSIS_ETF_SHARD_SCHEMA,
