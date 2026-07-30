@@ -195,7 +195,7 @@ class MaterializerFixture:
         snapshot = shard_root / "snapshots" / ("0" * 64)
         snapshot.mkdir(parents=True, exist_ok=True)
         shards = []
-        for shard_id in range(128):
+        for shard_id in range(1024):
             shard_name = f"{shard_id:03d}.json"
             shard_path = snapshot / shard_name
             shard_path.write_bytes(b"{}\n")
@@ -209,7 +209,7 @@ class MaterializerFixture:
         (shard_root / "index.json").write_bytes(pretty_bytes({
             "schema_version": "stockanalysis-etf-shards/v2",
             "compatibility_mode": "shard-only",
-            "shard_count": 128,
+            "shard_count": 1024,
             "payload_count": 1,
             "provenance": {"canonical_root": "data/stockanalysis/etfs"},
             "shards": shards,
@@ -412,7 +412,7 @@ class PublicDataSupplyMaterializerTests(unittest.TestCase):
             "public_stockanalysis_true_primary": 0,
             "public_stockanalysis_yahoo": 0,
             "public_stockanalysis_direct": 0,
-            "public_stockanalysis_shards": 128,
+            "public_stockanalysis_shards": 1024,
             "public_projection_payloads": 2,
             "public_status_rows": 3,
         })
