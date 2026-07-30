@@ -6,6 +6,7 @@ import Image from "next/image";
 import { AnimatePresence, domAnimation, LazyMotion, m, useReducedMotion } from "motion/react";
 import type { MonaVnextAnswerMatchTier } from "@/features/mona-vnext/coach/answerMatcher";
 import type { ProductQuestState } from "@/features/mona-vnext/product/gameSession";
+import type { StudyMode } from "@/features/mona-vnext/teacher/teacherSession";
 import type { ExpressionCard } from "@/components/admin-live/AdminLiveBench";
 
 export type WindDownPhase = "boot" | "ready" | "connecting" | "live" | "stopped" | "blocked";
@@ -23,6 +24,7 @@ type Props = {
   phase: WindDownPhase;
   message: string;
   card: ExpressionCard | null;
+  cardKey?: string;
   coachLine: string | null;
   errorText: string | null;
   answerVisible?: boolean;
@@ -33,6 +35,11 @@ type Props = {
   onVoiceChange: (voice: string) => void;
   onVadChange: (preset: "relaxed" | "balanced") => void;
   settingsSlot?: ReactNode;
+  studyModeControls?: {
+    mode: StudyMode;
+    options: Array<{ mode: StudyMode; label: string; hint?: string }>;
+    onChange: (mode: StudyMode) => void;
+  };
   resumeOffer?: boolean;
   onStart: () => void;
   onStop: () => void;
@@ -50,6 +57,7 @@ const EMPTY_QUEST: ProductQuestState = {
   xp: 0,
   lastReward: null,
   isComplete: false,
+  creditedAttemptKeys: [],
 };
 
 const VOICE_CHOICES = [
@@ -158,6 +166,7 @@ export default function MonaWindDown({
   phase,
   message,
   card,
+  cardKey,
   coachLine,
   errorText,
   answerVisible = false,
@@ -168,6 +177,7 @@ export default function MonaWindDown({
   onVoiceChange,
   onVadChange,
   settingsSlot,
+  studyModeControls,
   resumeOffer = false,
   onStart,
   onStop,
@@ -217,6 +227,9 @@ export default function MonaWindDown({
   const busy = phase === "connecting" || phase === "boot";
   const progress = Math.round((quest.completedSteps / quest.targetSteps) * 100);
   const verdictStyle = answerVerdict ? VERDICT_STYLE[answerVerdict.tier] : null;
+  const activeStudyMode = studyModeControls?.options.find(
+    (option) => option.mode === studyModeControls.mode,
+  );
 
   const pickVoice = (id: string) => {
     onVoiceChange(id);
@@ -281,7 +294,19 @@ export default function MonaWindDown({
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[11px] font-black tracking-[0.23em] text-[var(--wd-accent)]">WIND DOWN</p>
-              <p className="mt-1 text-[13px] font-semibold text-[var(--wd-muted)]">{planLine}</p>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <p className="text-[13px] font-semibold text-[var(--wd-muted)]">{planLine}</p>
+                {activeStudyMode ? (
+                  <button
+                    type="button"
+                    onClick={() => setSheetOpen(true)}
+                    aria-label={`학습 모드 ${activeStudyMode.label}. 변경하기`}
+                    className="rounded-full border border-[var(--wd-line)] bg-[var(--wd-card)] px-2.5 py-1 text-[11px] font-black text-[var(--wd-accent)] backdrop-blur-xl"
+                  >
+                    {activeStudyMode.label}⌄
+                  </button>
+                ) : null}
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <div className="rounded-full border border-[var(--wd-line)] bg-[var(--wd-card)] px-3 py-2 text-[12px] font-black backdrop-blur-xl">
@@ -313,7 +338,7 @@ export default function MonaWindDown({
               />
             </div>
             <span className="text-[12px] font-black tabular-nums text-[var(--wd-muted)]">
-              {quest.completedSteps}/{quest.targetSteps}
+              {quest.completedSteps}/{quest.targetSteps} 문장
             </span>
           </div>
         </header>
@@ -404,7 +429,7 @@ export default function MonaWindDown({
               </m.section>
             ) : (
               <m.section
-                key={card ? `card-${card.updatedAt}` : "welcome"}
+                key={card ? `card-${cardKey ?? card.ko}` : "welcome"}
                 initial={reduceMotion ? false : { opacity: 0, y: 14, rotateX: -4 }}
                 animate={{ opacity: 1, y: 0, rotateX: 0 }}
                 exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
@@ -478,7 +503,7 @@ export default function MonaWindDown({
                           onClick={onNext}
                           className="min-h-12 rounded-2xl bg-[var(--wd-accent)] px-3 text-[14px] font-black text-[#171021] transition active:scale-[.98]"
                         >
-                          다음 문장
+                          {answerVerdict && answerVerdict.tier !== "garbage" ? "다음 문장" : "건너뛰기"}
                         </button>
                       </div>
                     ) : null}
@@ -543,7 +568,7 @@ export default function MonaWindDown({
             <m.div
               initial={reduceMotion ? false : { y: 50, opacity: 0.7 }}
               animate={{ y: 0, opacity: 1 }}
-              className="relative rounded-t-[30px] border-t border-[var(--wd-line)] bg-[var(--wd-card-solid)] px-6 pb-[max(env(safe-area-inset-bottom),22px)] pt-3"
+              className="relative max-h-[calc(100dvh-8px)] overflow-y-auto overscroll-contain rounded-t-[30px] border-t border-[var(--wd-line)] bg-[var(--wd-card-solid)] px-6 pb-[max(env(safe-area-inset-bottom),22px)] pt-3"
               style={{ boxShadow: "0 -20px 54px -22px rgba(0,0,0,.7)" }}
             >
               <button
@@ -565,6 +590,30 @@ export default function MonaWindDown({
                   {theme === "dark" ? "☀ 밝게" : "☾ 어둡게"}
                 </button>
               </div>
+
+              {studyModeControls ? (
+                <>
+                  <p className="mt-6 text-[11px] font-black tracking-[.14em] text-[var(--wd-muted)]">학습 모드</p>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    {studyModeControls.options.map((option) => (
+                      <button
+                        key={option.mode}
+                        type="button"
+                        onClick={() => studyModeControls.onChange(option.mode)}
+                        aria-pressed={studyModeControls.mode === option.mode}
+                        className={`min-h-14 rounded-2xl border px-3 text-left transition active:scale-[.97] ${
+                          studyModeControls.mode === option.mode
+                            ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]"
+                            : "border-[var(--wd-line)] text-[var(--wd-muted)]"
+                        }`}
+                      >
+                        <span className="block text-[13px] font-black">{option.label}</span>
+                        {option.hint ? <span className="mt-0.5 block text-[10px] font-semibold">{option.hint}</span> : null}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : null}
 
               <p className="mt-6 text-[11px] font-black tracking-[.14em] text-[var(--wd-muted)]">코치 목소리</p>
               <div className="mt-3 grid grid-cols-3 gap-2">

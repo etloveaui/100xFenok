@@ -83,6 +83,23 @@ function checkMainUsesTeacherRuntime() {
   assert.ok(productShellSource.includes("lumi-mascot.webp"));
   assert.ok(productShellSource.includes("<LazyMotion"));
   assert.ok(productShellSource.includes("quest.completedSteps"));
+  assert.ok(
+    !productShellSource.includes("card-${card.updatedAt}"),
+    "intra-card timestamp patches must not remount the whole card",
+  );
+  assert.ok(
+    appSource.includes("cardKey={lessonState.expression.id}"),
+    "product card animation must be keyed by stable expression identity",
+  );
+  assert.ok(
+    appSource.includes("studyModeControls={studyModeControls}"),
+    "the product shell must expose the implemented study modes",
+  );
+  assert.ok(productShellSource.includes("학습 모드"));
+  assert.ok(
+    appSource.includes('applyProductVerdict(current, "miss", before)'),
+    "manual next must consume one unscored quest step",
+  );
   assert.ok(productShellSource.includes("@media (prefers-reduced-motion: reduce)"));
   assert.ok(productShellSource.includes("오늘의 5문장 시작"));
   return "main and debug surfaces share the app-owned teacher runtime";

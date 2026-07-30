@@ -91,11 +91,11 @@ const PRODUCT_INITIAL_ENGLISH_VISIBLE = false;
 
 // Durable event buffer cap, matched to the writer's events.slice(-1000).
 const MAX_PENDING_EVENTS = 1000;
-const STUDY_MODE_OPTIONS: Array<{ mode: StudyMode; label: string }> = [
-  { mode: "drill", label: "드릴" },
-  { mode: "review", label: "복습" },
-  { mode: "free_talk", label: "자유대화" },
-  { mode: "live_talk", label: "라이브톡" },
+const STUDY_MODE_OPTIONS: Array<{ mode: StudyMode; label: string; hint: string }> = [
+  { mode: "drill", label: "드릴", hint: "한국어 보고 말하기" },
+  { mode: "review", label: "복습", hint: "기억할 표현 다시" },
+  { mode: "free_talk", label: "자유대화", hint: "말하다가 바로 교정" },
+  { mode: "live_talk", label: "라이브톡", hint: "끊김 없이 대화" },
 ];
 
 type Props = {
@@ -628,6 +628,13 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
       if (evaluation.stopRequested) {
         dispatchTeacherEvent({ type: "LEARNER_STOP" }, { trigger: "LEARNER_STOP" });
       } else if (evaluation.nextMaterialRequested) {
+        if (surface === "winddown") {
+          setProductQuest((current) => applyProductVerdict(
+            current,
+            "miss",
+            currentLesson.expression.id,
+          ));
+        }
         dispatchTeacherEvent({ type: "LEARNER_NEXT" }, { trigger: "LEARNER_NEXT" });
       } else if (evaluation.englishVisibilityRequested) {
         dispatchTeacherEvent({ type: "LEARNER_REVEAL" }, { trigger: "LEARNER_REVEAL" });
@@ -659,7 +666,11 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
           }, { trigger: `EVAL_RESULT_${evaluation.answerMatch?.tier ?? "miss"}` });
           const productAnswerMatch = evaluation.answerMatch;
           if (surface === "winddown" && productAnswerMatch) {
-            setProductQuest((current) => applyProductVerdict(current, productAnswerMatch.tier));
+            setProductQuest((current) => applyProductVerdict(
+              current,
+              productAnswerMatch.tier,
+              currentLesson.expression.id,
+            ));
           }
           masteryEvent = buildMasteryEvent({
             expressionId: currentLesson.expression.id,
@@ -1217,6 +1228,9 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
     if (!session || sessionFinalizedRef.current) return;
     if (teacherActive) {
       const before = teacherSessionRef.current?.card?.expressionId ?? lessonStateRef.current.expression.id;
+      if (surface === "winddown") {
+        setProductQuest((current) => applyProductVerdict(current, "miss", before));
+      }
       dispatchTeacherEvent({ type: "LEARNER_NEXT" }, { trigger: "LEARNER_NEXT" });
       const after = teacherSessionRef.current?.card?.expressionId ?? lessonStateRef.current.expression.id;
       setAnswerVerdict(null);
@@ -1234,6 +1248,13 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
       return;
     }
     const currentLesson = lessonStateRef.current;
+    if (surface === "winddown") {
+      setProductQuest((current) => applyProductVerdict(
+        current,
+        "miss",
+        currentLesson.expression.id,
+      ));
+    }
     const nextExpression = pickNextExpression(
       currentLesson.expression.id,
       currentLesson.promptHistory,
@@ -1299,6 +1320,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
         phase={mapWindDownPhase(live.status)}
         message={buildWindDownMessage(live.status)}
         card={live.session ? windDownCard : null}
+        cardKey={lessonState.expression.id}
         coachLine={latestCoachLine}
         errorText={windDownError}
         answerVisible={lessonState.englishVisible}
@@ -1308,6 +1330,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
         vadPreset={vadPreset}
         onVoiceChange={setVoiceName}
         onVadChange={setVadPreset}
+        studyModeControls={studyModeControls}
         resumeOffer={Boolean(resumeOffer)}
         onStart={live.start}
         onStop={stopSession}

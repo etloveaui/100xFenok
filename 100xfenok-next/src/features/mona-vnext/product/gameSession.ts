@@ -15,6 +15,7 @@ export type ProductQuestState = {
   xp: number;
   lastReward: number | null;
   isComplete: boolean;
+  creditedAttemptKeys: string[];
 };
 
 export function createProductQuest(): ProductQuestState {
@@ -24,14 +25,17 @@ export function createProductQuest(): ProductQuestState {
     xp: 0,
     lastReward: null,
     isComplete: false,
+    creditedAttemptKeys: [],
   };
 }
 
 export function applyProductVerdict(
   state: ProductQuestState,
   tier: MonaVnextAnswerMatchTier,
+  attemptKey?: string,
 ): ProductQuestState {
   if (state.isComplete || tier === "garbage") return state;
+  if (attemptKey && state.creditedAttemptKeys.includes(attemptKey)) return state;
 
   const completedSteps = Math.min(state.targetSteps, state.completedSteps + 1);
   const reward = XP_BY_TIER[tier];
@@ -42,5 +46,8 @@ export function applyProductVerdict(
     xp: state.xp + reward,
     lastReward: reward,
     isComplete: completedSteps >= state.targetSteps,
+    creditedAttemptKeys: attemptKey
+      ? [...state.creditedAttemptKeys, attemptKey]
+      : state.creditedAttemptKeys,
   };
 }

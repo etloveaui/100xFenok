@@ -201,7 +201,7 @@ function checkS3SourceGates(): Result {
     const debugShellStart = app.indexOf("<WindDownVnextShell");
     const mainBranch = app.slice(mainBranchStart, debugShellStart);
     assert.ok(mainBranchStart > -1 && debugShellStart > mainBranchStart, "MonaVoiceCoachApp branch shape changed");
-    assert.equal(mainBranch.includes("studyModeControls"), false, "main winddown branch must not expose study mode controls");
+    assert.ok(mainBranch.includes("studyModeControls={studyModeControls}"), "main product must expose study mode controls");
     assert.ok(app.includes("studyModeControls={studyModeControls}"), "debug branch must wire study mode controls");
     assert.ok(shell.includes("오늘의 교정"), "debug shell must list correction candidates");
     assert.ok(memory.includes("owner-test"), "SRS bridge must stay in owner-test namespace");
@@ -209,7 +209,7 @@ function checkS3SourceGates(): Result {
     assert.equal(monaSources.some((source) => source.includes("productionWriteEnabled: true")), false);
     assert.equal(monaSources.some((source) => source.includes("saveStudySession")), false);
     assert.equal(monaSources.some((source) => source.includes("data/mona-english")), false);
-    return pass("s3-source-gates", "debug-only mode controls, owner-test writes, and production-write gates are enforced");
+    return pass("s3-source-gates", "product mode controls, owner-test writes, and production-write gates are enforced");
   } catch (error) {
     return fail("s3-source-gates", error instanceof Error ? error.message : String(error));
   }
