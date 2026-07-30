@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 
-export const STOCKANALYSIS_ETF_SHARD_COUNT = 128;
+export const STOCKANALYSIS_ETF_SHARD_COUNT = 1024;
 export const STOCKANALYSIS_ETF_SHARD_MAX_BYTES = 25 * 1024 * 1024;
 export const STOCKANALYSIS_ETF_SHARD_ALGORITHM = "fnv1a32-utf16-v1";
 export const STOCKANALYSIS_ETF_SHARD_SCHEMA = "stockanalysis-etf-shard/v2";
@@ -66,6 +66,18 @@ export function stockanalysisEtfSourceBindingSha256(rows) {
   return sha256Text(stableJson({
     schema_version: "stockanalysis-etf-source-binding/v1",
     rows: [...rows].sort((left, right) => left.ticker.localeCompare(right.ticker)),
+  }));
+}
+
+export function stockanalysisEtfSnapshotId(sourcePayloadSha256) {
+  if (!SHA256_PATTERN.test(sourcePayloadSha256 ?? "")) {
+    throw new Error("invalid StockAnalysis ETF source payload SHA-256");
+  }
+  return sha256Text(stableJson({
+    schema_version: "stockanalysis-etf-snapshot-binding/v1",
+    source_payload_sha256: sourcePayloadSha256,
+    shard_algorithm: STOCKANALYSIS_ETF_SHARD_ALGORITHM,
+    shard_count: STOCKANALYSIS_ETF_SHARD_COUNT,
   }));
 }
 
@@ -217,6 +229,70 @@ export function stockanalysisEtfPayloadDocumentResultFromShard(shard, value, exp
   return selectedDocument
     ? { kind: "ok", document: selectedDocument }
     : { kind: "ticker_not_found" };
+}
+
+/**
+ * Runtime-only fast path. The caller must first verify the complete shard raw
+ * byte length and SHA-256 against the validated manifest. This still validates
+ * every member key and envelope, but hashes and parses only the requested
+ * payload so unrelated members do not multiply Worker CPU cost.
+ */
+export function stockanalysisEtfPayloadDocumentResultFromVerifiedShard(shard, value, expectedMemberCount) {
+  const ticker = stockanalysisEtfTickerKey(value);
+  const record = asRecord(shard);
+  if (
+    !record
+    || record.schema_version !== STOCKANALYSIS_ETF_SHARD_SCHEMA
+    || record.shard_algorithm !== STOCKANALYSIS_ETF_SHARD_ALGORITHM
+    || record.shard_count !== STOCKANALYSIS_ETF_SHARD_COUNT
+    || record.shard_id !== stockanalysisEtfShardId(ticker)
+    || !Number.isInteger(expectedMemberCount)
+    || expectedMemberCount < 0
+  ) return { kind: "shard_integrity_unavailable", reason: "invalid_shard_envelope" };
+  const entries = asRecord(record.entries);
+  if (!entries) return { kind: "shard_integrity_unavailable", reason: "invalid_shard_entries" };
+  const memberKeys = Object.keys(entries);
+  if (memberKeys.length !== expectedMemberCount) {
+    return { kind: "shard_integrity_unavailable", reason: "shard_member_count_mismatch" };
+  }
+
+  let selectedEntry = null;
+  for (const memberTicker of memberKeys) {
+    let canonicalTicker;
+    try {
+      canonicalTicker = stockanalysisEtfTickerKey(memberTicker);
+    } catch {
+      return { kind: "shard_integrity_unavailable", reason: "invalid_member_ticker" };
+    }
+    if (canonicalTicker !== memberTicker || stockanalysisEtfShardId(memberTicker) !== record.shard_id) {
+      return { kind: "shard_integrity_unavailable", reason: "wrong_shard_membership" };
+    }
+    const entry = asRecord(entries[memberTicker]);
+    if (
+      !entry
+      || !SHA256_PATTERN.test(entry.sha256 ?? "")
+    ) {
+      return { kind: "shard_integrity_unavailable", reason: "invalid_member_envelope" };
+    }
+    if (memberTicker === ticker) selectedEntry = entry;
+  }
+  if (!selectedEntry) return { kind: "ticker_not_found" };
+  if (
+    typeof selectedEntry.raw !== "string"
+    || sha256Text(selectedEntry.raw) !== selectedEntry.sha256
+  ) {
+    return { kind: "shard_integrity_unavailable", reason: "invalid_member_digest" };
+  }
+  let payload;
+  try {
+    payload = JSON.parse(selectedEntry.raw);
+  } catch {
+    return { kind: "shard_integrity_unavailable", reason: "invalid_embedded_json" };
+  }
+  if (!strictStockanalysisEtfPayload(payload, ticker)) {
+    return { kind: "shard_integrity_unavailable", reason: "invalid_embedded_identity" };
+  }
+  return { kind: "ok", document: { raw: selectedEntry.raw, value: payload } };
 }
 
 export function stockanalysisEtfPayloadFromShard(shard, value) {

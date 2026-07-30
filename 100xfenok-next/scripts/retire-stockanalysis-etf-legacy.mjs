@@ -3,7 +3,10 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { stockanalysisEtfManifestSha256 } from "../src/lib/stockanalysis-etf-shard.mjs";
+import {
+  STOCKANALYSIS_ETF_SHARD_COUNT,
+  stockanalysisEtfManifestSha256,
+} from "../src/lib/stockanalysis-etf-shard.mjs";
 
 export const RETIREMENT_PLAN_SCHEMA = "stockanalysis-etf-legacy-retirement/v1";
 export const RETIREMENT_JOURNAL_SCHEMA = "stockanalysis-etf-legacy-retirement-journal/v1";
@@ -63,7 +66,10 @@ function shardState(publicRoot) {
   const manifestPath = path.join(root, "index.json");
   const manifestBody = fs.readFileSync(manifestPath);
   const manifest = JSON.parse(manifestBody);
-  if (manifest.shard_count !== 128 || manifest.shards?.length !== 128) fail("invalid shard manifest");
+  if (
+    manifest.shard_count !== STOCKANALYSIS_ETF_SHARD_COUNT
+    || manifest.shards?.length !== STOCKANALYSIS_ETF_SHARD_COUNT
+  ) fail("invalid shard manifest");
   const inventory = [{ path: "index.json", bytes: manifestBody.length, sha256: sha(manifestBody) }];
   for (const entry of manifest.shards) {
     const candidate = path.resolve(root, entry.path);
@@ -257,7 +263,10 @@ export function verifyEmittedEtfAssets({ assetRoot }) {
   const shard = shardState(publicRoot);
   if (direct.length !== 0) fail(`emitted direct legacy ETF count must be zero; got ${direct.length}`);
   if (shard.manifest.compatibility_mode !== "shard-only") fail("emitted ETF manifest is not shard-only");
-  if (shard.inventory.length !== 129) fail(`expected 129 emitted ETF shard assets; got ${shard.inventory.length}`);
+  const expectedShardAssets = STOCKANALYSIS_ETF_SHARD_COUNT + 1;
+  if (shard.inventory.length !== expectedShardAssets) {
+    fail(`expected ${expectedShardAssets} emitted ETF shard assets; got ${shard.inventory.length}`);
+  }
   return {
     direct_legacy_etf_count: 0,
     shard_file_count: shard.inventory.length,

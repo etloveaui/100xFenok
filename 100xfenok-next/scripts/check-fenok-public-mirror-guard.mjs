@@ -416,6 +416,7 @@ async function validateStockanalysisEtfShards({ canonicalDataRoot, publicDataRoo
     stockanalysisEtfPayloadDocumentFromShard,
     stockanalysisEtfShardFileNameForId,
     stockanalysisEtfShardId,
+    stockanalysisEtfSnapshotId,
     stockanalysisEtfSourceBindingSha256,
     stockanalysisEtfTickerKey,
   } = await import("../src/lib/stockanalysis-etf-shard.mjs");
@@ -518,7 +519,10 @@ async function validateStockanalysisEtfShards({ canonicalDataRoot, publicDataRoo
   const canonicalSourceSha256 = stockanalysisEtfSourceBindingSha256(
     canonicalTickers.map((ticker) => ({ ticker, sha256: canonicalPayloads.get(ticker).sha256 })),
   );
-  if (manifest.provenance.source_payload_sha256 !== canonicalSourceSha256 || manifest.snapshot_id !== canonicalSourceSha256) {
+  if (
+    manifest.provenance.source_payload_sha256 !== canonicalSourceSha256
+    || manifest.snapshot_id !== stockanalysisEtfSnapshotId(canonicalSourceSha256)
+  ) {
     violations.push("StockAnalysis ETF shard manifest canonical provenance digest mismatch");
   }
   if (manifest.compatibility_mode === STOCKANALYSIS_ETF_SHARD_ONLY_MODE) {

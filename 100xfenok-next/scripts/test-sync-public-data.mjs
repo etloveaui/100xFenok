@@ -419,10 +419,10 @@ function stockanalysisEtfFixturePayload(ticker) {
 }
 
 function assertStockanalysisEtfShardProjection(parentRoot) {
-  assert.equal(STOCKANALYSIS_ETF_SHARD_COUNT, 128);
-  assert.equal(stockanalysisEtfShardFileName("SPY"), "125.json");
-  assert.equal(stockanalysisEtfShardFileName("brk.b"), "058.json");
-  assert.equal(stockanalysisEtfShardFileName("$bf-b"), "090.json");
+  assert.equal(STOCKANALYSIS_ETF_SHARD_COUNT, 1024);
+  assert.equal(stockanalysisEtfShardFileName("SPY"), "509.json");
+  assert.equal(stockanalysisEtfShardFileName("brk.b"), "570.json");
+  assert.equal(stockanalysisEtfShardFileName("$bf-b"), "474.json");
 
   const fixture = makeSyncCase(parentRoot, "stockanalysis-etf-shards");
   const payloads = Object.fromEntries(["SPY", "BRK.B", "BF-B", "IEFA"].map((ticker) => [
@@ -1006,11 +1006,11 @@ try {
     destinationRoot: path.join(expectedPublicRoot, "data"),
     logger: () => {},
   });
-  const budget = inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 135 });
+  const budget = inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 1031 });
   assert.equal(budget.status, "pass");
-  assert.equal(budget.regular_file_count, 133);
+  assert.equal(budget.regular_file_count, 1029);
   assert.equal(budget.headroom, 2);
-  assert.equal(budget.warning_limit, 134);
+  assert.equal(budget.warning_limit, 1030);
   assert.equal(budget.warning_headroom, 1);
   assert.equal(budget.safety_status, "pass");
   assert.deepEqual(budget.data_supply_projection, {
@@ -1021,8 +1021,8 @@ try {
   });
   assert.deepEqual(budget.stockanalysis_etf_shards, {
     manifest_files: 1,
-    shard_files: 128,
-    total_files: 129,
+    shard_files: STOCKANALYSIS_ETF_SHARD_COUNT,
+    total_files: STOCKANALYSIS_ETF_SHARD_COUNT + 1,
     payload_count: 1,
     snapshot_id: budget.stockanalysis_etf_shards.snapshot_id,
     source_manifest_sha256: budget.stockanalysis_etf_shards.source_manifest_sha256,
@@ -1031,12 +1031,12 @@ try {
     largest_shard_member_count: budget.stockanalysis_etf_shards.largest_shard_member_count,
     largest_shard_path: budget.stockanalysis_etf_shards.largest_shard_path,
   });
-  assert.equal(JSON.parse(fs.readFileSync(reportPath, "utf8")).regular_file_count, 133);
+  assert.equal(JSON.parse(fs.readFileSync(reportPath, "utf8")).regular_file_count, 1029);
   assert.equal(path.relative(assetRoot, reportPath).startsWith(".."), true);
 
   write(assetRoot, "data/stockanalysis/etfs/SPY.json", "{\"stale\":true}\n");
   assert.throws(
-    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 135 }),
+    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 1031 }),
     /shard-only projection requires zero direct/,
   );
   fs.rmSync(path.join(assetRoot, "data/stockanalysis/etfs/SPY.json"));

@@ -10,6 +10,7 @@ import {
   verifyEmittedEtfAssets,
   writeRetirementPlan,
 } from "./retire-stockanalysis-etf-legacy.mjs";
+import { STOCKANALYSIS_ETF_SHARD_COUNT } from "../src/lib/stockanalysis-etf-shard.mjs";
 
 const hash = (body) => crypto.createHash("sha256").update(body).digest("hex");
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "etf-retirement-"));
@@ -25,14 +26,14 @@ for (const ticker of ["AAA", "BBB"]) {
   fs.writeFileSync(path.join(publicRoot, `${ticker}.json`), body);
 }
 const shardBody = "{}\n";
-const shards = Array.from({ length: 128 }, (_, id) => {
+const shards = Array.from({ length: STOCKANALYSIS_ETF_SHARD_COUNT }, (_, id) => {
   const relative = `snapshots/s/${String(id).padStart(3, "0")}.json`;
   fs.writeFileSync(path.join(publicRoot, "shards", relative), shardBody);
   return { id, path: relative, byte_length: shardBody.length, sha256: hash(shardBody) };
 });
 fs.writeFileSync(path.join(publicRoot, "shards", "index.json"), `${JSON.stringify({
   compatibility_mode: "legacy-fallback",
-  shard_count: 128,
+  shard_count: STOCKANALYSIS_ETF_SHARD_COUNT,
   payload_count: 2,
   shards,
 })}\n`);
