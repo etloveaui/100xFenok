@@ -5,12 +5,8 @@ import {
   verifyAdminSessionToken,
 } from "@/lib/server/admin-session";
 import { readMonaVnextLearningProfile } from "@/features/mona-vnext/memory/monaMemoryRepository";
-import {
-  listTeacherApprovedMonaVnextExpressionEntries,
-} from "@/features/mona-vnext/server/teacherMaterialBank";
-import {
-  buildWindDownStudyBootstrap,
-} from "@/features/winddown/server/studyBootstrap";
+import { buildWindDownStudyBootstrap } from "@/features/winddown/server/studyBootstrap";
+import { loadWindDownStudyMaterial } from "@/features/winddown/server/publishedMaterialAdapter";
 import {
   normalizeWindDownStudyCount,
   normalizeWindDownStudyMode,
@@ -44,13 +40,16 @@ export async function GET(request: Request) {
 
   try {
     const learning = await readMonaVnextLearningProfile();
-    const material = listTeacherApprovedMonaVnextExpressionEntries();
+    const material = loadWindDownStudyMaterial({
+      dueExpressionIds: learning.dueExpressionIds,
+      deferredExpressionIds: learning.deferredExpressionIds,
+    });
     const bootstrap = buildWindDownStudyBootstrap({
       mode,
       seed: normalizeWindDownStudySeed(url.searchParams.get("seed"), mode),
       entries: material.entries,
-      dueExpressionIds: learning.dueExpressionIds,
-      deferredExpressionIds: learning.deferredExpressionIds,
+      dueExpressionIds: material.dueExpressionIds,
+      deferredExpressionIds: material.deferredExpressionIds,
       count: normalizeWindDownStudyCount(url.searchParams.get("count")),
     });
     return noStoreJson({
@@ -60,13 +59,20 @@ export async function GET(request: Request) {
         recordCount: learning.recordCount,
       },
       material: material.metadata,
+      materialResolution: material.resolution,
+      advisor: material.advisorForExpressionIds(
+        bootstrap.cards.map((card) => card.id),
+      ),
     });
   } catch (error) {
     const requestId = crypto.randomUUID();
     console.error("WINDDOWN_STUDY_BOOTSTRAP_FAILED", { requestId, error });
-    return noStoreJson({
-      error: "WINDDOWN_STUDY_BOOTSTRAP_FAILED",
-      requestId,
-    }, 500);
+    return noStoreJson(
+      {
+        error: "WINDDOWN_STUDY_BOOTSTRAP_FAILED",
+        requestId,
+      },
+      500,
+    );
   }
 }

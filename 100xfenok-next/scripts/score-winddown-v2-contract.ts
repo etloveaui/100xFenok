@@ -226,6 +226,7 @@ const studyBootstrap = path.join(
 );
 const modelFreeEntryPaths = [
   studyBootstrap,
+  path.join(process.cwd(), "src/features/winddown/content"),
   path.join(process.cwd(), "src/features/winddown/learn"),
   path.join(process.cwd(), "src/features/winddown/review"),
   studyApi,
