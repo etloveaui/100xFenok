@@ -1,0 +1,1983 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "TKNZ",
+  "source_as_of": "2026-07-27T20:00:00Z",
+  "fetched_at": "2026-07-27T23:47:58Z",
+  "endpoints": {
+    "holdings": "/etf/tknz/holdings/__data.json",
+    "overview": "/etf/tknz/__data.json",
+    "quote": "/api/quotes/e/TKNZ",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/TKNZ/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/TKNZ/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/TKNZ/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/TKNZ/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/TKNZ/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/TKNZ/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": null,
+    "holdings_updated": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$15.44M",
+      "sharesOut": "640,000"
+    },
+    "performance": {
+      "tr1m": null,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "p": 24.5476,
+      "pd": 24.55,
+      "c": 0.44,
+      "cp": 1.83,
+      "cl": 24.11,
+      "cdr": 1,
+      "o": 25.32,
+      "h": 25.32,
+      "l": 24.37,
+      "v": 4841.225544,
+      "ts": 1785182400000,
+      "u": "Jul 27, 2026, 4:00 PM EDT",
+      "td": "2026-07-27",
+      "h52": 27.15,
+      "l52": 23.76,
+      "ex": "NYSEARCA",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 24.5476,
+      "epd": 24.55,
+      "ec": 0,
+      "ecp": 0,
+      "eu": "Jul 27, 2026, 6:30 PM EDT",
+      "es": "After-hours",
+      "ets": 1785191400000.8738,
+      "etd": "2026-07-27",
+      "epv": null,
+      "days": 0,
+      "exp": 1785196082064,
+      "symbol": "TKNZ",
+      "uid": "TKNZ"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-07-27",
+          "o": 25.32,
+          "h": 25.32,
+          "l": 24.365,
+          "c": 24.548,
+          "a": 24.5476,
+          "v": 5088,
+          "ch": 1.83
+        },
+        {
+          "t": "2026-07-24",
+          "o": 24.3,
+          "h": 24.3,
+          "l": 24.01,
+          "c": 24.106,
+          "a": 24.1064,
+          "v": 6356,
+          "ch": -1.13
+        },
+        {
+          "t": "2026-07-23",
+          "o": 24.8,
+          "h": 24.8,
+          "l": 24.31,
+          "c": 24.381,
+          "a": 24.381,
+          "v": 5423,
+          "ch": -1.94
+        },
+        {
+          "t": "2026-07-22",
+          "o": 25.03,
+          "h": 25.06,
+          "l": 24.765,
+          "c": 24.863,
+          "a": 24.8631,
+          "v": 2831,
+          "ch": -0.9
+        },
+        {
+          "t": "2026-07-21",
+          "o": 25.39,
+          "h": 25.39,
+          "l": 25.075,
+          "c": 25.09,
+          "a": 25.09,
+          "v": 14883,
+          "ch": 1.43
+        },
+        {
+          "t": "2026-07-20",
+          "o": 24.68,
+          "h": 27.15,
+          "l": 24.33,
+          "c": 24.737,
+          "a": 24.7374,
+          "v": 11929,
+          "ch": 1.59
+        },
+        {
+          "t": "2026-07-17",
+          "o": 24.01,
+          "h": 25.445,
+          "l": 23.76,
+          "c": 24.351,
+          "a": 24.3507,
+          "v": 10863,
+          "ch": -1.21
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-27",
+          "o": 25.32,
+          "h": 25.32,
+          "l": 24.365,
+          "c": 24.548,
+          "a": 24.5476,
+          "v": 5088,
+          "ch": 1.83
+        },
+        {
+          "t": "2026-07-20",
+          "o": 24.68,
+          "h": 27.15,
+          "l": 24.01,
+          "c": 24.106,
+          "a": 24.1064,
+          "v": 41422,
+          "ch": -1
+        }
+      ],
+      "monthly_1y": [],
+      "weekly_3y": [
+        {
+          "t": "2026-07-27",
+          "o": 25.32,
+          "h": 25.32,
+          "l": 24.365,
+          "c": 24.548,
+          "a": 24.5476,
+          "v": 5088,
+          "ch": 1.83
+        },
+        {
+          "t": "2026-07-20",
+          "o": 24.68,
+          "h": 27.15,
+          "l": 24.01,
+          "c": 24.106,
+          "a": 24.1064,
+          "v": 41422,
+          "ch": -1
+        }
+      ],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "TKNZ",
+        "lastChecked": 1785193329663,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$15.44M",
+      "nav": null,
+      "expenseRatio": null,
+      "peRatio": null,
+      "sharesOut": "640,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": null,
+      "inception": null,
+      "chart": {
+        "expiration": null,
+        "data": [
+          {
+            "t": 1785144600
+          },
+          {
+            "t": 1785144660
+          },
+          {
+            "t": 1785144720
+          },
+          {
+            "t": 1785144780
+          },
+          {
+            "t": 1785144840
+          },
+          {
+            "t": 1785144900
+          },
+          {
+            "t": 1785144960
+          },
+          {
+            "t": 1785145020
+          },
+          {
+            "t": 1785145080
+          },
+          {
+            "t": 1785145140
+          },
+          {
+            "t": 1785145200
+          },
+          {
+            "t": 1785145260
+          },
+          {
+            "t": 1785145320
+          },
+          {
+            "t": 1785145380
+          },
+          {
+            "t": 1785145440
+          },
+          {
+            "t": 1785145500
+          },
+          {
+            "t": 1785145560
+          },
+          {
+            "t": 1785145620
+          },
+          {
+            "t": 1785145680
+          },
+          {
+            "t": 1785145740
+          },
+          {
+            "t": 1785145800
+          },
+          {
+            "t": 1785145860
+          },
+          {
+            "t": 1785145920
+          },
+          {
+            "t": 1785145980
+          },
+          {
+            "t": 1785146040
+          },
+          {
+            "t": 1785146100
+          },
+          {
+            "t": 1785146160
+          },
+          {
+            "t": 1785146220
+          },
+          {
+            "t": 1785146280
+          },
+          {
+            "t": 1785146340
+          },
+          {
+            "t": 1785146400
+          },
+          {
+            "t": 1785146460
+          },
+          {
+            "t": 1785146520
+          },
+          {
+            "t": 1785146580
+          },
+          {
+            "t": 1785146640
+          },
+          {
+            "t": 1785146700
+          },
+          {
+            "t": 1785146760
+          },
+          {
+            "t": 1785146820
+          },
+          {
+            "t": 1785146880
+          },
+          {
+            "t": 1785146940
+          },
+          {
+            "t": 1785147000
+          },
+          {
+            "t": 1785147060
+          },
+          {
+            "t": 1785147120
+          },
+          {
+            "t": 1785147180
+          },
+          {
+            "t": 1785147240
+          },
+          {
+            "t": 1785147300
+          },
+          {
+            "t": 1785147360
+          },
+          {
+            "t": 1785147420
+          },
+          {
+            "t": 1785147480
+          },
+          {
+            "t": 1785147540
+          },
+          {
+            "t": 1785147600
+          },
+          {
+            "t": 1785147660
+          },
+          {
+            "t": 1785147720
+          },
+          {
+            "t": 1785147780
+          },
+          {
+            "t": 1785147840
+          },
+          {
+            "t": 1785147900
+          },
+          {
+            "t": 1785147960
+          },
+          {
+            "t": 1785148020
+          },
+          {
+            "t": 1785148080
+          },
+          {
+            "t": 1785148140
+          },
+          {
+            "t": 1785148200
+          },
+          {
+            "t": 1785148260
+          },
+          {
+            "t": 1785148320
+          },
+          {
+            "t": 1785148380
+          },
+          {
+            "t": 1785148440
+          },
+          {
+            "t": 1785148500
+          },
+          {
+            "t": 1785148560
+          },
+          {
+            "t": 1785148620
+          },
+          {
+            "t": 1785148680
+          },
+          {
+            "t": 1785148740
+          },
+          {
+            "t": 1785148800
+          },
+          {
+            "t": 1785148860
+          },
+          {
+            "t": 1785148920
+          },
+          {
+            "t": 1785148980
+          },
+          {
+            "t": 1785149040
+          },
+          {
+            "t": 1785149100
+          },
+          {
+            "t": 1785149160
+          },
+          {
+            "t": 1785149220
+          },
+          {
+            "t": 1785149280
+          },
+          {
+            "t": 1785149340
+          },
+          {
+            "t": 1785149400
+          },
+          {
+            "t": 1785149460
+          },
+          {
+            "t": 1785149520
+          },
+          {
+            "t": 1785149580
+          },
+          {
+            "c": 24.38,
+            "o": 24.38,
+            "t": 1785149640
+          },
+          {
+            "c": null,
+            "t": 1785149700
+          },
+          {
+            "c": 24.38,
+            "t": 1785149760
+          },
+          {
+            "c": null,
+            "t": 1785149820
+          },
+          {
+            "c": null,
+            "t": 1785149880
+          },
+          {
+            "c": null,
+            "t": 1785149940
+          },
+          {
+            "c": null,
+            "t": 1785150000
+          },
+          {
+            "c": null,
+            "t": 1785150060
+          },
+          {
+            "c": null,
+            "t": 1785150120
+          },
+          {
+            "c": null,
+            "t": 1785150180
+          },
+          {
+            "c": null,
+            "t": 1785150240
+          },
+          {
+            "c": null,
+            "t": 1785150300
+          },
+          {
+            "c": null,
+            "t": 1785150360
+          },
+          {
+            "c": null,
+            "t": 1785150420
+          },
+          {
+            "c": 24.435,
+            "t": 1785150480
+          },
+          {
+            "c": null,
+            "t": 1785150540
+          },
+          {
+            "c": null,
+            "t": 1785150600
+          },
+          {
+            "c": null,
+            "t": 1785150660
+          },
+          {
+            "c": null,
+            "t": 1785150720
+          },
+          {
+            "c": null,
+            "t": 1785150780
+          },
+          {
+            "c": null,
+            "t": 1785150840
+          },
+          {
+            "c": null,
+            "t": 1785150900
+          },
+          {
+            "c": null,
+            "t": 1785150960
+          },
+          {
+            "c": null,
+            "t": 1785151020
+          },
+          {
+            "c": null,
+            "t": 1785151080
+          },
+          {
+            "c": null,
+            "t": 1785151140
+          },
+          {
+            "c": null,
+            "t": 1785151200
+          },
+          {
+            "c": null,
+            "t": 1785151260
+          },
+          {
+            "c": null,
+            "t": 1785151320
+          },
+          {
+            "c": null,
+            "t": 1785151380
+          },
+          {
+            "c": null,
+            "t": 1785151440
+          },
+          {
+            "c": null,
+            "t": 1785151500
+          },
+          {
+            "c": null,
+            "t": 1785151560
+          },
+          {
+            "c": null,
+            "t": 1785151620
+          },
+          {
+            "c": null,
+            "t": 1785151680
+          },
+          {
+            "c": null,
+            "t": 1785151740
+          },
+          {
+            "c": null,
+            "t": 1785151800
+          },
+          {
+            "c": 24.435,
+            "t": 1785151860
+          },
+          {
+            "c": null,
+            "t": 1785151920
+          },
+          {
+            "c": null,
+            "t": 1785151980
+          },
+          {
+            "c": null,
+            "t": 1785152040
+          },
+          {
+            "c": null,
+            "t": 1785152100
+          },
+          {
+            "c": null,
+            "t": 1785152160
+          },
+          {
+            "c": null,
+            "t": 1785152220
+          },
+          {
+            "c": 24.365,
+            "t": 1785152280
+          },
+          {
+            "c": null,
+            "t": 1785152340
+          },
+          {
+            "c": null,
+            "t": 1785152400
+          },
+          {
+            "c": null,
+            "t": 1785152460
+          },
+          {
+            "c": null,
+            "t": 1785152520
+          },
+          {
+            "c": null,
+            "t": 1785152580
+          },
+          {
+            "c": null,
+            "t": 1785152640
+          },
+          {
+            "c": null,
+            "t": 1785152700
+          },
+          {
+            "c": null,
+            "t": 1785152760
+          },
+          {
+            "c": null,
+            "t": 1785152820
+          },
+          {
+            "c": null,
+            "t": 1785152880
+          },
+          {
+            "c": null,
+            "t": 1785152940
+          },
+          {
+            "c": 24.365,
+            "t": 1785153000
+          },
+          {
+            "c": null,
+            "t": 1785153060
+          },
+          {
+            "c": null,
+            "t": 1785153120
+          },
+          {
+            "c": null,
+            "t": 1785153180
+          },
+          {
+            "c": null,
+            "t": 1785153240
+          },
+          {
+            "c": null,
+            "t": 1785153300
+          },
+          {
+            "c": null,
+            "t": 1785153360
+          },
+          {
+            "c": null,
+            "t": 1785153420
+          },
+          {
+            "c": null,
+            "t": 1785153480
+          },
+          {
+            "c": null,
+            "t": 1785153540
+          },
+          {
+            "c": null,
+            "t": 1785153600
+          },
+          {
+            "c": 24.43,
+            "t": 1785153660
+          },
+          {
+            "c": null,
+            "t": 1785153720
+          },
+          {
+            "c": null,
+            "t": 1785153780
+          },
+          {
+            "c": null,
+            "t": 1785153840
+          },
+          {
+            "c": null,
+            "t": 1785153900
+          },
+          {
+            "c": null,
+            "t": 1785153960
+          },
+          {
+            "c": null,
+            "t": 1785154020
+          },
+          {
+            "c": null,
+            "t": 1785154080
+          },
+          {
+            "c": null,
+            "t": 1785154140
+          },
+          {
+            "c": null,
+            "t": 1785154200
+          },
+          {
+            "c": null,
+            "t": 1785154260
+          },
+          {
+            "c": null,
+            "t": 1785154320
+          },
+          {
+            "c": null,
+            "t": 1785154380
+          },
+          {
+            "c": null,
+            "t": 1785154440
+          },
+          {
+            "c": null,
+            "t": 1785154500
+          },
+          {
+            "c": null,
+            "t": 1785154560
+          },
+          {
+            "c": null,
+            "t": 1785154620
+          },
+          {
+            "c": null,
+            "t": 1785154680
+          },
+          {
+            "c": null,
+            "t": 1785154740
+          },
+          {
+            "c": null,
+            "t": 1785154800
+          },
+          {
+            "c": null,
+            "t": 1785154860
+          },
+          {
+            "c": null,
+            "t": 1785154920
+          },
+          {
+            "c": null,
+            "t": 1785154980
+          },
+          {
+            "c": null,
+            "t": 1785155040
+          },
+          {
+            "c": null,
+            "t": 1785155100
+          },
+          {
+            "c": null,
+            "t": 1785155160
+          },
+          {
+            "c": null,
+            "t": 1785155220
+          },
+          {
+            "c": null,
+            "t": 1785155280
+          },
+          {
+            "c": null,
+            "t": 1785155340
+          },
+          {
+            "c": null,
+            "t": 1785155400
+          },
+          {
+            "c": null,
+            "t": 1785155460
+          },
+          {
+            "c": null,
+            "t": 1785155520
+          },
+          {
+            "c": null,
+            "t": 1785155580
+          },
+          {
+            "c": null,
+            "t": 1785155640
+          },
+          {
+            "c": 24.43,
+            "t": 1785155700
+          },
+          {
+            "c": null,
+            "t": 1785155760
+          },
+          {
+            "c": null,
+            "t": 1785155820
+          },
+          {
+            "c": null,
+            "t": 1785155880
+          },
+          {
+            "c": null,
+            "t": 1785155940
+          },
+          {
+            "c": null,
+            "t": 1785156000
+          },
+          {
+            "c": null,
+            "t": 1785156060
+          },
+          {
+            "c": null,
+            "t": 1785156120
+          },
+          {
+            "c": null,
+            "t": 1785156180
+          },
+          {
+            "c": null,
+            "t": 1785156240
+          },
+          {
+            "c": null,
+            "t": 1785156300
+          },
+          {
+            "c": null,
+            "t": 1785156360
+          },
+          {
+            "c": null,
+            "t": 1785156420
+          },
+          {
+            "c": null,
+            "t": 1785156480
+          },
+          {
+            "c": null,
+            "t": 1785156540
+          },
+          {
+            "c": null,
+            "t": 1785156600
+          },
+          {
+            "c": null,
+            "t": 1785156660
+          },
+          {
+            "c": null,
+            "t": 1785156720
+          },
+          {
+            "c": null,
+            "t": 1785156780
+          },
+          {
+            "c": null,
+            "t": 1785156840
+          },
+          {
+            "c": 24.43,
+            "t": 1785156900
+          },
+          {
+            "c": null,
+            "t": 1785156960
+          },
+          {
+            "c": null,
+            "t": 1785157020
+          },
+          {
+            "c": null,
+            "t": 1785157080
+          },
+          {
+            "c": null,
+            "t": 1785157140
+          },
+          {
+            "c": null,
+            "t": 1785157200
+          },
+          {
+            "c": null,
+            "t": 1785157260
+          },
+          {
+            "c": null,
+            "t": 1785157320
+          },
+          {
+            "c": null,
+            "t": 1785157380
+          },
+          {
+            "c": null,
+            "t": 1785157440
+          },
+          {
+            "c": null,
+            "t": 1785157500
+          },
+          {
+            "c": null,
+            "t": 1785157560
+          },
+          {
+            "c": null,
+            "t": 1785157620
+          },
+          {
+            "c": null,
+            "t": 1785157680
+          },
+          {
+            "c": null,
+            "t": 1785157740
+          },
+          {
+            "c": null,
+            "t": 1785157800
+          },
+          {
+            "c": null,
+            "t": 1785157860
+          },
+          {
+            "c": null,
+            "t": 1785157920
+          },
+          {
+            "c": null,
+            "t": 1785157980
+          },
+          {
+            "c": null,
+            "t": 1785158040
+          },
+          {
+            "c": null,
+            "t": 1785158100
+          },
+          {
+            "c": null,
+            "t": 1785158160
+          },
+          {
+            "c": 24.5,
+            "t": 1785158220
+          },
+          {
+            "c": null,
+            "t": 1785158280
+          },
+          {
+            "c": 24.55,
+            "t": 1785158340
+          },
+          {
+            "c": null,
+            "t": 1785158400
+          },
+          {
+            "c": null,
+            "t": 1785158460
+          },
+          {
+            "c": null,
+            "t": 1785158520
+          },
+          {
+            "c": null,
+            "t": 1785158580
+          },
+          {
+            "c": null,
+            "t": 1785158640
+          },
+          {
+            "c": null,
+            "t": 1785158700
+          },
+          {
+            "c": null,
+            "t": 1785158760
+          },
+          {
+            "c": null,
+            "t": 1785158820
+          },
+          {
+            "c": null,
+            "t": 1785158880
+          },
+          {
+            "c": null,
+            "t": 1785158940
+          },
+          {
+            "c": null,
+            "t": 1785159000
+          },
+          {
+            "c": null,
+            "t": 1785159060
+          },
+          {
+            "c": null,
+            "t": 1785159120
+          },
+          {
+            "c": null,
+            "t": 1785159180
+          },
+          {
+            "c": null,
+            "t": 1785159240
+          },
+          {
+            "c": null,
+            "t": 1785159300
+          },
+          {
+            "c": null,
+            "t": 1785159360
+          },
+          {
+            "c": null,
+            "t": 1785159420
+          },
+          {
+            "c": null,
+            "t": 1785159480
+          },
+          {
+            "c": null,
+            "t": 1785159540
+          },
+          {
+            "c": null,
+            "t": 1785159600
+          },
+          {
+            "c": null,
+            "t": 1785159660
+          },
+          {
+            "c": null,
+            "t": 1785159720
+          },
+          {
+            "c": null,
+            "t": 1785159780
+          },
+          {
+            "c": 24.57,
+            "t": 1785159840
+          },
+          {
+            "c": null,
+            "t": 1785159900
+          },
+          {
+            "c": null,
+            "t": 1785159960
+          },
+          {
+            "c": null,
+            "t": 1785160020
+          },
+          {
+            "c": null,
+            "t": 1785160080
+          },
+          {
+            "c": null,
+            "t": 1785160140
+          },
+          {
+            "c": null,
+            "t": 1785160200
+          },
+          {
+            "c": null,
+            "t": 1785160260
+          },
+          {
+            "c": null,
+            "t": 1785160320
+          },
+          {
+            "c": null,
+            "t": 1785160380
+          },
+          {
+            "c": null,
+            "t": 1785160440
+          },
+          {
+            "c": null,
+            "t": 1785160500
+          },
+          {
+            "c": null,
+            "t": 1785160560
+          },
+          {
+            "c": null,
+            "t": 1785160620
+          },
+          {
+            "c": null,
+            "t": 1785160680
+          },
+          {
+            "c": null,
+            "t": 1785160740
+          },
+          {
+            "c": null,
+            "t": 1785160800
+          },
+          {
+            "c": null,
+            "t": 1785160860
+          },
+          {
+            "c": null,
+            "t": 1785160920
+          },
+          {
+            "c": null,
+            "t": 1785160980
+          },
+          {
+            "c": null,
+            "t": 1785161040
+          },
+          {
+            "c": null,
+            "t": 1785161100
+          },
+          {
+            "c": null,
+            "t": 1785161160
+          },
+          {
+            "c": null,
+            "t": 1785161220
+          },
+          {
+            "c": null,
+            "t": 1785161280
+          },
+          {
+            "c": null,
+            "t": 1785161340
+          },
+          {
+            "c": null,
+            "t": 1785161400
+          },
+          {
+            "c": null,
+            "t": 1785161460
+          },
+          {
+            "c": null,
+            "t": 1785161520
+          },
+          {
+            "c": null,
+            "t": 1785161580
+          },
+          {
+            "c": 24.545,
+            "t": 1785161640
+          },
+          {
+            "c": null,
+            "t": 1785161700
+          },
+          {
+            "c": null,
+            "t": 1785161760
+          },
+          {
+            "c": null,
+            "t": 1785161820
+          },
+          {
+            "c": null,
+            "t": 1785161880
+          },
+          {
+            "c": null,
+            "t": 1785161940
+          },
+          {
+            "c": 24.5,
+            "t": 1785162000
+          },
+          {
+            "c": null,
+            "t": 1785162060
+          },
+          {
+            "c": null,
+            "t": 1785162120
+          },
+          {
+            "c": null,
+            "t": 1785162180
+          },
+          {
+            "c": null,
+            "t": 1785162240
+          },
+          {
+            "c": null,
+            "t": 1785162300
+          },
+          {
+            "c": null,
+            "t": 1785162360
+          },
+          {
+            "c": null,
+            "t": 1785162420
+          },
+          {
+            "c": null,
+            "t": 1785162480
+          },
+          {
+            "c": null,
+            "t": 1785162540
+          },
+          {
+            "c": null,
+            "t": 1785162600
+          },
+          {
+            "c": null,
+            "t": 1785162660
+          },
+          {
+            "c": null,
+            "t": 1785162720
+          },
+          {
+            "c": null,
+            "t": 1785162780
+          },
+          {
+            "c": 24.5,
+            "t": 1785162840
+          },
+          {
+            "c": null,
+            "t": 1785162900
+          },
+          {
+            "c": null,
+            "t": 1785162960
+          },
+          {
+            "c": null,
+            "t": 1785163020
+          },
+          {
+            "c": null,
+            "t": 1785163080
+          },
+          {
+            "c": null,
+            "t": 1785163140
+          },
+          {
+            "c": null,
+            "t": 1785163200
+          },
+          {
+            "c": null,
+            "t": 1785163260
+          },
+          {
+            "c": null,
+            "t": 1785163320
+          },
+          {
+            "c": 24.519,
+            "t": 1785163380
+          },
+          {
+            "c": null,
+            "t": 1785163440
+          },
+          {
+            "c": null,
+            "t": 1785163500
+          },
+          {
+            "c": null,
+            "t": 1785163560
+          },
+          {
+            "c": null,
+            "t": 1785163620
+          },
+          {
+            "c": null,
+            "t": 1785163680
+          },
+          {
+            "c": null,
+            "t": 1785163740
+          },
+          {
+            "c": null,
+            "t": 1785163800
+          },
+          {
+            "c": null,
+            "t": 1785163860
+          },
+          {
+            "c": null,
+            "t": 1785163920
+          },
+          {
+            "c": 24.519,
+            "t": 1785163980
+          },
+          {
+            "t": 1785164039
+          },
+          {
+            "t": 1785164099
+          },
+          {
+            "t": 1785164159
+          },
+          {
+            "t": 1785164219
+          },
+          {
+            "t": 1785164279
+          },
+          {
+            "t": 1785164339
+          },
+          {
+            "t": 1785164399
+          },
+          {
+            "t": 1785164459
+          },
+          {
+            "t": 1785164519
+          },
+          {
+            "t": 1785164579
+          },
+          {
+            "t": 1785164639
+          },
+          {
+            "t": 1785164699
+          },
+          {
+            "t": 1785164759
+          },
+          {
+            "t": 1785164819
+          },
+          {
+            "t": 1785164879
+          },
+          {
+            "t": 1785164939
+          },
+          {
+            "t": 1785164999
+          },
+          {
+            "t": 1785165059
+          },
+          {
+            "t": 1785165119
+          },
+          {
+            "t": 1785165179
+          },
+          {
+            "t": 1785165239
+          },
+          {
+            "t": 1785165299
+          },
+          {
+            "t": 1785165359
+          },
+          {
+            "t": 1785165419
+          },
+          {
+            "t": 1785165479
+          },
+          {
+            "t": 1785165539
+          },
+          {
+            "t": 1785165599
+          },
+          {
+            "t": 1785165659
+          },
+          {
+            "t": 1785165719
+          },
+          {
+            "t": 1785165779
+          },
+          {
+            "t": 1785165839
+          },
+          {
+            "t": 1785165899
+          },
+          {
+            "t": 1785165959
+          },
+          {
+            "t": 1785166019
+          },
+          {
+            "t": 1785166079
+          },
+          {
+            "t": 1785166139
+          },
+          {
+            "t": 1785166199
+          },
+          {
+            "t": 1785166259
+          },
+          {
+            "t": 1785166319
+          },
+          {
+            "t": 1785166379
+          },
+          {
+            "t": 1785166439
+          },
+          {
+            "t": 1785166499
+          },
+          {
+            "t": 1785166559
+          },
+          {
+            "t": 1785166619
+          },
+          {
+            "t": 1785166679
+          },
+          {
+            "t": 1785166739
+          },
+          {
+            "t": 1785166799
+          },
+          {
+            "t": 1785166859
+          },
+          {
+            "t": 1785166919
+          },
+          {
+            "t": 1785166979
+          },
+          {
+            "t": 1785167039
+          },
+          {
+            "t": 1785167099
+          },
+          {
+            "t": 1785167159
+          },
+          {
+            "t": 1785167219
+          },
+          {
+            "t": 1785167279
+          },
+          {
+            "t": 1785167339
+          },
+          {
+            "t": 1785167399
+          },
+          {
+            "t": 1785167459
+          },
+          {
+            "t": 1785167519
+          },
+          {
+            "t": 1785167579
+          },
+          {
+            "t": 1785167639
+          },
+          {
+            "t": 1785167699
+          },
+          {
+            "t": 1785167759
+          },
+          {
+            "t": 1785167819
+          },
+          {
+            "t": 1785167879
+          },
+          {
+            "t": 1785167939
+          },
+          {
+            "t": 1785167999
+          },
+          {
+            "t": 1785168000
+          }
+        ]
+      },
+      "description": "The T. Rowe Price Active Crypto ETF is an actively managed exchange-traded fund that invests in a diversified portfolio of 5 to 15 different digital assets. It is structured as a Delaware statutory trust and is not a registered investment company under the Investment Company Act of 1940. The fund, sponsored by T. Rowe Price Sponsor LLC, aims to outperform the FTSE US Listed Crypto Index using quantitative models based on fundamentals, valuation, and momentum.",
+      "infoTable": [
+        [
+          "Category",
+          "Digital Assets"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "NYSEARCA"
+        ],
+        [
+          "Ticker Symbol",
+          "TKNZ"
+        ]
+      ],
+      "etf_website": null,
+      "provider_page": null,
+      "holdingsTable": {
+        "count": null,
+        "updated": null,
+        "top10": null,
+        "holdings": null
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1785200530396",
+        "data": [
+          {
+            "url": "https://www.etftrends.com/active-etf-content-hub/t-rowe-price-art-installation-spotlights-active-etf-lineup/",
+            "img": "https://cdn.snapi.dev/images/v1/s/m/a/etf6-3819768.jpg",
+            "title": "T. Rowe Price Art Installation Spotlights Active ETF Lineup",
+            "text": "Thousands of drifting light particles resolve into flowing patterns inside a new installation at the Oculus in Lower Manhattan. T. Rowe Price says the 10-foot-tall, 37-foot-wide piece mirrors how its ...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#TTEQ"
+            ],
+            "time": "Jul 23, 2026, 12:36 PM EDT",
+            "ago": "4 days ago"
+          },
+          {
+            "url": "https://www.etftrends.com/crypto-content-hub/crypto-etfs-more-selective-market-emerges/",
+            "img": "https://cdn.snapi.dev/images/v1/l/j/s/etf23-3818225.jpg",
+            "title": "Crypto ETFs: A More Selective Market Emerges",
+            "text": "Key Takeaways: Bitcoin remains dominant, but that ETF demand has become more selective toward the lowest-cost products. Hyperliquid ETFs show that investors still reward differentiated use cases, flex...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#BESO",
+              "#BHYP",
+              "#DIME",
+              "#HYPG",
+              "#IBIT",
+              "#THYP",
+              "#TKNS"
+            ],
+            "time": "Jul 23, 2026, 7:33 AM EDT",
+            "ago": "4 days ago"
+          },
+          {
+            "url": "https://www.etftrends.com/active-etf-content-hub/t-rowe-research-charts-disciplined-path-crypto/",
+            "img": "https://cdn.snapi.dev/images/v1/1/a/f/etf46-3812415.jpg",
+            "title": "T. Rowe Research Charts a Disciplined Path for Crypto",
+            "text": "Crypto has spent more than a decade on the edge of mainstream investing, cast either as a technological revolution or a speculative distraction. According to a new T.",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 21, 2026, 8:24 AM EDT",
+            "ago": "6 days ago"
+          },
+          {
+            "url": "https://www.etftrends.com/active-etf-content-hub/t-rowe-price-launches-first-active-multi-token-spot-crypto-etp-tknz/",
+            "img": "https://cdn.snapi.dev/images/v1/e/t/etf15-3805926.jpg",
+            "title": "T. Rowe Price Launches First Active Multi-Token Spot Crypto ETP TKNZ",
+            "text": "The active ETF landscape continues to be one of the foremost sources of investing innovation. T. Rowe Price has established itself as a leader on this front, and the firm is doubling down on that role...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 16, 2026, 11:37 AM EDT",
+            "ago": "11 days ago"
+          },
+          {
+            "url": "https://www.prnewswire.com/news-releases/t-rowe-price-debuts-industrys-first-actively-managed-multi-token-spot-exchange-traded-product-302827675.html",
+            "img": "https://cdn.snapi.dev/images/v1/w/s/i/press8-3805850.jpg",
+            "title": "T. ROWE PRICE DEBUTS INDUSTRY'S FIRST ACTIVELY MANAGED MULTI-TOKEN SPOT EXCHANGE-TRADED PRODUCT",
+            "text": "BALTIMORE, July 16, 2026 /PRNewswire/ -- T. Rowe Price, a global investment management firm and a leader in retirement, announced today the addition of the T. Rowe Price Active Crypto ETF (Ticker: TKN...",
+            "source": "PRNewsWire",
+            "type": "Article",
+            "tickers": [
+              "$TROW"
+            ],
+            "time": "Jul 16, 2026, 9:59 AM EDT",
+            "ago": "11 days ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 24.737,
+        "price1m": null,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 24.65
+      },
+      "performance": {
+        "tr1m": null,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": {
+      "p": 24.5476,
+      "pd": 24.55,
+      "c": 0.44,
+      "cp": 1.83,
+      "cl": 24.11,
+      "cdr": 1,
+      "o": 25.32,
+      "h": 25.32,
+      "l": 24.37,
+      "v": 4841.225544,
+      "ts": 1785182400000,
+      "u": "Jul 27, 2026, 4:00 PM EDT",
+      "td": "2026-07-27",
+      "h52": 27.15,
+      "l52": 23.76,
+      "ex": "NYSEARCA",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 24.5476,
+      "epd": 24.55,
+      "ec": 0,
+      "ecp": 0,
+      "eu": "Jul 27, 2026, 6:30 PM EDT",
+      "es": "After-hours",
+      "ets": 1785191400000.8738,
+      "etd": "2026-07-27",
+      "epv": null,
+      "days": 0,
+      "exp": 1785196082064,
+      "symbol": "TKNZ",
+      "uid": "TKNZ"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-07-27",
+          "o": 25.32,
+          "h": 25.32,
+          "l": 24.365,
+          "c": 24.548,
+          "a": 24.5476,
+          "v": 5088,
+          "ch": 1.83
+        },
+        {
+          "t": "2026-07-24",
+          "o": 24.3,
+          "h": 24.3,
+          "l": 24.01,
+          "c": 24.106,
+          "a": 24.1064,
+          "v": 6356,
+          "ch": -1.13
+        },
+        {
+          "t": "2026-07-23",
+          "o": 24.8,
+          "h": 24.8,
+          "l": 24.31,
+          "c": 24.381,
+          "a": 24.381,
+          "v": 5423,
+          "ch": -1.94
+        },
+        {
+          "t": "2026-07-22",
+          "o": 25.03,
+          "h": 25.06,
+          "l": 24.765,
+          "c": 24.863,
+          "a": 24.8631,
+          "v": 2831,
+          "ch": -0.9
+        },
+        {
+          "t": "2026-07-21",
+          "o": 25.39,
+          "h": 25.39,
+          "l": 25.075,
+          "c": 25.09,
+          "a": 25.09,
+          "v": 14883,
+          "ch": 1.43
+        },
+        {
+          "t": "2026-07-20",
+          "o": 24.68,
+          "h": 27.15,
+          "l": 24.33,
+          "c": 24.737,
+          "a": 24.7374,
+          "v": 11929,
+          "ch": 1.59
+        },
+        {
+          "t": "2026-07-17",
+          "o": 24.01,
+          "h": 25.445,
+          "l": 23.76,
+          "c": 24.351,
+          "a": 24.3507,
+          "v": 10863,
+          "ch": -1.21
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-27",
+          "o": 25.32,
+          "h": 25.32,
+          "l": 24.365,
+          "c": 24.548,
+          "a": 24.5476,
+          "v": 5088,
+          "ch": 1.83
+        },
+        {
+          "t": "2026-07-20",
+          "o": 24.68,
+          "h": 27.15,
+          "l": 24.01,
+          "c": 24.106,
+          "a": 24.1064,
+          "v": 41422,
+          "ch": -1
+        }
+      ],
+      "monthly_1y": [],
+      "weekly_3y": [
+        {
+          "t": "2026-07-27",
+          "o": 25.32,
+          "h": 25.32,
+          "l": 24.365,
+          "c": 24.548,
+          "a": 24.5476,
+          "v": 5088,
+          "ch": 1.83
+        },
+        {
+          "t": "2026-07-20",
+          "o": 24.68,
+          "h": 27.15,
+          "l": 24.01,
+          "c": 24.106,
+          "a": 24.1064,
+          "v": 41422,
+          "ch": -1
+        }
+      ],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable"
+  ]
+}

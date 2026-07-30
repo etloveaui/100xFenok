@@ -1,0 +1,1791 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "ZJAN",
+  "source_as_of": "2026-07-07T00:00:00Z",
+  "fetched_at": "2026-07-15T06:36:00Z",
+  "endpoints": {
+    "holdings": "/etf/zjan/holdings/__data.json",
+    "overview": "/etf/zjan/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "name": "Option on SPDR® S&P 500® ETF",
+        "weight_pct": 97.9,
+        "shares": 1649,
+        "raw": {
+          "n": "Option on SPDR® S&P 500® ETF",
+          "as": "97.90%",
+          "sh": "1,649"
+        }
+      },
+      {
+        "name": "Deposits With Broker For Short Positions",
+        "weight_pct": 7.02,
+        "raw": {
+          "n": "Deposits With Broker For Short Positions",
+          "as": "7.02%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "name": "Option on SPDR® S&P 500® ETF",
+        "weight_pct": 1.84,
+        "shares": 1649,
+        "raw": {
+          "n": "Option on SPDR® S&P 500® ETF",
+          "as": "1.84%",
+          "sh": "1,649"
+        }
+      },
+      {
+        "name": "Us Bank Mmda - Usbgfs 9",
+        "weight_pct": 0.26,
+        "shares": 319592,
+        "raw": {
+          "n": "Us Bank Mmda - Usbgfs 9",
+          "as": "0.26%",
+          "sh": "319,592"
+        }
+      },
+      {
+        "name": "Option on SPDR® S&P 500® ETF",
+        "weight_pct": -7.02,
+        "shares": 1649,
+        "raw": {
+          "n": "Option on SPDR® S&P 500® ETF",
+          "as": "-7.02%",
+          "sh": "1,649"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 5,
+    "holdings_updated": "Jul 7, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$114.52M",
+      "expenseRatio": "0.79%",
+      "sharesOut": "4.10M",
+      "inception": "Dec 31, 2024",
+      "provider_page": "innovator",
+      "etf_website": "https://www.innovatoretfs.com/etf/default.aspx?ticker=zjan"
+    },
+    "performance": {
+      "tr1m": 0.5548,
+      "trYTD": 2.686,
+      "tr1y": 6.511,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": 5.844
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "ZJAN",
+        "lastChecked": 1784074569650,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$114.52M",
+      "nav": null,
+      "expenseRatio": "0.79%",
+      "peRatio": null,
+      "sharesOut": "4.10M",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": "+6.51%",
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 5,
+      "inception": "Dec 31, 2024",
+      "chart": {
+        "expiration": 1783949400000,
+        "data": [
+          {
+            "t": 1783675800
+          },
+          {
+            "t": 1783675860
+          },
+          {
+            "t": 1783675920
+          },
+          {
+            "t": 1783675980
+          },
+          {
+            "t": 1783676040
+          },
+          {
+            "t": 1783676100
+          },
+          {
+            "t": 1783676160
+          },
+          {
+            "t": 1783676220
+          },
+          {
+            "t": 1783676280
+          },
+          {
+            "t": 1783676340
+          },
+          {
+            "t": 1783676400
+          },
+          {
+            "t": 1783676460
+          },
+          {
+            "t": 1783676520
+          },
+          {
+            "t": 1783676580
+          },
+          {
+            "t": 1783676640
+          },
+          {
+            "t": 1783676700
+          },
+          {
+            "t": 1783676760
+          },
+          {
+            "t": 1783676820
+          },
+          {
+            "t": 1783676880
+          },
+          {
+            "c": 28.09,
+            "o": 28.09,
+            "t": 1783676940
+          },
+          {
+            "c": null,
+            "t": 1783677000
+          },
+          {
+            "c": null,
+            "t": 1783677060
+          },
+          {
+            "c": null,
+            "t": 1783677120
+          },
+          {
+            "c": null,
+            "t": 1783677180
+          },
+          {
+            "c": 28.09,
+            "t": 1783677240
+          },
+          {
+            "c": null,
+            "t": 1783677300
+          },
+          {
+            "c": null,
+            "t": 1783677360
+          },
+          {
+            "c": null,
+            "t": 1783677420
+          },
+          {
+            "c": null,
+            "t": 1783677480
+          },
+          {
+            "c": null,
+            "t": 1783677540
+          },
+          {
+            "c": null,
+            "t": 1783677600
+          },
+          {
+            "c": null,
+            "t": 1783677660
+          },
+          {
+            "c": null,
+            "t": 1783677720
+          },
+          {
+            "c": null,
+            "t": 1783677780
+          },
+          {
+            "c": null,
+            "t": 1783677840
+          },
+          {
+            "c": null,
+            "t": 1783677900
+          },
+          {
+            "c": null,
+            "t": 1783677960
+          },
+          {
+            "c": null,
+            "t": 1783678020
+          },
+          {
+            "c": null,
+            "t": 1783678080
+          },
+          {
+            "c": null,
+            "t": 1783678140
+          },
+          {
+            "c": null,
+            "t": 1783678200
+          },
+          {
+            "c": null,
+            "t": 1783678260
+          },
+          {
+            "c": null,
+            "t": 1783678320
+          },
+          {
+            "c": null,
+            "t": 1783678380
+          },
+          {
+            "c": null,
+            "t": 1783678440
+          },
+          {
+            "c": null,
+            "t": 1783678500
+          },
+          {
+            "c": null,
+            "t": 1783678560
+          },
+          {
+            "c": null,
+            "t": 1783678620
+          },
+          {
+            "c": null,
+            "t": 1783678680
+          },
+          {
+            "c": null,
+            "t": 1783678740
+          },
+          {
+            "c": null,
+            "t": 1783678800
+          },
+          {
+            "c": null,
+            "t": 1783678860
+          },
+          {
+            "c": null,
+            "t": 1783678920
+          },
+          {
+            "c": null,
+            "t": 1783678980
+          },
+          {
+            "c": null,
+            "t": 1783679040
+          },
+          {
+            "c": null,
+            "t": 1783679100
+          },
+          {
+            "c": null,
+            "t": 1783679160
+          },
+          {
+            "c": null,
+            "t": 1783679220
+          },
+          {
+            "c": null,
+            "t": 1783679280
+          },
+          {
+            "c": null,
+            "t": 1783679340
+          },
+          {
+            "c": null,
+            "t": 1783679400
+          },
+          {
+            "c": null,
+            "t": 1783679460
+          },
+          {
+            "c": null,
+            "t": 1783679520
+          },
+          {
+            "c": null,
+            "t": 1783679580
+          },
+          {
+            "c": null,
+            "t": 1783679640
+          },
+          {
+            "c": null,
+            "t": 1783679700
+          },
+          {
+            "c": null,
+            "t": 1783679760
+          },
+          {
+            "c": null,
+            "t": 1783679820
+          },
+          {
+            "c": null,
+            "t": 1783679880
+          },
+          {
+            "c": null,
+            "t": 1783679940
+          },
+          {
+            "c": null,
+            "t": 1783680000
+          },
+          {
+            "c": null,
+            "t": 1783680060
+          },
+          {
+            "c": null,
+            "t": 1783680120
+          },
+          {
+            "c": null,
+            "t": 1783680180
+          },
+          {
+            "c": null,
+            "t": 1783680240
+          },
+          {
+            "c": null,
+            "t": 1783680300
+          },
+          {
+            "c": null,
+            "t": 1783680360
+          },
+          {
+            "c": null,
+            "t": 1783680420
+          },
+          {
+            "c": null,
+            "t": 1783680480
+          },
+          {
+            "c": null,
+            "t": 1783680540
+          },
+          {
+            "c": null,
+            "t": 1783680600
+          },
+          {
+            "c": null,
+            "t": 1783680660
+          },
+          {
+            "c": null,
+            "t": 1783680720
+          },
+          {
+            "c": null,
+            "t": 1783680780
+          },
+          {
+            "c": null,
+            "t": 1783680840
+          },
+          {
+            "c": null,
+            "t": 1783680900
+          },
+          {
+            "c": null,
+            "t": 1783680960
+          },
+          {
+            "c": null,
+            "t": 1783681020
+          },
+          {
+            "c": null,
+            "t": 1783681080
+          },
+          {
+            "c": null,
+            "t": 1783681140
+          },
+          {
+            "c": null,
+            "t": 1783681200
+          },
+          {
+            "c": null,
+            "t": 1783681260
+          },
+          {
+            "c": null,
+            "t": 1783681320
+          },
+          {
+            "c": null,
+            "t": 1783681380
+          },
+          {
+            "c": null,
+            "t": 1783681440
+          },
+          {
+            "c": null,
+            "t": 1783681500
+          },
+          {
+            "c": null,
+            "t": 1783681560
+          },
+          {
+            "c": null,
+            "t": 1783681620
+          },
+          {
+            "c": null,
+            "t": 1783681680
+          },
+          {
+            "c": null,
+            "t": 1783681740
+          },
+          {
+            "c": null,
+            "t": 1783681800
+          },
+          {
+            "c": null,
+            "t": 1783681860
+          },
+          {
+            "c": null,
+            "t": 1783681920
+          },
+          {
+            "c": null,
+            "t": 1783681980
+          },
+          {
+            "c": null,
+            "t": 1783682040
+          },
+          {
+            "c": null,
+            "t": 1783682100
+          },
+          {
+            "c": null,
+            "t": 1783682160
+          },
+          {
+            "c": null,
+            "t": 1783682220
+          },
+          {
+            "c": null,
+            "t": 1783682280
+          },
+          {
+            "c": null,
+            "t": 1783682340
+          },
+          {
+            "c": null,
+            "t": 1783682400
+          },
+          {
+            "c": null,
+            "t": 1783682460
+          },
+          {
+            "c": null,
+            "t": 1783682520
+          },
+          {
+            "c": null,
+            "t": 1783682580
+          },
+          {
+            "c": null,
+            "t": 1783682640
+          },
+          {
+            "c": null,
+            "t": 1783682700
+          },
+          {
+            "c": null,
+            "t": 1783682760
+          },
+          {
+            "c": null,
+            "t": 1783682820
+          },
+          {
+            "c": null,
+            "t": 1783682880
+          },
+          {
+            "c": null,
+            "t": 1783682940
+          },
+          {
+            "c": null,
+            "t": 1783683000
+          },
+          {
+            "c": null,
+            "t": 1783683060
+          },
+          {
+            "c": null,
+            "t": 1783683120
+          },
+          {
+            "c": null,
+            "t": 1783683180
+          },
+          {
+            "c": null,
+            "t": 1783683240
+          },
+          {
+            "c": null,
+            "t": 1783683300
+          },
+          {
+            "c": null,
+            "t": 1783683360
+          },
+          {
+            "c": null,
+            "t": 1783683420
+          },
+          {
+            "c": null,
+            "t": 1783683480
+          },
+          {
+            "c": null,
+            "t": 1783683540
+          },
+          {
+            "c": null,
+            "t": 1783683600
+          },
+          {
+            "c": null,
+            "t": 1783683660
+          },
+          {
+            "c": null,
+            "t": 1783683720
+          },
+          {
+            "c": null,
+            "t": 1783683780
+          },
+          {
+            "c": null,
+            "t": 1783683840
+          },
+          {
+            "c": null,
+            "t": 1783683900
+          },
+          {
+            "c": null,
+            "t": 1783683960
+          },
+          {
+            "c": null,
+            "t": 1783684020
+          },
+          {
+            "c": null,
+            "t": 1783684080
+          },
+          {
+            "c": null,
+            "t": 1783684140
+          },
+          {
+            "c": null,
+            "t": 1783684200
+          },
+          {
+            "c": null,
+            "t": 1783684260
+          },
+          {
+            "c": null,
+            "t": 1783684320
+          },
+          {
+            "c": null,
+            "t": 1783684380
+          },
+          {
+            "c": null,
+            "t": 1783684440
+          },
+          {
+            "c": null,
+            "t": 1783684500
+          },
+          {
+            "c": null,
+            "t": 1783684560
+          },
+          {
+            "c": null,
+            "t": 1783684620
+          },
+          {
+            "c": null,
+            "t": 1783684680
+          },
+          {
+            "c": null,
+            "t": 1783684740
+          },
+          {
+            "c": null,
+            "t": 1783684800
+          },
+          {
+            "c": null,
+            "t": 1783684860
+          },
+          {
+            "c": null,
+            "t": 1783684920
+          },
+          {
+            "c": null,
+            "t": 1783684980
+          },
+          {
+            "c": null,
+            "t": 1783685040
+          },
+          {
+            "c": null,
+            "t": 1783685100
+          },
+          {
+            "c": null,
+            "t": 1783685160
+          },
+          {
+            "c": null,
+            "t": 1783685220
+          },
+          {
+            "c": null,
+            "t": 1783685280
+          },
+          {
+            "c": null,
+            "t": 1783685340
+          },
+          {
+            "c": null,
+            "t": 1783685400
+          },
+          {
+            "c": null,
+            "t": 1783685460
+          },
+          {
+            "c": null,
+            "t": 1783685520
+          },
+          {
+            "c": null,
+            "t": 1783685580
+          },
+          {
+            "c": null,
+            "t": 1783685640
+          },
+          {
+            "c": null,
+            "t": 1783685700
+          },
+          {
+            "c": null,
+            "t": 1783685760
+          },
+          {
+            "c": null,
+            "t": 1783685820
+          },
+          {
+            "c": null,
+            "t": 1783685880
+          },
+          {
+            "c": null,
+            "t": 1783685940
+          },
+          {
+            "c": null,
+            "t": 1783686000
+          },
+          {
+            "c": null,
+            "t": 1783686060
+          },
+          {
+            "c": null,
+            "t": 1783686120
+          },
+          {
+            "c": null,
+            "t": 1783686180
+          },
+          {
+            "c": null,
+            "t": 1783686240
+          },
+          {
+            "c": null,
+            "t": 1783686300
+          },
+          {
+            "c": null,
+            "t": 1783686360
+          },
+          {
+            "c": null,
+            "t": 1783686420
+          },
+          {
+            "c": null,
+            "t": 1783686480
+          },
+          {
+            "c": null,
+            "t": 1783686540
+          },
+          {
+            "c": null,
+            "t": 1783686600
+          },
+          {
+            "c": null,
+            "t": 1783686660
+          },
+          {
+            "c": null,
+            "t": 1783686720
+          },
+          {
+            "c": null,
+            "t": 1783686780
+          },
+          {
+            "c": null,
+            "t": 1783686840
+          },
+          {
+            "c": null,
+            "t": 1783686900
+          },
+          {
+            "c": null,
+            "t": 1783686960
+          },
+          {
+            "c": null,
+            "t": 1783687020
+          },
+          {
+            "c": null,
+            "t": 1783687080
+          },
+          {
+            "c": null,
+            "t": 1783687140
+          },
+          {
+            "c": null,
+            "t": 1783687200
+          },
+          {
+            "c": null,
+            "t": 1783687260
+          },
+          {
+            "c": null,
+            "t": 1783687320
+          },
+          {
+            "c": null,
+            "t": 1783687380
+          },
+          {
+            "c": null,
+            "t": 1783687440
+          },
+          {
+            "c": null,
+            "t": 1783687500
+          },
+          {
+            "c": null,
+            "t": 1783687560
+          },
+          {
+            "c": null,
+            "t": 1783687620
+          },
+          {
+            "c": null,
+            "t": 1783687680
+          },
+          {
+            "c": null,
+            "t": 1783687740
+          },
+          {
+            "c": null,
+            "t": 1783687800
+          },
+          {
+            "c": null,
+            "t": 1783687860
+          },
+          {
+            "c": null,
+            "t": 1783687920
+          },
+          {
+            "c": null,
+            "t": 1783687980
+          },
+          {
+            "c": null,
+            "t": 1783688040
+          },
+          {
+            "c": null,
+            "t": 1783688100
+          },
+          {
+            "c": null,
+            "t": 1783688160
+          },
+          {
+            "c": null,
+            "t": 1783688220
+          },
+          {
+            "c": null,
+            "t": 1783688280
+          },
+          {
+            "c": null,
+            "t": 1783688340
+          },
+          {
+            "c": null,
+            "t": 1783688400
+          },
+          {
+            "c": null,
+            "t": 1783688460
+          },
+          {
+            "c": null,
+            "t": 1783688520
+          },
+          {
+            "c": null,
+            "t": 1783688580
+          },
+          {
+            "c": null,
+            "t": 1783688640
+          },
+          {
+            "c": null,
+            "t": 1783688700
+          },
+          {
+            "c": null,
+            "t": 1783688760
+          },
+          {
+            "c": null,
+            "t": 1783688820
+          },
+          {
+            "c": null,
+            "t": 1783688880
+          },
+          {
+            "c": null,
+            "t": 1783688940
+          },
+          {
+            "c": null,
+            "t": 1783689000
+          },
+          {
+            "c": null,
+            "t": 1783689060
+          },
+          {
+            "c": null,
+            "t": 1783689120
+          },
+          {
+            "c": null,
+            "t": 1783689180
+          },
+          {
+            "c": null,
+            "t": 1783689240
+          },
+          {
+            "c": null,
+            "t": 1783689300
+          },
+          {
+            "c": null,
+            "t": 1783689360
+          },
+          {
+            "c": null,
+            "t": 1783689420
+          },
+          {
+            "c": null,
+            "t": 1783689480
+          },
+          {
+            "c": null,
+            "t": 1783689540
+          },
+          {
+            "c": null,
+            "t": 1783689600
+          },
+          {
+            "c": null,
+            "t": 1783689660
+          },
+          {
+            "c": null,
+            "t": 1783689720
+          },
+          {
+            "c": null,
+            "t": 1783689780
+          },
+          {
+            "c": null,
+            "t": 1783689840
+          },
+          {
+            "c": null,
+            "t": 1783689900
+          },
+          {
+            "c": null,
+            "t": 1783689960
+          },
+          {
+            "c": null,
+            "t": 1783690020
+          },
+          {
+            "c": null,
+            "t": 1783690080
+          },
+          {
+            "c": null,
+            "t": 1783690140
+          },
+          {
+            "c": null,
+            "t": 1783690200
+          },
+          {
+            "c": null,
+            "t": 1783690260
+          },
+          {
+            "c": null,
+            "t": 1783690320
+          },
+          {
+            "c": null,
+            "t": 1783690380
+          },
+          {
+            "c": null,
+            "t": 1783690440
+          },
+          {
+            "c": null,
+            "t": 1783690500
+          },
+          {
+            "c": null,
+            "t": 1783690560
+          },
+          {
+            "c": null,
+            "t": 1783690620
+          },
+          {
+            "c": null,
+            "t": 1783690680
+          },
+          {
+            "c": null,
+            "t": 1783690740
+          },
+          {
+            "c": null,
+            "t": 1783690800
+          },
+          {
+            "c": null,
+            "t": 1783690860
+          },
+          {
+            "c": null,
+            "t": 1783690920
+          },
+          {
+            "c": null,
+            "t": 1783690980
+          },
+          {
+            "c": null,
+            "t": 1783691040
+          },
+          {
+            "c": null,
+            "t": 1783691100
+          },
+          {
+            "c": null,
+            "t": 1783691160
+          },
+          {
+            "c": null,
+            "t": 1783691220
+          },
+          {
+            "c": null,
+            "t": 1783691280
+          },
+          {
+            "c": null,
+            "t": 1783691340
+          },
+          {
+            "c": null,
+            "t": 1783691400
+          },
+          {
+            "c": null,
+            "t": 1783691460
+          },
+          {
+            "c": null,
+            "t": 1783691520
+          },
+          {
+            "c": null,
+            "t": 1783691580
+          },
+          {
+            "c": null,
+            "t": 1783691640
+          },
+          {
+            "c": null,
+            "t": 1783691700
+          },
+          {
+            "c": null,
+            "t": 1783691760
+          },
+          {
+            "c": null,
+            "t": 1783691820
+          },
+          {
+            "c": null,
+            "t": 1783691880
+          },
+          {
+            "c": null,
+            "t": 1783691940
+          },
+          {
+            "c": null,
+            "t": 1783692000
+          },
+          {
+            "c": null,
+            "t": 1783692060
+          },
+          {
+            "c": null,
+            "t": 1783692120
+          },
+          {
+            "c": null,
+            "t": 1783692180
+          },
+          {
+            "c": null,
+            "t": 1783692240
+          },
+          {
+            "c": null,
+            "t": 1783692300
+          },
+          {
+            "c": null,
+            "t": 1783692360
+          },
+          {
+            "c": null,
+            "t": 1783692420
+          },
+          {
+            "c": null,
+            "t": 1783692480
+          },
+          {
+            "c": null,
+            "t": 1783692540
+          },
+          {
+            "c": null,
+            "t": 1783692600
+          },
+          {
+            "c": null,
+            "t": 1783692660
+          },
+          {
+            "c": null,
+            "t": 1783692720
+          },
+          {
+            "c": null,
+            "t": 1783692780
+          },
+          {
+            "c": null,
+            "t": 1783692840
+          },
+          {
+            "c": null,
+            "t": 1783692900
+          },
+          {
+            "c": null,
+            "t": 1783692960
+          },
+          {
+            "c": null,
+            "t": 1783693020
+          },
+          {
+            "c": null,
+            "t": 1783693080
+          },
+          {
+            "c": null,
+            "t": 1783693140
+          },
+          {
+            "c": null,
+            "t": 1783693200
+          },
+          {
+            "c": null,
+            "t": 1783693260
+          },
+          {
+            "c": null,
+            "t": 1783693320
+          },
+          {
+            "c": null,
+            "t": 1783693380
+          },
+          {
+            "c": null,
+            "t": 1783693440
+          },
+          {
+            "c": null,
+            "t": 1783693500
+          },
+          {
+            "c": null,
+            "t": 1783693560
+          },
+          {
+            "c": null,
+            "t": 1783693620
+          },
+          {
+            "c": null,
+            "t": 1783693680
+          },
+          {
+            "c": null,
+            "t": 1783693740
+          },
+          {
+            "c": null,
+            "t": 1783693800
+          },
+          {
+            "c": null,
+            "t": 1783693860
+          },
+          {
+            "c": null,
+            "t": 1783693920
+          },
+          {
+            "c": null,
+            "t": 1783693980
+          },
+          {
+            "c": null,
+            "t": 1783694040
+          },
+          {
+            "c": null,
+            "t": 1783694100
+          },
+          {
+            "c": null,
+            "t": 1783694160
+          },
+          {
+            "c": null,
+            "t": 1783694220
+          },
+          {
+            "c": null,
+            "t": 1783694280
+          },
+          {
+            "c": null,
+            "t": 1783694340
+          },
+          {
+            "c": null,
+            "t": 1783694400
+          },
+          {
+            "c": null,
+            "t": 1783694460
+          },
+          {
+            "c": null,
+            "t": 1783694520
+          },
+          {
+            "c": null,
+            "t": 1783694580
+          },
+          {
+            "c": null,
+            "t": 1783694640
+          },
+          {
+            "c": null,
+            "t": 1783694700
+          },
+          {
+            "c": null,
+            "t": 1783694760
+          },
+          {
+            "c": null,
+            "t": 1783694820
+          },
+          {
+            "c": null,
+            "t": 1783694880
+          },
+          {
+            "c": null,
+            "t": 1783694940
+          },
+          {
+            "c": null,
+            "t": 1783695000
+          },
+          {
+            "c": null,
+            "t": 1783695060
+          },
+          {
+            "c": null,
+            "t": 1783695120
+          },
+          {
+            "c": null,
+            "t": 1783695180
+          },
+          {
+            "c": null,
+            "t": 1783695240
+          },
+          {
+            "c": null,
+            "t": 1783695300
+          },
+          {
+            "c": null,
+            "t": 1783695360
+          },
+          {
+            "c": null,
+            "t": 1783695420
+          },
+          {
+            "c": null,
+            "t": 1783695480
+          },
+          {
+            "c": null,
+            "t": 1783695540
+          },
+          {
+            "c": null,
+            "t": 1783695600
+          },
+          {
+            "c": null,
+            "t": 1783695660
+          },
+          {
+            "c": null,
+            "t": 1783695720
+          },
+          {
+            "c": null,
+            "t": 1783695780
+          },
+          {
+            "c": null,
+            "t": 1783695840
+          },
+          {
+            "c": null,
+            "t": 1783695900
+          },
+          {
+            "c": null,
+            "t": 1783695960
+          },
+          {
+            "c": null,
+            "t": 1783696020
+          },
+          {
+            "c": null,
+            "t": 1783696080
+          },
+          {
+            "c": null,
+            "t": 1783696140
+          },
+          {
+            "c": null,
+            "t": 1783696200
+          },
+          {
+            "c": null,
+            "t": 1783696260
+          },
+          {
+            "c": null,
+            "t": 1783696320
+          },
+          {
+            "c": null,
+            "t": 1783696380
+          },
+          {
+            "c": null,
+            "t": 1783696440
+          },
+          {
+            "c": null,
+            "t": 1783696500
+          },
+          {
+            "c": null,
+            "t": 1783696560
+          },
+          {
+            "c": null,
+            "t": 1783696620
+          },
+          {
+            "c": null,
+            "t": 1783696680
+          },
+          {
+            "c": null,
+            "t": 1783696740
+          },
+          {
+            "c": null,
+            "t": 1783696800
+          },
+          {
+            "c": null,
+            "t": 1783696860
+          },
+          {
+            "c": null,
+            "t": 1783696920
+          },
+          {
+            "c": null,
+            "t": 1783696980
+          },
+          {
+            "c": null,
+            "t": 1783697040
+          },
+          {
+            "c": null,
+            "t": 1783697100
+          },
+          {
+            "c": 28.095,
+            "t": 1783697160
+          },
+          {
+            "t": 1783697219
+          },
+          {
+            "t": 1783697279
+          },
+          {
+            "t": 1783697339
+          },
+          {
+            "t": 1783697399
+          },
+          {
+            "t": 1783697459
+          },
+          {
+            "t": 1783697519
+          },
+          {
+            "t": 1783697579
+          },
+          {
+            "t": 1783697639
+          },
+          {
+            "t": 1783697699
+          },
+          {
+            "t": 1783697759
+          },
+          {
+            "t": 1783697819
+          },
+          {
+            "t": 1783697879
+          },
+          {
+            "t": 1783697939
+          },
+          {
+            "t": 1783697999
+          },
+          {
+            "t": 1783698059
+          },
+          {
+            "t": 1783698119
+          },
+          {
+            "t": 1783698179
+          },
+          {
+            "t": 1783698239
+          },
+          {
+            "t": 1783698299
+          },
+          {
+            "t": 1783698359
+          },
+          {
+            "t": 1783698419
+          },
+          {
+            "t": 1783698479
+          },
+          {
+            "t": 1783698539
+          },
+          {
+            "t": 1783698599
+          },
+          {
+            "t": 1783698659
+          },
+          {
+            "t": 1783698719
+          },
+          {
+            "t": 1783698779
+          },
+          {
+            "t": 1783698839
+          },
+          {
+            "t": 1783698899
+          },
+          {
+            "t": 1783698959
+          },
+          {
+            "t": 1783699019
+          },
+          {
+            "t": 1783699079
+          },
+          {
+            "t": 1783699139
+          },
+          {
+            "t": 1783699199
+          },
+          {
+            "t": 1783699200
+          }
+        ]
+      },
+      "description": "The Innovator 1 Yr January (ZJAN) is an exchange-traded fund that mostly invests in downside hedge alternatives. The fund seeks to track the return of the SPDR S&P 500 ETF Trust (SPY), to a cap, with 100% downside hedge over a one year outcome period. The actively managed fund holds FLEX options to obtain exposure ZJAN was launched on Dec 31, 2024 and is issued by Innovator.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Alternatives"
+        ],
+        [
+          "Category",
+          "Defined Outcome"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "BATS"
+        ],
+        [
+          "Ticker Symbol",
+          "ZJAN"
+        ],
+        [
+          "Provider",
+          "Innovator"
+        ]
+      ],
+      "etf_website": "https://www.innovatoretfs.com/etf/default.aspx?ticker=zjan",
+      "provider_page": "innovator",
+      "holdingsTable": {
+        "count": 5,
+        "updated": "Jul 7, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "Option on SPDR® S&P 500® ETF",
+            "as": "97.90%",
+            "sh": "1,649"
+          },
+          {
+            "n": "Deposits With Broker For Short Positions",
+            "as": "7.02%",
+            "sh": "n/a"
+          },
+          {
+            "n": "Option on SPDR® S&P 500® ETF",
+            "as": "1.84%",
+            "sh": "1,649"
+          },
+          {
+            "n": "Us Bank Mmda - Usbgfs 9",
+            "as": "0.26%",
+            "sh": "319,592"
+          },
+          {
+            "n": "Option on SPDR® S&P 500® ETF",
+            "as": "-7.02%",
+            "sh": "1,649"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1783914032990",
+        "data": []
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 28.04,
+        "price1m": 27.94,
+        "price3m": 27.535,
+        "price6m": 27.42,
+        "priceYTD": 27.36,
+        "price1y": 26.378,
+        "price5y": null,
+        "priceMAX": 25.62
+      },
+      "performance": {
+        "tr1m": 0.5548,
+        "trYTD": 2.686,
+        "tr1y": 6.511,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": 5.844
+      }
+    },
+    "holdings": {},
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_surface_omits_holdings",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}

@@ -1,0 +1,2455 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "BITO",
+  "source_as_of": "2026-07-13T00:00:00Z",
+  "fetched_at": "2026-07-15T14:47:51Z",
+  "endpoints": {
+    "holdings": "/etf/bito/holdings/__data.json",
+    "overview": "/etf/bito/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "name": "CME BITCOIN FUT DIGITAL ASSETS 31/JUL/2026 BTCN6 CURNCY",
+        "weight_pct": 82.11,
+        "shares": 3584,
+        "raw": {
+          "n": "CME BITCOIN FUT DIGITAL ASSETS 31/JUL/2026 BTCN6 CURNCY",
+          "as": "82.11%",
+          "sh": "3,584"
+        }
+      },
+      {
+        "name": "COINBASE BIT FUT DIGITAL ASSETS 31/JUL/2026 BTIN6 CURNCY",
+        "weight_pct": 13.78,
+        "shares": 3000,
+        "raw": {
+          "n": "COINBASE BIT FUT DIGITAL ASSETS 31/JUL/2026 BTIN6 CURNCY",
+          "as": "13.78%",
+          "sh": "3,000"
+        }
+      },
+      {
+        "name": "S&P CME BITCOIN FUTURES DAILY ROLL INDEX SWAP SOCIETE GENERALE",
+        "weight_pct": 4.12,
+        "shares": 219179,
+        "raw": {
+          "n": "S&P CME BITCOIN FUTURES DAILY ROLL INDEX SWAP SOCIETE GENERALE",
+          "as": "4.12%",
+          "sh": "219,179"
+        }
+      },
+      {
+        "symbol": "#IQMM",
+        "name": "ProShares GENIUS Money Market ETF",
+        "shares": 9000000,
+        "raw": {
+          "n": "ProShares GENIUS Money Market ETF",
+          "s": "#IQMM",
+          "sh": "9,000,000"
+        }
+      },
+      {
+        "name": "NET OTHER ASSETS (LIABILITIES)",
+        "shares": 459433651,
+        "raw": {
+          "n": "NET OTHER ASSETS (LIABILITIES)",
+          "sh": "459,433,651"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 5,
+    "holdings_updated": "Jul 13, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": true,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$1.44B",
+      "nav": "$10.59",
+      "expenseRatio": "0.95%",
+      "sharesOut": "162.69M",
+      "dividendYield": "59.29%",
+      "beta": "1.73",
+      "inception": "Oct 18, 2021",
+      "provider_page": "proshares",
+      "etf_website": "https://www.proshares.com/our-etfs/strategic/bito"
+    },
+    "performance": {
+      "tr1m": 2.793,
+      "trYTD": -26.440584121404836,
+      "tr1y": -47.48000114739636,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": -4.382223123734075
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "BITO",
+        "lastChecked": 1784126830726,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$1.44B",
+      "nav": "$10.59",
+      "expenseRatio": "0.95%",
+      "peRatio": null,
+      "sharesOut": "162.69M",
+      "dps": "$5.25",
+      "dividendYield": "59.29%",
+      "payoutRatio": null,
+      "exDivDate": "Jul 1, 2026",
+      "ch1y": "-61.48%",
+      "payoutFrequency": "Monthly",
+      "beta": "1.73",
+      "holdings": 5,
+      "inception": "Oct 18, 2021",
+      "chart": {
+        "expiration": 1784126383508,
+        "data": [
+          {
+            "c": 8.86,
+            "o": 8.855,
+            "t": 1784107800
+          },
+          {
+            "c": 8.855,
+            "t": 1784107860
+          },
+          {
+            "c": 8.87,
+            "t": 1784107920
+          },
+          {
+            "c": 8.88,
+            "t": 1784107980
+          },
+          {
+            "c": 8.87,
+            "t": 1784108040
+          },
+          {
+            "c": 8.878,
+            "t": 1784108100
+          },
+          {
+            "c": 8.88,
+            "t": 1784108160
+          },
+          {
+            "c": 8.87,
+            "t": 1784108220
+          },
+          {
+            "c": 8.865,
+            "t": 1784108280
+          },
+          {
+            "c": 8.87,
+            "t": 1784108340
+          },
+          {
+            "c": 8.86,
+            "t": 1784108400
+          },
+          {
+            "c": 8.854,
+            "t": 1784108460
+          },
+          {
+            "c": 8.845,
+            "t": 1784108520
+          },
+          {
+            "c": 8.855,
+            "t": 1784108580
+          },
+          {
+            "c": 8.855,
+            "t": 1784108640
+          },
+          {
+            "c": 8.83,
+            "t": 1784108700
+          },
+          {
+            "c": 8.83,
+            "t": 1784108760
+          },
+          {
+            "c": 8.81,
+            "t": 1784108820
+          },
+          {
+            "c": 8.805,
+            "t": 1784108880
+          },
+          {
+            "c": 8.802,
+            "t": 1784108940
+          },
+          {
+            "c": 8.8,
+            "t": 1784109000
+          },
+          {
+            "c": 8.8,
+            "t": 1784109060
+          },
+          {
+            "c": 8.81,
+            "t": 1784109120
+          },
+          {
+            "c": 8.801,
+            "t": 1784109180
+          },
+          {
+            "c": 8.818,
+            "t": 1784109240
+          },
+          {
+            "c": 8.81,
+            "t": 1784109300
+          },
+          {
+            "c": 8.81,
+            "t": 1784109360
+          },
+          {
+            "c": 8.82,
+            "t": 1784109420
+          },
+          {
+            "c": 8.83,
+            "t": 1784109480
+          },
+          {
+            "c": 8.83,
+            "t": 1784109540
+          },
+          {
+            "c": 8.83,
+            "t": 1784109600
+          },
+          {
+            "c": 8.82,
+            "t": 1784109660
+          },
+          {
+            "c": 8.831,
+            "t": 1784109720
+          },
+          {
+            "c": 8.842,
+            "t": 1784109780
+          },
+          {
+            "c": 8.84,
+            "t": 1784109840
+          },
+          {
+            "c": 8.846,
+            "t": 1784109900
+          },
+          {
+            "c": 8.858,
+            "t": 1784109960
+          },
+          {
+            "c": 8.855,
+            "t": 1784110020
+          },
+          {
+            "c": 8.855,
+            "t": 1784110080
+          },
+          {
+            "c": 8.843,
+            "t": 1784110140
+          },
+          {
+            "c": 8.855,
+            "t": 1784110200
+          },
+          {
+            "c": 8.855,
+            "t": 1784110260
+          },
+          {
+            "c": 8.87,
+            "t": 1784110320
+          },
+          {
+            "c": 8.852,
+            "t": 1784110380
+          },
+          {
+            "c": 8.852,
+            "t": 1784110440
+          },
+          {
+            "c": 8.855,
+            "t": 1784110500
+          },
+          {
+            "c": 8.856,
+            "t": 1784110560
+          },
+          {
+            "c": 8.85,
+            "t": 1784110620
+          },
+          {
+            "c": 8.855,
+            "t": 1784110680
+          },
+          {
+            "c": 8.868,
+            "t": 1784110740
+          },
+          {
+            "c": 8.84,
+            "t": 1784110800
+          },
+          {
+            "c": 8.87,
+            "t": 1784110860
+          },
+          {
+            "c": 8.865,
+            "t": 1784110920
+          },
+          {
+            "c": 8.85,
+            "t": 1784110980
+          },
+          {
+            "c": 8.845,
+            "t": 1784111040
+          },
+          {
+            "c": 8.828,
+            "t": 1784111100
+          },
+          {
+            "c": 8.84,
+            "t": 1784111160
+          },
+          {
+            "c": 8.85,
+            "t": 1784111220
+          },
+          {
+            "c": 8.86,
+            "t": 1784111280
+          },
+          {
+            "c": 8.865,
+            "t": 1784111340
+          },
+          {
+            "c": 8.86,
+            "t": 1784111400
+          },
+          {
+            "c": 8.86,
+            "t": 1784111460
+          },
+          {
+            "c": 8.865,
+            "t": 1784111520
+          },
+          {
+            "c": 8.875,
+            "t": 1784111580
+          },
+          {
+            "c": 8.88,
+            "t": 1784111640
+          },
+          {
+            "c": 8.888,
+            "t": 1784111700
+          },
+          {
+            "c": 8.872,
+            "t": 1784111760
+          },
+          {
+            "c": 8.868,
+            "t": 1784111820
+          },
+          {
+            "c": 8.87,
+            "t": 1784111880
+          },
+          {
+            "t": 1784111939
+          },
+          {
+            "t": 1784111999
+          },
+          {
+            "t": 1784112059
+          },
+          {
+            "t": 1784112119
+          },
+          {
+            "t": 1784112179
+          },
+          {
+            "t": 1784112239
+          },
+          {
+            "t": 1784112299
+          },
+          {
+            "t": 1784112359
+          },
+          {
+            "t": 1784112419
+          },
+          {
+            "t": 1784112479
+          },
+          {
+            "t": 1784112539
+          },
+          {
+            "t": 1784112599
+          },
+          {
+            "t": 1784112659
+          },
+          {
+            "t": 1784112719
+          },
+          {
+            "t": 1784112779
+          },
+          {
+            "t": 1784112839
+          },
+          {
+            "t": 1784112899
+          },
+          {
+            "t": 1784112959
+          },
+          {
+            "t": 1784113019
+          },
+          {
+            "t": 1784113079
+          },
+          {
+            "t": 1784113139
+          },
+          {
+            "t": 1784113199
+          },
+          {
+            "t": 1784113259
+          },
+          {
+            "t": 1784113319
+          },
+          {
+            "t": 1784113379
+          },
+          {
+            "t": 1784113439
+          },
+          {
+            "t": 1784113499
+          },
+          {
+            "t": 1784113559
+          },
+          {
+            "t": 1784113619
+          },
+          {
+            "t": 1784113679
+          },
+          {
+            "t": 1784113739
+          },
+          {
+            "t": 1784113799
+          },
+          {
+            "t": 1784113859
+          },
+          {
+            "t": 1784113919
+          },
+          {
+            "t": 1784113979
+          },
+          {
+            "t": 1784114039
+          },
+          {
+            "t": 1784114099
+          },
+          {
+            "t": 1784114159
+          },
+          {
+            "t": 1784114219
+          },
+          {
+            "t": 1784114279
+          },
+          {
+            "t": 1784114339
+          },
+          {
+            "t": 1784114399
+          },
+          {
+            "t": 1784114459
+          },
+          {
+            "t": 1784114519
+          },
+          {
+            "t": 1784114579
+          },
+          {
+            "t": 1784114639
+          },
+          {
+            "t": 1784114699
+          },
+          {
+            "t": 1784114759
+          },
+          {
+            "t": 1784114819
+          },
+          {
+            "t": 1784114879
+          },
+          {
+            "t": 1784114939
+          },
+          {
+            "t": 1784114999
+          },
+          {
+            "t": 1784115059
+          },
+          {
+            "t": 1784115119
+          },
+          {
+            "t": 1784115179
+          },
+          {
+            "t": 1784115239
+          },
+          {
+            "t": 1784115299
+          },
+          {
+            "t": 1784115359
+          },
+          {
+            "t": 1784115419
+          },
+          {
+            "t": 1784115479
+          },
+          {
+            "t": 1784115539
+          },
+          {
+            "t": 1784115599
+          },
+          {
+            "t": 1784115659
+          },
+          {
+            "t": 1784115719
+          },
+          {
+            "t": 1784115779
+          },
+          {
+            "t": 1784115839
+          },
+          {
+            "t": 1784115899
+          },
+          {
+            "t": 1784115959
+          },
+          {
+            "t": 1784116019
+          },
+          {
+            "t": 1784116079
+          },
+          {
+            "t": 1784116139
+          },
+          {
+            "t": 1784116199
+          },
+          {
+            "t": 1784116259
+          },
+          {
+            "t": 1784116319
+          },
+          {
+            "t": 1784116379
+          },
+          {
+            "t": 1784116439
+          },
+          {
+            "t": 1784116499
+          },
+          {
+            "t": 1784116559
+          },
+          {
+            "t": 1784116619
+          },
+          {
+            "t": 1784116679
+          },
+          {
+            "t": 1784116739
+          },
+          {
+            "t": 1784116799
+          },
+          {
+            "t": 1784116859
+          },
+          {
+            "t": 1784116919
+          },
+          {
+            "t": 1784116979
+          },
+          {
+            "t": 1784117039
+          },
+          {
+            "t": 1784117099
+          },
+          {
+            "t": 1784117159
+          },
+          {
+            "t": 1784117219
+          },
+          {
+            "t": 1784117279
+          },
+          {
+            "t": 1784117339
+          },
+          {
+            "t": 1784117399
+          },
+          {
+            "t": 1784117459
+          },
+          {
+            "t": 1784117519
+          },
+          {
+            "t": 1784117579
+          },
+          {
+            "t": 1784117639
+          },
+          {
+            "t": 1784117699
+          },
+          {
+            "t": 1784117759
+          },
+          {
+            "t": 1784117819
+          },
+          {
+            "t": 1784117879
+          },
+          {
+            "t": 1784117939
+          },
+          {
+            "t": 1784117999
+          },
+          {
+            "t": 1784118059
+          },
+          {
+            "t": 1784118119
+          },
+          {
+            "t": 1784118179
+          },
+          {
+            "t": 1784118239
+          },
+          {
+            "t": 1784118299
+          },
+          {
+            "t": 1784118359
+          },
+          {
+            "t": 1784118419
+          },
+          {
+            "t": 1784118479
+          },
+          {
+            "t": 1784118539
+          },
+          {
+            "t": 1784118599
+          },
+          {
+            "t": 1784118659
+          },
+          {
+            "t": 1784118719
+          },
+          {
+            "t": 1784118779
+          },
+          {
+            "t": 1784118839
+          },
+          {
+            "t": 1784118899
+          },
+          {
+            "t": 1784118959
+          },
+          {
+            "t": 1784119019
+          },
+          {
+            "t": 1784119079
+          },
+          {
+            "t": 1784119139
+          },
+          {
+            "t": 1784119199
+          },
+          {
+            "t": 1784119259
+          },
+          {
+            "t": 1784119319
+          },
+          {
+            "t": 1784119379
+          },
+          {
+            "t": 1784119439
+          },
+          {
+            "t": 1784119499
+          },
+          {
+            "t": 1784119559
+          },
+          {
+            "t": 1784119619
+          },
+          {
+            "t": 1784119679
+          },
+          {
+            "t": 1784119739
+          },
+          {
+            "t": 1784119799
+          },
+          {
+            "t": 1784119859
+          },
+          {
+            "t": 1784119919
+          },
+          {
+            "t": 1784119979
+          },
+          {
+            "t": 1784120039
+          },
+          {
+            "t": 1784120099
+          },
+          {
+            "t": 1784120159
+          },
+          {
+            "t": 1784120219
+          },
+          {
+            "t": 1784120279
+          },
+          {
+            "t": 1784120339
+          },
+          {
+            "t": 1784120399
+          },
+          {
+            "t": 1784120459
+          },
+          {
+            "t": 1784120519
+          },
+          {
+            "t": 1784120579
+          },
+          {
+            "t": 1784120639
+          },
+          {
+            "t": 1784120699
+          },
+          {
+            "t": 1784120759
+          },
+          {
+            "t": 1784120819
+          },
+          {
+            "t": 1784120879
+          },
+          {
+            "t": 1784120939
+          },
+          {
+            "t": 1784120999
+          },
+          {
+            "t": 1784121059
+          },
+          {
+            "t": 1784121119
+          },
+          {
+            "t": 1784121179
+          },
+          {
+            "t": 1784121239
+          },
+          {
+            "t": 1784121299
+          },
+          {
+            "t": 1784121359
+          },
+          {
+            "t": 1784121419
+          },
+          {
+            "t": 1784121479
+          },
+          {
+            "t": 1784121539
+          },
+          {
+            "t": 1784121599
+          },
+          {
+            "t": 1784121659
+          },
+          {
+            "t": 1784121719
+          },
+          {
+            "t": 1784121779
+          },
+          {
+            "t": 1784121839
+          },
+          {
+            "t": 1784121899
+          },
+          {
+            "t": 1784121959
+          },
+          {
+            "t": 1784122019
+          },
+          {
+            "t": 1784122079
+          },
+          {
+            "t": 1784122139
+          },
+          {
+            "t": 1784122199
+          },
+          {
+            "t": 1784122259
+          },
+          {
+            "t": 1784122319
+          },
+          {
+            "t": 1784122379
+          },
+          {
+            "t": 1784122439
+          },
+          {
+            "t": 1784122499
+          },
+          {
+            "t": 1784122559
+          },
+          {
+            "t": 1784122619
+          },
+          {
+            "t": 1784122679
+          },
+          {
+            "t": 1784122739
+          },
+          {
+            "t": 1784122799
+          },
+          {
+            "t": 1784122859
+          },
+          {
+            "t": 1784122919
+          },
+          {
+            "t": 1784122979
+          },
+          {
+            "t": 1784123039
+          },
+          {
+            "t": 1784123099
+          },
+          {
+            "t": 1784123159
+          },
+          {
+            "t": 1784123219
+          },
+          {
+            "t": 1784123279
+          },
+          {
+            "t": 1784123339
+          },
+          {
+            "t": 1784123399
+          },
+          {
+            "t": 1784123459
+          },
+          {
+            "t": 1784123519
+          },
+          {
+            "t": 1784123579
+          },
+          {
+            "t": 1784123639
+          },
+          {
+            "t": 1784123699
+          },
+          {
+            "t": 1784123759
+          },
+          {
+            "t": 1784123819
+          },
+          {
+            "t": 1784123879
+          },
+          {
+            "t": 1784123939
+          },
+          {
+            "t": 1784123999
+          },
+          {
+            "t": 1784124059
+          },
+          {
+            "t": 1784124119
+          },
+          {
+            "t": 1784124179
+          },
+          {
+            "t": 1784124239
+          },
+          {
+            "t": 1784124299
+          },
+          {
+            "t": 1784124359
+          },
+          {
+            "t": 1784124419
+          },
+          {
+            "t": 1784124479
+          },
+          {
+            "t": 1784124539
+          },
+          {
+            "t": 1784124599
+          },
+          {
+            "t": 1784124659
+          },
+          {
+            "t": 1784124719
+          },
+          {
+            "t": 1784124779
+          },
+          {
+            "t": 1784124839
+          },
+          {
+            "t": 1784124899
+          },
+          {
+            "t": 1784124959
+          },
+          {
+            "t": 1784125019
+          },
+          {
+            "t": 1784125079
+          },
+          {
+            "t": 1784125139
+          },
+          {
+            "t": 1784125199
+          },
+          {
+            "t": 1784125259
+          },
+          {
+            "t": 1784125319
+          },
+          {
+            "t": 1784125379
+          },
+          {
+            "t": 1784125439
+          },
+          {
+            "t": 1784125499
+          },
+          {
+            "t": 1784125559
+          },
+          {
+            "t": 1784125619
+          },
+          {
+            "t": 1784125679
+          },
+          {
+            "t": 1784125739
+          },
+          {
+            "t": 1784125799
+          },
+          {
+            "t": 1784125859
+          },
+          {
+            "t": 1784125919
+          },
+          {
+            "t": 1784125979
+          },
+          {
+            "t": 1784126039
+          },
+          {
+            "t": 1784126099
+          },
+          {
+            "t": 1784126159
+          },
+          {
+            "t": 1784126219
+          },
+          {
+            "t": 1784126279
+          },
+          {
+            "t": 1784126339
+          },
+          {
+            "t": 1784126399
+          },
+          {
+            "t": 1784126459
+          },
+          {
+            "t": 1784126519
+          },
+          {
+            "t": 1784126579
+          },
+          {
+            "t": 1784126639
+          },
+          {
+            "t": 1784126699
+          },
+          {
+            "t": 1784126759
+          },
+          {
+            "t": 1784126819
+          },
+          {
+            "t": 1784126879
+          },
+          {
+            "t": 1784126939
+          },
+          {
+            "t": 1784126999
+          },
+          {
+            "t": 1784127059
+          },
+          {
+            "t": 1784127119
+          },
+          {
+            "t": 1784127179
+          },
+          {
+            "t": 1784127239
+          },
+          {
+            "t": 1784127299
+          },
+          {
+            "t": 1784127359
+          },
+          {
+            "t": 1784127419
+          },
+          {
+            "t": 1784127479
+          },
+          {
+            "t": 1784127539
+          },
+          {
+            "t": 1784127599
+          },
+          {
+            "t": 1784127659
+          },
+          {
+            "t": 1784127719
+          },
+          {
+            "t": 1784127779
+          },
+          {
+            "t": 1784127839
+          },
+          {
+            "t": 1784127899
+          },
+          {
+            "t": 1784127959
+          },
+          {
+            "t": 1784128019
+          },
+          {
+            "t": 1784128079
+          },
+          {
+            "t": 1784128139
+          },
+          {
+            "t": 1784128199
+          },
+          {
+            "t": 1784128259
+          },
+          {
+            "t": 1784128319
+          },
+          {
+            "t": 1784128379
+          },
+          {
+            "t": 1784128439
+          },
+          {
+            "t": 1784128499
+          },
+          {
+            "t": 1784128559
+          },
+          {
+            "t": 1784128619
+          },
+          {
+            "t": 1784128679
+          },
+          {
+            "t": 1784128739
+          },
+          {
+            "t": 1784128799
+          },
+          {
+            "t": 1784128859
+          },
+          {
+            "t": 1784128919
+          },
+          {
+            "t": 1784128979
+          },
+          {
+            "t": 1784129039
+          },
+          {
+            "t": 1784129099
+          },
+          {
+            "t": 1784129159
+          },
+          {
+            "t": 1784129219
+          },
+          {
+            "t": 1784129279
+          },
+          {
+            "t": 1784129339
+          },
+          {
+            "t": 1784129399
+          },
+          {
+            "t": 1784129459
+          },
+          {
+            "t": 1784129519
+          },
+          {
+            "t": 1784129579
+          },
+          {
+            "t": 1784129639
+          },
+          {
+            "t": 1784129699
+          },
+          {
+            "t": 1784129759
+          },
+          {
+            "t": 1784129819
+          },
+          {
+            "t": 1784129879
+          },
+          {
+            "t": 1784129939
+          },
+          {
+            "t": 1784129999
+          },
+          {
+            "t": 1784130059
+          },
+          {
+            "t": 1784130119
+          },
+          {
+            "t": 1784130179
+          },
+          {
+            "t": 1784130239
+          },
+          {
+            "t": 1784130299
+          },
+          {
+            "t": 1784130359
+          },
+          {
+            "t": 1784130419
+          },
+          {
+            "t": 1784130479
+          },
+          {
+            "t": 1784130539
+          },
+          {
+            "t": 1784130599
+          },
+          {
+            "t": 1784130659
+          },
+          {
+            "t": 1784130719
+          },
+          {
+            "t": 1784130779
+          },
+          {
+            "t": 1784130839
+          },
+          {
+            "t": 1784130899
+          },
+          {
+            "t": 1784130959
+          },
+          {
+            "t": 1784131019
+          },
+          {
+            "t": 1784131079
+          },
+          {
+            "t": 1784131139
+          },
+          {
+            "t": 1784131199
+          },
+          {
+            "t": 1784131200
+          }
+        ]
+      },
+      "description": "The ProShares Bitcoin ETF (BITO) is an exchange-traded fund that mostly invests in long btc, short usd currency. The fund actively manages a portfolio of front-month CME bitcoin futures. BITO was launched on Oct 18, 2021 and is issued by ProShares.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Currency"
+        ],
+        [
+          "Category",
+          "Digital Assets"
+        ],
+        [
+          "Stock Exchange",
+          "NYSEARCA"
+        ],
+        [
+          "Ticker Symbol",
+          "BITO"
+        ],
+        [
+          "Provider",
+          "ProShares"
+        ]
+      ],
+      "etf_website": "https://www.proshares.com/our-etfs/strategic/bito",
+      "provider_page": "proshares",
+      "holdingsTable": {
+        "count": 5,
+        "updated": "Jul 13, 2026",
+        "top10": 100.01,
+        "holdings": [
+          {
+            "n": "CME BITCOIN FUT DIGITAL ASSETS 31/JUL/2026 BTCN6 CURNCY",
+            "as": "82.11%",
+            "sh": "3,584"
+          },
+          {
+            "n": "COINBASE BIT FUT DIGITAL ASSETS 31/JUL/2026 BTIN6 CURNCY",
+            "as": "13.78%",
+            "sh": "3,000"
+          },
+          {
+            "n": "S&P CME BITCOIN FUTURES DAILY ROLL INDEX SWAP SOCIETE GENERALE",
+            "as": "4.12%",
+            "sh": "219,179"
+          },
+          {
+            "n": "ProShares GENIUS Money Market ETF",
+            "s": "#IQMM",
+            "sh": "9,000,000"
+          },
+          {
+            "n": "NET OTHER ASSETS (LIABILITIES)",
+            "sh": "459,433,651"
+          }
+        ]
+      },
+      "dividendTable": [
+        {
+          "dt": "2026-07-01",
+          "amt": 0.010375,
+          "pay": "2026-07-08"
+        },
+        {
+          "dt": "2026-06-01",
+          "amt": 0.014114,
+          "pay": "2026-06-05"
+        },
+        {
+          "dt": "2026-05-01",
+          "amt": 0.015564,
+          "pay": "2026-05-07"
+        },
+        {
+          "dt": "2026-04-01",
+          "amt": 0.006117,
+          "pay": "2026-04-08"
+        },
+        {
+          "dt": "2026-03-02",
+          "amt": 0.014285,
+          "pay": "2026-03-06"
+        },
+        {
+          "dt": "2026-02-02",
+          "amt": 0.009742,
+          "pay": "2026-02-06"
+        }
+      ],
+      "news": {
+        "exp": "1784132654624",
+        "data": [
+          {
+            "url": "nc0DUl8RF_0",
+            "img": "https://cdn.snapi.dev/images/v1/a/s/z/bgr32wd-3734337-3793901.jpg",
+            "title": "The SEC is opening the crypto floodgates",
+            "text": "Everyone is watching Bitcoin's price. Wall Street is quietly rebuilding the financial system.",
+            "source": "Yahoo Finance",
+            "type": "Video",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jul 9, 2026, 12:28 PM EDT",
+            "ago": "5 days ago"
+          },
+          {
+            "url": "P-6C9MbfLU8",
+            "img": "https://cdn.snapi.dev/images/v1/k/l/m/btc64-571668-3516160-3789468.jpg",
+            "title": "Bitcoin passed the Saylor test",
+            "text": "Bitcoin just had its best week since March—but that's not the most important story. In this episode of The Daily Wolf, Scott Melker explains why Bitcoin's recovery is more significant than the price i...",
+            "source": "Yahoo Finance",
+            "type": "Video",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jul 7, 2026, 12:19 PM EDT",
+            "ago": "7 days ago"
+          },
+          {
+            "url": "https://nypost.com/2026/07/06/business/bitcoin-bounces-back-after-trump-calls-himself-a-big-crypto-guy/",
+            "img": "https://cdn.snapi.dev/images/v1/n/7/a/gr32wd-3404560-3787886.jpg",
+            "title": "Bitcoin bounces back after Trump calls himself ‘a big crypto guy'",
+            "text": "Bitcoin bounced back Monday after President Trump called himself “a big crypto guy” and gave a positive, if noncommittal, answer when asked about the prospect of digital assets becoming part of his ne...",
+            "source": "New York Post",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jul 6, 2026, 3:55 PM EDT",
+            "ago": "8 days ago"
+          },
+          {
+            "url": "https://www.reuters.com/technology/citi-cuts-bitcoin-ether-forecasts-etf-flows-turn-negative-2026-07-01/",
+            "img": "https://cdn.snapi.dev/images/v1/i/w/j/gr32wd-3404560-3780665.jpg",
+            "title": "Citi cuts bitcoin, ether forecasts as ETF flows turn negative",
+            "text": "July 1 (Reuters) - Citigroup slashed its 12-month forecasts for bitcoin and ether, saying weakening investor appetite, negative exchange-traded fund flows and ​a lack of progress on U.S. digital asset...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jul 1, 2026, 3:11 AM EDT",
+            "ago": "14 days ago"
+          },
+          {
+            "url": "https://www.marketwatch.com/story/bitcoin-etfs-were-supposed-to-make-selloffs-less-painful-that-theory-is-being-put-to-the-test-f70ba3c6",
+            "img": "https://cdn.snapi.dev/images/v1/d/6/c/bgtr3wsd-3577395-3780038.jpg",
+            "title": "Bitcoin ETFs were supposed to make selloffs less painful. That theory is being put to the test.",
+            "text": "Crypto investors had hoped that increased institutional adoption and a crypto-friendly administration could help the largest cryptocurrency avoid the painful cycles it once experienced.",
+            "source": "Market Watch",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 30, 2026, 5:57 PM EDT",
+            "ago": "14 days ago"
+          },
+          {
+            "url": "U0QVH-8Dnvg",
+            "img": "https://cdn.snapi.dev/images/v1/z/i/t/43r3-2566363-3779800.jpg",
+            "title": "Bitcoin ETFs on Track for Worst Month of Withdrawls",
+            "text": "Bloomberg Intelligence's James Seyffart joins Isabelle Lee on \"Bloomberg Crypto.\" Bitcoin's biggest institutional sources of demand are faltering at the same time, leaving the cryptocurrency increasin...",
+            "source": "Bloomberg Markets and Finance",
+            "type": "Video",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 30, 2026, 4:19 PM EDT",
+            "ago": "14 days ago"
+          },
+          {
+            "url": "https://www.pymnts.com/cryptocurrency/2026/strategy-valuation-drop-threatens-key-bitcoin-funding-engine/",
+            "img": "https://cdn.snapi.dev/images/v1/y/a/z/cfre3212we-3393259-3775734.jpg",
+            "title": "Strategy Valuation Drop Threatens Key Bitcoin Funding Engine",
+            "text": "Bitcoin's largest corporate buyer, bitcoin treasury company Strategy, saw a valuation metric drop below a key threshold Friday (June 26), Bloomberg reported Friday. The ratio of the company's enterpri...",
+            "source": "PYMNTS",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#BITQ",
+              "#BRRR",
+              "#BTCO",
+              "#ETHA",
+              "#ETHD",
+              "#ETHE"
+            ],
+            "time": "Jun 28, 2026, 5:35 PM EDT",
+            "ago": "16 days ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/06/26/billionaire-investor-jeremy-grantham-says-bitcoin-will-dwindle-away-with-a-whimper.html",
+            "img": "https://cdn.snapi.dev/images/v1/e/0/f/cfre3212we-3393259-3774086.jpg",
+            "title": "Billionaire investor Jeremy Grantham says bitcoin will 'dwindle away with a whimper'",
+            "text": "\"[Over] years and years, decades and decades, it will dwindle away, I suspect – not with a bang, but a whimper,\" Grantham said. \"It's not a stable form of value.",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 26, 2026, 10:13 AM EDT",
+            "ago": "19 days ago"
+          },
+          {
+            "url": "ABF1dPmUkmc",
+            "img": "https://cdn.snapi.dev/images/v1/5/i/e/mjyt43ws-3415639-3773934.jpg",
+            "title": "Billionaire investor Jeremy Grantham on crypto: A useless, speculative mechanism",
+            "text": "Jeremy Grantham, GMO co-founder and long-term investment strategist, joins 'Squawk Box' to discuss the latest market trends, state of the economy, we're in a bubble and how to know when it will burst,...",
+            "source": "CNBC Television",
+            "type": "Video",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 26, 2026, 9:30 AM EDT",
+            "ago": "19 days ago"
+          },
+          {
+            "url": "gKzDU7IMGp0",
+            "img": "https://cdn.snapi.dev/images/v1/n/q/d/gr32wd-3404560-3773743.jpg",
+            "title": "I'm a bitcoin bull from a 'very, very long-term' perspective, says Fairlead's Katie Stockton",
+            "text": "Katie Stockton, Fairlead Strategies founder and managing partner, joins 'Squawk Box' to discuss the latest market trends, bitcoin price trends, and more.",
+            "source": "CNBC Television",
+            "type": "Video",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 26, 2026, 7:58 AM EDT",
+            "ago": "19 days ago"
+          },
+          {
+            "url": "LlWWbb2baPk",
+            "img": "https://cdn.snapi.dev/images/v1/z/0/s/bg321wedf-3512999-3772865.jpg",
+            "title": "Bitcoin Breaks Key Technical Level as Crypto Awaits Regulatory Clarity",
+            "text": "@CharlesSchwab's Adam Lynch discusses the latest moves in Bitcoin, highlighting that the cryptocurrency has broken its 200-week moving average. He also examines the factors weighing on cryptocurrencie...",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 25, 2026, 4:00 PM EDT",
+            "ago": "19 days ago"
+          },
+          {
+            "url": "xhwxYnEqeEY",
+            "img": "https://cdn.snapi.dev/images/v1/n/c/k/btc64-571668-3516160-3772562.jpg",
+            "title": "The 472nd Bitcoin obituary",
+            "text": "Bitcoin has officially been declared dead again. History suggests that may be exactly the wrong conclusion.",
+            "source": "Yahoo Finance",
+            "type": "Video",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 25, 2026, 12:19 PM EDT",
+            "ago": "19 days ago"
+          },
+          {
+            "url": "8KIU8775W3c",
+            "img": "https://cdn.snapi.dev/images/v1/i/a/4/1wdfc-3296967-3763744.jpg",
+            "title": "Inside the debate over bitcoin vs gold",
+            "text": "'The Claman Countdown' panelists Anthony Pompliano and Peter Schiff discuss what investors should focus on.",
+            "source": "Fox Business",
+            "type": "Video",
+            "tickers": [
+              "#AAAU",
+              "#BAR",
+              "#DBP",
+              "#GLD",
+              "#GLDM",
+              "#IAU",
+              "#OUNZ"
+            ],
+            "time": "Jun 20, 2026, 2:00 PM EDT",
+            "ago": "24 days ago"
+          },
+          {
+            "url": "eJ_nllBoiYE",
+            "img": "https://cdn.snapi.dev/images/v1/g/m/2/bgre3e-2527640-3761318.jpg",
+            "title": "Bitcoin slides as Fed keeps markets guessing",
+            "text": "Solana Policy Institute president & Blockchain Association Board Chair Kristin Smith joins 'Mornings with Maria' to discuss the Senate's push to pass the Clarity Act, crypto regulation and what's at s...",
+            "source": "Fox Business",
+            "type": "Video",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 18, 2026, 10:15 AM EDT",
+            "ago": "27 days ago"
+          },
+          {
+            "url": "https://www.forbes.com/sites/jasonkirsch/2026/06/17/gold-bitcoin-and-the-new-safe-haven-playbook/",
+            "img": "https://cdn.snapi.dev/images/v1/p/p/h/gold-bitcoin-and-the-new-safe--3760298.jpg",
+            "title": "Gold, Bitcoin, And The New Safe-Haven Playbook",
+            "text": "The Iran conflict that began on February 27, 2026, provided what analysts called a \"real-time stress test\" for the safe-haven claims of both gold and Bitcoin — and the results were not what the crypto...",
+            "source": "Forbes",
+            "type": "Article",
+            "tickers": [
+              "#AAAU",
+              "#BAR",
+              "#DBP",
+              "#GLD",
+              "#GLDM",
+              "#IAU",
+              "#OUNZ"
+            ],
+            "time": "Jun 18, 2026, 12:35 AM EDT",
+            "ago": "27 days ago"
+          },
+          {
+            "url": "https://www.forbes.com/sites/greatspeculations/2026/06/17/is-the-btc-price-headed-toward-60000/",
+            "img": "https://cdn.snapi.dev/images/v1/g/l/s/btc-faces-renewed-pressure-as--3759163.jpg",
+            "title": "BTC Faces Renewed Pressure As Fed Pattern Points Toward $60,000",
+            "text": "Currently, Bitcoin is valued at around $65,829 as Federal Reserve Chair Kevin Warsh convenes for his inaugural FOMC meeting.",
+            "source": "Forbes",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 17, 2026, 11:10 AM EDT",
+            "ago": "27 days ago"
+          },
+          {
+            "url": "b-kQkhXchFU",
+            "img": "https://cdn.snapi.dev/images/v1/b/e/a/btc64-571668-3516160-3751791.jpg",
+            "title": "Bitcoin's $60K Floor: How Crypto Bear Market Sets New Bull Foundation",
+            "text": "Bitcoin is experiencing a \"classic bear market,\" says @CharlesSchwab 's Jim Ferraioli. as the cryptocurrency continues a 50% fade from all-time highs.",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 12, 2026, 12:17 PM EDT",
+            "ago": "4 weeks ago"
+          },
+          {
+            "url": "https://www.marketwatch.com/story/bitcoin-bulls-are-still-around-these-charts-show-they-just-moved-on-to-hotter-markets-8e04c48c",
+            "img": "https://cdn.snapi.dev/images/v1/d/v/j/bgr32wd-3734337-3747919.jpg",
+            "title": "Bitcoin bulls are still around. These charts show they just moved on to hotter markets.",
+            "text": "Traders who once bet on crypto have not stopped gambling on the next big market story — they just are not finding that story in crypto itself.",
+            "source": "Market Watch",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 10, 2026, 5:54 PM EDT",
+            "ago": "4 weeks ago"
+          },
+          {
+            "url": "h49tQmFjI_o",
+            "img": "https://cdn.snapi.dev/images/v1/e/r/t/gen34-2485066-3746364.jpg",
+            "title": "This is one of the best bear markets for bitcoin, says Anthony Pompliano",
+            "text": "Anthony Pompliano, ProCap Financial chairman and CEO, joins 'Squawk box' to discuss the state of crypto, what's driving the latest bitcoin price slump, whether more downside is coming, and more.",
+            "source": "CNBC Television",
+            "type": "Video",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 10, 2026, 8:28 AM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "_v0dRsTD4Q4",
+            "img": "https://cdn.snapi.dev/images/v1/z/j/c/mjuy5432w-3404322-3745120.jpg",
+            "title": "Bitcoin Steadies After $60,000 Breach as Saylor Adds to Hoard",
+            "text": "Bloomberg's Emily Nicolle joins Katie Greifeld and Isabelle Lee on \"Bloomberg Crypto.\" Bitcoin steadied itself after dropping below the key threshold of $60,000, as Strategy Chairman Michael Saylor re...",
+            "source": "Bloomberg Markets and Finance",
+            "type": "Video",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 9, 2026, 3:05 PM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "g2J_qtS69ns",
+            "img": "https://cdn.snapi.dev/images/v1/e/v/l/gr32wd-3404560-3745121.jpg",
+            "title": "Bitcoin Treasuries Shed $62B in Deepening Crypto Rout",
+            "text": "Bloomberg's Monique Mulima joins Katie Greifeld and Isabelle Lee on \"Bloomberg Crypto.\" Bitcoin's slide this week is adding fresh pressure to one of the most ambitious financial experiments to emerge ...",
+            "source": "Bloomberg Markets and Finance",
+            "type": "Video",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 9, 2026, 3:05 PM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/06/09/bitcoins-brutal-sell-off-sparks-a-flurry-of-trading-in-related-stocks-including-one-big-bullish-bet.html",
+            "img": "https://cdn.snapi.dev/images/v1/g/c/l/bgr32wd-3734337-3743546.jpg",
+            "title": "Bitcoin's brutal sell-off sparks a flurry of trading in related stocks, including one big bullish bet",
+            "text": "The year has been a rocky one for the flagship cryptocurrency, but traders aren't backing away from the space.",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 9, 2026, 7:10 AM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "bgRA6qx8-LQ",
+            "img": "https://cdn.snapi.dev/images/v1/h/i/y/vgfr32e-2529421-3743357.jpg",
+            "title": "Bitcoin in trouble if it doesn't recover by Q4, currently still in 'classic mid-cycle' bear market",
+            "text": "Lucy Gazmararian, Founder and Managing Partner of Token Bay Capital, discusses the recent drop in bitcoin prices and why she believes it is characteristic of the classic cyclical bear phase rather tha...",
+            "source": "CNBC International TV",
+            "type": "Video",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 9, 2026, 4:51 AM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/currencies/crypto-exposure-etfs-funds-a23ca52c",
+            "img": "https://cdn.snapi.dev/images/v1/r/8/s/be31-589763-828818-3415581-3740609.jpg",
+            "title": "How to Get Crypto Exposure Without Owning Crypto Directly",
+            "text": "Spot or index ETFs are good ways for ordinary investors to add cryptocurrencies to their portfolios, and there are higher-end options for the wealthy.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 7, 2026, 10:00 AM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/crypto-bitcoin-price-selloff-etfs-761f4801",
+            "img": "https://cdn.snapi.dev/images/v1/r/e/g/btc64-571668-3516160-3739670.jpg",
+            "title": "Investors Flee Bitcoin ETFs as Crypto Continues to Crumble",
+            "text": "Bitcoin is trading at its lowest level since October 2024. That's bad news for crypto bulls and ETFs,",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 5, 2026, 2:41 PM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/investing/crypto-etfs-boom-downside-8e2535a7",
+            "img": "https://cdn.snapi.dev/images/v1/6/6/s/mjyt43ws-3415639-3737821.jpg",
+            "title": "The Boom in Crypto ETFs Has a Downside for Investors",
+            "text": "Investors face higher costs and the unwelcome prospect of fund closures as more digital-asset funds come to market.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 4, 2026, 2:00 PM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.reuters.com/legal/transactional/standard-chartereds-crypto-bull-sticks-100000-bitcoin-call-despite-painful-week-2026-06-04/",
+            "img": "https://cdn.snapi.dev/images/v1/l/j/w/bg321wedf-3512999-3736737.jpg",
+            "title": "Standard Chartered's crypto bull sticks to $100,000 bitcoin call despite 'painful' week",
+            "text": "Geoffrey Kendrick, one of the most ​vocal crypto advocates, is sticking with his call for bitcoin to hit $100,000 ‌by the end of the year despite a \"painful\" week, with the global head of digital asse...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 4, 2026, 9:17 AM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.reuters.com/business/bitcoin-falls-4-over-three-month-low-2026-06-03/",
+            "img": "https://cdn.snapi.dev/images/v1/k/u/s/bg321wedf-3512999-3735575.jpg",
+            "title": "Bitcoin falls 4% to over three-month low",
+            "text": "Bitcoin, ​the world's ‌largest ​cryptocurrency ​by market ⁠value, ​on ​Wednesday fell ​4% ​to $64,721.39, the lowest ‌since ⁠February 28.",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 3, 2026, 5:12 PM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/06/03/bitcoins-high-conviction-holders-are-selling-as-price-hits-new-lows.html",
+            "img": "https://cdn.snapi.dev/images/v1/a/s/f/asset-management13-3735218.jpg",
+            "title": "Bitcoin's high conviction holders are turning into sellers as the crypto's price hits new lows",
+            "text": "In the past two days, bitcoin's highest conviction holders have sold about $2.4 billion in bitcoin. Of the bitcoin sold in the past 30 days, 26% came from investors who bought it above $90,000.",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": [
+              "$ABTC",
+              "$APLD",
+              "#ARKB",
+              "#BITB",
+              "#BITU",
+              "#BITX",
+              "$BMNR"
+            ],
+            "time": "Jun 3, 2026, 2:37 PM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/06/03/bitcoin-to-slump-to-new-lows-after-recent-sell-off-traders-predict.html",
+            "img": "https://cdn.snapi.dev/images/v1/f/s/e/gr32wd-3404560-3734776.jpg",
+            "title": "Bitcoin set to slump to new lows for 2026 after recent sell-off, traders forecast",
+            "text": "Bitcoin prices fell this week after cryptocurrency treasury company Strategy revealed it sold a small amount of its bitcoin holding. Traders on prediction market Kalshi think it's likely that the cryp...",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#BITB",
+              "#BRRR",
+              "$BTBT",
+              "#BTC",
+              "$BTDR",
+              "$CIFR"
+            ],
+            "time": "Jun 3, 2026, 11:35 AM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/06/03/bitcoin-trails-stocks-by-most-since-2019-as-traders-get-their-kicks-elsewhere.html",
+            "img": "https://cdn.snapi.dev/images/v1/b/g/bgr32wd-3734337.jpg",
+            "title": "Bitcoin trails stocks by most since 2019 as traders get their kicks elsewhere",
+            "text": "Bitcoin hasn't had this cold a winter in seven years.",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Jun 3, 2026, 9:13 AM EDT",
+            "ago": "6 weeks ago"
+          },
+          {
+            "url": "_emiElYanVA",
+            "img": "https://cdn.snapi.dev/images/v1/k/j/0/etf27-3729869.jpg",
+            "title": "‘WE'LL FIGHT': Jamia Dimon BLOWS UP when confronted over crypto rules",
+            "text": "Coinbase Chief Policy Officer Faryar Shirzad discusses the CLARITY Act, crypto market performance and Coinbase's expansion into global derivatives trading on ‘Mornings with Maria.'",
+            "source": "Fox Business",
+            "type": "Video",
+            "tickers": [
+              "#ARKB",
+              "#BITB",
+              "#BRRR",
+              "$COIN",
+              "#EZBC",
+              "#FBTC",
+              "#GBTC"
+            ],
+            "time": "Jun 1, 2026, 11:00 AM EDT",
+            "ago": "6 weeks ago"
+          },
+          {
+            "url": "https://www.etftrends.com/coinshares-content-hub/altcoins-beyond-bitcoin-exposure-matters-portfolios/",
+            "img": "https://cdn.snapi.dev/images/v1/y/4/l/mjuy5432w-3404322-3725379.jpg",
+            "title": "Altcoins: Why Beyond-Bitcoin Exposure Matters for Portfolios",
+            "text": "Altcoins now represent 31% of total crypto market capitalization, generate more than $4B in annualized network revenue, and underpin over $310B in tokenized assets. As institutional adoption shifts fr...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "May 28, 2026, 3:02 PM EDT",
+            "ago": "6 weeks ago"
+          },
+          {
+            "url": "https://www.marketwatch.com/story/is-the-debasement-trade-dead-outflows-from-gold-and-bitcoin-etfs-suggest-investors-are-moving-on-911830c5",
+            "img": "https://cdn.snapi.dev/images/v1/a/q/n/gold5-2691306-3723563.jpg",
+            "title": "Is the ‘debasement trade' dead? Outflows from gold and bitcoin ETFs suggest investors are moving on",
+            "text": "The so-called debasement trade has fallen out of favor as both a discussion point and an investment concept.",
+            "source": "Market Watch",
+            "type": "Article",
+            "tickers": [
+              "#AAAU",
+              "#BAR",
+              "#DBP",
+              "#GLD",
+              "#GLDM",
+              "#IAU",
+              "#OUNZ"
+            ],
+            "time": "May 28, 2026, 4:51 AM EDT",
+            "ago": "6 weeks ago"
+          },
+          {
+            "url": "zqJ-sPbRD10",
+            "img": "https://cdn.snapi.dev/images/v1/i/5/k/cfre3212we-3393259-3718596.jpg",
+            "title": "‘Institutional adoption' is driving Bitcoin, CEO says",
+            "text": "ARK Invest CEO and CIO Cathie Wood explains her Bitcoin bullishness on ‘Fox Business In Depth: The Crypto Campaign.'",
+            "source": "Fox Business",
+            "type": "Video",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "May 25, 2026, 2:00 PM EDT",
+            "ago": "7 weeks ago"
+          },
+          {
+            "url": "-Q8OvzXimjo",
+            "img": "https://cdn.snapi.dev/images/v1/o/l/k/gr32wd-3404560-3717593.jpg",
+            "title": "RESERVE PLAN: Republicans eye MASSIVE Bitcoin stockpile",
+            "text": "FOX Business' Darren Botelho reports Republicans are racing to cement U.S. crypto dominance with a proposed national Bitcoin reserve funded by seized digital assets tied to Iran.",
+            "source": "Fox Business",
+            "type": "Video",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "May 23, 2026, 2:00 PM EDT",
+            "ago": "7 weeks ago"
+          },
+          {
+            "url": "https://www.foxbusiness.com/politics/gop-lawmaker-unveils-bill-codify-strategic-bitcoin-reserve",
+            "img": "https://cdn.snapi.dev/images/v1/t/h/p/gen34-2485066-3714243.jpg",
+            "title": "GOP lawmaker unveils bill to codify a strategic bitcoin reserve",
+            "text": "Rep. Nick Begich unveils the American Reserve Modernization Act to establish a U.S. strategic bitcoin reserve within the Treasury Department with bipartisan support.",
+            "source": "Fox Business",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "May 21, 2026, 10:42 AM EDT",
+            "ago": "7 weeks ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/05/20/bitcoin-price-crashes-as-etf-outflows-rise-coinbase-premium-index-slips/",
+            "img": "https://cdn.snapi.dev/images/v1/d/r/v/etf47-3710507.jpg",
+            "title": "Bitcoin price crashes as ETF outflows rise, Coinbase Premium Index slips",
+            "text": "Bitcoin price crashed to the important 50-day moving average as it continued facing major headwinds. Spot BTC ETF outflows are soaring, while the Coinbase Premium Index has remained in the red for wee...",
+            "source": "Invezz",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "May 20, 2026, 1:15 AM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "U7VRCHk01h8",
+            "img": "https://cdn.snapi.dev/images/v1/v/6/c/etf27-3704338.jpg",
+            "title": "Crypto industry scores win as Clarity Act regulation bill clears Senate hurdle",
+            "text": "The Clarity Act, which would create regulation for the cryptocurrency industry, cleared the Senate banking committee. The bill is the top legislative priority of the crypto industry, as it would add p...",
+            "source": "CNBC Television",
+            "type": "Video",
+            "tickers": [
+              "$BLK",
+              "$COIN",
+              "$CRCL",
+              "#GBTC",
+              "$HOOD",
+              "$MSTR",
+              "$RKLB"
+            ],
+            "time": "May 14, 2026, 4:30 PM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.marketwatch.com/story/bitcoins-rare-technical-action-points-to-a-crypto-bull-market-says-fundstrats-tom-lee-4e44bfb7",
+            "img": "https://cdn.snapi.dev/images/v1/y/7/k/bg321wedf-3512999-3683455.jpg",
+            "title": "Bitcoin's rare technical action points to a crypto bull market, says Fundstrat's Tom Lee",
+            "text": "Fundstrat's Tom Lee says activity in recent months point to a bullish phase for cryptocurrencies.",
+            "source": "Market Watch",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "May 7, 2026, 6:55 AM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/05/01/bitcoin-surged-in-april-but-weak-buyer-demand-makes-rally-vulnerable.html",
+            "img": "https://cdn.snapi.dev/images/v1/x/e/b/btc10-571795-3270163-3671197.jpg",
+            "title": "Bitcoin surged in April, but weak buyer demand makes the rally vulnerable",
+            "text": "Bitcoin gained 12.7% in April, registering back-to-back monthly gains and its best month since April 2025. The run was driven by leveraged trading activity in the derivatives market while demand for t...",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": [
+              "$ABTC",
+              "$AMPL",
+              "#ARKB",
+              "#ARKW",
+              "#BITI",
+              "#BITX",
+              "$BKKT"
+            ],
+            "time": "May 1, 2026, 11:57 AM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.marketwatch.com/story/buying-crypto-in-a-bear-market-is-a-cheaper-way-to-play-the-ai-boom-this-former-tiger-management-executive-says-868096eb",
+            "img": "https://cdn.snapi.dev/images/v1/s/n/t/bg321wedf-3512999-3661905.jpg",
+            "title": "Buying crypto in a bear market is a cheaper way to play the AI boom, this former Tiger Management executive says",
+            "text": "Artificial intelligence may be one of the most crowded trades in financial markets right now — but bitcoin, which is currently mired in a bear market, could be a cheaper way to play the AI boom.",
+            "source": "Market Watch",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Apr 28, 2026, 5:43 PM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.marketwatch.com/story/the-iran-cease-fire-has-boosted-investors-appetite-for-bitcoin-heres-why-it-could-break-past-80-000-soon-29c08c3e",
+            "img": "https://cdn.snapi.dev/images/v1/5/e/n/gr32wd-3404560-3650122.jpg",
+            "title": "The Iran cease-fire has boosted investors' appetite for bitcoin. Here's why it could break past $80,000 soon.",
+            "text": "Capital has flowed into bitcoin through multiple channels, which makes it less likely that bitcoin sees a sharp reversal like in previous months, and more likely that the rally builds momentum.",
+            "source": "Market Watch",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Apr 22, 2026, 5:37 PM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/04/20/bitcoin-etfs-log-996m-inflows-even-as-iran-tensions-resurface/",
+            "img": "https://cdn.snapi.dev/images/v1/t/e/t/btc64-571668-3516160-3642456.jpg",
+            "title": "Bitcoin ETFs log $996M inflows even as Iran tensions resurface",
+            "text": "US spot bitcoin exchange-traded funds (ETFs) recorded their strongest weekly inflows since mid-January, extending a three-week streak of positive momentum as improving risk appetite and geopolitical d...",
+            "source": "Invezz",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Apr 20, 2026, 7:27 AM EDT",
+            "ago": "3 months ago"
+          },
+          {
+            "url": "https://nypost.com/business/gold-vs-bitcoin-inflation-hedge/",
+            "img": "https://cdn.snapi.dev/images/v1/e/c/y/gold25-2688265-3639790.jpg",
+            "title": "Beyond the memes: Understanding the unique roles of gold and Bitcoin",
+            "text": "The crypto crowd spent years positioning Bitcoin as the ultimate hedge against a falling dollar. Did it pay off?",
+            "source": "New York Post",
+            "type": "Article",
+            "tickers": [
+              "#AAAU",
+              "#ARKB",
+              "#ARKW",
+              "#BAR",
+              "#BETE",
+              "#BETH",
+              "#BITB"
+            ],
+            "time": "Apr 17, 2026, 8:00 AM EDT",
+            "ago": "3 months ago"
+          },
+          {
+            "url": "https://nypost.com/business/stocks-vs-bitcoin-portfolio-guide/",
+            "img": "https://cdn.snapi.dev/images/v1/y/n/7/nhyt43ed-2718121-3637098.jpg",
+            "title": "Bitcoin vs. Stocks: It's time to stop pretending they're the same",
+            "text": "It is dangerously easy to treat Bitcoin and traditional stocks as equals when they sit side-by-side in your brokerage app.",
+            "source": "New York Post",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Apr 16, 2026, 6:30 AM EDT",
+            "ago": "3 months ago"
+          },
+          {
+            "url": "https://www.marketwatch.com/story/why-bitcoins-next-stop-could-be-98-000-after-surmounting-this-key-hurdle-technical-analyst-says-6e2eb6fa",
+            "img": "https://cdn.snapi.dev/images/v1/g/n/h/gr32wd-3404560-3633892.jpg",
+            "title": "Why bitcoin's next stop could be $98,000 after surmounting this key hurdle, technical analyst says",
+            "text": "Bitcoin on Tuesday tested a key level that has blocked gains for months, as technical analysts watched for signs that the cryptocurrency may finally be ready to break out.",
+            "source": "Market Watch",
+            "type": "Article",
+            "tickers": [
+              "#ARKB",
+              "#ARKW",
+              "#BETE",
+              "#BETH",
+              "#BITB",
+              "#BITC",
+              "#BITQ"
+            ],
+            "time": "Apr 14, 2026, 4:54 PM EDT",
+            "ago": "3 months ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/proshares-bitcoin-strategy-etf-falls-5-6",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/thefly_750x400.png",
+            "title": "ProShares Bitcoin Strategy ETF falls -5.6%",
+            "text": "ProShares Bitcoin Strategy ETF (BITO) is down -5.6%, or -$1.39 to $23.33.",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2024-12-23T14:55:31.000Z",
+            "ago": "1 year ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 8.65,
+        "price1m": 8.65,
+        "price3m": 10.19,
+        "price6m": 13.56,
+        "priceYTD": 12.16,
+        "price1y": 23.05,
+        "price5y": null,
+        "priceMAX": 41.94
+      },
+      "performance": {
+        "tr1m": 2.793,
+        "trYTD": -26.440584121404836,
+        "tr1y": -47.48000114739636,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": -4.382223123734075
+      }
+    },
+    "holdings": {},
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_surface_omits_holdings",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}

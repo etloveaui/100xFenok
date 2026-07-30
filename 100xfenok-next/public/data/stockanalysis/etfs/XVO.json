@@ -1,0 +1,358 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "XVO",
+  "source_as_of": "2026-07-14T00:00:00Z",
+  "fetched_at": "2026-07-19T00:53:37Z",
+  "endpoints": {
+    "holdings": "/etf/xvo/holdings/__data.json",
+    "overview": "/etf/xvo/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "rank": 1,
+        "name": "VANGUARD MID-CAP INDEX FUND ETF SHARES-SWAP-CLST-L",
+        "weight_pct": 199.02,
+        "shares": 12515,
+        "raw": {
+          "no": 1,
+          "n": "VANGUARD MID-CAP INDEX FUND ETF SHARES-SWAP-CLST-L",
+          "as": "199.02%",
+          "sh": "12,515"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "US DOLLARS",
+        "weight_pct": 66.88,
+        "shares": 340000,
+        "raw": {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "66.88%",
+          "sh": "340,000"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligations Fund",
+        "weight_pct": 29.68,
+        "shares": 150877,
+        "raw": {
+          "no": 3,
+          "n": "First American Government Obligations Fund",
+          "s": "!mutf/FGXXX",
+          "as": "29.68%",
+          "sh": "150,877"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": 0.13,
+        "shares": 658,
+        "raw": {
+          "no": 4,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "0.13%",
+          "sh": "658"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "Cash Offset",
+        "weight_pct": -195.71,
+        "shares": 994901,
+        "raw": {
+          "no": 5,
+          "n": "Cash Offset",
+          "as": "-195.71%",
+          "sh": "994,901"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 5,
+    "holdings_updated": "Jul 14, 2026",
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$508.35K",
+      "expenseRatio": "0.45%",
+      "sharesOut": "20,000",
+      "inception": "Jun 3, 2026",
+      "etf_website": "https://corgifunds.com/"
+    },
+    "performance": {
+      "tr1m": -1.389896250512436,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "XVO",
+        "lastChecked": 1784335300860,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$508.35K",
+      "nav": null,
+      "expenseRatio": "0.45%",
+      "peRatio": null,
+      "sharesOut": "20,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 5,
+      "inception": "Jun 3, 2026",
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "The Corgi U.S. Mid-Cap 2x Daily ETF (XVO) is an exchange-traded fund that mostly invests in mid cap equity. The fund  uses swap agreements and other financial instruments to pursue 2x leveraged exposure to the daily performance of the Vanguard Mid-Cap  ETF (VO), before fees and expenses. The fund does not aim to achieve 2x of the underlying ETF for any period other than a single day. XVO was launched on Jun 3, 2026 and is issued by Corgi.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Category",
+          "Trading--Leveraged Equity"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "BATS"
+        ],
+        [
+          "Ticker Symbol",
+          "XVO"
+        ],
+        [
+          "Provider",
+          "Corgi"
+        ]
+      ],
+      "etf_website": "https://corgifunds.com/",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 5,
+        "updated": "Jul 14, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "VANGUARD MID-CAP INDEX FUND ETF SHARES-SWAP-CLST-L",
+            "as": "199.02%",
+            "sh": "12,515"
+          },
+          {
+            "n": "US DOLLARS",
+            "as": "66.88%",
+            "sh": "340,000"
+          },
+          {
+            "n": "First American Government Obligations Fund",
+            "s": "!mutf/FGXXX",
+            "as": "29.68%",
+            "sh": "150,877"
+          },
+          {
+            "n": "OTHER ASSETS AND LIABILITIES",
+            "as": "0.13%",
+            "sh": "658"
+          },
+          {
+            "n": "Cash Offset",
+            "as": "-195.71%",
+            "sh": "994,901"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784378870480",
+        "data": []
+      },
+      "config": {
+        "no1d": true
+      },
+      "changes": {
+        "price1w": 25.519,
+        "price1m": 25.369,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 24.806
+      },
+      "performance": {
+        "tr1m": -1.389896250512436,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "VANGUARD MID-CAP INDEX FUND ETF SHARES-SWAP-CLST-L",
+          "as": "199.02%",
+          "sh": "12,515"
+        },
+        {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "66.88%",
+          "sh": "340,000"
+        },
+        {
+          "no": 3,
+          "n": "First American Government Obligations Fund",
+          "s": "!mutf/FGXXX",
+          "as": "29.68%",
+          "sh": "150,877"
+        },
+        {
+          "no": 4,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "0.13%",
+          "sh": "658"
+        },
+        {
+          "no": 5,
+          "n": "Cash Offset",
+          "as": "-195.71%",
+          "sh": "994,901"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "allocationChartData": {
+        "sectors": [],
+        "assets": [],
+        "countries": []
+      },
+      "infoBox": null,
+      "infoTable": {
+        "count": 5,
+        "top10": 100,
+        "assetClass": "Equity",
+        "category": "Trading--Leveraged Equity",
+        "categoryLabel": "ETF Category",
+        "aum": 508346,
+        "peRatio": null
+      },
+      "date": "Jul 14, 2026",
+      "count": 5,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Jul 14, 2026",
+        "lastChecked": 1784394430009,
+        "topic": "holdings",
+        "ticker": "XVO",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
+      }
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}

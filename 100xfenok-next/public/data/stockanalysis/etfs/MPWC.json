@@ -1,0 +1,578 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "MPWC",
+  "source_as_of": "2026-07-23T20:00:00Z",
+  "fetched_at": "2026-07-24T01:22:06Z",
+  "endpoints": {
+    "holdings": "/etf/mpwc/holdings/__data.json",
+    "overview": "/etf/mpwc/__data.json",
+    "quote": "/api/quotes/e/MPWC",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/MPWC/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/MPWC/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/MPWC/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/MPWC/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/MPWC/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/MPWC/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": null,
+    "holdings_updated": null,
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "sharesOut": "20,000",
+      "inception": "Jul 7, 2026",
+      "etf_website": "https://corgifunds.com/mpwc"
+    },
+    "performance": {
+      "tr1m": null,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "p": 26.1423,
+      "pd": 26.14,
+      "c": -0.28,
+      "cp": -1.05,
+      "cl": 26.42,
+      "cdr": -1,
+      "o": 26.14,
+      "h": 26.14,
+      "l": 26.14,
+      "v": 4.762066,
+      "ts": 1784836800000,
+      "u": "Jul 23, 2026, 4:00 PM EDT",
+      "td": "2026-07-23",
+      "h52": 29.205,
+      "l52": 22.127,
+      "ex": "BATS",
+      "ms": "closed",
+      "fms": "closed",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": "After-hours",
+      "ets": 1784851204289.97,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1784880900000,
+      "symbol": "MPWC",
+      "uid": "MPWC"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-07-22",
+          "o": 26.417,
+          "h": 26.417,
+          "l": 26.417,
+          "c": 26.417,
+          "a": 26.4166,
+          "v": 26,
+          "ch": 1.89
+        },
+        {
+          "t": "2026-07-21",
+          "o": 25.928,
+          "h": 25.928,
+          "l": 25.928,
+          "c": 25.928,
+          "a": 25.9276,
+          "v": 60,
+          "ch": 8.68
+        },
+        {
+          "t": "2026-07-20",
+          "o": 23.858,
+          "h": 23.858,
+          "l": 23.858,
+          "c": 23.858,
+          "a": 23.8575,
+          "v": 142,
+          "ch": 1.66
+        },
+        {
+          "t": "2026-07-17",
+          "o": 23.21,
+          "h": 23.468,
+          "l": 23.21,
+          "c": 23.468,
+          "a": 23.4683,
+          "v": 371,
+          "ch": 2.14
+        },
+        {
+          "t": "2026-07-16",
+          "o": 22.976,
+          "h": 22.976,
+          "l": 22.976,
+          "c": 22.976,
+          "a": 22.9755,
+          "v": 61,
+          "ch": -7.7
+        },
+        {
+          "t": "2026-07-15",
+          "o": 24.893,
+          "h": 24.893,
+          "l": 24.893,
+          "c": 24.893,
+          "a": 24.8925,
+          "v": 462,
+          "ch": -3.54
+        },
+        {
+          "t": "2026-07-14",
+          "o": 25.806,
+          "h": 25.806,
+          "l": 25.806,
+          "c": 25.806,
+          "a": 25.8055,
+          "v": 19,
+          "ch": 12.93
+        },
+        {
+          "t": "2026-07-13",
+          "o": 29.205,
+          "h": 29.205,
+          "l": 22.45,
+          "c": 22.85,
+          "a": 22.85,
+          "v": 775,
+          "ch": -8.81
+        },
+        {
+          "t": "2026-07-10",
+          "o": 24.49,
+          "h": 25.058,
+          "l": 24.49,
+          "c": 25.058,
+          "a": 25.0579,
+          "v": 550,
+          "ch": -3.06
+        },
+        {
+          "t": "2026-07-09",
+          "o": 26.02,
+          "h": 26.02,
+          "l": 25.85,
+          "c": 25.85,
+          "a": 25.8496,
+          "v": 224,
+          "ch": 8.93
+        },
+        {
+          "t": "2026-07-08",
+          "o": 22.57,
+          "h": 23.731,
+          "l": 22.57,
+          "c": 23.731,
+          "a": 23.7306,
+          "v": 571,
+          "ch": 7.25
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-20",
+          "o": 23.858,
+          "h": 26.417,
+          "l": 23.858,
+          "c": 26.417,
+          "a": 26.4166,
+          "v": 228,
+          "ch": 12.56
+        },
+        {
+          "t": "2026-07-13",
+          "o": 29.205,
+          "h": 29.205,
+          "l": 22.45,
+          "c": 23.468,
+          "a": 23.4683,
+          "v": 1688,
+          "ch": -6.34
+        }
+      ],
+      "monthly_1y": [],
+      "weekly_3y": [
+        {
+          "t": "2026-07-20",
+          "o": 23.858,
+          "h": 26.417,
+          "l": 23.858,
+          "c": 26.417,
+          "a": 26.4166,
+          "v": 228,
+          "ch": 12.56
+        },
+        {
+          "t": "2026-07-13",
+          "o": 29.205,
+          "h": 29.205,
+          "l": 22.45,
+          "c": 23.468,
+          "a": 23.4683,
+          "v": 1688,
+          "ch": -6.34
+        }
+      ],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "MPWC",
+        "lastChecked": 1784852172472,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": null,
+      "nav": null,
+      "expenseRatio": null,
+      "peRatio": null,
+      "sharesOut": "20,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": null,
+      "inception": "Jul 7, 2026",
+      "chart": {
+        "expiration": null,
+        "data": []
+      },
+      "description": "The Corgi MPWR 2x Daily ETF (MPWC) is an exchange-traded fund that mostly invests in information technology equity. The fund provides 2x leveraged exposure, less fees and expenses, to the daily price movement for shares of Monolithic Power Systems, Inc. (NASDAQ: MPWR), through derivatives such as swaps. MPWC was launched on Jul 7, 2026 and is issued by Corgi.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Stock Exchange",
+          "BATS"
+        ],
+        [
+          "Ticker Symbol",
+          "MPWC"
+        ],
+        [
+          "Provider",
+          "Corgi"
+        ]
+      ],
+      "etf_website": "https://corgifunds.com/mpwc",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": null,
+        "updated": null,
+        "top10": null,
+        "holdings": null
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784882371122",
+        "data": []
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 22.976,
+        "price1m": null,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 22.127
+      },
+      "performance": {
+        "tr1m": null,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": {
+      "p": 26.1423,
+      "pd": 26.14,
+      "c": -0.28,
+      "cp": -1.05,
+      "cl": 26.42,
+      "cdr": -1,
+      "o": 26.14,
+      "h": 26.14,
+      "l": 26.14,
+      "v": 4.762066,
+      "ts": 1784836800000,
+      "u": "Jul 23, 2026, 4:00 PM EDT",
+      "td": "2026-07-23",
+      "h52": 29.205,
+      "l52": 22.127,
+      "ex": "BATS",
+      "ms": "closed",
+      "fms": "closed",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": "After-hours",
+      "ets": 1784851204289.97,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1784880900000,
+      "symbol": "MPWC",
+      "uid": "MPWC"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-07-22",
+          "o": 26.417,
+          "h": 26.417,
+          "l": 26.417,
+          "c": 26.417,
+          "a": 26.4166,
+          "v": 26,
+          "ch": 1.89
+        },
+        {
+          "t": "2026-07-21",
+          "o": 25.928,
+          "h": 25.928,
+          "l": 25.928,
+          "c": 25.928,
+          "a": 25.9276,
+          "v": 60,
+          "ch": 8.68
+        },
+        {
+          "t": "2026-07-20",
+          "o": 23.858,
+          "h": 23.858,
+          "l": 23.858,
+          "c": 23.858,
+          "a": 23.8575,
+          "v": 142,
+          "ch": 1.66
+        },
+        {
+          "t": "2026-07-17",
+          "o": 23.21,
+          "h": 23.468,
+          "l": 23.21,
+          "c": 23.468,
+          "a": 23.4683,
+          "v": 371,
+          "ch": 2.14
+        },
+        {
+          "t": "2026-07-16",
+          "o": 22.976,
+          "h": 22.976,
+          "l": 22.976,
+          "c": 22.976,
+          "a": 22.9755,
+          "v": 61,
+          "ch": -7.7
+        },
+        {
+          "t": "2026-07-15",
+          "o": 24.893,
+          "h": 24.893,
+          "l": 24.893,
+          "c": 24.893,
+          "a": 24.8925,
+          "v": 462,
+          "ch": -3.54
+        },
+        {
+          "t": "2026-07-14",
+          "o": 25.806,
+          "h": 25.806,
+          "l": 25.806,
+          "c": 25.806,
+          "a": 25.8055,
+          "v": 19,
+          "ch": 12.93
+        },
+        {
+          "t": "2026-07-13",
+          "o": 29.205,
+          "h": 29.205,
+          "l": 22.45,
+          "c": 22.85,
+          "a": 22.85,
+          "v": 775,
+          "ch": -8.81
+        },
+        {
+          "t": "2026-07-10",
+          "o": 24.49,
+          "h": 25.058,
+          "l": 24.49,
+          "c": 25.058,
+          "a": 25.0579,
+          "v": 550,
+          "ch": -3.06
+        },
+        {
+          "t": "2026-07-09",
+          "o": 26.02,
+          "h": 26.02,
+          "l": 25.85,
+          "c": 25.85,
+          "a": 25.8496,
+          "v": 224,
+          "ch": 8.93
+        },
+        {
+          "t": "2026-07-08",
+          "o": 22.57,
+          "h": 23.731,
+          "l": 22.57,
+          "c": 23.731,
+          "a": 23.7306,
+          "v": 571,
+          "ch": 7.25
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-20",
+          "o": 23.858,
+          "h": 26.417,
+          "l": 23.858,
+          "c": 26.417,
+          "a": 26.4166,
+          "v": 228,
+          "ch": 12.56
+        },
+        {
+          "t": "2026-07-13",
+          "o": 29.205,
+          "h": 29.205,
+          "l": 22.45,
+          "c": 23.468,
+          "a": 23.4683,
+          "v": 1688,
+          "ch": -6.34
+        }
+      ],
+      "monthly_1y": [],
+      "weekly_3y": [
+        {
+          "t": "2026-07-20",
+          "o": 23.858,
+          "h": 26.417,
+          "l": 23.858,
+          "c": 26.417,
+          "a": 26.4166,
+          "v": 228,
+          "ch": 12.56
+        },
+        {
+          "t": "2026-07-13",
+          "o": 29.205,
+          "h": 29.205,
+          "l": 22.45,
+          "c": 23.468,
+          "a": 23.4683,
+          "v": 1688,
+          "ch": -6.34
+        }
+      ],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable"
+  ]
+}

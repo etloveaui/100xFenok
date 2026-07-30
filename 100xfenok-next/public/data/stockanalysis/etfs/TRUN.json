@@ -1,0 +1,521 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "TRUN",
+  "source_as_of": "2026-07-21T20:00:00Z",
+  "fetched_at": "2026-07-22T01:17:53Z",
+  "endpoints": {
+    "holdings": "/etf/trun/holdings/__data.json",
+    "overview": "/etf/trun/__data.json",
+    "quote": "/api/quotes/e/TRUN",
+    "history_periods": {
+      "daily_1y": "/api/symbol/e/TRUN/history?range=1Y&period=Daily",
+      "weekly_1y": "/api/symbol/e/TRUN/history?range=1Y&period=Weekly",
+      "monthly_1y": "/api/symbol/e/TRUN/history?range=1Y&period=Monthly",
+      "weekly_3y": "/api/symbol/e/TRUN/history?range=3Y&period=Weekly",
+      "monthly_3y": "/api/symbol/e/TRUN/history?range=3Y&period=Monthly",
+      "monthly_5y": "/api/symbol/e/TRUN/history?range=5Y&period=Monthly"
+    }
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": null,
+    "holdings_updated": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$267.62K",
+      "expenseRatio": "0.16%",
+      "sharesOut": "10,000",
+      "inception": "Jul 7, 2026",
+      "provider_page": "vaneck",
+      "etf_website": "https://www.vaneck.com/us/en/investments/energy-trusector-etf-trun/overview/"
+    },
+    "performance": {
+      "tr1m": null,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": {
+      "p": 27.5152,
+      "pd": 27.52,
+      "c": 0.29,
+      "cp": 1.05,
+      "cl": 27.23,
+      "cdr": 1,
+      "o": 27.52,
+      "h": 27.52,
+      "l": 27.52,
+      "v": 10,
+      "ts": 1784664000000,
+      "u": "Jul 21, 2026, 4:00 PM EDT",
+      "td": "2026-07-21",
+      "h52": 27.5152,
+      "l52": 25.621,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "closed",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": "After-hours",
+      "ets": 1784664900013.542,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1784708100000,
+      "symbol": "TRUN",
+      "uid": "TRUN"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-07-20",
+          "o": 27.16,
+          "h": 27.231,
+          "l": 27.16,
+          "c": 27.231,
+          "a": 27.2305,
+          "v": 453,
+          "ch": 0.51
+        },
+        {
+          "t": "2026-07-17",
+          "o": 27.093,
+          "h": 27.093,
+          "l": 27.093,
+          "c": 27.093,
+          "a": 27.0927,
+          "v": 10,
+          "ch": 1.29
+        },
+        {
+          "t": "2026-07-16",
+          "o": 26.747,
+          "h": 26.747,
+          "l": 26.747,
+          "c": 26.747,
+          "a": 26.7465,
+          "v": 23,
+          "ch": 1.01
+        },
+        {
+          "t": "2026-07-15",
+          "o": 26.47,
+          "h": 26.48,
+          "l": 26.314,
+          "c": 26.48,
+          "a": 26.4803,
+          "v": 486,
+          "ch": -0.79
+        },
+        {
+          "t": "2026-07-14",
+          "o": 26.692,
+          "h": 26.692,
+          "l": 26.692,
+          "c": 26.692,
+          "a": 26.6923,
+          "v": 7,
+          "ch": 0.4
+        },
+        {
+          "t": "2026-07-13",
+          "o": 26.587,
+          "h": 26.587,
+          "l": 26.587,
+          "c": 26.587,
+          "a": 26.5869,
+          "v": 9,
+          "ch": 3.13
+        },
+        {
+          "t": "2026-07-10",
+          "o": 25.71,
+          "h": 25.781,
+          "l": 25.71,
+          "c": 25.781,
+          "a": 25.7809,
+          "v": 329,
+          "ch": 0.63
+        },
+        {
+          "t": "2026-07-09",
+          "o": 25.621,
+          "h": 25.621,
+          "l": 25.621,
+          "c": 25.621,
+          "a": 25.6206,
+          "v": 121,
+          "ch": -1.54
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-20",
+          "o": 27.16,
+          "h": 27.231,
+          "l": 27.16,
+          "c": 27.231,
+          "a": 27.2305,
+          "v": 453,
+          "ch": 0.51
+        },
+        {
+          "t": "2026-07-13",
+          "o": 26.587,
+          "h": 27.093,
+          "l": 26.314,
+          "c": 27.093,
+          "a": 27.0927,
+          "v": 535,
+          "ch": 5.09
+        }
+      ],
+      "monthly_1y": [],
+      "weekly_3y": [
+        {
+          "t": "2026-07-20",
+          "o": 27.16,
+          "h": 27.231,
+          "l": 27.16,
+          "c": 27.231,
+          "a": 27.2305,
+          "v": 453,
+          "ch": 0.51
+        },
+        {
+          "t": "2026-07-13",
+          "o": 26.587,
+          "h": 27.093,
+          "l": 26.314,
+          "c": 27.093,
+          "a": 27.0927,
+          "v": 535,
+          "ch": 5.09
+        }
+      ],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "TRUN",
+        "lastChecked": 1784680180573,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$267.62K",
+      "nav": null,
+      "expenseRatio": "0.16%",
+      "peRatio": null,
+      "sharesOut": "10,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": null,
+      "inception": "Jul 7, 2026",
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "The VanEck Energy TruSector ETF (TRUN) is an exchange-traded fund that mostly invests in energy equity. The objective of VanEck Energy TruSector ETF (the Fund) is long-term capital appreciation. TRUN was launched on Jul 7, 2026 and is issued by VanEck.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Stock Exchange",
+          "NASDAQ"
+        ],
+        [
+          "Ticker Symbol",
+          "TRUN"
+        ],
+        [
+          "Provider",
+          "VanEck"
+        ]
+      ],
+      "etf_website": "https://www.vaneck.com/us/en/investments/energy-trusector-etf-trun/overview/",
+      "provider_page": "vaneck",
+      "holdingsTable": {
+        "count": null,
+        "updated": null,
+        "top10": null,
+        "holdings": null
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784700186217",
+        "data": []
+      },
+      "config": {
+        "no1d": true
+      },
+      "changes": {
+        "price1w": 25.781,
+        "price1m": null,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 26.021
+      },
+      "performance": {
+        "tr1m": null,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": {
+      "p": 27.5152,
+      "pd": 27.52,
+      "c": 0.29,
+      "cp": 1.05,
+      "cl": 27.23,
+      "cdr": 1,
+      "o": 27.52,
+      "h": 27.52,
+      "l": 27.52,
+      "v": 10,
+      "ts": 1784664000000,
+      "u": "Jul 21, 2026, 4:00 PM EDT",
+      "td": "2026-07-21",
+      "h52": 27.5152,
+      "l52": 25.621,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "closed",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": "After-hours",
+      "ets": 1784664900013.542,
+      "etd": null,
+      "epv": null,
+      "days": 0,
+      "exp": 1784708100000,
+      "symbol": "TRUN",
+      "uid": "TRUN"
+    },
+    "history": [],
+    "history_periods": {
+      "daily_1y": [
+        {
+          "t": "2026-07-20",
+          "o": 27.16,
+          "h": 27.231,
+          "l": 27.16,
+          "c": 27.231,
+          "a": 27.2305,
+          "v": 453,
+          "ch": 0.51
+        },
+        {
+          "t": "2026-07-17",
+          "o": 27.093,
+          "h": 27.093,
+          "l": 27.093,
+          "c": 27.093,
+          "a": 27.0927,
+          "v": 10,
+          "ch": 1.29
+        },
+        {
+          "t": "2026-07-16",
+          "o": 26.747,
+          "h": 26.747,
+          "l": 26.747,
+          "c": 26.747,
+          "a": 26.7465,
+          "v": 23,
+          "ch": 1.01
+        },
+        {
+          "t": "2026-07-15",
+          "o": 26.47,
+          "h": 26.48,
+          "l": 26.314,
+          "c": 26.48,
+          "a": 26.4803,
+          "v": 486,
+          "ch": -0.79
+        },
+        {
+          "t": "2026-07-14",
+          "o": 26.692,
+          "h": 26.692,
+          "l": 26.692,
+          "c": 26.692,
+          "a": 26.6923,
+          "v": 7,
+          "ch": 0.4
+        },
+        {
+          "t": "2026-07-13",
+          "o": 26.587,
+          "h": 26.587,
+          "l": 26.587,
+          "c": 26.587,
+          "a": 26.5869,
+          "v": 9,
+          "ch": 3.13
+        },
+        {
+          "t": "2026-07-10",
+          "o": 25.71,
+          "h": 25.781,
+          "l": 25.71,
+          "c": 25.781,
+          "a": 25.7809,
+          "v": 329,
+          "ch": 0.63
+        },
+        {
+          "t": "2026-07-09",
+          "o": 25.621,
+          "h": 25.621,
+          "l": 25.621,
+          "c": 25.621,
+          "a": 25.6206,
+          "v": 121,
+          "ch": -1.54
+        }
+      ],
+      "weekly_1y": [
+        {
+          "t": "2026-07-20",
+          "o": 27.16,
+          "h": 27.231,
+          "l": 27.16,
+          "c": 27.231,
+          "a": 27.2305,
+          "v": 453,
+          "ch": 0.51
+        },
+        {
+          "t": "2026-07-13",
+          "o": 26.587,
+          "h": 27.093,
+          "l": 26.314,
+          "c": 27.093,
+          "a": 27.0927,
+          "v": 535,
+          "ch": 5.09
+        }
+      ],
+      "monthly_1y": [],
+      "weekly_3y": [
+        {
+          "t": "2026-07-20",
+          "o": 27.16,
+          "h": 27.231,
+          "l": 27.16,
+          "c": 27.231,
+          "a": 27.2305,
+          "v": 453,
+          "ch": 0.51
+        },
+        {
+          "t": "2026-07-13",
+          "o": 26.587,
+          "h": 27.093,
+          "l": 26.314,
+          "c": 27.093,
+          "a": 27.0927,
+          "v": 535,
+          "ch": 5.09
+        }
+      ],
+      "monthly_3y": [],
+      "monthly_5y": []
+    }
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable"
+  ]
+}

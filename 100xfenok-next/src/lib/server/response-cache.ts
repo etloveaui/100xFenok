@@ -50,12 +50,8 @@ export async function withResponseCache(
   options: {
     isCacheable?: (response: Response) => boolean;
     preserveCacheControl?: boolean;
-    bypassCache?: boolean;
   } = {},
 ): Promise<Response> {
-  if (options.bypassCache === true) {
-    return loadResponse();
-  }
   const cache = getDefaultCache();
   if (!cache) {
     return loadResponse();

@@ -30,8 +30,6 @@ ENROLLMENT_SCHEMA = "data-supply-etf-detail-enrollment/v1"
 INDEX_SCHEMA = "data-supply-etf-detail-public-index/v1"
 EXPECTED_ENROLLMENT_COUNT = 718
 EXPECTED_MEMBERSHIP_SHA256 = "6b30e5d314daae54f635ba46d4936c4ab228416599dcc35eba8638115fdeff32"
-STOCKANALYSIS_ETF_PUBLIC_MODE = "shard-only"
-STOCKANALYSIS_ETF_SHARD_COUNT = 128
 STATE_REL_ROOT = Path("data/admin/data-supply-state/v1")
 CANONICAL_REL_ROOT = Path("data/computed/data-supply/etf-detail")
 PUBLIC_DATA_REL_ROOT = Path("100xfenok-next/public/data")
@@ -703,28 +701,13 @@ class PublicDataSupplyMaterializer:
             and not PublicDataSupplyMaterializer._is_yahoo(payload)
         )
 
-    def _stockanalysis_files(
-        self,
-        root: Path,
-        label: str,
-        *,
-        allow_directories: set[str] | None = None,
-    ) -> dict[str, tuple[dict[str, Any], bytes, Path]]:
+    def _stockanalysis_files(self, root: Path, label: str) -> dict[str, tuple[dict[str, Any], bytes, Path]]:
         if root.is_symlink() or not root.is_dir():
             raise MaterializationError(f"{label} directory is unsafe or missing")
-        allowed_directories = allow_directories or set()
         result = {}
         for path in sorted(root.iterdir()):
-            if path.is_symlink():
-                raise MaterializationError(f"{label}/{path.name} contains a symlink")
-            if path.is_dir():
-                if path.name in allowed_directories:
-                    continue
-                raise MaterializationError(f"{label}/{path.name} must not be a directory")
-            if not path.is_file():
-                raise MaterializationError(f"{label}/{path.name} must be a regular file")
             if path.suffix != ".json":
-                raise MaterializationError(f"{label}/{path.name} must be a JSON file")
+                continue
             self._regular_file(path, root=root, label=f"{label}/{path.name}")
             ticker = _ticker(path.stem, f"{label} filename")
             body = path.read_bytes()
@@ -733,67 +716,6 @@ class PublicDataSupplyMaterializer:
                 raise MaterializationError(f"{label}/{path.name} ticker/asset identity mismatch")
             result[ticker] = (payload, body, path)
         return result
-
-    def _validate_stockanalysis_shard_only_public(
-        self,
-        public_dir: Path,
-        canonical_files: Mapping[str, tuple[dict[str, Any], bytes, Path]],
-    ) -> dict[str, Any]:
-        """Require the public ETF root to expose only the immutable shard projection.
-
-        Canonical detail files remain the source of truth; public top-level
-        ``etfs/*.json`` files are retired and therefore any such file is a
-        fail-closed mixed-state violation, not a cleanup candidate.
-        """
-        shard_root = public_dir / "shards"
-        if shard_root.is_symlink() or not shard_root.is_dir():
-            raise MaterializationError("public StockAnalysis ETF shard root is missing or unsafe")
-        manifest_path = shard_root / "index.json"
-        self._regular_file(manifest_path, root=self.public_data_root, label="public StockAnalysis ETF shard manifest")
-        manifest = _strict_json_bytes(manifest_path.read_bytes(), "public StockAnalysis ETF shard manifest")
-        if (
-            manifest.get("compatibility_mode") != STOCKANALYSIS_ETF_PUBLIC_MODE
-            or manifest.get("shard_count") != STOCKANALYSIS_ETF_SHARD_COUNT
-            or not isinstance(manifest.get("shards"), list)
-            or len(manifest["shards"]) != STOCKANALYSIS_ETF_SHARD_COUNT
-            or manifest.get("payload_count") != len(canonical_files)
-            or manifest.get("provenance", {}).get("canonical_root") != "data/stockanalysis/etfs"
-        ):
-            raise MaterializationError("public StockAnalysis ETF shard-only manifest contract is invalid")
-        expected_paths = {"index.json"}
-        for entry in manifest["shards"]:
-            if not isinstance(entry, dict) or not isinstance(entry.get("path"), str):
-                raise MaterializationError("public StockAnalysis ETF shard manifest entry is invalid")
-            relative = PurePosixPath(entry["path"])
-            if relative.is_absolute() or ".." in relative.parts or not relative.parts or not relative.name.endswith(".json"):
-                raise MaterializationError("public StockAnalysis ETF shard manifest path is unsafe")
-            relative_text = relative.as_posix()
-            if relative_text in expected_paths:
-                raise MaterializationError("public StockAnalysis ETF shard manifest contains duplicate paths")
-            expected_paths.add(relative_text)
-            shard_path = shard_root / Path(*relative.parts)
-            self._regular_file(shard_path, root=shard_root, label="public StockAnalysis ETF shard")
-            expected_sha = entry.get("sha256")
-            expected_length = entry.get("byte_length")
-            body = shard_path.read_bytes()
-            if not isinstance(expected_sha, str) or hashlib.sha256(body).hexdigest() != expected_sha:
-                raise MaterializationError(f"public StockAnalysis ETF shard digest mismatch: {relative_text}")
-            if not isinstance(expected_length, int) or len(body) != expected_length:
-                raise MaterializationError(f"public StockAnalysis ETF shard byte-length mismatch: {relative_text}")
-        for candidate in shard_root.rglob("*"):
-            if candidate.is_symlink():
-                raise MaterializationError("public StockAnalysis ETF shard tree contains a symlink")
-            relative_text = candidate.relative_to(shard_root).as_posix()
-            if candidate.is_file() and relative_text not in expected_paths:
-                raise MaterializationError(f"public StockAnalysis ETF shard tree contains an unlisted file: {relative_text}")
-            if candidate.is_dir() and not any(path.startswith(f"{relative_text}/") for path in expected_paths):
-                raise MaterializationError(f"public StockAnalysis ETF shard tree contains an unlisted directory: {relative_text}")
-        return {
-            "mode": STOCKANALYSIS_ETF_PUBLIC_MODE,
-            "manifest": manifest,
-            "direct_files": 0,
-            "canonical_files": len(canonical_files),
-        }
 
     def _write_reconcile_journal(self, projection: Projection, stale: Mapping[str, tuple[dict[str, Any], bytes, Path]]) -> dict[str, Any]:
         plan = {
@@ -841,24 +763,63 @@ class PublicDataSupplyMaterializer:
         root_dir = self.repo_root / "data/stockanalysis/etfs"
         public_dir = self.public_data_root / "stockanalysis/etfs"
         root_files = self._stockanalysis_files(root_dir, "root stockanalysis ETF")
-        public_files = self._stockanalysis_files(public_dir, "public stockanalysis ETF", allow_directories={"shards"})
+        public_files = self._stockanalysis_files(public_dir, "public stockanalysis ETF")
         for ticker, (payload, _body, _path) in root_files.items():
             if not self._is_true_primary(payload):
                 raise MaterializationError(f"root StockAnalysis ETF is not true primary: {ticker}")
-        shard_state = self._validate_stockanalysis_shard_only_public(public_dir, root_files)
-        if public_files:
-            raise MaterializationError(
-                f"public StockAnalysis ETF shard-only root contains direct files: {sorted(public_files)[:5]}"
-            )
+        root_only = sorted(set(root_files) - set(public_files))
+        if root_only:
+            raise MaterializationError(f"root-only StockAnalysis ETF files exist: {root_only[:5]}")
+        for ticker in sorted(set(root_files) & set(public_files)):
+            public_payload, public_body, _ = public_files[ticker]
+            if root_files[ticker][1] != public_body or not self._is_true_primary(public_payload):
+                raise MaterializationError(f"shared true-primary parity mismatch: {ticker}")
+
+        public_only = sorted(set(public_files) - set(root_files))
+        enrollment_set = set(projection.enrollment["tickers"])
+        invalid_public_only = []
+        for ticker in public_only:
+            payload, _body, _path = public_files[ticker]
+            if ticker not in enrollment_set or not self._is_yahoo(payload):
+                invalid_public_only.append(ticker)
+        if invalid_public_only:
+            raise MaterializationError(f"public-only ETF files are outside validated Yahoo enrollment: {invalid_public_only[:5]}")
+
+        journal = self._load_reconcile_journal(projection)
+        stale = {ticker: public_files[ticker] for ticker in public_only}
+        if journal is None and stale:
+            if set(stale) != enrollment_set:
+                raise MaterializationError(
+                    f"initial public cleanup must prove full enrollment: expected={len(enrollment_set)} actual={len(stale)}"
+                )
+            journal = self._write_reconcile_journal(projection, stale)
+        if journal is not None:
+            planned = set(journal["tickers"])
+            if not set(stale).issubset(planned):
+                raise MaterializationError("remaining public cleanup set is outside the committed plan")
+            for ticker, (_payload, body, _path) in stale.items():
+                if journal["legacy_sha256"].get(ticker) != hashlib.sha256(body).hexdigest():
+                    raise MaterializationError(f"remaining public legacy digest mismatch: {ticker}")
 
         deleted = 0
-        yahoo_count = 0
-        true_count = 0
+        for ticker in sorted(stale):
+            stale[ticker][2].unlink()
+            deleted += 1
+            _fsync_dir(public_dir)
+            self.failpoint(f"public_unlink_{deleted}")
+        if journal is not None and not (set(self._stockanalysis_files(public_dir, "public stockanalysis ETF")) - set(root_files)):
+            self.reconcile_journal.unlink(missing_ok=True)
+            if self.reconcile_journal.parent.exists():
+                _fsync_dir(self.reconcile_journal.parent)
+
+        post = self._stockanalysis_files(public_dir, "public stockanalysis ETF")
+        yahoo_count = sum(1 for payload, _body, _path in post.values() if self._is_yahoo(payload))
+        true_count = sum(1 for payload, _body, _path in post.values() if self._is_true_primary(payload))
+        if yahoo_count or set(post) != set(root_files):
+            raise MaterializationError("public StockAnalysis ETF postcondition failed")
         postcondition = {
             "public_stockanalysis_true_primary": true_count,
             "public_stockanalysis_yahoo": yahoo_count,
-            "public_stockanalysis_direct": len(public_files),
-            "public_stockanalysis_shards": len(shard_state["manifest"]["shards"]),
             "public_projection_payloads": len(public_projection.payloads),
             "public_status_rows": public_projection.counts["enrolled"],
         }

@@ -1,0 +1,354 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "KEYX",
+  "source_as_of": "2026-07-08T00:00:00Z",
+  "fetched_at": "2026-07-18T21:39:10Z",
+  "endpoints": {
+    "holdings": "/etf/keyx/holdings/__data.json",
+    "overview": "/etf/keyx/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "rank": 1,
+        "name": "KEYSIGHT TECHNOLOGIES INC.-SWAP-CANT-L",
+        "weight_pct": 195.5,
+        "shares": 1218,
+        "raw": {
+          "no": 1,
+          "n": "KEYSIGHT TECHNOLOGIES INC.-SWAP-CANT-L",
+          "as": "195.50%",
+          "sh": "1,218"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "US DOLLARS",
+        "weight_pct": 114.28,
+        "shares": 225868,
+        "raw": {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "114.28%",
+          "sh": "225,868"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligations Fund",
+        "weight_pct": 10.8,
+        "shares": 21338,
+        "raw": {
+          "no": 3,
+          "n": "First American Government Obligations Fund",
+          "s": "!mutf/FGXXX",
+          "as": "10.80%",
+          "sh": "21,338"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": -3.91,
+        "shares": 7719,
+        "raw": {
+          "no": 4,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-3.91%",
+          "sh": "7,719"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "Cash Offset",
+        "weight_pct": -216.68,
+        "shares": 428243,
+        "raw": {
+          "no": 5,
+          "n": "Cash Offset",
+          "as": "-216.68%",
+          "sh": "428,243"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 5,
+    "holdings_updated": "Jul 8, 2026",
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$207.78K",
+      "expenseRatio": "0.45%",
+      "sharesOut": "10,000",
+      "inception": "Jun 24, 2026",
+      "etf_website": "https://www.corgifunds.com/keyx"
+    },
+    "performance": {
+      "tr1m": null,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "KEYX",
+        "lastChecked": 1784333772253,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$207.78K",
+      "nav": null,
+      "expenseRatio": "0.45%",
+      "peRatio": null,
+      "sharesOut": "10,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 5,
+      "inception": "Jun 24, 2026",
+      "chart": {
+        "expiration": null,
+        "data": []
+      },
+      "description": "The Corgi KEYS 2x Daily ETF (KEYX) is an exchange-traded fund that mostly invests in information technology equity. The fund provides 2x leveraged exposure, less fees and expenses, to the daily price movement for shares of Keysight Technologies, Inc. (NYSE: KEYS), through derivatives such as swaps. KEYX was launched on Jun 24, 2026 and is issued by Corgi.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Category",
+          "Trading--Leveraged Equity"
+        ],
+        [
+          "Stock Exchange",
+          "BATS"
+        ],
+        [
+          "Ticker Symbol",
+          "KEYX"
+        ],
+        [
+          "Provider",
+          "Corgi"
+        ]
+      ],
+      "etf_website": "https://www.corgifunds.com/keyx",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 5,
+        "updated": "Jul 8, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "KEYSIGHT TECHNOLOGIES INC.-SWAP-CANT-L",
+            "as": "195.50%",
+            "sh": "1,218"
+          },
+          {
+            "n": "US DOLLARS",
+            "as": "114.28%",
+            "sh": "225,868"
+          },
+          {
+            "n": "First American Government Obligations Fund",
+            "s": "!mutf/FGXXX",
+            "as": "10.80%",
+            "sh": "21,338"
+          },
+          {
+            "n": "OTHER ASSETS AND LIABILITIES",
+            "as": "-3.91%",
+            "sh": "7,719"
+          },
+          {
+            "n": "Cash Offset",
+            "as": "-216.68%",
+            "sh": "428,243"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784354697083",
+        "data": []
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 20.405,
+        "price1m": null,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 24.858
+      },
+      "performance": {
+        "tr1m": null,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "KEYSIGHT TECHNOLOGIES INC.-SWAP-CANT-L",
+          "as": "195.50%",
+          "sh": "1,218"
+        },
+        {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "114.28%",
+          "sh": "225,868"
+        },
+        {
+          "no": 3,
+          "n": "First American Government Obligations Fund",
+          "s": "!mutf/FGXXX",
+          "as": "10.80%",
+          "sh": "21,338"
+        },
+        {
+          "no": 4,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-3.91%",
+          "sh": "7,719"
+        },
+        {
+          "no": 5,
+          "n": "Cash Offset",
+          "as": "-216.68%",
+          "sh": "428,243"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "allocationChartData": {
+        "sectors": [],
+        "assets": [],
+        "countries": []
+      },
+      "infoBox": null,
+      "infoTable": {
+        "count": 5,
+        "top10": 100,
+        "assetClass": "Equity",
+        "category": "Trading--Leveraged Equity",
+        "categoryLabel": "ETF Category",
+        "aum": 207778,
+        "peRatio": null
+      },
+      "date": "Jul 8, 2026",
+      "count": 5,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Jul 8, 2026",
+        "lastChecked": 1784379749467,
+        "topic": "holdings",
+        "ticker": "KEYX",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
+      }
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}

@@ -16,7 +16,6 @@ export interface EtfDataSupply {
 export type EtfApiResult<T> =
   | { kind: "ok"; data: T; dataSupply: EtfDataSupply | null }
   | { kind: "unavailable"; data: null; dataSupply: EtfDataSupply }
-  | { kind: "shard_infrastructure_unavailable"; data: null; dataSupply: null }
   | { kind: "missing"; data: null; dataSupply: null }
   | { kind: "failed"; data: null; dataSupply: null };
 
@@ -107,10 +106,7 @@ export function getEtfDataSupplyPresentation(dataSupply: EtfDataSupply | null): 
   };
 }
 
-export async function parseEtfApiResponse<T>(
-  response: Response,
-  expectedTicker: string,
-): Promise<EtfApiResult<T>> {
+export async function parseEtfApiResponse<T>(response: Response): Promise<EtfApiResult<T>> {
   let payload: unknown = null;
   try {
     payload = await response.json();
@@ -119,9 +115,6 @@ export async function parseEtfApiResponse<T>(
   }
   const record = asRecord(payload);
   const dataSupply = parseEtfDataSupply(record?.data_supply);
-  if (response.status === 503 && record?.error === "STOCKANALYSIS_ETF_SHARD_UNAVAILABLE") {
-    return { kind: "shard_infrastructure_unavailable", data: null, dataSupply: null };
-  }
   if (response.status === 503 && record?.error === "DATA_SUPPLY_UNAVAILABLE" && dataSupply?.resolution_state === "unavailable") {
     return { kind: "unavailable", data: null, dataSupply };
   }
@@ -130,14 +123,7 @@ export async function parseEtfApiResponse<T>(
       ? { kind: "missing", data: null, dataSupply: null }
       : { kind: "failed", data: null, dataSupply: null };
   }
-  if (
-    !record
-    || typeof record.error === "string"
-    || record.asset_type !== "etf"
-    || typeof record.ticker !== "string"
-    || !record.ticker.trim()
-    || record.ticker !== expectedTicker
-  ) return { kind: "failed", data: null, dataSupply: null };
+  if (!record) return { kind: "failed", data: null, dataSupply: null };
   return { kind: "ok", data: record as T, dataSupply };
 }
 

@@ -1,0 +1,294 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "DVXK",
+  "source_as_of": "2026-07-15T00:00:00Z",
+  "fetched_at": "2026-07-18T18:42:07Z",
+  "endpoints": {
+    "holdings": "/etf/dvxk/holdings/__data.json",
+    "overview": "/etf/dvxk/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "name": "Us Dollars",
+        "weight_pct": 53.85,
+        "shares": 4059698,
+        "raw": {
+          "n": "Us Dollars",
+          "as": "53.85%",
+          "sh": "4,059,698"
+        }
+      },
+      {
+        "symbol": "#XLK",
+        "name": "State Street Technology Select Sector SPDR ETF",
+        "weight_pct": 45.63,
+        "shares": 18942,
+        "raw": {
+          "n": "State Street Technology Select Sector SPDR ETF",
+          "s": "#XLK",
+          "as": "45.63%",
+          "sh": "18,942"
+        }
+      },
+      {
+        "name": "Trs Technology Select Sect Spdr /Long/",
+        "weight_pct": 32.12,
+        "shares": 13337,
+        "raw": {
+          "n": "Trs Technology Select Sect Spdr /Long/",
+          "as": "32.12%",
+          "sh": "13,337"
+        }
+      },
+      {
+        "name": "Trs Technology Select Sect Spdr /Short/",
+        "weight_pct": -31.6,
+        "shares": 2382322,
+        "raw": {
+          "n": "Trs Technology Select Sect Spdr /Short/",
+          "as": "-31.60%",
+          "sh": "2,382,322"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 4,
+    "holdings_updated": "Jul 15, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$7.52M",
+      "expenseRatio": "0.89%",
+      "sharesOut": "205,000",
+      "dividendYield": "2.63%",
+      "inception": "Jul 22, 2025",
+      "etf_website": "https://www.websinv.com/product_page/dvxk/"
+    },
+    "performance": {
+      "tr1m": -4.345336522767518,
+      "trYTD": 26.336,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "DVXK",
+        "lastChecked": 1784335383067,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$7.52M",
+      "nav": null,
+      "expenseRatio": "0.89%",
+      "peRatio": null,
+      "sharesOut": "205,000",
+      "dps": "$0.94",
+      "dividendYield": "2.63%",
+      "payoutRatio": null,
+      "exDivDate": "Dec 30, 2025",
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 4,
+      "inception": "Jul 22, 2025",
+      "chart": {
+        "expiration": null,
+        "data": []
+      },
+      "description": "The WEBs Technology XLK Defined Volatility ETF (DVXK) is an exchange-traded fund that is based on the Syntax Defined Volatility XLK index. The fund tracks an index that adjusts exposure, between 0-200% via swaps, to the US large-cap Technology sector based on recent market volatility. The investment objective is to reduce volatility to a distinct target level and pursue better risk-adjusted sector returns DVXK was launched on Jul 22, 2025 and is issued by WEBs.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Category",
+          "Technology"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "NASDAQ"
+        ],
+        [
+          "Ticker Symbol",
+          "DVXK"
+        ],
+        [
+          "Provider",
+          "WEBs"
+        ],
+        [
+          "Index Tracked",
+          "Syntax Defined Volatility XLK Index"
+        ]
+      ],
+      "etf_website": "https://www.websinv.com/product_page/dvxk/",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 4,
+        "updated": "Jul 15, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "Us Dollars",
+            "as": "53.85%",
+            "sh": "4,059,698"
+          },
+          {
+            "n": "State Street Technology Select Sector SPDR ETF",
+            "s": "#XLK",
+            "as": "45.63%",
+            "sh": "18,942"
+          },
+          {
+            "n": "Trs Technology Select Sect Spdr /Long/",
+            "as": "32.12%",
+            "sh": "13,337"
+          },
+          {
+            "n": "Trs Technology Select Sect Spdr /Short/",
+            "as": "-31.60%",
+            "sh": "2,382,322"
+          }
+        ]
+      },
+      "dividendTable": [
+        {
+          "dt": "2025-12-30",
+          "amt": 0.9387,
+          "pay": "2026-01-05"
+        }
+      ],
+      "news": {
+        "exp": "1784384050320",
+        "data": [
+          {
+            "url": "https://www.globenewswire.com/news-release/2025/07/23/3120166/0/en/WEBs-Investments-Expands-Defined-Volatility-ETF-Suite-with-Launch-of-11-Sector-Funds.html",
+            "img": "https://cdn.snapi.dev/images/v1/b/a/x/press1-3192805.jpg",
+            "title": "WEBs Investments Expands Defined Volatility℠ ETF Suite with Launch of 11 Sector Funds",
+            "text": "PARK CITY, Utah, July 23, 2025 (GLOBE NEWSWIRE) -- WEBs Investments Inc. (WEBs) , an innovator in volatility-managed investment solutions, in partnership with Westwood Holdings Group, Inc. (NYSE: WHG)...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": [
+              "#DVIN",
+              "#DVRE",
+              "#DVUT",
+              "#DVXB",
+              "#DVXC",
+              "#DVXE",
+              "#DVXF"
+            ],
+            "time": "Jul 23, 2025, 8:00 AM EDT",
+            "ago": "1 year ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 37.349,
+        "price1m": 37.373,
+        "price3m": 28.846,
+        "price6m": 28.822,
+        "priceYTD": 28.297,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 25.236
+      },
+      "performance": {
+        "tr1m": -4.345336522767518,
+        "trYTD": 26.336,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_surface_omits_holdings",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}

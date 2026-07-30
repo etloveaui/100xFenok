@@ -61,24 +61,6 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.fetcher = load_fetcher_module()
 
-    def test_public_etf_detail_mirror_is_retired(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            original_out, original_public = self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR
-            self.fetcher.OUT_DIR = root / "data" / "stockanalysis"
-            self.fetcher.PUBLIC_DIR = root / "public" / "data" / "stockanalysis"
-            try:
-                with self.assertRaisesRegex(ValueError, "mirroring is retired"):
-                    self.fetcher.write_payload(
-                        "etfs/SPY.json",
-                        {"schema_version": "stockanalysis/v1", "ticker": "SPY", "asset_type": "etf"},
-                        mirror_public=True,
-                    )
-                self.assertFalse((self.fetcher.OUT_DIR / "etfs/SPY.json").exists())
-                self.assertFalse((self.fetcher.PUBLIC_DIR / "etfs/SPY.json").exists())
-            finally:
-                self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR = original_out, original_public
-
     def test_stock_financial_detection_requires_exact_natural_schedule_and_basket(self) -> None:
         def args(**overrides):
             values = {

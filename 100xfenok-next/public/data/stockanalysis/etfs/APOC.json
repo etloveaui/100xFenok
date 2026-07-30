@@ -1,0 +1,1707 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "APOC",
+  "source_as_of": "2026-07-09T00:00:00Z",
+  "fetched_at": "2026-07-15T14:36:35Z",
+  "endpoints": {
+    "holdings": "/etf/apoc/holdings/__data.json",
+    "overview": "/etf/apoc/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "symbol": "#VOO",
+        "name": "Vanguard S&P 500 ETF",
+        "weight_pct": 98.99,
+        "shares": 113404,
+        "raw": {
+          "n": "Vanguard S&P 500 ETF",
+          "s": "#VOO",
+          "as": "98.99%",
+          "sh": "113,404"
+        }
+      },
+      {
+        "name": "Deposits With Broker For Short Positions",
+        "weight_pct": 11.82,
+        "raw": {
+          "n": "Deposits With Broker For Short Positions",
+          "as": "11.82%",
+          "sh": "n/a"
+        }
+      },
+      {
+        "name": "Option on Vanguard S&P 500 ETF",
+        "weight_pct": 0.51,
+        "shares": 1146,
+        "raw": {
+          "n": "Option on Vanguard S&P 500 ETF",
+          "as": "0.51%",
+          "sh": "1,146"
+        }
+      },
+      {
+        "name": "Us Bank Mmda - Usbgfs 9",
+        "weight_pct": 0.36,
+        "shares": 287002,
+        "raw": {
+          "n": "Us Bank Mmda - Usbgfs 9",
+          "as": "0.36%",
+          "sh": "287,002"
+        }
+      },
+      {
+        "name": "Option on Vanguard S&P 500 ETF",
+        "weight_pct": 0.14,
+        "shares": 12,
+        "raw": {
+          "n": "Option on Vanguard S&P 500 ETF",
+          "as": "0.14%",
+          "sh": "12"
+        }
+      },
+      {
+        "name": "Option on Vanguard S&P 500 ETF",
+        "weight_pct": -0.01,
+        "shares": 12,
+        "raw": {
+          "n": "Option on Vanguard S&P 500 ETF",
+          "as": "-0.01%",
+          "sh": "12"
+        }
+      },
+      {
+        "name": "Option on Vanguard S&P 500 ETF",
+        "weight_pct": -11.81,
+        "shares": 1146,
+        "raw": {
+          "n": "Option on Vanguard S&P 500 ETF",
+          "as": "-11.81%",
+          "sh": "1,146"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 7,
+    "holdings_updated": "Jul 9, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$72.81M",
+      "expenseRatio": "0.79%",
+      "sharesOut": "2.65M",
+      "inception": "Sep 30, 2024",
+      "provider_page": "innovator",
+      "etf_website": "https://www.innovatoretfs.com/etf/default.aspx?ticker=apoc"
+    },
+    "performance": {
+      "tr1m": 0.541,
+      "trYTD": 0.5667,
+      "tr1y": 2.95,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": 2.512
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "APOC",
+        "lastChecked": 1784126050685,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$72.81M",
+      "nav": null,
+      "expenseRatio": "0.79%",
+      "peRatio": null,
+      "sharesOut": "2.65M",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": "+2.95%",
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 7,
+      "inception": "Sep 30, 2024",
+      "chart": {
+        "expiration": 1784122200000,
+        "data": [
+          {
+            "t": 1784021400
+          },
+          {
+            "t": 1784021460
+          },
+          {
+            "t": 1784021520
+          },
+          {
+            "t": 1784021580
+          },
+          {
+            "t": 1784021640
+          },
+          {
+            "t": 1784021700
+          },
+          {
+            "t": 1784021760
+          },
+          {
+            "t": 1784021820
+          },
+          {
+            "t": 1784021880
+          },
+          {
+            "t": 1784021940
+          },
+          {
+            "t": 1784022000
+          },
+          {
+            "t": 1784022060
+          },
+          {
+            "t": 1784022120
+          },
+          {
+            "t": 1784022180
+          },
+          {
+            "t": 1784022240
+          },
+          {
+            "t": 1784022300
+          },
+          {
+            "t": 1784022360
+          },
+          {
+            "t": 1784022420
+          },
+          {
+            "t": 1784022480
+          },
+          {
+            "t": 1784022540
+          },
+          {
+            "t": 1784022600
+          },
+          {
+            "t": 1784022660
+          },
+          {
+            "t": 1784022720
+          },
+          {
+            "t": 1784022780
+          },
+          {
+            "t": 1784022840
+          },
+          {
+            "t": 1784022900
+          },
+          {
+            "t": 1784022960
+          },
+          {
+            "t": 1784023020
+          },
+          {
+            "t": 1784023080
+          },
+          {
+            "t": 1784023140
+          },
+          {
+            "t": 1784023200
+          },
+          {
+            "t": 1784023260
+          },
+          {
+            "t": 1784023320
+          },
+          {
+            "t": 1784023380
+          },
+          {
+            "t": 1784023440
+          },
+          {
+            "t": 1784023500
+          },
+          {
+            "t": 1784023560
+          },
+          {
+            "t": 1784023620
+          },
+          {
+            "t": 1784023680
+          },
+          {
+            "t": 1784023740
+          },
+          {
+            "t": 1784023800
+          },
+          {
+            "t": 1784023860
+          },
+          {
+            "t": 1784023920
+          },
+          {
+            "t": 1784023980
+          },
+          {
+            "t": 1784024040
+          },
+          {
+            "t": 1784024100
+          },
+          {
+            "t": 1784024160
+          },
+          {
+            "t": 1784024220
+          },
+          {
+            "t": 1784024280
+          },
+          {
+            "t": 1784024340
+          },
+          {
+            "t": 1784024400
+          },
+          {
+            "t": 1784024460
+          },
+          {
+            "t": 1784024520
+          },
+          {
+            "t": 1784024580
+          },
+          {
+            "t": 1784024640
+          },
+          {
+            "t": 1784024700
+          },
+          {
+            "t": 1784024760
+          },
+          {
+            "t": 1784024820
+          },
+          {
+            "t": 1784024880
+          },
+          {
+            "t": 1784024940
+          },
+          {
+            "t": 1784025000
+          },
+          {
+            "t": 1784025060
+          },
+          {
+            "t": 1784025120
+          },
+          {
+            "t": 1784025180
+          },
+          {
+            "t": 1784025240
+          },
+          {
+            "t": 1784025300
+          },
+          {
+            "t": 1784025360
+          },
+          {
+            "t": 1784025420
+          },
+          {
+            "t": 1784025480
+          },
+          {
+            "t": 1784025540
+          },
+          {
+            "t": 1784025600
+          },
+          {
+            "t": 1784025660
+          },
+          {
+            "t": 1784025720
+          },
+          {
+            "t": 1784025780
+          },
+          {
+            "t": 1784025840
+          },
+          {
+            "t": 1784025900
+          },
+          {
+            "t": 1784025960
+          },
+          {
+            "t": 1784026020
+          },
+          {
+            "t": 1784026080
+          },
+          {
+            "t": 1784026140
+          },
+          {
+            "t": 1784026200
+          },
+          {
+            "t": 1784026260
+          },
+          {
+            "t": 1784026320
+          },
+          {
+            "t": 1784026380
+          },
+          {
+            "t": 1784026440
+          },
+          {
+            "t": 1784026500
+          },
+          {
+            "t": 1784026560
+          },
+          {
+            "c": 26.35,
+            "o": 26.35,
+            "t": 1784026620
+          },
+          {
+            "c": null,
+            "t": 1784026680
+          },
+          {
+            "c": null,
+            "t": 1784026740
+          },
+          {
+            "c": null,
+            "t": 1784026800
+          },
+          {
+            "c": null,
+            "t": 1784026860
+          },
+          {
+            "c": null,
+            "t": 1784026920
+          },
+          {
+            "c": null,
+            "t": 1784026980
+          },
+          {
+            "c": null,
+            "t": 1784027040
+          },
+          {
+            "c": null,
+            "t": 1784027100
+          },
+          {
+            "c": null,
+            "t": 1784027160
+          },
+          {
+            "c": null,
+            "t": 1784027220
+          },
+          {
+            "c": null,
+            "t": 1784027280
+          },
+          {
+            "c": null,
+            "t": 1784027340
+          },
+          {
+            "c": null,
+            "t": 1784027400
+          },
+          {
+            "c": null,
+            "t": 1784027460
+          },
+          {
+            "c": null,
+            "t": 1784027520
+          },
+          {
+            "c": 26.34,
+            "t": 1784027580
+          },
+          {
+            "c": null,
+            "t": 1784027640
+          },
+          {
+            "c": null,
+            "t": 1784027700
+          },
+          {
+            "c": null,
+            "t": 1784027760
+          },
+          {
+            "c": null,
+            "t": 1784027820
+          },
+          {
+            "c": null,
+            "t": 1784027880
+          },
+          {
+            "c": null,
+            "t": 1784027940
+          },
+          {
+            "c": null,
+            "t": 1784028000
+          },
+          {
+            "c": null,
+            "t": 1784028060
+          },
+          {
+            "c": null,
+            "t": 1784028120
+          },
+          {
+            "c": null,
+            "t": 1784028180
+          },
+          {
+            "c": null,
+            "t": 1784028240
+          },
+          {
+            "c": null,
+            "t": 1784028300
+          },
+          {
+            "c": null,
+            "t": 1784028360
+          },
+          {
+            "c": null,
+            "t": 1784028420
+          },
+          {
+            "c": null,
+            "t": 1784028480
+          },
+          {
+            "c": null,
+            "t": 1784028540
+          },
+          {
+            "c": null,
+            "t": 1784028600
+          },
+          {
+            "c": null,
+            "t": 1784028660
+          },
+          {
+            "c": null,
+            "t": 1784028720
+          },
+          {
+            "c": null,
+            "t": 1784028780
+          },
+          {
+            "c": 26.355,
+            "t": 1784028840
+          },
+          {
+            "c": null,
+            "t": 1784028900
+          },
+          {
+            "c": null,
+            "t": 1784028960
+          },
+          {
+            "c": null,
+            "t": 1784029020
+          },
+          {
+            "c": null,
+            "t": 1784029080
+          },
+          {
+            "c": null,
+            "t": 1784029140
+          },
+          {
+            "c": null,
+            "t": 1784029200
+          },
+          {
+            "c": null,
+            "t": 1784029260
+          },
+          {
+            "c": null,
+            "t": 1784029320
+          },
+          {
+            "c": null,
+            "t": 1784029380
+          },
+          {
+            "c": null,
+            "t": 1784029440
+          },
+          {
+            "c": null,
+            "t": 1784029500
+          },
+          {
+            "c": null,
+            "t": 1784029560
+          },
+          {
+            "c": null,
+            "t": 1784029620
+          },
+          {
+            "c": null,
+            "t": 1784029680
+          },
+          {
+            "c": null,
+            "t": 1784029740
+          },
+          {
+            "c": null,
+            "t": 1784029800
+          },
+          {
+            "c": null,
+            "t": 1784029860
+          },
+          {
+            "c": null,
+            "t": 1784029920
+          },
+          {
+            "c": null,
+            "t": 1784029980
+          },
+          {
+            "c": null,
+            "t": 1784030040
+          },
+          {
+            "c": null,
+            "t": 1784030100
+          },
+          {
+            "c": null,
+            "t": 1784030160
+          },
+          {
+            "c": null,
+            "t": 1784030220
+          },
+          {
+            "c": null,
+            "t": 1784030280
+          },
+          {
+            "c": null,
+            "t": 1784030340
+          },
+          {
+            "c": null,
+            "t": 1784030400
+          },
+          {
+            "c": null,
+            "t": 1784030460
+          },
+          {
+            "c": null,
+            "t": 1784030520
+          },
+          {
+            "c": null,
+            "t": 1784030580
+          },
+          {
+            "c": null,
+            "t": 1784030640
+          },
+          {
+            "c": null,
+            "t": 1784030700
+          },
+          {
+            "c": null,
+            "t": 1784030760
+          },
+          {
+            "c": null,
+            "t": 1784030820
+          },
+          {
+            "c": null,
+            "t": 1784030880
+          },
+          {
+            "c": null,
+            "t": 1784030940
+          },
+          {
+            "c": null,
+            "t": 1784031000
+          },
+          {
+            "c": null,
+            "t": 1784031060
+          },
+          {
+            "c": null,
+            "t": 1784031120
+          },
+          {
+            "c": null,
+            "t": 1784031180
+          },
+          {
+            "c": null,
+            "t": 1784031240
+          },
+          {
+            "c": null,
+            "t": 1784031300
+          },
+          {
+            "c": null,
+            "t": 1784031360
+          },
+          {
+            "c": null,
+            "t": 1784031420
+          },
+          {
+            "c": null,
+            "t": 1784031480
+          },
+          {
+            "c": null,
+            "t": 1784031540
+          },
+          {
+            "c": null,
+            "t": 1784031600
+          },
+          {
+            "c": null,
+            "t": 1784031660
+          },
+          {
+            "c": null,
+            "t": 1784031720
+          },
+          {
+            "c": null,
+            "t": 1784031780
+          },
+          {
+            "c": null,
+            "t": 1784031840
+          },
+          {
+            "c": null,
+            "t": 1784031900
+          },
+          {
+            "c": null,
+            "t": 1784031960
+          },
+          {
+            "c": null,
+            "t": 1784032020
+          },
+          {
+            "c": null,
+            "t": 1784032080
+          },
+          {
+            "c": null,
+            "t": 1784032140
+          },
+          {
+            "c": null,
+            "t": 1784032200
+          },
+          {
+            "c": null,
+            "t": 1784032260
+          },
+          {
+            "c": null,
+            "t": 1784032320
+          },
+          {
+            "c": null,
+            "t": 1784032380
+          },
+          {
+            "c": null,
+            "t": 1784032440
+          },
+          {
+            "c": null,
+            "t": 1784032500
+          },
+          {
+            "c": null,
+            "t": 1784032560
+          },
+          {
+            "c": null,
+            "t": 1784032620
+          },
+          {
+            "c": null,
+            "t": 1784032680
+          },
+          {
+            "c": null,
+            "t": 1784032740
+          },
+          {
+            "c": null,
+            "t": 1784032800
+          },
+          {
+            "c": null,
+            "t": 1784032860
+          },
+          {
+            "c": null,
+            "t": 1784032920
+          },
+          {
+            "c": null,
+            "t": 1784032980
+          },
+          {
+            "c": null,
+            "t": 1784033040
+          },
+          {
+            "c": null,
+            "t": 1784033100
+          },
+          {
+            "c": null,
+            "t": 1784033160
+          },
+          {
+            "c": null,
+            "t": 1784033220
+          },
+          {
+            "c": null,
+            "t": 1784033280
+          },
+          {
+            "c": null,
+            "t": 1784033340
+          },
+          {
+            "c": null,
+            "t": 1784033400
+          },
+          {
+            "c": null,
+            "t": 1784033460
+          },
+          {
+            "c": null,
+            "t": 1784033520
+          },
+          {
+            "c": null,
+            "t": 1784033580
+          },
+          {
+            "c": null,
+            "t": 1784033640
+          },
+          {
+            "c": null,
+            "t": 1784033700
+          },
+          {
+            "c": null,
+            "t": 1784033760
+          },
+          {
+            "c": null,
+            "t": 1784033820
+          },
+          {
+            "c": null,
+            "t": 1784033880
+          },
+          {
+            "c": null,
+            "t": 1784033940
+          },
+          {
+            "c": null,
+            "t": 1784034000
+          },
+          {
+            "c": null,
+            "t": 1784034060
+          },
+          {
+            "c": null,
+            "t": 1784034120
+          },
+          {
+            "c": null,
+            "t": 1784034180
+          },
+          {
+            "c": null,
+            "t": 1784034240
+          },
+          {
+            "c": null,
+            "t": 1784034300
+          },
+          {
+            "c": null,
+            "t": 1784034360
+          },
+          {
+            "c": null,
+            "t": 1784034420
+          },
+          {
+            "c": null,
+            "t": 1784034480
+          },
+          {
+            "c": null,
+            "t": 1784034540
+          },
+          {
+            "c": null,
+            "t": 1784034600
+          },
+          {
+            "c": null,
+            "t": 1784034660
+          },
+          {
+            "c": null,
+            "t": 1784034720
+          },
+          {
+            "c": null,
+            "t": 1784034780
+          },
+          {
+            "c": null,
+            "t": 1784034840
+          },
+          {
+            "c": null,
+            "t": 1784034900
+          },
+          {
+            "c": null,
+            "t": 1784034960
+          },
+          {
+            "c": null,
+            "t": 1784035020
+          },
+          {
+            "c": null,
+            "t": 1784035080
+          },
+          {
+            "c": null,
+            "t": 1784035140
+          },
+          {
+            "c": 26.38,
+            "t": 1784035200
+          },
+          {
+            "c": null,
+            "t": 1784035260
+          },
+          {
+            "c": null,
+            "t": 1784035320
+          },
+          {
+            "c": null,
+            "t": 1784035380
+          },
+          {
+            "c": null,
+            "t": 1784035440
+          },
+          {
+            "c": null,
+            "t": 1784035500
+          },
+          {
+            "c": null,
+            "t": 1784035560
+          },
+          {
+            "c": null,
+            "t": 1784035620
+          },
+          {
+            "c": null,
+            "t": 1784035680
+          },
+          {
+            "c": null,
+            "t": 1784035740
+          },
+          {
+            "c": null,
+            "t": 1784035800
+          },
+          {
+            "c": null,
+            "t": 1784035860
+          },
+          {
+            "c": null,
+            "t": 1784035920
+          },
+          {
+            "c": null,
+            "t": 1784035980
+          },
+          {
+            "c": null,
+            "t": 1784036040
+          },
+          {
+            "c": null,
+            "t": 1784036100
+          },
+          {
+            "c": null,
+            "t": 1784036160
+          },
+          {
+            "c": null,
+            "t": 1784036220
+          },
+          {
+            "c": null,
+            "t": 1784036280
+          },
+          {
+            "c": null,
+            "t": 1784036340
+          },
+          {
+            "c": null,
+            "t": 1784036400
+          },
+          {
+            "c": null,
+            "t": 1784036460
+          },
+          {
+            "c": null,
+            "t": 1784036520
+          },
+          {
+            "c": null,
+            "t": 1784036580
+          },
+          {
+            "c": null,
+            "t": 1784036640
+          },
+          {
+            "c": null,
+            "t": 1784036700
+          },
+          {
+            "c": null,
+            "t": 1784036760
+          },
+          {
+            "c": null,
+            "t": 1784036820
+          },
+          {
+            "c": null,
+            "t": 1784036880
+          },
+          {
+            "c": null,
+            "t": 1784036940
+          },
+          {
+            "c": null,
+            "t": 1784037000
+          },
+          {
+            "c": null,
+            "t": 1784037060
+          },
+          {
+            "c": null,
+            "t": 1784037120
+          },
+          {
+            "c": null,
+            "t": 1784037180
+          },
+          {
+            "c": null,
+            "t": 1784037240
+          },
+          {
+            "c": null,
+            "t": 1784037300
+          },
+          {
+            "c": null,
+            "t": 1784037360
+          },
+          {
+            "c": null,
+            "t": 1784037420
+          },
+          {
+            "c": null,
+            "t": 1784037480
+          },
+          {
+            "c": null,
+            "t": 1784037540
+          },
+          {
+            "c": null,
+            "t": 1784037600
+          },
+          {
+            "c": null,
+            "t": 1784037660
+          },
+          {
+            "c": null,
+            "t": 1784037720
+          },
+          {
+            "c": null,
+            "t": 1784037780
+          },
+          {
+            "c": null,
+            "t": 1784037840
+          },
+          {
+            "c": null,
+            "t": 1784037900
+          },
+          {
+            "c": null,
+            "t": 1784037960
+          },
+          {
+            "c": null,
+            "t": 1784038020
+          },
+          {
+            "c": null,
+            "t": 1784038080
+          },
+          {
+            "c": null,
+            "t": 1784038140
+          },
+          {
+            "c": null,
+            "t": 1784038200
+          },
+          {
+            "c": 26.352,
+            "t": 1784038260
+          },
+          {
+            "t": 1784038319
+          },
+          {
+            "t": 1784038379
+          },
+          {
+            "t": 1784038439
+          },
+          {
+            "t": 1784038499
+          },
+          {
+            "t": 1784038559
+          },
+          {
+            "t": 1784038619
+          },
+          {
+            "t": 1784038679
+          },
+          {
+            "t": 1784038739
+          },
+          {
+            "t": 1784038799
+          },
+          {
+            "t": 1784038859
+          },
+          {
+            "t": 1784038919
+          },
+          {
+            "t": 1784038979
+          },
+          {
+            "t": 1784039039
+          },
+          {
+            "t": 1784039099
+          },
+          {
+            "t": 1784039159
+          },
+          {
+            "t": 1784039219
+          },
+          {
+            "t": 1784039279
+          },
+          {
+            "t": 1784039339
+          },
+          {
+            "t": 1784039399
+          },
+          {
+            "t": 1784039459
+          },
+          {
+            "t": 1784039519
+          },
+          {
+            "t": 1784039579
+          },
+          {
+            "t": 1784039639
+          },
+          {
+            "t": 1784039699
+          },
+          {
+            "t": 1784039759
+          },
+          {
+            "t": 1784039819
+          },
+          {
+            "t": 1784039879
+          },
+          {
+            "t": 1784039939
+          },
+          {
+            "t": 1784039999
+          },
+          {
+            "t": 1784040059
+          },
+          {
+            "t": 1784040119
+          },
+          {
+            "t": 1784040179
+          },
+          {
+            "t": 1784040239
+          },
+          {
+            "t": 1784040299
+          },
+          {
+            "t": 1784040359
+          },
+          {
+            "t": 1784040419
+          },
+          {
+            "t": 1784040479
+          },
+          {
+            "t": 1784040539
+          },
+          {
+            "t": 1784040599
+          },
+          {
+            "t": 1784040659
+          },
+          {
+            "t": 1784040719
+          },
+          {
+            "t": 1784040779
+          },
+          {
+            "t": 1784040839
+          },
+          {
+            "t": 1784040899
+          },
+          {
+            "t": 1784040959
+          },
+          {
+            "t": 1784041019
+          },
+          {
+            "t": 1784041079
+          },
+          {
+            "t": 1784041139
+          },
+          {
+            "t": 1784041199
+          },
+          {
+            "t": 1784041259
+          },
+          {
+            "t": 1784041319
+          },
+          {
+            "t": 1784041379
+          },
+          {
+            "t": 1784041439
+          },
+          {
+            "t": 1784041499
+          },
+          {
+            "t": 1784041559
+          },
+          {
+            "t": 1784041619
+          },
+          {
+            "t": 1784041679
+          },
+          {
+            "t": 1784041739
+          },
+          {
+            "t": 1784041799
+          },
+          {
+            "t": 1784041859
+          },
+          {
+            "t": 1784041919
+          },
+          {
+            "t": 1784041979
+          },
+          {
+            "t": 1784042039
+          },
+          {
+            "t": 1784042099
+          },
+          {
+            "t": 1784042159
+          },
+          {
+            "t": 1784042219
+          },
+          {
+            "t": 1784042279
+          },
+          {
+            "t": 1784042339
+          },
+          {
+            "t": 1784042399
+          },
+          {
+            "t": 1784042459
+          },
+          {
+            "t": 1784042519
+          },
+          {
+            "t": 1784042579
+          },
+          {
+            "t": 1784042639
+          },
+          {
+            "t": 1784042699
+          },
+          {
+            "t": 1784042759
+          },
+          {
+            "t": 1784042819
+          },
+          {
+            "t": 1784042879
+          },
+          {
+            "t": 1784042939
+          },
+          {
+            "t": 1784042999
+          },
+          {
+            "t": 1784043059
+          },
+          {
+            "t": 1784043119
+          },
+          {
+            "t": 1784043179
+          },
+          {
+            "t": 1784043239
+          },
+          {
+            "t": 1784043299
+          },
+          {
+            "t": 1784043359
+          },
+          {
+            "t": 1784043419
+          },
+          {
+            "t": 1784043479
+          },
+          {
+            "t": 1784043539
+          },
+          {
+            "t": 1784043599
+          },
+          {
+            "t": 1784043659
+          },
+          {
+            "t": 1784043719
+          },
+          {
+            "t": 1784043779
+          },
+          {
+            "t": 1784043839
+          },
+          {
+            "t": 1784043899
+          },
+          {
+            "t": 1784043959
+          },
+          {
+            "t": 1784044019
+          },
+          {
+            "t": 1784044079
+          },
+          {
+            "t": 1784044139
+          },
+          {
+            "t": 1784044199
+          },
+          {
+            "t": 1784044259
+          },
+          {
+            "t": 1784044319
+          },
+          {
+            "t": 1784044379
+          },
+          {
+            "t": 1784044439
+          },
+          {
+            "t": 1784044499
+          },
+          {
+            "t": 1784044559
+          },
+          {
+            "t": 1784044619
+          },
+          {
+            "t": 1784044679
+          },
+          {
+            "t": 1784044739
+          },
+          {
+            "t": 1784044799
+          },
+          {
+            "t": 1784044800
+          }
+        ]
+      },
+      "description": "The Innovator 6mo Apr/Oct (APOC) is an exchange-traded fund that mostly invests in downside hedge alternatives. The fund seeks to track the return of the SPDR S&P 500 ETF Trust (SPY), to a cap, with 100% downside hedge over a six-month outcome period. The actively managed fund holds FLEX options to obtain exposure APOC was launched on Sep 30, 2024 and is issued by Innovator.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Alternatives"
+        ],
+        [
+          "Category",
+          "Defined Outcome"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "BATS"
+        ],
+        [
+          "Ticker Symbol",
+          "APOC"
+        ],
+        [
+          "Provider",
+          "Innovator"
+        ]
+      ],
+      "etf_website": "https://www.innovatoretfs.com/etf/default.aspx?ticker=apoc",
+      "provider_page": "innovator",
+      "holdingsTable": {
+        "count": 7,
+        "updated": "Jul 9, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "Vanguard S&P 500 ETF",
+            "s": "#VOO",
+            "as": "98.99%",
+            "sh": "113,404"
+          },
+          {
+            "n": "Deposits With Broker For Short Positions",
+            "as": "11.82%",
+            "sh": "n/a"
+          },
+          {
+            "n": "Option on Vanguard S&P 500 ETF",
+            "as": "0.51%",
+            "sh": "1,146"
+          },
+          {
+            "n": "Us Bank Mmda - Usbgfs 9",
+            "as": "0.36%",
+            "sh": "287,002"
+          },
+          {
+            "n": "Option on Vanguard S&P 500 ETF",
+            "as": "0.14%",
+            "sh": "12"
+          },
+          {
+            "n": "Option on Vanguard S&P 500 ETF",
+            "as": "-0.01%",
+            "sh": "12"
+          },
+          {
+            "n": "Option on Vanguard S&P 500 ETF",
+            "as": "-11.81%",
+            "sh": "1,146"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784110516239",
+        "data": [
+          {
+            "url": "https://www.businesswire.com/news/home/20241004606129/en/Adani-Airport-Holdings-Limited-and-Thales-Forge-Strategic-Partnership-to-Improve-Airport-Operations-and-Passenger-Experience-in-India/",
+            "img": "https://cdn.snapi.dev/images/v1/0/3/x/press1-2685912.jpg",
+            "title": "Adani Airport Holdings Limited and Thales Forge Strategic Partnership to Improve Airport Operations and Passenger Experience in India",
+            "text": "NEW DELHI--(BUSINESS WIRE)-- #ThalesIDWallet--Adani Airport Holdings Limited and Thales Forge Strategic Partnership to Improve Airport Operations and Passenger Experience in India.",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Oct 9, 2024, 2:00 AM EDT",
+            "ago": "1 year ago"
+          },
+          {
+            "url": "https://www.globenewswire.com/news-release/2024/10/01/2956319/0/en/Innovator-Builds-Upon-the-Largest-Suite-of-Buffer-ETFs-with-Three-100-Downside-Protection-Launches.html",
+            "img": "https://cdn.snapi.dev/images/v1/p/r/press15-2672602.jpg",
+            "title": "Innovator Builds Upon the Largest Suite of Buffer ETFs™ with Three 100% Downside Protection Launches*",
+            "text": "The asset management firm that pioneered Defined Outcome ETFs™ continues the growth of its industry-leading lineup of 100% Buffer ETFs™ The asset management firm that pioneered Defined Outcome ETFs™ c...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": [
+              "#AOCT",
+              "#ZOCT"
+            ],
+            "time": "Oct 1, 2024, 9:48 AM EDT",
+            "ago": "1 year ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 26.32,
+        "price1m": 26.21,
+        "price3m": 26.019,
+        "price6m": 26.25,
+        "priceYTD": 26.203,
+        "price1y": 25.597,
+        "price5y": null,
+        "priceMAX": 25.15
+      },
+      "performance": {
+        "tr1m": 0.541,
+        "trYTD": 0.5667,
+        "tr1y": 2.95,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": 2.512
+      }
+    },
+    "holdings": {},
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_surface_omits_holdings",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}

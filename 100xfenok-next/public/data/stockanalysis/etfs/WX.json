@@ -1,0 +1,1584 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "WX",
+  "source_as_of": "2026-07-16T00:00:00Z",
+  "fetched_at": "2026-07-19T00:38:47Z",
+  "endpoints": {
+    "holdings": "/etf/wx/holdings/__data.json",
+    "overview": "/etf/wx/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "rank": 1,
+        "name": "VANGUARD TOTAL WORLD STOCK INDEX FUND ETF SHARES-SWAP-CLST-L",
+        "weight_pct": 200.63,
+        "shares": 4595,
+        "raw": {
+          "no": 1,
+          "n": "VANGUARD TOTAL WORLD STOCK INDEX FUND ETF SHARES-SWAP-CLST-L",
+          "as": "200.63%",
+          "sh": "4,595"
+        }
+      },
+      {
+        "rank": 2,
+        "name": "US DOLLARS",
+        "weight_pct": 61.53,
+        "shares": 220000,
+        "raw": {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "61.53%",
+          "sh": "220,000"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "!MUTF/FGXXX",
+        "name": "First American Government Obligations Fund",
+        "weight_pct": 40.44,
+        "shares": 144594,
+        "raw": {
+          "no": 3,
+          "n": "First American Government Obligations Fund",
+          "s": "!mutf/FGXXX",
+          "as": "40.44%",
+          "sh": "144,594"
+        }
+      },
+      {
+        "rank": 4,
+        "name": "OTHER ASSETS AND LIABILITIES",
+        "weight_pct": -4.01,
+        "shares": 14354,
+        "raw": {
+          "no": 4,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-4.01%",
+          "sh": "14,354"
+        }
+      },
+      {
+        "rank": 5,
+        "name": "Cash Offset",
+        "weight_pct": -198.58,
+        "shares": 710083,
+        "raw": {
+          "no": 5,
+          "n": "Cash Offset",
+          "as": "-198.58%",
+          "sh": "710,083"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 5,
+    "holdings_updated": "Jul 16, 2026",
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$360.75K",
+      "expenseRatio": "0.20%",
+      "sharesOut": "15,000",
+      "inception": "Jun 3, 2026",
+      "etf_website": "https://corgifunds.com/wx"
+    },
+    "performance": {
+      "tr1m": -4.148584038249357,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "WX",
+        "lastChecked": 1784360983780,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$360.75K",
+      "nav": null,
+      "expenseRatio": "0.20%",
+      "peRatio": null,
+      "sharesOut": "15,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 5,
+      "inception": "Jun 3, 2026",
+      "chart": {
+        "expiration": 1784295000000,
+        "data": [
+          {
+            "t": 1784194200
+          },
+          {
+            "t": 1784194260
+          },
+          {
+            "t": 1784194320
+          },
+          {
+            "t": 1784194380
+          },
+          {
+            "t": 1784194440
+          },
+          {
+            "t": 1784194500
+          },
+          {
+            "t": 1784194560
+          },
+          {
+            "t": 1784194620
+          },
+          {
+            "t": 1784194680
+          },
+          {
+            "t": 1784194740
+          },
+          {
+            "t": 1784194800
+          },
+          {
+            "t": 1784194860
+          },
+          {
+            "t": 1784194920
+          },
+          {
+            "t": 1784194980
+          },
+          {
+            "t": 1784195040
+          },
+          {
+            "t": 1784195100
+          },
+          {
+            "c": 23.852,
+            "o": 24.219,
+            "t": 1784195160
+          },
+          {
+            "t": 1784195219
+          },
+          {
+            "t": 1784195279
+          },
+          {
+            "t": 1784195339
+          },
+          {
+            "t": 1784195399
+          },
+          {
+            "t": 1784195459
+          },
+          {
+            "t": 1784195519
+          },
+          {
+            "t": 1784195579
+          },
+          {
+            "t": 1784195639
+          },
+          {
+            "t": 1784195699
+          },
+          {
+            "t": 1784195759
+          },
+          {
+            "t": 1784195819
+          },
+          {
+            "t": 1784195879
+          },
+          {
+            "t": 1784195939
+          },
+          {
+            "t": 1784195999
+          },
+          {
+            "t": 1784196059
+          },
+          {
+            "t": 1784196119
+          },
+          {
+            "t": 1784196179
+          },
+          {
+            "t": 1784196239
+          },
+          {
+            "t": 1784196299
+          },
+          {
+            "t": 1784196359
+          },
+          {
+            "t": 1784196419
+          },
+          {
+            "t": 1784196479
+          },
+          {
+            "t": 1784196539
+          },
+          {
+            "t": 1784196599
+          },
+          {
+            "t": 1784196659
+          },
+          {
+            "t": 1784196719
+          },
+          {
+            "t": 1784196779
+          },
+          {
+            "t": 1784196839
+          },
+          {
+            "t": 1784196899
+          },
+          {
+            "t": 1784196959
+          },
+          {
+            "t": 1784197019
+          },
+          {
+            "t": 1784197079
+          },
+          {
+            "t": 1784197139
+          },
+          {
+            "t": 1784197199
+          },
+          {
+            "t": 1784197259
+          },
+          {
+            "t": 1784197319
+          },
+          {
+            "t": 1784197379
+          },
+          {
+            "t": 1784197439
+          },
+          {
+            "t": 1784197499
+          },
+          {
+            "t": 1784197559
+          },
+          {
+            "t": 1784197619
+          },
+          {
+            "t": 1784197679
+          },
+          {
+            "t": 1784197739
+          },
+          {
+            "t": 1784197799
+          },
+          {
+            "t": 1784197859
+          },
+          {
+            "t": 1784197919
+          },
+          {
+            "t": 1784197979
+          },
+          {
+            "t": 1784198039
+          },
+          {
+            "t": 1784198099
+          },
+          {
+            "t": 1784198159
+          },
+          {
+            "t": 1784198219
+          },
+          {
+            "t": 1784198279
+          },
+          {
+            "t": 1784198339
+          },
+          {
+            "t": 1784198399
+          },
+          {
+            "t": 1784198459
+          },
+          {
+            "t": 1784198519
+          },
+          {
+            "t": 1784198579
+          },
+          {
+            "t": 1784198639
+          },
+          {
+            "t": 1784198699
+          },
+          {
+            "t": 1784198759
+          },
+          {
+            "t": 1784198819
+          },
+          {
+            "t": 1784198879
+          },
+          {
+            "t": 1784198939
+          },
+          {
+            "t": 1784198999
+          },
+          {
+            "t": 1784199059
+          },
+          {
+            "t": 1784199119
+          },
+          {
+            "t": 1784199179
+          },
+          {
+            "t": 1784199239
+          },
+          {
+            "t": 1784199299
+          },
+          {
+            "t": 1784199359
+          },
+          {
+            "t": 1784199419
+          },
+          {
+            "t": 1784199479
+          },
+          {
+            "t": 1784199539
+          },
+          {
+            "t": 1784199599
+          },
+          {
+            "t": 1784199659
+          },
+          {
+            "t": 1784199719
+          },
+          {
+            "t": 1784199779
+          },
+          {
+            "t": 1784199839
+          },
+          {
+            "t": 1784199899
+          },
+          {
+            "t": 1784199959
+          },
+          {
+            "t": 1784200019
+          },
+          {
+            "t": 1784200079
+          },
+          {
+            "t": 1784200139
+          },
+          {
+            "t": 1784200199
+          },
+          {
+            "t": 1784200259
+          },
+          {
+            "t": 1784200319
+          },
+          {
+            "t": 1784200379
+          },
+          {
+            "t": 1784200439
+          },
+          {
+            "t": 1784200499
+          },
+          {
+            "t": 1784200559
+          },
+          {
+            "t": 1784200619
+          },
+          {
+            "t": 1784200679
+          },
+          {
+            "t": 1784200739
+          },
+          {
+            "t": 1784200799
+          },
+          {
+            "t": 1784200859
+          },
+          {
+            "t": 1784200919
+          },
+          {
+            "t": 1784200979
+          },
+          {
+            "t": 1784201039
+          },
+          {
+            "t": 1784201099
+          },
+          {
+            "t": 1784201159
+          },
+          {
+            "t": 1784201219
+          },
+          {
+            "t": 1784201279
+          },
+          {
+            "t": 1784201339
+          },
+          {
+            "t": 1784201399
+          },
+          {
+            "t": 1784201459
+          },
+          {
+            "t": 1784201519
+          },
+          {
+            "t": 1784201579
+          },
+          {
+            "t": 1784201639
+          },
+          {
+            "t": 1784201699
+          },
+          {
+            "t": 1784201759
+          },
+          {
+            "t": 1784201819
+          },
+          {
+            "t": 1784201879
+          },
+          {
+            "t": 1784201939
+          },
+          {
+            "t": 1784201999
+          },
+          {
+            "t": 1784202059
+          },
+          {
+            "t": 1784202119
+          },
+          {
+            "t": 1784202179
+          },
+          {
+            "t": 1784202239
+          },
+          {
+            "t": 1784202299
+          },
+          {
+            "t": 1784202359
+          },
+          {
+            "t": 1784202419
+          },
+          {
+            "t": 1784202479
+          },
+          {
+            "t": 1784202539
+          },
+          {
+            "t": 1784202599
+          },
+          {
+            "t": 1784202659
+          },
+          {
+            "t": 1784202719
+          },
+          {
+            "t": 1784202779
+          },
+          {
+            "t": 1784202839
+          },
+          {
+            "t": 1784202899
+          },
+          {
+            "t": 1784202959
+          },
+          {
+            "t": 1784203019
+          },
+          {
+            "t": 1784203079
+          },
+          {
+            "t": 1784203139
+          },
+          {
+            "t": 1784203199
+          },
+          {
+            "t": 1784203259
+          },
+          {
+            "t": 1784203319
+          },
+          {
+            "t": 1784203379
+          },
+          {
+            "t": 1784203439
+          },
+          {
+            "t": 1784203499
+          },
+          {
+            "t": 1784203559
+          },
+          {
+            "t": 1784203619
+          },
+          {
+            "t": 1784203679
+          },
+          {
+            "t": 1784203739
+          },
+          {
+            "t": 1784203799
+          },
+          {
+            "t": 1784203859
+          },
+          {
+            "t": 1784203919
+          },
+          {
+            "t": 1784203979
+          },
+          {
+            "t": 1784204039
+          },
+          {
+            "t": 1784204099
+          },
+          {
+            "t": 1784204159
+          },
+          {
+            "t": 1784204219
+          },
+          {
+            "t": 1784204279
+          },
+          {
+            "t": 1784204339
+          },
+          {
+            "t": 1784204399
+          },
+          {
+            "t": 1784204459
+          },
+          {
+            "t": 1784204519
+          },
+          {
+            "t": 1784204579
+          },
+          {
+            "t": 1784204639
+          },
+          {
+            "t": 1784204699
+          },
+          {
+            "t": 1784204759
+          },
+          {
+            "t": 1784204819
+          },
+          {
+            "t": 1784204879
+          },
+          {
+            "t": 1784204939
+          },
+          {
+            "t": 1784204999
+          },
+          {
+            "t": 1784205059
+          },
+          {
+            "t": 1784205119
+          },
+          {
+            "t": 1784205179
+          },
+          {
+            "t": 1784205239
+          },
+          {
+            "t": 1784205299
+          },
+          {
+            "t": 1784205359
+          },
+          {
+            "t": 1784205419
+          },
+          {
+            "t": 1784205479
+          },
+          {
+            "t": 1784205539
+          },
+          {
+            "t": 1784205599
+          },
+          {
+            "t": 1784205659
+          },
+          {
+            "t": 1784205719
+          },
+          {
+            "t": 1784205779
+          },
+          {
+            "t": 1784205839
+          },
+          {
+            "t": 1784205899
+          },
+          {
+            "t": 1784205959
+          },
+          {
+            "t": 1784206019
+          },
+          {
+            "t": 1784206079
+          },
+          {
+            "t": 1784206139
+          },
+          {
+            "t": 1784206199
+          },
+          {
+            "t": 1784206259
+          },
+          {
+            "t": 1784206319
+          },
+          {
+            "t": 1784206379
+          },
+          {
+            "t": 1784206439
+          },
+          {
+            "t": 1784206499
+          },
+          {
+            "t": 1784206559
+          },
+          {
+            "t": 1784206619
+          },
+          {
+            "t": 1784206679
+          },
+          {
+            "t": 1784206739
+          },
+          {
+            "t": 1784206799
+          },
+          {
+            "t": 1784206859
+          },
+          {
+            "t": 1784206919
+          },
+          {
+            "t": 1784206979
+          },
+          {
+            "t": 1784207039
+          },
+          {
+            "t": 1784207099
+          },
+          {
+            "t": 1784207159
+          },
+          {
+            "t": 1784207219
+          },
+          {
+            "t": 1784207279
+          },
+          {
+            "t": 1784207339
+          },
+          {
+            "t": 1784207399
+          },
+          {
+            "t": 1784207459
+          },
+          {
+            "t": 1784207519
+          },
+          {
+            "t": 1784207579
+          },
+          {
+            "t": 1784207639
+          },
+          {
+            "t": 1784207699
+          },
+          {
+            "t": 1784207759
+          },
+          {
+            "t": 1784207819
+          },
+          {
+            "t": 1784207879
+          },
+          {
+            "t": 1784207939
+          },
+          {
+            "t": 1784207999
+          },
+          {
+            "t": 1784208059
+          },
+          {
+            "t": 1784208119
+          },
+          {
+            "t": 1784208179
+          },
+          {
+            "t": 1784208239
+          },
+          {
+            "t": 1784208299
+          },
+          {
+            "t": 1784208359
+          },
+          {
+            "t": 1784208419
+          },
+          {
+            "t": 1784208479
+          },
+          {
+            "t": 1784208539
+          },
+          {
+            "t": 1784208599
+          },
+          {
+            "t": 1784208659
+          },
+          {
+            "t": 1784208719
+          },
+          {
+            "t": 1784208779
+          },
+          {
+            "t": 1784208839
+          },
+          {
+            "t": 1784208899
+          },
+          {
+            "t": 1784208959
+          },
+          {
+            "t": 1784209019
+          },
+          {
+            "t": 1784209079
+          },
+          {
+            "t": 1784209139
+          },
+          {
+            "t": 1784209199
+          },
+          {
+            "t": 1784209259
+          },
+          {
+            "t": 1784209319
+          },
+          {
+            "t": 1784209379
+          },
+          {
+            "t": 1784209439
+          },
+          {
+            "t": 1784209499
+          },
+          {
+            "t": 1784209559
+          },
+          {
+            "t": 1784209619
+          },
+          {
+            "t": 1784209679
+          },
+          {
+            "t": 1784209739
+          },
+          {
+            "t": 1784209799
+          },
+          {
+            "t": 1784209859
+          },
+          {
+            "t": 1784209919
+          },
+          {
+            "t": 1784209979
+          },
+          {
+            "t": 1784210039
+          },
+          {
+            "t": 1784210099
+          },
+          {
+            "t": 1784210159
+          },
+          {
+            "t": 1784210219
+          },
+          {
+            "t": 1784210279
+          },
+          {
+            "t": 1784210339
+          },
+          {
+            "t": 1784210399
+          },
+          {
+            "t": 1784210459
+          },
+          {
+            "t": 1784210519
+          },
+          {
+            "t": 1784210579
+          },
+          {
+            "t": 1784210639
+          },
+          {
+            "t": 1784210699
+          },
+          {
+            "t": 1784210759
+          },
+          {
+            "t": 1784210819
+          },
+          {
+            "t": 1784210879
+          },
+          {
+            "t": 1784210939
+          },
+          {
+            "t": 1784210999
+          },
+          {
+            "t": 1784211059
+          },
+          {
+            "t": 1784211119
+          },
+          {
+            "t": 1784211179
+          },
+          {
+            "t": 1784211239
+          },
+          {
+            "t": 1784211299
+          },
+          {
+            "t": 1784211359
+          },
+          {
+            "t": 1784211419
+          },
+          {
+            "t": 1784211479
+          },
+          {
+            "t": 1784211539
+          },
+          {
+            "t": 1784211599
+          },
+          {
+            "t": 1784211659
+          },
+          {
+            "t": 1784211719
+          },
+          {
+            "t": 1784211779
+          },
+          {
+            "t": 1784211839
+          },
+          {
+            "t": 1784211899
+          },
+          {
+            "t": 1784211959
+          },
+          {
+            "t": 1784212019
+          },
+          {
+            "t": 1784212079
+          },
+          {
+            "t": 1784212139
+          },
+          {
+            "t": 1784212199
+          },
+          {
+            "t": 1784212259
+          },
+          {
+            "t": 1784212319
+          },
+          {
+            "t": 1784212379
+          },
+          {
+            "t": 1784212439
+          },
+          {
+            "t": 1784212499
+          },
+          {
+            "t": 1784212559
+          },
+          {
+            "t": 1784212619
+          },
+          {
+            "t": 1784212679
+          },
+          {
+            "t": 1784212739
+          },
+          {
+            "t": 1784212799
+          },
+          {
+            "t": 1784212859
+          },
+          {
+            "t": 1784212919
+          },
+          {
+            "t": 1784212979
+          },
+          {
+            "t": 1784213039
+          },
+          {
+            "t": 1784213099
+          },
+          {
+            "t": 1784213159
+          },
+          {
+            "t": 1784213219
+          },
+          {
+            "t": 1784213279
+          },
+          {
+            "t": 1784213339
+          },
+          {
+            "t": 1784213399
+          },
+          {
+            "t": 1784213459
+          },
+          {
+            "t": 1784213519
+          },
+          {
+            "t": 1784213579
+          },
+          {
+            "t": 1784213639
+          },
+          {
+            "t": 1784213699
+          },
+          {
+            "t": 1784213759
+          },
+          {
+            "t": 1784213819
+          },
+          {
+            "t": 1784213879
+          },
+          {
+            "t": 1784213939
+          },
+          {
+            "t": 1784213999
+          },
+          {
+            "t": 1784214059
+          },
+          {
+            "t": 1784214119
+          },
+          {
+            "t": 1784214179
+          },
+          {
+            "t": 1784214239
+          },
+          {
+            "t": 1784214299
+          },
+          {
+            "t": 1784214359
+          },
+          {
+            "t": 1784214419
+          },
+          {
+            "t": 1784214479
+          },
+          {
+            "t": 1784214539
+          },
+          {
+            "t": 1784214599
+          },
+          {
+            "t": 1784214659
+          },
+          {
+            "t": 1784214719
+          },
+          {
+            "t": 1784214779
+          },
+          {
+            "t": 1784214839
+          },
+          {
+            "t": 1784214899
+          },
+          {
+            "t": 1784214959
+          },
+          {
+            "t": 1784215019
+          },
+          {
+            "t": 1784215079
+          },
+          {
+            "t": 1784215139
+          },
+          {
+            "t": 1784215199
+          },
+          {
+            "t": 1784215259
+          },
+          {
+            "t": 1784215319
+          },
+          {
+            "t": 1784215379
+          },
+          {
+            "t": 1784215439
+          },
+          {
+            "t": 1784215499
+          },
+          {
+            "t": 1784215559
+          },
+          {
+            "t": 1784215619
+          },
+          {
+            "t": 1784215679
+          },
+          {
+            "t": 1784215739
+          },
+          {
+            "t": 1784215799
+          },
+          {
+            "t": 1784215859
+          },
+          {
+            "t": 1784215919
+          },
+          {
+            "t": 1784215979
+          },
+          {
+            "t": 1784216039
+          },
+          {
+            "t": 1784216099
+          },
+          {
+            "t": 1784216159
+          },
+          {
+            "t": 1784216219
+          },
+          {
+            "t": 1784216279
+          },
+          {
+            "t": 1784216339
+          },
+          {
+            "t": 1784216399
+          },
+          {
+            "t": 1784216459
+          },
+          {
+            "t": 1784216519
+          },
+          {
+            "t": 1784216579
+          },
+          {
+            "t": 1784216639
+          },
+          {
+            "t": 1784216699
+          },
+          {
+            "t": 1784216759
+          },
+          {
+            "t": 1784216819
+          },
+          {
+            "t": 1784216879
+          },
+          {
+            "t": 1784216939
+          },
+          {
+            "t": 1784216999
+          },
+          {
+            "t": 1784217059
+          },
+          {
+            "t": 1784217119
+          },
+          {
+            "t": 1784217179
+          },
+          {
+            "t": 1784217239
+          },
+          {
+            "t": 1784217299
+          },
+          {
+            "t": 1784217359
+          },
+          {
+            "t": 1784217419
+          },
+          {
+            "t": 1784217479
+          },
+          {
+            "t": 1784217539
+          },
+          {
+            "t": 1784217599
+          },
+          {
+            "t": 1784217600
+          }
+        ]
+      },
+      "description": "The Corgi All World 2x Daily ETF (WX) is an exchange-traded fund that mostly invests in total market equity. The fund aims to provide 2x leveraged exposure to the daily price movement of the Vanguard Total World Stock Index Fund ETF (Ticker: VT), which provides exposure to equities from around the world, including emerging markets. WX was launched on Jun 3, 2026 and is issued by Corgi.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Category",
+          "Trading--Leveraged Equity"
+        ],
+        [
+          "Region",
+          "Global"
+        ],
+        [
+          "Stock Exchange",
+          "BATS"
+        ],
+        [
+          "Ticker Symbol",
+          "WX"
+        ],
+        [
+          "Provider",
+          "Corgi"
+        ]
+      ],
+      "etf_website": "https://corgifunds.com/wx",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 5,
+        "updated": "Jul 16, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "VANGUARD TOTAL WORLD STOCK INDEX FUND ETF SHARES-SWAP-CLST-L",
+            "as": "200.63%",
+            "sh": "4,595"
+          },
+          {
+            "n": "US DOLLARS",
+            "as": "61.53%",
+            "sh": "220,000"
+          },
+          {
+            "n": "First American Government Obligations Fund",
+            "s": "!mutf/FGXXX",
+            "as": "40.44%",
+            "sh": "144,594"
+          },
+          {
+            "n": "OTHER ASSETS AND LIABILITIES",
+            "as": "-4.01%",
+            "sh": "14,354"
+          },
+          {
+            "n": "Cash Offset",
+            "as": "-198.58%",
+            "sh": "710,083"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784248768593",
+        "data": [
+          {
+            "url": "https://www.etftrends.com/thematic-investing-content-hub/roundup-junes-most-notable-etf-launches/",
+            "img": "https://cdn.snapi.dev/images/v1/i/h/6/etf5-3779937.jpg",
+            "title": "A Roundup of June's Most Notable ETF Launches",
+            "text": "June has seen many ETF launches, from pure-play AI memory chip thematics to an autism impact fund that donates returns to nonprofits. With a record breaking 214 launches, the ETF landscape continues t...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#ASD",
+              "#DRAM",
+              "#HBMX",
+              "#LOFF",
+              "#RACK",
+              "#RAM",
+              "#VT"
+            ],
+            "time": "Jun 30, 2026, 5:02 PM EDT",
+            "ago": "18 days ago"
+          },
+          {
+            "url": "https://www.etftrends.com/corgi-breaks-records-again-debut-of-35-etfs/",
+            "img": "https://cdn.snapi.dev/images/v1/h/p/m/etf36-3737739.jpg",
+            "title": "Corgi Breaks Records Again: The Debut of 35 ETFs",
+            "text": "Less than a month after Corgi launched the largest ETF rollout by a single issuer, the firm broke that record. On June 3, Corgi Funds launched 35 new ETFs on Cboe, this time targeting short-term resul...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#OWN"
+            ],
+            "time": "Jun 4, 2026, 9:38 AM EDT",
+            "ago": "6 weeks ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 24.339,
+        "price1m": 24.471,
+        "price3m": null,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 24.587
+      },
+      "performance": {
+        "tr1m": -4.148584038249357,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {
+      "holdings": [
+        {
+          "no": 1,
+          "n": "VANGUARD TOTAL WORLD STOCK INDEX FUND ETF SHARES-SWAP-CLST-L",
+          "as": "200.63%",
+          "sh": "4,595"
+        },
+        {
+          "no": 2,
+          "n": "US DOLLARS",
+          "as": "61.53%",
+          "sh": "220,000"
+        },
+        {
+          "no": 3,
+          "n": "First American Government Obligations Fund",
+          "s": "!mutf/FGXXX",
+          "as": "40.44%",
+          "sh": "144,594"
+        },
+        {
+          "no": 4,
+          "n": "OTHER ASSETS AND LIABILITIES",
+          "as": "-4.01%",
+          "sh": "14,354"
+        },
+        {
+          "no": 5,
+          "n": "Cash Offset",
+          "as": "-198.58%",
+          "sh": "710,083"
+        }
+      ],
+      "asset_allocation": null,
+      "sectors": null,
+      "countries": null,
+      "allocationChartData": {
+        "sectors": [],
+        "assets": [],
+        "countries": []
+      },
+      "news": [
+        {
+          "t": "A Roundup of June's Most Notable ETF Launches",
+          "u": "https://www.etftrends.com/thematic-investing-content-hub/roundup-junes-most-notable-etf-launches/",
+          "n": "ETF Trends",
+          "d": "18 days ago"
+        },
+        {
+          "t": "Corgi Breaks Records Again: The Debut of 35 ETFs",
+          "u": "https://www.etftrends.com/corgi-breaks-records-again-debut-of-35-etfs/",
+          "n": "ETF Trends",
+          "d": "6 weeks ago"
+        }
+      ],
+      "infoBox": null,
+      "infoTable": {
+        "count": 5,
+        "top10": 100,
+        "assetClass": "Equity",
+        "category": "Trading--Leveraged Equity",
+        "categoryLabel": "ETF Category",
+        "aum": 360746,
+        "peRatio": null
+      },
+      "date": "Jul 16, 2026",
+      "count": 5,
+      "trust": {
+        "sources": [
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "freshnessLag": "days",
+        "updateFrequency": "daily",
+        "lastUpdated": "Jul 16, 2026",
+        "lastChecked": 1784374075439,
+        "topic": "holdings",
+        "ticker": "WX",
+        "summary": {
+          "pre": "ETF holdings data is provided by ",
+          "post": ". Holdings are typically published by the ETF issuer at the end of each trading day."
+        },
+        "extraSummaryLinks": null
+      }
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}

@@ -1,18 +1,12 @@
 #!/usr/bin/env node
 
-import { existsSync, lstatSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import {
   MIN_MERGED_EXPENSE_RATIO_COUNT,
   MIN_TRUE_PRIMARY_COVERAGE_RATE,
   R2_4_TRUE_PRIMARY_DETAIL_BASELINE,
   deriveStockAnalysisEtfUniverseThresholds,
 } from "./stockanalysis-etf-universe-thresholds.mjs";
-import {
-  STOCKANALYSIS_ETF_SHARD_COUNT,
-  sha256Text,
-  stockanalysisEtfManifestSha256,
-  stockanalysisEtfShardId,
-} from "../src/lib/stockanalysis-etf-shard.mjs";
 
 const ROOT = process.cwd();
 
@@ -21,7 +15,6 @@ const PUBLIC_UNIVERSE_PATH = `${ROOT}/public/data/stockanalysis/etf_universe.jso
 const SOURCE_SCREENER_PATH = `${ROOT}/../data/stockanalysis/surfaces/etf_screener.json`;
 const PUBLIC_SCREENER_PATH = `${ROOT}/public/data/stockanalysis/surfaces/etf_screener.json`;
 const SOURCE_ETF_DETAIL_ROOT = `${ROOT}/../data/stockanalysis/etfs`;
-const PUBLIC_ETF_DETAIL_ROOT = `${ROOT}/public/data/stockanalysis/etfs`;
 
 // R2.4 removed 718 Yahoo fallback payloads from the legacy ETF-detail root,
 // leaving 4,731 true-primary files. Keep that cutover population fail-closed.
@@ -55,62 +48,6 @@ function jsonFileTickerSet(path) {
   return new Set(readdirSync(path, { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
     .map((entry) => cleanTicker(entry.name.slice(0, -".json".length))));
-}
-
-function assertPublicShardProjection(sourceTickerSet, errors) {
-  if (!existsSync(PUBLIC_ETF_DETAIL_ROOT)) {
-    errors.push("public StockAnalysis ETF detail root is missing");
-    return null;
-  }
-  const directFiles = readdirSync(PUBLIC_ETF_DETAIL_ROOT, { withFileTypes: true })
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".json"));
-  assert(directFiles.length === 0, `public StockAnalysis ETF shard-only root must contain zero direct files, got ${directFiles.length}`, errors);
-  const publicShardRoot = `${PUBLIC_ETF_DETAIL_ROOT}/shards`;
-  if (existsSync(publicShardRoot)) {
-    const shardRootStat = lstatSync(publicShardRoot);
-    assert(!shardRootStat.isSymbolicLink() && shardRootStat.isDirectory(), "public StockAnalysis ETF shard root must be a real directory", errors);
-  }
-  const manifestPath = `${PUBLIC_ETF_DETAIL_ROOT}/shards/index.json`;
-  assert(existsSync(manifestPath), "public StockAnalysis ETF shard manifest is missing", errors);
-  if (!existsSync(manifestPath)) return null;
-  const manifestStat = lstatSync(manifestPath);
-  assert(!manifestStat.isSymbolicLink() && manifestStat.isFile(), "public StockAnalysis ETF shard manifest must be a regular file", errors);
-  if (manifestStat.isSymbolicLink() || !manifestStat.isFile()) return null;
-  const manifest = readJson(manifestPath);
-  assert(manifest.compatibility_mode === "shard-only", "public StockAnalysis ETF manifest must be shard-only", errors);
-  assert(manifest.shard_count === STOCKANALYSIS_ETF_SHARD_COUNT, "public StockAnalysis ETF shard count mismatch", errors);
-  assert(Array.isArray(manifest.shards) && manifest.shards.length === STOCKANALYSIS_ETF_SHARD_COUNT, "public StockAnalysis ETF manifest must enumerate all shards", errors);
-  assert(manifest.payload_count === sourceTickerSet.size, `public StockAnalysis ETF payload count mismatch: ${manifest.payload_count} vs ${sourceTickerSet.size}`, errors);
-  assert(manifest.manifest_sha256 === stockanalysisEtfManifestSha256(manifest), "public StockAnalysis ETF manifest digest mismatch", errors);
-  return manifest;
-}
-
-function assertPublicShardDetail(ticker, sourcePath, manifest, errors) {
-  if (!manifest) return;
-  const shardId = stockanalysisEtfShardId(ticker);
-  const entry = manifest.shards?.[shardId];
-  assert(entry?.id === shardId && typeof entry.path === "string", `${ticker}: shard manifest entry missing`, errors);
-  if (!entry?.path) return;
-  const shardPath = `${PUBLIC_ETF_DETAIL_ROOT}/shards/${entry.path}`;
-  assert(existsSync(shardPath), `${ticker}: public ETF shard file missing`, errors);
-  if (!existsSync(shardPath)) return;
-  const shardStat = lstatSync(shardPath);
-  assert(!shardStat.isSymbolicLink() && shardStat.isFile(), `${ticker}: public ETF shard path must be a regular file`, errors);
-  if (shardStat.isSymbolicLink() || !shardStat.isFile()) return;
-  const shardBytes = readText(shardPath);
-  assert(sha256Text(shardBytes) === entry.sha256, `${ticker}: public ETF shard digest mismatch`, errors);
-  let shard;
-  try {
-    shard = JSON.parse(shardBytes);
-  } catch (error) {
-    errors.push(`${ticker}: public ETF shard JSON is invalid (${error.message})`);
-    return;
-  }
-  const document = shard?.entries?.[ticker];
-  assert(document?.raw && document.sha256 === sha256Text(document.raw), `${ticker}: public ETF shard payload digest mismatch`, errors);
-  if (!document?.raw) return;
-  assert(document.raw === readText(sourcePath), `${ticker} ETF shard/source bytes differ`, errors);
-  assert(JSON.parse(document.raw).ticker === ticker, `${ticker}: public ETF shard payload identity mismatch`, errors);
 }
 
 function assert(condition, message, errors) {
@@ -319,7 +256,6 @@ const merged = buildMergedUniverse(universe, screener);
 const counts = merged.counts;
 const truePrimaryDetailTickers = jsonFileTickerSet(SOURCE_ETF_DETAIL_ROOT);
 const truePrimaryDetailCount = truePrimaryDetailTickers.size;
-const publicShardManifest = assertPublicShardProjection(truePrimaryDetailTickers, errors);
 const truePrimaryMergedRecords = merged.records.filter((row) => (
   truePrimaryDetailTickers.has(cleanTicker(row.ticker))
 ));
@@ -403,11 +339,13 @@ assertTickerContract(merged, "TSLL", {
 }, errors);
 
 for (const ticker of REQUIRED_DETAIL_FILES) {
+  const publicPath = `${ROOT}/public/data/stockanalysis/etfs/${ticker}.json`;
   const sourcePath = `${ROOT}/../data/stockanalysis/etfs/${ticker}.json`;
+  assert(existsSync(publicPath), `${ticker}: public ETF detail file missing`, errors);
   assert(existsSync(sourcePath), `${ticker}: source ETF detail file missing`, errors);
-  if (existsSync(sourcePath)) {
-    assertPublicShardDetail(ticker, sourcePath, publicShardManifest, errors);
-    assertEtfHistoryPeriods(readJson(sourcePath), ticker, errors);
+  if (existsSync(publicPath) && existsSync(sourcePath)) {
+    assertMirror(`${ticker} ETF detail`, sourcePath, publicPath, errors);
+    assertEtfHistoryPeriods(readJson(publicPath), ticker, errors);
   }
 }
 

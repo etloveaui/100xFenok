@@ -3105,9 +3105,6 @@ def write_json(path: Path, payload: dict) -> None:
 
 
 def write_payload(rel_path: str, payload: dict, mirror_public: bool) -> None:
-    normalized = rel_path.replace("\\", "/")
-    if mirror_public and normalized.startswith("etfs/"):
-        raise ValueError("public StockAnalysis ETF detail mirroring is retired; publish shard projection instead")
     write_json(OUT_DIR / rel_path, payload)
     if mirror_public:
         write_json(PUBLIC_DIR / rel_path, payload)

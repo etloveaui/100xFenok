@@ -1,0 +1,287 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "DVXV",
+  "source_as_of": "2026-07-16T00:00:00Z",
+  "fetched_at": "2026-07-18T18:42:49Z",
+  "endpoints": {
+    "holdings": "/etf/dvxv/holdings/__data.json",
+    "overview": "/etf/dvxv/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "symbol": "#XLV",
+        "name": "State Street Health Care Select Sector SPDR ETF",
+        "weight_pct": 52.59,
+        "shares": 1426,
+        "raw": {
+          "n": "State Street Health Care Select Sector SPDR ETF",
+          "s": "#XLV",
+          "as": "52.59%",
+          "sh": "1,426"
+        }
+      },
+      {
+        "name": "Trs Health Care Select Sector /Long/",
+        "weight_pct": 51.74,
+        "shares": 1403,
+        "raw": {
+          "n": "Trs Health Care Select Sector /Long/",
+          "as": "51.74%",
+          "sh": "1,403"
+        }
+      },
+      {
+        "name": "Us Dollars",
+        "weight_pct": 39.01,
+        "shares": 171179,
+        "raw": {
+          "n": "Us Dollars",
+          "as": "39.01%",
+          "sh": "171,179"
+        }
+      },
+      {
+        "name": "Trs Health Care Select Sector /Short/",
+        "weight_pct": -43.34,
+        "shares": 190147,
+        "raw": {
+          "n": "Trs Health Care Select Sector /Short/",
+          "as": "-43.34%",
+          "sh": "190,147"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 4,
+    "holdings_updated": "Jul 16, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$477.69K",
+      "expenseRatio": "0.89%",
+      "sharesOut": "15,000",
+      "inception": "Jul 22, 2025",
+      "etf_website": "https://www.websinv.com/product_page/dvxv/"
+    },
+    "performance": {
+      "tr1m": 5.854,
+      "trYTD": 3.995,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "DVXV",
+        "lastChecked": 1784335383415,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$477.69K",
+      "nav": null,
+      "expenseRatio": "0.89%",
+      "peRatio": null,
+      "sharesOut": "15,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 4,
+      "inception": "Jul 22, 2025",
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "The WEBs Health Care XLV Defined Volatility ETF (DVXV) is an exchange-traded fund that is based on the Syntax Defined Volatility XLV index. The fund tracks an index that adjusts exposure, between 0-200% via swaps, to the US large-cap Health Care sector based on recent market volatility. The investment objective is to reduce volatility to a distinct target level and pursue better risk-adjusted sector returns DVXV was launched on Jul 22, 2025 and is issued by WEBs.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Equity"
+        ],
+        [
+          "Category",
+          "Health"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "NASDAQ"
+        ],
+        [
+          "Ticker Symbol",
+          "DVXV"
+        ],
+        [
+          "Provider",
+          "WEBs"
+        ],
+        [
+          "Index Tracked",
+          "Syntax Defined Volatility XLV Index"
+        ]
+      ],
+      "etf_website": "https://www.websinv.com/product_page/dvxv/",
+      "provider_page": null,
+      "holdingsTable": {
+        "count": 4,
+        "updated": "Jul 16, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "State Street Health Care Select Sector SPDR ETF",
+            "s": "#XLV",
+            "as": "52.59%",
+            "sh": "1,426"
+          },
+          {
+            "n": "Trs Health Care Select Sector /Long/",
+            "as": "51.74%",
+            "sh": "1,403"
+          },
+          {
+            "n": "Us Dollars",
+            "as": "39.01%",
+            "sh": "171,179"
+          },
+          {
+            "n": "Trs Health Care Select Sector /Short/",
+            "as": "-43.34%",
+            "sh": "190,147"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784156344094",
+        "data": [
+          {
+            "url": "https://www.globenewswire.com/news-release/2025/07/23/3120166/0/en/WEBs-Investments-Expands-Defined-Volatility-ETF-Suite-with-Launch-of-11-Sector-Funds.html",
+            "img": "https://cdn.snapi.dev/images/v1/b/a/x/press1-3192805.jpg",
+            "title": "WEBs Investments Expands Defined Volatility℠ ETF Suite with Launch of 11 Sector Funds",
+            "text": "PARK CITY, Utah, July 23, 2025 (GLOBE NEWSWIRE) -- WEBs Investments Inc. (WEBs) , an innovator in volatility-managed investment solutions, in partnership with Westwood Holdings Group, Inc. (NYSE: WHG)...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": [
+              "#DVIN",
+              "#DVRE",
+              "#DVUT",
+              "#DVXB",
+              "#DVXC",
+              "#DVXE",
+              "#DVXF"
+            ],
+            "time": "Jul 23, 2025, 8:00 AM EDT",
+            "ago": "1 year ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": true
+      },
+      "changes": {
+        "price1w": 32.375,
+        "price1m": 30.574,
+        "price3m": 28.99,
+        "price6m": 31.363,
+        "priceYTD": 31.12,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 25.663
+      },
+      "performance": {
+        "tr1m": 5.854,
+        "trYTD": 3.995,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_surface_omits_holdings",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}

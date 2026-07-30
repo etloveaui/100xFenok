@@ -1,0 +1,2206 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "BOIL",
+  "source_as_of": "2026-07-13T00:00:00Z",
+  "fetched_at": "2026-07-15T14:50:36Z",
+  "endpoints": {
+    "holdings": "/etf/boil/holdings/__data.json",
+    "overview": "/etf/boil/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "name": "NATURAL GAS FUTR SEP26",
+        "weight_pct": 199.97,
+        "shares": 28364,
+        "raw": {
+          "n": "NATURAL GAS FUTR SEP26",
+          "as": "199.97%",
+          "sh": "28,364"
+        }
+      },
+      {
+        "name": "PROSHARES GENIUS MNY MKT ETF",
+        "shares": 1000000,
+        "raw": {
+          "n": "PROSHARES GENIUS MNY MKT ETF",
+          "sh": "1,000,000"
+        }
+      },
+      {
+        "name": "NET OTHER ASSETS / CASH",
+        "shares": 405812918,
+        "raw": {
+          "n": "NET OTHER ASSETS / CASH",
+          "sh": "405,812,918"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 3,
+    "holdings_updated": "Jul 13, 2026",
+    "classification": {
+      "is_leveraged": true,
+      "leverage_factor": 2.0,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$340.64M",
+      "nav": "$15.13",
+      "expenseRatio": "0.95%",
+      "sharesOut": "15.56M",
+      "beta": "0.01",
+      "inception": "Oct 4, 2011",
+      "provider_page": "proshares",
+      "etf_website": "https://www.proshares.com/our-etfs/leveraged-and-inverse/boil"
+    },
+    "performance": {
+      "tr1m": -15.919282511210769,
+      "trYTD": -50.87336244541485,
+      "tr1y": -75.50087108013938,
+      "cagr5y": -68.40958042526171,
+      "cagr10y": -58.60724371969051,
+      "cagrMAX": -57.72719545494043
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "BOIL",
+        "lastChecked": 1784127010351,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$340.64M",
+      "nav": "$15.13",
+      "expenseRatio": "0.95%",
+      "peRatio": null,
+      "sharesOut": "15.56M",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": "-75.50%",
+      "payoutFrequency": "n/a",
+      "beta": "0.01",
+      "holdings": 3,
+      "inception": "Oct 4, 2011",
+      "chart": {
+        "expiration": null,
+        "data": [
+          {
+            "c": 21.86,
+            "o": 21.931,
+            "t": 1784107800
+          },
+          {
+            "c": 21.86,
+            "t": 1784107860
+          },
+          {
+            "c": 21.86,
+            "t": 1784107920
+          },
+          {
+            "c": 21.831,
+            "t": 1784107980
+          },
+          {
+            "c": 21.83,
+            "t": 1784108040
+          },
+          {
+            "c": 21.78,
+            "t": 1784108100
+          },
+          {
+            "c": 21.806,
+            "t": 1784108160
+          },
+          {
+            "c": 21.825,
+            "t": 1784108220
+          },
+          {
+            "c": 21.805,
+            "t": 1784108280
+          },
+          {
+            "c": 21.8,
+            "t": 1784108340
+          },
+          {
+            "c": 21.815,
+            "t": 1784108400
+          },
+          {
+            "c": 21.81,
+            "t": 1784108460
+          },
+          {
+            "c": 21.815,
+            "t": 1784108520
+          },
+          {
+            "c": 21.825,
+            "t": 1784108580
+          },
+          {
+            "c": 21.808,
+            "t": 1784108640
+          },
+          {
+            "c": 21.88,
+            "t": 1784108700
+          },
+          {
+            "c": 21.92,
+            "t": 1784108760
+          },
+          {
+            "c": 21.885,
+            "t": 1784108820
+          },
+          {
+            "c": 21.9,
+            "t": 1784108880
+          },
+          {
+            "c": 21.895,
+            "t": 1784108940
+          },
+          {
+            "c": 21.9,
+            "t": 1784109000
+          },
+          {
+            "c": 21.95,
+            "t": 1784109060
+          },
+          {
+            "c": 21.905,
+            "t": 1784109120
+          },
+          {
+            "c": 21.895,
+            "t": 1784109180
+          },
+          {
+            "c": 21.881,
+            "t": 1784109240
+          },
+          {
+            "c": 21.91,
+            "t": 1784109300
+          },
+          {
+            "c": 21.91,
+            "t": 1784109360
+          },
+          {
+            "c": 21.889,
+            "t": 1784109420
+          },
+          {
+            "c": 21.935,
+            "t": 1784109480
+          },
+          {
+            "c": 22,
+            "t": 1784109540
+          },
+          {
+            "c": 21.91,
+            "t": 1784109600
+          },
+          {
+            "c": 21.835,
+            "t": 1784109660
+          },
+          {
+            "c": 21.845,
+            "t": 1784109720
+          },
+          {
+            "c": 21.82,
+            "t": 1784109780
+          },
+          {
+            "c": 21.845,
+            "t": 1784109840
+          },
+          {
+            "c": 21.845,
+            "t": 1784109900
+          },
+          {
+            "c": 21.855,
+            "t": 1784109960
+          },
+          {
+            "c": 21.855,
+            "t": 1784110020
+          },
+          {
+            "c": 21.85,
+            "t": 1784110080
+          },
+          {
+            "c": 21.82,
+            "t": 1784110140
+          },
+          {
+            "c": 21.915,
+            "t": 1784110200
+          },
+          {
+            "c": 21.95,
+            "t": 1784110260
+          },
+          {
+            "c": 21.97,
+            "t": 1784110320
+          },
+          {
+            "c": 21.975,
+            "t": 1784110380
+          },
+          {
+            "c": 21.97,
+            "t": 1784110440
+          },
+          {
+            "c": 21.971,
+            "t": 1784110500
+          },
+          {
+            "c": 21.98,
+            "t": 1784110560
+          },
+          {
+            "c": 21.995,
+            "t": 1784110620
+          },
+          {
+            "c": 22.005,
+            "t": 1784110680
+          },
+          {
+            "c": 21.985,
+            "t": 1784110740
+          },
+          {
+            "c": 22.065,
+            "t": 1784110800
+          },
+          {
+            "c": 22.07,
+            "t": 1784110860
+          },
+          {
+            "c": 22.06,
+            "t": 1784110920
+          },
+          {
+            "c": 22.14,
+            "t": 1784110980
+          },
+          {
+            "c": 22.19,
+            "t": 1784111040
+          },
+          {
+            "c": 22.175,
+            "t": 1784111100
+          },
+          {
+            "c": 22.235,
+            "t": 1784111160
+          },
+          {
+            "c": 22.2,
+            "t": 1784111220
+          },
+          {
+            "c": 22.23,
+            "t": 1784111280
+          },
+          {
+            "c": 22.29,
+            "t": 1784111340
+          },
+          {
+            "c": 22.29,
+            "t": 1784111400
+          },
+          {
+            "t": 1784111459
+          },
+          {
+            "t": 1784111519
+          },
+          {
+            "t": 1784111579
+          },
+          {
+            "t": 1784111639
+          },
+          {
+            "t": 1784111699
+          },
+          {
+            "t": 1784111759
+          },
+          {
+            "t": 1784111819
+          },
+          {
+            "t": 1784111879
+          },
+          {
+            "t": 1784111939
+          },
+          {
+            "t": 1784111999
+          },
+          {
+            "t": 1784112059
+          },
+          {
+            "t": 1784112119
+          },
+          {
+            "t": 1784112179
+          },
+          {
+            "t": 1784112239
+          },
+          {
+            "t": 1784112299
+          },
+          {
+            "t": 1784112359
+          },
+          {
+            "t": 1784112419
+          },
+          {
+            "t": 1784112479
+          },
+          {
+            "t": 1784112539
+          },
+          {
+            "t": 1784112599
+          },
+          {
+            "t": 1784112659
+          },
+          {
+            "t": 1784112719
+          },
+          {
+            "t": 1784112779
+          },
+          {
+            "t": 1784112839
+          },
+          {
+            "t": 1784112899
+          },
+          {
+            "t": 1784112959
+          },
+          {
+            "t": 1784113019
+          },
+          {
+            "t": 1784113079
+          },
+          {
+            "t": 1784113139
+          },
+          {
+            "t": 1784113199
+          },
+          {
+            "t": 1784113259
+          },
+          {
+            "t": 1784113319
+          },
+          {
+            "t": 1784113379
+          },
+          {
+            "t": 1784113439
+          },
+          {
+            "t": 1784113499
+          },
+          {
+            "t": 1784113559
+          },
+          {
+            "t": 1784113619
+          },
+          {
+            "t": 1784113679
+          },
+          {
+            "t": 1784113739
+          },
+          {
+            "t": 1784113799
+          },
+          {
+            "t": 1784113859
+          },
+          {
+            "t": 1784113919
+          },
+          {
+            "t": 1784113979
+          },
+          {
+            "t": 1784114039
+          },
+          {
+            "t": 1784114099
+          },
+          {
+            "t": 1784114159
+          },
+          {
+            "t": 1784114219
+          },
+          {
+            "t": 1784114279
+          },
+          {
+            "t": 1784114339
+          },
+          {
+            "t": 1784114399
+          },
+          {
+            "t": 1784114459
+          },
+          {
+            "t": 1784114519
+          },
+          {
+            "t": 1784114579
+          },
+          {
+            "t": 1784114639
+          },
+          {
+            "t": 1784114699
+          },
+          {
+            "t": 1784114759
+          },
+          {
+            "t": 1784114819
+          },
+          {
+            "t": 1784114879
+          },
+          {
+            "t": 1784114939
+          },
+          {
+            "t": 1784114999
+          },
+          {
+            "t": 1784115059
+          },
+          {
+            "t": 1784115119
+          },
+          {
+            "t": 1784115179
+          },
+          {
+            "t": 1784115239
+          },
+          {
+            "t": 1784115299
+          },
+          {
+            "t": 1784115359
+          },
+          {
+            "t": 1784115419
+          },
+          {
+            "t": 1784115479
+          },
+          {
+            "t": 1784115539
+          },
+          {
+            "t": 1784115599
+          },
+          {
+            "t": 1784115659
+          },
+          {
+            "t": 1784115719
+          },
+          {
+            "t": 1784115779
+          },
+          {
+            "t": 1784115839
+          },
+          {
+            "t": 1784115899
+          },
+          {
+            "t": 1784115959
+          },
+          {
+            "t": 1784116019
+          },
+          {
+            "t": 1784116079
+          },
+          {
+            "t": 1784116139
+          },
+          {
+            "t": 1784116199
+          },
+          {
+            "t": 1784116259
+          },
+          {
+            "t": 1784116319
+          },
+          {
+            "t": 1784116379
+          },
+          {
+            "t": 1784116439
+          },
+          {
+            "t": 1784116499
+          },
+          {
+            "t": 1784116559
+          },
+          {
+            "t": 1784116619
+          },
+          {
+            "t": 1784116679
+          },
+          {
+            "t": 1784116739
+          },
+          {
+            "t": 1784116799
+          },
+          {
+            "t": 1784116859
+          },
+          {
+            "t": 1784116919
+          },
+          {
+            "t": 1784116979
+          },
+          {
+            "t": 1784117039
+          },
+          {
+            "t": 1784117099
+          },
+          {
+            "t": 1784117159
+          },
+          {
+            "t": 1784117219
+          },
+          {
+            "t": 1784117279
+          },
+          {
+            "t": 1784117339
+          },
+          {
+            "t": 1784117399
+          },
+          {
+            "t": 1784117459
+          },
+          {
+            "t": 1784117519
+          },
+          {
+            "t": 1784117579
+          },
+          {
+            "t": 1784117639
+          },
+          {
+            "t": 1784117699
+          },
+          {
+            "t": 1784117759
+          },
+          {
+            "t": 1784117819
+          },
+          {
+            "t": 1784117879
+          },
+          {
+            "t": 1784117939
+          },
+          {
+            "t": 1784117999
+          },
+          {
+            "t": 1784118059
+          },
+          {
+            "t": 1784118119
+          },
+          {
+            "t": 1784118179
+          },
+          {
+            "t": 1784118239
+          },
+          {
+            "t": 1784118299
+          },
+          {
+            "t": 1784118359
+          },
+          {
+            "t": 1784118419
+          },
+          {
+            "t": 1784118479
+          },
+          {
+            "t": 1784118539
+          },
+          {
+            "t": 1784118599
+          },
+          {
+            "t": 1784118659
+          },
+          {
+            "t": 1784118719
+          },
+          {
+            "t": 1784118779
+          },
+          {
+            "t": 1784118839
+          },
+          {
+            "t": 1784118899
+          },
+          {
+            "t": 1784118959
+          },
+          {
+            "t": 1784119019
+          },
+          {
+            "t": 1784119079
+          },
+          {
+            "t": 1784119139
+          },
+          {
+            "t": 1784119199
+          },
+          {
+            "t": 1784119259
+          },
+          {
+            "t": 1784119319
+          },
+          {
+            "t": 1784119379
+          },
+          {
+            "t": 1784119439
+          },
+          {
+            "t": 1784119499
+          },
+          {
+            "t": 1784119559
+          },
+          {
+            "t": 1784119619
+          },
+          {
+            "t": 1784119679
+          },
+          {
+            "t": 1784119739
+          },
+          {
+            "t": 1784119799
+          },
+          {
+            "t": 1784119859
+          },
+          {
+            "t": 1784119919
+          },
+          {
+            "t": 1784119979
+          },
+          {
+            "t": 1784120039
+          },
+          {
+            "t": 1784120099
+          },
+          {
+            "t": 1784120159
+          },
+          {
+            "t": 1784120219
+          },
+          {
+            "t": 1784120279
+          },
+          {
+            "t": 1784120339
+          },
+          {
+            "t": 1784120399
+          },
+          {
+            "t": 1784120459
+          },
+          {
+            "t": 1784120519
+          },
+          {
+            "t": 1784120579
+          },
+          {
+            "t": 1784120639
+          },
+          {
+            "t": 1784120699
+          },
+          {
+            "t": 1784120759
+          },
+          {
+            "t": 1784120819
+          },
+          {
+            "t": 1784120879
+          },
+          {
+            "t": 1784120939
+          },
+          {
+            "t": 1784120999
+          },
+          {
+            "t": 1784121059
+          },
+          {
+            "t": 1784121119
+          },
+          {
+            "t": 1784121179
+          },
+          {
+            "t": 1784121239
+          },
+          {
+            "t": 1784121299
+          },
+          {
+            "t": 1784121359
+          },
+          {
+            "t": 1784121419
+          },
+          {
+            "t": 1784121479
+          },
+          {
+            "t": 1784121539
+          },
+          {
+            "t": 1784121599
+          },
+          {
+            "t": 1784121659
+          },
+          {
+            "t": 1784121719
+          },
+          {
+            "t": 1784121779
+          },
+          {
+            "t": 1784121839
+          },
+          {
+            "t": 1784121899
+          },
+          {
+            "t": 1784121959
+          },
+          {
+            "t": 1784122019
+          },
+          {
+            "t": 1784122079
+          },
+          {
+            "t": 1784122139
+          },
+          {
+            "t": 1784122199
+          },
+          {
+            "t": 1784122259
+          },
+          {
+            "t": 1784122319
+          },
+          {
+            "t": 1784122379
+          },
+          {
+            "t": 1784122439
+          },
+          {
+            "t": 1784122499
+          },
+          {
+            "t": 1784122559
+          },
+          {
+            "t": 1784122619
+          },
+          {
+            "t": 1784122679
+          },
+          {
+            "t": 1784122739
+          },
+          {
+            "t": 1784122799
+          },
+          {
+            "t": 1784122859
+          },
+          {
+            "t": 1784122919
+          },
+          {
+            "t": 1784122979
+          },
+          {
+            "t": 1784123039
+          },
+          {
+            "t": 1784123099
+          },
+          {
+            "t": 1784123159
+          },
+          {
+            "t": 1784123219
+          },
+          {
+            "t": 1784123279
+          },
+          {
+            "t": 1784123339
+          },
+          {
+            "t": 1784123399
+          },
+          {
+            "t": 1784123459
+          },
+          {
+            "t": 1784123519
+          },
+          {
+            "t": 1784123579
+          },
+          {
+            "t": 1784123639
+          },
+          {
+            "t": 1784123699
+          },
+          {
+            "t": 1784123759
+          },
+          {
+            "t": 1784123819
+          },
+          {
+            "t": 1784123879
+          },
+          {
+            "t": 1784123939
+          },
+          {
+            "t": 1784123999
+          },
+          {
+            "t": 1784124059
+          },
+          {
+            "t": 1784124119
+          },
+          {
+            "t": 1784124179
+          },
+          {
+            "t": 1784124239
+          },
+          {
+            "t": 1784124299
+          },
+          {
+            "t": 1784124359
+          },
+          {
+            "t": 1784124419
+          },
+          {
+            "t": 1784124479
+          },
+          {
+            "t": 1784124539
+          },
+          {
+            "t": 1784124599
+          },
+          {
+            "t": 1784124659
+          },
+          {
+            "t": 1784124719
+          },
+          {
+            "t": 1784124779
+          },
+          {
+            "t": 1784124839
+          },
+          {
+            "t": 1784124899
+          },
+          {
+            "t": 1784124959
+          },
+          {
+            "t": 1784125019
+          },
+          {
+            "t": 1784125079
+          },
+          {
+            "t": 1784125139
+          },
+          {
+            "t": 1784125199
+          },
+          {
+            "t": 1784125259
+          },
+          {
+            "t": 1784125319
+          },
+          {
+            "t": 1784125379
+          },
+          {
+            "t": 1784125439
+          },
+          {
+            "t": 1784125499
+          },
+          {
+            "t": 1784125559
+          },
+          {
+            "t": 1784125619
+          },
+          {
+            "t": 1784125679
+          },
+          {
+            "t": 1784125739
+          },
+          {
+            "t": 1784125799
+          },
+          {
+            "t": 1784125859
+          },
+          {
+            "t": 1784125919
+          },
+          {
+            "t": 1784125979
+          },
+          {
+            "t": 1784126039
+          },
+          {
+            "t": 1784126099
+          },
+          {
+            "t": 1784126159
+          },
+          {
+            "t": 1784126219
+          },
+          {
+            "t": 1784126279
+          },
+          {
+            "t": 1784126339
+          },
+          {
+            "t": 1784126399
+          },
+          {
+            "t": 1784126459
+          },
+          {
+            "t": 1784126519
+          },
+          {
+            "t": 1784126579
+          },
+          {
+            "t": 1784126639
+          },
+          {
+            "t": 1784126699
+          },
+          {
+            "t": 1784126759
+          },
+          {
+            "t": 1784126819
+          },
+          {
+            "t": 1784126879
+          },
+          {
+            "t": 1784126939
+          },
+          {
+            "t": 1784126999
+          },
+          {
+            "t": 1784127059
+          },
+          {
+            "t": 1784127119
+          },
+          {
+            "t": 1784127179
+          },
+          {
+            "t": 1784127239
+          },
+          {
+            "t": 1784127299
+          },
+          {
+            "t": 1784127359
+          },
+          {
+            "t": 1784127419
+          },
+          {
+            "t": 1784127479
+          },
+          {
+            "t": 1784127539
+          },
+          {
+            "t": 1784127599
+          },
+          {
+            "t": 1784127659
+          },
+          {
+            "t": 1784127719
+          },
+          {
+            "t": 1784127779
+          },
+          {
+            "t": 1784127839
+          },
+          {
+            "t": 1784127899
+          },
+          {
+            "t": 1784127959
+          },
+          {
+            "t": 1784128019
+          },
+          {
+            "t": 1784128079
+          },
+          {
+            "t": 1784128139
+          },
+          {
+            "t": 1784128199
+          },
+          {
+            "t": 1784128259
+          },
+          {
+            "t": 1784128319
+          },
+          {
+            "t": 1784128379
+          },
+          {
+            "t": 1784128439
+          },
+          {
+            "t": 1784128499
+          },
+          {
+            "t": 1784128559
+          },
+          {
+            "t": 1784128619
+          },
+          {
+            "t": 1784128679
+          },
+          {
+            "t": 1784128739
+          },
+          {
+            "t": 1784128799
+          },
+          {
+            "t": 1784128859
+          },
+          {
+            "t": 1784128919
+          },
+          {
+            "t": 1784128979
+          },
+          {
+            "t": 1784129039
+          },
+          {
+            "t": 1784129099
+          },
+          {
+            "t": 1784129159
+          },
+          {
+            "t": 1784129219
+          },
+          {
+            "t": 1784129279
+          },
+          {
+            "t": 1784129339
+          },
+          {
+            "t": 1784129399
+          },
+          {
+            "t": 1784129459
+          },
+          {
+            "t": 1784129519
+          },
+          {
+            "t": 1784129579
+          },
+          {
+            "t": 1784129639
+          },
+          {
+            "t": 1784129699
+          },
+          {
+            "t": 1784129759
+          },
+          {
+            "t": 1784129819
+          },
+          {
+            "t": 1784129879
+          },
+          {
+            "t": 1784129939
+          },
+          {
+            "t": 1784129999
+          },
+          {
+            "t": 1784130059
+          },
+          {
+            "t": 1784130119
+          },
+          {
+            "t": 1784130179
+          },
+          {
+            "t": 1784130239
+          },
+          {
+            "t": 1784130299
+          },
+          {
+            "t": 1784130359
+          },
+          {
+            "t": 1784130419
+          },
+          {
+            "t": 1784130479
+          },
+          {
+            "t": 1784130539
+          },
+          {
+            "t": 1784130599
+          },
+          {
+            "t": 1784130659
+          },
+          {
+            "t": 1784130719
+          },
+          {
+            "t": 1784130779
+          },
+          {
+            "t": 1784130839
+          },
+          {
+            "t": 1784130899
+          },
+          {
+            "t": 1784130959
+          },
+          {
+            "t": 1784131019
+          },
+          {
+            "t": 1784131079
+          },
+          {
+            "t": 1784131139
+          },
+          {
+            "t": 1784131199
+          },
+          {
+            "t": 1784131200
+          }
+        ]
+      },
+      "description": "The ProShares Ultra Bloomberg Natural Gas (BOIL) is an exchange-traded fund that is based on the Bloomberg Natural Gas index. The fund provides 2x the daily return of an index that measures the price performance of natural gas as reflected through publicly traded natural gas futures contracts. BOIL was launched on Oct 4, 2011 and is issued by ProShares.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Commodity"
+        ],
+        [
+          "Category",
+          "Trading--Leveraged Commodities"
+        ],
+        [
+          "Stock Exchange",
+          "NYSEARCA"
+        ],
+        [
+          "Ticker Symbol",
+          "BOIL"
+        ],
+        [
+          "Provider",
+          "ProShares"
+        ],
+        [
+          "Index Tracked",
+          "Bloomberg Natural Gas"
+        ]
+      ],
+      "etf_website": "https://www.proshares.com/our-etfs/leveraged-and-inverse/boil",
+      "provider_page": "proshares",
+      "holdingsTable": {
+        "count": 3,
+        "updated": "Jul 13, 2026",
+        "top10": 199.97,
+        "holdings": [
+          {
+            "n": "NATURAL GAS FUTR SEP26",
+            "as": "199.97%",
+            "sh": "28,364"
+          },
+          {
+            "n": "PROSHARES GENIUS MNY MKT ETF",
+            "sh": "1,000,000"
+          },
+          {
+            "n": "NET OTHER ASSETS / CASH",
+            "sh": "405,812,918"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784133139718",
+        "data": [
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-extend-losses-9eb6f08c",
+            "img": "https://cdn.snapi.dev/images/v1/r/t/i/oil30-3789010-3797986.jpg",
+            "title": "U.S. Natural Gas Futures Extend Losses",
+            "text": "U.S. natural gas futures continued their slide as weather forecasts were revised cooler and exports were seen falling on maintenance at Freeport LNG.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#IEO",
+              "#KOLD",
+              "#OIH",
+              "#UNG",
+              "#XOP"
+            ],
+            "time": "Jul 13, 2026, 9:51 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-extend-decline-9658b5fc",
+            "img": "https://cdn.snapi.dev/images/v1/v/f/vfre2wed-3795649.jpg",
+            "title": "U.S. Natural Gas Futures Extend Decline",
+            "text": "U.S. natural gas futures were still reeling from Thursday's bigger-than-expected inventory build and news of Freeport LNG's planned maintenance.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#IEO",
+              "#KOLD",
+              "#OIH",
+              "#UNG",
+              "#XOP"
+            ],
+            "time": "Jul 10, 2026, 10:42 AM EDT",
+            "ago": "5 days ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-held-back-by-adequate-supply-7345b617",
+            "img": "https://cdn.snapi.dev/images/v1/f/x/e/bgfre2-2760365-3793377.jpg",
+            "title": "U.S. Natural Gas Futures Held Back By Adequate Supply",
+            "text": "U.S. natural gas futures were lower, with ample supply and above-average storage keeping weather-driven rally attempts at bay.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#IEO",
+              "#KOLD",
+              "#OIH",
+              "#UNG",
+              "#XOP"
+            ],
+            "time": "Jul 9, 2026, 9:47 AM EDT",
+            "ago": "6 days ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-stay-rangebound-d3be7175",
+            "img": "https://cdn.snapi.dev/images/v1/o/i/oil30-3789010.jpg",
+            "title": "U.S. Natural Gas Futures Stay Rangebound",
+            "text": "U.S. natural gas futures were steady in early trade with the market focused on summer weather and power-sector use.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#IEO",
+              "#KOLD",
+              "#OIH",
+              "#UNG",
+              "#XOP"
+            ],
+            "time": "Jul 7, 2026, 10:08 AM EDT",
+            "ago": "8 days ago"
+          },
+          {
+            "url": "wgGipj3AotI",
+            "img": "https://cdn.snapi.dev/images/v1/f/r/fr321qwsdf-3781623.jpg",
+            "title": "Will gas prices keep dropping?",
+            "text": "Gas prices are finally giving drivers a break just in time for one of the busiest travel weekends of the year. Josh Lipton speaks with GasBuddy's Patrick De Haan about why prices have fallen roughly 8...",
+            "source": "Yahoo Finance",
+            "type": "Video",
+            "tickers": [
+              "#FCG",
+              "#IEO",
+              "#KOLD",
+              "#OIH",
+              "#UNG",
+              "#XOP"
+            ],
+            "time": "Jul 1, 2026, 11:55 AM EDT",
+            "ago": "13 days ago"
+          },
+          {
+            "url": "bIltKfZvz8w",
+            "img": "https://cdn.snapi.dev/images/v1/c/a/v/njhyt543er-2933940-3780363.jpg",
+            "title": "Gas prices will drop in the next 30 days, that's clear: Gulf senior energy advisor",
+            "text": "Gulf senior energy advisor Tom Kloza discusses what's to come with gas prices on 'The Bottom Line.'",
+            "source": "Fox Business",
+            "type": "Video",
+            "tickers": [
+              "#FCG",
+              "#IEO",
+              "#KOLD",
+              "#OIH",
+              "#UNG",
+              "#XOP"
+            ],
+            "time": "Jul 1, 2026, 1:30 AM EDT",
+            "ago": "14 days ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-pick-up-along-with-heat-ed2bb892",
+            "img": "https://cdn.snapi.dev/images/v1/k/1/r/mjy43wd-3437936-3778933.jpg",
+            "title": "U.S. Natural Gas Futures Pick Up Along With Heat",
+            "text": "U.S. natural gas futures picked up from losses the previous two sessions as this week will see the hottest weather so far of the summer.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#IEO",
+              "#KOLD",
+              "#OIH",
+              "#UNG",
+              "#XOP"
+            ],
+            "time": "Jun 30, 2026, 10:00 AM EDT",
+            "ago": "15 days ago"
+          },
+          {
+            "url": "https://www.wsj.com/articles/u-s-natural-gas-futures-start-the-week-lower-419b7051",
+            "img": "https://cdn.snapi.dev/images/v1/i/a/j/bre32wsd-3676123-3776654.jpg",
+            "title": "U.S. Natural Gas Futures Start The Week Lower",
+            "text": "U.S. natural gas futures retreated as the market looks beyond the current heat wave driving demand.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#IEO",
+              "#KOLD",
+              "#OIH",
+              "#UNG",
+              "#XOP"
+            ],
+            "time": "Jun 29, 2026, 9:43 AM EDT",
+            "ago": "16 days ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-extend-gains-on-coming-hot-weather-c3163e5e",
+            "img": "https://cdn.snapi.dev/images/v1/w/l/j/oil5-3753234-3774031.jpg",
+            "title": "U.S. Natural Gas Futures Extend Gains on Coming Hot Weather",
+            "text": "U.S. natural gas futures extended gains amid a wave of above-normal temperatures moving across the U.S. the next two weeks.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#IEO",
+              "#OIH",
+              "#XOP",
+              "#FCG",
+              "#KOLD",
+              "#UNG"
+            ],
+            "time": "Jun 26, 2026, 10:00 AM EDT",
+            "ago": "19 days ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-gains-ahead-of-storage-data-0fba0396",
+            "img": "https://cdn.snapi.dev/images/v1/d/h/j/etf39-3771832.jpg",
+            "title": "U.S. Natural Gas Gains Ahead of Storage Data",
+            "text": "U.S. natural gas futures rose as weather models overnight added a little more heat to the near-term outlook, lifting expected cooling demand.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#IEO",
+              "#KOLD",
+              "#OIH",
+              "#UNG",
+              "#XOP"
+            ],
+            "time": "Jun 25, 2026, 9:54 AM EDT",
+            "ago": "20 days ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-pull-back-in-early-trading-c62b8b93",
+            "img": "https://cdn.snapi.dev/images/v1/i/z/b/etf15-3758863.jpg",
+            "title": "U.S. Natural Gas Futures Pull Back in Early Trading",
+            "text": "U.S. natural gas futures were lower following three sessions of gains with the market weighing the weather outlook and the pick-up in LNG exports against ample storage and expectations of higher produ...",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#KOLD",
+              "#UNG"
+            ],
+            "time": "Jun 17, 2026, 9:49 AM EDT",
+            "ago": "4 weeks ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-start-week-lower-dd26dee3",
+            "img": "https://cdn.snapi.dev/images/v1/e/s/1/etf50-3753915.jpg",
+            "title": "U.S. Natural Gas Futures Start Week Lower",
+            "text": "U.S. natural gas futures were lower with the market more focused on the loss of weather-driven demand than the U.S.-Iran agreement to end the Middle East conflict.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#KOLD",
+              "#UNG",
+              "#UNL"
+            ],
+            "time": "Jun 15, 2026, 8:49 AM EDT",
+            "ago": "4 weeks ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-steady-in-early-trading-222dc267",
+            "img": "https://cdn.snapi.dev/images/v1/p/7/6/etf6-3751401.jpg",
+            "title": "U.S. Natural Gas Futures Steady in Early Trading",
+            "text": "U.S. natural gas futures were steady with a milder near-term weather outlook partly compensated by recovering LNG feedgas flows.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#KOLD",
+              "#UNG",
+              "#UNL"
+            ],
+            "time": "Jun 12, 2026, 10:17 AM EDT",
+            "ago": "4 weeks ago"
+          },
+          {
+            "url": "https://www.fxempire.com/forecasts/article/natural-gas-and-oil-forecast-oil-breakdown-deepens-as-iran-israel-conflict-lingers-natgas-steady-1604114",
+            "img": "https://cdn.snapi.dev/images/v1/6/0/o/nhyt542e-3422877-3750729.jpg",
+            "title": "Natural Gas and Oil Forecast: Oil Breakdown Deepens as Iran-Israel Conflict Lingers — NatGas Steady?",
+            "text": "Ceasefire stability amid Iran-Israel tensions allows energy prices to consolidate on fundamentals amid strong US production and healthy storage. WTI faces downside risk below $88, Brent retests channe...",
+            "source": "FXEmpire",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#FNGA",
+              "#FNGU",
+              "#KOLD",
+              "#UNG",
+              "#UNL"
+            ],
+            "time": "Jun 12, 2026, 1:42 AM EDT",
+            "ago": "4 weeks ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-retreat-ahead-of-storage-data-b676b6ed",
+            "img": "https://cdn.snapi.dev/images/v1/t/9/g/etf43-3749159.jpg",
+            "title": "U.S. Natural Gas Futures Retreat Ahead of Storage Data",
+            "text": "U.S. natural gas futures were lower ahead of the EIA's weekly inventory report with the market continuing to move in tandem with shifts in the weather outlook.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#KOLD",
+              "#UNG"
+            ],
+            "time": "Jun 11, 2026, 9:47 AM EDT",
+            "ago": "4 weeks ago"
+          },
+          {
+            "url": "https://www.reuters.com/business/energy/us-natural-gas-futures-rise-demand-outlook-strengthens-2026-06-10/",
+            "img": "https://cdn.snapi.dev/images/v1/e/f/o/etf30-3746949.jpg",
+            "title": "US natural gas futures rise as demand outlook strengthens",
+            "text": "U.S. natural gas futures climbed about ​3% on Wednesday on forecasts for hotter-than-normal weather and more demand over the next two weeks than previously expected.",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "#AMLP",
+              "#FCG",
+              "#IEO",
+              "#KOLD",
+              "#OIH",
+              "#RING",
+              "#UNG"
+            ],
+            "time": "Jun 10, 2026, 10:55 AM EDT",
+            "ago": "4 weeks ago"
+          },
+          {
+            "url": "https://www.reuters.com/business/energy/us-natgas-output-demand-hit-record-highs-2026-eia-says-2026-06-09/",
+            "img": "https://cdn.snapi.dev/images/v1/5/z/r/etf3-3744977.jpg",
+            "title": "US natgas output and demand to hit record highs in 2026, EIA says",
+            "text": "U.S. natural gas supply and demand will both rise to record highs in ​2026, the U.S. Energy Information Administration said in ‌its Short-Term Energy Outlook on Tuesday.",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#KOLD",
+              "#NRGU",
+              "#UNG"
+            ],
+            "time": "Jun 9, 2026, 1:46 PM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-inch-down-in-early-trading-5d2b7dc2",
+            "img": "https://cdn.snapi.dev/images/v1/h/f/f/etf42-3744186.jpg",
+            "title": "U.S. Natural Gas Futures Inch Down in Early Trading",
+            "text": "U.S. natural gas futures were modestly lower as a cooler weather outlook for the second half of June crimped demand expectations.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#FNGA",
+              "#FNGD",
+              "#FNGU",
+              "#KOLD",
+              "#UNG",
+              "#UNL"
+            ],
+            "time": "Jun 9, 2026, 9:53 AM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.wsj.com/articles/natural-u-s-gas-futures-decline-on-weather-outlook-8e5989d8",
+            "img": "https://cdn.snapi.dev/images/v1/t/d/n/etf18-3741745.jpg",
+            "title": "Natural U.S. Gas Futures Decline on Weather Outlook",
+            "text": "U.S. natural gas futures lost ground on lower temperature forecasts for the second half of June and higher production.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#CORN",
+              "#FCG",
+              "#KOLD",
+              "#UNG"
+            ],
+            "time": "Jun 8, 2026, 9:26 AM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-give-back-some-gains-6c6984c3",
+            "img": "https://cdn.snapi.dev/images/v1/o/d/g/etf43-3739028.jpg",
+            "title": "U.S. Natural Gas Futures Give Back Some Gains",
+            "text": "U.S. natural gas futures were lower after advancing the previous two sessions on a hotter weather outlook and the report of a below-average weekly storage injection.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#KOLD",
+              "#UNG",
+              "#UNL"
+            ],
+            "time": "Jun 5, 2026, 10:26 AM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-rise-on-weather-outlook-c40fdba0",
+            "img": "https://cdn.snapi.dev/images/v1/k/g/z/etf33-3736717.jpg",
+            "title": "U.S. Natural Gas Futures Rise on Weather Outlook",
+            "text": "U.S. natural gas futures gain with warmer weather forecasts lifting demand expectations for coming weeks.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#KOLD",
+              "$RNGR",
+              "#UNG"
+            ],
+            "time": "Jun 4, 2026, 9:15 AM EDT",
+            "ago": "5 weeks ago"
+          },
+          {
+            "url": "https://www.wsj.com/articles/u-s-natural-gas-futures-tread-water-01ef01bf",
+            "img": "https://cdn.snapi.dev/images/v1/4/0/e/etf34-3734422.jpg",
+            "title": "U.S. Natural Gas Futures Tread Water",
+            "text": "U.S. natural gas futures were slightly lower with the market awaiting a recovery in LNG feedgas flows after maintenance and higher weather-driven demand into the weekend and next week.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#KOLD",
+              "#UNG"
+            ],
+            "time": "Jun 3, 2026, 9:52 AM EDT",
+            "ago": "6 weeks ago"
+          },
+          {
+            "url": "https://www.reuters.com/business/energy/us-natural-gas-futures-fall-lng-export-flows-hit-four-month-low-2026-06-02/",
+            "img": "https://cdn.snapi.dev/images/v1/w/a/g/etf31-3731916.jpg",
+            "title": "US natural gas futures fall as LNG export flows hit four-month low",
+            "text": "U.S. natural gas futures slid about ​2% on Tuesday as daily flows to liquefied natural gas (LNG) export plants dropped to a four-month low.",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#IYE",
+              "#KOLD",
+              "$NGS",
+              "#OIH",
+              "#UNG",
+              "#VDE"
+            ],
+            "time": "Jun 2, 2026, 9:38 AM EDT",
+            "ago": "6 weeks ago"
+          },
+          {
+            "url": "https://www.wsj.com/articles/u-s-natural-gas-futures-return-some-gains-ca7c4288",
+            "img": "https://cdn.snapi.dev/images/v1/h/5/m/etf18-3729541.jpg",
+            "title": "U.S. Natural Gas Futures Return Some Gains",
+            "text": "U.S. natural gas futures pulled back from overnight highs while maintaining support from higher temperature forecasts moving into June.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#CORN",
+              "#FCG",
+              "#KOLD",
+              "#UNG",
+              "#VDE"
+            ],
+            "time": "Jun 1, 2026, 9:48 AM EDT",
+            "ago": "6 weeks ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-edge-down-475025a0",
+            "img": "https://cdn.snapi.dev/images/v1/p/v/e/etf36-3724339.jpg",
+            "title": "U.S. Natural Gas Futures Edge Down",
+            "text": "U.S. natural gas futures edged lower as the Nymex July contract moved to the front of the curve.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#IEO",
+              "#KOLD",
+              "#OIH",
+              "#UNG",
+              "#XLE",
+              "#XOP"
+            ],
+            "time": "May 28, 2026, 9:14 AM EDT",
+            "ago": "6 weeks ago"
+          },
+          {
+            "url": "https://www.wsj.com/articles/u-s-natural-gas-futures-steady-ahead-of-storage-data-4e6f219e",
+            "img": "https://cdn.snapi.dev/images/v1/d/9/x/etf15-3713857.jpg",
+            "title": "U.S. Natural Gas Futures Steady Ahead of Storage Data",
+            "text": "U.S. natural gas futures were holding around the key $3 mark ahead of the EIA's weekly inventory report due at 10:30 a.m. ET.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#COPX",
+              "#FCG",
+              "#IEO",
+              "#IYE",
+              "#KOLD",
+              "#OIH",
+              "#UNG"
+            ],
+            "time": "May 21, 2026, 9:06 AM EDT",
+            "ago": "7 weeks ago"
+          },
+          {
+            "url": "https://www.reuters.com/legal/litigation/us-lng-export-plant-gas-flows-set-hit-16-week-low-despite-expected-return-golden-2026-05-19/",
+            "img": "https://cdn.snapi.dev/images/v1/f/e/fe2wsdfcv-3709137.jpg",
+            "title": "US LNG export plant gas flows set to hit 16-week low despite expected return of Golden Pass",
+            "text": "The amount of natural gas flowing to the nine big U.S. liquefied natural gas ‌export plants looked set to hit a 16-week low on Tuesday even though QatarEnergy/Exxon Mobil's Golden Pass plant in Texas ...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "#ENFR",
+              "#FCG",
+              "#KOLD",
+              "#UNG",
+              "#USHY"
+            ],
+            "time": "May 19, 2026, 10:52 AM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/05/19/3297415/0/en/beyond-oil-reports-financial-results-for-first-quarter-2026.html",
+            "img": "https://cdn.snapi.dev/images/v1/g/t/p/press16-3708304.jpg",
+            "title": "Beyond Oil Reports Financial Results for First Quarter 2026",
+            "text": "VANCOUVER, British Columbia, May 19, 2026 (GLOBE NEWSWIRE) -- Beyond Oil Ltd. (TSX: BOIL) (OTCQB: BEOLF) (“Beyond Oil” or the “Company”), a food-tech innovation company dedicated to reducing health ri...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "May 19, 2026, 8:00 AM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-head-for-weekly-gains-e3d39e3b",
+            "img": "https://cdn.snapi.dev/images/v1/e/w/h/etf10-3703724.jpg",
+            "title": "U.S. Natural Gas Futures Head for Weekly Gains",
+            "text": "U.S. natural gas futures were higher and on track to post weekly gains, supported in part by a warmer weather outlook and a close-to-normal storage report for last week.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#ENFR",
+              "#FCG",
+              "#KOLD",
+              "#UNG",
+              "#USHY"
+            ],
+            "time": "May 15, 2026, 9:48 AM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-gain-ground-579f93ef",
+            "img": "https://cdn.snapi.dev/images/v1/k/z/v/etf37-3697950.jpg",
+            "title": "U.S. Natural Gas Futures Gain Ground",
+            "text": "U.S. natural gas futures were higher, fluctuating from one day to the next as the market weighs fading heating demand against a gradual pickup in cooling needs.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#IEZ",
+              "#KOLD",
+              "#UNG",
+              "#XLE",
+              "#XLK",
+              "#XOP"
+            ],
+            "time": "May 13, 2026, 10:01 AM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/05/13/3293885/0/en/Beyond-Oil-Commences-Sales-With-Iconic-American-Fast-Food-Chain.html",
+            "img": "https://cdn.snapi.dev/images/v1/d/p/4/press5-3697285.jpg",
+            "title": "Beyond Oil Commences Sales With Iconic American Fast-Food Chain",
+            "text": "Initial Commercial Rollout Has Commenced with Three Franchisees in Three US States Initial Commercial Rollout Has Commenced with Three Franchisees in Three US States",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "May 13, 2026, 7:30 AM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/05/12/3293387/0/en/beyond-oil-enters-revenue-execution-phase-advancing-strategic-customer-adoption-and-expanding-direct-sales.html",
+            "img": "https://cdn.snapi.dev/images/v1/b/6/n/press5-3695932.jpg",
+            "title": "Beyond Oil Enters Revenue Execution Phase, Advancing Strategic Customer Adoption and Expanding Direct Sales",
+            "text": "VANCOUVER, British Columbia, May 12, 2026 (GLOBE NEWSWIRE) -- Beyond Oil Ltd. (TSX: BOIL) (OTCQB: BEOLF) (“Beyond Oil” or the “Company”), a food-tech innovation company dedicated to reducing health ri...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "May 12, 2026, 4:05 PM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.reuters.com/business/energy/us-natgas-output-hit-record-high-2026-while-demand-declines-eia-says-2026-05-12/",
+            "img": "https://cdn.snapi.dev/images/v1/k/m/b/etf1-3695436.jpg",
+            "title": "US natgas output to hit record high in 2026, while demand declines, EIA says",
+            "text": "U.S. natural gas output will rise to a record high in 2026, while demand ​will decline, the U.S. Energy Information Administration said ‌in its Short-Term Energy Outlook on Tuesday.",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#KOLD",
+              "#UNG"
+            ],
+            "time": "May 12, 2026, 12:59 PM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-lower-in-early-trading-2c3757e1",
+            "img": "https://cdn.snapi.dev/images/v1/e/s/q/etf14-3680447.jpg",
+            "title": "U.S. Natural Gas Futures Lower in Early Trading",
+            "text": "U.S. natural gas futures were lower as oil prices fell on a report the U.S. and Iran were close to a deal.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#KOLD",
+              "#UNG"
+            ],
+            "time": "May 6, 2026, 9:26 AM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.reuters.com/business/energy/morgan-stanley-sees-us-gasoline-inventories-falling-historic-lows-2026-05-05/",
+            "img": "https://cdn.snapi.dev/images/v1/b/r/bre32wsd-3676123.jpg",
+            "title": "Morgan Stanley sees US gasoline inventories falling to historic lows",
+            "text": "U.S. gasoline inventories are drawing down sharply, heading toward historical summer lows, as a collapse in imports and shifts in refinery yield tighten supply, ​Morgan Stanley said in a Monday note.",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#IYE",
+              "#KOLD",
+              "#UNG",
+              "#VDE",
+              "#XOP"
+            ],
+            "time": "May 5, 2026, 6:35 AM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-start-week-higher-1cda0f17",
+            "img": "https://cdn.snapi.dev/images/v1/n/q/y/etf35-3674029.jpg",
+            "title": "U.S. Natural Gas Futures Start Week Higher",
+            "text": "U.S. natural gas futures were are gaining as mixed weather patterns offered some support with cooling demand in the south and lingering heating demand in the north",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#IYE",
+              "#KOLD",
+              "#UNG",
+              "#VDE",
+              "#XOP"
+            ],
+            "time": "May 4, 2026, 11:00 AM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "k5MrEzJnMM0",
+            "img": "https://cdn.snapi.dev/images/v1/l/z/t/njhyt543er-2933940-3671550.jpg",
+            "title": "Where could gas prices be by Memorial Day?",
+            "text": "FOX Business correspondent Lauren Simonetti reports on rising crude oil prices as analysts forecast $5-a-gallon gas prices by Memorial Day amid Middle East tensions near the Strait of Hormuz on ‘Varne...",
+            "source": "Fox Business",
+            "type": "Video",
+            "tickers": [
+              "#FCG",
+              "#IYE",
+              "#KOLD",
+              "#OIH",
+              "#UNG",
+              "#XOP"
+            ],
+            "time": "May 1, 2026, 1:45 PM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/natural-gas-little-changed-amid-mild-weather-forecast-251c132a",
+            "img": "https://cdn.snapi.dev/images/v1/f/c/x/etf8-3670796.jpg",
+            "title": "Natural Gas Little Changed Amid Mild Weather Forecast",
+            "text": "Natural gas futures rose slightly as mild weather in the U.S. kept air-conditioning demand subdued.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#IYE",
+              "#KOLD",
+              "#OIH",
+              "#UNG",
+              "#XOP"
+            ],
+            "time": "May 1, 2026, 10:02 AM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.reuters.com/business/energy/us-natural-gas-futures-climb-output-falls-lng-exports-surge-2026-05-01/",
+            "img": "https://cdn.snapi.dev/images/v1/m/e/3/etf1-3670698.jpg",
+            "title": "US natural gas futures climb as output falls and LNG exports surge",
+            "text": "U.S. natural gas futures edged up about 1% to a fresh three-week high on Friday on a drop in ​output over the past month and near-record liquefied natural gas exports.",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#IEO",
+              "#KOLD",
+              "#UNG",
+              "#XOP"
+            ],
+            "time": "May 1, 2026, 9:37 AM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.reuters.com/business/energy/while-asia-europe-scramble-natural-gas-us-glut-has-nowhere-go-2026-05-01/",
+            "img": "https://cdn.snapi.dev/images/v1/v/0/z/oil22-3670414.jpg",
+            "title": "While Asia and Europe scramble for natural gas, the US glut has nowhere to go",
+            "text": "The war with Iran has boosted prices of globally traded natural gas by throttling exports from the Gulf. In ​West Texas, gas is so abundant that some producers must pay to have it taken away.",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "$APA",
+              "$AR",
+              "$ARLP",
+              "$BSM",
+              "$CNQ",
+              "$CNX",
+              "$CRK"
+            ],
+            "time": "May 1, 2026, 8:04 AM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.wsj.com/articles/u-s-natural-gas-futures-little-changed-in-early-trade-a4f9f6ed",
+            "img": "https://cdn.snapi.dev/images/v1/c/z/g/etf4-3660224.jpg",
+            "title": "U.S. Natural Gas Futures Little Changed in Early Trade",
+            "text": "U.S. natural gas futures were trading sideways with the market caught between some late-season heating demand in the north and limited cooling demand in the south.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#KOLD",
+              "#UNG",
+              "#VDE",
+              "#XLE",
+              "#XOP"
+            ],
+            "time": "Apr 28, 2026, 9:56 AM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.wsj.com/finance/commodities-futures/u-s-natural-gas-futures-pick-up-in-early-trade-45f2458f",
+            "img": "https://cdn.snapi.dev/images/v1/z/v/n/etf50-3657321.jpg",
+            "title": "U.S. Natural Gas Futures Pick Up in Early Trade",
+            "text": "U.S. natural gas futures recovered ground after falling the previous two sessions, supported by some cooler near-term weather, easing production and solid LNG exports.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#KOLD",
+              "#UNG",
+              "#UNL"
+            ],
+            "time": "Apr 27, 2026, 9:32 AM EDT",
+            "ago": "2 months ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/natural-gas-texas-negative-prices-9ecc5e77",
+            "img": "https://cdn.snapi.dev/images/v1/y/y/b/etf40-3655575.jpg",
+            "title": "Natural Gas is Wildly Profitable Around the World. In Texas, Prices are Negative.",
+            "text": "Producers are having to pay companies to take the natural gas they are producing off their hands.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": [
+              "#FCG",
+              "#KOLD",
+              "#LNGX",
+              "#UNG",
+              "#UNL"
+            ],
+            "time": "Apr 24, 2026, 4:34 PM EDT",
+            "ago": "2 months ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 27.3,
+        "price1m": 26.76,
+        "price3m": 26.44,
+        "price6m": 32.94,
+        "priceYTD": 45.8,
+        "price1y": 91.84,
+        "price5y": 7146,
+        "priceMAX": 7351980
+      },
+      "performance": {
+        "tr1m": -15.919282511210769,
+        "trYTD": -50.87336244541485,
+        "tr1y": -75.50087108013938,
+        "cagr5y": -68.40958042526171,
+        "cagr10y": -58.60724371969051,
+        "cagrMAX": -57.72719545494043
+      }
+    },
+    "holdings": {},
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_surface_omits_holdings",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}

@@ -62,48 +62,14 @@ assert.equal(getEtfDataSupplyPresentation(noTime).sourceDate, null);
 const typed = await parseEtfApiResponse<Record<string, unknown>>(Response.json(
   { error: "DATA_SUPPLY_UNAVAILABLE", data_supply: noTime },
   { status: 503 },
-), "ADIU");
+));
 assert.equal(typed.kind, "unavailable");
-
-const shardUnavailable = await parseEtfApiResponse<Record<string, unknown>>(Response.json(
-  { error: "STOCKANALYSIS_ETF_SHARD_UNAVAILABLE", ticker: "SPY" },
-  { status: 503, headers: { "Cache-Control": "no-store" } },
-), "SPY");
-assert.equal(shardUnavailable.kind, "shard_infrastructure_unavailable");
 
 const generic = await parseEtfApiResponse<Record<string, unknown>>(Response.json(
   { error: "DATA_SUPPLY_INDEX_UNAVAILABLE" },
   { status: 503 },
-), "SPY");
+));
 assert.equal(generic.kind, "failed");
-
-const missing = await parseEtfApiResponse<Record<string, unknown>>(Response.json(
-  { error: "STOCKANALYSIS_ASSET_NOT_FOUND", ticker: "ZZZZ" },
-  { status: 404 },
-), "ZZZZ");
-assert.equal(missing.kind, "missing");
-
-const valid = await parseEtfApiResponse<Record<string, unknown>>(Response.json({
-  schema_version: "stockanalysis/v1",
-  source: "stockanalysis",
-  asset_type: "etf",
-  ticker: "SPY",
-}), "SPY");
-assert.equal(valid.kind, "ok");
-
-const crossTicker = await parseEtfApiResponse<Record<string, unknown>>(Response.json({
-  schema_version: "stockanalysis/v1",
-  source: "stockanalysis",
-  asset_type: "etf",
-  ticker: "QQQ",
-}), "SPY");
-assert.equal(crossTicker.kind, "failed");
-
-const invalidSuccess = await parseEtfApiResponse<Record<string, unknown>>(Response.json({
-  error: "STOCKANALYSIS_ETF_SHARD_UNAVAILABLE",
-  ticker: "SPY",
-}), "SPY");
-assert.equal(invalidSuccess.kind, "failed");
 
 assert.equal(isLegacyEtfDetailCompatibilityActive(
   new Date("2026-07-12T00:00:00Z"),
