@@ -83,6 +83,8 @@ const ENROLLMENT_SCHEMA = "data-supply-etf-detail-enrollment/v1";
 const INDEX_SCHEMA = "data-supply-etf-detail-public-index/v1";
 const HEX64 = /^[0-9a-f]{64}$/;
 const TICKER = /^[A-Z0-9][A-Z0-9._-]*$/;
+const STOCKANALYSIS_ETF_SHARD_ONLY_MODE = "shard-only";
+const STOCKANALYSIS_ETF_LEGACY_MODE = "legacy-fallback";
 
 function toPosix(value) {
   return value.split(path.sep).join("/");
@@ -332,7 +334,9 @@ function validateProjection({ canonicalDataRoot, publicDataRoot, violations }) {
 
 function validateLegacyEtfFiles({ canonicalDataRoot, publicFiles, violations }) {
   const prefix = "stockanalysis/etfs/";
-  for (const item of publicFiles.filter((file) => file.relativePath.startsWith(prefix) && file.relativePath.endsWith(".json"))) {
+  for (const item of publicFiles.filter((file) => file.relativePath.startsWith(prefix)
+    && !file.relativePath.startsWith(`${prefix}shards/`)
+    && file.relativePath.endsWith(".json"))) {
     let payload;
     try {
       payload = JSON.parse(item.bytes.toString("utf8"));
@@ -356,6 +360,239 @@ function validateLegacyEtfFiles({ canonicalDataRoot, publicFiles, violations }) 
   }
 }
 
+function strictStockanalysisEtfPayload(payload, ticker) {
+  return payload
+    && typeof payload === "object"
+    && !Array.isArray(payload)
+    && payload.schema_version === "stockanalysis/v1"
+    && payload.ticker === ticker
+    && payload.asset_type === "etf"
+    && payload.source === "stockanalysis"
+    && payload.source_provider !== "yahoo_finance"
+    && payload.detail_status !== "yf_fallback";
+}
+
+function validTimestampRange(value) {
+  if (!value || typeof value !== "object" || !Number.isInteger(value.present_count) || value.present_count < 0) return false;
+  if (value.present_count === 0) return value.min === null && value.max === null;
+  return isoTimestamp(value.min) && isoTimestamp(value.max);
+}
+
+async function validateStockanalysisEtfShards({ canonicalDataRoot, publicDataRoot, publicFiles, violations }) {
+  const prefix = "stockanalysis/etfs/shards/";
+  const shardFiles = publicFiles.filter((file) => file.relativePath.startsWith(prefix));
+  const canonicalRoot = path.join(canonicalDataRoot, "stockanalysis", "etfs");
+  const canonicalRootStat = lstatIfPresent(canonicalRoot);
+  if (canonicalRootStat?.isSymbolicLink() || (canonicalRootStat && !canonicalRootStat.isDirectory())) {
+    violations.push("data/stockanalysis/etfs: canonical ETF root must be a real directory");
+    return;
+  }
+  if (canonicalRootStat) {
+    for (const entry of fs.readdirSync(canonicalRoot, { withFileTypes: true })) {
+      const entryPath = path.join(canonicalRoot, entry.name);
+      const stat = fs.lstatSync(entryPath);
+      if (stat.isSymbolicLink() || stat.isDirectory() || !stat.isFile() || !entry.name.endsWith(".json")) {
+        violations.push(`data/stockanalysis/etfs/${entry.name}: canonical ETF root may contain only top-level JSON files`);
+      }
+    }
+  }
+  const canonicalNodes = walkRegularFiles(canonicalRoot, violations, "data/stockanalysis/etfs");
+  const canonicalFiles = canonicalNodes
+    .filter((file) => !file.relativePath.includes("/") && file.relativePath.endsWith(".json"));
+  if (shardFiles.length === 0) {
+    if (canonicalFiles.length > 0) {
+      violations.push("StockAnalysis ETF shard projection is missing while canonical ETF payloads exist");
+    }
+    return;
+  }
+  const {
+    STOCKANALYSIS_ETF_SHARD_ALGORITHM,
+    STOCKANALYSIS_ETF_SHARD_COMPATIBILITY_MODE,
+    STOCKANALYSIS_ETF_SHARD_COUNT,
+    STOCKANALYSIS_ETF_SHARD_MAX_BYTES,
+    STOCKANALYSIS_ETF_SHARD_MANIFEST_SCHEMA,
+    STOCKANALYSIS_ETF_SHARD_SCHEMA,
+    stockanalysisEtfManifestSha256,
+    stockanalysisEtfPayloadDocumentFromShard,
+    stockanalysisEtfShardFileNameForId,
+    stockanalysisEtfShardId,
+    stockanalysisEtfSourceBindingSha256,
+    stockanalysisEtfTickerKey,
+  } = await import("../src/lib/stockanalysis-etf-shard.mjs");
+
+  const manifestPath = path.join(publicDataRoot, "stockanalysis", "etfs", "shards", "index.json");
+  const parsedManifest = parseJsonFile(manifestPath, "StockAnalysis ETF shard manifest", violations);
+  if (!parsedManifest) return;
+  const manifest = parsedManifest.value;
+  const shards = Array.isArray(manifest.shards) ? manifest.shards : null;
+  if (
+    manifest.schema_version !== STOCKANALYSIS_ETF_SHARD_MANIFEST_SCHEMA
+    || ![STOCKANALYSIS_ETF_SHARD_ONLY_MODE, STOCKANALYSIS_ETF_LEGACY_MODE, STOCKANALYSIS_ETF_SHARD_COMPATIBILITY_MODE].includes(manifest.compatibility_mode)
+    || manifest.shard_algorithm !== STOCKANALYSIS_ETF_SHARD_ALGORITHM
+    || manifest.shard_count !== STOCKANALYSIS_ETF_SHARD_COUNT
+    || !Number.isInteger(manifest.payload_count)
+    || manifest.payload_count < 0
+    || !HEX64.test(manifest.snapshot_id || "")
+    || !HEX64.test(manifest.manifest_sha256 || "")
+    || manifest.manifest_sha256 !== stockanalysisEtfManifestSha256(manifest)
+    || !isoTimestamp(manifest.generated_at)
+    || !manifest.source_timestamp_range
+    || !validTimestampRange(manifest.source_timestamp_range.source_as_of)
+    || !validTimestampRange(manifest.source_timestamp_range.fetched_at)
+    || manifest.provenance?.canonical_root !== "data/stockanalysis/etfs"
+    || !HEX64.test(manifest.provenance?.source_payload_sha256 || "")
+    || !shards
+    || shards.length !== STOCKANALYSIS_ETF_SHARD_COUNT
+  ) {
+    violations.push("StockAnalysis ETF shard manifest contract is invalid");
+    return;
+  }
+
+  const expectedPaths = new Set(["stockanalysis/etfs/shards/index.json"]);
+  const shardEntries = new Map();
+  for (let position = 0; position < shards.length; position += 1) {
+    const entry = shards[position];
+    if (
+      !entry
+      || !Number.isInteger(entry.id)
+      || entry.id < 0
+      || entry.id >= STOCKANALYSIS_ETF_SHARD_COUNT
+      || entry.id !== position
+      || shardEntries.has(entry.id)
+      || entry.path !== `snapshots/${manifest.snapshot_id}/${stockanalysisEtfShardFileNameForId(entry.id)}`
+      || !HEX64.test(entry.sha256 || "")
+      || !Number.isInteger(entry.member_count)
+      || entry.member_count < 0
+      || !Number.isInteger(entry.byte_length)
+      || entry.byte_length < 0
+      || entry.byte_length > STOCKANALYSIS_ETF_SHARD_MAX_BYTES
+    ) {
+      violations.push("StockAnalysis ETF shard manifest entry is invalid");
+      continue;
+    }
+    shardEntries.set(entry.id, entry);
+    expectedPaths.add(`stockanalysis/etfs/shards/${entry.path}`);
+  }
+  if (shardEntries.size !== STOCKANALYSIS_ETF_SHARD_COUNT) return;
+  if ([...shardEntries.values()].reduce((sum, entry) => sum + entry.member_count, 0) !== manifest.payload_count) {
+    violations.push("StockAnalysis ETF shard manifest payload/member count mismatch");
+  }
+
+  const actualPaths = new Set(shardFiles.map((file) => file.relativePath));
+  for (const expectedPath of expectedPaths) {
+    if (!actualPaths.has(expectedPath)) violations.push(`StockAnalysis ETF shard projection is missing ${expectedPath}`);
+  }
+  for (const actualPath of actualPaths) {
+    if (!expectedPaths.has(actualPath)) violations.push(`StockAnalysis ETF shard projection has an unlisted file ${actualPath}`);
+  }
+
+  for (const item of canonicalNodes) {
+    if (item.relativePath.includes("/") || !item.relativePath.endsWith(".json")) {
+      violations.push(`data/stockanalysis/etfs/${item.relativePath}: canonical ETF root may contain only top-level JSON files`);
+    }
+  }
+  const canonicalPayloads = new Map();
+  for (const item of canonicalFiles) {
+    const ticker = path.posix.basename(item.relativePath, ".json");
+    try {
+      const raw = item.bytes.toString("utf8");
+      const payload = JSON.parse(raw);
+      if (!strictStockanalysisEtfPayload(payload, ticker)) {
+        violations.push(`data/stockanalysis/etfs/${item.relativePath}: strict StockAnalysis identity mismatch`);
+        continue;
+      }
+      canonicalPayloads.set(ticker, { raw, payload, sha256: sha256(item.bytes) });
+    } catch (error) {
+      violations.push(`data/stockanalysis/etfs/${item.relativePath}: invalid JSON (${error.message})`);
+    }
+  }
+
+  const directLegacyTickers = publicFiles
+    .filter((file) => file.relativePath.startsWith("stockanalysis/etfs/")
+      && !file.relativePath.startsWith(prefix)
+      && !file.relativePath.slice("stockanalysis/etfs/".length).includes("/")
+      && file.relativePath.endsWith(".json"))
+    .map((file) => path.posix.basename(file.relativePath, ".json"))
+    .sort();
+  const canonicalTickers = [...canonicalPayloads.keys()].sort();
+  const canonicalSourceSha256 = stockanalysisEtfSourceBindingSha256(
+    canonicalTickers.map((ticker) => ({ ticker, sha256: canonicalPayloads.get(ticker).sha256 })),
+  );
+  if (manifest.provenance.source_payload_sha256 !== canonicalSourceSha256 || manifest.snapshot_id !== canonicalSourceSha256) {
+    violations.push("StockAnalysis ETF shard manifest canonical provenance digest mismatch");
+  }
+  if (manifest.compatibility_mode === STOCKANALYSIS_ETF_SHARD_ONLY_MODE) {
+    if (directLegacyTickers.length > 0) {
+      violations.push("StockAnalysis ETF shard-only projection must contain zero public top-level ETF files");
+    }
+  } else if (JSON.stringify(directLegacyTickers) !== JSON.stringify(canonicalTickers)) {
+    violations.push("StockAnalysis ETF legacy-fallback set must exactly match canonical ETF payloads");
+  }
+
+  const shardedPayloads = new Map();
+  for (const [shardId, entry] of shardEntries) {
+    const relativePath = `stockanalysis/etfs/shards/${entry.path}`;
+    const item = shardFiles.find((file) => file.relativePath === relativePath);
+    if (!item) continue;
+    if (sha256(item.bytes) !== entry.sha256 || item.bytes.length !== entry.byte_length) {
+      violations.push(`StockAnalysis ETF shard ${entry.id}: hash/byte-length mismatch`);
+      continue;
+    }
+    let shard;
+    try {
+      shard = JSON.parse(item.bytes.toString("utf8"));
+    } catch (error) {
+      violations.push(`StockAnalysis ETF shard ${entry.id}: invalid JSON (${error.message})`);
+      continue;
+    }
+    if (
+      !shard
+      || typeof shard !== "object"
+      || Array.isArray(shard)
+      || shard.schema_version !== STOCKANALYSIS_ETF_SHARD_SCHEMA
+      || shard.shard_algorithm !== STOCKANALYSIS_ETF_SHARD_ALGORITHM
+      || shard.shard_count !== STOCKANALYSIS_ETF_SHARD_COUNT
+      || shard.shard_id !== shardId
+      || !shard.entries
+      || typeof shard.entries !== "object"
+      || Array.isArray(shard.entries)
+    ) {
+      violations.push(`StockAnalysis ETF shard ${entry.id}: contract mismatch`);
+      continue;
+    }
+    const tickers = Object.keys(shard.entries).sort();
+    if (tickers.length !== entry.member_count) violations.push(`StockAnalysis ETF shard ${entry.id}: member count mismatch`);
+    for (const ticker of tickers) {
+      let normalizedTicker;
+      try {
+        normalizedTicker = stockanalysisEtfTickerKey(ticker);
+      } catch {
+        violations.push(`StockAnalysis ETF shard ${entry.id}: invalid ticker ${ticker}`);
+        continue;
+      }
+      const document = stockanalysisEtfPayloadDocumentFromShard(shard, ticker);
+      const canonical = canonicalPayloads.get(ticker);
+      if (
+        normalizedTicker !== ticker
+        || stockanalysisEtfShardId(ticker) !== shardId
+        || shardedPayloads.has(ticker)
+        || !document
+        || !canonical
+        || document.raw !== canonical.raw
+        || sha256(document.raw) !== canonical.sha256
+        || canonicalJson(document.value) !== canonicalJson(canonical.payload)
+      ) {
+        violations.push(`StockAnalysis ETF shard ${entry.id}: payload identity/provenance mismatch for ${ticker}`);
+        continue;
+      }
+      shardedPayloads.set(ticker, document.value);
+    }
+  }
+  if (manifest.payload_count !== canonicalTickers.length || JSON.stringify([...shardedPayloads.keys()].sort()) !== JSON.stringify(canonicalTickers)) {
+    violations.push("StockAnalysis ETF shard payload membership must exactly match canonical ETF payloads");
+  }
+}
+
 function scanYardneyRawKeys(root, displayPrefix, violations) {
   for (const item of walkRegularFiles(path.join(root, "yardney"), violations, `${displayPrefix}/yardney`)) {
     if (!item.relativePath.endsWith(".json")) continue;
@@ -366,7 +603,7 @@ function scanYardneyRawKeys(root, displayPrefix, violations) {
   }
 }
 
-export function checkPublicMirror({ appRoot, repoRoot }) {
+export async function checkPublicMirror({ appRoot, repoRoot }) {
   const publicDataRoot = path.join(appRoot, "public", "data");
   const canonicalDataRoot = path.join(repoRoot, "data");
   const violations = [];
@@ -400,6 +637,7 @@ export function checkPublicMirror({ appRoot, repoRoot }) {
   scanYardneyRawKeys(publicDataRoot, "public/data", violations);
   scanYardneyRawKeys(canonicalDataRoot, "data", violations);
   validateLegacyEtfFiles({ canonicalDataRoot, publicDataRoot, publicFiles, violations });
+  await validateStockanalysisEtfShards({ canonicalDataRoot, publicDataRoot, publicFiles, violations });
   validateProjection({ canonicalDataRoot, publicDataRoot, violations });
 
   const edgePath = path.join(publicDataRoot, "admin", "fenok-edge-coverage-index.json");
@@ -426,7 +664,7 @@ const isMain = process.argv[1]
   && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url));
 
 if (isMain) {
-  const result = checkPublicMirror({ appRoot: defaultAppRoot, repoRoot: path.resolve(defaultAppRoot, "..") });
+  const result = await checkPublicMirror({ appRoot: defaultAppRoot, repoRoot: path.resolve(defaultAppRoot, "..") });
   if (!result.ok) {
     console.error("[fenok-public-mirror-guard] forbidden public files:");
     for (const violation of result.violations) console.error(`- ${violation}`);

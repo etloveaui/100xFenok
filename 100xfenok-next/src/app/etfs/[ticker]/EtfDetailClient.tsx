@@ -190,6 +190,7 @@ type EtfClassification = NonNullable<NonNullable<MarketFactsPayload["etf"]>["cla
 type LoadResult<T> =
   | { kind: "load_result"; status: "ok"; data: T }
   | { kind: "load_result"; status: "unavailable"; data: null; dataSupply: EtfDataSupply }
+  | { kind: "load_result"; status: "shard_infrastructure_unavailable"; data: null }
   | { kind: "load_result"; status: "missing"; data: null }
   | { kind: "load_result"; status: "failed"; data: null };
 
@@ -255,7 +256,13 @@ function okResult<T>(data: T): LoadResult<T> {
 function isLoadResult<T>(value: unknown): value is LoadResult<T> {
   const record = asRecord(value);
   return record?.kind === "load_result"
-    && (record.status === "ok" || record.status === "unavailable" || record.status === "missing" || record.status === "failed");
+    && (
+      record.status === "ok"
+      || record.status === "unavailable"
+      || record.status === "shard_infrastructure_unavailable"
+      || record.status === "missing"
+      || record.status === "failed"
+    );
 }
 
 function clearEtfRuntimeCache(ticker: string) {
@@ -274,7 +281,7 @@ function loadEtfPayload(ticker: string): Promise<LoadResult<EtfPayload>> {
   if (cached !== undefined) return Promise.resolve(okResult(cached));
 
   const request = fetch(`/api/data/stockanalysis/etfs/${encodeURIComponent(symbol)}/`, { cache: "no-store" })
-    .then((response) => parseEtfApiResponse<EtfPayload>(response))
+    .then((response) => parseEtfApiResponse<EtfPayload>(response, symbol))
     .then((result): LoadResult<EtfPayload> => {
       if (result.kind === "ok") {
         etfCache[symbol] = result.data;
@@ -283,6 +290,9 @@ function loadEtfPayload(ticker: string): Promise<LoadResult<EtfPayload>> {
       delete etfCache[symbol];
       if (result.kind === "unavailable") {
         return { kind: "load_result", status: "unavailable", data: null, dataSupply: result.dataSupply };
+      }
+      if (result.kind === "shard_infrastructure_unavailable") {
+        return { kind: "load_result", status: "shard_infrastructure_unavailable", data: null };
       }
       return result.kind === "missing" ? missingResult<EtfPayload>() : failedResult<EtfPayload>();
     })
@@ -1469,6 +1479,25 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
         </section>
         <SkeletonSection />
         <SkeletonSection />
+      </div>
+    );
+  }
+
+  if (etfResult?.status === "shard_infrastructure_unavailable") {
+    return (
+      <div className="stock-shell">
+        <div className="panel stock-empty" data-etf-shard-infrastructure-state="unavailable">
+          <p className="text-lg font-black text-[var(--c-ink)]">ETF 상세 저장소 일시 이용 불가</p>
+          <p className="mt-2 text-sm font-semibold text-[var(--c-ink-3)]">
+            {symbol} 상세 샤드의 무결성을 확인할 수 없어 독립 요약이나 예전 파일로 대체하지 않습니다.
+          </p>
+          <EtfRetryCallout
+            title="검증된 상세 데이터를 불러오지 못했습니다"
+            desc="잠시 뒤 다시 시도해 주세요."
+            onRetry={retryLoads}
+          />
+          <ExternalSourceLinks ticker={symbol} kind="etf" statusLine="ETF 상세 저장소 일시 이용 불가" className="mt-4" />
+        </div>
       </div>
     );
   }

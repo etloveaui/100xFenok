@@ -237,24 +237,26 @@ interface StockanalysisStockPayload {
   };
 }
 
-function loadStockanalysisEtf(ticker: string): Promise<StockanalysisEtfPayload | null> {
+type StockanalysisEtfLoadResult =
+  | { kind: "ok"; data: StockanalysisEtfPayload }
+  | { kind: "unavailable"; dataSupply: NonNullable<ReturnType<typeof parseEtfDataSupply>> }
+  | { kind: "shard_infrastructure_unavailable" }
+  | { kind: "missing" }
+  | { kind: "failed" };
+
+function loadStockanalysisEtf(ticker: string): Promise<StockanalysisEtfLoadResult> {
   const symbol = normalizeForEntityKey(ticker);
-  if (!symbol) return Promise.resolve(null);
+  if (!symbol) return Promise.resolve({ kind: "missing" });
   return fetch(`/api/data/stockanalysis/etfs/${encodeURIComponent(symbol)}`, { cache: "no-store" })
-    .then((response) => parseEtfApiResponse<StockanalysisEtfPayload>(response))
+    .then((response) => parseEtfApiResponse<StockanalysisEtfPayload>(response, symbol))
     .then((result) => {
-      if (result.kind === "ok") return result.data;
+      if (result.kind === "ok") return { kind: "ok" as const, data: result.data };
       if (result.kind === "unavailable") {
-        return {
-          ticker: symbol,
-          asset_type: "etf",
-          detail_status: "data_supply_unavailable",
-          data_supply: result.dataSupply,
-        };
+        return { kind: "unavailable" as const, dataSupply: result.dataSupply };
       }
-      return null;
+      return { kind: result.kind };
     })
-    .catch(() => null);
+    .catch(() => ({ kind: "failed" }));
 }
 
 function loadStockanalysisStock(ticker: string): Promise<StockanalysisStockPayload | null> {
@@ -3078,7 +3080,7 @@ export default function StockDetailClient({
   const rowLoading = row === undefined;
   const [yfData, setYfData] = useState<any | undefined>(undefined);
   const [stockTab, setStockTab] = useState<StockTab>(initialTab ?? "overview");
-  const [etfData, setEtfData] = useState<StockanalysisEtfPayload | null | undefined>(undefined);
+  const [etfResult, setEtfResult] = useState<StockanalysisEtfLoadResult | null | undefined>(undefined);
   const [etfSurfaceData, setEtfSurfaceData] = useState<TickerSurfacePayload | null | undefined>(undefined);
   const [stockAuxData, setStockAuxData] = useState<StockanalysisStockPayload | null | undefined>(undefined);
   const [financialCandidate, setFinancialCandidate] = useState<StockanalysisFinancialPayload | null | undefined>(undefined);
@@ -3123,14 +3125,14 @@ export default function StockDetailClient({
     const shouldLoadEtfData = assetHint === "etf" || marketFactsAssetType === "etf" || (row === null && !marketFactsLoading);
     if (!shouldLoadEtfData) {
       Promise.resolve().then(() => {
-        if (!cancelled) setEtfData(null);
+        if (!cancelled) setEtfResult(null);
       });
       return () => { cancelled = true; };
     }
     Promise.resolve().then(() => {
-      if (!cancelled) setEtfData(undefined);
+      if (!cancelled) setEtfResult(undefined);
     });
-    loadStockanalysisEtf(symbol).then((d) => { if (!cancelled) setEtfData(d); });
+    loadStockanalysisEtf(symbol).then((result) => { if (!cancelled) setEtfResult(result); });
     return () => { cancelled = true; };
   }, [assetHint, marketFactsAssetType, marketFactsLoading, row, symbol]);
 
@@ -3194,6 +3196,18 @@ export default function StockDetailClient({
 
   const yfLoaded = yfData !== undefined;
   const yfAvailable = yfData != null;
+  const etfData: StockanalysisEtfPayload | null | undefined = etfResult === undefined
+    ? undefined
+    : etfResult?.kind === "ok"
+      ? etfResult.data
+      : etfResult?.kind === "unavailable"
+        ? {
+            ticker: symbol,
+            asset_type: "etf",
+            detail_status: "data_supply_unavailable",
+            data_supply: etfResult.dataSupply,
+          }
+        : null;
   const hasEtfSurfaceData = surfaceRowsReturned(etfSurfaceData) > 0;
   const etfSurface = etfSurfaceFallback(etfSurfaceData, symbol);
   const isEtfAsset = assetHint === "etf" || marketFacts?.asset_type === "etf" || etfData?.asset_type === "etf" || hasEtfSurfaceData;
@@ -3243,6 +3257,19 @@ export default function StockDetailClient({
   useEffect(() => {
     writeStockTabUrl(activeStockTab, "replace");
   }, [activeStockTab]);
+
+  if (etfResult?.kind === "shard_infrastructure_unavailable") {
+    return (
+      <div className="stock-shell" data-stock-etf-shard-infrastructure-state="unavailable">
+        <div className="panel stock-empty">
+          <p className="text-lg font-black text-red-900">ETF 상세 저장소를 확인할 수 없습니다.</p>
+          <p className="mt-2 text-sm font-semibold text-red-800">
+            {symbol}의 상세 정보를 누락이나 요약 데이터로 바꾸지 않고 일시 장애로 표시합니다.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Unknown ticker
   if (!rowLoading && !row) {

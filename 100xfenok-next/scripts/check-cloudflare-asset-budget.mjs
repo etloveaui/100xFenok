@@ -1,10 +1,20 @@
 #!/usr/bin/env node
 
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  STOCKANALYSIS_ETF_SHARD_COMPATIBILITY_MODE,
+  STOCKANALYSIS_ETF_SHARD_COUNT,
+  stockanalysisEtfManifestSha256,
+  stockanalysisEtfShardManifestIsValid,
+} from "../src/lib/stockanalysis-etf-shard.mjs";
+
+const STOCKANALYSIS_ETF_SHARD_ONLY_MODE = "shard-only";
 
 export const DEFAULT_ASSET_LIMIT = 20_000;
+export const DEFAULT_ASSET_WARNING_LIMIT = 19_000;
 
 function atomicWriteJson(filePath, payload) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -114,13 +124,145 @@ function validateGeneratedDataManifest(assetRoot) {
   return { present: true, path_count: count };
 }
 
+function collectDirectLegacyEtfFiles(root, label) {
+  const directory = path.join(root, "data", "stockanalysis", "etfs");
+  const stat = fs.lstatSync(directory);
+  if (stat.isSymbolicLink() || !stat.isDirectory()) {
+    throw new Error(`${label} StockAnalysis ETF root must be a real directory: ${directory}`);
+  }
+  const files = new Map();
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    if (!entry.name.endsWith(".json")) continue;
+    const absolutePath = path.join(directory, entry.name);
+    const entryStat = fs.lstatSync(absolutePath);
+    if (entryStat.isSymbolicLink() || !entryStat.isFile()) {
+      throw new Error(`${label} legacy ETF fallback must be a regular file: ${absolutePath}`);
+    }
+    files.set(entry.name, { absolutePath, size: entryStat.size });
+  }
+  return files;
+}
+
+function isPublicStockanalysisEtfManifestValid(manifest) {
+  if (!manifest || typeof manifest !== "object") return false;
+  const originalDigestValid = manifest.manifest_sha256 === stockanalysisEtfManifestSha256(manifest);
+  if (!originalDigestValid) return false;
+  if (stockanalysisEtfShardManifestIsValid(manifest)) return true;
+  if (manifest.compatibility_mode !== STOCKANALYSIS_ETF_SHARD_ONLY_MODE) return false;
+  // The runtime validator in older checkouts only knows legacy-fallback. Run
+  // that structural validator against an equivalent mode while preserving the
+  // original digest check above; newer runtimes validate shard-only directly.
+  const legacyEquivalent = { ...manifest, compatibility_mode: STOCKANALYSIS_ETF_SHARD_COMPATIBILITY_MODE };
+  legacyEquivalent.manifest_sha256 = stockanalysisEtfManifestSha256(legacyEquivalent);
+  return stockanalysisEtfShardManifestIsValid(legacyEquivalent);
+}
+
+function validateStockanalysisEtfShardAssets(assetRoot, files, expectedPublicRoot) {
+  const prefix = "data/stockanalysis/etfs/shards/";
+  const projected = files.filter((item) => item.relativePath.startsWith(prefix));
+  if (projected.length === 0) {
+    throw new Error("StockAnalysis ETF shard projection is missing from emitted assets");
+  }
+  const byPath = new Map(projected.map((item) => [item.relativePath, item]));
+  const manifestRelativePath = `${prefix}index.json`;
+  const manifestFile = byPath.get(manifestRelativePath);
+  if (!manifestFile) throw new Error("StockAnalysis ETF shard manifest is missing from emitted assets");
+  const emittedManifestPath = path.join(assetRoot, ...manifestRelativePath.split("/"));
+  const expectedManifestPath = path.join(expectedPublicRoot, ...manifestRelativePath.split("/"));
+  const expectedManifestStat = fs.lstatSync(expectedManifestPath);
+  if (expectedManifestStat.isSymbolicLink() || !expectedManifestStat.isFile()) {
+    throw new Error(`current public StockAnalysis ETF shard manifest must be a regular file: ${expectedManifestPath}`);
+  }
+  const emittedManifestBytes = fs.readFileSync(emittedManifestPath);
+  const expectedManifestBytes = fs.readFileSync(expectedManifestPath);
+  if (!emittedManifestBytes.equals(expectedManifestBytes)) {
+    throw new Error("StockAnalysis ETF emitted shard manifest differs from the current public projection");
+  }
+  let manifest;
+  try {
+    manifest = JSON.parse(emittedManifestBytes.toString("utf8"));
+  } catch (error) {
+    throw new Error(`StockAnalysis ETF emitted shard manifest is invalid JSON: ${error.message}`);
+  }
+  if (!isPublicStockanalysisEtfManifestValid(manifest)) {
+    throw new Error("StockAnalysis ETF emitted shard manifest contract is invalid");
+  }
+  const expectedPaths = new Set([manifestRelativePath]);
+  let largest = { byte_length: 0, member_count: 0, path: null };
+  for (const entry of manifest.shards) {
+    const relativePath = `${prefix}${entry.path}`;
+    expectedPaths.add(relativePath);
+    const file = byPath.get(relativePath);
+    if (!file) throw new Error(`StockAnalysis ETF emitted shard is missing: ${relativePath}`);
+    const absolutePath = path.join(assetRoot, ...relativePath.split("/"));
+    const bytes = fs.readFileSync(absolutePath);
+    const digest = crypto.createHash("sha256").update(bytes).digest("hex");
+    if (file.size !== entry.byte_length || bytes.length !== entry.byte_length || digest !== entry.sha256) {
+      throw new Error(`StockAnalysis ETF emitted shard hash/byte-length mismatch: ${relativePath}`);
+    }
+    if (entry.byte_length > largest.byte_length) {
+      largest = {
+        byte_length: entry.byte_length,
+        member_count: entry.member_count,
+        path: relativePath,
+      };
+    }
+  }
+  for (const relativePath of byPath.keys()) {
+    if (!expectedPaths.has(relativePath)) {
+      throw new Error(`StockAnalysis ETF emitted shard projection has an unlisted asset: ${relativePath}`);
+    }
+  }
+  if (manifest.shards.length !== STOCKANALYSIS_ETF_SHARD_COUNT || projected.length !== STOCKANALYSIS_ETF_SHARD_COUNT + 1) {
+    throw new Error(`StockAnalysis ETF emitted shard asset count mismatch: manifest=${manifest.shards.length}, assets=${projected.length}`);
+  }
+  const emittedLegacy = collectDirectLegacyEtfFiles(assetRoot, "emitted asset");
+  const expectedLegacy = collectDirectLegacyEtfFiles(expectedPublicRoot, "current public");
+  const emittedNames = [...emittedLegacy.keys()].sort();
+  const expectedNames = [...expectedLegacy.keys()].sort();
+  if (manifest.compatibility_mode === STOCKANALYSIS_ETF_SHARD_ONLY_MODE) {
+    if (emittedNames.length !== 0 || expectedNames.length !== 0) {
+      throw new Error(`StockAnalysis ETF shard-only projection requires zero direct ETF assets: emitted=${emittedNames.length}, expected=${expectedNames.length}`);
+    }
+  } else {
+    if (JSON.stringify(emittedNames) !== JSON.stringify(expectedNames)) {
+      throw new Error(`StockAnalysis ETF emitted legacy fallback set differs from current public projection: emitted=${emittedNames.length}, expected=${expectedNames.length}`);
+    }
+    for (const name of expectedNames) {
+      const emitted = emittedLegacy.get(name);
+      const expected = expectedLegacy.get(name);
+      if (
+        emitted.size !== expected.size
+        || !fs.readFileSync(emitted.absolutePath).equals(fs.readFileSync(expected.absolutePath))
+      ) {
+        throw new Error(`StockAnalysis ETF emitted legacy fallback bytes differ from current public projection: ${name}`);
+      }
+    }
+  }
+  return {
+    manifest_files: 1,
+    shard_files: manifest.shards.length,
+    total_files: projected.length,
+    payload_count: manifest.payload_count,
+    snapshot_id: manifest.snapshot_id,
+    source_manifest_sha256: crypto.createHash("sha256").update(expectedManifestBytes).digest("hex"),
+    legacy_fallback_files: emittedLegacy.size,
+    largest_shard_bytes: largest.byte_length,
+    largest_shard_member_count: largest.member_count,
+    largest_shard_path: largest.path,
+  };
+}
+
 export function inspectCloudflareAssetBudget({
   assetRoot,
   reportPath,
+  expectedPublicRoot = null,
   limit = DEFAULT_ASSET_LIMIT,
+  warningLimit = null,
 }) {
   const root = path.resolve(assetRoot);
   const report = path.resolve(reportPath);
+  const expectedRoot = path.resolve(expectedPublicRoot || path.join(path.dirname(path.dirname(root)), "public"));
   const relativeReport = path.relative(root, report);
   if (!relativeReport.startsWith("..") || path.isAbsolute(relativeReport)) {
     throw new Error(`asset budget report must live outside asset root: ${report}`);
@@ -130,20 +272,29 @@ export function inspectCloudflareAssetBudget({
     throw new Error(`counted asset root must be a real directory: ${root}`);
   }
   if (!Number.isInteger(limit) || limit <= 0) throw new Error(`asset limit must be a positive integer: ${limit}`);
+  const effectiveWarningLimit = warningLimit ?? Math.min(DEFAULT_ASSET_WARNING_LIMIT, limit - 1);
+  if (!Number.isInteger(effectiveWarningLimit) || effectiveWarningLimit <= 0 || effectiveWarningLimit >= limit) {
+    throw new Error(`asset warning limit must be a positive integer below the hard limit: ${effectiveWarningLimit}`);
+  }
 
   const files = collectRegularFiles(root);
   const generatedDataManifest = validateGeneratedDataManifest(root);
   const count = files.length;
   const dataSupplyProjection = projectionCounts(files);
   validateProjectionCounts(root, dataSupplyProjection);
+  const stockanalysisEtfShards = validateStockanalysisEtfShardAssets(root, files, expectedRoot);
   const payload = {
     schema_version: "cloudflare-asset-budget/v1",
     counted_root: root,
     regular_file_count: count,
     limit,
     headroom: limit - count,
+    warning_limit: effectiveWarningLimit,
+    warning_headroom: effectiveWarningLimit - count,
+    safety_status: count >= effectiveWarningLimit ? "warning" : "pass",
     status: count < limit ? "pass" : "fail",
     data_supply_projection: dataSupplyProjection,
+    stockanalysis_etf_shards: stockanalysisEtfShards,
     generated_data_manifest: generatedDataManifest,
   };
   atomicWriteJson(report, payload);
@@ -171,7 +322,11 @@ if (isMain) {
       assetRoot: getArg("--asset-root") || path.join(appRoot, ".open-next", "assets"),
       reportPath: getArg("--report") || path.join(appRoot, ".open-next", "asset-budget-report.json"),
       limit: Number(getArg("--limit") || DEFAULT_ASSET_LIMIT),
+      warningLimit: Number(getArg("--warning-limit") || DEFAULT_ASSET_WARNING_LIMIT),
     });
+    if (result.safety_status === "warning") {
+      console.warn(`[check-cloudflare-asset-budget] safety warning: ${result.regular_file_count} assets leaves ${result.headroom} before the ${result.limit} hard limit`);
+    }
     console.log(JSON.stringify(result, null, 2));
   } catch (error) {
     console.error(`[check-cloudflare-asset-budget] ${error.message}`);

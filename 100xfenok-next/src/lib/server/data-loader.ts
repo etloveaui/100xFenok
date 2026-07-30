@@ -2,6 +2,12 @@ import type { Dirent } from "node:fs";
 import { lstat, readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { normalizeForFilePath } from "@/lib/ticker";
+import {
+  sha256Text,
+  stockanalysisEtfPayloadDocumentResultFromShard,
+  stockanalysisEtfShardManifestEntry,
+  stockanalysisEtfShardManifestIsValid,
+} from "../stockanalysis-etf-shard.mjs";
 import type { z } from "zod";
 import {
   benchmarkCatalogSchema,
@@ -71,6 +77,24 @@ type DataJsonFilesByPath = Record<string, readonly DataJsonManifestEntry[]>;
 type JsonRecord = Record<string, unknown>;
 export type PublicJsonDocument = { raw: string; value: JsonRecord };
 export type StockanalysisAssetKind = "etfs" | "stocks" | "financials";
+export type StockanalysisEtfShardDocumentResult =
+  | {
+      kind: "ok";
+      document: PublicJsonDocument;
+      manifestSha256: string;
+      snapshotId: string;
+    }
+  | {
+      kind: "ticker_not_found";
+      manifestSha256: string;
+      snapshotId: string;
+    }
+  | {
+      kind: "shard_integrity_unavailable";
+      reason: string;
+      manifestSha256: string | null;
+      snapshotId: string | null;
+    };
 
 let dataJsonFilesByPathPromise: Promise<DataJsonFilesByPath> | null = null;
 
@@ -201,6 +225,113 @@ export function normalizeStockanalysisTicker(value: string): string | null {
   const normalized = normalizeForFilePath(value);
   if (!/^[A-Z0-9][A-Z0-9.-]{0,19}$/.test(normalized)) return null;
   return normalized;
+}
+
+export async function getStockanalysisEtfShardDocument(
+  ticker: string,
+): Promise<StockanalysisEtfShardDocumentResult> {
+  const normalizedTicker = normalizeStockanalysisTicker(ticker);
+  if (!normalizedTicker) {
+    return {
+      kind: "shard_integrity_unavailable",
+      reason: "invalid_ticker",
+      manifestSha256: null,
+      snapshotId: null,
+    };
+  }
+  let manifestSha256: string | null = null;
+  let snapshotId: string | null = null;
+  try {
+    const shardRoot = path.join(PUBLIC_DATA_ROOT, "stockanalysis", "etfs", "shards");
+    const manifestDocument = await readStrictPublicJsonDocument(path.join(shardRoot, "index.json"));
+    if (!manifestDocument) {
+      return {
+        kind: "shard_integrity_unavailable",
+        reason: "manifest_unavailable",
+        manifestSha256,
+        snapshotId,
+      };
+    }
+    manifestSha256 = typeof manifestDocument.value.manifest_sha256 === "string"
+      ? manifestDocument.value.manifest_sha256
+      : null;
+    snapshotId = typeof manifestDocument.value.snapshot_id === "string"
+      ? manifestDocument.value.snapshot_id
+      : null;
+    const selected = stockanalysisEtfShardManifestEntry(manifestDocument.value, normalizedTicker);
+    if (!selected) {
+      return {
+        kind: "shard_integrity_unavailable",
+        reason: "manifest_invalid",
+        manifestSha256,
+        snapshotId,
+      };
+    }
+    const shardDocument = await readStrictPublicJsonDocument(path.join(
+      shardRoot,
+      ...selected.entry.path.split("/"),
+    ));
+    if (!shardDocument) {
+      return {
+        kind: "shard_integrity_unavailable",
+        reason: "selected_shard_unavailable",
+        manifestSha256,
+        snapshotId,
+      };
+    }
+    if (
+      Buffer.byteLength(shardDocument.raw, "utf8") !== selected.entry.byte_length
+      || sha256Text(shardDocument.raw) !== selected.entry.sha256
+    ) {
+      return {
+        kind: "shard_integrity_unavailable",
+        reason: "selected_shard_digest_mismatch",
+        manifestSha256,
+        snapshotId,
+      };
+    }
+    const result = stockanalysisEtfPayloadDocumentResultFromShard(
+      shardDocument.value,
+      selected.ticker,
+      selected.entry.member_count,
+    );
+    if (result.kind === "ok") {
+      if (!result.document) {
+        return {
+          kind: "shard_integrity_unavailable",
+          reason: "invalid_shard_result",
+          manifestSha256,
+          snapshotId,
+        };
+      }
+      return {
+        kind: "ok",
+        document: result.document,
+        manifestSha256: manifestSha256!,
+        snapshotId: snapshotId!,
+      };
+    }
+    if (result.kind === "ticker_not_found") {
+      return {
+        kind: "ticker_not_found",
+        manifestSha256: manifestSha256!,
+        snapshotId: snapshotId!,
+      };
+    }
+    return {
+      kind: "shard_integrity_unavailable",
+      reason: typeof result.reason === "string" ? result.reason : "invalid_shard_result",
+      manifestSha256,
+      snapshotId,
+    };
+  } catch {
+    return {
+      kind: "shard_integrity_unavailable",
+      reason: "shard_resolution_exception",
+      manifestSha256,
+      snapshotId,
+    };
+  }
 }
 
 export function normalizeStockanalysisSurfaceName(value: string): string | null {
@@ -709,8 +840,9 @@ export async function getStockanalysisManifest() {
   const latestBackfillPath = path.join(backfillDir, "latest.json");
   const etfCoveragePath = path.join(coverageDir, "etf_detail.json");
   const surfaceIndexPath = path.join(surfacesDir, "index.json");
+  const etfShardManifestPath = path.join(etfsDir, "shards", "index.json");
 
-  const [meta, topLevel, etfs, stocks, financials, backfill, coverage, surfaces, universe, index, latestBackfill, etfCoverage, surfaceIndex] =
+  const [meta, topLevel, etfs, stocks, financials, backfill, coverage, surfaces, universe, index, latestBackfill, etfCoverage, surfaceIndex, etfShardManifest] =
     await Promise.all([
       getBaseMeta("stockanalysis"),
       buildJsonSample(baseDir, "/data/stockanalysis", 20),
@@ -725,6 +857,7 @@ export async function getStockanalysisManifest() {
       readOptionalJsonRecord(latestBackfillPath),
       readOptionalJsonRecord(etfCoveragePath),
       readOptionalJsonRecord(surfaceIndexPath),
+      readOptionalJsonRecord(etfShardManifestPath),
     ]);
 
   const universeRecords = Array.isArray(universe?.records)
@@ -737,6 +870,13 @@ export async function getStockanalysisManifest() {
   const surfaceResults = Array.isArray(surfaceIndex?.results)
     ? surfaceIndex.results
     : [];
+  const validEtfShardManifest = stockanalysisEtfShardManifestIsValid(etfShardManifest)
+    ? etfShardManifest
+    : null;
+  const etfShardPayloadCount = typeof validEtfShardManifest?.payload_count === "number"
+    && Number.isInteger(validEtfShardManifest.payload_count)
+    ? validEtfShardManifest.payload_count
+    : null;
 
   return {
     generatedAt: new Date().toISOString(),
@@ -750,7 +890,19 @@ export async function getStockanalysisManifest() {
     description: meta.description,
     files: {
       topLevelCount: topLevel.count,
-      etfFileCount: etfs.count,
+      etfFileCount: etfShardPayloadCount ?? etfs.count,
+      legacyEtfFileCount: etfs.count,
+      etfShardFileCount: Array.isArray(validEtfShardManifest?.shards)
+        ? validEtfShardManifest.shards.length
+        : 0,
+      etfSharding: validEtfShardManifest
+        ? {
+            schema_version: validEtfShardManifest.schema_version ?? null,
+            compatibility_mode: validEtfShardManifest.compatibility_mode ?? null,
+            snapshot_id: validEtfShardManifest.snapshot_id ?? null,
+            generated_at: validEtfShardManifest.generated_at ?? null,
+          }
+        : null,
       stockFileCount: stocks.count,
       financialFileCount: financials.count,
       backfillFileCount: backfill.count,
@@ -816,7 +968,13 @@ export async function getStockanalysisAsset(
   assetKind: StockanalysisAssetKind,
   ticker: string,
 ) {
-  const assetPath = path.join(PUBLIC_DATA_ROOT, "stockanalysis", assetKind, `${ticker}.json`);
+  const normalizedTicker = normalizeStockanalysisTicker(ticker);
+  if (!normalizedTicker) return null;
+  if (assetKind === "etfs") {
+    const sharded = await getStockanalysisEtfShardDocument(normalizedTicker);
+    return sharded.kind === "ok" ? sharded.document.value : null;
+  }
+  const assetPath = path.join(PUBLIC_DATA_ROOT, "stockanalysis", assetKind, `${normalizedTicker}.json`);
   return readOptionalJsonRecord(assetPath);
 }
 
@@ -824,7 +982,13 @@ export async function getStockanalysisAssetDocument(
   assetKind: StockanalysisAssetKind,
   ticker: string,
 ) {
-  const assetPath = path.join(PUBLIC_DATA_ROOT, "stockanalysis", assetKind, `${ticker}.json`);
+  const normalizedTicker = normalizeStockanalysisTicker(ticker);
+  if (!normalizedTicker) return null;
+  if (assetKind === "etfs") {
+    const sharded = await getStockanalysisEtfShardDocument(normalizedTicker);
+    return sharded.kind === "ok" ? sharded.document : null;
+  }
+  const assetPath = path.join(PUBLIC_DATA_ROOT, "stockanalysis", assetKind, `${normalizedTicker}.json`);
   return readStrictPublicJsonDocument(assetPath);
 }
 
