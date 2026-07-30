@@ -31,8 +31,18 @@ assert.doesNotMatch(
 );
 assert.match(
   route,
-  /bypassCache:\s*resolution\.kind === "shard_unavailable"/,
-  "typed shard failures must bypass any previously cached success",
+  /`stockanalysis:etfs:\$\{buildVersion\}:\$\{ticker\}`/,
+  "ETF response cache must be isolated by immutable build artifact",
+);
+assert.match(
+  route,
+  /async \(\) => \{\s*const resolution = await resolve\(ticker\)/,
+  "ETF registry and shard validation must run only after a response-cache miss",
+);
+assert.match(
+  route,
+  /isCacheable:[\s\S]*response\.ok[\s\S]*X-100x-Data-Supply-SLO/,
+  "typed shard integrity failures must never be stored in the response cache",
 );
 
 const detail = source("src/app/etfs/[ticker]/EtfDetailClient.tsx");

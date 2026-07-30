@@ -52,7 +52,7 @@ export type EtfDetailResolution =
       projectionDigest: string;
       stateObservedAt: string;
     }
-  | { kind: "shard"; payload: JsonRecord; projectionDigest: string }
+  | { kind: "shard"; document: PublicJsonDocument; projectionDigest: string }
   | { kind: "not_found"; projectionDigest: string }
   | { kind: "shard_unavailable"; reason: string; projectionDigest: string | null }
   | {
@@ -384,7 +384,7 @@ export async function resolveDataSupplyEtfDetail(
       return { kind: "not_found", projectionDigest: shard.manifestSha256 };
     }
     return isStrictShardEtfPayload(shard.document.value, ticker)
-      ? { kind: "shard", payload: shard.document.value, projectionDigest: shard.manifestSha256 }
+      ? { kind: "shard", document: shard.document, projectionDigest: shard.manifestSha256 }
       : {
           kind: "shard_unavailable",
           reason: "invalid_shard_payload",

@@ -191,7 +191,7 @@ if (unavailable.kind === "unavailable") {
   assert.equal(typedRepresentation.body.error, "DATA_SUPPLY_UNAVAILABLE");
 }
 
-const { buildEtfResponse } = await import("../src/app/api/data/stockanalysis/[assetType]/[ticker]/route");
+const { buildEtfResponse, getEtfResponse } = await import("../src/app/api/data/stockanalysis/[assetType]/[ticker]/route");
 const shardUnavailableResponse = await buildEtfResponse({
   kind: "shard_unavailable",
   reason: "fixture-corrupt-shard",
@@ -361,13 +361,17 @@ assert.equal(collision.kind, "error");
 
 const originalCaches = globalThis.caches;
 let stored: Response | null = null;
+let storedKey: string | null = null;
 let loads = 0;
 Object.defineProperty(globalThis, "caches", {
   configurable: true,
   value: {
     default: {
-      match: async () => stored?.clone(),
-      put: async (_request: Request, response: Response) => { stored = response.clone(); },
+      match: async (request: Request) => request.url === storedKey ? stored?.clone() : undefined,
+      put: async (request: Request, response: Response) => {
+        storedKey = request.url;
+        stored = response.clone();
+      },
     },
   },
 });
@@ -392,10 +396,39 @@ try {
   assert.equal(second.headers.get("Cache-Control"), "public, max-age=15, s-maxage=60");
   assert.equal(loads, 1);
 
+  stored = null;
+  let resolutions = 0;
+  const shardRaw = `{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "SPY",
+  "escaped": "\\u2603"
+}
+`;
+  const resolveShard = async () => {
+    resolutions += 1;
+    return {
+      kind: "shard",
+      document: document(JSON.parse(shardRaw), shardRaw),
+      projectionDigest: "d".repeat(64),
+    } as const;
+  };
+  const firstEtf = await getEtfResponse("SPY", "build-a", resolveShard);
+  const secondEtf = await getEtfResponse("SPY", "build-a", resolveShard);
+  assert.equal(firstEtf.headers.get("X-100x-Cache"), "MISS");
+  assert.equal(secondEtf.headers.get("X-100x-Cache"), "HIT");
+  assert.equal(await firstEtf.text(), shardRaw, "cache MISS must preserve exact canonical ETF bytes");
+  assert.equal(await secondEtf.text(), shardRaw, "cache HIT must preserve exact canonical ETF bytes");
+  assert.equal(resolutions, 1, "a cache hit must not rerun ETF registry and shard validation");
+  await getEtfResponse("SPY", "build-b", resolveShard);
+  assert.equal(resolutions, 2, "a new build version must not reuse the prior artifact response");
+
   stored = Response.json(
     { schema_version: "stockanalysis/v1", source: "stockanalysis", asset_type: "etf", ticker: "SPY" },
     { headers: { "Cache-Control": "public, max-age=300" } },
   );
+  storedKey = "https://100xfenok-cache.local/responses/negative%3AADIU%3Adigest";
   let bypassLoads = 0;
   const bypassed = await withResponseCache(
     "negative:ADIU:digest",
