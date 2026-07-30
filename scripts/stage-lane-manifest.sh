@@ -38,7 +38,7 @@ fi
 
 jq -e --arg workflow "$WORKFLOW" --arg stage "$STAGE" --arg digest "$EXPECTED_DIGEST" '
   .schema_version == "lane-commit-manifest/v1"
-  and .registry_schema == "lane-registry/v2"
+  and .registry_schema == "lane-registry/v3"
   and .registry_digest == $digest
   and (.workflows | type == "object")
   and (.workflows[$workflow] | type == "object")
