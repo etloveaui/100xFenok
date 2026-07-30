@@ -678,7 +678,10 @@ export function useGeminiLiveSession({
     audioActivitySeenRef.current = false;
 
     try {
-      await audioOutput.ensure();
+      await Promise.all([
+        audioInput.prime(),
+        audioOutput.ensure(),
+      ]);
       setStatus("connecting");
       startMsRef.current = performance.now();
       const response = await fetch("/api/mona-vnext/session/", {
@@ -727,7 +730,7 @@ export function useGeminiLiveSession({
       setMetrics((current) => ({ ...current, lastError: message }));
       emitEvent("session-error", message);
     }
-  }, [audioOutput, clientBuildVersion, emitEvent, onSessionReady, openSocket, settings, status, stop]);
+  }, [audioInput, audioOutput, clientBuildVersion, emitEvent, onSessionReady, openSocket, settings, status, stop]);
 
   const sendText = useCallback((text: string) => {
     const trimmed = text.trim();

@@ -547,10 +547,10 @@ export default function MonaWindDown({
               style={{ boxShadow: "0 -20px 54px -22px rgba(0,0,0,.7)" }}
             >
               <button
-                type="button"
-                onClick={() => setSheetOpen(false)}
-                aria-label="설정 적용하고 닫기"
-                className="mx-auto flex min-h-8 w-20 items-center justify-center rounded-full"
+              type="button"
+              onClick={() => setSheetOpen(false)}
+              aria-label="설정 적용하고 닫기"
+              className="mx-auto flex min-h-[44px] w-20 items-center justify-center rounded-full"
               >
                 <span aria-hidden className="h-1 w-10 rounded-full bg-[var(--wd-line)]" />
               </button>
