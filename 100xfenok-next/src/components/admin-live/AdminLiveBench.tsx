@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import MonaWindDown, { type WindDownPhase } from "@/components/admin-live/MonaWindDown";
-import MonaVnextEntry from "@/components/admin-live/MonaVnextEntry";
+import MonaWindDownEntry from "@/components/admin-live/MonaWindDownEntry";
 import { BUILD_VERSION } from "@/generated/build-version";
 import { inspectAdminLiveModelOutput } from "@/lib/admin-live-output-safety";
 import {
@@ -3072,7 +3072,7 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
                 onInterruptionModeChange={setInterruptionMode}
                 variant="winddown"
               />
-              <MonaVnextEntry locked={settingsLocked} />
+              <MonaWindDownEntry locked={settingsLocked} />
             </>
           ) : undefined}
           onStart={() => void startSession()}

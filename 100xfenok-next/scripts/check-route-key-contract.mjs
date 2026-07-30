@@ -29,15 +29,15 @@ const ROUTE_SCOPE_CLASSIFICATION_ACK = {
   source: {
     path: "../../../docs/research/20260702_route_scope_classification.md",
     lines: "1-105",
-    note: "Lane C corrected route-scope classification source",
+    note: "Lane C corrected route-scope classification source, minus two retired WIND DOWN aliases",
   },
-  page_route_count: 53,
+  page_route_count: 51,
   core_covered_count: 19,
   needs_route_owner_probe_count: 0,
   legacy_bridge_closed_count: 9,
   admin_internal_count: 10,
   closed_alias_count: 4,
-  out_of_scope_count: 11,
+  out_of_scope_count: 9,
   blocked_actions: ["route_patch", "redirect", "delete", "deploy", "public_mutation"],
   core_covered_representative_routes: [
     "/etfs/SPY",

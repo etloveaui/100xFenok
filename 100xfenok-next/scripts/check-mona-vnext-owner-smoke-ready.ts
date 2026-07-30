@@ -54,27 +54,27 @@ function walkTextFiles(relDir: string) {
 
 function checkSourceInvariants(): Check[] {
   const winddown = readRel("src/app/winddown/page.tsx");
-  const winddownVnext = readRel("src/app/winddown-vnext/page.tsx");
-  const winddownLegacy = readRel("src/app/winddown-legacy/page.tsx");
   const adminLiveBench = readRel("src/components/admin-live/AdminLiveBench.tsx");
-  const monaVnextEntry = readRel("src/components/admin-live/MonaVnextEntry.tsx");
+  const monaWindDownEntry = readRel("src/components/admin-live/MonaWindDownEntry.tsx");
   const monaVoiceCoachApp = readRel("src/features/mona-vnext/MonaVoiceCoachApp.tsx");
   const liveSetup = readRel("src/features/mona-vnext/server/liveSetup.ts");
   const wrangler = readRel("wrangler.jsonc");
   const storage = readRel("src/features/mona-vnext/storage/objectStore.ts");
-  const legacyVnextEntryInSettings = adminLiveBench.includes("settingsSlot={mode === \"mona\" ? (")
-    && adminLiveBench.includes("<MonaVnextEntry locked={settingsLocked} />")
-    && !/normalizedCoachConfig\.tester === "owner"\s*\?\s*\(\s*<MonaVnextEntry/.test(adminLiveBench);
-  const productHidesDebugEntry = !monaVoiceCoachApp.includes("MonaVnextEntry")
+  const adminEntryInSettings = adminLiveBench.includes("settingsSlot={mode === \"mona\" ? (")
+    && adminLiveBench.includes("<MonaWindDownEntry locked={settingsLocked} />");
+  const productHidesDuplicateEntry = !monaVoiceCoachApp.includes("MonaWindDownEntry")
     && !monaVoiceCoachApp.includes("settingsSlot=");
-  const vnextEntryInLegacySettings = legacyVnextEntryInSettings
-    && monaVnextEntry.includes("href=\"/winddown-vnext\"")
-    && monaVnextEntry.includes("실험 테스트 열기");
+  const adminEntryTargetsProduct = adminEntryInSettings
+    && monaWindDownEntry.includes("href=\"/winddown\"")
+    && monaWindDownEntry.includes("오늘의 퀘스트 열기");
+  const retiredRouteFiles = [
+    "src/app/winddown-vnext/page.tsx",
+    "src/app/winddown-legacy/page.tsx",
+  ];
   const vnextFiles = [
     ...walkTextFiles("src/features/mona-vnext"),
     ...walkTextFiles("src/app/api/mona-vnext"),
     ...walkTextFiles("src/app/winddown"),
-    ...walkTextFiles("src/app/winddown-vnext"),
   ];
   const forbidden = [
     "saveStudySession",
@@ -92,7 +92,7 @@ function checkSourceInvariants(): Check[] {
 
   return [
     check(
-      "winddown-vnext-main-runtime",
+      "winddown-main-runtime",
       winddown.includes("MonaVoiceCoachApp")
         && winddown.includes("surface=\"winddown\"")
         && !winddown.includes("AdminLiveBench")
@@ -101,33 +101,24 @@ function checkSourceInvariants(): Check[] {
       "/winddown renders MonaVoiceCoachApp surface=\"winddown\" without AdminLiveBench import",
     ),
     check(
-      "winddown-vnext-design-shell",
+      "winddown-design-shell",
       monaVoiceCoachApp.includes("MonaWindDown")
         && monaVoiceCoachApp.includes("surface === \"winddown\"")
         ? "PASS"
         : "FAIL",
-      "/winddown vNext surface reuses the MonaWindDown design shell",
+      "/winddown app-owned surface reuses the MonaWindDown design shell",
     ),
     check(
-      "winddown-vnext-debug-route",
-      winddownVnext.includes("MonaVoiceCoachApp")
-        && winddownVnext.includes("surface=\"debug\"")
-        && !winddownVnext.includes("AdminLiveBench")
+      "winddown-retired-routes-absent",
+      retiredRouteFiles.every((relPath) => !existsSync(path.join(appRoot, relPath)))
         ? "PASS"
         : "FAIL",
-      "/winddown-vnext keeps the debug surface without AdminLiveBench import",
+      "/winddown-vnext and /winddown-legacy source routes are retired",
     ),
     check(
-      "winddown-legacy-rollback",
-      winddownLegacy.includes("<AdminLiveBench initialMode=\"mona\" simpleUi")
-        ? "PASS"
-        : "FAIL",
-      "/winddown-legacy keeps the previous AdminLiveBench rollback runtime",
-    ),
-    check(
-      "product-no-debug-entry",
-      productHidesDebugEntry && vnextEntryInLegacySettings ? "PASS" : "FAIL",
-      "main product hides debug navigation while the legacy admin bench keeps its tester entry",
+      "admin-winddown-entry",
+      productHidesDuplicateEntry && adminEntryTargetsProduct ? "PASS" : "FAIL",
+      "admin bench links to the single /winddown product route without product-side duplicate navigation",
     ),
     check(
       "vnext-no-production-write-path",
@@ -176,18 +167,29 @@ async function checkRouteReadiness(): Promise<Check[]> {
 
   const checks: Check[] = [];
   try {
-    const routes = ["/winddown/", "/winddown-vnext/", "/winddown-legacy/"];
-    const results = await Promise.all(routes.map(async (route) => {
-      const page = await fetch(`${baseUrl}${route}`, { cache: "no-store" });
-      return { route, ok: page.ok, status: page.status };
-    }));
+    const page = await fetch(`${baseUrl}/winddown/`, { cache: "no-store" });
     checks.push(check(
       "route-smoke",
-      results.every((result) => result.ok) ? "PASS" : "FAIL",
-      results.map((result) => `${result.route} HTTP ${result.status}`).join("; "),
+      page.ok ? "PASS" : "FAIL",
+      `/winddown/ HTTP ${page.status}`,
     ));
   } catch (error) {
     checks.push(check("route-smoke", "FAIL", error instanceof Error ? error.message : "route fetch failed"));
+  }
+
+  try {
+    const routes = ["/winddown-vnext/", "/winddown-legacy/"];
+    const results = await Promise.all(routes.map(async (route) => {
+      const page = await fetch(`${baseUrl}${route}`, { cache: "no-store", redirect: "manual" });
+      return { route, status: page.status };
+    }));
+    checks.push(check(
+      "retired-route-smoke",
+      results.every((result) => result.status === 404) ? "PASS" : "FAIL",
+      results.map((result) => `${result.route} HTTP ${result.status}`).join("; "),
+    ));
+  } catch (error) {
+    checks.push(check("retired-route-smoke", "FAIL", error instanceof Error ? error.message : "retired route fetch failed"));
   }
 
   try {
