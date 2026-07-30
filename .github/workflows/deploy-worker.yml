@@ -140,6 +140,10 @@ jobs:
       - name: Verify deploy provenance and source fence
         run: node scripts/test-deploy-provenance.mjs
 
+      - name: Verify data registry contracts
+        working-directory: 100xfenok-next
+        run: npm run qa:registry-contracts
+
       - name: Verify data health KPI fixtures
         working-directory: 100xfenok-next
         run: npm run qa:fenok-data-health-kpi:fixtures
