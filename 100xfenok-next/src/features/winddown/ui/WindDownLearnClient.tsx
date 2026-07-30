@@ -263,7 +263,7 @@ export default function WindDownLearnClient() {
           {status === "error" ? (
             <section className="rounded-[28px] border border-[var(--fnk-neutral-800)] bg-[var(--fnk-neutral-900)] p-7 text-center">
               <p className="text-lg font-black">문장을 안전하게 열지 못했어.</p>
-              <p className="mt-2 text-sm font-semibold leading-6 text-[var(--fnk-neutral-400)]">
+              <p className="mt-2 text-sm font-semibold leading-6 text-[var(--fnk-neutral-300)]">
                 이전 소재로 조용히 바꾸지 않았어. 다시 불러오면 돼.
               </p>
               <button
@@ -285,7 +285,7 @@ export default function WindDownLearnClient() {
                 QUEST COMPLETE
               </p>
               <h2 className="mt-2 text-2xl font-black">다섯 문장 완료!</h2>
-              <p className="mt-3 text-sm font-semibold text-[var(--fnk-neutral-400)]">
+              <p className="mt-3 text-sm font-semibold text-[var(--fnk-neutral-300)]">
                 틀린 문장 {session.completion?.mistakeRecap.length ?? 0}개도
                 다시 성공했어.
               </p>
@@ -296,7 +296,7 @@ export default function WindDownLearnClient() {
                       key={mistake.card.id}
                       className="rounded-2xl bg-[var(--fnk-neutral-800)] px-4 py-3"
                     >
-                      <p className="text-xs font-bold text-[var(--fnk-neutral-400)]">
+                      <p className="text-xs font-bold text-[var(--fnk-neutral-300)]">
                         {mistake.card.ko}
                       </p>
                       <p className="mt-1 text-sm font-black">
@@ -362,7 +362,7 @@ export default function WindDownLearnClient() {
                         ? "뜻 고르기"
                         : "문장 조립"}
                     </span>
-                    <span className="text-xs font-black tabular-nums text-[var(--fnk-neutral-400)]">
+                    <span className="text-xs font-black tabular-nums text-[var(--fnk-neutral-300)]">
                       {current.creditPolicy === "practice-only"
                         ? "보상 없는 짧은 연습"
                         : `${(session?.creditedCardIds.length ?? 0) + 1}번째`}
