@@ -6,9 +6,7 @@ import {
   WINDDOWN_ACTIVITY_CONTRACTS,
   getWindDownActivityContract,
 } from "../src/features/winddown/model/productContract";
-import {
-  buildWindDownStudyBootstrap,
-} from "../src/features/winddown/server/studyBootstrap";
+import { buildWindDownStudyBootstrap } from "../src/features/winddown/server/studyBootstrap";
 import {
   normalizeWindDownStudyCount,
   normalizeWindDownStudyMode,
@@ -19,7 +17,9 @@ import type { MonaVnextExpression } from "../src/features/mona-vnext/coach/coach
 function listSourceFiles(root: string): string[] {
   return readdirSync(root).flatMap((name) => {
     const absolute = path.join(root, name);
-    return statSync(absolute).isDirectory() ? listSourceFiles(absolute) : [absolute];
+    return statSync(absolute).isDirectory()
+      ? listSourceFiles(absolute)
+      : [absolute];
   });
 }
 
@@ -28,7 +28,10 @@ function resolveProjectImport(fromFile: string, specifier: string) {
   const unresolved = specifier.startsWith("@/")
     ? path.join(process.cwd(), "src", specifier.slice(2))
     : path.resolve(path.dirname(fromFile), specifier);
-  const withoutJavaScriptExtension = unresolved.replace(/\.(?:mjs|cjs|js|jsx)$/, "");
+  const withoutJavaScriptExtension = unresolved.replace(
+    /\.(?:mjs|cjs|js|jsx)$/,
+    "",
+  );
   const candidates = [
     unresolved,
     withoutJavaScriptExtension,
@@ -37,9 +40,11 @@ function resolveProjectImport(fromFile: string, specifier: string) {
     path.join(withoutJavaScriptExtension, "index.ts"),
     path.join(withoutJavaScriptExtension, "index.tsx"),
   ];
-  return candidates.find((candidate) => (
-    existsSync(candidate) && statSync(candidate).isFile()
-  )) ?? null;
+  return (
+    candidates.find(
+      (candidate) => existsSync(candidate) && statSync(candidate).isFile(),
+    ) ?? null
+  );
 }
 
 function importSpecifiers(file: string) {
@@ -53,17 +58,17 @@ function importSpecifiers(file: string) {
   const specifiers: string[] = [];
   function visit(node: ts.Node) {
     if (
-      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node))
-      && node.moduleSpecifier
-      && ts.isStringLiteral(node.moduleSpecifier)
+      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
+      node.moduleSpecifier &&
+      ts.isStringLiteral(node.moduleSpecifier)
     ) {
       specifiers.push(node.moduleSpecifier.text);
     }
     if (
-      ts.isCallExpression(node)
-      && node.expression.kind === ts.SyntaxKind.ImportKeyword
-      && node.arguments.length === 1
-      && ts.isStringLiteral(node.arguments[0])
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+      node.arguments.length === 1 &&
+      ts.isStringLiteral(node.arguments[0])
     ) {
       specifiers.push(node.arguments[0].text);
     }
@@ -107,7 +112,12 @@ assert.notEqual(
 const entries: MonaVnextExpression[] = [
   { id: "fresh-a", ko: "새 문장 A", en: "A fresh sentence.", state: "prompt" },
   { id: "due-a", ko: "복습 A", en: "Review sentence A.", state: "prompt" },
-  { id: "fresh-b", ko: "새 문장 B", en: "A second fresh sentence.", state: "prompt" },
+  {
+    id: "fresh-b",
+    ko: "새 문장 B",
+    en: "A second fresh sentence.",
+    state: "prompt",
+  },
   { id: "future-a", ko: "나중 A", en: "A future sentence.", state: "prompt" },
 ];
 
@@ -119,10 +129,15 @@ const learn = buildWindDownStudyBootstrap({
   deferredExpressionIds: ["future-a", "missing-deferred"],
   count: 5,
 });
-assert.deepEqual(new Set(learn.cards.map((card) => card.id)), new Set(["fresh-a", "fresh-b"]));
+assert.deepEqual(
+  new Set(learn.cards.map((card) => card.id)),
+  new Set(["fresh-a", "fresh-b"]),
+);
 assert.equal(learn.modelOpened, false);
 assert.equal(learn.inventory.insufficientFreshCount, 3);
-assert.deepEqual(learn.inventory.missingDeferredExpressionIds, ["missing-deferred"]);
+assert.deepEqual(learn.inventory.missingDeferredExpressionIds, [
+  "missing-deferred",
+]);
 assert.equal(learn.inventory.profileKnownCount, 3);
 assert.equal(learn.inventory.knownInMaterialCount, 2);
 
@@ -149,8 +164,10 @@ assert.ok(
       deferredExpressionIds: ["future-a", "missing-deferred"],
       count: 5,
     });
-    return candidate.cards.map((card) => card.id).join(",")
-      !== learn.cards.map((card) => card.id).join(",");
+    return (
+      candidate.cards.map((card) => card.id).join(",") !==
+      learn.cards.map((card) => card.id).join(",")
+    );
   }),
   "Different seeds must be able to change Learn order",
 );
@@ -163,10 +180,15 @@ const review = buildWindDownStudyBootstrap({
   deferredExpressionIds: ["future-a", "missing-deferred"],
   count: 5,
 });
-assert.deepEqual(review.cards.map((card) => card.id), ["due-a"]);
+assert.deepEqual(
+  review.cards.map((card) => card.id),
+  ["due-a"],
+);
 assert.deepEqual(review.inventory.missingDueExpressionIds, ["missing-due"]);
 assert.equal(review.inventory.unresolvedDueCount, 1);
-assert.deepEqual(review.inventory.missingDeferredExpressionIds, ["missing-deferred"]);
+assert.deepEqual(review.inventory.missingDeferredExpressionIds, [
+  "missing-deferred",
+]);
 assert.equal(
   review.inventory.freshAvailableCount,
   2,
@@ -219,7 +241,14 @@ assert.equal(
   "2026-07-31:review",
 );
 
-const studyApi = path.join(process.cwd(), "src/app/api/winddown/study/route.ts");
+const studyApi = path.join(
+  process.cwd(),
+  "src/app/api/winddown/study/route.ts",
+);
+const progressApi = path.join(
+  process.cwd(),
+  "src/app/api/winddown/progress/route.ts",
+);
 const studyBootstrap = path.join(
   process.cwd(),
   "src/features/winddown/server/studyBootstrap.ts",
@@ -229,24 +258,30 @@ const modelFreeEntryPaths = [
   path.join(process.cwd(), "src/features/winddown/content"),
   path.join(process.cwd(), "src/features/winddown/learn"),
   path.join(process.cwd(), "src/features/winddown/review"),
+  path.join(process.cwd(), "src/features/winddown/ui"),
   studyApi,
+  progressApi,
+  path.join(process.cwd(), "src/app/winddown/learn/page.tsx"),
 ].filter(existsSync);
-const modelFreeEntryFiles = modelFreeEntryPaths.flatMap((entry) => (
-  statSync(entry).isDirectory() ? listSourceFiles(entry) : [entry]
-));
+const modelFreeEntryFiles = modelFreeEntryPaths.flatMap((entry) =>
+  statSync(entry).isDirectory() ? listSourceFiles(entry) : [entry],
+);
 const modelFreeFiles = collectTransitiveProjectSources(modelFreeEntryFiles);
 for (const file of modelFreeFiles) {
   const normalized = file.split(path.sep).join("/");
   assert.equal(
-    /\/src\/features\/mona-vnext\/live(?:\/|\.[^/]+$)/.test(normalized)
-      || normalized.endsWith("/src/features/mona-vnext/server/liveSetup.ts")
-      || normalized.endsWith("/src/features/mona-vnext/MonaVoiceCoachApp.tsx")
-      || /\/src\/app\/api\/mona-vnext\/session(?:\/|\.[^/]+$)/.test(normalized),
+    /\/src\/features\/mona-vnext\/live(?:\/|\.[^/]+$)/.test(normalized) ||
+      normalized.endsWith("/src/features/mona-vnext/server/liveSetup.ts") ||
+      normalized.endsWith("/src/features/mona-vnext/MonaVoiceCoachApp.tsx") ||
+      /\/src\/app\/api\/mona-vnext\/session(?:\/|\.[^/]+$)/.test(normalized),
     false,
     `model-free import graph reaches a Live module: ${path.relative(process.cwd(), file)}`,
   );
 }
-assert.ok(modelFreeFiles.includes(studyBootstrap), "Study bootstrap must be inside the checked graph");
+assert.ok(
+  modelFreeFiles.includes(studyBootstrap),
+  "Study bootstrap must be inside the checked graph",
+);
 const boundarySource = modelFreeFiles
   .map((file) => readFileSync(file, "utf8"))
   .join("\n");
