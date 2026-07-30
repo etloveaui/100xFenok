@@ -40,6 +40,7 @@ import { MONA_VNEXT_NAMESPACE_POLICY } from "@/features/mona-vnext/memory/monaVn
 import { buildMonaVnextSrsAdvisory } from "@/features/mona-vnext/memory/srsAdvisory";
 import {
   buildCorrectionCandidate,
+  buildLearningEvent,
   buildMasteryEvent,
   type MonaVnextCorrectionCandidate,
 } from "@/features/mona-vnext/memory/srsBridge";
@@ -622,6 +623,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
       setAnswerVerdict(p15Gates.answerMatcher ? buildAnswerVerdict(evaluation.answerMatch) : null);
       const activeMode = teacherSessionRef.current.mode;
       let masteryEvent: ReturnType<typeof buildMasteryEvent> = null;
+      let learningEvent: ReturnType<typeof buildLearningEvent> = null;
       let correctionCandidate: MonaVnextCorrectionCandidate | null = null;
       if (evaluation.stopRequested) {
         dispatchTeacherEvent({ type: "LEARNER_STOP" }, { trigger: "LEARNER_STOP" });
@@ -650,6 +652,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
         });
         if (activeMode === "drill" || activeMode === "review") {
           const verdict = mapAnswerMatchToTeacherVerdict(evaluation.answerMatch);
+          const evaluatedAt = new Date().toISOString();
           dispatchTeacherEvent({
             type: "EVAL_RESULT",
             verdict,
@@ -661,7 +664,13 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
           masteryEvent = buildMasteryEvent({
             expressionId: currentLesson.expression.id,
             verdict,
-            atIso: new Date().toISOString(),
+            atIso: evaluatedAt,
+            sessionId: session.sessionId,
+          });
+          learningEvent = buildLearningEvent({
+            expressionId: currentLesson.expression.id,
+            verdict,
+            atIso: evaluatedAt,
             sessionId: session.sessionId,
           });
         } else if (activeMode === "free_talk" && learnerText.trim()) {
@@ -722,6 +731,7 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
         turnSeq: turn.turnSeq,
         advisory: {
           ...advisory,
+          ...(learningEvent ? { learningEvents: [learningEvent] } : {}),
           ...(masteryEvent ? { masteryEvents: [masteryEvent] } : {}),
           ...(correctionCandidate ? { correctionCandidates: [correctionCandidate] } : {}),
         },

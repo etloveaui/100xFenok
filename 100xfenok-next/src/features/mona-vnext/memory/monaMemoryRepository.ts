@@ -2,11 +2,19 @@ import path from "node:path";
 import {
   MONA_VNEXT_DATA_NAMESPACE,
 } from "@/features/mona-vnext/memory/monaVnextNamespace";
-import type {
+import {
+  buildLearningEvent,
+  type MonaVnextLearningEvent,
   MonaVnextCorrectionCandidate,
   MonaVnextMasteryEvent,
 } from "@/features/mona-vnext/memory/srsBridge";
 import type { MonaVnextSrsAdvisory } from "@/features/mona-vnext/memory/srsAdvisory";
+import {
+  applyMonaVnextLearningEvents,
+  classifyMonaVnextLearningProfile,
+  createEmptyMonaVnextLearningProfile,
+  normalizeMonaVnextLearningProfile,
+} from "@/features/mona-vnext/memory/fsrsLearningProfile";
 import { createMonaVnextObjectStore } from "@/features/mona-vnext/storage/objectStore";
 
 type MemoryCheckpoint = {
@@ -17,6 +25,8 @@ type MemoryCheckpoint = {
 };
 
 const MEMORY_DIR = path.join("data", MONA_VNEXT_DATA_NAMESPACE, "owner-test");
+const LEARNING_PROFILE_PATH = path.join(MEMORY_DIR, "learning-profile.json");
+const MEMORY_WRITE_CHAIN_KEY = LEARNING_PROFILE_PATH;
 const chains = new Map<string, Promise<void>>();
 
 function safeSegment(value: unknown, fallback: string) {
@@ -59,6 +69,29 @@ function normalizeMasteryEvents(value: unknown): MonaVnextMasteryEvent[] {
   return events;
 }
 
+function normalizeLearningEvents(value: unknown): MonaVnextLearningEvent[] {
+  if (!Array.isArray(value)) return [];
+  const events: MonaVnextLearningEvent[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+    const record = item as Record<string, unknown>;
+    const event = buildLearningEvent({
+      expressionId: typeof record.expressionId === "string" ? record.expressionId.trim().slice(0, 120) : "",
+      verdict: record.verdict === "canonical"
+        || record.verdict === "variant"
+        || record.verdict === "close"
+        || record.verdict === "miss"
+        ? record.verdict
+        : "garbage",
+      atIso: typeof record.atIso === "string" ? record.atIso.trim().slice(0, 80) : "",
+      sessionId: typeof record.sessionId === "string" ? record.sessionId.trim().slice(0, 120) : "",
+    });
+    if (event?.expressionId && event.atIso && event.sessionId) events.push(event);
+    if (events.length >= 20) break;
+  }
+  return events;
+}
+
 function normalizeCorrectionCandidates(value: unknown): MonaVnextCorrectionCandidate[] {
   if (!Array.isArray(value)) return [];
   return value
@@ -93,6 +126,7 @@ function normalizeAdvisory(value: unknown): MonaVnextSrsAdvisory {
     best3Candidates: normalizeStringArray(record.best3Candidates, 3),
     weakNoteCandidates: weak,
     nextSessionSuggestions: normalizeStringArray(record.nextSessionSuggestions, 6),
+    learningEvents: normalizeLearningEvents(record.learningEvents),
     masteryEvents: normalizeMasteryEvents(record.masteryEvents),
     correctionCandidates: normalizeCorrectionCandidates(record.correctionCandidates),
   };
@@ -112,7 +146,7 @@ export async function appendMonaVnextMemoryCheckpoint(args: Record<string, unkno
   };
 
   const relPath = path.join(MEMORY_DIR, `${conversationId}.json`);
-  const prev = chains.get(relPath) ?? Promise.resolve();
+  const prev = chains.get(MEMORY_WRITE_CHAIN_KEY) ?? Promise.resolve();
   const current = prev.then(async () => {
     const store = await createMonaVnextObjectStore();
     let doc: Record<string, unknown> = {
@@ -133,7 +167,12 @@ export async function appendMonaVnextMemoryCheckpoint(args: Record<string, unkno
       // Missing file starts a new advisory doc.
     }
 
-    const checkpoints = Array.isArray(doc.checkpoints) ? doc.checkpoints : [];
+    const checkpoints = Array.isArray(doc.checkpoints)
+      ? doc.checkpoints.filter((item) => {
+        if (!item || typeof item !== "object" || Array.isArray(item)) return true;
+        return (item as Record<string, unknown>).turnSeq !== turnSeq;
+      })
+      : [];
     const payload = {
       ...doc,
       schemaVersion: 1,
@@ -148,6 +187,20 @@ export async function appendMonaVnextMemoryCheckpoint(args: Record<string, unkno
 
     const raw = `${JSON.stringify(payload, null, 2)}\n`;
     await store.writeText(relPath, raw);
+    const learningEvents = checkpoint.advisory.learningEvents ?? [];
+    if (learningEvents.length > 0) {
+      const existingRaw = await store.readText(LEARNING_PROFILE_PATH);
+      const existing = existingRaw
+        ? normalizeMonaVnextLearningProfile(JSON.parse(existingRaw))
+        : createEmptyMonaVnextLearningProfile();
+      const learningProfile = applyMonaVnextLearningEvents(existing, learningEvents);
+      await store.writeText(LEARNING_PROFILE_PATH, `${JSON.stringify({
+        ...learningProfile,
+        namespace: MONA_VNEXT_DATA_NAMESPACE,
+        tester: "owner",
+        productionWriteEnabled: false,
+      }, null, 2)}\n`);
+    }
     return {
       ok: true,
       file: relPath,
@@ -155,11 +208,26 @@ export async function appendMonaVnextMemoryCheckpoint(args: Record<string, unkno
       conversationId,
       turnSeq,
       checkpointCount: payload.checkpoints.length,
+      learningEventCount: learningEvents.length,
     };
   });
 
-  chains.set(relPath, current.then(() => {}, () => {}));
+  chains.set(MEMORY_WRITE_CHAIN_KEY, current.then(() => {}, () => {}));
   return current;
+}
+
+export async function readMonaVnextLearningProfile(now = new Date()) {
+  const store = await createMonaVnextObjectStore();
+  const raw = await store.readText(LEARNING_PROFILE_PATH);
+  const profile = raw
+    ? normalizeMonaVnextLearningProfile(JSON.parse(raw))
+    : createEmptyMonaVnextLearningProfile();
+  const selection = classifyMonaVnextLearningProfile(profile, now);
+  return {
+    updatedAt: profile.updatedAt,
+    recordCount: Object.keys(profile.records).length,
+    ...selection,
+  };
 }
 
 export async function readMonaVnextMemorySummary() {
@@ -176,7 +244,10 @@ export async function readMonaVnextMemorySummary() {
     correctionCandidateCount: number;
   }> = [];
 
-  for (const file of files.sort((a, b) => b.mtimeMs - a.mtimeMs).slice(0, 20)) {
+  for (const file of files
+    .filter((item) => item.name !== path.basename(LEARNING_PROFILE_PATH))
+    .sort((a, b) => b.mtimeMs - a.mtimeMs)
+    .slice(0, 20)) {
     try {
       const raw = await store.readText(file.relPath);
       if (!raw) continue;
@@ -208,6 +279,7 @@ export async function readMonaVnextMemorySummary() {
     namespace: MONA_VNEXT_DATA_NAMESPACE,
     tester: "owner",
     productionWriteEnabled: false,
+    learning: await readMonaVnextLearningProfile(),
     sessions: summaries.sort((a, b) => (b.savedAt ?? "").localeCompare(a.savedAt ?? "")),
   };
 }

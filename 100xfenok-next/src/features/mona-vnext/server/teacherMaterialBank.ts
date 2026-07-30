@@ -40,6 +40,8 @@ export function filterMonaVnextSessionExpressionBankForTeacher(
 export function buildTeacherFilteredMonaVnextSessionExpressionBank(args: {
   seed: string;
   count?: number;
+  prioritizedExpressionIds?: string[];
+  deferredExpressionIds?: string[];
 }): MonaVnextSessionExpressionBank {
   const allEntries = listMonaVnextGeneratedExpressionEntries();
   const gate = validateTeacherMaterial(allEntries.map(monaExpressionToTeacherMaterialCandidate));
@@ -49,6 +51,8 @@ export function buildTeacherFilteredMonaVnextSessionExpressionBank(args: {
     seed: args.seed,
     count: args.count,
     entries,
+    prioritizedExpressionIds: args.prioritizedExpressionIds,
+    deferredExpressionIds: args.deferredExpressionIds,
     metadata: materialGateMetadata(gate),
   });
 }

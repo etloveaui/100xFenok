@@ -17,6 +17,7 @@ import {
   normalizeMonaVnextLiveTemperature,
 } from "@/features/mona-vnext/live/generationOptions";
 import { MONA_VNEXT_NAMESPACE_POLICY } from "@/features/mona-vnext/memory/monaVnextNamespace";
+import { readMonaVnextLearningProfile } from "@/features/mona-vnext/memory/monaMemoryRepository";
 import {
   MONA_VNEXT_AUTH_TOKEN_ENDPOINT,
   MONA_VNEXT_GEMINI_API_KEY_ENV,
@@ -99,8 +100,11 @@ export async function POST(request: Request) {
   const temperature = normalizeMonaVnextLiveTemperature(body?.temperature);
   const clientBuildVersion = normalizeClientBuildVersion(body?.clientBuildVersion);
   const resumedFromConversationId = normalizeResumeConversationId(body?.resumedFromConversationId);
+  const learningProfile = await readMonaVnextLearningProfile(now).catch(() => null);
   const expressionBank = buildTeacherFilteredMonaVnextSessionExpressionBank({
     seed: buildMonaVnextSessionBankSeed({ startedAt: now, conversationId }),
+    prioritizedExpressionIds: learningProfile?.dueExpressionIds,
+    deferredExpressionIds: learningProfile?.deferredExpressionIds,
   });
 
   if (expressionBank.entries.length === 0) {
@@ -218,6 +222,9 @@ export async function POST(request: Request) {
       expressionBankSize: expressionBank.entries.length,
       expressionBankSource: expressionBank.metadata.source,
       expressionBankSeed: expressionBank.metadata.seed,
+      learningProfileApplied: Boolean(learningProfile),
+      learningProfileRecordCount: learningProfile?.recordCount ?? 0,
+      reviewPriorityCount: expressionBank.metadata.reviewPriorityCount ?? 0,
       thinkingLevel: MONA_VNEXT_LIVE_THINKING_LEVEL,
       namespace: "mona-vnext",
       productionWriteEnabled: false,

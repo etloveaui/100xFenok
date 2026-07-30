@@ -13,6 +13,7 @@ const ALLOWED_RAW_COLOR_CATEGORIES = new Set([
   "metadata-color",
   "admin-internal",
   "chart-exception",
+  "product-theme",
   "p4-delete",
 ]);
 const CSS_TARGETS = [

@@ -34,6 +34,7 @@ DISTILL_REGISTRY_SYNC_SITES = [
     ("chains.py", '_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite")', 2),
     ("chains.py", '_resolve_model_id("gpt-5.4-mini", "gpt-5.4-mini")', 2),
     ("chains.py", '_resolve_model_id("mimo-2.5", "mimo-v2.5")', 2),
+    ("chains.py", '_resolve_model_id("gpt-5.6-luna", "gpt-5.6-luna")', 2),
     ("chains.py", '_resolve_model_id("gpt-5.5", "gpt-5.5")', 2),
     ("chains.py", '_resolve_model_id("deepseek-v4-pro", "deepseek-v4-pro")', 2),
     ("enrich.py", '_resolve_model_id("gemini-3.1-flash-lite", "gemini-3.1-flash-lite")', 1),
@@ -281,6 +282,7 @@ class ChainProviderTests(unittest.TestCase):
             "gemini-3.1-flash-lite": "gemini-3.1-flash-lite",
             "gpt-5.4-mini": "gpt-5.4-mini",
             "mimo-2.5": "mimo-v2.5",
+            "gpt-5.6-luna": "gpt-5.6-luna",
             "gpt-5.5": "gpt-5.5",
             "deepseek-v4-pro": "deepseek-v4-pro",
         }
@@ -295,6 +297,22 @@ class ChainProviderTests(unittest.TestCase):
             with self.subTest(filename=filename, needle=needle):
                 text = (SCRIPT_DIR / filename).read_text(encoding="utf-8")
                 self.assertEqual(text.count(needle), expected_count)
+
+    def test_nightly_chain_uses_luna_first_with_existing_fallbacks(self) -> None:
+        import chains
+
+        resolved = {
+            "gpt-5.6-luna": "gpt-5.6-luna",
+            "gpt-5.5": "gpt-5.5",
+            "deepseek-v4-pro": "deepseek-v4-pro",
+        }
+        with patch.object(chains, "_resolve_model_id", side_effect=lambda alias, fallback: resolved.get(alias, fallback)):
+            provider = chains.nightly_chain()
+
+        self.assertEqual(
+            [name for name, _adapter in provider.adapters],
+            ["gpt-5.6-luna", "kimi-for-coding+thinking", "gpt-5.5", "deepseek-v4-pro"],
+        )
 
     def test_gpt_adapter_routes_through_feno_llm_facade(self) -> None:
         import chains

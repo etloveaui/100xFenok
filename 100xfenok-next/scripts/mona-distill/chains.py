@@ -311,6 +311,7 @@ def nightly_chain() -> ChainProvider:
     """Quality chain for the nightly deep distill (spec v3 bench)."""
     return ChainProvider(
         [
+            (_resolve_model_id("gpt-5.6-luna", "gpt-5.6-luna"), make_gpt_adapter(_resolve_model_id("gpt-5.6-luna", "gpt-5.6-luna"))),
             ("kimi-for-coding+thinking", call_kimi_thinking),
             (_resolve_model_id("gpt-5.5", "gpt-5.5"), make_gpt_adapter(_resolve_model_id("gpt-5.5", "gpt-5.5"))),
             (_resolve_model_id("deepseek-v4-pro", "deepseek-v4-pro"), call_deepseek_v4_pro),

@@ -14,7 +14,8 @@ const CATEGORY_DEFINITIONS = {
   "metadata-color": "Next/browser metadata that still requires literal color values.",
   "admin-internal": "Admin-only route surface, outside the public product migration target.",
   "chart-exception": "Canvas/chart palette code where literals are intentionally bridged separately.",
-  "p4-delete": "Retire/preview/Mona winddown surface scheduled for P4 deletion, not migration.",
+  "product-theme": "Current immersive product surface with an intentional self-contained palette.",
+  "p4-delete": "Retire or preview surface scheduled for deletion, not migration.",
 };
 const rawColorGovernancePattern =
   /(?<![&\w-])#(?:[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?|(?=[0-9A-Fa-f]{3,4}\b)(?=[0-9A-Fa-f]*[A-Fa-f])[0-9A-Fa-f]{3,4})\b|rgba?\([^)]*\)|(?<!-)\b(?:white|black)\b(?!-)/g;
@@ -83,11 +84,24 @@ function categoryForPath(relPath) {
     };
   }
 
+  if (relPath === "src/components/admin-live/MonaWindDown.tsx") {
+    return {
+      category: "product-theme",
+      note: "Current WIND DOWN product palette is intentionally isolated from the finance-app theme.",
+    };
+  }
+
+  if (relPath === "src/app/winddown/page.tsx") {
+    return {
+      category: "metadata-color",
+      note: "Current WIND DOWN browser theme color metadata.",
+    };
+  }
+
   if (
     relPath === "src/app/admin/design-gallery/page.tsx" ||
     relPath.startsWith("src/components/Home") ||
     relPath === "src/components/DesignLabProfilePreview.tsx" ||
-    relPath === "src/components/admin-live/MonaWindDown.tsx" ||
     relPath.startsWith("src/features/mona-vnext/") ||
     relPath.startsWith("src/app/winddown")
   ) {

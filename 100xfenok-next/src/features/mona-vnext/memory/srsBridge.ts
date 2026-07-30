@@ -10,6 +10,16 @@ export type MonaVnextMasteryEvent = {
   sessionId: string;
 };
 
+export type MonaVnextLearningRating = "again" | "hard" | "good";
+
+export type MonaVnextLearningEvent = {
+  expressionId: string;
+  verdict: Extract<TeacherVerdict, "canonical" | "variant" | "close" | "miss">;
+  rating: MonaVnextLearningRating;
+  atIso: string;
+  sessionId: string;
+};
+
 export type MonaVnextReviewRecord = {
   expressionId: string;
   box: number;
@@ -81,6 +91,27 @@ export function buildMasteryEvent(args: {
   return {
     expressionId: args.expressionId,
     verdict: args.verdict,
+    atIso: args.atIso,
+    sessionId: args.sessionId,
+  };
+}
+
+export function buildLearningEvent(args: {
+  expressionId: string;
+  verdict: TeacherVerdict;
+  atIso: string;
+  sessionId: string;
+}): MonaVnextLearningEvent | null {
+  if (args.verdict === "garbage") return null;
+  const rating: MonaVnextLearningRating = args.verdict === "miss"
+    ? "again"
+    : args.verdict === "close"
+      ? "hard"
+      : "good";
+  return {
+    expressionId: args.expressionId,
+    verdict: args.verdict,
+    rating,
     atIso: args.atIso,
     sessionId: args.sessionId,
   };
