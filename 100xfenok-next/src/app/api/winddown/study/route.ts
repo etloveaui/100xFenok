@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 
   try {
     const learning = await readMonaVnextLearningProfile();
-    const material = loadWindDownStudyMaterial({
+    const material = await loadWindDownStudyMaterial({
       dueExpressionIds: learning.dueExpressionIds,
       deferredExpressionIds: learning.deferredExpressionIds,
     });

@@ -87,6 +87,46 @@ export type WindDownMaterialLkgPointer = {
   blobPath: string;
 };
 
+export const WINDDOWN_RUNTIME_PROJECTION_SCHEMA_VERSION = 1 as const;
+
+export type WindDownRuntimeMaterial = Pick<
+  WindDownLkgMaterial,
+  "id" | "ko" | "en" | "acceptedVariants"
+>;
+
+export type WindDownRuntimeQuarantineEntry = {
+  canonicalId: string | null;
+  legacyAliases: string[];
+};
+
+export type WindDownRuntimeProjection = {
+  schemaVersion: typeof WINDDOWN_RUNTIME_PROJECTION_SCHEMA_VERSION;
+  kind: "winddown-material-runtime-projection";
+  projectionDigest: string;
+  sourceContentDigest: string;
+  sourceArtifactDigest: string;
+  materials: WindDownRuntimeMaterial[];
+  aliases: WindDownLkgAliasEntry[];
+  quarantine: WindDownRuntimeQuarantineEntry[];
+  lunaQuarantinedMaterialIds: string[];
+  advisorOverlay: WindDownLkgAdvisorOverlay[];
+  advisorGate: WindDownLkgAdvisorGate;
+};
+
+export type WindDownRuntimeProjectionBody = Omit<
+  WindDownRuntimeProjection,
+  "projectionDigest"
+>;
+
+export type WindDownRuntimeProjectionPointer = {
+  schemaVersion: typeof WINDDOWN_RUNTIME_PROJECTION_SCHEMA_VERSION;
+  kind: "winddown-material-runtime-projection-pointer";
+  projectionDigest: string;
+  sourceContentDigest: string;
+  sourceArtifactDigest: string;
+  assetPath: string;
+};
+
 export type WindDownLkgReadOperations = {
   readText(path: string): Promise<string>;
   sha256(text: string): Promise<string>;
@@ -125,6 +165,52 @@ export function windDownLkgBlobPath(contentDigest: string): string {
 
 export function windDownLkgPointerPath(): string {
   return "current.json";
+}
+
+export function windDownRuntimeProjectionAssetPath(
+  projectionDigest: string,
+): string {
+  if (!SHA256_HEX.test(projectionDigest)) {
+    throw new Error("runtime_projection_digest_invalid");
+  }
+  return `/data/winddown/runtime-lkg/blobs/${projectionDigest}.json`;
+}
+
+export function windDownRuntimeProjectionBody(
+  value: WindDownRuntimeProjection,
+): WindDownRuntimeProjectionBody {
+  return {
+    schemaVersion: value.schemaVersion,
+    kind: value.kind,
+    sourceContentDigest: value.sourceContentDigest,
+    sourceArtifactDigest: value.sourceArtifactDigest,
+    materials: value.materials,
+    aliases: value.aliases,
+    quarantine: value.quarantine,
+    lunaQuarantinedMaterialIds: value.lunaQuarantinedMaterialIds,
+    advisorOverlay: value.advisorOverlay,
+    advisorGate: value.advisorGate,
+  };
+}
+
+export function windDownRuntimeProjectionText(
+  value: WindDownRuntimeProjection,
+): string {
+  return canonicalWindDownLkgJson(value);
+}
+
+export function makeWindDownRuntimeProjectionPointer(
+  value: WindDownRuntimeProjection,
+): WindDownRuntimeProjectionPointer {
+  assertWindDownRuntimeProjection(value);
+  return {
+    schemaVersion: WINDDOWN_RUNTIME_PROJECTION_SCHEMA_VERSION,
+    kind: "winddown-material-runtime-projection-pointer",
+    projectionDigest: value.projectionDigest,
+    sourceContentDigest: value.sourceContentDigest,
+    sourceArtifactDigest: value.sourceArtifactDigest,
+    assetPath: windDownRuntimeProjectionAssetPath(value.projectionDigest),
+  };
 }
 
 export function windDownLkgBody(
@@ -412,7 +498,7 @@ function assertAdvisorGate(
   value: unknown,
   materialCount: number,
   lunaCounts: { needsHumanReviewCount: number; rejectCount: number },
-): void {
+): asserts value is WindDownLkgAdvisorGate {
   if (!isRecord(value)) throw new Error("lkg_advisor_gate_invalid");
   assertExactKeys(
     value,
@@ -486,6 +572,203 @@ export function assertWindDownMaterialLkgPointer(
   assertDigest(value.contentDigest, "lkg_pointer_content_digest");
   if (value.blobPath !== windDownLkgBlobPath(value.contentDigest)) {
     throw new Error("lkg_pointer_blob_path_invalid");
+  }
+}
+
+function assertRuntimeMaterial(
+  value: unknown,
+): asserts value is WindDownRuntimeMaterial {
+  if (!isRecord(value)) throw new Error("runtime_material_invalid");
+  assertExactKeys(
+    value,
+    ["id", "ko", "en", "acceptedVariants"],
+    "runtime_material",
+  );
+  for (const key of ["id", "ko", "en"] as const) {
+    if (typeof value[key] !== "string" || !value[key].trim()) {
+      throw new Error(`runtime_material_${key}_invalid`);
+    }
+  }
+  assertStringArray(
+    value.acceptedVariants,
+    "runtime_material_accepted_variants",
+  );
+}
+
+function assertRuntimeAliases(
+  value: unknown,
+): asserts value is WindDownLkgAliasEntry[] {
+  if (!Array.isArray(value)) throw new Error("runtime_aliases_invalid");
+  const aliases = new Set<string>();
+  for (const entry of value) {
+    if (
+      !isRecord(entry) ||
+      typeof entry.legacyV1Id !== "string" ||
+      !entry.legacyV1Id ||
+      typeof entry.canonicalId !== "string" ||
+      !entry.canonicalId ||
+      aliases.has(entry.legacyV1Id)
+    ) {
+      throw new Error("runtime_alias_entry_invalid");
+    }
+    assertExactKeys(
+      entry,
+      ["legacyV1Id", "canonicalId"],
+      "runtime_alias_entry",
+    );
+    aliases.add(entry.legacyV1Id);
+  }
+}
+
+function assertRuntimeQuarantine(
+  value: unknown,
+): asserts value is WindDownRuntimeQuarantineEntry[] {
+  if (!Array.isArray(value)) throw new Error("runtime_quarantine_invalid");
+  for (const entry of value) {
+    if (!isRecord(entry)) throw new Error("runtime_quarantine_entry_invalid");
+    assertExactKeys(
+      entry,
+      ["canonicalId", "legacyAliases"],
+      "runtime_quarantine_entry",
+    );
+    if (
+      entry.canonicalId !== null &&
+      (typeof entry.canonicalId !== "string" || !entry.canonicalId)
+    ) {
+      throw new Error("runtime_quarantine_canonical_id_invalid");
+    }
+    assertStringArray(
+      entry.legacyAliases,
+      "runtime_quarantine_legacy_aliases",
+    );
+    if (entry.canonicalId === null && entry.legacyAliases.length === 0) {
+      throw new Error("runtime_quarantine_identity_missing");
+    }
+  }
+}
+
+export function assertWindDownRuntimeProjection(
+  value: unknown,
+): asserts value is WindDownRuntimeProjection {
+  if (!isRecord(value)) throw new Error("runtime_projection_object_required");
+  assertExactKeys(
+    value,
+    [
+      "schemaVersion",
+      "kind",
+      "projectionDigest",
+      "sourceContentDigest",
+      "sourceArtifactDigest",
+      "materials",
+      "aliases",
+      "quarantine",
+      "lunaQuarantinedMaterialIds",
+      "advisorOverlay",
+      "advisorGate",
+    ],
+    "runtime_projection",
+  );
+  if (
+    value.schemaVersion !== WINDDOWN_RUNTIME_PROJECTION_SCHEMA_VERSION ||
+    value.kind !== "winddown-material-runtime-projection"
+  ) {
+    throw new Error("runtime_projection_schema_invalid");
+  }
+  assertDigest(value.projectionDigest, "runtime_projection_digest");
+  assertDigest(value.sourceContentDigest, "runtime_projection_source_content");
+  assertDigest(
+    value.sourceArtifactDigest,
+    "runtime_projection_source_artifact",
+  );
+  if (!Array.isArray(value.materials) || value.materials.length === 0) {
+    throw new Error("runtime_projection_materials_invalid");
+  }
+  const materialIds = new Set<string>();
+  for (const material of value.materials) {
+    assertRuntimeMaterial(material);
+    if (materialIds.has(material.id)) {
+      throw new Error("runtime_projection_material_id_duplicate");
+    }
+    materialIds.add(material.id);
+  }
+  assertRuntimeAliases(value.aliases);
+  assertRuntimeQuarantine(value.quarantine);
+  assertStringArray(
+    value.lunaQuarantinedMaterialIds,
+    "runtime_projection_luna_quarantine",
+  );
+  if (
+    new Set(value.lunaQuarantinedMaterialIds).size !==
+      value.lunaQuarantinedMaterialIds.length ||
+    value.lunaQuarantinedMaterialIds.some((id) => materialIds.has(id))
+  ) {
+    throw new Error("runtime_projection_luna_quarantine_duplicate");
+  }
+  assertAdvisorOverlay(value.advisorOverlay, [...materialIds]);
+  if (!isRecord(value.advisorGate)) {
+    throw new Error("runtime_projection_advisor_gate_invalid");
+  }
+  const needsHumanReviewCount =
+    typeof value.advisorGate.needsHumanReviewCount === "number"
+      ? value.advisorGate.needsHumanReviewCount
+      : -1;
+  const rejectCount =
+    typeof value.advisorGate.rejectCount === "number"
+      ? value.advisorGate.rejectCount
+      : -1;
+  assertAdvisorGate(value.advisorGate, materialIds.size, {
+    needsHumanReviewCount,
+    rejectCount,
+  });
+  if (
+    value.lunaQuarantinedMaterialIds.length !==
+    value.advisorGate.quarantinedCount
+  ) {
+    throw new Error("runtime_projection_luna_quarantine_count_mismatch");
+  }
+}
+
+export function assertWindDownRuntimeProjectionPointer(
+  value: unknown,
+): asserts value is WindDownRuntimeProjectionPointer {
+  if (!isRecord(value)) {
+    throw new Error("runtime_projection_pointer_object_required");
+  }
+  assertExactKeys(
+    value,
+    [
+      "schemaVersion",
+      "kind",
+      "projectionDigest",
+      "sourceContentDigest",
+      "sourceArtifactDigest",
+      "assetPath",
+    ],
+    "runtime_projection_pointer",
+  );
+  if (
+    value.schemaVersion !== WINDDOWN_RUNTIME_PROJECTION_SCHEMA_VERSION ||
+    value.kind !== "winddown-material-runtime-projection-pointer"
+  ) {
+    throw new Error("runtime_projection_pointer_schema_invalid");
+  }
+  assertDigest(
+    value.projectionDigest,
+    "runtime_projection_pointer_digest",
+  );
+  assertDigest(
+    value.sourceContentDigest,
+    "runtime_projection_pointer_source_content",
+  );
+  assertDigest(
+    value.sourceArtifactDigest,
+    "runtime_projection_pointer_source_artifact",
+  );
+  if (
+    value.assetPath !==
+    windDownRuntimeProjectionAssetPath(value.projectionDigest)
+  ) {
+    throw new Error("runtime_projection_pointer_asset_path_invalid");
   }
 }
 

@@ -2,15 +2,16 @@
 import type { MonaVnextExpression } from "@/features/mona-vnext/coach/coachPolicy";
 import { listTeacherApprovedMonaVnextExpressionEntries } from "@/features/mona-vnext/server/teacherMaterialBank";
 import {
-  assertWindDownMaterialLkg,
+  assertWindDownRuntimeProjection,
+  assertWindDownRuntimeProjectionPointer,
+  canonicalWindDownLkgJson,
+  windDownRuntimeProjectionBody,
   type WindDownLkgAdvisorGate,
   type WindDownLkgAdvisorOverlay,
-  type WindDownMaterialLkg,
+  type WindDownRuntimeProjection,
 } from "@/features/winddown/content/lkgContract";
-import {
-  WINDDOWN_PUBLISHED_LKG,
-  WINDDOWN_PUBLISHED_LKG_BUILD,
-} from "@/generated/winddown-published-lkg";
+import { WINDDOWN_PUBLISHED_LKG_BUILD } from "@/generated/winddown-published-lkg";
+import { readPublicAssetText } from "@/lib/server/public-assets";
 
 type PersistedIdResolution = {
   inputCount: number;
@@ -140,9 +141,9 @@ function quarantineIds(values: unknown[]): QuarantinedId[] {
 }
 
 function publishedEntries(
-  lkg: WindDownMaterialLkg,
+  projection: WindDownRuntimeProjection,
 ): MonaVnextExpression[] | null {
-  const entries = lkg.materials.map(staticMaterial);
+  const entries = projection.materials.map(staticMaterial);
   if (entries.some((entry) => !entry)) return null;
   return (entries as PublishedStaticMaterial[]).map((entry) => ({
     id: entry.id,
@@ -155,9 +156,11 @@ function publishedEntries(
   }));
 }
 
-function normalizePublishedLkg(value: unknown): WindDownMaterialLkg | null {
+function normalizeRuntimeProjection(
+  value: unknown,
+): WindDownRuntimeProjection | null {
   try {
-    assertWindDownMaterialLkg(value);
+    assertWindDownRuntimeProjection(value);
     return publishedEntries(value) ? value : null;
   } catch {
     return null;
@@ -239,12 +242,12 @@ function cloneAdvisor(
 }
 
 function publishedSelection(
-  lkg: WindDownMaterialLkg,
+  projection: WindDownRuntimeProjection,
 ): WindDownStudyMaterialSelection | null {
-  const entries = publishedEntries(lkg);
+  const entries = publishedEntries(projection);
   if (!entries) return null;
   const advisors = new Map(
-    lkg.advisorOverlay.map((entry) => [entry.materialId, entry]),
+    projection.advisorOverlay.map((entry) => [entry.materialId, entry]),
   );
 
   return {
@@ -273,25 +276,28 @@ function publishedSelection(
       source: "published-lkg",
       publicationStatus: "active",
       sourceEntryCount:
-        entries.length + lkg.quarantine.length + lkg.lunaQuarantine.length,
+        entries.length +
+        projection.quarantine.length +
+        projection.lunaQuarantinedMaterialIds.length,
       activeMaterialCount: entries.length,
-      quarantinedMaterialCount: lkg.quarantine.length,
-      lunaQuarantinedMaterialCount: lkg.lunaQuarantine.length,
-      aliasMappingCount: lkg.migration.legacyAliasMap.length,
-      artifactDigest: lkg.artifactDigest,
-      contentDigest: lkg.contentDigest,
-      advisorGate: { ...lkg.advisorGate },
+      quarantinedMaterialCount: projection.quarantine.length,
+      lunaQuarantinedMaterialCount:
+        projection.lunaQuarantinedMaterialIds.length,
+      aliasMappingCount: projection.aliases.length,
+      artifactDigest: projection.sourceArtifactDigest,
+      contentDigest: projection.sourceContentDigest,
+      advisorGate: { ...projection.advisorGate },
       advisor: {
         available: true,
         overlayCount: advisors.size,
         receiptDigests: uniqueStrings(
-          lkg.advisorOverlay.map((entry) => entry.receiptDigest),
+          projection.advisorOverlay.map((entry) => entry.receiptDigest),
         ),
         requestedModels: uniqueStrings(
-          lkg.advisorOverlay.map((entry) => entry.requestedModel),
+          projection.advisorOverlay.map((entry) => entry.requestedModel),
         ),
         responseModels: uniqueStrings(
-          lkg.advisorOverlay.map((entry) => entry.responseModel),
+          projection.advisorOverlay.map((entry) => entry.responseModel),
         ),
       },
     },
@@ -356,22 +362,22 @@ function withPersistedIds(args: {
   base: WindDownStudyMaterialSelection;
   dueExpressionIds: string[];
   deferredExpressionIds: string[];
-  lkg: WindDownMaterialLkg | null;
+  projection: WindDownRuntimeProjection | null;
 }): WindDownStudyMaterialSelection {
   const activeIds = new Set(args.base.entries.map((entry) => entry.id));
   const aliases = new Map(
-    args.lkg?.migration.legacyAliasMap.map((entry) => [
+    args.projection?.aliases.map((entry) => [
       entry.legacyV1Id,
       entry.canonicalId,
     ]) ?? [],
   );
   const quarantinedIds = new Set<string>();
-  for (const entry of quarantineIds(args.lkg?.quarantine ?? [])) {
+  for (const entry of quarantineIds(args.projection?.quarantine ?? [])) {
     if (entry.canonicalId) quarantinedIds.add(entry.canonicalId);
     entry.legacyAliases.forEach((alias) => quarantinedIds.add(alias));
   }
-  args.lkg?.lunaQuarantine.forEach((entry) =>
-    quarantinedIds.add(entry.materialId),
+  args.projection?.lunaQuarantinedMaterialIds.forEach((materialId) =>
+    quarantinedIds.add(materialId),
   );
   const due = resolveIds({
     values: args.dueExpressionIds,
@@ -393,54 +399,121 @@ function withPersistedIds(args: {
   };
 }
 
-export function buildWindDownStudyMaterialFromPublishedLkg(args: {
-  publishedLkg: unknown;
+export function buildWindDownStudyMaterialFromRuntimeProjection(args: {
+  runtimeProjection: unknown;
   dueExpressionIds: string[];
   deferredExpressionIds: string[];
 }): WindDownStudyMaterialSelection {
-  const lkg = normalizePublishedLkg(args.publishedLkg);
-  const base = lkg
-    ? publishedSelection(lkg)
+  const projection = normalizeRuntimeProjection(args.runtimeProjection);
+  const base = projection
+    ? publishedSelection(projection)
     : legacyFallbackSelection("invalid");
   return withPersistedIds({
     base: base ?? legacyFallbackSelection("invalid"),
     dueExpressionIds: args.dueExpressionIds,
     deferredExpressionIds: args.deferredExpressionIds,
-    lkg,
+    projection,
   });
 }
 
-export function loadWindDownStudyMaterial(args: {
-  dueExpressionIds: string[];
-  deferredExpressionIds: string[];
-}): WindDownStudyMaterialSelection {
+export type WindDownPublishedMaterialLoadOperations = {
+  readAssetText(path: string): Promise<string>;
+  sha256(text: string): Promise<string>;
+};
+
+async function sha256(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(text),
+  );
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+const DEFAULT_LOAD_OPERATIONS: WindDownPublishedMaterialLoadOperations = {
+  readAssetText: readPublicAssetText,
+  sha256,
+};
+
+async function loadPublishedRuntimeProjection(
+  operations: WindDownPublishedMaterialLoadOperations,
+): Promise<WindDownRuntimeProjection | null> {
   if (
     WINDDOWN_PUBLISHED_LKG_BUILD.status !== "published" ||
-    !WINDDOWN_PUBLISHED_LKG
+    !WINDDOWN_PUBLISHED_LKG_BUILD.runtimeProjection
+  ) {
+    return null;
+  }
+
+  const pointer = WINDDOWN_PUBLISHED_LKG_BUILD.runtimeProjection;
+  try {
+    assertWindDownRuntimeProjectionPointer(pointer);
+    if (
+      WINDDOWN_PUBLISHED_LKG_BUILD.contentDigest !==
+        pointer.sourceContentDigest ||
+      WINDDOWN_PUBLISHED_LKG_BUILD.artifactDigest !==
+        pointer.sourceArtifactDigest
+    ) {
+      return null;
+    }
+    const raw = await operations.readAssetText(pointer.assetPath);
+    const parsed = JSON.parse(raw) as unknown;
+    assertWindDownRuntimeProjection(parsed);
+    if (
+      parsed.projectionDigest !== pointer.projectionDigest ||
+      parsed.sourceContentDigest !== pointer.sourceContentDigest ||
+      parsed.sourceArtifactDigest !== pointer.sourceArtifactDigest
+    ) {
+      return null;
+    }
+    const calculated = await operations.sha256(
+      canonicalWindDownLkgJson(windDownRuntimeProjectionBody(parsed)),
+    );
+    return calculated === pointer.projectionDigest ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function loadWindDownStudyMaterial(
+  args: {
+    dueExpressionIds: string[];
+    deferredExpressionIds: string[];
+  },
+  operations: WindDownPublishedMaterialLoadOperations =
+    DEFAULT_LOAD_OPERATIONS,
+): Promise<WindDownStudyMaterialSelection> {
+  if (
+    WINDDOWN_PUBLISHED_LKG_BUILD.status !== "published" ||
+    !WINDDOWN_PUBLISHED_LKG_BUILD.runtimeProjection
   ) {
     return withPersistedIds({
       base: legacyFallbackSelection("absent"),
       dueExpressionIds: args.dueExpressionIds,
       deferredExpressionIds: args.deferredExpressionIds,
-      lkg: null,
+      projection: null,
     });
   }
-  if (
-    WINDDOWN_PUBLISHED_LKG_BUILD.contentDigest !==
-      WINDDOWN_PUBLISHED_LKG.contentDigest ||
-    WINDDOWN_PUBLISHED_LKG_BUILD.artifactDigest !==
-      WINDDOWN_PUBLISHED_LKG.artifactDigest
-  ) {
+  const projection = await loadPublishedRuntimeProjection(operations);
+  if (!projection) {
     return withPersistedIds({
       base: legacyFallbackSelection("invalid"),
       dueExpressionIds: args.dueExpressionIds,
       deferredExpressionIds: args.deferredExpressionIds,
-      lkg: null,
+      projection: null,
     });
   }
-  return buildWindDownStudyMaterialFromPublishedLkg({
-    publishedLkg: WINDDOWN_PUBLISHED_LKG,
+  return buildWindDownStudyMaterialFromRuntimeProjection({
+    runtimeProjection: projection,
     dueExpressionIds: args.dueExpressionIds,
     deferredExpressionIds: args.deferredExpressionIds,
   });
 }
+
+/*
+ * The published runtime path above is deliberately asynchronous: local Node
+ * reads from public/, while Cloudflare reads the same immutable asset through
+ * the ASSETS binding. Full audit LKG blobs, signed receipts, candidates, and
+ * provider files are never reachable from this module.
+ */
