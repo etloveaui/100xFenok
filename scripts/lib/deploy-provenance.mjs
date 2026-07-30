@@ -207,6 +207,125 @@ export function filterRunsByHeadBranch(runs, branch) {
   return runs.filter((run) => run && run.head_branch === branch);
 }
 
+// Fail closed unless the downloaded artifact belongs to this workflow run,
+// remains on current main, and is not older than the source serving live.
+// Main may advance while a build runs; that alone must not starve publication.
+// The live-source relation is the monotonicity boundary that prevents an older
+// scheduled artifact from overwriting a newer accepted deployment.
+export function evaluateDeploySourceFence({
+  artifactSha,
+  runSha,
+  currentMainSha,
+  liveSha,
+  artifactRunId,
+  currentRunId,
+  artifactRunNumber,
+  currentRunNumber,
+  artifactRunAttempt,
+  currentRunAttempt,
+  liveRunNumber,
+  liveRunAttempt,
+  artifactIsAncestorOfCurrentMain,
+  liveIsAncestorOfArtifact,
+  artifactIsAncestorOfLive,
+}) {
+  const sourceIds = { artifactSha, runSha, currentMainSha, liveSha };
+  const validSha = (value) => typeof value === "string" && /^[0-9a-f]{40}$/i.test(value);
+  if (Object.values(sourceIds).some((value) => !validSha(value))) {
+    return {
+      allowed: false,
+      verdict: "identity-unavailable",
+      detail: "artifact, workflow run, current origin/main, and live deployment must each provide a full Git SHA",
+    };
+  }
+
+  const artifact = artifactSha.toLowerCase();
+  const run = runSha.toLowerCase();
+  if (artifact !== run) {
+    return {
+      allowed: false,
+      verdict: "artifact-run-mismatch",
+      detail: `artifact source ${artifact} does not match workflow source ${run}`,
+    };
+  }
+  if (
+    typeof artifactRunId !== "string"
+    || artifactRunId.length === 0
+    || artifactRunId !== currentRunId
+    || !Number.isInteger(artifactRunNumber)
+    || artifactRunNumber !== currentRunNumber
+    || !Number.isInteger(artifactRunAttempt)
+    || artifactRunAttempt !== currentRunAttempt
+  ) {
+    return {
+      allowed: false,
+      verdict: "artifact-run-mismatch",
+      detail: "artifact run id, run number, or run attempt does not match the current workflow run",
+    };
+  }
+  if (
+    !Number.isInteger(liveRunNumber)
+    || liveRunNumber < 0
+    || !Number.isInteger(liveRunAttempt)
+    || liveRunAttempt < 1
+  ) {
+    return {
+      allowed: false,
+      verdict: "identity-unavailable",
+      detail: "live deployment run number and run attempt must be available",
+    };
+  }
+  if (
+    typeof artifactIsAncestorOfCurrentMain !== "boolean"
+    || typeof liveIsAncestorOfArtifact !== "boolean"
+    || typeof artifactIsAncestorOfLive !== "boolean"
+  ) {
+    return {
+      allowed: false,
+      verdict: "ancestry-unavailable",
+      detail: "Git ancestry required for the current-main and live-source fence is unavailable",
+    };
+  }
+  if (!artifactIsAncestorOfCurrentMain) {
+    return {
+      allowed: false,
+      verdict: "source-diverged",
+      detail: `workflow source ${run} is not an ancestor of current origin/main ${currentMainSha.toLowerCase()}`,
+    };
+  }
+  if (!liveIsAncestorOfArtifact) {
+    if (artifactIsAncestorOfLive) {
+      return {
+        allowed: false,
+        verdict: "stale-live",
+        detail: `workflow source ${run} is older than live deployment source ${liveSha.toLowerCase()}`,
+      };
+    }
+    return {
+      allowed: false,
+      verdict: "live-diverged",
+      detail: `live deployment source ${liveSha.toLowerCase()} is not on the workflow source lineage`,
+    };
+  }
+  const candidateIsNewerRun = artifactRunNumber > liveRunNumber
+    || (artifactRunNumber === liveRunNumber && artifactRunAttempt > liveRunAttempt);
+  if (!candidateIsNewerRun) {
+    return {
+      allowed: false,
+      verdict: "stale-run",
+      detail:
+        `workflow run ${artifactRunNumber}.${artifactRunAttempt} is not newer than `
+        + `live deployment run ${liveRunNumber}.${liveRunAttempt}`,
+    };
+  }
+  return {
+    allowed: true,
+    verdict: "source-monotonic",
+    detail:
+      "artifact matches this workflow run, remains on current main, and advances both live source and run order",
+  };
+}
+
 // Evaluate one post-deploy observation of the live surface against this run.
 // Cloudflare edges roll over gradually, so right after a deploy the /BUILD_ID
 // asset and the provenance asset can disagree for seconds (first-live proof

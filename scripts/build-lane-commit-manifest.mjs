@@ -79,6 +79,7 @@ const UPDATE_MANIFEST_MATERIALIZATIONS = [
     destination: "100xfenok-next/public/data/slickcharts",
     mode: "rsync_tree",
     delete: true,
+    excludes: [],
     required: true,
     trailing_slash: true,
   },
@@ -87,6 +88,7 @@ const UPDATE_MANIFEST_MATERIALIZATIONS = [
     destination: "100xfenok-next/public/data/yf/finance",
     mode: "rsync_tree",
     delete: true,
+    excludes: [],
     required: true,
     trailing_slash: true,
   },
@@ -95,6 +97,7 @@ const UPDATE_MANIFEST_MATERIALIZATIONS = [
     destination: "100xfenok-next/public/data/stockanalysis",
     mode: "rsync_tree",
     delete: true,
+    excludes: ["etfs"],
     required: true,
     trailing_slash: true,
   },
@@ -103,6 +106,7 @@ const UPDATE_MANIFEST_MATERIALIZATIONS = [
     destination: "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json",
     mode: "cp_file",
     delete: false,
+    excludes: [],
     required: true,
     trailing_slash: false,
   },
@@ -111,6 +115,7 @@ const UPDATE_MANIFEST_MATERIALIZATIONS = [
     destination: "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json",
     mode: "cp_file",
     delete: false,
+    excludes: [],
     required: true,
     trailing_slash: false,
   },
@@ -122,6 +127,7 @@ const UPDATE_MANIFEST_MATERIALIZATIONS = [
     destination: "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json",
     mode: "cp_file",
     delete: false,
+    excludes: [],
     required: false,
     trailing_slash: false,
   },
@@ -130,6 +136,7 @@ const UPDATE_MANIFEST_MATERIALIZATIONS = [
     destination: "100xfenok-next/public/data/computed/fenok_occ_options_availability.json",
     mode: "cp_file",
     delete: false,
+    excludes: [],
     required: true,
     trailing_slash: false,
   },
@@ -138,6 +145,7 @@ const UPDATE_MANIFEST_MATERIALIZATIONS = [
     destination: "100xfenok-next/public/data/computed/market_facts/index.json",
     mode: "cp_file",
     delete: false,
+    excludes: [],
     required: true,
     trailing_slash: false,
   },
@@ -286,13 +294,22 @@ export function validateLaneCommitManifest(manifest, { registry = LANE_REGISTRY 
   if (!Array.isArray(update.materializations) || update.materializations.length !== 8) fail("materializations must contain exactly eight routes");
   for (const [index, route] of update.materializations.entries()) {
     const routeKeys = Object.keys(route).sort();
-    if (JSON.stringify(routeKeys) !== JSON.stringify(["delete", "destination", "mode", "required", "source", "trailing_slash"])) fail(`materializations[${index}] keys are invalid`);
+    if (JSON.stringify(routeKeys) !== JSON.stringify(["delete", "destination", "excludes", "mode", "required", "source", "trailing_slash"])) fail(`materializations[${index}] keys are invalid`);
     validatePathString(route.source, `materializations[${index}].source`);
     validatePathString(route.destination, `materializations[${index}].destination`);
+    if (!Array.isArray(route.excludes)) fail(`materializations[${index}].excludes must be an array`);
+    const seenExcludes = new Set();
+    for (const [excludeIndex, exclude] of route.excludes.entries()) {
+      validatePathString(exclude, `materializations[${index}].excludes[${excludeIndex}]`);
+      if (exclude.endsWith("/") || exclude.includes("*")) fail(`materializations[${index}].excludes[${excludeIndex}] must be an exact relative subtree`);
+      if (seenExcludes.has(exclude)) fail(`materializations[${index}].excludes duplicates ${exclude}`);
+      seenExcludes.add(exclude);
+    }
     if (!["cp_file", "rsync_tree"].includes(route.mode)) fail(`materializations[${index}].mode is invalid`);
     if (typeof route.delete !== "boolean" || typeof route.required !== "boolean" || typeof route.trailing_slash !== "boolean") fail(`materializations[${index}] booleans are invalid`);
     if (route.mode === "rsync_tree" && route.trailing_slash !== true) fail(`materializations[${index}] rsync route must declare trailing slash semantics`);
     if (route.mode === "cp_file" && route.trailing_slash !== false) fail(`materializations[${index}] cp route must not carry trailing slash semantics`);
+    if (route.mode === "cp_file" && route.excludes.length > 0) fail(`materializations[${index}] cp route cannot exclude subtrees`);
   }
   return true;
 }

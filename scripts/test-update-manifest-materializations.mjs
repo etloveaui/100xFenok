@@ -14,14 +14,14 @@ const workflow = fs.readFileSync(path.join(root, ".github/workflows/update-manif
 const manifest = JSON.parse(fs.readFileSync(path.join(root, "data/admin/lane-commit-manifest.json"), "utf8"));
 const helperCall = "node scripts/materialize-update-manifest-routes.mjs";
 const EXPECTED_ROUTES = [
-  { source: "data/slickcharts", destination: "100xfenok-next/public/data/slickcharts", mode: "rsync_tree", delete: true, required: true, trailing_slash: true },
-  { source: "data/yf/finance", destination: "100xfenok-next/public/data/yf/finance", mode: "rsync_tree", delete: true, required: true, trailing_slash: true },
-  { source: "data/stockanalysis", destination: "100xfenok-next/public/data/stockanalysis", mode: "rsync_tree", delete: true, required: true, trailing_slash: true },
-  { source: "data/indices/nasdaq-giw-sox-constituents.json", destination: "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json", mode: "cp_file", delete: false, required: true, trailing_slash: false },
-  { source: "data/admin/fenok-edge-korea-krx-daily-index.json", destination: "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json", mode: "cp_file", delete: false, required: true, trailing_slash: false },
-  { source: "data/computed/fenok-edge-korea-krx-bridge-history.json", destination: "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json", mode: "cp_file", delete: false, required: false, trailing_slash: false },
-  { source: "data/computed/fenok_occ_options_availability.json", destination: "100xfenok-next/public/data/computed/fenok_occ_options_availability.json", mode: "cp_file", delete: false, required: true, trailing_slash: false },
-  { source: "data/computed/market_facts/index.json", destination: "100xfenok-next/public/data/computed/market_facts/index.json", mode: "cp_file", delete: false, required: true, trailing_slash: false },
+  { source: "data/slickcharts", destination: "100xfenok-next/public/data/slickcharts", mode: "rsync_tree", delete: true, excludes: [], required: true, trailing_slash: true },
+  { source: "data/yf/finance", destination: "100xfenok-next/public/data/yf/finance", mode: "rsync_tree", delete: true, excludes: [], required: true, trailing_slash: true },
+  { source: "data/stockanalysis", destination: "100xfenok-next/public/data/stockanalysis", mode: "rsync_tree", delete: true, excludes: ["etfs"], required: true, trailing_slash: true },
+  { source: "data/indices/nasdaq-giw-sox-constituents.json", destination: "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json", mode: "cp_file", delete: false, excludes: [], required: true, trailing_slash: false },
+  { source: "data/admin/fenok-edge-korea-krx-daily-index.json", destination: "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json", mode: "cp_file", delete: false, excludes: [], required: true, trailing_slash: false },
+  { source: "data/computed/fenok-edge-korea-krx-bridge-history.json", destination: "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json", mode: "cp_file", delete: false, excludes: [], required: false, trailing_slash: false },
+  { source: "data/computed/fenok_occ_options_availability.json", destination: "100xfenok-next/public/data/computed/fenok_occ_options_availability.json", mode: "cp_file", delete: false, excludes: [], required: true, trailing_slash: false },
+  { source: "data/computed/market_facts/index.json", destination: "100xfenok-next/public/data/computed/market_facts/index.json", mode: "cp_file", delete: false, excludes: [], required: true, trailing_slash: false },
 ];
 
 assert.deepEqual(manifest.update_manifest.materializations, EXPECTED_ROUTES);
@@ -30,14 +30,15 @@ const initialProjection = workflow.slice(
   workflow.indexOf("- name: Project manifest-owned public mirrors"),
   workflow.indexOf("- name: Export computed signals"),
 );
-assert.match(initialProjection, /materialize-update-manifest-routes\.mjs --all[\s\S]*?validate-slickcharts-integrity\.py[\s\S]*?diff -qr data\/slickcharts/);
+assert.match(initialProjection, /materialize-update-manifest-routes\.mjs --all[\s\S]*?sync-public-data\.mjs --write --etf-shards-only[\s\S]*?validate-slickcharts-integrity\.py[\s\S]*?diff -qr data\/slickcharts/);
 assert.ok(workflow.indexOf("- name: Build shared market and stock promotion state") < workflow.indexOf("- name: Project manifest-owned public mirrors"));
 assert.ok(workflow.indexOf("- name: Project manifest-owned public mirrors") < workflow.indexOf("- name: Build phase2 closeout indexes"));
 const retry = workflow.slice(workflow.indexOf("for attempt in 1 2 3; do"));
 assert.match(retry, /git reset --hard origin\/main[\s\S]*?materialize-update-manifest-routes\.mjs --all --validate-only --assert-no-untracked/);
-assert.match(retry, /write-fenok-s1-stock-public-promotion-dry-run\.mjs --check[\s\S]*?materialize-update-manifest-routes\.mjs --all[\s\S]*?validate-slickcharts-integrity\.py[\s\S]*?diff -qr data\/slickcharts[\s\S]*?export-computed-signals\.mjs[\s\S]*?build-phase2-closeout-indexes\.mjs/);
+assert.match(retry, /write-fenok-s1-stock-public-promotion-dry-run\.mjs --check[\s\S]*?materialize-update-manifest-routes\.mjs --all[\s\S]*?sync-public-data\.mjs --write --etf-shards-only[\s\S]*?validate-slickcharts-integrity\.py[\s\S]*?diff -qr data\/slickcharts[\s\S]*?export-computed-signals\.mjs[\s\S]*?build-phase2-closeout-indexes\.mjs/);
 assert.match(retry, /git reset --hard origin\/main[\s\S]*?node scripts\/test-update-manifest-materializations\.mjs[\s\S]*?materialize-update-manifest-routes\.mjs --all --validate-only/);
 assert.equal((workflow.match(/materialize-update-manifest-routes\.mjs --all(?! --validate-only)/g) ?? []).length, 2);
+assert.equal((workflow.match(/sync-public-data\.mjs --write --etf-shards-only/g) ?? []).length, 2);
 assert.doesNotMatch(workflow, /--route-source/);
 assert.doesNotMatch(workflow, /rsync -a --checksum --delete (?:data\/slickcharts|data\/yf\/finance|data\/stockanalysis)/);
 assert.doesNotMatch(workflow, /cp data\/(?:indices\/nasdaq-giw-sox-constituents|admin\/fenok-edge-korea-krx-daily-index|computed\/fenok_occ_options_availability|computed\/market_facts\/index)\.json/);
@@ -68,6 +69,14 @@ function makeFixture() {
       write(path.join(source, "keep.json"), `${route.source}\n`);
       write(path.join(source, "nested/deep.json"), "deep\n");
       fs.mkdirSync(path.join(source, "empty"), { recursive: true });
+      if (route.source === "data/stockanalysis") {
+        write(path.join(source, "etfs/SPY.json"), '{"ticker":"SPY"}\n');
+        write(path.join(source, "nested/etfs/keep.json"), '{"nested":true}\n');
+        write(
+          path.join(repoRoot, route.destination, "etfs/shards/index.json"),
+          '{"compatibility_mode":"shard-only"}\n',
+        );
+      }
     } else write(source, `${route.source}\n`);
   }
   execFileSync("git", ["add", "-A"], { cwd: repoRoot });
@@ -100,6 +109,25 @@ function runHelper(fixture, args) {
       assert.equal(fs.statSync(path.join(destination, "empty")).isDirectory(), true);
     } else assert.equal(fs.readFileSync(destination, "utf8"), fs.readFileSync(source, "utf8"));
   }
+  const stockanalysisDestination = path.join(
+    fixture.repoRoot,
+    "100xfenok-next/public/data/stockanalysis/etfs",
+  );
+  assert.equal(fs.existsSync(path.join(stockanalysisDestination, "SPY.json")), false);
+  assert.equal(
+    fs.readFileSync(path.join(stockanalysisDestination, "shards/index.json"), "utf8"),
+    '{"compatibility_mode":"shard-only"}\n',
+  );
+  assert.equal(
+    fs.readFileSync(
+      path.join(
+        fixture.repoRoot,
+        "100xfenok-next/public/data/stockanalysis/nested/etfs/keep.json",
+      ),
+      "utf8",
+    ),
+    '{"nested":true}\n',
+  );
 }
 
 // A missing optional source removes an existing public mirror so stale bytes
@@ -245,6 +273,15 @@ for (const target of ["source", "destination"]) {
   const cpDeleteDrift = structuredClone(routes);
   cpDeleteDrift.at(-1).delete = true;
   assert.throws(() => validateMaterializationRoutes({ repoRoot: fixture.repoRoot, routes: cpDeleteDrift }), /cp_file flags are invalid/);
+  const unsafeExclude = structuredClone(routes);
+  unsafeExclude[0].excludes = ["../outside"];
+  assert.throws(() => validateMaterializationRoutes({ repoRoot: fixture.repoRoot, routes: unsafeExclude }), /excludes\[0\] is unsafe/);
+  const globExclude = structuredClone(routes);
+  globExclude[0].excludes = ["etf*"];
+  assert.throws(() => validateMaterializationRoutes({ repoRoot: fixture.repoRoot, routes: globExclude }), /exact relative subtree/);
+  const cpExclude = structuredClone(routes);
+  cpExclude.at(-1).excludes = ["nested"];
+  assert.throws(() => validateMaterializationRoutes({ repoRoot: fixture.repoRoot, routes: cpExclude }), /cp_file cannot exclude subtrees/);
 }
 
 console.log("test-update-manifest-materializations: ok");

@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   DEPLOY_PROVENANCE_SCHEMA,
   buildDeployProvenance,
   classifyLiveProvenance,
+  evaluateDeploySourceFence,
   evaluatePostObservation,
   filterRunsByHeadBranch,
   isDeployProvenance,
@@ -26,7 +29,7 @@ const base = {
   runId: "29502469123",
   runNumber: "1379",
   serverUrl: "https://github.com",
-  sha: "47041d9507",
+  sha: "47041d950747041d950747041d950747041d9507",
 };
 
 const provenance = buildDeployProvenance(base);
@@ -231,6 +234,128 @@ assert.equal(
 assert.throws(() => filterRunsByHeadBranch(null, "main"), /array/);
 assert.throws(() => filterRunsByHeadBranch([], ""), /branch name/);
 
+// --- evaluateDeploySourceFence --------------------------------------------
+
+const sourceFenceBase = {
+  artifactSha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  runSha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  currentMainSha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  liveSha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  artifactRunId: "200",
+  currentRunId: "200",
+  artifactRunNumber: 20,
+  currentRunNumber: 20,
+  artifactRunAttempt: 1,
+  currentRunAttempt: 1,
+  liveRunNumber: 19,
+  liveRunAttempt: 1,
+  artifactIsAncestorOfCurrentMain: true,
+  liveIsAncestorOfArtifact: true,
+  artifactIsAncestorOfLive: true,
+};
+
+assert.deepEqual(
+  evaluateDeploySourceFence(sourceFenceBase),
+  {
+    allowed: true,
+    verdict: "source-monotonic",
+    detail:
+      "artifact matches this workflow run, remains on current main, and advances both live source and run order",
+  },
+);
+
+const mainAdvanced = evaluateDeploySourceFence({
+  ...sourceFenceBase,
+  artifactSha: "1111111111111111111111111111111111111111",
+  runSha: "1111111111111111111111111111111111111111",
+  currentMainSha: "2222222222222222222222222222222222222222",
+  liveSha: "0000000000000000000000000000000000000000",
+  artifactIsAncestorOfLive: false,
+});
+assert.equal(mainAdvanced.allowed, true, "a main advance alone must not starve a valid deploy");
+assert.equal(mainAdvanced.verdict, "source-monotonic");
+
+const diverged = evaluateDeploySourceFence({
+  ...sourceFenceBase,
+  artifactSha: "2222222222222222222222222222222222222222",
+  runSha: "2222222222222222222222222222222222222222",
+  artifactIsAncestorOfCurrentMain: false,
+});
+assert.equal(diverged.allowed, false);
+assert.equal(diverged.verdict, "source-diverged");
+
+const staleLive = evaluateDeploySourceFence({
+  ...sourceFenceBase,
+  artifactSha: "1111111111111111111111111111111111111111",
+  runSha: "1111111111111111111111111111111111111111",
+  liveSha: "2222222222222222222222222222222222222222",
+  liveIsAncestorOfArtifact: false,
+  artifactIsAncestorOfLive: true,
+});
+assert.equal(staleLive.allowed, false);
+assert.equal(staleLive.verdict, "stale-live");
+
+const liveDiverged = evaluateDeploySourceFence({
+  ...sourceFenceBase,
+  artifactSha: "1111111111111111111111111111111111111111",
+  runSha: "1111111111111111111111111111111111111111",
+  liveSha: "2222222222222222222222222222222222222222",
+  liveIsAncestorOfArtifact: false,
+  artifactIsAncestorOfLive: false,
+});
+assert.equal(liveDiverged.allowed, false);
+assert.equal(liveDiverged.verdict, "live-diverged");
+
+const artifactMismatch = evaluateDeploySourceFence({
+  ...sourceFenceBase,
+  artifactSha: "3333333333333333333333333333333333333333",
+});
+assert.equal(artifactMismatch.allowed, false);
+assert.equal(artifactMismatch.verdict, "artifact-run-mismatch");
+
+const artifactRunMismatch = evaluateDeploySourceFence({
+  ...sourceFenceBase,
+  artifactRunNumber: 21,
+});
+assert.equal(artifactRunMismatch.allowed, false);
+assert.equal(artifactRunMismatch.verdict, "artifact-run-mismatch");
+
+const staleSameSourceRun = evaluateDeploySourceFence({
+  ...sourceFenceBase,
+  liveRunNumber: 21,
+});
+assert.equal(staleSameSourceRun.allowed, false);
+assert.equal(staleSameSourceRun.verdict, "stale-run");
+
+const newerAttempt = evaluateDeploySourceFence({
+  ...sourceFenceBase,
+  artifactRunNumber: 20,
+  currentRunNumber: 20,
+  artifactRunAttempt: 2,
+  currentRunAttempt: 2,
+  liveRunNumber: 20,
+  liveRunAttempt: 1,
+});
+assert.equal(newerAttempt.allowed, true);
+
+for (const [field, value] of [
+  ["artifactSha", ""],
+  ["runSha", null],
+  ["currentMainSha", "lookup-unavailable"],
+  ["liveSha", "lookup-unavailable"],
+]) {
+  const unavailable = evaluateDeploySourceFence({ ...sourceFenceBase, [field]: value });
+  assert.equal(unavailable.allowed, false, `${field} unavailable must fail closed`);
+  assert.equal(unavailable.verdict, "identity-unavailable");
+}
+
+const ancestryUnavailable = evaluateDeploySourceFence({
+  ...sourceFenceBase,
+  liveIsAncestorOfArtifact: null,
+});
+assert.equal(ancestryUnavailable.allowed, false);
+assert.equal(ancestryUnavailable.verdict, "ancestry-unavailable");
+
 // --- evaluatePostObservation (propagation-window poll unit) -----------------
 
 const postBase = {
@@ -304,7 +429,7 @@ const { outPath, provenance: written } = writeDeployProvenance({
     GITHUB_RUN_ID: "29554849521",
     GITHUB_RUN_NUMBER: "1402",
     GITHUB_SERVER_URL: "https://github.com",
-    GITHUB_SHA: "ae15b48dad",
+    GITHUB_SHA: "ae15b48dadae15b48dadae15b48dadae15b48dad",
   },
   now: "2026-07-17T04:26:00.000Z",
 });
@@ -313,6 +438,159 @@ assert.equal(written.build_id, "bundle-abc");
 assert.equal(written.built_at, "2026-07-17T04:26:00.000Z");
 const onDisk = JSON.parse(fs.readFileSync(outPath, "utf8"));
 assert.deepEqual(onDisk, written, "on-disk provenance must round-trip the builder output");
+
+const sourceFenceScript = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "check-deploy-source-fence.mjs",
+);
+const sourceFenceRepo = fs.mkdtempSync(path.join(os.tmpdir(), "deploy-source-fence-"));
+const runGit = (...args) => {
+  const result = spawnSync("git", args, { cwd: sourceFenceRepo, encoding: "utf8" });
+  assert.equal(result.status, 0, `${result.stderr}\n${result.stdout}`);
+  return result.stdout.trim();
+};
+runGit("init", "-q");
+runGit("config", "user.email", "source-fence@example.invalid");
+runGit("config", "user.name", "Source Fence Test");
+const commitFile = path.join(sourceFenceRepo, "state.txt");
+fs.writeFileSync(commitFile, "live\n");
+runGit("add", "state.txt");
+runGit("commit", "-qm", "live");
+const liveSource = runGit("rev-parse", "HEAD");
+fs.writeFileSync(commitFile, "candidate\n");
+runGit("commit", "-qam", "candidate");
+const candidateSource = runGit("rev-parse", "HEAD");
+fs.writeFileSync(commitFile, "current main\n");
+runGit("commit", "-qam", "current main");
+const currentMainSource = runGit("rev-parse", "HEAD");
+const candidateProvenancePath = path.join(sourceFenceRepo, "candidate-provenance.json");
+const liveProvenancePath = path.join(sourceFenceRepo, "live-provenance.json");
+const candidateRun = {
+  ...onDisk,
+  sha: candidateSource,
+  run_id: "30000000000",
+  run_number: 1380,
+  run_attempt: 1,
+};
+const liveRun = {
+  ...onDisk,
+  sha: liveSource,
+  run_id: "29999999999",
+  run_number: 1379,
+  run_attempt: 1,
+};
+fs.writeFileSync(candidateProvenancePath, JSON.stringify(candidateRun));
+fs.writeFileSync(liveProvenancePath, JSON.stringify(liveRun));
+const cliPass = spawnSync(
+  process.execPath,
+  [
+    sourceFenceScript,
+    "--provenance",
+    candidateProvenancePath,
+    "--live-provenance",
+    liveProvenancePath,
+    "--current-main",
+    currentMainSource,
+  ],
+  {
+    cwd: sourceFenceRepo,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      GITHUB_SHA: candidateSource,
+      GITHUB_RUN_ID: candidateRun.run_id,
+      GITHUB_RUN_NUMBER: String(candidateRun.run_number),
+      GITHUB_RUN_ATTEMPT: String(candidateRun.run_attempt),
+    },
+  },
+);
+assert.equal(cliPass.status, 0, `${cliPass.stderr}\n${cliPass.stdout}`);
+assert.match(cliPass.stdout, /source-monotonic/);
+
+fs.writeFileSync(liveProvenancePath, JSON.stringify({
+  ...liveRun,
+  sha: currentMainSource,
+  run_number: 1381,
+}));
+const cliStale = spawnSync(
+  process.execPath,
+  [
+    sourceFenceScript,
+    "--provenance",
+    candidateProvenancePath,
+    "--live-provenance",
+    liveProvenancePath,
+    "--current-main",
+    currentMainSource,
+  ],
+  {
+    cwd: sourceFenceRepo,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      GITHUB_SHA: candidateSource,
+      GITHUB_RUN_ID: candidateRun.run_id,
+      GITHUB_RUN_NUMBER: String(candidateRun.run_number),
+      GITHUB_RUN_ATTEMPT: String(candidateRun.run_attempt),
+    },
+  },
+);
+assert.equal(cliStale.status, 1);
+assert.match(cliStale.stdout, /stale-live/);
+
+const malformedProvenancePath = path.join(sourceFenceRepo, "malformed-provenance.json");
+fs.writeFileSync(malformedProvenancePath, JSON.stringify({ sha: candidateSource }));
+const cliMalformed = spawnSync(
+  process.execPath,
+  [
+    sourceFenceScript,
+    "--provenance",
+    malformedProvenancePath,
+    "--live-provenance",
+    liveProvenancePath,
+    "--current-main",
+    currentMainSource,
+  ],
+  {
+    cwd: sourceFenceRepo,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      GITHUB_SHA: candidateSource,
+      GITHUB_RUN_ID: candidateRun.run_id,
+      GITHUB_RUN_NUMBER: String(candidateRun.run_number),
+      GITHUB_RUN_ATTEMPT: String(candidateRun.run_attempt),
+    },
+  },
+);
+assert.equal(cliMalformed.status, 1);
+assert.match(cliMalformed.stdout, /identity-unavailable/);
+
+const deployWorkflowPath = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  ".github",
+  "workflows",
+  "deploy-worker.yml",
+);
+const deployWorkflow = fs.readFileSync(deployWorkflowPath, "utf8");
+const deployJob = deployWorkflow.slice(deployWorkflow.indexOf("\n  deploy:"));
+assert.equal(
+  [...deployWorkflow.matchAll(/fetch-depth: 0/g)].length,
+  1,
+  "only the deploy checkout should fetch full history for the source-lineage fence",
+);
+assert.match(deployJob, /uses: actions\/checkout@v4\s+with:\s+fetch-depth: 0/);
+const liveProvenanceFetchPosition = deployJob.indexOf("live-deploy-provenance-source-fence.json");
+const sourceFencePosition = deployJob.indexOf("check-deploy-source-fence.mjs");
+const uploadPosition = deployJob.indexOf("npx wrangler deploy");
+assert.equal(
+  liveProvenanceFetchPosition >= 0
+    && sourceFencePosition > liveProvenanceFetchPosition
+    && uploadPosition > sourceFencePosition,
+  true,
+  "live provenance and the monotonic source fence must run in order immediately before upload",
+);
 
 // structural round-trip: what the writer stamps, the checker credits as its own run
 const roundTrip = classifyLiveProvenance({

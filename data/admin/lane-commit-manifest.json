@@ -70,6 +70,7 @@
       {
         "delete": true,
         "destination": "100xfenok-next/public/data/slickcharts",
+        "excludes": [],
         "mode": "rsync_tree",
         "required": true,
         "source": "data/slickcharts",
@@ -78,6 +79,7 @@
       {
         "delete": true,
         "destination": "100xfenok-next/public/data/yf/finance",
+        "excludes": [],
         "mode": "rsync_tree",
         "required": true,
         "source": "data/yf/finance",
@@ -86,6 +88,9 @@
       {
         "delete": true,
         "destination": "100xfenok-next/public/data/stockanalysis",
+        "excludes": [
+          "etfs"
+        ],
         "mode": "rsync_tree",
         "required": true,
         "source": "data/stockanalysis",
@@ -94,6 +99,7 @@
       {
         "delete": false,
         "destination": "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json",
+        "excludes": [],
         "mode": "cp_file",
         "required": true,
         "source": "data/indices/nasdaq-giw-sox-constituents.json",
@@ -102,6 +108,7 @@
       {
         "delete": false,
         "destination": "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json",
+        "excludes": [],
         "mode": "cp_file",
         "required": true,
         "source": "data/admin/fenok-edge-korea-krx-daily-index.json",
@@ -110,6 +117,7 @@
       {
         "delete": false,
         "destination": "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json",
+        "excludes": [],
         "mode": "cp_file",
         "required": false,
         "source": "data/computed/fenok-edge-korea-krx-bridge-history.json",
@@ -118,6 +126,7 @@
       {
         "delete": false,
         "destination": "100xfenok-next/public/data/computed/fenok_occ_options_availability.json",
+        "excludes": [],
         "mode": "cp_file",
         "required": true,
         "source": "data/computed/fenok_occ_options_availability.json",
@@ -126,6 +135,7 @@
       {
         "delete": false,
         "destination": "100xfenok-next/public/data/computed/market_facts/index.json",
+        "excludes": [],
         "mode": "cp_file",
         "required": true,
         "source": "data/computed/market_facts/index.json",

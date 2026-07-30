@@ -160,6 +160,7 @@ jobs:
       - name: Project manifest-owned public mirrors
         run: |
           node scripts/materialize-update-manifest-routes.mjs --all
+          node 100xfenok-next/scripts/sync-public-data.mjs --write --etf-shards-only
           python3 scripts/validate-slickcharts-integrity.py
           diff -qr data/slickcharts 100xfenok-next/public/data/slickcharts
 
@@ -296,6 +297,7 @@ jobs:
             python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
             node scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check
             node scripts/materialize-update-manifest-routes.mjs --all
+            node 100xfenok-next/scripts/sync-public-data.mjs --write --etf-shards-only
             python3 scripts/validate-slickcharts-integrity.py
             diff -qr data/slickcharts 100xfenok-next/public/data/slickcharts
             node scripts/export-computed-signals.mjs

@@ -71,6 +71,12 @@ function routeKey(route) {
   return `${route.source}\u0000${route.destination}`;
 }
 
+function isExcluded(relativePath, excludes) {
+  return excludes.some(
+    (exclude) => relativePath === exclude || relativePath.startsWith(`${exclude}/`),
+  );
+}
+
 export function validateMaterializationRoutes({ repoRoot, routes }) {
   const resolvedRepo = fs.realpathSync(repoRoot);
   const sourceAllow = path.join(resolvedRepo, "data");
@@ -97,6 +103,16 @@ export function validateMaterializationRoutes({ repoRoot, routes }) {
     } else if (route.mode === "rsync_tree") {
       if (route.delete !== true || route.trailing_slash !== true) fail(`routes[${index}] rsync_tree flags are invalid`);
     } else fail(`routes[${index}] mode is invalid`);
+    if (!Array.isArray(route.excludes)) fail(`routes[${index}] excludes must be an array`);
+    for (const [excludeIndex, exclude] of route.excludes.entries()) {
+      assertSafeRelative(exclude, `routes[${index}].excludes[${excludeIndex}]`);
+      if (exclude.endsWith("/") || exclude.includes("*")) {
+        fail(`routes[${index}].excludes[${excludeIndex}] must be an exact relative subtree`);
+      }
+    }
+    if (route.mode === "cp_file" && route.excludes.length > 0) {
+      fail(`routes[${index}] cp_file cannot exclude subtrees`);
+    }
     const sourceAbs = path.resolve(resolvedRepo, route.source);
     const destinationAbs = path.resolve(resolvedRepo, route.destination);
     if (!isWithin(sourceAbs, sourceAllow) || sourceAbs === sourceAllow) fail(`routes[${index}] source escapes canonical data root`);
@@ -141,22 +157,23 @@ function run(command, args, options = {}) {
   return result.stdout;
 }
 
-function listTree(root, prefix = "") {
+function listTree(root, excludes = [], prefix = "") {
   const rows = [];
   for (const entry of fs.readdirSync(root, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
     const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (isExcluded(relative, excludes)) continue;
     const target = path.join(root, entry.name);
     if (entry.isSymbolicLink()) fail("tree parity encountered a symlink");
-    if (entry.isDirectory()) rows.push([`${relative}/`, null], ...listTree(target, relative));
+    if (entry.isDirectory()) rows.push([`${relative}/`, null], ...listTree(target, excludes, relative));
     else if (entry.isFile()) rows.push([relative, fs.readFileSync(target)]);
     else fail("tree parity encountered an unsupported entry");
   }
   return rows;
 }
 
-function assertTreeParity(source, destination) {
-  const left = listTree(source);
-  const right = listTree(destination);
+function assertTreeParity(source, destination, excludes = []) {
+  const left = listTree(source, excludes);
+  const right = listTree(destination, excludes);
   if (left.length !== right.length) fail("rsync tree parity count differs");
   for (let index = 0; index < left.length; index += 1) {
     const [leftPath, leftContents] = left[index];
@@ -238,8 +255,13 @@ export function materializeUpdateManifestRoutes(options) {
       if (!fs.readFileSync(route.sourceAbs).equals(fs.readFileSync(route.destinationAbs))) fail("cp_file parity differs");
     } else {
       fs.mkdirSync(route.destinationAbs, { recursive: true });
-      run("rsync", ["-a", "--checksum", "--delete", `${route.sourceAbs}/`, `${route.destinationAbs}/`], { cwd: validation.repoRoot });
-      assertTreeParity(route.sourceAbs, route.destinationAbs);
+      const excludeArgs = route.excludes.flatMap((exclude) => ["--exclude", `/${exclude}/`]);
+      run(
+        "rsync",
+        ["-a", "--checksum", "--delete", ...excludeArgs, `${route.sourceAbs}/`, `${route.destinationAbs}/`],
+        { cwd: validation.repoRoot },
+      );
+      assertTreeParity(route.sourceAbs, route.destinationAbs, route.excludes);
     }
     materialized += 1;
   }
