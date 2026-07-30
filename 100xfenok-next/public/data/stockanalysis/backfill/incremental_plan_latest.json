@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_backfill_plan",
-  "generated_at": "2026-07-28T23:43:18Z",
+  "generated_at": "2026-07-29T23:44:33Z",
   "mode": "history_gaps_only",
   "required_history_periods": [
     "daily_1y"
@@ -13,23 +13,21 @@
     "execution_proof": "backfill/incremental_latest.json remains reserved for completed fetch runs"
   },
   "counts": {
-    "etfs_planned": 1,
-    "incremental_selected": 1,
-    "incremental_candidates": 1,
-    "history_gap": 1,
+    "etfs_planned": 0,
+    "incremental_selected": 0,
+    "incremental_candidates": 0,
+    "history_gap": 0,
     "inception_limited_history_gap": 0,
     "terminal_limited_history_gap": 0,
-    "total_history_gap": 1,
-    "cooldown_skipped": 3
+    "total_history_gap": 0,
+    "cooldown_skipped": 10
   },
-  "etfs": [
-    "DHLX"
-  ],
+  "etfs": [],
   "incremental_etf_backfill": {
     "schema_version": "stockanalysis/v1",
     "source": "stockanalysis",
     "operation": "incremental_etf_backfill_select",
-    "generated_at": "2026-07-28T23:43:18Z",
+    "generated_at": "2026-07-29T23:44:33Z",
     "policy": {
       "limit": 0,
       "offset": 0,
@@ -45,83 +43,29 @@
       "min_daily_1y_rows": 200
     },
     "counts": {
-      "candidates": 1,
-      "selected": 1,
+      "candidates": 0,
+      "selected": 0,
       "missing": 0,
       "fallback_retry": 0,
-      "history_gap": 1,
+      "history_gap": 0,
       "inception_limited_history_gap": 0,
-      "total_history_gap": 1,
+      "total_history_gap": 0,
       "stale": 0,
-      "cooldown_skipped": 3,
+      "cooldown_skipped": 10,
       "prior_failed_candidates": 0,
       "daily_1y_missing_file": 0,
-      "daily_1y_short_rows": 1,
+      "daily_1y_short_rows": 0,
       "offset_skipped": 0,
-      "scheduled_plan_rows": 4
+      "scheduled_plan_rows": 10
     },
-    "selected": [
-      {
-        "ticker": "DHLX",
-        "source": "fenok_edge_etf_daily1y_fetchable_plan",
-        "reason": "history_gap",
-        "age_hours": null,
-        "prior_failures": 0,
-        "priority": 0,
-        "reason_priority": 2,
-        "plan_order": 1,
-        "missing_history_periods": [
-          "daily_1y"
-        ],
-        "fetchable_missing_history_periods": [
-          "daily_1y"
-        ],
-        "inception_limited_history_periods": [],
-        "inception_date": "2025-09-30",
-        "daily_1y_actual_rows": 196,
-        "daily_1y_min_rows": 200,
-        "missing_file": false,
-        "pending_consecutive_failures": 0,
-        "pending_next_attempt_after_utc": null,
-        "pre_fetch_daily_1y_evidence": {
-          "row_count": 207,
-          "raw_row_count": 207,
-          "valid_unique_date_count": 207,
-          "invalid_or_duplicate_date_count": 0,
-          "earliest_observation": "2025-09-30",
-          "earliest_date": "2025-09-30",
-          "latest_observation": "2026-07-28",
-          "latest_date": "2026-07-28",
-          "span_days": 301,
-          "expected_trading_days": 216,
-          "expected_utc_weekdays_inclusive": 216,
-          "observed_trading_days": 207,
-          "density": 0.958333,
-          "max_internal_gap_days": 4,
-          "max_internal_calendar_gap_days": 4,
-          "latest_observation_age_days": 0,
-          "latest_observation_age_business_days": 0,
-          "latest_business_day_age": 0,
-          "latest_not_future": true,
-          "gates": {
-            "min_rows": true,
-            "density": true,
-            "max_internal_gap": true,
-            "latest_business_day_age": true
-          },
-          "evidence_pass": true,
-          "eligible": true
-        },
-        "pre_fetch_payload_fetched_at": "2026-07-28T23:42:56Z"
-      }
-    ],
+    "selected": [],
     "cooldown": [
       {
-        "ticker": "ASCI",
+        "ticker": "BGCG",
         "source": "fenok_edge_etf_daily1y_fetchable_plan",
         "consecutive_failures": 0,
-        "next_attempt_after_utc": "2026-08-04T23:43:09Z",
-        "failure_reason": "successful StockAnalysis primary fetch still has 192 unique daily_1y dates (< 200)",
+        "next_attempt_after_utc": "2026-08-05T23:44:25Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 40 unique daily_1y dates (< 200)",
         "plan_order": 0,
         "missing_history_periods": [
           "daily_1y"
@@ -129,14 +73,29 @@
         "fetchable_missing_history_periods": [
           "daily_1y"
         ],
-        "inception_date": "2025-10-21"
+        "inception_date": "2026-06-02"
       },
       {
-        "ticker": "IBTR",
+        "ticker": "EMEM",
         "source": "fenok_edge_etf_daily1y_fetchable_plan",
         "consecutive_failures": 0,
-        "next_attempt_after_utc": "2026-08-04T23:43:09Z",
-        "failure_reason": "successful StockAnalysis primary fetch still has 83 unique daily_1y dates (< 200)",
+        "next_attempt_after_utc": "2026-08-05T23:44:25Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 47 unique daily_1y dates (< 200)",
+        "plan_order": 1,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "IDEQ",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 4,
+        "next_attempt_after_utc": "2026-08-05T23:44:25Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
         "plan_order": 2,
         "missing_history_periods": [
           "daily_1y"
@@ -147,12 +106,102 @@
         "inception_date": null
       },
       {
-        "ticker": "QQMY",
+        "ticker": "MAUG",
         "source": "fenok_edge_etf_daily1y_fetchable_plan",
         "consecutive_failures": 0,
-        "next_attempt_after_utc": "2026-08-04T23:43:09Z",
-        "failure_reason": "successful StockAnalysis primary fetch still has 58 unique daily_1y dates (< 200)",
+        "next_attempt_after_utc": "2026-08-05T23:44:25Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 59 unique daily_1y dates (< 200)",
         "plan_order": 3,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "MFEB",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 0,
+        "next_attempt_after_utc": "2026-08-05T23:44:25Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 59 unique daily_1y dates (< 200)",
+        "plan_order": 4,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "MMAY",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 0,
+        "next_attempt_after_utc": "2026-08-05T23:44:25Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 59 unique daily_1y dates (< 200)",
+        "plan_order": 5,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "MNVR",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 0,
+        "next_attempt_after_utc": "2026-08-05T23:44:25Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 59 unique daily_1y dates (< 200)",
+        "plan_order": 6,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "PHYS",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 4,
+        "next_attempt_after_utc": "2026-08-05T23:44:25Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 7,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "PSLV",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 4,
+        "next_attempt_after_utc": "2026-08-05T23:44:25Z",
+        "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY",
+        "plan_order": 8,
+        "missing_history_periods": [
+          "daily_1y"
+        ],
+        "fetchable_missing_history_periods": [
+          "daily_1y"
+        ],
+        "inception_date": null
+      },
+      {
+        "ticker": "WDE",
+        "source": "fenok_edge_etf_daily1y_fetchable_plan",
+        "consecutive_failures": 0,
+        "next_attempt_after_utc": "2026-08-05T23:44:25Z",
+        "failure_reason": "successful StockAnalysis primary fetch still has 45 unique daily_1y dates (< 200)",
+        "plan_order": 9,
         "missing_history_periods": [
           "daily_1y"
         ],

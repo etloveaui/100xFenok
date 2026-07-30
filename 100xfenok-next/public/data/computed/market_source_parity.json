@@ -1,23 +1,23 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-07-29T23:25:05Z",
+  "generated_at": "2026-07-29T23:56:12Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6772,
     "fields": 19,
-    "multi_candidate_fields": 32118,
-    "divergence_rows": 32091,
-    "percent_scale_warnings": 57,
+    "multi_candidate_fields": 32119,
+    "divergence_rows": 32092,
+    "percent_scale_warnings": 58,
     "diagnosis_counts": {
-      "agreement": 21150,
-      "scale_mismatch": 57,
-      "sign_divergence": 768,
-      "stale": 6721,
-      "value_drift": 3395
+      "agreement": 21151,
+      "scale_mismatch": 58,
+      "sign_divergence": 771,
+      "stale": 6718,
+      "value_drift": 3394
     },
-    "stale_rows": 6721,
-    "scale_mismatch_rows": 57,
-    "sign_divergence_rows": 768
+    "stale_rows": 6718,
+    "scale_mismatch_rows": 58,
+    "sign_divergence_rows": 771
   },
   "by_field": {
     "beta": {
@@ -261,15 +261,15 @@
     },
     "total_assets": {
       "ticker_count": 5031,
-      "multi_candidate_count": 836,
+      "multi_candidate_count": 837,
       "selected_sources": {
         "stockanalysis.overview": 3730,
         "yf": 870,
         "yf.stockanalysis_fallback.overview": 431
       },
       "candidate_sources": {
-        "stockanalysis.overview": 836,
-        "yf": 836
+        "stockanalysis.overview": 837,
+        "yf": 837
       }
     },
     "trailing_pe": {
@@ -4738,6 +4738,44 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.performance": 39.0
+      }
+    },
+    {
+      "ticker": "PSLV",
+      "asset_type": "etf",
+      "field": "return_1m",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 3,
+      "relative_spread_pct": 100.839968,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": 0.16198044576343068
+        },
+        {
+          "source": "stockanalysis.detail.performance",
+          "value": -19.284116331096207
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": -19.284116331096207
+        }
+      ],
+      "diagnosis": "scale_mismatch",
+      "spread_pct": 100.839968,
+      "fresh_spread_pct": 100.839968,
+      "stale_sources": [],
+      "scale_mismatch": true,
+      "scale_factor": 119,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0
       }
     },
     {
