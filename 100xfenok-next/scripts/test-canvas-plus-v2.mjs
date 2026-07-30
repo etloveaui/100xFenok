@@ -55,7 +55,7 @@ for (let index = 0; index < stockOrder.length - 1; index += 1) {
 }
 
 const routeContract = fs.readFileSync(path.join(appRoot, "scripts/check-route-key-contract.mjs"), "utf8");
-assert.ok(routeContract.includes("page_route_count: 51"), "route contract page count must include V2 lab routes");
+assert.ok(routeContract.includes("page_route_count: 52"), "route contract page count must include V2 lab routes");
 assert.ok(routeContract.includes("out_of_scope_count: 10"), "route contract must classify V2 lab routes as out of scope");
 
 const packageJson = JSON.parse(fs.readFileSync(path.join(appRoot, "package.json"), "utf8"));

@@ -79,7 +79,7 @@ const packageJson = JSON.parse(fs.readFileSync(path.join(appRoot, "package.json"
 assert.ok(!Object.keys(packageJson.dependencies ?? {}).some((name) => /radix|shadcn|motion|recharts|echarts/i.test(name)), "V1 must not add new UI/chart dependencies");
 
 const routeContract = fs.readFileSync(path.join(appRoot, "scripts/check-route-key-contract.mjs"), "utf8");
-assert.ok(routeContract.includes("page_route_count: 51"), "route contract page count must include the lab routes");
+assert.ok(routeContract.includes("page_route_count: 52"), "route contract page count must include the lab routes");
 assert.ok(routeContract.includes("out_of_scope_count: 10"), "route contract must classify the lab routes as out of scope");
 
 const allowlistGenerator = fs.readFileSync(path.join(appRoot, "scripts/generate-raw-color-allowlist.mjs"), "utf8");
