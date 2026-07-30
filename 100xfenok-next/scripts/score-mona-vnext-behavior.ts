@@ -715,14 +715,16 @@ function checkFeatureGates(): Result {
     && gates.listActiveExperimentalFeatures("debug").join(",") === "experimental-feature"
     && !isMonaVnextFeatureEnabled("future-feature", "winddown")
     && !isMonaVnextFeatureEnabled("future-feature", "debug")
-    && !isMonaVnextFeatureEnabled(MONA_VNEXT_ANSWER_MATCHER_GATE, "winddown")
+    && isMonaVnextFeatureEnabled(MONA_VNEXT_ANSWER_MATCHER_GATE, "winddown")
     && isMonaVnextFeatureEnabled(MONA_VNEXT_ANSWER_MATCHER_GATE, "debug")
     && !isMonaVnextFeatureEnabled(MONA_VNEXT_AUTO_ADVANCE_ON_CANONICAL_GATE, "winddown")
     && isMonaVnextFeatureEnabled(MONA_VNEXT_AUTO_ADVANCE_ON_CANONICAL_GATE, "debug")
+    && isMonaVnextFeatureEnabled(MONA_VNEXT_STT_GARBAGE_GATE, "winddown")
+    && isMonaVnextFeatureEnabled(MONA_VNEXT_APP_OWNED_NEXT_MATERIAL_GATE, "winddown")
     && listActiveExperimentalFeatures("winddown").length === 0
     && activeDebugFeatures.join(",") === expectedP15Gates.join(",");
   return ok
-    ? pass("feature-gates", "promoted hits both surfaces; P1.5 experimental gates hit debug only")
+    ? pass("feature-gates", "matcher/garbage/app-owned-next are promoted; auto-advance remains debug-only")
     : fail("feature-gates", "feature gate isolation semantics regressed");
 }
 

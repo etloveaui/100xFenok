@@ -21,8 +21,10 @@ type Props = {
   onVoiceChange: (voice: string) => void;
   onVadChange: (preset: "relaxed" | "balanced") => void;
   settingsSlot?: ReactNode;
+  resumeOffer?: boolean;
   onStart: () => void;
   onStop: () => void;
+  onResume?: () => void;
   onRevealAnswer?: () => void;
   onNext?: () => void;
 };
@@ -106,7 +108,8 @@ export default function MonaWindDown({
   phase, modeLabel = "vNext", message, card, coachLine, errorText, answerVisible = false,
   voiceName, vadPreset, onVoiceChange, onVadChange,
   settingsSlot,
-  onStart, onStop, onRevealAnswer, onNext,
+  resumeOffer = false,
+  onStart, onStop, onResume, onRevealAnswer, onNext,
 }: Props) {
   const [theme, setTheme] = useState<WindDownTheme>(() => {
     if (typeof window === "undefined") return "light";
@@ -233,6 +236,21 @@ export default function MonaWindDown({
       </header>
 
       <main className="relative flex flex-1 flex-col items-center justify-center gap-6 px-6">
+        {resumeOffer && onResume ? (
+          <section className="wd-card-in w-full max-w-[420px] rounded-2xl border border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] px-5 py-4">
+            <p className="text-[14px] font-semibold text-[var(--wd-ink)]">
+              연결이 끊겼지만, 하던 문장은 그대로 있어.
+            </p>
+            <button
+              type="button"
+              onClick={onResume}
+              className="mt-3 min-h-11 w-full rounded-xl bg-[var(--wd-accent)] px-4 text-[14px] font-semibold text-white transition active:scale-[0.98]"
+            >
+              이어서 하기
+            </button>
+          </section>
+        ) : null}
+
         <section
           key={card ? card.updatedAt : "idle"}
           aria-live="polite"

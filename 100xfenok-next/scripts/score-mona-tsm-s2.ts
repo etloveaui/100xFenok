@@ -104,6 +104,7 @@ function checkS2SourceWiring(): Result {
     const route = readFileSync(path.join(process.cwd(), "src/app/api/mona-vnext/session/route.ts"), "utf8");
     const writer = readFileSync(path.join(process.cwd(), "src/features/mona-vnext/logging/voiceLogWriter.ts"), "utf8");
     const shell = readFileSync(path.join(process.cwd(), "src/features/mona-vnext/ui/WindDownVnextShell.tsx"), "utf8");
+    const productPolicy = readFileSync(path.join(process.cwd(), "src/features/mona-vnext/product/productPolicy.ts"), "utf8");
 
     for (const needle of [
       "resumeOffer",
@@ -127,10 +128,11 @@ function checkS2SourceWiring(): Result {
       assert.ok(live.includes(needle), `useGeminiLiveSession missing ${needle}`);
     }
     assert.ok(live.includes("enableResumePrewarm?: boolean"), "useGeminiLiveSession missing explicit resume prewarm gate option");
-    assert.ok(live.includes("enableResumePrewarm = false"), "resume prewarm gate must default off for main /winddown");
+    assert.ok(live.includes("enableResumePrewarm = false"), "resume prewarm must remain an explicit opt-in at the transport boundary");
     assert.match(live, /if\s*\(\s*enableResumePrewarm\s*\)\s*{\s*prewarmResumeSession\("go-away"\);/s, "go-away prewarm must be gated by enableResumePrewarm");
-    assert.ok(app.includes("const teacherActive = surface === \"debug\""), "teacherActive must stay staging/debug scoped");
-    assert.ok(app.includes("enableResumePrewarm: teacherActive"), "only the staging/TSM path may enable resume prewarm");
+    assert.ok(app.includes("isMonaTeacherRuntimeActive(surface)"), "teacher runtime must follow the shared product policy");
+    assert.ok(productPolicy.includes('surface === "winddown" || surface === "debug"'), "main and debug must share the Teacher State Machine");
+    assert.ok(app.includes("enableResumePrewarm: teacherActive"), "only the app-owned TSM path may enable resume prewarm");
     assert.ok(app.includes("onSessionResumed"), "MonaVoiceCoachApp missing dedicated prewarmed resume restore callback");
     assert.ok(live.includes("onSessionResumed?.(prewarmedSession)"), "prewarmed resume must call onSessionResumed, not raw onSessionReady");
     assert.ok(!live.includes("onSessionReady?.(prewarmedSession)"), "prewarmed resume must not refire onSessionReady lesson reset");

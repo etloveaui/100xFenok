@@ -44,6 +44,7 @@ import {
   buildMasteryEvent,
   type MonaVnextCorrectionCandidate,
 } from "@/features/mona-vnext/memory/srsBridge";
+import { isMonaTeacherRuntimeActive } from "@/features/mona-vnext/product/productPolicy";
 import { buildTeacherRealtimeTextInput } from "@/features/mona-vnext/teacher/effectEmitter";
 import {
   mapAnswerMatchToTeacherVerdict,
@@ -222,7 +223,7 @@ function shouldInjectPedagogyControl(evaluation: MonaVnextPostTurnEvaluation) {
 }
 
 export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
-  const teacherActive = surface === "debug";
+  const teacherActive = isMonaTeacherRuntimeActive(surface);
   const activeExperimentalFeatures = useMemo(() => listActiveExperimentalFeatures(surface), [surface]);
   const p15Gates = useMemo(() => ({
     answerMatcher: isMonaVnextFeatureEnabled(MONA_VNEXT_ANSWER_MATCHER_GATE, surface),
@@ -1278,8 +1279,10 @@ export default function MonaVoiceCoachApp({ surface = "debug" }: Props = {}) {
         onVoiceChange={setVoiceName}
         onVadChange={setVadPreset}
         settingsSlot={<MonaVnextEntry locked={settingsLocked} />}
+        resumeOffer={Boolean(resumeOffer)}
         onStart={live.start}
         onStop={stopSession}
+        onResume={resumeTeacherSession}
         onRevealAnswer={revealAnswer}
         onNext={advanceLesson}
       />
