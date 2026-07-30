@@ -5,6 +5,16 @@ import type { MonaVnextLearningEvent } from "@/features/mona-vnext/memory/srsBri
 const COORDINATOR_BINDING = "WINDDOWN_REVIEW_COORDINATOR";
 const COORDINATOR_OBJECT_NAME = "mona-vnext-learning-profile-v1";
 
+export class MonaVnextProfileCoordinatorError extends Error {
+  constructor(
+    readonly code: string,
+    readonly status: number,
+  ) {
+    super(code);
+    this.name = "MonaVnextProfileCoordinatorError";
+  }
+}
+
 type DurableObjectStubLike = {
   fetch(request: Request): Promise<Response>;
 };
@@ -55,7 +65,7 @@ export async function invokeMonaVnextProfileCoordinator(
       typeof body?.error === "string"
         ? body.error
         : "PROFILE_COORDINATOR_FAILED";
-    throw new Error(code);
+    throw new MonaVnextProfileCoordinatorError(code, response.status);
   }
   return body;
 }

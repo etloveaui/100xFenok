@@ -249,6 +249,10 @@ const progressApi = path.join(
   process.cwd(),
   "src/app/api/winddown/progress/route.ts",
 );
+const reviewApi = path.join(
+  process.cwd(),
+  "src/app/api/winddown/review/route.ts",
+);
 const studyBootstrap = path.join(
   process.cwd(),
   "src/features/winddown/server/studyBootstrap.ts",
@@ -261,7 +265,9 @@ const modelFreeEntryPaths = [
   path.join(process.cwd(), "src/features/winddown/ui"),
   studyApi,
   progressApi,
+  reviewApi,
   path.join(process.cwd(), "src/app/winddown/learn/page.tsx"),
+  path.join(process.cwd(), "src/app/winddown/review/page.tsx"),
 ].filter(existsSync);
 const modelFreeEntryFiles = modelFreeEntryPaths.flatMap((entry) =>
   statSync(entry).isDirectory() ? listSourceFiles(entry) : [entry],

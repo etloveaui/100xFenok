@@ -225,7 +225,7 @@ export async function appendMonaVnextMemoryCheckpoint(args: Record<string, unkno
   return current;
 }
 
-export async function readMonaVnextLearningProfile(now = new Date()) {
+export async function readMonaVnextLearningProfileState() {
   const store = await createMonaVnextObjectStore();
   let profile: MonaVnextLearningProfile;
   if (store.backend === "cloudflare-kv") {
@@ -236,6 +236,11 @@ export async function readMonaVnextLearningProfile(now = new Date()) {
       ? normalizeMonaVnextLearningProfile(JSON.parse(raw))
       : createEmptyMonaVnextLearningProfile();
   }
+  return profile;
+}
+
+export async function readMonaVnextLearningProfile(now = new Date()) {
+  const profile = await readMonaVnextLearningProfileState();
   const selection = classifyMonaVnextLearningProfile(profile, now);
   return {
     updatedAt: profile.updatedAt,

@@ -11,6 +11,7 @@ import {
 import { MONA_VNEXT_DATA_NAMESPACE } from "@/features/mona-vnext/memory/monaVnextNamespace";
 import {
   commitWindDownReviewCycleState,
+  summarizeWindDownReviewQueue,
   WindDownReviewCycleError,
   type WindDownReviewCycleInput,
   type WindDownReviewCycleMaterial,
@@ -61,6 +62,7 @@ export type MonaVnextProfileCoordinatorCommand =
       operation: "commit-review-cycle";
       input: WindDownReviewCycleInput;
       material: WindDownReviewCycleMaterial | null;
+      activeMaterialIds: string[];
       currentContentDigest: string;
       nowIso: string;
     };
@@ -150,6 +152,18 @@ function receiptKey(reviewCycleId: string) {
   return `${RECEIPT_STORAGE_PREFIX}${reviewCycleId}`;
 }
 
+function normalizeActiveMaterialIds(value: unknown) {
+  if (!Array.isArray(value) || value.length > 2_000) return null;
+  const ids: string[] = [];
+  for (const item of value) {
+    if (typeof item !== "string") return null;
+    const normalized = item.trim();
+    if (!normalized || normalized.length > 120) return null;
+    ids.push(normalized);
+  }
+  return [...new Set(ids)];
+}
+
 export async function handleMonaVnextProfileCoordinatorRequest(
   state: WindDownReviewCoordinatorState,
   env: WindDownReviewCoordinatorEnv,
@@ -208,6 +222,10 @@ export async function handleMonaVnextProfileCoordinatorRequest(
       typeof inputRecord.reviewCycleId === "string"
         ? inputRecord.reviewCycleId
         : "";
+    const activeMaterialIds = normalizeActiveMaterialIds(body.activeMaterialIds);
+    if (!activeMaterialIds) {
+      return noStoreJson({ error: "INVALID_PROFILE_COORDINATOR_COMMAND" }, 400);
+    }
     try {
       const result = await state.storage.transaction(async (transaction) => {
         const profile =
@@ -242,7 +260,15 @@ export async function handleMonaVnextProfileCoordinatorRequest(
             committed.receipt,
           );
         }
-        return committed;
+        return {
+          ...committed,
+          ...summarizeWindDownReviewQueue({
+            profile: committed.profile,
+            nowIso:
+              typeof body.nowIso === "string" ? body.nowIso : "",
+            activeMaterialIds,
+          }),
+        };
       });
       // The DO copy is authoritative. Re-mirroring duplicates repairs a prior
       // response interrupted after the atomic DO transaction.
@@ -252,6 +278,8 @@ export async function handleMonaVnextProfileCoordinatorRequest(
         operation: body.operation,
         duplicate: result.duplicate,
         receipt: result.receipt,
+        remainingDueCount: result.remainingDueCount,
+        nextDueAtIso: result.nextDueAtIso,
       });
     } catch (error) {
       if (error instanceof WindDownReviewCycleError) {

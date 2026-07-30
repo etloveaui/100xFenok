@@ -7,6 +7,7 @@ import {
 } from "@/features/mona-vnext/memory/fsrsLearningProfile";
 import { buildLearningEvent } from "@/features/mona-vnext/memory/srsBridge";
 import type { MonaVnextLearningRating } from "@/features/mona-vnext/memory/srsBridge";
+import type { MonaVnextExpression } from "@/features/mona-vnext/coach/coachPolicy";
 
 export const WINDDOWN_REVIEW_CYCLE_SCHEMA_VERSION = 1 as const;
 
@@ -22,6 +23,15 @@ export type WindDownReviewCycleInput = {
   materialId: string;
   contentDigest: string;
   attempts: WindDownReviewAttemptEvidence[];
+};
+
+export type WindDownReviewGradeInput = {
+  schemaVersion: typeof WINDDOWN_REVIEW_CYCLE_SCHEMA_VERSION;
+  activity: "review";
+  reviewCycleId: string;
+  materialId: string;
+  contentDigest: string;
+  attempt: WindDownReviewAttemptEvidence;
 };
 
 export type WindDownReviewCycleMaterial = {
@@ -67,6 +77,8 @@ type CommitArgs = {
   nowIso: string;
 };
 
+type GradeArgs = Omit<CommitArgs, "existingReceipt">;
+
 const SAFE_ID = /^[A-Za-z0-9._:-]+$/;
 const SHA256_HEX = /^[a-f0-9]{64}$/;
 const REVIEW_CYCLE_ID = /^winddown-review:[a-f0-9]{64}$/;
@@ -82,29 +94,36 @@ function cleanId(value: unknown, maxLength: number) {
     : null;
 }
 
-function normalizeAttempts(value: unknown): WindDownReviewAttemptEvidence[] | null {
-  if (!Array.isArray(value) || value.length < 1 || value.length > 2) return null;
-  const attempts: WindDownReviewAttemptEvidence[] = [];
-  for (const item of value) {
-    if (!item || typeof item !== "object" || Array.isArray(item)) return null;
-    const source = item as Record<string, unknown>;
-    if (
-      typeof source.answer !== "string" ||
-      source.answer.length > MAX_ANSWER_LENGTH ||
-      typeof source.revealedBefore !== "boolean"
-    ) {
-      return null;
-    }
-    if (!source.answer.trim() && source.revealedBefore !== true) return null;
-    attempts.push({
-      answer: source.answer,
-      revealedBefore: source.revealedBefore,
-    });
+function normalizeAttempt(value: unknown): WindDownReviewAttemptEvidence | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const source = value as Record<string, unknown>;
+  if (
+    typeof source.answer !== "string" ||
+    source.answer.length > MAX_ANSWER_LENGTH ||
+    typeof source.revealedBefore !== "boolean" ||
+    (!source.answer.trim() && source.revealedBefore !== true)
+  ) {
+    return null;
   }
-  return attempts;
+  return {
+    answer: source.answer,
+    revealedBefore: source.revealedBefore,
+  };
 }
 
-function normalizeInput(value: unknown): WindDownReviewCycleInput {
+function normalizeAttempts(value: unknown): WindDownReviewAttemptEvidence[] | null {
+  if (!Array.isArray(value) || value.length < 1 || value.length > 2) return null;
+  const attempts = value.map(normalizeAttempt);
+  return attempts.every(
+      (attempt): attempt is WindDownReviewAttemptEvidence => Boolean(attempt),
+    )
+    ? attempts
+    : null;
+}
+
+export function normalizeWindDownReviewCycleInput(
+  value: unknown,
+): WindDownReviewCycleInput {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new WindDownReviewCycleError("INVALID_REVIEW_CYCLE", 400);
   }
@@ -141,6 +160,27 @@ function normalizeInput(value: unknown): WindDownReviewCycleInput {
   };
 }
 
+export function normalizeWindDownReviewGradeInput(
+  value: unknown,
+): WindDownReviewGradeInput {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new WindDownReviewCycleError("INVALID_REVIEW_CYCLE", 400);
+  }
+  const source = value as Record<string, unknown>;
+  const base = normalizeWindDownReviewCycleInput({
+    ...source,
+    attempts: [source.attempt],
+  });
+  return {
+    schemaVersion: base.schemaVersion,
+    activity: base.activity,
+    reviewCycleId: base.reviewCycleId,
+    materialId: base.materialId,
+    contentDigest: base.contentDigest,
+    attempt: base.attempts[0],
+  };
+}
+
 async function sha256(value: string) {
   const digest = await crypto.subtle.digest(
     "SHA-256",
@@ -167,6 +207,35 @@ export async function createWindDownReviewCycleId(args: {
   return `winddown-review:${digest}`;
 }
 
+export async function buildWindDownReviewCards(args: {
+  cards: MonaVnextExpression[];
+  profile: MonaVnextLearningProfile;
+  contentDigest: string;
+  nowIso: string;
+}) {
+  const nowMs = Date.parse(args.nowIso);
+  if (!Number.isFinite(nowMs) || !SHA256_HEX.test(args.contentDigest)) {
+    throw new WindDownReviewCycleError("INVALID_REVIEW_CYCLE", 400);
+  }
+  const profile = normalizeMonaVnextLearningProfile(args.profile);
+  const cards = await Promise.all(args.cards.map(async (card) => {
+    const record = profile.records[card.id];
+    if (!record || Date.parse(record.card.dueAtIso) > nowMs) return null;
+    return {
+      ...card,
+      reviewCycleId: await createWindDownReviewCycleId({
+        materialId: card.id,
+        contentDigest: args.contentDigest,
+        record,
+      }),
+      dueAtIso: record.card.dueAtIso,
+    };
+  }));
+  return cards.filter(
+    (card): card is NonNullable<(typeof cards)[number]> => Boolean(card),
+  );
+}
+
 async function requestDigest(input: WindDownReviewCycleInput) {
   return sha256(JSON.stringify({
     schemaVersion: input.schemaVersion,
@@ -179,6 +248,20 @@ async function requestDigest(input: WindDownReviewCycleInput) {
       revealedBefore: attempt.revealedBefore,
     })),
   }));
+}
+
+function isStrictRecall(
+  attempt: WindDownReviewAttemptEvidence,
+  material: WindDownReviewCycleMaterial,
+) {
+  if (attempt.revealedBefore) return false;
+  const match = evaluateMonaVnextAnswerAttempt(
+    attempt.answer,
+    material.en,
+    material.acceptedVariants ?? [],
+  );
+  return match.reason === "exact-normalized-match" ||
+    match.reason === "accepted-variant-match";
 }
 
 function outcome(args: {
@@ -196,8 +279,10 @@ function outcome(args: {
     args.attempts
       .slice(0, index + 1)
       .every((attempt) => attempt.revealedBefore === false) &&
-    (matches[index]?.reason === "exact-normalized-match" ||
-      matches[index]?.reason === "accepted-variant-match");
+    Boolean(args.attempts[index] && isStrictRecall(
+      args.attempts[index],
+      args.material,
+    ));
   if (passed(0)) {
     return {
       rating: "good" as const,
@@ -219,8 +304,91 @@ function outcome(args: {
   };
 }
 
+async function validateReviewCycleContext(args: {
+  profile: MonaVnextLearningProfile;
+  reviewCycleId: string;
+  materialId: string;
+  contentDigest: string;
+  material: WindDownReviewCycleMaterial | null;
+  currentContentDigest: string;
+  nowIso: string;
+}) {
+  if (args.contentDigest !== args.currentContentDigest) {
+    throw new WindDownReviewCycleError("MATERIAL_VERSION_CHANGED", 409);
+  }
+  if (!args.material || args.materialId !== args.material.id) {
+    throw new WindDownReviewCycleError("MATERIAL_NOT_ACTIVE", 409);
+  }
+  const nowMs = Date.parse(args.nowIso);
+  if (!Number.isFinite(nowMs)) {
+    throw new WindDownReviewCycleError("INVALID_REVIEW_CYCLE", 400);
+  }
+  const profile = normalizeMonaVnextLearningProfile(args.profile);
+  const record = profile.records[args.materialId];
+  if (!record || Date.parse(record.card.dueAtIso) > nowMs) {
+    throw new WindDownReviewCycleError("REVIEW_CYCLE_NOT_DUE", 409);
+  }
+  const expectedCycleId = await createWindDownReviewCycleId({
+    materialId: args.materialId,
+    contentDigest: args.contentDigest,
+    record,
+  });
+  if (args.reviewCycleId !== expectedCycleId) {
+    throw new WindDownReviewCycleError("REVIEW_CYCLE_STALE", 409);
+  }
+  return { nowMs, profile, material: args.material };
+}
+
+export async function gradeWindDownReviewAttemptState(args: GradeArgs) {
+  const input = normalizeWindDownReviewGradeInput(args.input);
+  await validateReviewCycleContext({
+    profile: args.profile,
+    reviewCycleId: input.reviewCycleId,
+    materialId: input.materialId,
+    contentDigest: input.contentDigest,
+    material: args.material,
+    currentContentDigest: args.currentContentDigest,
+    nowIso: args.nowIso,
+  });
+  if (input.attempt.revealedBefore) {
+    return { outcome: "revealed" as const, needsRepair: true };
+  }
+  if (args.material && isStrictRecall(input.attempt, args.material)) {
+    return { outcome: "correct" as const, needsRepair: false };
+  }
+  return { outcome: "miss" as const, needsRepair: true };
+}
+
+export function summarizeWindDownReviewQueue(args: {
+  profile: MonaVnextLearningProfile;
+  nowIso: string;
+  activeMaterialIds?: Iterable<string>;
+}) {
+  const nowMs = Date.parse(args.nowIso);
+  if (!Number.isFinite(nowMs)) {
+    throw new WindDownReviewCycleError("INVALID_REVIEW_CYCLE", 400);
+  }
+  const activeIds = args.activeMaterialIds
+    ? new Set(args.activeMaterialIds)
+    : null;
+  const records = Object.values(
+    normalizeMonaVnextLearningProfile(args.profile).records,
+  )
+    .filter((record) => !activeIds || activeIds.has(record.expressionId))
+    .sort((left, right) =>
+      Date.parse(left.card.dueAtIso) - Date.parse(right.card.dueAtIso) ||
+      left.expressionId.localeCompare(right.expressionId)
+    );
+  return {
+    remainingDueCount: records.filter(
+      (record) => Date.parse(record.card.dueAtIso) <= nowMs,
+    ).length,
+    nextDueAtIso: records[0]?.card.dueAtIso ?? null,
+  };
+}
+
 export async function commitWindDownReviewCycleState(args: CommitArgs) {
-  const input = normalizeInput(args.input);
+  const input = normalizeWindDownReviewCycleInput(args.input);
   const digest = await requestDigest(input);
   if (args.existingReceipt) {
     if (
@@ -236,31 +404,17 @@ export async function commitWindDownReviewCycleState(args: CommitArgs) {
     };
   }
 
-  if (input.contentDigest !== args.currentContentDigest) {
-    throw new WindDownReviewCycleError("MATERIAL_VERSION_CHANGED", 409);
-  }
-  if (!args.material || input.materialId !== args.material.id) {
-    throw new WindDownReviewCycleError("MATERIAL_NOT_ACTIVE", 409);
-  }
-  const nowMs = Date.parse(args.nowIso);
-  if (!Number.isFinite(nowMs)) {
-    throw new WindDownReviewCycleError("INVALID_REVIEW_CYCLE", 400);
-  }
-  const profile = normalizeMonaVnextLearningProfile(args.profile);
-  const record = profile.records[input.materialId];
-  if (!record || Date.parse(record.card.dueAtIso) > nowMs) {
-    throw new WindDownReviewCycleError("REVIEW_CYCLE_NOT_DUE", 409);
-  }
-  const expectedCycleId = await createWindDownReviewCycleId({
+  const { nowMs, profile, material } = await validateReviewCycleContext({
+    profile: args.profile,
+    reviewCycleId: input.reviewCycleId,
     materialId: input.materialId,
     contentDigest: input.contentDigest,
-    record,
+    material: args.material,
+    currentContentDigest: args.currentContentDigest,
+    nowIso: args.nowIso,
   });
-  if (input.reviewCycleId !== expectedCycleId) {
-    throw new WindDownReviewCycleError("REVIEW_CYCLE_STALE", 409);
-  }
 
-  const result = outcome({ attempts: input.attempts, material: args.material });
+  const result = outcome({ attempts: input.attempts, material });
   const reviewedAt = new Date(nowMs).toISOString();
   const learningEvent = buildLearningEvent({
     expressionId: input.materialId,

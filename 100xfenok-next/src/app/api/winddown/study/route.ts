@@ -4,9 +4,15 @@ import {
   ADMIN_SESSION_COOKIE,
   verifyAdminSessionToken,
 } from "@/lib/server/admin-session";
-import { readMonaVnextLearningProfile } from "@/features/mona-vnext/memory/monaMemoryRepository";
+import {
+  readMonaVnextLearningProfileState,
+} from "@/features/mona-vnext/memory/monaMemoryRepository";
+import {
+  classifyMonaVnextLearningProfile,
+} from "@/features/mona-vnext/memory/fsrsLearningProfile";
 import { buildWindDownStudyBootstrap } from "@/features/winddown/server/studyBootstrap";
 import { loadWindDownStudyMaterial } from "@/features/winddown/server/publishedMaterialAdapter";
+import { buildWindDownReviewCards } from "@/features/winddown/server/reviewCycle";
 import {
   normalizeWindDownStudyCount,
   normalizeWindDownStudyMode,
@@ -39,7 +45,17 @@ export async function GET(request: Request) {
   if (!mode) return noStoreJson({ error: "INVALID_WINDDOWN_STUDY_MODE" }, 400);
 
   try {
-    const learning = await readMonaVnextLearningProfile();
+    const now = new Date();
+    const learningProfile = await readMonaVnextLearningProfileState();
+    const learningSelection = classifyMonaVnextLearningProfile(
+      learningProfile,
+      now,
+    );
+    const learning = {
+      updatedAt: learningProfile.updatedAt,
+      recordCount: Object.keys(learningProfile.records).length,
+      ...learningSelection,
+    };
     const material = await loadWindDownStudyMaterial({
       dueExpressionIds: learning.dueExpressionIds,
       deferredExpressionIds: learning.deferredExpressionIds,
@@ -52,8 +68,31 @@ export async function GET(request: Request) {
       deferredExpressionIds: material.deferredExpressionIds,
       count: normalizeWindDownStudyCount(url.searchParams.get("count")),
     });
+    let cards = bootstrap.cards;
+    let inventory = bootstrap.inventory;
+    if (mode === "review") {
+      if (
+        material.metadata.source !== "published-lkg" ||
+        material.metadata.publicationStatus !== "active" ||
+        !material.metadata.contentDigest
+      ) {
+        return noStoreJson({ error: "WINDDOWN_MATERIAL_UNAVAILABLE" }, 503);
+      }
+      cards = await buildWindDownReviewCards({
+        cards: bootstrap.cards,
+        profile: learningProfile,
+        contentDigest: material.metadata.contentDigest,
+        nowIso: now.toISOString(),
+      });
+      inventory = {
+        ...bootstrap.inventory,
+        selectedCount: cards.length,
+      };
+    }
     return noStoreJson({
       ...bootstrap,
+      cards,
+      inventory,
       learning: {
         updatedAt: learning.updatedAt,
         recordCount: learning.recordCount,
@@ -61,7 +100,7 @@ export async function GET(request: Request) {
       material: material.metadata,
       materialResolution: material.resolution,
       advisor: material.advisorForExpressionIds(
-        bootstrap.cards.map((card) => card.id),
+        cards.map((card) => card.id),
       ),
     });
   } catch (error) {

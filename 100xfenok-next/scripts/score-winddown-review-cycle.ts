@@ -222,6 +222,7 @@ const coordinatorCommand = {
   operation: "commit-review-cycle",
   input: firstPassInput,
   material,
+  activeMaterialIds: [material.id],
   currentContentDigest: digest,
   nowIso,
 };
