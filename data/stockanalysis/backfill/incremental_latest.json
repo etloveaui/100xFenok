@@ -2,581 +2,1356 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_backfill_select",
-  "generated_at": "2026-07-29T23:43:49Z",
+  "generated_at": "2026-07-30T01:04:50Z",
   "policy": {
-    "limit": 120,
-    "offset": 0,
-    "max_age_hours": null,
+    "limit": 39,
+    "max_age_hours": 168.0,
     "cooldown_days": 7,
     "cooldown_failure_threshold": 3,
-    "required_history_periods": [
-      "daily_1y"
-    ],
-    "history_gaps_only": true,
-    "selection": "exact Fenok Edge scored-ETF daily_1y fetchable plan; includes missing detail files and daily_1y row-count gaps below min rows",
-    "plan_path": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
-    "min_daily_1y_rows": 200
+    "required_history_periods": [],
+    "history_gaps_only": false,
+    "selection": "never-fetched or latest-observation-invalid ETF details first, lower prior failures before retries, then Yahoo fallback retries, then multi-year history gaps, then stale records; new_etfs are prioritized within each reason/failure bucket, then etf_universe, then etf_screener-only rows"
   },
   "counts": {
-    "candidates": 10,
-    "selected": 10,
-    "missing": 0,
+    "candidates": 5115,
+    "selected": 39,
+    "missing": 2,
+    "invalid": 304,
     "fallback_retry": 0,
-    "history_gap": 10,
+    "history_gap": 0,
     "inception_limited_history_gap": 0,
-    "total_history_gap": 10,
-    "stale": 0,
-    "cooldown_skipped": 0,
-    "prior_failed_candidates": 3,
-    "daily_1y_missing_file": 0,
-    "daily_1y_short_rows": 10,
-    "offset_skipped": 0,
-    "scheduled_plan_rows": 10,
+    "terminal_limited_history_gap": 0,
+    "total_history_gap": 0,
+    "stale": 4809,
+    "cooldown_skipped": 137,
+    "prior_failed_candidates": 307,
     "ledger_tracked": 488,
-    "ledger_cooldown": 165
+    "ledger_cooldown": 166
   },
   "selected": [
     {
-      "ticker": "BGCG",
-      "source": "fenok_edge_etf_daily1y_fetchable_plan",
-      "reason": "history_gap",
+      "ticker": "MSOL",
+      "source": "new_etfs",
+      "reason": "missing",
       "age_hours": null,
       "prior_failures": 0,
       "priority": 0,
-      "reason_priority": 2,
-      "plan_order": 0,
-      "missing_history_periods": [
-        "daily_1y"
-      ],
-      "fetchable_missing_history_periods": [
-        "daily_1y"
-      ],
-      "inception_limited_history_periods": [],
-      "inception_date": "2026-06-02",
-      "daily_1y_actual_rows": 29,
-      "daily_1y_min_rows": 200,
-      "missing_file": false,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": "2026-07-22T23:46:13Z",
-      "pre_fetch_daily_1y_evidence": {
-        "row_count": 29,
-        "raw_row_count": 29,
-        "valid_unique_date_count": 29,
-        "invalid_or_duplicate_date_count": 0,
-        "earliest_observation": "2026-06-02",
-        "earliest_date": "2026-06-02",
-        "latest_observation": "2026-07-14",
-        "latest_date": "2026-07-14",
-        "span_days": 42,
-        "expected_trading_days": 31,
-        "expected_utc_weekdays_inclusive": 31,
-        "observed_trading_days": 29,
-        "density": 0.935484,
-        "max_internal_gap_days": 4,
-        "max_internal_calendar_gap_days": 4,
-        "latest_observation_age_days": 15,
-        "latest_observation_age_business_days": 11,
-        "latest_business_day_age": 11,
-        "latest_not_future": true,
-        "gates": {
-          "min_rows": true,
-          "density": true,
-          "max_internal_gap": true,
-          "latest_business_day_age": false
-        },
-        "evidence_pass": false,
-        "eligible": false
-      },
-      "pre_fetch_payload_fetched_at": "2026-07-15T23:43:28Z"
+      "reason_priority": 0
     },
     {
-      "ticker": "EMEM",
-      "source": "fenok_edge_etf_daily1y_fetchable_plan",
-      "reason": "history_gap",
+      "ticker": "BGUS",
+      "source": "etf_screener",
+      "reason": "missing",
       "age_hours": null,
       "prior_failures": 0,
-      "priority": 0,
-      "reason_priority": 2,
-      "plan_order": 1,
-      "missing_history_periods": [
-        "daily_1y"
-      ],
-      "fetchable_missing_history_periods": [
-        "daily_1y"
-      ],
-      "inception_limited_history_periods": [],
-      "inception_date": null,
-      "daily_1y_actual_rows": 36,
-      "daily_1y_min_rows": 200,
-      "missing_file": false,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": "2026-07-22T23:46:13Z",
-      "pre_fetch_daily_1y_evidence": {
-        "row_count": 36,
-        "raw_row_count": 36,
-        "valid_unique_date_count": 36,
-        "invalid_or_duplicate_date_count": 0,
-        "earliest_observation": "2026-05-21",
-        "earliest_date": "2026-05-21",
-        "latest_observation": "2026-07-14",
-        "latest_date": "2026-07-14",
-        "span_days": 54,
-        "expected_trading_days": 39,
-        "expected_utc_weekdays_inclusive": 39,
-        "observed_trading_days": 36,
-        "density": 0.923077,
-        "max_internal_gap_days": 4,
-        "max_internal_calendar_gap_days": 4,
-        "latest_observation_age_days": 15,
-        "latest_observation_age_business_days": 11,
-        "latest_business_day_age": 11,
-        "latest_not_future": true,
-        "gates": {
-          "min_rows": true,
-          "density": true,
-          "max_internal_gap": true,
-          "latest_business_day_age": false
-        },
-        "evidence_pass": false,
-        "eligible": false
-      },
-      "pre_fetch_payload_fetched_at": "2026-07-15T23:44:10Z"
+      "priority": 2,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "BLTD",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 346.26,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "BNDY",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 346.25,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "BRKW",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 346.23,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "BRRR",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 346.22,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "BTC",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.81,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "BTCO",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.8,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "BTCW",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.79,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "BTRN",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.79,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CBOJ",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.78,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CBOY",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.76,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CBTJ",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.74,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CBTY",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.73,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CBXY",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.72,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CEGX",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.71,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CERY",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.7,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "COIW",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.66,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPAG",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.64,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPHY",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.64,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPNJ",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.64,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPNM",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.63,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPNQ",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.62,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPNS",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.62,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPRA",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.61,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPRJ",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.6,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPRO",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.59,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPRY",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.59,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPSA",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.58,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPSD",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.58,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPSF",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.57,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPSJ",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.56,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPSM",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.56,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPSN",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.55,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPSO",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.55,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPSP",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.54,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPSR",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.54,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPST",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.53,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    },
+    {
+      "ticker": "CPSU",
+      "source": "etf_universe",
+      "reason": "invalid",
+      "age_hours": 270.52,
+      "prior_failures": 1,
+      "priority": 1,
+      "reason_priority": 0
+    }
+  ],
+  "cooldown": [
+    {
+      "ticker": "AAAU",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "AAPB",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "ABXB",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "ACGR",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "ACII",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-07-31T23:46:00Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "ACLC",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "AMZO",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "APRH",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "APRJ",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "APRT",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "APRW",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "AVNV",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BALT",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BAPR",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BAR",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BAUG",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BDEC",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BFEB",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BGLD",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BITC",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BITI",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BITO",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BITS",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BJAN",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BJUL",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BJUN",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BMAR",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BMAY",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BNDW",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BNOV",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BOCT",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BOIL",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BSEP",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BSTP",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "BUCK",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "COM",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T16:46:22Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "DEFI",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "DRUP",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "DWUS",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "EAPR",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "EDGQ",
+      "source": "etf_universe",
+      "consecutive_failures": 4,
+      "next_attempt_after_utc": "2026-08-04T01:18:09Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "EDGX",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-03T23:48:16Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "EJAN",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "EMCS",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "EOCT",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "ESUM",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-03T23:48:16Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "ETHE",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "EUO",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "EVMT",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "EWV",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "FGDL",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "FXA",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "FXB",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "FXC",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "FXE",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "FXF",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "FXY",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "GDLC",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "GLD",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "GLDM",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "GLTR",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "GOP",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "GSOL",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "HIGH",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "HYGW",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "HYTR",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "IAPR",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "IAU",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "IAUM",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
     },
     {
       "ticker": "IDEQ",
-      "source": "fenok_edge_etf_daily1y_fetchable_plan",
-      "reason": "history_gap",
-      "age_hours": null,
-      "prior_failures": 3,
-      "priority": 0,
-      "reason_priority": 2,
-      "plan_order": 2,
-      "missing_history_periods": [
-        "daily_1y"
-      ],
-      "fetchable_missing_history_periods": [
-        "daily_1y"
-      ],
-      "inception_limited_history_periods": [],
-      "inception_date": null,
-      "daily_1y_actual_rows": 0,
-      "daily_1y_min_rows": 200,
-      "missing_file": false,
-      "pending_consecutive_failures": 3,
-      "pending_next_attempt_after_utc": "2026-07-28T23:44:11Z",
-      "pre_fetch_daily_1y_evidence": {
-        "row_count": 0,
-        "raw_row_count": 0,
-        "valid_unique_date_count": 0,
-        "invalid_or_duplicate_date_count": 0,
-        "earliest_observation": null,
-        "earliest_date": null,
-        "latest_observation": null,
-        "latest_date": null,
-        "span_days": null,
-        "expected_trading_days": 0,
-        "expected_utc_weekdays_inclusive": 0,
-        "observed_trading_days": 0,
-        "density": 0.0,
-        "max_internal_gap_days": 0,
-        "max_internal_calendar_gap_days": 0,
-        "latest_observation_age_days": null,
-        "latest_observation_age_business_days": null,
-        "latest_business_day_age": null,
-        "latest_not_future": false,
-        "gates": {
-          "min_rows": false,
-          "density": false,
-          "max_internal_gap": true,
-          "latest_business_day_age": false
-        },
-        "evidence_pass": false,
-        "eligible": false
-      },
-      "pre_fetch_payload_fetched_at": "2026-07-18T20:49:58Z"
+      "source": "etf_universe",
+      "consecutive_failures": 4,
+      "next_attempt_after_utc": "2026-08-05T23:44:25Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
     },
     {
-      "ticker": "MAUG",
-      "source": "fenok_edge_etf_daily1y_fetchable_plan",
-      "reason": "history_gap",
-      "age_hours": null,
-      "prior_failures": 0,
-      "priority": 0,
-      "reason_priority": 2,
-      "plan_order": 3,
-      "missing_history_periods": [
-        "daily_1y"
-      ],
-      "fetchable_missing_history_periods": [
-        "daily_1y"
-      ],
-      "inception_limited_history_periods": [],
-      "inception_date": null,
-      "daily_1y_actual_rows": 49,
-      "daily_1y_min_rows": 200,
-      "missing_file": false,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": "2026-07-22T23:46:13Z",
-      "pre_fetch_daily_1y_evidence": {
-        "row_count": 49,
-        "raw_row_count": 49,
-        "valid_unique_date_count": 49,
-        "invalid_or_duplicate_date_count": 0,
-        "earliest_observation": "2026-05-04",
-        "earliest_date": "2026-05-04",
-        "latest_observation": "2026-07-14",
-        "latest_date": "2026-07-14",
-        "span_days": 71,
-        "expected_trading_days": 52,
-        "expected_utc_weekdays_inclusive": 52,
-        "observed_trading_days": 49,
-        "density": 0.942308,
-        "max_internal_gap_days": 4,
-        "max_internal_calendar_gap_days": 4,
-        "latest_observation_age_days": 15,
-        "latest_observation_age_business_days": 11,
-        "latest_business_day_age": 11,
-        "latest_not_future": true,
-        "gates": {
-          "min_rows": true,
-          "density": true,
-          "max_internal_gap": true,
-          "latest_business_day_age": false
-        },
-        "evidence_pass": false,
-        "eligible": false
-      },
-      "pre_fetch_payload_fetched_at": "2026-07-15T23:44:31Z"
+      "ticker": "IGLD",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
     },
     {
-      "ticker": "MFEB",
-      "source": "fenok_edge_etf_daily1y_fetchable_plan",
-      "reason": "history_gap",
-      "age_hours": null,
-      "prior_failures": 0,
-      "priority": 0,
-      "reason_priority": 2,
-      "plan_order": 4,
-      "missing_history_periods": [
-        "daily_1y"
-      ],
-      "fetchable_missing_history_periods": [
-        "daily_1y"
-      ],
-      "inception_limited_history_periods": [],
-      "inception_date": null,
-      "daily_1y_actual_rows": 49,
-      "daily_1y_min_rows": 200,
-      "missing_file": false,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": "2026-07-22T23:46:13Z",
-      "pre_fetch_daily_1y_evidence": {
-        "row_count": 49,
-        "raw_row_count": 49,
-        "valid_unique_date_count": 49,
-        "invalid_or_duplicate_date_count": 0,
-        "earliest_observation": "2026-05-04",
-        "earliest_date": "2026-05-04",
-        "latest_observation": "2026-07-14",
-        "latest_date": "2026-07-14",
-        "span_days": 71,
-        "expected_trading_days": 52,
-        "expected_utc_weekdays_inclusive": 52,
-        "observed_trading_days": 49,
-        "density": 0.942308,
-        "max_internal_gap_days": 4,
-        "max_internal_calendar_gap_days": 4,
-        "latest_observation_age_days": 15,
-        "latest_observation_age_business_days": 11,
-        "latest_business_day_age": 11,
-        "latest_not_future": true,
-        "gates": {
-          "min_rows": true,
-          "density": true,
-          "max_internal_gap": true,
-          "latest_business_day_age": false
-        },
-        "evidence_pass": false,
-        "eligible": false
-      },
-      "pre_fetch_payload_fetched_at": "2026-07-15T23:44:52Z"
+      "ticker": "IJAN",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
     },
     {
-      "ticker": "MMAY",
-      "source": "fenok_edge_etf_daily1y_fetchable_plan",
-      "reason": "history_gap",
-      "age_hours": null,
-      "prior_failures": 0,
-      "priority": 0,
-      "reason_priority": 2,
-      "plan_order": 5,
-      "missing_history_periods": [
-        "daily_1y"
-      ],
-      "fetchable_missing_history_periods": [
-        "daily_1y"
-      ],
-      "inception_limited_history_periods": [],
-      "inception_date": null,
-      "daily_1y_actual_rows": 49,
-      "daily_1y_min_rows": 200,
-      "missing_file": false,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": "2026-07-22T23:46:13Z",
-      "pre_fetch_daily_1y_evidence": {
-        "row_count": 49,
-        "raw_row_count": 49,
-        "valid_unique_date_count": 49,
-        "invalid_or_duplicate_date_count": 0,
-        "earliest_observation": "2026-05-04",
-        "earliest_date": "2026-05-04",
-        "latest_observation": "2026-07-14",
-        "latest_date": "2026-07-14",
-        "span_days": 71,
-        "expected_trading_days": 52,
-        "expected_utc_weekdays_inclusive": 52,
-        "observed_trading_days": 49,
-        "density": 0.942308,
-        "max_internal_gap_days": 4,
-        "max_internal_calendar_gap_days": 4,
-        "latest_observation_age_days": 15,
-        "latest_observation_age_business_days": 11,
-        "latest_business_day_age": 11,
-        "latest_not_future": true,
-        "gates": {
-          "min_rows": true,
-          "density": true,
-          "max_internal_gap": true,
-          "latest_business_day_age": false
-        },
-        "evidence_pass": false,
-        "eligible": false
-      },
-      "pre_fetch_payload_fetched_at": "2026-07-15T23:45:12Z"
+      "ticker": "IJUL",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-01T17:02:55Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
     },
     {
-      "ticker": "MNVR",
-      "source": "fenok_edge_etf_daily1y_fetchable_plan",
-      "reason": "history_gap",
-      "age_hours": null,
-      "prior_failures": 0,
-      "priority": 0,
-      "reason_priority": 2,
-      "plan_order": 6,
-      "missing_history_periods": [
-        "daily_1y"
-      ],
-      "fetchable_missing_history_periods": [
-        "daily_1y"
-      ],
-      "inception_limited_history_periods": [],
-      "inception_date": null,
-      "daily_1y_actual_rows": 49,
-      "daily_1y_min_rows": 200,
-      "missing_file": false,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": "2026-07-22T23:46:13Z",
-      "pre_fetch_daily_1y_evidence": {
-        "row_count": 49,
-        "raw_row_count": 49,
-        "valid_unique_date_count": 49,
-        "invalid_or_duplicate_date_count": 0,
-        "earliest_observation": "2026-05-04",
-        "earliest_date": "2026-05-04",
-        "latest_observation": "2026-07-14",
-        "latest_date": "2026-07-14",
-        "span_days": 71,
-        "expected_trading_days": 52,
-        "expected_utc_weekdays_inclusive": 52,
-        "observed_trading_days": 49,
-        "density": 0.942308,
-        "max_internal_gap_days": 4,
-        "max_internal_calendar_gap_days": 4,
-        "latest_observation_age_days": 15,
-        "latest_observation_age_business_days": 11,
-        "latest_business_day_age": 11,
-        "latest_not_future": true,
-        "gates": {
-          "min_rows": true,
-          "density": true,
-          "max_internal_gap": true,
-          "latest_business_day_age": false
-        },
-        "evidence_pass": false,
-        "eligible": false
-      },
-      "pre_fetch_payload_fetched_at": "2026-07-15T23:45:33Z"
+      "ticker": "IOCT",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "JANT",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "JANW",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "JOJO",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "JULH",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "JULJ",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "JULT",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "JULW",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "KCCA",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "KJAN",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "KJUL",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "KOCT",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "KOLD",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "KRYP",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-03T23:48:16Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "LFEQ",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "LQDW",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "MSTB",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "MSTQ",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "NAPR",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "NJAN",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "NJUL",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "NOCT",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "OCTT",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "OCTW",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "OILK",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "OPER",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "OPPJ",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "OUNZ",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "PALL",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "PAPR",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "PAUG",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "PDBA",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "PDBC",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "PDEC",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "PFEB",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
     },
     {
       "ticker": "PHYS",
-      "source": "fenok_edge_etf_daily1y_fetchable_plan",
-      "reason": "history_gap",
-      "age_hours": null,
-      "prior_failures": 3,
-      "priority": 0,
-      "reason_priority": 2,
-      "plan_order": 7,
-      "missing_history_periods": [
-        "daily_1y"
-      ],
-      "fetchable_missing_history_periods": [
-        "daily_1y"
-      ],
-      "inception_limited_history_periods": [],
-      "inception_date": null,
-      "daily_1y_actual_rows": 0,
-      "daily_1y_min_rows": 200,
-      "missing_file": false,
-      "pending_consecutive_failures": 3,
-      "pending_next_attempt_after_utc": "2026-07-28T23:44:11Z",
-      "pre_fetch_daily_1y_evidence": {
-        "row_count": 0,
-        "raw_row_count": 0,
-        "valid_unique_date_count": 0,
-        "invalid_or_duplicate_date_count": 0,
-        "earliest_observation": null,
-        "earliest_date": null,
-        "latest_observation": null,
-        "latest_date": null,
-        "span_days": null,
-        "expected_trading_days": 0,
-        "expected_utc_weekdays_inclusive": 0,
-        "observed_trading_days": 0,
-        "density": 0.0,
-        "max_internal_gap_days": 0,
-        "max_internal_calendar_gap_days": 0,
-        "latest_observation_age_days": null,
-        "latest_observation_age_business_days": null,
-        "latest_business_day_age": null,
-        "latest_not_future": false,
-        "gates": {
-          "min_rows": false,
-          "density": false,
-          "max_internal_gap": true,
-          "latest_business_day_age": false
-        },
-        "evidence_pass": false,
-        "eligible": false
-      },
-      "pre_fetch_payload_fetched_at": "2026-07-18T22:35:09Z"
+      "source": "etf_universe",
+      "consecutive_failures": 4,
+      "next_attempt_after_utc": "2026-08-05T23:44:25Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "PJAN",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "PJUL",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "PJUN",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "PLTM",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "PMAR",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "PMAY",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:13:15Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "PNOV",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:27:02Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "POCT",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:27:02Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "PPLT",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:27:02Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "PSEP",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:27:02Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
     },
     {
       "ticker": "PSLV",
-      "source": "fenok_edge_etf_daily1y_fetchable_plan",
-      "reason": "history_gap",
-      "age_hours": null,
-      "prior_failures": 3,
-      "priority": 0,
-      "reason_priority": 2,
-      "plan_order": 8,
-      "missing_history_periods": [
-        "daily_1y"
-      ],
-      "fetchable_missing_history_periods": [
-        "daily_1y"
-      ],
-      "inception_limited_history_periods": [],
-      "inception_date": null,
-      "daily_1y_actual_rows": 0,
-      "daily_1y_min_rows": 200,
-      "missing_file": false,
-      "pending_consecutive_failures": 3,
-      "pending_next_attempt_after_utc": "2026-07-28T23:44:11Z",
-      "pre_fetch_daily_1y_evidence": {
-        "row_count": 0,
-        "raw_row_count": 0,
-        "valid_unique_date_count": 0,
-        "invalid_or_duplicate_date_count": 0,
-        "earliest_observation": null,
-        "earliest_date": null,
-        "latest_observation": null,
-        "latest_date": null,
-        "span_days": null,
-        "expected_trading_days": 0,
-        "expected_utc_weekdays_inclusive": 0,
-        "observed_trading_days": 0,
-        "density": 0.0,
-        "max_internal_gap_days": 0,
-        "max_internal_calendar_gap_days": 0,
-        "latest_observation_age_days": null,
-        "latest_observation_age_business_days": null,
-        "latest_business_day_age": null,
-        "latest_not_future": false,
-        "gates": {
-          "min_rows": false,
-          "density": false,
-          "max_internal_gap": true,
-          "latest_business_day_age": false
-        },
-        "evidence_pass": false,
-        "eligible": false
-      },
-      "pre_fetch_payload_fetched_at": "2026-07-18T22:39:52Z"
+      "source": "etf_universe",
+      "consecutive_failures": 4,
+      "next_attempt_after_utc": "2026-08-05T23:44:25Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
     },
     {
-      "ticker": "WDE",
-      "source": "fenok_edge_etf_daily1y_fetchable_plan",
-      "reason": "history_gap",
-      "age_hours": null,
-      "prior_failures": 0,
-      "priority": 0,
-      "reason_priority": 2,
-      "plan_order": 9,
-      "missing_history_periods": [
-        "daily_1y"
-      ],
-      "fetchable_missing_history_periods": [
-        "daily_1y"
-      ],
-      "inception_limited_history_periods": [],
-      "inception_date": null,
-      "daily_1y_actual_rows": 35,
-      "daily_1y_min_rows": 200,
-      "missing_file": false,
-      "pending_consecutive_failures": 0,
-      "pending_next_attempt_after_utc": "2026-07-22T23:46:13Z",
-      "pre_fetch_daily_1y_evidence": {
-        "row_count": 35,
-        "raw_row_count": 35,
-        "valid_unique_date_count": 35,
-        "invalid_or_duplicate_date_count": 0,
-        "earliest_observation": "2026-05-22",
-        "earliest_date": "2026-05-22",
-        "latest_observation": "2026-07-14",
-        "latest_date": "2026-07-14",
-        "span_days": 53,
-        "expected_trading_days": 38,
-        "expected_utc_weekdays_inclusive": 38,
-        "observed_trading_days": 35,
-        "density": 0.921053,
-        "max_internal_gap_days": 4,
-        "max_internal_calendar_gap_days": 4,
-        "latest_observation_age_days": 15,
-        "latest_observation_age_business_days": 11,
-        "latest_business_day_age": 11,
-        "latest_not_future": true,
-        "gates": {
-          "min_rows": true,
-          "density": true,
-          "max_internal_gap": true,
-          "latest_business_day_age": false
-        },
-        "evidence_pass": false,
-        "eligible": false
-      },
-      "pre_fetch_payload_fetched_at": "2026-07-15T23:45:54Z"
+      "ticker": "RAAR",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-03T23:48:16Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "RAAY",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-03T23:48:16Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "RCLR",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-03T23:48:16Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "RCLY",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-03T23:48:16Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "RMHY",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-03T23:48:16Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "SFGV",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-03T23:48:16Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "SPPP",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-07-31T23:46:00Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "TOT",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-03T23:48:16Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "WTIB",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-03T23:48:16Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "XLII",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-03T23:48:16Z",
+      "failure_reason": "ValueError: Yahoo fallback quoteType is not ETF/MUTUALFUND: EQUITY"
+    },
+    {
+      "ticker": "XTJA",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T04:27:02Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "XTJL",
+      "source": "etf_universe",
+      "consecutive_failures": 4,
+      "next_attempt_after_utc": "2026-08-02T05:35:29Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "XTOC",
+      "source": "etf_universe",
+      "consecutive_failures": 4,
+      "next_attempt_after_utc": "2026-08-02T05:35:29Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "YCL",
+      "source": "etf_universe",
+      "consecutive_failures": 4,
+      "next_attempt_after_utc": "2026-08-02T05:35:29Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "YCS",
+      "source": "etf_universe",
+      "consecutive_failures": 4,
+      "next_attempt_after_utc": "2026-08-02T05:35:29Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "ZSB",
+      "source": "etf_universe",
+      "consecutive_failures": 3,
+      "next_attempt_after_utc": "2026-08-02T05:35:29Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "ticker": "ZVOL",
+      "source": "etf_universe",
+      "consecutive_failures": 4,
+      "next_attempt_after_utc": "2026-08-02T05:35:29Z",
+      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
     }
   ],
-  "cooldown": [],
   "inception_limited": [],
+  "terminal_limited": [],
   "pending_ledger": {
     "path": "backfill/pending_ledger.json",
-    "generated_at": "2026-07-29T23:44:25Z",
+    "generated_at": "2026-07-30T01:15:07Z",
     "counts": {
       "tracked": 488,
-      "cooldown": 165,
+      "cooldown": 166,
       "provider_coverage_gaps": 2,
-      "updated": 10,
+      "updated": 38,
       "cleared": 0
     }
   }

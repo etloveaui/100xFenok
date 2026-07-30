@@ -1,0 +1,261 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "CPRA",
+  "source_as_of": "2026-05-31T00:00:00Z",
+  "fetched_at": "2026-07-18T18:28:23Z",
+  "endpoints": {
+    "holdings": "/etf/cpra/holdings/__data.json",
+    "overview": "/etf/cpra/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [
+      {
+        "name": "4iwm 270331 C 1.71 4iwm 270331 C 1.71",
+        "weight_pct": 112.31,
+        "shares": 51500,
+        "raw": {
+          "n": "4iwm 270331 C 1.71 4iwm 270331 C 1.71",
+          "as": "112.31%",
+          "sh": "51,500"
+        }
+      },
+      {
+        "name": "4iwm 270331 P 248.00 4iwm 270331 P 248.00",
+        "weight_pct": 3.27,
+        "shares": 51500,
+        "raw": {
+          "n": "4iwm 270331 P 248.00 4iwm 270331 P 248.00",
+          "as": "3.27%",
+          "sh": "51,500"
+        }
+      },
+      {
+        "name": "Usd",
+        "weight_pct": 0.76,
+        "shares": 100146,
+        "raw": {
+          "n": "Usd",
+          "as": "0.76%",
+          "sh": "100,146"
+        }
+      },
+      {
+        "name": "4iwm 270331 C 267.67 4iwm 270331 C 267.67",
+        "weight_pct": -16.34,
+        "shares": 51500,
+        "raw": {
+          "n": "4iwm 270331 C 267.67 4iwm 270331 C 267.67",
+          "as": "-16.34%",
+          "sh": "51,500"
+        }
+      }
+    ],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 4,
+    "holdings_updated": "May 31, 2026",
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$13.21M",
+      "expenseRatio": "0.69%",
+      "sharesOut": "475,001",
+      "inception": "Apr 1, 2025",
+      "provider_page": "calamos",
+      "etf_website": "https://www.calamos.com/funds/etf/calamos-russell-2000-structured-alt-protection-etf-april-cpra/#_tab-overview"
+    },
+    "performance": {
+      "tr1m": 0.4293,
+      "trYTD": 4.444,
+      "tr1y": 8.495,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": 8.924
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "CPRA",
+        "lastChecked": 1784333713284,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$13.21M",
+      "nav": null,
+      "expenseRatio": "0.69%",
+      "peRatio": null,
+      "sharesOut": "475,001",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": "+8.50%",
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 4,
+      "inception": "Apr 1, 2025",
+      "chart": {
+        "expiration": null,
+        "data": []
+      },
+      "description": "The Calamos Russell 2000 Structured Alt Protection ETF - April (CPRA) is an exchange-traded fund that mostly invests in downside hedge alternatives. The fund seeks to track the return of the iShares Russell 2000 ETF (IWM), to a cap, with 100% downside hedge over a one-year outcome period. The actively managed fund holds FLEX options to obtain exposure CPRA was launched on Apr 1, 2025 and is issued by Calamos.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Alternatives"
+        ],
+        [
+          "Category",
+          "Defined Outcome"
+        ],
+        [
+          "Region",
+          "North America"
+        ],
+        [
+          "Stock Exchange",
+          "NYSEARCA"
+        ],
+        [
+          "Ticker Symbol",
+          "CPRA"
+        ],
+        [
+          "Provider",
+          "Calamos"
+        ]
+      ],
+      "etf_website": "https://www.calamos.com/funds/etf/calamos-russell-2000-structured-alt-protection-etf-april-cpra/#_tab-overview",
+      "provider_page": "calamos",
+      "holdingsTable": {
+        "count": 4,
+        "updated": "May 31, 2026",
+        "top10": 100,
+        "holdings": [
+          {
+            "n": "4iwm 270331 C 1.71 4iwm 270331 C 1.71",
+            "as": "112.31%",
+            "sh": "51,500"
+          },
+          {
+            "n": "4iwm 270331 P 248.00 4iwm 270331 P 248.00",
+            "as": "3.27%",
+            "sh": "51,500"
+          },
+          {
+            "n": "Usd",
+            "as": "0.76%",
+            "sh": "100,146"
+          },
+          {
+            "n": "4iwm 270331 C 267.67 4iwm 270331 C 267.67",
+            "as": "-16.34%",
+            "sh": "51,500"
+          }
+        ]
+      },
+      "dividendTable": null,
+      "news": {
+        "exp": "1784452967856",
+        "data": []
+      },
+      "config": {
+        "no1d": false
+      },
+      "changes": {
+        "price1w": 27.696,
+        "price1m": 27.6,
+        "price3m": 27.26,
+        "price6m": 26.645,
+        "priceYTD": 26.539,
+        "price1y": 25.548,
+        "price5y": null,
+        "priceMAX": 24.831
+      },
+      "performance": {
+        "tr1m": 0.4293,
+        "trYTD": 4.444,
+        "tr1y": 8.495,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": 8.924
+      }
+    },
+    "holdings": {},
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_surface_omits_holdings",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ]
+}
