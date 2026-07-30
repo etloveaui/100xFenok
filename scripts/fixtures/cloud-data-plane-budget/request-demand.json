@@ -1,0 +1,53 @@
+{
+  "schema_version": "cloud-data-plane-request-demand/v1",
+  "status": "verified",
+  "verified_on": "2026-07-30",
+  "scope": "fixture-candidate",
+  "period": "monthly-and-daily-peak",
+  "r2": {
+    "class_a": {
+      "put": 8,
+      "copy": 4,
+      "list": 3,
+      "delete": 2
+    },
+    "class_b_operations_per_month": 50
+  },
+  "d1": {
+    "tables": [
+      {
+        "id": "assets",
+        "added_rows": 50,
+        "max_rows": 1000,
+        "retention_days": 30,
+        "purge_batch_rows": 2,
+        "rows_read_per_day": 30,
+        "logical_writes_per_day": 5,
+        "index_read_amplification": 2,
+        "index_write_amplification": 3
+      },
+      {
+        "id": "pointers",
+        "added_rows": 20,
+        "max_rows": 100,
+        "retention_days": 30,
+        "purge_batch_rows": 1,
+        "rows_read_per_day": 5,
+        "logical_writes_per_day": 1,
+        "index_read_amplification": 1,
+        "index_write_amplification": 1
+      }
+    ],
+    "database_bytes": 500,
+    "max_row_or_blob_bytes": 12,
+    "queries_per_worker_invocation": 6
+  },
+  "kv": {
+    "model": "single_active_generation_pointer",
+    "pointers": 1,
+    "pointer_bytes": 60,
+    "max_pointer_bytes": 50,
+    "reads_per_day": 20,
+    "writes_per_day": 3
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "schema_version": "cloud-data-plane-policy/v1",
+  "status": "verified",
+  "verified_on": "2026-07-30",
+  "scope": "fixture-limits",
+  "period": "monthly-and-daily",
+  "r2": {
+    "hard_limit": {
+      "decimal_gb_month": 10,
+      "class_a_operations_per_month": 1000000,
+      "class_b_operations_per_month": 10000000
+    },
+    "planning_line": {
+      "decimal_gb_month": 8,
+      "class_a_operations_per_month": 800000
+    }
+  },
+  "d1": {
+    "hard_limit": {
+      "database_bytes": 500000000,
+      "account_bytes": 5000000000,
+      "max_row_or_blob_bytes": 2000000,
+      "queries_per_worker_invocation": 50,
+      "rows_read_per_day": 5000000,
+      "rows_written_per_day": 100000
+    },
+    "planning_line": {
+      "database_bytes": 400000000,
+      "account_bytes": 4000000000,
+      "rows_read_per_day": 4000000,
+      "rows_written_per_day": 80000
+    }
+  },
+  "kv": {
+    "hard_limit": {
+      "stored_bytes": 1000000000,
+      "max_pointer_bytes": 26214400,
+      "reads_per_day": 100000,
+      "writes_per_day": 1000
+    },
+    "planning_line": {
+      "writes_per_day": 800
+    }
+  }
+}

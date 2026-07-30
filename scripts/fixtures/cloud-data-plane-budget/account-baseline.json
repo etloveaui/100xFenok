@@ -1,0 +1,47 @@
+{
+  "schema_version": "cloud-data-plane-account-baseline/v1",
+  "status": "verified",
+  "verified_on": "2026-07-30",
+  "scope": "fixture-account",
+  "period": "monthly",
+  "r2": {
+    "unrelated_storage_byte_days": 0,
+    "unrelated_objects": 0,
+    "slots": {
+      "previous": {
+        "bytes": 1000000000,
+        "objects": 2
+      },
+      "in_progress": {
+        "bytes": 500000000,
+        "objects": 1
+      }
+    },
+    "class_a": {
+      "put": 10,
+      "copy": 5,
+      "list": 2,
+      "delete": 3
+    },
+    "class_b_operations_per_month": 5
+  },
+  "d1": {
+    "per_table_rows": {
+      "assets": 100,
+      "pointers": 0
+    },
+    "database_bytes": 1000,
+    "account_bytes": 2000,
+    "max_row_or_blob_bytes": 10,
+    "rows_read_per_day": 20,
+    "rows_written_per_day": 10,
+    "queries_per_worker_invocation": 4
+  },
+  "kv": {
+    "pointers": 2,
+    "stored_bytes": 100,
+    "max_pointer_bytes": 40,
+    "reads_per_day": 10,
+    "writes_per_day": 2
+  }
+}
