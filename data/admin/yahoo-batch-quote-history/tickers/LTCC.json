@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 593,
+      "natural": true,
+      "observed_at": "2026-07-30T23:31:53Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30589620986",
+      "schedule": "0 22 * * 4",
+      "shard": "4/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T09:22:40Z",
-    "history_as_of": "2026-07-08",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/LTCC.json",
-    "payload_sha256": "2fcf0b1db1f27fb9d9e38bdf2a19c142259694301f2f485c82d0eeb6b4d742d7",
-    "quote_as_of": "2026-07-08T20:00:00Z",
-    "source_as_of": "2026-07-08"
+    "fetched_at": "2026-07-30T23:32:45Z",
+    "history_as_of": "2026-07-30",
+    "path": "data/yf/finance/LTCC.json",
+    "payload_sha256": "86eb2614679eaeedd3ddf5780d794c91de63c048d8273777bec37418030b135a",
+    "quote_as_of": "2026-07-30T20:00:00Z",
+    "source_as_of": "2026-07-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 593,
+    "natural": true,
+    "observed_at": "2026-07-30T23:31:53Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30589620986",
+    "schedule": "0 22 * * 4",
+    "shard": "4/6"
   },
   "lkg": {
     "fetched_at": "2026-07-09T09:22:40Z",
@@ -46,8 +59,20 @@
     "quote_as_of": "2026-07-08T20:00:00Z",
     "source_as_of": "2026-07-08"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-30",
+    "observed_at": "2026-07-30T23:31:53Z",
+    "payload_sha256": "70abb9e852ead71831bc1f28f191f62466d761103c549f41bfd8b97f2db8ead2",
+    "quote_as_of": "2026-07-30T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "30589620986",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-30"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "LTCC",
-  "updated_at": "2026-07-17T00:15:36Z"
+  "updated_at": "2026-07-30T23:31:53Z"
 }

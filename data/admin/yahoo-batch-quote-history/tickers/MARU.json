@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 520,
+      "natural": true,
+      "observed_at": "2026-07-30T23:31:53Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30589620986",
+      "schedule": "0 22 * * 4",
+      "shard": "4/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T00:02:51Z",
-    "history_as_of": "2026-06-26",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MARU.json",
-    "payload_sha256": "2d0e010026c5e6b28da5bae184026d038abdb4647d516c4bb83168dfe24c1f69",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-26"
+    "fetched_at": "2026-07-30T23:32:52Z",
+    "history_as_of": "2026-07-30",
+    "path": "data/yf/finance/MARU.json",
+    "payload_sha256": "e08f9b1feaf5a832b0f8788e0864e8f40f53251e77010a1800792a133691857a",
+    "quote_as_of": "2026-07-30T19:00:22Z",
+    "source_as_of": "2026-07-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 520,
+    "natural": true,
+    "observed_at": "2026-07-30T23:31:53Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30589620986",
+    "schedule": "0 22 * * 4",
+    "shard": "4/6"
   },
   "lkg": {
     "fetched_at": "2026-06-30T00:02:51Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-26"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-30",
+    "observed_at": "2026-07-30T23:31:53Z",
+    "payload_sha256": "6471515ba6330253b2b41fe4e19cce42724104f05acc67da6a4790946432f383",
+    "quote_as_of": "2026-07-30T19:00:22Z",
+    "run_attempt": 1,
+    "run_id": "30589620986",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-30"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "MARU",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-30T23:31:53Z"
 }

@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 497,
+      "natural": true,
+      "observed_at": "2026-07-30T23:31:53Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30589620986",
+      "schedule": "0 22 * * 4",
+      "shard": "4/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T09:22:43Z",
-    "history_as_of": "2026-07-08",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/LVIG.json",
-    "payload_sha256": "703f3d41aff7a8ace1396fa8901cfb6a74465f99973c8a806a9a867d51ffcd33",
-    "quote_as_of": "2026-07-08T20:00:00Z",
-    "source_as_of": "2026-07-08"
+    "fetched_at": "2026-07-30T23:32:49Z",
+    "history_as_of": "2026-07-30",
+    "path": "data/yf/finance/LVIG.json",
+    "payload_sha256": "78c1c1e7d8bf5320d1662b37855275933fa6b5c6b87c36ba9907f31a9384e260",
+    "quote_as_of": "2026-07-30T20:00:00Z",
+    "source_as_of": "2026-07-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 497,
+    "natural": true,
+    "observed_at": "2026-07-30T23:31:53Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30589620986",
+    "schedule": "0 22 * * 4",
+    "shard": "4/6"
   },
   "lkg": {
     "fetched_at": "2026-07-09T09:22:43Z",
@@ -46,8 +59,20 @@
     "quote_as_of": "2026-07-08T20:00:00Z",
     "source_as_of": "2026-07-08"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-30",
+    "observed_at": "2026-07-30T23:31:53Z",
+    "payload_sha256": "c0ea18241c67ec7c6398327f51e7aa69edb447175d5717f5a3988e85b129b116",
+    "quote_as_of": "2026-07-30T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "30589620986",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-30"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "LVIG",
-  "updated_at": "2026-07-17T00:15:36Z"
+  "updated_at": "2026-07-30T23:31:53Z"
 }

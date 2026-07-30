@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 686,
+      "natural": true,
+      "observed_at": "2026-07-30T23:31:53Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30589620986",
+      "schedule": "0 22 * * 4",
+      "shard": "4/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-02T01:57:35Z",
-    "history_as_of": "2026-07-01",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/KEYG.json",
-    "payload_sha256": "b22d235e701cdd3b7fb54b2e2aa625840d9dc89613bf86be09efe980fe89304b",
-    "quote_as_of": null,
-    "source_as_of": "2026-07-01"
+    "fetched_at": "2026-07-30T23:32:04Z",
+    "history_as_of": "2026-07-30",
+    "path": "data/yf/finance/KEYG.json",
+    "payload_sha256": "d50c566c7aa38366243990b246f079ebb16e6699a2eb5f03c267a7e1542a508b",
+    "quote_as_of": "2026-07-30T19:31:59Z",
+    "source_as_of": "2026-07-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 686,
+    "natural": true,
+    "observed_at": "2026-07-30T23:31:53Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30589620986",
+    "schedule": "0 22 * * 4",
+    "shard": "4/6"
   },
   "lkg": {
     "fetched_at": "2026-07-02T01:57:35Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-07-01"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-30",
+    "observed_at": "2026-07-30T23:31:53Z",
+    "payload_sha256": "ffc9cda7ec0f41e527df0335ba4722c9c46aa10c7d7a10439e9fed7e23af4e92",
+    "quote_as_of": "2026-07-30T19:31:59Z",
+    "run_attempt": 1,
+    "run_id": "30589620986",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-30"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-07-01"
   },
   "ticker": "KEYG",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-30T23:31:53Z"
 }

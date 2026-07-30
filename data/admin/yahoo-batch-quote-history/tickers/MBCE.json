@@ -12,31 +12,106 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: MBCE: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: MBCE: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: MBCE: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: MBCE: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: MBCE: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: MBCE: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 587,
+      "natural": true,
+      "observed_at": "2026-07-30T23:31:53Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30589620986",
+      "schedule": "0 22 * * 4",
+      "shard": "4/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T00:03:02Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MBCE.json",
-    "payload_sha256": "98053b930bb38eef6baa229071aae276672211b1d706b34a1f2eaa03fdd7b572",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-07-30T23:32:56Z",
+    "history_as_of": "2026-07-30",
+    "path": "data/yf/finance/MBCE.json",
+    "payload_sha256": "32870b93e776fe6d273d741e243e52b7c6140395a821212d4f47fba05b13c573",
+    "quote_as_of": "2026-07-30T19:36:27Z",
+    "source_as_of": "2026-07-30"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
-    "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "attempts_used": 1,
+    "event_name": "schedule",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: MBCE: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MBCE: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MBCE: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MBCE: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MBCE: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: MBCE: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 587,
+    "natural": true,
+    "observed_at": "2026-07-30T23:31:53Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30589620986",
+    "schedule": "0 22 * * 4",
+    "shard": "4/6"
   },
   "lkg": {
     "fetched_at": "2026-06-30T00:03:02Z",
@@ -46,8 +121,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-30",
+    "observed_at": "2026-07-30T23:31:53Z",
+    "payload_sha256": "a4ed06d7a8e663938a59ae9275ff57a598e771844b6e99468b026e364be7d882",
+    "quote_as_of": "2026-07-30T19:36:27Z",
+    "run_attempt": 1,
+    "run_id": "30589620986",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-30"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +147,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "MBCE",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-30T23:31:53Z"
 }

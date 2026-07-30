@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 568,
+      "natural": true,
+      "observed_at": "2026-07-30T23:31:53Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30589620986",
+      "schedule": "0 22 * * 4",
+      "shard": "4/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-01T23:58:57Z",
-    "history_as_of": "2026-06-30",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MDCR.json",
-    "payload_sha256": "7cd20253dba0dc2d8b98e980f903d9bb0ec0754626d99acf71435b00afe43f17",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-30"
+    "fetched_at": "2026-07-30T23:32:59Z",
+    "history_as_of": "2026-07-29",
+    "path": "data/yf/finance/MDCR.json",
+    "payload_sha256": "1799843b138b3c994d692227285b743fd38a8421b61b14fde50a4f98e05c16aa",
+    "quote_as_of": "2026-06-30T17:04:53Z",
+    "source_as_of": "2026-06-30T17:04:53Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 568,
+    "natural": true,
+    "observed_at": "2026-07-30T23:31:53Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30589620986",
+    "schedule": "0 22 * * 4",
+    "shard": "4/6"
   },
   "lkg": {
     "fetched_at": "2026-07-01T23:58:57Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-30"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-29",
+    "observed_at": "2026-07-30T23:31:53Z",
+    "payload_sha256": "c52f364a261a2357fa944778e10d176c35f9bdf3a2c311d4866d82788e75bf52",
+    "quote_as_of": "2026-06-30T17:04:53Z",
+    "run_attempt": 1,
+    "run_id": "30589620986",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-06-30T17:04:53Z"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-30"
   },
   "ticker": "MDCR",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-07-30T23:31:53Z"
 }
