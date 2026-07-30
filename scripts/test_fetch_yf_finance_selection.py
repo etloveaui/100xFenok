@@ -1635,6 +1635,58 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertNotIn("AAPL", shard_one)
         self.assertEqual(weekly[0], "AAPL")
 
+    def test_daily_retry_cap_rotates_oldest_candidates_without_dropping_regular_shards(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(
+            self.root / "admin" / "yahoo-batch-quote-history",
+            self.fetcher.OUT_DIR,
+        )
+        retries = [f"RETRY{index:03d}" for index in range(45)]
+        regular = [f"STOCK{index:04d}" for index in range(1185)]
+        for index, ticker in enumerate(retries):
+            write_json(store._state_path(ticker), {
+                "schema_version": "yahoo-batch-quote-history-state/v1",
+                "ticker": ticker,
+                "retry": True,
+                "last_attempt": {"observed_at": f"2026-07-01T00:{index:02d}:00Z"},
+                "attempts": [],
+            })
+
+        first_order = store.retry_tickers_ordered(set(retries))
+        plans = [
+            self.fetcher.select_ticker_plan(
+                [*first_order, *regular],
+                first_order,
+                shard=f"{shard_index}/5",
+                natural=True,
+                all_shards=True,
+                retry_limit=40,
+            )
+            for shard_index in range(5)
+        ]
+        first_retry_batch = [ticker for ticker in plans[0] if ticker in set(retries)]
+        self.assertEqual(first_retry_batch, retries[:40])
+        self.assertTrue(all(ticker not in set(retries) for plan in plans[1:] for ticker in plan))
+        selected_regular = [ticker for plan in plans for ticker in plan if ticker in set(regular)]
+        self.assertEqual(len(selected_regular), 1185)
+        self.assertEqual(set(selected_regular), set(regular))
+
+        for index, ticker in enumerate(first_retry_batch):
+            state = json.loads(store._state_path(ticker).read_text(encoding="utf-8"))
+            state["last_attempt"]["observed_at"] = f"2026-07-02T00:{index:02d}:00Z"
+            write_json(store._state_path(ticker), state)
+
+        second_order = store.retry_tickers_ordered(set(retries))
+        second_plan = self.fetcher.select_ticker_plan(
+            [*second_order, *regular],
+            second_order,
+            shard="0/5",
+            natural=True,
+            all_shards=True,
+            retry_limit=40,
+        )
+        second_retry_batch = [ticker for ticker in second_plan if ticker in set(retries)]
+        self.assertEqual(second_retry_batch[:5], retries[40:])
+
     def test_weekly_stable_shards_survive_gap_removal(self) -> None:
         tickers = [f"ETF{i:04d}" for i in range(240)]
         assignments = {}
@@ -2414,6 +2466,7 @@ assert callable(namespace["load_universe"])
             self.assertIn(f"'0 22 * * {weekday}') DAILY_INDEX={weekday}", run_step)
         self.assertNotIn('date -u +%w', run_step)
         self.assertIn("--scheduled-weekday", run_step)
+        self.assertIn('INPUT_RETRY_LIMIT="${YF_DAILY_STOCK_RETRY_LIMIT:-40}"', run_step)
         self.assertIn("YF_WEEKLY_ETF_RETRY_LIMIT:-40", run_step)
         self.assertIn("YF_WEEKLY_ETF_REGULAR_LIMIT:-100", run_step)
         self.assertIn("YF_WEEKLY_ETF_UNTRACKED_LIMIT:-80", run_step)

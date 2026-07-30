@@ -153,6 +153,8 @@ const ALARM_STATE_SIGNIFICANT_KEYS = Object.freeze([
   "cadence_state_counts",
   "excluded_workflows",
   "unknown_workflows",
+  "queue_evicted_run_count",
+  "queue_evicted_workflows",
   "last_resolved_at",
 ]);
 

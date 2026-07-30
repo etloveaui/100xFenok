@@ -165,6 +165,7 @@ jobs:
               # must be an explicit operator override so a larger future active
               # universe cannot silently fall outside daily freshness.
               INPUT_LIMIT="${YF_DAILY_STOCK_LIMIT:-}"
+              INPUT_RETRY_LIMIT="${YF_DAILY_STOCK_RETRY_LIMIT:-40}"
               INPUT_SHARD="${YF_DAILY_STOCK_SHARD:-}"
               INPUT_SLEEP="${YF_DAILY_STOCK_SLEEP:-0.35}"
               INPUT_TICKER_TIMEOUT="${YF_DAILY_STOCK_TICKER_TIMEOUT:-45}"

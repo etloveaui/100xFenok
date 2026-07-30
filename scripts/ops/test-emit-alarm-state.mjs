@@ -97,9 +97,23 @@ const quietHealth = {
     ],
     "each losing workflow is named, sorted, without raw run evidence",
   );
-  const quiet = buildAlarmState({ health: quietHealth, prior: null, env: ENV, now: NOW });
+  const quietSameBoard = {
+    ...withEvictions,
+    workflows: withEvictions.workflows.map(({ queue_evicted_run_urls: _ignored, ...row }) => row),
+  };
+  const quiet = buildAlarmState({ health: quietSameBoard, prior: null, env: ENV, now: NOW });
   assert.equal(quiet.queue_evicted_run_count, 0);
   assert.deepEqual(quiet.queue_evicted_workflows, [], "a clean board sprouts no eviction noise");
+  assert.equal(
+    alarmStateUnchanged(quiet, state),
+    false,
+    "an eviction-only change must update the published state even though it does not page",
+  );
+  assert.equal(
+    alarmStateUnchanged(state, quiet),
+    false,
+    "clearing eviction evidence must also update the published state",
+  );
 }
 
 // --- RED-first: firing must open + record the incident ---
