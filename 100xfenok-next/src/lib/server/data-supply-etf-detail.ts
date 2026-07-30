@@ -4,8 +4,9 @@ import {
   getDataSupplyEtfEnrollmentDocument,
   getDataSupplyEtfIndexDocument,
   getDataSupplyEtfPayloadDocument,
-  getStockanalysisAssetDocument,
+  getStockanalysisEtfShardDocument,
   type PublicJsonDocument,
+  type StockanalysisEtfShardDocumentResult,
 } from "./data-loader";
 
 export type { PublicJsonDocument } from "./data-loader";
@@ -51,8 +52,9 @@ export type EtfDetailResolution =
       projectionDigest: string;
       stateObservedAt: string;
     }
-  | { kind: "direct"; payload: JsonRecord; projectionDigest: string }
+  | { kind: "shard"; payload: JsonRecord; projectionDigest: string }
   | { kind: "not_found"; projectionDigest: string }
+  | { kind: "shard_unavailable"; reason: string; projectionDigest: string | null }
   | {
       kind: "error";
       code: "DATA_SUPPLY_GUARD_UNAVAILABLE" | "DATA_SUPPLY_INDEX_UNAVAILABLE";
@@ -63,7 +65,7 @@ export interface EtfDetailResolverDependencies {
   readEnrollment: () => Promise<PublicJsonDocument | null>;
   readIndex: () => Promise<PublicJsonDocument | null>;
   readProjectionPayload: (ticker: string) => Promise<PublicJsonDocument | null>;
-  readDirectPayload: (ticker: string) => Promise<PublicJsonDocument | null>;
+  readShardPayload: (ticker: string) => Promise<StockanalysisEtfShardDocumentResult>;
   now: () => Date;
 }
 
@@ -71,7 +73,7 @@ const DEFAULT_DEPENDENCIES: EtfDetailResolverDependencies = {
   readEnrollment: getDataSupplyEtfEnrollmentDocument,
   readIndex: getDataSupplyEtfIndexDocument,
   readProjectionPayload: getDataSupplyEtfPayloadDocument,
-  readDirectPayload: (ticker) => getStockanalysisAssetDocument("etfs", ticker),
+  readShardPayload: getStockanalysisEtfShardDocument,
   now: () => new Date(),
 };
 
@@ -325,18 +327,16 @@ function parseEntry(ticker: string, value: unknown, digest: string, now: Date) {
   };
 }
 
-function isStrictDirectEtfPayload(payload: JsonRecord, ticker: string): boolean {
+function isStrictShardEtfPayload(payload: JsonRecord, ticker: string): boolean {
   const primary = DATA_SUPPLY_ETF_DETAIL_POLICY.providers[0];
-  if (
+  return !(
     payload.schema_version !== primary.schema
     || (payload.source !== primary.name && payload.source_provider !== primary.name)
     || payload.asset_type !== "etf"
     || payload.ticker !== ticker
     || "data_supply" in payload
     || payload.detail_status === "yf_fallback"
-  ) return false;
-  const text = stableJson(payload).toLowerCase();
-  return !text.includes("yahoo") && !text.includes("yf_fallback");
+  );
 }
 
 export function mergeEtfDataSupply(payload: JsonRecord, dataSupply: EtfDataSupplyMetadata): JsonRecord {
@@ -347,14 +347,7 @@ export function mergeEtfDataSupply(payload: JsonRecord, dataSupply: EtfDataSuppl
 export function buildUnavailableEtfRepresentation(
   ticker: string,
   dataSupply: EtfDataSupplyMetadata,
-  independentSummary: JsonRecord | null,
 ) {
-  if (independentSummary) {
-    return {
-      kind: "summary",
-      body: mergeEtfDataSupply(independentSummary, dataSupply),
-    } as const;
-  }
   return {
     kind: "typed_unavailable",
     body: {
@@ -378,17 +371,30 @@ export async function resolveDataSupplyEtfDetail(
   }
 
   const enrolled = guard.tickers.has(ticker);
-  const resolveDirect = async (): Promise<EtfDetailResolution> => {
-    const direct = await dependencies.readDirectPayload(ticker);
-    if (!direct) return { kind: "not_found", projectionDigest: guard.indexSha };
-    return isStrictDirectEtfPayload(direct.value, ticker)
-      ? { kind: "direct", payload: direct.value, projectionDigest: guard.indexSha }
-      : { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
+  const resolveShard = async (): Promise<EtfDetailResolution> => {
+    const shard = await dependencies.readShardPayload(ticker);
+    if (shard.kind === "shard_integrity_unavailable") {
+      return {
+        kind: "shard_unavailable",
+        reason: shard.reason,
+        projectionDigest: shard.manifestSha256,
+      };
+    }
+    if (shard.kind === "ticker_not_found") {
+      return { kind: "not_found", projectionDigest: shard.manifestSha256 };
+    }
+    return isStrictShardEtfPayload(shard.document.value, ticker)
+      ? { kind: "shard", payload: shard.document.value, projectionDigest: shard.manifestSha256 }
+      : {
+          kind: "shard_unavailable",
+          reason: "invalid_shard_payload",
+          projectionDigest: shard.manifestSha256,
+        };
   };
   const indexDocument = await dependencies.readIndex();
   if (!indexDocument) {
     if (enrolled) return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
-    return resolveDirect();
+    return resolveShard();
   }
 
   const parsedIndex = await parseIndex(indexDocument, guard, dependencies.now());
@@ -397,11 +403,11 @@ export async function resolveDataSupplyEtfDetail(
   }
   if (parsedIndex.kind === "invalid") {
     if (enrolled) return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
-    return resolveDirect();
+    return resolveShard();
   }
   const entries = parsedIndex.entries;
   if (!enrolled) {
-    return resolveDirect();
+    return resolveShard();
   }
 
   const parsed = parseEntry(ticker, entries[ticker], guard.indexSha, dependencies.now());
