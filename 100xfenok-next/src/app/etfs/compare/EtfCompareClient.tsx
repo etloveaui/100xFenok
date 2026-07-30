@@ -12,6 +12,17 @@ import {
   parseEtfDataSupply,
 } from "@/lib/data-supply-etf-ui";
 
+type EtfCompareLoadState =
+  | "ok"
+  | "data_supply_unavailable"
+  | "shard_infrastructure_unavailable"
+  | "missing"
+  | "failed";
+
+type EtfCompareClientRow = EtfCompareRow & {
+  loadState: EtfCompareLoadState;
+};
+
 function rawText(value: unknown): string {
   if (typeof value === "string" && value.trim()) return value.trim();
   if (isFiniteNumber(value)) return value.toLocaleString("ko-KR");
@@ -39,25 +50,41 @@ function fmtSigned(value: number | null | undefined): string {
   return isFiniteNumber(value) ? formatSignedPercent(value, { digits: 2, fraction: false }) : "—";
 }
 
-async function loadEtf(ticker: string): Promise<EtfCompareRow> {
+async function loadEtf(ticker: string): Promise<EtfCompareClientRow> {
   try {
     const response = await fetch(`/api/data/stockanalysis/etfs/${encodeURIComponent(ticker)}/`, { cache: "no-store" });
-    const result = await parseEtfApiResponse<EtfPayload>(response);
-    if (result.kind === "ok") return { ticker, data: result.data, failed: false };
+    const result = await parseEtfApiResponse<EtfPayload>(response, ticker);
+    if (result.kind === "ok") return { ticker, data: result.data, failed: false, loadState: "ok" };
     if (result.kind === "unavailable") {
       return {
         ticker,
         data: { ticker, data_supply: result.dataSupply } as unknown as EtfPayload,
         failed: false,
+        loadState: "data_supply_unavailable",
       };
     }
-    return { ticker, data: null, failed: true };
+    if (result.kind === "shard_infrastructure_unavailable") {
+      return { ticker, data: null, failed: false, loadState: "shard_infrastructure_unavailable" };
+    }
+    return { ticker, data: null, failed: true, loadState: result.kind };
   } catch {
-    return { ticker, data: null, failed: true };
+    return { ticker, data: null, failed: true, loadState: "failed" };
   }
 }
 
-function CompareSummaryCard({ row }: { row: EtfCompareRow }) {
+function CompareSummaryCard({ row }: { row: EtfCompareClientRow }) {
+  if (row.loadState === "shard_infrastructure_unavailable") {
+    return (
+      <div
+        className="rounded-xl border border-red-200 bg-red-50 px-3 py-3"
+        data-etf-compare-shard-infrastructure-state="unavailable"
+      >
+        <TickerChip ticker={row.ticker} href={`/etfs/${encodeURIComponent(row.ticker)}`} variant="inline" className="orbitron text-sm text-red-900" />
+        <p className="mt-2 text-xs font-black text-red-900">ETF 상세 저장소를 확인할 수 없습니다.</p>
+        <p className="mt-1 text-[10px] font-semibold text-red-800">이 종목을 누락이나 빈 데이터로 바꾸지 않고 일시 장애로 표시합니다.</p>
+      </div>
+    );
+  }
   const dataSupply = parseEtfDataSupply((row.data as unknown as { data_supply?: unknown } | null)?.data_supply);
   const supplyPresentation = getEtfDataSupplyPresentation(dataSupply);
   const overview = row.data?.normalized?.overview ?? {};
@@ -168,7 +195,7 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
   const tickersKey = tickers.join(",");
   const [loadState, setLoadState] = useState<{
     key: string;
-    rows: EtfCompareRow[];
+    rows: EtfCompareClientRow[];
   }>({ key: "", rows: [] });
 
   useEffect(() => {

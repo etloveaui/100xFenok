@@ -191,17 +191,29 @@ class MaterializerFixture:
             "source": "stockanalysis",
         })
         (root / "IEFA.json").write_bytes(primary)
-        (public / "IEFA.json").write_bytes(primary)
-        for ticker in self.tickers:
-            legacy = pretty_bytes({
-                "schema_version": "stockanalysis/v1",
-                "ticker": ticker,
-                "asset_type": "etf",
-                "source": "yahoo_finance",
-                "source_provider": "yahoo_finance",
-                "detail_status": "yf_fallback",
+        shard_root = public / "shards"
+        snapshot = shard_root / "snapshots" / ("0" * 64)
+        snapshot.mkdir(parents=True, exist_ok=True)
+        shards = []
+        for shard_id in range(128):
+            shard_name = f"{shard_id:03d}.json"
+            shard_path = snapshot / shard_name
+            shard_path.write_bytes(b"{}\n")
+            shards.append({
+                "id": shard_id,
+                "path": f"snapshots/{'0' * 64}/{shard_name}",
+                "member_count": 1 if shard_id == 0 else 0,
+                "sha256": hashlib.sha256(b"{}\n").hexdigest(),
+                "byte_length": 3,
             })
-            (public / f"{ticker}.json").write_bytes(legacy)
+        (shard_root / "index.json").write_bytes(pretty_bytes({
+            "schema_version": "stockanalysis-etf-shards/v2",
+            "compatibility_mode": "shard-only",
+            "shard_count": 128,
+            "payload_count": 1,
+            "provenance": {"canonical_root": "data/stockanalysis/etfs"},
+            "shards": shards,
+        }))
 
 
 class PublicDataSupplyMaterializerTests(unittest.TestCase):
@@ -389,33 +401,22 @@ class PublicDataSupplyMaterializerTests(unittest.TestCase):
             )
         self.assertFalse(self.fixture.canonical_root.exists())
 
-    def test_reconcile_validates_full_plan_resumes_partial_unlink_and_is_idempotent(self):
+    def test_reconcile_requires_shard_only_public_and_is_idempotent(self):
         materializer, _ = self.fixture.materializer()
         materializer.write_canonical(generated_at="2026-07-11T01:00:00Z", bootstrap_enrollment=True)
         self.fixture.copy_projection_public()
         self.fixture.seed_stockanalysis_reconcile()
-
-        def fail_after_first(point: str):
-            if point == "public_unlink_1":
-                raise RuntimeError("fixture crash")
-
-        crashing, _ = self.fixture.materializer(failpoint=fail_after_first)
-        with self.assertRaisesRegex(RuntimeError, "fixture crash"):
-            crashing.reconcile_public()
-        remaining = sorted(path.stem for path in (self.fixture.public_data_root / "stockanalysis/etfs").glob("*.json") if path.stem != "IEFA")
-        self.assertEqual(len(remaining), 2)
-
-        resumed, reader = self.fixture.materializer()
-        result = resumed.reconcile_public()
-        self.assertEqual(reader.calls, 1)
-        self.assertEqual(result["stale_deleted"], 2)
+        result = materializer.reconcile_public()
+        self.assertEqual(result["stale_deleted"], 0)
         self.assertEqual(result["postcondition"], {
-            "public_stockanalysis_true_primary": 1,
+            "public_stockanalysis_true_primary": 0,
             "public_stockanalysis_yahoo": 0,
+            "public_stockanalysis_direct": 0,
+            "public_stockanalysis_shards": 128,
             "public_projection_payloads": 2,
             "public_status_rows": 3,
         })
-        self.assertEqual(resumed.reconcile_public()["stale_deleted"], 0)
+        self.assertEqual(materializer.reconcile_public()["stale_deleted"], 0)
 
     def test_reconcile_rejects_out_of_set_and_primary_difference_without_deletion(self):
         materializer, _ = self.fixture.materializer()
@@ -429,15 +430,15 @@ class PublicDataSupplyMaterializerTests(unittest.TestCase):
             "source": "yahoo_finance", "source_provider": "yahoo_finance", "detail_status": "yf_fallback",
         }))
         before = sorted(path.name for path in public.glob("*.json"))
-        with self.assertRaises(MaterializationError):
+        with self.assertRaisesRegex(MaterializationError, "direct files"):
             materializer.reconcile_public()
         self.assertEqual(sorted(path.name for path in public.glob("*.json")), before)
 
         bad.unlink()
         (public / "IEFA.json").write_bytes(b"{}\n")
-        with self.assertRaises(MaterializationError):
+        with self.assertRaisesRegex(MaterializationError, "identity mismatch"):
             materializer.reconcile_public()
-        self.assertEqual(len(list(public.glob("*.json"))), 4)
+        self.assertEqual(len(list(public.glob("*.json"))), 1)
 
 
 def run_real_baseline_reconcile_fixture(root: Path) -> None:

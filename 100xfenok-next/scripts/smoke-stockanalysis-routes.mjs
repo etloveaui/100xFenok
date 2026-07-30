@@ -307,6 +307,45 @@ async function fetchJsonResponse(url) {
   return { response, payload };
 }
 
+export function validateEtfRetirementStaticManifest(manifest) {
+  const compatibilityMode = manifest?.compatibility_mode;
+  if (typeof compatibilityMode !== "string" || compatibilityMode.length === 0) {
+    fail("ETF shard manifest has no compatibility_mode");
+  }
+
+  if (compatibilityMode !== "shard-only") {
+    return {
+      compatibility_mode: compatibilityMode,
+      retirement_contract_required: false,
+    };
+  }
+
+  if (!Array.isArray(manifest.shards) || manifest.shards.length !== 128) {
+    fail(`ETF shard-only manifest must declare exactly 128 shards; received ${Array.isArray(manifest.shards) ? manifest.shards.length : "non-array"}`);
+  }
+  if (manifest.shard_count !== 128 || manifest.payload_count !== 5586) {
+    fail(`ETF shard-only manifest count mismatch: shard_count=${manifest.shard_count}, payload_count=${manifest.payload_count}`);
+  }
+  return {
+    compatibility_mode: compatibilityMode,
+    retirement_contract_required: true,
+  };
+}
+
+async function checkEtfRetirementStaticContract(root) {
+  const manifest = await fetchJson(`${root}/data/stockanalysis/etfs/shards/index.json`);
+  const contract = validateEtfRetirementStaticManifest(manifest);
+  if (!contract.retirement_contract_required) return contract;
+  const direct = await fetchText(`${root}/data/stockanalysis/etfs/SPY.json`);
+  if (direct.response.status !== 404) {
+    fail(`ETF shard-only contract requires direct SPY static JSON to return 404; received HTTP ${direct.response.status}`);
+  }
+  return {
+    ...contract,
+    direct_spy_static_status: direct.response.status,
+  };
+}
+
 export async function fetchProducerJson(url, options = {}) {
   const { response, text } = await fetchTextWithBoundedRetry(
     url,
@@ -899,6 +938,7 @@ async function main() {
   const snapshot = await checkEtfSnapshot(root);
   const universe = await checkEtfUniverse(root);
   const details = await checkEtfDetails(root);
+  const etfRetirementStatic = await checkEtfRetirementStaticContract(root);
   const r2Resolution = await checkR2EtfResolution(root);
   const surfaces = await checkSurfaceContracts(root);
 
@@ -919,6 +959,7 @@ async function main() {
     snapshot,
     universe,
     details,
+    etfRetirementStatic,
     r2Resolution,
     surfaces,
   }, null, 2));

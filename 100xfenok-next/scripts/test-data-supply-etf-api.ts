@@ -33,6 +33,8 @@ async function fixture(options: {
   indexMissing?: boolean;
   invalidCounts?: boolean;
   crossbind?: boolean;
+  shardMissing?: boolean;
+  shardUnavailable?: boolean;
 }) {
   const ticker = options.ticker ?? "ADIU";
   const enrolledTicker = options.enrolledTicker ?? ticker;
@@ -109,7 +111,29 @@ async function fixture(options: {
     readEnrollment: async () => options.guardMissing ? null : document(guard),
     readIndex: async () => options.indexMissing ? null : document(index),
     readProjectionPayload: async () => payloadDoc,
-    readDirectPayload: async () => options.direct ? document(options.direct) : null,
+    readShardPayload: async () => {
+      if (options.shardUnavailable) {
+        return {
+          kind: "shard_integrity_unavailable",
+          reason: "fixture",
+          manifestSha256: "d".repeat(64),
+          snapshotId: "e".repeat(64),
+        } as const;
+      }
+      if (options.shardMissing || !options.direct) {
+        return {
+          kind: "ticker_not_found",
+          manifestSha256: "d".repeat(64),
+          snapshotId: "e".repeat(64),
+        } as const;
+      }
+      return {
+        kind: "ok",
+        document: document(options.direct),
+        manifestSha256: "d".repeat(64),
+        snapshotId: "e".repeat(64),
+      } as const;
+    },
   });
 }
 
@@ -162,12 +186,31 @@ if (unavailable.kind === "unavailable") {
   const rawSummary = { schema_version: "stockanalysis/v1", ticker: "ADIU", detail_status: "surface_only" };
   const summary = mergeEtfDataSupply(rawSummary, unavailable.dataSupply);
   assert.equal((summary.data_supply as JsonRecord).resolution_state, "unavailable");
-  const summaryRepresentation = buildUnavailableEtfRepresentation("ADIU", unavailable.dataSupply, rawSummary);
-  assert.equal(summaryRepresentation.kind, "summary");
-  const typedRepresentation = buildUnavailableEtfRepresentation("ADIU", unavailable.dataSupply, null);
+  const typedRepresentation = buildUnavailableEtfRepresentation("ADIU", unavailable.dataSupply);
   assert.equal(typedRepresentation.kind, "typed_unavailable");
   assert.equal(typedRepresentation.body.error, "DATA_SUPPLY_UNAVAILABLE");
 }
+
+const { buildEtfResponse } = await import("../src/app/api/data/stockanalysis/[assetType]/[ticker]/route");
+const shardUnavailableResponse = await buildEtfResponse({
+  kind: "shard_unavailable",
+  reason: "fixture-corrupt-shard",
+  projectionDigest: "d".repeat(64),
+}, "SPY");
+assert.equal(shardUnavailableResponse.status, 503);
+assert.equal(shardUnavailableResponse.headers.get("Cache-Control"), "no-store");
+assert.equal((await shardUnavailableResponse.json()).error, "STOCKANALYSIS_ETF_SHARD_UNAVAILABLE");
+
+const absentResponse = await buildEtfResponse({
+  kind: "not_found",
+  projectionDigest: "d".repeat(64),
+}, "ZZZZ");
+assert.equal(absentResponse.status, 404);
+assert.equal((await absentResponse.json()).error, "STOCKANALYSIS_ASSET_NOT_FOUND");
+
+const unavailableResponse = await buildEtfResponse(unavailable, "ADIU");
+assert.equal(unavailableResponse.status, 503);
+assert.equal((await unavailableResponse.json()).error, "DATA_SUPPLY_UNAVAILABLE");
 
 assert.equal(unavailableStateAgeHours(
   "2026-07-11T00:00:00Z",
@@ -260,21 +303,52 @@ const direct = {
   normalized: { holdings: [] },
 };
 const unenrolled = await fixture({ ticker: "IEFA", enrolledTicker: "ADIU", indexMissing: true, direct });
-assert.equal(unenrolled.kind, "direct");
+assert.equal(unenrolled.kind, "shard");
 const unenrolledWithIndex = await fixture({ ticker: "IEFA", enrolledTicker: "ADIU", direct });
-assert.equal(unenrolledWithIndex.kind, "direct");
+assert.equal(unenrolledWithIndex.kind, "shard");
 const sourceProviderDirect = await fixture({
   ticker: "IEFA",
   enrolledTicker: "ADIU",
   direct: { ...direct, source: undefined, source_provider: "stockanalysis" },
 });
-assert.equal(sourceProviderDirect.kind, "direct");
+assert.equal(sourceProviderDirect.kind, "shard");
+const stockanalysisWithYahooNewsAttribution = await fixture({
+  ticker: "IEFA",
+  enrolledTicker: "ADIU",
+  direct: {
+    ...direct,
+    raw: {
+      overview: {
+        news: {
+          data: [{ source: "Yahoo Finance" }],
+        },
+      },
+    },
+  },
+});
+assert.equal(
+  stockanalysisWithYahooNewsAttribution.kind,
+  "shard",
+  "nested news attribution must not be confused with the ETF payload provider",
+);
 const rejectedYahooDirect = await fixture({
   ticker: "IEFA",
   enrolledTicker: "ADIU",
   direct: { ...direct, source: "yahoo_finance", detail_status: "yf_fallback" },
 });
-assert.equal(rejectedYahooDirect.kind, "error");
+assert.equal(rejectedYahooDirect.kind, "shard_unavailable");
+const missingShardTicker = await fixture({
+  ticker: "IEFA",
+  enrolledTicker: "ADIU",
+  shardMissing: true,
+});
+assert.equal(missingShardTicker.kind, "not_found");
+const unavailableShard = await fixture({
+  ticker: "IEFA",
+  enrolledTicker: "ADIU",
+  shardUnavailable: true,
+});
+assert.equal(unavailableShard.kind, "shard_unavailable");
 
 const collision = await fixture({ payload: {
   schema_version: "yf-etf-detail/v1",
@@ -317,6 +391,26 @@ try {
   assert.equal(second.headers.get("X-100x-Cache"), "HIT");
   assert.equal(second.headers.get("Cache-Control"), "public, max-age=15, s-maxage=60");
   assert.equal(loads, 1);
+
+  stored = Response.json(
+    { schema_version: "stockanalysis/v1", source: "stockanalysis", asset_type: "etf", ticker: "SPY" },
+    { headers: { "Cache-Control": "public, max-age=300" } },
+  );
+  let bypassLoads = 0;
+  const bypassed = await withResponseCache(
+    "negative:ADIU:digest",
+    300,
+    async () => {
+      bypassLoads += 1;
+      return Response.json(
+        { error: "STOCKANALYSIS_ETF_SHARD_UNAVAILABLE", ticker: "SPY" },
+        { status: 503, headers: { "Cache-Control": "no-store" } },
+      );
+    },
+    { bypassCache: true },
+  );
+  assert.equal(bypassed.status, 503, "a cached success must not mask shard integrity failure");
+  assert.equal(bypassLoads, 1);
 } finally {
   Object.defineProperty(globalThis, "caches", { configurable: true, value: originalCaches });
 }

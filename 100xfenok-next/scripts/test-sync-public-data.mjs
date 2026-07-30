@@ -11,6 +11,7 @@ import {
   EXCLUDED_PUBLIC_DATA_FILES,
   EXCLUDED_PUBLIC_DATA_ROOTS,
   syncPublicData,
+  syncStockanalysisEtfShardProjection,
 } from "./sync-public-data.mjs";
 import { inspectCloudflareAssetBudget } from "./check-cloudflare-asset-budget.mjs";
 import {
@@ -20,6 +21,17 @@ import {
   marketFactsShardFileName,
   marketFactsShardUrl,
 } from "../src/lib/market-facts-shard.mjs";
+import {
+  STOCKANALYSIS_ETF_SHARD_COUNT,
+  STOCKANALYSIS_ETF_SHARD_MAX_BYTES,
+  sha256Text,
+  stockanalysisEtfManifestSha256,
+  stockanalysisEtfPayloadDocumentFromShard,
+  stockanalysisEtfPayloadFromShard,
+  stockanalysisEtfShardFileName,
+  stockanalysisEtfShardId,
+} from "../src/lib/stockanalysis-etf-shard.mjs";
+import { checkPublicMirror } from "./check-fenok-public-mirror-guard.mjs";
 import { checkSyncExclusionsAgainstRegistry } from "../../scripts/check-lane-registry-sync.mjs";
 import { LANE_REGISTRY } from "../../scripts/lib/lane-registry.mjs";
 import {
@@ -392,6 +404,195 @@ async function assertMarketFactsShardProjection(parentRoot) {
   syncPublicData({ sourceRoot: fixture.sourceRoot, destinationRoot: fixture.destinationRoot, logger: () => {} });
   assert.deepEqual(snapshotNode(fixture.destinationRoot), destinationAfter, "market-facts projection must be byte-idempotent");
   assert.deepEqual(snapshotNode(fixture.sourceRoot), sourceBefore, "canonical ticker files must remain byte-identical");
+}
+
+function stockanalysisEtfFixturePayload(ticker) {
+  return {
+    schema_version: "stockanalysis/v1",
+    source: "stockanalysis",
+    asset_type: "etf",
+    ticker,
+    source_as_of: "2026-07-28T20:00:00Z",
+    fetched_at: "2026-07-29T01:19:39Z",
+    overview: { name: `${ticker} ETF`, expense_ratio: 0.12 },
+  };
+}
+
+function assertStockanalysisEtfShardProjection(parentRoot) {
+  assert.equal(STOCKANALYSIS_ETF_SHARD_COUNT, 128);
+  assert.equal(stockanalysisEtfShardFileName("SPY"), "125.json");
+  assert.equal(stockanalysisEtfShardFileName("brk.b"), "058.json");
+  assert.equal(stockanalysisEtfShardFileName("$bf-b"), "090.json");
+
+  const fixture = makeSyncCase(parentRoot, "stockanalysis-etf-shards");
+  const payloads = Object.fromEntries(["SPY", "BRK.B", "BF-B", "IEFA"].map((ticker) => [
+    ticker,
+    stockanalysisEtfFixturePayload(ticker),
+  ]));
+  for (const [ticker, payload] of Object.entries(payloads)) {
+    write(fixture.sourceRoot, `stockanalysis/etfs/${ticker}.json`, `${JSON.stringify(payload, null, 2)}\n`);
+  }
+  write(fixture.destinationRoot, "stockanalysis/etfs/SPY.json", '{"stale":true}\n');
+  write(fixture.destinationRoot, "stockanalysis/etfs/shards/stale.json", '{"stale":true}\n');
+  const sourceBefore = snapshotNode(fixture.sourceRoot);
+
+  const rehearsal = syncPublicData({
+    sourceRoot: fixture.sourceRoot,
+    destinationRoot: fixture.destinationRoot,
+    dryRun: true,
+    logger: () => {},
+  });
+  assert.equal(rehearsal.stockanalysisEtfTickerFiles, 4);
+  assert.equal(rehearsal.stockanalysisEtfShardFiles, STOCKANALYSIS_ETF_SHARD_COUNT);
+  assert.equal(rehearsal.stockanalysisEtfManifestFiles, 1);
+  assert.deepEqual(snapshotNode(fixture.sourceRoot), sourceBefore, "ETF sharding must not mutate canonical payloads");
+
+  const result = syncStockanalysisEtfShardProjection({
+    sourceRoot: fixture.sourceRoot,
+    destinationRoot: fixture.destinationRoot,
+    logger: () => {},
+  });
+  assert.equal(result.stockanalysisEtfTickerFiles, 4);
+  assert.equal(result.stockanalysisEtfShardFiles, STOCKANALYSIS_ETF_SHARD_COUNT);
+  assert.equal(result.stockanalysisEtfManifestFiles, 1);
+  assert.deepEqual(snapshotNode(fixture.sourceRoot), sourceBefore, "canonical ETF bytes must remain unchanged");
+  assert.equal(
+    fs.readdirSync(path.join(fixture.destinationRoot, "stockanalysis", "etfs"))
+      .filter((name) => name.endsWith(".json")).length,
+    0,
+    "shard-only ETF projection must emit no public top-level JSON files",
+  );
+
+  const shardRoot = path.join(fixture.destinationRoot, "stockanalysis", "etfs", "shards");
+  const manifest = JSON.parse(fs.readFileSync(path.join(shardRoot, "index.json"), "utf8"));
+  assert.equal(manifest.compatibility_mode, "shard-only");
+  assert.equal(manifest.payload_count, 4);
+  assert.equal(manifest.shards.length, STOCKANALYSIS_ETF_SHARD_COUNT);
+  assert.equal(
+    manifest.shards.every((entry) => entry.byte_length <= STOCKANALYSIS_ETF_SHARD_MAX_BYTES),
+    true,
+  );
+  assert.equal(fs.existsSync(path.join(shardRoot, "stale.json")), false);
+  for (const [ticker, payload] of Object.entries(payloads)) {
+    const selected = { entry: manifest.shards[stockanalysisEtfShardId(ticker)] };
+    assert.ok(selected, `${ticker} must resolve through the manifest`);
+    const shard = JSON.parse(fs.readFileSync(path.join(shardRoot, selected.entry.path), "utf8"));
+    const document = stockanalysisEtfPayloadDocumentFromShard(shard, ticker);
+    const expectedRaw = fs.readFileSync(path.join(fixture.sourceRoot, "stockanalysis", "etfs", `${ticker}.json`), "utf8");
+    assert.equal(document?.raw, expectedRaw, `${ticker} shard entry must retain the exact source bytes`);
+    assert.equal(sha256Text(document?.raw ?? ""), sha256Text(expectedRaw), `${ticker} shard entry must retain the source SHA-256`);
+    assert.deepEqual(document?.value, JSON.parse(expectedRaw), `${ticker} shard entry must parse the source bytes`);
+    assert.deepEqual(stockanalysisEtfPayloadFromShard(shard, ticker), payload, `${ticker} must retain every source field`);
+  }
+
+  const destinationAfter = snapshotNode(fixture.destinationRoot);
+  syncStockanalysisEtfShardProjection({ sourceRoot: fixture.sourceRoot, destinationRoot: fixture.destinationRoot, logger: () => {} });
+  assert.deepEqual(snapshotNode(fixture.destinationRoot), destinationAfter, "ETF shard projection must be byte-idempotent");
+  syncPublicData({ sourceRoot: fixture.sourceRoot, destinationRoot: fixture.destinationRoot, logger: () => {} });
+  assert.equal(
+    fs.readdirSync(path.join(fixture.destinationRoot, "stockanalysis", "etfs"))
+      .filter((name) => name.endsWith(".json")).length,
+    0,
+    "second full sync must not recreate direct ETF files",
+  );
+  const activeSnapshotRoot = path.join(shardRoot, "snapshots", manifest.snapshot_id);
+  write(activeSnapshotRoot, "unlisted.json", "{}\n");
+  assert.throws(
+    () => syncStockanalysisEtfShardProjection({
+      sourceRoot: fixture.sourceRoot,
+      destinationRoot: fixture.destinationRoot,
+      logger: () => {},
+    }),
+    /immutable snapshot contains an unlisted or unsafe node/,
+  );
+
+  const identityMismatch = makeSyncCase(parentRoot, "stockanalysis-etf-identity-mismatch");
+  write(
+    identityMismatch.sourceRoot,
+    "stockanalysis/etfs/SPY.json",
+    `${JSON.stringify(stockanalysisEtfFixturePayload("spy"), null, 2)}\n`,
+  );
+  assert.throws(
+    () => syncStockanalysisEtfShardProjection({
+      sourceRoot: identityMismatch.sourceRoot,
+      destinationRoot: identityMismatch.destinationRoot,
+      logger: () => {},
+    }),
+    /strict StockAnalysis ETF identity\/timestamp mismatch/,
+  );
+
+  const unsafeParent = makeSyncCase(parentRoot, "stockanalysis-etf-unsafe-parent");
+  write(
+    unsafeParent.sourceRoot,
+    "stockanalysis/etfs/SPY.json",
+    `${JSON.stringify(stockanalysisEtfFixturePayload("SPY"), null, 2)}\n`,
+  );
+  const outside = path.join(parentRoot, "stockanalysis-etf-unsafe-parent-outside");
+  fs.mkdirSync(outside, { recursive: true });
+  fs.symlinkSync(outside, path.join(unsafeParent.destinationRoot, "stockanalysis"));
+  assert.throws(
+    () => syncStockanalysisEtfShardProjection({
+      sourceRoot: unsafeParent.sourceRoot,
+      destinationRoot: unsafeParent.destinationRoot,
+      logger: () => {},
+    }),
+    /destination parent must be a real directory/,
+  );
+  assert.deepEqual(fs.readdirSync(outside), [], "standalone shard publication must not follow destination symlinks");
+}
+
+async function assertStockanalysisEtfShardPublicGuard(parentRoot) {
+  const fixture = makeSyncCase(parentRoot, "stockanalysis-etf-shard-guard");
+  const payload = stockanalysisEtfFixturePayload("SPY");
+  write(fixture.sourceRoot, "stockanalysis/etfs/SPY.json", `${JSON.stringify(payload, null, 2)}\n`);
+  syncPublicData({ sourceRoot: fixture.sourceRoot, destinationRoot: fixture.destinationRoot, logger: () => {} });
+  const appRoot = path.dirname(path.dirname(fixture.destinationRoot));
+  const valid = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
+  assert.equal(valid.ok, true, valid.violations.join("\n"));
+
+  write(
+    fixture.destinationRoot,
+    "stockanalysis/etfs/SPY.json",
+    `${JSON.stringify(payload, null, 2)}\n`,
+  );
+  const mixedMode = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
+  assert.equal(mixedMode.ok, false);
+  assert.equal(
+    mixedMode.violations.some((violation) => /shard-only projection must contain zero/.test(violation)),
+    true,
+  );
+  fs.rmSync(path.join(fixture.destinationRoot, "stockanalysis", "etfs", "SPY.json"));
+
+  const manifestPath = path.join(fixture.destinationRoot, "stockanalysis", "etfs", "shards", "index.json");
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  const provenanceMismatch = structuredClone(manifest);
+  provenanceMismatch.provenance.source_payload_sha256 = "0".repeat(64);
+  provenanceMismatch.manifest_sha256 = stockanalysisEtfManifestSha256(provenanceMismatch);
+  fs.writeFileSync(manifestPath, `${JSON.stringify(provenanceMismatch)}\n`);
+  const invalidProvenance = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
+  assert.equal(invalidProvenance.ok, false);
+  assert.equal(
+    invalidProvenance.violations.some((violation) => /canonical provenance digest mismatch/.test(violation)),
+    true,
+  );
+  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+
+  const firstShard = manifest.shards.find((entry) => entry.member_count > 0);
+  const shardPath = path.join(fixture.destinationRoot, "stockanalysis", "etfs", "shards", firstShard.path);
+  fs.appendFileSync(shardPath, " ");
+  const invalid = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
+  assert.equal(invalid.ok, false);
+  assert.equal(invalid.violations.some((violation) => /hash\/byte-length mismatch/.test(violation)), true);
+
+  fs.rmSync(path.join(fixture.destinationRoot, "stockanalysis", "etfs", "shards"), { recursive: true });
+  const missing = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
+  assert.equal(missing.ok, false);
+  assert.equal(missing.violations.some((violation) => /shard projection is missing while canonical ETF payloads exist/.test(violation)), true);
+
+  fs.mkdirSync(path.join(fixture.sourceRoot, "stockanalysis", "etfs", "empty-directory"));
+  const nestedCanonical = await checkPublicMirror({ appRoot, repoRoot: fixture.root });
+  assert.equal(nestedCanonical.ok, false);
+  assert.equal(nestedCanonical.violations.some((violation) => /canonical ETF root may contain only top-level JSON files/.test(violation)), true);
 }
 
 function marketFactsFixturePayload(ticker = "AAPL") {
@@ -772,40 +973,95 @@ try {
   assertOrphanedDestinationProjectionFailsClosed(fixtureRoot);
   assertMarketFactsSourceDriftFailsBeforeMutation(fixtureRoot);
   await assertMarketFactsShardProjection(fixtureRoot);
+  assertStockanalysisEtfShardProjection(fixtureRoot);
+  await assertStockanalysisEtfShardPublicGuard(fixtureRoot);
 
   const buildRoot = path.join(fixtureRoot, "100xfenok-next", ".open-next");
   const assetRoot = path.join(buildRoot, "assets");
+  const expectedPublicRoot = path.join(fixtureRoot, "100xfenok-next", "public");
   const reportPath = path.join(buildRoot, "asset-budget-report.json");
   write(assetRoot, "index.html", "ok");
   write(assetRoot, "data/computed/data-supply/etf-detail/enrollment.json", "{}\n");
   write(assetRoot, "data/computed/data-supply/etf-detail/index.json", '{"selected_count":1}\n');
   write(assetRoot, "data/computed/data-supply/etf-detail/payloads/AAA.json", "{}\n");
 
-  const budget = inspectCloudflareAssetBudget({ assetRoot, reportPath, limit: 5 });
+  assert.throws(
+    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, limit: 5 }),
+    /StockAnalysis ETF shard projection is missing/,
+  );
+  const budgetCanonicalRoot = path.join(fixtureRoot, "budget-canonical");
+  fs.mkdirSync(budgetCanonicalRoot, { recursive: true });
+  write(
+    budgetCanonicalRoot,
+    "stockanalysis/etfs/SPY.json",
+    `${JSON.stringify(stockanalysisEtfFixturePayload("SPY"), null, 2)}\n`,
+  );
+  syncStockanalysisEtfShardProjection({
+    sourceRoot: budgetCanonicalRoot,
+    destinationRoot: path.join(assetRoot, "data"),
+    logger: () => {},
+  });
+  syncStockanalysisEtfShardProjection({
+    sourceRoot: budgetCanonicalRoot,
+    destinationRoot: path.join(expectedPublicRoot, "data"),
+    logger: () => {},
+  });
+  const budget = inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 135 });
   assert.equal(budget.status, "pass");
-  assert.equal(budget.regular_file_count, 4);
-  assert.equal(budget.headroom, 1);
+  assert.equal(budget.regular_file_count, 133);
+  assert.equal(budget.headroom, 2);
+  assert.equal(budget.warning_limit, 134);
+  assert.equal(budget.warning_headroom, 1);
+  assert.equal(budget.safety_status, "pass");
   assert.deepEqual(budget.data_supply_projection, {
     enrollment_files: 1,
     index_files: 1,
     payload_files: 1,
     total_files: 3,
   });
-  assert.equal(JSON.parse(fs.readFileSync(reportPath, "utf8")).regular_file_count, 4);
+  assert.deepEqual(budget.stockanalysis_etf_shards, {
+    manifest_files: 1,
+    shard_files: 128,
+    total_files: 129,
+    payload_count: 1,
+    snapshot_id: budget.stockanalysis_etf_shards.snapshot_id,
+    source_manifest_sha256: budget.stockanalysis_etf_shards.source_manifest_sha256,
+    legacy_fallback_files: 0,
+    largest_shard_bytes: budget.stockanalysis_etf_shards.largest_shard_bytes,
+    largest_shard_member_count: budget.stockanalysis_etf_shards.largest_shard_member_count,
+    largest_shard_path: budget.stockanalysis_etf_shards.largest_shard_path,
+  });
+  assert.equal(JSON.parse(fs.readFileSync(reportPath, "utf8")).regular_file_count, 133);
   assert.equal(path.relative(assetRoot, reportPath).startsWith(".."), true);
 
+  write(assetRoot, "data/stockanalysis/etfs/SPY.json", "{\"stale\":true}\n");
   assert.throws(
-    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, limit: 4 }),
+    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 135 }),
+    /shard-only projection requires zero direct/,
+  );
+  fs.rmSync(path.join(assetRoot, "data/stockanalysis/etfs/SPY.json"));
+  fs.appendFileSync(path.join(expectedPublicRoot, "data/stockanalysis/etfs/shards/index.json"), " ");
+  assert.throws(
+    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 135 }),
+    /emitted shard manifest differs/,
+  );
+  fs.copyFileSync(
+    path.join(assetRoot, "data/stockanalysis/etfs/shards/index.json"),
+    path.join(expectedPublicRoot, "data/stockanalysis/etfs/shards/index.json"),
+  );
+
+  assert.throws(
+    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 133 }),
     /asset limit/i,
   );
   assert.throws(
-    () => inspectCloudflareAssetBudget({ assetRoot, reportPath: path.join(assetRoot, "report.json"), limit: 5 }),
+    () => inspectCloudflareAssetBudget({ assetRoot, reportPath: path.join(assetRoot, "report.json"), expectedPublicRoot, limit: 135 }),
     /outside/i,
   );
 
   fs.symlinkSync(path.join(assetRoot, "index.html"), path.join(assetRoot, "linked.html"));
   assert.throws(
-    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, limit: 10 }),
+    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 135 }),
     /symlink/i,
   );
   fs.rmSync(path.join(assetRoot, "linked.html"));
@@ -813,7 +1069,7 @@ try {
     computed: [{ name: "same.json" }, { name: "same.json" }],
   }));
   assert.throws(
-    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, limit: 10 }),
+    () => inspectCloudflareAssetBudget({ assetRoot, reportPath, expectedPublicRoot, limit: 135 }),
     /duplicate manifest path/i,
   );
 
