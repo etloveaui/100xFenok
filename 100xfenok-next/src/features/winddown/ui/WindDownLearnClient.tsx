@@ -226,7 +226,7 @@ export default function WindDownLearnClient() {
             </div>
             <Link
               href="/winddown"
-              className="inline-flex min-h-11 items-center rounded-full border border-[var(--fnk-neutral-700)] px-4 text-xs font-black text-[var(--fnk-neutral-300)]"
+              className="inline-flex min-h-14 items-center rounded-full border border-[var(--fnk-neutral-700)] px-4 text-xs font-black text-[var(--fnk-neutral-300)]"
             >
               나가기
             </Link>
