@@ -20,6 +20,21 @@ function materialGateMetadata(gate: TeacherMaterialGateResult) {
   };
 }
 
+export function listTeacherApprovedMonaVnextExpressionEntries() {
+  const allEntries = listMonaVnextGeneratedExpressionEntries();
+  const gate = validateTeacherMaterial(allEntries.map(monaExpressionToTeacherMaterialCandidate));
+  const acceptedIds = new Set(gate.accepted.map((entry) => entry.expressionId));
+  return {
+    entries: allEntries.filter((entry) => acceptedIds.has(entry.id)),
+    metadata: {
+      source: "teacher-material-gate",
+      sourceEntryCount: allEntries.length,
+      acceptedCount: gate.accepted.length,
+      ...materialGateMetadata(gate),
+    },
+  };
+}
+
 export function filterMonaVnextSessionExpressionBankForTeacher(
   expressionBank: MonaVnextSessionExpressionBank,
 ): MonaVnextSessionExpressionBank {
@@ -43,16 +58,16 @@ export function buildTeacherFilteredMonaVnextSessionExpressionBank(args: {
   prioritizedExpressionIds?: string[];
   deferredExpressionIds?: string[];
 }): MonaVnextSessionExpressionBank {
-  const allEntries = listMonaVnextGeneratedExpressionEntries();
-  const gate = validateTeacherMaterial(allEntries.map(monaExpressionToTeacherMaterialCandidate));
-  const acceptedIds = new Set(gate.accepted.map((entry) => entry.expressionId));
-  const entries = allEntries.filter((entry) => acceptedIds.has(entry.id));
+  const approved = listTeacherApprovedMonaVnextExpressionEntries();
   return buildMonaVnextSessionExpressionBank({
     seed: args.seed,
     count: args.count,
-    entries,
+    entries: approved.entries,
     prioritizedExpressionIds: args.prioritizedExpressionIds,
     deferredExpressionIds: args.deferredExpressionIds,
-    metadata: materialGateMetadata(gate),
+    metadata: {
+      materialQuarantine: approved.metadata.materialQuarantine,
+      materialWarnings: approved.metadata.materialWarnings,
+    },
   });
 }
