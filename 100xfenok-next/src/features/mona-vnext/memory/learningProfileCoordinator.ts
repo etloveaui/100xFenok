@@ -575,6 +575,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
         now: new Date(nowIso),
       });
       const game = projectWindDownGameProgress(events);
+      const currentLevel = levelFromXp(game.xp);
       const ceremonyRecord = await readCeremonyRecord(transaction);
       const profile =
         (await transaction.get<MonaVnextLearningProfile>(
@@ -591,10 +592,12 @@ export async function handleMonaVnextProfileCoordinatorRequest(
         ceremony = mastery
           ? projectWindDownCeremony(
               ceremonyRecord,
-              levelFromXp(game.xp),
+              currentLevel,
               buildWindDownCeremonyOptionCatalog({
                 material: ceremonyMaterial,
                 mastery,
+                record: ceremonyRecord,
+                currentLevel,
               }),
             )
           : projectUnavailableWindDownCeremony(
@@ -604,7 +607,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
       } else {
         ceremony = projectUnavailableWindDownCeremony(
           ceremonyRecord,
-          levelFromXp(game.xp),
+          currentLevel,
         );
       }
       const activeLearn =
@@ -688,6 +691,8 @@ export async function handleMonaVnextProfileCoordinatorRequest(
       const catalog = buildWindDownCeremonyOptionCatalog({
         material: ceremonyMaterial,
         mastery,
+        record,
+        currentLevel,
       });
       const committed = commitWindDownCeremonyChoice({
         record,

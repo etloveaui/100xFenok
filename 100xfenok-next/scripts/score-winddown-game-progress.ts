@@ -173,6 +173,8 @@ const ceremonyMaterial = {
 const fallbackCatalog = buildWindDownCeremonyOptionCatalog({
   material: ceremonyMaterial,
   mastery: [],
+  record: ceremonyRecord,
+  currentLevel: 7,
 });
 const lockedCeremony = commitWindDownCeremonyChoice({
   record: ceremonyRecord,
@@ -273,6 +275,8 @@ const masteryEvidence = masteryMaterialEntries.map((entry, index) => ({
 const masteryCatalog = buildWindDownCeremonyOptionCatalog({
   material: { ...ceremonyMaterial, entries: masteryMaterialEntries },
   mastery: masteryEvidence,
+  record: ceremonyRecord,
+  currentLevel: 13,
 });
 assert.equal(masteryCatalog.slots.group.source, "mastery-derived");
 assert.equal(masteryCatalog.slots.group.options.length, 3);
@@ -293,6 +297,8 @@ assert.deepEqual(
   buildWindDownCeremonyOptionCatalog({
     material: { ...ceremonyMaterial, entries: masteryMaterialEntries },
     mastery: masteryEvidence.slice(0, 8),
+    record: ceremonyRecord,
+    currentLevel: 13,
   }).slots.fandom.source,
   "fallback-insufficient-mastery",
   "fallback must count unique post-exclusion slices, not raw eligible expressions",
@@ -301,9 +307,70 @@ assert.deepEqual(
   buildWindDownCeremonyOptionCatalog({
     material: { ...ceremonyMaterial, entries: masteryMaterialEntries },
     mastery: [...masteryEvidence].reverse(),
+    record: ceremonyRecord,
+    currentLevel: 13,
   }),
   masteryCatalog,
   "mastery option generation must be deterministic regardless of input order",
+);
+const levelSevenCatalog = buildWindDownCeremonyOptionCatalog({
+  material: { ...ceremonyMaterial, entries: masteryMaterialEntries },
+  mastery: masteryEvidence,
+  record: ceremonyRecord,
+  currentLevel: 7,
+});
+assert.equal(levelSevenCatalog.slots.group.source, "mastery-derived");
+assert.deepEqual(
+  levelSevenCatalog.slots.group.options.map((option) => option.label),
+  ["SLEEP", "LIGHT", "DREAM"],
+  "the visible group ceremony must receive the strongest eligible phrases",
+);
+assert.equal(
+  levelSevenCatalog.slots["debut-song"].source,
+  "fallback-insufficient-mastery",
+  "a locked debut-song ceremony must not consume mastery",
+);
+assert.equal(
+  levelSevenCatalog.slots.fandom.source,
+  "fallback-insufficient-mastery",
+  "a locked fandom ceremony must not consume mastery",
+);
+const allStrongMasteryEvidence = masteryEvidence.map((evidence) => ({
+  ...evidence,
+  successfulReviewCount: 3,
+}));
+const committedGroupCatalog = buildWindDownCeremonyOptionCatalog({
+  material: { ...ceremonyMaterial, entries: masteryMaterialEntries },
+  mastery: allStrongMasteryEvidence,
+  record: committedCeremony.record,
+  currentLevel: 13,
+});
+assert.deepEqual(
+  committedGroupCatalog.slots.group.options,
+  fallbackCatalog.slots.group.options,
+  "a committed group ceremony must retain three static options without consuming mastery",
+);
+assert.deepEqual(
+  committedGroupCatalog.slots["debut-song"].options.map(
+    (option) => option.label,
+  ),
+  ["Sleep On It", "See The First Light", "Chasing The Same Dream"],
+  "a committed group must leave the three strongest qualifying phrases for debut-song",
+);
+assert.deepEqual(
+  committedGroupCatalog.slots.fandom.options.map((option) => option.label),
+  ["MINUTE CREW", "TOMORROW CREW", "READY CREW"],
+  "later active slots must remain exclusive after skipping a committed group",
+);
+assert(
+  normalizeWindDownCeremonyProjection(
+    projectWindDownCeremony(
+      committedCeremony.record,
+      13,
+      committedGroupCatalog,
+    ),
+  ),
+  "a committed unlocked slot must keep three static options so the ready projection remains valid",
 );
 
 console.log(

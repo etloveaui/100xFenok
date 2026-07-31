@@ -361,16 +361,27 @@ async function main() {
       options: Array<{ label: string }>;
     }>;
   };
+  assert.equal(
+    masteryCeremony.slots.find((slot) => slot.id === "group")?.optionSource,
+    "fallback-insufficient-mastery",
+    "a committed group name must keep static options without consuming mastery",
+  );
   assert(
-    masteryCeremony.slots.every(
-      (slot) => slot.optionSource === "mastery-derived",
-    ),
-    "nine default chip recalls must produce three distinct learned option sets",
+    masteryCeremony.slots
+      .filter((slot) => slot.id !== "group")
+      .every((slot) => slot.optionSource === "mastery-derived"),
+    "the six count-three chip recalls must fill the two uncommitted naming slots",
   );
-  const learnedLabels = masteryCeremony.slots.flatMap(
-    (slot) => slot.options.map((option) => option.label),
+  const learnedLabels = masteryCeremony.slots
+    .filter((slot) => slot.optionSource === "mastery-derived")
+    .flatMap(
+      (slot) => slot.options.map((option) => option.label),
+    );
+  assert.equal(
+    learnedLabels.length,
+    6,
+    "only uncommitted slots may expose six learned naming options",
   );
-  assert.equal(learnedLabels.length, 9);
   assert(
     !learnedLabels.includes("POISON"),
     "one chips success must not qualify a phrase for permanent naming",

@@ -440,7 +440,13 @@ function derivedOptions(args: {
 export function buildWindDownCeremonyOptionCatalog(args: {
   material: WindDownCeremonyMaterialContext;
   mastery: readonly WindDownCeremonyMasteryEvidence[];
+  record: WindDownCeremonyRecord;
+  currentLevel: number;
 }): WindDownCeremonyOptionCatalog {
+  const currentLevel =
+    Number.isInteger(args.currentLevel) && args.currentLevel >= 1
+      ? args.currentLevel
+      : 1;
   const materialById = new Map(
     args.material.entries.map((entry) => [entry.id, entry.en]),
   );
@@ -469,6 +475,15 @@ export function buildWindDownCeremonyOptionCatalog(args: {
   const slots = {} as WindDownCeremonyOptionCatalog["slots"];
   const assignedMaterialIds = new Set<string>();
   for (const slot of WIND_DOWN_CEREMONY_SLOTS) {
+    const needsOptions =
+      currentLevel >= slot.unlockLevel && !args.record.choices[slot.id];
+    if (!needsOptions) {
+      slots[slot.id] = {
+        source: "fallback-insufficient-mastery",
+        options: slot.options,
+      };
+      continue;
+    }
     const derived = derivedOptions({
       slotId: slot.id,
       contentDigest: args.material.contentDigest,
