@@ -294,10 +294,17 @@ jobs:
           # publish only when it is on main and is not older than what is live.
           live_provenance_path="$RUNNER_TEMP/live-deploy-provenance-source-fence.json"
           source_fence_cache_bust="source-fence-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-$(date +%s)"
-          curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
+          if ! curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
             -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
             "$base_url/deploy-provenance.json?cb=$source_fence_cache_bust" \
-            -o "$live_provenance_path"
+            -o "$live_provenance_path"; then
+            # Transition/rollback compatibility: bundles deployed before the
+            # no-store cutover expose the same stamp under the cached data path.
+            curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
+              -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
+              "$base_url/data/admin/deploy-provenance.json?cb=$source_fence_cache_bust" \
+              -o "$live_provenance_path"
+          fi
           git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
           current_main_sha="$(git rev-parse --verify refs/remotes/origin/main)"
           node ../scripts/check-deploy-source-fence.mjs \

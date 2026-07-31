@@ -608,12 +608,11 @@ const uploadPosition = deployJob.indexOf("npx wrangler deploy");
 assert.match(deployJob, /\$base_url\/deploy-provenance\.json\?cb=/);
 assert.match(
   deployJob,
-  /--provenance "\.open-next\/assets\/deploy-provenance\.json"/,
+  /if ! curl[\s\S]+\$base_url\/deploy-provenance\.json\?cb=[\s\S]+\$base_url\/data\/admin\/deploy-provenance\.json\?cb=/,
 );
-assert.equal(
-  deployJob.includes("data/admin/deploy-provenance.json"),
-  false,
-  "the deploy source fence must not read the retired cached provenance path",
+assert.match(
+  deployJob,
+  /--provenance "\.open-next\/assets\/deploy-provenance\.json"/,
 );
 assert.equal(
   liveProvenanceFetchPosition >= 0
