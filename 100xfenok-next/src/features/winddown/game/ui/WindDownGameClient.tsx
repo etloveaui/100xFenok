@@ -113,6 +113,7 @@ export default function WindDownGameClient({
   const [ceremonyStatus, setCeremonyStatus] = useState<
     "idle" | "saving" | "conflict" | "refreshed" | "error"
   >("idle");
+  const [ceremonyStatusSlotLabel, setCeremonyStatusSlotLabel] = useState("");
 
   const xp = habit?.game.xp ?? 0;
   const level = levelFromXp(xp);
@@ -149,9 +150,11 @@ export default function WindDownGameClient({
   const commitCeremony = useCallback(async (
     slotId: WindDownCeremonySlotId,
     optionId: string,
+    slotLabel: string,
   ) => {
     if (ceremonyRequestPending.current) return;
     ceremonyRequestPending.current = true;
+    setCeremonyStatusSlotLabel(slotLabel);
     setCeremonyStatus("saving");
     try {
       const response = await fetch("/api/winddown/game/ceremony", {
@@ -289,7 +292,7 @@ export default function WindDownGameClient({
           ← 오늘 밤으로
         </Link>
         {status === "loading" ? (
-          <section aria-busy="true" aria-live="polite" className="mt-8 rounded-[24px] border border-[var(--wd-border)] p-6" style={{ background: "var(--wd-surface)" }}>
+          <section aria-busy="true" className="mt-8 rounded-[24px] border border-[var(--wd-border)] p-6" style={{ background: "var(--wd-surface)" }}>
             <h1 className="text-xl font-bold">학습 기록으로 투어를 여는 중</h1>
             <p className="mt-2 text-sm text-[var(--wd-text-muted)]">저장된 완료 기록만 확인하고 있어.</p>
           </section>
@@ -361,7 +364,7 @@ export default function WindDownGameClient({
         </div>
         <p className="mt-2 text-xs font-bold text-[var(--wd-text-muted)]">
           {next
-            ? `${next.label} 개방까지 Lv.${next.unlockLevel} · 매일 19 XP면 약 ${forecast}일`
+            ? `${next.label} 개방까지 Lv.${next.unlockLevel} · 매일 19 XP면 예상 약 ${forecast}일`
             : "마지막 장까지 열었어."}
         </p>
         <p className="mt-1 text-xs font-bold text-[var(--wd-text-muted)]">
@@ -411,7 +414,7 @@ export default function WindDownGameClient({
             {chosenCeremonies.map((slot) => (
               <li
                 key={slot.id}
-                className="rounded-full border border-[var(--wd-border)] px-3 py-2 text-xs font-black"
+                className="max-w-full break-words rounded-full border border-[var(--wd-border)] px-3 py-2 text-xs font-black"
               >
                 {slot.label} · {slot.choice?.label}
               </li>
@@ -442,25 +445,18 @@ export default function WindDownGameClient({
                   key={option.id}
                   type="button"
                   disabled={ceremonyStatus === "saving"}
-                  onClick={() => void commitCeremony(openCeremony.id, option.id)}
-                  className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-[var(--wd-border)] px-4 text-sm font-black disabled:opacity-50"
+                  onClick={() => void commitCeremony(
+                    openCeremony.id,
+                    option.id,
+                    openCeremony.label,
+                  )}
+                  className="inline-flex min-h-12 w-full items-center justify-center break-words rounded-2xl border border-[var(--wd-border)] px-4 text-sm font-black disabled:opacity-50"
                   style={{ background: "var(--wd-bg)" }}
                 >
                   {option.label}
                 </button>
               ))}
             </div>
-            <p aria-live="polite" className="mt-3 min-h-5 text-xs font-bold text-[var(--wd-text-muted)]">
-              {ceremonyStatus === "saving"
-                ? "공식 이름으로 저장하는 중…"
-                : ceremonyStatus === "conflict"
-                  ? "다른 화면에서 먼저 정한 공식 이름을 불러왔어."
-                : ceremonyStatus === "refreshed"
-                  ? "문장 자료가 갱신되어 최신 이름 후보를 불러왔어."
-                : ceremonyStatus === "error"
-                  ? "이름을 저장하지 못했어. 연결을 확인하고 다시 눌러 줘."
-                  : ""}
-            </p>
           </div>
         ) : nextCeremony ? (
           <p className="mt-3 text-sm font-bold text-[var(--wd-text-muted)]">
@@ -471,6 +467,17 @@ export default function WindDownGameClient({
             우리 팀의 공식 이야기가 모두 정해졌어.
           </p>
         )}
+        <p aria-live="polite" className="mt-3 min-h-5 text-xs font-bold text-[var(--wd-text-muted)]">
+          {ceremonyStatus === "saving"
+            ? `${ceremonyStatusSlotLabel}을 공식 이름으로 저장하는 중…`
+            : ceremonyStatus === "conflict"
+              ? `${ceremonyStatusSlotLabel}은 다른 화면에서 먼저 정해져 저장된 이름을 불러왔어.`
+            : ceremonyStatus === "refreshed"
+              ? `${ceremonyStatusSlotLabel} 후보가 갱신되어 최신 목록을 불러왔어.`
+            : ceremonyStatus === "error"
+              ? `${ceremonyStatusSlotLabel}을 저장하지 못했어. 연결을 확인하고 다시 눌러 줘.`
+              : ""}
+        </p>
       </section>
 
       <section aria-label="함께 걷는 멤버" className="rounded-[24px] border border-[var(--wd-border)] p-5" style={{ background: "var(--wd-surface)" }}>

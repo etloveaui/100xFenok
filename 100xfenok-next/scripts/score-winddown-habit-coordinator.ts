@@ -365,6 +365,44 @@ async function main() {
   assert(!learnedLabels.includes("POISON"));
   assert(!learnedLabels.includes("REGRET"));
 
+  const missingReceiptKey =
+    "winddown-review-receipt:ceremony-mastery-1";
+  const missingReceipt = values.get(missingReceiptKey);
+  assert(missingReceipt);
+  values.delete(missingReceiptKey);
+  const degradedMasteryHabit = await command({
+    operation: "read-winddown-habit",
+    nowIso: "2026-07-31T10:07:45.000Z",
+    ceremonyMaterial,
+  });
+  assert.equal(degradedMasteryHabit.response.status, 200);
+  assert.equal(
+    (degradedMasteryHabit.body.ceremony as { status?: unknown }).status,
+    "unavailable",
+  );
+  assert.deepEqual(
+    degradedMasteryHabit.body.game,
+    masteryHabit.body.game,
+    "a ceremony-only receipt fault must preserve authoritative tour progress",
+  );
+  assert.deepEqual(
+    degradedMasteryHabit.body.projection,
+    masteryHabit.body.projection,
+    "a ceremony-only receipt fault must preserve the habit action projection",
+  );
+  const degradedMasteryCommit = await command({
+    operation: "commit-winddown-ceremony-choice",
+    slotId: "debut-song",
+    optionId: "first-light",
+    ceremonyMaterial,
+  });
+  assert.equal(degradedMasteryCommit.response.status, 500);
+  assert.equal(
+    degradedMasteryCommit.body.error,
+    "WINDDOWN_CEREMONY_MASTERY_STATE_INVALID",
+  );
+  values.set(missingReceiptKey, missingReceipt);
+
   values.set("winddown-game-ceremony:v1", {
     schemaVersion: 1,
     catalogVersion: "corrupted",

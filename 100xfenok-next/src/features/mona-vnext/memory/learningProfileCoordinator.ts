@@ -575,15 +575,19 @@ export async function handleMonaVnextProfileCoordinatorRequest(
           events,
           profile,
         });
-        if (!mastery) return { status: "mastery-invalid" as const };
-        ceremony = projectWindDownCeremony(
-          ceremonyRecord,
-          levelFromXp(game.xp),
-          buildWindDownCeremonyOptionCatalog({
-            material: ceremonyMaterial,
-            mastery,
-          }),
-        );
+        ceremony = mastery
+          ? projectWindDownCeremony(
+              ceremonyRecord,
+              levelFromXp(game.xp),
+              buildWindDownCeremonyOptionCatalog({
+                material: ceremonyMaterial,
+                mastery,
+              }),
+            )
+          : projectUnavailableWindDownCeremony(
+              ceremonyRecord,
+              levelFromXp(game.xp),
+            );
       } else {
         ceremony = projectUnavailableWindDownCeremony(
           ceremonyRecord,
@@ -604,9 +608,6 @@ export async function handleMonaVnextProfileCoordinatorRequest(
     });
     if (result.status === "state-invalid") {
       return noStoreJson({ error: "WINDDOWN_CEREMONY_STATE_INVALID" }, 500);
-    }
-    if (result.status === "mastery-invalid") {
-      return noStoreJson({ error: "WINDDOWN_CEREMONY_MASTERY_STATE_INVALID" }, 500);
     }
     return noStoreJson({
       ok: true,

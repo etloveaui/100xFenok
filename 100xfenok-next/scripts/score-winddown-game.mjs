@@ -193,7 +193,7 @@ assert.equal(
   "the learner seed must deterministically drive the scene without a fake local preference",
 );
 assert.equal(
-  client.includes("매일 19 XP면")
+  client.includes("매일 19 XP면 예상 약")
     && !client.includes("이 속도면")
     && !client.includes("밤마다 조금씩"),
   true,
@@ -287,14 +287,24 @@ assert.equal(
 assert.equal(
   client.includes("ceremonyRequestPending")
     && client.includes("min-h-12")
-    && client.includes('aria-live="polite"')
+    && (client.match(/aria-live="polite"/g) ?? []).length === 1
+    && client.indexOf('<p aria-live="polite"') > client.lastIndexOf("nextCeremony ?")
     && client.includes("response.status === 409")
-    && client.includes("다른 화면에서 먼저 정한 공식 이름을 불러왔어.")
-    && client.includes("문장 자료가 갱신되어 최신 이름 후보를 불러왔어.")
+    && client.includes("ceremonyStatusSlotLabel")
+    && client.includes("은 다른 화면에서 먼저 정해져 저장된 이름을 불러왔어.")
+    && client.includes("후보가 갱신되어 최신 목록을 불러왔어.")
+    && client.includes("max-w-full break-words")
     && client.includes('ceremony.status === "unavailable"')
     && client.includes('optionSource === "mastery-derived"'),
   true,
   "the naming moment must resist double taps and expose honest mobile feedback",
+);
+assert.equal(
+  (coordinator.match(/status: "mastery-invalid"/g) ?? []).length === 1
+    && (coordinator.match(/WINDDOWN_CEREMONY_MASTERY_STATE_INVALID/g) ?? []).length === 1
+    && coordinator.includes(": projectUnavailableWindDownCeremony("),
+  true,
+  "a malformed mastery receipt must darken only the read-only ceremony while commits stay fail-closed",
 );
 assert.equal(
   routeContract.includes("/winddown/game/ceremony"),
