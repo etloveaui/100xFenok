@@ -95,7 +95,7 @@ function normalizeLearningEvents(value: unknown): MonaVnextLearningEvent[] {
         : "garbage",
       atIso: typeof record.atIso === "string" ? record.atIso.trim().slice(0, 80) : "",
       sessionId: typeof record.sessionId === "string" ? record.sessionId.trim().slice(0, 120) : "",
-      inputMode,
+      inputMode: inputMode ?? undefined,
     });
     if (event?.expressionId && event.atIso && event.sessionId) events.push(event);
     if (events.length >= 20) break;

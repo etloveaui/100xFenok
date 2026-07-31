@@ -209,7 +209,7 @@ function normalizeLearningEvents(value: unknown) {
         typeof source.sessionId === "string"
           ? source.sessionId.trim().slice(0, 160)
           : "",
-      inputMode,
+      inputMode: inputMode ?? undefined,
     });
     if (!event || !event.expressionId || !event.atIso || !event.sessionId) {
       return null;
