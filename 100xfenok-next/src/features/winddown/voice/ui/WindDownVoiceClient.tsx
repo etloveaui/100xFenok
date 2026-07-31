@@ -524,8 +524,8 @@ export default function WindDownVoiceClient({ activity }: Props) {
                     <div
                       className={`rounded-2xl border px-4 py-3 text-sm font-bold ${
                         journeyTargetEvidence
-                          ? "border-[#9ee7c4]/60 bg-[#9ee7c4]/15 text-white"
-                          : "border-[#d8b4fe]/30 bg-black/15 text-white/75"
+                          ? "border-white/35 bg-white/15 text-white"
+                          : "border-white/20 bg-black/15 text-white/75"
                       }`}
                     >
                       <span aria-hidden>{journeyTargetEvidence ? "✓" : "○"}</span>
@@ -534,7 +534,7 @@ export default function WindDownVoiceClient({ activity }: Props) {
                       </span>
                     </div>
                   ) : (
-                    <p className="rounded-2xl border border-[#f6b2a4]/35 bg-[#8f2e27]/20 px-4 py-3 text-sm font-bold text-white/75">
+                    <p className="rounded-2xl border border-white/20 bg-black/15 px-4 py-3 text-sm font-bold text-white/75">
                       오늘 문장이 아직 없어. Learn을 마치면 이 장면이 오늘 여정에 기록돼.
                     </p>
                   )
@@ -665,12 +665,12 @@ export default function WindDownVoiceClient({ activity }: Props) {
               {!reportState.habitCredited ? (
                 activity === "roleplay" && journeyTargets.length === 0 ? (
                   <>
-                    <Link href="/winddown/learn" className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-white px-4 text-sm font-black text-[#2a133f] active:scale-[.98] motion-reduce:transition-none">Learn에서 오늘 문장 고르기</Link>
+                    <Link href="/winddown/learn" className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-white px-4 text-sm font-black text-slate-900 active:scale-[.98] motion-reduce:transition-none">Learn에서 오늘 문장 고르기</Link>
                     <Link href="/winddown" className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-white/20 px-4 text-sm font-black text-white active:scale-[.98] motion-reduce:transition-none">오늘 여정 보기</Link>
                   </>
                 ) : (
                   <>
-                    <button type="button" onClick={start} className="mt-5 min-h-[48px] w-full rounded-2xl bg-white px-4 text-sm font-black text-[#2a133f] active:scale-[.98] motion-reduce:transition-none">
+                    <button type="button" onClick={start} className="mt-5 min-h-[48px] w-full rounded-2xl bg-white px-4 text-sm font-black text-slate-900 active:scale-[.98] motion-reduce:transition-none">
                       {activity === "roleplay" ? "오늘 문장으로 다시 말하기" : "한 번 더 이야기하기"}
                     </button>
                     <Link href="/winddown" className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-white/20 px-4 text-sm font-black text-white active:scale-[.98] motion-reduce:transition-none">오늘 여정 보기</Link>
