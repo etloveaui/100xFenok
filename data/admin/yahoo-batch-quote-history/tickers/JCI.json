@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -188,15 +175,28 @@
       "run_id": "30502016705",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 587,
+      "natural": true,
+      "observed_at": "2026-07-31T01:08:46Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30593079919",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-30T00:48:59Z",
-    "history_as_of": "2026-07-29",
+    "fetched_at": "2026-07-31T01:11:16Z",
+    "history_as_of": "2026-07-30",
     "path": "data/yf/finance/JCI.json",
-    "payload_sha256": "530f4c49450a84b9aad5e3793c51add884025306fad620707410dc12c417b24c",
-    "quote_as_of": "2026-07-29T20:00:02Z",
-    "source_as_of": "2026-07-29"
+    "payload_sha256": "685f5adcd39c806fcf39b683013d55fbd7fb8a33a0f08466beefba4e327e0d41",
+    "quote_as_of": "2026-07-30T20:00:02Z",
+    "source_as_of": "2026-07-30"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -206,14 +206,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1116,
+    "latency_ms": 587,
     "natural": true,
-    "observed_at": "2026-07-30T00:46:27Z",
+    "observed_at": "2026-07-31T01:08:46Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30502016705",
+    "run_id": "30593079919",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "4/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -244,14 +244,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-29",
-    "observed_at": "2026-07-30T00:46:27Z",
-    "payload_sha256": "ac849b9dc990239da473c20e34a24fae545b49d7908b0ef2c9d47d7a65f0bb1e",
-    "quote_as_of": "2026-07-29T20:00:02Z",
+    "history_as_of": "2026-07-30",
+    "observed_at": "2026-07-31T01:08:46Z",
+    "payload_sha256": "e05f023f684e729b4cc9ca44566cb1bc12cb6a7142175e750fb7560d4a1e34f0",
+    "quote_as_of": "2026-07-30T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "30502016705",
+    "run_id": "30593079919",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-29"
+    "source_as_of": "2026-07-30"
   },
   "recovered_at": "2026-07-24T00:27:41Z",
   "recovered_from_run_id": "29968542251",
@@ -262,5 +262,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "JCI",
-  "updated_at": "2026-07-30T00:46:27Z"
+  "updated_at": "2026-07-31T01:08:46Z"
 }

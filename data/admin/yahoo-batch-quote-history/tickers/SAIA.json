@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -188,15 +175,28 @@
       "run_id": "30502016705",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 524,
+      "natural": true,
+      "observed_at": "2026-07-31T01:08:46Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30593079919",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-30T00:49:36Z",
-    "history_as_of": "2026-07-29",
+    "fetched_at": "2026-07-31T01:11:54Z",
+    "history_as_of": "2026-07-30",
     "path": "data/yf/finance/SAIA.json",
-    "payload_sha256": "aa3bd1b4291c0587604bad1e72014972eacc46458e67abde141033f88930705a",
-    "quote_as_of": "2026-07-29T20:00:01Z",
-    "source_as_of": "2026-07-29"
+    "payload_sha256": "7617f0531eeffbdc820d5c93879a3a82cb439b5c1b09f5148afba090bcd8c064",
+    "quote_as_of": "2026-07-30T20:00:00Z",
+    "source_as_of": "2026-07-30"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -206,14 +206,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 456,
+    "latency_ms": 524,
     "natural": true,
-    "observed_at": "2026-07-30T00:46:27Z",
+    "observed_at": "2026-07-31T01:08:46Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30502016705",
+    "run_id": "30593079919",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "4/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -244,14 +244,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-29",
-    "observed_at": "2026-07-30T00:46:27Z",
-    "payload_sha256": "054343f7ecfadb1761a2569752339f9eb0e3e47b66052ecf87529252c3e33eb1",
-    "quote_as_of": "2026-07-29T20:00:01Z",
+    "history_as_of": "2026-07-30",
+    "observed_at": "2026-07-31T01:08:46Z",
+    "payload_sha256": "9b60ef35558c837f492b0329fedea40bc19abbe1d1f049d254ab966a002b0c64",
+    "quote_as_of": "2026-07-30T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30502016705",
+    "run_id": "30593079919",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-29"
+    "source_as_of": "2026-07-30"
   },
   "recovered_at": "2026-07-24T00:27:41Z",
   "recovered_from_run_id": "29968542251",
@@ -262,5 +262,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "SAIA",
-  "updated_at": "2026-07-30T00:46:27Z"
+  "updated_at": "2026-07-31T01:08:46Z"
 }

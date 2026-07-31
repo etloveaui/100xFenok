@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -168,48 +155,74 @@
       "run_id": "30316637722",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 471,
+      "natural": true,
+      "observed_at": "2026-07-31T00:55:40Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30593079919",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-07-31T00:59:40Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "30593079919",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-28T00:19:54Z",
-    "history_as_of": "2026-07-27",
+    "fetched_at": "2026-07-31T00:57:46Z",
+    "history_as_of": "2026-07-30",
     "path": "data/yf/finance/ATO.json",
-    "payload_sha256": "9328d3472ab21526d709b0e7a2d5dcf97c5b8d5914158cf9e7533a70d6ceb979",
-    "quote_as_of": "2026-07-27T20:00:02Z",
-    "source_as_of": "2026-07-27"
+    "payload_sha256": "f848abe3824f3c7674888e61f905c9d6d4dc548c9b70cb6f0ed470ea7dc68817",
+    "quote_as_of": "2026-07-30T20:00:02Z",
+    "source_as_of": "2026-07-30"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 538,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-07-28T00:18:14Z",
-    "outcome": "fresh",
+    "observed_at": "2026-07-31T00:59:40Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "30316637722",
+    "run_id": "30593079919",
     "schedule": "20 23 * * 1-5",
     "shard": "1/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-27",
-    "observed_at": "2026-07-28T00:18:14Z",
-    "payload_sha256": "44978036c9ce53c10aab7ed23879474c541ca04fcc5d814ace3862679db1f768",
-    "quote_as_of": "2026-07-27T20:00:02Z",
+    "history_as_of": "2026-07-30",
+    "observed_at": "2026-07-31T00:55:40Z",
+    "payload_sha256": "a497425dc9adb46cf67b6c9a4ed0de631eff9d4bbd1f570e0ff1e9b814c5aaeb",
+    "quote_as_of": "2026-07-30T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "30316637722",
+    "run_id": "30593079919",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-27"
+    "source_as_of": "2026-07-30"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "ATO",
-  "updated_at": "2026-07-28T00:18:14Z"
+  "updated_at": "2026-07-31T00:59:40Z"
 }

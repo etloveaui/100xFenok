@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -188,15 +175,28 @@
       "run_id": "30502016705",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 526,
+      "natural": true,
+      "observed_at": "2026-07-31T01:01:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30593079919",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-30T00:41:19Z",
-    "history_as_of": "2026-07-29",
+    "fetched_at": "2026-07-31T01:03:27Z",
+    "history_as_of": "2026-07-30",
     "path": "data/yf/finance/DPZ.json",
-    "payload_sha256": "25d672363e7a074547c9af93749b03d25e82d0079386c5eba63bbcf7db8e0f0e",
-    "quote_as_of": "2026-07-29T20:00:01Z",
-    "source_as_of": "2026-07-29"
+    "payload_sha256": "b2e9ef2b3275649abda473b2492ecbaef5d07d0380e8503b4053318342bf8782",
+    "quote_as_of": "2026-07-30T20:00:01Z",
+    "source_as_of": "2026-07-30"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -206,14 +206,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 480,
+    "latency_ms": 526,
     "natural": true,
-    "observed_at": "2026-07-30T00:39:13Z",
+    "observed_at": "2026-07-31T01:01:21Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30502016705",
+    "run_id": "30593079919",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "2/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -244,14 +244,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-29",
-    "observed_at": "2026-07-30T00:39:13Z",
-    "payload_sha256": "1593f965ac5b51739dcf847ca5ab51c335db8c31efad732f4594c2a5e773135d",
-    "quote_as_of": "2026-07-29T20:00:01Z",
+    "history_as_of": "2026-07-30",
+    "observed_at": "2026-07-31T01:01:21Z",
+    "payload_sha256": "e0648e583e5d90f6f043058e5fd4a23630bf487fd9e626e54051b4275c27bf54",
+    "quote_as_of": "2026-07-30T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "30502016705",
+    "run_id": "30593079919",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-29"
+    "source_as_of": "2026-07-30"
   },
   "recovered_at": "2026-07-21T00:18:00Z",
   "recovered_from_run_id": "29622560422",
@@ -262,5 +262,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "DPZ",
-  "updated_at": "2026-07-30T00:39:13Z"
+  "updated_at": "2026-07-31T01:01:21Z"
 }

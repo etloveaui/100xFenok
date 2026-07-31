@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "30502016705",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 510,
+      "natural": true,
+      "observed_at": "2026-07-31T01:01:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30593079919",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-30T00:42:01Z",
-    "history_as_of": "2026-07-29",
+    "fetched_at": "2026-07-31T01:04:10Z",
+    "history_as_of": "2026-07-30",
     "path": "data/yf/finance/MU.json",
-    "payload_sha256": "0cc04dc9e402c6b8781ce3d13a521b4c3a2c0e6194411204377cbe07ae20994b",
-    "quote_as_of": "2026-07-29T20:00:01Z",
-    "source_as_of": "2026-07-29"
+    "payload_sha256": "8298eace4e1c33782875b6241ddf478573dcaff9f4528828a5248c0091e98f91",
+    "quote_as_of": "2026-07-30T20:00:01Z",
+    "source_as_of": "2026-07-30"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -200,30 +200,30 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 664,
+    "latency_ms": 510,
     "natural": true,
-    "observed_at": "2026-07-30T00:39:13Z",
+    "observed_at": "2026-07-31T01:01:21Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30502016705",
+    "run_id": "30593079919",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "2/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-29",
-    "observed_at": "2026-07-30T00:39:13Z",
-    "payload_sha256": "a1212ee73c74db5d21bf1e11abd349c1a38e53faa89264401becf2c953f665bc",
-    "quote_as_of": "2026-07-29T20:00:01Z",
+    "history_as_of": "2026-07-30",
+    "observed_at": "2026-07-31T01:01:21Z",
+    "payload_sha256": "a79a85783805f131148313c92d45cff370508cd1b14f8b11c3731408752041b6",
+    "quote_as_of": "2026-07-30T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "30502016705",
+    "run_id": "30593079919",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-29"
+    "source_as_of": "2026-07-30"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MU",
-  "updated_at": "2026-07-30T00:39:13Z"
+  "updated_at": "2026-07-31T01:01:21Z"
 }

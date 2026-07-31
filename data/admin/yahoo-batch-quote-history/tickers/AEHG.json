@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-07-22T23:47:05Z",
     "history_as_of": "2026-07-22",
-    "path": "data/yf/finance/AEHG.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AEHG.json",
     "payload_sha256": "0f6c161c2915d8a029235347d746b9851dbdd2145d93921467e417f6af5d171b",
     "quote_as_of": "2026-07-22T20:00:00Z",
     "source_as_of": "2026-07-22"
@@ -65,12 +65,12 @@
     "shard": "3/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-30T14:33:38Z",
-    "history_as_of": "2026-06-30",
+    "fetched_at": "2026-07-22T23:47:05Z",
+    "history_as_of": "2026-07-22",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AEHG.json",
-    "payload_sha256": "414a921622f7d9e873c3d573f3682abc1c8302339452098b32dc0019ba7f4f67",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-30"
+    "payload_sha256": "0f6c161c2915d8a029235347d746b9851dbdd2145d93921467e417f6af5d171b",
+    "quote_as_of": "2026-07-22T20:00:00Z",
+    "source_as_of": "2026-07-22"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-22"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-07-31T00:55:40Z",
+    "classified_run_id": "30593079919",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "AEHG holds LKG because Yahoo source date 2026-06-30 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AEHG holds LKG because Yahoo source date 2026-07-22 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-30"
+    "source_as_of": "2026-07-22"
   },
   "ticker": "AEHG",
-  "updated_at": "2026-07-22T23:45:22Z"
+  "updated_at": "2026-07-31T00:55:40Z"
 }

@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-22T23:46:15Z",
     "history_as_of": "2026-07-22",
-    "path": "data/yf/finance/CIR.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CIR.json",
     "payload_sha256": "3e3bd42a8bd822e5d65f8184b2e6904699b53681ae2adee510daa7a37a23d014",
     "quote_as_of": "2026-07-22T16:01:23Z",
     "source_as_of": "2026-07-22"
@@ -52,12 +52,12 @@
     "shard": "3/6"
   },
   "lkg": {
-    "fetched_at": "2026-07-08T22:42:14Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-07-22T23:46:15Z",
+    "history_as_of": "2026-07-22",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CIR.json",
-    "payload_sha256": "2d9b8631df6a7585001d16cf86e1e6b9a50388a3e24a2b87a7bda89f1e933260",
-    "quote_as_of": null,
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "3e3bd42a8bd822e5d65f8184b2e6904699b53681ae2adee510daa7a37a23d014",
+    "quote_as_of": "2026-07-22T16:01:23Z",
+    "source_as_of": "2026-07-22"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-22"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-07-17T00:15:36Z",
-    "classified_run_id": "29544227703",
+    "classified_at": "2026-07-31T00:55:40Z",
+    "classified_run_id": "30593079919",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CIR holds LKG because Yahoo source date 2026-07-08 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CIR holds LKG because Yahoo source date 2026-07-22 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-08"
+    "source_as_of": "2026-07-22"
   },
   "ticker": "CIR",
-  "updated_at": "2026-07-22T23:45:22Z"
+  "updated_at": "2026-07-31T00:55:40Z"
 }

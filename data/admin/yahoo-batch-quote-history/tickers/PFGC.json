@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -188,15 +175,28 @@
       "run_id": "30502016705",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 435,
+      "natural": true,
+      "observed_at": "2026-07-31T01:04:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30593079919",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-30T00:45:47Z",
-    "history_as_of": "2026-07-29",
+    "fetched_at": "2026-07-31T01:08:06Z",
+    "history_as_of": "2026-07-30",
     "path": "data/yf/finance/PFGC.json",
-    "payload_sha256": "3307e4449f655d71b5d34641148622b7a861fb3f458a15e08e47b23f3b85accf",
-    "quote_as_of": "2026-07-29T20:00:02Z",
-    "source_as_of": "2026-07-29"
+    "payload_sha256": "05e0a489d7c84c10cff260b90433c115bd9194e4ad6d51a462b23fb24f002608",
+    "quote_as_of": "2026-07-30T20:00:02Z",
+    "source_as_of": "2026-07-30"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -206,14 +206,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 427,
+    "latency_ms": 435,
     "natural": true,
-    "observed_at": "2026-07-30T00:42:51Z",
+    "observed_at": "2026-07-31T01:04:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30502016705",
+    "run_id": "30593079919",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "3/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -244,14 +244,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-29",
-    "observed_at": "2026-07-30T00:42:51Z",
-    "payload_sha256": "cdecc0ecc792e9c7da68d1b601f7e6ba4667ce42cca10f384f84d973e1dfafc2",
-    "quote_as_of": "2026-07-29T20:00:02Z",
+    "history_as_of": "2026-07-30",
+    "observed_at": "2026-07-31T01:04:59Z",
+    "payload_sha256": "29d633537dcef2b286d082f454538c24fea188082b7b0ac10fea78ea26cb679d",
+    "quote_as_of": "2026-07-30T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "30502016705",
+    "run_id": "30593079919",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-29"
+    "source_as_of": "2026-07-30"
   },
   "recovered_at": "2026-07-21T00:18:00Z",
   "recovered_from_run_id": "29622560422",
@@ -262,5 +262,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "PFGC",
-  "updated_at": "2026-07-30T00:42:51Z"
+  "updated_at": "2026-07-31T01:04:59Z"
 }
