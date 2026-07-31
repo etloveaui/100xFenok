@@ -98,7 +98,10 @@ function categoryForPath(relPath) {
     };
   }
 
-  if (relPath.startsWith("src/features/winddown/ui/")) {
+  if (
+    relPath.startsWith("src/features/winddown/ui/") ||
+    relPath.startsWith("src/features/winddown/habit/ui/")
+  ) {
     return {
       category: "product-theme",
       note: "Current WIND DOWN activity palette is intentionally isolated from the finance-app theme.",

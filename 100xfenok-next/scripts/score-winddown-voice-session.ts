@@ -14,6 +14,7 @@ import {
 } from "../src/features/winddown/server/voiceSession";
 import {
   createWindDownVoiceSessionProof,
+  readWindDownVoiceSessionProofChainContext,
   verifyWindDownVoiceSessionProofChain,
 } from "../src/features/winddown/server/voiceSessionProof";
 import {
@@ -106,12 +107,18 @@ assert.match(liveTalkPrompt, /do not use study exercises/i);
 assert.doesNotMatch(liveTalkPrompt, /must use|select from|practice these expressions/i);
 
 const apiKey = "server-secret-test-key";
+const journeyTargets = [{
+  materialId: "material-tonight",
+  en: "I would like a decaf coffee",
+  acceptedVariants: ["I'd like a decaf coffee"],
+}];
 let capturedUrl = "";
 let capturedInit: RequestInit | undefined;
 const session = await createWindDownVoiceSession(roleplay, {
   now: () => new Date("2026-07-31T00:00:00.000Z"),
   randomId: () => "fixed-id",
   getApiKey: () => apiKey,
+  journeyTargets,
   fetch: async (input, init) => {
     capturedUrl = String(input);
     capturedInit = init;
@@ -139,6 +146,10 @@ assert.match(
   String(providerBody.bidiGenerateContentSetup.systemInstruction?.parts?.[0]?.text),
   /You are the friendly cafe barista\./,
 );
+assert.match(
+  String(providerBody.bidiGenerateContentSetup.systemInstruction?.parts?.[0]?.text),
+  /I would like a decaf coffee/,
+);
 assert.equal("expressionBank" in providerBody.bidiGenerateContentSetup, false);
 assert.equal(session.activity, "roleplay");
 assert.equal(session.settings.activity, "roleplay");
@@ -153,6 +164,7 @@ const decodedReportProof = Buffer.from(
 ).toString("utf8");
 assert.match(decodedReportProof, /winddown-voice-product-session-001/);
 assert.match(decodedReportProof, /winddown-roleplay-cafe-order-fixed-id/);
+assert.match(decodedReportProof, /material-tonight/);
 assert.doesNotMatch(
   decodedReportProof,
   /ephemeral-client-token|server-secret-test-key|systemInstruction|setup/,
@@ -184,6 +196,19 @@ assert.equal(await verifyWindDownVoiceSessionProofChain({
   stoppedAtIso: "2026-07-31T00:10:00.000Z",
   nowMs: Date.parse("2026-07-31T00:10:00.000Z"),
 }), true);
+assert.deepEqual(
+  await readWindDownVoiceSessionProofChainContext({
+    activity: "roleplay",
+    productSessionId: roleplay.productSessionId,
+    descriptor: createWindDownRoleplayDescriptor("cafe-order"),
+    conversationIds: [session.conversationId],
+    sessionProofs: [session.reportProof],
+    startedAtIso: session.startedAt,
+    stoppedAtIso: "2026-07-31T00:10:00.000Z",
+    nowMs: Date.parse("2026-07-31T00:10:00.000Z"),
+  }),
+  { journeyTargets },
+);
 assert.equal(await verifyWindDownVoiceSessionProofChain({
   activity: "roleplay",
   productSessionId: roleplay.productSessionId,
@@ -274,6 +299,7 @@ const resumedSession = await createWindDownVoiceSession({
   now: () => new Date("2026-07-31T00:05:00.000Z"),
   randomId: () => "resumed-fixed-id",
   getApiKey: () => apiKey,
+  journeyTargets,
   fetch: async () => new Response(JSON.stringify({
     name: "resumed-ephemeral-token",
     expireTime: "2026-07-31T00:35:00.000Z",
@@ -359,7 +385,11 @@ const reportRouteSource = readFileSync(
   path.join(process.cwd(), "src/app/api/winddown/live/report/route.ts"),
   "utf8",
 );
-assert.match(reportRouteSource, /verifyWindDownVoiceSessionProofChain/);
+assert.match(
+  reportRouteSource,
+  /readWindDownVoiceSessionProofChainContext/,
+);
+assert.match(reportRouteSource, /journeyTargets:\s*proofContext\.journeyTargets/);
 assert.match(
   reportRouteSource,
   /INVALID_WINDDOWN_VOICE_REPORT_SESSION_PROOF[\s\S]*403/,

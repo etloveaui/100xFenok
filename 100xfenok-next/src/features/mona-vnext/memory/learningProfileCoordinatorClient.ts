@@ -4,6 +4,13 @@ import type {
 } from "@/features/mona-vnext/memory/learningProfileCoordinator";
 import { normalizeMonaVnextLearningProfile } from "@/features/mona-vnext/memory/fsrsLearningProfile";
 import type { MonaVnextLearningEvent } from "@/features/mona-vnext/memory/srsBridge";
+import type {
+  WindDownLearnAction,
+  WindDownLearnCard,
+} from "@/features/winddown/learn/engine";
+import type {
+  WindDownLearnSessionManifest,
+} from "@/features/winddown/server/learnSessionProof";
 
 const COORDINATOR_BINDING = "WINDDOWN_REVIEW_COORDINATOR";
 const COORDINATOR_OBJECT_NAME = "mona-vnext-learning-profile-v1";
@@ -105,5 +112,29 @@ export async function commitWindDownVoiceReportThroughCoordinator(
   return invokeMonaVnextProfileCoordinator({
     operation: "commit-voice-report",
     receipt,
+  });
+}
+
+export async function readWindDownHabitThroughCoordinator(now = new Date()) {
+  return invokeMonaVnextProfileCoordinator({
+    operation: "read-winddown-habit",
+    nowIso: now.toISOString(),
+  });
+}
+
+export async function commitWindDownLearnAttemptThroughCoordinator(args: {
+  manifest: WindDownLearnSessionManifest;
+  cards: WindDownLearnCard[];
+  attemptId: string;
+  action: WindDownLearnAction;
+  now: Date;
+}) {
+  return invokeMonaVnextProfileCoordinator({
+    operation: "commit-learn-attempt",
+    manifest: args.manifest,
+    cards: args.cards,
+    attemptId: args.attemptId,
+    action: args.action,
+    nowIso: args.now.toISOString(),
   });
 }

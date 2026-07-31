@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { Fraunces } from "next/font/google";
 import AdminAccessGate from "@/components/AdminAccessGate";
-import MonaVoiceCoachApp from "@/features/mona-vnext/MonaVoiceCoachApp";
+import WindDownHabitHomeClient from "@/features/winddown/habit/ui/WindDownHabitHomeClient";
 import {
   ADMIN_SESSION_COOKIE,
   verifyAdminSessionToken,
@@ -17,7 +17,7 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   title: "Wind-Down",
-  description: "자기 전 영어 발화 코치",
+  description: "자기 전 영어 여정",
   manifest: "/winddown/manifest.webmanifest",
   appleWebApp: {
     capable: true,
@@ -53,7 +53,7 @@ export default async function WindDownPage() {
 
   return (
     <div data-immersive-route="winddown" className={fraunces.variable}>
-      <MonaVoiceCoachApp surface="winddown" />
+      <WindDownHabitHomeClient />
     </div>
   );
 }

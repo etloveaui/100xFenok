@@ -4,11 +4,16 @@ import {
   ADMIN_SESSION_COOKIE,
   verifyAdminSessionToken,
 } from "@/lib/server/admin-session";
-import { appendMonaVnextMemoryCheckpoint } from "@/features/mona-vnext/memory/monaMemoryRepository";
 import {
-  prepareWindDownLearnProgress,
-  WindDownLearnProgressError,
-} from "@/features/winddown/server/learnProgress";
+  commitWindDownLearnAttemptThroughCoordinator,
+  MonaVnextProfileCoordinatorError,
+} from "@/features/mona-vnext/memory/learningProfileCoordinatorClient";
+import {
+  getWindDownHabitKstDay,
+} from "@/features/winddown/habit/domain";
+import {
+  verifyWindDownLearnSessionProof,
+} from "@/features/winddown/server/learnSessionProof";
 import { loadWindDownStudyMaterial } from "@/features/winddown/server/publishedMaterialAdapter";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +39,34 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
 
   try {
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return noStoreJson({ error: "INVALID_WINDDOWN_LEARN_ATTEMPT" }, 400);
+    }
+    const source = body as Record<string, unknown>;
+    const expected = new Set([
+      "schemaVersion",
+      "activity",
+      "attemptId",
+      "sessionProof",
+      "action",
+    ]);
+    const now = new Date();
+    const manifest = await verifyWindDownLearnSessionProof({
+      proof: source.sessionProof,
+      now,
+    });
+    if (
+      Object.keys(source).length !== expected.size
+      || !Object.keys(source).every((key) => expected.has(key))
+      || source.schemaVersion !== 2
+      || source.activity !== "learn"
+      || typeof source.attemptId !== "string"
+      || !/^[A-Za-z0-9._:-]{1,160}$/.test(source.attemptId)
+      || !manifest
+      || manifest.habitKstDay !== getWindDownHabitKstDay(now)
+    ) {
+      return noStoreJson({ error: "INVALID_WINDDOWN_LEARN_ATTEMPT" }, 400);
+    }
     const material = await loadWindDownStudyMaterial({
       dueExpressionIds: [],
       deferredExpressionIds: [],
@@ -45,23 +78,39 @@ export async function POST(request: Request) {
     ) {
       return noStoreJson({ error: "WINDDOWN_MATERIAL_UNAVAILABLE" }, 503);
     }
-    const prepared = prepareWindDownLearnProgress(body, {
-      currentContentDigest: material.metadata.contentDigest,
-      activeMaterialIds: new Set(material.entries.map((entry) => entry.id)),
+    if (manifest.contentDigest !== material.metadata.contentDigest) {
+      return noStoreJson({ error: "MATERIAL_VERSION_CHANGED" }, 409);
+    }
+    const byId = new Map(material.entries.map((entry) => [entry.id, entry]));
+    const cards = manifest.cardIds.flatMap((id) => {
+      const card = byId.get(id);
+      return card ? [card] : [];
     });
-    const stored = await appendMonaVnextMemoryCheckpoint(prepared.checkpoint);
+    if (cards.length !== manifest.cardIds.length) {
+      return noStoreJson({ error: "MATERIAL_VERSION_CHANGED" }, 409);
+    }
+    const stored = await commitWindDownLearnAttemptThroughCoordinator({
+      manifest,
+      cards,
+      attemptId: source.attemptId,
+      action: source.action as never,
+      now,
+    });
     return noStoreJson({
       ok: true,
-      schemaVersion: prepared.input.schemaVersion,
-      activity: prepared.input.activity,
-      attemptId: prepared.input.attemptId,
-      materialId: prepared.input.materialId,
-      rating: prepared.learningEvent.rating,
-      persisted: stored.ok === true,
-      backend: stored.backend,
+      schemaVersion: 2,
+      activity: "learn",
+      attemptId: source.attemptId,
+      persisted: stored.persisted === true,
+      duplicate: stored.duplicate === true,
+      outcome: stored.outcome,
+      reward: stored.reward,
+      state: stored.state,
+      completionReceipt: stored.completionReceipt ?? null,
+      backend: "durable-object",
     });
   } catch (error) {
-    if (error instanceof WindDownLearnProgressError) {
+    if (error instanceof MonaVnextProfileCoordinatorError) {
       return noStoreJson({ error: error.code }, error.status);
     }
     const requestId = crypto.randomUUID();

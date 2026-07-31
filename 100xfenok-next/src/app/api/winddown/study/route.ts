@@ -5,14 +5,24 @@ import {
   verifyAdminSessionToken,
 } from "@/lib/server/admin-session";
 import {
-  readMonaVnextLearningProfileState,
-} from "@/features/mona-vnext/memory/monaMemoryRepository";
+  readMonaVnextLearningProfileThroughCoordinator,
+  readWindDownHabitThroughCoordinator,
+} from "@/features/mona-vnext/memory/learningProfileCoordinatorClient";
 import {
   classifyMonaVnextLearningProfile,
 } from "@/features/mona-vnext/memory/fsrsLearningProfile";
 import { buildWindDownStudyBootstrap } from "@/features/winddown/server/studyBootstrap";
 import { loadWindDownStudyMaterial } from "@/features/winddown/server/publishedMaterialAdapter";
 import { buildWindDownReviewCards } from "@/features/winddown/server/reviewCycle";
+import {
+  getWindDownHabitKstDay,
+} from "@/features/winddown/habit/domain";
+import {
+  createWindDownLearnSessionProof,
+  normalizeWindDownLearnSessionManifest,
+  WIND_DOWN_LEARN_SESSION_TTL_MS,
+  type WindDownLearnSessionManifest,
+} from "@/features/winddown/server/learnSessionProof";
 import {
   normalizeWindDownStudyCount,
   normalizeWindDownStudyMode,
@@ -46,7 +56,7 @@ export async function GET(request: Request) {
 
   try {
     const now = new Date();
-    const learningProfile = await readMonaVnextLearningProfileState();
+    const learningProfile = await readMonaVnextLearningProfileThroughCoordinator();
     const learningSelection = classifyMonaVnextLearningProfile(
       learningProfile,
       now,
@@ -60,9 +70,12 @@ export async function GET(request: Request) {
       dueExpressionIds: learning.dueExpressionIds,
       deferredExpressionIds: learning.deferredExpressionIds,
     });
+    const habitKstDay = getWindDownHabitKstDay(now);
     const bootstrap = buildWindDownStudyBootstrap({
       mode,
-      seed: normalizeWindDownStudySeed(url.searchParams.get("seed"), mode),
+      seed: mode === "learn"
+        ? `${habitKstDay}:learn`
+        : normalizeWindDownStudySeed(url.searchParams.get("seed"), mode),
       entries: material.entries,
       dueExpressionIds: material.dueExpressionIds,
       deferredExpressionIds: material.deferredExpressionIds,
@@ -70,6 +83,13 @@ export async function GET(request: Request) {
     });
     let cards = bootstrap.cards;
     let inventory = bootstrap.inventory;
+    let learnSession:
+      | {
+          manifest: WindDownLearnSessionManifest;
+          proof: string;
+          resumeState: unknown | null;
+        }
+      | null = null;
     if (mode === "review") {
       if (
         material.metadata.source !== "published-lkg" ||
@@ -88,6 +108,64 @@ export async function GET(request: Request) {
         ...bootstrap.inventory,
         selectedCount: cards.length,
       };
+    } else {
+      if (
+        material.metadata.source !== "published-lkg"
+        || material.metadata.publicationStatus !== "active"
+        || !material.metadata.contentDigest
+        || cards.length !== 5
+      ) {
+        return noStoreJson({ error: "WINDDOWN_MATERIAL_UNAVAILABLE" }, 503);
+      }
+      const habit = await readWindDownHabitThroughCoordinator(now);
+      const activeLearn =
+        habit.activeLearn
+        && typeof habit.activeLearn === "object"
+        && !Array.isArray(habit.activeLearn)
+          ? habit.activeLearn as Record<string, unknown>
+          : null;
+      const activeManifest = normalizeWindDownLearnSessionManifest(
+        activeLearn?.manifest,
+      );
+      const byId = new Map(material.entries.map((entry) => [entry.id, entry]));
+      const resumedCards = activeManifest
+        && activeManifest.habitKstDay === habitKstDay
+        && activeManifest.contentDigest === material.metadata.contentDigest
+          ? activeManifest.cardIds.flatMap((id) => {
+              const card = byId.get(id);
+              return card ? [card] : [];
+            })
+          : [];
+      const issuedAtMs = now.getTime();
+      const manifest: WindDownLearnSessionManifest =
+        activeManifest && resumedCards.length === 5
+          ? {
+              ...activeManifest,
+              issuedAtIso: now.toISOString(),
+              expiresAtIso: new Date(
+                issuedAtMs + WIND_DOWN_LEARN_SESSION_TTL_MS,
+              ).toISOString(),
+            }
+          : {
+              schemaVersion: 1,
+              sessionId: crypto.randomUUID(),
+              habitKstDay,
+              seed: bootstrap.seed,
+              cardIds: cards.map((card) => card.id),
+              contentDigest: material.metadata.contentDigest,
+              issuedAtIso: now.toISOString(),
+              expiresAtIso: new Date(
+                issuedAtMs + WIND_DOWN_LEARN_SESSION_TTL_MS,
+              ).toISOString(),
+            };
+      if (resumedCards.length === 5) {
+        cards = resumedCards;
+      }
+      learnSession = {
+        manifest,
+        proof: await createWindDownLearnSessionProof(manifest),
+        resumeState: activeLearn?.state ?? null,
+      };
     }
     return noStoreJson({
       ...bootstrap,
@@ -99,6 +177,7 @@ export async function GET(request: Request) {
       },
       material: material.metadata,
       materialResolution: material.resolution,
+      ...(learnSession ? { learnSession } : {}),
       advisor: material.advisorForExpressionIds(
         cards.map((card) => card.id),
       ),

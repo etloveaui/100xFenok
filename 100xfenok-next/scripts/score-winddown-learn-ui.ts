@@ -24,15 +24,16 @@ assert.ok(
 );
 assert.ok(
   client.includes('fetch("/api/winddown/progress"'),
-  "credited Learn actions must use the dedicated progress endpoint",
+  "every Learn action must use the dedicated progress endpoint",
 );
 assert.ok(
   client.includes("body?.persisted !== true"),
   "Learn UI must not advance past an unconfirmed persistence response",
 );
 assert.ok(
-  client.includes("result.reward === 1"),
-  "only credited reducer actions may create progress writes",
+  client.includes("sessionProof") &&
+    client.includes("action,"),
+  "the client must submit the signed session proof and actual action, not a self-awarded verdict",
 );
 assert.ok(
   client.includes('feedback.outcome === "miss"'),
@@ -49,9 +50,17 @@ assert.ok(
 );
 assert.ok(
   progressRoute.includes("ADMIN_SESSION_REQUIRED") &&
-    progressRoute.includes("prepareWindDownLearnProgress"),
-  "the progress endpoint must authenticate and validate writes",
+    progressRoute.includes("verifyWindDownLearnSessionProof") &&
+    progressRoute.includes("commitWindDownLearnAttemptThroughCoordinator"),
+  "the progress endpoint must authenticate, verify the server proof, and commit through the coordinator",
 );
+for (const forbiddenTrustField of ["occurredAt", "verdict:", "sequence:"]) {
+  assert.equal(
+    client.includes(forbiddenTrustField),
+    false,
+    `the Learn client must not award its own ${forbiddenTrustField}`,
+  );
+}
 
 for (const forbidden of [
   "MonaVoiceCoachApp",
@@ -68,5 +77,5 @@ for (const forbidden of [
 }
 
 console.log(
-  "PASS winddown-learn-ui - five-card UI persists only credited model-free actions",
+  "PASS winddown-learn-ui - five-card UI submits signed actions and resumes server state",
 );

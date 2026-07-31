@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   WINDDOWN_LEARN_CREDIT_TARGET,
   applyWindDownLearnAction,
@@ -25,18 +25,28 @@ type StudyResponse = {
     publicationStatus: "active" | "absent" | "invalid";
     contentDigest: string | null;
   };
+  learnSession: {
+    manifest: {
+      schemaVersion: 1;
+      sessionId: string;
+      habitKstDay: string;
+      seed: string;
+      cardIds: string[];
+      contentDigest: string;
+      issuedAtIso: string;
+      expiresAtIso: string;
+    };
+    proof: string;
+    resumeState: unknown | null;
+  };
 };
 
 type ProgressPayload = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   activity: "learn";
   attemptId: string;
-  sessionId: string;
-  sequence: number;
-  materialId: string;
-  contentDigest: string;
-  occurredAt: string;
-  verdict: "canonical" | "close";
+  sessionProof: string;
+  action: WindDownLearnAction;
 };
 
 type Feedback = {
@@ -57,10 +67,22 @@ function kstDay() {
   }).format(new Date());
 }
 
-function newSessionId() {
-  return typeof crypto !== "undefined" && "randomUUID" in crypto
+function newAttemptId(sessionId: string) {
+  const suffix = typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
-    : `session-${Date.now().toString(36)}`;
+    : Date.now().toString(36);
+  return `${sessionId}:${suffix}`;
+}
+
+function isLearnState(value: unknown): value is WindDownLearnState {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const source = value as Partial<WindDownLearnState>;
+  return source.schemaVersion === 1
+    && source.targetActions === WINDDOWN_LEARN_CREDIT_TARGET
+    && Array.isArray(source.queue)
+    && Array.isArray(source.creditedCardIds)
+    && Array.isArray(source.mistakes)
+    && typeof source.isComplete === "boolean";
 }
 
 function isStudyResponse(value: unknown): value is StudyResponse {
@@ -73,14 +95,16 @@ function isStudyResponse(value: unknown): value is StudyResponse {
     Array.isArray(source.cards) &&
     source.material?.source === "published-lkg" &&
     source.material.publicationStatus === "active" &&
-    typeof source.material.contentDigest === "string"
+    typeof source.material.contentDigest === "string" &&
+    typeof source.learnSession?.proof === "string" &&
+    typeof source.learnSession.manifest?.sessionId === "string"
   );
 }
 
 export default function WindDownLearnClient() {
-  const sessionIdRef = useRef(newSessionId());
   const [session, setSession] = useState<WindDownLearnState | null>(null);
-  const [contentDigest, setContentDigest] = useState<string | null>(null);
+  const [sessionProof, setSessionProof] = useState<string | null>(null);
+  const [manifestSessionId, setManifestSessionId] = useState<string | null>(null);
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
@@ -105,12 +129,21 @@ export default function WindDownLearnClient() {
       ) {
         throw new Error("winddown_learn_bootstrap_invalid");
       }
-      setContentDigest(body.material.contentDigest);
-      setSession(createWindDownLearnSession({ cards: body.cards, seed }));
+      setSessionProof(body.learnSession.proof);
+      setManifestSessionId(body.learnSession.manifest.sessionId);
+      setSession(
+        isLearnState(body.learnSession.resumeState)
+          ? body.learnSession.resumeState
+          : createWindDownLearnSession({
+              cards: body.cards,
+              seed: body.learnSession.manifest.seed,
+            }),
+      );
       setStatus("ready");
     } catch {
       setSession(null);
-      setContentDigest(null);
+      setSessionProof(null);
+      setManifestSessionId(null);
       setStatus("error");
     }
   }, []);
@@ -140,10 +173,23 @@ export default function WindDownLearnClient() {
     });
     const body = (await response.json().catch(() => null)) as {
       persisted?: boolean;
+      outcome?: Feedback["outcome"];
+      state?: unknown;
     } | null;
-    if (!response.ok || body?.persisted !== true) {
+    if (
+      !response.ok
+      || body?.persisted !== true
+      || !isLearnState(body.state)
+      || (
+        body.outcome !== "miss"
+        && body.outcome !== "practice"
+        && body.outcome !== "correct"
+        && body.outcome !== "complete"
+      )
+    ) {
       throw new Error("winddown_learn_progress_failed");
     }
+    return { outcome: body.outcome, state: body.state };
   }, []);
 
   const saveFeedback = useCallback(
@@ -152,10 +198,16 @@ export default function WindDownLearnClient() {
       const attemptId = currentFeedback.progress.attemptId;
       setFeedback({ ...currentFeedback, saveError: false });
       try {
-        await persistProgress(currentFeedback.progress);
+        const persisted = await persistProgress(currentFeedback.progress);
         setFeedback((latest) =>
           latest && latest.progress?.attemptId === attemptId
-            ? { ...latest, persisted: true, saveError: false }
+            ? {
+                ...latest,
+                outcome: persisted.outcome,
+                nextState: persisted.state,
+                persisted: true,
+                saveError: false,
+              }
             : latest,
         );
       } catch {
@@ -171,39 +223,42 @@ export default function WindDownLearnClient() {
 
   const submit = useCallback(
     (action: WindDownLearnAction) => {
-      if (!session || !current || feedback || !contentDigest) return;
+      if (
+        !session
+        || !current
+        || feedback
+        || !sessionProof
+        || !manifestSessionId
+      ) return;
       const result = applyWindDownLearnAction(session, action);
       if (result.outcome === "invalid") return;
-      const recovered = session.mistakes.some(
-        (mistake) => mistake.card.id === current.card.id,
-      );
-      const progressPayload: ProgressPayload | null =
-        result.reward === 1
-          ? {
-              schemaVersion: 1,
-              activity: "learn",
-              attemptId: `${sessionIdRef.current}:${session.creditedCardIds.length + 1}:${current.card.id}`,
-              sessionId: sessionIdRef.current,
-              sequence: session.creditedCardIds.length + 1,
-              materialId: current.card.id,
-              contentDigest,
-              occurredAt: new Date().toISOString(),
-              verdict: recovered ? "close" : "canonical",
-            }
-          : null;
+      const progressPayload: ProgressPayload = {
+        schemaVersion: 2,
+        activity: "learn",
+        attemptId: newAttemptId(manifestSessionId),
+        sessionProof,
+        action,
+      };
       const nextFeedback: Feedback = {
         outcome: result.outcome,
         nextState: result.state,
         card: current.card,
         progress: progressPayload,
-        persisted: progressPayload === null,
+        persisted: false,
         saveError: false,
       };
       setFeedback(nextFeedback);
       setSelectedTokenIds([]);
-      if (progressPayload) void saveFeedback(nextFeedback);
+      void saveFeedback(nextFeedback);
     },
-    [contentDigest, current, feedback, saveFeedback, session],
+    [
+      current,
+      feedback,
+      manifestSessionId,
+      saveFeedback,
+      session,
+      sessionProof,
+    ],
   );
 
   const continueQuest = () => {

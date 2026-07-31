@@ -9,7 +9,7 @@ import {
   type WindDownVoiceReportInput,
 } from "@/features/winddown/voice/report";
 import {
-  verifyWindDownVoiceSessionProofChain,
+  readWindDownVoiceSessionProofChainContext,
 } from "@/features/winddown/server/voiceSessionProof";
 import {
   ADMIN_SESSION_COOKIE,
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
     }
     return noStoreJson({ error: "INVALID_WINDDOWN_VOICE_REPORT" }, 400);
   }
-  if (!await verifyWindDownVoiceSessionProofChain({
+  const proofContext = await readWindDownVoiceSessionProofChainContext({
     activity: report.activity,
     productSessionId: report.productSessionId,
     descriptor: report.descriptor,
@@ -75,7 +75,8 @@ export async function POST(request: Request) {
     sessionProofs: report.sessionProofs,
     startedAtIso: report.startedAtIso,
     stoppedAtIso: report.stoppedAtIso,
-  })) {
+  });
+  if (!proofContext) {
     return noStoreJson({
       error: "INVALID_WINDDOWN_VOICE_REPORT_SESSION_PROOF",
     }, 403);
@@ -89,6 +90,7 @@ export async function POST(request: Request) {
     finalDigest,
     committedAtIso: new Date().toISOString(),
     report,
+    journeyTargets: proofContext.journeyTargets,
   };
 
   try {

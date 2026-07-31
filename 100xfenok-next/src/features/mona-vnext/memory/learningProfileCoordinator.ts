@@ -21,10 +21,37 @@ import {
   isWindDownVoiceReport,
   type WindDownVoiceReport,
 } from "@/features/winddown/voice/report";
+import {
+  applyWindDownLearnAction,
+  createWindDownLearnSession,
+  type WindDownLearnAction,
+  type WindDownLearnCard,
+  type WindDownLearnState,
+} from "@/features/winddown/learn/engine";
+import {
+  appendWindDownHabitCompletionEvent,
+  createWindDownHabitCompletionEvent,
+  getWindDownHabitKstDay,
+  projectWindDownHabit,
+  WindDownHabitError,
+  type WindDownHabitCompletionEvent,
+  type WindDownHabitLearnCreditReceipt,
+} from "@/features/winddown/habit/domain";
+import {
+  normalizeWindDownLearnSessionManifest,
+  type WindDownLearnSessionManifest,
+} from "@/features/winddown/server/learnSessionProof";
+import {
+  normalizeWindDownVoiceJourneyTargets,
+  type WindDownVoiceJourneyTarget,
+} from "@/features/winddown/voice/journeyTarget";
 
 const PROFILE_STORAGE_KEY = "mona-vnext-learning-profile";
 const RECEIPT_STORAGE_PREFIX = "winddown-review-receipt:";
 const VOICE_REPORT_STORAGE_PREFIX = "winddown-voice-report:";
+const HABIT_EVENTS_STORAGE_KEY = "winddown-habit-events";
+const LEARN_SESSION_STORAGE_PREFIX = "winddown-learn-session:";
+const LEARN_ATTEMPT_STORAGE_PREFIX = "winddown-learn-attempt:";
 const PROFILE_KV_KEY =
   `data/${MONA_VNEXT_DATA_NAMESPACE}/owner-test/learning-profile.json`;
 
@@ -74,6 +101,18 @@ export type MonaVnextProfileCoordinatorCommand =
   | {
       operation: "commit-voice-report";
       receipt: WindDownVoiceReportReceipt;
+    }
+  | {
+      operation: "read-winddown-habit";
+      nowIso: string;
+    }
+  | {
+      operation: "commit-learn-attempt";
+      manifest: WindDownLearnSessionManifest;
+      cards: WindDownLearnCard[];
+      attemptId: string;
+      action: WindDownLearnAction;
+      nowIso: string;
     };
 
 export type WindDownVoiceReportReceipt = {
@@ -83,6 +122,23 @@ export type WindDownVoiceReportReceipt = {
   finalDigest: string;
   committedAtIso: string;
   report: WindDownVoiceReport;
+  journeyTargets?: WindDownVoiceJourneyTarget[];
+};
+
+type StoredWindDownLearnSession = {
+  schemaVersion: 1;
+  manifest: WindDownLearnSessionManifest;
+  state: WindDownLearnState;
+};
+
+type StoredWindDownLearnAttempt = {
+  schemaVersion: 1;
+  attemptId: string;
+  requestDigest: string;
+  outcome: "miss" | "practice" | "correct" | "complete";
+  reward: 0 | 1;
+  state: WindDownLearnState;
+  completionReceipt: WindDownHabitLearnCreditReceipt | null;
 };
 
 function noStoreJson(body: unknown, status = 200) {
@@ -174,6 +230,122 @@ function voiceReportKey(productSessionId: string) {
   return `${VOICE_REPORT_STORAGE_PREFIX}${productSessionId}`;
 }
 
+function learnSessionKey(habitKstDay: string) {
+  return `${LEARN_SESSION_STORAGE_PREFIX}${habitKstDay}`;
+}
+
+function learnAttemptKey(attemptId: string) {
+  return `${LEARN_ATTEMPT_STORAGE_PREFIX}${attemptId}`;
+}
+
+function normalizeNowIso(value: unknown) {
+  if (typeof value !== "string") return null;
+  const milliseconds = Date.parse(value);
+  return Number.isFinite(milliseconds) ? new Date(milliseconds).toISOString() : null;
+}
+
+function normalizeLearnAttemptId(value: unknown) {
+  return typeof value === "string"
+    && /^[A-Za-z0-9._:-]{1,160}$/.test(value)
+    ? value
+    : null;
+}
+
+function normalizeLearnAction(value: unknown): WindDownLearnAction | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const source = value as Record<string, unknown>;
+  if (
+    source.type === "choose-meaning"
+    && Object.keys(source).length === 3
+    && typeof source.cardId === "string"
+    && typeof source.choiceId === "string"
+  ) {
+    return {
+      type: source.type,
+      cardId: source.cardId,
+      choiceId: source.choiceId,
+    };
+  }
+  if (
+    source.type === "submit-sentence"
+    && Object.keys(source).length === 3
+    && typeof source.cardId === "string"
+    && Array.isArray(source.tokenIds)
+    && source.tokenIds.length <= 20
+    && source.tokenIds.every((tokenId) => typeof tokenId === "string")
+  ) {
+    return {
+      type: source.type,
+      cardId: source.cardId,
+      tokenIds: source.tokenIds,
+    };
+  }
+  return null;
+}
+
+function sameLearnManifestIdentity(
+  left: WindDownLearnSessionManifest,
+  right: WindDownLearnSessionManifest,
+) {
+  return left.sessionId === right.sessionId
+    && left.habitKstDay === right.habitKstDay
+    && left.seed === right.seed
+    && left.contentDigest === right.contentDigest
+    && JSON.stringify(left.cardIds) === JSON.stringify(right.cardIds);
+}
+
+function normalizeLearnCards(
+  value: unknown,
+  manifest: WindDownLearnSessionManifest,
+) {
+  if (!Array.isArray(value) || value.length !== 5) return null;
+  const cards: WindDownLearnCard[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+    const source = item as Record<string, unknown>;
+    if (
+      typeof source.id !== "string"
+      || typeof source.ko !== "string"
+      || typeof source.en !== "string"
+    ) return null;
+    cards.push({
+      id: source.id,
+      ko: source.ko,
+      en: source.en,
+      ...(Array.isArray(source.acceptedVariants)
+        ? {
+            acceptedVariants: source.acceptedVariants.filter(
+              (item): item is string => typeof item === "string",
+            ),
+          }
+        : {}),
+    });
+  }
+  const cardIds = cards.map((card) => card.id);
+  return cardIds.length === manifest.cardIds.length
+    && cardIds.every((id, index) => id === manifest.cardIds[index])
+    ? cards
+    : null;
+}
+
+async function readHabitEvents(storage: StorageTransactionLike) {
+  return (await storage.get<WindDownHabitCompletionEvent[]>(
+    HABIT_EVENTS_STORAGE_KEY,
+  )) ?? [];
+}
+
+async function appendHabitEvent(
+  transaction: StorageTransactionLike,
+  candidate: WindDownHabitCompletionEvent,
+) {
+  const appended = appendWindDownHabitCompletionEvent(
+    await readHabitEvents(transaction),
+    candidate,
+  );
+  await transaction.put(HABIT_EVENTS_STORAGE_KEY, appended.events);
+  return appended;
+}
+
 function normalizeVoiceReportReceipt(value: unknown): WindDownVoiceReportReceipt | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const source = value as Record<string, unknown>;
@@ -184,10 +356,12 @@ function normalizeVoiceReportReceipt(value: unknown): WindDownVoiceReportReceipt
     "finalDigest",
     "committedAtIso",
     "report",
+    "journeyTargets",
   ]);
+  const keys = Object.keys(source);
   if (
-    Object.keys(source).length !== receiptKeys.size
-    || !Object.keys(source).every((key) => receiptKeys.has(key))
+    (keys.length !== receiptKeys.size && keys.length !== receiptKeys.size - 1)
+    || !keys.every((key) => receiptKeys.has(key))
   ) return null;
   const productSessionId =
     typeof source.productSessionId === "string"
@@ -198,12 +372,17 @@ function normalizeVoiceReportReceipt(value: unknown): WindDownVoiceReportReceipt
   const committedAtIso =
     typeof source.committedAtIso === "string" ? source.committedAtIso.trim() : "";
   const committedAtMs = Date.parse(committedAtIso);
+  const journeyTargets = normalizeWindDownVoiceJourneyTargets(
+    source.journeyTargets ?? [],
+  );
   if (
     source.schemaVersion !== 1 ||
     (source.activity !== "roleplay" && source.activity !== "live-talk") ||
     !/^[A-Za-z0-9._-]{8,160}$/.test(productSessionId) ||
     !/^[a-f0-9]{64}$/.test(finalDigest) ||
     !Number.isFinite(committedAtMs) ||
+    !journeyTargets ||
+    (source.activity === "live-talk" && journeyTargets.length > 0) ||
     !isWindDownVoiceReport(source.report) ||
     source.report.activity !== source.activity ||
     source.report.productSessionId !== productSessionId
@@ -217,6 +396,7 @@ function normalizeVoiceReportReceipt(value: unknown): WindDownVoiceReportReceipt
     finalDigest,
     committedAtIso: new Date(committedAtMs).toISOString(),
     report: source.report,
+    journeyTargets,
   };
 }
 
@@ -263,6 +443,212 @@ export async function handleMonaVnextProfileCoordinatorRequest(
       ok: true,
       operation: body.operation,
       profile: initializedProfile,
+    });
+  }
+
+  if (body.operation === "read-winddown-habit") {
+    const nowIso = normalizeNowIso(body.nowIso);
+    if (!nowIso) {
+      return noStoreJson({ error: "INVALID_PROFILE_COORDINATOR_COMMAND" }, 400);
+    }
+    const events = await readHabitEvents(state.storage);
+    const projection = projectWindDownHabit({
+      events,
+      now: new Date(nowIso),
+    });
+    const activeLearn =
+      (await state.storage.get<StoredWindDownLearnSession>(
+        learnSessionKey(projection.currentKstDay),
+      )) ?? null;
+    return noStoreJson({
+      ok: true,
+      operation: body.operation,
+      projection,
+      activeLearn,
+    });
+  }
+
+  if (body.operation === "commit-learn-attempt") {
+    await initialProfile(state, env);
+    const manifest = normalizeWindDownLearnSessionManifest(body.manifest);
+    const attemptId = normalizeLearnAttemptId(body.attemptId);
+    const action = normalizeLearnAction(body.action);
+    const nowIso = normalizeNowIso(body.nowIso);
+    const cards = manifest ? normalizeLearnCards(body.cards, manifest) : null;
+    if (
+      !manifest
+      || !attemptId
+      || !action
+      || !nowIso
+      || !cards
+      || manifest.habitKstDay !== getWindDownHabitKstDay(new Date(nowIso))
+      || Date.parse(manifest.issuedAtIso) > Date.parse(nowIso) + 30_000
+      || Date.parse(manifest.expiresAtIso) <= Date.parse(nowIso)
+    ) {
+      return noStoreJson({ error: "INVALID_WINDDOWN_LEARN_ATTEMPT" }, 400);
+    }
+    const requestDigest = await sha256Hex(JSON.stringify({
+      manifest: {
+        sessionId: manifest.sessionId,
+        habitKstDay: manifest.habitKstDay,
+        seed: manifest.seed,
+        cardIds: manifest.cardIds,
+        contentDigest: manifest.contentDigest,
+      },
+      action,
+    }));
+    const result = await state.storage.transaction(async (transaction) => {
+      const existingAttempt =
+        (await transaction.get<StoredWindDownLearnAttempt>(
+          learnAttemptKey(attemptId),
+        )) ?? null;
+      if (existingAttempt) {
+        if (existingAttempt.requestDigest === requestDigest) {
+          const profile = existingAttempt.reward === 1
+            ? (await transaction.get<MonaVnextLearningProfile>(
+                PROFILE_STORAGE_KEY,
+              )) ?? createEmptyMonaVnextLearningProfile()
+            : null;
+          return {
+              status: 200,
+              duplicate: true,
+              // A previous response can fail after the authoritative DO
+              // transaction but before the KV mirror. Re-mirror credited
+              // duplicates so a safe retry repairs that split state.
+              profileDirty: existingAttempt.reward === 1,
+              profile,
+              receipt: existingAttempt,
+            };
+        }
+        return {
+          status: 409,
+          duplicate: false,
+          profileDirty: false,
+          profile: null,
+          receipt: existingAttempt,
+        };
+      }
+
+      const sessionKey = learnSessionKey(manifest.habitKstDay);
+      const existingSession =
+        (await transaction.get<StoredWindDownLearnSession>(sessionKey)) ?? null;
+      if (
+        existingSession
+        && !sameLearnManifestIdentity(existingSession.manifest, manifest)
+      ) {
+        return {
+          status: 409,
+          duplicate: false,
+          profileDirty: false,
+          profile: null,
+          receipt: null,
+        };
+      }
+      const currentState = existingSession?.state
+        ?? createWindDownLearnSession({ cards, seed: manifest.seed });
+      const applied = applyWindDownLearnAction(currentState, action);
+      if (applied.outcome === "invalid") {
+        return {
+          status: 400,
+          duplicate: false,
+          profileDirty: false,
+          profile: null,
+          receipt: null,
+        };
+      }
+
+      let profile =
+        (await transaction.get<MonaVnextLearningProfile>(
+          PROFILE_STORAGE_KEY,
+        )) ?? createEmptyMonaVnextLearningProfile();
+      let profileDirty = false;
+      if (applied.reward === 1) {
+        const recovered = currentState.mistakes.some(
+          (mistake) => mistake.card.id === action.cardId,
+        );
+        const learningEvent = buildLearningEvent({
+          expressionId: action.cardId,
+          verdict: recovered ? "close" : "canonical",
+          atIso: nowIso,
+          sessionId: `winddown:${manifest.sessionId}:${attemptId}`,
+        });
+        if (!learningEvent) {
+          return {
+            status: 400,
+            duplicate: false,
+            profileDirty: false,
+            profile: null,
+            receipt: null,
+          };
+        }
+        profile = applyMonaVnextLearningEvents(profile, [learningEvent]);
+        profileDirty = true;
+        await transaction.put(PROFILE_STORAGE_KEY, profile);
+      }
+
+      let completionReceipt: WindDownHabitLearnCreditReceipt | null = null;
+      if (applied.state.isComplete) {
+        completionReceipt = {
+          schemaVersion: 1,
+          activity: "learn",
+          receiptId: `winddown-learn:${manifest.sessionId}`,
+          sessionId: manifest.sessionId,
+          persistedAtIso: nowIso,
+          creditedActionCount: applied.state.creditedCardIds.length,
+          completion: "five-exercises",
+          persisted: true,
+        };
+        await appendHabitEvent(
+          transaction,
+          createWindDownHabitCompletionEvent({
+            kind: "learn-credit-receipt",
+            receipt: completionReceipt,
+          }),
+        );
+      }
+
+      const storedSession: StoredWindDownLearnSession = {
+        schemaVersion: 1,
+        manifest,
+        state: applied.state,
+      };
+      const receipt: StoredWindDownLearnAttempt = {
+        schemaVersion: 1,
+        attemptId,
+        requestDigest,
+        outcome: applied.outcome,
+        reward: applied.reward,
+        state: applied.state,
+        completionReceipt,
+      };
+      await transaction.put(sessionKey, storedSession);
+      await transaction.put(learnAttemptKey(attemptId), receipt);
+      return {
+        status: 200,
+        duplicate: false,
+        profileDirty,
+        profile,
+        receipt,
+      };
+    });
+    if (result.status === 409) {
+      return noStoreJson({ error: "WINDDOWN_LEARN_ATTEMPT_CONFLICT" }, 409);
+    }
+    if (result.status === 400 || !result.receipt) {
+      return noStoreJson({ error: "INVALID_WINDDOWN_LEARN_ATTEMPT" }, 400);
+    }
+    if (result.profileDirty && result.profile) {
+      await mirrorProfile(env, result.profile);
+    }
+    return noStoreJson({
+      ok: true,
+      operation: body.operation,
+      duplicate: result.duplicate,
+      persisted: true,
+      outcome: result.receipt.outcome,
+      reward: result.receipt.reward,
+      state: result.receipt.state,
+      completionReceipt: result.receipt.completionReceipt,
     });
   }
 
@@ -339,6 +725,13 @@ export async function handleMonaVnextProfileCoordinatorRequest(
             committed.receipt,
           );
         }
+        await appendHabitEvent(
+          transaction,
+          createWindDownHabitCompletionEvent({
+            kind: "review-credit-receipt",
+            receipt: committed.receipt,
+          }),
+        );
         return {
           ...committed,
           ...summarizeWindDownReviewQueue({
@@ -390,9 +783,37 @@ export async function handleMonaVnextProfileCoordinatorRequest(
         ) {
           return { status: 409, duplicate: false, receipt: existing };
         }
+        try {
+          await appendHabitEvent(
+            transaction,
+            createWindDownHabitCompletionEvent({
+              kind: "voice-report-receipt",
+              receipt: existing,
+            }),
+          );
+        } catch (error) {
+          if (
+            !(error instanceof WindDownHabitError)
+            || error.code !== "UNQUALIFIED_HABIT_COMPLETION"
+          ) throw error;
+        }
         return { status: 200, duplicate: true, receipt: existing };
       }
       await transaction.put(key, receipt);
+      try {
+        await appendHabitEvent(
+          transaction,
+          createWindDownHabitCompletionEvent({
+            kind: "voice-report-receipt",
+            receipt,
+          }),
+        );
+      } catch (error) {
+        if (
+          !(error instanceof WindDownHabitError)
+          || error.code !== "UNQUALIFIED_HABIT_COMPLETION"
+        ) throw error;
+      }
       return { status: 200, duplicate: false, receipt };
     });
     if (result.status === 409) {

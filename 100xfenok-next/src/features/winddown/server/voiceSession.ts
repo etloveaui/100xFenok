@@ -26,6 +26,9 @@ import {
 import {
   createWindDownVoiceSessionProof,
 } from "@/features/winddown/server/voiceSessionProof";
+import type {
+  WindDownVoiceJourneyTarget,
+} from "@/features/winddown/voice/journeyTarget";
 
 type FetchLike = (
   input: RequestInfo | URL,
@@ -37,6 +40,7 @@ export type WindDownVoiceSessionDependencies = {
   randomId?: () => string;
   getApiKey?: () => string | null;
   fetch?: FetchLike;
+  journeyTargets?: WindDownVoiceJourneyTarget[];
 };
 
 export class WindDownVoiceSessionError extends Error {
@@ -57,6 +61,7 @@ export class WindDownVoiceSessionError extends Error {
 
 function buildRoleplayPrompt(
   descriptor: WindDownRoleplayDescriptor,
+  journeyTargets: readonly WindDownVoiceJourneyTarget[] = [],
 ) {
   const goals = descriptor.goals
     .map((goal, index) => `${index + 1}. ${goal.label} (${goal.id})`)
@@ -74,6 +79,14 @@ function buildRoleplayPrompt(
     "Speak mostly in short, natural English turns. Use brief Korean only when the learner is stuck.",
     "Do not switch to study exercises, grading, or review scheduling.",
     "The roleplay is complete only after the learner has had a natural chance to meet every listed goal.",
+    ...(journeyTargets.length > 0
+      ? [
+          "TONIGHT'S PHRASES: Invite the learner to use at least one of these naturally. Do not read them as a quiz or claim success before the learner says one:",
+          ...journeyTargets.map(
+            (target, index) => `${index + 1}. ${target.en} (${target.materialId})`,
+          ),
+        ]
+      : []),
   ].join("\n");
 }
 
@@ -97,12 +110,16 @@ function buildLiveTalkPrompt(
 export function buildWindDownVoicePrompt(
   activity: WindDownVoiceActivity,
   descriptor?: WindDownRoleplayDescriptor | WindDownLiveTalkDescriptor,
+  journeyTargets: readonly WindDownVoiceJourneyTarget[] = [],
 ) {
   if (!descriptor || descriptor.kind !== (activity === "roleplay" ? "scenario" : "topic")) {
     throw new WindDownVoiceSessionError("WINDDOWN_VOICE_EXPERIENCE_NOT_FOUND", 404);
   }
   return activity === "roleplay"
-    ? buildRoleplayPrompt(descriptor as WindDownRoleplayDescriptor)
+    ? buildRoleplayPrompt(
+        descriptor as WindDownRoleplayDescriptor,
+        journeyTargets,
+      )
     : buildLiveTalkPrompt(descriptor as WindDownLiveTalkDescriptor);
 }
 
@@ -177,7 +194,13 @@ export async function createWindDownVoiceSession(
     vadPreset,
     lowVoice: true,
     interruptionMode: "no-interrupt",
-    systemInstruction: buildWindDownVoicePrompt(request.activity, experience),
+    systemInstruction: buildWindDownVoicePrompt(
+      request.activity,
+      experience,
+      request.activity === "roleplay"
+        ? dependencies.journeyTargets ?? []
+        : [],
+    ),
   });
   const expireTime = new Date(now.getTime() + 30 * 60 * 1000).toISOString();
   const newSessionExpireTime = new Date(now.getTime() + 60 * 1000).toISOString();
@@ -237,6 +260,9 @@ export async function createWindDownVoiceSession(
       ? { resumedFromConversationId: request.resumedFromConversationId }
       : {}),
     issuedAtMs: now.getTime(),
+    journeyTargets: request.activity === "roleplay"
+      ? dependencies.journeyTargets ?? []
+      : [],
   });
 
   const common = {
