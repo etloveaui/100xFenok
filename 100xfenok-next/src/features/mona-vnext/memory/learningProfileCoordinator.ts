@@ -403,14 +403,27 @@ async function readCeremonyMasteryEvidence(args: {
       || stored.reviewedAt !== event.occurredAtIso
     ) return null;
     const profileRecord = args.profile.records[event.source.materialId];
-    if (
-      stored.rating === "good"
-      && stored.reward === 1
+    const typedMastery = (
+      stored.inputMode === "typed"
+      && stored.rating === "good"
       && profileRecord?.lastRating === "good"
       && (
         profileRecord.lastVerdict === "canonical"
         || profileRecord.lastVerdict === "variant"
       )
+    );
+    const chipsRecall = (
+      stored.inputMode === "chips"
+      && stored.rating === "hard"
+      && profileRecord?.lastInputMode === "chips"
+      && profileRecord.lastRating === "hard"
+      && profileRecord.lastVerdict === "close"
+      && profileRecord.card.stability > 0
+    );
+    if (
+      stored.reward === 1
+      && profileRecord?.lastReviewedAt === stored.reviewedAt
+      && (typedMastery || chipsRecall)
     ) {
       evidence.push({
         materialId: event.source.materialId,

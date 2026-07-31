@@ -436,7 +436,7 @@ export default function WindDownGameClient({
             <h2 className="mt-1 text-lg font-bold">{openCeremony.label}을 정할 순간</h2>
             <p className="mt-2 text-sm font-medium text-[var(--wd-text-muted)]">
               {openCeremony.optionSource === "mastery-derived"
-                ? "모나가 복습에서 정확히 떠올린 문장으로 만든 후보야. 한 번 정하면 공식 이름으로 남아."
+                ? "모나가 복습에서 다시 잡아낸 문장으로 만든 후보야. 한 번 정하면 공식 이름으로 남아."
                 : "아직 후보로 만들 숙달 문장이 부족해 첫 이름 후보를 준비했어. 한 번 정하면 공식 이름으로 남아."}
             </p>
             <div className="mt-4 grid gap-2">

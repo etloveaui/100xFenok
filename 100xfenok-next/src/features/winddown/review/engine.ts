@@ -622,7 +622,7 @@ export function applyWindDownReviewAction(
         queue,
         results,
         phase: queue.length > 0 ? "recall" : "summary",
-        inputMode: "chips",
+        inputMode: state.inputMode,
         attempts: [],
         pendingAnswer: null,
         match: null,

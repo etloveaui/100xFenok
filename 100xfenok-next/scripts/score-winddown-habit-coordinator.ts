@@ -305,6 +305,7 @@ async function main() {
   assert(templateRecord);
   const masteryEvents = [...ceremonyEvents];
   ceremonyMaterial.entries.forEach((entry, index) => {
+    const chips = index < 9;
     const hard = entry.id === "ceremony-hard";
     const laterMiss = entry.id === "ceremony-later-miss";
     const reviewCycleId =
@@ -316,8 +317,9 @@ async function main() {
       requestDigest: String(index + 1).padStart(64, "0"),
       materialId: entry.id,
       reviewedAt,
-      rating: hard ? "hard" as const : "good" as const,
+      rating: chips || hard ? "hard" as const : "good" as const,
       reward: 1 as const,
+      ...(chips ? { inputMode: "chips" as const } : {}),
     };
     values.set(`winddown-review-receipt:${reviewCycleId}`, receipt);
     masteryEvents.push(
@@ -329,9 +331,10 @@ async function main() {
     storedProfile.records[entry.id] = {
       ...templateRecord,
       expressionId: entry.id,
-      lastVerdict: laterMiss ? "miss" : hard ? "close" : "canonical",
-      lastRating: laterMiss ? "again" : hard ? "hard" : "good",
+      lastVerdict: laterMiss ? "miss" : chips || hard ? "close" : "canonical",
+      lastRating: laterMiss ? "again" : chips || hard ? "hard" : "good",
       lastReviewedAt: reviewedAt,
+      ...(chips ? { lastInputMode: "chips" as const } : {}),
       card: {
         ...templateRecord.card,
         stability: hard ? 2_000 : laterMiss ? 1_999 : 1_000 - index,
@@ -357,7 +360,7 @@ async function main() {
     masteryCeremony.slots.every(
       (slot) => slot.optionSource === "mastery-derived",
     ),
-    "nine strict-recall receipts must produce three distinct learned option sets",
+    "nine default chip recalls must produce three distinct learned option sets",
   );
   const learnedLabels = masteryCeremony.slots.flatMap(
     (slot) => slot.options.map((option) => option.label),

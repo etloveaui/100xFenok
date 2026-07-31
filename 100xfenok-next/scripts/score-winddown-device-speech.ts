@@ -177,7 +177,7 @@ assert.ok(
 );
 assert.ok(
   component.includes("발음 점수나 학습 보상으로 저장하지 않아")
-    && component.includes("Safari/Siri 설정과 네트워크 상태"),
+    && component.includes("브라우저에 따라 음성이 기기 밖 서비스에서 처리될 수"),
   "the UI must disclose browser-managed processing and non-credit semantics",
 );
 assert.ok(

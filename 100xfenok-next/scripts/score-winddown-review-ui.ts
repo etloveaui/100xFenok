@@ -219,6 +219,20 @@ assert.equal(
   "typed",
   "the selected input mode must remain frozen through repair and retry",
 );
+const nextCard = applyWindDownReviewAction(review, {
+  type: "commit-succeeded",
+  result: {
+    materialId: cards[0]!.id,
+    rating: "hard",
+    reward: 1,
+  },
+}).state;
+assert.equal(nextCard.phase, "recall");
+assert.equal(
+  nextCard.inputMode,
+  "typed",
+  "the opt-in toggle must remain a session preference across Review cards",
+);
 
 const reveal = applyWindDownReviewAction(
   createWindDownReviewSession({ cards, contentDigest: digest }),

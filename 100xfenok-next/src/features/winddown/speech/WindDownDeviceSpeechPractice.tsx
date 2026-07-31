@@ -85,8 +85,9 @@ export function WindDownDeviceSpeechPractice({
       ) : null}
 
       <p className="mt-3 text-center text-[10px] font-bold leading-4 text-[var(--wd-text-muted)]">
-        대화 모델은 열지 않아. 받아쓰기는 Safari/Siri 설정과 네트워크 상태에
-        따라 달라질 수 있고, 발음 점수나 학습 보상으로 저장하지 않아.
+        대화 모델은 열지 않아. 받아쓰기는 브라우저 설정과 네트워크 상태에
+        따라 달라지고, 브라우저에 따라 음성이 기기 밖 서비스에서 처리될 수
+        있어. 발음 점수나 학습 보상으로 저장하지 않아.
       </p>
     </section>
   );
