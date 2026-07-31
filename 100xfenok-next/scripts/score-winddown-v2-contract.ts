@@ -8,6 +8,7 @@ import {
 } from "../src/features/winddown/model/productContract";
 import { buildWindDownStudyBootstrap } from "../src/features/winddown/server/studyBootstrap";
 import {
+  getWindDownKstDay,
   normalizeWindDownStudyCount,
   normalizeWindDownStudyMode,
   normalizeWindDownStudySeed,
@@ -231,6 +232,16 @@ assert.equal(
 
 assert.equal(normalizeWindDownStudyMode("learn"), "learn");
 assert.equal(normalizeWindDownStudyMode("roleplay"), null);
+assert.equal(
+  getWindDownKstDay(new Date("2026-07-30T14:59:59.999Z")),
+  "2026-07-30",
+  "the KST study day must not roll over before local midnight",
+);
+assert.equal(
+  getWindDownKstDay(new Date("2026-07-30T15:00:00.000Z")),
+  "2026-07-31",
+  "the KST study day must roll over exactly at local midnight",
+);
 assert.equal(normalizeWindDownStudyCount(null), 20);
 assert.equal(normalizeWindDownStudyCount(""), 20);
 assert.equal(normalizeWindDownStudyCount("not-a-number"), 20);
@@ -310,6 +321,65 @@ assert.equal(
   "The study API must not return raw internal error details",
 );
 
+const roleplayPage = path.join(
+  process.cwd(),
+  "src/app/winddown/roleplay/page.tsx",
+);
+const liveTalkPage = path.join(
+  process.cwd(),
+  "src/app/winddown/live-talk/page.tsx",
+);
+const voiceClient = path.join(
+  process.cwd(),
+  "src/features/winddown/voice/ui/WindDownVoiceClient.tsx",
+);
+for (const file of [roleplayPage, liveTalkPage, voiceClient]) {
+  assert.equal(existsSync(file), true, `Phase 5 voice product file missing: ${file}`);
+}
+const voiceFiles = collectTransitiveProjectSources([
+  roleplayPage,
+  liveTalkPage,
+  voiceClient,
+]);
+for (const file of voiceFiles) {
+  const normalized = file.split(path.sep).join("/");
+  assert.equal(
+    normalized.endsWith("/src/features/mona-vnext/MonaVoiceCoachApp.tsx") ||
+      normalized.endsWith("/src/components/admin-live/MonaWindDown.tsx") ||
+      normalized.endsWith("/src/features/mona-vnext/teacher/teacherMachine.ts") ||
+      normalized.endsWith("/src/features/mona-vnext/coach/coachPrompt.ts") ||
+      normalized.endsWith("/src/features/mona-vnext/game/gameSession.ts"),
+    false,
+    `Phase 5 voice product reaches the legacy card/XP teacher runtime: ${path.relative(process.cwd(), file)}`,
+  );
+}
+const voiceBoundarySource = voiceFiles
+  .map((file) => readFileSync(file, "utf8"))
+  .join("\n");
+for (const required of [
+  "useGeminiLiveTransport",
+  "/api/winddown/live/session/",
+  "/api/winddown/live/report/",
+  "scenario-goals-complete",
+  "learner-stop",
+]) {
+  assert.equal(
+    voiceBoundarySource.includes(required),
+    true,
+    `Phase 5 voice product boundary is missing: ${required}`,
+  );
+}
+assert.equal(
+  readFileSync(roleplayPage, "utf8").includes('activity="roleplay"'),
+  true,
+  "Roleplay route must bind the Roleplay product",
+);
+assert.equal(
+  readFileSync(liveTalkPage, "utf8").includes('activity="live-talk"'),
+  true,
+  "Live Talk route must bind the Live Talk product",
+);
+
 console.log(
-  "PASS winddown-v2-contract - activity skeleton and model-free bootstrap contract are explicit",
+  "PASS winddown-v2-contract - model-free activities and isolated voice products are explicit",
 );

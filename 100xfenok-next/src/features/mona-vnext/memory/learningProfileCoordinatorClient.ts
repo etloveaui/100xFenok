@@ -1,4 +1,7 @@
-import type { MonaVnextProfileCoordinatorCommand } from "@/features/mona-vnext/memory/learningProfileCoordinator";
+import type {
+  MonaVnextProfileCoordinatorCommand,
+  WindDownVoiceReportReceipt,
+} from "@/features/mona-vnext/memory/learningProfileCoordinator";
 import { normalizeMonaVnextLearningProfile } from "@/features/mona-vnext/memory/fsrsLearningProfile";
 import type { MonaVnextLearningEvent } from "@/features/mona-vnext/memory/srsBridge";
 
@@ -94,4 +97,13 @@ export async function readMonaVnextLearningProfileThroughCoordinator() {
     throw new Error("PROFILE_COORDINATOR_PROFILE_INVALID");
   }
   return normalizeMonaVnextLearningProfile(profile);
+}
+
+export async function commitWindDownVoiceReportThroughCoordinator(
+  receipt: WindDownVoiceReportReceipt,
+) {
+  return invokeMonaVnextProfileCoordinator({
+    operation: "commit-voice-report",
+    receipt,
+  });
 }

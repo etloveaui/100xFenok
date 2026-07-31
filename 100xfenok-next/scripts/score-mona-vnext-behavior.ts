@@ -604,10 +604,12 @@ function checkRepairIntent(): Result {
 }
 
 function checkInterruptionFlushSource(): Result {
-  const source = readFileSync(path.join(process.cwd(), "src/features/mona-vnext/live/useGeminiLiveSession.ts"), "utf8");
-  const ok = source.includes("serverContent.interrupted")
-    && source.includes("audioOutput.flush()")
-    && source.includes("dropAudioUntilTurnCompleteRef.current = true");
+  const wrapper = readFileSync(path.join(process.cwd(), "src/features/mona-vnext/live/useGeminiLiveSession.ts"), "utf8");
+  const transport = readFileSync(path.join(process.cwd(), "src/features/mona-vnext/live/useGeminiLiveTransport.ts"), "utf8");
+  const ok = wrapper.includes("useGeminiLiveTransport")
+    && transport.includes("serverContent.interrupted")
+    && transport.includes("audioOutput.flush()")
+    && transport.includes("dropAudioUntilTurnCompleteRef.current = true");
   return ok
     ? pass("interruption-flush", "interrupted serverContent flushes queued playback")
     : fail("interruption-flush", "interruption flush source guard missing");

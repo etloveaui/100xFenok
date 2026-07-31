@@ -13,8 +13,10 @@ import {
 } from "../src/features/mona-vnext/memory/learningProfileCoordinator";
 import {
   WindDownReviewCycleError,
+  buildWindDownReviewCards,
   commitWindDownReviewCycleState,
   createWindDownReviewCycleId,
+  summarizeWindDownReviewQueue,
   type WindDownReviewCycleInput,
 } from "../src/features/winddown/server/reviewCycle";
 
@@ -42,6 +44,42 @@ assert(dueRecord);
 const nowIso = new Date(
   Date.parse(dueRecord.card.dueAtIso) + 60_000,
 ).toISOString();
+const dueAtMs = Date.parse(dueRecord.card.dueAtIso);
+const dueAtKstIso = new Date(dueAtMs + 9 * 60 * 60 * 1000)
+  .toISOString()
+  .replace("Z", "+09:00");
+assert.equal(
+  (
+    await buildWindDownReviewCards({
+      cards: [material],
+      profile: dueProfile,
+      contentDigest: digest,
+      nowIso: new Date(dueAtMs - 1).toISOString(),
+    })
+  ).length,
+  0,
+  "a review card must remain unavailable one millisecond before its due instant",
+);
+assert.equal(
+  (
+    await buildWindDownReviewCards({
+      cards: [material],
+      profile: dueProfile,
+      contentDigest: digest,
+      nowIso: dueAtKstIso,
+    })
+  ).length,
+  1,
+  "the same due instant expressed in KST must make the review card available",
+);
+assert.equal(
+  summarizeWindDownReviewQueue({
+    profile: dueProfile,
+    nowIso: dueAtKstIso,
+  }).remainingDueCount,
+  1,
+  "queue summaries must use the same absolute due boundary across time zones",
+);
 const reviewCycleId = await createWindDownReviewCycleId({
   materialId: material.id,
   contentDigest: digest,

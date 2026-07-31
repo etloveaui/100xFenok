@@ -64,6 +64,59 @@ export function normalizeMonaVnextInterruptionMode(value: unknown): MonaVnextInt
   return value === "barge-in" ? "barge-in" : "no-interrupt";
 }
 
+export function buildMonaVnextAudioSetup(options: {
+  model?: unknown;
+  voiceName: MonaVnextVoiceName;
+  vadPreset: MonaVnextVadPreset;
+  lowVoice: boolean;
+  interruptionMode: MonaVnextInterruptionMode;
+  temperature?: unknown;
+  systemInstruction: string;
+}) {
+  const vad = VAD_PRESETS[options.vadPreset];
+  const model = normalizeMonaVnextGeminiModel(options.model);
+  const temperature = normalizeMonaVnextLiveTemperature(options.temperature);
+  return {
+    model: `models/${model}`,
+    generationConfig: {
+      responseModalities: ["AUDIO"],
+      thinkingConfig: { thinkingLevel: MONA_VNEXT_LIVE_THINKING_LEVEL },
+      temperature,
+      speechConfig: {
+        voiceConfig: {
+          prebuiltVoiceConfig: {
+            voiceName: options.voiceName,
+          },
+        },
+      },
+    },
+    systemInstruction: {
+      parts: [{ text: options.systemInstruction }],
+    },
+    realtimeInputConfig: {
+      activityHandling: options.interruptionMode === "no-interrupt"
+        ? "NO_INTERRUPTION"
+        : "START_OF_ACTIVITY_INTERRUPTS",
+      automaticActivityDetection: {
+        disabled: false,
+        ...vad,
+      },
+    },
+    inputAudioTranscription: {
+      languageHints: {
+        languageCodes: ["ko-KR", "en-US"],
+      },
+    },
+    outputAudioTranscription: {
+      languageHints: {
+        languageCodes: ["ko-KR", "en-US"],
+      },
+    },
+    sessionResumption: {},
+    contextWindowCompression: { slidingWindow: {} },
+  };
+}
+
 export async function buildMonaVnextReadiness() {
   const hasKey = getMonaVnextGeminiApiKey() !== null;
   const persistence = await getMonaVnextPersistenceReadiness();
@@ -104,57 +157,20 @@ export function buildMonaVnextLiveSetup(options: {
   activeExpressionId?: unknown;
   expressionBank?: MonaVnextExpression[];
 }) {
-  const vad = VAD_PRESETS[options.vadPreset];
-  const model = normalizeMonaVnextGeminiModel(options.model);
-  const temperature = normalizeMonaVnextLiveTemperature(options.temperature);
   const expressionBank = options.expressionBank?.length ? options.expressionBank : MONA_VNEXT_EXPRESSION_BANK;
   const activeExpression = getMonaVnextExpressionById(options.activeExpressionId, expressionBank);
-  return {
-    model: `models/${model}`,
-    generationConfig: {
-      responseModalities: ["AUDIO"],
-      thinkingConfig: { thinkingLevel: MONA_VNEXT_LIVE_THINKING_LEVEL },
-      temperature,
-      speechConfig: {
-        voiceConfig: {
-          prebuiltVoiceConfig: {
-            voiceName: options.voiceName,
-          },
-        },
-      },
-    },
-    systemInstruction: {
-      parts: [
-        {
-          text: buildMonaVnextSystemPrompt({
-            lowVoice: options.lowVoice,
-            englishVisible: options.englishVisible,
-            activeExpression,
-            expressionBankSize: expressionBank.length,
-          }),
-        },
-      ],
-    },
-    realtimeInputConfig: {
-      activityHandling: options.interruptionMode === "no-interrupt"
-        ? "NO_INTERRUPTION"
-        : "START_OF_ACTIVITY_INTERRUPTS",
-      automaticActivityDetection: {
-        disabled: false,
-        ...vad,
-      },
-    },
-    inputAudioTranscription: {
-      languageHints: {
-        languageCodes: ["ko-KR", "en-US"],
-      },
-    },
-    outputAudioTranscription: {
-      languageHints: {
-        languageCodes: ["ko-KR", "en-US"],
-      },
-    },
-    sessionResumption: {},
-    contextWindowCompression: { slidingWindow: {} },
-  };
+  return buildMonaVnextAudioSetup({
+    model: options.model,
+    voiceName: options.voiceName,
+    vadPreset: options.vadPreset,
+    lowVoice: options.lowVoice,
+    interruptionMode: options.interruptionMode,
+    temperature: options.temperature,
+    systemInstruction: buildMonaVnextSystemPrompt({
+      lowVoice: options.lowVoice,
+      englishVisible: options.englishVisible,
+      activeExpression,
+      expressionBankSize: expressionBank.length,
+    }),
+  });
 }

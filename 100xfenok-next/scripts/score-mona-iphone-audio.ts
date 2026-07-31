@@ -5,11 +5,13 @@ import vm from "node:vm";
 
 const inputPath = path.join(process.cwd(), "src/features/mona-vnext/live/useLiveAudioInput.ts");
 const sessionPath = path.join(process.cwd(), "src/features/mona-vnext/live/useGeminiLiveSession.ts");
+const transportPath = path.join(process.cwd(), "src/features/mona-vnext/live/useGeminiLiveTransport.ts");
 const appPath = path.join(process.cwd(), "src/features/mona-vnext/MonaVoiceCoachApp.tsx");
 const workletPath = path.join(process.cwd(), "public/winddown/mona-pcm-capture.worklet.js");
 
 const inputSource = readFileSync(inputPath, "utf8");
 const sessionSource = readFileSync(sessionPath, "utf8");
+const transportSource = readFileSync(transportPath, "utf8");
 const appSource = readFileSync(appPath, "utf8");
 
 assert.ok(existsSync(workletPath), "the production PCM capture worklet is missing");
@@ -24,8 +26,12 @@ assert.ok(inputSource.includes("context.createScriptProcessor"), "older iPhones 
 assert.ok(inputSource.includes("autoGainControl: true"), "quiet bedtime speech should use device AGC");
 assert.ok(inputSource.includes('document.addEventListener("visibilitychange"'));
 assert.ok(inputSource.includes("return { prime, start, stop }"));
-assert.ok(sessionSource.includes("audioInput.prime()"));
-assert.ok(sessionSource.includes("audioOutput.ensure()"));
+assert.ok(
+  sessionSource.includes("useGeminiLiveTransport"),
+  "the Mona compatibility hook must use the shared production transport",
+);
+assert.ok(transportSource.includes("audioInput.prime()"));
+assert.ok(transportSource.includes("audioOutput.ensure()"));
 assert.ok(appSource.includes('window.addEventListener("pagehide"'));
 
 type WorkletMessage = {

@@ -10,10 +10,28 @@ export function normalizeWindDownStudyCount(value: string | null) {
   return Number.isFinite(parsed) ? Math.max(1, Math.min(Math.floor(parsed), 20)) : 20;
 }
 
+export function getWindDownKstDay(now = new Date()) {
+  const values = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Seoul",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+      .formatToParts(now)
+      .filter((part) => part.type === "year" || part.type === "month" || part.type === "day")
+      .map((part) => [part.type, part.value]),
+  );
+  if (!values.year || !values.month || !values.day) {
+    throw new Error("WINDDOWN_KST_DAY_UNAVAILABLE");
+  }
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 export function normalizeWindDownStudySeed(
   value: string | null,
   mode: WindDownModelFreeMode,
-  day = new Date().toISOString().slice(0, 10),
+  day = getWindDownKstDay(),
 ) {
   const normalized = (value ?? "")
     .trim()

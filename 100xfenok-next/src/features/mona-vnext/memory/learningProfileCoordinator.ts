@@ -17,9 +17,14 @@ import {
   type WindDownReviewCycleMaterial,
   type WindDownReviewCycleReceipt,
 } from "@/features/winddown/server/reviewCycle";
+import {
+  isWindDownVoiceReport,
+  type WindDownVoiceReport,
+} from "@/features/winddown/voice/report";
 
 const PROFILE_STORAGE_KEY = "mona-vnext-learning-profile";
 const RECEIPT_STORAGE_PREFIX = "winddown-review-receipt:";
+const VOICE_REPORT_STORAGE_PREFIX = "winddown-voice-report:";
 const PROFILE_KV_KEY =
   `data/${MONA_VNEXT_DATA_NAMESPACE}/owner-test/learning-profile.json`;
 
@@ -65,7 +70,20 @@ export type MonaVnextProfileCoordinatorCommand =
       activeMaterialIds: string[];
       currentContentDigest: string;
       nowIso: string;
+    }
+  | {
+      operation: "commit-voice-report";
+      receipt: WindDownVoiceReportReceipt;
     };
+
+export type WindDownVoiceReportReceipt = {
+  schemaVersion: 1;
+  activity: "roleplay" | "live-talk";
+  productSessionId: string;
+  finalDigest: string;
+  committedAtIso: string;
+  report: WindDownVoiceReport;
+};
 
 function noStoreJson(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -152,6 +170,66 @@ function receiptKey(reviewCycleId: string) {
   return `${RECEIPT_STORAGE_PREFIX}${reviewCycleId}`;
 }
 
+function voiceReportKey(productSessionId: string) {
+  return `${VOICE_REPORT_STORAGE_PREFIX}${productSessionId}`;
+}
+
+function normalizeVoiceReportReceipt(value: unknown): WindDownVoiceReportReceipt | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const source = value as Record<string, unknown>;
+  const receiptKeys = new Set([
+    "schemaVersion",
+    "activity",
+    "productSessionId",
+    "finalDigest",
+    "committedAtIso",
+    "report",
+  ]);
+  if (
+    Object.keys(source).length !== receiptKeys.size
+    || !Object.keys(source).every((key) => receiptKeys.has(key))
+  ) return null;
+  const productSessionId =
+    typeof source.productSessionId === "string"
+      ? source.productSessionId.trim()
+      : "";
+  const finalDigest =
+    typeof source.finalDigest === "string" ? source.finalDigest.trim() : "";
+  const committedAtIso =
+    typeof source.committedAtIso === "string" ? source.committedAtIso.trim() : "";
+  const committedAtMs = Date.parse(committedAtIso);
+  if (
+    source.schemaVersion !== 1 ||
+    (source.activity !== "roleplay" && source.activity !== "live-talk") ||
+    !/^[A-Za-z0-9._-]{8,160}$/.test(productSessionId) ||
+    !/^[a-f0-9]{64}$/.test(finalDigest) ||
+    !Number.isFinite(committedAtMs) ||
+    !isWindDownVoiceReport(source.report) ||
+    source.report.activity !== source.activity ||
+    source.report.productSessionId !== productSessionId
+  ) {
+    return null;
+  }
+  return {
+    schemaVersion: 1,
+    activity: source.activity,
+    productSessionId,
+    finalDigest,
+    committedAtIso: new Date(committedAtMs).toISOString(),
+    report: source.report,
+  };
+}
+
+async function sha256Hex(value: string) {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(value),
+  );
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 function normalizeActiveMaterialIds(value: unknown) {
   if (!Array.isArray(value) || value.length > 2_000) return null;
   const ids: string[] = [];
@@ -179,9 +257,8 @@ export async function handleMonaVnextProfileCoordinatorRequest(
     return noStoreJson({ error: "INVALID_PROFILE_COORDINATOR_COMMAND" }, 400);
   }
 
-  const initializedProfile = await initialProfile(state, env);
-
   if (body.operation === "read-learning-profile") {
+    const initializedProfile = await initialProfile(state, env);
     return noStoreJson({
       ok: true,
       operation: body.operation,
@@ -190,6 +267,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
   }
 
   if (body.operation === "append-learning-events") {
+    await initialProfile(state, env);
     const events = normalizeLearningEvents(body.learningEvents);
     if (!events) {
       return noStoreJson({ error: "INVALID_LEARNING_EVENTS" }, 400);
@@ -213,6 +291,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
   }
 
   if (body.operation === "commit-review-cycle") {
+    await initialProfile(state, env);
     const input = body.input;
     const inputRecord =
       input && typeof input === "object" && !Array.isArray(input)
@@ -287,6 +366,44 @@ export async function handleMonaVnextProfileCoordinatorRequest(
       }
       throw error;
     }
+  }
+
+  if (body.operation === "commit-voice-report") {
+    const receipt = normalizeVoiceReportReceipt(body.receipt);
+    if (!receipt) {
+      return noStoreJson({ error: "INVALID_WINDDOWN_VOICE_REPORT_RECEIPT" }, 400);
+    }
+    if (
+      receipt.finalDigest !==
+      await sha256Hex(JSON.stringify(receipt.report))
+    ) {
+      return noStoreJson({ error: "WINDDOWN_VOICE_REPORT_DIGEST_MISMATCH" }, 400);
+    }
+    const result = await state.storage.transaction(async (transaction) => {
+      const key = voiceReportKey(receipt.productSessionId);
+      const existing =
+        (await transaction.get<WindDownVoiceReportReceipt>(key)) ?? null;
+      if (existing) {
+        if (
+          existing.finalDigest !== receipt.finalDigest ||
+          existing.activity !== receipt.activity
+        ) {
+          return { status: 409, duplicate: false, receipt: existing };
+        }
+        return { status: 200, duplicate: true, receipt: existing };
+      }
+      await transaction.put(key, receipt);
+      return { status: 200, duplicate: false, receipt };
+    });
+    if (result.status === 409) {
+      return noStoreJson({ error: "WINDDOWN_VOICE_REPORT_CONFLICT" }, 409);
+    }
+    return noStoreJson({
+      ok: true,
+      operation: body.operation,
+      duplicate: result.duplicate,
+      receipt: result.receipt,
+    });
   }
 
   return noStoreJson({ error: "INVALID_PROFILE_COORDINATOR_COMMAND" }, 400);

@@ -105,6 +105,13 @@ function categoryForPath(relPath) {
     };
   }
 
+  if (relPath.startsWith("src/features/winddown/voice/ui/")) {
+    return {
+      category: "product-theme",
+      note: "Current WIND DOWN voice-product palette is intentionally isolated from the finance-app theme.",
+    };
+  }
+
   if (relPath === "src/app/winddown/page.tsx") {
     return {
       category: "metadata-color",
