@@ -11,7 +11,6 @@ import {
 import { buildWindDownStudyBootstrap } from "../src/features/winddown/server/studyBootstrap";
 import {
   getWindDownKstDay,
-  normalizeWindDownStudyCount,
   normalizeWindDownStudyMode,
   normalizeWindDownStudySeed,
 } from "../src/features/winddown/server/studyRequest";
@@ -279,11 +278,6 @@ assert.equal(
   "2026-07-31",
   "the KST study day must roll over exactly at local midnight",
 );
-assert.equal(normalizeWindDownStudyCount(null), 20);
-assert.equal(normalizeWindDownStudyCount(""), 20);
-assert.equal(normalizeWindDownStudyCount("not-a-number"), 20);
-assert.equal(normalizeWindDownStudyCount("0"), 1);
-assert.equal(normalizeWindDownStudyCount("999"), 20);
 assert.equal(
   normalizeWindDownStudySeed(null, "review", "2026-07-31"),
   "2026-07-31:review",
@@ -368,6 +362,15 @@ assert.ok(
   readFileSync(studyApi, "utf8").includes("reviewJourney.remaining")
     && readFileSync(habitApi, "utf8").includes("getWindDownReviewJourneyTarget"),
   "Study and habit routes must share one daily review target calculation",
+);
+assert.ok(
+  readFileSync(studyApi, "utf8").includes(": WINDDOWN_LEARN_CREDIT_TARGET")
+    && !readFileSync(studyApi, "utf8").includes('searchParams.get("count")')
+    && !readFileSync(
+      path.join(process.cwd(), "src/features/winddown/ui/WindDownLearnClient.tsx"),
+      "utf8",
+    ).includes("&count="),
+  "Learn must always issue the five-exercise contract without a caller-controlled count",
 );
 
 const roleplayPage = path.join(

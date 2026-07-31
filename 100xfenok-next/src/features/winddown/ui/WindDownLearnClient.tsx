@@ -133,7 +133,7 @@ export default function WindDownLearnClient() {
     try {
       const seed = `${kstDay()}:learn`;
       const response = await fetch(
-        `/api/winddown/study?mode=learn&count=${WINDDOWN_LEARN_CREDIT_TARGET}&seed=${encodeURIComponent(seed)}`,
+        `/api/winddown/study?mode=learn&seed=${encodeURIComponent(seed)}`,
         { cache: "no-store" },
       );
       const body: unknown = await response.json();

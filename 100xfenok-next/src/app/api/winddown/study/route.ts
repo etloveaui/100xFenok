@@ -27,7 +27,9 @@ import {
   getWindDownReviewJourneyTarget,
 } from "@/features/winddown/model/productContract";
 import {
-  normalizeWindDownStudyCount,
+  WINDDOWN_LEARN_CREDIT_TARGET,
+} from "@/features/winddown/learn/engine";
+import {
   normalizeWindDownStudyMode,
   normalizeWindDownStudySeed,
 } from "@/features/winddown/server/studyRequest";
@@ -102,7 +104,7 @@ export async function GET(request: Request) {
       deferredExpressionIds: material.deferredExpressionIds,
       count: mode === "review"
         ? reviewJourney.remaining
-        : normalizeWindDownStudyCount(url.searchParams.get("count")),
+        : WINDDOWN_LEARN_CREDIT_TARGET,
     });
     let cards = bootstrap.cards;
     let inventory = bootstrap.inventory;
@@ -136,7 +138,7 @@ export async function GET(request: Request) {
         material.metadata.source !== "published-lkg"
         || material.metadata.publicationStatus !== "active"
         || !material.metadata.contentDigest
-        || cards.length !== 5
+        || cards.length !== WINDDOWN_LEARN_CREDIT_TARGET
       ) {
         return noStoreJson({ error: "WINDDOWN_MATERIAL_UNAVAILABLE" }, 503);
       }
@@ -160,7 +162,7 @@ export async function GET(request: Request) {
           : [];
       const issuedAtMs = now.getTime();
       const manifest: WindDownLearnSessionManifest =
-        activeManifest && resumedCards.length === 5
+        activeManifest && resumedCards.length === WINDDOWN_LEARN_CREDIT_TARGET
           ? {
               ...activeManifest,
               issuedAtIso: now.toISOString(),
@@ -180,7 +182,7 @@ export async function GET(request: Request) {
                 issuedAtMs + WIND_DOWN_LEARN_SESSION_TTL_MS,
               ).toISOString(),
             };
-      if (resumedCards.length === 5) {
+      if (resumedCards.length === WINDDOWN_LEARN_CREDIT_TARGET) {
         cards = resumedCards;
       }
       learnSession = {

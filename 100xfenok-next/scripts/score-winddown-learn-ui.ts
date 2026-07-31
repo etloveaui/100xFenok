@@ -17,10 +17,10 @@ const page = readFileSync(pagePath, "utf8");
 const progressRoute = readFileSync(progressRoutePath, "utf8");
 
 assert.ok(
-  client.includes(
-    "/api/winddown/study?mode=learn&count=${WINDDOWN_LEARN_CREDIT_TARGET}",
-  ),
-  "Learn UI must load exactly five model-free study cards",
+  client.includes("/api/winddown/study?mode=learn&seed=")
+    && !client.includes("&count=")
+    && client.includes("body.cards.length !== WINDDOWN_LEARN_CREDIT_TARGET"),
+  "Learn UI must rely on the server-owned five-card contract and reject any mismatch",
 );
 assert.ok(
   client.includes('fetch("/api/winddown/progress"'),

@@ -18,7 +18,7 @@
 //     the run that built it; absence is reported as legacy, never guessed.
 
 export const DEPLOY_PROVENANCE_SCHEMA = "deploy-provenance/v1";
-export const DEPLOY_PROVENANCE_PUBLIC_PATH = "data/admin/deploy-provenance.json";
+export const DEPLOY_PROVENANCE_PUBLIC_PATH = "deploy-provenance.json";
 
 // Conclusions that mean "this run's smokes never passed".
 const UNVERIFIED_CONCLUSIONS = new Set([

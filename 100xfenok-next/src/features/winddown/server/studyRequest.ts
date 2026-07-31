@@ -4,12 +4,6 @@ export function normalizeWindDownStudyMode(value: string | null): WindDownModelF
   return value === "learn" || value === "review" ? value : null;
 }
 
-export function normalizeWindDownStudyCount(value: string | null) {
-  if (value === null || value.trim() === "") return 20;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? Math.max(1, Math.min(Math.floor(parsed), 20)) : 20;
-}
-
 export function getWindDownKstDay(now = new Date()) {
   const values = Object.fromEntries(
     new Intl.DateTimeFormat("en-US", {

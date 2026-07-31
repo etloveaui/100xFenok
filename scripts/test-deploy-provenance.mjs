@@ -8,6 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  DEPLOY_PROVENANCE_PUBLIC_PATH,
   DEPLOY_PROVENANCE_SCHEMA,
   buildDeployProvenance,
   classifyLiveProvenance,
@@ -33,6 +34,11 @@ const base = {
 };
 
 const provenance = buildDeployProvenance(base);
+assert.equal(
+  DEPLOY_PROVENANCE_PUBLIC_PATH,
+  "deploy-provenance.json",
+  "the live identity stamp must stay outside broad cached data paths",
+);
 assert.equal(provenance.schema_version, DEPLOY_PROVENANCE_SCHEMA);
 assert.equal(provenance.build_id, "build-123");
 assert.equal(provenance.run_id, "29502469123");
@@ -575,6 +581,21 @@ const deployWorkflowPath = path.join(
 );
 const deployWorkflow = fs.readFileSync(deployWorkflowPath, "utf8");
 const deployJob = deployWorkflow.slice(deployWorkflow.indexOf("\n  deploy:"));
+const staticHeaders = fs.readFileSync(
+  path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "..",
+    "100xfenok-next",
+    "public",
+    "_headers",
+  ),
+  "utf8",
+);
+assert.match(
+  staticHeaders,
+  /^\/deploy-provenance\.json\r?\n\s+Cache-Control: no-store$/m,
+  "the live identity stamp must be served with an exact no-store header rule",
+);
 assert.equal(
   [...deployWorkflow.matchAll(/fetch-depth: 0/g)].length,
   1,
@@ -584,6 +605,16 @@ assert.match(deployJob, /uses: actions\/checkout@v4\s+with:\s+fetch-depth: 0/);
 const liveProvenanceFetchPosition = deployJob.indexOf("live-deploy-provenance-source-fence.json");
 const sourceFencePosition = deployJob.indexOf("check-deploy-source-fence.mjs");
 const uploadPosition = deployJob.indexOf("npx wrangler deploy");
+assert.match(deployJob, /\$base_url\/deploy-provenance\.json\?cb=/);
+assert.match(
+  deployJob,
+  /--provenance "\.open-next\/assets\/deploy-provenance\.json"/,
+);
+assert.equal(
+  deployJob.includes("data/admin/deploy-provenance.json"),
+  false,
+  "the deploy source fence must not read the retired cached provenance path",
+);
 assert.equal(
   liveProvenanceFetchPosition >= 0
     && sourceFencePosition > liveProvenanceFetchPosition
@@ -606,5 +637,9 @@ assert.equal(roundTrip.verdict, "verified-predecessor");
 // writer refuses a bundle without BUILD_ID (identity must never be fabricated)
 const emptyAssets = fs.mkdtempSync(path.join(os.tmpdir(), "deploy-provenance-noid-"));
 assert.throws(() => writeDeployProvenance({ assetsDir: emptyAssets, env: {} }), /BUILD_ID not found/);
+
+for (const temporaryPath of [tmpAssets, sourceFenceRepo, emptyAssets]) {
+  fs.rmSync(temporaryPath, { recursive: true, force: true });
+}
 
 console.log("test-deploy-provenance: ok");

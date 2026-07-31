@@ -18,7 +18,7 @@
 #     queued deploy skips itself BEFORE upload if a newer run is already active
 #     (scripts/check-deploy-supersession.mjs) — skipping never happens after
 #     an upload, so a deploy is never interrupted mid-flight.
-#   - every bundle carries data/admin/deploy-provenance.json declaring the run
+#   - every bundle carries deploy-provenance.json declaring the run
 #     that shipped it; the deploy job asserts the CURRENT live bundle's
 #     provenance before (loud, non-blocking) and after (blocking) upload
 #     (scripts/check-live-deploy-provenance.mjs).
@@ -296,12 +296,12 @@ jobs:
           source_fence_cache_bust="source-fence-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-$(date +%s)"
           curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
             -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
-            "$base_url/data/admin/deploy-provenance.json?cb=$source_fence_cache_bust" \
+            "$base_url/deploy-provenance.json?cb=$source_fence_cache_bust" \
             -o "$live_provenance_path"
           git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
           current_main_sha="$(git rev-parse --verify refs/remotes/origin/main)"
           node ../scripts/check-deploy-source-fence.mjs \
-            --provenance ".open-next/assets/data/admin/deploy-provenance.json" \
+            --provenance ".open-next/assets/deploy-provenance.json" \
             --live-provenance "$live_provenance_path" \
             --current-main "$current_main_sha"
 
