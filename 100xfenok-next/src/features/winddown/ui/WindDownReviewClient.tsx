@@ -17,6 +17,9 @@ import {
   WIND_DOWN_IDLE_ASSIST_DELAY_MS,
   firstEnglishLetter,
 } from "@/features/winddown/ui/windDownAssistiveHints";
+import {
+  WindDownDeviceSpeechPractice,
+} from "@/features/winddown/speech/WindDownDeviceSpeechPractice";
 
 type StudyResponse = {
   schemaVersion: 1;
@@ -579,6 +582,14 @@ export default function WindDownReviewClient() {
                   </div>
                   <p className="mt-9 text-[11px] font-black tracking-[0.15em] text-[var(--wd-listening)]">한국어를 보고 영어를 떠올려 봐</p>
                   <h2 className="mt-3 text-[27px] font-black leading-[1.35] tracking-[-0.035em]">{current.ko}</h2>
+                  <WindDownDeviceSpeechPractice
+                    key={`recall:${current.id}`}
+                    targetText={current.en}
+                    controls="speak-only"
+                    showMatchFeedback={false}
+                    disabled={busy}
+                    onTranscript={setAnswer}
+                  />
                   <div className="mt-auto pt-8">
                     <label htmlFor="review-answer" className="text-xs font-black text-white/55">영어로 직접 입력</label>
                     <input
@@ -687,6 +698,13 @@ export default function WindDownReviewClient() {
                   <span className="w-fit rounded-full border border-[var(--wd-listening)] bg-[var(--wd-surface-raised)] px-3 py-1.5 text-[10px] font-black tracking-[0.12em] text-[var(--wd-listening)]">ONE RETRY</span>
                   <p className="mt-8 text-[11px] font-black tracking-[0.15em] text-[var(--wd-listening)]">연결한 감각으로 한 번만 다시 입력</p>
                   <h2 className="mt-3 text-[27px] font-black leading-[1.35] tracking-[-0.035em]">{current.ko}</h2>
+                  <WindDownDeviceSpeechPractice
+                    key={`retry:${current.id}`}
+                    targetText={current.en}
+                    controls="listen-and-speak"
+                    disabled={busy}
+                    onTranscript={setAnswer}
+                  />
                   <div className="mt-auto pt-8">
                     <label htmlFor="review-retry" className="text-xs font-black text-white/55">영어로 다시 입력</label>
                     <input
@@ -742,7 +760,7 @@ export default function WindDownReviewClient() {
             {notice ? <p aria-live="polite" className="mt-4 text-center text-sm font-bold text-white/65">{notice}</p> : null}
           </main>
 
-          <p className="pb-1 text-center text-[11px] font-bold text-white/40">이 복습은 마이크·대화 모델·실시간 연결을 열지 않아.</p>
+          <p className="pb-1 text-center text-[11px] font-bold text-white/40">기기 받아쓰기는 선택 사항이며, 제출 전까지 복습 기록을 바꾸지 않아.</p>
         </div>
       </div>
     </div>

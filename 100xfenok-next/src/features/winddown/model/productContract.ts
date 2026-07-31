@@ -6,7 +6,7 @@ export type WindDownActivityContract = {
   mode: WindDownMode;
   engine: "deterministic-learn" | "fsrs-review" | "gemini-roleplay" | "gemini-live-talk";
   modelPolicy: "forbidden" | "required";
-  microphonePolicy: "forbidden" | "required";
+  microphonePolicy: "forbidden" | "optional-browser-managed" | "required";
   completion: "five-exercises" | "due-queue" | "scenario-goals" | "learner-stop";
 };
 
@@ -15,14 +15,14 @@ export const WINDDOWN_ACTIVITY_CONTRACTS = {
     mode: "learn",
     engine: "deterministic-learn",
     modelPolicy: "forbidden",
-    microphonePolicy: "forbidden",
+    microphonePolicy: "optional-browser-managed",
     completion: "five-exercises",
   },
   review: {
     mode: "review",
     engine: "fsrs-review",
     modelPolicy: "forbidden",
-    microphonePolicy: "forbidden",
+    microphonePolicy: "optional-browser-managed",
     completion: "due-queue",
   },
   roleplay: {

@@ -104,6 +104,14 @@ assert.deepEqual(
 );
 assert.equal(getWindDownActivityContract("learn").modelPolicy, "forbidden");
 assert.equal(getWindDownActivityContract("review").modelPolicy, "forbidden");
+assert.equal(
+  getWindDownActivityContract("learn").microphonePolicy,
+  "optional-browser-managed",
+);
+assert.equal(
+  getWindDownActivityContract("review").microphonePolicy,
+  "optional-browser-managed",
+);
 assert.equal(getWindDownActivityContract("roleplay").modelPolicy, "required");
 assert.equal(getWindDownActivityContract("live-talk").modelPolicy, "required");
 assert.notEqual(

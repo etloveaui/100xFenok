@@ -18,6 +18,12 @@ import {
   WIND_DOWN_IDLE_ASSIST_DELAY_MS,
   firstWrongChoiceId,
 } from "@/features/winddown/ui/windDownAssistiveHints";
+import {
+  WindDownDeviceSpeechPractice,
+} from "@/features/winddown/speech/WindDownDeviceSpeechPractice";
+import {
+  shouldOfferWindDownLearnSpeech,
+} from "@/features/winddown/speech/deviceSpeech";
 
 type StudyResponse = {
   schemaVersion: 1;
@@ -458,6 +464,11 @@ export default function WindDownLearnClient() {
                   <p className="mt-3 text-base font-black">
                     {feedback.card.en}
                   </p>
+                  <WindDownDeviceSpeechPractice
+                    key={`feedback:${feedback.card.id}`}
+                    targetText={feedback.card.en}
+                    controls="listen-and-speak"
+                  />
                   {feedback.saveError ? (
                     <p className="mt-4 rounded-2xl bg-[var(--fnk-loss-900)] px-4 py-3 text-sm font-bold">
                       결과가 아직 저장되지 않았어. 같은 기록으로 다시 저장할게.
@@ -498,6 +509,17 @@ export default function WindDownLearnClient() {
                         : `${(session?.creditedCardIds.length ?? 0) + 1}번째`}
                     </span>
                   </div>
+
+                  {shouldOfferWindDownLearnSpeech({
+                    exerciseKind: current.kind,
+                    answerVisible: false,
+                  }) ? (
+                    <WindDownDeviceSpeechPractice
+                      key={current.card.id}
+                      targetText={current.card.en}
+                      controls="listen-and-speak"
+                    />
+                  ) : null}
 
                   {current.kind === "meaning-choice" ? (
                     <>
@@ -625,7 +647,7 @@ export default function WindDownLearnClient() {
         </main>
 
         <p className="pb-1 text-center text-[11px] font-bold text-[var(--wd-text-muted)]">
-          이 모드에서는 마이크와 AI 대화를 열지 않아.
+          기기 음성 연습은 선택 사항이며, 정답·보상·진행 기록을 바꾸지 않아.
         </p>
       </div>
     </div>
