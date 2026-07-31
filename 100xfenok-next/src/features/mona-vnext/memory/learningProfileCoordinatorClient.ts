@@ -11,6 +11,10 @@ import type {
 import type {
   WindDownLearnSessionManifest,
 } from "@/features/winddown/server/learnSessionProof";
+import type {
+  WindDownCeremonyMaterialContext,
+  WindDownCeremonySelection,
+} from "@/features/winddown/game/model/ceremony";
 
 const COORDINATOR_BINDING = "WINDDOWN_REVIEW_COORDINATOR";
 const COORDINATOR_OBJECT_NAME = "mona-vnext-learning-profile-v1";
@@ -115,10 +119,28 @@ export async function commitWindDownVoiceReportThroughCoordinator(
   });
 }
 
-export async function readWindDownHabitThroughCoordinator(now = new Date()) {
+export async function readWindDownHabitThroughCoordinator(
+  now = new Date(),
+  ceremonyMaterial: WindDownCeremonyMaterialContext | null = null,
+) {
   return invokeMonaVnextProfileCoordinator({
     operation: "read-winddown-habit",
     nowIso: now.toISOString(),
+    ceremonyMaterial,
+  });
+}
+
+export async function commitWindDownCeremonyChoiceThroughCoordinator(
+  args: {
+    selection: WindDownCeremonySelection;
+    ceremonyMaterial: WindDownCeremonyMaterialContext;
+  },
+) {
+  return invokeMonaVnextProfileCoordinator({
+    operation: "commit-winddown-ceremony-choice",
+    slotId: args.selection.slotId,
+    optionId: args.selection.optionId,
+    ceremonyMaterial: args.ceremonyMaterial,
   });
 }
 

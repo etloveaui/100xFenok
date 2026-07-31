@@ -14,6 +14,13 @@ import {
 import {
   getWindDownReviewJourneyTarget,
 } from "@/features/winddown/model/productContract";
+import {
+  normalizeWindDownCeremonyProjection,
+} from "@/features/winddown/game/model/ceremony";
+import {
+  loadWindDownCeremonyMaterialContext,
+  WindDownCeremonyMaterialError,
+} from "@/features/winddown/server/ceremonyMaterialContext";
 
 export const dynamic = "force-dynamic";
 export const revalidate = false;
@@ -45,8 +52,14 @@ export async function GET() {
   }
   try {
     const now = new Date();
+    const ceremonyMaterial = await loadWindDownCeremonyMaterialContext().catch(
+      (error) => {
+        if (error instanceof WindDownCeremonyMaterialError) return null;
+        throw error;
+      },
+    );
     const [habit, profile] = await Promise.all([
-      readWindDownHabitThroughCoordinator(now),
+      readWindDownHabitThroughCoordinator(now, ceremonyMaterial),
       readMonaVnextLearningProfileThroughCoordinator(),
     ]);
     if (!isRecord(habit.projection)) {
@@ -61,6 +74,10 @@ export async function GET() {
       || !isNonNegativeInteger(habit.game.creditedNightCount)
     ) {
       return noStoreJson({ error: "WINDDOWN_GAME_PROJECTION_INVALID" }, 500);
+    }
+    const ceremony = normalizeWindDownCeremonyProjection(habit.ceremony);
+    if (!ceremony) {
+      return noStoreJson({ error: "WINDDOWN_CEREMONY_PROJECTION_INVALID" }, 500);
     }
     const projection = habit.projection;
     const currentKstDay =
@@ -125,6 +142,7 @@ export async function GET() {
         collectedReviewStarCount: habit.game.collectedReviewStarCount,
         creditedNightCount: habit.game.creditedNightCount,
       },
+      ceremony,
       tonight: {
         completed,
         nextAction,

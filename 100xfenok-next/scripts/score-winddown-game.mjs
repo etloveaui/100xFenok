@@ -11,8 +11,10 @@ const ROSTER = "src/features/winddown/game/model/roster.ts";
 const CONTRACT = "src/features/winddown/game/model/contract.ts";
 const SCENES = "src/features/winddown/game/ui/scenes.ts";
 const PROGRESS = "src/features/winddown/game/model/progress.ts";
+const CEREMONY = "src/features/winddown/game/model/ceremony.ts";
 const CLIENT = "src/features/winddown/game/ui/WindDownGameClient.tsx";
 const ROUTE = "src/app/winddown/game/page.tsx";
+const CEREMONY_API = "src/app/api/winddown/game/ceremony/route.ts";
 const HOME = "src/features/winddown/habit/ui/WindDownHabitHomeClient.tsx";
 const HABIT_API = "src/app/api/winddown/habit/route.ts";
 const COORDINATOR =
@@ -25,8 +27,10 @@ for (const rel of [
   CONTRACT,
   SCENES,
   PROGRESS,
+  CEREMONY,
   CLIENT,
   ROUTE,
+  CEREMONY_API,
   HOME,
   HABIT_API,
   COORDINATOR,
@@ -37,8 +41,10 @@ for (const rel of [
 
 const tour = read(TOUR);
 const progress = read(PROGRESS);
+const ceremony = read(CEREMONY);
 const client = read(CLIENT);
 const route = read(ROUTE);
+const ceremonyApi = read(CEREMONY_API);
 const roster = read(ROSTER);
 const contract = read(CONTRACT);
 const scenes = read(SCENES);
@@ -226,7 +232,77 @@ assert.equal(
   "the authenticated game route must be acknowledged by the route-scope count",
 );
 
-/* 6. unlock levels are strictly increasing so no chapter is unreachable */
+/* 6. naming is a receipt-gated, one-time ceremony inside the tour, never local
+      preference state or a new destination */
+for (const [slotId, unlockLevel] of [
+  ["group", 7],
+  ["debut-song", 10],
+  ["fandom", 13],
+]) {
+  assert.equal(
+    ceremony.includes(`id: "${slotId}"`)
+      && ceremony.includes(`unlockLevel: ${unlockLevel}`),
+    true,
+    `ceremony slot ${slotId} must unlock at receipt-derived level ${unlockLevel}`,
+  );
+}
+assert.equal(
+  ceremony.includes("WIND_DOWN_CEREMONY_SCHEMA_VERSION")
+    && ceremony.includes("optionId")
+    && ceremony.includes("windDownCeremonyOption")
+    && ceremony.includes("normalizeWindDownCeremonySelection"),
+  true,
+  "ceremony choices must use a versioned server-owned option contract",
+);
+assert.equal(
+  coordinator.includes('"commit-winddown-ceremony-choice"')
+    && coordinator.includes("projectWindDownGameProgress")
+    && coordinator.includes("levelFromXp")
+    && coordinator.includes("transaction"),
+  true,
+  "the coordinator must derive ceremony unlocks from immutable receipt XP inside its write transaction",
+);
+assert.equal(
+  ceremonyApi.includes("verifyAdminSessionToken")
+    && ceremonyApi.includes("commitWindDownCeremonyChoiceThroughCoordinator")
+    && ceremonyApi.includes("MonaVnextProfileCoordinatorError"),
+  true,
+  "the ceremony write route must require admin auth and preserve coordinator conflict status",
+);
+assert.equal(
+  client.includes('fetch("/api/winddown/game/ceremony"')
+    && client.includes("ceremony")
+    && !client.includes("localStorage")
+    && !client.includes("sessionStorage"),
+  true,
+  "the tour must persist naming through the server ceremony endpoint without browser-only state",
+);
+assert.equal(
+  habitApi.includes("normalizeWindDownCeremonyProjection(habit.ceremony)")
+    && habitApi.includes("ceremony,")
+    && client.includes("normalizeWindDownCeremonyProjection(value.ceremony)"),
+  true,
+  "the committed ceremony must hydrate through the validated habit response after reload",
+);
+assert.equal(
+  client.includes("ceremonyRequestPending")
+    && client.includes("min-h-12")
+    && client.includes('aria-live="polite"')
+    && client.includes("response.status === 409")
+    && client.includes("다른 화면에서 먼저 정한 공식 이름을 불러왔어.")
+    && client.includes("문장 자료가 갱신되어 최신 이름 후보를 불러왔어.")
+    && client.includes('ceremony.status === "unavailable"')
+    && client.includes('optionSource === "mastery-derived"'),
+  true,
+  "the naming moment must resist double taps and expose honest mobile feedback",
+);
+assert.equal(
+  routeContract.includes("/winddown/game/ceremony"),
+  false,
+  "ceremony must remain inside the tour rather than becoming a seventh page destination",
+);
+
+/* 7. unlock levels are strictly increasing so no chapter is unreachable */
 const levels = chapterRows.map((row) =>
   Number(row.match(/unlockLevel:\s*(\d+)/)?.[1] ?? Number.NaN),
 );
@@ -237,7 +313,7 @@ for (let i = 1; i < levels.length; i += 1) {
   );
 }
 
-/* 7. the progression curve keeps its promise: one full arc lands near ninety nights */
+/* 8. the progression curve keeps its promise: one full arc lands near ninety nights */
 const levelCost = (n) => 12 + Math.floor(n * 0.55);
 const xpToReach = (lv) => {
   let total = 0;
@@ -255,7 +331,7 @@ assert.ok(
   `full arc should land near ninety nights, computed ${arcNights}`,
 );
 
-/* 8. forecasting must never grant progress */
+/* 9. forecasting must never grant progress */
 assert.equal(
   /ASSUMED_XP_PER_NIGHT[^\n]*=[^\n]*award/i.test(progress),
   false,

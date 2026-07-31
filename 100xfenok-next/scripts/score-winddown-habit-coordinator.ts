@@ -12,6 +12,10 @@ import {
 import type {
   WindDownLearnSessionManifest,
 } from "../src/features/winddown/server/learnSessionProof";
+import {
+  createWindDownHabitCompletionEvent,
+  type WindDownHabitCompletionEvent,
+} from "../src/features/winddown/habit/domain";
 
 const cards: WindDownLearnCard[] = Array.from({ length: 5 }, (_, index) => ({
   id: `learn-card-${index + 1}`,
@@ -27,6 +31,23 @@ const manifest: WindDownLearnSessionManifest = {
   contentDigest: "a".repeat(64),
   issuedAtIso: "2026-07-31T09:00:00.000Z",
   expiresAtIso: "2026-08-01T03:00:00.000Z",
+};
+const ceremonyMaterial = {
+  schemaVersion: 1 as const,
+  contentDigest: "b".repeat(64),
+  entries: [
+    { id: "ceremony-material-1", en: "I need to sleep on it." },
+    { id: "ceremony-material-2", en: "I can see the first light." },
+    { id: "ceremony-material-3", en: "We are chasing the same dream." },
+    { id: "ceremony-material-4", en: "Could you give me a minute?" },
+    { id: "ceremony-material-5", en: "I will figure it out tomorrow." },
+    { id: "ceremony-material-6", en: "We are ready for this." },
+    { id: "ceremony-material-7", en: "I am finally home." },
+    { id: "ceremony-material-8", en: "Let's start from here." },
+    { id: "ceremony-material-9", en: "It was a beautiful night." },
+    { id: "ceremony-hard", en: "I need poison." },
+    { id: "ceremony-later-miss", en: "I regret this." },
+  ],
 };
 
 function correctAction(): WindDownLearnAction {
@@ -185,6 +206,7 @@ async function main() {
   const habit = await command({
     operation: "read-winddown-habit",
     nowIso: "2026-07-31T10:06:00.000Z",
+    ceremonyMaterial,
   });
   assert.equal(habit.response.status, 200);
   const projection = habit.body.projection as {
@@ -217,8 +239,151 @@ async function main() {
   });
   assert.equal(wrongDay.response.status, 400);
 
+  const ceremonyEvents: WindDownHabitCompletionEvent[] = [];
+  for (let night = 1; night <= 12; night += 1) {
+    const day = new Date(
+      Date.UTC(2026, 6, night),
+    ).toISOString().slice(0, 10);
+    ceremonyEvents.push(
+      createWindDownHabitCompletionEvent({
+        kind: "learn-credit-receipt",
+        receipt: {
+          schemaVersion: 1,
+          activity: "learn",
+          receiptId: `ceremony-learn-${night}`,
+          sessionId: `ceremony-session-${night}`,
+          persistedAtIso: `${day}T12:00:00.000Z`,
+          creditedActionCount: 5,
+          completion: "five-exercises",
+          persisted: true,
+        },
+      }),
+    );
+  }
+  values.set("winddown-habit-events", ceremonyEvents);
+
+  const committedCeremony = await command({
+    operation: "commit-winddown-ceremony-choice",
+    slotId: "group",
+    optionId: "lumen",
+    ceremonyMaterial,
+  });
+  assert.equal(committedCeremony.response.status, 200);
+  assert.equal(committedCeremony.body.duplicate, false);
+  const duplicateCeremony = await command({
+    operation: "commit-winddown-ceremony-choice",
+    slotId: "group",
+    optionId: "lumen",
+    ceremonyMaterial,
+  });
+  assert.equal(duplicateCeremony.response.status, 200);
+  assert.equal(duplicateCeremony.body.duplicate, true);
+  const conflictCeremony = await command({
+    operation: "commit-winddown-ceremony-choice",
+    slotId: "group",
+    optionId: "moonrise",
+    ceremonyMaterial,
+  });
+  assert.equal(conflictCeremony.response.status, 409);
+  assert.equal(
+    conflictCeremony.body.error,
+    "WINDDOWN_CEREMONY_CHOICE_CONFLICT",
+  );
+
+  const storedProfile = structuredClone(
+    values.get("mona-vnext-learning-profile"),
+  ) as {
+    records: Record<string, {
+      expressionId: string;
+      lastVerdict: string;
+      lastRating: string;
+      lastReviewedAt: string;
+      card: Record<string, unknown>;
+    }>;
+  };
+  const templateRecord = Object.values(storedProfile.records)[0];
+  assert(templateRecord);
+  const masteryEvents = [...ceremonyEvents];
+  ceremonyMaterial.entries.forEach((entry, index) => {
+    const hard = entry.id === "ceremony-hard";
+    const laterMiss = entry.id === "ceremony-later-miss";
+    const reviewCycleId = `ceremony-mastery-${index + 1}`;
+    const reviewedAt = `2026-07-${String(10 + index).padStart(2, "0")}T12:30:00.000Z`;
+    const receipt = {
+      schemaVersion: 1 as const,
+      reviewCycleId,
+      requestDigest: String(index + 1).padStart(64, "0"),
+      materialId: entry.id,
+      reviewedAt,
+      rating: hard ? "hard" as const : "good" as const,
+      reward: 1 as const,
+    };
+    values.set(`winddown-review-receipt:${reviewCycleId}`, receipt);
+    masteryEvents.push(
+      createWindDownHabitCompletionEvent({
+        kind: "review-credit-receipt",
+        receipt,
+      }),
+    );
+    storedProfile.records[entry.id] = {
+      ...templateRecord,
+      expressionId: entry.id,
+      lastVerdict: laterMiss ? "miss" : hard ? "close" : "canonical",
+      lastRating: laterMiss ? "again" : hard ? "hard" : "good",
+      lastReviewedAt: reviewedAt,
+      card: {
+        ...templateRecord.card,
+        stability: hard ? 2_000 : laterMiss ? 1_999 : 1_000 - index,
+      },
+    };
+  });
+  values.set("mona-vnext-learning-profile", storedProfile);
+  values.set("winddown-habit-events", masteryEvents);
+  const masteryHabit = await command({
+    operation: "read-winddown-habit",
+    nowIso: "2026-07-31T10:07:30.000Z",
+    ceremonyMaterial,
+  });
+  assert.equal(masteryHabit.response.status, 200);
+  const masteryCeremony = masteryHabit.body.ceremony as {
+    slots: Array<{
+      id: string;
+      optionSource: string;
+      options: Array<{ label: string }>;
+    }>;
+  };
+  assert(
+    masteryCeremony.slots.every(
+      (slot) => slot.optionSource === "mastery-derived",
+    ),
+    "nine strict-recall receipts must produce three distinct learned option sets",
+  );
+  const learnedLabels = masteryCeremony.slots.flatMap(
+    (slot) => slot.options.map((option) => option.label),
+  );
+  assert.equal(learnedLabels.length, 9);
+  assert(!learnedLabels.includes("POISON"));
+  assert(!learnedLabels.includes("REGRET"));
+
+  values.set("winddown-game-ceremony:v1", {
+    schemaVersion: 1,
+    catalogVersion: "corrupted",
+    learnerId: "mona",
+    choices: {},
+  });
+  const corruptedCeremony = await command({
+    operation: "read-winddown-habit",
+    nowIso: "2026-07-31T10:08:00.000Z",
+    ceremonyMaterial,
+  });
+  assert.equal(corruptedCeremony.response.status, 500);
+  assert.equal(
+    corruptedCeremony.body.error,
+    "WINDDOWN_CEREMONY_STATE_INVALID",
+  );
+
   console.log(
-    "PASS winddown-habit-coordinator - server-owned Learn resume, receipt, duplicate, conflict, and day gates",
+    "PASS winddown-habit-coordinator - server-owned Learn and ceremony receipts, duplicate, conflict, corruption, and day gates",
   );
 }
 

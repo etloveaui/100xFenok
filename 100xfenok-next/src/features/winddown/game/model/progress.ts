@@ -12,6 +12,12 @@ import type {
   WindDownHabitCompletionEvent,
 } from "@/features/winddown/habit/domain";
 
+const MAX_LEVEL = 400;
+
+function safeXp(value: number): number {
+  return Number.isFinite(value) ? Math.max(0, value) : 0;
+}
+
 /** XP required to leave level n. Grows so one full arc lands near ninety nights. */
 export function levelCost(level: number): number {
   if (!Number.isFinite(level) || level < 1) return Number.POSITIVE_INFINITY;
@@ -21,14 +27,14 @@ export function levelCost(level: number): number {
 /** Cumulative XP required to reach the start of `level`. */
 export function xpToReach(level: number): number {
   if (!Number.isFinite(level) || level < 1) return 0;
+  const capped = Math.min(level, MAX_LEVEL);
   let total = 0;
-  for (let i = 1; i < level; i += 1) total += levelCost(i);
+  for (let i = 1; i < capped; i += 1) total += levelCost(i);
   return total;
 }
 
-const MAX_LEVEL = 400;
-
-export function levelFromXp(xp: number): number {
+export function levelFromXp(rawXp: number): number {
+  const xp = safeXp(rawXp);
   if (!Number.isFinite(xp) || xp <= 0) return 1;
   let level = 1;
   let spent = 0;
@@ -39,12 +45,17 @@ export function levelFromXp(xp: number): number {
   return level;
 }
 
-export function xpIntoLevel(xp: number): number {
-  return Math.max(0, xp - xpToReach(levelFromXp(xp)));
+export function xpIntoLevel(rawXp: number): number {
+  const xp = safeXp(rawXp);
+  const level = levelFromXp(xp);
+  return Math.max(
+    0,
+    Math.min(levelCost(level), xp - xpToReach(level)),
+  );
 }
 
-export function xpNeededForLevel(xp: number): number {
-  return levelCost(levelFromXp(xp));
+export function xpNeededForLevel(rawXp: number): number {
+  return levelCost(levelFromXp(safeXp(rawXp)));
 }
 
 /** Awarded per credited study answer and per collected star. */
@@ -117,8 +128,8 @@ export function projectWindDownGameProgress(
   };
 }
 
-export function nightsToReach(level: number, xp: number): number {
-  const remaining = xpToReach(level) - xp;
+export function nightsToReach(level: number, rawXp: number): number {
+  const remaining = xpToReach(level) - safeXp(rawXp);
   if (remaining <= 0) return 0;
   return Math.ceil(remaining / ASSUMED_XP_PER_NIGHT);
 }
@@ -151,12 +162,14 @@ export function nextChapter(xp: number): WindDownChapter | null {
  * Fills with nights spent inside the chapter so the world visibly grows between
  * milestones rather than jumping only when a chapter unlocks.
  */
-export function chapterGrowth(xp: number): number {
+export function chapterGrowth(rawXp: number): number {
+  const xp = safeXp(rawXp);
   const here = currentChapter(xp);
   const next = nextChapter(xp);
   if (!next) return 1;
   const from = xpToReach(here.unlockLevel);
   const to = xpToReach(next.unlockLevel);
   if (to <= from) return 1;
-  return Math.max(0, Math.min(1, (xp - from) / (to - from)));
+  const ratio = (xp - from) / (to - from);
+  return Number.isFinite(ratio) ? Math.max(0, Math.min(1, ratio)) : 0;
 }

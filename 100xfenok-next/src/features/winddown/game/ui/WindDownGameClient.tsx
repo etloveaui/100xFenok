@@ -21,6 +21,11 @@ import {
   memberForChapter,
   type WindDownLearnerProfile,
 } from "@/features/winddown/game/model/contract";
+import {
+  normalizeWindDownCeremonyProjection,
+  type WindDownCeremonyProjection,
+  type WindDownCeremonySlotId,
+} from "@/features/winddown/game/model/ceremony";
 
 type Props = {
   /** Identity is presentation-only here; progress always comes from receipts. */
@@ -39,6 +44,7 @@ type NextAction = "review" | "learn" | "roleplay" | "free";
 
 type GameHabitResponse = {
   game: GameProgress;
+  ceremony: WindDownCeremonyProjection;
   nextAction: NextAction;
 };
 
@@ -60,6 +66,7 @@ function isNonNegativeInteger(value: unknown): value is number {
 function gameHabitFrom(value: unknown): GameHabitResponse | null {
   if (!isRecord(value) || value.ok !== true || !isRecord(value.game)) return null;
   const game = value.game;
+  const ceremony = normalizeWindDownCeremonyProjection(value.ceremony);
   const tonight = value.tonight;
   if (
     game.schemaVersion !== 1
@@ -67,6 +74,7 @@ function gameHabitFrom(value: unknown): GameHabitResponse | null {
     || !isNonNegativeInteger(game.creditedAnswerCount)
     || !isNonNegativeInteger(game.collectedReviewStarCount)
     || !isNonNegativeInteger(game.creditedNightCount)
+    || !ceremony
     || !isRecord(tonight)
     || !["review", "learn", "roleplay", "free"].includes(String(tonight.nextAction))
   ) {
@@ -80,8 +88,15 @@ function gameHabitFrom(value: unknown): GameHabitResponse | null {
       collectedReviewStarCount: game.collectedReviewStarCount,
       creditedNightCount: game.creditedNightCount,
     },
+    ceremony,
     nextAction: tonight.nextAction as NextAction,
   };
+}
+
+function ceremonyFrom(value: unknown): WindDownCeremonyProjection | null {
+  return isRecord(value) && value.ok === true
+    ? normalizeWindDownCeremonyProjection(value.ceremony)
+    : null;
 }
 
 export default function WindDownGameClient({
@@ -90,10 +105,14 @@ export default function WindDownGameClient({
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [habit, setHabit] = useState<GameHabitResponse | null>(null);
   const requestSequence = useRef(0);
+  const ceremonyRequestPending = useRef(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef<number | null>(null);
   const [reduced, setReduced] = useState(false);
   const [selected, setSelected] = useState<WindDownChapter | null>(null);
+  const [ceremonyStatus, setCeremonyStatus] = useState<
+    "idle" | "saving" | "conflict" | "refreshed" | "error"
+  >("idle");
 
   const xp = habit?.game.xp ?? 0;
   const level = levelFromXp(xp);
@@ -124,6 +143,53 @@ export default function WindDownGameClient({
       if (requestSequence.current !== sequence) return;
       setHabit(null);
       setStatus("error");
+    }
+  }, []);
+
+  const commitCeremony = useCallback(async (
+    slotId: WindDownCeremonySlotId,
+    optionId: string,
+  ) => {
+    if (ceremonyRequestPending.current) return;
+    ceremonyRequestPending.current = true;
+    setCeremonyStatus("saving");
+    try {
+      const response = await fetch("/api/winddown/game/ceremony", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slotId, optionId }),
+      });
+      const body: unknown = await response.json().catch(() => null);
+      const ceremony = ceremonyFrom(body);
+      if (response.status === 409) {
+        const errorCode = isRecord(body) && typeof body.error === "string"
+          ? body.error
+          : "";
+        const latestResponse = await fetch("/api/winddown/habit", {
+          cache: "no-store",
+        });
+        const latestBody: unknown = await latestResponse.json().catch(() => null);
+        const latestHabit = gameHabitFrom(latestBody);
+        if (!latestResponse.ok || !latestHabit) {
+          throw new Error("winddown_ceremony_conflict_refresh_failed");
+        }
+        setHabit(latestHabit);
+        setCeremonyStatus(
+          errorCode === "WINDDOWN_CEREMONY_CHOICE_CONFLICT"
+            ? "conflict"
+            : "refreshed",
+        );
+        return;
+      }
+      if (!response.ok || !ceremony) {
+        throw new Error("winddown_ceremony_commit_failed");
+      }
+      setHabit((current) => current ? { ...current, ceremony } : current);
+      setCeremonyStatus("idle");
+    } catch {
+      setCeremonyStatus("error");
+    } finally {
+      ceremonyRequestPending.current = false;
     }
   }, []);
 
@@ -194,6 +260,16 @@ export default function WindDownGameClient({
 
   const forecast = next ? nightsToReach(next.unlockLevel, xp) : 0;
   const action = habit ? ACTIONS[habit.nextAction] : null;
+  const chosenCeremonies = habit?.ceremony.slots.filter(
+    (slot) => slot.choice !== null,
+  ) ?? [];
+  const openCeremony = habit?.ceremony.slots.find(
+    (slot) => slot.unlocked && slot.choice === null,
+  ) ?? null;
+  const nextCeremony = habit?.ceremony.slots.find(
+    (slot) => !slot.unlocked,
+  ) ?? null;
+  const ceremonyUnavailable = habit?.ceremony.status === "unavailable";
 
   if (!isContentPackValid(WIND_DOWN_CONTENT_PACK)) {
     return (
@@ -322,6 +398,79 @@ export default function WindDownGameClient({
             );
           })}
         </ul>
+      </section>
+
+      <section
+        aria-label="우리의 이름"
+        className="rounded-[24px] border border-[var(--wd-border)] p-5"
+        style={{ background: "var(--wd-surface)" }}
+      >
+        <p className="text-[11px] font-black tracking-[0.16em] text-[var(--wd-accent)]">OUR STORY</p>
+        {chosenCeremonies.length > 0 ? (
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {chosenCeremonies.map((slot) => (
+              <li
+                key={slot.id}
+                className="rounded-full border border-[var(--wd-border)] px-3 py-2 text-xs font-black"
+              >
+                {slot.label} · {slot.choice?.label}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {ceremonyUnavailable ? (
+          <div className={chosenCeremonies.length > 0 ? "mt-5" : "mt-2"}>
+            <h2 className="text-lg font-bold">이름 후보를 지금 불러오지 못했어.</h2>
+            <p className="mt-2 text-sm font-medium text-[var(--wd-text-muted)]">
+              학습과 투어 기록은 그대로야. 출판된 문장 자료가 다시 열리면 여기서 이어갈 수 있어.
+            </p>
+          </div>
+        ) : openCeremony ? (
+          <div className={chosenCeremonies.length > 0 ? "mt-5" : "mt-2"}>
+            <p className="text-xs font-black text-[var(--wd-accent)]">
+              학습 기록이 Lv.{openCeremony.unlockLevel}을 열었어
+            </p>
+            <h2 className="mt-1 text-lg font-bold">{openCeremony.label}을 정할 순간</h2>
+            <p className="mt-2 text-sm font-medium text-[var(--wd-text-muted)]">
+              {openCeremony.optionSource === "mastery-derived"
+                ? "모나가 복습에서 정확히 떠올린 문장으로 만든 후보야. 한 번 정하면 공식 이름으로 남아."
+                : "아직 후보로 만들 숙달 문장이 부족해 첫 이름 후보를 준비했어. 한 번 정하면 공식 이름으로 남아."}
+            </p>
+            <div className="mt-4 grid gap-2">
+              {openCeremony.options.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  disabled={ceremonyStatus === "saving"}
+                  onClick={() => void commitCeremony(openCeremony.id, option.id)}
+                  className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-[var(--wd-border)] px-4 text-sm font-black disabled:opacity-50"
+                  style={{ background: "var(--wd-bg)" }}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <p aria-live="polite" className="mt-3 min-h-5 text-xs font-bold text-[var(--wd-text-muted)]">
+              {ceremonyStatus === "saving"
+                ? "공식 이름으로 저장하는 중…"
+                : ceremonyStatus === "conflict"
+                  ? "다른 화면에서 먼저 정한 공식 이름을 불러왔어."
+                : ceremonyStatus === "refreshed"
+                  ? "문장 자료가 갱신되어 최신 이름 후보를 불러왔어."
+                : ceremonyStatus === "error"
+                  ? "이름을 저장하지 못했어. 연결을 확인하고 다시 눌러 줘."
+                  : ""}
+            </p>
+          </div>
+        ) : nextCeremony ? (
+          <p className="mt-3 text-sm font-bold text-[var(--wd-text-muted)]">
+            다음 이야기 · {nextCeremony.label}은 Lv.{nextCeremony.unlockLevel}에 열려.
+          </p>
+        ) : (
+          <p className="mt-3 text-sm font-bold text-[var(--wd-text-muted)]">
+            우리 팀의 공식 이야기가 모두 정해졌어.
+          </p>
+        )}
       </section>
 
       <section aria-label="함께 걷는 멤버" className="rounded-[24px] border border-[var(--wd-border)] p-5" style={{ background: "var(--wd-surface)" }}>

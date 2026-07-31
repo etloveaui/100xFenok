@@ -38,8 +38,23 @@ import {
   type WindDownHabitLearnCreditReceipt,
 } from "@/features/winddown/habit/domain";
 import {
+  levelFromXp,
   projectWindDownGameProgress,
 } from "@/features/winddown/game/model/progress";
+import {
+  buildWindDownCeremonyOptionCatalog,
+  commitWindDownCeremonyChoice,
+  createEmptyWindDownCeremonyRecord,
+  normalizeWindDownCeremonyMaterialContext,
+  normalizeWindDownCeremonyRecord,
+  normalizeWindDownCeremonySelection,
+  projectWindDownCeremony,
+  projectUnavailableWindDownCeremony,
+  type WindDownCeremonyMasteryEvidence,
+  type WindDownCeremonyMaterialContext,
+  type WindDownCeremonyRecord,
+  type WindDownCeremonySlotId,
+} from "@/features/winddown/game/model/ceremony";
 import {
   normalizeWindDownLearnSessionManifest,
   type WindDownLearnSessionManifest,
@@ -55,6 +70,7 @@ const VOICE_REPORT_STORAGE_PREFIX = "winddown-voice-report:";
 const HABIT_EVENTS_STORAGE_KEY = "winddown-habit-events";
 const LEARN_SESSION_STORAGE_PREFIX = "winddown-learn-session:";
 const LEARN_ATTEMPT_STORAGE_PREFIX = "winddown-learn-attempt:";
+const CEREMONY_STORAGE_KEY = "winddown-game-ceremony:v1";
 const PROFILE_KV_KEY =
   `data/${MONA_VNEXT_DATA_NAMESPACE}/owner-test/learning-profile.json`;
 
@@ -108,6 +124,13 @@ export type MonaVnextProfileCoordinatorCommand =
   | {
       operation: "read-winddown-habit";
       nowIso: string;
+      ceremonyMaterial: WindDownCeremonyMaterialContext | null;
+    }
+  | {
+      operation: "commit-winddown-ceremony-choice";
+      slotId: WindDownCeremonySlotId;
+      optionId: string;
+      ceremonyMaterial: WindDownCeremonyMaterialContext;
     }
   | {
       operation: "commit-learn-attempt";
@@ -337,6 +360,73 @@ async function readHabitEvents(storage: StorageTransactionLike) {
   )) ?? [];
 }
 
+async function readCeremonyRecord(storage: StorageTransactionLike) {
+  const stored = await storage.get<unknown>(CEREMONY_STORAGE_KEY);
+  if (stored === undefined) return createEmptyWindDownCeremonyRecord();
+  return normalizeWindDownCeremonyRecord(stored);
+}
+
+async function readCeremonyMasteryEvidence(args: {
+  storage: StorageTransactionLike;
+  events: readonly WindDownHabitCompletionEvent[];
+  profile: MonaVnextLearningProfile;
+}): Promise<WindDownCeremonyMasteryEvidence[] | null> {
+  const reviewEvents = args.events.filter(
+    (event) => event.source.kind === "review-credit-receipt",
+  );
+  const receipts = await Promise.all(reviewEvents.map(async (event) => ({
+    event,
+    receipt: await args.storage.get<unknown>(
+      receiptKey(
+        event.source.kind === "review-credit-receipt"
+          ? event.source.reviewCycleId
+          : "",
+      ),
+    ),
+  })));
+  const evidence: WindDownCeremonyMasteryEvidence[] = [];
+  for (const { event, receipt } of receipts) {
+    if (
+      event.source.kind !== "review-credit-receipt"
+      || !receipt
+      || typeof receipt !== "object"
+      || Array.isArray(receipt)
+    ) return null;
+    const stored = receipt as Record<string, unknown>;
+    if (
+      stored.schemaVersion !== 1
+      || stored.reviewCycleId !== event.source.reviewCycleId
+      || stored.materialId !== event.source.materialId
+      || stored.reviewedAt !== event.occurredAtIso
+      || typeof stored.requestDigest !== "string"
+      || !/^[a-f0-9]{64}$/.test(stored.requestDigest)
+      || (
+        stored.rating !== "again"
+        && stored.rating !== "hard"
+        && stored.rating !== "good"
+      )
+      || (stored.reward !== 0 && stored.reward !== 1)
+    ) return null;
+    const profileRecord = args.profile.records[event.source.materialId];
+    if (
+      stored.rating === "good"
+      && stored.reward === 1
+      && profileRecord?.lastRating === "good"
+      && (
+        profileRecord.lastVerdict === "canonical"
+        || profileRecord.lastVerdict === "variant"
+      )
+    ) {
+      evidence.push({
+        materialId: event.source.materialId,
+        reviewedAtIso: event.occurredAtIso,
+        stability: profileRecord.card.stability,
+      });
+    }
+  }
+  return evidence;
+}
+
 async function appendHabitEvent(
   transaction: StorageTransactionLike,
   candidate: WindDownHabitCompletionEvent,
@@ -451,25 +541,190 @@ export async function handleMonaVnextProfileCoordinatorRequest(
 
   if (body.operation === "read-winddown-habit") {
     const nowIso = normalizeNowIso(body.nowIso);
-    if (!nowIso) {
+    const ceremonyMaterial = body.ceremonyMaterial === null
+      ? null
+      : normalizeWindDownCeremonyMaterialContext(body.ceremonyMaterial);
+    if (
+      Object.keys(body).length !== 3
+      || !Object.keys(body).every((key) =>
+        key === "operation" || key === "nowIso" || key === "ceremonyMaterial"
+      )
+      || !nowIso
+      || (body.ceremonyMaterial !== null && !ceremonyMaterial)
+    ) {
       return noStoreJson({ error: "INVALID_PROFILE_COORDINATOR_COMMAND" }, 400);
     }
-    const events = await readHabitEvents(state.storage);
-    const projection = projectWindDownHabit({
-      events,
-      now: new Date(nowIso),
+    await initialProfile(state, env);
+    const result = await state.storage.transaction(async (transaction) => {
+      const events = await readHabitEvents(transaction);
+      const projection = projectWindDownHabit({
+        events,
+        now: new Date(nowIso),
+      });
+      const game = projectWindDownGameProgress(events);
+      const ceremonyRecord = await readCeremonyRecord(transaction);
+      const profile =
+        (await transaction.get<MonaVnextLearningProfile>(
+          PROFILE_STORAGE_KEY,
+        )) ?? createEmptyMonaVnextLearningProfile();
+      if (!ceremonyRecord) return { status: "state-invalid" as const };
+      let ceremony;
+      if (ceremonyMaterial) {
+        const mastery = await readCeremonyMasteryEvidence({
+          storage: transaction,
+          events,
+          profile,
+        });
+        if (!mastery) return { status: "mastery-invalid" as const };
+        ceremony = projectWindDownCeremony(
+          ceremonyRecord,
+          levelFromXp(game.xp),
+          buildWindDownCeremonyOptionCatalog({
+            material: ceremonyMaterial,
+            mastery,
+          }),
+        );
+      } else {
+        ceremony = projectUnavailableWindDownCeremony(
+          ceremonyRecord,
+          levelFromXp(game.xp),
+        );
+      }
+      const activeLearn =
+        (await transaction.get<StoredWindDownLearnSession>(
+          learnSessionKey(projection.currentKstDay),
+        )) ?? null;
+      return {
+        status: "ready" as const,
+        projection,
+        game,
+        ceremony,
+        activeLearn,
+      };
     });
-    const game = projectWindDownGameProgress(events);
-    const activeLearn =
-      (await state.storage.get<StoredWindDownLearnSession>(
-        learnSessionKey(projection.currentKstDay),
-      )) ?? null;
+    if (result.status === "state-invalid") {
+      return noStoreJson({ error: "WINDDOWN_CEREMONY_STATE_INVALID" }, 500);
+    }
+    if (result.status === "mastery-invalid") {
+      return noStoreJson({ error: "WINDDOWN_CEREMONY_MASTERY_STATE_INVALID" }, 500);
+    }
     return noStoreJson({
       ok: true,
       operation: body.operation,
-      projection,
-      game,
-      activeLearn,
+      projection: result.projection,
+      game: result.game,
+      ceremony: result.ceremony,
+      activeLearn: result.activeLearn,
+    });
+  }
+
+  if (body.operation === "commit-winddown-ceremony-choice") {
+    if (
+      Object.keys(body).length !== 4
+      || !Object.keys(body).every((key) =>
+        key === "operation"
+        || key === "slotId"
+        || key === "optionId"
+        || key === "ceremonyMaterial"
+      )
+    ) {
+      return noStoreJson({ error: "INVALID_WINDDOWN_CEREMONY_CHOICE" }, 400);
+    }
+    const selection = normalizeWindDownCeremonySelection({
+      slotId: body.slotId,
+      optionId: body.optionId,
+    });
+    const ceremonyMaterial = normalizeWindDownCeremonyMaterialContext(
+      body.ceremonyMaterial,
+    );
+    if (!selection || !ceremonyMaterial) {
+      return noStoreJson({ error: "INVALID_WINDDOWN_CEREMONY_CHOICE" }, 400);
+    }
+    await initialProfile(state, env);
+    const result = await state.storage.transaction(async (transaction) => {
+      const record = await readCeremonyRecord(transaction);
+      if (!record) {
+        return {
+          status: "state-invalid" as const,
+          currentLevel: 1,
+          record: null,
+          choice: null,
+        };
+      }
+      const events = await readHabitEvents(transaction);
+      const game = projectWindDownGameProgress(events);
+      const currentLevel = levelFromXp(game.xp);
+      const profile =
+        (await transaction.get<MonaVnextLearningProfile>(
+          PROFILE_STORAGE_KEY,
+        )) ?? createEmptyMonaVnextLearningProfile();
+      const mastery = await readCeremonyMasteryEvidence({
+        storage: transaction,
+        events,
+        profile,
+      });
+      if (!mastery) {
+        return {
+          status: "mastery-invalid" as const,
+          currentLevel,
+          record: null,
+          choice: null,
+        };
+      }
+      const catalog = buildWindDownCeremonyOptionCatalog({
+        material: ceremonyMaterial,
+        mastery,
+      });
+      const committed = commitWindDownCeremonyChoice({
+        record,
+        selection,
+        currentLevel,
+        committedAtIso: new Date().toISOString(),
+        catalog,
+      });
+      if (committed.status === "committed") {
+        await transaction.put<WindDownCeremonyRecord>(
+          CEREMONY_STORAGE_KEY,
+          committed.record,
+        );
+      }
+      return {
+        ...committed,
+        currentLevel,
+        catalog,
+      };
+    });
+    if (result.status === "state-invalid") {
+      return noStoreJson({ error: "WINDDOWN_CEREMONY_STATE_INVALID" }, 500);
+    }
+    if (result.status === "invalid") {
+      return noStoreJson({ error: "INVALID_WINDDOWN_CEREMONY_CHOICE" }, 400);
+    }
+    if (result.status === "mastery-invalid") {
+      return noStoreJson({ error: "WINDDOWN_CEREMONY_MASTERY_STATE_INVALID" }, 500);
+    }
+    if (result.status === "locked") {
+      return noStoreJson({ error: "WINDDOWN_CEREMONY_SLOT_LOCKED" }, 403);
+    }
+    if (result.status === "stale") {
+      return noStoreJson({ error: "WINDDOWN_CEREMONY_OPTION_SET_CHANGED" }, 409);
+    }
+    if (result.status === "conflict") {
+      return noStoreJson({
+        error: "WINDDOWN_CEREMONY_CHOICE_CONFLICT",
+        choice: result.choice,
+      }, 409);
+    }
+    return noStoreJson({
+      ok: true,
+      operation: body.operation,
+      duplicate: result.status === "duplicate",
+      choice: result.choice,
+      ceremony: projectWindDownCeremony(
+        result.record,
+        result.currentLevel,
+        result.catalog,
+      ),
     });
   }
 
