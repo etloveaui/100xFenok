@@ -249,6 +249,7 @@ export default function WindDownHabitHomeClient() {
 
   const projection = habit?.projection ?? null;
   const tonight = habit?.tonight ?? null;
+  const game = habit?.game ?? null;
   const latestHistory = projection?.questHistory.slice(0, 3) ?? [];
   const nextAction = tonight ? nextActionDetails[tonight.nextAction] : null;
   const lumiState: WindDownLumiState =
@@ -299,7 +300,7 @@ export default function WindDownHabitHomeClient() {
           </section>
         ) : null}
 
-        {status === "ready" && projection && tonight && nextAction ? (
+        {status === "ready" && projection && tonight && game && nextAction ? (
           <>
             <section className="mt-7 rounded-[30px] border border-[var(--wd-line)] bg-[var(--wd-card)] p-6 shadow-[var(--wd-shadow)]">
               <div className="flex items-start justify-between gap-4">
@@ -347,7 +348,7 @@ export default function WindDownHabitHomeClient() {
                 </Link>
               </div>
               <p className="mt-2 text-sm font-medium leading-6 text-[var(--wd-muted)]">
-                저장된 문장 {habit.game.creditedAnswerCount}개와 복습 별 {habit.game.collectedReviewStarCount}개가 {habit.game.xp} XP로 이어졌어.
+                저장된 문장 {game.creditedAnswerCount}개와 복습 별 {game.collectedReviewStarCount}개가 {game.xp} XP로 이어졌어.
               </p>
             </section>
 

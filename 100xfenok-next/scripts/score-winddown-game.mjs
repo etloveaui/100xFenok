@@ -214,6 +214,12 @@ assert.equal(
   "receipt progress and home/back navigation must be wired end to end",
 );
 assert.equal(
+  home.includes("const game = habit?.game ?? null")
+    && home.includes("projection && tonight && game && nextAction"),
+  true,
+  "the home card must narrow game progress before rendering receipt totals",
+);
+assert.equal(
   routeContract.includes("page_route_count: 56")
     && routeContract.includes("out_of_scope_count: 14"),
   true,
