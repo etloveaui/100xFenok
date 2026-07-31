@@ -44,6 +44,11 @@ assert.ok(
   "completion must render the reducer's mistake recap",
 );
 assert.ok(
+  client.includes('href="/winddown/roleplay"') &&
+    client.includes("다음: 말하기"),
+  "Learn completion must offer the next journey step directly",
+);
+assert.ok(
   page.includes("verifyAdminSessionToken") &&
     page.includes("<AdminAccessGate />"),
   "the Learn route must retain the product authentication gate",

@@ -24,6 +24,7 @@ import {
 } from "@/features/winddown/voice/product";
 import {
   WIND_DOWN_VOICE_DEFAULT_SETTINGS,
+  getWindDownVoiceStatusCopy,
   requestWindDownVoiceSession,
   type WindDownVoiceClientSettings,
   type WindDownVoiceSessionRequestOptions,
@@ -108,16 +109,8 @@ function formatLatency(milliseconds: number | null | undefined) {
   return milliseconds === null ? "—" : `${milliseconds}ms`;
 }
 
-function reportErrorText(error: unknown) {
-  return error instanceof Error && error.message ? error.message : "보고서를 저장하지 못했어.";
-}
-
-function statusCopy(status: string, error: string | null | undefined) {
-  if (status === "listening") return "루미가 듣고 있어";
-  if (status === "connecting" || status === "setup-wait" || status === "stopping") return "안전하게 연결하는 중";
-  if (status === "blocked") return "마이크 권한 또는 보안 연결을 확인해줘";
-  if (status === "error") return error ?? "연결이 잠시 멈췄어";
-  return "준비되면 시작해줘";
+function reportErrorText() {
+  return "대화 기록을 저장하지 못했어. 같은 기록으로 다시 시도해줘.";
 }
 
 export default function WindDownVoiceClient({ activity }: Props) {
@@ -286,8 +279,8 @@ export default function WindDownVoiceClient({ activity }: Props) {
         throw new Error(`WIND_DOWN_VOICE_REPORT_HTTP_${response.status}`);
       }
       setReportState({ phase: "success", frozen: report, receipt: payload.receipt, error: null });
-    } catch (error) {
-      setReportState({ phase: "error", frozen: report, receipt: null, error: reportErrorText(error) });
+    } catch {
+      setReportState({ phase: "error", frozen: report, receipt: null, error: reportErrorText() });
     }
   }, []);
 
@@ -556,7 +549,7 @@ export default function WindDownVoiceClient({ activity }: Props) {
           <section className="mt-5 flex min-h-[170px] flex-1 flex-col justify-end rounded-[28px] border border-white/10 bg-black/15 p-5">
             <p className="text-[11px] font-black tracking-[.14em] text-white/45">LUMI</p>
             <p aria-live="polite" className="mt-2 text-[17px] font-bold leading-relaxed">
-              {latestCoachLine ?? statusCopy(live.status, error)}
+              {latestCoachLine ?? getWindDownVoiceStatusCopy(live.status, error)}
             </p>
             {transcriptState.current.userText ? (
               <p className="mt-4 border-t border-white/10 pt-3 text-sm font-semibold leading-6 text-white/60">
@@ -604,7 +597,8 @@ export default function WindDownVoiceClient({ activity }: Props) {
               <p className="mt-3 text-xs font-semibold text-white/50">
                 {reportState.receipt.committedAtIso.slice(0, 16).replace("T", " ")}
               </p>
-              <button type="button" onClick={start} className="mt-5 min-h-[48px] w-full rounded-2xl bg-white px-4 text-sm font-black text-[#173831] active:scale-[.98] motion-reduce:transition-none">다른 대화 시작</button>
+              <Link href="/winddown" className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-white px-4 text-sm font-black text-[#173831] active:scale-[.98] motion-reduce:transition-none">오늘 여정 보기</Link>
+              <button type="button" onClick={start} className="mt-3 min-h-[48px] w-full rounded-2xl border border-white/20 px-4 text-sm font-black text-white active:scale-[.98] motion-reduce:transition-none">다른 대화 시작</button>
             </section>
           ) : null}
 
@@ -625,7 +619,7 @@ export default function WindDownVoiceClient({ activity }: Props) {
 
         <footer className="pt-3">
           <div className="mb-3 flex items-center justify-between gap-3 text-xs font-bold text-white/55">
-            <span>{statusCopy(live.status, error)}</span>
+            <span>{getWindDownVoiceStatusCopy(live.status, error)}</span>
             <button
               type="button"
               onClick={() => setSettings((current) => ({

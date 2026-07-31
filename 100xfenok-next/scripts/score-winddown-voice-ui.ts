@@ -14,6 +14,7 @@ import {
 } from "../src/features/winddown/voice/product";
 import {
   buildWindDownVoiceSessionRequest,
+  getWindDownVoiceStatusCopy,
   WIND_DOWN_VOICE_DEFAULT_SETTINGS,
 } from "../src/features/winddown/voice/clientContract";
 import {
@@ -60,6 +61,18 @@ const productBoundRequest = buildWindDownVoiceSessionRequest({
   productSessionId: "winddown-voice-product-bound-001",
 });
 assert.equal(productBoundRequest.productSessionId, "winddown-voice-product-bound-001");
+assert.equal(
+  getWindDownVoiceStatusCopy("error", "NotAllowedError: Permission denied"),
+  "마이크 사용이 꺼져 있어. iPhone 설정에서 마이크를 허용해줘.",
+);
+assert.equal(
+  getWindDownVoiceStatusCopy("blocked", "Error: MISSING_GEMINI_API_KEY"),
+  "음성 서비스 준비가 끝나지 않았어. 잠시 후 다시 시도해줘.",
+);
+assert.equal(
+  getWindDownVoiceStatusCopy("error", "WIND_DOWN_VOICE_SESSION_HTTP_503"),
+  "음성 서비스 연결이 잠시 불안정해. 잠시 후 다시 시도해줘.",
+);
 
 const cleanTurns: WindDownVoiceFinalizedTurn[] = [
   {
@@ -419,6 +432,8 @@ for (const required of [
   "전사→첫 오디오",
   "build-error",
   "nextPracticeSuggestion.text",
+  'href="/winddown"',
+  "오늘 여정 보기",
 ]) {
   assert.equal(clientSource.includes(required), true, `voice client missing mobile/report guard: ${required}`);
 }
@@ -437,6 +452,7 @@ for (const required of [
   "fatalErrorNotifiedRef",
   "onSessionResuming?.(liveSession)",
   "onFatalError?.(message)",
+  'namedLiveErrorMessage(error, "MIC_START_FAILED")',
 ]) {
   assert.equal(transportSource.includes(required), true, `voice transport missing stale-resume safety: ${required}`);
 }

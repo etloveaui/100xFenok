@@ -44,7 +44,9 @@ function orderEntriesBySeed(entries: MonaVnextExpression[], seed: string) {
 export function buildWindDownStudyBootstrap(args: StudyBootstrapArgs) {
   const entries = uniqueEntries(args.entries);
   const normalizedCount = Number.isFinite(args.count) ? Math.floor(args.count) : 20;
-  const count = Math.max(1, Math.min(normalizedCount, 20));
+  const count = args.mode === "review"
+    ? Math.max(0, Math.min(normalizedCount, 20))
+    : Math.max(1, Math.min(normalizedCount, 20));
   const dueExpressionIds = uniqueIds(args.dueExpressionIds);
   const deferredExpressionIds = uniqueIds(args.deferredExpressionIds);
   const byId = new Map(entries.map((entry) => [entry.id, entry]));

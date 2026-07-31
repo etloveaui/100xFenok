@@ -11,6 +11,9 @@ import {
   ADMIN_SESSION_COOKIE,
   verifyAdminSessionToken,
 } from "@/lib/server/admin-session";
+import {
+  getWindDownReviewJourneyTarget,
+} from "@/features/winddown/model/productContract";
 
 export const dynamic = "force-dynamic";
 export const revalidate = false;
@@ -78,7 +81,10 @@ export async function GET() {
       profile,
       now,
     ).dueExpressionIds.length;
-    const reviewTarget = Math.min(3, reviewCompletedCount + dueCount);
+    const { target: reviewTarget } = getWindDownReviewJourneyTarget({
+      completedCount: reviewCompletedCount,
+      dueCount,
+    });
     const voiceCompleted = tonightEvents.some(
       (event) => event.activity === "roleplay",
     );

@@ -4,6 +4,8 @@ import path from "node:path";
 import ts from "typescript";
 import {
   WINDDOWN_ACTIVITY_CONTRACTS,
+  WINDDOWN_REVIEW_DAILY_TARGET,
+  getWindDownReviewJourneyTarget,
   getWindDownActivityContract,
 } from "../src/features/winddown/model/productContract";
 import { buildWindDownStudyBootstrap } from "../src/features/winddown/server/studyBootstrap";
@@ -108,6 +110,19 @@ assert.notEqual(
   getWindDownActivityContract("roleplay").engine,
   getWindDownActivityContract("live-talk").engine,
   "Roleplay and Live Talk must not be aliases for one engine",
+);
+assert.equal(WINDDOWN_REVIEW_DAILY_TARGET, 3);
+assert.deepEqual(
+  getWindDownReviewJourneyTarget({ completedCount: 0, dueCount: 20 }),
+  { target: 3, remaining: 3 },
+);
+assert.deepEqual(
+  getWindDownReviewJourneyTarget({ completedCount: 1, dueCount: 20 }),
+  { target: 3, remaining: 2 },
+);
+assert.deepEqual(
+  getWindDownReviewJourneyTarget({ completedCount: 3, dueCount: 20 }),
+  { target: 3, remaining: 0 },
 );
 
 const entries: MonaVnextExpression[] = [
@@ -218,6 +233,20 @@ const emptyReview = buildWindDownStudyBootstrap({
 });
 assert.deepEqual(emptyReview.cards, []);
 assert.equal(emptyReview.inventory.dueCount, 0);
+const completedReview = buildWindDownStudyBootstrap({
+  mode: "review",
+  seed: "daily-target-complete",
+  entries,
+  dueExpressionIds: ["due-a"],
+  deferredExpressionIds: [],
+  count: 0,
+});
+assert.deepEqual(completedReview.cards, []);
+assert.equal(
+  completedReview.inventory.requestedCount,
+  0,
+  "a completed daily review target must not reopen one extra card",
+);
 assert.equal(
   buildWindDownStudyBootstrap({
     mode: "learn",
@@ -263,6 +292,10 @@ const progressApi = path.join(
 const reviewApi = path.join(
   process.cwd(),
   "src/app/api/winddown/review/route.ts",
+);
+const habitApi = path.join(
+  process.cwd(),
+  "src/app/api/winddown/habit/route.ts",
 );
 const studyBootstrap = path.join(
   process.cwd(),
@@ -319,6 +352,11 @@ assert.equal(
   readFileSync(studyApi, "utf8").includes("detail:"),
   false,
   "The study API must not return raw internal error details",
+);
+assert.ok(
+  readFileSync(studyApi, "utf8").includes("reviewJourney.remaining")
+    && readFileSync(habitApi, "utf8").includes("getWindDownReviewJourneyTarget"),
+  "Study and habit routes must share one daily review target calculation",
 );
 
 const roleplayPage = path.join(

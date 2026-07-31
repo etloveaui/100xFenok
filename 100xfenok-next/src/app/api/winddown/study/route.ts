@@ -24,6 +24,9 @@ import {
   type WindDownLearnSessionManifest,
 } from "@/features/winddown/server/learnSessionProof";
 import {
+  getWindDownReviewJourneyTarget,
+} from "@/features/winddown/model/productContract";
+import {
   normalizeWindDownStudyCount,
   normalizeWindDownStudyMode,
   normalizeWindDownStudySeed,
@@ -31,6 +34,10 @@ import {
 
 export const dynamic = "force-dynamic";
 export const revalidate = false;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
 
 function noStoreJson(body: unknown, status = 200) {
   return NextResponse.json(body, {
@@ -56,7 +63,10 @@ export async function GET(request: Request) {
 
   try {
     const now = new Date();
-    const learningProfile = await readMonaVnextLearningProfileThroughCoordinator();
+    const [learningProfile, habit] = await Promise.all([
+      readMonaVnextLearningProfileThroughCoordinator(),
+      readWindDownHabitThroughCoordinator(now),
+    ]);
     const learningSelection = classifyMonaVnextLearningProfile(
       learningProfile,
       now,
@@ -71,6 +81,17 @@ export async function GET(request: Request) {
       deferredExpressionIds: learning.deferredExpressionIds,
     });
     const habitKstDay = getWindDownHabitKstDay(now);
+    const projection = isRecord(habit.projection) ? habit.projection : null;
+    const questHistory = Array.isArray(projection?.questHistory)
+      ? projection.questHistory.filter(isRecord)
+      : [];
+    const reviewCompletedCount = questHistory.filter(
+      (event) => event.kstDay === habitKstDay && event.activity === "review",
+    ).length;
+    const reviewJourney = getWindDownReviewJourneyTarget({
+      completedCount: reviewCompletedCount,
+      dueCount: learning.dueExpressionIds.length,
+    });
     const bootstrap = buildWindDownStudyBootstrap({
       mode,
       seed: mode === "learn"
@@ -79,7 +100,9 @@ export async function GET(request: Request) {
       entries: material.entries,
       dueExpressionIds: material.dueExpressionIds,
       deferredExpressionIds: material.deferredExpressionIds,
-      count: normalizeWindDownStudyCount(url.searchParams.get("count")),
+      count: mode === "review"
+        ? reviewJourney.remaining
+        : normalizeWindDownStudyCount(url.searchParams.get("count")),
     });
     let cards = bootstrap.cards;
     let inventory = bootstrap.inventory;
@@ -117,7 +140,6 @@ export async function GET(request: Request) {
       ) {
         return noStoreJson({ error: "WINDDOWN_MATERIAL_UNAVAILABLE" }, 503);
       }
-      const habit = await readWindDownHabitThroughCoordinator(now);
       const activeLearn =
         habit.activeLearn
         && typeof habit.activeLearn === "object"

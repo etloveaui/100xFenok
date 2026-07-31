@@ -361,6 +361,18 @@ export default function WindDownLearnClient() {
                   ))}
                 </ul>
               ) : null}
+              <Link
+                href="/winddown/roleplay"
+                className="mt-7 inline-flex min-h-14 w-full items-center justify-center rounded-2xl bg-[var(--fnk-purple-600)] px-5 text-sm font-black"
+              >
+                다음: 말하기
+              </Link>
+              <Link
+                href="/winddown"
+                className="mt-3 inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-[var(--fnk-neutral-700)] px-5 text-sm font-black text-[var(--fnk-neutral-200)]"
+              >
+                오늘 여정 보기
+              </Link>
             </section>
           ) : null}
 

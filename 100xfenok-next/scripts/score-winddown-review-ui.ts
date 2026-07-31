@@ -200,6 +200,10 @@ assert.ok(
   "Review must use the flat contract: load due queue, grade one attempt, then commit frozen attempts",
 );
 assert.ok(
+  client.includes('href="/winddown/learn"'),
+  "Review completion must offer the next journey step directly",
+);
+assert.ok(
   client.includes('"correct", "good"'),
   "Review must recognize the server grade outcome `correct` as an exact recall",
 );

@@ -1,5 +1,7 @@
 export type WindDownMode = "learn" | "review" | "roleplay" | "live-talk";
 
+export const WINDDOWN_REVIEW_DAILY_TARGET = 3 as const;
+
 export type WindDownActivityContract = {
   mode: WindDownMode;
   engine: "deterministic-learn" | "fsrs-review" | "gemini-roleplay" | "gemini-live-talk";
@@ -41,4 +43,24 @@ export const WINDDOWN_ACTIVITY_CONTRACTS = {
 
 export function getWindDownActivityContract(mode: WindDownMode): WindDownActivityContract {
   return WINDDOWN_ACTIVITY_CONTRACTS[mode];
+}
+
+export function getWindDownReviewJourneyTarget(args: {
+  completedCount: number;
+  dueCount: number;
+}) {
+  const completedCount = Number.isFinite(args.completedCount)
+    ? Math.max(0, Math.floor(args.completedCount))
+    : 0;
+  const dueCount = Number.isFinite(args.dueCount)
+    ? Math.max(0, Math.floor(args.dueCount))
+    : 0;
+  const target = Math.min(
+    WINDDOWN_REVIEW_DAILY_TARGET,
+    completedCount + dueCount,
+  );
+  return {
+    target,
+    remaining: Math.max(0, target - completedCount),
+  };
 }

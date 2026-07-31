@@ -107,6 +107,14 @@ const MAX_RESUME_ATTEMPTS = 3;
 const MIC_DEAD_DETECTION_MS = 5000;
 const MIC_DEAD_RMS_THRESHOLD = 0.0001;
 
+function namedLiveErrorMessage(error: unknown, fallback: string) {
+  if (!(error instanceof Error)) return fallback;
+  const message = error.message.trim() || fallback;
+  return error.name && error.name !== "Error"
+    ? `${error.name}: ${message}`
+    : message;
+}
+
 type OpenSocketOptions = {
   reconnect?: boolean;
   prewarmedFreshStart?: boolean;
@@ -291,7 +299,7 @@ export function useGeminiLiveTransport<
       return payload;
     }).catch((error: unknown) => {
       if (prewarmRequestTokenRef.current !== requestToken) return null;
-      emitEvent("resume-prewarm-failed", error instanceof Error ? error.message : "RESUME_PREWARM_FAILED", {
+      emitEvent("resume-prewarm-failed", namedLiveErrorMessage(error, "RESUME_PREWARM_FAILED"), {
         reason,
       });
       return null;
@@ -461,7 +469,7 @@ export function useGeminiLiveTransport<
           resumeAttemptCountRef.current = 0;
         }
       }).catch((error: unknown) => {
-        const message = error instanceof Error ? error.message : "MIC_START_FAILED";
+        const message = namedLiveErrorMessage(error, "MIC_START_FAILED");
         setMetrics((current) => ({ ...current, lastError: message, micPermission: "denied" }));
         if (wasReconnecting) {
           failRecovery(`SESSION_RESUME_MIC_FAILED: ${message}`);
@@ -578,7 +586,7 @@ export function useGeminiLiveTransport<
       try {
         socket.send(JSON.stringify({ setup }));
       } catch (error) {
-        const message = error instanceof Error ? error.message : "SETUP_SEND_FAILED";
+        const message = namedLiveErrorMessage(error, "SETUP_SEND_FAILED");
         if (options.reconnect) {
           failRecovery(`SESSION_RESUME_SETUP_SEND_FAILED: ${message}`);
           return;
@@ -600,7 +608,7 @@ export function useGeminiLiveTransport<
           handleServerMessage(JSON.parse(text) as MonaVnextServerMessage, socket, generation);
         } catch (error) {
           if (generation !== socketGenerationRef.current || socket !== socketRef.current) return;
-          const message = error instanceof Error ? error.message : "SERVER_MESSAGE_PARSE_FAILED";
+          const message = namedLiveErrorMessage(error, "SERVER_MESSAGE_PARSE_FAILED");
           if (options.reconnect) {
             failRecovery(`SESSION_RESUME_MESSAGE_PARSE_FAILED: ${message}`);
             return;
@@ -695,7 +703,7 @@ export function useGeminiLiveTransport<
     try {
       openSocket(liveSession, setup, { reconnect: true, prewarmedFreshStart: Boolean(prewarmedSession) });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "SESSION_RESUME_SOCKET_OPEN_FAILED";
+      const message = namedLiveErrorMessage(error, "SESSION_RESUME_SOCKET_OPEN_FAILED");
       failRecovery(message);
     }
   }, [clearReconnectTimer, emitEvent, failRecovery, onSessionResumed, onSessionResuming, openSocket]);
@@ -765,7 +773,7 @@ export function useGeminiLiveTransport<
 
       openSocket(liveSession, liveSession.setup);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "SESSION_START_FAILED";
+      const message = namedLiveErrorMessage(error, "SESSION_START_FAILED");
       const hadStartedSession = activeSessionRef.current !== null;
       stop(message.includes("MISSING_GEMINI_API_KEY") ? "blocked" : "error");
       setMetrics((current) => ({ ...current, lastError: message }));
