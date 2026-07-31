@@ -1,7 +1,7 @@
 {
   "schema_version": "product-surface-coverage/v2",
   "source_stamp_version": 2,
-  "generated_at": "2026-07-30T23:55:20.791Z",
+  "generated_at": "2026-07-31T00:44:22.935Z",
   "source": "local DataPack coverage files",
   "raw_policy": {
     "public_mirror_allowed": true,
@@ -39,12 +39,12 @@
       "recovered_from_live_count": 204,
       "missing_date_count": 8,
       "age_histogram": {
-        "days_0_7": 57,
-        "days_8_30": 526,
-        "days_31_90": 58,
+        "days_0_7": 46,
+        "days_8_30": 508,
+        "days_31_90": 87,
         "over_90_days": 69
       },
-      "median_age_days": 20,
+      "median_age_days": 21,
       "oldest_member": {
         "ticker": "DJP",
         "source_as_of": "2017-03-08"
@@ -92,7 +92,7 @@
     "sec13fJson": 78,
     "edgarByTicker": 204,
     "slickchartsJson": 576,
-    "dataUsageRootJson": 24472,
+    "dataUsageRootJson": 24474,
     "dataUsagePublicJson": 15021
   },
   "surfaces": [
@@ -169,9 +169,9 @@
           "label": "가격 원천 기준일",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "기준 2026-07-27 · 3일 전",
+          "detail": "기준 2026-07-27 · 4일 전",
           "as_of": "2026-07-27",
-          "age_days": 3,
+          "age_days": 4,
           "max_age_days": 7,
           "calendar": "us_market"
         },
@@ -200,7 +200,7 @@
           "reason": "provider publishes no aggregate source date"
         }
       ],
-      "as_of": "2026-07-30T23:54:10.114Z",
+      "as_of": "2026-07-31T00:42:44Z",
       "source_as_of": "2026-07-27",
       "source_as_of_reason": null,
       "stamp_evidence": {
@@ -408,7 +408,7 @@
           "collection_fresh_count": 23,
           "stale_count": 0,
           "collected_at_floor": "2026-07-30T01:04:12Z",
-          "collection_age_hours": 22.852,
+          "collection_age_hours": 23.67,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -423,7 +423,7 @@
       "owner": "Market valuation",
       "status": "stale",
       "status_label": "오래됨",
-      "coverage_score": 72.73,
+      "coverage_score": 63.64,
       "summary": "시장 화면은 값 자체보다 기준일, 커버리지, 소스 차이를 함께 보여야 한다.",
       "checks": [
         {
@@ -436,8 +436,8 @@
           "label": "거시·심리",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "24,472개 루트 JSON",
-          "count": 24472
+          "detail": "24,474개 루트 JSON",
+          "count": 24474
         },
         {
           "label": "시장 구조",
@@ -455,13 +455,15 @@
         },
         {
           "label": "KOSPI RIM 입력",
-          "status": "ready",
-          "status_label": "준비됨",
+          "status": "partial",
+          "status_label": "부분 준비",
           "detail": "943개 구성 · 매칭 90.91%",
           "index_id": "KOSPI",
           "role": "secondary_input_only",
-          "public_status": "ready_inputs_and_forecast_grid",
-          "blockers": [],
+          "public_status": "input_only_krx_exact_weights_with_caveats",
+          "blockers": [
+            "krx_kospi_daily_refresh_recommended"
+          ],
           "forecast_grid_status": "input_only_krx_exact_weights_no_fair_value",
           "source_tier": "exact_index_weight_source",
           "proxy_inputs_present": false,
@@ -490,9 +492,9 @@
           "label": "RIM 입력 기준일",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "기준 2026-07-24 · 6일 전",
+          "detail": "기준 2026-07-24 · 7일 전",
           "as_of": "2026-07-24",
-          "age_days": 6,
+          "age_days": 7,
           "max_age_days": 14,
           "calendar": null
         },
@@ -500,9 +502,9 @@
           "label": "Yardeni 기준일",
           "status": "stale",
           "status_label": "오래됨",
-          "detail": "기준 2026-07-17 · 13일 전",
+          "detail": "기준 2026-07-17 · 14일 전",
           "as_of": "2026-07-17",
-          "age_days": 13,
+          "age_days": 14,
           "max_age_days": 10,
           "calendar": null
         },
@@ -530,14 +532,14 @@
           "label": "시장 데이터 기준일",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "기준 2026-07-27 · 3일 전",
+          "detail": "기준 2026-07-27 · 4일 전",
           "as_of": "2026-07-27",
-          "age_days": 3,
+          "age_days": 4,
           "max_age_days": 7,
           "calendar": "us_market"
         }
       ],
-      "as_of": "2026-07-30T23:53:37Z",
+      "as_of": "2026-07-31T00:42:44Z",
       "source_as_of": "2026-07-17",
       "source_as_of_reason": null,
       "stamp_evidence": {
@@ -781,7 +783,7 @@
           "collection_fresh_count": 16,
           "stale_count": 0,
           "collected_at_floor": "2026-07-30T01:04:28Z",
-          "collection_age_hours": 22.848,
+          "collection_age_hours": 23.665,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -844,14 +846,14 @@
           "label": "섹터 데이터 기준일",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "기준 2026-07-27 · 3일 전",
+          "detail": "기준 2026-07-27 · 4일 전",
           "as_of": "2026-07-27",
-          "age_days": 3,
+          "age_days": 4,
           "max_age_days": 14,
           "calendar": null
         }
       ],
-      "as_of": "2026-07-30T23:53:37Z",
+      "as_of": "2026-07-31T00:42:44Z",
       "source_as_of": "2026-07-27",
       "source_as_of_reason": null,
       "stamp_evidence": {
@@ -899,7 +901,7 @@
           "collection_fresh_count": 3,
           "stale_count": 0,
           "collected_at_floor": "2026-07-30T01:04:40Z",
-          "collection_age_hours": 22.845,
+          "collection_age_hours": 23.662,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -954,9 +956,9 @@
           "label": "ETF 상세 전체 구성원 원천 기준일",
           "status": "stale",
           "status_label": "오래됨",
-          "detail": "기준 2017-03-08 · 3431일 전 (경고: 7일 초과 노후화)",
+          "detail": "기준 2017-03-08 · 3432일 전 (경고: 7일 초과 노후화)",
           "as_of": "2017-03-08",
-          "age_days": 3431,
+          "age_days": 3432,
           "max_age_days": 7,
           "calendar": null,
           "warn_only": true
@@ -4611,7 +4613,7 @@
           "collection_fresh_count": 5,
           "stale_count": 0,
           "collected_at_floor": "2026-07-30T01:04:12Z",
-          "collection_age_hours": 22.852,
+          "collection_age_hours": 23.67,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -4653,9 +4655,9 @@
           "label": "스크리너 기준일",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "기준 2026-07-24 · 6일 전",
+          "detail": "기준 2026-07-24 · 7일 전",
           "as_of": "2026-07-24",
-          "age_days": 6,
+          "age_days": 7,
           "max_age_days": 14,
           "calendar": null
         }
@@ -4706,8 +4708,8 @@
           "label": "미러/사용 현황",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "24,472 / 15,021 JSON",
-          "root": 24472,
+          "detail": "24,474 / 15,021 JSON",
+          "root": 24474,
           "public": 15021
         },
         {
@@ -4742,7 +4744,7 @@
           "reason": "internal artifact uses generation time; no upstream source date"
         }
       ],
-      "as_of": "2026-07-30T23:55:20.791Z",
+      "as_of": "2026-07-31T00:44:22.935Z",
       "source_as_of": null,
       "source_as_of_reason": "internal artifact uses generation time; no upstream source date"
     }

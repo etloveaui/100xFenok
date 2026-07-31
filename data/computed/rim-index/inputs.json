@@ -1,6 +1,6 @@
 {
   "schema_version": "rim_index_inputs.v1",
-  "generated_at": "2026-07-30T23:55:19.051Z",
+  "generated_at": "2026-07-31T00:44:21.464Z",
   "generated_by": "scripts/build-rim-index.mjs",
   "product": "Fenok Index RIM Workbench",
   "output_scope": "inputs_only_no_fair_value",
@@ -38,8 +38,8 @@
           "source_tier": "observed_source",
           "as_of": "2026-07-24",
           "freshness": {
-            "generated_at_date": "2026-07-30",
-            "calendar_age_days": 6,
+            "generated_at_date": "2026-07-31",
+            "calendar_age_days": 7,
             "freshness_unit": "calendar_days",
             "freshness_calendar": "us_market",
             "max_input_freshness_days": 10,
@@ -761,8 +761,8 @@
           "source_tier": "observed_source",
           "as_of": "2026-07-24",
           "freshness": {
-            "generated_at_date": "2026-07-30",
-            "calendar_age_days": 6,
+            "generated_at_date": "2026-07-31",
+            "calendar_age_days": 7,
             "freshness_unit": "calendar_days",
             "freshness_calendar": "us_market",
             "max_input_freshness_days": 10,
@@ -1471,8 +1471,8 @@
           "source_tier": "observed_source",
           "as_of": "2026-07-24",
           "freshness": {
-            "generated_at_date": "2026-07-30",
-            "calendar_age_days": 6,
+            "generated_at_date": "2026-07-31",
+            "calendar_age_days": 7,
             "freshness_unit": "calendar_days",
             "freshness_calendar": "us_market",
             "max_input_freshness_days": 10,
@@ -1550,7 +1550,7 @@
       "id": "KOSPI",
       "label": "KOSPI",
       "role": "secondary_input_only",
-      "public_status": "ready_inputs_and_forecast_grid",
+      "public_status": "input_only_krx_exact_weights_with_caveats",
       "observed": {
         "price": {
           "value": 6690.62,
@@ -1559,8 +1559,8 @@
           "source_tier": "observed_source",
           "as_of": "2026-07-26",
           "freshness": {
-            "generated_at_date": "2026-07-30",
-            "calendar_age_days": 4,
+            "generated_at_date": "2026-07-31",
+            "calendar_age_days": 5,
             "freshness_unit": "calendar_days",
             "freshness_calendar": "us_market",
             "max_input_freshness_days": 10,
@@ -2262,14 +2262,14 @@
                 "value": 4933296613154775
               },
               "freshness": {
-                "generated_at_date": "2026-07-30",
-                "calendar_age_days": 2,
-                "business_age_days": 2,
+                "generated_at_date": "2026-07-31",
+                "calendar_age_days": 3,
+                "business_age_days": 3,
                 "freshness_unit": "business_days",
                 "freshness_calendar": "krx_market",
                 "max_input_freshness_days": 2,
                 "future_date_anomaly": false,
-                "status": "fresh_enough_for_input_slice"
+                "status": "refresh_recommended"
               },
               "matched_stock_action_rows": 237,
               "matched_weight_ratio": 0.909118,
@@ -2311,7 +2311,12 @@
         }
       },
       "assumptions": {},
-      "blockers": []
+      "blockers": [
+        {
+          "code": "krx_kospi_daily_refresh_recommended",
+          "severity": "freshness_blocker"
+        }
+      ]
     },
     "SOX": {
       "id": "SOX",
@@ -2326,8 +2331,8 @@
           "source_tier": "observed_source",
           "as_of": "2026-07-24",
           "freshness": {
-            "generated_at_date": "2026-07-30",
-            "calendar_age_days": 6,
+            "generated_at_date": "2026-07-31",
+            "calendar_age_days": 7,
             "freshness_unit": "calendar_days",
             "freshness_calendar": "us_market",
             "max_input_freshness_days": 10,
@@ -3038,9 +3043,9 @@
                 "value": 14616694.779323
               },
               "freshness": {
-                "generated_at_date": "2026-07-30",
-                "calendar_age_days": 1,
-                "business_age_days": 1,
+                "generated_at_date": "2026-07-31",
+                "calendar_age_days": 2,
+                "business_age_days": 2,
                 "freshness_unit": "business_days",
                 "freshness_calendar": "us_market",
                 "max_input_freshness_days": 7,
@@ -3120,14 +3125,14 @@
             "value": 4933296613154775
           },
           "freshness": {
-            "generated_at_date": "2026-07-30",
-            "calendar_age_days": 2,
-            "business_age_days": 2,
+            "generated_at_date": "2026-07-31",
+            "calendar_age_days": 3,
+            "business_age_days": 3,
             "freshness_unit": "business_days",
             "freshness_calendar": "krx_market",
             "max_input_freshness_days": 2,
             "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
+            "status": "refresh_recommended"
           },
           "matched_stock_action_rows": 237,
           "matched_weight_ratio": 0.909118,
@@ -3288,9 +3293,9 @@
           "value": 14616694.779323
         },
         "freshness": {
-          "generated_at_date": "2026-07-30",
-          "calendar_age_days": 1,
-          "business_age_days": 1,
+          "generated_at_date": "2026-07-31",
+          "calendar_age_days": 2,
+          "business_age_days": 2,
           "freshness_unit": "business_days",
           "freshness_calendar": "us_market",
           "max_input_freshness_days": 7,
