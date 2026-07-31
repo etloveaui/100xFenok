@@ -7,6 +7,7 @@ import {
   createWindDownLiveTalkDescriptor,
   createWindDownRoleplayDescriptor,
   containsWindDownVoiceUnsafeText,
+  deriveWindDownVoiceCorrectionPresentation,
   evaluateWindDownRoleplay,
   isWindDownVoiceDescriptor,
   summarizeWindDownLiveTalk,
@@ -80,8 +81,8 @@ const cleanTurns: WindDownVoiceFinalizedTurn[] = [
     conversationId: "winddown-roleplay-a",
     turnSeq: 1,
     userText: "Can I get a latte?",
-    modelText: "Sure. Try saying, 'Can I get a latte, please?'",
-    correctionText: "Try saying, 'Can I get a latte, please?'",
+    modelText: "Correction — Was: Can I get a latte | Now: Can I get a latte, please? | Why: Please makes the request warmer.",
+    correctionText: "Correction — Was: Can I get a latte | Now: Can I get a latte, please? | Why: Please makes the request warmer.",
     finalized: true,
     sttDrift: false,
     interrupted: false,
@@ -137,6 +138,56 @@ assert.deepEqual(progress.evidence.map((item) => `${item.conversationId}:${item.
 ]);
 assert.equal(progress.corrections.length, 1, "only a literal coach-transcript correction is reportable");
 assert.equal(progress.corrections[0].turnSeq, 1);
+assert.deepEqual(progress.corrections[0], {
+  conversationId: "winddown-roleplay-a",
+  turnSeq: 1,
+  learnerText: "Can I get a latte?",
+  correctionText: "Correction — Was: Can I get a latte | Now: Can I get a latte, please? | Why: Please makes the request warmer.",
+});
+assert.deepEqual(
+  Object.keys(progress.corrections[0]).sort(),
+  ["conversationId", "correctionText", "learnerText", "turnSeq"],
+  "persisted v1 corrections must keep their original exact four-field shape",
+);
+assert.deepEqual(deriveWindDownVoiceCorrectionPresentation(progress.corrections[0]), {
+  was: "Can I get a latte",
+  now: "Can I get a latte, please?",
+  why: "Please makes the request warmer.",
+  citation: {
+    conversationId: "winddown-roleplay-a",
+    turnSeq: 1,
+  },
+});
+const legacyCorrection = evaluateWindDownRoleplay(cafe, [{
+  ...cleanTurns[0],
+  correctionText: "Try saying, Can I get a latte, please.",
+  modelText: "Try saying, Can I get a latte, please.",
+}]).corrections[0];
+assert.ok(legacyCorrection, "literal legacy v1 corrections remain canonical");
+assert.equal(
+  deriveWindDownVoiceCorrectionPresentation(legacyCorrection),
+  null,
+  "legacy text cannot fabricate was/now/why presentation evidence",
+);
+const oversizedCorrection = `Try saying, ${"x".repeat(230)}`;
+assert.equal(
+  evaluateWindDownRoleplay(cafe, [{
+    ...cleanTurns[0],
+    correctionText: oversizedCorrection,
+    modelText: oversizedCorrection,
+  }]).corrections.length,
+  0,
+  "correction excerpts over the v1 field limit must not enter canonical outcomes",
+);
+assert.equal(
+  evaluateWindDownRoleplay(cafe, [{
+    ...cleanTurns[0],
+    correctionText: "Correction — Was: I ordered tea | Now: Can I get tea, please? | Why: This is a polite request.",
+    modelText: "Correction — Was: I ordered tea | Now: Can I get tea, please? | Why: This is a polite request.",
+  }]).corrections.length,
+  0,
+  "Was must be a literal excerpt of the learner turn",
+);
 assert.equal(
   containsWindDownVoiceUnsafeText("access_token=abcdefghijklmnopqrstuvwxyz0123456789"),
   true,
@@ -197,7 +248,64 @@ const roleplayReport = buildWindDownVoiceReport({
 assert.equal(roleplayReport.outcome.kind, "roleplay");
 assert.equal(roleplayReport.outcome.completed, true);
 assert.equal(roleplayReport.outcome.goalResults.length, 3);
+assert.deepEqual(
+  Object.keys(roleplayReport.outcome.corrections[0] ?? {}).sort(),
+  ["conversationId", "correctionText", "learnerText", "turnSeq"],
+);
 assert.equal(isWindDownVoiceReport(roleplayReport), true);
+const legacyV1Report = buildWindDownVoiceReport({
+  ...roleplayReport,
+  productSessionId: "winddown-product-roleplay-legacy-v1",
+  conversationIds: ["winddown-roleplay-a"],
+  sessionProofs: [reportProofs[0]],
+  completionReason: "learner-stop",
+  turns: [{
+    ...cleanTurns[0],
+    modelText: "Try saying, Can I get a latte, please.",
+    correctionText: "Try saying, Can I get a latte, please.",
+  }],
+});
+assert.equal(legacyV1Report.schemaVersion, 1);
+assert.equal(
+  legacyV1Report.outcome.corrections[0]?.correctionText,
+  "Try saying, Can I get a latte, please.",
+);
+assert.equal(
+  legacyV1Report.outcome.kind === "roleplay"
+    ? legacyV1Report.outcome.nextPracticeSuggestion.text
+    : null,
+  "다음에는 “Try saying, Can I get a latte, please.”를 한 번 더 말해봐.",
+  "legacy v1 correction suggestion text must remain digest-compatible",
+);
+assert.deepEqual(
+  buildWindDownVoiceReport(legacyV1Report),
+  legacyV1Report,
+  "server re-normalization must preserve an already persisted legacy v1 digest",
+);
+const liveTalkReport = buildWindDownVoiceReport({
+  schemaVersion: 1,
+  productSessionId: "winddown-product-live-talk-1",
+  activity: "live-talk",
+  descriptor: liveTalkDescriptor,
+  conversationIds: ["winddown-roleplay-a"],
+  sessionProofs: [reportProofs[0]],
+  startedAtIso: "2026-07-31T00:00:00.000Z",
+  stoppedAtIso: "2026-07-31T00:02:00.000Z",
+  completionReason: "learner-stop",
+  turns: cleanTurns.slice(0, 1),
+  metrics: { turnCount: 1 },
+});
+assert.equal(liveTalkReport.outcome.kind, "live-talk");
+assert.equal("goalResults" in liveTalkReport.outcome, false, "Live Talk reports have no goals");
+assert.equal(
+  liveTalkReport.outcome.corrections[0]
+    ? deriveWindDownVoiceCorrectionPresentation(
+        liveTalkReport.outcome.corrections[0],
+      )?.why
+    : null,
+  "Please makes the request warmer.",
+);
+assert.equal(isWindDownVoiceReport(liveTalkReport), true);
 assert.equal(
   new TextEncoder().encode(JSON.stringify(roleplayReport)).byteLength <= WIND_DOWN_VOICE_REPORT_MAX_BYTES,
   true,
@@ -346,6 +454,16 @@ assert.equal(
   false,
   "next practice must be derived from a persisted correction, evidence, or catalog goal",
 );
+const forgedCorrectionReport = JSON.parse(JSON.stringify(roleplayReport)) as typeof roleplayReport;
+if (forgedCorrectionReport.outcome.kind === "roleplay") {
+  forgedCorrectionReport.outcome.corrections[0].correctionText =
+    "Correction — Was: Can I get a latte | Now: I want tea. | Why: Different evidence.";
+}
+assert.equal(
+  isWindDownVoiceReport(forgedCorrectionReport),
+  false,
+  "tampered persisted correction text must fail canonical rebuild comparison",
+);
 
 const chainOrderedReport = buildWindDownVoiceReport({
   ...roleplayReport,
@@ -452,6 +570,14 @@ for (const required of [
   "전사→첫 오디오",
   "build-error",
   "nextPracticeSuggestion.text",
+  "data-turn-citation",
+  "대화 증거",
+  "deriveWindDownVoiceCorrectionPresentation",
+  "presentation.was",
+  "presentation.now",
+  "presentation.why",
+  "presentation.citation.turnSeq",
+  "이전 형식 교정",
   "journeyTargetEvidence",
   "오늘 문장:",
   "오늘 말하기는 아직 0/1",

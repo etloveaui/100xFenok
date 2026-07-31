@@ -1,6 +1,7 @@
 import { containsMonaVnextControlLeakage } from "@/features/mona-vnext/logging/voiceLogSchema";
 
 export const WIND_DOWN_VOICE_POLICY_VERSION = 1 as const;
+export const WIND_DOWN_VOICE_CORRECTION_MAX_CHARS = 240;
 /** @deprecated Prefer WIND_DOWN_VOICE_POLICY_VERSION in new transport code. */
 export const WINDDOWN_VOICE_PRODUCT_VERSION = WIND_DOWN_VOICE_POLICY_VERSION;
 
@@ -68,6 +69,16 @@ export type WindDownVoiceCorrection = {
   turnSeq: number;
   learnerText: string;
   correctionText: string;
+};
+
+export type WindDownVoiceCorrectionPresentation = {
+  was: string;
+  now: string;
+  why: string;
+  citation: {
+    conversationId: string;
+    turnSeq: number;
+  };
 };
 
 /**
@@ -273,24 +284,71 @@ function phraseMatches(text: string, phrase: string) {
   return new RegExp(`(^|[^a-z])${escaped}(?=$|[^a-z])`, "i").test(text);
 }
 
+export function deriveWindDownVoiceCorrectionPresentation(
+  correction: WindDownVoiceCorrection,
+): WindDownVoiceCorrectionPresentation | null {
+  const learnerText = cleanText(correction.learnerText);
+  const correctionText = cleanText(
+    correction.correctionText,
+    WIND_DOWN_VOICE_CORRECTION_MAX_CHARS + 1,
+  );
+  if (!learnerText || !correctionText) return null;
+  if (
+    typeof correction.conversationId !== "string"
+    || !correction.conversationId.trim()
+    || !Number.isInteger(correction.turnSeq)
+    || correction.turnSeq < 1
+    || correctionText.length > WIND_DOWN_VOICE_CORRECTION_MAX_CHARS
+  ) return null;
+  if (
+    containsWindDownVoiceUnsafeText(learnerText)
+    || containsWindDownVoiceUnsafeText(correctionText)
+  ) return null;
+  const structured = correctionText.match(
+    /^correction\s*(?:—|-|:)\s*was\s*:\s*([^|]{1,120}?)\s*\|\s*now\s*:\s*([^|]{1,120}?)\s*\|\s*why\s*:\s*(.{1,160})$/i,
+  );
+  if (!structured) return null;
+  const was = cleanText(structured[1], 120);
+  const now = cleanText(structured[2], 120);
+  const why = cleanText(structured[3], 160);
+  if (!was || !now || !why) return null;
+  if (!normalizeText(learnerText).includes(normalizeText(was))) return null;
+  return {
+    was,
+    now,
+    why,
+    citation: {
+      conversationId: correction.conversationId.trim(),
+      turnSeq: correction.turnSeq,
+    },
+  };
+}
+
 function correctionFromTurn(turn: WindDownVoiceFinalizedTurn): WindDownVoiceCorrection | null {
   if (!isCleanLearnerTurn(turn)) return null;
   const learnerText = cleanText(turn.userText);
   const modelText = cleanText(turn.modelText, 560);
-  const correctionText = cleanText(turn.correctionText, 360);
+  const correctionText = cleanText(
+    turn.correctionText,
+    WIND_DOWN_VOICE_CORRECTION_MAX_CHARS + 1,
+  );
   if (!learnerText || !modelText || !correctionText) return null;
-  if (
-    containsWindDownVoiceUnsafeText(learnerText)
-    || containsWindDownVoiceUnsafeText(modelText)
-    || containsWindDownVoiceUnsafeText(correctionText)
-  ) return null;
+  if (correctionText.length > WIND_DOWN_VOICE_CORRECTION_MAX_CHARS) return null;
   if (!normalizeText(modelText).includes(normalizeText(correctionText))) return null;
-  return {
+  const correction = {
     conversationId: turn.conversationId.trim(),
     turnSeq: turn.turnSeq,
     learnerText,
     correctionText,
   };
+  const claimsStructuredEvidence = /^correction\s*(?:—|-|:)/i.test(
+    correctionText,
+  );
+  if (
+    claimsStructuredEvidence
+    && !deriveWindDownVoiceCorrectionPresentation(correction)
+  ) return null;
+  return correction;
 }
 
 function dedupeCorrections(turns: readonly WindDownVoiceFinalizedTurn[]) {

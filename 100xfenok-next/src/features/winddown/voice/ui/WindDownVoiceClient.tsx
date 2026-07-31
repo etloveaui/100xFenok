@@ -13,9 +13,11 @@ import {
 import type { MonaVnextTurn } from "@/features/mona-vnext/transcript/turnBoundary";
 import {
   WIND_DOWN_LIVE_TALK_TOPICS,
+  WIND_DOWN_VOICE_CORRECTION_MAX_CHARS,
   WINDDOWN_VOICE_SCENARIOS,
   createWindDownLiveTalkDescriptor,
   createWindDownRoleplayDescriptor,
+  deriveWindDownVoiceCorrectionPresentation,
   evaluateWindDownRoleplay,
   summarizeWindDownLiveTalk,
   type WindDownVoiceActivity,
@@ -82,6 +84,7 @@ function startConversationId() {
 }
 
 function toFinalizedTurn(turn: MonaVnextTurn): WindDownVoiceFinalizedTurn {
+  const correctionText = extractTranscriptCorrection(turn.modelText);
   return {
     conversationId: turn.conversationId,
     turnSeq: turn.turnSeq,
@@ -90,16 +93,25 @@ function toFinalizedTurn(turn: MonaVnextTurn): WindDownVoiceFinalizedTurn {
     finalized: true,
     sttDrift: turn.sttDrift,
     interrupted: turn.interrupted,
-    ...(extractTranscriptCorrection(turn.modelText) ? { correctionText: extractTranscriptCorrection(turn.modelText) } : {}),
+    ...(correctionText ? { correctionText } : {}),
   };
 }
 
-/** The correction remains a literal model-transcript excerpt for this turn. */
+/**
+ * Keep only a complete was/now/why block spoken by the coach. Every report
+ * field can then be rebuilt from the learner and coach transcripts for the
+ * same provider-finalized turn.
+ */
 function extractTranscriptCorrection(modelText: string | null) {
   const text = modelText?.trim().replace(/\s+/g, " ") ?? "";
   if (!text) return null;
-  const match = text.match(/(?:try saying|say|instead|자연스럽게는|이렇게 말해)[^.!?]{0,180}[.!?]?/i);
-  return match?.[0]?.trim() || null;
+  const match = text.match(
+    /correction\s*(?:—|-|:)\s*was\s*:\s*[^|]{1,120}?\s*\|\s*now\s*:\s*[^|]{1,120}?\s*\|\s*why\s*:\s*.{1,160}$/i,
+  );
+  const correction = match?.[0]?.trim() || null;
+  return correction && correction.length <= WIND_DOWN_VOICE_CORRECTION_MAX_CHARS
+    ? correction
+    : null;
 }
 
 function mergeTurn(
@@ -687,15 +699,20 @@ export default function WindDownVoiceClient({ activity }: Props) {
                   <p className="text-sm font-semibold text-[var(--wd-muted)]">
                     목표 {reportState.frozen.outcome.goalResults.filter((goal) => goal.completed).length}/{reportState.frozen.outcome.goalResults.length}개를 채웠어.
                   </p>
-                  {reportState.frozen.outcome.evidence.map((evidence) => (
-                    <p key={`${evidence.conversationId}:${evidence.turnSeq}:${evidence.goalId}`} className="rounded-xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-3 py-2 text-xs font-semibold text-[var(--wd-muted)]">
-                      {evidence.matchedPhrase} · turn {evidence.turnSeq}
-                    </p>
-                  ))}
-                  {reportState.frozen.outcome.corrections.map((correction) => (
-                    <p key={`${correction.conversationId}:${correction.turnSeq}:${correction.correctionText}`} className="rounded-xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-3 py-2 text-xs font-semibold text-[var(--wd-muted)]">
-                      turn {correction.turnSeq} · {correction.correctionText}
-                    </p>
+                  {reportState.frozen.outcome.goalResults.map((goal) => (
+                    <div key={goal.goalId} className="rounded-xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-3 py-2 text-xs font-semibold text-[var(--wd-muted)]">
+                      <p>{goal.completed ? "✓" : "○"} {goal.label}</p>
+                      {goal.evidence ? (
+                        <p className="mt-1 text-[11px] text-[var(--wd-accent)]">
+                          “{goal.evidence.matchedPhrase}” · turn-{goal.evidence.turnSeq}
+                          {reportState.frozen.conversationIds.length > 1
+                            ? ` · 이어진 대화 ${reportState.frozen.conversationIds.indexOf(goal.evidence.conversationId) + 1}`
+                            : ""}
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-[11px]">확인된 내 말 없음</p>
+                      )}
+                    </div>
                   ))}
                   <p className="rounded-xl bg-[var(--wd-accent-soft)] px-3 py-2 text-xs font-bold text-[var(--wd-text)]">
                     다음 한 번: {reportState.frozen.outcome.nextPracticeSuggestion.text}
@@ -708,6 +725,80 @@ export default function WindDownVoiceClient({ activity }: Props) {
                   {reportState.frozen.outcome.highlightTurns.length > 0 ? <p className="text-xs text-[var(--wd-muted)]">다시 볼 turn {reportState.frozen.outcome.highlightTurns.map((turn) => turn.turnSeq).join(" · ")}</p> : null}
                 </div>
               )}
+              <div className="mt-5 border-t border-[var(--wd-border)] pt-4">
+                <h3 className="text-sm font-black">대화 증거</h3>
+                <div className="mt-3 space-y-3">
+                  {reportState.frozen.turns.map((turn) => (
+                    <article
+                      key={`${turn.conversationId}:${turn.turnSeq}`}
+                      data-turn-citation={`${turn.conversationId}:${turn.turnSeq}`}
+                      className="rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] p-3"
+                    >
+                      <p className="text-[10px] font-black tracking-[.12em] text-[var(--wd-accent)]">
+                        turn-{turn.turnSeq}
+                        {reportState.frozen.conversationIds.length > 1
+                          ? ` · 이어진 대화 ${reportState.frozen.conversationIds.indexOf(turn.conversationId) + 1}`
+                          : ""}
+                      </p>
+                      {turn.userText ? (
+                        <p className="mt-2 rounded-xl bg-[var(--wd-accent-soft)] px-3 py-2 text-sm font-semibold leading-6">
+                          나 · {turn.userText}
+                        </p>
+                      ) : null}
+                      {turn.modelText ? (
+                        <p className="mt-2 px-3 text-sm font-semibold leading-6 text-[var(--wd-muted)]">
+                          루미 · {turn.modelText}
+                        </p>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              </div>
+              {reportState.frozen.outcome.corrections.length > 0 ? (
+                <div className="mt-5 border-t border-[var(--wd-border)] pt-4">
+                  <h3 className="text-sm font-black">교정</h3>
+                  <div className="mt-3 space-y-3">
+                    {reportState.frozen.outcome.corrections.map((correction) => {
+                      const presentation =
+                        deriveWindDownVoiceCorrectionPresentation(correction);
+                      if (!presentation) {
+                        return (
+                          <article
+                            key={`${correction.conversationId}:${correction.turnSeq}:${correction.correctionText}`}
+                            className="rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] p-3 text-xs"
+                          >
+                            <p className="font-semibold leading-5">{correction.correctionText}</p>
+                            <p className="mt-3 font-black text-[var(--wd-accent)]">
+                              이전 형식 교정 · 근거 turn-{correction.turnSeq}
+                              {reportState.frozen.conversationIds.length > 1
+                                ? ` · 이어진 대화 ${reportState.frozen.conversationIds.indexOf(correction.conversationId) + 1}`
+                                : ""}
+                            </p>
+                          </article>
+                        );
+                      }
+                      return (
+                        <article
+                          key={`${correction.conversationId}:${correction.turnSeq}:${correction.correctionText}`}
+                          className="rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] p-3 text-xs"
+                        >
+                          <dl className="space-y-2">
+                            <div><dt className="font-black text-[var(--wd-muted)]">was</dt><dd className="mt-0.5 font-semibold">{presentation.was}</dd></div>
+                            <div><dt className="font-black text-[var(--wd-muted)]">now</dt><dd className="mt-0.5 font-semibold">{presentation.now}</dd></div>
+                            <div><dt className="font-black text-[var(--wd-muted)]">why</dt><dd className="mt-0.5 font-semibold">{presentation.why}</dd></div>
+                          </dl>
+                          <p className="mt-3 font-black text-[var(--wd-accent)]">
+                            근거 · turn-{presentation.citation.turnSeq}
+                            {reportState.frozen.conversationIds.length > 1
+                              ? ` · 이어진 대화 ${reportState.frozen.conversationIds.indexOf(presentation.citation.conversationId) + 1}`
+                              : ""}
+                          </p>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
               <p className="mt-3 text-xs font-semibold text-[var(--wd-muted)]">
                 {reportState.receipt.committedAtIso.slice(0, 16).replace("T", " ")}
               </p>

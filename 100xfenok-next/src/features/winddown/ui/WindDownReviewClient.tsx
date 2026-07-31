@@ -13,6 +13,10 @@ import {
   WindDownLumi,
   type WindDownLumiState,
 } from "@/features/winddown/ui/WindDownLumi";
+import {
+  WIND_DOWN_IDLE_ASSIST_DELAY_MS,
+  firstEnglishLetter,
+} from "@/features/winddown/ui/windDownAssistiveHints";
 
 type StudyResponse = {
   schemaVersion: 1;
@@ -192,6 +196,7 @@ export default function WindDownReviewClient() {
   const [initialCount, setInitialCount] = useState(0);
   const [answer, setAnswer] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
+  const [recallAssistVisible, setRecallAssistVisible] = useState(false);
   const loadSequence = useRef(0);
 
   const loadQueue = useCallback(async (reloadNotice: string | null = null) => {
@@ -400,6 +405,28 @@ export default function WindDownReviewClient() {
 
   const busy = isBusy(session);
   const current = session?.queue[0] ?? null;
+  const recallHintLetter = useMemo(
+    () => (current ? firstEnglishLetter(current.en) : null),
+    [current],
+  );
+  const canShowRecallAssist =
+    status === "ready"
+    && session?.phase === "recall"
+    && Boolean(current)
+    && Boolean(recallHintLetter)
+    && !answer.trim()
+    && !busy;
+
+  useEffect(() => {
+    setRecallAssistVisible(false);
+    if (!canShowRecallAssist) return;
+    const timeoutId = window.setTimeout(
+      () => setRecallAssistVisible(true),
+      WIND_DOWN_IDLE_ASSIST_DELAY_MS,
+    );
+    return () => window.clearTimeout(timeoutId);
+  }, [answer, canShowRecallAssist, current?.id]);
+
   const progress = queueProgress(session, initialCount);
   const ratingCount = useMemo(() => {
     const results = session?.results ?? [];
@@ -514,7 +541,7 @@ export default function WindDownReviewClient() {
                   <button
                     type="button"
                     onClick={() => void loadQueue()}
-                    className="mt-7 min-h-[44px] w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black active:scale-[0.98]"
+                    className="mt-7 min-h-[44px] w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)] active:scale-[0.98]"
                   >
                     다시 불러오기
                   </button>
@@ -568,11 +595,16 @@ export default function WindDownReviewClient() {
                       placeholder="떠오르는 문장을 적어봐"
                       className="mt-2 min-h-14 w-full rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-4 text-base font-bold outline-none placeholder:text-[var(--wd-text-muted)] focus:border-[var(--wd-accent)]"
                     />
+                    {recallAssistVisible && recallHintLetter ? (
+                      <p role="status" className="mt-3 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 py-2 text-center text-xs font-bold text-[var(--wd-text-muted)]">
+                        루미 힌트: 첫 글자는 <span className="text-[var(--wd-text)]">{recallHintLetter}</span> 이야.
+                      </p>
+                    ) : null}
                     <button
                       type="button"
                       disabled={busy || !answer.trim()}
                       onClick={submitFirst}
-                      className="mt-3 min-h-[44px] w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-none"
+                      className="mt-3 min-h-[44px] w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-none"
                     >
                       답 확인하기
                     </button>
@@ -604,7 +636,7 @@ export default function WindDownReviewClient() {
                   <button
                     type="button"
                     onClick={() => retryGrade(session.phase === "grade-error-first" ? "first" : "retry")}
-                    className="mt-7 min-h-[44px] w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black"
+                    className="mt-7 min-h-[44px] w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)]"
                   >
                     같은 답 다시 채점하기
                   </button>
@@ -699,7 +731,7 @@ export default function WindDownReviewClient() {
                   <button
                     type="button"
                     onClick={retryCommit}
-                    className="mt-7 min-h-[44px] w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black"
+                    className="mt-7 min-h-[44px] w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)]"
                   >
                     같은 기록 다시 저장하기
                   </button>

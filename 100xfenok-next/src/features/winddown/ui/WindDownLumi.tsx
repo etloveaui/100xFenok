@@ -95,7 +95,7 @@ export function WindDownLumi({
       >
         <span className="absolute inset-1 rounded-full border border-white/10" />
         <span
-          className={`${coreSize} ${presentation.accent} ${presentation.motion} grid place-items-center rounded-full font-black text-[var(--wd-text)] motion-reduce:animate-none`}
+          className={`${coreSize} ${presentation.accent} ${presentation.motion} grid place-items-center rounded-full font-black text-[var(--wd-bg)] motion-reduce:animate-none`}
         >
           {presentation.glyph}
         </span>

@@ -77,6 +77,8 @@ function buildRoleplayPrompt(
     goals,
     `OPENING LINE: ${descriptor.openingLine}`,
     "Speak mostly in short, natural English turns. Use brief Korean only when the learner is stuck.",
+    "When a correction is genuinely useful, say one concise line in exactly this format: Correction — Was: <exact words the learner just said> | Now: <better English> | Why: <brief reason>.",
+    "Never put words the learner did not say in Was. If there is no supported correction, do not use the Correction format.",
     "Do not switch to study exercises, grading, or review scheduling.",
     "The roleplay is complete only after the learner has had a natural chance to meet every listed goal.",
     ...(journeyTargets.length > 0
@@ -102,6 +104,8 @@ function buildLiveTalkPrompt(
     `OPENING LINE: ${descriptor.openingLine}`,
     "Keep the exchange open and natural. Follow the learner's meaning instead of driving scenario goals.",
     "Speak mostly in short, natural English turns. Use brief Korean only when the learner is stuck.",
+    "When a correction is genuinely useful, say one concise line in exactly this format: Correction — Was: <exact words the learner just said> | Now: <better English> | Why: <brief reason>.",
+    "Never put words the learner did not say in Was. If there is no supported correction, do not use the Correction format.",
     "Do not use study exercises, grading, review scheduling, or roleplay completion goals.",
     "There is no automatic completion. The session ends only when the learner decides to stop.",
   ].join("\n");

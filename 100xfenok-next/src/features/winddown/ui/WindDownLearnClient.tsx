@@ -14,6 +14,10 @@ import {
   WindDownLumi,
   type WindDownLumiState,
 } from "@/features/winddown/ui/WindDownLumi";
+import {
+  WIND_DOWN_IDLE_ASSIST_DELAY_MS,
+  firstWrongChoiceId,
+} from "@/features/winddown/ui/windDownAssistiveHints";
 
 type StudyResponse = {
   schemaVersion: 1;
@@ -111,6 +115,7 @@ export default function WindDownLearnClient() {
   const [manifestSessionId, setManifestSessionId] = useState<string | null>(null);
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [idleAssistVisible, setIdleAssistVisible] = useState(false);
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
   );
@@ -202,6 +207,29 @@ export default function WindDownLearnClient() {
       return token ? [token] : [];
     });
   }, [current, selectedTokenIds]);
+  const assistiveWrongChoiceId = useMemo(
+    () =>
+      current?.kind === "meaning-choice"
+        ? firstWrongChoiceId(current.choices, current.correctChoiceId)
+        : null,
+    [current],
+  );
+  const canShowIdleAssist =
+    status === "ready"
+    && Boolean(current)
+    && !session?.isComplete
+    && !feedback
+    && (current?.kind === "meaning-choice" || selectedTokenIds.length === 0);
+
+  useEffect(() => {
+    setIdleAssistVisible(false);
+    if (!canShowIdleAssist) return;
+    const timeoutId = window.setTimeout(
+      () => setIdleAssistVisible(true),
+      WIND_DOWN_IDLE_ASSIST_DELAY_MS,
+    );
+    return () => window.clearTimeout(timeoutId);
+  }, [canShowIdleAssist, current?.card.id, current?.kind, selectedTokenIds]);
 
   const persistProgress = useCallback(async (payload: ProgressPayload) => {
     const response = await fetch("/api/winddown/progress", {
@@ -312,7 +340,7 @@ export default function WindDownLearnClient() {
         <header>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-[11px] font-black tracking-[0.2em] text-[var(--fnk-purple-600)]">
+              <p className="text-[11px] font-black tracking-[0.2em] text-[var(--wd-accent)]">
                 WIND DOWN · LEARN
               </p>
               <h1 className="mt-1 text-xl font-black">오늘의 다섯 문장</h1>
@@ -327,7 +355,7 @@ export default function WindDownLearnClient() {
           <div className="mt-5 flex items-center gap-3">
             <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--wd-surface-raised)]">
               <div
-                className="h-full rounded-full bg-[var(--fnk-purple-600)] transition-[width] motion-reduce:transition-none"
+                className="h-full rounded-full bg-[var(--wd-accent)] transition-[width] motion-reduce:transition-none"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -365,7 +393,7 @@ export default function WindDownLearnClient() {
               <button
                 type="button"
                 onClick={() => void loadQuest()}
-                className="mt-6 min-h-14 w-full rounded-2xl bg-[var(--fnk-purple-600)] px-5 text-sm font-black"
+                className="mt-6 min-h-14 w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)]"
               >
                 다시 불러오기
               </button>
@@ -374,7 +402,7 @@ export default function WindDownLearnClient() {
 
           {status === "ready" && session?.isComplete ? (
             <section className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-7 text-center">
-              <p className="mt-4 text-[11px] font-black tracking-[0.18em] text-[var(--fnk-purple-600)]">
+              <p className="mt-4 text-[11px] font-black tracking-[0.18em] text-[var(--wd-accent)]">
                 QUEST COMPLETE
               </p>
               <h2 className="mt-2 text-2xl font-black">다섯 문장 완료!</h2>
@@ -401,7 +429,7 @@ export default function WindDownLearnClient() {
               ) : null}
               <Link
                 href="/winddown/roleplay"
-                className="mt-7 inline-flex min-h-14 w-full items-center justify-center rounded-2xl bg-[var(--fnk-purple-600)] px-5 text-sm font-black"
+                className="mt-7 inline-flex min-h-14 w-full items-center justify-center rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)]"
               >
                 다음: 말하기
               </Link>
@@ -440,7 +468,7 @@ export default function WindDownLearnClient() {
                       type="button"
                       onClick={() => void saveFeedback(feedback)}
                       disabled={!feedback.saveError}
-                      className="mt-6 min-h-14 w-full rounded-2xl bg-[var(--fnk-purple-600)] px-5 text-sm font-black disabled:opacity-60"
+                      className="mt-6 min-h-14 w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)] disabled:opacity-60"
                     >
                       {feedback.saveError ? "저장 다시 시도" : "결과 저장 중"}
                     </button>
@@ -448,7 +476,7 @@ export default function WindDownLearnClient() {
                     <button
                       type="button"
                       onClick={continueQuest}
-                      className="mt-6 min-h-14 w-full rounded-2xl bg-[var(--fnk-purple-600)] px-5 text-sm font-black"
+                      className="mt-6 min-h-14 w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)]"
                     >
                       {feedback.outcome === "complete"
                         ? "오늘 결과 보기"
@@ -473,7 +501,7 @@ export default function WindDownLearnClient() {
 
                   {current.kind === "meaning-choice" ? (
                     <>
-                      <p className="mt-7 text-xs font-black tracking-[0.15em] text-[var(--fnk-purple-600)]">
+                      <p className="mt-7 text-xs font-black tracking-[0.15em] text-[var(--wd-accent)]">
                         이 영어의 뜻은?
                       </p>
                       <h2 className="mt-3 text-2xl font-black leading-snug">
@@ -491,16 +519,26 @@ export default function WindDownLearnClient() {
                                 choiceId: choice.id,
                               })
                             }
-                            className="min-h-14 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-4 py-3 text-left text-sm font-black transition active:scale-[0.98] motion-reduce:transition-none"
+                            className={[
+                              "min-h-14 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-4 py-3 text-left text-sm font-black transition active:scale-[0.98] motion-reduce:transition-none",
+                              idleAssistVisible && choice.id === assistiveWrongChoiceId
+                                ? "opacity-40"
+                                : "",
+                            ].join(" ")}
                           >
                             {choice.text}
                           </button>
                         ))}
                       </div>
+                      {idleAssistVisible && assistiveWrongChoiceId ? (
+                        <p role="status" className="mt-3 text-center text-xs font-bold text-[var(--wd-text-muted)]">
+                          루미 힌트: 하나의 선택지를 살짝 흐리게 했어.
+                        </p>
+                      ) : null}
                     </>
                   ) : (
                     <>
-                      <p className="mt-7 text-xs font-black tracking-[0.15em] text-[var(--fnk-purple-600)]">
+                      <p className="mt-7 text-xs font-black tracking-[0.15em] text-[var(--wd-accent)]">
                         영어 문장을 만들어 봐
                       </p>
                       <h2 className="mt-3 text-xl font-black leading-snug">
@@ -524,7 +562,7 @@ export default function WindDownLearnClient() {
                                 ids.filter((id) => id !== token.id),
                               )
                             }
-                            className="min-h-11 rounded-xl bg-[var(--fnk-purple-600)] px-3 text-sm font-black"
+                            className="min-h-11 rounded-xl bg-[var(--wd-accent)] px-3 text-sm font-black text-[var(--wd-bg)]"
                           >
                             {token.text}
                           </button>
@@ -533,6 +571,9 @@ export default function WindDownLearnClient() {
                       <div className="mt-4 flex flex-wrap gap-2">
                         {current.tokens.map((token) => {
                           const selected = selectedTokenIds.includes(token.id);
+                          const isAssistiveFirstToken =
+                            idleAssistVisible
+                            && token.id === current.canonicalTokenIds[0];
                           return (
                             <button
                               key={token.id}
@@ -541,13 +582,23 @@ export default function WindDownLearnClient() {
                               onClick={() =>
                                 setSelectedTokenIds((ids) => [...ids, token.id])
                               }
-                              className="min-h-11 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 text-sm font-black disabled:opacity-25"
+                              className={[
+                                "min-h-11 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 text-sm font-black disabled:opacity-25",
+                                isAssistiveFirstToken
+                                  ? "animate-pulse ring-2 ring-[var(--wd-listening)] motion-reduce:animate-none"
+                                  : "",
+                              ].join(" ")}
                             >
                               {token.text}
                             </button>
                           );
                         })}
                       </div>
+                      {idleAssistVisible ? (
+                        <p role="status" className="mt-3 text-center text-xs font-bold text-[var(--wd-text-muted)]">
+                          루미 힌트: 첫 단어부터 시작해 봐.
+                        </p>
+                      ) : null}
                       <button
                         type="button"
                         disabled={
@@ -561,7 +612,7 @@ export default function WindDownLearnClient() {
                             tokenIds: selectedTokenIds,
                           })
                         }
-                        className="mt-6 min-h-14 w-full rounded-2xl bg-[var(--fnk-purple-600)] px-5 text-sm font-black disabled:opacity-35"
+                        className="mt-6 min-h-14 w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)] disabled:opacity-35"
                       >
                         확인
                       </button>

@@ -38,7 +38,7 @@
     "test:winddown-learn": "tsx scripts/score-winddown-learn-engine.ts && tsx scripts/score-winddown-learn-progress.ts && tsx scripts/score-winddown-learn-ui.ts",
     "test:winddown-review": "npm run test:winddown-review-cycle && tsx scripts/score-winddown-review-api.ts && tsx scripts/score-winddown-review-ui.ts",
     "test:winddown-review-cycle": "tsx scripts/score-winddown-review-cycle.ts",
-    "test:winddown-lumi": "node scripts/score-winddown-lumi.mjs",
+    "test:winddown-lumi": "tsx scripts/score-winddown-assistive-lumi.ts && node scripts/score-winddown-lumi.mjs",
     "test:winddown-voice": "tsx scripts/score-winddown-voice-session.ts && tsx scripts/score-winddown-voice-ui.ts && tsx scripts/score-winddown-voice-report-coordinator.ts",
     "test:winddown-habit": "tsx scripts/score-winddown-habit.ts && tsx scripts/score-winddown-habit-coordinator.ts",
     "test:winddown-luna-receipt": "tsx scripts/score-winddown-luna-receipt.ts",

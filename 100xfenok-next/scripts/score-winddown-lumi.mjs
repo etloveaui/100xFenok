@@ -8,8 +8,10 @@ const lumiPath = path.join(
   "src/features/winddown/ui/WindDownLumi.tsx",
 );
 const layoutPath = path.join(root, "src/app/winddown/layout.tsx");
+const globalsPath = path.join(root, "src/app/globals.css");
 assert.equal(existsSync(layoutPath), true, "WIND DOWN night theme layout must exist");
 const layoutSource = readFileSync(layoutPath, "utf8");
+const globalsSource = readFileSync(globalsPath, "utf8");
 for (const token of ["--wd-bg", "--wd-surface", "--wd-border", "--wd-text"]) {
   assert.equal(
     layoutSource.includes(token),
@@ -24,6 +26,40 @@ for (const guard of ['data-wd-theme="night"', "themeColor"]) {
     `WIND DOWN layout guard missing: ${guard}`,
   );
 }
+for (const token of [
+  "--fnk-fixed-night-950: #07061a",
+  "--fnk-fixed-night-900: #130f30",
+  "--fnk-fixed-night-800: #241a49",
+  "--fnk-fixed-night-ink: #f7f2ff",
+  "--fnk-fixed-night-dim: #bcb0de",
+  "--fnk-fixed-amber-300: #ffc98b",
+  "--fnk-fixed-violet-300: #a796ff",
+  "--fnk-fixed-mint-300: #7ce9c8",
+  "--fnk-fixed-rose-300: #ff9fb2",
+]) {
+  assert.equal(
+    globalsSource.includes(token),
+    true,
+    `fixed WIND DOWN token missing: ${token}`,
+  );
+}
+for (const alias of [
+  '"--wd-bg": "var(--fnk-fixed-night-950)"',
+  '"--wd-accent": "var(--fnk-fixed-amber-300)"',
+  '"--wd-listening": "var(--fnk-fixed-mint-300)"',
+  '"--wd-danger": "var(--fnk-fixed-rose-300)"',
+]) {
+  assert.equal(
+    layoutSource.includes(alias),
+    true,
+    `WIND DOWN night alias missing: ${alias}`,
+  );
+}
+assert.equal(
+  layoutSource.includes('themeColor: "#07061a"'),
+  true,
+  "browser chrome must match the fixed night ground",
+);
 assert.equal(existsSync(lumiPath), true, "shared Lumi renderer must exist");
 
 const lumiSource = readFileSync(lumiPath, "utf8");
@@ -48,6 +84,7 @@ for (const guard of [
   "motion-reduce:animate-none",
   "var(--wd-accent)",
   "var(--wd-bg)",
+  "text-[var(--wd-bg)]",
 ]) {
   assert.equal(
     lumiSource.includes(guard),
@@ -101,6 +138,24 @@ for (const client of clients) {
     false,
     `${client.path} must not reintroduce a route-local raw palette`,
   );
+  assert.equal(
+    source.includes("--fnk-purple-600"),
+    false,
+    `${client.path} must not bypass the warm night accent`,
+  );
+  for (const line of source.split("\n")) {
+    if (
+      line.includes("bg-[var(--wd-accent)]")
+      && !line.includes("bg-gradient")
+      && !line.includes('className="h-full')
+    ) {
+      assert.equal(
+        line.includes("text-[var(--wd-bg)]"),
+        true,
+        `${client.path} accent fill must use dark readable ink`,
+      );
+    }
+  }
   for (const state of client.states) {
     assert.equal(
       source.includes(`"${state}"`),

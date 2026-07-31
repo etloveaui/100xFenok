@@ -1,11 +1,13 @@
 import {
   containsWindDownVoiceSecretLeakage,
   containsWindDownVoiceUnsafeText,
+  deriveWindDownVoiceCorrectionPresentation,
   evaluateWindDownRoleplay,
   getWindDownVoiceScenario,
   isWindDownVoiceDescriptor,
   normalizeWindDownVoiceDescriptor,
   summarizeWindDownLiveTalk,
+  WIND_DOWN_VOICE_CORRECTION_MAX_CHARS,
   type WindDownVoiceActivity,
   type WindDownVoiceCorrection,
   type WindDownVoiceDescriptor,
@@ -18,7 +20,8 @@ export const WIND_DOWN_VOICE_REPORT_SCHEMA_VERSION = 1 as const;
 export const WIND_DOWN_VOICE_REPORT_MAX_BYTES = 48 * 1024;
 export const WIND_DOWN_VOICE_REPORT_MAX_TURNS = 24;
 export const WIND_DOWN_VOICE_REPORT_MAX_TURN_TEXT_CHARS = 640;
-export const WIND_DOWN_VOICE_REPORT_MAX_CORRECTION_CHARS = 240;
+export const WIND_DOWN_VOICE_REPORT_MAX_CORRECTION_CHARS =
+  WIND_DOWN_VOICE_CORRECTION_MAX_CHARS;
 export const WIND_DOWN_VOICE_REPORT_MAX_LATENCY_SAMPLES = 60;
 
 export type WindDownVoiceCompletionReason =
@@ -123,7 +126,6 @@ const HIGHLIGHT_KEYS = new Set([
   "conversationId",
   "turnSeq",
 ]);
-
 function hasExactKeys(
   value: Record<string, unknown>,
   expected: ReadonlySet<string>,
@@ -380,12 +382,15 @@ function buildRoleplayNextPracticeSuggestion(args: {
   corrections: readonly WindDownVoiceCorrection[];
 }): WindDownRoleplayNextPracticeSuggestion {
   const correction = args.corrections[0];
+  const correctionPresentation = correction
+    ? deriveWindDownVoiceCorrectionPresentation(correction)
+    : null;
   if (correction) {
     return {
       kind: "correction",
       conversationId: correction.conversationId,
       turnSeq: correction.turnSeq,
-      text: `다음에는 “${correction.correctionText}”를 한 번 더 말해봐.`,
+      text: `다음에는 “${correctionPresentation?.now ?? correction.correctionText}”를 한 번 더 말해봐.`,
     };
   }
   const completedGoalIds = new Set(args.evidence.map((item) => item.goalId));

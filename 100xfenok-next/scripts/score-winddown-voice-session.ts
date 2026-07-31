@@ -101,9 +101,13 @@ assert.notEqual(roleplayPrompt, liveTalkPrompt);
 assert.match(roleplayPrompt, /roleplay/i);
 assert.match(roleplayPrompt, /roles?/i);
 assert.match(roleplayPrompt, /goal/i);
+assert.match(roleplayPrompt, /Correction — Was: .* \| Now: .* \| Why:/);
+assert.match(roleplayPrompt, /exact words the learner just said/i);
 assert.match(liveTalkPrompt, /open conversation/i);
 assert.match(liveTalkPrompt, /learner decides to stop/i);
 assert.match(liveTalkPrompt, /do not use study exercises/i);
+assert.match(liveTalkPrompt, /Correction — Was: .* \| Now: .* \| Why:/);
+assert.match(liveTalkPrompt, /exact words the learner just said/i);
 assert.doesNotMatch(liveTalkPrompt, /must use|select from|practice these expressions/i);
 
 const apiKey = "server-secret-test-key";
