@@ -17,6 +17,7 @@ const HOME = "src/features/winddown/habit/ui/WindDownHabitHomeClient.tsx";
 const HABIT_API = "src/app/api/winddown/habit/route.ts";
 const COORDINATOR =
   "src/features/mona-vnext/memory/learningProfileCoordinator.ts";
+const ROUTE_CONTRACT = "scripts/check-route-key-contract.mjs";
 
 for (const rel of [
   TOUR,
@@ -29,6 +30,7 @@ for (const rel of [
   HOME,
   HABIT_API,
   COORDINATOR,
+  ROUTE_CONTRACT,
 ]) {
   assert.equal(exists(rel), true, `WIND DOWN game file missing: ${rel}`);
 }
@@ -43,6 +45,7 @@ const scenes = read(SCENES);
 const home = read(HOME);
 const habitApi = read(HABIT_API);
 const coordinator = read(COORDINATOR);
+const routeContract = read(ROUTE_CONTRACT);
 
 /* 1. the route is authenticated and immersive, exactly like the other WIND DOWN routes */
 assert.equal(
@@ -209,6 +212,12 @@ assert.equal(
     && client.includes('href="/winddown"'),
   true,
   "receipt progress and home/back navigation must be wired end to end",
+);
+assert.equal(
+  routeContract.includes("page_route_count: 56")
+    && routeContract.includes("out_of_scope_count: 14"),
+  true,
+  "the authenticated game route must be acknowledged by the route-scope count",
 );
 
 /* 6. unlock levels are strictly increasing so no chapter is unreachable */
