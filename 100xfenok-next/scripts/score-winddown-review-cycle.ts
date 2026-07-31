@@ -607,13 +607,10 @@ assert.match(wrangler, /WINDDOWN_REVIEW_COORDINATOR/);
 assert.match(wrangler, /new_sqlite_classes/);
 assert.match(worker, /extends DurableObject/);
 assert.match(worker, /blockConcurrencyWhile/);
-assert.match(
-  repository,
-  /appendMonaVnextLearningEventsThroughCoordinator/,
-  "Cloudflare Learn writes must share the same profile single-writer",
-);
 assert.match(repository, /readMonaVnextLearningProfileThroughCoordinator/);
+assert.doesNotMatch(repository, /appendMonaVnextMemoryCheckpoint|readMonaVnextMemorySummary/);
 assert.match(coordinatorClient, /operation: "read-learning-profile"/);
+assert.doesNotMatch(coordinatorClient, /operation: "append-learning-events"/);
 
 console.log(
   "PASS winddown-review-cycle - server grading, atomic receipt idempotency, and fail-closed review cycles",

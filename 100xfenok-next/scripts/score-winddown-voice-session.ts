@@ -418,11 +418,6 @@ assert.match(
   /INVALID_WINDDOWN_VOICE_REPORT_SESSION_PROOF[\s\S]*403/,
 );
 
-const wrapperSource = readFileSync(
-  path.join(process.cwd(), "src/features/mona-vnext/live/useGeminiLiveSession.ts"),
-  "utf8",
-);
-assert.match(wrapperSource, /useGeminiLiveTransport/);
 const transportSource = readFileSync(
   path.join(
     process.cwd(),

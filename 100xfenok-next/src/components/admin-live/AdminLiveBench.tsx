@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import MonaWindDown, { type WindDownPhase } from "@/components/admin-live/MonaWindDown";
-import MonaWindDownEntry from "@/components/admin-live/MonaWindDownEntry";
 import { BUILD_VERSION } from "@/generated/build-version";
 import { inspectAdminLiveModelOutput } from "@/lib/admin-live-output-safety";
 import {
@@ -829,10 +827,9 @@ async function readSocketData(data: MessageEvent["data"]): Promise<string> {
 
 type AdminLiveBenchProps = {
   initialMode?: BenchMode;
-  simpleUi?: boolean;
 };
 
-export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false }: AdminLiveBenchProps = {}) {
+export default function AdminLiveBench({ initialMode = "fenok" }: AdminLiveBenchProps = {}) {
   const [mode, setMode] = useState<BenchMode>(initialMode);
   const [status, setStatus] = useState<SessionStatus>("checking");
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -3036,52 +3033,6 @@ export default function AdminLiveBench({ initialMode = "fenok", simpleUi = false
       return [...current, tool.id];
     });
   };
-
-  if (simpleUi) {
-    const phase: WindDownPhase = status === "listening"
-      ? "live"
-      : status === "connecting"
-        ? "connecting"
-        : status === "checking"
-          ? "boot"
-          : status === "blocked"
-            ? "blocked"
-            : status === "stopped"
-              ? "stopped"
-              : "ready";
-    const lastCoachLine = logs.find((entry) => entry.role === "bench")?.text ?? null;
-    return (
-      <>
-        <MonaWindDown
-          phase={phase}
-          message={mainMessage}
-          card={card}
-          coachLine={lastCoachLine}
-          errorText={metrics.lastError}
-          voiceName={voiceName}
-          vadPreset={vadPreset}
-          onVoiceChange={setVoiceName}
-          onVadChange={setVadPreset}
-          settingsSlot={mode === "mona" ? (
-            <>
-              <CoachConfigControls
-                config={normalizedCoachConfig}
-                locked={settingsLocked}
-                onUpdate={updateCoachConfig}
-                interruptionMode={interruptionMode}
-                onInterruptionModeChange={setInterruptionMode}
-                variant="winddown"
-              />
-              <MonaWindDownEntry locked={settingsLocked} />
-            </>
-          ) : undefined}
-          onStart={() => void startSession()}
-          onStop={() => void stopSession()}
-        />
-        <BuildVersionBadge onCopy={copyBuildVersion} />
-      </>
-    );
-  }
 
   return (
     <main className="min-h-[calc(100vh-80px)] bg-slate-50 px-4 pb-[max(env(safe-area-inset-bottom),16px)] pt-5">

@@ -7,8 +7,6 @@ import {
 } from "@/features/mona-vnext/memory/fsrsLearningProfile";
 import {
   buildLearningEvent,
-  normalizeMonaVnextLearningInputMode,
-  type MonaVnextLearningEvent,
 } from "@/features/mona-vnext/memory/srsBridge";
 import { MONA_VNEXT_DATA_NAMESPACE } from "@/features/mona-vnext/memory/monaVnextNamespace";
 import {
@@ -108,10 +106,6 @@ export type MonaVnextProfileCoordinatorCommand =
       operation: "read-learning-profile";
     }
   | {
-      operation: "append-learning-events";
-      learningEvents: MonaVnextLearningEvent[];
-    }
-  | {
       operation: "commit-review-cycle";
       input: WindDownReviewCycleInput;
       material: WindDownReviewCycleMaterial | null;
@@ -177,46 +171,6 @@ function noStoreJson(body: unknown, status = 200) {
       "Content-Type": "application/json; charset=utf-8",
     },
   });
-}
-
-function normalizeLearningEvents(value: unknown) {
-  if (!Array.isArray(value) || value.length < 1 || value.length > 20) return null;
-  const events: MonaVnextLearningEvent[] = [];
-  for (const item of value) {
-    if (!item || typeof item !== "object" || Array.isArray(item)) return null;
-    const source = item as Record<string, unknown>;
-    const inputMode = source.inputMode === undefined
-      ? undefined
-      : normalizeMonaVnextLearningInputMode(source.inputMode);
-    if (source.inputMode !== undefined && !inputMode) return null;
-    const event = buildLearningEvent({
-      expressionId:
-        typeof source.expressionId === "string"
-          ? source.expressionId.trim().slice(0, 120)
-          : "",
-      verdict:
-        source.verdict === "canonical" ||
-        source.verdict === "variant" ||
-        source.verdict === "close" ||
-        source.verdict === "miss"
-          ? source.verdict
-          : "garbage",
-      atIso:
-        typeof source.atIso === "string"
-          ? source.atIso.trim().slice(0, 80)
-          : "",
-      sessionId:
-        typeof source.sessionId === "string"
-          ? source.sessionId.trim().slice(0, 160)
-          : "",
-      inputMode: inputMode ?? undefined,
-    });
-    if (!event || !event.expressionId || !event.atIso || !event.sessionId) {
-      return null;
-    }
-    events.push(event);
-  }
-  return events;
 }
 
 async function initialProfile(
@@ -928,30 +882,6 @@ export async function handleMonaVnextProfileCoordinatorRequest(
       reward: result.receipt.reward,
       state: result.receipt.state,
       completionReceipt: result.receipt.completionReceipt,
-    });
-  }
-
-  if (body.operation === "append-learning-events") {
-    await initialProfile(state, env);
-    const events = normalizeLearningEvents(body.learningEvents);
-    if (!events) {
-      return noStoreJson({ error: "INVALID_LEARNING_EVENTS" }, 400);
-    }
-    const profile = await state.storage.transaction(async (transaction) => {
-      const current =
-        (await transaction.get<MonaVnextLearningProfile>(
-          PROFILE_STORAGE_KEY,
-        )) ?? createEmptyMonaVnextLearningProfile();
-      const next = applyMonaVnextLearningEvents(current, events);
-      await transaction.put(PROFILE_STORAGE_KEY, next);
-      return next;
-    });
-    await mirrorProfile(env, profile);
-    return noStoreJson({
-      ok: true,
-      operation: body.operation,
-      appliedEventCount: events.length,
-      updatedAt: profile.updatedAt,
     });
   }
 

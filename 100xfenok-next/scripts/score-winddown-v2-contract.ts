@@ -16,6 +16,42 @@ import {
 } from "../src/features/winddown/server/studyRequest";
 import type { MonaVnextExpression } from "../src/features/mona-vnext/coach/coachPolicy";
 
+const RETIRED_LEGACY_PATHS = [
+  "src/app/api/mona-vnext/session/route.ts",
+  "src/app/api/mona-vnext/log/route.ts",
+  "src/app/api/mona-vnext/memory/route.ts",
+  "src/components/admin-live/MonaWindDown.tsx",
+  "src/components/admin-live/MonaWindDownEntry.tsx",
+  "src/features/mona-vnext/MonaVoiceCoachApp.tsx",
+  "src/features/mona-vnext/coach/baselineEvidence.ts",
+  "src/features/mona-vnext/coach/coachPrompt.ts",
+  "src/features/mona-vnext/coach/lessonFlow.ts",
+  "src/features/mona-vnext/coach/postTurnEvaluator.ts",
+  "src/features/mona-vnext/featureGates.ts",
+  "src/features/mona-vnext/gates/replayFixtures.ts",
+  "src/features/mona-vnext/live/useGeminiLiveSession.ts",
+  "src/features/mona-vnext/logging/persistenceState.ts",
+  "src/features/mona-vnext/logging/voiceLogWriter.ts",
+  "src/features/mona-vnext/memory/srsAdvisory.ts",
+  "src/features/mona-vnext/product/gameSession.ts",
+  "src/features/mona-vnext/product/productPolicy.ts",
+  "src/features/mona-vnext/teacher/effectEmitter.ts",
+  "src/features/mona-vnext/teacher/teacherDriftGuard.ts",
+  "src/features/mona-vnext/teacher/teacherMachine.ts",
+  "src/features/mona-vnext/teacher/teacherSessionScorer.ts",
+  "src/features/mona-vnext/ui/ExpressionCard.tsx",
+  "src/features/mona-vnext/ui/SessionControls.tsx",
+  "src/features/mona-vnext/ui/WindDownVnextShell.tsx",
+] as const;
+
+for (const retiredPath of RETIRED_LEGACY_PATHS) {
+  assert.equal(
+    existsSync(path.join(process.cwd(), retiredPath)),
+    false,
+    `retired WIND DOWN legacy path returned: ${retiredPath}`,
+  );
+}
+
 function listSourceFiles(root: string): string[] {
   return readdirSync(root).flatMap((name) => {
     const absolute = path.join(root, name);
@@ -414,7 +450,7 @@ for (const file of voiceFiles) {
       normalized.endsWith("/src/components/admin-live/MonaWindDown.tsx") ||
       normalized.endsWith("/src/features/mona-vnext/teacher/teacherMachine.ts") ||
       normalized.endsWith("/src/features/mona-vnext/coach/coachPrompt.ts") ||
-      normalized.endsWith("/src/features/mona-vnext/game/gameSession.ts"),
+      normalized.endsWith("/src/features/mona-vnext/product/gameSession.ts"),
     false,
     `Phase 5 voice product reaches the legacy card/XP teacher runtime: ${path.relative(process.cwd(), file)}`,
   );

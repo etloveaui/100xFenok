@@ -3,16 +3,19 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
 
-const inputPath = path.join(process.cwd(), "src/features/mona-vnext/live/useLiveAudioInput.ts");
-const sessionPath = path.join(process.cwd(), "src/features/mona-vnext/live/useGeminiLiveSession.ts");
-const transportPath = path.join(process.cwd(), "src/features/mona-vnext/live/useGeminiLiveTransport.ts");
-const appPath = path.join(process.cwd(), "src/features/mona-vnext/MonaVoiceCoachApp.tsx");
+const inputSource = readFileSync(
+  path.join(process.cwd(), "src/features/mona-vnext/live/useLiveAudioInput.ts"),
+  "utf8",
+);
+const transportSource = readFileSync(
+  path.join(process.cwd(), "src/features/mona-vnext/live/useGeminiLiveTransport.ts"),
+  "utf8",
+);
+const voiceClientSource = readFileSync(
+  path.join(process.cwd(), "src/features/winddown/voice/ui/WindDownVoiceClient.tsx"),
+  "utf8",
+);
 const workletPath = path.join(process.cwd(), "public/winddown/mona-pcm-capture.worklet.js");
-
-const inputSource = readFileSync(inputPath, "utf8");
-const sessionSource = readFileSync(sessionPath, "utf8");
-const transportSource = readFileSync(transportPath, "utf8");
-const appSource = readFileSync(appPath, "utf8");
 
 assert.ok(existsSync(workletPath), "the production PCM capture worklet is missing");
 const workletSource = readFileSync(workletPath, "utf8");
@@ -26,21 +29,11 @@ assert.ok(inputSource.includes("context.createScriptProcessor"), "older iPhones 
 assert.ok(inputSource.includes("autoGainControl: true"), "quiet bedtime speech should use device AGC");
 assert.ok(inputSource.includes('document.addEventListener("visibilitychange"'));
 assert.ok(inputSource.includes("return { prime, start, stop }"));
-assert.ok(
-  sessionSource.includes("useGeminiLiveTransport"),
-  "the Mona compatibility hook must use the shared production transport",
-);
 assert.ok(transportSource.includes("audioInput.prime()"));
 assert.ok(transportSource.includes("audioOutput.ensure()"));
-assert.ok(appSource.includes('window.addEventListener("pagehide"'));
+assert.ok(voiceClientSource.includes('window.addEventListener("pagehide"'));
 
-type WorkletMessage = {
-  type?: unknown;
-  buffer?: unknown;
-  rms?: unknown;
-  peak?: unknown;
-};
-
+type WorkletMessage = { type?: unknown; buffer?: unknown; rms?: unknown; peak?: unknown };
 type WorkletProcessorInstance = {
   port: {
     messages: WorkletMessage[];
@@ -49,20 +42,16 @@ type WorkletProcessorInstance = {
   };
   process: (inputs: Float32Array[][]) => boolean;
 };
-
 type WorkletProcessorConstructor = new (options: {
   processorOptions: { targetSampleRate: number; chunkSamples: number };
 }) => WorkletProcessorInstance;
 
 let registeredProcessor: WorkletProcessorConstructor | null = null;
-
 class MockAudioWorkletProcessor {
   port = {
     messages: [] as WorkletMessage[],
     onmessage: null as ((event: { data?: unknown }) => void) | null,
-    postMessage: (message: WorkletMessage) => {
-      this.port.messages.push(message);
-    },
+    postMessage: (message: WorkletMessage) => this.port.messages.push(message),
   };
 }
 
@@ -100,4 +89,4 @@ assert.equal(firstPcm.length, 320);
 assert.ok(firstPcm[0] >= 8190 && firstPcm[0] <= 8192);
 assert.ok(Number(statsMessages[0].rms) >= 0.249 && Number(statsMessages[0].rms) <= 0.251);
 
-console.log("PASS iphone-audio - touch priming, worklet capture, fallback, AGC, and lifecycle guards are wired");
+console.log("PASS winddown-iphone-audio - current transport keeps iPhone priming, worklet, fallback, AGC, and lifecycle guards");

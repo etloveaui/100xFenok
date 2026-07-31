@@ -94,13 +94,6 @@ function categoryForPath(relPath) {
     };
   }
 
-  if (relPath === "src/components/admin-live/MonaWindDown.tsx") {
-    return {
-      category: "product-theme",
-      note: "Current WIND DOWN product palette is intentionally isolated from the finance-app theme.",
-    };
-  }
-
   if (
     relPath.startsWith("src/features/winddown/ui/") ||
     relPath.startsWith("src/features/winddown/habit/ui/")
@@ -131,9 +124,7 @@ function categoryForPath(relPath) {
   if (
     relPath === "src/app/admin/design-gallery/page.tsx" ||
     relPath.startsWith("src/components/Home") ||
-    relPath === "src/components/DesignLabProfilePreview.tsx" ||
-    relPath.startsWith("src/features/mona-vnext/") ||
-    relPath.startsWith("src/app/winddown")
+    relPath === "src/components/DesignLabProfilePreview.tsx"
   ) {
     return {
       category: "p4-delete",

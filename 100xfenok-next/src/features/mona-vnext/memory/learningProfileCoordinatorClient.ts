@@ -3,7 +3,6 @@ import type {
   WindDownVoiceReportReceipt,
 } from "@/features/mona-vnext/memory/learningProfileCoordinator";
 import { normalizeMonaVnextLearningProfile } from "@/features/mona-vnext/memory/fsrsLearningProfile";
-import type { MonaVnextLearningEvent } from "@/features/mona-vnext/memory/srsBridge";
 import type {
   WindDownLearnAction,
   WindDownLearnCard,
@@ -82,15 +81,6 @@ export async function invokeMonaVnextProfileCoordinator(
     throw new MonaVnextProfileCoordinatorError(code, response.status);
   }
   return body;
-}
-
-export async function appendMonaVnextLearningEventsThroughCoordinator(
-  learningEvents: MonaVnextLearningEvent[],
-) {
-  return invokeMonaVnextProfileCoordinator({
-    operation: "append-learning-events",
-    learningEvents,
-  });
 }
 
 export async function readMonaVnextLearningProfileThroughCoordinator() {
