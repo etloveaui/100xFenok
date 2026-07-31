@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import AdminAccessGate from "@/components/AdminAccessGate";
 import WindDownLearnClient from "@/features/winddown/ui/WindDownLearnClient";
@@ -11,12 +11,6 @@ export const metadata: Metadata = {
   title: "Learn · Wind-Down",
   description: "모델 없이 다섯 문장을 배우는 WIND DOWN 학습",
   robots: { index: false, follow: false },
-};
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover",
 };
 
 export default async function WindDownLearnPage() {

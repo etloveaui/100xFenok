@@ -8,6 +8,9 @@ const SRC_ROOT = join(ROOT, "src");
 const ALLOWLIST_PATH = join(ROOT, "scripts/raw-color-allowlist.json");
 const SCAN_EXTENSIONS = new Set([".css", ".ts", ".tsx"]);
 const RAW_COLOR_SCHEMA = "raw-color-allowlist/v2";
+const GENERATED_KST_DAY = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Seoul",
+}).format(new Date());
 const CATEGORY_DEFINITIONS = {
   "token-source": "Design-token source files where raw literals define the token vocabulary.",
   "style-island": "Legacy or isolated CSS surface pending a later token migration wave.",
@@ -115,7 +118,10 @@ function categoryForPath(relPath) {
     };
   }
 
-  if (relPath === "src/app/winddown/page.tsx") {
+  if (
+    relPath === "src/app/winddown/layout.tsx" ||
+    relPath === "src/app/winddown/page.tsx"
+  ) {
     return {
       category: "metadata-color",
       note: "Current WIND DOWN browser theme color metadata.",
@@ -185,7 +191,7 @@ const allowlist = {
   scope: "src/**/*.{css,ts,tsx}",
   policy:
     "Each listed literal is the current approved occurrence count and each file must carry category metadata. Unknown literals, higher counts, stale counts, or uncategorized files fail qa:tokens; refresh after intentional tokenization.",
-  generated_from: "P2 W5 baseline refresh, 2026-06-25",
+  generated_from: `Current source scan via scripts/generate-raw-color-allowlist.mjs (${GENERATED_KST_DAY} KST)`,
   category_definitions: CATEGORY_DEFINITIONS,
   total_allowed_occurrences: totalAllowedOccurrences,
   file_count: Object.keys(files).length,

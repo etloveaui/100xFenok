@@ -9,6 +9,10 @@ import {
   type WindDownReviewCommitInput,
   type WindDownReviewState,
 } from "@/features/winddown/review/engine";
+import {
+  WindDownLumi,
+  type WindDownLumiState,
+} from "@/features/winddown/ui/WindDownLumi";
 
 type StudyResponse = {
   schemaVersion: 1;
@@ -405,15 +409,57 @@ export default function WindDownReviewClient() {
       again: results.filter((result) => result.rating === "again").length,
     };
   }, [session?.results]);
+  const lumiState: WindDownLumiState =
+    status === "loading"
+      ? "thinking"
+      : status === "error"
+        ? "rescue"
+        : session?.phase === "summary"
+          ? initialCount > 0
+            ? "celebrate"
+            : "idle"
+          : session?.phase === "grading-first"
+            || session?.phase === "grading-retry"
+            || session?.phase === "committing"
+            ? "thinking"
+            : session?.phase === "grade-error-first"
+              || session?.phase === "grade-error-retry"
+              || session?.phase === "commit-error"
+              ? "rescue"
+              : session?.phase === "match" || session?.phase === "retry"
+                ? "retry"
+                : notice?.startsWith("좋아")
+                  ? "correct"
+                  : "prompt";
+  const lumiMessage =
+    status === "loading"
+      ? "돌아올 문장을 찾는 중"
+      : status === "error"
+        ? "대기열을 추측하지 않고 멈췄어"
+        : session?.phase === "summary"
+          ? initialCount > 0
+            ? "오늘 돌아볼 문장을 모두 마쳤어"
+            : "지금 돌아볼 문장은 없어"
+          : session?.phase === "grading-first" || session?.phase === "grading-retry"
+            ? "입력한 문장을 확인하는 중"
+            : session?.phase === "committing"
+              ? "복습 기록을 안전하게 남기는 중"
+              : session?.phase === "grade-error-first"
+                || session?.phase === "grade-error-retry"
+                || session?.phase === "commit-error"
+                ? "같은 기록을 지키고 있어"
+                : session?.phase === "match" || session?.phase === "retry"
+                  ? "감각을 되찾아 한 번 더"
+                  : notice ?? "떠오르는 문장을 적어봐";
 
   return (
-    <div className="fixed inset-0 z-[70] min-h-[100dvh] overflow-y-auto bg-[#090d1d] text-[var(--fnk-color-white)]">
-      <div className="min-h-[100dvh] bg-[radial-gradient(circle_at_82%_9%,rgba(103,92,255,0.35),transparent_27%),radial-gradient(circle_at_8%_75%,rgba(38,191,164,0.18),transparent_25%)]">
+    <div className="fixed inset-0 z-[70] min-h-[100dvh] overflow-y-auto bg-[var(--wd-bg)] text-[var(--wd-text)]">
+      <div className="min-h-[100dvh] bg-[var(--wd-bg)]">
         <div className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-[max(env(safe-area-inset-bottom),20px)] pt-[max(env(safe-area-inset-top),18px)]">
           <header>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[11px] font-black tracking-[0.2em] text-[#a9a3ff]">
+                <p className="text-[11px] font-black tracking-[0.2em] text-[var(--wd-accent)]">
                   WIND DOWN · REVIEW
                 </p>
                 <h1 className="mt-1 text-xl font-black tracking-[-0.02em]">
@@ -430,7 +476,7 @@ export default function WindDownReviewClient() {
             <div className="mt-5 flex items-center gap-3">
               <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/10">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#8c82ff] to-[#55e0bf] transition-[width] duration-300 motion-reduce:transition-none"
+                  className="h-full rounded-full bg-gradient-to-r from-[var(--wd-accent)] to-[var(--wd-listening)] transition-[width] duration-300 motion-reduce:transition-none"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -438,13 +484,19 @@ export default function WindDownReviewClient() {
                 {session?.results.length ?? 0}/{initialCount}
               </span>
             </div>
+            <WindDownLumi
+              state={lumiState}
+              message={lumiMessage}
+              compact
+              className="mt-5 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-surface)] px-4 py-3"
+            />
           </header>
 
           <main className="flex flex-1 flex-col justify-center py-5">
-            <section className="min-h-[460px] rounded-[30px] border border-white/10 bg-[#12182e]/95 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.32)] sm:p-6">
+            <section className="min-h-[460px] rounded-[30px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-5 shadow-2xl sm:p-6">
               {status === "loading" ? (
                 <div aria-live="polite" className="flex min-h-[408px] flex-col items-center justify-center text-center">
-                  <span className="grid size-16 place-items-center rounded-[22px] bg-[#242951] text-3xl" aria-hidden>
+                  <span className="grid size-16 place-items-center rounded-[22px] bg-[var(--wd-surface-raised)] text-3xl" aria-hidden>
                     ◌
                   </span>
                   <p className="mt-5 text-lg font-black">오늘 돌아올 문장을 찾는 중</p>
@@ -462,7 +514,7 @@ export default function WindDownReviewClient() {
                   <button
                     type="button"
                     onClick={() => void loadQueue()}
-                    className="mt-7 min-h-[44px] w-full rounded-2xl bg-[#8277ff] px-5 text-sm font-black active:scale-[0.98]"
+                    className="mt-7 min-h-[44px] w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black active:scale-[0.98]"
                   >
                     다시 불러오기
                   </button>
@@ -472,7 +524,7 @@ export default function WindDownReviewClient() {
               {status === "ready" && session?.phase === "summary" ? (
                 <div className="flex min-h-[408px] flex-col justify-center text-center">
                   <p className="text-5xl" aria-hidden>{initialCount === 0 ? "🌙" : "✦"}</p>
-                  <p className="mt-4 text-[11px] font-black tracking-[0.18em] text-[#a9a3ff]">
+                  <p className="mt-4 text-[11px] font-black tracking-[0.18em] text-[var(--wd-accent)]">
                     {initialCount === 0 ? "NO DUE CARDS" : "QUEUE COMPLETE"}
                   </p>
                   <h2 className="mt-2 text-2xl font-black">
@@ -485,7 +537,7 @@ export default function WindDownReviewClient() {
                   </p>
                   <Link
                     href="/winddown/learn"
-                    className="mt-7 inline-flex min-h-[44px] items-center justify-center rounded-2xl border border-[#8c82ff]/50 bg-[#242951] px-5 text-sm font-black text-white"
+                    className="mt-7 inline-flex min-h-[44px] items-center justify-center rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-5 text-sm font-black text-[var(--wd-text)]"
                   >
                     Learn으로 새 문장 보기
                   </Link>
@@ -495,10 +547,10 @@ export default function WindDownReviewClient() {
               {status === "ready" && current && session?.phase === "recall" ? (
                 <div className="flex min-h-[408px] flex-col">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="rounded-full border border-[#8c82ff]/35 bg-[#252551] px-3 py-1.5 text-[10px] font-black tracking-[0.12em] text-[#c3beff]">RECALL</span>
+                    <span className="rounded-full border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 py-1.5 text-[10px] font-black tracking-[0.12em] text-[var(--wd-accent)]">RECALL</span>
                     <span className="text-xs font-black tabular-nums text-white/50">남은 문장 {session.queue.length}개</span>
                   </div>
-                  <p className="mt-9 text-[11px] font-black tracking-[0.15em] text-[#55e0bf]">한국어를 보고 영어를 떠올려 봐</p>
+                  <p className="mt-9 text-[11px] font-black tracking-[0.15em] text-[var(--wd-listening)]">한국어를 보고 영어를 떠올려 봐</p>
                   <h2 className="mt-3 text-[27px] font-black leading-[1.35] tracking-[-0.035em]">{current.ko}</h2>
                   <div className="mt-auto pt-8">
                     <label htmlFor="review-answer" className="text-xs font-black text-white/55">영어로 직접 입력</label>
@@ -514,13 +566,13 @@ export default function WindDownReviewClient() {
                       autoCapitalize="sentences"
                       spellCheck={false}
                       placeholder="떠오르는 문장을 적어봐"
-                      className="mt-2 min-h-14 w-full rounded-2xl border border-white/15 bg-[#0d1226] px-4 text-base font-bold outline-none placeholder:text-white/35 focus:border-[#8c82ff]"
+                      className="mt-2 min-h-14 w-full rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-4 text-base font-bold outline-none placeholder:text-[var(--wd-text-muted)] focus:border-[var(--wd-accent)]"
                     />
                     <button
                       type="button"
                       disabled={busy || !answer.trim()}
                       onClick={submitFirst}
-                      className="mt-3 min-h-[44px] w-full rounded-2xl bg-[#8277ff] px-5 text-sm font-black transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-none"
+                      className="mt-3 min-h-[44px] w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-none"
                     >
                       답 확인하기
                     </button>
@@ -538,7 +590,7 @@ export default function WindDownReviewClient() {
 
               {status === "ready" && session && ["grading-first", "grading-retry"].includes(session.phase) ? (
                 <div aria-live="polite" className="flex min-h-[408px] flex-col items-center justify-center text-center">
-                  <span className="grid size-16 place-items-center rounded-[22px] bg-[#242951] text-3xl" aria-hidden>✣</span>
+                  <span className="grid size-16 place-items-center rounded-[22px] bg-[var(--wd-surface-raised)] text-3xl" aria-hidden>✣</span>
                   <h2 className="mt-5 text-xl font-black">입력한 문장을 정확히 확인하는 중</h2>
                   <p className="mt-2 text-sm font-semibold text-white/55">이 동안에는 다음 동작을 열지 않아.</p>
                 </div>
@@ -552,7 +604,7 @@ export default function WindDownReviewClient() {
                   <button
                     type="button"
                     onClick={() => retryGrade(session.phase === "grade-error-first" ? "first" : "retry")}
-                    className="mt-7 min-h-[44px] w-full rounded-2xl bg-[#8277ff] px-5 text-sm font-black"
+                    className="mt-7 min-h-[44px] w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black"
                   >
                     같은 답 다시 채점하기
                   </button>
@@ -562,7 +614,7 @@ export default function WindDownReviewClient() {
               {status === "ready" && current && session?.phase === "match" && session.match ? (
                 <div className="flex min-h-[408px] flex-col">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="rounded-full border border-[#55e0bf]/35 bg-[#123b43] px-3 py-1.5 text-[10px] font-black tracking-[0.12em] text-[#8bf4d8]">MATCH REPAIR</span>
+                    <span className="rounded-full border border-[var(--wd-listening)] bg-[var(--wd-surface-raised)] px-3 py-1.5 text-[10px] font-black tracking-[0.12em] text-[var(--wd-listening)]">MATCH REPAIR</span>
                     <span className="text-xs font-black text-white/50">3쌍을 맞추면 재도전</span>
                   </div>
                   <h2 className="mt-5 text-xl font-black">문장의 조각을 다시 연결해 봐.</h2>
@@ -580,9 +632,9 @@ export default function WindDownReviewClient() {
                           onClick={() => selectMatchTile(tile.id)}
                           className={[
                             "min-h-20 rounded-2xl border px-3 py-3 text-left text-sm font-black leading-snug transition motion-reduce:transition-none",
-                            matched ? "border-[#55e0bf]/20 bg-[#55e0bf]/10 text-white/30" : "border-white/12 bg-[#181f3b] text-white",
-                            selected ? "border-[#a9a3ff] bg-[#303060]" : "",
-                            wrong ? "border-[#fb8b9a] bg-[#54283c]" : "",
+                            matched ? "border-[var(--wd-listening)] bg-[var(--wd-surface)] text-[var(--wd-text-muted)]" : "border-[var(--wd-border)] bg-[var(--wd-surface-raised)] text-[var(--wd-text)]",
+                            selected ? "border-[var(--wd-accent)] bg-[var(--wd-surface)]" : "",
+                            wrong ? "border-[var(--wd-danger)] bg-[var(--wd-surface-raised)]" : "",
                           ].join(" ")}
                         >
                           <span className="block text-[10px] font-black tracking-[0.1em] text-white/40">{tile.side === "left" ? "CUE" : "PAIR"}</span>
@@ -592,7 +644,7 @@ export default function WindDownReviewClient() {
                     })}
                   </div>
                   {session.match.wrongTileIds.length > 0 ? (
-                    <p aria-live="polite" className="mt-4 text-center text-sm font-black text-[#ffb4c0]">아직 아니야. 다른 짝을 골라 봐.</p>
+                    <p aria-live="polite" className="mt-4 text-center text-sm font-black text-[var(--wd-danger)]">아직 아니야. 다른 짝을 골라 봐.</p>
                   ) : null}
                   <p className="mt-auto pt-4 text-center text-xs font-bold text-white/45">{session.match.matchedPairIds.length}/3 연결</p>
                 </div>
@@ -600,8 +652,8 @@ export default function WindDownReviewClient() {
 
               {status === "ready" && current && session?.phase === "retry" ? (
                 <div className="flex min-h-[408px] flex-col">
-                  <span className="w-fit rounded-full border border-[#55e0bf]/35 bg-[#123b43] px-3 py-1.5 text-[10px] font-black tracking-[0.12em] text-[#8bf4d8]">ONE RETRY</span>
-                  <p className="mt-8 text-[11px] font-black tracking-[0.15em] text-[#55e0bf]">연결한 감각으로 한 번만 다시 입력</p>
+                  <span className="w-fit rounded-full border border-[var(--wd-listening)] bg-[var(--wd-surface-raised)] px-3 py-1.5 text-[10px] font-black tracking-[0.12em] text-[var(--wd-listening)]">ONE RETRY</span>
+                  <p className="mt-8 text-[11px] font-black tracking-[0.15em] text-[var(--wd-listening)]">연결한 감각으로 한 번만 다시 입력</p>
                   <h2 className="mt-3 text-[27px] font-black leading-[1.35] tracking-[-0.035em]">{current.ko}</h2>
                   <div className="mt-auto pt-8">
                     <label htmlFor="review-retry" className="text-xs font-black text-white/55">영어로 다시 입력</label>
@@ -617,13 +669,13 @@ export default function WindDownReviewClient() {
                       autoCapitalize="sentences"
                       spellCheck={false}
                       placeholder="이번에는 문장을 끝까지 적어봐"
-                      className="mt-2 min-h-14 w-full rounded-2xl border border-[#55e0bf]/35 bg-[#0d1226] px-4 text-base font-bold outline-none placeholder:text-white/35 focus:border-[#55e0bf]"
+                      className="mt-2 min-h-14 w-full rounded-2xl border border-[var(--wd-listening)] bg-[var(--wd-bg)] px-4 text-base font-bold outline-none placeholder:text-[var(--wd-text-muted)] focus:border-[var(--wd-listening)]"
                     />
                     <button
                       type="button"
                       disabled={busy || !answer.trim()}
                       onClick={submitRetry}
-                      className="mt-3 min-h-[44px] w-full rounded-2xl bg-[#55cdb0] px-5 text-sm font-black text-[#092018] disabled:cursor-not-allowed disabled:opacity-35"
+                      className="mt-3 min-h-[44px] w-full rounded-2xl bg-[var(--wd-listening)] px-5 text-sm font-black text-[var(--wd-bg)] disabled:cursor-not-allowed disabled:opacity-35"
                     >
                       한 번만 다시 확인하기
                     </button>
@@ -633,7 +685,7 @@ export default function WindDownReviewClient() {
 
               {status === "ready" && session?.phase === "committing" ? (
                 <div aria-live="polite" className="flex min-h-[408px] flex-col items-center justify-center text-center">
-                  <span className="grid size-16 place-items-center rounded-[22px] bg-[#242951] text-3xl" aria-hidden>✦</span>
+                  <span className="grid size-16 place-items-center rounded-[22px] bg-[var(--wd-surface-raised)] text-3xl" aria-hidden>✦</span>
                   <h2 className="mt-5 text-xl font-black">한 번의 복습 기록으로 남기는 중</h2>
                   <p className="mt-2 text-sm font-semibold text-white/55">같은 주기와 같은 문장으로만 저장해.</p>
                 </div>
@@ -647,7 +699,7 @@ export default function WindDownReviewClient() {
                   <button
                     type="button"
                     onClick={retryCommit}
-                    className="mt-7 min-h-[44px] w-full rounded-2xl bg-[#8277ff] px-5 text-sm font-black"
+                    className="mt-7 min-h-[44px] w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black"
                   >
                     같은 기록 다시 저장하기
                   </button>

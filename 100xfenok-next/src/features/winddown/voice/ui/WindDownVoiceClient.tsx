@@ -41,6 +41,10 @@ import {
   windDownVoiceJourneyTargetEvidence,
 } from "@/features/winddown/voice/journeyTarget";
 import {
+  WindDownLumi,
+  type WindDownLumiState,
+} from "@/features/winddown/ui/WindDownLumi";
+import {
   hasReachedWindDownVoiceTurnLimit,
   serializeWindDownVoiceKeepaliveBody,
   shouldFinalizeWindDownVoiceForVisibility,
@@ -475,20 +479,64 @@ export default function WindDownVoiceClient({ activity }: Props) {
   const latestCoachLine = transcriptState.current.modelText
     || [...transcriptState.turns].reverse().find((turn) => turn.modelText)?.modelText
     || null;
+  const lumiState: WindDownLumiState =
+    reportState.phase === "success"
+      ? reportState.habitCredited
+        ? "celebrate"
+        : "prompt"
+      : reportState.phase === "error" || reportState.phase === "build-error"
+        ? "rescue"
+        : reportState.phase === "pending"
+          ? "thinking"
+          : live.status === "blocked" || live.status === "error"
+            ? "rescue"
+            : live.status === "connecting"
+                || live.status === "setup-wait"
+                || live.status === "stopping"
+              ? "thinking"
+              : live.status === "listening"
+                ? "listening"
+                : "prompt";
+  const lumiMessage =
+    reportState.phase === "success"
+      ? reportState.habitCredited
+        ? "오늘 말하기가 1/1로 기록됐어"
+        : activity === "roleplay" && journeyTargets.length === 0
+          ? "Learn에서 오늘 문장을 고르면 다시 이어갈 수 있어"
+          : "저장은 됐어. 한 번 더 말하면 오늘 여정에 기록돼"
+      : reportState.phase === "pending"
+        ? "대화 기록을 안전하게 남기는 중"
+        : reportState.phase === "error"
+          ? "같은 대화 기록을 다시 저장할 수 있어"
+          : reportState.phase === "build-error"
+            ? "완료로 표시하지 않고 기록을 지키고 있어"
+            : live.status === "blocked"
+              ? "마이크 권한을 확인하면 다시 이어갈 수 있어"
+              : live.status === "error"
+                ? "연결을 확인한 뒤 같은 장면을 다시 시작해줘"
+                : live.status === "connecting" || live.status === "setup-wait"
+                  ? "대화를 준비하고 있어"
+                  : live.status === "stopping"
+                    ? "마지막 말을 정리하고 있어"
+                    : live.status === "listening"
+                      ? latestCoachLine ?? "듣고 있어. 편하게 이어가 봐"
+                      : activity === "roleplay"
+                        ? "장면을 골랐다면 네 차례야"
+                        : "주제를 골랐다면 편하게 시작해";
 
   return (
-    <div className={`min-h-[100dvh] overflow-x-hidden ${activity === "roleplay" ? "bg-[#171322] text-white" : "bg-[#102622] text-[#f4fff7]"}`}>
+    <div className="min-h-[100dvh] overflow-x-hidden bg-[var(--wd-bg)] text-[var(--wd-text)]">
       <div className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-[max(env(safe-area-inset-bottom),20px)] pt-[max(env(safe-area-inset-top),18px)]">
         <header className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className={`text-[11px] font-black tracking-[0.18em] ${activity === "roleplay" ? "text-[#d8b4fe]" : "text-[#9ee7c4]"}`}>
+            <p className="text-[11px] font-black tracking-[0.18em] text-[var(--wd-accent)]">
               WIND DOWN · {activity === "roleplay" ? "ROLEPLAY" : "LIVE TALK"}
             </p>
             <h1 className="mt-1 text-[24px] font-black tracking-tight">{heading}</h1>
           </div>
           <Link
             href="/winddown"
-            className="inline-flex min-h-[44px] shrink-0 items-center rounded-full border border-white/20 px-4 text-xs font-black text-white/75 transition active:scale-[.98] motion-reduce:transition-none"
+            className="inline-flex min-h-[44px] shrink-0 items-center rounded-full border border-[var(--wd-border)] bg-[var(--wd-surface)] px-4 text-xs font-black text-[var(--wd-muted)] transition active:scale-[.98] motion-reduce:transition-none"
           >
             나가기
           </Link>
@@ -496,10 +544,10 @@ export default function WindDownVoiceClient({ activity }: Props) {
 
         <main className="flex flex-1 flex-col py-6">
           {activity === "roleplay" ? (
-            <section className="rounded-[28px] border border-white/10 bg-white/[.07] p-5 shadow-2xl">
-              <p className="text-[11px] font-black tracking-[.15em] text-[#d8b4fe]">SCENE</p>
+            <section className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-5 shadow-2xl">
+              <p className="text-[11px] font-black tracking-[.15em] text-[var(--wd-accent)]">SCENE</p>
               <h2 className="mt-2 text-xl font-black">{activeTitle}</h2>
-              <p className="mt-2 text-sm font-semibold leading-6 text-white/70">
+              <p className="mt-2 text-sm font-semibold leading-6 text-[var(--wd-muted)]">
                 {roleplay?.scenario.scene}
               </p>
               {!listening && !busy && reportState.phase === "idle" ? (
@@ -510,10 +558,10 @@ export default function WindDownVoiceClient({ activity }: Props) {
                       type="button"
                       aria-pressed={descriptor.activity === "roleplay" && descriptor.scenarioId === scenario.id}
                       onClick={() => setDescriptor(createWindDownRoleplayDescriptor(scenario.id))}
-                      className={`min-h-[64px] rounded-2xl border px-4 text-left transition active:scale-[.98] motion-reduce:transition-none ${descriptor.activity === "roleplay" && descriptor.scenarioId === scenario.id ? "border-[#d8b4fe] bg-[#a855f7]/25" : "border-white/10 bg-black/10"}`}
+                      className={`min-h-[64px] rounded-2xl border px-4 text-left transition active:scale-[.98] motion-reduce:transition-none ${descriptor.activity === "roleplay" && descriptor.scenarioId === scenario.id ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)]" : "border-[var(--wd-border)] bg-[var(--wd-bg)]"}`}
                     >
                       <span className="block text-sm font-black">{scenario.title}</span>
-                      <span className="mt-0.5 block text-xs font-semibold text-white/60">{scenario.scene}</span>
+                      <span className="mt-0.5 block text-xs font-semibold text-[var(--wd-muted)]">{scenario.scene}</span>
                     </button>
                   ))}
                 </div>
@@ -524,8 +572,8 @@ export default function WindDownVoiceClient({ activity }: Props) {
                     <div
                       className={`rounded-2xl border px-4 py-3 text-sm font-bold ${
                         journeyTargetEvidence
-                          ? "border-white/35 bg-white/15 text-white"
-                          : "border-white/20 bg-black/15 text-white/75"
+                          ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-text)]"
+                          : "border-[var(--wd-border)] bg-[var(--wd-bg)] text-[var(--wd-muted)]"
                       }`}
                     >
                       <span aria-hidden>{journeyTargetEvidence ? "✓" : "○"}</span>
@@ -534,7 +582,7 @@ export default function WindDownVoiceClient({ activity }: Props) {
                       </span>
                     </div>
                   ) : (
-                    <p className="rounded-2xl border border-white/20 bg-black/15 px-4 py-3 text-sm font-bold text-white/75">
+                    <p className="rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-4 py-3 text-sm font-bold text-[var(--wd-muted)]">
                       오늘 문장이 아직 없어. Learn을 마치면 이 장면이 오늘 여정에 기록돼.
                     </p>
                   )
@@ -542,20 +590,20 @@ export default function WindDownVoiceClient({ activity }: Props) {
                 {roleplay?.scenario.goals.map((goal) => {
                   const evidence = roleplay.evidence.find((item) => item.goalId === goal.id);
                   return (
-                    <div key={goal.id} className={`flex min-h-[44px] items-center gap-3 rounded-2xl px-4 text-sm font-bold ${evidence ? "bg-[#a855f7]/30 text-white" : "bg-black/15 text-white/60"}`}>
+                    <div key={goal.id} className={`flex min-h-[44px] items-center gap-3 rounded-2xl border px-4 text-sm font-bold ${evidence ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-text)]" : "border-[var(--wd-border)] bg-[var(--wd-bg)] text-[var(--wd-muted)]"}`}>
                       <span aria-hidden>{evidence ? "✓" : "○"}</span>
                       <span className="min-w-0 flex-1">{goal.label}</span>
-                      {evidence ? <span className="text-[11px] tabular-nums text-white/70">turn {evidence.turnSeq}</span> : null}
+                      {evidence ? <span className="text-[11px] tabular-nums text-[var(--wd-muted)]">turn {evidence.turnSeq}</span> : null}
                     </div>
                   );
                 })}
               </div>
             </section>
           ) : (
-            <section className="rounded-[32px] border border-[#9ee7c4]/25 bg-[radial-gradient(circle_at_top,#2f6c57,transparent_62%),#173831] p-6 shadow-2xl">
-              <p className="text-[11px] font-black tracking-[.16em] text-[#9ee7c4]">OPEN CONVERSATION</p>
+            <section className="rounded-[32px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6 shadow-2xl">
+              <p className="text-[11px] font-black tracking-[.16em] text-[var(--wd-accent)]">OPEN CONVERSATION</p>
               <h2 className="mt-3 text-[28px] font-black leading-tight">{activeTitle}</h2>
-              <p className="mt-3 max-w-sm text-sm font-semibold leading-6 text-[#d7f7e4]/75">
+              <p className="mt-3 max-w-sm text-sm font-semibold leading-6 text-[var(--wd-muted)]">
                 {descriptor.activity === "live-talk" && WIND_DOWN_LIVE_TALK_TOPICS.find((topic) => topic.id === descriptor.topicId)?.scene}
               </p>
               {!listening && !busy && reportState.phase === "idle" ? (
@@ -566,56 +614,57 @@ export default function WindDownVoiceClient({ activity }: Props) {
                       type="button"
                       aria-pressed={descriptor.activity === "live-talk" && descriptor.topicId === topic.id}
                       onClick={() => setDescriptor(createWindDownLiveTalkDescriptor(topic.id))}
-                      className={`min-h-[64px] min-w-[190px] rounded-2xl border px-4 text-left transition active:scale-[.98] motion-reduce:transition-none ${descriptor.activity === "live-talk" && descriptor.topicId === topic.id ? "border-[#9ee7c4] bg-[#9ee7c4]/15" : "border-white/10 bg-black/10"}`}
+                      className={`min-h-[64px] min-w-[190px] rounded-2xl border px-4 text-left transition active:scale-[.98] motion-reduce:transition-none ${descriptor.activity === "live-talk" && descriptor.topicId === topic.id ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)]" : "border-[var(--wd-border)] bg-[var(--wd-bg)]"}`}
                     >
                       <span className="block text-sm font-black">{topic.title}</span>
-                      <span className="mt-1 block text-xs font-semibold text-[#d7f7e4]/65">{topic.openingLine}</span>
+                      <span className="mt-1 block text-xs font-semibold text-[var(--wd-muted)]">{topic.openingLine}</span>
                     </button>
                   ))}
                 </div>
               ) : null}
               <div className="mt-7 grid grid-cols-2 gap-2 text-center">
-                <div className="min-w-0 rounded-2xl bg-black/15 px-2 py-3">
-                  <p className="text-[10px] font-black tracking-[.1em] text-[#9ee7c4]">대화</p>
+                <div className="min-w-0 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-2 py-3">
+                  <p className="text-[10px] font-black tracking-[.1em] text-[var(--wd-accent)]">대화</p>
                   <p className="mt-1 text-lg font-black tabular-nums">{formatDuration(liveTalkSummary.durationSeconds)}</p>
                 </div>
-                <div className="min-w-0 rounded-2xl bg-black/15 px-2 py-3">
-                  <p className="text-[10px] font-black tracking-[.1em] text-[#9ee7c4]">내 말</p>
+                <div className="min-w-0 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-2 py-3">
+                  <p className="text-[10px] font-black tracking-[.1em] text-[var(--wd-accent)]">내 말</p>
                   <p className="mt-1 text-lg font-black tabular-nums">{liveTalkSummary.cleanLearnerTurns}</p>
                 </div>
-                <div className="min-w-0 rounded-2xl bg-black/15 px-2 py-3">
-                  <p className="text-[10px] font-black tracking-[.1em] text-[#9ee7c4]">끊김</p>
+                <div className="min-w-0 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-2 py-3">
+                  <p className="text-[10px] font-black tracking-[.1em] text-[var(--wd-accent)]">끊김</p>
                   <p className="mt-1 text-lg font-black tabular-nums">{liveTalkSummary.interruptedTurnCount}</p>
                 </div>
-                <div className="min-w-0 rounded-2xl bg-black/15 px-2 py-3">
-                  <p className="text-[10px] font-black tracking-[.1em] text-[#9ee7c4]">응답</p>
+                <div className="min-w-0 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-2 py-3">
+                  <p className="text-[10px] font-black tracking-[.1em] text-[var(--wd-accent)]">응답</p>
                   <p className="mt-1 text-lg font-black tabular-nums">{formatLatency(live.metrics.lastResponseLatencyMs)}</p>
-                  <p className="mt-0.5 text-[10px] font-semibold text-[#d7f7e4]/55">전사→첫 오디오 · {live.metrics.responseLatencySamplesMs.length}회</p>
+                  <p className="mt-0.5 text-[10px] font-semibold text-[var(--wd-muted)]">전사→첫 오디오 · {live.metrics.responseLatencySamplesMs.length}회</p>
                 </div>
               </div>
             </section>
           )}
 
-          <section className="mt-5 flex min-h-[170px] flex-1 flex-col justify-end rounded-[28px] border border-white/10 bg-black/15 p-5">
-            <p className="text-[11px] font-black tracking-[.14em] text-white/45">LUMI</p>
-            <p aria-live="polite" className="mt-2 text-[17px] font-bold leading-relaxed">
-              {latestCoachLine ?? getWindDownVoiceStatusCopy(live.status, error)}
-            </p>
+          <section className="mt-5 flex min-h-[170px] flex-1 flex-col justify-end rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-5">
+            <WindDownLumi
+              state={lumiState}
+              message={lumiMessage}
+              compact
+            />
             {transcriptState.current.userText ? (
-              <p className="mt-4 border-t border-white/10 pt-3 text-sm font-semibold leading-6 text-white/60">
+              <p className="mt-4 border-t border-[var(--wd-border)] pt-3 text-sm font-semibold leading-6 text-[var(--wd-muted)]">
                 나: {transcriptState.current.userText}
               </p>
             ) : null}
           </section>
 
           {liveTalkSummary.highlightTurnSeqs.length > 0 && activity === "live-talk" ? (
-            <p className="mt-3 text-center text-xs font-semibold text-[#b5e9cd]">
+            <p className="mt-3 text-center text-xs font-semibold text-[var(--wd-accent)]">
               다시 볼 대화 {liveTalkSummary.highlightTurns.map((turn) => `#${turn.turnSeq}`).join(" · ")}
             </p>
           ) : null}
 
           {reportState.phase === "success" ? (
-            <section aria-live="polite" className="mt-5 rounded-[28px] border border-[#9ee7c4]/35 bg-[#9ee7c4]/10 p-5">
+            <section aria-live="polite" className="mt-5 rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-5">
               <p className="text-2xl" aria-hidden>
                 {reportState.habitCredited ? "✓" : "○"}
               </p>
@@ -625,7 +674,7 @@ export default function WindDownVoiceClient({ activity }: Props) {
                   : "오늘의 대화가 정리됐어."}
               </h2>
               {!reportState.habitCredited ? (
-                <p className="mt-3 rounded-xl bg-black/15 px-3 py-2 text-sm font-semibold text-white/75">
+                <p className="mt-3 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-3 py-2 text-sm font-semibold text-[var(--wd-muted)]">
                   {activity === "roleplay"
                     ? journeyTargets.length > 0
                       ? "오늘 문장을 한 번 자연스럽게 말하면 여정에 기록돼."
@@ -635,73 +684,73 @@ export default function WindDownVoiceClient({ activity }: Props) {
               ) : null}
               {reportState.frozen.outcome.kind === "roleplay" ? (
                 <div className="mt-3 space-y-2">
-                  <p className="text-sm font-semibold text-white/75">
+                  <p className="text-sm font-semibold text-[var(--wd-muted)]">
                     목표 {reportState.frozen.outcome.goalResults.filter((goal) => goal.completed).length}/{reportState.frozen.outcome.goalResults.length}개를 채웠어.
                   </p>
                   {reportState.frozen.outcome.evidence.map((evidence) => (
-                    <p key={`${evidence.conversationId}:${evidence.turnSeq}:${evidence.goalId}`} className="rounded-xl bg-black/15 px-3 py-2 text-xs font-semibold text-white/75">
+                    <p key={`${evidence.conversationId}:${evidence.turnSeq}:${evidence.goalId}`} className="rounded-xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-3 py-2 text-xs font-semibold text-[var(--wd-muted)]">
                       {evidence.matchedPhrase} · turn {evidence.turnSeq}
                     </p>
                   ))}
                   {reportState.frozen.outcome.corrections.map((correction) => (
-                    <p key={`${correction.conversationId}:${correction.turnSeq}:${correction.correctionText}`} className="rounded-xl bg-black/15 px-3 py-2 text-xs font-semibold text-white/75">
+                    <p key={`${correction.conversationId}:${correction.turnSeq}:${correction.correctionText}`} className="rounded-xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-3 py-2 text-xs font-semibold text-[var(--wd-muted)]">
                       turn {correction.turnSeq} · {correction.correctionText}
                     </p>
                   ))}
-                  <p className="rounded-xl bg-white/10 px-3 py-2 text-xs font-bold text-white/85">
+                  <p className="rounded-xl bg-[var(--wd-accent-soft)] px-3 py-2 text-xs font-bold text-[var(--wd-text)]">
                     다음 한 번: {reportState.frozen.outcome.nextPracticeSuggestion.text}
                   </p>
                 </div>
               ) : (
-                <div className="mt-3 space-y-2 text-sm font-semibold text-white/75">
+                <div className="mt-3 space-y-2 text-sm font-semibold text-[var(--wd-muted)]">
                   <p>깨끗하게 남은 내 말 {reportState.frozen.outcome.cleanLearnerTurns}개 · 끊김 {reportState.frozen.outcome.interruptedTurnCount}회</p>
-                  <p>응답 {formatLatency(reportState.frozen.metrics.lastResponseLatencyMs ?? null)} <span className="text-xs text-white/55">전사→첫 오디오 기준 · {reportState.frozen.metrics.responseLatencySamplesMs?.length ?? 0}회</span></p>
-                  {reportState.frozen.outcome.highlightTurns.length > 0 ? <p className="text-xs text-white/60">다시 볼 turn {reportState.frozen.outcome.highlightTurns.map((turn) => turn.turnSeq).join(" · ")}</p> : null}
+                  <p>응답 {formatLatency(reportState.frozen.metrics.lastResponseLatencyMs ?? null)} <span className="text-xs text-[var(--wd-muted)]">전사→첫 오디오 기준 · {reportState.frozen.metrics.responseLatencySamplesMs?.length ?? 0}회</span></p>
+                  {reportState.frozen.outcome.highlightTurns.length > 0 ? <p className="text-xs text-[var(--wd-muted)]">다시 볼 turn {reportState.frozen.outcome.highlightTurns.map((turn) => turn.turnSeq).join(" · ")}</p> : null}
                 </div>
               )}
-              <p className="mt-3 text-xs font-semibold text-white/50">
+              <p className="mt-3 text-xs font-semibold text-[var(--wd-muted)]">
                 {reportState.receipt.committedAtIso.slice(0, 16).replace("T", " ")}
               </p>
               {!reportState.habitCredited ? (
                 activity === "roleplay" && journeyTargets.length === 0 ? (
                   <>
-                    <Link href="/winddown/learn" className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-white px-4 text-sm font-black text-slate-900 active:scale-[.98] motion-reduce:transition-none">Learn에서 오늘 문장 고르기</Link>
-                    <Link href="/winddown" className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-white/20 px-4 text-sm font-black text-white active:scale-[.98] motion-reduce:transition-none">오늘 여정 보기</Link>
+                    <Link href="/winddown/learn" className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-bg)] active:scale-[.98] motion-reduce:transition-none">Learn에서 오늘 문장 고르기</Link>
+                    <Link href="/winddown" className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-[var(--wd-border)] px-4 text-sm font-black text-[var(--wd-text)] active:scale-[.98] motion-reduce:transition-none">오늘 여정 보기</Link>
                   </>
                 ) : (
                   <>
-                    <button type="button" onClick={start} className="mt-5 min-h-[48px] w-full rounded-2xl bg-white px-4 text-sm font-black text-slate-900 active:scale-[.98] motion-reduce:transition-none">
+                    <button type="button" onClick={start} className="mt-5 min-h-[48px] w-full rounded-2xl bg-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-bg)] active:scale-[.98] motion-reduce:transition-none">
                       {activity === "roleplay" ? "오늘 문장으로 다시 말하기" : "한 번 더 이야기하기"}
                     </button>
-                    <Link href="/winddown" className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-white/20 px-4 text-sm font-black text-white active:scale-[.98] motion-reduce:transition-none">오늘 여정 보기</Link>
+                    <Link href="/winddown" className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-[var(--wd-border)] px-4 text-sm font-black text-[var(--wd-text)] active:scale-[.98] motion-reduce:transition-none">오늘 여정 보기</Link>
                   </>
                 )
               ) : (
                 <>
-                  <Link href="/winddown" className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-white px-4 text-sm font-black text-[#173831] active:scale-[.98] motion-reduce:transition-none">오늘 여정 보기</Link>
-                  <button type="button" onClick={start} className="mt-3 min-h-[48px] w-full rounded-2xl border border-white/20 px-4 text-sm font-black text-white active:scale-[.98] motion-reduce:transition-none">다른 대화 시작</button>
+                  <Link href="/winddown" className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-bg)] active:scale-[.98] motion-reduce:transition-none">오늘 여정 보기</Link>
+                  <button type="button" onClick={start} className="mt-3 min-h-[48px] w-full rounded-2xl border border-[var(--wd-border)] px-4 text-sm font-black text-[var(--wd-text)] active:scale-[.98] motion-reduce:transition-none">다른 대화 시작</button>
                 </>
               )}
             </section>
           ) : null}
 
           {reportState.phase === "error" || reportState.phase === "build-error" ? (
-            <section role="alert" className="mt-5 rounded-[28px] border border-[#f6b2a4]/45 bg-[#8f2e27]/30 p-5 text-center">
+            <section role="alert" className="mt-5 rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-5 text-center">
               <h2 className="text-lg font-black">
                 {reportState.phase === "error" ? "대화는 끝났지만 보고를 저장하지 못했어." : "대화를 정리하지 못했어."}
               </h2>
-              <p className="mt-2 text-sm font-semibold text-white/75">{reportState.error}</p>
+              <p className="mt-2 text-sm font-semibold text-[var(--wd-muted)]">{reportState.error}</p>
               {reportState.phase === "error" ? (
-                <button type="button" onClick={reportRetry} className="mt-5 min-h-[48px] w-full rounded-2xl bg-white px-4 text-sm font-black text-[#8f2e27] active:scale-[.98] motion-reduce:transition-none">같은 보고서 다시 저장</button>
+                <button type="button" onClick={reportRetry} className="mt-5 min-h-[48px] w-full rounded-2xl bg-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-bg)] active:scale-[.98] motion-reduce:transition-none">같은 보고서 다시 저장</button>
               ) : (
-                <button type="button" onClick={start} className="mt-5 min-h-[48px] w-full rounded-2xl bg-white px-4 text-sm font-black text-[#8f2e27] active:scale-[.98] motion-reduce:transition-none">대화 다시 시작</button>
+                <button type="button" onClick={start} className="mt-5 min-h-[48px] w-full rounded-2xl bg-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-bg)] active:scale-[.98] motion-reduce:transition-none">대화 다시 시작</button>
               )}
             </section>
           ) : null}
         </main>
 
         <footer className="pt-3">
-          <div className="mb-3 flex items-center justify-between gap-3 text-xs font-bold text-white/55">
+          <div className="mb-3 flex items-center justify-between gap-3 text-xs font-bold text-[var(--wd-muted)]">
             <span>{getWindDownVoiceStatusCopy(live.status, error)}</span>
             <button
               type="button"
@@ -710,7 +759,7 @@ export default function WindDownVoiceClient({ activity }: Props) {
                 vadPreset: current.vadPreset === "relaxed" ? "balanced" : "relaxed",
               }))}
               disabled={listening || busy || reportState.phase === "pending"}
-              className="min-h-[44px] rounded-full border border-white/15 px-4 disabled:opacity-40"
+              className="min-h-[44px] rounded-full border border-[var(--wd-border)] bg-[var(--wd-surface)] px-4 disabled:opacity-40"
             >
               {settings.vadPreset === "relaxed" ? "여유 있게" : "보통 속도"}
             </button>
@@ -720,7 +769,7 @@ export default function WindDownVoiceClient({ activity }: Props) {
               type="button"
               onClick={() => finishAndReport("learner-stop")}
               disabled={reportState.phase === "pending"}
-              className={`min-h-[56px] w-full rounded-[22px] px-5 text-[15px] font-black transition active:scale-[.98] motion-reduce:transition-none ${activity === "roleplay" ? "bg-[#d8b4fe] text-[#2a133f]" : "bg-[#9ee7c4] text-[#123328]"}`}
+              className="min-h-[56px] w-full rounded-[22px] bg-[var(--wd-accent)] px-5 text-[15px] font-black text-[var(--wd-bg)] transition active:scale-[.98] motion-reduce:transition-none"
             >
               대화 마치고 정리하기
             </button>
@@ -729,7 +778,7 @@ export default function WindDownVoiceClient({ activity }: Props) {
               type="button"
               onClick={start}
               disabled={busy || reportState.phase === "pending" || reportState.phase === "success"}
-              className={`min-h-[56px] w-full rounded-[22px] px-5 text-[15px] font-black transition active:scale-[.98] motion-reduce:transition-none disabled:opacity-45 ${activity === "roleplay" ? "bg-[#d8b4fe] text-[#2a133f]" : "bg-[#9ee7c4] text-[#123328]"}`}
+              className="min-h-[56px] w-full rounded-[22px] bg-[var(--wd-accent)] px-5 text-[15px] font-black text-[var(--wd-bg)] transition active:scale-[.98] disabled:opacity-45 motion-reduce:transition-none"
             >
               {busy ? "연결하는 중" : live.status === "blocked" || live.status === "error" ? "권한 확인 후 다시 연결" : activity === "roleplay" ? "장면 시작하기" : "대화 시작하기"}
             </button>

@@ -10,6 +10,10 @@ import {
   type WindDownLearnCard,
   type WindDownLearnState,
 } from "@/features/winddown/learn/engine";
+import {
+  WindDownLumi,
+  type WindDownLumiState,
+} from "@/features/winddown/ui/WindDownLumi";
 
 type StudyResponse = {
   schemaVersion: 1;
@@ -156,6 +160,40 @@ export default function WindDownLearnClient() {
   const progress = session
     ? Math.round((session.creditedCardIds.length / session.targetActions) * 100)
     : 0;
+  const lumiState: WindDownLumiState =
+    status === "loading"
+      ? "thinking"
+      : status === "error"
+        ? "rescue"
+        : session?.isComplete
+          ? "celebrate"
+          : feedback?.saveError
+            ? "rescue"
+            : feedback && !feedback.persisted
+              ? "thinking"
+              : feedback?.outcome === "miss"
+                ? "retry"
+                : feedback
+                  ? feedback.outcome === "complete"
+                    ? "celebrate"
+                    : "correct"
+                  : "prompt";
+  const lumiMessage =
+    status === "loading"
+      ? "오늘 문장을 고르는 중"
+      : status === "error"
+        ? "기록을 추측하지 않고 멈췄어"
+        : session?.isComplete
+          ? "다섯 문장이 오늘 밤에 쌓였어"
+          : feedback?.saveError
+            ? "같은 결과를 안전하게 다시 저장할게"
+            : feedback && !feedback.persisted
+              ? "방금 결과를 저장하는 중"
+              : feedback?.outcome === "miss"
+                ? "괜찮아, 잠시 뒤 다시 만나자"
+                : feedback
+                  ? "좋아, 한 문장 쌓였어"
+                  : "네 차례야";
   const selectedTokens = useMemo(() => {
     if (!current || current.kind !== "sentence-builder") return [];
     const byId = new Map(current.tokens.map((token) => [token.id, token]));
@@ -269,7 +307,7 @@ export default function WindDownLearnClient() {
   };
 
   return (
-    <div className="fixed inset-0 z-[70] min-h-[100dvh] overflow-y-auto bg-[var(--fnk-neutral-950)] text-[var(--fnk-color-white)]">
+    <div className="fixed inset-0 z-[70] min-h-[100dvh] overflow-y-auto bg-[var(--wd-bg)] text-[var(--wd-text)]">
       <div className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-[max(env(safe-area-inset-bottom),20px)] pt-[max(env(safe-area-inset-top),18px)]">
         <header>
           <div className="flex items-center justify-between gap-4">
@@ -281,44 +319,47 @@ export default function WindDownLearnClient() {
             </div>
             <Link
               href="/winddown"
-              className="inline-flex min-h-14 items-center rounded-full border border-[var(--fnk-neutral-700)] px-4 text-xs font-black text-[var(--fnk-neutral-300)]"
+              className="inline-flex min-h-14 items-center rounded-full border border-[var(--wd-border)] px-4 text-xs font-black text-[var(--wd-text-muted)]"
             >
               나가기
             </Link>
           </div>
           <div className="mt-5 flex items-center gap-3">
-            <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--fnk-neutral-800)]">
+            <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--wd-surface-raised)]">
               <div
                 className="h-full rounded-full bg-[var(--fnk-purple-600)] transition-[width] motion-reduce:transition-none"
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <span className="min-w-10 text-right text-xs font-black tabular-nums text-[var(--fnk-neutral-300)]">
+            <span className="min-w-10 text-right text-xs font-black tabular-nums text-[var(--wd-text-muted)]">
               {session?.creditedCardIds.length ?? 0}/
               {WINDDOWN_LEARN_CREDIT_TARGET}
             </span>
           </div>
+          <WindDownLumi
+            state={lumiState}
+            message={lumiMessage}
+            compact
+            className="mt-5 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-surface)] px-4 py-3"
+          />
         </header>
 
         <main className="flex flex-1 flex-col justify-center py-6">
           {status === "loading" ? (
             <section
               aria-live="polite"
-              className="rounded-[28px] border border-[var(--fnk-neutral-800)] bg-[var(--fnk-neutral-900)] p-8 text-center"
+              className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-8 text-center"
             >
-              <p className="text-4xl" aria-hidden>
-                🌙
-              </p>
-              <p className="mt-4 text-base font-black">
+              <p className="text-base font-black">
                 루미가 오늘 문장을 고르는 중
               </p>
             </section>
           ) : null}
 
           {status === "error" ? (
-            <section className="rounded-[28px] border border-[var(--fnk-neutral-800)] bg-[var(--fnk-neutral-900)] p-7 text-center">
+            <section className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-7 text-center">
               <p className="text-lg font-black">문장을 안전하게 열지 못했어.</p>
-              <p className="mt-2 text-sm font-semibold leading-6 text-[var(--fnk-neutral-300)]">
+              <p className="mt-2 text-sm font-semibold leading-6 text-[var(--wd-text-muted)]">
                 이전 소재로 조용히 바꾸지 않았어. 다시 불러오면 돼.
               </p>
               <button
@@ -332,15 +373,12 @@ export default function WindDownLearnClient() {
           ) : null}
 
           {status === "ready" && session?.isComplete ? (
-            <section className="rounded-[28px] border border-[var(--fnk-neutral-800)] bg-[var(--fnk-neutral-900)] p-7 text-center">
-              <p className="text-5xl" aria-hidden>
-                ✨
-              </p>
+            <section className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-7 text-center">
               <p className="mt-4 text-[11px] font-black tracking-[0.18em] text-[var(--fnk-purple-600)]">
                 QUEST COMPLETE
               </p>
               <h2 className="mt-2 text-2xl font-black">다섯 문장 완료!</h2>
-              <p className="mt-3 text-sm font-semibold text-[var(--fnk-neutral-300)]">
+              <p className="mt-3 text-sm font-semibold text-[var(--wd-text-muted)]">
                 틀린 문장 {session.completion?.mistakeRecap.length ?? 0}개도
                 다시 성공했어.
               </p>
@@ -349,9 +387,9 @@ export default function WindDownLearnClient() {
                   {session.completion?.mistakeRecap.map((mistake) => (
                     <li
                       key={mistake.card.id}
-                      className="rounded-2xl bg-[var(--fnk-neutral-800)] px-4 py-3"
+                      className="rounded-2xl bg-[var(--wd-surface-raised)] px-4 py-3"
                     >
-                      <p className="text-xs font-bold text-[var(--fnk-neutral-300)]">
+                      <p className="text-xs font-bold text-[var(--wd-text-muted)]">
                         {mistake.card.ko}
                       </p>
                       <p className="mt-1 text-sm font-black">
@@ -369,7 +407,7 @@ export default function WindDownLearnClient() {
               </Link>
               <Link
                 href="/winddown"
-                className="mt-3 inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-[var(--fnk-neutral-700)] px-5 text-sm font-black text-[var(--fnk-neutral-200)]"
+                className="mt-3 inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-[var(--wd-border)] px-5 text-sm font-black text-[var(--wd-text)]"
               >
                 오늘 여정 보기
               </Link>
@@ -377,13 +415,10 @@ export default function WindDownLearnClient() {
           ) : null}
 
           {status === "ready" && current && !session?.isComplete ? (
-            <section className="rounded-[28px] border border-[var(--fnk-neutral-800)] bg-[var(--fnk-neutral-900)] p-6 shadow-2xl">
+            <section className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6 shadow-2xl">
               {feedback ? (
                 <div aria-live="polite" className="text-center">
-                  <p className="text-4xl" aria-hidden>
-                    {feedback.outcome === "miss" ? "🌱" : "✨"}
-                  </p>
-                  <h2 className="mt-4 text-xl font-black">
+                  <h2 className="text-xl font-black">
                     {feedback.outcome === "miss"
                       ? "괜찮아, 잠시 뒤 다시 만나자."
                       : feedback.outcome === "practice"
@@ -424,12 +459,12 @@ export default function WindDownLearnClient() {
               ) : (
                 <>
                   <div className="flex items-center justify-between gap-3">
-                    <span className="rounded-full bg-[var(--fnk-neutral-800)] px-3 py-1.5 text-[10px] font-black tracking-[0.1em] text-[var(--fnk-neutral-300)]">
+                    <span className="rounded-full bg-[var(--wd-surface-raised)] px-3 py-1.5 text-[10px] font-black tracking-[0.1em] text-[var(--wd-text-muted)]">
                       {current.kind === "meaning-choice"
                         ? "뜻 고르기"
                         : "문장 조립"}
                     </span>
-                    <span className="text-xs font-black tabular-nums text-[var(--fnk-neutral-300)]">
+                    <span className="text-xs font-black tabular-nums text-[var(--wd-text-muted)]">
                       {current.creditPolicy === "practice-only"
                         ? "보상 없는 짧은 연습"
                         : `${(session?.creditedCardIds.length ?? 0) + 1}번째`}
@@ -456,7 +491,7 @@ export default function WindDownLearnClient() {
                                 choiceId: choice.id,
                               })
                             }
-                            className="min-h-14 rounded-2xl border border-[var(--fnk-neutral-700)] bg-[var(--fnk-neutral-800)] px-4 py-3 text-left text-sm font-black transition active:scale-[0.98] motion-reduce:transition-none"
+                            className="min-h-14 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-4 py-3 text-left text-sm font-black transition active:scale-[0.98] motion-reduce:transition-none"
                           >
                             {choice.text}
                           </button>
@@ -473,10 +508,10 @@ export default function WindDownLearnClient() {
                       </h2>
                       <div
                         aria-label="선택한 단어"
-                        className="mt-6 flex min-h-20 flex-wrap content-start gap-2 rounded-2xl border border-dashed border-[var(--fnk-neutral-700)] bg-[var(--fnk-neutral-950)] p-3"
+                        className="mt-6 flex min-h-20 flex-wrap content-start gap-2 rounded-2xl border border-dashed border-[var(--wd-border)] bg-[var(--wd-bg)] p-3"
                       >
                         {selectedTokens.length === 0 ? (
-                          <span className="text-sm font-semibold text-[var(--fnk-neutral-500)]">
+                          <span className="text-sm font-semibold text-[var(--wd-text-muted)]">
                             아래 단어를 순서대로 눌러봐
                           </span>
                         ) : null}
@@ -506,7 +541,7 @@ export default function WindDownLearnClient() {
                               onClick={() =>
                                 setSelectedTokenIds((ids) => [...ids, token.id])
                               }
-                              className="min-h-11 rounded-xl border border-[var(--fnk-neutral-700)] bg-[var(--fnk-neutral-800)] px-3 text-sm font-black disabled:opacity-25"
+                              className="min-h-11 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 text-sm font-black disabled:opacity-25"
                             >
                               {token.text}
                             </button>
@@ -538,7 +573,7 @@ export default function WindDownLearnClient() {
           ) : null}
         </main>
 
-        <p className="pb-1 text-center text-[11px] font-bold text-[var(--fnk-neutral-500)]">
+        <p className="pb-1 text-center text-[11px] font-bold text-[var(--wd-text-muted)]">
           이 모드에서는 마이크와 AI 대화를 열지 않아.
         </p>
       </div>

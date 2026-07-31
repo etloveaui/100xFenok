@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { Fraunces } from "next/font/google";
 import AdminAccessGate from "@/components/AdminAccessGate";
@@ -22,19 +22,12 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "Wind-Down",
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
   },
   icons: {
     apple: [{ url: "/winddown/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   robots: { index: false, follow: false },
-};
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  themeColor: "#faf6ef",
-  viewportFit: "cover",
 };
 
 export default async function WindDownPage() {
