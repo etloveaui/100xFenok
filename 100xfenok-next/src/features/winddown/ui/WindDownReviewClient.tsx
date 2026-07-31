@@ -240,7 +240,7 @@ function ReviewChipInput({
             type="button"
             disabled={disabled}
             onClick={() => onChange(selectedIds.filter((id) => id !== chip.id))}
-            className="min-h-[44px] max-w-full break-words rounded-xl px-3 text-sm font-black text-[var(--wd-bg)] disabled:opacity-40"
+            className="min-h-[44px] min-w-[44px] max-w-full break-words rounded-xl px-3 text-sm font-black text-[var(--wd-bg)] disabled:opacity-40"
             style={{ backgroundColor: accent }}
           >
             {chip.text}
@@ -259,7 +259,7 @@ function ReviewChipInput({
               disabled={disabled || isSelected}
               onClick={() => onChange([...selectedIds, chip.id])}
               className={[
-                "min-h-[44px] max-w-full break-words rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 text-sm font-black disabled:opacity-25",
+                "min-h-[44px] min-w-[44px] max-w-full break-words rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 text-sm font-black disabled:opacity-25",
                 isFirst
                   ? "ring-2 ring-[var(--wd-listening)]"
                   : "",
