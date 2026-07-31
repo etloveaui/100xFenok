@@ -9,6 +9,10 @@ import {
   type WindDownVoiceScenarioId,
   type WindDownVoiceTopicId,
 } from "@/features/winddown/voice/product";
+import {
+  normalizeWindDownVoiceJourneyTargets,
+  type WindDownVoiceJourneyTarget,
+} from "@/features/winddown/voice/journeyTarget";
 
 export const WIND_DOWN_VOICE_SESSION_ENDPOINT = "/api/winddown/live/session/" as const;
 export const WIND_DOWN_VOICE_SESSION_SCHEMA_VERSION = 1 as const;
@@ -95,6 +99,7 @@ type CommonResponse = {
 export type WindDownRoleplaySessionResponse = CommonResponse & {
   activity: "roleplay";
   experience: WindDownRoleplayDescriptor;
+  journeyTargets: WindDownVoiceJourneyTarget[];
   settings: {
     activity: "roleplay";
     voiceName: WindDownVoiceName;
@@ -257,6 +262,9 @@ export function isWindDownVoiceSessionResponse(
   const setup = record.setup;
   const settings = record.settings;
   const experience = record.experience;
+  const journeyTargets = normalizeWindDownVoiceJourneyTargets(
+    record.journeyTargets,
+  );
   if (
     record.schemaVersion !== 1
     || record.policyVersion !== 1
@@ -320,7 +328,8 @@ export function isWindDownVoiceSessionResponse(
   }
   if (record.activity === "roleplay") {
     if (
-      responseExperience.kind !== "scenario"
+      !journeyTargets
+      || responseExperience.kind !== "scenario"
       || responseExperience.policyVersion !== WIND_DOWN_VOICE_POLICY_VERSION
       || !isWindDownVoiceScenarioId(responseExperience.scenarioId)
       || !Array.isArray(responseExperience.goals)
@@ -349,6 +358,7 @@ export function isWindDownVoiceSessionResponse(
   }
   if (
     record.activity !== "live-talk"
+    || record.journeyTargets !== undefined
     || responseExperience.kind !== "topic"
     || responseExperience.policyVersion !== WIND_DOWN_VOICE_POLICY_VERSION
     || !isWindDownVoiceTopicId(responseExperience.topicId)

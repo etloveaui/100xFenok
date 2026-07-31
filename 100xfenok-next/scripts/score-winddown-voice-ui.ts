@@ -21,6 +21,7 @@ import {
   buildWindDownVoiceReport,
   containsWindDownVoiceReportSecretLeakage,
   isWindDownVoiceReport,
+  isWindDownVoiceReportResponse,
   WIND_DOWN_VOICE_REPORT_MAX_BYTES,
   WIND_DOWN_VOICE_REPORT_MAX_CORRECTION_CHARS,
   WIND_DOWN_VOICE_REPORT_MAX_TURN_TEXT_CHARS,
@@ -204,6 +205,25 @@ assert.equal(
 );
 assert.equal(containsWindDownVoiceReportSecretLeakage("Bearer abcdefghijklmnopqrstuvwxyz0123456789"), true);
 assert.equal(containsWindDownVoiceReportSecretLeakage("AIzaabcdefghijklmnopqrstuvwxyz123456"), true);
+const reportResponseReceipt = {
+  schemaVersion: 1 as const,
+  activity: "roleplay" as const,
+  productSessionId: roleplayReport.productSessionId,
+  finalDigest: "a".repeat(64),
+  committedAtIso: roleplayReport.stoppedAtIso,
+  report: roleplayReport,
+};
+assert.equal(isWindDownVoiceReportResponse({
+  ok: true,
+  duplicate: false,
+  habitCredited: true,
+  receipt: reportResponseReceipt,
+}), true);
+assert.equal(isWindDownVoiceReportResponse({
+  ok: true,
+  duplicate: false,
+  receipt: reportResponseReceipt,
+}), false, "report success must never hide whether tonight's journey was credited");
 
 for (const injectedControlKey of ["setup", "token", "systemInstruction"]) {
   assert.throws(() => buildWindDownVoiceReport({
@@ -432,6 +452,15 @@ for (const required of [
   "전사→첫 오디오",
   "build-error",
   "nextPracticeSuggestion.text",
+  "journeyTargetEvidence",
+  "오늘 문장:",
+  "오늘 말하기는 아직 0/1",
+  "오늘 문장으로 다시 말하기",
+  "Learn에서 오늘 문장 고르기",
+  "한 번 더 이야기하기",
+  "journeyTargets.length === 0",
+  "habitCredited",
+  'href="/winddown/learn"',
   'href="/winddown"',
   "오늘 여정 보기",
 ]) {

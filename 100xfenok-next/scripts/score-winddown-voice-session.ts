@@ -156,6 +156,7 @@ assert.equal(session.settings.activity, "roleplay");
 assert.equal(session.policyVersion, 1);
 assert.equal(session.productSessionId, roleplay.productSessionId);
 assert.equal(session.experience.kind, "scenario");
+assert.deepEqual(session.journeyTargets, journeyTargets);
 assert.equal(session.token, "ephemeral-client-token");
 assert.match(session.reportProof, /^[A-Za-z0-9_-]+\.[a-f0-9]{64}$/);
 const decodedReportProof = Buffer.from(
@@ -176,6 +177,15 @@ assert.equal(isWindDownVoiceSessionResponse({
   websocketEndpoint: "https://not-a-websocket.example",
 }), false);
 assert.equal(isWindDownVoiceSessionResponse({ ...session, token: "" }), false);
+assert.equal(
+  isWindDownVoiceSessionResponse(
+    Object.fromEntries(
+      Object.entries(session).filter(([key]) => key !== "journeyTargets"),
+    ),
+  ),
+  false,
+  "roleplay responses must expose the server-bound tonight phrases",
+);
 assert.equal(isWindDownVoiceSessionResponse({
   ...session,
   experience: { ...session.experience, scenarioId: "unknown-scenario" },
@@ -284,6 +294,15 @@ const liveTalkSession = await createWindDownVoiceSession(liveTalk, {
   },
 });
 assert.equal(liveTalkSession.activity, "live-talk");
+assert.equal("journeyTargets" in liveTalkSession, false);
+assert.equal(
+  isWindDownVoiceSessionResponse({
+    ...liveTalkSession,
+    journeyTargets,
+  }),
+  false,
+  "Live Talk must not inherit scored journey targets",
+);
 assert.equal(liveTalkSession.experience.kind, "topic");
 assert.equal(
   liveTalkSession.sessionId,

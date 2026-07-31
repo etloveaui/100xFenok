@@ -99,6 +99,7 @@ export async function POST(request: Request) {
     return noStoreJson({
       ok: true,
       duplicate: committed.duplicate === true,
+      habitCredited: committed.habitCredited === true,
       receipt: committed.receipt,
     });
   } catch (error) {

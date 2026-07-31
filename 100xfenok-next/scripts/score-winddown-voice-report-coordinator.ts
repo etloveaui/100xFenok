@@ -94,6 +94,11 @@ async function main() {
     finalDigest,
     committedAtIso: "2026-07-31T00:00:00.000Z",
     report,
+    journeyTargets: [{
+      materialId: "material-tonight",
+      en: "I'd like a decaf coffee",
+      acceptedVariants: [],
+    }],
   };
 
   async function commit(candidate: unknown) {
@@ -116,13 +121,31 @@ async function main() {
   const first = await firstResponse.json() as Record<string, unknown>;
   assert.equal(first.ok, true);
   assert.equal(first.duplicate, false);
+  assert.equal(first.habitCredited, true);
 
   const duplicateResponse = await commit(receipt);
   assert.equal(duplicateResponse.status, 200);
   const duplicate = await duplicateResponse.json() as Record<string, unknown>;
   assert.equal(duplicate.ok, true);
   assert.equal(duplicate.duplicate, true);
+  assert.equal(duplicate.habitCredited, true);
   assert.deepEqual(duplicate.receipt, first.receipt);
+
+  const unqualifiedReport = {
+    ...report,
+    productSessionId: "wd-roleplay-session-unqualified",
+  };
+  const unqualifiedResponse = await commit({
+    schemaVersion: 1,
+    activity: "roleplay",
+    productSessionId: unqualifiedReport.productSessionId,
+    finalDigest: await sha256Hex(unqualifiedReport),
+    committedAtIso: "2026-07-31T00:01:00.000Z",
+    report: unqualifiedReport,
+  });
+  assert.equal(unqualifiedResponse.status, 200);
+  const unqualified = await unqualifiedResponse.json() as Record<string, unknown>;
+  assert.equal(unqualified.habitCredited, false);
 
   const conflictResponse = await commit({
     ...receipt,

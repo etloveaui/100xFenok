@@ -38,6 +38,9 @@ import {
   type WindDownVoiceReportReceipt,
 } from "@/features/winddown/voice/report";
 import {
+  windDownVoiceJourneyTargetEvidence,
+} from "@/features/winddown/voice/journeyTarget";
+import {
   hasReachedWindDownVoiceTurnLimit,
   serializeWindDownVoiceKeepaliveBody,
   shouldFinalizeWindDownVoiceForVisibility,
@@ -53,7 +56,13 @@ type Props = {
 type ReportState =
   | { phase: "idle"; frozen: null; receipt: null; error: null }
   | { phase: "pending"; frozen: WindDownVoiceReport; receipt: null; error: null }
-  | { phase: "success"; frozen: WindDownVoiceReport; receipt: WindDownVoiceReportReceipt; error: null }
+  | {
+      phase: "success";
+      frozen: WindDownVoiceReport;
+      receipt: WindDownVoiceReportReceipt;
+      habitCredited: boolean;
+      error: null;
+    }
   | { phase: "error"; frozen: WindDownVoiceReport; receipt: null; error: string }
   | { phase: "build-error"; frozen: null; receipt: null; error: string };
 
@@ -254,6 +263,14 @@ export default function WindDownVoiceClient({ activity }: Props) {
     const scenario = WINDDOWN_VOICE_SCENARIOS.find((item) => item.id === descriptor.scenarioId);
     return scenario ? evaluateWindDownRoleplay(scenario, turns) : null;
   }, [descriptor, turns]);
+  const journeyTargets = liveSession?.activity === "roleplay"
+    ? liveSession.journeyTargets
+    : [];
+  const journeyTargetEvidence = useMemo(() => (
+    activity === "roleplay"
+      ? windDownVoiceJourneyTargetEvidence({ targets: journeyTargets, turns })
+      : null
+  ), [activity, journeyTargets, turns]);
   const liveTalkSummary = useMemo(() => summarizeWindDownLiveTalk({
     turns,
     startedAtIso: startedAtRef.current,
@@ -278,7 +295,13 @@ export default function WindDownVoiceClient({ activity }: Props) {
       if (!response.ok || !isWindDownVoiceReportResponse(payload)) {
         throw new Error(`WIND_DOWN_VOICE_REPORT_HTTP_${response.status}`);
       }
-      setReportState({ phase: "success", frozen: report, receipt: payload.receipt, error: null });
+      setReportState({
+        phase: "success",
+        frozen: report,
+        receipt: payload.receipt,
+        habitCredited: payload.habitCredited,
+        error: null,
+      });
     } catch {
       setReportState({ phase: "error", frozen: report, receipt: null, error: reportErrorText() });
     }
@@ -391,12 +414,19 @@ export default function WindDownVoiceClient({ activity }: Props) {
     if (
       activity === "roleplay"
       && roleplay?.completed
+      && journeyTargetEvidence
       && live.status === "listening"
       && !finalizingRef.current
     ) {
       finishAndReport("scenario-goals-complete");
     }
-  }, [activity, finishAndReport, live.status, roleplay?.completed]);
+  }, [
+    activity,
+    finishAndReport,
+    journeyTargetEvidence,
+    live.status,
+    roleplay?.completed,
+  ]);
 
   const start = useCallback(() => {
     if (live.status === "listening" || live.status === "connecting" || live.status === "setup-wait") return;
@@ -489,6 +519,26 @@ export default function WindDownVoiceClient({ activity }: Props) {
                 </div>
               ) : null}
               <div className="mt-5 space-y-2">
+                {liveSession?.activity === "roleplay" ? (
+                  journeyTargets.length > 0 ? (
+                    <div
+                      className={`rounded-2xl border px-4 py-3 text-sm font-bold ${
+                        journeyTargetEvidence
+                          ? "border-[#9ee7c4]/60 bg-[#9ee7c4]/15 text-white"
+                          : "border-[#d8b4fe]/30 bg-black/15 text-white/75"
+                      }`}
+                    >
+                      <span aria-hidden>{journeyTargetEvidence ? "✓" : "○"}</span>
+                      <span className="ml-3">
+                        오늘 문장: {journeyTargets.map((target) => target.en).join(" / ")}
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="rounded-2xl border border-[#f6b2a4]/35 bg-[#8f2e27]/20 px-4 py-3 text-sm font-bold text-white/75">
+                      오늘 문장이 아직 없어. Learn을 마치면 이 장면이 오늘 여정에 기록돼.
+                    </p>
+                  )
+                ) : null}
                 {roleplay?.scenario.goals.map((goal) => {
                   const evidence = roleplay.evidence.find((item) => item.goalId === goal.id);
                   return (
@@ -566,8 +616,23 @@ export default function WindDownVoiceClient({ activity }: Props) {
 
           {reportState.phase === "success" ? (
             <section aria-live="polite" className="mt-5 rounded-[28px] border border-[#9ee7c4]/35 bg-[#9ee7c4]/10 p-5">
-              <p className="text-2xl" aria-hidden>✓</p>
-              <h2 className="mt-2 text-lg font-black">오늘의 대화가 정리됐어.</h2>
+              <p className="text-2xl" aria-hidden>
+                {reportState.habitCredited ? "✓" : "○"}
+              </p>
+              <h2 className="mt-2 text-lg font-black">
+                {!reportState.habitCredited
+                  ? "대화는 저장됐지만 오늘 말하기는 아직 0/1이야."
+                  : "오늘의 대화가 정리됐어."}
+              </h2>
+              {!reportState.habitCredited ? (
+                <p className="mt-3 rounded-xl bg-black/15 px-3 py-2 text-sm font-semibold text-white/75">
+                  {activity === "roleplay"
+                    ? journeyTargets.length > 0
+                      ? "오늘 문장을 한 번 자연스럽게 말하면 여정에 기록돼."
+                      : "Learn을 먼저 마치면 오늘 문장으로 말하기를 기록할 수 있어."
+                    : "내 문장이 끝까지 인식되도록 한 번 더 이야기해줘."}
+                </p>
+              ) : null}
               {reportState.frozen.outcome.kind === "roleplay" ? (
                 <div className="mt-3 space-y-2">
                   <p className="text-sm font-semibold text-white/75">
@@ -597,8 +662,26 @@ export default function WindDownVoiceClient({ activity }: Props) {
               <p className="mt-3 text-xs font-semibold text-white/50">
                 {reportState.receipt.committedAtIso.slice(0, 16).replace("T", " ")}
               </p>
-              <Link href="/winddown" className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-white px-4 text-sm font-black text-[#173831] active:scale-[.98] motion-reduce:transition-none">오늘 여정 보기</Link>
-              <button type="button" onClick={start} className="mt-3 min-h-[48px] w-full rounded-2xl border border-white/20 px-4 text-sm font-black text-white active:scale-[.98] motion-reduce:transition-none">다른 대화 시작</button>
+              {!reportState.habitCredited ? (
+                activity === "roleplay" && journeyTargets.length === 0 ? (
+                  <>
+                    <Link href="/winddown/learn" className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-white px-4 text-sm font-black text-[#2a133f] active:scale-[.98] motion-reduce:transition-none">Learn에서 오늘 문장 고르기</Link>
+                    <Link href="/winddown" className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-white/20 px-4 text-sm font-black text-white active:scale-[.98] motion-reduce:transition-none">오늘 여정 보기</Link>
+                  </>
+                ) : (
+                  <>
+                    <button type="button" onClick={start} className="mt-5 min-h-[48px] w-full rounded-2xl bg-white px-4 text-sm font-black text-[#2a133f] active:scale-[.98] motion-reduce:transition-none">
+                      {activity === "roleplay" ? "오늘 문장으로 다시 말하기" : "한 번 더 이야기하기"}
+                    </button>
+                    <Link href="/winddown" className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-white/20 px-4 text-sm font-black text-white active:scale-[.98] motion-reduce:transition-none">오늘 여정 보기</Link>
+                  </>
+                )
+              ) : (
+                <>
+                  <Link href="/winddown" className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-white px-4 text-sm font-black text-[#173831] active:scale-[.98] motion-reduce:transition-none">오늘 여정 보기</Link>
+                  <button type="button" onClick={start} className="mt-3 min-h-[48px] w-full rounded-2xl border border-white/20 px-4 text-sm font-black text-white active:scale-[.98] motion-reduce:transition-none">다른 대화 시작</button>
+                </>
+              )}
             </section>
           ) : null}
 

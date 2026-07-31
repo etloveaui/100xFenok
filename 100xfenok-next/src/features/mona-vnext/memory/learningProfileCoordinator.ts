@@ -781,8 +781,14 @@ export async function handleMonaVnextProfileCoordinatorRequest(
           existing.finalDigest !== receipt.finalDigest ||
           existing.activity !== receipt.activity
         ) {
-          return { status: 409, duplicate: false, receipt: existing };
+          return {
+            status: 409,
+            duplicate: false,
+            habitCredited: false,
+            receipt: existing,
+          };
         }
+        let habitCredited = false;
         try {
           await appendHabitEvent(
             transaction,
@@ -791,15 +797,22 @@ export async function handleMonaVnextProfileCoordinatorRequest(
               receipt: existing,
             }),
           );
+          habitCredited = true;
         } catch (error) {
           if (
             !(error instanceof WindDownHabitError)
             || error.code !== "UNQUALIFIED_HABIT_COMPLETION"
           ) throw error;
         }
-        return { status: 200, duplicate: true, receipt: existing };
+        return {
+          status: 200,
+          duplicate: true,
+          habitCredited,
+          receipt: existing,
+        };
       }
       await transaction.put(key, receipt);
+      let habitCredited = false;
       try {
         await appendHabitEvent(
           transaction,
@@ -808,13 +821,19 @@ export async function handleMonaVnextProfileCoordinatorRequest(
             receipt,
           }),
         );
+        habitCredited = true;
       } catch (error) {
         if (
           !(error instanceof WindDownHabitError)
           || error.code !== "UNQUALIFIED_HABIT_COMPLETION"
         ) throw error;
       }
-      return { status: 200, duplicate: false, receipt };
+      return {
+        status: 200,
+        duplicate: false,
+        habitCredited,
+        receipt,
+      };
     });
     if (result.status === 409) {
       return noStoreJson({ error: "WINDDOWN_VOICE_REPORT_CONFLICT" }, 409);
@@ -823,6 +842,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
       ok: true,
       operation: body.operation,
       duplicate: result.duplicate,
+      habitCredited: result.habitCredited,
       receipt: result.receipt,
     });
   }

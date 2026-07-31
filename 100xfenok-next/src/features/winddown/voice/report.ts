@@ -263,6 +263,7 @@ export type WindDownVoiceReportReceipt = {
 export type WindDownVoiceReportResponse = {
   ok: true;
   duplicate: boolean;
+  habitCredited: boolean;
   receipt: WindDownVoiceReportReceipt;
 };
 
@@ -806,6 +807,7 @@ export function isWindDownVoiceReportResponse(value: unknown): value is WindDown
   const receipt = response.receipt;
   return response.ok === true
     && typeof response.duplicate === "boolean"
+    && typeof response.habitCredited === "boolean"
     && Boolean(receipt)
     && typeof receipt === "object"
     && !Array.isArray(receipt)

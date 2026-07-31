@@ -294,6 +294,7 @@ export async function createWindDownVoiceSession(
       ...common,
       activity: "roleplay",
       experience: experience as WindDownRoleplayDescriptor,
+      journeyTargets: dependencies.journeyTargets ?? [],
       settings: { activity: "roleplay", voiceName, vadPreset },
     }
     : {
