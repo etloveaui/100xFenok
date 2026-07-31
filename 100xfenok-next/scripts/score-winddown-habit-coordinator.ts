@@ -197,6 +197,13 @@ async function main() {
     1,
     "five persisted credits and any retries must close exactly one Learn quest",
   );
+  assert.deepEqual(habit.body.game, {
+    schemaVersion: 1,
+    xp: 15,
+    creditedAnswerCount: 5,
+    collectedReviewStarCount: 0,
+    creditedNightCount: 1,
+  }, "the game projection must come from the same authoritative Learn receipt");
   assert.equal(kvWrites, 7, "credited duplicates retry or confirm the KV mirror");
   assert.equal(successfulKvWrites, 6, "the repaired mirror and later credited retries all persist");
 

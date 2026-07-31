@@ -41,6 +41,13 @@ type TonightJourney = {
 type HabitResponse = {
   projection: HabitProjection;
   tonight: TonightJourney;
+  game: {
+    schemaVersion: 1;
+    xp: number;
+    creditedAnswerCount: number;
+    collectedReviewStarCount: number;
+    creditedNightCount: number;
+  };
 };
 
 const ACTIVITIES: Array<{
@@ -158,6 +165,17 @@ function projectionFrom(value: unknown): HabitResponse | null {
   ) {
     return null;
   }
+  const game = value.game;
+  if (
+    !isRecord(game) ||
+    game.schemaVersion !== 1 ||
+    !isNonNegativeInteger(game.xp) ||
+    !isNonNegativeInteger(game.creditedAnswerCount) ||
+    !isNonNegativeInteger(game.collectedReviewStarCount) ||
+    !isNonNegativeInteger(game.creditedNightCount)
+  ) {
+    return null;
+  }
 
   return {
     projection: {
@@ -175,6 +193,13 @@ function projectionFrom(value: unknown): HabitResponse | null {
       reviewTarget: tonight.reviewTarget,
       voiceCompleted: tonight.voiceCompleted,
       estimatedMinutes: tonight.estimatedMinutes,
+    },
+    game: {
+      schemaVersion: 1,
+      xp: game.xp,
+      creditedAnswerCount: game.creditedAnswerCount,
+      collectedReviewStarCount: game.collectedReviewStarCount,
+      creditedNightCount: game.creditedNightCount,
     },
   };
 }
@@ -309,6 +334,21 @@ export default function WindDownHabitHomeClient() {
                   <span className="mt-1 block text-sm font-black tabular-nums">{tonight.voiceCompleted ? "1/1" : "0/1"}</span>
                 </div>
               </div>
+            </section>
+
+            <section className="mt-5 rounded-[28px] border border-[var(--wd-line)] bg-[var(--wd-card-solid)] p-5">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-black tracking-[0.16em] text-[var(--wd-accent)]">WORLD TOUR</p>
+                  <h2 className="mt-1 text-lg font-bold">공부한 만큼 열린 무대</h2>
+                </div>
+                <Link href="/winddown/game" className="inline-flex min-h-[48px] shrink-0 items-center rounded-full border border-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-accent)] transition active:scale-[.98] motion-reduce:transition-none">
+                  투어 보기
+                </Link>
+              </div>
+              <p className="mt-2 text-sm font-medium leading-6 text-[var(--wd-muted)]">
+                저장된 문장 {habit.game.creditedAnswerCount}개와 복습 별 {habit.game.collectedReviewStarCount}개가 {habit.game.xp} XP로 이어졌어.
+              </p>
             </section>
 
             <section className="mt-5 rounded-[28px] border border-[var(--wd-line)] bg-[var(--wd-card-solid)] p-5">

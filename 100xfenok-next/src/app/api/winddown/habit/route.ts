@@ -35,6 +35,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+}
+
 export async function GET() {
   if (!(await requireAdminSession())) {
     return noStoreJson({ error: "ADMIN_SESSION_REQUIRED" }, 401);
@@ -47,6 +51,16 @@ export async function GET() {
     ]);
     if (!isRecord(habit.projection)) {
       return noStoreJson({ error: "WINDDOWN_HABIT_PROJECTION_INVALID" }, 500);
+    }
+    if (
+      !isRecord(habit.game)
+      || habit.game.schemaVersion !== 1
+      || !isNonNegativeInteger(habit.game.xp)
+      || !isNonNegativeInteger(habit.game.creditedAnswerCount)
+      || !isNonNegativeInteger(habit.game.collectedReviewStarCount)
+      || !isNonNegativeInteger(habit.game.creditedNightCount)
+    ) {
+      return noStoreJson({ error: "WINDDOWN_GAME_PROJECTION_INVALID" }, 500);
     }
     const projection = habit.projection;
     const currentKstDay =
@@ -104,6 +118,13 @@ export async function GET() {
     return noStoreJson({
       ok: true,
       projection,
+      game: {
+        schemaVersion: 1,
+        xp: habit.game.xp,
+        creditedAnswerCount: habit.game.creditedAnswerCount,
+        collectedReviewStarCount: habit.game.collectedReviewStarCount,
+        creditedNightCount: habit.game.creditedNightCount,
+      },
       tonight: {
         completed,
         nextAction,

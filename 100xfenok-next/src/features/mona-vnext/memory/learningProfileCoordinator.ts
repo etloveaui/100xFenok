@@ -38,6 +38,9 @@ import {
   type WindDownHabitLearnCreditReceipt,
 } from "@/features/winddown/habit/domain";
 import {
+  projectWindDownGameProgress,
+} from "@/features/winddown/game/model/progress";
+import {
   normalizeWindDownLearnSessionManifest,
   type WindDownLearnSessionManifest,
 } from "@/features/winddown/server/learnSessionProof";
@@ -456,6 +459,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
       events,
       now: new Date(nowIso),
     });
+    const game = projectWindDownGameProgress(events);
     const activeLearn =
       (await state.storage.get<StoredWindDownLearnSession>(
         learnSessionKey(projection.currentKstDay),
@@ -464,6 +468,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
       ok: true,
       operation: body.operation,
       projection,
+      game,
       activeLearn,
     });
   }

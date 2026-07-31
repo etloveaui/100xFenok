@@ -314,12 +314,15 @@ const modelFreeEntryPaths = [
   path.join(process.cwd(), "src/features/winddown/content"),
   path.join(process.cwd(), "src/features/winddown/learn"),
   path.join(process.cwd(), "src/features/winddown/review"),
+  path.join(process.cwd(), "src/features/winddown/game"),
   path.join(process.cwd(), "src/features/winddown/ui"),
   studyApi,
   progressApi,
   reviewApi,
+  habitApi,
   path.join(process.cwd(), "src/app/winddown/learn/page.tsx"),
   path.join(process.cwd(), "src/app/winddown/review/page.tsx"),
+  path.join(process.cwd(), "src/app/winddown/game/page.tsx"),
 ].filter(existsSync);
 const modelFreeEntryFiles = modelFreeEntryPaths.flatMap((entry) =>
   statSync(entry).isDirectory() ? listSourceFiles(entry) : [entry],

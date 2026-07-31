@@ -1,0 +1,252 @@
+import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+
+const root = process.cwd();
+const read = (rel) => readFileSync(path.join(root, rel), "utf8");
+const exists = (rel) => existsSync(path.join(root, rel));
+
+const TOUR = "src/features/winddown/game/model/tour.ts";
+const ROSTER = "src/features/winddown/game/model/roster.ts";
+const CONTRACT = "src/features/winddown/game/model/contract.ts";
+const SCENES = "src/features/winddown/game/ui/scenes.ts";
+const PROGRESS = "src/features/winddown/game/model/progress.ts";
+const CLIENT = "src/features/winddown/game/ui/WindDownGameClient.tsx";
+const ROUTE = "src/app/winddown/game/page.tsx";
+const HOME = "src/features/winddown/habit/ui/WindDownHabitHomeClient.tsx";
+const HABIT_API = "src/app/api/winddown/habit/route.ts";
+const COORDINATOR =
+  "src/features/mona-vnext/memory/learningProfileCoordinator.ts";
+
+for (const rel of [
+  TOUR,
+  ROSTER,
+  CONTRACT,
+  SCENES,
+  PROGRESS,
+  CLIENT,
+  ROUTE,
+  HOME,
+  HABIT_API,
+  COORDINATOR,
+]) {
+  assert.equal(exists(rel), true, `WIND DOWN game file missing: ${rel}`);
+}
+
+const tour = read(TOUR);
+const progress = read(PROGRESS);
+const client = read(CLIENT);
+const route = read(ROUTE);
+const roster = read(ROSTER);
+const contract = read(CONTRACT);
+const scenes = read(SCENES);
+const home = read(HOME);
+const habitApi = read(HABIT_API);
+const coordinator = read(COORDINATOR);
+
+/* 1. the route is authenticated and immersive, exactly like the other WIND DOWN routes */
+assert.equal(
+  route.includes("AdminAccessGate"),
+  true,
+  "game route must gate on admin session like every other WIND DOWN route",
+);
+assert.equal(
+  route.includes('data-immersive-route="winddown"'),
+  true,
+  "game route must declare the immersive WIND DOWN route marker",
+);
+
+/* 2. model-free boundary: the game must never reach Live, mic, token, or socket code */
+for (const forbidden of [
+  "useGeminiLiveSession",
+  "SpeechRecognition",
+  "getUserMedia",
+  "WebSocket",
+  "/api/mona-vnext/session",
+  "GEMINI_API_KEY",
+]) {
+  for (const [name, source] of [
+    ["client", client],
+    ["tour model", tour],
+    ["roster model", roster],
+    ["contract model", contract],
+    ["scenes", scenes],
+    ["progress model", progress],
+    ["route", route],
+  ]) {
+    assert.equal(
+      source.includes(forbidden),
+      false,
+      `WIND DOWN game ${name} must not reference ${forbidden}`,
+    );
+  }
+}
+
+/* 3. theme discipline: surfaces resolve from --wd-*, never from raw hex or the
+      themeable --fnk-neutral ramp that inverts under [data-theme="dark"] */
+assert.equal(
+  /#[0-9a-fA-F]{6}/.test(client),
+  false,
+  "game client must not carry raw hex colours; use --wd-* tokens",
+);
+assert.equal(
+  client.includes("--fnk-neutral-"),
+  false,
+  "game client must not resolve colour from the themeable --fnk-neutral ramp",
+);
+assert.equal(
+  /#[0-9a-fA-F]{6}/.test(
+    scenes.replace(/"--wd-[a-z-]+",\s*"#[0-9a-fA-F]{6}"/g, ""),
+  ),
+  false,
+  "scenes may only carry hex inside an explicit --wd-* token fallback",
+);
+assert.equal(
+  scenes.includes("--wd-"),
+  true,
+  "scenes must resolve colour from scoped --wd-* tokens",
+);
+assert.equal(
+  client.includes("var(--wd-"),
+  true,
+  "game client must resolve colour from the scoped --wd-* tokens",
+);
+
+/* 4. reduced motion is honoured by the animation loop, not only by CSS */
+assert.equal(
+  client.includes("prefers-reduced-motion"),
+  true,
+  "game client must gate its animation loop on prefers-reduced-motion",
+);
+assert.equal(
+  client.includes("cancelAnimationFrame"),
+  true,
+  "game client must stop its animation loop rather than leaking a frame callback",
+);
+
+/* 5. content is data: acts, chapters and regions are declared, not branched on */
+const chapterRows = tour.match(/\{ id: "[^"]+".*unlockLevel:\s*\d+.*\}/g) ?? [];
+const chapterCount = chapterRows.length;
+assert.equal(chapterCount, 24, `expected exactly 24 chapters, found ${chapterCount}`);
+const actCount = (tour.match(/tag:\s*"ACT /g) ?? []).length;
+assert.equal(actCount, 9, `expected exactly 9 acts, found ${actCount}`);
+const regionCount = (tour.match(/\{ id: "[^"]+".*topic:/g) ?? []).length;
+assert.equal(regionCount, 12, `expected exactly 12 regions, found ${regionCount}`);
+assert.equal(
+  /switch\s*\(\s*chapter\.(id|scene)\s*\)/.test(client),
+  false,
+  "scenes must resolve through a registry, never a switch over chapter ids",
+);
+assert.equal(
+  /isBuilt\(\s*x\s*,/.test(scenes),
+  false,
+  "scenes must not hash animated x for build state",
+);
+assert.equal(
+  scenes.includes("identity: number"),
+  true,
+  "scenes must gate build state on a stable identity",
+);
+assert.equal(
+  client.includes('role="img"') && client.includes("orientationchange"),
+  true,
+  "the reduced-motion canvas must repaint on rotate and expose image semantics",
+);
+assert.equal(
+  (client.match(/\}, \[paint, reduced, status\]\);/g) ?? []).length,
+  2,
+  "both animation effects must depend on ready status so a zero-XP canvas paints after mount",
+);
+
+const memberCount = (roster.match(/\n    roleLabel:/g) ?? []).length;
+assert.equal(memberCount, 4, `expected exactly four members, found ${memberCount}`);
+assert.equal(
+  contract.includes("members: WIND_DOWN_MEMBERS")
+    && client.includes("memberForChapter")
+    && scenes.includes("WindDownMember"),
+  true,
+  "the content pack roster must change both copy and the tour scene",
+);
+for (const token of ["WIND_DOWN_CONTENT_PACK", "version", "seed"]) {
+  assert.equal(contract.includes(token), true, `content/learner contract missing: ${token}`);
+}
+assert.equal(
+  /seed:\s*number/.test(contract),
+  true,
+  "learner profile must carry a deterministic numeric seed",
+);
+assert.equal(
+  contract.includes("learner.seed")
+    && client.includes("memberForChapter")
+    && client.includes("모나의 고정 시드")
+    && !client.includes("setMemberId"),
+  true,
+  "the learner seed must deterministically drive the scene without a fake local preference",
+);
+assert.equal(
+  client.includes("매일 19 XP면")
+    && !client.includes("이 속도면")
+    && !client.includes("밤마다 조금씩"),
+  true,
+  "forecast copy must state its ideal-night assumption instead of presenting measured pace",
+);
+assert.equal(
+  progress.includes("projectWindDownGameProgress")
+    && progress.includes("WindDownHabitCompletionEvent"),
+  true,
+  "game XP must project from authoritative habit receipts",
+);
+assert.equal(
+  client.includes('fetch("/api/winddown/habit"')
+    && !/function WindDownGameClient\(\{\s*xp/.test(client),
+  true,
+  "the client must read receipt-backed progress rather than accept invented XP",
+);
+assert.equal(
+  coordinator.includes("projectWindDownGameProgress(events)")
+    && habitApi.includes("game:")
+    && home.includes('href="/winddown/game"')
+    && client.includes('href="/winddown"'),
+  true,
+  "receipt progress and home/back navigation must be wired end to end",
+);
+
+/* 6. unlock levels are strictly increasing so no chapter is unreachable */
+const levels = chapterRows.map((row) =>
+  Number(row.match(/unlockLevel:\s*(\d+)/)?.[1] ?? Number.NaN),
+);
+for (let i = 1; i < levels.length; i += 1) {
+  assert.ok(
+    levels[i] > levels[i - 1],
+    `chapter unlock levels must strictly increase (index ${i}: ${levels[i - 1]} -> ${levels[i]})`,
+  );
+}
+
+/* 7. the progression curve keeps its promise: one full arc lands near ninety nights */
+const levelCost = (n) => 12 + Math.floor(n * 0.55);
+const xpToReach = (lv) => {
+  let total = 0;
+  for (let i = 1; i < lv; i += 1) total += levelCost(i);
+  return total;
+};
+const assumedNightly = Number(
+  /XP_PER_CREDITED_ANSWER \* 5 \+ XP_PER_COLLECTED_STAR \* 2/.test(progress) ? 19 : 0,
+);
+assert.equal(assumedNightly, 19, "nightly forecast assumption changed; update this gate deliberately");
+const finalLevel = levels[levels.length - 1];
+const arcNights = Math.ceil(xpToReach(finalLevel) / assumedNightly);
+assert.ok(
+  arcNights >= 80 && arcNights <= 100,
+  `full arc should land near ninety nights, computed ${arcNights}`,
+);
+
+/* 8. forecasting must never grant progress */
+assert.equal(
+  /ASSUMED_XP_PER_NIGHT[^\n]*=[^\n]*award/i.test(progress),
+  false,
+  "the nightly assumption must not be wired into any award path",
+);
+
+console.log(
+  `score-winddown-game: PASS (acts ${actCount}, chapters ${chapterCount}, regions ${regionCount}, members ${memberCount}, arc ${arcNights} nights)`,
+);
