@@ -1,3 +1,4 @@
+import { State } from "ts-fsrs";
 import {
   applyMonaVnextLearningEvents,
   createEmptyMonaVnextLearningProfile,
@@ -418,17 +419,21 @@ async function readCeremonyMasteryEvidence(args: {
       && profileRecord?.lastInputMode === "chips"
       && profileRecord.lastRating === "hard"
       && profileRecord.lastVerdict === "close"
-      && profileRecord.card.stability > 0
     );
     if (
       stored.reward === 1
       && profileRecord?.lastReviewedAt === stored.reviewedAt
+      && profileRecord.card.state === State.Review
       && (typedMastery || chipsRecall)
     ) {
       evidence.push({
         materialId: event.source.materialId,
         reviewedAtIso: event.occurredAtIso,
         stability: profileRecord.card.stability,
+        successfulReviewCount: Math.max(
+          0,
+          profileRecord.card.reps - profileRecord.card.lapses,
+        ),
       });
     }
   }

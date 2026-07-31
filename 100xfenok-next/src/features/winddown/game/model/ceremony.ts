@@ -39,6 +39,15 @@ export type WindDownCeremonyMasteryEvidence = {
   materialId: string;
   reviewedAtIso: string;
   stability: number;
+  successfulReviewCount: number;
+};
+
+export const WIND_DOWN_CEREMONY_SUCCESS_THRESHOLDS: Readonly<
+  Record<WindDownCeremonySlotId, number>
+> = {
+  group: 2,
+  "debut-song": 3,
+  fandom: 3,
 };
 
 export type WindDownCeremonyOptionCatalog = {
@@ -398,6 +407,12 @@ function derivedOptions(args: {
   }> = [];
   const labels = new Set<string>();
   for (const evidence of args.mastery) {
+    if (
+      evidence.successfulReviewCount <
+      WIND_DOWN_CEREMONY_SUCCESS_THRESHOLDS[args.slotId]
+    ) {
+      continue;
+    }
     const en = args.materialById.get(evidence.materialId);
     if (!en) continue;
     const label = derivedLabel(args.slotId, en);
@@ -438,6 +453,8 @@ export function buildWindDownCeremonyOptionCatalog(args: {
       && typeof evidence.stability === "number"
       && Number.isFinite(evidence.stability)
       && evidence.stability >= 0
+      && Number.isSafeInteger(evidence.successfulReviewCount)
+      && evidence.successfulReviewCount >= 0
     )
     .sort((left, right) =>
       right.stability - left.stability

@@ -268,6 +268,7 @@ const masteryEvidence = masteryMaterialEntries.map((entry, index) => ({
   materialId: entry.id,
   reviewedAtIso: `2026-07-2${index + 1}T12:00:00.000Z`,
   stability: 100 - index,
+  successfulReviewCount: index < 3 ? 2 : 3,
 }));
 const masteryCatalog = buildWindDownCeremonyOptionCatalog({
   material: { ...ceremonyMaterial, entries: masteryMaterialEntries },

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { State } from "ts-fsrs";
 import {
   handleMonaVnextProfileCoordinatorRequest,
   type WindDownReviewCoordinatorEnv,
@@ -305,9 +306,10 @@ async function main() {
   assert(templateRecord);
   const masteryEvents = [...ceremonyEvents];
   ceremonyMaterial.entries.forEach((entry, index) => {
-    const chips = index < 9;
     const hard = entry.id === "ceremony-hard";
+    const chips = index < 9 || hard;
     const laterMiss = entry.id === "ceremony-later-miss";
+    const successfulReviews = hard ? 1 : index < 3 ? 2 : 3;
     const reviewCycleId =
       `winddown-review:${String(index + 1).padStart(64, "0")}`;
     const reviewedAt = `2026-07-${String(10 + index).padStart(2, "0")}T12:30:00.000Z`;
@@ -338,6 +340,9 @@ async function main() {
       card: {
         ...templateRecord.card,
         stability: hard ? 2_000 : laterMiss ? 1_999 : 1_000 - index,
+        state: State.Review,
+        reps: successfulReviews,
+        lapses: 0,
       },
     };
   });
@@ -366,7 +371,10 @@ async function main() {
     (slot) => slot.options.map((option) => option.label),
   );
   assert.equal(learnedLabels.length, 9);
-  assert(!learnedLabels.includes("POISON"));
+  assert(
+    !learnedLabels.includes("POISON"),
+    "one chips success must not qualify a phrase for permanent naming",
+  );
   assert(!learnedLabels.includes("REGRET"));
 
   const missingReceiptKey =
