@@ -97,6 +97,17 @@ assert.equal(
   false,
   "Lumi must not add a motion runtime",
 );
+for (const state of ["idle", "prompt", "rescue"]) {
+  const stateBlock = lumiSource.match(
+    new RegExp(`${state}: \\{[\\s\\S]*?motion: "([^"]*)"`),
+  );
+  assert.ok(stateBlock, `Lumi ${state} motion contract must remain explicit`);
+  assert.equal(
+    stateBlock[1].includes("infinite"),
+    false,
+    `Lumi ${state} must not blink or bounce forever while waiting for the learner`,
+  );
+}
 
 const clients = [
   {

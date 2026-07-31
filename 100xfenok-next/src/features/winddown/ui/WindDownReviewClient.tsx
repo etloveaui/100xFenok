@@ -240,7 +240,7 @@ function ReviewChipInput({
             type="button"
             disabled={disabled}
             onClick={() => onChange(selectedIds.filter((id) => id !== chip.id))}
-            className="min-h-11 max-w-full break-words rounded-xl px-3 text-sm font-black text-[var(--wd-bg)] disabled:opacity-40"
+            className="min-h-[44px] max-w-full break-words rounded-xl px-3 text-sm font-black text-[var(--wd-bg)] disabled:opacity-40"
             style={{ backgroundColor: accent }}
           >
             {chip.text}
@@ -259,9 +259,9 @@ function ReviewChipInput({
               disabled={disabled || isSelected}
               onClick={() => onChange([...selectedIds, chip.id])}
               className={[
-                "min-h-11 max-w-full break-words rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 text-sm font-black disabled:opacity-25",
+                "min-h-[44px] max-w-full break-words rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 text-sm font-black disabled:opacity-25",
                 isFirst
-                  ? "animate-pulse ring-2 ring-[var(--wd-listening)] motion-reduce:animate-none"
+                  ? "ring-2 ring-[var(--wd-listening)]"
                   : "",
               ].join(" ")}
             >
@@ -785,17 +785,23 @@ export default function WindDownReviewClient() {
                         </>
                       ) : null}
                     </div>
-                    {recallAssistVisible && recallHintLetter ? (
-                      <p role="status" className="mt-3 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 py-2 text-center text-xs font-bold text-[var(--wd-text-muted)]">
-                        {session.inputMode === "typed" ? (
-                          <>
-                            루미 힌트: 첫 글자는 <span className="text-[var(--wd-text)]">{recallHintLetter}</span> 이야.
-                          </>
-                        ) : (
-                          "루미 힌트: 첫 단어가 살짝 빛나고 있어."
-                        )}
-                      </p>
-                    ) : null}
+                    <p
+                      aria-live="polite"
+                      className={[
+                        "mt-3 min-h-[40px] rounded-xl border px-3 py-2 text-center text-xs font-bold text-[var(--wd-text-muted)]",
+                        recallAssistVisible && recallHintLetter
+                          ? "border-[var(--wd-border)] bg-[var(--wd-surface-raised)]"
+                          : "border-transparent bg-transparent",
+                      ].join(" ")}
+                    >
+                      {recallAssistVisible && recallHintLetter
+                        ? session.inputMode === "typed"
+                          ? <>
+                              루미 힌트: 첫 글자는 <span className="text-[var(--wd-text)]">{recallHintLetter}</span> 이야.
+                            </>
+                          : "루미 힌트: 첫 단어가 살짝 빛나고 있어."
+                        : null}
+                    </p>
                     <button
                       type="button"
                       disabled={busy || !submittedAnswer.trim()}

@@ -98,11 +98,18 @@ function collectTransitiveProjectSources(entryFiles: string[]) {
 const contracts = Object.values(WINDDOWN_ACTIVITY_CONTRACTS);
 assert.deepEqual(
   contracts.map((contract) => contract.mode),
-  ["learn", "review", "roleplay", "live-talk"],
-  "WIND DOWN must expose four stable product activities",
+  ["learn", "review", "drill", "roleplay", "live-talk"],
+  "WIND DOWN must expose five stable product activities",
 );
 assert.equal(getWindDownActivityContract("learn").modelPolicy, "forbidden");
 assert.equal(getWindDownActivityContract("review").modelPolicy, "forbidden");
+assert.deepEqual(getWindDownActivityContract("drill"), {
+  mode: "drill",
+  engine: "deterministic-drill",
+  modelPolicy: "forbidden",
+  microphonePolicy: "forbidden",
+  completion: "five-rounds",
+});
 assert.equal(
   getWindDownActivityContract("learn").microphonePolicy,
   "optional-browser-managed",
@@ -295,6 +302,10 @@ const reviewApi = path.join(
   process.cwd(),
   "src/app/api/winddown/review/route.ts",
 );
+const drillApi = path.join(
+  process.cwd(),
+  "src/app/api/winddown/drill/route.ts",
+);
 const habitApi = path.join(
   process.cwd(),
   "src/app/api/winddown/habit/route.ts",
@@ -308,14 +319,17 @@ const modelFreeEntryPaths = [
   path.join(process.cwd(), "src/features/winddown/content"),
   path.join(process.cwd(), "src/features/winddown/learn"),
   path.join(process.cwd(), "src/features/winddown/review"),
+  path.join(process.cwd(), "src/features/winddown/drill"),
   path.join(process.cwd(), "src/features/winddown/game"),
   path.join(process.cwd(), "src/features/winddown/ui"),
   studyApi,
   progressApi,
   reviewApi,
+  drillApi,
   habitApi,
   path.join(process.cwd(), "src/app/winddown/learn/page.tsx"),
   path.join(process.cwd(), "src/app/winddown/review/page.tsx"),
+  path.join(process.cwd(), "src/app/winddown/drill/page.tsx"),
   path.join(process.cwd(), "src/app/winddown/game/page.tsx"),
 ].filter(existsSync);
 const modelFreeEntryFiles = modelFreeEntryPaths.flatMap((entry) =>

@@ -38,7 +38,7 @@ export function WindDownDeviceSpeechPractice({
             type="button"
             disabled={disabled || !speech.support.synthesis}
             onClick={speech.speak}
-            className="min-h-11 flex-1 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 text-xs font-black text-[var(--wd-text)] disabled:opacity-35"
+            className="min-h-[44px] flex-1 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 text-xs font-black text-[var(--wd-text)] disabled:opacity-35"
           >
             {speech.phase === "speaking" ? "읽는 중…" : "문장 듣기"}
           </button>
@@ -47,7 +47,7 @@ export function WindDownDeviceSpeechPractice({
           type="button"
           disabled={disabled || !speech.support.recognition}
           onClick={listening ? speech.stop : speech.startListening}
-          className="min-h-11 flex-1 rounded-xl bg-[var(--wd-listening)] px-3 text-xs font-black text-[var(--wd-bg)] disabled:opacity-35"
+          className="min-h-[44px] flex-1 rounded-xl bg-[var(--wd-listening)] px-3 text-xs font-black text-[var(--wd-bg)] disabled:opacity-35"
         >
           {speech.phase === "requesting"
             ? "마이크 여는 중…"

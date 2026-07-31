@@ -8,6 +8,7 @@ import {
 } from "@/features/winddown/ui/WindDownLumi";
 
 type Activity = "learn" | "review" | "roleplay" | "live-talk";
+type NavigationActivity = Activity | "drill";
 
 type ConstellationDay = {
   kstDay: string;
@@ -51,7 +52,7 @@ type HabitResponse = {
 };
 
 const ACTIVITIES: Array<{
-  id: Activity;
+  id: NavigationActivity;
   href: string;
   label: string;
   description: string;
@@ -67,6 +68,12 @@ const ACTIVITIES: Array<{
     href: "/winddown/review",
     label: "Review",
     description: "돌아볼 문장",
+  },
+  {
+    id: "drill",
+    href: "/winddown/drill",
+    label: "Quick Drill",
+    description: "점수와 콤보로 다섯 라운드",
   },
   {
     id: "roleplay",

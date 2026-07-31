@@ -278,7 +278,7 @@ export default function WindDownGameClient({
     return (
       <main role="alert" className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pt-[max(env(safe-area-inset-top),20px)] text-[var(--wd-text)]">
         <h1 className="mt-16 text-xl font-bold">투어 콘텐츠를 안전하게 열지 못했어.</h1>
-        <Link href="/winddown" className="mt-5 inline-flex min-h-12 items-center text-sm font-black text-[var(--wd-accent)]">
+        <Link href="/winddown" className="mt-5 inline-flex min-h-[44px] items-center text-sm font-black text-[var(--wd-accent)]">
           오늘 밤으로 돌아가기
         </Link>
       </main>
@@ -288,7 +288,7 @@ export default function WindDownGameClient({
   if (status === "loading" || !habit || !action) {
     return (
       <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-[max(env(safe-area-inset-bottom),24px)] pt-[max(env(safe-area-inset-top),20px)] text-[var(--wd-text)]">
-        <Link href="/winddown" className="inline-flex min-h-12 items-center text-sm font-black text-[var(--wd-accent)]">
+        <Link href="/winddown" className="inline-flex min-h-[44px] items-center text-sm font-black text-[var(--wd-accent)]">
           ← 오늘 밤으로
         </Link>
         {status === "loading" ? (
@@ -303,7 +303,7 @@ export default function WindDownGameClient({
             <button
               type="button"
               onClick={() => void loadProgress()}
-              className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)]"
+              className="mt-5 inline-flex min-h-[44px] w-full items-center justify-center rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)]"
             >
               다시 불러오기
             </button>
@@ -316,10 +316,10 @@ export default function WindDownGameClient({
   return (
     <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col gap-4 px-5 pb-[max(env(safe-area-inset-bottom),24px)] pt-[max(env(safe-area-inset-top),20px)] text-[var(--wd-text)]">
       <nav aria-label="월드 투어 이동" className="flex items-center justify-between gap-3">
-        <Link href="/winddown" className="inline-flex min-h-12 items-center text-sm font-black text-[var(--wd-accent)]">
+        <Link href="/winddown" className="inline-flex min-h-[44px] items-center text-sm font-black text-[var(--wd-accent)]">
           ← 오늘 밤
         </Link>
-        <Link href={action.href} className="inline-flex min-h-12 items-center rounded-2xl bg-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-bg)]">
+        <Link href={action.href} className="inline-flex min-h-[44px] items-center rounded-2xl bg-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-bg)]">
           {action.label}
         </Link>
       </nav>
@@ -450,7 +450,7 @@ export default function WindDownGameClient({
                     option.id,
                     openCeremony.label,
                   )}
-                  className="inline-flex min-h-12 w-full items-center justify-center break-words rounded-2xl border border-[var(--wd-border)] px-4 text-sm font-black disabled:opacity-50"
+                  className="inline-flex min-h-[44px] w-full items-center justify-center break-words rounded-2xl border border-[var(--wd-border)] px-4 text-sm font-black disabled:opacity-50"
                   style={{ background: "var(--wd-bg)" }}
                 >
                   {option.label}

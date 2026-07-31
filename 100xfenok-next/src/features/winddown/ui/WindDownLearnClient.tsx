@@ -441,7 +441,7 @@ export default function WindDownLearnClient() {
               </Link>
               <Link
                 href="/winddown"
-                className="mt-3 inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-[var(--wd-border)] px-5 text-sm font-black text-[var(--wd-text)]"
+                className="mt-3 inline-flex min-h-[44px] w-full items-center justify-center rounded-2xl border border-[var(--wd-border)] px-5 text-sm font-black text-[var(--wd-text)]"
               >
                 오늘 여정 보기
               </Link>
@@ -552,11 +552,11 @@ export default function WindDownLearnClient() {
                           </button>
                         ))}
                       </div>
-                      {idleAssistVisible && assistiveWrongChoiceId ? (
-                        <p role="status" className="mt-3 text-center text-xs font-bold text-[var(--wd-text-muted)]">
-                          루미 힌트: 하나의 선택지를 살짝 흐리게 했어.
-                        </p>
-                      ) : null}
+                      <p role="status" className="mt-3 min-h-[20px] text-center text-xs font-bold text-[var(--wd-text-muted)]">
+                        {idleAssistVisible && assistiveWrongChoiceId
+                          ? "루미 힌트: 하나의 선택지를 살짝 흐리게 했어."
+                          : null}
+                      </p>
                     </>
                   ) : (
                     <>
@@ -584,7 +584,7 @@ export default function WindDownLearnClient() {
                                 ids.filter((id) => id !== token.id),
                               )
                             }
-                            className="min-h-11 rounded-xl bg-[var(--wd-accent)] px-3 text-sm font-black text-[var(--wd-bg)]"
+                            className="min-h-[44px] rounded-xl bg-[var(--wd-accent)] px-3 text-sm font-black text-[var(--wd-bg)]"
                           >
                             {token.text}
                           </button>
@@ -605,9 +605,9 @@ export default function WindDownLearnClient() {
                                 setSelectedTokenIds((ids) => [...ids, token.id])
                               }
                               className={[
-                                "min-h-11 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 text-sm font-black disabled:opacity-25",
+                                "min-h-[44px] rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 text-sm font-black disabled:opacity-25",
                                 isAssistiveFirstToken
-                                  ? "animate-pulse ring-2 ring-[var(--wd-listening)] motion-reduce:animate-none"
+                                  ? "ring-2 ring-[var(--wd-listening)]"
                                   : "",
                               ].join(" ")}
                             >
@@ -616,11 +616,11 @@ export default function WindDownLearnClient() {
                           );
                         })}
                       </div>
-                      {idleAssistVisible ? (
-                        <p role="status" className="mt-3 text-center text-xs font-bold text-[var(--wd-text-muted)]">
-                          루미 힌트: 첫 단어부터 시작해 봐.
-                        </p>
-                      ) : null}
+                      <p role="status" className="mt-3 min-h-[20px] text-center text-xs font-bold text-[var(--wd-text-muted)]">
+                        {idleAssistVisible
+                          ? "루미 힌트: 첫 단어부터 시작해 봐."
+                          : null}
+                      </p>
                       <button
                         type="button"
                         disabled={

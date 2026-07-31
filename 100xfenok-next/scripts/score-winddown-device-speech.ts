@@ -181,6 +181,10 @@ assert.ok(
   "the UI must disclose browser-managed processing and non-credit semantics",
 );
 assert.ok(
+  component.includes("min-h-[44px]") && !component.includes("min-h-11"),
+  "device speech controls must keep an absolute 44px touch floor even when the app root font is smaller than 16px",
+);
+assert.ok(
   learn.includes("WindDownDeviceSpeechPractice")
     && learn.includes("shouldOfferWindDownLearnSpeech({")
     && learn.includes("exerciseKind: current.kind")

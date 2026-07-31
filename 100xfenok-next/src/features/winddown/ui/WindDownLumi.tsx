@@ -21,13 +21,13 @@ const LUMI_STATES: Record<
     label: "곁에서 기다리는 중",
     glyph: "·",
     accent: "bg-[var(--wd-text-muted)] shadow-[0_0_28px_var(--wd-text-muted)]",
-    motion: "motion-safe:animate-[pulse_4s_ease-in-out_infinite]",
+    motion: "",
   },
   prompt: {
     label: "네 차례",
     glyph: "?",
     accent: "bg-[var(--wd-accent)] shadow-[0_0_32px_var(--wd-accent)]",
-    motion: "motion-safe:animate-[bounce_1.8s_ease-in-out_infinite]",
+    motion: "motion-safe:animate-[bounce_.7s_ease-out_1]",
   },
   listening: {
     label: "듣고 있어",
@@ -57,7 +57,7 @@ const LUMI_STATES: Record<
     label: "기록을 지키고 있어",
     glyph: "!",
     accent: "bg-[var(--wd-danger)] shadow-[0_0_32px_var(--wd-danger)]",
-    motion: "motion-safe:animate-[pulse_2.2s_ease-in-out_infinite]",
+    motion: "motion-safe:animate-[pulse_1.1s_ease-in-out_2]",
   },
   celebrate: {
     label: "오늘의 별이 켜졌어",

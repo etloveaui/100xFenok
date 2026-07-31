@@ -49,6 +49,12 @@ assert.ok(
   "Learn completion must offer the next journey step directly",
 );
 assert.ok(
+  client.includes("min-h-[44px]")
+    && !client.includes("min-h-11")
+    && !client.includes("min-h-12"),
+  "Learn controls must keep an absolute 44px touch floor even when the app root font is smaller than 16px",
+);
+assert.ok(
   page.includes("verifyAdminSessionToken") &&
     page.includes("<AdminAccessGate />"),
   "the Learn route must retain the product authentication gate",

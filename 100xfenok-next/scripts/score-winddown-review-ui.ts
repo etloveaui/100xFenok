@@ -298,6 +298,7 @@ assert.ok(
 );
 assert.ok(
   client.includes("min-h-[44px]") &&
+    !client.includes("min-h-11") &&
     !client.includes("min-h-12") &&
     client.includes("min-h-[460px]"),
   "Review controls need 44px-plus touch targets and a stable mobile card frame",

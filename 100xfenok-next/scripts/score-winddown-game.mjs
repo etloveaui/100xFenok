@@ -226,8 +226,8 @@ assert.equal(
   "the home card must narrow game progress before rendering receipt totals",
 );
 assert.equal(
-  routeContract.includes("page_route_count: 56")
-    && routeContract.includes("out_of_scope_count: 14"),
+  routeContract.includes("page_route_count: 57")
+    && routeContract.includes("out_of_scope_count: 15"),
   true,
   "the authenticated game route must be acknowledged by the route-scope count",
 );
@@ -286,7 +286,8 @@ assert.equal(
 );
 assert.equal(
   client.includes("ceremonyRequestPending")
-    && client.includes("min-h-12")
+    && client.includes("min-h-[44px]")
+    && !client.includes("min-h-12")
     && (client.match(/aria-live="polite"/g) ?? []).length === 1
     && client.indexOf('<p aria-live="polite"') > client.lastIndexOf("nextCeremony ?")
     && client.includes("response.status === 409")

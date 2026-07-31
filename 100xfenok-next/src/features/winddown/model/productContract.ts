@@ -1,13 +1,13 @@
-export type WindDownMode = "learn" | "review" | "roleplay" | "live-talk";
+export type WindDownMode = "learn" | "review" | "drill" | "roleplay" | "live-talk";
 
 export const WINDDOWN_REVIEW_DAILY_TARGET = 3 as const;
 
 export type WindDownActivityContract = {
   mode: WindDownMode;
-  engine: "deterministic-learn" | "fsrs-review" | "gemini-roleplay" | "gemini-live-talk";
+  engine: "deterministic-learn" | "fsrs-review" | "deterministic-drill" | "gemini-roleplay" | "gemini-live-talk";
   modelPolicy: "forbidden" | "required";
   microphonePolicy: "forbidden" | "optional-browser-managed" | "required";
-  completion: "five-exercises" | "due-queue" | "scenario-goals" | "learner-stop";
+  completion: "five-exercises" | "due-queue" | "five-rounds" | "scenario-goals" | "learner-stop";
 };
 
 export const WINDDOWN_ACTIVITY_CONTRACTS = {
@@ -24,6 +24,13 @@ export const WINDDOWN_ACTIVITY_CONTRACTS = {
     modelPolicy: "forbidden",
     microphonePolicy: "optional-browser-managed",
     completion: "due-queue",
+  },
+  drill: {
+    mode: "drill",
+    engine: "deterministic-drill",
+    modelPolicy: "forbidden",
+    microphonePolicy: "forbidden",
+    completion: "five-rounds",
   },
   roleplay: {
     mode: "roleplay",

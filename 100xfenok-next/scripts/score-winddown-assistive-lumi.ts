@@ -44,13 +44,23 @@ assert.ok(
   learn.includes("firstWrongChoiceId")
     && learn.includes("opacity-40")
     && learn.includes("canonicalTokenIds[0]")
-    && learn.includes("animate-pulse")
-    && learn.includes("motion-reduce:animate-none"),
-  "Learn must dim one wrong meaning choice or pulse the first canonical token accessibly",
+    && learn.includes("ring-2")
+    && learn.includes("min-h-[20px]")
+    && !learn.includes("animate-pulse"),
+  "Learn must use a static, layout-stable idle cue instead of making an unanswered card blink",
+);
+assert.equal(
+  review.includes("animate-pulse"),
+  false,
+  "Review idle assistance must remain static instead of pulsing a word chip",
+);
+assert.ok(
+  review.includes("min-h-[40px]") && review.includes('aria-live="polite"'),
+  "Review idle assistance must reserve its status line instead of shifting the answer controls",
 );
 assert.ok(
   review.includes("session?.phase === \"recall\"")
-    && review.includes("!answer.trim()")
+    && review.includes("!submittedAnswer.trim()")
     && review.includes("firstEnglishLetter")
     && review.includes("루미 힌트: 첫 글자는"),
   "Review must reveal a first-letter cue only for an empty initial recall",
