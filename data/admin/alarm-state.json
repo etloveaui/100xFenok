@@ -1,6 +1,6 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-07-31T11:43:44.096Z",
+  "generated_at": "2026-07-31T12:23:04.830Z",
   "status": "open",
   "open_incident_count": 3,
   "open_incidents": [
@@ -254,8 +254,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "suspected_skip"
+      ]
     },
     {
       "file": "fetch-us-indices-daily.yml",
@@ -392,8 +394,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 22,
-    "overdue": 3,
+    "not_due": 21,
+    "overdue": 4,
     "recovered": 0,
     "no_declaration": 7,
     "unknown": 0
@@ -414,9 +416,9 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "30627973284",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30627973284",
-    "observed_at": "2026-07-31T11:43:44.096Z",
+    "run_id": "30630312869",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30630312869",
+    "observed_at": "2026-07-31T12:23:04.830Z",
     "event": "workflow_run",
     "workflows": [
       "fetch-stockanalysis.yml",
