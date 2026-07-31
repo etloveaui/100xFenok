@@ -612,6 +612,11 @@ assert.match(
 );
 assert.match(
   deployJob,
+  /live_provenance_surface="fresh-no-store"[\s\S]+live_provenance_surface="legacy-cached-fallback"[\s\S]+Deploy source fence provenance surface: \$live_provenance_surface/,
+  "the deploy log must disclose whether the source fence read the fresh or rollback-only legacy surface",
+);
+assert.match(
+  deployJob,
   /--provenance "\.open-next\/assets\/deploy-provenance\.json"/,
 );
 assert.equal(
