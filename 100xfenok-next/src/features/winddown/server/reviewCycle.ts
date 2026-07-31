@@ -11,6 +11,8 @@ import type { MonaVnextExpression } from "@/features/mona-vnext/coach/coachPolic
 
 export const WINDDOWN_REVIEW_CYCLE_SCHEMA_VERSION = 1 as const;
 
+export type WindDownReviewInputMode = "chips" | "typed";
+
 export type WindDownReviewAttemptEvidence = {
   answer: string;
   revealedBefore: boolean;
@@ -22,6 +24,7 @@ export type WindDownReviewCycleInput = {
   reviewCycleId: string;
   materialId: string;
   contentDigest: string;
+  inputMode: WindDownReviewInputMode;
   attempts: WindDownReviewAttemptEvidence[];
 };
 
@@ -31,6 +34,7 @@ export type WindDownReviewGradeInput = {
   reviewCycleId: string;
   materialId: string;
   contentDigest: string;
+  inputMode: WindDownReviewInputMode;
   attempt: WindDownReviewAttemptEvidence;
 };
 
@@ -48,6 +52,7 @@ export type WindDownReviewCycleReceipt = {
   reviewedAt: string;
   rating: MonaVnextLearningRating;
   reward: 0 | 1;
+  inputMode: WindDownReviewInputMode;
 };
 
 export type WindDownReviewCycleErrorCode =
@@ -70,7 +75,7 @@ export class WindDownReviewCycleError extends Error {
 
 type CommitArgs = {
   profile: MonaVnextLearningProfile;
-  existingReceipt: WindDownReviewCycleReceipt | null;
+  existingReceipt: unknown;
   input: unknown;
   material: WindDownReviewCycleMaterial | null;
   currentContentDigest: string;
@@ -83,6 +88,33 @@ const SAFE_ID = /^[A-Za-z0-9._:-]+$/;
 const SHA256_HEX = /^[a-f0-9]{64}$/;
 const REVIEW_CYCLE_ID = /^winddown-review:[a-f0-9]{64}$/;
 const MAX_ANSWER_LENGTH = 240;
+const RECEIPT_KEYS = new Set([
+  "schemaVersion",
+  "reviewCycleId",
+  "requestDigest",
+  "materialId",
+  "reviewedAt",
+  "rating",
+  "reward",
+  "inputMode",
+]);
+const LEGACY_RECEIPT_KEYS = new Set(
+  [...RECEIPT_KEYS].filter((key) => key !== "inputMode"),
+);
+
+function exactKeys(
+  value: Record<string, unknown>,
+  expected: ReadonlySet<string>,
+) {
+  const keys = Object.keys(value);
+  return keys.length === expected.size && keys.every((key) => expected.has(key));
+}
+
+export function normalizeWindDownReviewInputMode(
+  value: unknown,
+): WindDownReviewInputMode | null {
+  return value === "chips" || value === "typed" ? value : null;
+}
 
 function cleanId(value: unknown, maxLength: number) {
   if (typeof value !== "string") return null;
@@ -139,6 +171,9 @@ export function normalizeWindDownReviewCycleInput(
       SHA256_HEX.test(source.contentDigest)
       ? source.contentDigest
       : null;
+  const inputMode = source.inputMode === undefined
+    ? "typed"
+    : normalizeWindDownReviewInputMode(source.inputMode);
   const attempts = normalizeAttempts(source.attempts);
   if (
     source.schemaVersion !== WINDDOWN_REVIEW_CYCLE_SCHEMA_VERSION ||
@@ -146,6 +181,7 @@ export function normalizeWindDownReviewCycleInput(
     !reviewCycleId ||
     !materialId ||
     !contentDigest ||
+    !inputMode ||
     !attempts
   ) {
     throw new WindDownReviewCycleError("INVALID_REVIEW_CYCLE", 400);
@@ -156,6 +192,7 @@ export function normalizeWindDownReviewCycleInput(
     reviewCycleId,
     materialId,
     contentDigest,
+    inputMode,
     attempts,
   };
 }
@@ -177,8 +214,62 @@ export function normalizeWindDownReviewGradeInput(
     reviewCycleId: base.reviewCycleId,
     materialId: base.materialId,
     contentDigest: base.contentDigest,
+    inputMode: base.inputMode,
     attempt: base.attempts[0],
   };
+}
+
+function normalizedStoredReceipt(value: unknown): {
+  receipt: WindDownReviewCycleReceipt;
+  legacyInputMode: boolean;
+} | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const source = value as Record<string, unknown>;
+  const legacyInputMode = source.inputMode === undefined;
+  if (
+    !(legacyInputMode
+      ? exactKeys(source, LEGACY_RECEIPT_KEYS)
+      : exactKeys(source, RECEIPT_KEYS))
+    || source.schemaVersion !== WINDDOWN_REVIEW_CYCLE_SCHEMA_VERSION
+    || typeof source.reviewCycleId !== "string"
+    || !REVIEW_CYCLE_ID.test(source.reviewCycleId)
+    || typeof source.requestDigest !== "string"
+    || !SHA256_HEX.test(source.requestDigest)
+    || !cleanId(source.materialId, 120)
+    || typeof source.reviewedAt !== "string"
+    || !Number.isFinite(Date.parse(source.reviewedAt))
+    || (
+      source.rating !== "again"
+      && source.rating !== "hard"
+      && source.rating !== "good"
+    )
+    || (source.reward !== 0 && source.reward !== 1)
+  ) return null;
+  const inputMode = legacyInputMode
+    ? "typed"
+    : normalizeWindDownReviewInputMode(source.inputMode);
+  if (!inputMode || (inputMode === "chips" && source.rating === "good")) {
+    return null;
+  }
+  return {
+    legacyInputMode,
+    receipt: {
+      schemaVersion: WINDDOWN_REVIEW_CYCLE_SCHEMA_VERSION,
+      reviewCycleId: source.reviewCycleId,
+      requestDigest: source.requestDigest,
+      materialId: source.materialId as string,
+      reviewedAt: new Date(Date.parse(source.reviewedAt)).toISOString(),
+      rating: source.rating,
+      reward: source.reward,
+      inputMode,
+    },
+  };
+}
+
+export function normalizeWindDownReviewCycleReceipt(
+  value: unknown,
+): WindDownReviewCycleReceipt | null {
+  return normalizedStoredReceipt(value)?.receipt ?? null;
 }
 
 async function sha256(value: string) {
@@ -236,18 +327,30 @@ export async function buildWindDownReviewCards(args: {
   );
 }
 
-async function requestDigest(input: WindDownReviewCycleInput) {
-  return sha256(JSON.stringify({
+function requestDigestValue(
+  input: WindDownReviewCycleInput,
+  includeInputMode: boolean,
+) {
+  return JSON.stringify({
     schemaVersion: input.schemaVersion,
     activity: input.activity,
     reviewCycleId: input.reviewCycleId,
     materialId: input.materialId,
     contentDigest: input.contentDigest,
+    ...(includeInputMode ? { inputMode: input.inputMode } : {}),
     attempts: input.attempts.map((attempt) => ({
       answer: attempt.answer,
       revealedBefore: attempt.revealedBefore,
     })),
-  }));
+  });
+}
+
+async function requestDigest(input: WindDownReviewCycleInput) {
+  return sha256(requestDigestValue(input, true));
+}
+
+async function legacyRequestDigest(input: WindDownReviewCycleInput) {
+  return sha256(requestDigestValue(input, false));
 }
 
 function isStrictRecall(
@@ -265,6 +368,7 @@ function isStrictRecall(
 }
 
 function outcome(args: {
+  inputMode: WindDownReviewInputMode;
   attempts: WindDownReviewAttemptEvidence[];
   material: WindDownReviewCycleMaterial;
 }) {
@@ -284,6 +388,13 @@ function outcome(args: {
       args.material,
     ));
   if (passed(0)) {
+    if (args.inputMode === "chips") {
+      return {
+        rating: "hard" as const,
+        reward: 1 as const,
+        verdict: "close" as const,
+      };
+    }
     return {
       rating: "good" as const,
       reward: 1 as const,
@@ -390,16 +501,29 @@ export function summarizeWindDownReviewQueue(args: {
 export async function commitWindDownReviewCycleState(args: CommitArgs) {
   const input = normalizeWindDownReviewCycleInput(args.input);
   const digest = await requestDigest(input);
-  if (args.existingReceipt) {
+  const existing = args.existingReceipt === null
+    ? null
+    : normalizedStoredReceipt(args.existingReceipt);
+  if (args.existingReceipt !== null && !existing) {
+    throw new WindDownReviewCycleError("INVALID_REVIEW_CYCLE", 400);
+  }
+  if (existing) {
+    const expectedDigest = existing.legacyInputMode
+      ? input.inputMode === "typed"
+        ? await legacyRequestDigest(input)
+        : null
+      : digest;
     if (
-      args.existingReceipt.reviewCycleId !== input.reviewCycleId ||
-      args.existingReceipt.requestDigest !== digest
+      existing.receipt.reviewCycleId !== input.reviewCycleId ||
+      existing.receipt.inputMode !== input.inputMode ||
+      !expectedDigest ||
+      existing.receipt.requestDigest !== expectedDigest
     ) {
       throw new WindDownReviewCycleError("REVIEW_CYCLE_CONFLICT", 409);
     }
     return {
       profile: normalizeMonaVnextLearningProfile(args.profile),
-      receipt: args.existingReceipt,
+      receipt: existing.receipt,
       duplicate: true,
     };
   }
@@ -414,13 +538,18 @@ export async function commitWindDownReviewCycleState(args: CommitArgs) {
     nowIso: args.nowIso,
   });
 
-  const result = outcome({ attempts: input.attempts, material });
+  const result = outcome({
+    inputMode: input.inputMode,
+    attempts: input.attempts,
+    material,
+  });
   const reviewedAt = new Date(nowMs).toISOString();
   const learningEvent = buildLearningEvent({
     expressionId: input.materialId,
     verdict: result.verdict,
     atIso: reviewedAt,
     sessionId: input.reviewCycleId,
+    inputMode: input.inputMode,
   });
   if (!learningEvent || learningEvent.rating !== result.rating) {
     throw new WindDownReviewCycleError("INVALID_REVIEW_CYCLE", 400);
@@ -433,6 +562,7 @@ export async function commitWindDownReviewCycleState(args: CommitArgs) {
     reviewedAt,
     rating: result.rating,
     reward: result.reward,
+    inputMode: input.inputMode,
   };
   return {
     profile: applyMonaVnextLearningEvents(profile, [learningEvent]),

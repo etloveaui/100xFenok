@@ -307,7 +307,8 @@ async function main() {
   ceremonyMaterial.entries.forEach((entry, index) => {
     const hard = entry.id === "ceremony-hard";
     const laterMiss = entry.id === "ceremony-later-miss";
-    const reviewCycleId = `ceremony-mastery-${index + 1}`;
+    const reviewCycleId =
+      `winddown-review:${String(index + 1).padStart(64, "0")}`;
     const reviewedAt = `2026-07-${String(10 + index).padStart(2, "0")}T12:30:00.000Z`;
     const receipt = {
       schemaVersion: 1 as const,
@@ -366,7 +367,7 @@ async function main() {
   assert(!learnedLabels.includes("REGRET"));
 
   const missingReceiptKey =
-    "winddown-review-receipt:ceremony-mastery-1";
+    `winddown-review-receipt:winddown-review:${"1".padStart(64, "0")}`;
   const missingReceipt = values.get(missingReceiptKey);
   assert(missingReceipt);
   values.delete(missingReceiptKey);

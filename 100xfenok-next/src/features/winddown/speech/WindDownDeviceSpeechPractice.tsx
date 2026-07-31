@@ -68,7 +68,9 @@ export function WindDownDeviceSpeechPractice({
           <p className="mt-1 text-xs font-bold text-[var(--wd-listening)]">
             {showMatchFeedback && speech.match
               ? MATCH_COPY[speech.match]
-              : "받아쓴 문장을 입력칸에 옮겼어. 확인한 뒤 제출해 줘."}
+              : onTranscript
+                ? "받아쓴 문장을 입력칸에 옮겼어. 확인한 뒤 제출해 줘."
+                : "기기가 들은 문장만 확인했어. 복습 답과 점수에는 반영하지 않아."}
           </p>
         </div>
       ) : null}

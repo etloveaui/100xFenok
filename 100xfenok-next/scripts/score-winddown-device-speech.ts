@@ -192,9 +192,14 @@ assert.ok(
 assert.ok(
   review.includes('controls="speak-only"')
     && review.includes("showMatchFeedback={false}")
-    && review.includes("onTranscript={setAnswer}")
-    && review.includes('controls="listen-and-speak"'),
-  "Review must accept speech as editable input without revealing recall, then allow playback after repair",
+    && !review.includes("onTranscript={setAnswer}")
+    && review.includes('controls="listen-and-speak"')
+    && review.includes('session.inputMode === "typed"'),
+  "Review speech must remain optional practice and never enter the chips-or-typed scored answer",
+);
+assert.ok(
+  component.includes("복습 답과 점수에는 반영하지 않아"),
+  "speech without a transcript callback must describe practice-only behavior",
 );
 assert.ok(
   contract.includes('microphonePolicy: "forbidden" | "optional-browser-managed" | "required"')

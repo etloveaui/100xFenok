@@ -14,12 +14,25 @@ export type WindDownReviewAttempt = {
   revealedBefore: boolean;
 };
 
+export type WindDownReviewInputMode = "chips" | "typed";
+
+export type WindDownReviewChip = {
+  id: string;
+  text: string;
+};
+
+export type WindDownReviewChipExercise = {
+  chips: WindDownReviewChip[];
+  canonicalChipIds: string[];
+};
+
 export type WindDownReviewCommitInput = {
   schemaVersion: typeof WINDDOWN_REVIEW_SCHEMA_VERSION;
   activity: "review";
   reviewCycleId: string;
   materialId: string;
   contentDigest: string;
+  inputMode: WindDownReviewInputMode;
   attempts: WindDownReviewAttempt[];
 };
 
@@ -78,6 +91,7 @@ export type WindDownReviewState = {
   queue: WindDownReviewCard[];
   results: WindDownReviewResult[];
   phase: WindDownReviewPhase;
+  inputMode: WindDownReviewInputMode;
   attempts: WindDownReviewAttempt[];
   pendingAnswer: string | null;
   match: WindDownLocalMatchState | null;
@@ -85,6 +99,7 @@ export type WindDownReviewState = {
 };
 
 export type WindDownReviewAction =
+  | { type: "set-input-mode"; inputMode: WindDownReviewInputMode }
   | { type: "submit-first"; answer: string }
   | { type: "retry-first-grade" }
   | { type: "first-graded"; exact: boolean }
@@ -104,6 +119,7 @@ export type WindDownReviewActionResult = {
   outcome:
     | "invalid"
     | "grading"
+    | "input-mode-changed"
     | "match"
     | "retry"
     | "committing"
@@ -119,6 +135,71 @@ function stableRank(seed: string, value: string) {
     hash = Math.imul(hash, 16777619);
   }
   return hash >>> 0;
+}
+
+function sentenceTokens(value: string) {
+  return (
+    value.match(
+      /[A-Za-z0-9]+(?:['’\-][A-Za-z0-9]+)*|[^\sA-Za-z0-9]/g,
+    ) ?? []
+  );
+}
+
+export function createWindDownReviewChipExercise(
+  card: WindDownReviewCard,
+): WindDownReviewChipExercise {
+  const canonical = sentenceTokens(card.en).map((text, index) => ({
+    id: `winddown-review-chip:${card.id}:${index}`,
+    text,
+  }));
+  return {
+    chips: [...canonical].sort(
+      (left, right) =>
+        stableRank(card.reviewCycleId, left.id) -
+          stableRank(card.reviewCycleId, right.id) ||
+        left.id.localeCompare(right.id),
+    ),
+    canonicalChipIds: canonical.map((chip) => chip.id),
+  };
+}
+
+export function joinWindDownReviewChips(
+  chips: readonly WindDownReviewChip[],
+): string {
+  let sentence = "";
+  let attachNext = false;
+  let quoteOpen = false;
+  for (const chip of chips) {
+    const text = chip.text.trim();
+    if (!text) continue;
+    if (/^["“”]$/.test(text)) {
+      if (!sentence) {
+        sentence = text;
+        quoteOpen = true;
+        attachNext = true;
+      } else if (quoteOpen) {
+        sentence += text;
+        quoteOpen = false;
+        attachNext = false;
+      } else {
+        sentence += ` ${text}`;
+        quoteOpen = true;
+        attachNext = true;
+      }
+      continue;
+    }
+    const closesPrevious = /^[,.;:!?%)}\]…]+$/.test(text);
+    const connector = /^[-–—/]$/.test(text);
+    if (!sentence) {
+      sentence = text;
+    } else if (attachNext || closesPrevious || connector) {
+      sentence += text;
+    } else {
+      sentence += ` ${text}`;
+    }
+    attachNext = /^[(\[{£€¥₩$]$/.test(text) || connector;
+  }
+  return sentence;
 }
 
 function uniqueCards(cards: readonly WindDownReviewCard[]) {
@@ -296,6 +377,7 @@ function cleanAnswer(value: string) {
 function buildCommitInput(
   card: WindDownReviewCard,
   contentDigest: string,
+  inputMode: WindDownReviewInputMode,
   attempts: WindDownReviewAttempt[],
 ): WindDownReviewCommitInput {
   return {
@@ -304,6 +386,7 @@ function buildCommitInput(
     reviewCycleId: card.reviewCycleId,
     materialId: card.id,
     contentDigest,
+    inputMode,
     attempts,
   };
 }
@@ -322,6 +405,7 @@ export function createWindDownReviewSession(args: {
     queue,
     results: [],
     phase: queue.length > 0 ? "recall" : "summary",
+    inputMode: "chips",
     attempts: [],
     pendingAnswer: null,
     match: null,
@@ -335,6 +419,14 @@ export function applyWindDownReviewAction(
 ): WindDownReviewActionResult {
   const card = currentCard(state);
   if (!card) return invalid(state);
+
+  if (action.type === "set-input-mode") {
+    if (state.phase !== "recall") return invalid(state);
+    return {
+      state: { ...state, inputMode: action.inputMode },
+      outcome: "input-mode-changed",
+    };
+  }
 
   if (action.type === "submit-first") {
     const answer = cleanAnswer(action.answer);
@@ -380,7 +472,12 @@ export function applyWindDownReviewAction(
           phase: "committing",
           attempts,
           pendingAnswer: null,
-          commitInput: buildCommitInput(card, state.contentDigest, attempts),
+          commitInput: buildCommitInput(
+            card,
+            state.contentDigest,
+            state.inputMode,
+            attempts,
+          ),
         },
         outcome: "committing",
       };
@@ -409,7 +506,12 @@ export function applyWindDownReviewAction(
         ...state,
         phase: "committing",
         attempts,
-        commitInput: buildCommitInput(card, state.contentDigest, attempts),
+        commitInput: buildCommitInput(
+          card,
+          state.contentDigest,
+          state.inputMode,
+          attempts,
+        ),
       },
       outcome: "committing",
     };
@@ -483,7 +585,12 @@ export function applyWindDownReviewAction(
         phase: "committing",
         attempts,
         pendingAnswer: null,
-        commitInput: buildCommitInput(card, state.contentDigest, attempts),
+        commitInput: buildCommitInput(
+          card,
+          state.contentDigest,
+          state.inputMode,
+          attempts,
+        ),
       },
       outcome: "committing",
     };
@@ -515,6 +622,7 @@ export function applyWindDownReviewAction(
         queue,
         results,
         phase: queue.length > 0 ? "recall" : "summary",
+        inputMode: "chips",
         attempts: [],
         pendingAnswer: null,
         match: null,

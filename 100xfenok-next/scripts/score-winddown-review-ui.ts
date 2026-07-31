@@ -5,7 +5,9 @@ import {
   applyWindDownLocalMatchAction,
   applyWindDownReviewAction,
   createWindDownLocalMatch,
+  createWindDownReviewChipExercise,
   createWindDownReviewSession,
+  joinWindDownReviewChips,
   type WindDownReviewCard,
 } from "../src/features/winddown/review/engine";
 
@@ -64,6 +66,43 @@ assert.equal(
   duplicateLabelMatch.tiles.length,
   "duplicate labels must never become duplicate React or reducer IDs",
 );
+
+const chipExercise = createWindDownReviewChipExercise(cards[0]!);
+assert.deepEqual(
+  new Set(chipExercise.chips.map((chip) => chip.id)),
+  new Set(chipExercise.canonicalChipIds),
+  "review chips must preserve every canonical token exactly once",
+);
+const chipsById = new Map(chipExercise.chips.map((chip) => [chip.id, chip]));
+assert.equal(
+  joinWindDownReviewChips(
+    chipExercise.canonicalChipIds.flatMap((id) => {
+      const chip = chipsById.get(id);
+      return chip ? [chip] : [];
+    }),
+  ),
+  "I am ready.",
+  "canonical chip order must reconstruct punctuation without stray spaces",
+);
+const punctuationCard: WindDownReviewCard = {
+  ...cards[0]!,
+  id: "punctuation",
+  en: 'He said "well-being costs $5…"',
+};
+const punctuationExercise = createWindDownReviewChipExercise(punctuationCard);
+const punctuationById = new Map(
+  punctuationExercise.chips.map((chip) => [chip.id, chip]),
+);
+assert.equal(
+  joinWindDownReviewChips(
+    punctuationExercise.canonicalChipIds.flatMap((id) => {
+      const chip = punctuationById.get(id);
+      return chip ? [chip] : [];
+    }),
+  ),
+  punctuationCard.en,
+  "quotes, hyphens, currency, and ellipses must stay readable",
+);
 assert.deepEqual(
   createWindDownLocalMatch({
     card: cards[0]!,
@@ -119,6 +158,12 @@ assert.equal(solvedMatch.isComplete, true);
 
 let review = createWindDownReviewSession({ cards, contentDigest: digest });
 assert.equal(review.phase, "recall");
+assert.equal(review.inputMode, "chips", "word chips must be the default mode");
+review = applyWindDownReviewAction(review, {
+  type: "set-input-mode",
+  inputMode: "typed",
+}).state;
+assert.equal(review.inputMode, "typed", "typed recall must be opt-in");
 review = applyWindDownReviewAction(review, {
   type: "submit-first",
   answer: "i am ready",
@@ -169,6 +214,11 @@ assert.equal(
   cards[0]?.reviewCycleId,
   "a commit must retain the original cycle ID for a network retry",
 );
+assert.equal(
+  review.commitInput?.inputMode,
+  "typed",
+  "the selected input mode must remain frozen through repair and retry",
+);
 
 const reveal = applyWindDownReviewAction(
   createWindDownReviewSession({ cards, contentDigest: digest }),
@@ -176,6 +226,11 @@ const reveal = applyWindDownReviewAction(
 ).state;
 assert.equal(reveal.phase, "committing");
 assert.deepEqual(reveal.attempts, [{ answer: "", revealedBefore: true }]);
+assert.equal(
+  reveal.commitInput?.inputMode,
+  "chips",
+  "a default-mode reveal must retain chips in its receipt request",
+);
 
 const enginePath = path.join(
   process.cwd(),
@@ -195,9 +250,23 @@ assert.ok(
   client.includes("/api/winddown/study?mode=review") &&
     client.includes('operation: "grade-recall"') &&
     client.includes("attempt: attempts.at(-1)") &&
+    client.includes("inputMode: input.inputMode") &&
+    client.includes("receipt.inputMode !== input.inputMode") &&
     client.includes('operation: "commit-review-cycle"') &&
     client.includes("...input,"),
   "Review must use the flat contract: load due queue, grade one attempt, then commit frozen attempts",
+);
+assert.ok(
+  client.includes('type: "set-input-mode"') &&
+    client.includes('aria-pressed={session.inputMode === "typed"}') &&
+    client.includes('enterKeyHint="done"') &&
+    client.includes("event.nativeEvent.isComposing"),
+  "Review must default to chips and expose an accessible, IME-safe typed opt-in",
+);
+assert.equal(
+  client.includes("onTranscript={setAnswer}"),
+  false,
+  "device speech practice must never write into the scored Review answer",
 );
 assert.ok(
   client.includes('href="/winddown/learn"'),

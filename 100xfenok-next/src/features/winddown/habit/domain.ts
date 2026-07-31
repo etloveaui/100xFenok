@@ -49,6 +49,7 @@ export type WindDownHabitReviewCreditReceipt = {
   reviewedAt: string;
   rating: "again" | "hard" | "good";
   reward: 0 | 1;
+  inputMode?: "chips" | "typed";
 };
 
 export type WindDownHabitVoiceReportReceipt = {
@@ -157,7 +158,11 @@ const REVIEW_RECEIPT_KEYS = new Set([
   "reviewedAt",
   "rating",
   "reward",
+  "inputMode",
 ]);
+const LEGACY_REVIEW_RECEIPT_KEYS = new Set(
+  [...REVIEW_RECEIPT_KEYS].filter((key) => key !== "inputMode"),
+);
 
 function invalid(code: WindDownHabitErrorCode): never {
   throw new WindDownHabitError(code);
@@ -297,7 +302,13 @@ function validateReviewReceipt(value: unknown): {
   materialId: string;
   reviewedAtIso: string;
 } | null {
-  if (!isRecord(value) || !hasExactKeys(value, REVIEW_RECEIPT_KEYS)) return null;
+  if (
+    !isRecord(value)
+    || (
+      !hasExactKeys(value, REVIEW_RECEIPT_KEYS)
+      && !hasExactKeys(value, LEGACY_REVIEW_RECEIPT_KEYS)
+    )
+  ) return null;
   const reviewCycleId = safeId(value.reviewCycleId);
   const materialId = safeId(value.materialId, 120);
   const reviewedAtIso = canonicalIso(value.reviewedAt);
@@ -310,6 +321,12 @@ function validateReviewReceipt(value: unknown): {
     || !reviewedAtIso
     || (value.rating !== "again" && value.rating !== "hard" && value.rating !== "good")
     || (value.reward !== 0 && value.reward !== 1)
+    || (
+      value.inputMode !== undefined
+      && value.inputMode !== "chips"
+      && value.inputMode !== "typed"
+    )
+    || (value.inputMode === "chips" && value.rating === "good")
   ) return null;
   return { reviewCycleId, materialId, reviewedAtIso };
 }

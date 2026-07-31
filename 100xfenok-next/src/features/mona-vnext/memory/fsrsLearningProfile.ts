@@ -8,6 +8,7 @@ import {
 } from "ts-fsrs";
 import type {
   MonaVnextLearningEvent,
+  MonaVnextLearningInputMode,
   MonaVnextLearningRating,
 } from "@/features/mona-vnext/memory/srsBridge";
 
@@ -29,6 +30,7 @@ export type MonaVnextLearningRecord = {
   lastVerdict: MonaVnextLearningEvent["verdict"];
   lastRating: MonaVnextLearningRating;
   lastReviewedAt: string;
+  lastInputMode?: MonaVnextLearningInputMode;
   card: MonaVnextSerializedFsrsCard;
 };
 
@@ -118,6 +120,10 @@ function normalizeRating(value: unknown): MonaVnextLearningRating | null {
   return value === "again" || value === "hard" || value === "good" ? value : null;
 }
 
+function normalizeInputMode(value: unknown): MonaVnextLearningInputMode | null {
+  return value === "chips" || value === "typed" ? value : null;
+}
+
 function normalizeVerdict(value: unknown): MonaVnextLearningEvent["verdict"] | null {
   return value === "miss" || value === "close" || value === "canonical" || value === "variant"
     ? value
@@ -162,6 +168,7 @@ export function normalizeMonaVnextLearningProfile(value: unknown): MonaVnextLear
     const lastVerdict = normalizeVerdict(record.lastVerdict);
     const lastRating = normalizeRating(record.lastRating);
     const lastReviewedAt = validIso(record.lastReviewedAt);
+    const lastInputMode = normalizeInputMode(record.lastInputMode);
     const card = normalizeCard(record.card);
     if (!expressionId || !lastVerdict || !lastRating || !lastReviewedAt || !card) continue;
     records[expressionId] = {
@@ -169,6 +176,7 @@ export function normalizeMonaVnextLearningProfile(value: unknown): MonaVnextLear
       lastVerdict,
       lastRating,
       lastReviewedAt,
+      ...(lastInputMode ? { lastInputMode } : {}),
       card,
     };
   }
@@ -213,6 +221,7 @@ export function applyMonaVnextLearningEvents(
       lastVerdict: event.verdict,
       lastRating: event.rating,
       lastReviewedAt: reviewedAt,
+      ...(event.inputMode ? { lastInputMode: event.inputMode } : {}),
       card: serializeCard(result.card),
     };
     seen.add(id);

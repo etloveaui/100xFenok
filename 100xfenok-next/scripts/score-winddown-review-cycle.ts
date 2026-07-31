@@ -16,6 +16,8 @@ import {
   buildWindDownReviewCards,
   commitWindDownReviewCycleState,
   createWindDownReviewCycleId,
+  normalizeWindDownReviewCycleReceipt,
+  normalizeWindDownReviewCycleInput,
   summarizeWindDownReviewQueue,
   type WindDownReviewCycleInput,
 } from "../src/features/winddown/server/reviewCycle";
@@ -88,6 +90,7 @@ const reviewCycleId = await createWindDownReviewCycleId({
 
 function input(
   attempts: WindDownReviewCycleInput["attempts"],
+  inputMode: WindDownReviewCycleInput["inputMode"] = "typed",
 ): WindDownReviewCycleInput {
   return {
     schemaVersion: 1,
@@ -95,6 +98,7 @@ function input(
     reviewCycleId,
     materialId: material.id,
     contentDigest: digest,
+    inputMode,
     attempts,
   };
 }
@@ -112,7 +116,17 @@ const firstPass = await commitWindDownReviewCycleState({
 });
 assert.equal(firstPass.receipt.rating, "good");
 assert.equal(firstPass.receipt.reward, 1);
+assert.equal(firstPass.receipt.inputMode, "typed");
 assert.equal(firstPass.duplicate, false);
+assert.equal(firstPass.profile.records[material.id].lastInputMode, "typed");
+assert.equal(
+  normalizeWindDownReviewCycleReceipt({
+    ...firstPass.receipt,
+    inputMode: "chips",
+  }),
+  null,
+  "a chips receipt can never claim Good",
+);
 assert.equal(
   firstPass.profile.records[material.id].card.reps,
   dueRecord.card.reps + 1,
@@ -130,6 +144,21 @@ assert.equal(duplicate.duplicate, true);
 assert.deepEqual(duplicate.receipt, firstPass.receipt);
 assert.deepEqual(duplicate.profile, firstPass.profile);
 
+const chipsFirst = await commitWindDownReviewCycleState({
+  profile: dueProfile,
+  existingReceipt: null,
+  input: input([
+    { answer: "I am ready.", revealedBefore: false },
+  ], "chips"),
+  material,
+  currentContentDigest: digest,
+  nowIso,
+});
+assert.equal(chipsFirst.receipt.rating, "hard");
+assert.equal(chipsFirst.receipt.reward, 1);
+assert.equal(chipsFirst.receipt.inputMode, "chips");
+assert.equal(chipsFirst.profile.records[material.id].lastInputMode, "chips");
+
 async function expectError(
   args: Parameters<typeof commitWindDownReviewCycleState>[0],
   code: WindDownReviewCycleError["code"],
@@ -145,6 +174,19 @@ await expectError(
     profile: firstPass.profile,
     existingReceipt: firstPass.receipt,
     input: input([{ answer: "different", revealedBefore: false }]),
+    material,
+    currentContentDigest: digest,
+    nowIso,
+  },
+  "REVIEW_CYCLE_CONFLICT",
+);
+await expectError(
+  {
+    profile: firstPass.profile,
+    existingReceipt: firstPass.receipt,
+    input: input([
+      { answer: "I am ready.", revealedBefore: false },
+    ], "chips"),
     material,
     currentContentDigest: digest,
     nowIso,
@@ -176,6 +218,7 @@ const recovered = await commitWindDownReviewCycleState({
 });
 assert.equal(recovered.receipt.rating, "hard");
 assert.equal(recovered.receipt.reward, 1);
+assert.equal(recovered.receipt.inputMode, "typed");
 
 const revealed = await commitWindDownReviewCycleState({
   profile: dueProfile,
@@ -221,6 +264,67 @@ assert.equal(
   "typed recall must not inherit the speech matcher's permissive token-in-order pass",
 );
 assert.equal(extraWords.receipt.reward, 0);
+
+assert.equal(
+  normalizeWindDownReviewCycleInput({
+    schemaVersion: 1,
+    activity: "review",
+    reviewCycleId,
+    materialId: material.id,
+    contentDigest: digest,
+    attempts: [{ answer: "I am ready.", revealedBefore: false }],
+  }).inputMode,
+  "typed",
+  "legacy review input without inputMode must normalize to typed",
+);
+
+async function sha256(value: string) {
+  const bytes = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(value),
+  );
+  return Array.from(new Uint8Array(bytes))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+const legacyReceipt = {
+  schemaVersion: firstPass.receipt.schemaVersion,
+  reviewCycleId: firstPass.receipt.reviewCycleId,
+  requestDigest: await sha256(JSON.stringify({
+    schemaVersion: firstPassInput.schemaVersion,
+    activity: firstPassInput.activity,
+    reviewCycleId: firstPassInput.reviewCycleId,
+    materialId: firstPassInput.materialId,
+    contentDigest: firstPassInput.contentDigest,
+    attempts: firstPassInput.attempts,
+  })),
+  materialId: firstPass.receipt.materialId,
+  reviewedAt: firstPass.receipt.reviewedAt,
+  rating: firstPass.receipt.rating,
+  reward: firstPass.receipt.reward,
+};
+const legacyDuplicate = await commitWindDownReviewCycleState({
+  profile: firstPass.profile,
+  existingReceipt: legacyReceipt,
+  input: firstPassInput,
+  material,
+  currentContentDigest: digest,
+  nowIso,
+});
+assert.equal(legacyDuplicate.duplicate, true);
+assert.equal(legacyDuplicate.receipt.inputMode, "typed");
+await expectError(
+  {
+    profile: firstPass.profile,
+    existingReceipt: legacyReceipt,
+    input: input(firstPassInput.attempts, "chips"),
+    material,
+    currentContentDigest: digest,
+    nowIso,
+  },
+  "REVIEW_CYCLE_CONFLICT",
+);
 
 class MemoryDurableState implements WindDownReviewCoordinatorState {
   private readonly values = new Map<string, unknown>();
@@ -440,6 +544,28 @@ await expectError(
 );
 
 const wrangler = readFileSync(path.join(process.cwd(), "wrangler.jsonc"), "utf8");
+const wranglerConfig = JSON.parse(wrangler) as {
+  observability?: {
+    enabled?: boolean;
+    logs?: {
+      enabled?: boolean;
+      invocation_logs?: boolean;
+      persist?: boolean;
+    };
+  };
+};
+assert.deepEqual(
+  wranglerConfig.observability,
+  {
+    enabled: true,
+    logs: {
+      enabled: true,
+      invocation_logs: true,
+      persist: true,
+    },
+  },
+  "Workers invocation logs must remain enabled for physical-device attribution",
+);
 const workerMain = wrangler.match(/"main"\s*:\s*"([^"]+)"/)?.[1];
 assert.equal(
   workerMain,

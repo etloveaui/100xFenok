@@ -6,6 +6,7 @@ import {
 } from "@/features/mona-vnext/memory/monaMemoryRepository";
 import {
   gradeWindDownReviewAttemptState,
+  normalizeWindDownReviewCycleReceipt,
   normalizeWindDownReviewCycleInput,
   normalizeWindDownReviewGradeInput,
   type WindDownReviewCycleMaterial,
@@ -99,12 +100,7 @@ export async function persistWindDownReviewCycle(
     currentContentDigest: context.contentDigest,
     nowIso: now.toISOString(),
   });
-  const receipt =
-    response.receipt &&
-    typeof response.receipt === "object" &&
-    !Array.isArray(response.receipt)
-      ? (response.receipt as WindDownReviewCycleReceipt)
-      : null;
+  const receipt = normalizeWindDownReviewCycleReceipt(response.receipt);
   const remainingDueCount = response.remainingDueCount;
   const nextDueAtIso = response.nextDueAtIso;
   if (

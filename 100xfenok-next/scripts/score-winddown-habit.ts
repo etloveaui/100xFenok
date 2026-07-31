@@ -172,6 +172,29 @@ const againReview = createWindDownHabitCompletionEvent({
   },
 });
 assert.equal(againReview.activity, "review", "honest Again work counts as a reviewed item");
+const chipsReview = createWindDownHabitCompletionEvent({
+  kind: "review-credit-receipt",
+  receipt: {
+    ...reviewReceipt("chips", "2026-07-31T00:01:00.000Z"),
+    rating: "hard",
+    inputMode: "chips",
+  },
+});
+assert.equal(
+  chipsReview.activity,
+  "review",
+  "current Review receipts with inputMode remain qualified habit evidence",
+);
+expectError(
+  () => createWindDownHabitCompletionEvent({
+    kind: "review-credit-receipt",
+    receipt: {
+      ...reviewReceipt("chips-good", "2026-07-31T00:02:00.000Z"),
+      inputMode: "chips",
+    },
+  }),
+  "UNQUALIFIED_HABIT_COMPLETION",
+);
 expectError(
   () => createWindDownHabitCompletionEvent({
     kind: "voice-report-receipt",

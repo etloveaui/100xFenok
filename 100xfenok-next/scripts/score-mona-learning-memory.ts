@@ -25,6 +25,7 @@ const events = verdicts.map((verdict, index) => buildLearningEvent({
   verdict,
   atIso: reviewedAt,
   sessionId: "owner-learning-memory",
+  ...(index === 2 ? { inputMode: "typed" as const } : {}),
 })).filter((event) => event !== null);
 
 assert.equal(events.length, 4, "garbage/STT noise must not enter the learning profile");
@@ -37,11 +38,18 @@ assert.equal(profile.records["expression-0"].lastRating, "again");
 assert.equal(profile.records["expression-1"].lastRating, "hard");
 assert.equal(profile.records["expression-2"].lastRating, "good");
 assert.equal(profile.records["expression-3"].lastRating, "good");
+assert.equal(profile.records["expression-2"].lastInputMode, "typed");
+assert.equal(
+  profile.records["expression-0"].lastInputMode,
+  undefined,
+  "legacy and non-Review learning events remain valid without an input mode",
+);
 
 const serialized = JSON.stringify(profile);
 assert.equal(serialized.includes("[object Date]"), false);
 const restored = normalizeMonaVnextLearningProfile(JSON.parse(serialized));
 assert.equal(restored.records["expression-2"].card.reps, 1);
+assert.equal(restored.records["expression-2"].lastInputMode, "typed");
 assert.ok(Date.parse(restored.records["expression-2"].card.dueAtIso) > Date.parse(reviewedAt));
 
 const dueAt = restored.records["expression-2"].card.dueAtIso;

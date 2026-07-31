@@ -11,6 +11,13 @@ export type MonaVnextMasteryEvent = {
 };
 
 export type MonaVnextLearningRating = "again" | "hard" | "good";
+export type MonaVnextLearningInputMode = "chips" | "typed";
+
+export function normalizeMonaVnextLearningInputMode(
+  value: unknown,
+): MonaVnextLearningInputMode | null {
+  return value === "chips" || value === "typed" ? value : null;
+}
 
 export type MonaVnextLearningEvent = {
   expressionId: string;
@@ -18,6 +25,7 @@ export type MonaVnextLearningEvent = {
   rating: MonaVnextLearningRating;
   atIso: string;
   sessionId: string;
+  inputMode?: MonaVnextLearningInputMode;
 };
 
 export type MonaVnextReviewRecord = {
@@ -101,6 +109,7 @@ export function buildLearningEvent(args: {
   verdict: TeacherVerdict;
   atIso: string;
   sessionId: string;
+  inputMode?: MonaVnextLearningInputMode;
 }): MonaVnextLearningEvent | null {
   if (args.verdict === "garbage") return null;
   const rating: MonaVnextLearningRating = args.verdict === "miss"
@@ -114,6 +123,7 @@ export function buildLearningEvent(args: {
     rating,
     atIso: args.atIso,
     sessionId: args.sessionId,
+    ...(args.inputMode ? { inputMode: args.inputMode } : {}),
   };
 }
 

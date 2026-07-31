@@ -6,16 +6,17 @@ import {
 } from "@/features/mona-vnext/memory/fsrsLearningProfile";
 import {
   buildLearningEvent,
+  normalizeMonaVnextLearningInputMode,
   type MonaVnextLearningEvent,
 } from "@/features/mona-vnext/memory/srsBridge";
 import { MONA_VNEXT_DATA_NAMESPACE } from "@/features/mona-vnext/memory/monaVnextNamespace";
 import {
   commitWindDownReviewCycleState,
+  normalizeWindDownReviewCycleReceipt,
   summarizeWindDownReviewQueue,
   WindDownReviewCycleError,
   type WindDownReviewCycleInput,
   type WindDownReviewCycleMaterial,
-  type WindDownReviewCycleReceipt,
 } from "@/features/winddown/server/reviewCycle";
 import {
   isWindDownVoiceReport,
@@ -183,6 +184,10 @@ function normalizeLearningEvents(value: unknown) {
   for (const item of value) {
     if (!item || typeof item !== "object" || Array.isArray(item)) return null;
     const source = item as Record<string, unknown>;
+    const inputMode = source.inputMode === undefined
+      ? undefined
+      : normalizeMonaVnextLearningInputMode(source.inputMode);
+    if (source.inputMode !== undefined && !inputMode) return null;
     const event = buildLearningEvent({
       expressionId:
         typeof source.expressionId === "string"
@@ -203,6 +208,7 @@ function normalizeLearningEvents(value: unknown) {
         typeof source.sessionId === "string"
           ? source.sessionId.trim().slice(0, 160)
           : "",
+      inputMode,
     });
     if (!event || !event.expressionId || !event.atIso || !event.sessionId) {
       return null;
@@ -388,24 +394,13 @@ async function readCeremonyMasteryEvidence(args: {
   for (const { event, receipt } of receipts) {
     if (
       event.source.kind !== "review-credit-receipt"
-      || !receipt
-      || typeof receipt !== "object"
-      || Array.isArray(receipt)
     ) return null;
-    const stored = receipt as Record<string, unknown>;
+    const stored = normalizeWindDownReviewCycleReceipt(receipt);
     if (
-      stored.schemaVersion !== 1
+      !stored
       || stored.reviewCycleId !== event.source.reviewCycleId
       || stored.materialId !== event.source.materialId
       || stored.reviewedAt !== event.occurredAtIso
-      || typeof stored.requestDigest !== "string"
-      || !/^[a-f0-9]{64}$/.test(stored.requestDigest)
-      || (
-        stored.rating !== "again"
-        && stored.rating !== "hard"
-        && stored.rating !== "good"
-      )
-      || (stored.reward !== 0 && stored.reward !== 1)
     ) return null;
     const profileRecord = args.profile.records[event.source.materialId];
     if (
@@ -959,7 +954,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
             PROFILE_STORAGE_KEY,
           )) ?? createEmptyMonaVnextLearningProfile();
         const existingReceipt = cycleId
-          ? (await transaction.get<WindDownReviewCycleReceipt>(
+          ? (await transaction.get<unknown>(
               receiptKey(cycleId),
             )) ?? null
           : null;

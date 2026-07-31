@@ -113,6 +113,7 @@ async function main() {
       reviewCycleId,
       materialId: materials[0].id,
       contentDigest: digest,
+      inputMode: "typed",
       attempt: { answer: "I'm ready.", revealedBefore: false },
     },
   });
@@ -128,6 +129,7 @@ async function main() {
       reviewCycleId,
       materialId: materials[0].id,
       contentDigest: digest,
+      inputMode: "typed",
       attempt: { answer: "not yet", revealedBefore: false },
     },
   });
@@ -140,6 +142,7 @@ async function main() {
       reviewCycleId,
       materialId: materials[0].id,
       contentDigest: digest,
+      inputMode: "typed",
       attempt: { answer: "", revealedBefore: true },
     },
   });
@@ -154,6 +157,7 @@ async function main() {
           reviewCycleId: `winddown-review:${"f".repeat(64)}`,
           materialId: materials[0].id,
           contentDigest: digest,
+          inputMode: "typed",
           attempt: { answer: "I am ready.", revealedBefore: false },
         },
       }),
@@ -192,6 +196,7 @@ async function main() {
     reviewCycleId,
     materialId: materials[0].id,
     contentDigest: digest,
+    inputMode: "typed",
     attempts: [{ answer: "I am ready.", revealedBefore: false }],
   };
   const coordinatorCommand = {
@@ -228,6 +233,10 @@ async function main() {
   assert.equal(commitResponse.status, 200);
   const committed = await commitResponse.json() as Record<string, unknown>;
   assert.equal(committed.duplicate, false);
+  assert.equal(
+    (committed.receipt as Record<string, unknown>).inputMode,
+    "typed",
+  );
   assert.equal(committed.remainingDueCount, 1);
   assert.equal(
     committed.nextDueAtIso,

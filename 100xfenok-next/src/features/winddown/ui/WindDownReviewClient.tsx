@@ -4,9 +4,13 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   applyWindDownReviewAction,
+  createWindDownReviewChipExercise,
   createWindDownReviewSession,
+  joinWindDownReviewChips,
   type WindDownReviewCard,
+  type WindDownReviewChipExercise,
   type WindDownReviewCommitInput,
+  type WindDownReviewInputMode,
   type WindDownReviewState,
 } from "@/features/winddown/review/engine";
 import {
@@ -47,6 +51,7 @@ type ReviewReceipt = {
   materialId: string;
   rating: "good" | "hard" | "again";
   reward: 0 | 1;
+  inputMode: WindDownReviewInputMode;
 };
 
 class ReviewApiError extends Error {
@@ -162,11 +167,16 @@ function receiptFrom(value: unknown): ReviewReceipt | null {
     typeof receipt.reviewCycleId !== "string" ||
     typeof receipt.materialId !== "string" ||
     !["good", "hard", "again"].includes(String(receipt.rating)) ||
+    (receipt.inputMode !== undefined &&
+      !["chips", "typed"].includes(String(receipt.inputMode))) ||
     (receipt.reward !== 0 && receipt.reward !== 1)
   ) {
     return null;
   }
-  return receipt as ReviewReceipt;
+  return {
+    ...(receipt as Omit<ReviewReceipt, "inputMode">),
+    inputMode: receipt.inputMode === "chips" ? "chips" : "typed",
+  };
 }
 
 async function postReviewOperation(body: Record<string, unknown>) {
@@ -193,14 +203,87 @@ function queueProgress(state: WindDownReviewState | null, initialCount: number) 
   return Math.round((state.results.length / initialCount) * 100);
 }
 
+function ReviewChipInput({
+  exercise,
+  selectedIds,
+  onChange,
+  disabled,
+  assistVisible,
+  accent = "var(--wd-accent)",
+}: {
+  exercise: WindDownReviewChipExercise;
+  selectedIds: string[];
+  onChange: (ids: string[]) => void;
+  disabled: boolean;
+  assistVisible: boolean;
+  accent?: string;
+}) {
+  const byId = new Map(exercise.chips.map((chip) => [chip.id, chip]));
+  const selected = selectedIds.flatMap((id) => {
+    const chip = byId.get(id);
+    return chip ? [chip] : [];
+  });
+  return (
+    <>
+      <div
+        aria-label="선택한 단어"
+        className="mt-4 flex min-h-16 flex-wrap content-start gap-2 rounded-2xl border border-dashed border-[var(--wd-border)] bg-[var(--wd-bg)] p-3"
+      >
+        {selected.length === 0 ? (
+          <span className="text-sm font-semibold text-[var(--wd-text-muted)]">
+            아래 단어를 순서대로 눌러봐
+          </span>
+        ) : null}
+        {selected.map((chip) => (
+          <button
+            key={chip.id}
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange(selectedIds.filter((id) => id !== chip.id))}
+            className="min-h-11 max-w-full break-words rounded-xl px-3 text-sm font-black text-[var(--wd-bg)] disabled:opacity-40"
+            style={{ backgroundColor: accent }}
+          >
+            {chip.text}
+          </button>
+        ))}
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2" aria-label="고를 단어">
+        {exercise.chips.map((chip) => {
+          const isSelected = selectedIds.includes(chip.id);
+          const isFirst =
+            assistVisible && chip.id === exercise.canonicalChipIds[0];
+          return (
+            <button
+              key={chip.id}
+              type="button"
+              disabled={disabled || isSelected}
+              onClick={() => onChange([...selectedIds, chip.id])}
+              className={[
+                "min-h-11 max-w-full break-words rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 text-sm font-black disabled:opacity-25",
+                isFirst
+                  ? "animate-pulse ring-2 ring-[var(--wd-listening)] motion-reduce:animate-none"
+                  : "",
+              ].join(" ")}
+            >
+              {chip.text}
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
 export default function WindDownReviewClient() {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [session, setSession] = useState<WindDownReviewState | null>(null);
   const [initialCount, setInitialCount] = useState(0);
   const [answer, setAnswer] = useState("");
+  const [selectedChipIds, setSelectedChipIds] = useState<string[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
   const [recallAssistVisible, setRecallAssistVisible] = useState(false);
   const loadSequence = useRef(0);
+  const typedInput = useRef<HTMLInputElement>(null);
 
   const loadQueue = useCallback(async (reloadNotice: string | null = null) => {
     const sequence = loadSequence.current + 1;
@@ -208,6 +291,7 @@ export default function WindDownReviewClient() {
     setStatus("loading");
     setSession(null);
     setAnswer("");
+    setSelectedChipIds([]);
     setNotice(reloadNotice);
     try {
       const response = await fetch("/api/winddown/study?mode=review", {
@@ -253,7 +337,8 @@ export default function WindDownReviewClient() {
         if (
           !receipt ||
           receipt.reviewCycleId !== input.reviewCycleId ||
-          receipt.materialId !== input.materialId
+          receipt.materialId !== input.materialId ||
+          receipt.inputMode !== input.inputMode
         ) {
           throw new ReviewApiError("REVIEW_API_FAILED");
         }
@@ -268,6 +353,7 @@ export default function WindDownReviewClient() {
         if (next.outcome === "invalid") throw new ReviewApiError("REVIEW_API_FAILED");
         setSession(next.state);
         setAnswer("");
+        setSelectedChipIds([]);
         setNotice(
           receipt.rating === "good"
             ? "좋아. 정확히 기억했어."
@@ -304,6 +390,7 @@ export default function WindDownReviewClient() {
         reviewCycleId: card.reviewCycleId,
         materialId: card.id,
         contentDigest: gradingState.contentDigest,
+        inputMode: gradingState.inputMode,
         attempts,
       };
       try {
@@ -314,6 +401,7 @@ export default function WindDownReviewClient() {
           reviewCycleId: input.reviewCycleId,
           materialId: input.materialId,
           contentDigest: input.contentDigest,
+          inputMode: input.inputMode,
           attempt: attempts.at(-1),
         });
         const exact = gradeIsExact(body);
@@ -343,11 +431,11 @@ export default function WindDownReviewClient() {
     [commit, reloadForCycleChange],
   );
 
-  const submitFirst = () => {
+  const submitFirst = (submittedAnswer: string) => {
     if (!session || isBusy(session)) return;
     const next = applyWindDownReviewAction(session, {
       type: "submit-first",
-      answer,
+      answer: submittedAnswer,
     });
     if (next.outcome === "invalid") return;
     setSession(next.state);
@@ -364,11 +452,11 @@ export default function WindDownReviewClient() {
     void commit(next.state);
   };
 
-  const submitRetry = () => {
+  const submitRetry = (submittedAnswer: string) => {
     if (!session || isBusy(session)) return;
     const next = applyWindDownReviewAction(session, {
       type: "submit-retry",
-      answer,
+      answer: submittedAnswer,
     });
     if (next.outcome === "invalid") return;
     setSession(next.state);
@@ -408,6 +496,52 @@ export default function WindDownReviewClient() {
 
   const busy = isBusy(session);
   const current = session?.queue[0] ?? null;
+  const chipExercise = useMemo(
+    () => (current ? createWindDownReviewChipExercise(current) : null),
+    [current],
+  );
+  const selectedChips = useMemo(() => {
+    if (!chipExercise) return [];
+    const byId = new Map(chipExercise.chips.map((chip) => [chip.id, chip]));
+    return selectedChipIds.flatMap((id) => {
+      const chip = byId.get(id);
+      return chip ? [chip] : [];
+    });
+  }, [chipExercise, selectedChipIds]);
+  const selectedChipAnswer = useMemo(
+    () => joinWindDownReviewChips(selectedChips),
+    [selectedChips],
+  );
+  const submittedAnswer =
+    session?.inputMode === "typed" ? answer : selectedChipAnswer;
+
+  const setInputMode = (inputMode: WindDownReviewInputMode) => {
+    if (!session || isBusy(session)) return;
+    const next = applyWindDownReviewAction(session, {
+      type: "set-input-mode",
+      inputMode,
+    });
+    if (next.outcome === "invalid") return;
+    setSession(next.state);
+    setAnswer("");
+    setSelectedChipIds([]);
+    setNotice(null);
+  };
+
+  useEffect(() => {
+    setAnswer("");
+    setSelectedChipIds([]);
+  }, [current?.id]);
+
+  useEffect(() => {
+    if (
+      (session?.phase === "recall" || session?.phase === "retry") &&
+      session.inputMode === "typed"
+    ) {
+      typedInput.current?.focus();
+    }
+  }, [session?.inputMode, session?.phase]);
+
   const recallHintLetter = useMemo(
     () => (current ? firstEnglishLetter(current.en) : null),
     [current],
@@ -417,7 +551,7 @@ export default function WindDownReviewClient() {
     && session?.phase === "recall"
     && Boolean(current)
     && Boolean(recallHintLetter)
-    && !answer.trim()
+    && !submittedAnswer.trim()
     && !busy;
 
   useEffect(() => {
@@ -428,7 +562,7 @@ export default function WindDownReviewClient() {
       WIND_DOWN_IDLE_ASSIST_DELAY_MS,
     );
     return () => window.clearTimeout(timeoutId);
-  }, [answer, canShowRecallAssist, current?.id]);
+  }, [canShowRecallAssist, current?.id, submittedAnswer]);
 
   const progress = queueProgress(session, initialCount);
   const ratingCount = useMemo(() => {
@@ -588,33 +722,84 @@ export default function WindDownReviewClient() {
                     controls="speak-only"
                     showMatchFeedback={false}
                     disabled={busy}
-                    onTranscript={setAnswer}
                   />
-                  <div className="mt-auto pt-8">
-                    <label htmlFor="review-answer" className="text-xs font-black text-white/55">영어로 직접 입력</label>
-                    <input
-                      id="review-answer"
-                      value={answer}
-                      onChange={(event) => setAnswer(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") submitFirst();
-                      }}
-                      maxLength={240}
-                      autoComplete="off"
-                      autoCapitalize="sentences"
-                      spellCheck={false}
-                      placeholder="떠오르는 문장을 적어봐"
-                      className="mt-2 min-h-14 w-full rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-4 text-base font-bold outline-none placeholder:text-[var(--wd-text-muted)] focus:border-[var(--wd-accent)]"
-                    />
+                  <div className="mt-auto pt-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs font-black text-white/55">
+                        {session.inputMode === "chips"
+                          ? "단어를 순서대로 골라 문장 만들기"
+                          : "도움 없이 영어 문장 입력하기"}
+                      </p>
+                      <button
+                        type="button"
+                        aria-pressed={session.inputMode === "typed"}
+                        aria-expanded={session.inputMode === "typed"}
+                        aria-controls="review-input-panel"
+                        onClick={() =>
+                          setInputMode(
+                            session.inputMode === "typed" ? "chips" : "typed",
+                          )
+                        }
+                        className="min-h-[44px] shrink-0 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 text-xs font-black text-[var(--wd-text)]"
+                      >
+                        {session.inputMode === "typed" ? "단어 칩" : "직접 입력"}
+                      </button>
+                    </div>
+                    <div id="review-input-panel">
+                      {session.inputMode === "chips" && chipExercise ? (
+                        <ReviewChipInput
+                          exercise={chipExercise}
+                          selectedIds={selectedChipIds}
+                          onChange={setSelectedChipIds}
+                          disabled={busy}
+                          assistVisible={recallAssistVisible}
+                        />
+                      ) : null}
+                      {session.inputMode === "typed" ? (
+                        <>
+                          <label htmlFor="review-answer" className="sr-only">
+                            영어로 직접 입력
+                          </label>
+                          <input
+                            ref={typedInput}
+                            id="review-answer"
+                            value={answer}
+                            onChange={(event) => setAnswer(event.target.value)}
+                            onKeyDown={(event) => {
+                              if (
+                                event.key === "Enter" &&
+                                !event.nativeEvent.isComposing
+                              ) {
+                                submitFirst(submittedAnswer);
+                              }
+                            }}
+                            inputMode="text"
+                            enterKeyHint="done"
+                            maxLength={240}
+                            autoComplete="off"
+                            autoCapitalize="sentences"
+                            spellCheck={false}
+                            placeholder="떠오르는 문장을 적어봐"
+                            className="mt-4 min-h-14 w-full rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-4 text-base font-bold outline-none placeholder:text-[var(--wd-text-muted)] focus:border-[var(--wd-accent)]"
+                          />
+                        </>
+                      ) : null}
+                    </div>
                     {recallAssistVisible && recallHintLetter ? (
                       <p role="status" className="mt-3 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 py-2 text-center text-xs font-bold text-[var(--wd-text-muted)]">
-                        루미 힌트: 첫 글자는 <span className="text-[var(--wd-text)]">{recallHintLetter}</span> 이야.
+                        {session.inputMode === "typed" ? (
+                          <>
+                            루미 힌트: 첫 글자는 <span className="text-[var(--wd-text)]">{recallHintLetter}</span> 이야.
+                          </>
+                        ) : (
+                          "루미 힌트: 첫 단어가 살짝 빛나고 있어."
+                        )}
                       </p>
                     ) : null}
                     <button
                       type="button"
-                      disabled={busy || !answer.trim()}
-                      onClick={submitFirst}
+                      disabled={busy || !submittedAnswer.trim()}
+                      onClick={() => submitFirst(submittedAnswer)}
                       className="mt-3 min-h-[44px] w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-none"
                     >
                       답 확인하기
@@ -623,7 +808,7 @@ export default function WindDownReviewClient() {
                       type="button"
                       disabled={busy}
                       onClick={reveal}
-                      className="mt-3 min-h-[44px] w-full rounded-2xl border border-white/15 bg-white/[0.03] px-5 text-sm font-black text-white/80 disabled:opacity-40"
+                      className="mt-2 min-h-[44px] w-full px-5 text-xs font-black text-white/55 disabled:opacity-40"
                     >
                       정답 보기 · Again으로 기록
                     </button>
@@ -674,7 +859,7 @@ export default function WindDownReviewClient() {
                           disabled={busy || matched}
                           onClick={() => selectMatchTile(tile.id)}
                           className={[
-                            "min-h-20 rounded-2xl border px-3 py-3 text-left text-sm font-black leading-snug transition motion-reduce:transition-none",
+                            "min-h-20 min-w-0 break-words rounded-2xl border px-3 py-3 text-left text-sm font-black leading-snug transition motion-reduce:transition-none",
                             matched ? "border-[var(--wd-listening)] bg-[var(--wd-surface)] text-[var(--wd-text-muted)]" : "border-[var(--wd-border)] bg-[var(--wd-surface-raised)] text-[var(--wd-text)]",
                             selected ? "border-[var(--wd-accent)] bg-[var(--wd-surface)]" : "",
                             wrong ? "border-[var(--wd-danger)] bg-[var(--wd-surface-raised)]" : "",
@@ -702,29 +887,58 @@ export default function WindDownReviewClient() {
                     key={`retry:${current.id}`}
                     targetText={current.en}
                     controls="listen-and-speak"
+                    showMatchFeedback={false}
                     disabled={busy}
-                    onTranscript={setAnswer}
                   />
-                  <div className="mt-auto pt-8">
-                    <label htmlFor="review-retry" className="text-xs font-black text-white/55">영어로 다시 입력</label>
-                    <input
-                      id="review-retry"
-                      value={answer}
-                      onChange={(event) => setAnswer(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") submitRetry();
-                      }}
-                      maxLength={240}
-                      autoComplete="off"
-                      autoCapitalize="sentences"
-                      spellCheck={false}
-                      placeholder="이번에는 문장을 끝까지 적어봐"
-                      className="mt-2 min-h-14 w-full rounded-2xl border border-[var(--wd-listening)] bg-[var(--wd-bg)] px-4 text-base font-bold outline-none placeholder:text-[var(--wd-text-muted)] focus:border-[var(--wd-listening)]"
-                    />
+                  <div className="mt-auto pt-5">
+                    <p className="text-xs font-black text-white/55">
+                      {session.inputMode === "chips"
+                        ? "같은 단어 칩으로 다시 연결해 봐"
+                        : "같은 직접 입력 방식으로 다시 적어봐"}
+                    </p>
+                    {session.inputMode === "chips" && chipExercise ? (
+                      <ReviewChipInput
+                        exercise={chipExercise}
+                        selectedIds={selectedChipIds}
+                        onChange={setSelectedChipIds}
+                        disabled={busy}
+                        assistVisible={false}
+                        accent="var(--wd-listening)"
+                      />
+                    ) : null}
+                    {session.inputMode === "typed" ? (
+                      <>
+                        <label htmlFor="review-retry" className="sr-only">
+                          영어로 다시 입력
+                        </label>
+                        <input
+                          ref={typedInput}
+                          id="review-retry"
+                          value={answer}
+                          onChange={(event) => setAnswer(event.target.value)}
+                          onKeyDown={(event) => {
+                            if (
+                              event.key === "Enter" &&
+                              !event.nativeEvent.isComposing
+                            ) {
+                              submitRetry(submittedAnswer);
+                            }
+                          }}
+                          inputMode="text"
+                          enterKeyHint="done"
+                          maxLength={240}
+                          autoComplete="off"
+                          autoCapitalize="sentences"
+                          spellCheck={false}
+                          placeholder="이번에는 문장을 끝까지 적어봐"
+                          className="mt-4 min-h-14 w-full rounded-2xl border border-[var(--wd-listening)] bg-[var(--wd-bg)] px-4 text-base font-bold outline-none placeholder:text-[var(--wd-text-muted)] focus:border-[var(--wd-listening)]"
+                        />
+                      </>
+                    ) : null}
                     <button
                       type="button"
-                      disabled={busy || !answer.trim()}
-                      onClick={submitRetry}
+                      disabled={busy || !submittedAnswer.trim()}
+                      onClick={() => submitRetry(submittedAnswer)}
                       className="mt-3 min-h-[44px] w-full rounded-2xl bg-[var(--wd-listening)] px-5 text-sm font-black text-[var(--wd-bg)] disabled:cursor-not-allowed disabled:opacity-35"
                     >
                       한 번만 다시 확인하기

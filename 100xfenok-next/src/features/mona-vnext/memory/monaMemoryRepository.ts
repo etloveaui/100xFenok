@@ -4,6 +4,7 @@ import {
 } from "@/features/mona-vnext/memory/monaVnextNamespace";
 import {
   buildLearningEvent,
+  normalizeMonaVnextLearningInputMode,
   type MonaVnextLearningEvent,
   MonaVnextCorrectionCandidate,
   MonaVnextMasteryEvent,
@@ -80,6 +81,10 @@ function normalizeLearningEvents(value: unknown): MonaVnextLearningEvent[] {
   for (const item of value) {
     if (!item || typeof item !== "object" || Array.isArray(item)) continue;
     const record = item as Record<string, unknown>;
+    const inputMode = record.inputMode === undefined
+      ? undefined
+      : normalizeMonaVnextLearningInputMode(record.inputMode);
+    if (record.inputMode !== undefined && !inputMode) continue;
     const event = buildLearningEvent({
       expressionId: typeof record.expressionId === "string" ? record.expressionId.trim().slice(0, 120) : "",
       verdict: record.verdict === "canonical"
@@ -90,6 +95,7 @@ function normalizeLearningEvents(value: unknown): MonaVnextLearningEvent[] {
         : "garbage",
       atIso: typeof record.atIso === "string" ? record.atIso.trim().slice(0, 80) : "",
       sessionId: typeof record.sessionId === "string" ? record.sessionId.trim().slice(0, 120) : "",
+      inputMode,
     });
     if (event?.expressionId && event.atIso && event.sessionId) events.push(event);
     if (events.length >= 20) break;
