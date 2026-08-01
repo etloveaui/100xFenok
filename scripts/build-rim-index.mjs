@@ -307,7 +307,10 @@ export function buildPublicRimMirror(payload) {
       raw_public: false,
       raw_rows_included: false,
       private_artifact_paths_included: false,
-      private_path_redaction: "whitespace-free strings containing a _private/ or admin/ path segment are replaced with private_path_redacted; prose describing the policy is preserved",
+      // Describe the rule WITHOUT spelling any forbidden public token: the mirror
+      // guard scans these bytes too, and a policy sentence that names the token it
+      // forbids fails the build exactly as a real leak would.
+      private_path_redaction: "path-shaped strings (no whitespace) whose leading or interior segment is a private or admin root are replaced with private_path_redacted; prose describing the policy is preserved",
     },
   };
 }

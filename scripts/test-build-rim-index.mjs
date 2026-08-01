@@ -582,6 +582,18 @@ assert.equal(
   "private path references are not public",
   "the bare phrase 'private path' is prose and must survive",
 );
+// The public mirror guard rejects these literal tokens ANYWHERE in the emitted
+// bytes, including in the payload's own description of its redaction policy.
+// Run 30692013135 failed the Cloudflare build on exactly that: the policy
+// sentence spelled the forbidden token out loud while the data value beside it
+// was correctly redacted.
+for (const token of ["_private/", "admin/data-supply-state/", "admin/slickcharts-daily-delivery/", "data/yf/migration-evidence/"]) {
+  assert.equal(
+    JSON.stringify(buildPublicRimMirror({ p: "_private/admin/rim.json" })).includes(token),
+    false,
+    `the emitted mirror must not contain the forbidden public token ${token}, not even in its own policy text`,
+  );
+}
 assert.equal(pathBearingProjection.metric, "Selling, General & Admin", "finance metric words are not redacted");
 assert.equal(pathBearingProjection.lowercase_metric, "selling, general & admin", "lowercase finance metric words are not redacted");
 const projectedText = JSON.stringify(pathBearingProjection);
