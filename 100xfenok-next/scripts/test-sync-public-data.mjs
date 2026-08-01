@@ -1073,6 +1073,47 @@ try {
     /duplicate manifest path/i,
   );
 
+  // Regression test: reversed source creation order yields identical snapshot bytes & sha256
+  {
+    const fixture1 = makeSyncCase(fixtureRoot, "stockanalysis-etf-order-a");
+    const fixture2 = makeSyncCase(fixtureRoot, "stockanalysis-etf-order-b");
+    const spy = stockanalysisEtfFixturePayload("SPY");
+    const ivv = stockanalysisEtfFixturePayload("IVV");
+    const qqq = stockanalysisEtfFixturePayload("QQQ");
+
+    // Case A: SPY, IVV, QQQ
+    write(fixture1.sourceRoot, "stockanalysis/etfs/SPY.json", `${JSON.stringify(spy, null, 2)}\n`);
+    write(fixture1.sourceRoot, "stockanalysis/etfs/IVV.json", `${JSON.stringify(ivv, null, 2)}\n`);
+    write(fixture1.sourceRoot, "stockanalysis/etfs/QQQ.json", `${JSON.stringify(qqq, null, 2)}\n`);
+
+    // Case B: QQQ, IVV, SPY (reversed order)
+    write(fixture2.sourceRoot, "stockanalysis/etfs/QQQ.json", `${JSON.stringify(qqq, null, 2)}\n`);
+    write(fixture2.sourceRoot, "stockanalysis/etfs/IVV.json", `${JSON.stringify(ivv, null, 2)}\n`);
+    write(fixture2.sourceRoot, "stockanalysis/etfs/SPY.json", `${JSON.stringify(spy, null, 2)}\n`);
+
+    syncStockanalysisEtfShardProjection({ sourceRoot: fixture1.sourceRoot, destinationRoot: fixture1.destinationRoot, logger: () => {} });
+    syncStockanalysisEtfShardProjection({ sourceRoot: fixture2.sourceRoot, destinationRoot: fixture2.destinationRoot, logger: () => {} });
+
+    const manifestA = fs.readFileSync(path.join(fixture1.destinationRoot, "stockanalysis/etfs/shards/index.json"), "utf8");
+    const manifestB = fs.readFileSync(path.join(fixture2.destinationRoot, "stockanalysis/etfs/shards/index.json"), "utf8");
+    assert.equal(manifestA, manifestB, "manifest bytes must be byte-for-byte identical regardless of source creation order");
+
+    const parsedA = JSON.parse(manifestA);
+    const snapshotIdA = parsedA.snapshot_id;
+    const snapshotDirA = path.join(fixture1.destinationRoot, "stockanalysis/etfs/shards/snapshots", snapshotIdA);
+    const snapshotDirB = path.join(fixture2.destinationRoot, "stockanalysis/etfs/shards/snapshots", snapshotIdA);
+
+    const filesA = fs.readdirSync(snapshotDirA).sort();
+    const filesB = fs.readdirSync(snapshotDirB).sort();
+    assert.deepEqual(filesA, filesB, "snapshot directory contents must be identical");
+
+    for (const filename of filesA) {
+      const bytesA = fs.readFileSync(path.join(snapshotDirA, filename), "utf8");
+      const bytesB = fs.readFileSync(path.join(snapshotDirB, filename), "utf8");
+      assert.equal(bytesA, bytesB, `snapshot file ${filename} must be byte-for-byte identical regardless of source creation order`);
+    }
+  }
+
   console.log("test-sync-public-data: ok");
 } finally {
   fs.rmSync(fixtureRoot, { recursive: true, force: true });
