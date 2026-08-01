@@ -157,6 +157,8 @@ def _html_attempt_tuple(
         status,
         decode="ok",
         payload="non_empty",
+        # Legacy receipt name; each scraper/parser owns structural validity.
+        assertions=[{"id": "table_rows", "passed": True}],
         provider_date=provider_date,
         response_sha256=response_sha256,
     )
@@ -309,6 +311,7 @@ def fetch_html_playwright(
                 last_status,
                 decode="ok",
                 payload="non_empty",
+                assertions=[{"id": "table_rows", "passed": False}],
             ))
         else:
             _emit_attempt_tuple(_returned_failure_tuple(last_status))
