@@ -2904,7 +2904,10 @@ def fetch_etf(
             if isinstance(overview_holdings_table, dict)
             else None
         )
-        if isinstance(overview_holdings, list) and overview_holdings:
+        overview_supplies_holdings = isinstance(overview_holdings, list) and bool(overview_holdings)
+        if not holdings_unavailable and not overview_supplies_holdings:
+            raise
+        if overview_supplies_holdings:
             holdings_unavailable = False
             holdings_surface_fallback = True
             holdings_unavailability_reason = "holdings_surface_fallback_overview"
