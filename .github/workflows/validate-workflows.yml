@@ -54,19 +54,23 @@ jobs:
       - name: Parse workflow YAML
         run: ruby scripts/ops/validate-workflow-yaml.rb
 
-      # A guard nobody proves is a guard nobody has. The invented-key fixture
-      # must be rejected and the real-keys fixture must pass, so deleting the
-      # schema check cannot go green.
+      # Prove unknown keys, invalid queue enums, and max+cancel incompatibility
+      # all fail while GitHub's supported queue modes pass.
       - name: Prove the concurrency-schema guard
         run: |
           set -euo pipefail
           fixture_dir="scripts/ops/fixtures/workflow-concurrency"
-          if ruby scripts/ops/validate-workflow-yaml.rb "$fixture_dir/invalid-unknown-concurrency-key.yml" >/dev/null 2>&1; then
-            echo "FAIL regression fixture unexpectedly passed: unknown concurrency key" >&2
-            exit 1
-          fi
+          for invalid in \
+            invalid-unknown-concurrency-key.yml \
+            invalid-queue-value.yml \
+            invalid-max-cancel.yml; do
+            if ruby scripts/ops/validate-workflow-yaml.rb "$fixture_dir/$invalid" >/dev/null 2>&1; then
+              echo "FAIL regression fixture unexpectedly passed: $invalid" >&2
+              exit 1
+            fi
+          done
           ruby scripts/ops/validate-workflow-yaml.rb "$fixture_dir/valid-concurrency.yml"
-          echo "PASS concurrency-schema guard rejects invented keys and accepts the real ones"
+          echo "PASS concurrency-schema guard enforces GitHub's queue contract"
 
       - name: Validate lane manifest staging
         run: npm --prefix 100xfenok-next run qa:lane-manifest-staging

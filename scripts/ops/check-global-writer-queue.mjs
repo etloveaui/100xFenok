@@ -32,6 +32,9 @@ export function loadPolicy(policyPath = DEFAULT_POLICY_PATH) {
   if (policy.concurrency_group !== "fenok-data-writer-refs/heads/main") {
     throw new Error("queue policy concurrency group is not the canonical global writer group");
   }
+  if (policy.queue_mode !== "max") {
+    throw new Error("queue policy queue_mode must be max");
+  }
   if (policy.canonical_branch !== "main") {
     throw new Error("queue policy canonical_branch must be main");
   }

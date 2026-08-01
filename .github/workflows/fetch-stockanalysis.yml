@@ -127,6 +127,7 @@ jobs:
     concurrency:
       group: stockanalysis-acquire-${{ github.ref }}
       cancel-in-progress: false
+      queue: max
     outputs:
       artifact_digest: ${{ steps.upload.outputs.artifact-digest }}
     # 60 was structurally too short for post-outage catch-up: 261 rate-limited
@@ -445,6 +446,7 @@ jobs:
     concurrency:
       group: fenok-data-writer-refs/heads/main
       cancel-in-progress: false
+      queue: max
     steps:
       - name: Checkout complete history
         uses: actions/checkout@v4

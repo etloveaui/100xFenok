@@ -21,6 +21,7 @@ env:
 concurrency:
   group: fenok-data-writer-${{ github.ref }}
   cancel-in-progress: false
+  queue: max
 
 jobs:
   damodaran:

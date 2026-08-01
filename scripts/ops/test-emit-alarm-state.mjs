@@ -71,23 +71,30 @@ const quietHealth = {
 };
 
 // --- Queue eviction must reach the published state -------------------------
-// A run GitHub evicted from the shared writer queue executed nothing, so it is
-// not an incident and must not page. But it IS a lost acquisition slot, and on
-// 2026-07-24 two of them (news tone, queue observability) vanished with nobody
-// able to see them. The published state carries the count so contention cannot
-// hide behind an otherwise-quiet board. Counts only — the emitter deliberately
-// does not publish raw run evidence.
+// Lost scheduled slots page separately from producer failures. A non-scheduled
+// observer eviction remains visibility-only because it does not represent a
+// missed producer cadence.
 {
   const withEvictions = {
-    status: "ok",
+    status: "alarm",
     workflows: [
-      { ...okRow("fetch-fenok-news-tone.yml", "News Tone"), queue_evicted_run_urls: ["https://gh/run/30107986538"] },
+      {
+        ...okRow("fetch-fenok-news-tone.yml", "News Tone"),
+        status: "alarm",
+        alarming: true,
+        alarm_reasons: ["lost_schedule_slot"],
+        lost_schedule_slot_count: 1,
+        lost_schedule_slot_run_urls: ["https://gh/run/30107986538"],
+        queue_evicted_run_urls: ["https://gh/run/30107986538"],
+      },
       { ...okRow("global-writer-queue-observability.yml", "Queue Observability"), queue_evicted_run_urls: ["https://gh/run/30108630740"] },
       okRow("deploy-worker.yml", "Deploy Worker"),
     ],
   };
   const state = buildAlarmState({ health: withEvictions, prior: null, env: ENV, now: NOW });
-  assert.equal(state.status, "clear", "eviction alone must never page");
+  assert.equal(state.status, "open", "a lost scheduled slot must page");
+  assert.deepEqual(state.open_incidents[0].alarm_reasons, ["lost_schedule_slot"]);
+  assert.equal(state.open_incidents[0].lost_schedule_slot_count, 1);
   assert.equal(state.queue_evicted_run_count, 2, "lost slots are counted, not dropped");
   assert.deepEqual(
     state.queue_evicted_workflows,
@@ -98,8 +105,12 @@ const quietHealth = {
     "each losing workflow is named, sorted, without raw run evidence",
   );
   const quietSameBoard = {
-    ...withEvictions,
-    workflows: withEvictions.workflows.map(({ queue_evicted_run_urls: _ignored, ...row }) => row),
+    status: "ok",
+    workflows: [
+      okRow("fetch-fenok-news-tone.yml", "News Tone"),
+      okRow("global-writer-queue-observability.yml", "Queue Observability"),
+      okRow("deploy-worker.yml", "Deploy Worker"),
+    ],
   };
   const quiet = buildAlarmState({ health: quietSameBoard, prior: null, env: ENV, now: NOW });
   assert.equal(quiet.queue_evicted_run_count, 0);
@@ -107,7 +118,7 @@ const quietHealth = {
   assert.equal(
     alarmStateUnchanged(quiet, state),
     false,
-    "an eviction-only change must update the published state even though it does not page",
+    "clearing a lost scheduled slot must update the published state",
   );
   assert.equal(
     alarmStateUnchanged(state, quiet),
@@ -230,23 +241,31 @@ assert.deepEqual(
 );
 
 // Defect 2 two-hop public projection: cadence is supplied by the health
-// producer, then emitted without allowing an overdue slot to page.  The public
+// producer, and an unrecovered overdue slot pages after its declared grace. The public
 // shape keeps only the honest suspected_skip/attempt_gap words, never its cron
 // or private evidence paths.
 {
   const cadenceHealth = {
-    status: "ok",
+    status: "alarm",
     workflows: [
       { ...okRow("not-due.yml", "Not Due"), cadence_status: "not_due" },
-      { ...okRow("overdue.yml", "Overdue"), cadence_status: "overdue", cadence_evidence: ["suspected_skip"] },
+      {
+        ...okRow("overdue.yml", "Overdue"),
+        status: "alarm",
+        alarming: true,
+        alarm_reasons: ["unrecovered_overdue"],
+        cadence_status: "overdue",
+        cadence_evidence: ["suspected_skip"],
+      },
       { ...okRow("recovered.yml", "Recovered"), cadence_status: "recovered", cadence_evidence: ["attempt_gap"] },
       { ...okRow("no-declaration.yml", "No Declaration"), cadence_status: "no_declaration" },
       { ...okRow("unknown.yml", "Unknown"), cadence_status: "unknown" },
     ],
   };
   const cadenceState = buildAlarmState({ health: cadenceHealth, prior: null, env: ENV, now: NOW });
-  assert.equal(cadenceState.status, "clear", "an overdue slot must not change the completed-run paging decision");
-  assert.equal(cadenceState.open_incident_count, 0);
+  assert.equal(cadenceState.status, "open", "unrecovered overdue after declared grace must page");
+  assert.equal(cadenceState.open_incident_count, 1);
+  assert.deepEqual(cadenceState.open_incidents[0].alarm_reasons, ["unrecovered_overdue"]);
   assert.deepEqual(cadenceState.cadence_state_counts, {
     not_due: 1,
     overdue: 1,

@@ -1,6 +1,6 @@
-# Control fixture: the two keys GitHub Actions actually defines, at both the
-# top level and job level. This must keep passing, so the guard cannot be
-# satisfied by rejecting concurrency blocks outright.
+# Control fixture: every supported key and queue enum at both the top level and
+# job level. This must keep passing, so the guard cannot reject concurrency
+# blocks or GitHub's native deep queue.
 name: Valid Concurrency
 
 on:
@@ -9,6 +9,7 @@ on:
 concurrency:
   group: fixture-writer
   cancel-in-progress: false
+  queue: max
 
 jobs:
   noop:
@@ -16,6 +17,7 @@ jobs:
     concurrency:
       group: fixture-writer-job
       cancel-in-progress: true
+      queue: single
     steps:
       - name: Noop
         run: echo noop

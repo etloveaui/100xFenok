@@ -412,8 +412,8 @@ function cadenceEvidenceFromRows(rows, recoveredSlots) {
 
 /**
  * Project the existing detection/KPI slot evidence onto every watched workflow.
- * `overdue` is an observability result only; the paging path continues to use
- * completed-run failure streaks in evaluateWorkflow.
+ * An overdue slot is already beyond its declared grace window, so it is an
+ * independent paging reason even when the latest completed run is green.
  */
 export function deriveWorkflowCadenceProjection({
   watched,
@@ -491,10 +491,18 @@ export function attachWorkflowCadence(workflows, cadenceProjection) {
       evidence: [],
       failure_streak_threshold: FAST_CADENCE_FAILURE_STREAK_THRESHOLD,
     };
+    const alarmReasons = Array.isArray(workflow.alarm_reasons)
+      ? [...new Set(workflow.alarm_reasons)]
+      : [];
+    if (cadence.state === "overdue" && !alarmReasons.includes("unrecovered_overdue")) {
+      alarmReasons.push("unrecovered_overdue");
+    }
+    const alarming = workflow.alarming === true || cadence.state === "overdue";
     return {
       ...workflow,
-      // Keep the run-failure classification intact. An overdue declared slot is
-      // visible evidence, but never becomes an `alarm` or a paging decision here.
+      status: alarming ? "alarm" : workflow.status,
+      alarming,
+      alarm_reasons: alarmReasons,
       cadence_status: cadence.state,
       cadence_evidence: cadence.evidence,
       failure_streak_threshold: cadence.failure_streak_threshold,
@@ -565,10 +573,10 @@ export function computeFailureStreak(runs) {
 
 /**
  * True when GitHub never executed the run: every job was cancelled without
- * entering a single step. That is the signature of concurrency-queue eviction —
- * `cancel-in-progress: false` keeps at most ONE waiting run per group, so a
- * third arrival cancels the one that was waiting. Absent or empty job data
- * proves nothing and must not be read as eviction.
+ * entering a single step. That is the legacy concurrency-queue replacement
+ * signature retained for historical evidence and isolated groups. Empty job
+ * data does not prove this signature; scheduled `jobs=[]` is classified
+ * separately as a lost schedule slot.
  *
  * Pure function — the test imports this directly.
  *
@@ -578,6 +586,11 @@ export function computeFailureStreak(runs) {
 export function isQueueEvictedRun(jobs) {
   if (!Array.isArray(jobs) || jobs.length === 0) return false;
   return jobs.every((job) => job?.conclusion === "cancelled" && (job?.steps?.length ?? 0) === 0);
+}
+
+export function isLostScheduledSlot(run) {
+  return run?.event === "schedule"
+    && (run?.jobs_empty === true || run?.queue_evicted === true);
 }
 
 /**
@@ -590,18 +603,28 @@ export function evaluateWorkflow(workflow, runs) {
     return !Array.isArray(workflow.events) || !run?.event || workflow.events.includes(run.event);
   });
   const { streak, firstFailingIndex, evictedRunUrls } = computeFailureStreak(countedRuns);
+  const lostScheduledSlots = countedRuns.filter(isLostScheduledSlot);
+  const lostScheduledSlotRunUrls = lostScheduledSlots
+    .map((run) => run?.html_url)
+    .filter(Boolean);
   const latest = countedRuns[0] || null;
   const failureStreakThreshold = workflow.failure_streak_threshold === SLOW_CADENCE_FAILURE_STREAK_THRESHOLD
     ? SLOW_CADENCE_FAILURE_STREAK_THRESHOLD
     : FAST_CADENCE_FAILURE_STREAK_THRESHOLD;
+  const alarmReasons = [];
+  if (streak >= failureStreakThreshold) alarmReasons.push("failure_streak");
+  if (lostScheduledSlots.length > 0) alarmReasons.push("lost_schedule_slot");
   const base = {
     file: workflow.file,
     label: workflow.label,
     streak,
     failure_streak_threshold: failureStreakThreshold,
-    alarming: streak >= failureStreakThreshold,
+    alarming: alarmReasons.length > 0,
+    alarm_reasons: alarmReasons,
     latestRunUrl: latest?.html_url || null,
     queue_evicted_run_urls: evictedRunUrls,
+    lost_schedule_slot_count: lostScheduledSlots.length,
+    lost_schedule_slot_run_urls: lostScheduledSlotRunUrls,
   };
   if (workflow.events) base.events = workflow.events;
   if (countedRuns.length === 0) {
@@ -618,32 +641,46 @@ export function evaluateWorkflow(workflow, runs) {
   return {
     ...base,
     status: "alarm",
-    firstFailingRunId: firstFailing?.id ?? null,
-    firstFailingRunUrl: firstFailing?.html_url || null,
-    firstFailingStartedAt: firstFailing?.run_started_at || firstFailing?.created_at || null,
+    ...(firstFailing ? {
+      firstFailingRunId: firstFailing.id ?? null,
+      firstFailingRunUrl: firstFailing.html_url || null,
+      firstFailingStartedAt: firstFailing.run_started_at || firstFailing.created_at || null,
+    } : {}),
   };
 }
 
 function buildIssueBody(alarms) {
   const lines = [
-    "[alert] Consecutive pipeline job failures detected.",
+    "[alert] Pipeline health incidents detected.",
     "",
-    "A scheduled or critical workflow reached its cadence-calibrated failure threshold. On 07-16 a bad commit hard-failed",
-    "every Update Manifest run for ~12h and blocked Deploy Worker with no alarm — this",
-    "check exists to detect that class of outage on the next hourly alarm sweep.",
+    "A watched workflow lost a scheduled slot, remained overdue after its documented grace,",
+    "or reached its cadence-calibrated failure threshold.",
     "",
   ];
   for (const alarm of alarms) {
     lines.push(`## ${alarm.label} (\`${alarm.file}\`)`);
-    lines.push(`- Consecutive failures: ${alarm.streak}`);
-    lines.push(`- Paging threshold: ${alarm.failure_streak_threshold}`);
-    lines.push(
-      `- First failing run: ${alarm.firstFailingRunId ?? "unknown"}` +
-        (alarm.firstFailingStartedAt ? ` started ${alarm.firstFailingStartedAt}` : ""),
-    );
-    if (alarm.firstFailingRunUrl) lines.push(`- First failing run URL: ${alarm.firstFailingRunUrl}`);
+    const reasons = Array.isArray(alarm.alarm_reasons) ? alarm.alarm_reasons : [];
+    lines.push(`- Alarm reasons: ${reasons.join(", ") || "unknown"}`);
+    if (reasons.includes("lost_schedule_slot")) {
+      lines.push(`- Lost scheduled slots: ${alarm.lost_schedule_slot_count ?? 0}`);
+      for (const url of alarm.lost_schedule_slot_run_urls ?? []) {
+        lines.push(`- Lost scheduled run URL: ${url}`);
+      }
+    }
+    if (reasons.includes("unrecovered_overdue")) {
+      lines.push("- Declared cadence remains overdue after its documented grace.");
+    }
+    if (reasons.includes("failure_streak")) {
+      lines.push(`- Consecutive failures: ${alarm.streak}`);
+      lines.push(`- Paging threshold: ${alarm.failure_streak_threshold}`);
+      lines.push(
+        `- First failing run: ${alarm.firstFailingRunId ?? "unknown"}` +
+          (alarm.firstFailingStartedAt ? ` started ${alarm.firstFailingStartedAt}` : ""),
+      );
+      if (alarm.firstFailingRunUrl) lines.push(`- First failing run URL: ${alarm.firstFailingRunUrl}`);
+      lines.push("- Read the failed step log for the failing run.");
+    }
     if (alarm.latestRunUrl) lines.push(`- Latest run URL: ${alarm.latestRunUrl}`);
-    lines.push("- Read the failed step LOG (a green run means nothing here — inspect the actual failure).");
     lines.push("");
   }
   return lines.join("\n");
@@ -707,22 +744,24 @@ async function fetchRunJobs({ token, owner, repo, runId }) {
   return Array.isArray(payload?.jobs) ? payload.jobs : [];
 }
 
-// Only the leading failure-class prefix can change a streak verdict, so that is
-// the only place worth spending job-level API calls. Capped so a workflow with a
-// long red history cannot turn one health check into a rate-limit incident, and
-// fail-open: a job lookup that errors leaves the run classified exactly as the
-// run list already classified it.
+// Only the leading failure-class or scheduled-cancellation prefix can change an
+// incident verdict, so that is the only place worth spending job-level API calls.
+// The lookup is capped and fail-open: an API error preserves the run-list result.
 export const QUEUE_EVICTION_INSPECTION_LIMIT = 5;
 
 export async function annotateQueueEvictions({ runs, fetchJobsFn, limit = QUEUE_EVICTION_INSPECTION_LIMIT }) {
   if (!Array.isArray(runs) || typeof fetchJobsFn !== "function") return runs;
   let inspected = 0;
   for (const run of runs) {
-    if (!FAILURE_CONCLUSIONS.has(run?.conclusion)) break;
+    const inspectable = FAILURE_CONCLUSIONS.has(run?.conclusion)
+      || (run?.event === "schedule" && run?.conclusion === "cancelled");
+    if (!inspectable) break;
     if (inspected >= limit) break;
     inspected += 1;
     try {
-      if (isQueueEvictedRun(await fetchJobsFn(run.id))) run.queue_evicted = true;
+      const jobs = await fetchJobsFn(run.id);
+      if (Array.isArray(jobs) && jobs.length === 0) run.jobs_empty = true;
+      else if (isQueueEvictedRun(jobs)) run.queue_evicted = true;
     } catch {
       // keep the run-list classification
     }

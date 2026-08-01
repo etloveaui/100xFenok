@@ -1,0 +1,15 @@
+name: Invalid Concurrency Queue Value
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: fixture-writer
+  cancel-in-progress: false
+  queue: unlimited
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo noop

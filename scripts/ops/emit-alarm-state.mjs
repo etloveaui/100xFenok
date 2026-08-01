@@ -46,6 +46,11 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
     failure_streak_threshold: w.failure_streak_threshold === 1 ? 1 : 2,
     first_failing_run_id: w.firstFailingRunId ?? w.alarm?.firstFailingRunId ?? null,
     first_failing_run_url: w.firstFailingRunUrl ?? w.alarm?.firstFailingRunUrl ?? null,
+    alarm_reasons: Array.isArray(w.alarm_reasons) ? [...new Set(w.alarm_reasons)].sort() : [],
+    lost_schedule_slot_count: Number.isInteger(w.lost_schedule_slot_count)
+      ? w.lost_schedule_slot_count
+      : 0,
+    cadence_status: CADENCE_STATES.includes(w?.cadence_status) ? w.cadence_status : "unknown",
   }));
 
   // A run the API could not classify is a real state, and going from one unknown
@@ -64,11 +69,9 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
       }))
       .sort((a, b) => String(a.file).localeCompare(String(b.file)))
     : [];
-  // A run GitHub evicted from the shared `fenok-data-writer` queue executed
-  // nothing, so it is not an incident and must never page. It is still a LOST
-  // acquisition slot, and on 2026-07-24 two of them disappeared with no surface
-  // able to show it. Counts only, sorted, no raw run evidence — consistent with
-  // the cadence-evidence policy below.
+  // Queue eviction evidence remains visible by workflow. A scheduled lost slot
+  // pages through `lost_schedule_slot`; an observer/manual eviction alone does
+  // not. Counts only, sorted, no raw run evidence.
   const queueEvictedWorkflows = workflows
     .map((w) => ({
       workflow: w?.file ?? null,

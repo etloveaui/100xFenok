@@ -22,6 +22,7 @@ const NOW = "2026-07-21T03:00:00Z";
 assert.equal(policy.version, 1, "queue policy is explicitly versioned");
 assert.equal(policy.metric, "global-writer candidate queued runs");
 assert.equal(policy.concurrency_group, "fenok-data-writer-refs/heads/main");
+assert.equal(policy.queue_mode, "max", "loss-intolerant writers use GitHub's deep pending queue");
 assert.equal(policy.canonical_branch, "main", "writer workflows are observed only on main");
 assert.equal(policy.default_observation_mode, "workflow_run", "other writers retain workflow-level observation");
 assert.ok(Array.isArray(policy.workflows) && policy.workflows.length > 10, "writer workflow list is explicit");
@@ -49,6 +50,24 @@ const actualWriterWorkflows = fs
   })
   .sort();
 assert.deepEqual([...policy.workflows].sort(), actualWriterWorkflows, "policy list stays in parity with global-writer workflows");
+const canonicalQueueBlock = /group:\s*(?:fenok-data-writer-refs\/heads\/main|fenok-data-writer-\$\{\{ github\.ref \}\})\s*\n\s*cancel-in-progress:\s*false\s*\n\s*queue:\s*max/;
+for (const file of policy.workflows) {
+  const body = fs.readFileSync(path.join(workflowsDir, file), "utf8");
+  assert.match(body, canonicalQueueBlock, `${file} must opt into the canonical max queue atomically`);
+  assert.doesNotMatch(
+    body.replace(canonicalQueueBlock, ""),
+    /group:\s*(?:fenok-data-writer-refs\/heads\/main|fenok-data-writer-\$\{\{ github\.ref \}\})/,
+    `${file} must declare the canonical writer group exactly once`,
+  );
+}
+{
+  const stockanalysis = fs.readFileSync(path.join(workflowsDir, "fetch-stockanalysis.yml"), "utf8");
+  assert.match(
+    stockanalysis,
+    /group:\s*stockanalysis-acquire-\$\{\{ github\.ref \}\}\s*\n\s*cancel-in-progress:\s*false\s*\n\s*queue:\s*max/,
+    "StockAnalysis acquisition is loss-intolerant and must use the max queue",
+  );
+}
 
 const runs = readFixture("mixed");
 const evaluated = evaluateQueue(runs, { now: NOW, maxDepth: 2, maxAgeMinutes: 30 });

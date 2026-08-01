@@ -7,15 +7,12 @@ paths = ARGV.empty? ? Dir.glob(".github/workflows/*.{yml,yaml}").sort : ARGV
 failed = []
 schema_failed = []
 
-# GitHub Actions defines exactly two keys under `concurrency`. It ignores the
-# rest silently, so an invented key reads as configuration while doing nothing.
-# `queue: max` sat in 28 workflows and was read by humans as a deep writer
-# queue; the real behaviour is one run in progress plus at most ONE waiting, and
-# a third arrival cancels the waiter. Two acquisition slots died that way on
-# 2026-07-24 before anyone noticed. Syntax validation cannot catch this - the
-# YAML is perfectly well-formed - which is the same blind spot as #357, where a
-# file GitHub itself refused to run passed this check.
-CONCURRENCY_KEYS = %w[group cancel-in-progress].freeze
+# GitHub Actions supports a native pending queue under `concurrency`: `single`
+# (the replacement-prone default) or `max` (up to 100 pending runs). Keep this
+# local schema aligned with GitHub while still rejecting invented keys and the
+# forbidden max-queue + in-progress-cancellation combination.
+CONCURRENCY_KEYS = %w[group cancel-in-progress queue].freeze
+CONCURRENCY_QUEUE_VALUES = %w[single max].freeze
 
 def concurrency_violations(doc, path)
   found = []
@@ -28,8 +25,16 @@ def concurrency_violations(doc, path)
   blocks.each do |where, block|
     next unless block.is_a?(Hash)
     unknown = block.keys.map(&:to_s) - CONCURRENCY_KEYS
-    next if unknown.empty?
-    found << "#{path}: #{where} concurrency declares #{unknown.join(', ')} - GitHub Actions defines only #{CONCURRENCY_KEYS.join(', ')} and silently ignores anything else"
+    unless unknown.empty?
+      found << "#{path}: #{where} concurrency declares #{unknown.join(', ')} - GitHub Actions defines only #{CONCURRENCY_KEYS.join(', ')}"
+    end
+    queue = block["queue"]
+    if !queue.nil? && !CONCURRENCY_QUEUE_VALUES.include?(queue.to_s)
+      found << "#{path}: #{where} concurrency queue must be one of #{CONCURRENCY_QUEUE_VALUES.join(', ')}"
+    end
+    if queue.to_s == "max" && block["cancel-in-progress"] == true
+      found << "#{path}: #{where} concurrency queue max is incompatible with cancel-in-progress true"
+    end
   end
   found
 end

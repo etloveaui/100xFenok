@@ -271,7 +271,9 @@ function writeWorkflow(root, file, source) {
     ],
   );
   const joined = attachWorkflowCadence([{ file: "overdue.yml", label: "Overdue", status: "ok" }], projection);
-  assert.equal(joined[0].status, "ok", "overdue remains visible but cannot become a failure alarm");
+  assert.equal(joined[0].status, "alarm", "unrecovered overdue after declared grace must page");
+  assert.equal(joined[0].alarming, true);
+  assert.deepEqual(joined[0].alarm_reasons, ["unrecovered_overdue"]);
   assert.equal(joined[0].cadence_status, "overdue");
 
   // Mutation proof: neither absent grace nor an ambiguous/missing schedule may
@@ -499,15 +501,9 @@ function writeWorkflow(root, file, source) {
 }
 
 // --- Queue eviction is its own state, not a producer failure ----------------
-// 28 workflows share `group: fenok-data-writer-*` with cancel-in-progress:false.
-// GitHub keeps at most one run WAITING per group, so a third arrival evicts the
-// waiting one. The evicted run reports run-level `failure` with a job that has
-// conclusion `cancelled` and ZERO steps — it never executed a single line. On
-// 2026-07-24 that silently killed the GDELT news-tone slot (30107986538) and
-// the queue observability slot (30108630740) within 12 minutes of each other.
-// Counting it as a producer failure blames the wrong thing; passing it over
-// like an ordinary supersession hides a lost acquisition slot. It gets its own
-// class: skipped for the streak, surfaced by name.
+// A scheduled run cancelled before any job exists is a lost natural slot. It
+// must page without inflating the producer failure streak. Manual cancellations
+// remain outside the counted automatic event set.
 const jobsOf = (...jobs) => ({ jobs });
 const evictedJobs = jobsOf({ name: "fetch", conclusion: "cancelled", steps: [] });
 const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "Run", conclusion: "failure" }] });
@@ -567,8 +563,38 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
       { ...S(1), event: "schedule" },
     ],
   );
-  assert.equal(result.streak, 0, "eviction alone is not an alarm");
+  assert.equal(result.streak, 0, "eviction is not a producer failure");
+  assert.equal(result.status, "alarm", "a lost scheduled slot must page");
+  assert.deepEqual(result.alarm_reasons, ["lost_schedule_slot"]);
   assert.deepEqual(result.queue_evicted_run_urls, ["https://gh/run/2"]);
+}
+
+{
+  const result = evaluateWorkflow(
+    { file: "fetch-oecd-cli.yml", label: "OECD", events: ["schedule"] },
+    [
+      { ...C(30694384064), event: "schedule", jobs_empty: true },
+      { ...S(30690000000), event: "schedule" },
+    ],
+  );
+  assert.equal(result.status, "alarm");
+  assert.equal(result.streak, 0);
+  assert.equal(result.lost_schedule_slot_count, 1);
+  assert.deepEqual(result.lost_schedule_slot_run_urls, ["https://gh/run/30694384064"]);
+  assert.deepEqual(result.alarm_reasons, ["lost_schedule_slot"]);
+}
+
+{
+  const result = evaluateWorkflow(
+    { file: "fetch-oecd-cli.yml", label: "OECD", events: ["schedule"] },
+    [
+      { ...C(10), event: "workflow_dispatch", jobs_empty: true },
+      { ...S(9), event: "schedule" },
+    ],
+  );
+  assert.equal(result.status, "ok", "normal manual cancellation must not become a lost scheduled slot");
+  assert.equal(result.lost_schedule_slot_count, 0);
+  assert.deepEqual(result.alarm_reasons, []);
 }
 
 // --- The classifier must actually be wired to run data ----------------------
@@ -594,6 +620,22 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
     fetchJobsFn: async (id) => { asked.push(id); return []; },
   });
   assert.deepEqual(asked, [], "a healthy latest run spends no API calls at all");
+}
+
+{
+  const asked = [];
+  const runs = await annotateQueueEvictions({
+    runs: [{ ...C(30694384064), event: "schedule" }, { ...S(1), event: "schedule" }],
+    fetchJobsFn: async (id) => { asked.push(id); return []; },
+  });
+  assert.deepEqual(asked, [30694384064], "a leading cancelled schedule must inspect job execution evidence");
+  assert.equal(runs[0].jobs_empty, true);
+  const result = evaluateWorkflow(
+    { file: "fetch-oecd-cli.yml", label: "OECD", events: ["schedule"] },
+    runs,
+  );
+  assert.equal(result.status, "alarm");
+  assert.equal(result.lost_schedule_slot_count, 1);
 }
 
 {
@@ -723,8 +765,13 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
     result.watched.length,
     "the five-state count must reconcile to the complete watch inventory",
   );
-  assert.equal(result.workflows.some((row) => row.cadence_status === "overdue" && row.status === "alarm"), false,
-    "cadence overdue cannot manufacture a paging alarm during the first evaluation");
+  const overdueRows = result.workflows.filter((row) => row.cadence_status === "overdue");
+  assert.ok(overdueRows.length > 0, "the checked-in KPI fixture must exercise overdue cadence");
+  assert.ok(
+    overdueRows.every((row) => row.status === "alarm"
+      && row.alarm_reasons.includes("unrecovered_overdue")),
+    "an unrecovered slot beyond declared grace must remain a paging incident",
+  );
 }
 
 // Workflow YAML sanity: mirror the budget-alarm shape and honor #357 (no runner
