@@ -412,19 +412,39 @@ const DEFERRED_RECONCILIATION_REASONS = new Set([
 ]);
 const etfDetailDateRows = etfDetailEntries.map((entry) => {
   const ticker = String(entry?.ticker ?? "").trim();
-  const frozenSourceAsOf = trueSourceDate(entry?.source_as_of);
+  const unavailable = entry?.resolution_state === "unavailable";
+  // An unavailable R2 member has no published detail. Its retained provider
+  // file may still carry an old source_as_of, but that legacy date is not an
+  // effective member and must not become the ETF center source floor.
   const safeTicker = /^[A-Za-z0-9._^=-]+$/.test(ticker);
+  const resolvedPayloadPath = !unavailable && safeTicker && typeof entry?.payload_path === "string"
+    && entry.payload_path.trim() === `payloads/${ticker}.json`
+    ? entry.payload_path.trim()
+    : "";
+  const resolvedPayload = resolvedPayloadPath
+    ? readJson(`computed/data-supply/etf-detail/${resolvedPayloadPath}`)
+    : null;
+  const resolvedSourceAsOf = resolvedPayload ? trueSourceDate(resolvedPayload?.source_as_of) : null;
   const livePayload = safeTicker ? readJson(`stockanalysis/etfs/${ticker}.json`) : null;
-  const liveSourceAsOf = livePayload ? trueSourceDate(livePayload?.source_as_of) : null;
-  const sourceAsOf = liveSourceAsOf ?? frozenSourceAsOf;
+  const liveSourceAsOf = !unavailable && !resolvedPayload && livePayload
+    ? trueSourceDate(livePayload?.source_as_of)
+    : null;
+  const frozenSourceAsOf = unavailable || resolvedPayload ? null : trueSourceDate(entry?.source_as_of);
+  const sourceAsOf = resolvedSourceAsOf ?? liveSourceAsOf ?? frozenSourceAsOf;
   const partialReasonCodes = Array.isArray(livePayload?.partial_reason_codes)
     ? livePayload.partial_reason_codes
     : [];
   return {
     ticker: ticker || "unknown",
     source_as_of: sourceAsOf,
-    source: liveSourceAsOf != null ? "live_payload" : frozenSourceAsOf != null ? "frozen_index_fallback" : "missing",
-    recovered_from_live: frozenSourceAsOf == null && liveSourceAsOf != null,
+    source: resolvedSourceAsOf != null
+      ? "resolved_payload"
+      : liveSourceAsOf != null
+        ? "live_payload"
+        : frozenSourceAsOf != null
+          ? "frozen_index_fallback"
+          : "missing",
+    recovered_from_live: !unavailable && frozenSourceAsOf == null && liveSourceAsOf != null,
     deferred_reconciliation: partialReasonCodes.some((reason) => DEFERRED_RECONCILIATION_REASONS.has(reason)),
   };
 });
@@ -447,7 +467,7 @@ const oldestEtfDetailMember = etfDetailAgeRows.length
   : null;
 const etfDetailDateResolution = {
   enrollment_count: etfDetailDateRows.length,
-  live_date_count: etfDetailDateRows.filter((row) => row.source === "live_payload").length,
+  live_date_count: etfDetailDateRows.filter((row) => ["resolved_payload", "live_payload"].includes(row.source)).length,
   fallback_date_count: etfDetailDateRows.filter((row) => row.source === "frozen_index_fallback").length,
   recovered_from_live_count: etfDetailDateRows.filter((row) => row.recovered_from_live).length,
   missing_date_count: etfDetailDateRows.filter((row) => row.source === "missing").length,
