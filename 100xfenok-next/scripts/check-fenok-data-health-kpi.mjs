@@ -783,16 +783,17 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
   if (isV2) {
     const yahoo = lanesById.get("yahoo_batch_quote_history");
     const yahooCounts = yahoo?.counts || {};
-    const countKeys = ["active", "untracked", "fresh", "lkg", "pending_history", "unavailable", "retry", "failed", "stale"];
+    const countKeys = ["active", "untracked", "pending_acquisition", "fresh", "lkg", "pending_history", "unavailable", "terminal", "retry", "failed", "stale"];
     for (const key of countKeys) {
       push(errors, typeof yahooCounts[key] === "number" && Number.isInteger(yahooCounts[key]) && yahooCounts[key] >= 0,
         `yahoo_batch_quote_history.counts.${key} must be a non-negative integer`);
     }
     const active = Number(yahooCounts.active);
-    const classified = Number(yahooCounts.untracked) + Number(yahooCounts.fresh) + Number(yahooCounts.lkg)
-      + Number(yahooCounts.pending_history) + Number(yahooCounts.unavailable);
-    push(errors, classified === active,
-      `yahoo_batch_quote_history classified count mismatch: ${classified} vs active ${active}`);
+    const partitioned = Number(yahooCounts.untracked) + Number(yahooCounts.pending_acquisition)
+      + Number(yahooCounts.fresh) + Number(yahooCounts.lkg) + Number(yahooCounts.pending_history)
+      + Number(yahooCounts.unavailable) + Number(yahooCounts.terminal);
+    push(errors, partitioned === active,
+      `yahoo_batch_quote_history active partition mismatch: ${partitioned} vs active ${active}`);
     push(errors, Number(yahooCounts.retry) <= Number(yahooCounts.lkg) + Number(yahooCounts.pending_history) + Number(yahooCounts.unavailable),
       "yahoo_batch_quote_history retry count exceeds non-fresh states");
     push(errors, Number(yahooCounts.failed) <= Number(yahooCounts.lkg) + Number(yahooCounts.pending_history) + Number(yahooCounts.unavailable),
@@ -836,10 +837,12 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
       "yahoo_batch_quote_history fetch_attempts is below non-skipped attempts");
     const yahooReady = active > 0
       && Number(yahooCounts.untracked) === 0
+      && Number(yahooCounts.pending_acquisition) === 0
       && Number(yahooCounts.fresh) === active
       && Number(yahooCounts.lkg) === 0
       && Number(yahooCounts.pending_history) === 0
       && Number(yahooCounts.unavailable) === 0
+      && Number(yahooCounts.terminal) === 0
       && Number(yahooCounts.retry) === 0
       && Number(latestAttempt?.failed) === 0
       && oldestValid

@@ -1583,22 +1583,36 @@ export function buildStockDenominatorReconciliation({
   const coverageTrack = trackById(coverageIndex, "expanded_stock_candidates");
   const canonicalPlan = coverageTrack?.denominator;
   const yahooCounts = yahooBatchState?.counts;
-  const activeFields = ["active", "untracked", "fresh", "lkg", "pending_history", "unavailable", "retry"];
+  const activeFields = [
+    "active",
+    "untracked",
+    "pending_acquisition",
+    "fresh",
+    "lkg",
+    "pending_history",
+    "unavailable",
+    "terminal",
+    "retry",
+  ];
   const activeCount = yahooCounts?.active;
   const untrackedCount = yahooCounts?.untracked;
+  const pendingAcquisitionCount = yahooCounts?.pending_acquisition;
   const freshCount = yahooCounts?.fresh;
   const lkgCount = yahooCounts?.lkg;
   const pendingCount = yahooCounts?.pending_history;
   const unavailableCount = yahooCounts?.unavailable;
+  const yahooTerminalCount = yahooCounts?.terminal;
   const retryCount = yahooCounts?.retry;
   const countValues = {
     canonical_daily_plan: strictPositiveInteger(canonicalPlan) ? canonicalPlan : null,
     yahoo_active_universe: strictPositiveInteger(activeCount) ? activeCount : null,
     yahoo_active_untracked: strictNonNegativeInteger(untrackedCount) ? untrackedCount : null,
+    yahoo_active_pending_acquisition: strictNonNegativeInteger(pendingAcquisitionCount) ? pendingAcquisitionCount : null,
     yahoo_active_fresh: strictNonNegativeInteger(freshCount) ? freshCount : null,
     yahoo_active_lkg: strictNonNegativeInteger(lkgCount) ? lkgCount : null,
     yahoo_active_pending_history: strictNonNegativeInteger(pendingCount) ? pendingCount : null,
     yahoo_active_unavailable: strictNonNegativeInteger(unavailableCount) ? unavailableCount : null,
+    yahoo_active_terminal: strictNonNegativeInteger(yahooTerminalCount) ? yahooTerminalCount : null,
     retry_debt: strictNonNegativeInteger(retryCount) ? retryCount : null,
   };
 
@@ -1625,9 +1639,14 @@ export function buildStockDenominatorReconciliation({
     : null;
   const activePartitionOk = countValues.yahoo_active_universe !== null
     && countValues.yahoo_active_untracked !== null
+    && countValues.yahoo_active_pending_acquisition !== null
+    && countValues.yahoo_active_terminal !== null
     && classifiedCount !== null
-    && classifiedCount + countValues.yahoo_active_untracked === countValues.yahoo_active_universe;
-  if (!activePartitionOk) blockers.push("Yahoo active universe is not closed by classified plus untracked states");
+    && classifiedCount
+      + countValues.yahoo_active_pending_acquisition
+      + countValues.yahoo_active_terminal
+      + countValues.yahoo_active_untracked === countValues.yahoo_active_universe;
+  if (!activePartitionOk) blockers.push("Yahoo active universe is not closed by its exclusive states");
 
   const retrySymbols = yahooBatchState?.retry_symbols;
   const retrySymbolsValid = uniqueNonEmptyStrings(retrySymbols);
@@ -1719,6 +1738,8 @@ export function buildStockDenominatorReconciliation({
     equations: {
       yahoo_active_partition: {
         classified: classifiedCount,
+        pending_acquisition: countValues.yahoo_active_pending_acquisition,
+        terminal: countValues.yahoo_active_terminal,
         untracked: countValues.yahoo_active_untracked,
         total: countValues.yahoo_active_universe,
         ok: activePartitionOk,
@@ -1954,10 +1975,13 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
       ? [...new Set(currentAttempt.promotion_deferral_symbols.filter((value) => typeof value === "string"))].sort()
       : [],
   };
-  const exclusiveCount = number(counts.fresh)
+  const partitionCount = number(counts.fresh)
     + number(counts.lkg)
     + number(counts.pending_history)
-    + number(counts.unavailable);
+    + number(counts.unavailable)
+    + number(counts.pending_acquisition)
+    + number(counts.terminal)
+    + number(counts.untracked);
   const pendingDetail = pendingDetails.length > 0
     ? pendingDetails.map((item) => (
       `${item.symbol || "unknown"} is ${item.reason === "recent_listing" ? "a recent listing" : "newly discovered"} from ${(item.discovered_from || []).join(", ") || "an active-universe source"}; `
@@ -1992,8 +2016,8 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
     check(
       "active_universe_accounted",
       "active-universe state coverage",
-      number(counts.active) > 0 && number(counts.untracked) === 0 && exclusiveCount === number(counts.active),
-      `${exclusiveCount} classified / ${number(counts.active)} active; ${number(counts.untracked)} untracked`,
+      number(counts.active) > 0 && partitionCount === number(counts.active),
+      `${partitionCount} partitioned / ${number(counts.active)} active; ${number(counts.untracked)} untracked`,
     ),
     check(
       "current_attempt_evidence",
@@ -2007,17 +2031,21 @@ export function buildYahooBatchLane(state, nowIso = state?.generated_at) {
     check("oldest_source_fresh", "oldest Yahoo source age", oldestSourceFresh, `${oldestSourceAge ?? "unknown"} / ${YAHOO_BATCH_MAX_SOURCE_BUSINESS_DAYS} business days`),
     check("no_current_failures", "current Yahoo attempt failures", number(currentAttempt.failed) === 0, `run ${currentAttempt.run_id || "missing"}: ${number(currentAttempt.failed)} failed`),
     check("no_lkg_primary", "LKG primary", number(counts.lkg) === 0, lkgStatusDetail),
+    check("no_pending_acquisition", "pending Yahoo acquisition", number(counts.pending_acquisition) === 0, `${number(counts.pending_acquisition)} pending-acquisition symbol(s)`),
     check("no_pending_history", "pending Yahoo history", number(counts.pending_history) === 0, pendingDetail),
     check("no_unavailable", "Yahoo unavailable", number(counts.unavailable) === 0, unavailableDetail),
+    check("no_terminal", "terminal Yahoo provider absence", number(counts.terminal) === 0, `${number(counts.terminal)} terminal symbol(s)`),
     check("retry_set_empty", "Yahoo retry set", number(counts.retry) === 0, `${number(counts.retry)} active-universe retry candidate(s)`),
   ], {
     counts: {
       active: number(counts.active),
       untracked: number(counts.untracked),
+      pending_acquisition: number(counts.pending_acquisition),
       fresh: number(counts.fresh),
       lkg: number(counts.lkg),
       pending_history: number(counts.pending_history),
       unavailable: number(counts.unavailable),
+      terminal: number(counts.terminal),
       retry: number(counts.retry),
       failed: number(counts.failed),
       stale: number(counts.stale),
