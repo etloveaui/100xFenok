@@ -260,7 +260,10 @@ jobs:
           fi
           echo "YF_PLAN_ONLY=${INPUT_PLAN_ONLY:-false}" >> "$GITHUB_ENV"
           ARGS="--profile ${INPUT_PROFILE:-full} --max-age-hours ${INPUT_MAX_AGE_HOURS:-0} --record-batch-state --run-id ${GITHUB_RUN_ID} --run-attempt ${GITHUB_RUN_ATTEMPT}"
-          if [ "$EVENT_NAME" = "schedule" ]; then ARGS="$ARGS --natural-run"; fi
+          # A bounded manual recovery uses the same deterministic retry lane
+          # as the scheduled ETF slot; ordinary manual dispatches keep their
+          # historical non-natural behavior.
+          if [ "$EVENT_NAME" = "schedule" ] || [ "$INPUT_UNTRACKED_ONLY" = "true" ]; then ARGS="$ARGS --natural-run"; fi
           if [ -n "$INPUT_LIMIT" ]; then ARGS="$ARGS --limit $INPUT_LIMIT"; fi
           if [ -n "$INPUT_RETRY_LIMIT" ]; then ARGS="$ARGS --retry-limit $INPUT_RETRY_LIMIT"; fi
           if [ -n "$INPUT_REGULAR_LIMIT" ]; then ARGS="$ARGS --regular-limit $INPUT_REGULAR_LIMIT"; fi

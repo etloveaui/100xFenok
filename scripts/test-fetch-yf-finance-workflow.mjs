@@ -30,6 +30,11 @@ assert.match(
 );
 assert.match(workflowText, /INPUT_UNTRACKED_LIMIT: \$\{\{ github\.event\.inputs\.untracked_limit \|\| '' \}\}/);
 assert.match(workflowText, /INPUT_STABLE_SHARDS: \$\{\{ github\.event\.inputs\.stable_shards \|\| 'false' \}\}/);
+assert.match(
+  workflowText,
+  /if \[ "\$EVENT_NAME" = "schedule" \] \|\| \[ "\$INPUT_UNTRACKED_ONLY" = "true" \]; then ARGS="\$ARGS --natural-run"; fi/,
+  "bounded manual recovery must claim the natural retry queue while ordinary dispatches stay unchanged",
+);
 const gate = checkWorkflowCommitShardsAgainstRegistry({
   workflowText,
   workflowRel: ".github/workflows/fetch-yf-finance.yml",
