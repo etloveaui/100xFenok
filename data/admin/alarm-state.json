@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-01T18:02:08.794Z",
+  "generated_at": "2026-08-01T18:10:41.384Z",
   "status": "open",
-  "open_incident_count": 8,
+  "open_incident_count": 9,
   "open_incidents": [
     {
       "workflow": "fetch-defillama.yml",
@@ -57,6 +57,19 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "overdue"
+    },
+    {
+      "workflow": "fetch-yahoo-ticker.yml",
+      "label": "Fetch Yahoo Finance Ticker Snapshot",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "lost_schedule_slot"
+      ],
+      "lost_schedule_slot_count": 1,
+      "cadence_status": "not_due"
     },
     {
       "workflow": "global-writer-queue-observer.yml",
@@ -496,15 +509,16 @@
     }
   ],
   "last_firing": {
-    "run_id": "30711577341",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30711577341",
-    "observed_at": "2026-08-01T18:02:08.794Z",
+    "run_id": "30711899858",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30711899858",
+    "observed_at": "2026-08-01T18:10:41.384Z",
     "event": "workflow_run",
     "workflows": [
       "fetch-defillama.yml",
       "fetch-fred-macro.yml",
       "fetch-oecd-cli.yml",
       "fetch-stockanalysis.yml",
+      "fetch-yahoo-ticker.yml",
       "global-writer-queue-observer.yml",
       "slickcharts-daily.yml",
       "slickcharts-monthly.yml",
