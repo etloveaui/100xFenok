@@ -2010,6 +2010,140 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             "scheduled Yahoo campaign must exclude state-tracked regular candidates",
         )
 
+    def test_active_universe_pending_acquisition_is_honest_and_keeps_first_seen_provenance(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(
+            self.root / "admin" / "yahoo-batch-quote-history",
+            self.fetcher.OUT_DIR,
+        )
+        first = {**self._run("first-discovery"), "observed_at": "2026-08-01T01:00:00Z"}
+        store.reconcile_active_universe({"PENDING"}, {"PENDING": ["stockanalysis_etf"]}, first)
+        second = {**self._run("second-discovery"), "observed_at": "2026-08-02T01:00:00Z"}
+        store.reconcile_active_universe({"PENDING"}, {"PENDING": ["dashboard_configuration"]}, second)
+
+        inventory = json.loads(store.active_universe_path.read_text(encoding="utf-8"))
+        pending = inventory["items"]["PENDING"]
+        self.assertEqual(pending["resolution_state"], "pending_acquisition")
+        self.assertFalse(pending["coverage"])
+        self.assertEqual(pending["coverage_status"], "not_observed")
+        self.assertEqual(pending["provider_reachability"], "not_attempted")
+        self.assertEqual(pending["first_seen_at"], first["observed_at"])
+        self.assertEqual(pending["first_seen_run_id"], "first-discovery")
+        self.assertEqual(pending["first_seen_from"], ["stockanalysis_etf"])
+        self.assertEqual(pending["discovered_from"], ["dashboard_configuration", "stockanalysis_etf"])
+        index = store.rebuild_index({"PENDING"}, second)
+        self.assertEqual(index["counts"]["pending_acquisition"], 1)
+        self.assertEqual(index["counts"]["untracked"], 0)
+        self.assertEqual(index["counts"]["fresh"], 0)
+        self.assertEqual(index["counts"]["lkg"], 0)
+
+    def test_observed_and_terminal_state_win_over_stale_pending_inventory(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(
+            self.root / "admin" / "yahoo-batch-quote-history",
+            self.fetcher.OUT_DIR,
+        )
+        run = self._run("precedence")
+        write_json(store.active_universe_path, {
+            "schema_version": "yahoo-batch-active-universe/v1",
+            "generated_at": run["observed_at"],
+            "items": {
+                ticker: {
+                    "resolution_state": "pending_acquisition",
+                    "coverage": False,
+                    "coverage_status": "not_observed",
+                    "provider_reachability": "not_attempted",
+                    "discovered_from": ["stockanalysis_etf"],
+                    "first_seen_at": run["observed_at"],
+                    "first_seen_run_id": run["run_id"],
+                    "last_seen_at": run["observed_at"],
+                    "last_seen_run_id": run["run_id"],
+                }
+                for ticker in ("FRESH", "BLD", "PENDING")
+            },
+        })
+        write_json(store._state_path("FRESH"), {
+            "schema_version": "yahoo-batch-quote-history-state/v1", "ticker": "FRESH",
+            "resolution_state": "fresh_primary", "retry": False, "attempts": [],
+        })
+        write_json(store._state_path("BLD"), {
+            "schema_version": "yahoo-batch-quote-history-state/v1", "ticker": "BLD",
+            "resolution_state": "terminal_provider_unsupported", "retry": False, "attempts": [],
+        })
+
+        index = store.rebuild_index({"FRESH", "BLD", "PENDING"}, run)
+        self.assertEqual(index["counts"]["fresh"], 1)
+        self.assertEqual(index["counts"]["terminal"], 1)
+        self.assertEqual(index["counts"]["pending_acquisition"], 1)
+        self.assertEqual(index["counts"]["untracked"], 0)
+        self.assertEqual(store.pending_acquisition_tickers({"FRESH", "BLD", "PENDING"}), {"PENDING"})
+
+    def test_terminal_artifact_excludes_bld_day_holx_but_retains_mmc_alias_retry(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(
+            self.root / "admin" / "yahoo-batch-quote-history",
+            self.fetcher.OUT_DIR,
+        )
+        run = self._run("terminal-transition")
+        for ticker in ("BLD", "DAY", "HOLX", "MMC"):
+            write_json(store._state_path(ticker), {
+                "schema_version": "yahoo-batch-quote-history-state/v1", "ticker": ticker,
+                "resolution_state": "unavailable", "retry": True,
+                "last_attempt": {"observed_at": "2026-07-30T00:00:00Z"}, "attempts": [],
+            })
+        artifact = self.root / "terminal-evidence.json"
+        write_json(artifact, {
+            "schema_version": "fenok-s1-stock-public-promotion-dry-run/v0.1",
+            "generated_at": run["observed_at"], "dry_run": True,
+            "blocked_rows": [
+                {"ticker": ticker, "corporate_action_policy": {"evidence": [
+                    {"symbol": ticker, "terminal": terminal, "alias_target": alias}
+                ]}}
+                for ticker, terminal, alias in (
+                    ("BLD", True, None), ("DAY", True, None), ("HOLX", True, None), ("MMC", False, "MRSH"),
+                )
+            ],
+        })
+        evidence = store.load_terminal_evidence(artifact)
+        store.transition_terminal_tickers({"BLD", "DAY", "HOLX", "MMC"}, evidence, run)
+
+        self.assertEqual(store.retry_tickers_ordered({"BLD", "DAY", "HOLX", "MMC"}), ["MMC"])
+        for ticker in ("BLD", "DAY", "HOLX"):
+            state = json.loads(store._state_path(ticker).read_text(encoding="utf-8"))
+            self.assertEqual(state["resolution_state"], "terminal_provider_unsupported")
+            self.assertFalse(state["retry"])
+            self.assertEqual(state["terminal"]["evidence_sha256"], evidence["artifact_sha256"])
+        self.assertTrue(json.loads(store._state_path("MMC").read_text(encoding="utf-8"))["retry"])
+
+        checked_in = store.load_terminal_evidence(self.fetcher.S1_STOCK_PROMOTION_DRY_RUN)
+        self.assertTrue({"BLD", "DAY", "HOLX"}.issubset(checked_in["tickers"]))
+        self.assertNotIn("MMC", checked_in["tickers"])
+
+        write_json(artifact, {"schema_version": "bad", "blocked_rows": []})
+        with self.assertRaisesRegex(ValueError, "terminal evidence"):
+            store.load_terminal_evidence(artifact)
+
+    def test_observed_state_is_written_before_pending_inventory_cleanup(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(
+            self.root / "admin" / "yahoo-batch-quote-history",
+            self.fetcher.OUT_DIR,
+        )
+        run = self._run("crash-safe")
+        store.reconcile_active_universe({"AAPL"}, {"AAPL": ["stockanalysis_etf"]}, run)
+        payload = self._daily_payload("AAPL")
+        write_json(self.fetcher.OUT_DIR / "AAPL.json", payload)
+        original_cleanup = store._remove_pending_after_state
+        store._remove_pending_after_state = lambda _ticker: None
+        try:
+            store.record_success("AAPL", payload, run, ["stockanalysis_etf"], {"attempts_used": 1, "failures": [], "latency_ms": 1})
+        finally:
+            store._remove_pending_after_state = original_cleanup
+
+        self.assertTrue(store._state_path("AAPL").exists())
+        self.assertIn("AAPL", json.loads(store.active_universe_path.read_text())["items"])
+        index = store.rebuild_index({"AAPL"}, run)
+        self.assertEqual(index["counts"]["fresh"], 1)
+        self.assertEqual(index["counts"]["pending_acquisition"], 0)
+        store.reconcile_active_universe({"AAPL"}, {"AAPL": ["stockanalysis_etf"]}, run)
+        self.assertNotIn("AAPL", json.loads(store.active_universe_path.read_text())["items"])
+
     def test_untracked_campaign_bootstraps_usable_local_payloads_before_selection(self) -> None:
         self.assertEqual(
             self.fetcher.bootstrap_exclusions(["LOCAL", "MISSING"], untracked_only=True),
@@ -2145,7 +2279,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         source = FETCH_PATH.read_text(encoding="utf-8")
         self.assertLess(
             source.index("state_store.bootstrap_existing("),
-            source.index("retry_queue = state_store.retry_tickers_ordered"),
+            source.index("retry_queue = ("),
             "stale classification must enter the retry set before natural-run selection",
         )
 
@@ -2227,6 +2361,26 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(payload["count"], 1)
         self.assertTrue(payload["history_gaps_only"])
         self.assertEqual(payload["priority"], "stockanalysis_etf_aum")
+
+    def test_stateful_plan_only_prospectively_selects_pending_without_writing_inventory(self) -> None:
+        self.fetcher.load_universe_sources = lambda **_kwargs: {"PENDING": ["stockanalysis_etf"]}
+        before = list(self.fetcher.YAHOO_BATCH_STATE_ROOT.rglob("*")) if self.fetcher.YAHOO_BATCH_STATE_ROOT.exists() else []
+        original_argv, original_stdout = sys.argv, sys.stdout
+        buffer = io.StringIO()
+        try:
+            sys.argv = [
+                "fetch-yf-finance.py", "--tickers", "PENDING", "--record-batch-state",
+                "--natural-run", "--untracked-only", "--untracked-limit", "1",
+                "--regular-limit", "1", "--plan-only", "--plan-sample-size", "1",
+            ]
+            sys.stdout = buffer
+            self.fetcher.main()
+        finally:
+            sys.argv, sys.stdout = original_argv, original_stdout
+
+        self.assertEqual(json.loads(buffer.getvalue())["sample"], ["PENDING"])
+        self.assertFalse(self.fetcher.YAHOO_BATCH_STATE_ROOT.exists())
+        self.assertEqual(before, [])
 
     def test_enrolled_yahoo_write_records_exact_manual_object(self) -> None:
         self.fetcher.DATA_SUPPLY_STATE_ROOT = self.root / "state"

@@ -13,6 +13,8 @@ ATTEMPT_RETENTION = 14
 NEW_LISTING_PENDING_DAYS = 31
 ERROR_TEXT_LIMIT = 1000
 PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2 = "provider_observation/v2"
+ACTIVE_UNIVERSE_SCHEMA_VERSION = "yahoo-batch-active-universe/v1"
+TERMINAL_RESOLUTION_STATE = "terminal_provider_unsupported"
 PROMOTION_DEFERRAL_REASONS = {
     "foreign_writer_conflict",
     "recovery_not_advanced_by_provider",
@@ -219,6 +221,7 @@ class YahooBatchStateStore:
         self.finance_dir = Path(finance_dir)
         self.ticker_dir = self.root / "tickers"
         self.lkg_dir = self.root / "lkg"
+        self.active_universe_path = self.root / "active-universe.json"
 
     def _state_path(self, ticker: str) -> Path:
         return self.ticker_dir / f"{ticker}.json"
@@ -233,18 +236,195 @@ class YahooBatchStateStore:
             "attempts": [],
         }
 
+    def _load_active_universe(self) -> dict:
+        payload = _read_json(self.active_universe_path)
+        if (
+            isinstance(payload, dict)
+            and payload.get("schema_version") == ACTIVE_UNIVERSE_SCHEMA_VERSION
+            and isinstance(payload.get("items"), dict)
+        ):
+            return payload
+        return {"schema_version": ACTIVE_UNIVERSE_SCHEMA_VERSION, "items": {}}
+
+    @staticmethod
+    def _is_pending_acquisition(item: object) -> bool:
+        return (
+            isinstance(item, dict)
+            and item.get("resolution_state") == "pending_acquisition"
+            and item.get("coverage") is False
+            and item.get("coverage_status") == "not_observed"
+            and item.get("provider_reachability") == "not_attempted"
+        )
+
+    def _remove_pending_after_state(self, ticker: str) -> None:
+        """Drop an inventory duplicate only after its per-ticker state is durable.
+
+        A crash between these writes leaves a harmless duplicate; state-first index
+        precedence keeps it out of pending counts until the next reconciliation.
+        """
+        inventory = self._load_active_universe()
+        items = inventory["items"]
+        if ticker not in items:
+            return
+        del items[ticker]
+        inventory["generated_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        _write_json(self.active_universe_path, inventory)
+
+    def reconcile_active_universe(
+        self,
+        active_universe: set[str],
+        sources: dict[str, list[str]],
+        run: dict,
+    ) -> int:
+        """Persist only active symbols that have never received a Yahoo observation."""
+        inventory = self._load_active_universe()
+        items = inventory["items"]
+        observed_at = str(run.get("observed_at") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
+        run_id = str(run.get("run_id") or "local")
+        changed = 0
+        for ticker in sorted(set(active_universe)):
+            # Per-ticker observation/terminal state always wins over stale inventory.
+            if _read_json(self._state_path(ticker)) is not None:
+                if ticker in items:
+                    del items[ticker]
+                    changed += 1
+                continue
+            existing = items.get(ticker)
+            discovered_from = sorted(set(sources.get(ticker, [])))
+            if self._is_pending_acquisition(existing):
+                prior_sources = existing.get("discovered_from") if isinstance(existing.get("discovered_from"), list) else []
+                if not isinstance(existing.get("first_seen_from"), list):
+                    existing["first_seen_from"] = sorted(set(prior_sources))
+                    changed += 1
+                merged_sources = sorted({*prior_sources, *discovered_from})
+                if existing.get("discovered_from") != merged_sources:
+                    existing["discovered_from"] = merged_sources
+                    changed += 1
+                if existing.get("last_seen_at") != observed_at or existing.get("last_seen_run_id") != run_id:
+                    existing["last_seen_at"] = observed_at
+                    existing["last_seen_run_id"] = run_id
+                    changed += 1
+                continue
+            items[ticker] = {
+                "resolution_state": "pending_acquisition",
+                "coverage": False,
+                "coverage_status": "not_observed",
+                "provider_reachability": "not_attempted",
+                "discovered_from": discovered_from,
+                "first_seen_from": discovered_from,
+                "first_seen_at": observed_at,
+                "first_seen_run_id": run_id,
+                "last_seen_at": observed_at,
+                "last_seen_run_id": run_id,
+            }
+            changed += 1
+        if changed or not self.active_universe_path.exists():
+            inventory["generated_at"] = observed_at
+            _write_json(self.active_universe_path, inventory)
+        return changed
+
+    def pending_acquisition_tickers(self, active_universe: set[str]) -> set[str]:
+        items = self._load_active_universe()["items"]
+        return {
+            ticker for ticker in set(active_universe)
+            if _read_json(self._state_path(ticker)) is None and self._is_pending_acquisition(items.get(ticker))
+        }
+
+    def prospective_pending_acquisition_tickers(self, active_universe: set[str]) -> set[str]:
+        """Resolve a first-run campaign without persisting its pending inventory."""
+        return {
+            ticker for ticker in set(active_universe)
+            if _read_json(self._state_path(ticker)) is None
+        }
+
+    def load_terminal_evidence(self, artifact_path: Path) -> dict:
+        path = Path(artifact_path)
+        try:
+            payload_bytes = path.read_bytes()
+            payload = json.loads(payload_bytes)
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError(f"terminal evidence artifact is unreadable: {path}") from exc
+        if (
+            not isinstance(payload, dict)
+            or payload.get("schema_version") != "fenok-s1-stock-public-promotion-dry-run/v0.1"
+            or payload.get("dry_run") is not True
+            or _iso_ms(payload.get("generated_at")) is None
+            or not isinstance(payload.get("blocked_rows"), list)
+        ):
+            raise ValueError("terminal evidence artifact contract is invalid")
+        tickers = {}
+        for row in payload["blocked_rows"]:
+            ticker = str(row.get("ticker") or "").strip().upper() if isinstance(row, dict) else ""
+            policy = row.get("corporate_action_policy") if isinstance(row, dict) else None
+            evidence = policy.get("evidence") if isinstance(policy, dict) else None
+            if not ticker or not isinstance(evidence, list):
+                continue
+            terminal_rows = [
+                item for item in evidence
+                if isinstance(item, dict)
+                and item.get("terminal") is True
+                and str(item.get("symbol") or "").upper() == ticker
+                and item.get("alias_target") is None
+            ]
+            if terminal_rows:
+                tickers[ticker] = terminal_rows
+        try:
+            artifact_label = path.relative_to(self.root.parents[1]).as_posix()
+        except ValueError:
+            artifact_label = path.name
+        return {
+            "artifact_path": artifact_label,
+            "artifact_sha256": _sha256(payload_bytes),
+            "artifact_generated_at": payload["generated_at"],
+            "tickers": tickers,
+        }
+
+    def transition_terminal_tickers(self, active_universe: set[str], terminal_evidence: dict, run: dict) -> int:
+        if not isinstance(terminal_evidence, dict) or not isinstance(terminal_evidence.get("tickers"), dict):
+            raise ValueError("terminal evidence contract is invalid")
+        transitioned = 0
+        for ticker in sorted(set(active_universe) & set(terminal_evidence["tickers"])):
+            state = self._load_state(ticker)
+            state.update({
+                "schema_version": "yahoo-batch-quote-history-state/v1",
+                "ticker": ticker,
+                "resolution_state": TERMINAL_RESOLUTION_STATE,
+                "retry": False,
+                "terminal": {
+                    "artifact_path": terminal_evidence.get("artifact_path"),
+                    "evidence_sha256": terminal_evidence.get("artifact_sha256"),
+                    "artifact_generated_at": terminal_evidence.get("artifact_generated_at"),
+                    "evidence": terminal_evidence["tickers"][ticker],
+                    "classified_at": str(run.get("observed_at") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
+                    "classified_run_id": str(run.get("run_id") or "local"),
+                },
+                "updated_at": str(run.get("observed_at") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
+            })
+            state.pop("pending", None)
+            state.pop("stale", None)
+            _write_json(self._state_path(ticker), state)
+            self._remove_pending_after_state(ticker)
+            transitioned += 1
+        return transitioned
+
     @staticmethod
     def _append_attempt(state: dict, row: dict) -> None:
         attempts = [item for item in state.get("attempts") or [] if isinstance(item, dict)]
         attempts.append(row)
         state["attempts"] = attempts[-ATTEMPT_RETENTION:]
 
-    def retry_tickers_ordered(self, active_universe: set[str]) -> list[str]:
+    def retry_tickers_ordered(self, active_universe: set[str], terminal_tickers: set[str] | None = None) -> list[str]:
         active = set(active_universe)
+        terminal = set(terminal_tickers or set())
         retry = []
         for ticker in sorted(active):
             state = _read_json(self._state_path(ticker))
-            if state and state.get("retry") is True:
+            if (
+                ticker not in terminal
+                and state
+                and state.get("resolution_state") != TERMINAL_RESOLUTION_STATE
+                and state.get("retry") is True
+            ):
                 observed_at = str((state.get("last_attempt") or {}).get("observed_at") or "")
                 retry.append((observed_at, ticker))
         return [ticker for _observed_at, ticker in sorted(retry)]
@@ -257,6 +437,7 @@ class YahooBatchStateStore:
             ticker
             for ticker in set(active_universe)
             if _read_json(self._state_path(ticker)) is None
+            and ticker not in self.pending_acquisition_tickers(active_universe)
         }
 
     def bootstrap_existing(
@@ -365,6 +546,7 @@ class YahooBatchStateStore:
         })
         state.pop("pending", None)
         _write_json(self._state_path(ticker), state)
+        self._remove_pending_after_state(ticker)
         return state
 
     def build_provider_observation(self, ticker: str, payload: dict, run: dict) -> dict:
@@ -558,6 +740,7 @@ class YahooBatchStateStore:
             "updated_at": attempt["observed_at"],
         })
         _write_json(self._state_path(ticker), state)
+        self._remove_pending_after_state(ticker)
         return state
 
     def record_success(
@@ -664,6 +847,7 @@ class YahooBatchStateStore:
             state.pop("pending", None)
 
         _write_json(self._state_path(ticker), state)
+        self._remove_pending_after_state(ticker)
         return state
 
     def record_failure(
@@ -747,6 +931,7 @@ class YahooBatchStateStore:
             state.pop("lkg", None)
             state.pop("current", None)
         _write_json(self._state_path(ticker), state)
+        self._remove_pending_after_state(ticker)
         return state
 
     def record_skip(
@@ -765,6 +950,7 @@ class YahooBatchStateStore:
             state["last_attempt"] = attempt
             state["updated_at"] = attempt["observed_at"]
             _write_json(self._state_path(ticker), state)
+            self._remove_pending_after_state(ticker)
             return state
         history = (payload.get("data") or {}).get("history_1y") if isinstance(payload.get("data"), dict) else None
         has_history = isinstance(history, list) and len(history) > 0
@@ -800,6 +986,7 @@ class YahooBatchStateStore:
         else:
             state.pop("pending", None)
         _write_json(self._state_path(ticker), state)
+        self._remove_pending_after_state(ticker)
         return state
 
     def rebuild_index(self, active_universe: set[str], run: dict, batch_failure: str | None = None) -> dict:
@@ -807,10 +994,12 @@ class YahooBatchStateStore:
         counts = {
             "active": len(active),
             "untracked": 0,
+            "pending_acquisition": 0,
             "fresh": 0,
             "lkg": 0,
             "pending_history": 0,
             "unavailable": 0,
+            "terminal": 0,
             "retry": 0,
             "failed": 0,
             "stale": 0,
@@ -819,6 +1008,8 @@ class YahooBatchStateStore:
         pending_symbols = []
         lkg_symbols = []
         pending_details = []
+        pending_acquisition_details = []
+        terminal_symbols = []
         lkg_details = []
         unavailable_details = []
         promotion_deferral_details = []
@@ -828,10 +1019,16 @@ class YahooBatchStateStore:
         stale_groups = {}
         run_id = str(run.get("run_id") or "local")
 
+        inventory_items = self._load_active_universe()["items"]
         for ticker in sorted(active):
             state = _read_json(self._state_path(ticker))
             if not state:
-                counts["untracked"] += 1
+                pending_item = inventory_items.get(ticker)
+                if self._is_pending_acquisition(pending_item):
+                    counts["pending_acquisition"] += 1
+                    pending_acquisition_details.append({"symbol": ticker, **pending_item})
+                else:
+                    counts["untracked"] += 1
                 continue
             resolution = state.get("resolution_state")
             if resolution == "fresh_primary":
@@ -893,7 +1090,10 @@ class YahooBatchStateStore:
                     "retry": state.get("retry") is True,
                     "expected_resolution": "next_natural_yahoo_run" if state.get("retry") is True else None,
                 })
-            if state.get("retry") is True:
+            elif resolution == TERMINAL_RESOLUTION_STATE:
+                counts["terminal"] += 1
+                terminal_symbols.append(ticker)
+            if state.get("retry") is True and resolution != TERMINAL_RESOLUTION_STATE:
                 counts["retry"] += 1
                 retry_symbols.append(ticker)
             last_attempt = state.get("last_attempt")
@@ -962,6 +1162,9 @@ class YahooBatchStateStore:
             "oldest_source_ticker": oldest[1],
             "retry_symbols": retry_symbols,
             "pending_symbols": pending_symbols[:20],
+            "pending_acquisition_symbols": [row["symbol"] for row in pending_acquisition_details[:20]],
+            "pending_acquisition_details": pending_acquisition_details[:20],
+            "terminal_symbols": terminal_symbols[:20],
             "lkg_symbols": lkg_symbols[:20],
             "pending_details": pending_details[:20],
             "lkg_details": prioritized_lkg_details[:20],
@@ -1004,6 +1207,7 @@ class YahooBatchStateStore:
             "message": (
                 f"Yahoo quote/history: fresh={counts['fresh']}, lkg={counts['lkg']}, "
                 f"pending_history={counts['pending_history']}, unavailable={counts['unavailable']}, "
+                f"pending_acquisition={counts['pending_acquisition']}, terminal={counts['terminal']}, "
                 f"retry={counts['retry']}, failed={counts['failed']}, source_stale={counts['stale']}. "
                 "Pending history is a normal new-listing state and self-resolves on a natural Yahoo run."
             ),

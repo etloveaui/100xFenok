@@ -63,6 +63,7 @@ DASHBOARD_CONSTANTS = ROOT / "100xfenok-next" / "src" / "lib" / "dashboard" / "c
 PORTFOLIO_TS = ROOT / "100xfenok-next" / "src" / "lib" / "portfolio.ts"
 OUT_DIR = ROOT / "data" / "yf" / "finance"
 YAHOO_BATCH_STATE_ROOT = ROOT / "data" / "admin" / "yahoo-batch-quote-history"
+S1_STOCK_PROMOTION_DRY_RUN = ROOT / "data" / "admin" / "fenok-s1-stock-public-promotion-dry-run.json"
 DATA_SUPPLY_STATE_ROOT = ROOT / "data" / "admin" / "data-supply-state" / "v1"
 DATA_SUPPLY_PROVIDER_TRUTH_ROOT = ROOT
 
@@ -1653,6 +1654,15 @@ def filter_untracked_candidates(tickers, state_store, active_universe):
     return [ticker for ticker in tickers if ticker in untracked]
 
 
+def filter_pending_acquisition_candidates(tickers, state_store, active_universe, *, prospective=False):
+    pending = (
+        state_store.prospective_pending_acquisition_tickers(active_universe)
+        if prospective
+        else state_store.pending_acquisition_tickers(active_universe)
+    )
+    return [ticker for ticker in tickers if ticker in pending]
+
+
 def bootstrap_exclusions(tickers, *, untracked_only):
     return set() if untracked_only else set(tickers)
 
@@ -1779,7 +1789,7 @@ def main():
     parser.add_argument("--stockanalysis-etfs", action="store_true", help="include the full StockAnalysis ETF universe/screener in the Yahoo candidate set")
     parser.add_argument("--history-gaps-only", action="store_true", help="fetch only tickers whose local payload lacks enough 1Y daily history for return facts")
     parser.add_argument("--history-min-rows", type=int, default=200, help="minimum history_1y rows needed to skip a ticker under --history-gaps-only")
-    parser.add_argument("--untracked-only", action="store_true", help="prioritize regular candidates with no Yahoo batch state before reserved maintenance capacity")
+    parser.add_argument("--untracked-only", action="store_true", help="prioritize not-yet-observed regular candidates before reserved maintenance capacity")
     parser.add_argument("--profile", choices=("daily", "core", "full", "etf"), default="full", help="daily=price/history only, core=legacy compact fields, full=bounded extra Yahoo-only depth, etf=fund-focused depth")
     parser.add_argument("--include-options", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--include-shares-full", action="store_true", help="fetch full share-count history sample; useful for buyback/dilution backfills")
@@ -1873,6 +1883,8 @@ def main():
         "shard": args.shard,
         "observed_at": _observed_now(),
     }
+    terminal_evidence = state_store.load_terminal_evidence(S1_STOCK_PROMOTION_DRY_RUN) if state_store else None
+    terminal_tickers = set((terminal_evidence or {}).get("tickers") or {})
     if state_store and not args.plan_only:
         freshness = yahoo_source_freshness(existing_yahoo_source_dates(active_universe), run_context["observed_at"])
         state_store.bootstrap_existing(
@@ -1883,7 +1895,13 @@ def main():
             source_age_business_days=freshness["ages"],
             max_source_business_days=freshness["max_source_business_days"],
         )
-    retry_queue = state_store.retry_tickers_ordered(active_universe) if state_store and args.natural_run else []
+        state_store.transition_terminal_tickers(active_universe, terminal_evidence, run_context)
+        state_store.reconcile_active_universe(active_universe, universe_sources, run_context)
+    retry_queue = (
+        state_store.retry_tickers_ordered(active_universe, terminal_tickers)
+        if state_store and args.natural_run
+        else []
+    )
     retry_tickers = set(retry_queue)
     regular_tickers = [ticker for ticker in tickers if ticker not in retry_tickers]
     if args.history_gaps_only:
@@ -1891,7 +1909,12 @@ def main():
     selected_universe = set(tickers)
 
     if args.untracked_only:
-        untracked_regular = filter_untracked_candidates(regular_tickers, state_store, active_universe)
+        untracked_regular = filter_pending_acquisition_candidates(
+            regular_tickers,
+            state_store,
+            active_universe,
+            prospective=args.plan_only,
+        )
         tickers = select_campaign_or_rotation_plan(
             regular_tickers,
             untracked_regular,
