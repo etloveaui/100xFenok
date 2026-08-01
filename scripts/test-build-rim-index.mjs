@@ -58,7 +58,6 @@ function makeKrxBridgeFixture(asOf) {
       row?.marketScope === "korea"
       && String(row?.symbol ?? "").endsWith(".KS")
       && /^\d{6}$/.test(String(row?.ticker_normalized ?? ""))
-      && typeof row?.dividendYield === "number"
       && typeof row?.estimateSnapshot?.forwardEps?.fy1 === "number"
       && typeof row?.estimateSnapshot?.forwardEps?.fy2 === "number"
       && typeof row?.estimateSnapshot?.forwardEps?.fy3 === "number"
