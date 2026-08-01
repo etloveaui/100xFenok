@@ -434,12 +434,16 @@ function buildStockanalysisEtfShardProjection(sourceRoot) {
   const sourceSha256 = stockanalysisEtfSourceBindingSha256(sourceRows);
   const snapshotId = stockanalysisEtfSnapshotId(sourceSha256);
   const shardFiles = shards.map((entriesByTicker, shardId) => {
+    const sortedEntries = {};
+    for (const key of Object.keys(entriesByTicker).sort()) {
+      sortedEntries[key] = entriesByTicker[key];
+    }
     const body = `${JSON.stringify({
       schema_version: STOCKANALYSIS_ETF_SHARD_SCHEMA,
       shard_algorithm: STOCKANALYSIS_ETF_SHARD_ALGORITHM,
       shard_count: STOCKANALYSIS_ETF_SHARD_COUNT,
       shard_id: shardId,
-      entries: entriesByTicker,
+      entries: sortedEntries,
     })}\n`;
     const byteLength = Buffer.byteLength(body);
     if (byteLength > STOCKANALYSIS_ETF_SHARD_MAX_BYTES) {
