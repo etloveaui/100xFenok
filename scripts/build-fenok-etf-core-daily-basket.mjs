@@ -49,6 +49,15 @@ export const ETF_CORE_DAILY_BASKET_CONFIG = Object.freeze({
   },
 });
 
+const COHORT_METRIC_FIELDS = Object.freeze([
+  "eligible_count",
+  "selected_count",
+  "fresh_selected_count",
+  "stale_selected_count",
+  "achieved_coverage_pct",
+  "max_quote_age_days",
+]);
+
 const CORE_EXCLUDED_DERIVATIVE_INCOME_PATTERNS = [
   /\byieldmax\b/i,
   /\bweeklypay\b/i,
@@ -97,6 +106,10 @@ function asArray(value) {
 
 function asObject(value) {
   return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function isRecord(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 function normTicker(value) {
@@ -184,6 +197,14 @@ function categoryKey(value) {
 
 function categoryCap(category) {
   return ETF_CORE_DAILY_BASKET_CONFIG.categoryCaps[category] ?? ETF_CORE_DAILY_BASKET_CONFIG.categoryCaps.Uncategorized;
+}
+
+function exactJsonEqual(left, right) {
+  try {
+    return JSON.stringify(left) === JSON.stringify(right);
+  } catch {
+    return false;
+  }
 }
 
 function compactAction(row) {
@@ -311,6 +332,53 @@ function freshnessReasons(proof) {
   return reasons;
 }
 
+function buildCohortMetrics(structuralCandidates, selected) {
+  const metrics = {};
+  const ensureMetric = (row) => {
+    const category = categoryKey(row.category);
+    metrics[category] ??= {
+      eligible_count: 0,
+      selected_count: 0,
+      fresh_selected_count: 0,
+      stale_selected_count: 0,
+      achieved_coverage_pct: 0,
+      max_quote_age_days: null,
+    };
+    return metrics[category];
+  };
+
+  for (const row of structuralCandidates) {
+    ensureMetric(row).eligible_count += 1;
+  }
+  for (const row of selected) {
+    const metric = ensureMetric(row);
+    metric.selected_count += 1;
+    if (row.status === "fresh") metric.fresh_selected_count += 1;
+    else metric.stale_selected_count += 1;
+    const rawAgeDays = row.proof?.quote_age_days;
+    const ageDaysValue = rawAgeDays == null ? null : asNumber(rawAgeDays, null);
+    if (ageDaysValue !== null) {
+      metric.max_quote_age_days = metric.max_quote_age_days === null
+        ? ageDaysValue
+        : Math.max(metric.max_quote_age_days, ageDaysValue);
+    }
+  }
+
+  return Object.fromEntries(
+    Object.entries(metrics)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([category, metric]) => [
+        category,
+        {
+          ...metric,
+          achieved_coverage_pct: metric.eligible_count > 0
+            ? round((metric.selected_count / metric.eligible_count) * 100)
+            : 0,
+        },
+      ]),
+  );
+}
+
 function buildRows({ signalSummary, actionIndex, detailCoverage, newEtfs, now }) {
   const actionByTicker = new Map(asArray(actionIndex?.rows).map((row) => [normTicker(row.ticker), row]).filter(([ticker]) => ticker));
   const missingDetailSet = new Set(asArray(detailCoverage?.missing_tickers).map(normTicker));
@@ -384,6 +452,7 @@ export function selectBasketRows(structuralCandidates) {
   return {
     selected,
     selectedByCategory: Object.fromEntries(Object.entries(selectedByCategory).sort(([a], [b]) => a.localeCompare(b))),
+    cohortMetrics: buildCohortMetrics(structuralCandidates, selected),
   };
 }
 
@@ -449,7 +518,7 @@ export function buildEtfCoreDailyBasket({
     newEtfs: sourceNewEtfs,
     now,
   });
-  const { selected, selectedByCategory } = selectBasketRows(structuralCandidates);
+  const { selected, selectedByCategory, cohortMetrics } = selectBasketRows(structuralCandidates);
   const staleRows = selected.filter((row) => row.status !== "fresh");
   const freshRows = selected.filter((row) => row.status === "fresh");
   const freshnessBlockerCounts = countBy(selected.flatMap((row) => row.freshness_blockers));
@@ -514,6 +583,7 @@ export function buildEtfCoreDailyBasket({
       stale_selected_count: staleRows.length,
       selected_by_category: selectedByCategory,
       structural_candidates_by_category: countBy(structuralCandidates.map((row) => categoryKey(row.category))),
+      cohort_metrics: cohortMetrics,
       freshness_blocker_counts: freshnessBlockerCounts,
       excluded_reason_counts: excludedReasonCounts,
     },
@@ -534,6 +604,58 @@ export function buildEtfCoreDailyBasket({
   };
 }
 
+function validateCohortMetrics(metrics, label, errors) {
+  if (!isRecord(metrics)) {
+    errors.push(`${label} must be an object`);
+    return;
+  }
+
+  const categories = Object.keys(metrics);
+  const sortedCategories = [...categories].sort((left, right) => left.localeCompare(right));
+  if (!exactJsonEqual(categories, sortedCategories)) {
+    errors.push(`${label} category keys must be sorted`);
+  }
+
+  const expectedFields = [...COHORT_METRIC_FIELDS].sort();
+  for (const category of categories) {
+    const metric = metrics[category];
+    if (!isRecord(metric)) {
+      errors.push(`${label}.${category} must be an object`);
+      continue;
+    }
+    if (!exactJsonEqual(Object.keys(metric).sort(), expectedFields)) {
+      errors.push(`${label}.${category} has an invalid shape`);
+    }
+
+    const counts = {
+      eligible_count: metric.eligible_count,
+      selected_count: metric.selected_count,
+      fresh_selected_count: metric.fresh_selected_count,
+      stale_selected_count: metric.stale_selected_count,
+    };
+    const validCounts = Object.entries(counts).every(([field, value]) => {
+      const valid = Number.isInteger(value) && value >= 0;
+      if (!valid) errors.push(`${label}.${category}.${field} must be a non-negative integer`);
+      return valid;
+    });
+    if (validCounts) {
+      if (counts.selected_count !== counts.fresh_selected_count + counts.stale_selected_count) {
+        errors.push(`${label}.${category} selected_count must equal fresh plus stale`);
+      }
+      if (counts.selected_count > counts.eligible_count) {
+        errors.push(`${label}.${category} selected_count cannot exceed eligible_count`);
+      }
+    }
+
+    if (!(finite(metric.achieved_coverage_pct) && metric.achieved_coverage_pct >= 0 && metric.achieved_coverage_pct <= 100)) {
+      errors.push(`${label}.${category}.achieved_coverage_pct must be finite within 0..100`);
+    }
+    if (!(metric.max_quote_age_days === null || (finite(metric.max_quote_age_days) && metric.max_quote_age_days >= 0))) {
+      errors.push(`${label}.${category}.max_quote_age_days must be null or finite non-negative`);
+    }
+  }
+}
+
 export function validateEtfCoreDailyBasket(adminPayload, summaryPayload) {
   const errors = [];
   const rows = asArray(adminPayload?.rows);
@@ -541,6 +663,8 @@ export function validateEtfCoreDailyBasket(adminPayload, summaryPayload) {
   const dailyUniverse = asArray(adminPayload?.daily_refresh_universe?.tickers);
   const rowTickers = rows.map((row) => row.ticker);
   const uniqueTickers = new Set(rowTickers);
+  const adminCohortMetrics = adminPayload?.coverage?.cohort_metrics;
+  const summaryCohortMetrics = summaryPayload?.coverage?.cohort_metrics;
 
   if (adminPayload?.schema_version !== ETF_CORE_DAILY_BASKET_CONFIG.schema_version) errors.push("admin schema_version mismatch");
   if (summaryPayload?.schema_version !== ETF_CORE_DAILY_BASKET_CONFIG.summary_schema_version) errors.push("summary schema_version mismatch");
@@ -551,6 +675,11 @@ export function validateEtfCoreDailyBasket(adminPayload, summaryPayload) {
   if (summaryRows.length !== rows.length) errors.push("summary rows length must equal admin rows length");
   if (dailyUniverse.length !== rows.length) errors.push("daily_refresh_universe must match selected row count");
   if (uniqueTickers.size !== rows.length) errors.push("duplicate selected tickers");
+  validateCohortMetrics(adminCohortMetrics, "admin coverage.cohort_metrics", errors);
+  validateCohortMetrics(summaryCohortMetrics, "summary coverage.cohort_metrics", errors);
+  if (!exactJsonEqual(adminCohortMetrics, summaryCohortMetrics)) {
+    errors.push("summary/admin cohort_metrics must match exactly");
+  }
 
   for (const row of rows) {
     if (!row.ticker) errors.push("selected row missing ticker");
