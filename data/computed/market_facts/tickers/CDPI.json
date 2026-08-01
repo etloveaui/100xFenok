@@ -2,14 +2,14 @@
   "schema_version": "market-facts/v1",
   "ticker": "CDPI",
   "asset_type": "etf",
-  "generated_at": "2026-07-25T01:38:08Z",
+  "generated_at": "2026-08-01T19:05:18Z",
   "source_as_of": "2026-07-24",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
-    "name": "CDPI",
-    "exchange": null,
-    "currency": null,
+    "name": "Columbia High Dividend Premium Income ETF Shares",
+    "exchange": "PCX",
+    "currency": "USD",
     "sector": null,
     "industry": null,
     "fund_family": null,
@@ -41,10 +41,10 @@
       "candidate_count": 1
     },
     "previous_close": {
-      "value": 20.28,
-      "source": "stockanalysis.quote",
-      "as_of": "2026-07-24",
-      "fetched_at": "2026-07-25T01:21:32Z",
+      "value": 20.1948,
+      "source": "yf",
+      "as_of": "2026-07-20",
+      "fetched_at": "2026-08-01T18:23:10Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -53,6 +53,13 @@
       ],
       "candidates": [
         {
+          "value": 20.1948,
+          "source": "yf",
+          "as_of": "2026-07-20",
+          "fetched_at": "2026-08-01T18:23:10Z",
+          "confidence": "observed"
+        },
+        {
           "value": 20.28,
           "source": "stockanalysis.quote",
           "as_of": "2026-07-24",
@@ -60,7 +67,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change": {
       "value": 0.14,
@@ -81,9 +88,16 @@
           "as_of": "2026-07-24",
           "fetched_at": "2026-07-25T01:21:32Z",
           "confidence": "observed"
+        },
+        {
+          "value": -0.0523987,
+          "source": "yf",
+          "as_of": "2026-07-20",
+          "fetched_at": "2026-08-01T18:23:10Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change_pct": {
       "value": 0.71,
@@ -104,9 +118,16 @@
           "as_of": "2026-07-24",
           "fetched_at": "2026-07-25T01:21:32Z",
           "confidence": "observed"
+        },
+        {
+          "value": -0.259466,
+          "source": "yf",
+          "as_of": "2026-07-20",
+          "fetched_at": "2026-08-01T18:23:10Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "total_assets": {
       "value": 6030000.0,
@@ -153,6 +174,66 @@
         }
       ],
       "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": 0.7503732878826493,
+      "source": "yf.history_1y",
+      "as_of": "2026-07-31",
+      "fetched_at": "2026-08-01T18:23:10Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 0.7503732878826493,
+          "source": "yf.history_1y",
+          "as_of": "2026-07-31",
+          "fetched_at": "2026-08-01T18:23:10Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_1y": {
+      "value": 0.7503732878826493,
+      "source": "yf.history_1y",
+      "as_of": "2026-07-31",
+      "fetched_at": "2026-08-01T18:23:10Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 0.7503732878826493,
+          "source": "yf.history_1y",
+          "as_of": "2026-07-31",
+          "fetched_at": "2026-08-01T18:23:10Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": 0.7503748,
+          "source": "yf",
+          "as_of": "2026-07-20",
+          "fetched_at": "2026-08-01T18:23:10Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
     }
   },
   "etf": {
@@ -175,14 +256,14 @@
   },
   "financials": null,
   "sources": {
-    "yf": false,
+    "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
-    "yf": null,
+    "yf": "yf/finance/CDPI.json",
     "stockanalysis": "stockanalysis/etfs/CDPI.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",

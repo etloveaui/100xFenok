@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-08-01T16:58:00.000Z",
-  "classification_as_of": "2026-08-01T16:57:23.737Z",
+  "generated_at": "2026-08-01T19:07:24.976Z",
+  "classification_as_of": "2026-08-01T19:06:47.316Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -25,11 +25,11 @@
   },
   "daily_1y_readiness": {
     "denominator": 4431,
-    "daily_1y_complete": 3643,
-    "daily_1y_missing": 788,
+    "daily_1y_complete": 3648,
+    "daily_1y_missing": 783,
     "daily_1y_fetchable": 5,
     "inception_limited_daily_1y_gap": 740,
-    "terminal_limited_daily_1y_gap": 43,
+    "terminal_limited_daily_1y_gap": 38,
     "fetchable_breakdown": {
       "counts": {
         "stockanalysis_short_rows": 5
@@ -45,7 +45,7 @@
       }
     },
     "terminal_limited_breakdown": {
-      "data_supply_unavailable": 16,
+      "data_supply_unavailable": 11,
       "provider_history_start_limited": 11,
       "provider_rejected_non_etf": 16
     },
@@ -70,7 +70,7 @@
     "coverage_index_daily_check_count_ok": true,
     "coverage_index_fetchable_daily_1y_gap": 5,
     "coverage_index_inception_limited_daily_1y_gap": 740,
-    "coverage_index_terminal_limited_daily_1y_gap": 43,
+    "coverage_index_terminal_limited_daily_1y_gap": 38,
     "history_gap_report_count_ok": true,
     "history_gap_classification_clock_match": true,
     "coverage_index_classification_clock_match": true,
@@ -78,7 +78,7 @@
     "history_gap_report_scored_etf_count": 4431,
     "history_gap_report_fetchable_daily_1y_gap": 5,
     "history_gap_report_inception_limited_daily_1y_gap": 740,
-    "history_gap_report_terminal_limited_daily_1y_gap": 43
+    "history_gap_report_terminal_limited_daily_1y_gap": 38
   },
   "samples": {
     "fetchable": [
@@ -337,7 +337,7 @@
     "can_drive_bounded_ticker_batches": true,
     "batch_count": 1,
     "default_batch_size": 120,
-    "yf_local_crosscheck_gap_count": 3477,
+    "yf_local_crosscheck_gap_count": 3094,
     "yf_local_crosscheck_matches": false,
     "caveat": "The exact readiness blocker is effective ETF detail daily_1y continuity: true StockAnalysis primary first, then the verified R2 active selection. Raw local YF is cross-check-only and is never treated as selected authority."
   },
@@ -354,7 +354,7 @@
       "selection": "explicit full-primary daily_1y fetchable tickers; not the scored-ETF scheduled plan",
       "single_writer": true,
       "shard_size": 100,
-      "ticker_count": 341,
+      "ticker_count": 374,
       "shard_count": 4,
       "shards": [
         {
@@ -374,7 +374,7 @@
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "0",
-            "etfs": "DGP,DGZ,DHSB,DJP,DULL,DVIN,DVQQ,DVRE,DVSP,DVUT,DVXB,DVXC,DVXE,DVXF,DVXK,DVXP,DVXV,DVXY,DZZ,EALT,EBUF,EETH,ETH,ETHA,ETHD,ETHT,ETHV,ETHW,EZBC,EZET,FBTC,FEBU,FETH,FLAO,FLJJ,GBTC,GDXD,GDXU,GEVX,GLDI,GMMA,GOOW,GOOX,GPT,GRN,HDLB,HFSP,HODL,HOOW,HYSA,HYTI,IAUG,IBIC,IBIH,IBIJ,IBIK,IBIL,IBIT,IBUF,IDEC,IFEB,IFED,IJUN,IMAR,IMAY,INOV,ISEP,IVVW,IWDL,IWFL,IWML,IWMW,JAJL,JANU,JNEU,JULU,KAUG,KBAB,KBUF,KDEC,KFEB,KJUN,KMAR,KMAY,KMLI,KNOV,KPDD,KPRO,KSEP,KSPY,LAPR,LGCF,LJUL,LQTI,LTTI,MAGX,MAGY,MARU,MAYU,METW"
+            "etfs": "DEFI,DGP,DGZ,DHSB,DJP,DRUP,DULL,DVIN,DVQQ,DVRE,DVSP,DVUT,DVXB,DVXC,DVXE,DVXF,DVXK,DVXP,DVXV,DVXY,DWUS,DZZ,EALT,EAPR,EBUF,EETH,EJAN,EMCS,EOCT,ETH,ETHA,ETHD,ETHE,ETHT,ETHV,ETHW,EUO,EVMT,EWV,EZBC,EZET,FBTC,FEBU,FETH,FGDL,FLAO,FLJJ,FXA,FXB,FXC,FXE,FXF,FXY,GBTC,GDLC,GDXD,GDXU,GEVX,GLD,GLDI,GLDM,GLTR,GMMA,GOOW,GOOX,GOP,GPT,GRN,GSOL,HDLB,HFSP,HIGH,HODL,HOOW,HYGW,HYSA,HYTI,HYTR,IAPR,IAU,IAUG,IAUM,IBIC,IBIH,IBIJ,IBIK,IBIL,IBIT,IBUF,IDEC,IFEB,IFED,IGLD,IJAN,IJUL,IJUN,IMAR,IMAY,INOV,ISEP"
           }
         },
         {
@@ -384,17 +384,17 @@
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "0",
-            "etfs": "MLPB,MLPD,MLPR,MSFW,MSFX,MSTW,MTUL,MVPL,MVRL,NAUG,NDEC,NFEB,NFLW,NJUN,NMAR,NMAY,NNOV,NSEP,NVBU,NVDW,OCTU,PFFL,PLTW,PMTL,PSTP,PWRD,QBF,QBTX,QBUF,QETH,QQDN,QTAP,QTJA,QTOC,QULL,RBUF,RDTE,RGTU,RSJN,RYLG,SCDL,SCO,SDD,SEPU,SETH,SGOL,SHNY,SIVR,SKRE,SLON,SLV,SLVO,SMHB,SMU,SPBC,SPDN,SPPP,SPUC,SPYU,SVXY,TAGS,TBIL,TBJL,TBLL,TEMT,TETH,TFJL,THY,TJAN,TJUL,TLTW,TNGY,TSL,TSLW,TSPY,TYA,UAPR,UAUG,UCIB,UDEC,UDN,UFEB,UFIV,UJAN,UJUL,UJUN,ULE,UMAY,UNOV,UOCT,USE,USEP,USG,USML,USOI,USVN,UTEN,UTHY,UTRE,UTWO"
+            "etfs": "IVVW,IWDL,IWFL,IWML,IWMW,JAJL,JANU,JNEU,JULU,KAUG,KBAB,KBUF,KDEC,KFEB,KJUN,KMAR,KMAY,KMLI,KNOV,KPDD,KPRO,KSEP,KSPY,LAPR,LGCF,LJUL,LQTI,LTTI,MAGX,MAGY,MARU,MAYU,METW,MLPB,MLPD,MLPR,MSFW,MSFX,MSTW,MTUL,MVPL,MVRL,NAUG,NDEC,NFEB,NFLW,NJUN,NMAR,NMAY,NNOV,NSEP,NVBU,NVDW,OCTU,PFFL,PLTW,PMTL,PSTP,PWRD,QBF,QBTX,QBUF,QETH,QQDN,QTAP,QTJA,QTOC,QULL,RBUF,RDTE,RGTU,RSJN,RYLG,SCDL,SCO,SDD,SEPU,SETH,SGOL,SHNY,SIVR,SKRE,SLON,SLV,SLVO,SMHB,SMU,SPBC,SPDN,SPPP,SPUC,SPYU,SVXY,TAGS,TBIL,TBJL,TBLL,TEMT,TETH,TFJL"
           }
         },
         {
           "shard": 4,
-          "ticker_count": 41,
+          "ticker_count": 74,
           "inputs": {
             "history_gaps_only": "true",
             "required_history_periods": "daily_1y",
             "incremental_etf_limit": "0",
-            "etfs": "UTWY,UVXY,UX,UXRP,VIXM,VIXY,VXX,VXZ,VYLD,WAGN,WTPI,WXET,XBIL,XDIV,XDQQ,XDSQ,XDTE,XLBI,XLCI,XLEI,XLFI,XLRI,XLSI,XLVI,XLYI,XRPI,YBTC,YETH,ZALT,ZAPR,ZAUG,ZDEK,ZFEB,ZJAN,ZJUL,ZJUN,ZMAY,ZNOV,ZOCT,ZSC,ZSEP"
+            "etfs": "THY,TJAN,TJUL,TLTW,TNGY,TSL,TSLW,TSPY,TYA,UAPR,UAUG,UCIB,UDEC,UDN,UFEB,UFIV,UJAN,UJUL,UJUN,ULE,UMAY,UNOV,UOCT,USE,USEP,USG,USML,USOI,USVN,UTEN,UTHY,UTRE,UTWO,UTWY,UVXY,UX,UXRP,VIXM,VIXY,VXX,VXZ,VYLD,WAGN,WTPI,WXET,XBIL,XDIV,XDQQ,XDSQ,XDTE,XLBI,XLCI,XLEI,XLFI,XLRI,XLSI,XLVI,XLYI,XRPI,YBTC,YETH,ZALT,ZAPR,ZAUG,ZDEK,ZFEB,ZJAN,ZJUL,ZJUN,ZMAY,ZNOV,ZOCT,ZSC,ZSEP"
           }
         }
       ]
