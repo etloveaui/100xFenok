@@ -31,6 +31,25 @@ from scraper_utils import fetch_html, extract_js_state
 
 # Constants
 SOURCE_URL = "https://www.slickcharts.com/sp500/drawdown"
+_DRAW_DOWN_STATE_PATTERNS = "__sc_init_state__, inline SvelteKit page data"
+
+
+def extract_drawdown_state(html: str) -> dict:
+    """Extract the two SlickCharts state embeddings evidenced for this page.
+
+    Cloudflare challenges are classified by ``fetch_html`` before this parser is
+    reached.  A normal HTML page without either known embedding is a source
+    structure change, rather than provider throttling.
+    """
+    try:
+        return extract_js_state(html)
+    except ValueError as exc:
+        if str(exc) == "Could not find SlickCharts SvelteKit page data":
+            raise ValueError(
+                "No SlickCharts drawdown state found; tried "
+                f"{_DRAW_DOWN_STATE_PATTERNS}"
+            ) from exc
+        raise
 
 
 def parse_drawdown_data(state: dict) -> dict:
@@ -119,7 +138,7 @@ def main():
 
         # Fetch and parse
         html = fetch_html(session, SOURCE_URL)
-        state = extract_js_state(html)
+        state = extract_drawdown_state(html)
         data = parse_drawdown_data(state)
         payload = build_payload(data)
 
