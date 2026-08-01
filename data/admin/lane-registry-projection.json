@@ -1,6 +1,6 @@
 {
   "schema_version": "lane-registry-projection/v2",
-  "generated_at": "2026-08-01T09:15:20.183Z",
+  "generated_at": "2026-08-01T09:24:24.223Z",
   "source_schema_version": "lane-registry/v3",
   "purpose": "Admin-safe lane metadata and derived control-room projection for the owner data dashboard. No store roots, attempt/recovery paths, run identities, or repository directory structure.",
   "lane_count": 32,
@@ -157,6 +157,7 @@
         "source": {
           "source_date": "2026-07-31T20:00:00.000Z",
           "source_date_reason": "yahoo_hourly_ticker.current.source_as_of.oldest",
+          "evidence_status": "observed",
           "sla": null
         },
         "recovery": {
@@ -209,6 +210,7 @@
         "source": {
           "source_date": "2026-07-28",
           "source_date_reason": "sentiment_index.items.current.source_as_of.oldest",
+          "evidence_status": "observed",
           "sla": null
         },
         "recovery": {
@@ -341,7 +343,8 @@
         },
         "source": {
           "source_date": null,
-          "source_date_reason": "local runtime has no repository source stamp",
+          "source_date_reason": "not_instrumented: local runtime has no committed public-safe source stamp",
+          "evidence_status": "not_instrumented",
           "sla": null
         },
         "recovery": {
@@ -390,7 +393,8 @@
         },
         "source": {
           "source_date": null,
-          "source_date_reason": "owner SSOT runtime has no repository source stamp",
+          "source_date_reason": "not_instrumented: owner SSOT runtime has no committed public-safe source stamp",
+          "evidence_status": "not_instrumented",
           "sla": null
         },
         "recovery": {
@@ -439,7 +443,8 @@
         },
         "source": {
           "source_date": null,
-          "source_date_reason": "KV runtime has no repository source stamp",
+          "source_date_reason": "not_instrumented: KV runtime has no committed public-safe source stamp",
+          "evidence_status": "not_instrumented",
           "sla": null
         },
         "recovery": {
@@ -501,6 +506,7 @@
         "source": {
           "source_date": "2026-07-24",
           "source_date_reason": "global_scouter_metadata.source_date",
+          "evidence_status": "observed",
           "sla": null
         },
         "recovery": {

@@ -113,6 +113,9 @@ const controlProjection = buildLaneRegistryProjection(LANE_REGISTRY, {
         as_of: "2026-07-31",
         details: { recovery_retry_set: [{ key: "sentiment" }], recovery_recovered: [] },
       },
+      { id: "admin_live_voice_logs", as_of: "2026-08-01", details: {} },
+      { id: "mona_production_study_state", as_of: "2026-08-01", details: {} },
+      { id: "mona_vnext_kv", as_of: "2026-08-01", details: {} },
     ],
   },
   sourceArtifacts: {
@@ -192,9 +195,11 @@ assert.equal(sentimentControl.recovery.state, "retry_pending");
 const yahooSource = yahooControl.source;
 assert.equal(yahooSource.source_date, "2026-07-31T20:00:00.000Z", "yahoo must use the oldest committed provider source clock");
 assert.equal(yahooSource.source_date_reason, "yahoo_hourly_ticker.current.source_as_of.oldest");
+assert.equal(yahooSource.evidence_status, "observed");
 assert.ok(!JSON.stringify(yahooSource).includes("data/admin"), "yahoo source path must stay private");
 assert.equal(sentimentControl.source.source_date, "2026-07-28", "sentiment must use the oldest committed provider source clock");
 assert.equal(sentimentControl.source.source_date_reason, "sentiment_index.items.current.source_as_of.oldest");
+assert.equal(sentimentControl.source.evidence_status, "observed");
 assert.ok(!JSON.stringify(sentimentControl.source).includes("data/admin"), "sentiment source path must stay private");
 const globalControl = controlProjection.lanes.find((lane) => lane.id === "global_scouter").control_room_state;
 assert.equal(globalControl.source.source_date, "2026-07-24", "global_scouter must use the metadata source clock");
@@ -203,6 +208,18 @@ assert.equal(
   "global_scouter_metadata.source_date",
   "global_scouter source clock provenance must be explicit",
 );
+assert.equal(globalControl.source.evidence_status, "observed");
 assert.ok(!JSON.stringify(globalControl.source).includes("data/global-scouter"), "source path must stay private");
+
+for (const [laneId, reason] of Object.entries({
+  admin_live_voice_logs: "not_instrumented: local runtime has no committed public-safe source stamp",
+  mona_production_study_state: "not_instrumented: owner SSOT runtime has no committed public-safe source stamp",
+  mona_vnext_kv: "not_instrumented: KV runtime has no committed public-safe source stamp",
+})) {
+  const source = controlProjection.lanes.find((lane) => lane.id === laneId).control_room_state.source;
+  assert.equal(source.source_date, null, `${laneId} must not infer a source date`);
+  assert.equal(source.source_date_reason, reason, `${laneId} source instrumentation reason`);
+  assert.equal(source.evidence_status, "not_instrumented", `${laneId} source evidence status`);
+}
 
 console.log(JSON.stringify({ ok: true, lanes: projection.lanes.length, red_markers_stripped: rawViolations }, null, 2));

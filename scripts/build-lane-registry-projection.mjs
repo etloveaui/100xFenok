@@ -73,6 +73,7 @@ const RECOVERY_STATES = new Set([
 ]);
 const INCIDENT_CLASSES = new Set(["engineering", "provider_wait", "queue", "unknown"]);
 const QUEUE_EVIDENCE = new Set(["measured", "count_only", "unavailable"]);
+const SOURCE_EVIDENCE = new Set(["observed", "not_instrumented", "unavailable"]);
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const ISO_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
 
@@ -95,9 +96,21 @@ const LANE_SOURCE_MAP = Object.freeze({
     source_date_reason: "sentiment_index.items.current.source_as_of.oldest",
     no_source_reason: "sentiment current source_as_of is unavailable",
   },
-  admin_live_voice_logs: { source_id: null, no_source_reason: "local runtime has no repository source stamp" },
-  mona_production_study_state: { source_id: null, no_source_reason: "owner SSOT runtime has no repository source stamp" },
-  mona_vnext_kv: { source_id: null, no_source_reason: "KV runtime has no repository source stamp" },
+  admin_live_voice_logs: {
+    source_id: null,
+    no_source_evidence_status: "not_instrumented",
+    no_source_reason: "not_instrumented: local runtime has no committed public-safe source stamp",
+  },
+  mona_production_study_state: {
+    source_id: null,
+    no_source_evidence_status: "not_instrumented",
+    no_source_reason: "not_instrumented: owner SSOT runtime has no committed public-safe source stamp",
+  },
+  mona_vnext_kv: {
+    source_id: null,
+    no_source_evidence_status: "not_instrumented",
+    no_source_reason: "not_instrumented: KV runtime has no committed public-safe source stamp",
+  },
   global_scouter: {
     source_id: null,
     source_artifact: "data/global-scouter/core/metadata.json",
@@ -401,14 +414,20 @@ function buildSourceState(lane, context, kpiLane) {
     : Array.isArray(mapping.source_date_path)
       ? oldestSourceDate(sourceArtifacts.flatMap((artifact) => collectSourceDateValues(artifact, mapping.source_date_path)))
       : null;
-  const sourceDate = mapping.source_artifact
-    ? artifactSourceDate
-    : safeIso(kpiLane?.as_of) || null;
+  const sourceDate = mapping.no_source_evidence_status === "not_instrumented"
+    ? null
+    : mapping.source_artifact
+      ? artifactSourceDate
+      : safeIso(kpiLane?.as_of) || null;
+  const evidenceStatus = artifactSourceDate || sourceDate
+    ? "observed"
+    : mapping.no_source_evidence_status || "unavailable";
   return {
     source_date: sourceDate,
     source_date_reason: artifactSourceDate
       ? mapping.source_date_reason
       : sourceDate ? "kpi_lane_as_of" : mapping.no_source_reason,
+    evidence_status: SOURCE_EVIDENCE.has(evidenceStatus) ? evidenceStatus : "unavailable",
     sla: sourceSla ? {
       unit: sourceSla.unit,
       calendar: sourceSla.calendar,
