@@ -1,6 +1,6 @@
 {
   "schema_version": "rim_index_inputs.v1",
-  "generated_at": "2026-08-01T07:12:38.354Z",
+  "generated_at": "2026-08-01T10:56:44.686Z",
   "generated_by": "scripts/build-rim-index.mjs",
   "product": "Fenok Index RIM Workbench",
   "output_scope": "inputs_only_no_fair_value",
@@ -1599,7 +1599,7 @@
         },
         "risk_free_rate": {
           "value": 0.04315,
-          "source": "admin_private_path_redacted",
+          "source": "private_path_redacted",
           "source_field": "OutBlock_1[ISU_NM=국고04250-3606(26-6),BND_EXP_TP_NM=10,GOVBND_ISU_TP_NM=지표].CLSPRC_YD / 100",
           "source_tier": "observed_source",
           "as_of": "2026-07-30",
@@ -1631,7 +1631,7 @@
           "formula": "krx_kospi_mktcap_weighted_dividend_yield / (benchmark_best_eps / benchmark_px_last)",
           "sources": [
             "computed/stock_action_index.json",
-            "admin_private_path_redacted",
+            "private_path_redacted",
             "benchmarks/emerging.json"
           ],
           "source_tier": "derived_formula",
@@ -1639,7 +1639,7 @@
             "stock_action_source_date": "2026-07-24",
             "index_key": "kospi_krx_mktcap",
             "krx_weight_as_of": "2026-07-30",
-            "krx_weight_source": "admin_private_path_redacted",
+            "krx_weight_source": "private_path_redacted",
             "raw_public": false,
             "weighted_dividend_yield": 0.01846032,
             "benchmark_as_of": "2026-07-26",
@@ -1674,14 +1674,14 @@
           "formula": "krx_kospi_mktcap_weighted_average(((forward_eps_fy3 / forward_eps_fy1)^(1/2)) - 1)",
           "sources": [
             "computed/stock_action_index.json",
-            "admin_private_path_redacted"
+            "private_path_redacted"
           ],
           "source_tier": "derived_formula",
           "coverage": {
             "stock_action_source_date": "2026-07-24",
             "index_key": "kospi_krx_mktcap",
             "krx_weight_as_of": "2026-07-30",
-            "krx_weight_source": "admin_private_path_redacted",
+            "krx_weight_source": "private_path_redacted",
             "raw_public": false,
             "min_covered_weight_ratio": 0.75,
             "unmatched_krx_sample": [
@@ -1748,7 +1748,7 @@
                 "sources": [
                   "benchmarks/emerging.json",
                   "computed/stock_action_index.json",
-                  "admin_private_path_redacted"
+                  "private_path_redacted"
                 ],
                 "source_tier": "derived_formula",
                 "notes": [
@@ -1760,7 +1760,7 @@
                 "formula": "weighted_average(stock_action.estimateSnapshot.epsGrowth.fy1) / 100",
                 "sources": [
                   "computed/stock_action_index.json",
-                  "admin_private_path_redacted"
+                  "private_path_redacted"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
@@ -1819,7 +1819,7 @@
                 "formula": "weighted_average(stock_action.profitabilitySnapshot.roe.fy1) / 100",
                 "sources": [
                   "computed/stock_action_index.json",
-                  "admin_private_path_redacted"
+                  "private_path_redacted"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
@@ -1916,7 +1916,7 @@
                 "sources": [
                   "benchmarks/emerging.json",
                   "computed/stock_action_index.json",
-                  "admin_private_path_redacted"
+                  "private_path_redacted"
                 ],
                 "source_tier": "derived_formula",
                 "notes": [
@@ -1928,7 +1928,7 @@
                 "formula": "weighted_average((forward_eps_fy2 / forward_eps_fy1) - 1)",
                 "sources": [
                   "computed/stock_action_index.json",
-                  "admin_private_path_redacted"
+                  "private_path_redacted"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
@@ -1987,7 +1987,7 @@
                 "formula": "weighted_average(stock_action.profitabilitySnapshot.roe.fy2) / 100",
                 "sources": [
                   "computed/stock_action_index.json",
-                  "admin_private_path_redacted"
+                  "private_path_redacted"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
@@ -2084,7 +2084,7 @@
                 "sources": [
                   "benchmarks/emerging.json",
                   "computed/stock_action_index.json",
-                  "admin_private_path_redacted"
+                  "private_path_redacted"
                 ],
                 "source_tier": "derived_formula",
                 "notes": [
@@ -2096,7 +2096,7 @@
                 "formula": "weighted_average((forward_eps_fy3 / forward_eps_fy2) - 1)",
                 "sources": [
                   "computed/stock_action_index.json",
-                  "admin_private_path_redacted"
+                  "private_path_redacted"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
@@ -2155,7 +2155,7 @@
                 "formula": "weighted_average(stock_action.profitabilitySnapshot.roe.fy3) / 100",
                 "sources": [
                   "computed/stock_action_index.json",
-                  "admin_private_path_redacted"
+                  "private_path_redacted"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
@@ -2248,8 +2248,8 @@
             "index_diagnostics": {
               "index_key": "kospi_krx_mktcap",
               "source_tier": "exact_index_weight_source",
-              "source": "admin_private_path_redacted",
-              "bridge_source": "admin/fenok-edge-korea-krx-daily-index.json",
+              "source": "private_path_redacted",
+              "bridge_source": "private_path_redacted",
               "source_field": "OutBlock_1[MKT_NM=KOSPI].MKTCAP / sum(OutBlock_1[MKT_NM=KOSPI].MKTCAP)",
               "as_of": "2026-07-30",
               "raw_public": false,
@@ -3106,8 +3106,8 @@
         "krx_kospi_weights": {
           "index_key": "kospi_krx_mktcap",
           "source_tier": "exact_index_weight_source",
-          "source": "admin_private_path_redacted",
-          "bridge_source": "admin/fenok-edge-korea-krx-daily-index.json",
+          "source": "private_path_redacted",
+          "bridge_source": "private_path_redacted",
           "source_field": "OutBlock_1[MKT_NM=KOSPI].MKTCAP / sum(OutBlock_1[MKT_NM=KOSPI].MKTCAP)",
           "as_of": "2026-07-30",
           "raw_public": false,
@@ -3415,6 +3415,6 @@
     "raw_public": false,
     "raw_rows_included": false,
     "private_artifact_paths_included": false,
-    "private_path_redaction": "strings_containing__private_are_replaced_with_admin_private_path_redacted"
+    "private_path_redaction": "path-shaped strings (no whitespace) whose leading or interior segment is a private or admin root are replaced with private_path_redacted; prose describing the policy is preserved"
   }
 }
