@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 688,
+      "natural": true,
+      "observed_at": "2026-08-01T18:35:05Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30711924670",
+      "schedule": "",
+      "shard": "3/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T00:50:21Z",
+    "fetched_at": "2026-08-01T18:38:17Z",
     "history_as_of": "2026-07-31",
     "path": "data/yf/finance/ZBH.json",
-    "payload_sha256": "1166de11cca1237e1f70cd9ce05477bc781140d8640032c899383049a5dd676a",
+    "payload_sha256": "279c7107e6e6b40359c95089263ec666c3adb37bc7e7e0b6d00fe6a06421e76e",
     "quote_as_of": "2026-07-31T20:00:03Z",
     "source_as_of": "2026-07-31"
   },
@@ -196,16 +196,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1052,
+    "latency_ms": 688,
     "natural": true,
-    "observed_at": "2026-08-01T00:45:24Z",
+    "observed_at": "2026-08-01T18:35:05Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "30711924670",
+    "schedule": "",
+    "shard": "3/6"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:47:30Z",
@@ -217,13 +217,13 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T00:45:24Z",
-    "payload_sha256": "b18fd271ac22a65d5d99b84abba970860fafa8f822c799c28930f08f72384d0f",
+    "observed_at": "2026-08-01T18:35:05Z",
+    "payload_sha256": "d9b6bee3e7c6502e538c6c5c8dbd4b2977aa6271b93a64d80eb2f12c06d0ee27",
     "quote_as_of": "2026-07-31T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "30674982988",
+    "run_id": "30711924670",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
@@ -241,5 +241,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "ZBH",
-  "updated_at": "2026-08-01T00:45:24Z"
+  "updated_at": "2026-08-01T18:35:05Z"
 }
