@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   buildFetchCronAttemptCoverage,
+  validateAttemptShard,
   validateDetectionReport,
 } from "./build-data-supply-detection-floor.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
@@ -1105,6 +1106,83 @@ export const LAST_ATTEMPT_STORELESS_DETAIL = Object.freeze({
   last_attempt: null,
   last_attempt_reason: "lane has no recovery store",
 });
+
+const DETECTION_ATTEMPT_OUTCOMES = new Set(["success", "failed", "provider_wait", "unobserved", "unknown"]);
+const DETECTION_ATTEMPT_FAILURE_CLASSES = new Set([
+  "transport",
+  "http",
+  "rate_limited",
+  "decode",
+  "assertion",
+  "provider_unsupported",
+  "unknown",
+]);
+
+function failedDetectionAssertion(row) {
+  return Array.isArray(row?.assertions) && row.assertions.some((assertion) => assertion?.passed === false);
+}
+
+function normalizeDetectionAttempt(row) {
+  if (!row) return { observed_at: null, outcome: "unobserved", failure_class: null };
+  const observedAt = isDetectionSourceStamp(row.observed_at) ? row.observed_at : null;
+  if (row.execution === "unobserved") return { observed_at: observedAt, outcome: "unobserved", failure_class: null };
+  const providerUnsupported = [row.exception_kind, row.retry_reason, row.outcome].includes("provider_unsupported");
+  if (providerUnsupported || row.outcome === "no_fallback_candidates") {
+    return { observed_at: observedAt, outcome: "provider_wait", failure_class: "provider_unsupported" };
+  }
+  if (row.rate_limited === true || row.http_status === 429) {
+    return { observed_at: observedAt, outcome: "failed", failure_class: "rate_limited" };
+  }
+  if (row.exception_kind === "transport") {
+    return { observed_at: observedAt, outcome: "failed", failure_class: "transport" };
+  }
+  if (row.http_status !== null && row.http_status !== undefined && (row.http_status < 200 || row.http_status >= 300)) {
+    return { observed_at: observedAt, outcome: "failed", failure_class: "http" };
+  }
+  if (row.decode === "error") return { observed_at: observedAt, outcome: "failed", failure_class: "decode" };
+  if (failedDetectionAssertion(row)) return { observed_at: observedAt, outcome: "failed", failure_class: "assertion" };
+  if (row.outcome === "error" || row.execution === "threw" || row.payload === "empty") {
+    return { observed_at: observedAt, outcome: "failed", failure_class: "unknown" };
+  }
+  if (row.execution === "returned" || row.outcome === "success" || row.outcome === undefined) {
+    return { observed_at: observedAt, outcome: "success", failure_class: null };
+  }
+  return { observed_at: observedAt, outcome: "unknown", failure_class: "unknown" };
+}
+
+function latestDetectionAttempt(rows) {
+  const observed = rows
+    .filter((row) => isDetectionSourceStamp(row?.observed_at))
+    .sort((a, b) => Date.parse(b.observed_at) - Date.parse(a.observed_at));
+  return observed[0] ?? rows.find((row) => row?.execution === "unobserved") ?? null;
+}
+
+export function buildDetectionAttemptDetail({ rows = [], status = "present" } = {}) {
+  if (status === "missing") {
+    return { last_attempt: null, last_attempt_reason: "detection attempt shard missing" };
+  }
+  if (status === "invalid") {
+    return { last_attempt: null, last_attempt_reason: "detection attempt shard invalid" };
+  }
+  const row = latestDetectionAttempt(Array.isArray(rows) ? rows : []);
+  if (!row) {
+    return { last_attempt: null, last_attempt_reason: "detection attempt shard has no observed attempt" };
+  }
+  const normalized = normalizeDetectionAttempt(row);
+  if (!DETECTION_ATTEMPT_OUTCOMES.has(normalized.outcome)
+    || (normalized.failure_class !== null && !DETECTION_ATTEMPT_FAILURE_CLASSES.has(normalized.failure_class))) {
+    return { last_attempt: null, last_attempt_reason: "detection attempt shard outcome is invalid" };
+  }
+  return {
+    last_attempt: {
+      event_name: null,
+      observed_at: normalized.observed_at,
+      outcome: normalized.outcome,
+      failure_class: normalized.failure_class,
+    },
+    last_attempt_reason: null,
+  };
+}
 
 const KPI_SOURCE_STATUS_SCHEMA = "fenok-kpi-source-status/v1";
 const SOURCE_STATUS_SPECS = Object.freeze({
@@ -2726,6 +2804,39 @@ function buildSourceArtifacts(loaded) {
   }));
 }
 
+function detectionAttemptRelativePath(lane) {
+  const declared = lane?.roots?.detection_attempt;
+  if (typeof declared !== "string" || declared === "") return null;
+  return declared.startsWith("data/") ? declared.slice("data/".length) : declared;
+}
+
+export function loadCommittedDetectionAttemptDetails(lanes, { dataRoot = DATA_ROOT } = {}) {
+  const details = {};
+  for (const lane of Array.isArray(lanes) ? lanes : []) {
+    const relativePath = detectionAttemptRelativePath(
+      LANE_REGISTRY.lanes.find((candidate) => candidate.id === lane?.id),
+    );
+    if (!relativePath) continue;
+    const absolutePath = path.join(dataRoot, relativePath);
+    let document;
+    try {
+      document = JSON.parse(fs.readFileSync(absolutePath, "utf8"));
+    } catch (error) {
+      details[lane.id] = buildDetectionAttemptDetail({
+        status: error?.code === "ENOENT" ? "missing" : "invalid",
+      });
+      continue;
+    }
+    try {
+      validateAttemptShard(document, lane.id);
+      details[lane.id] = buildDetectionAttemptDetail({ rows: document.attempts });
+    } catch {
+      details[lane.id] = buildDetectionAttemptDetail({ status: "invalid" });
+    }
+  }
+  return details;
+}
+
 export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, recoverySources = RECOVERY_STATE_SOURCES) {
   const coverageIndex = readJson("admin/fenok-edge-coverage-index.json");
   const stockPromotionDryRun = readJson("admin/fenok-s1-stock-public-promotion-dry-run.json");
@@ -2788,11 +2899,15 @@ export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, r
     buildPublicMirrorLane(rimInputs),
     ...detectionFloorLanes,
   ];
+  const committedDetectionAttemptDetails = loadCommittedDetectionAttemptDetails(lanes);
   // #365 P2: last_attempt is uniform across every lane. Detection-floor lanes set
-  // it from their injected recovery state; the remaining composite/platform lanes
-  // have no recovery store -> honest null + reason (never fabricated).
+  // it from their committed detection shard; the remaining composite/platform
+  // lanes have no recovery store -> honest null + reason (never fabricated).
   for (const laneEntry of lanes) {
     laneEntry.details = laneEntry.details || {};
+    if (committedDetectionAttemptDetails[laneEntry.id]) {
+      Object.assign(laneEntry.details, committedDetectionAttemptDetails[laneEntry.id]);
+    }
     if (!("last_attempt" in laneEntry.details)) {
       Object.assign(laneEntry.details, LAST_ATTEMPT_STORELESS_DETAIL);
     }

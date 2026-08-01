@@ -5,9 +5,18 @@
 // identity while keeping event_name/observed_at.
 
 import assert from "node:assert/strict";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { compactLastAttempt } from "./build-fenok-data-health-kpi.mjs";
+import {
+  buildDetectionAttemptDetail,
+  compactLastAttempt,
+  loadCommittedDetectionAttemptDetails,
+} from "./build-fenok-data-health-kpi.mjs";
 import { projectPublicKpi } from "./lib/kpi-runtime-projection.mjs";
+import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 // --- (a) value-changing injection: last_attempt tracks the injected current_attempt ---
 const injectA = { current_attempt: { run_id: "111", event_name: "schedule", observed_at: "2026-07-19T01:00:00Z", extra: "ignored" } };
@@ -47,3 +56,49 @@ assert.equal(pubStoreless.details.last_attempt, null, "storeless last_attempt st
 assert.equal(pubStoreless.details.last_attempt_reason, "lane has no recovery store", "reason preserved");
 
 console.log(JSON.stringify({ ok: true, suite: "kpi last_attempt (injection + storeless + public redaction)" }, null, 2));
+
+// --- (d) committed detection-shard attempt clock is public-safe and outcome-bound ---
+const gdelt = buildDetectionAttemptDetail({
+  rows: [{
+    observed_at: "2026-07-31T16:24:24.940Z",
+    execution: "returned",
+    exception_kind: null,
+    http_status: 200,
+    rate_limited: false,
+    decode: "ok",
+    payload: "non_empty",
+    assertions: [{ id: "articles_array", passed: false }],
+    retry_reason: "rate_limited",
+  }],
+});
+assert.deepEqual(gdelt, {
+  last_attempt: {
+    event_name: null,
+    observed_at: "2026-07-31T16:24:24.940Z",
+    outcome: "failed",
+    failure_class: "assertion",
+  },
+  last_attempt_reason: null,
+}, "GDELT failed shard evidence must replace the previous null attempt clock");
+
+const missingYahoo = buildDetectionAttemptDetail({ status: "missing" });
+assert.deepEqual(missingYahoo, {
+  last_attempt: null,
+  last_attempt_reason: "detection attempt shard missing",
+}, "missing Yahoo shard must remain explicit missing evidence");
+
+const publicGdelt = projectPublicKpi({ lanes: [{ id: "gdelt_news_tone", details: gdelt }] }, "2026-08-01T00:00:00Z");
+assert.deepEqual(publicGdelt.lanes[0].details.last_attempt, gdelt.last_attempt,
+  "public KPI must preserve the normalized attempt outcome and failure class");
+
+const shardLanes = ["gdelt_news_tone", "yahoo_batch_quote_history"]
+  .map((id) => LANE_REGISTRY.lanes.find((lane) => lane.id === id));
+const committed = loadCommittedDetectionAttemptDetails(shardLanes, { dataRoot: path.join(REPO_ROOT, "data") });
+assert.equal(committed.gdelt_news_tone.last_attempt.outcome, "failed",
+  "committed GDELT shard must produce a failed public attempt outcome");
+assert.equal(committed.gdelt_news_tone.last_attempt.observed_at, "2026-07-31T16:24:24.940Z",
+  "committed GDELT shard must provide its latest observed_at");
+assert.deepEqual(committed.yahoo_batch_quote_history, missingYahoo,
+  "missing Yahoo shard must not fall back to the private recovery index clock");
+
+console.log(JSON.stringify({ ok: true, suite: "detection attempt clock (GDELT failure + Yahoo missing + public projection)" }, null, 2));

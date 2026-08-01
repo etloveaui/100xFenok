@@ -42,6 +42,8 @@ function projectLaneRecoveryDetails(doc) {
       lane.details.last_attempt = {
         event_name: lastAttempt.event_name ?? null,
         observed_at: lastAttempt.observed_at ?? null,
+        ...(Object.hasOwn(lastAttempt, "outcome") ? { outcome: lastAttempt.outcome ?? null } : {}),
+        ...(Object.hasOwn(lastAttempt, "failure_class") ? { failure_class: lastAttempt.failure_class ?? null } : {}),
       };
     }
     const recovered = lane?.details?.recovery_recovered;
