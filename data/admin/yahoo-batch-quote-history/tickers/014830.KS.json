@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,14 +168,27 @@
       "run_id": "30593079919",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 880,
+      "natural": true,
+      "observed_at": "2026-08-01T00:45:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30674982988",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-31T01:00:06Z",
+    "fetched_at": "2026-08-01T00:45:57Z",
     "history_as_of": "2026-07-31",
     "path": "data/yf/finance/014830.KS.json",
-    "payload_sha256": "84b4d01e63c3d90ff4254a2ab2223762ba212985739573081a5dc3bda0c57e37",
-    "quote_as_of": "2026-07-31T00:39:56Z",
+    "payload_sha256": "2825e17d51f996acc1c9abe8c371f5fa62aa6016395a644a2aead8f452532571",
+    "quote_as_of": "2026-07-31T06:30:30Z",
     "source_as_of": "2026-07-31"
   },
   "discovered_from": [
@@ -199,12 +199,12 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 546,
+    "latency_ms": 880,
     "natural": true,
-    "observed_at": "2026-07-31T00:59:40Z",
+    "observed_at": "2026-08-01T00:45:24Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30593079919",
+    "run_id": "30674982988",
     "schedule": "20 23 * * 1-5",
     "shard": "1/5"
   },
@@ -212,11 +212,11 @@
   "provider_observation": {
     "event_name": "schedule",
     "history_as_of": "2026-07-31",
-    "observed_at": "2026-07-31T00:59:40Z",
-    "payload_sha256": "8677a244d8a03c2fa9baf59d271e78b5a80df4746de4b57a9217aaffdabfcde5",
-    "quote_as_of": "2026-07-31T00:39:56Z",
+    "observed_at": "2026-08-01T00:45:24Z",
+    "payload_sha256": "c190b07a3a617256d7b8a8fd6878a2f5edfbcc28c85e416bac2dffb32b71f411",
+    "quote_as_of": "2026-07-31T06:30:30Z",
     "run_attempt": 1,
-    "run_id": "30593079919",
+    "run_id": "30674982988",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "014830.KS",
-  "updated_at": "2026-07-31T00:59:40Z"
+  "updated_at": "2026-08-01T00:45:24Z"
 }

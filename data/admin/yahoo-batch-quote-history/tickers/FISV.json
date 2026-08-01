@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,47 +168,60 @@
       "run_id": "30502016705",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 879,
+      "natural": true,
+      "observed_at": "2026-08-01T00:39:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30674982988",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-30T00:37:53Z",
-    "history_as_of": "2026-07-29",
+    "fetched_at": "2026-08-01T00:43:22Z",
+    "history_as_of": "2026-07-31",
     "path": "data/yf/finance/FISV.json",
-    "payload_sha256": "eaed00724c008c9ebcb8500dbb1b56248e1ac3681f2de9efd2c16e577a69f32f",
-    "quote_as_of": "2026-07-29T20:00:01Z",
-    "source_as_of": "2026-07-29"
+    "payload_sha256": "8071af2a8610a1b3dfa3861c1eed9151da4032bf90fae22cb77e6125591da291",
+    "quote_as_of": "2026-07-31T20:00:01Z",
+    "source_as_of": "2026-07-31"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 879,
     "natural": true,
-    "observed_at": "2026-07-30T00:50:04Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-01T00:39:20Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30502016705",
+    "run_id": "30674982988",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "0/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-29",
-    "observed_at": "2026-07-30T00:35:13Z",
-    "payload_sha256": "f5eb89a7532856f80e222f80208afbf573d7b9d7f30fad4fc677ba8939eebfc2",
-    "quote_as_of": "2026-07-29T20:00:01Z",
+    "history_as_of": "2026-07-31",
+    "observed_at": "2026-08-01T00:39:20Z",
+    "payload_sha256": "a4f94edd4cfaee3bbf211d804b615a4bdffd382f4372d7a44f03e408266833f7",
+    "quote_as_of": "2026-07-31T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "30502016705",
+    "run_id": "30674982988",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-29"
+    "source_as_of": "2026-07-31"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "FISV",
-  "updated_at": "2026-07-30T00:50:04Z"
+  "updated_at": "2026-08-01T00:39:20Z"
 }

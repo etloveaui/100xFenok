@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 497,
-      "natural": true,
-      "observed_at": "2026-07-14T00:11:54Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29295146902",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -188,30 +175,43 @@
       "run_id": "30593079919",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 790,
+      "natural": true,
+      "observed_at": "2026-08-01T00:45:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30674982988",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-31T00:57:54Z",
-    "history_as_of": "2026-07-30",
+    "fetched_at": "2026-08-01T00:47:53Z",
+    "history_as_of": "2026-07-31",
     "path": "data/yf/finance/CASY.json",
-    "payload_sha256": "7c505f8bd4dccc005c4ebb883720c942e20595f88d1b14324a47f26afa1d5618",
-    "quote_as_of": "2026-07-30T20:00:01Z",
-    "source_as_of": "2026-07-30"
+    "payload_sha256": "245c990e50becfb07375eaa713c1642d6516f6a7c3629af040c1f8ac38ee5af6",
+    "quote_as_of": "2026-07-31T20:00:00Z",
+    "source_as_of": "2026-07-31"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 790,
     "natural": true,
-    "observed_at": "2026-07-31T00:59:40Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-01T00:45:24Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30593079919",
+    "run_id": "30674982988",
     "schedule": "20 23 * * 1-5",
     "shard": "1/5"
   },
@@ -244,14 +244,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-30",
-    "observed_at": "2026-07-31T00:55:40Z",
-    "payload_sha256": "c54c2395271c6907acb93991568f1410d2665ca07446fd8bab6742f37a0a392c",
-    "quote_as_of": "2026-07-30T20:00:01Z",
+    "history_as_of": "2026-07-31",
+    "observed_at": "2026-08-01T00:45:24Z",
+    "payload_sha256": "868d0ed01ac197c59a16e53f92c550a8c675ebf7bf8b6820965a68bc9701bca1",
+    "quote_as_of": "2026-07-31T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30593079919",
+    "run_id": "30674982988",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-30"
+    "source_as_of": "2026-07-31"
   },
   "recovered_at": "2026-07-21T00:18:00Z",
   "recovered_from_run_id": "29622560422",
@@ -262,5 +262,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CASY",
-  "updated_at": "2026-07-31T00:59:40Z"
+  "updated_at": "2026-08-01T00:45:24Z"
 }

@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-14T00:29:46Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29295146902",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -188,30 +175,43 @@
       "run_id": "30593079919",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 917,
+      "natural": true,
+      "observed_at": "2026-08-01T00:45:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30674982988",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-31T00:57:57Z",
-    "history_as_of": "2026-07-30",
+    "fetched_at": "2026-08-01T00:47:57Z",
+    "history_as_of": "2026-07-31",
     "path": "data/yf/finance/CHKP.json",
-    "payload_sha256": "b7eb93dcc6a9aaf20486ac7c743b8e6f7410e52e634bfdd26d5e62706918b42d",
-    "quote_as_of": "2026-07-30T20:00:01Z",
-    "source_as_of": "2026-07-30"
+    "payload_sha256": "bdbf67563250a2018c49118548b9ef849eb9dd0bef0e88d646ab1a190ba79d15",
+    "quote_as_of": "2026-07-31T20:00:01Z",
+    "source_as_of": "2026-07-31"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 917,
     "natural": true,
-    "observed_at": "2026-07-31T00:59:40Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-01T00:45:24Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30593079919",
+    "run_id": "30674982988",
     "schedule": "20 23 * * 1-5",
     "shard": "1/5"
   },
@@ -244,14 +244,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-30",
-    "observed_at": "2026-07-31T00:55:40Z",
-    "payload_sha256": "f2093e02a32d1b3a32b529f5295949a7e47b34f002a99399839fcc0b92a60c6f",
-    "quote_as_of": "2026-07-30T20:00:01Z",
+    "history_as_of": "2026-07-31",
+    "observed_at": "2026-08-01T00:45:24Z",
+    "payload_sha256": "ab88eda3e457965d8fda37c61550cb7005bb81d4b2fea071acd0d9160d2a7892",
+    "quote_as_of": "2026-07-31T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "30593079919",
+    "run_id": "30674982988",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-30"
+    "source_as_of": "2026-07-31"
   },
   "recovered_at": "2026-07-21T00:18:00Z",
   "recovered_from_run_id": "29622560422",
@@ -262,5 +262,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CHKP",
-  "updated_at": "2026-07-31T00:59:40Z"
+  "updated_at": "2026-08-01T00:45:24Z"
 }

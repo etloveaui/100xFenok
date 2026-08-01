@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "error": "ValueError: source did not advance beyond the retained LKG for BLD",
       "event_name": "schedule",
@@ -194,6 +181,20 @@
       "run_id": "30593079919",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for BLD despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 865,
+      "natural": true,
+      "observed_at": "2026-08-01T00:39:20Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "30674982988",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -212,12 +213,12 @@
     "error": "ValueError: quote_as_of is unavailable for BLD despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 409,
+    "latency_ms": 865,
     "natural": true,
-    "observed_at": "2026-07-31T00:55:40Z",
+    "observed_at": "2026-08-01T00:39:20Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "30593079919",
+    "run_id": "30674982988",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -229,9 +230,9 @@
     "failure_kind": "transient_provider_miss",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-07-31T00:55:40Z",
+    "observed_at": "2026-08-01T00:39:20Z",
     "run_attempt": 1,
-    "run_id": "30593079919"
+    "run_id": "30674982988"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:40:31Z",
@@ -255,5 +256,5 @@
     "source_as_of": "2026-06-30T20:05:29Z"
   },
   "ticker": "BLD",
-  "updated_at": "2026-07-31T00:55:40Z"
+  "updated_at": "2026-08-01T00:39:20Z"
 }

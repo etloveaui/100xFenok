@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,48 +168,61 @@
       "run_id": "30502016705",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 941,
+      "natural": true,
+      "observed_at": "2026-08-01T00:39:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30674982988",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-30T00:37:51Z",
-    "history_as_of": "2026-07-29",
+    "fetched_at": "2026-08-01T00:43:19Z",
+    "history_as_of": "2026-07-31",
     "path": "data/yf/finance/FCX.json",
-    "payload_sha256": "e3fd6aa8c58a3ce242fc8fa8eb121deb950fcc8be377201e2947459575e5ffac",
-    "quote_as_of": "2026-07-29T20:00:02Z",
-    "source_as_of": "2026-07-29"
+    "payload_sha256": "dc8cb03043db8d7764f8918b5311e5fd1b02cbaf3d4e10f6abfb2091f1ddbc2c",
+    "quote_as_of": "2026-07-31T20:00:03Z",
+    "source_as_of": "2026-07-31"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 941,
     "natural": true,
-    "observed_at": "2026-07-30T00:50:04Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-01T00:39:20Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30502016705",
+    "run_id": "30674982988",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "0/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-29",
-    "observed_at": "2026-07-30T00:35:13Z",
-    "payload_sha256": "f0db7d4ef5033c87ee419901bc4780bdeb845caaaa0f51fc589b2d26ff35f279",
-    "quote_as_of": "2026-07-29T20:00:02Z",
+    "history_as_of": "2026-07-31",
+    "observed_at": "2026-08-01T00:39:20Z",
+    "payload_sha256": "1c3a8d75fce6e9495175496ab1cbbda27ba9534330bbc850c8d80604e2135089",
+    "quote_as_of": "2026-07-31T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "30502016705",
+    "run_id": "30674982988",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-29"
+    "source_as_of": "2026-07-31"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "FCX",
-  "updated_at": "2026-07-30T00:50:04Z"
+  "updated_at": "2026-08-01T00:39:20Z"
 }
