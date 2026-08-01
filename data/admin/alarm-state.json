@@ -1,16 +1,87 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-01T10:08:28.403Z",
+  "generated_at": "2026-08-01T10:33:51.919Z",
   "status": "open",
-  "open_incident_count": 4,
+  "open_incident_count": 10,
   "open_incidents": [
+    {
+      "workflow": "fetch-fred-macro.yml",
+      "label": "Fetch FRED Macro Data",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "lost_schedule_slot"
+      ],
+      "lost_schedule_slot_count": 1,
+      "cadence_status": "not_due"
+    },
+    {
+      "workflow": "fetch-oecd-cli.yml",
+      "label": "Fetch OECD CLI Shadow",
+      "streak": 0,
+      "failure_streak_threshold": 1,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "lost_schedule_slot"
+      ],
+      "lost_schedule_slot_count": 1,
+      "cadence_status": "not_due"
+    },
     {
       "workflow": "fetch-stockanalysis.yml",
       "label": "Fetch StockAnalysis Data",
       "streak": 5,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 30591328070,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30591328070"
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30591328070",
+      "alarm_reasons": [
+        "failure_streak",
+        "unrecovered_overdue"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "overdue"
+    },
+    {
+      "workflow": "fetch-treasury-tga.yml",
+      "label": "Fetch Treasury TGA Data",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "lost_schedule_slot"
+      ],
+      "lost_schedule_slot_count": 1,
+      "cadence_status": "not_due"
+    },
+    {
+      "workflow": "fetch-yahoo-ticker.yml",
+      "label": "Fetch Yahoo Finance Ticker Snapshot",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "unrecovered_overdue"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "overdue"
+    },
+    {
+      "workflow": "slickcharts-daily.yml",
+      "label": "SlickCharts Daily",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "lost_schedule_slot"
+      ],
+      "lost_schedule_slot_count": 1,
+      "cadence_status": "not_due"
     },
     {
       "workflow": "slickcharts-history.yml",
@@ -18,7 +89,12 @@
       "streak": 1,
       "failure_streak_threshold": 1,
       "first_failing_run_id": 28516319530,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/28516319530"
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/28516319530",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
     },
     {
       "workflow": "slickcharts-monthly.yml",
@@ -26,7 +102,26 @@
       "streak": 1,
       "failure_streak_threshold": 1,
       "first_failing_run_id": 28513565916,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/28513565916"
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/28513565916",
+      "alarm_reasons": [
+        "failure_streak",
+        "lost_schedule_slot"
+      ],
+      "lost_schedule_slot_count": 1,
+      "cadence_status": "not_due"
+    },
+    {
+      "workflow": "slickcharts-weekly.yml",
+      "label": "SlickCharts Weekly",
+      "streak": 0,
+      "failure_streak_threshold": 1,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "lost_schedule_slot"
+      ],
+      "lost_schedule_slot_count": 1,
+      "cadence_status": "not_due"
     },
     {
       "workflow": "update-manifest.yml",
@@ -34,7 +129,12 @@
       "streak": 2,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 30690524302,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30690524302"
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30690524302",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
     }
   ],
   "watched_workflows": [
@@ -416,14 +516,20 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "30695087261",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30695087261",
-    "observed_at": "2026-08-01T10:08:28.403Z",
+    "run_id": "30695909716",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30695909716",
+    "observed_at": "2026-08-01T10:33:51.919Z",
     "event": "workflow_run",
     "workflows": [
+      "fetch-fred-macro.yml",
+      "fetch-oecd-cli.yml",
       "fetch-stockanalysis.yml",
+      "fetch-treasury-tga.yml",
+      "fetch-yahoo-ticker.yml",
+      "slickcharts-daily.yml",
       "slickcharts-history.yml",
       "slickcharts-monthly.yml",
+      "slickcharts-weekly.yml",
       "update-manifest.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
