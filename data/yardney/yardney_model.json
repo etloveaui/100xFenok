@@ -4,9 +4,9 @@
     "model_version": "feno_yardeni_fred_v1",
     "description": "Feno Yardeni Bond PER to S&P 500 Fair Value",
     "frequency": "weekly",
-    "date_range": "1990-02-02 ~ 2026-07-17",
-    "total_records": 1890,
-    "generated_at": "2026-07-25T11:18:30.531Z",
+    "date_range": "1990-02-02 ~ 2026-07-24",
+    "total_records": 1891,
+    "generated_at": "2026-08-01T12:02:53.419Z",
     "generated_by": "build-feno-yardeni-model.mjs",
     "calculation_source": "FRED series/observations API corporate bond yields plus 100x benchmark S&P 500 price/EPS; benchmark EPS/SPX currently comes from the existing Bloomberg-sourced benchmarks pipeline; pre-benchmark history preserved from verified seed.",
     "source_components": {
@@ -14,12 +14,12 @@
         {
           "series_id": "WAAA",
           "label": "Moody's Seasoned Aaa Corporate Bond Yield",
-          "latest_date": "2026-07-17"
+          "latest_date": "2026-07-24"
         },
         {
           "series_id": "WBAA",
           "label": "Moody's Seasoned Baa Corporate Bond Yield",
-          "latest_date": "2026-07-17"
+          "latest_date": "2026-07-24"
         }
       ],
       "spx_eps_input": {
@@ -30,8 +30,8 @@
           "best_eps"
         ],
         "source": "Bloomberg Terminal",
-        "version": "2026-07-17",
-        "generated": "2026-07-21T10:31:49.922965"
+        "version": "2026-07-24",
+        "generated": "2026-07-27T10:31:19.284300"
       },
       "preserved_seed_input": {
         "file": "data/yardney/yardney_model.json",
@@ -47,12 +47,12 @@
     "last_update": {
       "mode": "feno_yardeni_rebuild",
       "seed_preserved_records": 1026,
-      "computed_records": 864,
+      "computed_records": 865,
       "skipped_benchmark_records": 0,
       "skipped_benchmark_dates_sample": [],
       "first_computed_date": "2010-01-01",
-      "last_computed_date": "2026-07-17",
-      "last_public_date": "2026-07-17"
+      "last_computed_date": "2026-07-24",
+      "last_public_date": "2026-07-24"
     },
     "columns": {
       "date": "Weekly Friday date",
@@ -15134,58 +15134,66 @@
     {
       "date": "2026-06-05",
       "spx": 7383.74,
-      "eps": 362.0441,
+      "eps": 362.1315,
       "bond_per": 17.36,
-      "fair_value": 6285.09,
-      "premium_pct": 17.48
+      "fair_value": 6286.6,
+      "premium_pct": 17.45
     },
     {
       "date": "2026-06-12",
       "spx": 7431.46,
-      "eps": 363.7763,
+      "eps": 363.8785,
       "bond_per": 17.26,
-      "fair_value": 6278.78,
-      "premium_pct": 18.36
+      "fair_value": 6280.54,
+      "premium_pct": 18.33
     },
     {
       "date": "2026-06-19",
       "spx": 7500.58,
-      "eps": 365.1259,
+      "eps": 365.2775,
       "bond_per": 17.39,
-      "fair_value": 6349.54,
-      "premium_pct": 18.13
+      "fair_value": 6352.18,
+      "premium_pct": 18.08
     },
     {
       "date": "2026-06-26",
       "spx": 7354.02,
-      "eps": 368.7062,
+      "eps": 368.8361,
       "bond_per": 17.42,
-      "fair_value": 6422.86,
-      "premium_pct": 14.5
+      "fair_value": 6425.12,
+      "premium_pct": 14.46
     },
     {
       "date": "2026-07-03",
       "spx": 7483.24,
-      "eps": 370.6732,
+      "eps": 370.8195,
       "bond_per": 17.32,
-      "fair_value": 6420.06,
-      "premium_pct": 16.56
+      "fair_value": 6422.59,
+      "premium_pct": 16.51
     },
     {
       "date": "2026-07-10",
       "spx": 7575.39,
-      "eps": 371.4088,
+      "eps": 371.2762,
       "bond_per": 16.99,
-      "fair_value": 6310.24,
-      "premium_pct": 20.05
+      "fair_value": 6307.98,
+      "premium_pct": 20.09
     },
     {
       "date": "2026-07-17",
       "spx": 7457.69,
-      "eps": 374.5481,
+      "eps": 374.515,
       "bond_per": 16.81,
-      "fair_value": 6296.15,
-      "premium_pct": 18.45
+      "fair_value": 6295.6,
+      "premium_pct": 18.46
+    },
+    {
+      "date": "2026-07-24",
+      "spx": 7411.98,
+      "eps": 379.0375,
+      "bond_per": 16.56,
+      "fair_value": 6276.86,
+      "premium_pct": 18.08
     }
   ]
 }
