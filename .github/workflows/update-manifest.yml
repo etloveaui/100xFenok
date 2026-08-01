@@ -297,6 +297,15 @@ jobs:
             python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
             node scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check
             node scripts/materialize-update-manifest-routes.mjs --all
+            # Run 30689758451 died at the immutable-snapshot guard: this attempt
+            # re-projected on top of the snapshot directory an earlier projection
+            # had already written into the working tree, and the guard compares
+            # bytes rather than replacing. A content-addressed directory may be
+            # replaced, never compared against a stale sibling, so every attempt
+            # starts from an empty snapshot root. `git reset --hard` above already
+            # restored the tracked snapshot, and the projector rewrites it, so an
+            # unchanged source produces an identical tree and no diff.
+            rm -rf 100xfenok-next/public/data/stockanalysis/etfs/shards/snapshots
             node 100xfenok-next/scripts/sync-public-data.mjs --write --etf-shards-only
             python3 scripts/validate-slickcharts-integrity.py
             diff -qr data/slickcharts 100xfenok-next/public/data/slickcharts

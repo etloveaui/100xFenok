@@ -129,6 +129,27 @@ class StockanalysisSurfaceContractTest(unittest.TestCase):
             projection_workflow,
         )
 
+        # Run 30689758451 died at the immutable-snapshot guard because the retry
+        # attempt re-projected on top of an earlier projection's snapshot
+        # directory still present in the working tree. A content-addressed
+        # directory may be replaced, never compared against a stale sibling, so
+        # the retry must start from an empty snapshot root every attempt.
+        shard_projection = "node 100xfenok-next/scripts/sync-public-data.mjs --write --etf-shards-only"
+        snapshot_reset = (
+            "rm -rf 100xfenok-next/public/data/stockanalysis/etfs/shards/snapshots"
+        )
+        self.assertEqual(retry_lines.count(shard_projection), 1)
+        self.assertEqual(
+            retry_lines.count(snapshot_reset),
+            1,
+            "the retry attempt must clear the ETF shard snapshot root exactly once",
+        )
+        self.assertLess(
+            retry_lines.index(snapshot_reset),
+            retry_lines.index(shard_projection),
+            "the snapshot root must be cleared BEFORE the shard projection re-runs",
+        )
+
     # NOTE: test_surface_catalog_labels_cover_all_index_groups removed — it validated
     # SurfaceCatalogCard.tsx groupLabel coverage, but that public diagnostic card was
     # intentionally removed in ef5227996. The catalog/groupLabel surface no longer exists.
