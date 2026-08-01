@@ -109,7 +109,7 @@
     "qa:fenok-public-guard": "node scripts/check-fenok-public-mirror-guard.mjs",
     "qa:data-supply-policy-registry": "node ../scripts/test-data-supply-policy-registry.mjs",
     "qa:data-supply-public": "python3 ../scripts/materialize_data_supply_public.py --check && python3 ../scripts/test_materialize_data_supply_public.py && python3 ../scripts/test_fetch_stockanalysis_fixtures.py && node scripts/test-sync-public-data.mjs && npx --no-install tsx scripts/test-stockanalysis-etf-shard-loader.ts && npx --no-install tsx scripts/test-data-supply-etf-api.ts && npx --no-install tsx scripts/test-data-supply-etf-ui.tsx && npm run test:stockanalysis-etf-client-contracts && npm run test:stockanalysis-etf-retirement && npm run qa:etf-universe && node scripts/test-data-supply-public-redaction.mjs && node scripts/check-fenok-public-mirror-guard.mjs",
-    "qa:rim-index": "node ../scripts/test-build-rim-index.mjs && node ../scripts/test-rim-sole-writer.mjs && node ../scripts/build-rim-index.mjs --check && node scripts/check-rim-index-consumer-growth-guard.mjs",
+    "qa:rim-index": "node ../scripts/test-build-rim-index.mjs && node ../scripts/test-rim-sole-writer.mjs && node ../scripts/build-rim-index.mjs --check && node scripts/check-rim-index-consumer-growth-guard.mjs && npm run qa:rim-band",
     "qa:fenok-signal-lens": "node ../scripts/test-fenok-native-signal-formula-contract.mjs && node scripts/check-fenok-signal-lens-dual-hexagon.mjs",
     "qa:fenok-signal-lens-proxies": "node ../scripts/test-build-fenok-signal-lens-proxies.mjs",
     "qa:fenok-signal-lens-proxies:artifacts": "node ../scripts/test-build-fenok-signal-lens-proxies.mjs --artifacts",
@@ -185,7 +185,8 @@
     "qa:a11y": "node .qa-a11y.js",
     "qa:a11y:p2": "QA_A11Y_VIEWPORTS=desktop,mobile,fold QA_A11Y_ROUTES=/explore,/screener,/stock/NVDA,/stock/ZZZZ,/market-valuation,/sectors node .qa-a11y.js",
     "qa:a11y:mobile": "QA_A11Y_VIEWPORTS=mobile,fold QA_A11Y_ROUTES=/,/posts,/vr,/explore,/screener,/portfolio,/stock/NVDA,/stock/ZZZZ,/superinvestors,/market-valuation,/sectors,/admin,/admin/design-lab?mode=native,/tools/stock-analyzer/native,/etfs,/etfs/new,/etfs/SPY,/etfs/ADIU node .qa-a11y.js",
-    "qa:a11y:strict": "QA_A11Y_STRICT=1 node .qa-a11y.js"
+    "qa:a11y:strict": "QA_A11Y_STRICT=1 node .qa-a11y.js",
+    "qa:rim-band": "tsx scripts/check-rim-band-render-contract.tsx"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.21.3",

@@ -6,6 +6,7 @@ import { DataStateBadge } from "@/components/DataStateNotice";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import MarketThermometer from "@/components/market/MarketThermometer";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
+import { readRimBand, type RimValuationRange } from "./rimBand";
 import type {
   MarketBondPulse,
   MarketEventRisk,
@@ -202,7 +203,12 @@ interface RimIndexEntry {
       as_of?: string | null;
     } | null;
   } | null;
+  derived?: {
+    valuation_range_v1?: RimValuationRange | null;
+  } | null;
 }
+
+// Whether a band may be drawn at all is decided in one testable place.
 
 interface RimInputsDoc {
   generated_at?: string;
@@ -237,10 +243,21 @@ const RIM_INDEX_LABELS_KO: Record<string, string> = {
   CCMP: "나스닥 종합",
 };
 
-// No public fair-value card exists anywhere: the payload is globally
-// output_scope=inputs_only_no_fair_value with policy.no_public_single_target=true
-// (public/data/computed/rim-index/inputs.json). Tiers describe input readiness only.
+// The payload publishes a two-endpoint assumption BAND for the primary indices
+// and never one number: output_scope=inputs_and_assumption_labelled_range_no_single_target
+// with policy.no_public_single_target=true (public/data/computed/rim-index/inputs.json).
+// Render both endpoints or neither. Showing a midpoint, or one endpoint alone,
+// recreates the single target the producer refuses to emit.
 type RimReadinessTier = "input_ready" | "input_only" | "pending";
+
+const RIM_BAND_NUMBER = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 });
+const RIM_BAND_PERCENT = new Intl.NumberFormat("ko-KR", { style: "percent", maximumFractionDigits: 1 });
+
+const RIM_BAND_POSITION_KO: Record<string, string> = {
+  below_range: "현재 지수는 밴드 아래입니다",
+  within_range: "현재 지수는 밴드 안입니다",
+  above_range: "현재 지수는 밴드 위입니다",
+};
 
 interface RimReadinessMeta {
   rank: number;
@@ -254,7 +271,7 @@ const RIM_READINESS_META: Record<RimReadinessTier, RimReadinessMeta> = {
     rank: 0,
     badge: "입력 준비",
     tone: "amber",
-    detail: () => "입력 데이터와 예측 그리드가 준비되었습니다. 공개 적정가 카드는 제공하지 않습니다.",
+    detail: () => "입력 데이터와 예측 그리드가 준비되었습니다. 단일 목표가는 제공하지 않습니다.",
   },
   input_only: {
     rank: 1,
@@ -262,8 +279,8 @@ const RIM_READINESS_META: Record<RimReadinessTier, RimReadinessMeta> = {
     tone: "slate",
     detail: (blockerCount) =>
       blockerCount > 0
-        ? `공개 적정가 카드 제공을 막는 항목이 ${blockerCount}건 남아 입력 데이터만 제공합니다.`
-        : "공개 적정가 카드는 제공하지 않고 입력 데이터만 제공합니다.",
+        ? `밴드 공개를 막는 항목이 ${blockerCount}건 남아 입력 데이터만 제공합니다.`
+        : "단일 목표가는 제공하지 않고 입력 데이터만 제공합니다.",
   },
   pending: {
     rank: 2,
@@ -318,6 +335,7 @@ function RimReadinessPanel() {
         name: RIM_INDEX_LABELS_KO[id] ?? "지수",
         meta,
         detail: meta.detail(blockerCount),
+        band: readRimBand(id, safe, { generatedAt: doc?.generated_at ?? null }),
       };
     })
     .sort((a, b) => a.meta.rank - b.meta.rank || a.id.localeCompare(b.id));
@@ -347,6 +365,40 @@ function RimReadinessPanel() {
                   {row.meta.badge}
                 </span>
               </div>
+              {row.band ? (
+                <div className="mt-2 min-w-0">
+                  <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+                    <span className="text-[10px] font-black text-[var(--c-ink-3)]">보수</span>
+                    <span className="text-sm font-black tabular-nums text-[var(--c-ink)]">
+                      {RIM_BAND_NUMBER.format(row.band.low)}
+                    </span>
+                    <span className="text-[11px] font-black text-[var(--c-ink-3)]">~</span>
+                    <span className="text-sm font-black tabular-nums text-[var(--c-ink)]">
+                      {RIM_BAND_NUMBER.format(row.band.high)}
+                    </span>
+                    <span className="text-[10px] font-black text-[var(--c-ink-3)]">낙관</span>
+                  </div>
+                  <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
+                    가정을 명시한 밸류에이션 밴드입니다. 목표가가 아니며 단일 값은 제공하지 않습니다.
+                    {row.band.position && RIM_BAND_POSITION_KO[row.band.position]
+                      ? ` ${RIM_BAND_POSITION_KO[row.band.position]}.`
+                      : ""}
+                  </p>
+                  {/* The assumptions are the band. Hiding them would let an
+                      opinion read as a measurement. */}
+                  <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
+                    보수 = 잔여이익이 {row.band.fadeYears}년에 걸쳐 0으로 소멸(영구성장 없음), 낙관 = 영구성장{" "}
+                    {RIM_BAND_PERCENT.format(row.band.terminalGrowthHigh)}. 할인율{" "}
+                    {RIM_BAND_PERCENT.format(row.band.discountRate)}. 성장률은 관측값이 아닌 하우스 가정입니다.
+                  </p>
+                  <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
+                    밴드 기준일 {row.band.asOf} (가장 오래된 입력 기준)
+                    {row.band.reconciliationUsesCollectionTime
+                      ? " · 교차검증 입력은 제공처가 관측일을 발행하지 않아 수집 시각을 사용합니다. 관측일이 아닙니다."
+                      : ""}
+                  </p>
+                </div>
+              ) : null}
               <p className="mt-2 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">{row.detail}</p>
             </div>
           ))}

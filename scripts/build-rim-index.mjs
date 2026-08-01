@@ -15,7 +15,76 @@ const repoRoot = path.resolve(__dirname, "..");
 const dataRoot = path.join(repoRoot, "data");
 const publicDataRoot = path.join(repoRoot, "100xfenok-next", "public", "data");
 
-const SCHEMA_VERSION = "rim_index_inputs.v1";
+const SCHEMA_VERSION = "rim_index_inputs.v2";
+const OUTPUT_SCOPE = "inputs_and_assumption_labelled_range_no_single_target";
+
+// --- RIM successor: an assumption-labelled valuation RANGE -------------------
+// One index-level number would be a public single target, which policy forbids
+// and which no set of inputs honestly supports. The published shape is a BAND
+// between two named economic stories, computed from the SAME published
+// operands; only the terminal treatment differs between the endpoints.
+//
+//   conservative  excess returns compete away -- residual income fades linearly
+//                 to zero over FADE_YEARS, no perpetuity at all
+//   optimistic    excess returns persist -- residual income grows forever at
+//                 TERMINAL_GROWTH_OPTIMISTIC
+//
+// There is deliberately NO middle scenario. A base case is what every reader
+// would quote, which reintroduces the single target through the back door.
+const VALUATION_RANGE_SCHEMA = "rim_valuation_range_v1";
+const VALUATION_RANGE_METHOD = "residual_income_three_period_plus_terminal_treatment_band";
+const TERMINAL_GROWTH_CONSERVATIVE = 0;
+const TERMINAL_GROWTH_OPTIMISTIC = 0.025;
+const FADE_YEARS = 10;
+const REQUIRED_RANGE_SCENARIOS = ["conservative", "optimistic"];
+// The exact gate set. Pinned as a list so DELETING a gate is as loud as failing
+// one -- an empty `gates` object used to validate cleanly.
+const REQUIRED_RANGE_GATES = [
+  "primary_index",
+  "source_tier_satisfied",
+  "blockers_empty",
+  "operands_complete",
+  "source_clock_honest",
+  "payout_routes_reconciled",
+  "model_sensitivity_bounded",
+];
+// TWO separate questions, deliberately not merged. Whether the two payout routes
+// AGREE is a source-quality question and is judged on payout itself. How much
+// the disagreement MOVES the model is a sensitivity question and is judged on
+// retention. Reporting only the second let a 15.44% payout disagreement read as
+// "reconciled" because its endpoint effect happened to be small.
+const PAYOUT_ROUTE_DIVERGENCE_LIMIT = 0.05;
+const PAYOUT_RETENTION_DIVERGENCE_LIMIT = 0.05;
+const MAX_PLAUSIBLE_INDEX_DIVIDEND_YIELD = 0.06;
+const MAX_UNRESOLVED_DIVIDEND_UNIT_SHARE = 0.25;
+// Any of these appearing as a KEY at ANY depth is a single target trying to
+// re-enter through a nested object.
+const FORBIDDEN_TARGET_KEYS = [
+  "point_target",
+  "target",
+  "target_price",
+  "price_target",
+  "fair_value",
+  "fairValue",
+  "intrinsic_value",
+  "intrinsicValue",
+  "single_target",
+  "estimate",
+  "valuation",
+];
+
+function findForbiddenTargetKeyPaths(node, trail = []) {
+  if (Array.isArray(node)) {
+    return node.flatMap((item, index) => findForbiddenTargetKeyPaths(item, [...trail, String(index)]));
+  }
+  if (!node || typeof node !== "object") return [];
+  const found = [];
+  for (const [key, value] of Object.entries(node)) {
+    if (FORBIDDEN_TARGET_KEYS.includes(key)) found.push([...trail, key].join("."));
+    found.push(...findForbiddenTargetKeyPaths(value, [...trail, key]));
+  }
+  return found;
+}
 const DEFAULT_OUTPUT = "computed/rim-index/inputs.json";
 const DEFAULT_MIN_COVERED_WEIGHT = 0.75;
 const KOSPI_KRX_BRIDGE_FILE = "admin/fenok-edge-korea-krx-daily-index.json";
@@ -691,7 +760,23 @@ function buildPayoutRatio(indexConfig, benchmarkRow, yieldPayload, {
       primary_formula: "index_yield_over_benchmark_earnings_yield",
       index_yield_as_of: indexYieldAsOf,
       index_yield_as_of_reason: indexYieldAsOf ? null : "provider publishes no source date for the index yield observation",
-      index_yield_collected_at: yieldPayload?.updated ?? null,
+      // Canonical UTC (Z). The provider sends +00:00; the same instant is
+      // published in one canonical form so every reader parses one shape, and
+      // the raw string is kept beside it as provenance.
+      index_yield_collected_at: canonicalUtcInstant(yieldPayload?.updated) ?? null,
+      index_yield_collected_at_provider: yieldPayload?.updated ?? null,
+      // Both the reconciled value and this timestamp are read off the SAME
+      // parsed response object above. Recorded explicitly so the collection
+      // clock can be accepted on evidence rather than on the reader's trust,
+      // and so an absent timestamp fails closed instead of silently passing.
+      index_yield_provenance: {
+        same_response: Object.hasOwn(yieldPayload ?? {}, "updated")
+          && typeof yieldPayload.updated === "string"
+          && yieldPayload.updated.trim().length > 0,
+        source_file: indexConfig.yieldFile,
+        clock_kind: indexYieldAsOf ? "source_as_of" : "collected_at",
+        note: "collection time, not an economic observation date",
+      },
       benchmark_as_of: benchmarkRow.date,
       benchmark_earnings_yield: round(earningsYield, 8),
     },
@@ -1128,7 +1213,7 @@ function krxKospiWeightDiagnostics(stockActionPayload, krxWeights) {
   const joined = stockActionRowsForKrxKospiWeights(stockActionPayload, krxWeights);
   const denominatorOptions = { denominatorRows: joined.denominatorRows };
   const matched = weightedMetric(joined.indexRows, () => 1, denominatorOptions);
-  const dividendYield = weightedMetric(joined.indexRows, (row) => numberOrNull(row?.dividendYield), denominatorOptions);
+  const dividendYield = weightedDividendYieldFraction(joined.indexRows, denominatorOptions);
   const forwardGrowth = weightedMetric(joined.indexRows, (row) => {
     const fy1 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy1);
     const fy3 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy3);
@@ -1175,7 +1260,7 @@ function soxWeightDiagnostics(stockActionPayload, soxWeights) {
   const joined = stockActionRowsForSoxWeights(stockActionPayload, soxWeights);
   const denominatorOptions = { denominatorRows: joined.denominatorRows };
   const matched = weightedMetric(joined.indexRows, () => 1, denominatorOptions);
-  const dividendYield = weightedMetric(joined.indexRows, (row) => numberOrNull(row?.dividendYield), denominatorOptions);
+  const dividendYield = weightedDividendYieldFraction(joined.indexRows, denominatorOptions);
   const forwardGrowth = weightedMetric(joined.indexRows, (row) => {
     const fy1 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy1);
     const fy3 = numberOrNull(row?.estimateSnapshot?.forwardEps?.fy3);
@@ -1261,9 +1346,52 @@ function koreaCoverageDiagnostics(stockActionPayload, krxWeights = null) {
   };
 }
 
+// `computed/stock_action_index.json` stores dividendYield in BOTH conventions in
+// the same field, and not split by market: AAPL (US) is 0.00321 while MTB (US)
+// is 2.43. Averaging them raw produced an 8.4% weighted S&P 500 dividend yield.
+//
+// Magnitude cannot decide -- a percent-encoded 0.4% yield is 0.4 and a
+// fraction-encoded one is 0.004, both below 1. The row's OWN trailing dividend
+// over its OWN price is a measured fraction, so it can arbitrate. When the row
+// carries no dividend and no price there is nothing to arbitrate with, and the
+// row is dropped from the average rather than guessed at 100x precision.
+export function normalizeDividendYieldFraction(row) {
+  const stored = numberOrNull(row?.dividendYield);
+  if (!finite(stored) || stored < 0) {
+    return { value: null, unit: "unresolved", reason: "row carries no usable dividend yield" };
+  }
+  if (stored === 0) return { value: 0, unit: "zero", reason: "" };
+  const price = numberOrNull(row?.price);
+  const trailingDividend = numberOrNull(row?.dividendHistory?.ttm);
+  if (!finite(price) || price <= 0 || !finite(trailingDividend) || trailingDividend <= 0) {
+    return {
+      value: null,
+      unit: "unresolved",
+      reason: "no trailing dividend and price to measure the unit against",
+    };
+  }
+  const measuredFraction = trailingDividend / price;
+  const asFraction = stored;
+  const asPercent = stored / 100;
+  if (Math.abs(asPercent - measuredFraction) < Math.abs(asFraction - measuredFraction)) {
+    return { value: asPercent, unit: "percent", reason: "" };
+  }
+  return { value: asFraction, unit: "fraction", reason: "" };
+}
+
+function weightedDividendYieldFraction(indexRows, options) {
+  const weighted = weightedMetric(indexRows, (row) => normalizeDividendYieldFraction(row).value, options);
+  const unitMix = { percent: 0, fraction: 0, zero: 0, unresolved: 0 };
+  for (const item of indexRows) {
+    const { unit } = normalizeDividendYieldFraction(item.row);
+    if (unit in unitMix) unitMix[unit] += 1;
+  }
+  return { ...weighted, dividend_yield_unit_mix: unitMix };
+}
+
 function buildStockActionPayoutRatio(indexConfig, benchmarkRow, stockActionPayload) {
   const indexRows = stockActionRowsForIndex(stockActionPayload, indexConfig.slickchartsIndex);
-  const dividendYield = weightedMetric(indexRows, (row) => numberOrNull(row?.dividendYield));
+  const dividendYield = weightedDividendYieldFraction(indexRows);
   const earningsYield = benchmarkRow.best_eps / benchmarkRow.px_last;
   const payoutRatio = finite(dividendYield.value) && earningsYield > 0
     ? dividendYield.value / earningsYield
@@ -1287,7 +1415,7 @@ function buildStockActionPayoutRatio(indexConfig, benchmarkRow, stockActionPaylo
 function buildKrxKospiPayoutRatio(indexConfig, benchmarkRow, stockActionPayload, krxWeights) {
   const joined = stockActionRowsForKrxKospiWeights(stockActionPayload, krxWeights);
   const denominatorOptions = { denominatorRows: joined.denominatorRows };
-  const dividendYield = weightedMetric(joined.indexRows, (row) => numberOrNull(row?.dividendYield), denominatorOptions);
+  const dividendYield = weightedDividendYieldFraction(joined.indexRows, denominatorOptions);
   const earningsYield = benchmarkRow.best_eps / benchmarkRow.px_last;
   const payoutRatio = finite(dividendYield.value) && earningsYield > 0
     ? dividendYield.value / earningsYield
@@ -1354,7 +1482,7 @@ function buildKrxKospiForwardEpsGrowth(
 function buildSoxPayoutRatio(indexConfig, benchmarkRow, stockActionPayload, soxWeights) {
   const joined = stockActionRowsForSoxWeights(stockActionPayload, soxWeights);
   const denominatorOptions = { denominatorRows: joined.denominatorRows };
-  const dividendYield = weightedMetric(joined.indexRows, (row) => numberOrNull(row?.dividendYield), denominatorOptions);
+  const dividendYield = weightedDividendYieldFraction(joined.indexRows, denominatorOptions);
   const earningsYield = benchmarkRow.best_eps / benchmarkRow.px_last;
   const payoutRatio = finite(dividendYield.value) && earningsYield > 0
     ? dividendYield.value / earningsYield
@@ -1609,7 +1737,12 @@ function buildForecastGrid(
     }, metricOptions),
   };
   const payoutRatio = numberOrNull(payoutRatioField?.value);
-  const retentionRatio = finite(payoutRatio) ? Math.max(0, 1 - payoutRatio) : null;
+  // No clamp. `Math.max(0, 1 - payout)` used to publish retention 0 alongside a
+  // formula string that said "1 - payout_ratio", so a payout above 1 silently
+  // froze the book roll-forward instead of shrinking the book. A payout above 1
+  // is a real state -- the index distributes more than it earns -- and the
+  // arithmetic below is now exactly what the published formula claims.
+  const retentionRatio = finite(payoutRatio) ? 1 - payoutRatio : null;
   const price = benchmarkRow.px_last;
   const costOfEquity = numberOrNull(costOfEquityValue);
   const canonicalPegGrowth = numberOrNull(explicitEpsGrowth3yField?.value);
@@ -1732,7 +1865,10 @@ function buildForecastGrid(
         value: round(residualIncomeProxy, 4),
         formula: "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
         sources: ["forecast_grid_v1.roe_on_beginning_book", "derived.cost_of_equity", "forecast_grid_v1.book_value_beginning"],
-        notes: ["Scenario input only; no fair value or target price is emitted."],
+        notes: [
+          "Operand of derived.valuation_range_v1; the field name and formula are unchanged.",
+          "It feeds a two-endpoint assumption band only. No single index value is emitted from it.",
+        ],
       }),
     });
     if (finite(endingBook)) beginningBook = endingBook;
@@ -1826,41 +1962,59 @@ function unavailableIndex(indexConfig, error) {
   const source = error?.source ?? null;
   const unavailable = () => blockedValue({ reason, sourceTier: "blocked_missing_source" });
   const primary = PRIMARY_INDICES.some((item) => item.id === indexConfig.id);
+  const observed = {
+    price: unavailable(),
+    forward_eps: unavailable(),
+    forward_pe: unavailable(),
+    price_to_book: unavailable(),
+    risk_free_rate: unavailable(),
+    equity_risk_premium: unavailable(),
+  };
+  const costOfEquity = unavailable();
+  const forecastGrid = {
+    schema_version: "forecast_grid_v1",
+    public_status: primary
+      ? "input_only_primary_with_caveats_no_fair_value"
+      : "input_only_unavailable_no_fair_value",
+    source_tier: "blocked_missing_source",
+    reason,
+    periods: [],
+  };
+  const blockers = [{
+    code: "source_unavailable",
+    severity: "lane_degraded",
+    ...(source ? { source } : {}),
+    reason,
+  }];
   return {
     id: indexConfig.id,
     label: indexConfig.label,
     role: primary ? "primary_public_v1" : indexConfig.role,
     public_status: primary ? "input_only_primary_with_caveats" : "blocked_or_input_only",
-    observed: {
-      price: unavailable(),
-      forward_eps: unavailable(),
-      forward_pe: unavailable(),
-      price_to_book: unavailable(),
-      risk_free_rate: unavailable(),
-      equity_risk_premium: unavailable(),
-    },
+    observed,
     derived: {
       book_value: unavailable(),
       payout_ratio: unavailable(),
       explicit_eps_growth_3y: unavailable(),
-      cost_of_equity: unavailable(),
-      forecast_grid_v1: {
-        schema_version: "forecast_grid_v1",
-        public_status: primary
-          ? "input_only_primary_with_caveats_no_fair_value"
-          : "input_only_unavailable_no_fair_value",
-        source_tier: "blocked_missing_source",
-        reason,
-        periods: [],
-      },
+      cost_of_equity: costOfEquity,
+      forecast_grid_v1: forecastGrid,
+      // A primary index still reports WHY no band exists. Omitting the block
+      // when sources vanish would make an unavailable lane look like a lane
+      // that was never in scope for one.
+      ...(primary
+        ? {
+          valuation_range_v1: buildValuationRange({
+            indexConfig,
+            observed,
+            costOfEquity,
+            forecastGrid,
+            blockers,
+          }),
+        }
+        : {}),
     },
     assumptions: {},
-    blockers: [{
-      code: "source_unavailable",
-      severity: "lane_degraded",
-      ...(source ? { source } : {}),
-      reason,
-    }],
+    blockers,
   };
 }
 
@@ -1871,6 +2025,624 @@ function buildIndexWithAvailability(indexConfig, context, builder) {
     if (error instanceof LaneUnavailableError) return unavailableIndex(indexConfig, error);
     throw error;
   }
+}
+
+// A real calendar day, not a shape. The regex alone accepted 2026-02-31 and
+// 2025-02-29, which then propagated into clock comparisons as if they were days.
+export function isIsoDay(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return false;
+  const probe = new Date(Date.UTC(year, month - 1, day));
+  return probe.getUTCFullYear() === year
+    && probe.getUTCMonth() === month - 1
+    && probe.getUTCDate() === day;
+}
+
+// A COMPLETE instant that is explicitly UTC, matched with the same rule the
+// consumer applies. Date.parse alone accepts a bare day, a missing zone, and
+// other partial forms, so `parseUtcInstant` used to let a day masquerade as an
+// instant. `Z` and `+00:00`/`-00:00` are the same clock and providers use both
+// -- SlickCharts emits `+00:00` -- but a real offset like `+09:00` is a
+// different clock and is refused rather than silently shifted.
+const STRICT_UTC_INSTANT = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?)(Z|[+-]00:00)$/;
+
+export function parseUtcInstant(value) {
+  if (typeof value !== "string") return null;
+  const match = STRICT_UTC_INSTANT.exec(value);
+  if (!match) return null;
+  const ms = Date.parse(value);
+  if (!Number.isFinite(ms)) return null;
+  if (!isIsoDay(match[1])) return null;
+  // Round-trip, so an impossible calendar date cannot become a clock.
+  return new Date(ms).toISOString().slice(0, 10) === match[1] ? ms : null;
+}
+
+// The canonical published form. The provider's raw string is preserved beside
+// it so normalisation never erases what the provider actually sent.
+export function canonicalUtcInstant(value) {
+  const ms = parseUtcInstant(value);
+  return ms === null ? null : new Date(ms).toISOString();
+}
+
+export const INDEX_YIELD_COLLECTION_SLA_HOURS = 750;
+
+// The ratified exception, enforced rather than described. The reconciliation
+// provider publishes no economic observation date, so the collection time of the
+// SAME fetch-and-parse response stands in for it -- but only while it is a real
+// non-future UTC instant inside the provider's monthly delivery SLA, and only
+// while it stays labelled as a collection time.
+// ROUTE POLICY, derived from the provider evidence rather than read off the
+// declared `kind`. A relabel that also edits the declared tuple stays internally
+// coherent, so the tuple comparison alone cannot catch it; what cannot be made
+// coherent is the provider's own record of whether it published an observation
+// date. `index_yield_as_of`, `index_yield_as_of_reason`, and
+// `index_yield_provenance.clock_kind` state that one fact three ways, and this
+// checks that they agree before anything is allowed to claim `source_as_of`.
+export function reconciliationClockPolicyFailures(coverage, generatedAt) {
+  const failures = [];
+  const provenance = coverage?.index_yield_provenance;
+  if (!provenance || typeof provenance !== "object") {
+    return ["reconciliation route publishes no clock provenance"];
+  }
+  if (typeof provenance.source_file !== "string" || !provenance.source_file.trim()) {
+    failures.push("reconciliation clock provenance names no source file");
+  }
+  // The capability, not the payload, decides what this route may claim.
+  const capability = clockRouteCapability("reconciliation.index_yield");
+  const expectedKind = capability?.kinds?.[0] ?? "collected_at";
+  if (capability?.publishes_observation_date === false
+    && coverage?.index_yield_as_of !== null && coverage?.index_yield_as_of !== undefined) {
+    failures.push(
+      `reconciliation route carries a source date (${coverage.index_yield_as_of}) that its provider`
+      + ` (${capability.provider}) does not publish`,
+    );
+  }
+  if (provenance.clock_kind !== expectedKind) {
+    failures.push(
+      `reconciliation clock provenance claims ${provenance.clock_kind} while its provider can only supply ${expectedKind}`,
+    );
+  }
+  const reason = coverage?.index_yield_as_of_reason;
+  if (typeof reason !== "string" || !reason.trim()) {
+    failures.push("reconciliation route must state why it carries no observation date");
+  }
+  {
+    const evaluation = evaluateCollectionClock(coverage?.index_yield_collected_at, generatedAt, {
+      sameResponse: provenance.same_response,
+    });
+    failures.push(...evaluation.failures);
+  }
+  return failures;
+}
+
+export function evaluateCollectionClock(collectedAt, generatedAt, { sameResponse } = {}) {
+  const failures = [];
+  const collectedMs = parseUtcInstant(collectedAt);
+  const generatedMs = parseUtcInstant(generatedAt);
+  if (sameResponse !== true) {
+    failures.push("the collection time is not from the same fetch-and-parse response as the reconciled value");
+  }
+  if (collectedMs === null) {
+    failures.push(`index yield collection time ${collectedAt ?? "(absent)"} is not a valid UTC timestamp`);
+    return { failures, ageHours: null, day: null };
+  }
+  if (generatedMs !== null && collectedMs > generatedMs) {
+    failures.push("index yield collection time is in the future");
+  }
+  const ageHours = generatedMs === null ? null : (generatedMs - collectedMs) / 3_600_000;
+  if (finite(ageHours) && ageHours > INDEX_YIELD_COLLECTION_SLA_HOURS) {
+    failures.push(
+      `index yield collection is ${Math.round(ageHours)}h old, beyond the`
+      + ` ${INDEX_YIELD_COLLECTION_SLA_HOURS}h provider delivery SLA`,
+    );
+  }
+  const day = new Date(collectedMs).toISOString().slice(0, 10);
+  return { failures, ageHours, day: isIsoDay(day) ? day : null };
+}
+
+function rangeGate(passed, reason) {
+  return { passed, reason: passed ? "" : reason };
+}
+
+// Normalised by the larger magnitude so the metric does not depend on which
+// route is called the reference, and does not explode when one route is small.
+export function payoutRouteDivergence(indexWeighted, indexLevel) {
+  if (!finite(indexWeighted) || !finite(indexLevel)) return null;
+  const scale = Math.max(Math.abs(indexWeighted), Math.abs(indexLevel));
+  return scale > 0 ? Math.abs(indexWeighted - indexLevel) / scale : null;
+}
+
+export function retentionRouteDivergence(indexWeighted, indexLevel) {
+  if (!finite(indexWeighted) || !finite(indexLevel)) return null;
+  const scale = Math.max(Math.abs(1 - indexWeighted), Math.abs(1 - indexLevel));
+  return scale > 0 ? Math.abs(indexWeighted - indexLevel) / scale : null;
+}
+
+// Value AT THE TERMINAL PERIOD, not at t0. Residual income decays linearly to
+// zero over `fadeYears` while growing at `growth`, so the excess return is gone
+// by the end of the fade and nothing is capitalised into perpetuity.
+function fadeContinuingValue(terminalResidualIncome, discountRate, growth, fadeYears) {
+  let total = 0;
+  for (let year = 1; year <= fadeYears; year += 1) {
+    const surviving = 1 - year / fadeYears;
+    total += (terminalResidualIncome * (1 + growth) ** year * surviving) / (1 + discountRate) ** year;
+  }
+  return total;
+}
+
+function perpetuityContinuingValue(terminalResidualIncome, discountRate, growth) {
+  return (terminalResidualIncome * (1 + growth)) / (discountRate - growth);
+}
+
+// ONE implementation, used by the builder to emit and by the validator to
+// recompute. A validator that only checks that the emitted fields agree with
+// each other cannot tell a computed band from a typed-in one.
+export function computeRimScenarioValues({
+  bookValueBeginning,
+  residualIncome,
+  discountRate,
+  terminalGrowthLow = TERMINAL_GROWTH_CONSERVATIVE,
+  terminalGrowthHigh = TERMINAL_GROWTH_OPTIMISTIC,
+  fadeYears = FADE_YEARS,
+}) {
+  const explicitPresentValue = residualIncome.reduce(
+    (total, value, index) => total + value / (1 + discountRate) ** (index + 1),
+    0,
+  );
+  const terminalResidualIncome = residualIncome.at(-1);
+  const discountToToday = (1 + discountRate) ** residualIncome.length;
+  const conservativeContinuingValue = fadeContinuingValue(
+    terminalResidualIncome,
+    discountRate,
+    terminalGrowthLow,
+    fadeYears,
+  );
+  const optimisticContinuingValue = perpetuityContinuingValue(
+    terminalResidualIncome,
+    discountRate,
+    terminalGrowthHigh,
+  );
+  return {
+    explicitPresentValue,
+    conservativeContinuingValue,
+    optimisticContinuingValue,
+    conservative: bookValueBeginning + explicitPresentValue + conservativeContinuingValue / discountToToday,
+    optimistic: bookValueBeginning + explicitPresentValue + optimisticContinuingValue / discountToToday,
+  };
+}
+
+// The FIXED required clock inventory. Not "whatever happened to carry a date":
+// a named list of every route the band depends on, main and reconciliation, each
+// of which must resolve to a real day or the band does not publish. A clock that
+// reports only the freshest layer hides the stale one underneath it, and a route
+// silently omitted from the list is the same failure with no evidence left behind.
+export const REQUIRED_MAIN_CLOCK_SOURCES = [
+  "observed.price",
+  "observed.forward_eps",
+  "observed.price_to_book",
+  "observed.risk_free_rate",
+  "observed.equity_risk_premium",
+  "computed/stock_action_index.json",
+  "benchmark_row",
+];
+export const REQUIRED_RECONCILIATION_CLOCK_SOURCES = ["reconciliation.index_yield"];
+
+export function collectRangeSourceClocks({ observed, forecastGrid, payoutRatio, legacyPayoutRatio, generatedAt }) {
+  const entries = [];
+  const push = (source, asOf, route, kind, extra = {}) => {
+    entries.push({ source, route, kind, as_of: isIsoDay(asOf) ? asOf : null, ...extra });
+  };
+  for (const key of ["price", "forward_eps", "price_to_book", "risk_free_rate", "equity_risk_premium"]) {
+    push(`observed.${key}`, observed?.[key]?.as_of, "main", "source_as_of");
+  }
+  push("computed/stock_action_index.json", forecastGrid?.coverage?.stock_action_source_date, "main", "source_as_of");
+  push("benchmark_row", payoutRatio?.coverage?.benchmark_as_of, "main", "source_as_of");
+
+  const coverage = legacyPayoutRatio?.coverage ?? {};
+  const policyFailures = reconciliationClockPolicyFailures(coverage, generatedAt);
+  // The KIND is the provider's capability. A payload cannot promote it.
+  const reconciliationKind = clockRouteCapability("reconciliation.index_yield")?.kinds?.[0] ?? "collected_at";
+  {
+    const evaluation = evaluateCollectionClock(coverage.index_yield_collected_at, generatedAt, {
+      sameResponse: coverage.index_yield_provenance?.same_response,
+    });
+    push(
+      "reconciliation.index_yield",
+      policyFailures.length === 0 ? evaluation.day : null,
+      "reconciliation",
+      reconciliationKind,
+      {
+        reason: coverage.index_yield_as_of_reason || "provider publishes no source date",
+        collection_age_hours: finite(evaluation.ageHours) ? round(evaluation.ageHours, 2) : null,
+        collection_sla_hours: INDEX_YIELD_COLLECTION_SLA_HOURS,
+        clock_policy_failures: policyFailures,
+      },
+    );
+  }
+  return entries.sort((a, b) => {
+    if (a.as_of && b.as_of) return a.as_of.localeCompare(b.as_of) || a.source.localeCompare(b.source);
+    if (a.as_of) return -1;
+    if (b.as_of) return 1;
+    return a.source.localeCompare(b.source);
+  });
+}
+
+export const REQUIRED_CLOCK_TUPLES = [
+  ...REQUIRED_MAIN_CLOCK_SOURCES.map((source) => ({ source, route: "main" })),
+  ...REQUIRED_RECONCILIATION_CLOCK_SOURCES.map((source) => ({ source, route: "reconciliation" })),
+];
+
+// ROUTE CAPABILITY ALLOWLIST -- the one piece of this contract that does not
+// live in the payload.
+//
+// Deriving the expected clock kind from payload fields fails against a coherent
+// forgery: edit index_yield_as_of, its reason, the provenance block, the clock
+// tuple and the derived clock fields together and every cross-check agrees,
+// because they are all the same mutable evidence. What a payload cannot edit is
+// what the PROVIDER is capable of publishing. That is a property of the source,
+// it is stated here in code, and a payload claiming a capability its provider
+// does not have is rejected however self-consistent it is.
+function deepFreeze(value) {
+  if (value && typeof value === "object") {
+    for (const nested of Object.values(value)) deepFreeze(nested);
+    Object.freeze(value);
+  }
+  return value;
+}
+
+// Deeply frozen: Object.freeze is shallow, so a plain freeze would still let
+// anything push a kind onto one of these arrays at runtime.
+export const CLOCK_ROUTE_CAPABILITIES = deepFreeze({
+  "observed.price": { route: "main", kinds: ["source_as_of"], publishes_observation_date: true },
+  "observed.forward_eps": { route: "main", kinds: ["source_as_of"], publishes_observation_date: true },
+  "observed.price_to_book": { route: "main", kinds: ["source_as_of"], publishes_observation_date: true },
+  "observed.risk_free_rate": { route: "main", kinds: ["source_as_of"], publishes_observation_date: true },
+  "observed.equity_risk_premium": { route: "main", kinds: ["source_as_of"], publishes_observation_date: true },
+  "computed/stock_action_index.json": { route: "main", kinds: ["source_as_of"], publishes_observation_date: true },
+  benchmark_row: { route: "main", kinds: ["source_as_of"], publishes_observation_date: true },
+  // SlickCharts index-yield: publishes a value and a fetch time, never an
+  // economic observation date. Its clock can therefore ONLY ever be a
+  // collection time, and no payload may promote it.
+  "reconciliation.index_yield": {
+    route: "reconciliation",
+    kinds: ["collected_at"],
+    publishes_observation_date: false,
+    provider: "slickcharts index yield",
+  },
+});
+
+export function clockRouteCapability(source) {
+  return Object.hasOwn(CLOCK_ROUTE_CAPABILITIES, source) ? CLOCK_ROUTE_CAPABILITIES[source] : null;
+}
+
+export function rangeClockInventoryFailures(entries) {
+  const failures = [];
+  const seen = new Map();
+  for (const row of entries) {
+    const key = `${row?.source}|${row?.route}`;
+    if (seen.has(key)) failures.push(`${row?.source} appears more than once on route ${row?.route}`);
+    seen.set(key, row);
+  }
+  for (const { source, route } of REQUIRED_CLOCK_TUPLES) {
+    const row = seen.get(`${source}|${route}`);
+    if (!row) {
+      failures.push(`${source} is missing from the ${route} clock inventory`);
+      continue;
+    }
+    const capability = clockRouteCapability(source);
+    if (!capability) failures.push(`${source} has no declared route capability`);
+    else {
+      if (capability.route !== route) failures.push(`${source} belongs to route ${capability.route}, not ${route}`);
+      if (!capability.kinds.includes(row.kind)) {
+        failures.push(
+          `${source} declares clock kind ${row.kind}, which its provider cannot supply`
+          + ` (allowed: ${capability.kinds.join(", ")})`,
+        );
+      }
+    }
+    if (Array.isArray(row.clock_policy_failures) && row.clock_policy_failures.length > 0) {
+      failures.push(`${source}: ${row.clock_policy_failures.join("; ")}`);
+    }
+    if (!isIsoDay(row.as_of)) failures.push(`${source} carries no usable calendar date`);
+  }
+  const required = new Set(REQUIRED_CLOCK_TUPLES.map(({ source, route }) => `${source}|${route}`));
+  for (const row of entries) {
+    if (!required.has(`${row?.source}|${row?.route}`)) {
+      failures.push(`${row?.source} on route ${row?.route} is not a declared clock tuple`);
+    }
+  }
+  return failures;
+}
+
+export function clockTupleKey(row) {
+  return JSON.stringify([row?.source ?? null, row?.route ?? null, row?.kind ?? null, row?.as_of ?? null]);
+}
+
+function buildValuationRange({
+  indexConfig,
+  observed,
+  costOfEquity,
+  forecastGrid,
+  blockers,
+  payoutRatio,
+  legacyPayoutRatio,
+  generatedAt = null,
+}) {
+  const isPrimary = PRIMARY_INDICES.some((item) => item.id === indexConfig.id);
+  const periods = Array.isArray(forecastGrid?.periods) ? forecastGrid.periods : [];
+  const residualIncomeByPeriod = periods.map((row) => ({
+    period: row?.period ?? null,
+    value: row?.residual_income_proxy?.value ?? null,
+    source: "derived.forecast_grid_v1.residual_income_proxy",
+  }));
+  const bookValueBeginning = periods[0]?.book_value_beginning?.value ?? null;
+  const discountRate = costOfEquity?.value ?? null;
+  const observedFields = Object.entries(observed ?? {});
+  const sourceClockEntries = collectRangeSourceClocks({
+    observed, forecastGrid, payoutRatio, legacyPayoutRatio, generatedAt,
+  });
+  const clockFailures = rangeClockInventoryFailures(sourceClockEntries);
+  const contributingSourceDates = sourceClockEntries.map((entry) => entry.as_of).filter((day) => isIsoDay(day));
+  // The band is only as current as its OLDEST operand. Reporting the newest
+  // would let one fresh input hide a stale one behind it.
+  const asOf = contributingSourceDates[0] ?? null;
+
+  const requiredTiers = [
+    ["observed.price", observed?.price?.source_tier, "observed_source"],
+    ["observed.price_to_book", observed?.price_to_book?.source_tier, "observed_source"],
+    ["observed.risk_free_rate", observed?.risk_free_rate?.source_tier, "observed_source"],
+    ["observed.equity_risk_premium", observed?.equity_risk_premium?.source_tier, "observed_source"],
+    ["derived.cost_of_equity", costOfEquity?.source_tier, "derived_formula"],
+  ];
+  const tierFailures = requiredTiers
+    .filter(([, actual, expected]) => actual !== expected)
+    .map(([label, actual]) => `${label}=${actual ?? "(missing)"}`);
+
+  const terminalResidualIncome = residualIncomeByPeriod.at(-1)?.value ?? null;
+  const operandFailures = [];
+  if (!finite(bookValueBeginning) || bookValueBeginning <= 0) operandFailures.push("book_value_beginning");
+  if (!finite(discountRate) || discountRate <= TERMINAL_GROWTH_OPTIMISTIC) {
+    operandFailures.push("cost_of_equity must exceed the optimistic terminal growth");
+  }
+  if (residualIncomeByPeriod.length !== 3 || residualIncomeByPeriod.some((row) => !finite(row.value))) {
+    operandFailures.push("three finite residual_income_proxy periods");
+  } else if (!(terminalResidualIncome > 0)) {
+    // With negative terminal residual income the perpetuity is the LOWER
+    // endpoint, so "optimistic" would name the pessimistic number. Refuse
+    // rather than publish an inverted band under honest-looking labels.
+    operandFailures.push("terminal residual_income_proxy must be positive for the band to be correctly ordered");
+  }
+
+  const undatedObserved = observedFields
+    .filter(([, field]) => !isIsoDay(field?.as_of))
+    .map(([key]) => key);
+
+  // Two independent routes reach the same payout: the index-weighted
+  // constituent yields, and the index-level published yield kept as
+  // legacy_payout_ratio_qa. Reconcile on RETENTION, because retention is the
+  // number the book roll-forward actually consumes.
+  const payoutValue = payoutRatio?.value ?? null;
+  const legacyPayoutValue = legacyPayoutRatio?.value ?? null;
+  const unitMix = payoutRatio?.coverage?.dividend_yield_unit_mix ?? null;
+  const unitMixTotal = unitMix
+    ? unitMix.percent + unitMix.fraction + unitMix.zero + unitMix.unresolved
+    : 0;
+  const unresolvedShare = unitMixTotal > 0 ? unitMix.unresolved / unitMixTotal : 1;
+  const weightedDividendYield = payoutRatio?.coverage?.weighted_dividend_yield ?? null;
+  const payoutDivergence = payoutRouteDivergence(payoutValue, legacyPayoutValue);
+  const retentionDivergence = retentionRouteDivergence(payoutValue, legacyPayoutValue);
+
+  const routeFailures = [];
+  if (!finite(payoutValue) || payoutValue <= 0 || payoutValue >= 1) {
+    routeFailures.push(`payout ratio ${payoutValue} is outside the plausible range (0, 1)`);
+  }
+  if (!finite(weightedDividendYield) || weightedDividendYield <= 0
+    || weightedDividendYield > MAX_PLAUSIBLE_INDEX_DIVIDEND_YIELD) {
+    routeFailures.push(`weighted dividend yield ${weightedDividendYield} is not plausible for a broad index`);
+  }
+  if (unresolvedShare > MAX_UNRESOLVED_DIVIDEND_UNIT_SHARE) {
+    routeFailures.push(`${round(unresolvedShare * 100, 1)}% of constituent rows have an unmeasurable dividend unit`);
+  }
+  const reconciliationClock = sourceClockEntries.find((row) => row.route === "reconciliation");
+  if (Array.isArray(reconciliationClock?.clock_policy_failures) && reconciliationClock.clock_policy_failures.length > 0) {
+    // Ratified rule: absence, SLA breach, or a relabel of the reconciliation
+    // clock blocks the reconciliation gate, and therefore blocks publication.
+    routeFailures.push(...reconciliationClock.clock_policy_failures);
+  }
+  if (!finite(payoutDivergence)) {
+    routeFailures.push("no independent payout route is available to reconcile against");
+  } else if (payoutDivergence > PAYOUT_ROUTE_DIVERGENCE_LIMIT) {
+    routeFailures.push(
+      `the two payout routes differ by ${round(payoutDivergence * 100, 2)}%,`
+      + ` above the ${PAYOUT_ROUTE_DIVERGENCE_LIMIT * 100}% limit`,
+    );
+  }
+
+  const sensitivityFailures = [];
+  if (!finite(retentionDivergence)) {
+    sensitivityFailures.push("retention sensitivity cannot be measured without a second payout route");
+  } else if (retentionDivergence > PAYOUT_RETENTION_DIVERGENCE_LIMIT) {
+    sensitivityFailures.push(
+      `retention moves ${round(retentionDivergence * 100, 2)}% between the payout routes,`
+      + ` above the ${PAYOUT_RETENTION_DIVERGENCE_LIMIT * 100}% limit`,
+    );
+  }
+
+  const gates = {
+    primary_index: rangeGate(isPrimary, `${indexConfig.id} is not a primary index; secondary lanes stay input-only`),
+    source_tier_satisfied: rangeGate(
+      tierFailures.length === 0,
+      `required source tiers not met: ${tierFailures.join(", ")}`,
+    ),
+    blockers_empty: rangeGate(
+      Array.isArray(blockers) && blockers.length === 0,
+      `${blockers?.length ?? 0} open blocker(s): ${(blockers ?? []).map((row) => row?.code).join(", ")}`,
+    ),
+    operands_complete: rangeGate(
+      operandFailures.length === 0,
+      `incomplete operands: ${operandFailures.join(", ")}`,
+    ),
+    source_clock_honest: rangeGate(
+      clockFailures.length === 0 && undatedObserved.length === 0 && Boolean(asOf),
+      [
+        ...clockFailures,
+        ...(undatedObserved.length > 0 ? [`observed inputs without a source date: ${undatedObserved.join(", ")}`] : []),
+      ].join("; ") || "no contributing clock resolves to a day",
+    ),
+    payout_routes_reconciled: rangeGate(routeFailures.length === 0, routeFailures.join("; ")),
+    model_sensitivity_bounded: rangeGate(sensitivityFailures.length === 0, sensitivityFailures.join("; ")),
+  };
+
+  const assumptions = {
+    assumption_version: ASSUMPTION_VERSION,
+    reviewed_at: REVIEWED_AT,
+    terminal_growth: {
+      low: TERMINAL_GROWTH_CONSERVATIVE,
+      high: TERMINAL_GROWTH_OPTIMISTIC,
+      source_tier: "house_assumption",
+      assumption_version: ASSUMPTION_VERSION,
+      reviewed_at: REVIEWED_AT,
+      notes: ["Not observed from any source; the two values are the band's only growth inputs."],
+    },
+    fade_years: {
+      value: FADE_YEARS,
+      source_tier: "house_assumption",
+      assumption_version: ASSUMPTION_VERSION,
+      reviewed_at: REVIEWED_AT,
+      notes: ["Applies to the conservative endpoint only; the optimistic endpoint never fades."],
+    },
+    discount_rate: {
+      value: discountRate,
+      source_tier: "derived_formula",
+      sources: ["derived.cost_of_equity"],
+      notes: ["The published cost of equity is reused as-is; the band adds no private premium."],
+    },
+  };
+
+  const operands = {
+    book_value_beginning: {
+      value: bookValueBeginning,
+      source: "derived.forecast_grid_v1.periods[0].book_value_beginning",
+    },
+    residual_income_by_period: residualIncomeByPeriod,
+    discount_rate: { value: discountRate, source: "derived.cost_of_equity" },
+    payout_cross_check: {
+      index_weighted_route: payoutValue,
+      index_level_route: legacyPayoutValue,
+      payout_divergence: finite(payoutDivergence) ? round(payoutDivergence, 6) : null,
+      payout_divergence_limit: PAYOUT_ROUTE_DIVERGENCE_LIMIT,
+      retention_divergence: finite(retentionDivergence) ? round(retentionDivergence, 6) : null,
+      retention_divergence_limit: PAYOUT_RETENTION_DIVERGENCE_LIMIT,
+      weighted_dividend_yield: weightedDividendYield,
+      dividend_yield_unit_mix: unitMix,
+      unresolved_unit_share: round(unresolvedShare, 6),
+    },
+  };
+
+  const sourceClock = {
+    basis: "oldest_contributing_observed_source",
+    as_of: asOf,
+    contributing_source_dates: contributingSourceDates,
+    contributing_sources: sourceClockEntries,
+    // The oldest DATED route. An undated entry sorts first only because it has
+    // nothing to sort on; naming it the oldest source would be a clock claim
+    // resting on a missing clock.
+    oldest_source: sourceClockEntries.find((row) => isIsoDay(row.as_of))?.source ?? null,
+  };
+
+  const scenarioFormula = "book_value_beginning"
+    + " + sum(residual_income_proxy_t / (1 + discount_rate)^t for t in fy1..fy3)"
+    + " + continuing_value / (1 + discount_rate)^3";
+
+  const blocked = Object.values(gates).some((gate) => !gate.passed);
+  if (blocked) {
+    return {
+      schema_version: VALUATION_RANGE_SCHEMA,
+      public_status: "blocked_no_range",
+      method: VALUATION_RANGE_METHOD,
+      emits_single_target: false,
+      as_of: asOf,
+      unit: "index_points",
+      source_clock: sourceClock,
+      gates,
+      assumptions,
+      operands,
+      range: { low: null, high: null },
+      scenarios: [],
+      price_context: { observed_price: observed?.price?.value ?? null, position: null },
+      notes: [
+        "No band is published while any gate is open; the inputs above remain readable.",
+        "A partial band would be indistinguishable from a measured one to a reader.",
+      ],
+    };
+  }
+
+  const computed = computeRimScenarioValues({
+    bookValueBeginning,
+    residualIncome: residualIncomeByPeriod.map((row) => row.value),
+    discountRate,
+  });
+  const scenarioDefinitions = [
+    {
+      id: "conservative",
+      growth: TERMINAL_GROWTH_CONSERVATIVE,
+      terminalTreatment: `residual income fades linearly to zero over ${FADE_YEARS} years; no perpetuity`,
+      continuingValue: computed.conservativeContinuingValue,
+      value: computed.conservative,
+    },
+    {
+      id: "optimistic",
+      growth: TERMINAL_GROWTH_OPTIMISTIC,
+      terminalTreatment: `residual income persists and grows at ${TERMINAL_GROWTH_OPTIMISTIC} in perpetuity`,
+      continuingValue: computed.optimisticContinuingValue,
+      value: computed.optimistic,
+    },
+  ];
+
+  const scenarios = scenarioDefinitions.map((definition) => ({
+    id: definition.id,
+    value: round(definition.value, 2),
+    source_tier: "assumption_labelled_scenario",
+    assumption_version: ASSUMPTION_VERSION,
+    reviewed_at: REVIEWED_AT,
+    terminal_growth: definition.growth,
+    terminal_treatment: definition.terminalTreatment,
+    continuing_value_at_fy3: round(definition.continuingValue, 2),
+    formula: scenarioFormula,
+  }));
+
+  const [low, high] = scenarios.map((scenario) => scenario.value);
+  const observedPrice = observed?.price?.value ?? null;
+  const position = !finite(observedPrice)
+    ? null
+    : observedPrice < low
+      ? "below_range"
+      : observedPrice > high
+        ? "above_range"
+        : "within_range";
+
+  return {
+    schema_version: VALUATION_RANGE_SCHEMA,
+    public_status: "ready_range_no_single_target",
+    method: VALUATION_RANGE_METHOD,
+    emits_single_target: false,
+    as_of: asOf,
+    unit: "index_points",
+    source_clock: sourceClock,
+    gates,
+    assumptions,
+    operands,
+    range: { low, high, width_ratio: round(high / low, 4) },
+    scenarios,
+    price_context: { observed_price: observedPrice, position },
+    notes: [
+      "A band between two named assumption sets, not an estimate of where the index should trade.",
+      "The endpoints differ only in terminal treatment; every other operand is shared and published above.",
+      "No middle case is published: it would be quoted as a single number, which policy forbids.",
+      "Both endpoints move with the house assumptions, which are opinions and are labelled as such.",
+    ],
+  };
 }
 
 function buildPrimaryIndex(indexConfig, context) {
@@ -1948,6 +2720,12 @@ function buildPrimaryIndex(indexConfig, context) {
     }),
   };
   observed.price.freshness = benchmarkFreshness;
+  const costOfEquity = derivedValue({
+    value: round(dgs10.value + usErp.value, 8),
+    formula: "risk_free_rate + equity_risk_premium",
+    sources: ["observed.risk_free_rate", "observed.equity_risk_premium"],
+    notes: ["No house premium adjustment included in public inputs slice."],
+  });
   return {
     id: indexConfig.id,
     label: indexConfig.label,
@@ -1961,13 +2739,18 @@ function buildPrimaryIndex(indexConfig, context) {
       payout_ratio: payoutRatio,
       legacy_payout_ratio_qa: legacyPayoutRatio,
       explicit_eps_growth_3y: explicitEpsGrowth3y,
-      cost_of_equity: derivedValue({
-        value: round(dgs10.value + usErp.value, 8),
-        formula: "risk_free_rate + equity_risk_premium",
-        sources: ["observed.risk_free_rate", "observed.equity_risk_premium"],
-        notes: ["No house premium adjustment included in public inputs slice."],
-      }),
+      cost_of_equity: costOfEquity,
       forecast_grid_v1: forecastGrid,
+      valuation_range_v1: buildValuationRange({
+        indexConfig,
+        observed,
+        costOfEquity,
+        forecastGrid,
+        blockers,
+        payoutRatio,
+        legacyPayoutRatio,
+        generatedAt: context.generatedAt,
+      }),
     },
     assumptions: {
       terminal_growth: {
@@ -2341,10 +3124,12 @@ export function buildRimIndexInputs({
     generated_at: generatedAt,
     generated_by: "scripts/build-rim-index.mjs",
     product: "Fenok Index RIM Workbench",
-    output_scope: "inputs_only_no_fair_value",
+    output_scope: OUTPUT_SCOPE,
     path: DEFAULT_OUTPUT,
     policy: {
       no_public_single_target: true,
+      valuation_range_scope: "SPX_NDX_only_assumption_labelled_range_no_single_target",
+      valuation_range_shape: "two labelled endpoint scenarios and no middle case; a collapsed or single-valued range is rejected",
       no_kospi_dgs10_fallback: true,
       source_tier_required: true,
       forecast_grid_v1_scope: "SPX_NDX_plus_KOSPI_when_krx_exact_weights_available_inputs_only; proxy grids stay nested under proxy_inputs_v1",
@@ -2471,11 +3256,503 @@ function validateCoreFormulaIntegrity(item, id, errors) {
   }
 }
 
+// The whole point of the successor slice is that it can never become a target.
+// These checks are the enforcement; the builder's shape is only the intent.
+
+// A SECOND implementation of the band arithmetic, written from the contract
+// rather than from the producer's code, and deliberately not sharing a single
+// function with it. The producer uses computeRimScenarioValues; this oracle is
+// what the validator uses. If both agree the number is checked twice; if one has
+// a bug the other does not automatically bless it. Note the different shapes:
+// (fadeYears - k)/fadeYears instead of 1 - k/fadeYears, and (RI + RI*g) instead
+// of RI*(1+g). Same mathematics, independently expressed.
+function validatorScenarioOracle({ bookValueBeginning, residualIncome, discountRate, growthLow, growthHigh, fadeYears }) {
+  const discount = (years) => (1 + discountRate) ** years;
+  let explicitPresentValue = 0;
+  for (let period = 1; period <= residualIncome.length; period += 1) {
+    explicitPresentValue += residualIncome[period - 1] / discount(period);
+  }
+  const terminal = residualIncome[residualIncome.length - 1];
+  let fadeValue = 0;
+  for (let year = 1; year <= fadeYears; year += 1) {
+    const survivingShare = (fadeYears - year) / fadeYears;
+    fadeValue += (terminal * (1 + growthLow) ** year * survivingShare) / discount(year);
+  }
+  const perpetuityValue = (terminal + terminal * growthHigh) / (discountRate - growthHigh);
+  const horizon = discount(residualIncome.length);
+  return {
+    explicitPresentValue,
+    conservativeContinuingValue: fadeValue,
+    optimisticContinuingValue: perpetuityValue,
+    conservative: bookValueBeginning + explicitPresentValue + fadeValue / horizon,
+    optimistic: bookValueBeginning + explicitPresentValue + perpetuityValue / horizon,
+  };
+}
+
+const EXPECTED_SCENARIO_FORMULA = "book_value_beginning"
+  + " + sum(residual_income_proxy_t / (1 + discount_rate)^t for t in fy1..fy3)"
+  + " + continuing_value / (1 + discount_rate)^3";
+
+function validateValuationRange(item, id, errors, payload) {
+  const range = item?.derived?.valuation_range_v1;
+  if (!range) {
+    errors.push(`${id}.valuation_range_v1: a primary index must report a range block, even when refused`);
+    return;
+  }
+  if (range.schema_version !== VALUATION_RANGE_SCHEMA) {
+    errors.push(`${id}.valuation_range_v1: schema_version must be ${VALUATION_RANGE_SCHEMA}`);
+  }
+  if (range.emits_single_target !== false) {
+    errors.push(`${id}.valuation_range_v1: emits_single_target must be false`);
+  }
+  // Recursive, over the whole block. A direct-key check let a nested
+  // `notes[0].point_target` through, which is the same number in a costume.
+  for (const path of findForbiddenTargetKeyPaths(range)) {
+    errors.push(`${id}.valuation_range_v1: forbidden single-target key at ${path}`);
+  }
+
+  const gates = range.gates ?? {};
+  const declaredGateKeys = Object.keys(gates).sort();
+  if (declaredGateKeys.join(",") !== [...REQUIRED_RANGE_GATES].sort().join(",")) {
+    errors.push(
+      `${id}.valuation_range_v1: gates must be exactly ${REQUIRED_RANGE_GATES.join(", ")};`
+      + ` found ${declaredGateKeys.join(", ") || "(none)"}`,
+    );
+  }
+  const failedGates = Object.entries(gates).filter(([, gate]) => gate?.passed !== true).map(([key]) => key);
+  for (const [key, gate] of Object.entries(gates)) {
+    if (gate?.passed !== true && !String(gate?.reason ?? "").trim()) {
+      errors.push(`${id}.valuation_range_v1: failed gate ${key} must state a reason`);
+    }
+  }
+
+  // MEASURED, not declared. Everything below is recomputed from the payload the
+  // range sits inside, so a hand-edited `passed: true` or a typed-in date cannot
+  // survive review just by being internally consistent.
+  const measuredBlockersEmpty = Array.isArray(item?.blockers) && item.blockers.length === 0;
+  if (gates.blockers_empty?.passed !== measuredBlockersEmpty) {
+    errors.push(
+      `${id}.valuation_range_v1: gate blockers_empty declares ${gates.blockers_empty?.passed}`
+      + ` but the index carries ${item?.blockers?.length ?? 0} blocker(s)`,
+    );
+  }
+  const measuredClocks = collectRangeSourceClocks({
+    observed: item?.observed,
+    forecastGrid: item?.derived?.forecast_grid_v1,
+    payoutRatio: item?.derived?.payout_ratio,
+    legacyPayoutRatio: item?.derived?.legacy_payout_ratio_qa,
+    generatedAt: payload?.generated_at,
+  });
+  const measuredDatedClocks = measuredClocks.filter((row) => isIsoDay(row.as_of));
+  const measuredAsOf = measuredDatedClocks.map((row) => row.as_of).sort()[0] ?? null;
+
+  // EXACT TUPLES, both directions. Matching on `source` alone let route, kind,
+  // and duplicate entries drift without anything noticing.
+  const declaredClocks = Array.isArray(range.source_clock?.contributing_sources)
+    ? range.source_clock.contributing_sources
+    : [];
+  const declaredTupleCounts = new Map();
+  for (const row of declaredClocks) {
+    const key = clockTupleKey(row);
+    declaredTupleCounts.set(key, (declaredTupleCounts.get(key) ?? 0) + 1);
+  }
+  const declaredPairCounts = new Map();
+  for (const row of declaredClocks) {
+    const pair = `${row?.source}|${row?.route}`;
+    declaredPairCounts.set(pair, (declaredPairCounts.get(pair) ?? 0) + 1);
+  }
+  for (const [pair, count] of declaredPairCounts) {
+    if (count > 1) {
+      errors.push(`${id}.valuation_range_v1: source clock declares ${pair.replace("|", " on route ")} ${count} times`);
+    }
+  }
+  const measuredTupleCounts = new Map();
+  for (const row of measuredClocks) {
+    const key = clockTupleKey(row);
+    measuredTupleCounts.set(key, (measuredTupleCounts.get(key) ?? 0) + 1);
+  }
+  for (const [key, count] of measuredTupleCounts) {
+    if ((declaredTupleCounts.get(key) ?? 0) !== count) {
+      const [source, route, kind, asOf] = JSON.parse(key);
+      errors.push(
+        `${id}.valuation_range_v1: source clock omits contributing source ${source}`
+        + ` (route ${route}, kind ${kind}, as_of ${asOf})`,
+      );
+    }
+  }
+  for (const [key] of declaredTupleCounts) {
+    if (!measuredTupleCounts.has(key)) {
+      const [source, route, kind, asOf] = JSON.parse(key);
+      errors.push(
+        `${id}.valuation_range_v1: source clock declares ${source} (route ${route}, kind ${kind},`
+        + ` as_of ${asOf}), which is not a contributing route`,
+      );
+    }
+  }
+
+  // Derived clock fields recomputed from that exact inventory, never trusted.
+  const expectedDates = measuredDatedClocks.map((row) => row.as_of);
+  const declaredDates = Array.isArray(range.source_clock?.contributing_source_dates)
+    ? range.source_clock.contributing_source_dates
+    : null;
+  if (!declaredDates || JSON.stringify(declaredDates) !== JSON.stringify(expectedDates)) {
+    errors.push(
+      `${id}.valuation_range_v1: contributing_source_dates does not recompute from the clock inventory`,
+    );
+  }
+  const expectedOldestSource = measuredDatedClocks[0]?.source ?? null;
+  if ((range.source_clock?.oldest_source ?? null) !== expectedOldestSource) {
+    errors.push(
+      `${id}.valuation_range_v1: oldest_source ${range.source_clock?.oldest_source} does not recompute`
+      + ` (expected ${expectedOldestSource})`,
+    );
+  }
+  const inventoryFailures = rangeClockInventoryFailures(measuredClocks);
+  const measuredClockHonest = inventoryFailures.length === 0
+    && Boolean(measuredAsOf)
+    && Object.values(item?.observed ?? {}).every((field) => isIsoDay(field?.as_of));
+  if (gates.source_clock_honest?.passed !== measuredClockHonest) {
+    errors.push(
+      `${id}.valuation_range_v1: gate source_clock_honest declares ${gates.source_clock_honest?.passed}`
+      + ` but the required clock inventory says ${measuredClockHonest}`
+      + (inventoryFailures.length ? ` (${inventoryFailures.join("; ")})` : ""),
+    );
+  }
+  if (measuredAsOf && range.as_of !== measuredAsOf) {
+    errors.push(
+      `${id}.valuation_range_v1: as_of ${range.as_of} is not the oldest contributing operand date ${measuredAsOf}`,
+    );
+  }
+  if (measuredAsOf && range.source_clock?.as_of !== measuredAsOf) {
+    errors.push(
+      `${id}.valuation_range_v1: source_clock.as_of ${range.source_clock?.as_of} must equal the oldest`
+      + ` contributing clock ${measuredAsOf}`,
+    );
+  }
+  const measuredPrimary = PRIMARY_INDICES.some((row) => row.id === id);
+  if (gates.primary_index?.passed !== measuredPrimary) {
+    errors.push(`${id}.valuation_range_v1: gate primary_index does not match the index role`);
+  }
+  const measuredTierSatisfied = [
+    [item?.observed?.price?.source_tier, "observed_source"],
+    [item?.observed?.price_to_book?.source_tier, "observed_source"],
+    [item?.observed?.risk_free_rate?.source_tier, "observed_source"],
+    [item?.observed?.equity_risk_premium?.source_tier, "observed_source"],
+    [item?.derived?.cost_of_equity?.source_tier, "derived_formula"],
+  ].every(([actual, expected]) => actual === expected);
+  if (gates.source_tier_satisfied?.passed !== measuredTierSatisfied) {
+    errors.push(
+      `${id}.valuation_range_v1: gate source_tier_satisfied declares ${gates.source_tier_satisfied?.passed}`
+      + ` but the published source tiers say ${measuredTierSatisfied}`,
+    );
+  }
+  const measuredGridPeriods = item?.derived?.forecast_grid_v1?.periods ?? [];
+  const measuredResidualIncome = measuredGridPeriods.map((row) => row?.residual_income_proxy?.value);
+  const measuredBookValue = measuredGridPeriods[0]?.book_value_beginning?.value;
+  const measuredCostOfEquity = item?.derived?.cost_of_equity?.value;
+  const measuredOperandsComplete = finite(measuredBookValue) && measuredBookValue > 0
+    && finite(measuredCostOfEquity) && measuredCostOfEquity > TERMINAL_GROWTH_OPTIMISTIC
+    && measuredResidualIncome.length === 3
+    && measuredResidualIncome.every((value) => finite(value))
+    && measuredResidualIncome.at(-1) > 0;
+  if (gates.operands_complete?.passed !== measuredOperandsComplete) {
+    errors.push(
+      `${id}.valuation_range_v1: gate operands_complete declares ${gates.operands_complete?.passed}`
+      + ` but the published operands say ${measuredOperandsComplete}`,
+    );
+  }
+  // Rederived from the SOURCE operands, not read from operands.payout_cross_check.
+  // Trusting the published divergence would let a payload declare its own
+  // agreement, which is exactly how a 15.44% payout gap passed as reconciled.
+  const crossCheck = range.operands?.payout_cross_check;
+  const sourcePayout = item?.derived?.payout_ratio?.value;
+  const sourceLegacyPayout = item?.derived?.legacy_payout_ratio_qa?.value;
+  const sourceUnitMix = item?.derived?.payout_ratio?.coverage?.dividend_yield_unit_mix;
+  const sourceWeightedYield = item?.derived?.payout_ratio?.coverage?.weighted_dividend_yield;
+  const sourceUnitTotal = sourceUnitMix
+    ? sourceUnitMix.percent + sourceUnitMix.fraction + sourceUnitMix.zero + sourceUnitMix.unresolved
+    : 0;
+  const sourceUnresolvedShare = sourceUnitTotal > 0 ? sourceUnitMix.unresolved / sourceUnitTotal : 1;
+  const rederivedPayoutDivergence = payoutRouteDivergence(sourcePayout, sourceLegacyPayout);
+  const rederivedRetentionDivergence = retentionRouteDivergence(sourcePayout, sourceLegacyPayout);
+
+  for (const [field, published, rederived] of [
+    ["payout_divergence", crossCheck?.payout_divergence, rederivedPayoutDivergence],
+    ["retention_divergence", crossCheck?.retention_divergence, rederivedRetentionDivergence],
+  ]) {
+    if (!finite(rederived)) continue;
+    if (!finite(published) || Math.abs(published - rederived) > 1e-5) {
+      errors.push(
+        `${id}.valuation_range_v1: published ${field} ${published} does not rederive from the payout`
+        + ` operands (expected ${round(rederived, 6)})`,
+      );
+    }
+  }
+
+  // PARITY. The builder blocks this gate on collection-clock and route-policy
+  // failures; the validator's recomputation must do the same, or a payload whose
+  // clock is absent, stale, future-dated, or relabelled can declare the gate
+  // passed and the validator will agree with it.
+  const measuredReconciliationPolicyFailures = reconciliationClockPolicyFailures(
+    item?.derived?.legacy_payout_ratio_qa?.coverage,
+    payload?.generated_at,
+  );
+  if (measuredReconciliationPolicyFailures.length > 0
+    && gates.payout_routes_reconciled?.passed === true) {
+    errors.push(
+      `${id}.valuation_range_v1: payout_routes_reconciled is declared passed while the reconciliation`
+      + ` clock policy fails: ${measuredReconciliationPolicyFailures.join("; ")}`,
+    );
+  }
+  const measuredRoutesReconciled = measuredReconciliationPolicyFailures.length === 0
+    && finite(rederivedPayoutDivergence)
+    && rederivedPayoutDivergence <= PAYOUT_ROUTE_DIVERGENCE_LIMIT
+    && finite(sourceWeightedYield)
+    && sourceWeightedYield > 0
+    && sourceWeightedYield <= MAX_PLAUSIBLE_INDEX_DIVIDEND_YIELD
+    && sourceUnresolvedShare <= MAX_UNRESOLVED_DIVIDEND_UNIT_SHARE
+    && finite(sourcePayout)
+    && sourcePayout > 0
+    && sourcePayout < 1;
+  if (gates.payout_routes_reconciled?.passed !== measuredRoutesReconciled) {
+    errors.push(
+      `${id}.valuation_range_v1: gate payout_routes_reconciled declares`
+      + ` ${gates.payout_routes_reconciled?.passed} but the rederived payout divergence`
+      + ` ${round(rederivedPayoutDivergence, 6)} says ${measuredRoutesReconciled}`,
+    );
+  }
+  const measuredSensitivityBounded = finite(rederivedRetentionDivergence)
+    && rederivedRetentionDivergence <= PAYOUT_RETENTION_DIVERGENCE_LIMIT;
+  if (gates.model_sensitivity_bounded?.passed !== measuredSensitivityBounded) {
+    errors.push(
+      `${id}.valuation_range_v1: gate model_sensitivity_bounded declares`
+      + ` ${gates.model_sensitivity_bounded?.passed} but the rederived retention divergence says`
+      + ` ${measuredSensitivityBounded}`,
+    );
+  }
+
+  if (range.public_status === "blocked_no_range") {
+    if (failedGates.length === 0) {
+      errors.push(`${id}.valuation_range_v1: a refused range must name at least one failed gate`);
+    }
+    if (range.range?.low !== null || range.range?.high !== null) {
+      errors.push(`${id}.valuation_range_v1: a refused range must publish null endpoints`);
+    }
+    if (!Array.isArray(range.scenarios) || range.scenarios.length !== 0) {
+      errors.push(`${id}.valuation_range_v1: a refused range must publish no scenarios`);
+    }
+    return;
+  }
+
+  if (range.public_status !== "ready_range_no_single_target") {
+    errors.push(`${id}.valuation_range_v1: invalid public_status ${range.public_status ?? "(missing)"}`);
+    return;
+  }
+  if (failedGates.length > 0) {
+    errors.push(
+      `${id}.valuation_range_v1: ready status requires every gate to pass, but ${failedGates.join(", ")} failed`,
+    );
+  }
+
+  const scenarios = Array.isArray(range.scenarios) ? range.scenarios : [];
+  if (scenarios.length !== REQUIRED_RANGE_SCENARIOS.length) {
+    errors.push(
+      `${id}.valuation_range_v1: exactly ${REQUIRED_RANGE_SCENARIOS.length} endpoint scenarios are allowed;`
+      + ` a middle scenario would be read as a single target`,
+    );
+    return;
+  }
+  if (scenarios.map((row) => row?.id).join(",") !== REQUIRED_RANGE_SCENARIOS.join(",")) {
+    errors.push(`${id}.valuation_range_v1: scenario ids must be ${REQUIRED_RANGE_SCENARIOS.join(", ")}`);
+  }
+  for (const scenario of scenarios) {
+    if (!finite(scenario?.value)) errors.push(`${id}.valuation_range_v1.${scenario?.id}: finite scenario value required`);
+    if (scenario?.source_tier !== "assumption_labelled_scenario") {
+      errors.push(`${id}.valuation_range_v1.${scenario?.id}: assumption_labelled_scenario tier required`);
+    }
+    if (scenario?.assumption_version !== ASSUMPTION_VERSION) {
+      errors.push(`${id}.valuation_range_v1.${scenario?.id}: assumption_version must be ${ASSUMPTION_VERSION}`);
+    }
+  }
+
+  const [low, high] = scenarios.map((row) => row?.value);
+  if (range.range?.low !== low || range.range?.high !== high) {
+    errors.push(`${id}.valuation_range_v1: range endpoints must equal the two scenario values`);
+  }
+  if (finite(low) && finite(high) && !(low < high)) {
+    errors.push(`${id}.valuation_range_v1: range endpoints must differ; a collapsed range is a single target`);
+  }
+  if (!isIsoDay(range.as_of)) {
+    errors.push(`${id}.valuation_range_v1: as_of must be an ISO day taken from the oldest operand`);
+  }
+  if (range.source_clock?.basis !== "oldest_contributing_observed_source") {
+    errors.push(`${id}.valuation_range_v1: source clock must be the oldest contributing observed source`);
+  }
+  if (range.assumptions?.terminal_growth?.source_tier !== "house_assumption"
+    || range.assumptions?.fade_years?.source_tier !== "house_assumption") {
+    errors.push(`${id}.valuation_range_v1: terminal growth and fade years must be labelled house assumptions`);
+  }
+  if (range.assumptions?.discount_rate?.value !== item?.derived?.cost_of_equity?.value) {
+    errors.push(`${id}.valuation_range_v1: the discount rate must be the published cost of equity`);
+  }
+  const publishedResidualIncome = (item?.derived?.forecast_grid_v1?.periods ?? [])
+    .map((row) => row?.residual_income_proxy?.value);
+  const operandResidualIncome = (range.operands?.residual_income_by_period ?? []).map((row) => row?.value);
+  if (JSON.stringify(publishedResidualIncome) !== JSON.stringify(operandResidualIncome)) {
+    errors.push(`${id}.valuation_range_v1: operands must equal the published residual_income_proxy values`);
+  }
+  const publishedBookValue = item?.derived?.forecast_grid_v1?.periods?.[0]?.book_value_beginning?.value;
+  if (range.operands?.book_value_beginning?.value !== publishedBookValue) {
+    errors.push(
+      `${id}.valuation_range_v1: operand book_value_beginning ${range.operands?.book_value_beginning?.value}`
+      + ` does not match the published grid value ${publishedBookValue}`,
+    );
+  }
+
+  const terminalGrowthHigh = range.assumptions?.terminal_growth?.high;
+  const terminalGrowthLow = range.assumptions?.terminal_growth?.low;
+  const discountRate = range.assumptions?.discount_rate?.value;
+  if (!finite(terminalGrowthHigh) || !finite(discountRate) || !(terminalGrowthHigh < discountRate)) {
+    errors.push(
+      `${id}.valuation_range_v1: terminal growth ${terminalGrowthHigh} must stay below the discount rate`
+      + ` ${discountRate}; at or above it the perpetuity is undefined or negative`,
+    );
+  } else if (
+    finite(publishedBookValue)
+    && operandResidualIncome.length === 3
+    && operandResidualIncome.every((value) => finite(value))
+    && finite(terminalGrowthLow)
+    && finite(range.assumptions?.fade_years?.value)
+  ) {
+    const fadeYears = range.assumptions.fade_years.value;
+    // Independent oracle. Not the producer's calculator.
+    const oracle = validatorScenarioOracle({
+      bookValueBeginning: publishedBookValue,
+      residualIncome: operandResidualIncome,
+      discountRate,
+      growthLow: terminalGrowthLow,
+      growthHigh: terminalGrowthHigh,
+      fadeYears,
+    });
+    const expectations = [
+      { scenario: scenarios[0], value: oracle.conservative, continuing: oracle.conservativeContinuingValue, growth: terminalGrowthLow },
+      { scenario: scenarios[1], value: oracle.optimistic, continuing: oracle.optimisticContinuingValue, growth: terminalGrowthHigh },
+    ];
+    for (const { scenario, value, continuing, growth } of expectations) {
+      if (!finite(scenario?.value) || Math.abs(scenario.value - value) > 0.05) {
+        errors.push(
+          `${id}.valuation_range_v1.${scenario?.id}: published scenario value ${scenario?.value}`
+          + ` does not recompute from the published operands (expected ${round(value, 2)})`,
+        );
+      }
+      // The intermediate the endpoint was built from must also survive review.
+      // Tampering with it alone used to leave the endpoint agreeing with itself.
+      if (!finite(scenario?.continuing_value_at_fy3)
+        || Math.abs(scenario.continuing_value_at_fy3 - continuing) > 0.05) {
+        errors.push(
+          `${id}.valuation_range_v1.${scenario?.id}: continuing_value_at_fy3`
+          + ` ${scenario?.continuing_value_at_fy3} does not recompute (expected ${round(continuing, 2)})`,
+        );
+      }
+      if (scenario?.terminal_growth !== growth) {
+        errors.push(
+          `${id}.valuation_range_v1.${scenario?.id}: terminal_growth ${scenario?.terminal_growth}`
+          + ` does not match the declared assumption ${growth}`,
+        );
+      }
+      if (scenario?.formula !== EXPECTED_SCENARIO_FORMULA) {
+        errors.push(`${id}.valuation_range_v1.${scenario?.id}: formula is not the contract formula`);
+      }
+      if (typeof scenario?.terminal_treatment !== "string" || !scenario.terminal_treatment.trim()) {
+        errors.push(`${id}.valuation_range_v1.${scenario?.id}: terminal_treatment must state the terminal rule`);
+      }
+    }
+    // The prose must name the numbers it describes, or an assumption can move
+    // while the sentence a reader trusts stays put.
+    const conservativeTreatment = scenarios[0]?.terminal_treatment ?? "";
+    if (!conservativeTreatment.includes(String(fadeYears))) {
+      errors.push(`${id}.valuation_range_v1.conservative: terminal_treatment must name the fade years ${fadeYears}`);
+    }
+    const optimisticTreatment = scenarios[1]?.terminal_treatment ?? "";
+    if (!optimisticTreatment.includes(String(terminalGrowthHigh))) {
+      errors.push(`${id}.valuation_range_v1.optimistic: terminal_treatment must name the terminal growth ${terminalGrowthHigh}`);
+    }
+    if (finite(range.operands?.discount_rate?.value) && range.operands.discount_rate.value !== discountRate) {
+      errors.push(`${id}.valuation_range_v1: operand discount_rate disagrees with the declared assumption`);
+    }
+  }
+
+  // Recompute the model chain the band rests on, period by period. Endpoint
+  // agreement alone would still accept a grid whose book roll-forward, ROE, or
+  // residual income were quietly inconsistent underneath it.
+  const gridPeriods = item?.derived?.forecast_grid_v1?.periods ?? [];
+  for (const [index, period] of gridPeriods.entries()) {
+    const beginning = period?.book_value_beginning?.value;
+    const earnings = period?.earnings_proxy?.value;
+    const payout = period?.payout_ratio?.value;
+    const retention = period?.retention_ratio?.value;
+    const ending = period?.book_value_ending?.value;
+    const roe = period?.roe_on_beginning_book?.value;
+    const residualIncome = period?.residual_income_proxy?.value;
+    if (![beginning, earnings, payout, retention, ending, roe, residualIncome].every((value) => finite(value))) {
+      continue;
+    }
+    if (Math.abs(retention - (1 - payout)) > 1e-5) {
+      errors.push(`${id}.forecast_grid_v1.${period.period}: retention ${retention} is not 1 - payout ${payout}`);
+    }
+    if (Math.abs(ending - (beginning + earnings * retention)) > 1e-2) {
+      errors.push(
+        `${id}.forecast_grid_v1.${period.period}: book roll-forward ${ending} does not recompute from`
+        + ` ${beginning} + ${earnings} * ${retention}`,
+      );
+    }
+    if (Math.abs(roe - earnings / beginning) > 1e-5) {
+      errors.push(`${id}.forecast_grid_v1.${period.period}: roe ${roe} does not recompute from earnings / book`);
+    }
+    if (finite(discountRate) && Math.abs(residualIncome - (roe - discountRate) * beginning) > 1e-2) {
+      errors.push(
+        `${id}.forecast_grid_v1.${period.period}: residual income ${residualIncome} does not recompute from`
+        + ` (roe - discount_rate) * book_value_beginning`,
+      );
+    }
+    const previousEnding = gridPeriods[index - 1]?.book_value_ending?.value;
+    if (index > 0 && finite(previousEnding) && Math.abs(beginning - previousEnding) > 1e-2) {
+      errors.push(
+        `${id}.forecast_grid_v1.${period.period}: opening book ${beginning} does not continue the prior`
+        + ` period's closing book ${previousEnding}`,
+      );
+    }
+  }
+
+  if (finite(low) && finite(high) && low > 0) {
+    const expectedWidth = round(high / low, 4);
+    if (finite(range.range?.width_ratio) && Math.abs(range.range.width_ratio - expectedWidth) > 1e-3) {
+      errors.push(`${id}.valuation_range_v1: width_ratio ${range.range.width_ratio} does not recompute (${expectedWidth})`);
+    }
+    const observedPrice = item?.observed?.price?.value;
+    if (finite(observedPrice)) {
+      const expectedPosition = observedPrice < low ? "below_range" : observedPrice > high ? "above_range" : "within_range";
+      if (range.price_context?.position !== expectedPosition) {
+        errors.push(
+          `${id}.valuation_range_v1: price position ${range.price_context?.position} does not recompute`
+          + ` from price ${observedPrice} against ${low}~${high} (expected ${expectedPosition})`,
+        );
+      }
+      if (range.price_context?.observed_price !== observedPrice) {
+        errors.push(`${id}.valuation_range_v1: price_context.observed_price does not match the observed price`);
+      }
+    }
+  }
+}
+
 export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN_COVERED_WEIGHT } = {}) {
   const errors = [];
   const warnings = [];
   if (payload?.schema_version !== SCHEMA_VERSION) errors.push(`schema_version must be ${SCHEMA_VERSION}`);
-  if (payload?.output_scope !== "inputs_only_no_fair_value") errors.push("output_scope must be inputs_only_no_fair_value");
+  if (payload?.output_scope !== OUTPUT_SCOPE) errors.push(`output_scope must be ${OUTPUT_SCOPE}`);
+  if (payload?.policy?.no_public_single_target !== true) {
+    errors.push("policy.no_public_single_target must stay true under the range scope");
+  }
   if (!payload?.source_tier_counts || Object.keys(payload.source_tier_counts).length === 0) {
     errors.push("source_tier_counts is required");
   }
@@ -2488,6 +3765,7 @@ export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN
     if (item.id !== id) errors.push(`${id}: identity mismatch`);
     if (item.role !== "primary_public_v1") errors.push(`${id}: primary_public_v1 role required`);
     if (!Array.isArray(item.blockers)) errors.push(`${id}: blockers must be an array`);
+    validateValuationRange(item, id, errors, payload);
     const sourceUnavailable = item.blockers?.some((row) => row?.code === "source_unavailable");
     if (sourceUnavailable) {
       validateUnavailableIndexShape(item, id, errors, warnings);
@@ -2648,6 +3926,13 @@ export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN
           }
         }
       }
+    }
+  }
+  // Secondary and backlog lanes stay input-only. Emitting even a refused range
+  // for them would invite a consumer to build a card that can never fill.
+  for (const id of SECONDARY_INDICES.map((row) => row.id)) {
+    if (payload?.indices?.[id]?.derived && "valuation_range_v1" in payload.indices[id].derived) {
+      errors.push(`${id}: secondary and backlog indices must not carry a valuation range`);
     }
   }
   for (const id of ["KOSPI", "SOX"]) {
