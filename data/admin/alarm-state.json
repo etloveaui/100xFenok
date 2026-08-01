@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-01T07:44:50.772Z",
+  "generated_at": "2026-08-01T09:06:02.676Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 4,
   "open_incidents": [
     {
       "workflow": "fetch-stockanalysis.yml",
@@ -27,6 +27,14 @@
       "failure_streak_threshold": 1,
       "first_failing_run_id": 28513565916,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/28513565916"
+    },
+    {
+      "workflow": "update-manifest.yml",
+      "label": "Update Manifest",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 30690524302,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30690524302"
     }
   ],
   "watched_workflows": [
@@ -286,7 +294,7 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "no_declaration",
+      "cadence_status": "unknown",
       "cadence_evidence": []
     },
     {
@@ -394,8 +402,8 @@
     "not_due": 23,
     "overdue": 2,
     "recovered": 0,
-    "no_declaration": 7,
-    "unknown": 0
+    "no_declaration": 6,
+    "unknown": 1
   },
   "excluded_workflows": [
     {
@@ -413,14 +421,15 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "30690301957",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30690301957",
-    "observed_at": "2026-08-01T07:44:50.772Z",
+    "run_id": "30693029604",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30693029604",
+    "observed_at": "2026-08-01T09:06:02.676Z",
     "event": "workflow_run",
     "workflows": [
       "fetch-stockanalysis.yml",
       "slickcharts-history.yml",
-      "slickcharts-monthly.yml"
+      "slickcharts-monthly.yml",
+      "update-manifest.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
