@@ -282,8 +282,8 @@ function sanitizePublicRimMirror(node) {
       Object.entries(node).map(([key, value]) => [key, sanitizePublicRimMirror(value)]),
     );
   }
-  if (typeof node === "string" && node.includes("_private/")) {
-    return "admin_private_path_redacted";
+  if (typeof node === "string" && /_private\/|(?:^|\/)admin\/|private\/admin|private path/i.test(node)) {
+    return "private_path_redacted";
   }
   return node;
 }
@@ -295,7 +295,7 @@ export function buildPublicRimMirror(payload) {
       raw_public: false,
       raw_rows_included: false,
       private_artifact_paths_included: false,
-      private_path_redaction: "strings_containing__private_are_replaced_with_admin_private_path_redacted",
+      private_path_redaction: "private/admin path-bearing strings are replaced with private_path_redacted",
     },
   };
 }

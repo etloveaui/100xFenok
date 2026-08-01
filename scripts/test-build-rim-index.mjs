@@ -554,8 +554,21 @@ const publicText = JSON.stringify(payload);
 assert.equal(publicText.includes('"fair_value"'), false);
 assert.equal(publicText.includes('"target_price"'), false);
 const projected = buildPublicRimMirror({ source: "_private/admin/rim.json", value: 1 });
-assert.equal(projected.source, "admin_private_path_redacted");
+assert.equal(projected.source, "private_path_redacted");
 assert.equal(projected.public_mirror_policy.raw_public, false);
+const pathBearingProjection = buildPublicRimMirror({
+  path: "admin/fenok-edge-korea-krx-daily-index.json",
+  note: "Raw KRX rows stay private/admin; private path references are not public.",
+  metric: "Selling, General & Admin",
+  lowercase_metric: "selling, general & admin",
+});
+assert.equal(pathBearingProjection.path, "private_path_redacted");
+assert.equal(pathBearingProjection.note, "private_path_redacted");
+assert.equal(pathBearingProjection.metric, "Selling, General & Admin", "finance metric words are not redacted");
+assert.equal(pathBearingProjection.lowercase_metric, "selling, general & admin", "lowercase finance metric words are not redacted");
+const projectedText = JSON.stringify(pathBearingProjection);
+assert.equal(projectedText.includes("admin/fenok-edge"), false);
+assert.equal(projectedText.includes("admin_private_path_redacted"), false);
 
 assert.deepEqual(parseArgs(["--check", "--min-covered-weight", "0.8"]).check, true);
 const cliRoot = path.join(os.tmpdir(), "rim-cli-data-root");
