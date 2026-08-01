@@ -2874,6 +2874,7 @@ def fetch_etf(
     overview_path, overview_data = fetch_svelte_detail(ticker, "overview", timeout)
     holdings_unavailable = overview_declares_holdings_unavailable(overview_data)
     holdings_unavailability_reason = None
+    holdings_surface_fallback = False
     try:
         holdings_path, holdings_data = fetch_svelte_detail(
             ticker,
@@ -2897,12 +2898,23 @@ def fetch_etf(
             ticker=ticker.lower()
         )
         holdings_data = {}
-        holdings_unavailable = True
-        holdings_unavailability_reason = (
-            "holdings_surface_omits_holdings"
-            if missing_holdings_contract
-            else f"holdings_surface_http_{exc.code}"
+        overview_holdings_table = overview_data.get("holdingsTable")
+        overview_holdings = (
+            overview_holdings_table.get("holdings")
+            if isinstance(overview_holdings_table, dict)
+            else None
         )
+        if isinstance(overview_holdings, list) and overview_holdings:
+            holdings_unavailable = False
+            holdings_surface_fallback = True
+            holdings_unavailability_reason = "holdings_surface_fallback_overview"
+        else:
+            holdings_unavailable = True
+            holdings_unavailability_reason = (
+                "holdings_surface_omits_holdings"
+                if missing_holdings_contract
+                else f"holdings_surface_http_{exc.code}"
+            )
     if include_history:
         history_paths, history_periods, history_errors = fetch_etf_history_periods(ticker, timeout)
     else:
@@ -3003,6 +3015,7 @@ def fetch_etf(
             f"holdings_{key}_unavailable"
             for key in ("count", "date", "countries")
             if holdings_data.get(key) is None
+            and not (holdings_surface_fallback and key in {"count", "date"})
         ),
         *(["history_deferred_initial_reconcile"] if not include_history else []),
         *(["quote_deferred_initial_reconcile"] if not include_quote else []),
@@ -5996,7 +6009,7 @@ def run_one(
                         f"controlled failure injection for etf_detail:{ticker}"
                     )
                 payload = (
-                    fetch_etf(ticker, timeout)
+                    fetch_etf(ticker, timeout, allow_partial_holdings=True)
                     if include_etf_history
                     else fetch_etf(
                         ticker,
