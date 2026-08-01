@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 492,
+      "natural": false,
+      "observed_at": "2026-08-01T21:22:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30718396938",
+      "schedule": "",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T00:58:25Z",
+    "fetched_at": "2026-08-01T21:24:33Z",
     "history_as_of": "2026-07-31",
     "path": "data/yf/finance/DRI.json",
-    "payload_sha256": "d015d6f44678d5464b8fd2c9c86433c7900aafd97320c44d0ea8b981923061bf",
+    "payload_sha256": "fbc646602c6ee5b584892e1a611b1e22e9dda62cb2fbd41e3b10d085d4a2e386",
     "quote_as_of": "2026-07-31T20:00:03Z",
     "source_as_of": "2026-07-31"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 632,
-    "natural": true,
-    "observed_at": "2026-08-01T00:55:56Z",
+    "latency_ms": 492,
+    "natural": false,
+    "observed_at": "2026-08-01T21:22:20Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "30718396938",
+    "schedule": "",
+    "shard": "4/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T00:55:56Z",
-    "payload_sha256": "a525318b4d726afe6b4538a74aae170a94886aeb8983a869dbfd3db7f8173601",
+    "observed_at": "2026-08-01T21:22:20Z",
+    "payload_sha256": "0fe2ff69e78293400f6e554dc83606c94e268b0025a84362241ac5607d7e7a3c",
     "quote_as_of": "2026-07-31T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "30674982988",
+    "run_id": "30718396938",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "DRI",
-  "updated_at": "2026-08-01T00:55:56Z"
+  "updated_at": "2026-08-01T21:22:20Z"
 }

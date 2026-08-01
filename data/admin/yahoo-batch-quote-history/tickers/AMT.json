@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 678,
-      "natural": true,
-      "observed_at": "2026-07-16T00:13:37Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29460793523",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 459,
+      "natural": false,
+      "observed_at": "2026-08-01T21:07:13Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30718396938",
+      "schedule": "",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T00:57:53Z",
+    "fetched_at": "2026-08-01T21:08:57Z",
     "history_as_of": "2026-07-31",
     "path": "data/yf/finance/AMT.json",
-    "payload_sha256": "79899dd269afeb4255d43482b840dcef306669d76fd4c44c37374e406ab96736",
+    "payload_sha256": "668fe734424b4954b8c3e1703c75c38454574afaecf6d497cd956c8ee73f882f",
     "quote_as_of": "2026-07-31T20:00:03Z",
     "source_as_of": "2026-07-31"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 625,
-    "natural": true,
-    "observed_at": "2026-08-01T00:55:56Z",
+    "latency_ms": 459,
+    "natural": false,
+    "observed_at": "2026-08-01T21:07:13Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "30718396938",
+    "schedule": "",
+    "shard": "0/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T00:55:56Z",
-    "payload_sha256": "0f7331440943f21a9b2638b476ea565888c0f09ad92265b059444e9597cac0cc",
+    "observed_at": "2026-08-01T21:07:13Z",
+    "payload_sha256": "953cfa74fe983f8d184d515e1900d0bb51a5ee6e3e174a14c66d07a71f55070b",
     "quote_as_of": "2026-07-31T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "30674982988",
+    "run_id": "30718396938",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AMT",
-  "updated_at": "2026-08-01T00:55:56Z"
+  "updated_at": "2026-08-01T21:07:13Z"
 }

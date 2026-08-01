@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 499,
+      "natural": false,
+      "observed_at": "2026-08-01T21:07:13Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30718396938",
+      "schedule": "",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T00:57:55Z",
+    "fetched_at": "2026-08-01T21:08:59Z",
     "history_as_of": "2026-07-31",
     "path": "data/yf/finance/APTV.json",
-    "payload_sha256": "a64461821e898cf2ab05f02482e5c1102ce59ee4bc9869dda2d9591ad454e454",
+    "payload_sha256": "74d246e89367b52aea0eafcf69a5e943f46e45bb3ce320a35f3ed78979b00f5b",
     "quote_as_of": "2026-07-31T20:00:03Z",
     "source_as_of": "2026-07-31"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 638,
-    "natural": true,
-    "observed_at": "2026-08-01T00:55:56Z",
+    "latency_ms": 499,
+    "natural": false,
+    "observed_at": "2026-08-01T21:07:13Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "30718396938",
+    "schedule": "",
+    "shard": "0/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T00:55:56Z",
-    "payload_sha256": "8e2a21a5e49291e5cc2200f1af26e6d2753df9c244d144dde26451a9ce9189e2",
+    "observed_at": "2026-08-01T21:07:13Z",
+    "payload_sha256": "95aa7dd46858492e1f1e9983632f34ce7c2380f5c25b66111fd4fc200a9b49ba",
     "quote_as_of": "2026-07-31T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "30674982988",
+    "run_id": "30718396938",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "APTV",
-  "updated_at": "2026-08-01T00:55:56Z"
+  "updated_at": "2026-08-01T21:07:13Z"
 }

@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 685,
+      "natural": false,
+      "observed_at": "2026-08-01T21:22:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30718396938",
+      "schedule": "",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T00:42:53Z",
+    "fetched_at": "2026-08-01T21:24:24Z",
     "history_as_of": "2026-07-31",
     "path": "data/yf/finance/COST.json",
-    "payload_sha256": "a398531070d00a942482da161d4614d6964c5eae267e63306bc1466672fd8e17",
+    "payload_sha256": "b79564f9b702e36f2d05f9d6637f0c7c1b0e762af683ec90592245eaaf413d3e",
     "quote_as_of": "2026-07-31T20:00:01Z",
     "source_as_of": "2026-07-31"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1064,
-    "natural": true,
-    "observed_at": "2026-08-01T00:39:20Z",
+    "latency_ms": 685,
+    "natural": false,
+    "observed_at": "2026-08-01T21:22:20Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "30718396938",
+    "schedule": "",
+    "shard": "4/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T00:39:20Z",
-    "payload_sha256": "3013e112d1d1b82aa2d2a1eedd42eeb5965e0275ffbb632bf0db17b978a4004e",
+    "observed_at": "2026-08-01T21:22:20Z",
+    "payload_sha256": "30daf93b8d4a098f2a53a414cb93f1e1605dd13ab582b61dab71e3688476db0b",
     "quote_as_of": "2026-07-31T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "30674982988",
+    "run_id": "30718396938",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "COST",
-  "updated_at": "2026-08-01T00:39:20Z"
+  "updated_at": "2026-08-01T21:22:20Z"
 }

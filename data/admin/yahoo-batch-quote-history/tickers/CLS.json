@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 654,
-      "natural": true,
-      "observed_at": "2026-07-16T00:19:31Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29460793523",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 439,
+      "natural": false,
+      "observed_at": "2026-08-01T21:18:35Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30718396938",
+      "schedule": "",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T01:02:34Z",
+    "fetched_at": "2026-08-01T21:20:28Z",
     "history_as_of": "2026-07-31",
     "path": "data/yf/finance/CLS.json",
-    "payload_sha256": "ebfdf0bd8d1913d3e3ba4980b63eb854676415cb51037f16ebcd1fcf94a9d67e",
+    "payload_sha256": "d51f84ece096036e9a28ab1ea1f2a914bd47dbf2fbe914d2350101340b9a4da5",
     "quote_as_of": "2026-07-31T20:00:02Z",
     "source_as_of": "2026-07-31"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 708,
-    "natural": true,
-    "observed_at": "2026-08-01T01:00:13Z",
+    "latency_ms": 439,
+    "natural": false,
+    "observed_at": "2026-08-01T21:18:35Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "run_id": "30718396938",
+    "schedule": "",
+    "shard": "3/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T01:00:13Z",
-    "payload_sha256": "474480717d679943f4352fc47b856690a54dab2f835c719327389dd1fe22cf3b",
+    "observed_at": "2026-08-01T21:18:35Z",
+    "payload_sha256": "9ab48a99fd17c8d563af77fe1e76313990fdada760be246033f83a90a9615b52",
     "quote_as_of": "2026-07-31T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "30674982988",
+    "run_id": "30718396938",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CLS",
-  "updated_at": "2026-08-01T01:00:13Z"
+  "updated_at": "2026-08-01T21:18:35Z"
 }

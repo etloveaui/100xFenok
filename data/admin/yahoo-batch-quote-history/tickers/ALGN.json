@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 461,
-      "natural": true,
-      "observed_at": "2026-07-14T00:11:54Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29295146902",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 536,
+      "natural": false,
+      "observed_at": "2026-08-01T21:18:35Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30718396938",
+      "schedule": "",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T00:47:35Z",
+    "fetched_at": "2026-08-01T21:20:09Z",
     "history_as_of": "2026-07-31",
     "path": "data/yf/finance/ALGN.json",
-    "payload_sha256": "9ff814437f88082148e008b89aa3abcf3cd0d80f6adafaa02f8c597264f64a3e",
+    "payload_sha256": "f3bb205b6cdc7f80e64fa9176b748aa8180a892046ab20836af132c21e49b85a",
     "quote_as_of": "2026-07-31T20:00:01Z",
     "source_as_of": "2026-07-31"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 797,
-    "natural": true,
-    "observed_at": "2026-08-01T00:45:24Z",
+    "latency_ms": 536,
+    "natural": false,
+    "observed_at": "2026-08-01T21:18:35Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "30718396938",
+    "schedule": "",
+    "shard": "3/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T00:45:24Z",
-    "payload_sha256": "db3e3769652911945b5834f1a6ffad02dc60f9917b1d4e83cae946777e82e8d9",
+    "observed_at": "2026-08-01T21:18:35Z",
+    "payload_sha256": "213b317eb31ad9e3aafb7ac49aaa7370d327b6b47c8a6561c7c96fe069d43634",
     "quote_as_of": "2026-07-31T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "30674982988",
+    "run_id": "30718396938",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "ALGN",
-  "updated_at": "2026-08-01T00:45:24Z"
+  "updated_at": "2026-08-01T21:18:35Z"
 }

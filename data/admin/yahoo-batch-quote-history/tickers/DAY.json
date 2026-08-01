@@ -395,6 +395,39 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "workflow_dispatch",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": false,
+      "observed_at": "2026-08-01T21:07:13Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "30718396938",
+      "schedule": "",
+      "shard": "0/5"
     }
   ],
   "discovered_from": [
@@ -403,7 +436,7 @@
   "last_attempt": {
     "attempts_used": 2,
     "error": "empty payload",
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [
       {
         "attempt": 1,
@@ -425,12 +458,12 @@
       }
     ],
     "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-08-01T00:39:20Z",
+    "natural": false,
+    "observed_at": "2026-08-01T21:07:13Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
+    "run_id": "30718396938",
+    "schedule": "",
     "shard": "0/5"
   },
   "latest_failure": {
@@ -460,18 +493,18 @@
       }
     ],
     "lkg_status": "absent",
-    "observed_at": "2026-08-01T00:39:20Z",
+    "observed_at": "2026-08-01T21:07:13Z",
     "run_attempt": 1,
-    "run_id": "30674982988"
+    "run_id": "30718396938"
   },
   "resolution_state": "terminal_provider_unsupported",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "terminal": {
-    "artifact_generated_at": "2026-08-01T16:56:43.554Z",
+    "artifact_generated_at": "2026-08-01T20:57:15.399Z",
     "artifact_path": "admin/fenok-s1-stock-public-promotion-dry-run.json",
-    "classified_at": "2026-08-01T18:48:56Z",
-    "classified_run_id": "30711926935",
+    "classified_at": "2026-08-01T21:22:20Z",
+    "classified_run_id": "30718396938",
     "evidence": [
       {
         "alias_source": null,
@@ -494,8 +527,8 @@
         "type": "Delisted"
       }
     ],
-    "evidence_sha256": "2a419708c1081882d0c3c8dd0dfe96d8eafbbd88723be177bc20208c082e6a06"
+    "evidence_sha256": "82ae03f6ec10b1a8e7dd4d8fd042ef04177c3d9f7a51064e99d3a949156e120c"
   },
   "ticker": "DAY",
-  "updated_at": "2026-08-01T18:48:56Z"
+  "updated_at": "2026-08-01T21:22:20Z"
 }

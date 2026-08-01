@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 601,
-      "natural": true,
-      "observed_at": "2026-07-16T00:24:49Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29460793523",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 398,
+      "natural": false,
+      "observed_at": "2026-08-01T21:18:35Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30718396938",
+      "schedule": "",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T00:49:02Z",
+    "fetched_at": "2026-08-01T21:21:13Z",
     "history_as_of": "2026-07-31",
     "path": "data/yf/finance/LSCC.json",
-    "payload_sha256": "d5d64a4b9b7f32e60e7cb83333cfd8caa402adc52e25fb6b5d5138d4c8c2a265",
+    "payload_sha256": "60515a80712881853a23b255e1318b4b4d9cc46516d6e0413990f62f7d8dd7ad",
     "quote_as_of": "2026-07-31T20:00:01Z",
     "source_as_of": "2026-07-31"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 842,
-    "natural": true,
-    "observed_at": "2026-08-01T00:45:24Z",
+    "latency_ms": 398,
+    "natural": false,
+    "observed_at": "2026-08-01T21:18:35Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "30718396938",
+    "schedule": "",
+    "shard": "3/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T00:45:24Z",
-    "payload_sha256": "177b1f720c7718ef6e616a4c5ed370d67d11582c4e842d5054617c2de111e6a0",
+    "observed_at": "2026-08-01T21:18:35Z",
+    "payload_sha256": "304954dbaa1433c324cf0ad414fc785e8a89a6dba94d2d5e98851b394782185a",
     "quote_as_of": "2026-07-31T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "30674982988",
+    "run_id": "30718396938",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "LSCC",
-  "updated_at": "2026-08-01T00:45:24Z"
+  "updated_at": "2026-08-01T21:18:35Z"
 }

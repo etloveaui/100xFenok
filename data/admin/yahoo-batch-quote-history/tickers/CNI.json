@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 733,
-      "natural": true,
-      "observed_at": "2026-07-16T00:19:31Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29460793523",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 559,
+      "natural": false,
+      "observed_at": "2026-08-01T21:18:35Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30718396938",
+      "schedule": "",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T01:02:36Z",
+    "fetched_at": "2026-08-01T21:20:30Z",
     "history_as_of": "2026-07-31",
     "path": "data/yf/finance/CNI.json",
-    "payload_sha256": "08ad47cf5acefd2fa6b6bb4a81735b099ad6aebb218ca7bf4ffa286acd4e11ff",
+    "payload_sha256": "fc736f00a457619f1e403813269d42c8429f9ec830ce6ff8a12441dd7abbbcc6",
     "quote_as_of": "2026-07-31T20:00:03Z",
     "source_as_of": "2026-07-31"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 622,
-    "natural": true,
-    "observed_at": "2026-08-01T01:00:13Z",
+    "latency_ms": 559,
+    "natural": false,
+    "observed_at": "2026-08-01T21:18:35Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "run_id": "30718396938",
+    "schedule": "",
+    "shard": "3/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T01:00:13Z",
-    "payload_sha256": "81a2fe8185aa2420ec91198d5e8d104c667db7f739b022681cd82dafe959481f",
+    "observed_at": "2026-08-01T21:18:35Z",
+    "payload_sha256": "fea0c87946f9f24ed3303f49b02e9ae4f00ba914e393297324d41b9e77acd45c",
     "quote_as_of": "2026-07-31T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "30674982988",
+    "run_id": "30718396938",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CNI",
-  "updated_at": "2026-08-01T01:00:13Z"
+  "updated_at": "2026-08-01T21:18:35Z"
 }

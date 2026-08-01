@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 793,
-      "natural": true,
-      "observed_at": "2026-07-16T00:24:49Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29460793523",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 665,
+      "natural": false,
+      "observed_at": "2026-08-01T21:22:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30718396938",
+      "schedule": "",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T00:49:10Z",
+    "fetched_at": "2026-08-01T21:25:14Z",
     "history_as_of": "2026-07-31",
     "path": "data/yf/finance/MPC.json",
-    "payload_sha256": "2fbb4e0ba7195122c28c799a10714d202571a7c2bfc0053868f2366db81f406c",
+    "payload_sha256": "110240e2ebb6f0dafbe1aa9f58f7e9e4821fcfb63c4c32e534b6236909e5df09",
     "quote_as_of": "2026-07-31T20:00:03Z",
     "source_as_of": "2026-07-31"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 876,
-    "natural": true,
-    "observed_at": "2026-08-01T00:45:24Z",
+    "latency_ms": 665,
+    "natural": false,
+    "observed_at": "2026-08-01T21:22:20Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "30718396938",
+    "schedule": "",
+    "shard": "4/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T00:45:24Z",
-    "payload_sha256": "8ac0ed13c0955fc405f865ee592e8249eb9b22575e36322bdbca912580dd9717",
+    "observed_at": "2026-08-01T21:22:20Z",
+    "payload_sha256": "a817ee63d4efb100297949121ef80f9a915061bdb7eb2abd2dab00d8e13e6518",
     "quote_as_of": "2026-07-31T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "30674982988",
+    "run_id": "30718396938",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MPC",
-  "updated_at": "2026-08-01T00:45:24Z"
+  "updated_at": "2026-08-01T21:22:20Z"
 }

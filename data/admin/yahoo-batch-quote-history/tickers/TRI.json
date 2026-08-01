@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 453,
-      "natural": true,
-      "observed_at": "2026-07-17T00:24:27Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29544227703",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 449,
+      "natural": false,
+      "observed_at": "2026-08-01T21:11:16Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30718396938",
+      "schedule": "",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T00:55:33Z",
+    "fetched_at": "2026-08-01T21:14:37Z",
     "history_as_of": "2026-07-31",
     "path": "data/yf/finance/TRI.json",
-    "payload_sha256": "722689a5235c5592a9f3e26af78546c35d1c85d403a5604bf85fe1626166c601",
+    "payload_sha256": "319ed1afd03a10934d51891e9678ca8deeabb1379805cbe7a08cbbe273a4a9b1",
     "quote_as_of": "2026-07-31T20:00:00Z",
     "source_as_of": "2026-07-31"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 942,
-    "natural": true,
-    "observed_at": "2026-08-01T00:50:22Z",
+    "latency_ms": 449,
+    "natural": false,
+    "observed_at": "2026-08-01T21:11:16Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "run_id": "30718396938",
+    "schedule": "",
+    "shard": "1/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T00:50:22Z",
-    "payload_sha256": "a86d77a14fc03a2496678bb11396b2ec7ef693f2c6967a23c0c6fbd44dc42c7d",
+    "observed_at": "2026-08-01T21:11:16Z",
+    "payload_sha256": "71e5b711d1abe00488fe2063ad2f0e9a1373f527dc67ee1251f31e76f37cf701",
     "quote_as_of": "2026-07-31T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30674982988",
+    "run_id": "30718396938",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "TRI",
-  "updated_at": "2026-08-01T00:50:22Z"
+  "updated_at": "2026-08-01T21:11:16Z"
 }

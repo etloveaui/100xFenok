@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -188,13 +175,26 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 692,
+      "natural": false,
+      "observed_at": "2026-08-01T21:22:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30718396938",
+      "schedule": "",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T00:44:57Z",
+    "fetched_at": "2026-08-01T21:25:52Z",
     "history_as_of": "2026-07-31",
     "path": "data/yf/finance/TGT.json",
-    "payload_sha256": "227ccdbb7ffaad08da66ed6b2c6d68952dd25141ddfceac47da7803a7ccbca33",
+    "payload_sha256": "5c642855fdda99996112973d32f3e1c3994ecb65c1c734ee47b70d8a7fed5b6d",
     "quote_as_of": "2026-07-31T20:04:02Z",
     "source_as_of": "2026-07-31"
   },
@@ -203,16 +203,16 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "schedule",
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-08-01T01:00:13Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 692,
+    "natural": false,
+    "observed_at": "2026-08-01T21:22:20Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
+    "run_id": "30718396938",
+    "schedule": "",
     "shard": "4/5"
   },
   "last_recovered_failure": {
@@ -243,13 +243,13 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T00:39:20Z",
-    "payload_sha256": "169e71371cf8c2ceb74a638cc1359e5f91fc1f559f2214db210dd2a4c0fd3ff4",
+    "observed_at": "2026-08-01T21:22:20Z",
+    "payload_sha256": "51177611a08a6a61e0fc342a8f928e15b783632c3b1f842dc80a35a3ebb69155",
     "quote_as_of": "2026-07-31T20:04:02Z",
     "run_attempt": 1,
-    "run_id": "30674982988",
+    "run_id": "30718396938",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
@@ -262,5 +262,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "TGT",
-  "updated_at": "2026-08-01T01:00:13Z"
+  "updated_at": "2026-08-01T21:22:20Z"
 }

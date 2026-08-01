@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-18T00:49:31Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29622560422",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 589,
+      "natural": false,
+      "observed_at": "2026-08-01T21:07:13Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30718396938",
+      "schedule": "",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T00:50:04Z",
+    "fetched_at": "2026-08-01T21:11:03Z",
     "history_as_of": "2026-07-31",
     "path": "data/yf/finance/TXRH.json",
-    "payload_sha256": "a32f4a9a0e4eef7388045ca2912bc16292c1fb4c2a12a6c9bdecdafb0dde604d",
+    "payload_sha256": "4b567bfeab5165cfc91189fc841a5793fb354f3cbf55255dd1c3d8f9768f6652",
     "quote_as_of": "2026-07-31T20:00:00Z",
     "source_as_of": "2026-07-31"
   },
@@ -197,16 +197,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 818,
-    "natural": true,
-    "observed_at": "2026-08-01T00:45:24Z",
+    "latency_ms": 589,
+    "natural": false,
+    "observed_at": "2026-08-01T21:07:13Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "30718396938",
+    "schedule": "",
+    "shard": "0/5"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:47:20Z",
@@ -218,13 +218,13 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T00:45:24Z",
-    "payload_sha256": "dda4310f63291cf39b779058827080275e4cc19927cd232bb14462cdbd0a1817",
+    "observed_at": "2026-08-01T21:07:13Z",
+    "payload_sha256": "dc3fdabc75ad72d5f5b5fa905e17259619758f5b3587aa0edbccb632f8a94c4e",
     "quote_as_of": "2026-07-31T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30674982988",
+    "run_id": "30718396938",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
@@ -242,5 +242,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "TXRH",
-  "updated_at": "2026-08-01T00:45:24Z"
+  "updated_at": "2026-08-01T21:07:13Z"
 }

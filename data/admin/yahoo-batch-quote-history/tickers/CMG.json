@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 688,
-      "natural": true,
-      "observed_at": "2026-07-16T00:19:31Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29460793523",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 504,
+      "natural": false,
+      "observed_at": "2026-08-01T21:18:35Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30718396938",
+      "schedule": "",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T01:02:35Z",
+    "fetched_at": "2026-08-01T21:20:29Z",
     "history_as_of": "2026-07-31",
     "path": "data/yf/finance/CMG.json",
-    "payload_sha256": "a337485257e08fda0295026e67d2e00e55bdb476cc1f81a2b040d25d5474422d",
+    "payload_sha256": "eecf54de7d64d7339adaf502a8f42f1b544dbc89b2993b931fb28f17d3aca68f",
     "quote_as_of": "2026-07-31T20:03:39Z",
     "source_as_of": "2026-07-31"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 653,
-    "natural": true,
-    "observed_at": "2026-08-01T01:00:13Z",
+    "latency_ms": 504,
+    "natural": false,
+    "observed_at": "2026-08-01T21:18:35Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "run_id": "30718396938",
+    "schedule": "",
+    "shard": "3/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T01:00:13Z",
-    "payload_sha256": "b7b7e47c5e64cf8159b98d4099ca67f290178ba682e365a58dd2366bcc18aa57",
+    "observed_at": "2026-08-01T21:18:35Z",
+    "payload_sha256": "05ddf370aceb3db6e51104ea3a1b468352a4ea8ccbdb19915834d671ff0b6c5f",
     "quote_as_of": "2026-07-31T20:03:39Z",
     "run_attempt": 1,
-    "run_id": "30674982988",
+    "run_id": "30718396938",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CMG",
-  "updated_at": "2026-08-01T01:00:13Z"
+  "updated_at": "2026-08-01T21:18:35Z"
 }

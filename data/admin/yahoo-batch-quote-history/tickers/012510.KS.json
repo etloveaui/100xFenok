@@ -2,25 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "error": "controlled failure injection for 012510.KS",
-      "event_name": "workflow_dispatch",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "owner-approved controlled failure injection"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-14T08:37:13Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "29318385532",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 714,
@@ -199,6 +180,20 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for 012510.KS despite available history",
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 595,
+      "natural": false,
+      "observed_at": "2026-08-01T21:14:53Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "30718396938",
+      "schedule": "",
+      "shard": "2/5"
     }
   ],
   "current": {
@@ -215,16 +210,16 @@
   "last_attempt": {
     "attempts_used": 1,
     "error": "ValueError: quote_as_of is unavailable for 012510.KS despite available history",
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1306,
-    "natural": true,
-    "observed_at": "2026-08-01T00:39:20Z",
+    "latency_ms": 595,
+    "natural": false,
+    "observed_at": "2026-08-01T21:14:53Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "30718396938",
+    "schedule": "",
+    "shard": "2/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -247,9 +242,9 @@
     "failure_kind": "transient_provider_miss",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-08-01T00:39:20Z",
+    "observed_at": "2026-08-01T21:14:53Z",
     "run_attempt": 1,
-    "run_id": "30674982988"
+    "run_id": "30718396938"
   },
   "lkg": {
     "fetched_at": "2026-07-15T00:10:47Z",
@@ -275,5 +270,5 @@
     "source_as_of": "2026-06-25T06:30:30Z"
   },
   "ticker": "012510.KS",
-  "updated_at": "2026-08-01T00:39:20Z"
+  "updated_at": "2026-08-01T21:14:53Z"
 }

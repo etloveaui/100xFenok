@@ -5,20 +5,6 @@
       "error": "ValueError: quote_as_of is unavailable for BK despite available history",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 442,
-      "natural": true,
-      "observed_at": "2026-07-14T00:11:54Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "29295146902",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for BK despite available history",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 332,
       "natural": true,
       "observed_at": "2026-07-15T00:10:40Z",
@@ -309,6 +295,39 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "workflow_dispatch",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": false,
+      "observed_at": "2026-08-01T21:22:20Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "30718396938",
+      "schedule": "",
+      "shard": "4/5"
     }
   ],
   "current": {
@@ -325,7 +344,7 @@
   "last_attempt": {
     "attempts_used": 2,
     "error": "empty payload",
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [
       {
         "attempt": 1,
@@ -347,13 +366,13 @@
       }
     ],
     "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-08-01T00:39:20Z",
+    "natural": false,
+    "observed_at": "2026-08-01T21:22:20Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "30718396938",
+    "schedule": "",
+    "shard": "4/5"
   },
   "latest_failure": {
     "attempts_used": 2,
@@ -382,9 +401,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-08-01T00:39:20Z",
+    "observed_at": "2026-08-01T21:22:20Z",
     "run_attempt": 1,
-    "run_id": "30674982988"
+    "run_id": "30718396938"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:48:55Z",
@@ -408,5 +427,5 @@
     "source_as_of": "2026-07-02"
   },
   "ticker": "BK",
-  "updated_at": "2026-08-01T00:39:20Z"
+  "updated_at": "2026-08-01T21:22:20Z"
 }

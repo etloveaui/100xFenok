@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 770,
-      "natural": true,
-      "observed_at": "2026-07-16T00:30:04Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29460793523",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
       "attempts_used": 2,
       "error": "empty payload",
       "event_name": "schedule",
@@ -212,15 +199,28 @@
       "run_id": "30593079919",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 722,
+      "natural": false,
+      "observed_at": "2026-08-01T21:14:53Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30718396938",
+      "schedule": "",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-31T01:08:40Z",
-    "history_as_of": "2026-07-30",
+    "fetched_at": "2026-08-01T21:18:30Z",
+    "history_as_of": "2026-07-31",
     "path": "data/yf/finance/WFC.json",
-    "payload_sha256": "1276a257d672228b4d7f2dc4cf20b195e14af6f50e3c724fa9be306bf5e63820",
-    "quote_as_of": "2026-07-30T20:00:19Z",
-    "source_as_of": "2026-07-30"
+    "payload_sha256": "2cee43c4327719f5d4c013294d1c3b972db6e38c054346f825a97ab255b1933d",
+    "quote_as_of": "2026-07-31T20:00:59Z",
+    "source_as_of": "2026-07-31"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -228,16 +228,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 566,
-    "natural": true,
-    "observed_at": "2026-07-31T01:04:59Z",
+    "latency_ms": 722,
+    "natural": false,
+    "observed_at": "2026-08-01T21:14:53Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30593079919",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "30718396938",
+    "schedule": "",
+    "shard": "2/5"
   },
   "last_recovered_failure": {
     "attempts_used": 2,
@@ -291,15 +291,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-07-30",
-    "observed_at": "2026-07-31T01:04:59Z",
-    "payload_sha256": "d7d7c0c63e0fac6fc6d70c10e684e912968ac8ffa0fb9a0843bc78cd30d69f93",
-    "quote_as_of": "2026-07-30T20:00:19Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-07-31",
+    "observed_at": "2026-08-01T21:14:53Z",
+    "payload_sha256": "f6456b0d6cc53305451822930fd7678d8279cd2d3288eb32f95c567676f44cfe",
+    "quote_as_of": "2026-07-31T20:00:59Z",
     "run_attempt": 1,
-    "run_id": "30593079919",
+    "run_id": "30718396938",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-30"
+    "source_as_of": "2026-07-31"
   },
   "recovered_at": "2026-07-18T00:37:10Z",
   "recovered_from_run_id": "29544227703",
@@ -310,5 +310,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "WFC",
-  "updated_at": "2026-07-31T01:04:59Z"
+  "updated_at": "2026-08-01T21:14:53Z"
 }
