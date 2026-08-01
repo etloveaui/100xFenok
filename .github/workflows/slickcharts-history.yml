@@ -59,9 +59,8 @@ permissions:
   actions: write
 
 concurrency:
-  group: fenok-data-writer-refs/heads/main
+  group: fenok-data-writer-slickcharts-history-${{ github.ref }}
   cancel-in-progress: false
-  queue: max
 
 jobs:
   # Run membership tracker first

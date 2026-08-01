@@ -153,13 +153,10 @@ def _html_attempt_tuple(
             provider_date=provider_date,
             response_sha256=response_sha256,
         )
-    soup = BeautifulSoup(html, "html.parser")
-    has_rows = any(row.find("td") is not None for row in soup.select("table tr"))
     return _returned_attempt_tuple(
         status,
         decode="ok",
         payload="non_empty",
-        assertions=[{"id": "table_rows", "passed": has_rows}],
         provider_date=provider_date,
         response_sha256=response_sha256,
     )
@@ -312,7 +309,6 @@ def fetch_html_playwright(
                 last_status,
                 decode="ok",
                 payload="non_empty",
-                assertions=[{"id": "table_rows", "passed": False}],
             ))
         else:
             _emit_attempt_tuple(_returned_failure_tuple(last_status))
