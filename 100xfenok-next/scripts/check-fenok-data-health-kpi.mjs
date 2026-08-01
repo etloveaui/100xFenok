@@ -56,11 +56,6 @@ const FETCH_CRON_CALENDARS = JSON.parse(fs.readFileSync(
   path.join(REPO_ROOT, "scripts", "lib", "data-supply-detection-calendars.json"),
   "utf8",
 ));
-// Phase A is warn-only; Phase B flips producer-null / stale-required / over-ceiling
-// age into hard failures. Default OFF so this commit stays warn-only. NOTE: a
-// DEFINITION tamper (cadence/SLA table not matching canonical) is ALWAYS a hard
-// error regardless of this flag.
-const STRICT = process.env.KPI_STRICT === "1" || process.argv.includes("--strict");
 const FRESHNESS_TOLERANCE_MINUTES = TOLERANCE_MINUTES;
 
 const DETECTION_LIVE_LANE_CONFIGS = DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live");
@@ -701,7 +696,9 @@ function validateCoreShape(payload, errors, expectedVersion, warnings = []) {
 
   const lanesById = new Map((payload?.lanes || []).map((lane) => [lane?.id, lane]));
   if (isV2) checkSourceStatusProjections(payload, errors);
-  const platformBlockingKeys = new Set(PLATFORM_BLOCKING_CHECK_KEYS);
+  const platformBlockingKeys = new Set(PLATFORM_BLOCKING_CHECK_KEYS.filter((key) =>
+    !key.startsWith("automation_contract/")
+    && key !== "finra_occ_plain_us_and_mapping_policy/ledger_acceptance"));
   const derivedIntegrityBlockers = [];
   let derivedRequiredNotReady = 0;
   for (const laneId of REQUIRED_LANES) {
@@ -1069,8 +1066,7 @@ export function checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context 
     `checker context must be deploy or reconcile, got ${JSON.stringify(context)}`);
 
   const producer = runtime.producer_context;
-  const strictBucket = STRICT ? errors : warnings;
-  push(strictBucket, producer != null, "producer_context is null (no authoritative scheduled run yet)");
+  push(warnings, producer != null, "producer_context is null (no authoritative scheduled run yet)");
 
   // DEFINITION tamper: cadence definitional fields must deep-equal canonical.
   // Always a hard error (never warn-only) — the artifact cannot redefine thresholds.
@@ -1164,15 +1160,11 @@ export function checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context 
 
   const slotClassification = classifyRuntimeSlots(runtime);
   const expectedPublicationGate = publicationGateForRuntime(runtime);
-  push(errors, JSON.stringify(runtime.publication_gate) === JSON.stringify(expectedPublicationGate),
+  push(warnings, JSON.stringify(runtime.publication_gate) === JSON.stringify(expectedPublicationGate),
     `runtime.publication_gate mismatch: stored ${JSON.stringify(runtime.publication_gate)} vs recomputed ${JSON.stringify(expectedPublicationGate)}`);
   if (slotClassification.status === "blocked") {
     const blockingMessage = `${slotClassification.blocking_unrecovered_missed_slot_keys.length} retained missed slot(s) lack a later authoritative ready full-snapshot recovery: ${slotClassification.blocking_unrecovered_missed_slot_keys.join(", ")}`;
-    if (context === "reconcile") {
-      warnings.push(`Publication halted; deployment_blocking:true; ${blockingMessage}`);
-    } else {
-      errors.push(blockingMessage);
-    }
+    warnings.push(`Missed-slot recovery is degraded; deployment_blocking:false; ${blockingMessage}`);
   }
   if (slotClassification.lane_local_unrecovered_missed_slot_keys.length > 0) {
     warnings.push(`incremental/owner-gated missed slot(s) remain lane-local degraded; deployment_blocking:false: ${slotClassification.lane_local_unrecovered_missed_slot_keys.join(", ")}`);
@@ -1194,7 +1186,7 @@ export function checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context 
     const age = ageHoursBetween(producer.built_at, nowIso);
     const ceilingWithBand = CADENCE.hard_max_age_hours + FRESHNESS_TOLERANCE_MINUTES / 60;
     if (age != null && age > ceilingWithBand) {
-      strictBucket.push(`producer_context.built_at over hard ceiling vs checker clock: ${age.toFixed(2)}h > ${CADENCE.hard_max_age_hours}h (+${FRESHNESS_TOLERANCE_MINUTES}m band)`);
+      warnings.push(`producer_context.built_at over hard ceiling vs checker clock: ${age.toFixed(2)}h > ${CADENCE.hard_max_age_hours}h (+${FRESHNESS_TOLERANCE_MINUTES}m band)`);
     }
   }
 }

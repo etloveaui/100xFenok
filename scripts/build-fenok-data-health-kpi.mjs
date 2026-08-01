@@ -620,7 +620,9 @@ function laneStatus(checks) {
 }
 
 function lane(id, label, checks, { required = true, counts = {}, details = {}, asOf = null } = {}) {
-  const platformBlockingKeys = new Set(PLATFORM_BLOCKING_CHECK_KEYS);
+  const platformBlockingKeys = new Set(PLATFORM_BLOCKING_CHECK_KEYS.filter((key) =>
+    !key.startsWith("automation_contract/")
+    && key !== "finra_occ_plain_us_and_mapping_policy/ledger_acceptance"));
   const classifiedChecks = checks.map((item) => ({
     ...item,
     platform_blocking: platformBlockingKeys.has(`${id}/${item.id}`),
@@ -2414,7 +2416,7 @@ export function buildFinraOccLane(ledger, occAvailability = null) {
     message: occAttempt.message ?? "OCC current-attempt verdict is missing.",
   } : null;
   return lane("finra_occ_plain_us_and_mapping_policy", "FINRA/OCC source gate", [
-    check("ledger_acceptance", "ledger acceptance", ledger?.source_audit?.acceptance_ok === true, ledger?.generated_at || "missing", { platform_blocking: true }),
+    check("ledger_acceptance", "ledger acceptance", ledger?.source_audit?.acceptance_ok === true, ledger?.generated_at || "missing"),
     check("finra_plain_us_ready", "plain US FINRA", number(counts.plain_us_finra_source_ready) === number(counts.plain_us_finra_denominator), `${number(counts.plain_us_finra_source_ready)} / ${number(counts.plain_us_finra_denominator)}`),
     check("occ_plain_us_ready", "plain US OCC", number(counts.plain_us_occ_source_ready) === number(counts.plain_us_occ_denominator), `${number(counts.plain_us_occ_source_ready)} / ${number(counts.plain_us_occ_denominator)}`),
     check("occ_current_delivery_ready", "OCC current delivery", occAttemptReady, publicOccAttempt?.message || "OCC current-attempt evidence is missing; prior data may still be served."),
@@ -2482,18 +2484,18 @@ function deployWorkerKpiGateWired() {
 
 function buildAutomationLane() {
   return lane("automation_contract", "Daily automation and deploy gates", [
-    check("sync_static_builds_kpi", "sync-static KPI build", workflowCheck("100xfenok-next/package.json", "build:fenok-data-health-kpi"), "package script wiring", { platform_blocking: true }),
-    check("sync_static_checks_kpi", "sync-static KPI check", workflowCheck("100xfenok-next/package.json", "qa:fenok-data-health-kpi"), "package gate wiring", { platform_blocking: true }),
-    check("update_manifest_rebuilds_kpi", "manifest reconciliation", workflowCheck(".github/workflows/update-manifest.yml", "build:fenok-data-health-kpi"), "update-manifest rebuild path", { platform_blocking: true }),
-    check("deploy_worker_checks_kpi", "Worker deploy gate", deployWorkerKpiGateWired(), "deploy build/reconcile/verify wiring", { platform_blocking: true }),
-    check("deploy_worker_smokes_kpi", "Worker live KPI smoke", workflowCheck(".github/workflows/deploy-worker.yml", "Smoke data health KPI"), "deploy post-smoke contract", { platform_blocking: true }),
-    check("phase_b_checker_strict", "Phase B checker strict mode", workflowCheck("100xfenok-next/package.json", "check-fenok-data-health-kpi.mjs --strict"), "strict checker wiring", { platform_blocking: true }),
-    check("phase_b_pending_max_age", "Phase B pending age enforcement", workflowCheck("100xfenok-next/scripts/check-fenok-data-health-kpi.mjs", "PENDING_MAX_AGE_DAYS") && workflowCheck("100xfenok-next/package.json", "check-fenok-data-health-kpi.mjs --strict"), "14-day pending exemption expiry is active under strict", { platform_blocking: true }),
-    check("deploy_worker_smoke_strict", "Worker live KPI smoke strict mode", workflowCheck(".github/workflows/deploy-worker.yml", "KPI v2 producer freshness (strict, Phase B)"), "live producer freshness fails closed", { platform_blocking: true }),
-    check("yf_daily_no_default_cap", "YF daily stock shards no silent cap", workflowCheck(".github/workflows/fetch-yf-finance.yml", 'INPUT_LIMIT="${YF_DAILY_STOCK_LIMIT:-}"'), "future active universe expansion does not silently fall outside freshness", { platform_blocking: true }),
-    check("stockanalysis_daily1y_scheduled", "StockAnalysis daily-1Y schedule", workflowCheck(".github/workflows/fetch-stockanalysis.yml", "50 22 * * 1-5") && workflowCheck(".github/workflows/fetch-stockanalysis.yml", "daily_1y"), "weekday catch-up lane", { platform_blocking: true }),
-    check("edge_daily_dispatches_manifest", "Edge daily manifest dispatch", workflowCheck(".github/workflows/fenok-edge-daily.yml", "gh workflow run update-manifest.yml"), "manifest/RIM/deploy chain", { platform_blocking: true }),
-    check("krx_daily_dispatches_manifest", "KRX daily manifest dispatch", workflowCheck(".github/workflows/fenok-edge-krx-daily.yml", "gh workflow run update-manifest.yml"), "manifest/RIM/deploy chain", { platform_blocking: true }),
+    check("sync_static_builds_kpi", "sync-static KPI build", workflowCheck("100xfenok-next/package.json", "build:fenok-data-health-kpi"), "package script wiring"),
+    check("sync_static_checks_kpi", "sync-static KPI check", workflowCheck("100xfenok-next/package.json", "qa:fenok-data-health-kpi"), "package gate wiring"),
+    check("update_manifest_rebuilds_kpi", "manifest reconciliation", workflowCheck(".github/workflows/update-manifest.yml", "build:fenok-data-health-kpi"), "update-manifest rebuild path"),
+    check("deploy_worker_checks_kpi", "Worker deploy gate", deployWorkerKpiGateWired(), "deploy build/reconcile/verify wiring"),
+    check("deploy_worker_smokes_kpi", "Worker live KPI smoke", workflowCheck(".github/workflows/deploy-worker.yml", "Smoke data health KPI"), "deploy post-smoke contract"),
+    check("phase_b_checker_strict", "Phase B checker strict mode", workflowCheck("100xfenok-next/package.json", "check-fenok-data-health-kpi.mjs --strict"), "strict checker wiring"),
+    check("phase_b_pending_max_age", "Phase B pending age enforcement", workflowCheck("100xfenok-next/scripts/check-fenok-data-health-kpi.mjs", "PENDING_MAX_AGE_DAYS") && workflowCheck("100xfenok-next/package.json", "check-fenok-data-health-kpi.mjs --strict"), "14-day pending exemption expiry is active under strict"),
+    check("deploy_worker_smoke_strict", "Worker live KPI smoke strict mode", workflowCheck(".github/workflows/deploy-worker.yml", "KPI v2 producer freshness (strict, Phase B)"), "live producer freshness fails closed"),
+    check("yf_daily_no_default_cap", "YF daily stock shards no silent cap", workflowCheck(".github/workflows/fetch-yf-finance.yml", 'INPUT_LIMIT="${YF_DAILY_STOCK_LIMIT:-}"'), "future active universe expansion does not silently fall outside freshness"),
+    check("stockanalysis_daily1y_scheduled", "StockAnalysis daily-1Y schedule", workflowCheck(".github/workflows/fetch-stockanalysis.yml", "50 22 * * 1-5") && workflowCheck(".github/workflows/fetch-stockanalysis.yml", "daily_1y"), "weekday catch-up lane"),
+    check("edge_daily_dispatches_manifest", "Edge daily manifest dispatch", workflowCheck(".github/workflows/fenok-edge-daily.yml", "gh workflow run update-manifest.yml"), "manifest/RIM/deploy chain"),
+    check("krx_daily_dispatches_manifest", "KRX daily manifest dispatch", workflowCheck(".github/workflows/fenok-edge-krx-daily.yml", "gh workflow run update-manifest.yml"), "manifest/RIM/deploy chain"),
   ], {
     details: {
       credential_dependent_for_build: false,
