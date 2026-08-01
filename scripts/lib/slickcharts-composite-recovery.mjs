@@ -564,22 +564,13 @@ export function finalizeSlickchartsCompositeRecovery({
     }
 
     if (providerObservation !== null) {
-      const baselineUnverified = prior.resolution_state === "bootstrap_unverified"
-        || prior.resolution_state === "unavailable";
       const recovering = prior.retry === true || prior.resolution_state === "lkg_primary";
       const priorFloor = prior.provider_observation?.source_floor ?? null;
       const advances = priorFloor !== null && providerObservation.source_floor > priorFloor;
       const priorContentSet = prior.provider_observation?.content_set_sha256 ?? null;
       const contentAdvances = /^[a-f0-9]{64}$/u.test(priorContentSet ?? "")
         && providerObservation.content_set_sha256 !== priorContentSet;
-      if (baselineUnverified && !natural) {
-        restoreSlickchartsCompositeSnapshot({ repoRoot, member, snapshotRoot });
-        index.members[member] = {
-          ...prior,
-          retry: false,
-        };
-        decision = "baseline_requires_natural_schedule_attempt_1";
-      } else if (recovering && (!natural || !advances || !contentAdvances)) {
+      if (recovering && (!natural || !advances || !contentAdvances)) {
         restoreSlickchartsCompositeSnapshot({ repoRoot, member, snapshotRoot });
         index.members[member] = {
           ...prior,
