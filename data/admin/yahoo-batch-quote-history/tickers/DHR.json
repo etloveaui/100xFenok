@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 477,
-      "natural": true,
-      "observed_at": "2026-07-17T00:15:36Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29544227703",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 1008,
+      "natural": true,
+      "observed_at": "2026-08-01T18:28:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30711923637",
+      "schedule": "",
+      "shard": "2/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T00:58:23Z",
+    "fetched_at": "2026-08-01T18:31:53Z",
     "history_as_of": "2026-07-31",
     "path": "data/yf/finance/DHR.json",
-    "payload_sha256": "a5ccc9d72878f820d7243dcfe1db0048f0c9c4280b3ef947409bcf8907d2b820",
+    "payload_sha256": "a2b2deeaa69dbeea7493ac3f3a650536623ec3f430d959ad3ff56a489492f03d",
     "quote_as_of": "2026-07-31T20:03:18Z",
     "source_as_of": "2026-07-31"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 823,
+    "latency_ms": 1008,
     "natural": true,
-    "observed_at": "2026-08-01T00:55:56Z",
+    "observed_at": "2026-08-01T18:28:23Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "30711923637",
+    "schedule": "",
+    "shard": "2/6"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T00:55:56Z",
-    "payload_sha256": "8c1b200706aa21373c6a186c084a1027875f2a4c66e5813044763355b3d23db6",
+    "observed_at": "2026-08-01T18:28:23Z",
+    "payload_sha256": "4c7bf9f22c9003f1b17c64e73c10275d87bc8a7a0494050aed108ef8d8db2b68",
     "quote_as_of": "2026-07-31T20:03:18Z",
     "run_attempt": 1,
-    "run_id": "30674982988",
+    "run_id": "30711923637",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "DHR",
-  "updated_at": "2026-08-01T00:55:56Z"
+  "updated_at": "2026-08-01T18:28:23Z"
 }
