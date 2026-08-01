@@ -1,0 +1,42 @@
+name: Writer Queue Canary
+
+on:
+  workflow_dispatch:
+    inputs:
+      hold_seconds:
+        description: Queue hold duration in seconds (15-60)
+        required: true
+        default: 30
+        type: number
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fenok-data-writer-${{ github.ref }}
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  hold-queue-slot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Record identity and hold queue slot
+        shell: bash
+        env:
+          HOLD_SECONDS: ${{ inputs.hold_seconds }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$HOLD_SECONDS" =~ ^[0-9]+$ ]]; then
+            echo "hold_seconds must be an integer" >&2
+            exit 1
+          fi
+          if (( HOLD_SECONDS < 15 || HOLD_SECONDS > 60 )); then
+            echo "hold_seconds must be between 15 and 60" >&2
+            exit 1
+          fi
+          echo "run_id=${{ github.run_id }} run_attempt=${{ github.run_attempt }} ref=${{ github.ref }} sha=${{ github.sha }}"
+          sleep "$HOLD_SECONDS"
+          echo "writer queue canary completed successfully"
+          exit 0

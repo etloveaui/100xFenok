@@ -26,6 +26,7 @@ assert.equal(policy.queue_mode, "max", "loss-intolerant writers use GitHub's dee
 assert.equal(policy.canonical_branch, "main", "writer workflows are observed only on main");
 assert.equal(policy.default_observation_mode, "workflow_run", "other writers retain workflow-level observation");
 assert.ok(Array.isArray(policy.workflows) && policy.workflows.length > 10, "writer workflow list is explicit");
+assert.equal(policy.workflows.length, 27, "policy covers 26 producers plus the manual canary");
 assert.equal(new Set(policy.workflows).size, policy.workflows.length, "writer workflow list has no duplicates");
 assert.equal(policy.api.runs_per_page, 100, "API page size stays within the REST limit");
 assert.ok(policy.api.max_pages >= 1, "API query depth is bounded");
@@ -59,6 +60,29 @@ for (const file of policy.workflows) {
     /group:\s*(?:fenok-data-writer-refs\/heads\/main|fenok-data-writer-\$\{\{ github\.ref \}\})/,
     `${file} must declare the canonical writer group exactly once`,
   );
+}
+{
+  const canary = fs.readFileSync(path.join(workflowsDir, "writer-queue-canary.yml"), "utf8");
+  const triggerBlock = canary.match(/^on:\n(?<body>[\s\S]*?)^permissions:/m)?.groups?.body ?? "";
+  const jobsBlock = canary.match(/^jobs:\n(?<body>[\s\S]*)$/m)?.groups?.body ?? "";
+  const jobNames = [...jobsBlock.matchAll(/^  ([a-z][a-z0-9-]*):\s*$/gm)]
+    .map((match) => match[1]);
+  assert.deepEqual(jobNames, ["hold-queue-slot"], "canary has exactly one job");
+  assert.match(triggerBlock, /^  workflow_dispatch:/m, "canary is manually dispatchable");
+  assert.doesNotMatch(
+    triggerBlock,
+    /^  (?:push|pull_request|schedule|workflow_run):/m,
+    "canary must remain manual-only",
+  );
+  assert.match(triggerBlock, /hold_seconds:[\s\S]*?default: 30[\s\S]*?type: number/);
+  assert.match(canary, /^permissions:\n  contents: read$/m, "canary permissions are read-only");
+  assert.equal((canary.match(/runs-on: ubuntu-latest/g) ?? []).length, 1);
+  assert.match(canary, /HOLD_SECONDS < 15 \|\| HOLD_SECONDS > 60/, "hold is bounded to 15..60 seconds");
+  assert.match(canary, /github\.run_id[\s\S]*github\.run_attempt[\s\S]*github\.ref[\s\S]*github\.sha/);
+  assert.match(canary, /sleep "\$HOLD_SECONDS"/, "canary holds its queue slot for the requested duration");
+  assert.doesNotMatch(canary, /^\s*uses:/m, "canary uses no checkout, artifact, or cache actions");
+  assert.doesNotMatch(canary, /\b(?:secrets|git push|wrangler|deploy)\b/i, "canary performs no privileged operation");
+  assert.doesNotMatch(canary, /\bwrite\b/i, "canary declares no write capability");
 }
 {
   const stockanalysis = fs.readFileSync(path.join(workflowsDir, "fetch-stockanalysis.yml"), "utf8");
