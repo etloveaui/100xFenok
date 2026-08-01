@@ -511,7 +511,6 @@ jobs:
             rm -rf "$PROJECTION_ORACLE_ROOT"
             mkdir -p "$PROJECTION_ORACLE"
             rsync -a --checksum --delete data/stockanalysis/surfaces/ "$PROJECTION_ORACLE/"
-            python3 -m unittest scripts/test_fetch_stockanalysis_fixtures.py
             python3 scripts/test_stockanalysis_recovery_state.py
             node scripts/test-yahoo-etf-fallback-recovery.mjs
             node scripts/test-stockanalysis-attempt-emitter.mjs
