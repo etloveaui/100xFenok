@@ -14,18 +14,36 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-import {
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const HERMETIC_BOOTSTRAP = path.join(__dirname, "lib", "kpi-fixture-hermetic-bootstrap.mjs");
+const HERMETIC_GUARD = path.join(__dirname, "lib", "kpi-fixture-hermetic-fs-guard.mjs");
+
+if (process.env.KPI_HERMETIC_BOOTSTRAPPED !== "1") {
+  try {
+    execFileSync(process.execPath, [
+      "--import",
+      HERMETIC_BOOTSTRAP,
+      fileURLToPath(import.meta.url),
+      ...process.argv.slice(2),
+    ], { env: { ...process.env }, stdio: "inherit" });
+    process.exit(0);
+  } catch (error) {
+    process.exit(error.status ?? 1);
+  }
+}
+
+const {
   projectPublicKpi,
   projectRuntime,
   PUBLIC_RUNTIME_DENY_KEYS,
-} from "./lib/kpi-runtime-projection.mjs";
-import {
+} = await import("./lib/kpi-runtime-projection.mjs");
+const {
   classifyRuntimeSlotRecoveries,
   classifyRuntimeSlots,
   publicationGateForRuntime,
   validateCronDeferrals,
-} from "./lib/kpi-runtime-slots.mjs";
-import {
+} = await import("./lib/kpi-runtime-slots.mjs");
+const {
   evaluateSlaAge,
   slaStatusForAge,
   classifyProductSurface,
@@ -44,26 +62,26 @@ import {
   projectRequiredSourceStatuses,
   validateProducerRecoveryAttempt,
   RECOVERY_STATE_SOURCES,
-} from "./build-fenok-data-health-kpi.mjs";
-import { SOURCE_SLA_DEF, REQUIRED_SURFACE_IDS, SLICKCHARTS_DELIVERY_GROUPS, TRACKED_CRONS, CADENCE } from "./lib/kpi-contract-constants.mjs";
-import { ETF_CORE_DAILY_BASKET_CONFIG } from "./build-fenok-etf-core-daily-basket.mjs";
-import {
+} = await import("./build-fenok-data-health-kpi.mjs");
+const { SOURCE_SLA_DEF, REQUIRED_SURFACE_IDS, SLICKCHARTS_DELIVERY_GROUPS, TRACKED_CRONS, CADENCE } = await import("./lib/kpi-contract-constants.mjs");
+const { ETF_CORE_DAILY_BASKET_CONFIG } = await import("./build-fenok-etf-core-daily-basket.mjs");
+const {
   checkV2Runtime,
   checkSourceSla,
   checkPublicProjection,
   checkDetectionFloorLane,
   checkRecoveryStateSources,
   checkSourceStatusProjections,
-} from "../100xfenok-next/scripts/check-fenok-data-health-kpi.mjs";
-import { projectFenokDataHealthKpiPublicMirror } from "../100xfenok-next/sync-static-overrides.mjs";
-import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
-import { buildFetchCronAttemptCoverage } from "./build-data-supply-detection-floor.mjs";
-import { deriveProductSurfaceStampEvidence } from "./lib/product-surface-stamp-v2.mjs";
-import { ProducerLkgStateStore } from "./lib/producer-lkg-state.mjs";
-import { checkKpiRecoverySourcesAgainstRegistry } from "./check-lane-registry-kpi.mjs";
-import { bootstrapSlickchartsCompositeIndex } from "./lib/slickcharts-composite-recovery.mjs";
+} = await import("../100xfenok-next/scripts/check-fenok-data-health-kpi.mjs");
+const { projectFenokDataHealthKpiPublicMirror } = await import("../100xfenok-next/sync-static-overrides.mjs");
+const { DATA_SUPPLY_DETECTION_CONFIG } = await import("./lib/data-supply-detection-config.mjs");
+const { buildFetchCronAttemptCoverage } = await import("./build-data-supply-detection-floor.mjs");
+const { deriveProductSurfaceStampEvidence } = await import("./lib/product-surface-stamp-v2.mjs");
+const { ProducerLkgStateStore } = await import("./lib/producer-lkg-state.mjs");
+const { checkKpiRecoverySourcesAgainstRegistry } = await import("./check-lane-registry-kpi.mjs");
+const { bootstrapSlickchartsCompositeIndex } = await import("./lib/slickcharts-composite-recovery.mjs");
+const { registerKpiFixtureRoot } = await import("./lib/kpi-fixture-hermetic-fs-guard.mjs");
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BUILDER = path.join(__dirname, "build-fenok-data-health-kpi.mjs");
 const CHECKER = path.join(__dirname, "..", "100xfenok-next", "scripts", "check-fenok-data-health-kpi.mjs");
 const UPDATE_MANIFEST_WORKFLOW = path.join(__dirname, "..", ".github", "workflows", "update-manifest.yml");
@@ -73,7 +91,28 @@ const KPI_REL = path.join("admin", "fenok-data-health-kpi.json");
 const DETECTION_BASELINE_REPORT = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report;
 const DETECTION_CALENDAR_FIXTURE = JSON.parse(fs.readFileSync(DETECTION_CALENDARS, "utf8"));
 const REPO_ROOT = path.resolve(__dirname, "..");
+const HERMETIC_FIXTURE_ROOT = registerKpiFixtureRoot(process.env.KPI_HERMETIC_FIXTURE_ROOT);
 const TEMP_ROOTS = new Set();
+
+for (const livePath of [
+  path.join(REPO_ROOT, "data", "slickcharts", "gainers.json"),
+  path.join(REPO_ROOT, "data", "admin", "yahoo-hourly-ticker", "index.json"),
+]) {
+  assert.throws(
+    () => fs.readFileSync(livePath, "utf8"),
+    (error) => error?.code === "ERR_KPI_FIXTURE_LIVE_DATA_READ",
+    `live repository data read must fail closed: ${livePath}`,
+  );
+}
+for (const fixturePath of [
+  path.join(HERMETIC_FIXTURE_ROOT, "data", "slickcharts", "gainers.json"),
+  path.join(HERMETIC_FIXTURE_ROOT, "data", "admin", "yahoo-hourly-ticker", "index.json"),
+]) {
+  assert.doesNotThrow(
+    () => JSON.parse(fs.readFileSync(fixturePath, "utf8")),
+    `declared fixture data read must succeed: ${fixturePath}`,
+  );
+}
 
 function cleanupTempRoots() {
   let failed = false;
@@ -94,7 +133,7 @@ process.once("exit", cleanupTempRoots);
 
 function readySlickchartsCompositeIndex(
   generatedAt = "2026-07-14T11:00:00Z",
-  repoRoot = REPO_ROOT,
+  repoRoot = HERMETIC_FIXTURE_ROOT,
 ) {
   const run = {
     run_id: "slickcharts-fixture",
@@ -1087,7 +1126,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
 
   const slickchartsLiveRoot = mkTmp("slickcharts-live-mutation");
   fs.cpSync(
-    path.join(REPO_ROOT, "data", "slickcharts"),
+    path.join(HERMETIC_FIXTURE_ROOT, "data", "slickcharts"),
     path.join(slickchartsLiveRoot, "data", "slickcharts"),
     { recursive: true },
   );
@@ -1464,12 +1503,16 @@ function baseEnv() {
     if (k.startsWith("GITHUB_") || k.startsWith("KPI_")) continue;
     env[k] = v;
   }
+  const guardOption = `--import=${HERMETIC_GUARD}`;
+  env.NODE_OPTIONS = [env.NODE_OPTIONS, guardOption].filter(Boolean).join(" ");
+  env.KPI_HERMETIC_FIXTURE_ROOTS = [HERMETIC_FIXTURE_ROOT, ...TEMP_ROOTS].join(path.delimiter);
   return env;
 }
 
 function mkTmp(name) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), `kpi-v2-${name}-`));
   TEMP_ROOTS.add(dir);
+  registerKpiFixtureRoot(dir);
   fs.mkdirSync(path.join(dir, "data", "admin"), { recursive: true });
   fs.mkdirSync(path.join(dir, "data", "computed", "rim-index"), { recursive: true });
   fs.mkdirSync(path.join(dir, "public", "data", "admin"), { recursive: true });
@@ -1488,7 +1531,7 @@ function writeReadyRecoveryIndex(tmp, relPath, laneId, keys, generatedAt = "2026
 function writeReadySlickchartsComposite(
   tmp,
   generatedAt = "2026-07-14T11:00:00Z",
-  slickchartsRepoRoot = REPO_ROOT,
+  slickchartsRepoRoot = HERMETIC_FIXTURE_ROOT,
 ) {
   writeJson(
     path.join(tmp, "data", "admin", "slickcharts-composite-recovery", "index.json"),
@@ -1497,7 +1540,7 @@ function writeReadySlickchartsComposite(
   assert.equal(
     fs.existsSync(path.join(tmp, "data", "slickcharts")),
     false,
-    "SlickCharts fixtures must reuse the read-only repository tree instead of copying it per case",
+    "SlickCharts fixtures must reuse the declared synthetic fixture tree instead of copying it per case",
   );
 }
 
@@ -1597,7 +1640,7 @@ function seedFinraOccLedger(tmp, { finra, occ }) {
 
 function runBuilder(tmp, env, nowIso, {
   expectExit = 0,
-  slickchartsRepoRoot = REPO_ROOT,
+  slickchartsRepoRoot = HERMETIC_FIXTURE_ROOT,
 } = {}) {
   let status = 0;
   try {
@@ -1625,7 +1668,7 @@ function runBuilder(tmp, env, nowIso, {
 function runChecker(tmp, nowIso, {
   strict = false,
   context = "deploy",
-  slickchartsRepoRoot = REPO_ROOT,
+  slickchartsRepoRoot = HERMETIC_FIXTURE_ROOT,
 } = {}) {
   const args = [
     CHECKER,
@@ -1876,7 +1919,7 @@ console.log("# KPI v2 runtime self-proof fixtures");
   const tmp = mkTmp("detection-floor-live-installed");
   const slickchartsLiveRoot = mkTmp("detection-floor-live-mutation");
   fs.cpSync(
-    path.join(REPO_ROOT, "data", "slickcharts"),
+    path.join(HERMETIC_FIXTURE_ROOT, "data", "slickcharts"),
     path.join(slickchartsLiveRoot, "data", "slickcharts"),
     { recursive: true },
   );
@@ -3902,7 +3945,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     for (const badPending of [{ pending_since: 123, ever_stamped: false }, { pending_since: "2026-07-01T00:00:00Z", ever_stamped: "yes" }, { pending_since: "garbage", ever_stamped: false }]) {
       const tmp = mkCorrupt(badPending);
       let status = 0;
-      try { execFileSync("node", [BUILDER, "--data-root", tmp, "--slickcharts-repo-root", REPO_ROOT], { env: { ...baseEnv(), KPI_FAKE_NOW: now, GITHUB_EVENT_NAME: "push", GITHUB_WORKFLOW_REF: "o/r/.github/workflows/deploy-worker.yml@refs/heads/main", GITHUB_RUN_ID: "pc", GITHUB_RUN_ATTEMPT: "1" }, stdio: ["ignore", "pipe", "pipe"] }); }
+      try { execFileSync("node", [BUILDER, "--data-root", tmp, "--slickcharts-repo-root", HERMETIC_FIXTURE_ROOT], { env: { ...baseEnv(), KPI_FAKE_NOW: now, GITHUB_EVENT_NAME: "push", GITHUB_WORKFLOW_REF: "o/r/.github/workflows/deploy-worker.yml@refs/heads/main", GITHUB_RUN_ID: "pc", GITHUB_RUN_ATTEMPT: "1" }, stdio: ["ignore", "pipe", "pipe"] }); }
       catch (e) { status = e.status ?? 1; }
       assert.equal(status, 1, `corrupt prior v2 pending ${JSON.stringify(badPending)} -> build hard-fails`);
     }
@@ -4622,7 +4665,7 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   // source path must flow into the artifact's generated_at (vs the canonical
   // slickcharts store), proving the seam reaches the projection end to end.
   const canonicalSox = readySlickchartsCompositeIndex("2026-07-14T11:00:00Z");
-  const injectedSox = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "data", "admin", "yahoo-hourly-ticker", "index.json"), "utf8"));
+  const injectedSox = JSON.parse(fs.readFileSync(path.join(HERMETIC_FIXTURE_ROOT, "data", "admin", "yahoo-hourly-ticker", "index.json"), "utf8"));
   const injectedSources = Object.freeze({
     ...RECOVERY_STATE_SOURCES,
     nonstandard: Object.freeze({
