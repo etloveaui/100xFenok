@@ -163,6 +163,14 @@ jobs:
           node 100xfenok-next/scripts/sync-public-data.mjs --write --etf-shards-only
           python3 scripts/validate-slickcharts-integrity.py
           diff -qr data/slickcharts 100xfenok-next/public/data/slickcharts
+          # The surfaces mirror sat two producer cycles behind its source without
+          # anything noticing: the producer's own run of the surface contract
+          # overrides the comparison target with a copy of the source, so its
+          # byte-equality assertion cannot fail there. Prove the mirror where it is
+          # actually produced, exactly as SlickCharts already does above. Scoped to
+          # surfaces because `etfs/` is deliberately shard-only and excluded from
+          # this mirror.
+          diff -qr data/stockanalysis/surfaces 100xfenok-next/public/data/stockanalysis/surfaces
 
       - name: Export computed signals
         run: node scripts/export-computed-signals.mjs
@@ -309,6 +317,10 @@ jobs:
             node 100xfenok-next/scripts/sync-public-data.mjs --write --etf-shards-only
             python3 scripts/validate-slickcharts-integrity.py
             diff -qr data/slickcharts 100xfenok-next/public/data/slickcharts
+            # Same mirror proof as the initial path; a retry that republishes must
+            # be held to the identical contract. Scoped to surfaces: `etfs/` is
+            # shard-only and excluded from this mirror by design.
+            diff -qr data/stockanalysis/surfaces 100xfenok-next/public/data/stockanalysis/surfaces
             node scripts/export-computed-signals.mjs
             node scripts/build-phase2-closeout-indexes.mjs
             node scripts/build-fenok-signals.mjs

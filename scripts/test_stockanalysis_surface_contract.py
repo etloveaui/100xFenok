@@ -150,6 +150,35 @@ class StockanalysisSurfaceContractTest(unittest.TestCase):
             "the snapshot root must be cleared BEFORE the shard projection re-runs",
         )
 
+        # The surfaces mirror drifted two producer cycles behind its source and
+        # nothing noticed: the only CI run of this contract overrides the
+        # comparison target with a copy of the source, so its byte-equality
+        # assertion cannot fail there. SlickCharts already proves the mirror
+        # immediately after projection; StockAnalysis surfaces must too. Scoped to
+        # surfaces on purpose -- `etfs/` is deliberately shard-only and excluded
+        # from this mirror, so a whole-tree diff would fail by contract.
+        surfaces_diff = (
+            "diff -qr data/stockanalysis/surfaces "
+            "100xfenok-next/public/data/stockanalysis/surfaces"
+        )
+        for label, lines in (("initial", initial_lines), ("retry", retry_lines)):
+            with self.subTest(path=label):
+                self.assertEqual(
+                    lines.count(surfaces_diff),
+                    1,
+                    f"the {label} path must verify the surfaces mirror exactly once",
+                )
+                self.assertLess(
+                    lines.index(materialize),
+                    lines.index(surfaces_diff),
+                    f"the {label} surfaces check must run AFTER the projection it verifies",
+                )
+        self.assertNotIn(
+            "diff -qr data/stockanalysis 100xfenok-next/public/data/stockanalysis",
+            projection_workflow,
+            "a whole-tree stockanalysis diff would fail by contract; etfs/ is shard-only",
+        )
+
     # NOTE: test_surface_catalog_labels_cover_all_index_groups removed — it validated
     # SurfaceCatalogCard.tsx groupLabel coverage, but that public diagnostic card was
     # intentionally removed in ef5227996. The catalog/groupLabel surface no longer exists.
