@@ -563,7 +563,25 @@ const pathBearingProjection = buildPublicRimMirror({
   lowercase_metric: "selling, general & admin",
 });
 assert.equal(pathBearingProjection.path, "private_path_redacted");
-assert.equal(pathBearingProjection.note, "private_path_redacted");
+// Redaction is PATH-only. The live payload leaked `admin/fenok-edge-korea-krx-daily-index.json`
+// twice as a bare path, which is what must disappear. Prose that merely explains the
+// policy is documentation, not an exposure: redacting it removes the reader's only
+// explanation of why raw rows are absent, while hiding nothing.
+assert.equal(
+  pathBearingProjection.note,
+  "Raw KRX rows stay private/admin; private path references are not public.",
+  "prose describing the policy must survive redaction",
+);
+assert.equal(
+  buildPublicRimMirror({ p: "data/admin/fenok-edge-korea-krx-daily-index.json" }).p,
+  "private_path_redacted",
+  "a nested admin path is still redacted",
+);
+assert.equal(
+  buildPublicRimMirror({ s: "private path references are not public" }).s,
+  "private path references are not public",
+  "the bare phrase 'private path' is prose and must survive",
+);
 assert.equal(pathBearingProjection.metric, "Selling, General & Admin", "finance metric words are not redacted");
 assert.equal(pathBearingProjection.lowercase_metric, "selling, general & admin", "lowercase finance metric words are not redacted");
 const projectedText = JSON.stringify(pathBearingProjection);

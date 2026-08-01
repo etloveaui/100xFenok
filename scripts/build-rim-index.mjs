@@ -273,6 +273,18 @@ function writeJson(relPath, payload, roots) {
   }
 }
 
+// A private artifact reference is a PATH, and a path has no whitespace. Matching on
+// the words instead let the rule swallow its own documentation: strings like
+// "Raw KRX rows stay private/admin" explain why raw rows are absent and expose
+// nothing, while the actual leak was a bare `admin/....json` published twice. Keep
+// the segment anchors so `admin/x.json` and `data/admin/x.json` both redact.
+const PRIVATE_PATH_SEGMENT = /(?:^|\/)(?:_private|admin)\//i;
+
+function isPrivateArtifactPath(value) {
+  if (/\s/.test(value)) return false;
+  return PRIVATE_PATH_SEGMENT.test(value);
+}
+
 function sanitizePublicRimMirror(node) {
   if (Array.isArray(node)) {
     return node.map((item) => sanitizePublicRimMirror(item));
@@ -282,7 +294,7 @@ function sanitizePublicRimMirror(node) {
       Object.entries(node).map(([key, value]) => [key, sanitizePublicRimMirror(value)]),
     );
   }
-  if (typeof node === "string" && /_private\/|(?:^|\/)admin\/|private\/admin|private path/i.test(node)) {
+  if (typeof node === "string" && isPrivateArtifactPath(node)) {
     return "private_path_redacted";
   }
   return node;
@@ -295,7 +307,7 @@ export function buildPublicRimMirror(payload) {
       raw_public: false,
       raw_rows_included: false,
       private_artifact_paths_included: false,
-      private_path_redaction: "private/admin path-bearing strings are replaced with private_path_redacted",
+      private_path_redaction: "whitespace-free strings containing a _private/ or admin/ path segment are replaced with private_path_redacted; prose describing the policy is preserved",
     },
   };
 }
