@@ -111,6 +111,7 @@ class StockanalysisSurfaceContractTest(unittest.TestCase):
             "delete": True,
             "required": True,
             "trailing_slash": True,
+            "excludes": ["etfs"],
         }])
 
         materialize = "node scripts/materialize-update-manifest-routes.mjs --all"
