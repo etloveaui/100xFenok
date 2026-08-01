@@ -534,6 +534,9 @@ jobs:
               --artifact-root "$ARTIFACT_ROOT"
             python3 scripts/resolve_etf_detail_candidates.py \
               --artifact-manifest "$ARTIFACT_ROOT/manifest.json"
+            scripts/stage-lane-manifest.sh \
+              --workflow .github/workflows/fetch-stockanalysis.yml \
+              --stage always_if_exists
             (
               cd 100xfenok-next
               npm run build:data-supply-public

@@ -437,12 +437,15 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         )
         publish = workflow.split("  publish-stockanalysis:\n", 1)[1]
         resolve_call = "python3 scripts/resolve_etf_detail_candidates.py"
+        stage_call = "scripts/stage-lane-manifest.sh"
         build_call = "npm run build:data-supply-public"
         reconcile_call = "npm run reconcile:data-supply-public-mirror"
         self.assertNotIn(resolve_call, workflow.split("  publish-stockanalysis:\n", 1)[0])
         self.assertIn("group: fenok-data-writer-refs/heads/main", publish)
         self.assertLess(publish.index("audit-stage"), publish.index(resolve_call))
-        self.assertLess(publish.index(resolve_call), publish.index(build_call))
+        post_resolver_stage = publish.index(stage_call, publish.index(resolve_call))
+        self.assertLess(publish.index(resolve_call), post_resolver_stage)
+        self.assertLess(post_resolver_stage, publish.index(build_call))
         self.assertLess(publish.index(build_call), publish.index(reconcile_call))
         self.assertLess(publish.index(reconcile_call), publish.index("git commit"))
         self.assertNotIn("fetched_at", (SCRIPT_DIR / "resolve_etf_detail_candidates.py").read_text())

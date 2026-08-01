@@ -364,6 +364,106 @@ class PublicDataSupplyMaterializerTests(unittest.TestCase):
             ).write_canonical(generated_at="2026-07-11T02:00:00Z")
         self.assertEqual((self.fixture.canonical_root / "index.json").read_bytes(), baseline)
 
+    def test_stockanalysis_lane_stage_tracks_resolver_state_before_materialization(self):
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                "user.name=materializer-fixture",
+                "-c",
+                "user.email=fixture@example.invalid",
+                "commit",
+                "-qm",
+                "fixture baseline",
+            ],
+            cwd=self.fixture.repo,
+            check=True,
+        )
+        self.fixture.transaction_id = "3" * 64
+        self.fixture._seed_selection(
+            "FRESH",
+            "fresh_fallback",
+            "provider_object",
+            "2026-07-12T00:00:00Z",
+        )
+        self.fixture._write_state_files()
+        observation_history = self.fixture.state_root / "history/observations/2026-07-12.jsonl"
+        resolution_history = self.fixture.state_root / "history/resolutions/2026-07-12.jsonl"
+        observation_history.parent.mkdir(parents=True, exist_ok=True)
+        resolution_history.parent.mkdir(parents=True, exist_ok=True)
+        observation_history.write_text('{"fixture":"observation"}\n', encoding="utf-8")
+        resolution_history.write_text('{"fixture":"resolution"}\n', encoding="utf-8")
+
+        materializer, _ = self.fixture.materializer()
+        with self.assertRaisesRegex(MaterializationError, "Git-tracked"):
+            materializer.write_canonical(
+                generated_at="2026-07-12T01:00:00Z",
+                bootstrap_enrollment=True,
+            )
+
+        for relative in (
+            "data/stockanalysis",
+            "data/yf/etf-details",
+            "data/admin/stockanalysis-recovery",
+        ):
+            (self.fixture.repo / relative).mkdir(parents=True, exist_ok=True)
+        lane_manifest = SCRIPT_DIR.parent / "data/admin/lane-commit-manifest.json"
+        registry_digest = json.loads(lane_manifest.read_text(encoding="utf-8"))["registry_digest"]
+        subprocess.run(
+            [
+                "bash",
+                str(SCRIPT_DIR / "stage-lane-manifest.sh"),
+                "--repo-root",
+                str(self.fixture.repo),
+                "--manifest",
+                str(lane_manifest),
+                "--workflow",
+                ".github/workflows/fetch-stockanalysis.yml",
+                "--stage",
+                "always_if_exists",
+                "--expected-digest",
+                registry_digest,
+            ],
+            cwd=self.fixture.repo,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        generation_root = (
+            f"data/admin/data-supply-state/v1/domains/etf_detail/generations/"
+            f"{self.fixture.transaction_id}"
+        )
+        provider_object = (
+            "data/admin/data-supply-state/v1/"
+            + self.fixture.current["FRESH"]["payload_ref"]["path"]
+        )
+        expected_resolver_paths = {
+            "data/admin/data-supply-state/v1/domains/etf_detail/active.json",
+            *(f"{generation_root}/{name}.json" for name in ("manifest", "current", "lkg", "recovery", "decision")),
+            provider_object,
+            str(observation_history.relative_to(self.fixture.repo)),
+            str(resolution_history.relative_to(self.fixture.repo)),
+        }
+        cached = set(
+            subprocess.run(
+                ["git", "diff", "--cached", "--name-only"],
+                cwd=self.fixture.repo,
+                check=True,
+                stdout=subprocess.PIPE,
+                text=True,
+            ).stdout.splitlines()
+        )
+        self.assertEqual(cached, expected_resolver_paths)
+
+        materializer.write_canonical(
+            generated_at="2026-07-12T01:00:00Z",
+            bootstrap_enrollment=True,
+        )
+        (self.fixture.repo / provider_object).unlink()
+        with self.assertRaisesRegex(MaterializationError, "immutable payload.*missing"):
+            materializer.build_projection(generated_at="2026-07-12T02:00:00Z")
+
     def test_privacy_tokens_and_data_supply_collision_fail_before_write(self):
         selection = self.fixture.current["FRESH"]
         original_selection = copy.deepcopy(selection)
