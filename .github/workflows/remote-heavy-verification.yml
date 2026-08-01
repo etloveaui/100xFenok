@@ -1,0 +1,60 @@
+name: Remote Heavy Verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: Closed heavy verification suite
+        required: true
+        type: choice
+        options:
+          - runtime-build
+          - static-build
+          - cloudflare-build
+          - contracts
+      revision:
+        description: Exact origin/main commit to verify
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remote-heavy-verification-${{ github.ref }}-${{ inputs.suite }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: 100xfenok-next
+    steps:
+      - name: Checkout requested revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.revision }}
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run closed verification suite
+        env:
+          SUITE: ${{ inputs.suite }}
+        run: |
+          set -euo pipefail
+          case "$SUITE" in
+            runtime-build) npm run build:runtime:steps;;
+            static-build) npm run build:static:steps;;
+            cloudflare-build) npm run cf:build:steps;;
+            contracts) npm run qa:registry-contracts;;
+            *) echo "unsupported suite" >&2; exit 64;;
+          esac
