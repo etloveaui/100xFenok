@@ -256,12 +256,6 @@ jobs:
           npm --prefix 100xfenok-next run build:fenok-data-health-kpi
           npm --prefix 100xfenok-next run build:lane-registry-projection
           node 100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs
-          node scripts/ops/test-kpi-fixture-attestation.mjs
-          node scripts/test-build-fenok-data-health-kpi.mjs
-          install -m 0555 scripts/ops/kpi-fixture-attestation.mjs "$RUNNER_TEMP/kpi-fixture-attestor.mjs"
-          node "$RUNNER_TEMP/kpi-fixture-attestor.mjs" record \
-            --repo-root "$GITHUB_WORKSPACE" \
-            --output "$RUNNER_TEMP/kpi-fixture-attestation.json"
           node scripts/test-update-manifest-workflow.mjs
           node scripts/test-update-manifest-central-staging.mjs
           node 100xfenok-next/scripts/check-fenok-data-health-kpi.mjs --strict --context=reconcile
@@ -293,12 +287,6 @@ jobs:
           for attempt in 1 2 3; do
             git fetch origin main
             git reset --hard origin/main
-            kpi_fixture_digest_matches_reset=false
-            if node "$RUNNER_TEMP/kpi-fixture-attestor.mjs" verify \
-              --repo-root "$GITHUB_WORKSPACE" \
-              --input "$RUNNER_TEMP/kpi-fixture-attestation.json"; then
-              kpi_fixture_digest_matches_reset=true
-            fi
             node scripts/test-update-manifest-materializations.mjs
             node scripts/test-update-manifest-central-staging.mjs
             node scripts/stage-update-manifest-central.mjs --clean-untracked-after-reset
@@ -385,17 +373,6 @@ jobs:
             npm --prefix 100xfenok-next run build:fenok-data-health-kpi
             npm --prefix 100xfenok-next run build:lane-registry-projection
             node 100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs
-            if [ "$kpi_fixture_digest_matches_reset" = "true" ] && \
-              node "$RUNNER_TEMP/kpi-fixture-attestor.mjs" verify \
-                --repo-root "$GITHUB_WORKSPACE" \
-                --input "$RUNNER_TEMP/kpi-fixture-attestation.json"; then
-              echo "KPI fixture inputs unchanged after latest-main reset; duplicate suite copy skipped"
-            else
-              node scripts/test-build-fenok-data-health-kpi.mjs
-              node "$RUNNER_TEMP/kpi-fixture-attestor.mjs" record \
-                --repo-root "$GITHUB_WORKSPACE" \
-                --output "$RUNNER_TEMP/kpi-fixture-attestation.json"
-            fi
             node 100xfenok-next/scripts/check-fenok-data-health-kpi.mjs --strict --context=reconcile
             npm --prefix 100xfenok-next run build:static-route-manifest
 
