@@ -79,8 +79,22 @@ const ISO_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
 const LANE_SOURCE_MAP = Object.freeze({
   // No canonical source-SLA row exists for these six boundaries today. Keep
   // the map explicit so a future source contract is an intentional change.
-  yahoo_ticker_macro: { source_id: null, no_source_reason: "provider source SLA is not declared" },
-  sentiment: { source_id: null, no_source_reason: "provider source SLA is not declared" },
+  yahoo_ticker_macro: {
+    source_id: null,
+    source_artifact: "data/admin/yahoo-hourly-ticker/index.json",
+    source_artifact_keys_path: ["keys", "*"],
+    source_artifact_dir: "data/admin/yahoo-hourly-ticker/keys",
+    source_date_path: ["current", "source_as_of"],
+    source_date_reason: "yahoo_hourly_ticker.current.source_as_of.oldest",
+    no_source_reason: "yahoo hourly ticker current source_as_of is unavailable",
+  },
+  sentiment: {
+    source_id: null,
+    source_artifact: "data/admin/sentiment/index.json",
+    source_date_path: ["items", "*", "current", "source_as_of"],
+    source_date_reason: "sentiment_index.items.current.source_as_of.oldest",
+    no_source_reason: "sentiment current source_as_of is unavailable",
+  },
   admin_live_voice_logs: { source_id: null, no_source_reason: "local runtime has no repository source stamp" },
   mona_production_study_state: { source_id: null, no_source_reason: "owner SSOT runtime has no repository source stamp" },
   mona_vnext_kv: { source_id: null, no_source_reason: "KV runtime has no repository source stamp" },
@@ -338,14 +352,42 @@ function kpiLaneFor(lane, context) {
   return (context.kpi?.lanes || []).find((candidate) => candidate?.id === lane.id) || null;
 }
 
-function sourceArtifactFor(lane, mapping, context) {
+function sourceArtifactsFor(lane, mapping, context) {
   const provided = context.sourceArtifacts;
   if (isObject(provided) && Object.prototype.hasOwnProperty.call(provided, lane.id)) {
-    return provided[lane.id];
+    const value = provided[lane.id];
+    return Array.isArray(value) ? value : [value];
+  }
+  if (mapping.source_artifact_keys_path && mapping.source_artifact_dir) {
+    const index = readJson(path.join(context.repoRoot, mapping.source_artifact));
+    const keys = collectSourceDateValues(index, mapping.source_artifact_keys_path)
+      .filter((value) => typeof value === "string" && value.length > 0);
+    return keys
+      .map((key) => readJson(path.join(context.repoRoot, mapping.source_artifact_dir, key)))
+      .filter(Boolean);
   }
   return mapping.source_artifact
-    ? readJson(path.join(context.repoRoot, mapping.source_artifact))
-    : null;
+    ? [readJson(path.join(context.repoRoot, mapping.source_artifact))]
+    : [];
+}
+
+function collectSourceDateValues(value, pathSegments) {
+  if (pathSegments.length === 0) return [value];
+  if (value === null || value === undefined) return [];
+  const [segment, ...rest] = pathSegments;
+  if (segment === "*") {
+    if (!isObject(value) && !Array.isArray(value)) return [];
+    return Object.values(value).flatMap((child) => collectSourceDateValues(child, rest));
+  }
+  return collectSourceDateValues(value?.[segment], rest);
+}
+
+function oldestSourceDate(values) {
+  const valid = values
+    .map((value) => safeIso(value))
+    .filter(Boolean)
+    .sort((a, b) => Date.parse(a) - Date.parse(b));
+  return valid[0] || null;
 }
 
 function buildSourceState(lane, context, kpiLane) {
@@ -353,10 +395,12 @@ function buildSourceState(lane, context, kpiLane) {
   const sourceSla = mapping.source_id
     ? (context.kpi?.source_sla || []).find((row) => row?.source_id === mapping.source_id) || null
     : null;
-  const sourceArtifact = sourceArtifactFor(lane, mapping, context);
+  const sourceArtifacts = sourceArtifactsFor(lane, mapping, context);
   const artifactSourceDate = mapping.source_date_field
-    ? safeIso(sourceArtifact?.[mapping.source_date_field])
-    : null;
+    ? oldestSourceDate(sourceArtifacts.map((artifact) => artifact?.[mapping.source_date_field]))
+    : Array.isArray(mapping.source_date_path)
+      ? oldestSourceDate(sourceArtifacts.flatMap((artifact) => collectSourceDateValues(artifact, mapping.source_date_path)))
+      : null;
   const sourceDate = mapping.source_artifact
     ? artifactSourceDate
     : safeIso(kpiLane?.as_of) || null;

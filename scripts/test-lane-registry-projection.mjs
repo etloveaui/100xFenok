@@ -116,6 +116,19 @@ const controlProjection = buildLaneRegistryProjection(LANE_REGISTRY, {
     ],
   },
   sourceArtifacts: {
+    yahoo_ticker_macro: [
+      { current: { source_as_of: "2026-07-31T20:00:00.000Z" } },
+      { current: { source_as_of: "2026-07-31T20:00:00.000Z" } },
+    ],
+    sentiment: {
+      items: {
+        cnn: { current: { source_as_of: "2026-07-31" } },
+        cftc: { current: { source_as_of: "2026-07-28" } },
+        crypto: { current: { source_as_of: "2026-07-31" } },
+        move: { current: { source_as_of: "2026-07-31" } },
+        vix: { current: { source_as_of: "2026-07-31" } },
+      },
+    },
     global_scouter: {
       update_frequency: "weekly",
       source_date: "2026-07-24",
@@ -176,6 +189,13 @@ assert.equal(sentimentControl.latest_attempt.failure_class, "rate_limited");
 assert.equal(sentimentControl.incident.class, "engineering");
 assert.deepEqual(sentimentControl.queue, { evidence_status: "measured", wait_ms: 1234, depth: 2 });
 assert.equal(sentimentControl.recovery.state, "retry_pending");
+const yahooSource = yahooControl.source;
+assert.equal(yahooSource.source_date, "2026-07-31T20:00:00.000Z", "yahoo must use the oldest committed provider source clock");
+assert.equal(yahooSource.source_date_reason, "yahoo_hourly_ticker.current.source_as_of.oldest");
+assert.ok(!JSON.stringify(yahooSource).includes("data/admin"), "yahoo source path must stay private");
+assert.equal(sentimentControl.source.source_date, "2026-07-28", "sentiment must use the oldest committed provider source clock");
+assert.equal(sentimentControl.source.source_date_reason, "sentiment_index.items.current.source_as_of.oldest");
+assert.ok(!JSON.stringify(sentimentControl.source).includes("data/admin"), "sentiment source path must stay private");
 const globalControl = controlProjection.lanes.find((lane) => lane.id === "global_scouter").control_room_state;
 assert.equal(globalControl.source.source_date, "2026-07-24", "global_scouter must use the metadata source clock");
 assert.equal(
