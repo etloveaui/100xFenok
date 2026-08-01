@@ -242,19 +242,38 @@
     "quote_as_of": "2026-06-30T20:05:29Z",
     "source_as_of": "2026-06-30T20:05:29Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "terminal_provider_unsupported",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
-  "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
-    "expected_resolution": "next_natural_yahoo_run",
-    "max_business_days": 6,
-    "message": "BLD holds LKG because Yahoo source date 2026-06-30T20:05:29Z is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
-    "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-30T20:05:29Z"
+  "terminal": {
+    "artifact_generated_at": "2026-08-01T16:56:43.554Z",
+    "artifact_path": "admin/fenok-s1-stock-public-promotion-dry-run.json",
+    "classified_at": "2026-08-01T17:32:35Z",
+    "classified_run_id": "30707126488",
+    "evidence": [
+      {
+        "alias_source": null,
+        "alias_target": null,
+        "date": "Jun 30, 2026",
+        "other": "BLD",
+        "symbol": "BLD",
+        "terminal": true,
+        "text": "BLD was acquired by QXO",
+        "type": "Acquisition"
+      },
+      {
+        "alias_source": null,
+        "alias_target": null,
+        "date": "Jun 30, 2026",
+        "other": null,
+        "symbol": "BLD",
+        "terminal": true,
+        "text": "Topbuild Corp was delisted",
+        "type": "Delisted"
+      }
+    ],
+    "evidence_sha256": "2a419708c1081882d0c3c8dd0dfe96d8eafbbd88723be177bc20208c082e6a06"
   },
   "ticker": "BLD",
-  "updated_at": "2026-08-01T00:39:20Z"
+  "updated_at": "2026-08-01T17:32:35Z"
 }
