@@ -1924,7 +1924,7 @@ console.log("# KPI v2 runtime self-proof fixtures");
     attempt_gaps: 0,
   });
   assert.equal(rootCronShadow.rows.length, 30);
-  assert.deepEqual(publicCronShadow.pre_activation_lane_ids, ["damodaran", "oecd_cli"]);
+  assert.deepEqual(publicCronShadow.pre_activation_lane_ids, ["damodaran", "oecd_cli", "yahoo_batch_quote_history"]);
   assert.deepEqual(publicCronShadow.suspected_skip_lane_ids, ["apewisdom_attention", "finra_ats_weekly", "gdelt_news_tone"]);
   assert.deepEqual(publicCronShadow.attempt_gap_lane_ids, []);
   assert.equal(Object.hasOwn(publicCronShadow, "rows"), false);
