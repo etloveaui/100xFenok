@@ -89,6 +89,34 @@ on:
         description: 'Resolve and print the candidate plan without Yahoo calls or data writes'
         required: false
         default: 'false'
+      untracked_only:
+        description: 'Bounded recovery: select pending-acquisition names before maintenance'
+        required: false
+        default: 'false'
+      retry_limit:
+        description: 'Natural retry budget for a bounded recovery dispatch'
+        required: false
+        default: ''
+      regular_limit:
+        description: 'Regular candidate budget per stable shard cycle'
+        required: false
+        default: ''
+      untracked_limit:
+        description: 'Pending-acquisition budget within the regular candidate budget'
+        required: false
+        default: ''
+      shard_cycle_index:
+        description: 'Stable shard cycle index (required for untracked recovery)'
+        required: false
+        default: ''
+      scheduled_weekday:
+        description: 'Scheduled weekday 0-5 matching the selected ETF shard'
+        required: false
+        default: ''
+      stable_shards:
+        description: 'Use deterministic hash shards (required for untracked recovery)'
+        required: false
+        default: 'false'
 
 permissions:
   contents: write
@@ -147,17 +175,35 @@ jobs:
           INPUT_STOCKS_ONLY: ${{ github.event.inputs.stocks_only || 'false' }}
           INPUT_HISTORY_GAPS_ONLY: ${{ github.event.inputs.history_gaps_only || 'false' }}
           INPUT_HISTORY_MIN_ROWS: ${{ github.event.inputs.history_min_rows || '200' }}
-          INPUT_UNTRACKED_ONLY: 'false'
+          INPUT_UNTRACKED_ONLY: ${{ github.event.inputs.untracked_only || 'false' }}
           INPUT_PLAN_ONLY: ${{ github.event.inputs.plan_only || 'false' }}
-          INPUT_RETRY_LIMIT: ''
-          INPUT_REGULAR_LIMIT: ''
-          INPUT_UNTRACKED_LIMIT: ''
-          INPUT_SHARD_CYCLE_INDEX: ''
-          INPUT_SCHEDULED_WEEKDAY: ''
-          INPUT_STABLE_SHARDS: 'false'
+          INPUT_RETRY_LIMIT: ${{ github.event.inputs.retry_limit || '' }}
+          INPUT_REGULAR_LIMIT: ${{ github.event.inputs.regular_limit || '' }}
+          INPUT_UNTRACKED_LIMIT: ${{ github.event.inputs.untracked_limit || '' }}
+          INPUT_SHARD_CYCLE_INDEX: ${{ github.event.inputs.shard_cycle_index || '' }}
+          INPUT_SCHEDULED_WEEKDAY: ${{ github.event.inputs.scheduled_weekday || '' }}
+          INPUT_STABLE_SHARDS: ${{ github.event.inputs.stable_shards || 'false' }}
           EVENT_NAME: ${{ github.event_name }}
           EVENT_SCHEDULE: ${{ github.event.schedule }}
         run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$INPUT_UNTRACKED_ONLY" = "true" ]; then
+            if [ "$INPUT_STABLE_SHARDS" != "true" ] || [ -z "$INPUT_SHARD" ] || [ -z "$INPUT_SHARD_CYCLE_INDEX" ] || [ -z "$INPUT_SCHEDULED_WEEKDAY" ]; then
+              echo "::error::bounded untracked recovery requires stable_shards=true, shard=i/6, shard_cycle_index, and scheduled_weekday" >&2
+              exit 2
+            fi
+            case "$INPUT_SHARD" in
+              [0-5]/6) ;;
+              *) echo "::error::bounded untracked recovery requires shard i/6 with i in 0..5" >&2; exit 2 ;;
+            esac
+            case "$INPUT_SCHEDULED_WEEKDAY" in
+              0|1|2|3|4|5) ;;
+              *) echo "::error::scheduled_weekday must be 0..5" >&2; exit 2 ;;
+            esac
+            if [ -z "$INPUT_LIMIT" ] || [ -z "$INPUT_RETRY_LIMIT" ] || [ -z "$INPUT_REGULAR_LIMIT" ] || [ -z "$INPUT_UNTRACKED_LIMIT" ]; then
+              echo "::error::bounded untracked recovery requires limit, retry_limit, regular_limit, and untracked_limit" >&2
+              exit 2
+            fi
+          fi
           if [ "$EVENT_NAME" = "schedule" ]; then
             if [ "$EVENT_SCHEDULE" = "20 23 * * 1-5" ]; then
               INPUT_DAILY_STOCK_SHARDS="${YF_DAILY_STOCK_SHARDS:-5}"

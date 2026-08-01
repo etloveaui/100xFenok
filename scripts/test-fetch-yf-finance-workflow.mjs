@@ -11,6 +11,25 @@ import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-
 
 const workflowText = fs.readFileSync(new URL("../.github/workflows/fetch-yf-finance.yml", import.meta.url), "utf8");
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+for (const input of [
+  "untracked_only", "retry_limit", "regular_limit", "untracked_limit",
+  "shard_cycle_index", "scheduled_weekday", "stable_shards",
+]) {
+  assert.match(workflowText, new RegExp(`^      ${input}:\\n`, "m"),
+    `workflow_dispatch must expose bounded recovery input ${input}`);
+}
+assert.match(
+  workflowText,
+  /bounded untracked recovery requires stable_shards=true, shard=i\/6, shard_cycle_index, and scheduled_weekday/,
+  "untracked recovery must fail closed without deterministic shard controls",
+);
+assert.match(
+  workflowText,
+  /bounded untracked recovery requires limit, retry_limit, regular_limit, and untracked_limit/,
+  "untracked recovery must fail closed without explicit budgets",
+);
+assert.match(workflowText, /INPUT_UNTRACKED_LIMIT: \$\{\{ github\.event\.inputs\.untracked_limit \|\| '' \}\}/);
+assert.match(workflowText, /INPUT_STABLE_SHARDS: \$\{\{ github\.event\.inputs\.stable_shards \|\| 'false' \}\}/);
 const gate = checkWorkflowCommitShardsAgainstRegistry({
   workflowText,
   workflowRel: ".github/workflows/fetch-yf-finance.yml",
