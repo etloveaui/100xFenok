@@ -519,6 +519,7 @@ jobs:
               STOCKANALYSIS_PROJECTION_ORACLE_DIR="$PROJECTION_ORACLE" \
               python3 -m unittest scripts/test_stockanalysis_surface_contract.py
             python3 -m unittest scripts/test_stockanalysis_workflow_contract.py
+            python3 -m unittest scripts/test_resolve_etf_detail_candidates.py
             python3 -m unittest scripts/test_stockanalysis_artifact.py
             python3 scripts/test-stockanalysis-financials-fixtures.py
             python3 -m unittest scripts/test_audit_market_data.py
@@ -531,6 +532,20 @@ jobs:
               --stage always_if_exists
             python3 scripts/stockanalysis_artifact.py audit-stage \
               --artifact-root "$ARTIFACT_ROOT"
+            python3 scripts/resolve_etf_detail_candidates.py \
+              --artifact-manifest "$ARTIFACT_ROOT/manifest.json"
+            (
+              cd 100xfenok-next
+              npm run build:data-supply-public
+              node scripts/sync-public-data.mjs --write
+              npm run reconcile:data-supply-public-mirror
+            )
+            scripts/stage-lane-manifest.sh \
+              --workflow .github/workflows/fetch-stockanalysis.yml \
+              --stage always_if_exists
+            git add -- \
+              data/computed/data-supply/etf-detail \
+              100xfenok-next/public/data/computed/data-supply/etf-detail
             if git diff --staged --quiet; then
               COMMIT_ARGS=(--allow-empty)
               COMMIT_SUBJECT="chore: record stockanalysis no-change run"

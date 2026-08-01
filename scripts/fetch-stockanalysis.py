@@ -5643,7 +5643,7 @@ def fetch_yahoo_etf_fallback(
         candidate_path = write_yf_etf_detail_payload(ticker, etf_payload)
         record_etf_detail_observation(
             provider="yahoo_finance",
-            endpoint_family="yahoo_etf_detail",
+            endpoint_family="yahoo_finance_etf_detail",
             ticker=ticker,
             provider_path=f"data/yf/etf-details/{ticker}.json",
             payload_path=candidate_path,
@@ -5676,7 +5676,7 @@ def fetch_yahoo_etf_fallback(
         if isinstance(exc, ValueError):
             record_etf_detail_failure_observation(
                 provider="yahoo_finance",
-                endpoint_family="yahoo_etf_detail",
+                endpoint_family="yahoo_finance_etf_detail",
                 ticker=ticker,
                 provider_path=f"data/yf/finance/{ticker}.json",
                 provider_schema="yf-finance/v2",
@@ -5881,7 +5881,7 @@ def run_yahoo_etf_fallback_recovery(
         canonical_path = YF_ETF_DETAIL_OUT_DIR / f"{ticker}.json"
         record_etf_detail_observation(
             provider="yahoo_finance",
-            endpoint_family="yahoo_etf_detail",
+            endpoint_family="yahoo_finance_etf_detail",
             ticker=ticker,
             provider_path=f"data/yf/etf-details/{ticker}.json",
             payload_path=canonical_path,

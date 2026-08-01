@@ -53,9 +53,31 @@ def _provider_object_path(row: Mapping[str, Any]) -> str:
     ).as_posix()
 
 
+def _semantically_same_selection(
+    left: Mapping[str, Any] | None,
+    right: Mapping[str, Any] | None,
+) -> bool:
+    """Compare authority decisions without the wall-clock selection stamp."""
+
+    if left is None or right is None:
+        return left is right
+    left_semantic = dict(left)
+    right_semantic = dict(right)
+    for volatile in ("selected_at", "age_seconds"):
+        left_semantic.pop(volatile, None)
+        right_semantic.pop(volatile, None)
+    return left_semantic == right_semantic
+
+
 class DataSupplyResolver:
     def __init__(self, store: DataSupplyStateStore):
         self.store = store
+        self._committed_transaction_id: str | None = None
+
+    def _commit_prepared(self, domain: str, transaction_id: str) -> dict[str, Any]:
+        active = self.store.commit_prepared(domain, transaction_id)
+        self._committed_transaction_id = transaction_id
+        return active
 
     def _selection(
         self,
@@ -82,6 +104,7 @@ class DataSupplyResolver:
         observations: list[Mapping[str, Any]],
         decided_at: str,
     ) -> dict[str, Any]:
+        self._committed_transaction_id = None
         try:
             policy = get_domain_policy(domain, consumer_id=POLICY_CONSUMER_ID)
         except KeyError as exc:
@@ -142,7 +165,7 @@ class DataSupplyResolver:
                     reason_code="all_authorities_exhausted",
                     decided_at=decided_at,
                 )
-                return self.store.commit_prepared(domain, transaction_id)
+                return self._commit_prepared(domain, transaction_id)
             preserved = self.store.preserve_current_as_provider_lkg(
                 domain,
                 entity,
@@ -179,7 +202,7 @@ class DataSupplyResolver:
                 recovery_green_count=0,
                 decided_at=decided_at,
             )
-            return self.store.commit_prepared(domain, transaction_id)
+            return self._commit_prepared(domain, transaction_id)
 
         if prior is None:
             if primary_fresh:
@@ -227,6 +250,29 @@ class DataSupplyResolver:
                 reason_code = "primary_unavailable_fallback_valid"
             else:
                 raise SchemaError("no fresh provider candidate exists; LKG/unavailable path required")
+
+        if (
+            _semantically_same_selection(prior, selected)
+            and recovery_count == next_recovery_count
+            and last_primary_event_id == next_primary_event_id
+        ):
+            self.store.reconcile_committed_pending(domain)
+            return active
+
+        if (
+            prior is not None
+            and prior["provider"] == selected["provider"]
+            and not _semantically_same_selection(prior, selected)
+        ):
+            prior_source = _timestamp(prior["source_as_of"])
+            selected_source = _timestamp(selected["source_as_of"])
+            prior_observed = _timestamp(prior["observed_at"])
+            selected_observed = _timestamp(selected["observed_at"])
+            if selected_source < prior_source or (
+                selected_source == prior_source and selected_observed <= prior_observed
+            ):
+                self.store.reconcile_committed_pending(domain)
+                return active
 
         next_current = dict(active["current"])
         next_current[entity] = selected
@@ -279,7 +325,7 @@ class DataSupplyResolver:
             recovery_green_count=next_recovery_count,
             decided_at=decided_at,
         )
-        return self.store.commit_prepared(domain, transaction_id)
+        return self._commit_prepared(domain, transaction_id)
 
     def resolve_etf_detail(
         self,
@@ -294,6 +340,20 @@ class DataSupplyResolver:
             observations=observations,
             decided_at=decided_at,
         )
+
+    def resolve_etf_detail_with_outcome(
+        self,
+        *,
+        entity: str,
+        observations: list[Mapping[str, Any]],
+        decided_at: str,
+    ) -> tuple[dict[str, Any], bool]:
+        active = self.resolve_etf_detail(
+            entity=entity,
+            observations=observations,
+            decided_at=decided_at,
+        )
+        return active, self._committed_transaction_id == active["transaction_id"]
 
 
 __all__ = ["DataSupplyResolver", "FALLBACK_PROVIDER", "PRIMARY_PROVIDER"]
