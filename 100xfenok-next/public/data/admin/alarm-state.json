@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-01T15:31:11.445Z",
+  "generated_at": "2026-08-01T16:54:18.378Z",
   "status": "open",
-  "open_incident_count": 6,
+  "open_incident_count": 7,
   "open_incidents": [
     {
       "workflow": "fetch-fred-macro.yml",
@@ -44,6 +44,19 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "overdue"
+    },
+    {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 30706907306,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30706907306",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
     },
     {
       "workflow": "slickcharts-daily.yml",
@@ -465,14 +478,15 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "30706038540",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30706038540",
-    "observed_at": "2026-08-01T15:31:11.445Z",
-    "event": "schedule",
+    "run_id": "30709110503",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30709110503",
+    "observed_at": "2026-08-01T16:54:18.378Z",
+    "event": "workflow_run",
     "workflows": [
       "fetch-fred-macro.yml",
       "fetch-oecd-cli.yml",
       "fetch-stockanalysis.yml",
+      "global-writer-queue-observer.yml",
       "slickcharts-daily.yml",
       "slickcharts-monthly.yml",
       "slickcharts-weekly.yml"
