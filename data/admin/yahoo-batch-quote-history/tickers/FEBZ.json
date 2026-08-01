@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-01T17:35:33Z",
     "history_as_of": "2026-07-31",
-    "path": "data/yf/finance/FEBZ.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FEBZ.json",
     "payload_sha256": "d30fb9efbdf4e9b7b28066cc4a9af18081f1183a37485d18c1f9b5c9c4b56c26",
     "quote_as_of": "2026-07-07T13:54:40Z",
     "source_as_of": "2026-07-07T13:54:40Z"
@@ -38,6 +38,14 @@
     "schedule": "",
     "shard": "0/6"
   },
+  "lkg": {
+    "fetched_at": "2026-08-01T17:35:33Z",
+    "history_as_of": "2026-07-31",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FEBZ.json",
+    "payload_sha256": "d30fb9efbdf4e9b7b28066cc4a9af18081f1183a37485d18c1f9b5c9c4b56c26",
+    "quote_as_of": "2026-07-07T13:54:40Z",
+    "source_as_of": "2026-07-07T13:54:40Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "workflow_dispatch",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-07T13:54:40Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 18,
+    "classified_at": "2026-08-01T18:21:41Z",
+    "classified_run_id": "30711922590",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "FEBZ holds LKG because Yahoo source date 2026-07-07T13:54:40Z is 18 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-07T13:54:40Z"
+  },
   "ticker": "FEBZ",
-  "updated_at": "2026-08-01T17:32:35Z"
+  "updated_at": "2026-08-01T18:21:41Z"
 }

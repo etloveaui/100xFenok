@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "30674982988",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 592,
+      "natural": true,
+      "observed_at": "2026-08-01T18:21:41Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30711922590",
+      "schedule": "",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T00:48:24Z",
+    "fetched_at": "2026-08-01T18:25:05Z",
     "history_as_of": "2026-07-31",
     "path": "data/yf/finance/EPAM.json",
-    "payload_sha256": "f59b732e3dda3fc64cb8ad39b7f9dde6bcaed72757e2f22bac4f2b265a32c923",
+    "payload_sha256": "33607c0dd5538de8a18c53ce4484cb69311d533f32cd31fd5cc21a3d747bb003",
     "quote_as_of": "2026-07-31T20:00:03Z",
     "source_as_of": "2026-07-31"
   },
@@ -196,26 +196,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 797,
+    "latency_ms": 592,
     "natural": true,
-    "observed_at": "2026-08-01T00:45:24Z",
+    "observed_at": "2026-08-01T18:21:41Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30674982988",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "30711922590",
+    "schedule": "",
+    "shard": "1/6"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T00:45:24Z",
-    "payload_sha256": "57e95612611bf554dd6278fb5ccb3ee952389ae616af75d37d6aaf25c083654e",
+    "observed_at": "2026-08-01T18:21:41Z",
+    "payload_sha256": "d11df3e63304111af14893525362dde5b2fc16386060c8b1594028455ce265fd",
     "quote_as_of": "2026-07-31T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "30674982988",
+    "run_id": "30711922590",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
@@ -223,5 +223,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "EPAM",
-  "updated_at": "2026-08-01T00:45:24Z"
+  "updated_at": "2026-08-01T18:21:41Z"
 }
