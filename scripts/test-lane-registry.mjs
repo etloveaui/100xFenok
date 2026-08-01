@@ -247,9 +247,14 @@ function clone(value) {
       acc[lane.lane_class] = (acc[lane.lane_class] ?? 0) + 1;
       return acc;
     }, {});
-    assert.deepEqual(byClass, { detection_floor: 28, auxiliary: 4 }, "lane_class partition drifted");
-    assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "auxiliary",
-      "yahoo_batch_quote_history remains auxiliary (not a detection-floor lane)");
+    assert.deepEqual(byClass, { detection_floor: 29, auxiliary: 3 }, "lane_class partition drifted");
+    assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "detection_floor",
+      "yahoo_batch_quote_history is a standard detection-floor producer");
+    assert.equal(
+      registryLaneById("yahoo_batch_quote_history").roots.detection_attempt,
+      "data/admin/data-supply-state/detection-attempts/yahoo_batch_quote_history.json",
+      "Yahoo batch attempt evidence uses the standard detection shard root",
+    );
     for (const id of ["benchmarks", "global_scouter"]) {
       const converterLane = registryLaneById(id);
       assert.ok(converterLane, `${id} converter lane is registered`);

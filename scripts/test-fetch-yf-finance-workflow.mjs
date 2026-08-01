@@ -4,19 +4,28 @@
 // workflow commits; the gate keeps it that way in both directions.
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const workflowText = fs.readFileSync(new URL("../.github/workflows/fetch-yf-finance.yml", import.meta.url), "utf8");
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const gate = checkWorkflowCommitShardsAgainstRegistry({
   workflowText,
   workflowRel: ".github/workflows/fetch-yf-finance.yml",
+  repoRoot,
 });
 assert.deepEqual(gate.missing_in_workflow, [],
   `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
 assert.deepEqual(gate.undeclared_in_workflow, [],
   `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
 assert.deepEqual(gate.lanes, ["yahoo_batch_quote_history"], "the registry must attribute this lane to fetch-yf-finance.yml");
+assert.match(
+  workflowText,
+  /- name: Emit Yahoo batch detection attempt[\s\S]*?if: \$\{\{ always\(\) && env\.YF_PLAN_ONLY != 'true' \}\}[\s\S]*?node scripts\/emit-yahoo-batch-quote-history-attempt\.mjs[\s\S]*?- name: Refresh owned Yahoo quarter-close source/,
+  "the standard attempt shard must be emitted after the batch and before downstream refresh work",
+);
 assert.match(workflowText, /scripts\/stage-lane-manifest\.sh/);
 assert.match(workflowText, /--stage always_if_exists/);
 assert.match(

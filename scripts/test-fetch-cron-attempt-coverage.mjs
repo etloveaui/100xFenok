@@ -66,8 +66,8 @@ const scheduledMembers = DATA_SUPPLY_DETECTION_CONFIG.lanes
   .flatMap((lane) => lane.producer_members)
   .filter((member) => member.cadence_declaration?.kind === "github_workflow" && member.schedule.length > 0);
 const scheduleBindings = scheduledMembers.reduce((sum, member) => sum + member.schedule.length, 0);
-assert.equal(scheduledMembers.length, 29);
-assert.equal(scheduleBindings, 32);
+assert.equal(scheduledMembers.length, 30);
+assert.equal(scheduleBindings, 39);
 assert.equal(
   DATA_SUPPLY_DETECTION_CONFIG.lanes.find((lane) => lane.id === "damodaran")
     ?.producer_members[0]?.activated_at,
@@ -79,14 +79,14 @@ assert.equal(
   "2026-07-20T14:20:11Z",
 );
 
-// The baseline predates two newly declared workflows. They remain in the
+// The baseline predates three newly declared workflows. They remain in the
 // declaration denominator but must not manufacture expected_at rows.
 const coverage = buildFetchCronAttemptCoverage({ report: baseline, calendars });
 assert.equal(coverage.schema_version, "fetch-cron-attempt-coverage/v1");
 assert.equal(coverage.mode, "shadow");
 assert.equal(coverage.deployment_blocking, false);
 assert.deepEqual(coverage.counts, {
-  scheduled_members: 29,
+  scheduled_members: 30,
   schedule_bindings: 30,
   observed: 27,
   suspected_skips: 3,
@@ -109,12 +109,29 @@ assert.deepEqual(coverage.pre_activation_members, [
     activated_at: "2026-07-19T15:05:41Z",
     first_eligible_at: "2026-07-25T11:17:00.000Z",
   },
+  {
+    lane_id: "yahoo_batch_quote_history",
+    member_id: "yahoo_batch_quote_history",
+    workflow: ".github/workflows/fetch-yf-finance.yml",
+    cron: "20 23 * * 1-5",
+    activated_at: "2026-08-01T01:00:13Z",
+    first_eligible_at: "2026-08-03T23:20:00.000Z",
+  },
+  ...[0, 1, 2, 3, 4, 5].map((weekday) => ({
+    lane_id: "yahoo_batch_quote_history",
+    member_id: "yahoo_batch_quote_history",
+    workflow: ".github/workflows/fetch-yf-finance.yml",
+    cron: `0 22 * * ${weekday}`,
+    activated_at: "2026-08-01T01:00:13Z",
+    first_eligible_at: `2026-08-0${weekday + 2}T22:00:00.000Z`,
+  })),
 ]);
 assert.equal(coverage.rows.some((row) => row.lane_id === "oecd_cli"), false);
 assert.equal(coverage.rows.some((row) => row.lane_id === "damodaran"), false);
+assert.equal(coverage.rows.some((row) => row.lane_id === "yahoo_batch_quote_history"), false);
 const configWithoutActivation = clone(DATA_SUPPLY_DETECTION_CONFIG);
 for (const lane of configWithoutActivation.lanes.filter((row) => (
-  row.id === "oecd_cli" || row.id === "damodaran"
+  row.id === "oecd_cli" || row.id === "damodaran" || row.id === "yahoo_batch_quote_history"
 ))) delete lane.producer_members[0].activated_at;
 const unboundedCoverage = buildFetchCronAttemptCoverage({
   report: null,
@@ -128,7 +145,7 @@ const boundedMissingReportCoverage = buildFetchCronAttemptCoverage({
   nowValue: baseline.generated_at,
 });
 const unaffectedRows = (document) => document.rows.filter((row) => (
-  row.lane_id !== "oecd_cli" && row.lane_id !== "damodaran"
+  row.lane_id !== "oecd_cli" && row.lane_id !== "damodaran" && row.lane_id !== "yahoo_batch_quote_history"
 ));
 assert.deepEqual(
   unaffectedRows(boundedMissingReportCoverage),
@@ -192,7 +209,7 @@ assert.equal(rowOf(postActivationCoverage, "damodaran").expected_at, "2026-07-25
 assert.equal(rowOf(postActivationCoverage, "damodaran").state, "suspected_skip");
 assert.deepEqual(
   postActivationCoverage.pre_activation_members.map((row) => row.lane_id),
-  ["oecd_cli"],
+  ["oecd_cli", ...Array(7).fill("yahoo_batch_quote_history")],
 );
 
 const missingReportCoverage = buildFetchCronAttemptCoverage({
@@ -203,7 +220,7 @@ const missingReportCoverage = buildFetchCronAttemptCoverage({
 assert.equal(missingReportCoverage.deployment_blocking, false);
 assert.equal(missingReportCoverage.status, "warning");
 assert.deepEqual(missingReportCoverage.counts, {
-  scheduled_members: 29,
+  scheduled_members: 30,
   schedule_bindings: 30,
   observed: 0,
   suspected_skips: 30,

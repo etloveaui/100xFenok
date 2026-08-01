@@ -244,6 +244,10 @@ jobs:
             python3 scripts/fetch-yf-finance.py $ARGS --sleep "${INPUT_SLEEP:-0.8}" --ticker-timeout "${INPUT_TICKER_TIMEOUT:-90}" --retries "${INPUT_RETRIES:-2}"
           fi
 
+      - name: Emit Yahoo batch detection attempt
+        if: ${{ always() && env.YF_PLAN_ONLY != 'true' }}
+        run: node scripts/emit-yahoo-batch-quote-history-attempt.mjs
+
       - name: Refresh owned Yahoo quarter-close source
         id: quarter_closes
         if: ${{ env.YF_PLAN_ONLY != 'true' }}

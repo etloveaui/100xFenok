@@ -452,6 +452,17 @@
         "mode": "owner_guard",
         "ownership_flip": true
       }
+    },
+    {
+      "id": "yahoo_batch_quote_history_index",
+      "encoding": "json",
+      "content": {
+        "schema_version": "yahoo-batch-quote-history-index/v1",
+        "lane_id": "yahoo_batch_quote_history",
+        "generated_at": "2026-07-11T00:00:00Z",
+        "counts": { "active": 1, "success": 1, "failed": 0 },
+        "current_attempt": { "attempted": 1, "successes": 1, "failed": 0, "skipped": 0 }
+      }
     }
   ],
   "layouts": [
@@ -762,6 +773,11 @@
           "path": "data/computed/fenok_news_tone_proxy.json",
           "node_type": "regular",
           "document_id": "gdelt"
+        },
+        {
+          "path": "data/admin/yahoo-batch-quote-history/index.json",
+          "node_type": "regular",
+          "document_id": "yahoo_batch_quote_history_index"
         }
       ]
     },

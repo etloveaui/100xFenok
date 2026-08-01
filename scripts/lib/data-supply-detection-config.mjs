@@ -1074,6 +1074,37 @@ const config = {
       affectedSurfaceIds: ["fenok_news_tone"],
       visibility: "admin_only",
     }),
+    lane({
+      id: "yahoo_batch_quote_history",
+      label: "Yahoo batch quote/history",
+      members: [registryMember("yahoo_batch_quote_history", [
+        "20 23 * * 1-5",
+        "0 22 * * 0",
+        "0 22 * * 1",
+        "0 22 * * 2",
+        "0 22 * * 3",
+        "0 22 * * 4",
+        "0 22 * * 5",
+      ], [
+        artifact("yahoo_batch_quote_history_index", "data/admin/yahoo-batch-quote-history/index.json", {
+          schemaVersion: schemaVersion("/schema_version", "yahoo-batch-quote-history-index/v1"),
+          sourceSelector: pointerSource("/generated_at", "rfc3339"),
+          assertions: [
+            exactAssertion("lane_identity", "/lane_id", "yahoo_batch_quote_history"),
+            typeAssertion("counts_object", "/counts", "object"),
+            typeAssertion("current_attempt_object", "/current_attempt", "object"),
+          ],
+        }),
+      ])],
+      endpointContract: endpointAssertion(
+        "yfinance_batch_library",
+        typeAssertion("current_attempt_completed", "/current_attempt/attempted", "number"),
+        "library",
+      ),
+      freshnessPolicy: freshness({ fold: "latest", unit: "hours", calendar: "utc", maxStaleness: 30 }),
+      affectedSurfaceIds: ["yahoo_batch_quote_history_admin"],
+      visibility: "admin_only",
+    }),
   ],
 };
 

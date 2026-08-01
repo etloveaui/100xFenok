@@ -72,15 +72,15 @@
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "expected_report": {
-      "config_digest": "89909ef3642bda01b92cf51fafb408b95c32e58fcb0bc32d1575db9ab7c23716",
+      "config_digest": "f62fedfa6a0fe808c16b373f63576e19dbf24d91b1932dc06c02b925adf39a48",
       "counts": {
         "drift": 0,
         "producer_members_drift": 0,
-        "producer_members_ready": 28,
+        "producer_members_ready": 29,
         "producer_members_stale": 0,
         "producer_members_unavailable": 1,
         "producer_members_unobserved": 3,
-        "ready": 24,
+        "ready": 25,
         "stale": 0,
         "unavailable": 1,
         "unobserved": 3
@@ -854,22 +854,46 @@
           "monitoring_mode": "post_fetch_artifact",
           "reason": "workflow_unobserved",
           "status": "unobserved"
+        },
+        {
+          "affected_surface_ids": [
+            "yahoo_batch_quote_history_admin"
+          ],
+          "artifact": {
+            "age": 0,
+            "reason": "ok",
+            "source_as_of": "2026-07-11T00:00:00Z",
+            "status": "ready",
+            "unit": "hours"
+          },
+          "endpoint": {
+            "observed_at": "2026-07-11T00:00:00Z",
+            "reason": "ok",
+            "status": "ready"
+          },
+          "enforcement": "shadow",
+          "id": "yahoo_batch_quote_history",
+          "kpi_required": false,
+          "label": "Yahoo batch quote/history",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "ok",
+          "status": "ready"
         }
       ],
-      "logical_lane_count": 28,
+      "logical_lane_count": 29,
       "monitoring_mode_counts": {
         "artifact_only": 3,
         "composite": 1,
-        "post_fetch_artifact": 24
+        "post_fetch_artifact": 25
       },
-      "producer_member_count": 32,
+      "producer_member_count": 33,
       "schema_version": "data-supply-detection-floor/v1"
     },
     "id": "all_valid_at_fixed_now",
     "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "c0494cf1aecb2e930e09c9d186b73f30ee415c17a44149f60f82bc11b4565ceb"
+    "report_file_sha256": "95d7f7edadeef84a00b290b92d94b5ec5962abb5342072816049aa4c584e2d83"
   },
-  "config_digest": "89909ef3642bda01b92cf51fafb408b95c32e58fcb0bc32d1575db9ab7c23716",
+  "config_digest": "f62fedfa6a0fe808c16b373f63576e19dbf24d91b1932dc06c02b925adf39a48",
   "config_digest_input": {
     "canonicalization": "recursive-sorted-object-keys-preserved-array-order-utf8",
     "enforcement": "shadow",
@@ -902,7 +926,8 @@
       "occ_options_volume",
       "yahoo_private_options",
       "apewisdom_attention",
-      "gdelt_news_tone"
+      "gdelt_news_tone",
+      "yahoo_batch_quote_history"
     ],
     "ordered_member_ids": [
       "fred_macro",
@@ -936,11 +961,12 @@
       "occ_options_volume",
       "yahoo_private_options",
       "apewisdom_attention",
-      "gdelt_news_tone"
+      "gdelt_news_tone",
+      "yahoo_batch_quote_history"
     ],
     "schema_version": "data-supply-detection-config/v1"
   },
-  "logical_lane_count": 28,
+  "logical_lane_count": 29,
   "privacy_exclusions": [
     "raw_response_bodies",
     "credentials",
@@ -955,7 +981,7 @@
     "promotion_pointers",
     "state_transitions"
   ],
-  "producer_member_count": 32,
+  "producer_member_count": 33,
   "reason_cases": [
     {
       "expected_reason": "transport_error",
@@ -994,7 +1020,7 @@
       "id": "unobserved"
     }
   ],
-  "registry_digest": "bbcd5bec89988be356440781721144851052042126fbca978b4f0f9f545e95c9",
+  "registry_digest": "a4667289150591a338fbcbff337b542c68fb60f73b284b1b39af6834d611fcea",
   "schema_version": "data-supply-detection-expected/v1",
   "slickcharts_member_ids": [
     "daily",

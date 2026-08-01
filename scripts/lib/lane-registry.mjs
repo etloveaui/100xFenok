@@ -1073,18 +1073,27 @@ const lanes = [
     provider_members: null,
     provider_refs: [{ provider_id: "yahoo_finance", role: "source", members: null }],
     store_kind: "payload",
-    lane_class: "auxiliary",
+    lane_class: "detection_floor",
     cadence: { kind: "daily" },
+    // The first standard v2 attempt shard is emitted from the next workflow
+    // execution; older batch indexes are not retroactively treated as proof.
+    activated_at: "2026-08-01T01:00:13Z",
     enforcement: "shadow",
     privacy_class: "public_mirror",
     admin_store: "data/admin/yahoo-batch-quote-history",
-    detection_attempt: null,
+    detection_attempt: attemptShard("yahoo_batch_quote_history"),
     canonical_outputs: [],
     public_mirror: [],
-    commit_shards: ["data/admin/yahoo-batch-quote-history"],
+    commit_shards: [
+      attemptShard("yahoo_batch_quote_history"),
+      "data/admin/yahoo-batch-quote-history",
+    ],
     recovery_store: "data/admin/yahoo-batch-quote-history/index.json",
     kpi_recovery_shape: "direct",
-    declared_exception: "not a detection-floor lane; KPI surfaces it as a warn-only base lane (pre-existing 2026-05-06 staleness)",
+    script_sources: [
+      "scripts/fetch-yf-finance.py",
+      "scripts/emit-yahoo-batch-quote-history-attempt.mjs",
+    ],
   }),
 ];
 
