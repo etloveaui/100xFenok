@@ -1,9 +1,22 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-01T16:54:18.378Z",
+  "generated_at": "2026-08-01T18:02:08.794Z",
   "status": "open",
-  "open_incident_count": 7,
+  "open_incident_count": 8,
   "open_incidents": [
+    {
+      "workflow": "fetch-defillama.yml",
+      "label": "Fetch DefiLlama Stablecoins Data",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "lost_schedule_slot"
+      ],
+      "lost_schedule_slot_count": 1,
+      "cadence_status": "not_due"
+    },
     {
       "workflow": "fetch-fred-macro.yml",
       "label": "Fetch FRED Macro Data",
@@ -48,7 +61,7 @@
     {
       "workflow": "global-writer-queue-observer.yml",
       "label": "Global Writer Queue Observability",
-      "streak": 2,
+      "streak": 3,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 30706907306,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30706907306",
@@ -475,14 +488,20 @@
     }
   ],
   "unknown_workflows": [],
-  "queue_evicted_run_count": 0,
-  "queue_evicted_workflows": [],
+  "queue_evicted_run_count": 1,
+  "queue_evicted_workflows": [
+    {
+      "workflow": "fetch-defillama.yml",
+      "count": 1
+    }
+  ],
   "last_firing": {
-    "run_id": "30709110503",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30709110503",
-    "observed_at": "2026-08-01T16:54:18.378Z",
+    "run_id": "30711577341",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30711577341",
+    "observed_at": "2026-08-01T18:02:08.794Z",
     "event": "workflow_run",
     "workflows": [
+      "fetch-defillama.yml",
       "fetch-fred-macro.yml",
       "fetch-oecd-cli.yml",
       "fetch-stockanalysis.yml",
