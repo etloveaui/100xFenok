@@ -11,6 +11,11 @@ on:
 permissions:
   actions: read
   contents: read
+  # Notification only. The observer measured a breach every 15 minutes and told
+  # nobody: read-only permissions and no notification step meant the signal died
+  # in the run log. It gains issue write and nothing else — never repo write,
+  # because it watches a blocked writer queue and must not join it.
+  issues: write
 
 # Keep this observer outside the data-writer group: it must remain measurable
 # while the writer queue is blocked.
@@ -24,6 +29,7 @@ jobs:
     permissions:
       actions: read
       contents: read
+      issues: write
     steps:
       - name: Checkout observer policy and checker
         uses: actions/checkout@v4
@@ -33,8 +39,56 @@ jobs:
         with:
           node-version: '22'
 
+      # continue-on-error so a breach still reaches the state comment below; the
+      # red job signal is restored by the final step, not dropped.
       - name: Observe global-writer candidate queue
+        id: queue
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: node scripts/ops/check-global-writer-queue.mjs
+        run: node scripts/ops/check-global-writer-queue.mjs > queue-state.json
+
+      # ONE upserted state comment, not an append-per-run: the failure alarm's
+      # append behaviour produced 136 comments on a single issue and made a live
+      # incident indistinguishable from a finished one. `--edit-last` rewrites this
+      # observer's own last comment, so it must target a DEDICATED state issue —
+      # pointing it at the failure-alarm issue would overwrite that alarm's alerts.
+      - name: Upsert queue state comment
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          QUEUE_OUTCOME: ${{ steps.queue.outcome }}
+        run: |
+          QUEUE_STATE_TITLE="100xFenok global-writer queue state"
+          existing="$(gh issue list --state open --search "$QUEUE_STATE_TITLE in:title" --json number --jq '.[0].number // empty')"
+          if [ -z "$existing" ]; then
+            # `gh issue create` has no --json; it prints the issue URL, whose last
+            # path segment is the number.
+            created_url="$(gh issue create --title "$QUEUE_STATE_TITLE" \
+              --body 'Rolling state of the global-writer candidate queue. One comment, upserted every observation; see the comment below for the current reading.' \
+              2>/dev/null || true)"
+            existing="${created_url##*/}"
+          fi
+          case "$existing" in
+            ''|*[!0-9]*) existing="" ;;
+          esac
+          if [ -z "$existing" ]; then
+            echo "could not resolve the queue state issue; state not published"
+            exit 0
+          fi
+          {
+            printf '%s\n\n' "[queue-state] observer outcome: \`$QUEUE_OUTCOME\`"
+            printf '%s\n' 'Thresholds and the watched workflow set are declared in `scripts/ops/global-writer-queue-policy.v1.json`.'
+            printf '\n%s\n' "Observed by: $RUN_URL"
+            printf '\n```json\n'
+            head -c 4000 queue-state.json 2>/dev/null || echo '{}'
+            printf '\n```\n'
+          } > queue-state-comment.md
+          gh issue comment "$existing" --edit-last --create-if-none --body-file queue-state-comment.md
+
+      - name: Fail on queue alarm
+        if: steps.queue.outcome != 'success'
+        run: exit 1

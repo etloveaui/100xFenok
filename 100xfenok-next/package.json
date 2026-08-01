@@ -161,7 +161,7 @@
     "qa:cross-asset-identifier-contract": "tsx scripts/test-cross-asset-identifier-contract.ts",
     "qa:lane-runid": "node scripts/test-generate-lane-runid-map.mjs && npm run qa:lane-board",
     "qa:pipeline-job-health": "node ../scripts/ops/test-check-pipeline-job-health.mjs",
-    "qa:alarm-state": "npm run qa:pipeline-job-health && node ../scripts/ops/test-emit-alarm-state.mjs && node ../scripts/test-pipeline-failure-alarm-manifest.mjs",
+    "qa:alarm-state": "npm run qa:pipeline-job-health && node ../scripts/ops/test-emit-alarm-state.mjs && node ../scripts/test-pipeline-failure-alarm-manifest.mjs && node ../scripts/test-global-writer-queue-manifest.mjs",
     "qa:route-not-found-guards": "tsx scripts/test-route-not-found-guards.ts",
     "qa:kpi-last-attempt": "node ../scripts/test-kpi-last-attempt.mjs",
     "qa:market-events-freshness": "tsx scripts/check-market-events-freshness.tsx",

@@ -11,6 +11,8 @@ const workflow = fs.readFileSync(path.join(root, ".github/workflows/pipeline-fai
 const INCIDENT_TRANSITION_IF =
   "if: steps.pipeline.outcome == 'failure' && steps.alarm_state.outputs.incident_changed != 'false'";
 const FAIL_ON_ALARM_IF = "if: steps.pipeline.outcome == 'failure'";
+const ALL_CLEAR_STEP = "Post all-clear on the OPS issue";
+const ALL_CLEAR_IF = "if: steps.alarm_state.outputs.incident_resolved == 'true'";
 
 function stepBlock(source, name) {
   // The exact six-space delimiter is intentionally fail-closed: if workflow
@@ -57,6 +59,29 @@ function assertIncidentTransitionGuards(source) {
     failStep.split("\n").find((line) => line.trimStart().startsWith("run:"))?.trim(),
     "run: exit 1",
     "Fail on alarm must exit non-zero",
+  );
+}
+
+function assertAllClearGuards(source) {
+  const block = stepBlock(source, ALL_CLEAR_STEP);
+  const ifLines = block
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("if:"));
+  assert.deepEqual(
+    ifLines,
+    [ALL_CLEAR_IF],
+    "the all-clear must gate exactly on the emitter's resolution output",
+  );
+  assert.doesNotMatch(
+    block,
+    /gh issue create/,
+    "an all-clear must never open an issue; with nothing open there is nothing to clear",
+  );
+  assert.doesNotMatch(
+    block,
+    /git (?:add|commit|push)/,
+    "the all-clear is a notification only and must make no repo write",
   );
 }
 
@@ -112,6 +137,23 @@ assert.throws(
   () => assertIncidentTransitionGuards(silencedFailure),
   /Fail on alarm must remain red for every unresolved incident/,
   "gating Fail on alarm on incident_changed must fail the guard",
+);
+
+// A recovery was recorded and never announced: every issue step was gated on the
+// failing path, so the OPS issue collected alerts and was never told the incident
+// ended. The all-clear must therefore run on the SUCCEEDING path, driven only by
+// the emitter's resolution output.
+assertAllClearGuards(workflow);
+
+assert.throws(
+  () => assertAllClearGuards(replaceStepCondition(workflow, ALL_CLEAR_STEP, FAIL_ON_ALARM_IF)),
+  /must gate exactly on the emitter's resolution output/,
+  "gating the all-clear on the failing path would restore the defect it exists to fix",
+);
+assert.throws(
+  () => assertAllClearGuards(workflow.replace(`- name: ${ALL_CLEAR_STEP}`, "- name: Post something else")),
+  /must exist/,
+  "removing the all-clear step must fail the guard",
 );
 
 console.log("test-pipeline-failure-alarm-manifest: ok");

@@ -101,6 +101,35 @@ jobs:
             gh issue create --title "$title" --body-file pipeline-job-health-issue.md
           fi
 
+      # Recovery used to be recorded and never announced: every issue step above is
+      # gated on the failing path, so the OPS issue collected 136 alert comments
+      # since 2026-07-18 and was never told an incident ended. A reader could not
+      # separate a live outage from a finished one. This runs on the SUCCEEDING
+      # path, driven only by the emitter's open -> clear transition. Notification
+      # only: it never opens an issue (with nothing open there is nothing to clear)
+      # and never writes to the repo.
+      - name: Post all-clear on the OPS issue
+        if: steps.alarm_state.outputs.incident_resolved == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="100xFenok pipeline job failure alarm"
+          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          if [ -z "$existing" ]; then
+            echo "no open OPS issue; nothing to clear"
+            exit 0
+          fi
+          gh issue comment "$existing" --body "$(printf '%s\n' \
+            '[all-clear] Consecutive pipeline job failures have cleared.' \
+            '' \
+            'Alarm state is now `clear`. The resolution timestamp and the incident that' \
+            'preceded it are in `data/admin/alarm-state.json` (`last_resolved_at`,' \
+            '`last_firing`).' \
+            '' \
+            "Observed by: $RUN_URL")"
+
       - name: Fail on alarm
         if: steps.pipeline.outcome == 'failure'
         run: exit 1
