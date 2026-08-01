@@ -1917,7 +1917,7 @@ console.log("# KPI v2 runtime self-proof fixtures");
   assert.equal(rootCronShadow.mode, "shadow");
   assert.equal(rootCronShadow.deployment_blocking, false);
   assert.deepEqual(rootCronShadow.counts, {
-    scheduled_members: 29,
+    scheduled_members: 30,
     schedule_bindings: 30,
     observed: 27,
     suspected_skips: 3,
