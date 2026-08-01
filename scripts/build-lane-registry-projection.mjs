@@ -84,7 +84,13 @@ const LANE_SOURCE_MAP = Object.freeze({
   admin_live_voice_logs: { source_id: null, no_source_reason: "local runtime has no repository source stamp" },
   mona_production_study_state: { source_id: null, no_source_reason: "owner SSOT runtime has no repository source stamp" },
   mona_vnext_kv: { source_id: null, no_source_reason: "KV runtime has no repository source stamp" },
-  global_scouter: { source_id: null, no_source_reason: "owner-managed payload has no source SLA row" },
+  global_scouter: {
+    source_id: null,
+    source_artifact: "data/global-scouter/core/metadata.json",
+    source_date_field: "source_date",
+    source_date_reason: "global_scouter_metadata.source_date",
+    no_source_reason: "global_scouter metadata source_date is unavailable",
+  },
 });
 
 function isObject(value) {
@@ -332,15 +338,33 @@ function kpiLaneFor(lane, context) {
   return (context.kpi?.lanes || []).find((candidate) => candidate?.id === lane.id) || null;
 }
 
+function sourceArtifactFor(lane, mapping, context) {
+  const provided = context.sourceArtifacts;
+  if (isObject(provided) && Object.prototype.hasOwnProperty.call(provided, lane.id)) {
+    return provided[lane.id];
+  }
+  return mapping.source_artifact
+    ? readJson(path.join(context.repoRoot, mapping.source_artifact))
+    : null;
+}
+
 function buildSourceState(lane, context, kpiLane) {
   const mapping = LANE_SOURCE_MAP[lane.id] || { source_id: null, no_source_reason: "source SLA is not declared" };
   const sourceSla = mapping.source_id
     ? (context.kpi?.source_sla || []).find((row) => row?.source_id === mapping.source_id) || null
     : null;
-  const sourceDate = safeIso(kpiLane?.as_of) || null;
+  const sourceArtifact = sourceArtifactFor(lane, mapping, context);
+  const artifactSourceDate = mapping.source_date_field
+    ? safeIso(sourceArtifact?.[mapping.source_date_field])
+    : null;
+  const sourceDate = mapping.source_artifact
+    ? artifactSourceDate
+    : safeIso(kpiLane?.as_of) || null;
   return {
     source_date: sourceDate,
-    source_date_reason: sourceDate ? "kpi_lane_as_of" : mapping.no_source_reason,
+    source_date_reason: artifactSourceDate
+      ? mapping.source_date_reason
+      : sourceDate ? "kpi_lane_as_of" : mapping.no_source_reason,
     sla: sourceSla ? {
       unit: sourceSla.unit,
       calendar: sourceSla.calendar,
@@ -462,6 +486,7 @@ function createProjectionContext(options = {}) {
     kpi: options.kpi || readJson(path.join(repoRoot, path.relative(REPO_ROOT, KPI_PATH))),
     alarm: options.alarm || readJson(path.join(repoRoot, path.relative(REPO_ROOT, ALARM_PATH))),
     queue: options.queue || {},
+    sourceArtifacts: options.sourceArtifacts || {},
     workflowSchedules: options.workflowSchedules || {},
   };
 }

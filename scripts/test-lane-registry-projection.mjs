@@ -115,6 +115,12 @@ const controlProjection = buildLaneRegistryProjection(LANE_REGISTRY, {
       },
     ],
   },
+  sourceArtifacts: {
+    global_scouter: {
+      update_frequency: "weekly",
+      source_date: "2026-07-24",
+    },
+  },
   attempts: {
     yahoo_ticker_macro: [{
       lane_id: "yahoo_ticker_macro",
@@ -170,5 +176,13 @@ assert.equal(sentimentControl.latest_attempt.failure_class, "rate_limited");
 assert.equal(sentimentControl.incident.class, "engineering");
 assert.deepEqual(sentimentControl.queue, { evidence_status: "measured", wait_ms: 1234, depth: 2 });
 assert.equal(sentimentControl.recovery.state, "retry_pending");
+const globalControl = controlProjection.lanes.find((lane) => lane.id === "global_scouter").control_room_state;
+assert.equal(globalControl.source.source_date, "2026-07-24", "global_scouter must use the metadata source clock");
+assert.equal(
+  globalControl.source.source_date_reason,
+  "global_scouter_metadata.source_date",
+  "global_scouter source clock provenance must be explicit",
+);
+assert.ok(!JSON.stringify(globalControl.source).includes("data/global-scouter"), "source path must stay private");
 
 console.log(JSON.stringify({ ok: true, lanes: projection.lanes.length, red_markers_stripped: rawViolations }, null, 2));
