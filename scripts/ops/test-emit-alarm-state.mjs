@@ -176,6 +176,33 @@ const stillClear = buildAlarmState({ health: quietHealth, prior: resolved, env: 
 assert.equal(stillClear.status, "clear");
 assert.equal(stillClear.last_resolved_at, "2026-07-19T13:00:00.000Z", "clear->clear preserves the original resolution time");
 
+// --- Recovery must be ANNOUNCEABLE, not merely recorded ---
+// buildAlarmState already stamps last_resolved_at on open->clear, but the only
+// value main() publishes to the workflow is `incident_changed`. The OPS issue is
+// therefore written on failure and never told the incident ended, so a reader
+// cannot tell a live outage from a finished one. Expose the transition as a pure
+// predicate the way `alarmStateUnchanged` already is, so the notification channel
+// can gate an all-clear on it.
+{
+  const emitter = await import("./emit-alarm-state.mjs");
+  assert.equal(typeof emitter.alarmStateResolved, "function",
+    "the emitter must expose the open->clear transition as a pure predicate");
+  assert.equal(emitter.alarmStateResolved(firing, resolved), true,
+    "open -> clear is a resolution the workflow can announce");
+  assert.equal(emitter.alarmStateResolved(resolved, stillClear), false,
+    "clear -> clear must not re-announce an already-resolved incident");
+  assert.equal(emitter.alarmStateResolved(firing, firing), false,
+    "an unchanged open incident is not a resolution");
+  assert.equal(emitter.alarmStateResolved(null, resolved), false,
+    "a first-ever clear run has nothing to announce as resolved");
+  assert.equal(emitter.alarmStateResolved(firing, unknownState()), false,
+    "open -> unknown is not a resolution; unknown health must never read as an all-clear");
+}
+
+function unknownState() {
+  return buildAlarmState({ health: { status: "unknown", workflows: [] }, prior: null, env: ENV, now: NOW });
+}
+
 // --- Unknown health is surfaced honestly (not silently clear) ---
 const unknown = buildAlarmState({ health: { status: "unknown", workflows: [] }, prior: null, env: ENV, now: NOW });
 assert.equal(unknown.status, "unknown");

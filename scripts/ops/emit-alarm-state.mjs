@@ -188,6 +188,21 @@ export function alarmStateUnchanged(prior, next) {
   return a !== null && a === significantAlarmState(next);
 }
 
+/**
+ * True only on the open -> clear transition, so a recovery can be ANNOUNCED and
+ * not merely recorded. `buildAlarmState` already stamps `last_resolved_at`, but
+ * the alarm's notification channel is gated on the failing path, which means the
+ * OPS issue collects alerts and is never told the incident ended; a reader cannot
+ * separate a live outage from a finished one.
+ *
+ * `status` is the honest three-value vocabulary, so an `unknown` read can never
+ * be announced as an all-clear, and a first-ever clear run (no prior document)
+ * has nothing to announce.
+ */
+export function alarmStateResolved(prior, next) {
+  return prior?.status === "open" && next?.status === "clear";
+}
+
 export function writeAlarmStateMirrors({ state, outPath, publicOutPath }) {
   const json = `${JSON.stringify(state, null, 2)}\n`;
   for (const target of [outPath, publicOutPath]) {
@@ -216,9 +231,14 @@ function main() {
   // louder half of the churn in place: 9 comments on issue #88 between 04:53 and
   // 06:35 on 2026-07-22, all restating one unchanged incident.
   const incidentChanged = unchanged ? "false" : "true";
+  // Published alongside `incident_changed` so the notification channel can post an
+  // all-clear instead of leaving the OPS issue reading as a live outage forever.
+  // The workflow gating that consumes this is a separate change and is not made here.
+  const incidentResolved = alarmStateResolved(prior, emitted) ? "true" : "false";
   if (process.env.GITHUB_OUTPUT) {
     try {
       fs.appendFileSync(process.env.GITHUB_OUTPUT, `incident_changed=${incidentChanged}\n`);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `incident_resolved=${incidentResolved}\n`);
     } catch (error) {
       // Never let output plumbing mask the alarm; the job exit code and the OPS
       // issue remain the primary channel.
