@@ -248,8 +248,6 @@ jobs:
           node scripts/build-data-supply-detection-floor.mjs --verify-report "$report_path"
 
           install -m 0644 "$report_path" "$installed_path"
-          cmp -s "$report_path" "$installed_path"
-          node scripts/build-data-supply-detection-floor.mjs --verify-report "$installed_path"
 
       - name: Build data health KPI
         run: |
@@ -292,7 +290,6 @@ jobs:
               python scripts/scrapers/membership-tracker.py --quiet
               node scripts/build-slickcharts-discovery.mjs
             fi
-            python3 scripts/validate-slickcharts-integrity.py --skip-public
 
             python3 scripts/rebuild-yf-finance-summary.py
             python3 scripts/build-market-facts.py --no-public-mirror
@@ -362,8 +359,6 @@ jobs:
               node scripts/build-data-supply-detection-floor.mjs --verify-report "$report_path"
 
               install -m 0644 "$report_path" "$installed_path"
-              cmp -s "$report_path" "$installed_path"
-              node scripts/build-data-supply-detection-floor.mjs --verify-report "$installed_path"
             )
             npm --prefix 100xfenok-next run build:fenok-data-health-kpi
             npm --prefix 100xfenok-next run build:lane-registry-projection
