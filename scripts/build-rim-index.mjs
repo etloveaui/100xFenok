@@ -9,6 +9,7 @@ import {
   isRealCalendarDate,
 } from "./lib/market-calendar.mjs";
 import { SOURCE_SLA_DEF } from "./lib/kpi-contract-constants.mjs";
+import { resolveDividendYieldFraction } from "./lib/dividend-yield-unit.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -1346,44 +1347,19 @@ function koreaCoverageDiagnostics(stockActionPayload, krxWeights = null) {
   };
 }
 
-// `computed/stock_action_index.json` stores dividendYield in BOTH conventions in
-// the same field, and not split by market: AAPL (US) is 0.00321 while MTB (US)
-// is 2.43. Averaging them raw produced an 8.4% weighted S&P 500 dividend yield.
-//
-// Magnitude cannot decide -- a percent-encoded 0.4% yield is 0.4 and a
-// fraction-encoded one is 0.004, both below 1. The row's OWN trailing dividend
-// over its OWN price is a measured fraction, so it can arbitrate. When the row
-// carries no dividend and no price there is nothing to arbitrate with, and the
-// row is dropped from the average rather than guessed at 100x precision.
-export function normalizeDividendYieldFraction(row) {
-  const stored = numberOrNull(row?.dividendYield);
-  if (!finite(stored) || stored < 0) {
-    return { value: null, unit: "unresolved", reason: "row carries no usable dividend yield" };
-  }
-  if (stored === 0) return { value: 0, unit: "zero", reason: "" };
-  const price = numberOrNull(row?.price);
-  const trailingDividend = numberOrNull(row?.dividendHistory?.ttm);
-  if (!finite(price) || price <= 0 || !finite(trailingDividend) || trailingDividend <= 0) {
-    return {
-      value: null,
-      unit: "unresolved",
-      reason: "no trailing dividend and price to measure the unit against",
-    };
-  }
-  const measuredFraction = trailingDividend / price;
-  const asFraction = stored;
-  const asPercent = stored / 100;
-  if (Math.abs(asPercent - measuredFraction) < Math.abs(asFraction - measuredFraction)) {
-    return { value: asPercent, unit: "percent", reason: "" };
-  }
-  return { value: asFraction, unit: "fraction", reason: "" };
-}
+// One rule, one module. This used to be a private copy here, which is how it
+// came to disagree with the writer: the local helper turned an ABSENT yield into
+// a measured 0% (Number(null) === 0), so 74 rows with no dividend data at all
+// were averaged in as genuine zero-yield companies. The shared rule fails closed
+// on absence. A parity test pins the two together over the whole published
+// population, not just fixtures.
+export { resolveDividendYieldFraction as normalizeDividendYieldFraction } from "./lib/dividend-yield-unit.mjs";
 
 function weightedDividendYieldFraction(indexRows, options) {
-  const weighted = weightedMetric(indexRows, (row) => normalizeDividendYieldFraction(row).value, options);
+  const weighted = weightedMetric(indexRows, (row) => resolveDividendYieldFraction(row).value, options);
   const unitMix = { percent: 0, fraction: 0, zero: 0, unresolved: 0 };
   for (const item of indexRows) {
-    const { unit } = normalizeDividendYieldFraction(item.row);
+    const { unit } = resolveDividendYieldFraction(item.row);
     if (unit in unitMix) unitMix[unit] += 1;
   }
   return { ...weighted, dividend_yield_unit_mix: unitMix };

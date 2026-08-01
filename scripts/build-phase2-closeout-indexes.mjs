@@ -1,6 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import {
+  emptyDividendYieldUnitMix,
+  resolveDividendYieldFraction,
+  tallyDividendYieldUnit,
+} from "./lib/dividend-yield-unit.mjs";
 import {
   ACTION_SCORE_CONFIG,
   actionFrom,
@@ -682,6 +688,7 @@ function buildStockActionIndex() {
   const sectorSmartMoney = sectorSmartMoneyMap();
   const convictions = convictionMap(knownSymbols);
 
+  const dividendYieldUnitMix = emptyDividendYieldUnitMix();
   const actionRows = rows
     .map((stock) => {
       const symbol = String(stock.symbol ?? "").trim().toUpperCase();
@@ -708,7 +715,28 @@ function buildStockActionIndex() {
       const extensionQualityFlags = stock.__marketFactExtension
         ? ["missing_global_scouter_core_row"]
         : [];
-      const action = actionFrom(stock, context);
+      // THE SINGLE UNIT BOUNDARY for dividendYield.
+      //
+      // This file is the only writer of computed/stock_action_index.json, and
+      // every consumer -- the action scorer below, both screener surfaces, the
+      // discovery ranking, the RIM payout route -- reads that artifact rather
+      // than the upstream sources. Resolving here fixes all of them at once.
+      //
+      // It must happen BEFORE actionFrom, not only on the emitted row: the
+      // scorer's income thresholds are fraction-shaped and its reason string is
+      // yield*100, which is how a percent-encoded 2.43 reached the live screener
+      // as a dividend of 243%.
+      const dividendYieldUnit = resolveDividendYieldFraction({
+        dividendYield: stock.dividendYield,
+        price: stock.price,
+        dividendHistory: context.dividendHistory,
+      });
+      tallyDividendYieldUnit(dividendYieldUnitMix, dividendYieldUnit.unit);
+      const scoredStock = dividendYieldUnit.value === stock.dividendYield
+        ? stock
+        : { ...stock, dividendYield: dividendYieldUnit.value };
+
+      const action = actionFrom(scoredStock, context);
       const quality_flags = Array.from(new Set([...qualityFlags(stock, context), ...action.scoreQualityFlags, ...extensionQualityFlags])).sort();
       delete action.scoreQualityFlags;
       return {
@@ -724,7 +752,7 @@ function buildStockActionIndex() {
         marketCap: num(stock.marketCap),
         per: num(stock.per),
         peForward: num(stock.peForward),
-        dividendYield: num(stock.dividendYield),
+        dividendYield: dividendYieldUnit.value,
         return12m: num(stock.return12m),
         ret1y: num(stock.ret1y),
         ret3y: num(stock.ret3y),
@@ -808,6 +836,11 @@ function buildStockActionIndex() {
     coverage: {
       source_stock_count: rows.length,
       indexed_stock_count: actionRows.length,
+      // Published, not averaged away: how many rows each dividend-yield reading
+      // resolved to. `unresolved` rows carry a null yield by design -- they had
+      // no measurable dividend and price, and a hundred-fold unit error is worse
+      // than a visible gap.
+      dividend_yield_unit_mix: dividendYieldUnitMix,
       universe_stock_count: universe?.uniqueCount ?? null,
       guru_ticker_count: guru?.metadata?.tickers ?? Object.keys(guru?.holders ?? {}).length,
       conviction_matched_count: convictions.map.size,
