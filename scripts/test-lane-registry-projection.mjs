@@ -10,7 +10,13 @@
 import assert from "node:assert/strict";
 
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
-import { buildLaneRegistryProjection, projectLane, PROJECTION_SCHEMA } from "./build-lane-registry-projection.mjs";
+import {
+  buildLaneRegistryProjection,
+  projectLane,
+  PROJECTION_SCHEMA,
+  CONTROL_ROOM_STATE_KEYS,
+  isControlRoomLane,
+} from "./build-lane-registry-projection.mjs";
 
 // Path/privacy markers that must never appear in the admin-safe projection.
 // Markers are PATH-shaped on purpose: "_private/" (the private-root prefix), not
@@ -46,7 +52,10 @@ assert.equal(projection.lane_count, 32);
 
 const ALLOWED_KEYS = ["cadence", "enforcement", "id", "label", "owner_workflow", "privacy_class", "store_kind"];
 for (const lane of projection.lanes) {
-  assert.deepEqual(Object.keys(lane).sort(), ALLOWED_KEYS, `lane ${lane.id}: unexpected key set`);
+  const expectedKeys = isControlRoomLane(LANE_REGISTRY.lanes.find((candidate) => candidate.id === lane.id), LANE_REGISTRY.providers)
+    ? [...ALLOWED_KEYS, "control_room_state"]
+    : ALLOWED_KEYS;
+  assert.deepEqual(Object.keys(lane).sort(), expectedKeys.sort(), `lane ${lane.id}: unexpected key set`);
   // owner_workflow is a basename (no directory) or null.
   if (lane.owner_workflow !== null) {
     assert.ok(!lane.owner_workflow.includes("/"), `lane ${lane.id}: owner_workflow must be a basename`);
@@ -66,5 +75,100 @@ assert.equal(projected.privacy_class, "public_mirror");
 assert.equal(projected.enforcement, "live");
 assert.equal(projected.cadence.provider, "FRED");
 assert.ok(!("roots" in projected) && !("recovery_store" in projected), "no path fields carried");
+
+// --- RED-first control-room projection ---
+// The six non-external-data provider/runtime lanes are derived from the provider
+// registry, not a second hand-maintained lane list. Their operating state is a
+// separate projection from product freshness enums and never carries private
+// run IDs/URLs.
+const fixtureNow = "2026-08-01T08:00:00Z";
+const fixtureCalendars = {
+  schema_version: "data-supply-detection-calendars/v1",
+  calendars: [
+    { id: "utc", timezone: "UTC", weekend_days: [0, 6], holidays: [] },
+    { id: "us_trading", timezone: "America/New_York", weekend_days: [0, 6], holidays: [] },
+  ],
+  schedules: [
+    { id: "hourly_at_05", cron: "5 * * * *", calendar_id: "utc", grace: { unit: "hours", value: 6 } },
+    { id: "weekday_2200_us", cron: "0 22 * * 1-5", calendar_id: "us_trading", grace: { unit: "business_days", value: 1 } },
+  ],
+};
+const controlProjection = buildLaneRegistryProjection(LANE_REGISTRY, {
+  now: fixtureNow,
+  calendars: fixtureCalendars,
+  workflowSchedules: {
+    "fetch-yahoo-ticker.yml": [{ cron: "5 * * * *", calendar_id: "utc" }],
+    "fetch-sentiment.yml": [{ cron: "0 22 * * 1-5", calendar_id: "us_trading" }],
+  },
+  kpi: {
+    source_sla: [],
+    lanes: [
+      {
+        id: "yahoo_ticker_macro",
+        as_of: "2026-08-01T07:55:00Z",
+        details: { recovery_retry_set: [], recovery_recovered: [] },
+      },
+      {
+        id: "sentiment",
+        as_of: "2026-07-31",
+        details: { recovery_retry_set: [{ key: "sentiment" }], recovery_recovered: [] },
+      },
+    ],
+  },
+  attempts: {
+    yahoo_ticker_macro: [{
+      lane_id: "yahoo_ticker_macro",
+      observed_at: "2026-08-01T07:05:00Z",
+      execution: "returned",
+      http_status: 200,
+      rate_limited: false,
+      decode: "ok",
+      payload: "non_empty",
+      assertions: [{ id: "chart_result_array", passed: true }],
+      attempt_id: "gh-123456789-1-yahoo",
+    }],
+    sentiment: [{
+      lane_id: "sentiment",
+      observed_at: "2026-07-31T21:59:00Z",
+      execution: "returned",
+      http_status: 429,
+      rate_limited: true,
+      decode: "not_attempted",
+      payload: "empty",
+      assertions: [],
+      attempt_id: "gh-987654321-1-sentiment",
+    }],
+  },
+  alarm: {
+    status: "open",
+    open_incidents: [{ workflow: "fetch-sentiment.yml", class: "engineering" }],
+  },
+  queue: {
+    "fetch-sentiment.yml": { evidence_status: "measured", wait_ms: 1234, depth: 2 },
+  },
+});
+const controlRows = controlProjection.lanes.filter((lane) => lane.control_room_state);
+assert.equal(controlRows.length, 6, "exactly six external/runtime lanes must carry control_room_state");
+assert.deepEqual(
+  controlRows.map((lane) => lane.id),
+  ["yahoo_ticker_macro", "sentiment", "admin_live_voice_logs", "mona_production_study_state", "mona_vnext_kv", "global_scouter"],
+  "control-room lanes must derive from provider classes",
+);
+for (const lane of controlRows) {
+  assert.deepEqual(Object.keys(lane.control_room_state).sort(), [...CONTROL_ROOM_STATE_KEYS].sort(), `${lane.id}: control state shape`);
+  assert.ok(!JSON.stringify(lane.control_room_state).includes("123456789"), `${lane.id}: private run id leaked`);
+  assert.ok(!JSON.stringify(lane.control_room_state).includes("github.com"), `${lane.id}: private run URL leaked`);
+}
+const yahooControl = controlProjection.lanes.find((lane) => lane.id === "yahoo_ticker_macro").control_room_state;
+assert.equal(yahooControl.schedule.status, "on_time");
+assert.equal(yahooControl.latest_attempt.outcome, "success");
+assert.equal(yahooControl.latest_attempt.failure_class, null);
+const sentimentControl = controlProjection.lanes.find((lane) => lane.id === "sentiment").control_room_state;
+assert.equal(sentimentControl.schedule.status, "overdue");
+assert.equal(sentimentControl.latest_attempt.outcome, "failed");
+assert.equal(sentimentControl.latest_attempt.failure_class, "rate_limited");
+assert.equal(sentimentControl.incident.class, "engineering");
+assert.deepEqual(sentimentControl.queue, { evidence_status: "measured", wait_ms: 1234, depth: 2 });
+assert.equal(sentimentControl.recovery.state, "retry_pending");
 
 console.log(JSON.stringify({ ok: true, lanes: projection.lanes.length, red_markers_stripped: rawViolations }, null, 2));

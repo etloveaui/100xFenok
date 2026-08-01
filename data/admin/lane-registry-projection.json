@@ -1,8 +1,8 @@
 {
-  "schema_version": "lane-registry-projection/v1",
-  "generated_at": "2026-08-01T07:12:52.776Z",
+  "schema_version": "lane-registry-projection/v2",
+  "generated_at": "2026-08-01T08:51:59.738Z",
   "source_schema_version": "lane-registry/v3",
-  "purpose": "Admin-safe lane metadata projection for the owner data dashboard. Metadata only — no store roots, attempt/recovery paths, or repo directory structure.",
+  "purpose": "Admin-safe lane metadata and derived control-room projection for the owner data dashboard. No store roots, attempt/recovery paths, run identities, or repository directory structure.",
   "lane_count": 32,
   "lanes": [
     {
@@ -135,7 +135,47 @@
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
-      "owner_workflow": "fetch-yahoo-ticker.yml"
+      "owner_workflow": "fetch-yahoo-ticker.yml",
+      "control_room_state": {
+        "schedule": {
+          "workflow": "fetch-yahoo-ticker.yml",
+          "cron": "5 * * * *",
+          "calendar_id": "utc",
+          "grace": {
+            "unit": "hours",
+            "value": 6
+          },
+          "latest_expected_slot": "2026-08-01T08:05:00.000Z",
+          "next_expected_slot": "2026-08-01T09:05:00.000Z",
+          "status": "overdue"
+        },
+        "latest_attempt": {
+          "observed_at": "2026-08-01T07:44:45.026Z",
+          "outcome": "success",
+          "failure_class": null
+        },
+        "source": {
+          "source_date": "2026-07-31T20:00:00Z",
+          "source_date_reason": "kpi_lane_as_of",
+          "sla": null
+        },
+        "recovery": {
+          "state": "retained_lkg",
+          "retry_count": 0,
+          "recovered_at": "2026-07-15T14:04:52.506Z",
+          "lkg_source_date": "2026-07-31T20:00:00.000Z"
+        },
+        "incident": {
+          "status": "unknown",
+          "workflow": "fetch-yahoo-ticker.yml",
+          "class": null
+        },
+        "queue": {
+          "evidence_status": "unavailable",
+          "wait_ms": null,
+          "depth": null
+        }
+      }
     },
     {
       "id": "sentiment",
@@ -147,7 +187,47 @@
       },
       "enforcement": "live",
       "privacy_class": "public_mirror",
-      "owner_workflow": "fetch-sentiment.yml"
+      "owner_workflow": "fetch-sentiment.yml",
+      "control_room_state": {
+        "schedule": {
+          "workflow": "fetch-sentiment.yml",
+          "cron": "0 22 * * 1-5",
+          "calendar_id": "us_trading",
+          "grace": {
+            "unit": "business_days",
+            "value": 1
+          },
+          "latest_expected_slot": "2026-07-31T22:00:00.000Z",
+          "next_expected_slot": "2026-08-03T22:00:00.000Z",
+          "status": "on_time"
+        },
+        "latest_attempt": {
+          "observed_at": "2026-07-31T22:50:58.518Z",
+          "outcome": "success",
+          "failure_class": null
+        },
+        "source": {
+          "source_date": "2026-07-31",
+          "source_date_reason": "kpi_lane_as_of",
+          "sla": null
+        },
+        "recovery": {
+          "state": "fresh_primary",
+          "retry_count": 0,
+          "recovered_at": "2026-07-28T22:50:53.386Z",
+          "lkg_source_date": "2026-07-27"
+        },
+        "incident": {
+          "status": "unknown",
+          "workflow": "fetch-sentiment.yml",
+          "class": null
+        },
+        "queue": {
+          "evidence_status": "unavailable",
+          "wait_ms": null,
+          "depth": null
+        }
+      }
     },
     {
       "id": "nasdaq_giw_sox",
@@ -243,7 +323,44 @@
       },
       "enforcement": "shadow",
       "privacy_class": "private",
-      "owner_workflow": null
+      "owner_workflow": null,
+      "control_room_state": {
+        "schedule": {
+          "workflow": null,
+          "cron": null,
+          "calendar_id": null,
+          "grace": null,
+          "latest_expected_slot": null,
+          "next_expected_slot": null,
+          "status": "unobserved"
+        },
+        "latest_attempt": {
+          "observed_at": null,
+          "outcome": "unobserved",
+          "failure_class": null
+        },
+        "source": {
+          "source_date": null,
+          "source_date_reason": "local runtime has no repository source stamp",
+          "sla": null
+        },
+        "recovery": {
+          "state": "unavailable",
+          "retry_count": null,
+          "recovered_at": null,
+          "lkg_source_date": null
+        },
+        "incident": {
+          "status": "unknown",
+          "workflow": null,
+          "class": null
+        },
+        "queue": {
+          "evidence_status": "unavailable",
+          "wait_ms": null,
+          "depth": null
+        }
+      }
     },
     {
       "id": "mona_production_study_state",
@@ -255,7 +372,44 @@
       },
       "enforcement": "shadow",
       "privacy_class": "private",
-      "owner_workflow": null
+      "owner_workflow": null,
+      "control_room_state": {
+        "schedule": {
+          "workflow": null,
+          "cron": null,
+          "calendar_id": null,
+          "grace": null,
+          "latest_expected_slot": null,
+          "next_expected_slot": null,
+          "status": "unobserved"
+        },
+        "latest_attempt": {
+          "observed_at": null,
+          "outcome": "unobserved",
+          "failure_class": null
+        },
+        "source": {
+          "source_date": null,
+          "source_date_reason": "owner SSOT runtime has no repository source stamp",
+          "sla": null
+        },
+        "recovery": {
+          "state": "unavailable",
+          "retry_count": null,
+          "recovered_at": null,
+          "lkg_source_date": null
+        },
+        "incident": {
+          "status": "unknown",
+          "workflow": null,
+          "class": null
+        },
+        "queue": {
+          "evidence_status": "unavailable",
+          "wait_ms": null,
+          "depth": null
+        }
+      }
     },
     {
       "id": "mona_vnext_kv",
@@ -267,7 +421,44 @@
       },
       "enforcement": "shadow",
       "privacy_class": "private",
-      "owner_workflow": null
+      "owner_workflow": null,
+      "control_room_state": {
+        "schedule": {
+          "workflow": null,
+          "cron": null,
+          "calendar_id": null,
+          "grace": null,
+          "latest_expected_slot": null,
+          "next_expected_slot": null,
+          "status": "unobserved"
+        },
+        "latest_attempt": {
+          "observed_at": null,
+          "outcome": "unobserved",
+          "failure_class": null
+        },
+        "source": {
+          "source_date": null,
+          "source_date_reason": "KV runtime has no repository source stamp",
+          "sla": null
+        },
+        "recovery": {
+          "state": "unavailable",
+          "retry_count": null,
+          "recovered_at": null,
+          "lkg_source_date": null
+        },
+        "incident": {
+          "status": "unknown",
+          "workflow": null,
+          "class": null
+        },
+        "queue": {
+          "evidence_status": "unavailable",
+          "wait_ms": null,
+          "depth": null
+        }
+      }
     },
     {
       "id": "benchmarks",
@@ -291,7 +482,44 @@
       },
       "enforcement": "shadow",
       "privacy_class": "public_mirror",
-      "owner_workflow": null
+      "owner_workflow": null,
+      "control_room_state": {
+        "schedule": {
+          "workflow": null,
+          "cron": null,
+          "calendar_id": null,
+          "grace": null,
+          "latest_expected_slot": null,
+          "next_expected_slot": null,
+          "status": "unobserved"
+        },
+        "latest_attempt": {
+          "observed_at": null,
+          "outcome": "unobserved",
+          "failure_class": null
+        },
+        "source": {
+          "source_date": null,
+          "source_date_reason": "owner-managed payload has no source SLA row",
+          "sla": null
+        },
+        "recovery": {
+          "state": "unavailable",
+          "retry_count": null,
+          "recovered_at": null,
+          "lkg_source_date": null
+        },
+        "incident": {
+          "status": "unknown",
+          "workflow": null,
+          "class": null
+        },
+        "queue": {
+          "evidence_status": "unavailable",
+          "wait_ms": null,
+          "depth": null
+        }
+      }
     },
     {
       "id": "damodaran",
