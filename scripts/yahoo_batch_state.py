@@ -104,11 +104,15 @@ def _epoch_iso(value) -> str | None:
 
 
 def _is_natural_promotion_run(run: dict) -> bool:
-    return (
-        run.get("natural") is True
-        and run.get("event_name") == "schedule"
-        and int(run.get("run_attempt") or 1) == 1
-    )
+    # A scheduled acquisition promotes only when it is the natural first attempt.
+    # A manual dispatch is a real provider acquisition too, so it promotes on a
+    # first attempt with a complete run binding; retries and unbound or local
+    # runs stay excluded, and every payload/provider check still applies.
+    if int(run.get("run_attempt") or 1) != 1:
+        return False
+    if run.get("event_name") == "schedule":
+        return run.get("natural") is True
+    return run.get("event_name") == "workflow_dispatch" and _valid_run_binding(run)
 
 
 def _valid_run_binding(run: dict) -> bool:

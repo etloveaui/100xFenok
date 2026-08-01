@@ -1028,7 +1028,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         manual_proof = store.build_provider_observation("AAPL", advanced_provider, manual_run)
         self.assertEqual(
             store.evaluate_recovery_candidate("AAPL", candidate, manual_proof, manual_run)["reason"],
-            "recovery_requires_schedule",
+            "ok",
         )
         rerun = {**self._run("rerun", attempt=2), "natural": True}
         rerun_proof = store.build_provider_observation("AAPL", advanced_provider, rerun)
@@ -1511,7 +1511,9 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(first["pending"]["expected_resolution"], "next_natural_yahoo_run")
         self.assertEqual(first["pending"]["reason"], "recent_listing")
 
-        manual_run = {**self._run("manual-pending"), "event_name": "workflow_dispatch", "natural": False}
+        manual_run = {
+            **self._run("manual-pending", attempt=2), "event_name": "workflow_dispatch", "natural": False,
+        }
         manual_proof = store.build_provider_observation("NEW", pending, manual_run)
         manual_decision = store.evaluate_recovery_candidate("NEW", pending, manual_proof, manual_run)
         self.assertEqual(manual_decision["reason"], "recovery_requires_schedule")
