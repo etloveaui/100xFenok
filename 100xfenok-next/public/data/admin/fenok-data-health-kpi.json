@@ -4966,6 +4966,51 @@
           "recovered_entities": [],
           "promotion_deferrals": []
         },
+        "stock_denominator_reconciliation": {
+          "schema_version": "stock-denominator-reconciliation/v1",
+          "status": "ready",
+          "status_message": "Stock denominators reconcile: 1185 canonical daily names, 6741 Yahoo-active names, 887 retry candidates, and 3 terminal provider-unsupported names; 884 retries remain actionable after the terminal overlap.",
+          "counts": {
+            "canonical_daily_plan": 1185,
+            "yahoo_active_universe": 6741,
+            "yahoo_active_excess": 5556,
+            "yahoo_active_untracked": 3756,
+            "yahoo_active_classified": 2985,
+            "retry_debt": 887,
+            "retry_debt_actionable": 884,
+            "terminal_provider_unsupported": 3,
+            "terminal_retry_overlap": 3
+          },
+          "equations": {
+            "yahoo_active_partition": {
+              "classified": 2985,
+              "untracked": 3756,
+              "total": 6741,
+              "ok": true
+            },
+            "retry_overlay": {
+              "retry_debt": 887,
+              "non_fresh_states": 887,
+              "retry_symbols": 887,
+              "ok": true
+            },
+            "terminal_subset": {
+              "terminal_provider_unsupported": 3,
+              "canonical_daily_plan": 1185,
+              "ok": true
+            }
+          },
+          "warnings": [
+            "terminal provider-unsupported names overlap the raw Yahoo retry debt; actionable retry debt excludes that overlap"
+          ],
+          "blockers": [],
+          "sources": {
+            "canonical_daily_plan": "fenok-edge-coverage-index:expanded_stock_candidates.denominator",
+            "yahoo_active_universe": "yahoo-batch-quote-history:index.counts.active",
+            "retry_debt": "yahoo-batch-quote-history:index.counts.retry + retry_symbols",
+            "terminal_provider_unsupported": "fenok-s1-stock-public-promotion-dry-run:blocked_rows.corporate_action_policy.evidence[terminal=true]"
+          }
+        },
         "last_attempt": null,
         "last_attempt_reason": "lane has no recovery store"
       },
@@ -5008,6 +5053,14 @@
           "status": "ready",
           "status_label": "정상",
           "detail": "0 blockers",
+          "platform_blocking": false
+        },
+        {
+          "id": "denominator_reconciliation",
+          "label": "stock denominator reconciliation",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "Stock denominators reconcile: 1185 canonical daily names, 6741 Yahoo-active names, 887 retry candidates, and 3 terminal provider-unsupported names; 884 retries remain actionable after the terminal overlap.",
           "platform_blocking": false
         },
         {

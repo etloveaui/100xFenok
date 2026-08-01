@@ -29,6 +29,7 @@ import {
   evaluateSlaAge,
   slaStatusForAge,
   classifyProductSurface,
+  buildStockDenominatorReconciliation,
   buildEtfLane,
   buildYahooBatchLane,
   buildSlickChartsDeliveryLane,
@@ -430,6 +431,71 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   assert.match(degradedEtfLane.status_message, /not ready.*Other lanes may publish/);
   assert.equal(degradedEtfLane.checks.find((item) => item.id === "requirements_complete")?.status, "blocked",
     "failed readiness remains visible and is not painted green");
+}
+
+// Stock denominator reconciliation is a measured ledger: raw Yahoo retry debt
+// stays distinct from the canonical daily plan and terminal provider evidence.
+{
+  const coverageIndex = {
+    public_scoring_readiness: {
+      tracks: [{ id: "expanded_stock_candidates", denominator: 10 }],
+    },
+  };
+  const yahooBatchState = {
+    counts: { active: 12, untracked: 1, fresh: 6, lkg: 3, pending_history: 0, unavailable: 2, retry: 5 },
+    retry_symbols: ["A", "B", "C", "TERM", "OTHER"],
+  };
+  const stockPromotionDryRun = {
+    counts: { excluded_blocked_rows: 2 },
+    blocked_rows: [
+      { ticker: "TERM", corporate_action_policy: {
+        status: "policy_required_before_promotion",
+        evidence: [{ type: "Delisted", terminal: true }],
+      } },
+      { ticker: "ALIAS", corporate_action_policy: {
+        status: "policy_required_before_promotion",
+        evidence: [{ type: "Symbol Change", terminal: false, alias_target: "NEW" }],
+      } },
+    ],
+  };
+  const reconciled = buildStockDenominatorReconciliation({ coverageIndex, yahooBatchState, stockPromotionDryRun });
+  assert.equal(reconciled.status, "ready");
+  assert.deepEqual(reconciled.counts, {
+    canonical_daily_plan: 10,
+    yahoo_active_universe: 12,
+    yahoo_active_excess: 2,
+    yahoo_active_untracked: 1,
+    yahoo_active_classified: 11,
+    retry_debt: 5,
+    retry_debt_actionable: 4,
+    terminal_provider_unsupported: 1,
+    terminal_retry_overlap: 1,
+  });
+  assert.equal(reconciled.equations.yahoo_active_partition.ok, true);
+  assert.equal(reconciled.equations.retry_overlay.ok, true);
+  assert.equal(reconciled.equations.terminal_subset.ok, true);
+  assert.equal(reconciled.warnings.length, 1, "terminal/retry overlap remains explicit rather than silently additive");
+
+  const malformedRetry = structuredClone(yahooBatchState);
+  malformedRetry.retry_symbols = ["A", "A", "B", "C", "TERM"];
+  const retryBlocked = buildStockDenominatorReconciliation({
+    coverageIndex,
+    yahooBatchState: malformedRetry,
+    stockPromotionDryRun,
+  });
+  assert.equal(retryBlocked.status, "blocked");
+  assert.match(retryBlocked.status_message, /retry_symbols is missing, duplicated, or malformed/);
+
+  const malformedLedger = structuredClone(stockPromotionDryRun);
+  malformedLedger.counts.excluded_blocked_rows = 1;
+  const ledgerBlocked = buildStockDenominatorReconciliation({
+    coverageIndex,
+    yahooBatchState,
+    stockPromotionDryRun: malformedLedger,
+  });
+  assert.equal(ledgerBlocked.status, "blocked");
+  assert.match(ledgerBlocked.status_message, /S1 blocked ledger is missing or does not match/);
+  console.log("  pass - stock denominator reconciliation is overlap-aware and fail-closed");
 }
 
 // Yahoo acquisition readiness is lane-local: LKG/new-listing lag stays visible

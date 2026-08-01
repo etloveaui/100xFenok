@@ -39,6 +39,7 @@ import {
   compactRecoveryIndex,
   compactSlickchartsCompositeIndex,
   formatRecoveryRetryEvidence,
+  buildStockDenominatorReconciliation,
   projectRecoveryRecoveredSet,
   projectRecoveryRetrySet,
   validateProducerRecoveryAttempt,
@@ -556,6 +557,28 @@ export function checkRecoveryStateSources(rootDoc, rootKpiPath, errors) {
         && JSON.stringify(actualAttempt.failed_symbols ?? []) === JSON.stringify(expectedFailedSymbols)
         && attemptFieldsMatch,
       "yahoo_batch_quote_history KPI promotion deferral attempt does not match the source index");
+    }
+  }
+  {
+    const coverageIndex = readOptionalJson(path.join(adminRoot, "fenok-edge-coverage-index.json"));
+    const yahooBatchState = readOptionalJson(path.join(adminRoot, "yahoo-batch-quote-history", "index.json"));
+    const stockPromotionDryRun = readOptionalJson(path.join(adminRoot, "fenok-s1-stock-public-promotion-dry-run.json"));
+    const lane = lanesById.get("stock_s1_candidate_gate");
+    const actual = lane?.details?.stock_denominator_reconciliation;
+    const hasEvidence = actual !== undefined
+      || coverageIndex !== null
+      || stockPromotionDryRun !== null;
+    if (hasEvidence) {
+      const expected = buildStockDenominatorReconciliation({
+        coverageIndex,
+        yahooBatchState,
+        stockPromotionDryRun,
+      });
+      push(errors, actual && JSON.stringify(actual) === JSON.stringify(expected),
+        "stock_s1_candidate_gate denominator reconciliation does not match its source artifacts");
+      const reconciliationCheck = lane?.checks?.find((row) => row?.id === "denominator_reconciliation");
+      push(errors, reconciliationCheck?.status === (expected.status === "ready" ? "ready" : "blocked"),
+        "stock_s1_candidate_gate denominator reconciliation check does not match source validity");
     }
   }
   try {

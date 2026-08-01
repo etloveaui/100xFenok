@@ -1470,19 +1470,229 @@ function stockanalysisRecoveryEvidence(state, kinds) {
   };
 }
 
-function buildStockS1Lane(coverageIndex, stockanalysisRecovery) {
+const STOCK_DENOMINATOR_RECONCILIATION_SCHEMA = "stock-denominator-reconciliation/v1";
+
+function strictNonNegativeInteger(value) {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+}
+
+function strictPositiveInteger(value) {
+  return strictNonNegativeInteger(value) && value > 0;
+}
+
+function uniqueNonEmptyStrings(values) {
+  return Array.isArray(values)
+    && values.every((value) => typeof value === "string" && value.length > 0)
+    && new Set(values).size === values.length;
+}
+
+/**
+ * Reconcile the stock acquisition denominators without conflating a retry
+ * overlay with the daily plan or terminal provider-unsupported rows.
+ *
+ * The raw sources deliberately remain separate: the coverage index owns the
+ * canonical 1,185-name daily plan, Yahoo owns its broader active universe and
+ * retry set, and the S1 promotion artifact owns terminal corporate-action
+ * evidence. A malformed or incomplete source returns `blocked`; it never
+ * becomes a synthetic zero.
+ */
+export function buildStockDenominatorReconciliation({
+  coverageIndex,
+  yahooBatchState,
+  stockPromotionDryRun,
+} = {}) {
+  const blockers = [];
+  const coverageTrack = trackById(coverageIndex, "expanded_stock_candidates");
+  const canonicalPlan = coverageTrack?.denominator;
+  const yahooCounts = yahooBatchState?.counts;
+  const activeFields = ["active", "untracked", "fresh", "lkg", "pending_history", "unavailable", "retry"];
+  const activeCount = yahooCounts?.active;
+  const untrackedCount = yahooCounts?.untracked;
+  const freshCount = yahooCounts?.fresh;
+  const lkgCount = yahooCounts?.lkg;
+  const pendingCount = yahooCounts?.pending_history;
+  const unavailableCount = yahooCounts?.unavailable;
+  const retryCount = yahooCounts?.retry;
+  const countValues = {
+    canonical_daily_plan: strictPositiveInteger(canonicalPlan) ? canonicalPlan : null,
+    yahoo_active_universe: strictPositiveInteger(activeCount) ? activeCount : null,
+    yahoo_active_untracked: strictNonNegativeInteger(untrackedCount) ? untrackedCount : null,
+    yahoo_active_fresh: strictNonNegativeInteger(freshCount) ? freshCount : null,
+    yahoo_active_lkg: strictNonNegativeInteger(lkgCount) ? lkgCount : null,
+    yahoo_active_pending_history: strictNonNegativeInteger(pendingCount) ? pendingCount : null,
+    yahoo_active_unavailable: strictNonNegativeInteger(unavailableCount) ? unavailableCount : null,
+    retry_debt: strictNonNegativeInteger(retryCount) ? retryCount : null,
+  };
+
+  if (countValues.canonical_daily_plan === null) {
+    blockers.push("canonical expanded_stock_candidates denominator is missing or malformed");
+  }
+  if (!yahooBatchState || !yahooCounts || typeof yahooCounts !== "object" || Array.isArray(yahooCounts)) {
+    blockers.push("Yahoo active-universe counts are missing");
+  } else {
+    for (const field of activeFields) {
+      if (!strictNonNegativeInteger(yahooCounts[field])) {
+        blockers.push(`Yahoo count ${field} is missing or not a non-negative integer`);
+      }
+    }
+    if (countValues.yahoo_active_universe !== null && countValues.canonical_daily_plan !== null
+      && countValues.yahoo_active_universe < countValues.canonical_daily_plan) {
+      blockers.push("Yahoo active universe is narrower than the canonical daily plan");
+    }
+  }
+
+  const classifiedCount = [freshCount, lkgCount, pendingCount, unavailableCount]
+    .every(strictNonNegativeInteger)
+    ? freshCount + lkgCount + pendingCount + unavailableCount
+    : null;
+  const activePartitionOk = countValues.yahoo_active_universe !== null
+    && countValues.yahoo_active_untracked !== null
+    && classifiedCount !== null
+    && classifiedCount + countValues.yahoo_active_untracked === countValues.yahoo_active_universe;
+  if (!activePartitionOk) blockers.push("Yahoo active universe is not closed by classified plus untracked states");
+
+  const retrySymbols = yahooBatchState?.retry_symbols;
+  const retrySymbolsValid = uniqueNonEmptyStrings(retrySymbols);
+  if (!retrySymbolsValid) {
+    blockers.push("Yahoo retry_symbols is missing, duplicated, or malformed");
+  } else if (countValues.retry_debt === null || retrySymbols.length !== countValues.retry_debt) {
+    blockers.push("Yahoo retry debt does not match retry_symbols");
+  }
+  const nonFreshCount = [lkgCount, pendingCount, unavailableCount].every(strictNonNegativeInteger)
+    ? lkgCount + pendingCount + unavailableCount
+    : null;
+  const retryOverlayOk = countValues.retry_debt !== null
+    && nonFreshCount !== null
+    && countValues.retry_debt <= nonFreshCount;
+  if (!retryOverlayOk) blockers.push("Yahoo retry debt exceeds non-fresh active states");
+
+  const blockedRows = stockPromotionDryRun?.blocked_rows;
+  const excludedBlockedCount = stockPromotionDryRun?.counts?.excluded_blocked_rows;
+  const terminalSymbols = [];
+  const blockedSymbols = [];
+  const blockedRowsShapeOk = Array.isArray(blockedRows)
+    && strictNonNegativeInteger(excludedBlockedCount)
+    && blockedRows.length === excludedBlockedCount;
+  if (!blockedRowsShapeOk) {
+    blockers.push("S1 blocked ledger is missing or does not match its excluded-row denominator");
+  } else {
+    for (const row of blockedRows) {
+      const ticker = row?.ticker;
+      const policy = row?.corporate_action_policy;
+      const evidence = policy?.evidence;
+      if (typeof ticker !== "string" || ticker.length === 0 || blockedSymbols.includes(ticker)) {
+        blockers.push("S1 blocked ledger contains a missing or duplicate ticker");
+        continue;
+      }
+      blockedSymbols.push(ticker);
+      if (!policy || typeof policy !== "object" || Array.isArray(policy) || !Array.isArray(evidence)) {
+        blockers.push(`S1 blocked ledger policy evidence is malformed for ${ticker}`);
+        continue;
+      }
+      if (!(["none", "policy_required_before_promotion"].includes(policy.status))) {
+        blockers.push(`S1 blocked ledger policy status is unknown for ${ticker}`);
+      }
+      if (evidence.length > 0 && policy.status !== "policy_required_before_promotion") {
+        blockers.push(`S1 blocked ledger evidence is not policy-bound for ${ticker}`);
+      }
+      if (policy.status === "policy_required_before_promotion" && evidence.length === 0) {
+        blockers.push(`S1 blocked ledger policy evidence is empty for ${ticker}`);
+      }
+      for (const item of evidence) {
+        if (typeof item?.terminal !== "boolean") {
+          blockers.push(`S1 blocked ledger terminal flag is malformed for ${ticker}`);
+        }
+      }
+      if (policy.status === "policy_required_before_promotion" && evidence.some((item) => item?.terminal === true)) {
+        terminalSymbols.push(ticker);
+      }
+    }
+  }
+
+  const terminalCount = [...new Set(terminalSymbols)].length;
+  const terminalSubsetOk = countValues.canonical_daily_plan !== null && terminalCount <= countValues.canonical_daily_plan;
+  if (!terminalSubsetOk) blockers.push("terminal provider-unsupported count exceeds the canonical daily plan");
+  const retrySet = retrySymbolsValid ? new Set(retrySymbols) : new Set();
+  const terminalRetryOverlap = terminalSymbols.filter((symbol) => retrySet.has(symbol)).length;
+  const retryActionableCount = countValues.retry_debt !== null
+    ? countValues.retry_debt - terminalRetryOverlap
+    : null;
+  const status = blockers.length === 0 ? "ready" : "blocked";
+  const counts = {
+    canonical_daily_plan: countValues.canonical_daily_plan,
+    yahoo_active_universe: countValues.yahoo_active_universe,
+    yahoo_active_excess: countValues.yahoo_active_universe !== null && countValues.canonical_daily_plan !== null
+      ? countValues.yahoo_active_universe - countValues.canonical_daily_plan
+      : null,
+    yahoo_active_untracked: countValues.yahoo_active_untracked,
+    yahoo_active_classified: classifiedCount,
+    retry_debt: countValues.retry_debt,
+    retry_debt_actionable: retryActionableCount,
+    terminal_provider_unsupported: terminalCount,
+    terminal_retry_overlap: terminalRetryOverlap,
+  };
+  return {
+    schema_version: STOCK_DENOMINATOR_RECONCILIATION_SCHEMA,
+    status,
+    status_message: status === "ready"
+      ? `Stock denominators reconcile: ${counts.canonical_daily_plan} canonical daily names, ${counts.yahoo_active_universe} Yahoo-active names, ${counts.retry_debt} retry candidates, and ${counts.terminal_provider_unsupported} terminal provider-unsupported names; ${counts.retry_debt_actionable} retries remain actionable after the terminal overlap.`
+      : `Stock denominator reconciliation is blocked: ${blockers.join("; ")}.`,
+    counts,
+    equations: {
+      yahoo_active_partition: {
+        classified: classifiedCount,
+        untracked: countValues.yahoo_active_untracked,
+        total: countValues.yahoo_active_universe,
+        ok: activePartitionOk,
+      },
+      retry_overlay: {
+        retry_debt: countValues.retry_debt,
+        non_fresh_states: nonFreshCount,
+        retry_symbols: retrySymbolsValid ? retrySymbols.length : null,
+        ok: retryOverlayOk && retrySymbolsValid && retrySymbols.length === countValues.retry_debt,
+      },
+      terminal_subset: {
+        terminal_provider_unsupported: terminalCount,
+        canonical_daily_plan: countValues.canonical_daily_plan,
+        ok: terminalSubsetOk,
+      },
+    },
+    warnings: terminalRetryOverlap > 0
+      ? ["terminal provider-unsupported names overlap the raw Yahoo retry debt; actionable retry debt excludes that overlap"]
+      : [],
+    blockers,
+    sources: {
+      canonical_daily_plan: "fenok-edge-coverage-index:expanded_stock_candidates.denominator",
+      yahoo_active_universe: "yahoo-batch-quote-history:index.counts.active",
+      retry_debt: "yahoo-batch-quote-history:index.counts.retry + retry_symbols",
+      terminal_provider_unsupported: "fenok-s1-stock-public-promotion-dry-run:blocked_rows.corporate_action_policy.evidence[terminal=true]",
+    },
+  };
+}
+
+function buildStockS1Lane(coverageIndex, stockanalysisRecovery, yahooBatchState, stockPromotionDryRun) {
   const track = trackById(coverageIndex, "expanded_stock_candidates");
   const promotion = track?.promotion_gate_readiness || {};
   const counts = promotion.counts || {};
   const denominator = number(counts.denominator || track?.denominator);
   const closedCount = number(counts.current_public_candidate_overlap_plus_blocked);
   const recovery = stockanalysisRecoveryEvidence(stockanalysisRecovery, ["stock", "financial"]);
+  const hasDenominatorSources = coverageIndex !== null || yahooBatchState !== null || stockPromotionDryRun !== null;
+  const denominatorReconciliation = hasDenominatorSources
+    ? buildStockDenominatorReconciliation({ coverageIndex, yahooBatchState, stockPromotionDryRun })
+    : null;
   return lane("stock_s1_candidate_gate", "S1 candidate promotion gate", [
     check("requirements_complete", "PUBLIC+DAILY+GATED with blocked ledger", allRequirementsReady(track?.requirements), track?.stage || "missing"),
     check("artifact_present", "promotion artifact", bool(promotion.artifact_present), promotion.artifact_generated_at || "missing"),
     check("gap_partition_closed", "public plus blocked equals denominator", denominator > 0 && closedCount === denominator, `${closedCount.toLocaleString("ko-KR")} / ${denominator.toLocaleString("ko-KR")}`),
     check("promotion_queue_empty", "promotion queue", number(counts.promotion_rows) === 0, `${number(counts.promotion_rows)} rows`),
     check("blockers_empty", "gate blockers", (promotion.blockers || []).length === 0, `${(promotion.blockers || []).length} blockers`),
+    ...(denominatorReconciliation ? [check(
+      "denominator_reconciliation",
+      "stock denominator reconciliation",
+      denominatorReconciliation.status === "ready",
+      denominatorReconciliation.status_message,
+    )] : []),
     diagnosticCheck("stockanalysis_recovery_state_present", "StockAnalysis stock/financial recovery state", recovery.state_present, recovery.generated_at || "missing", { service_gate: false }),
     diagnosticCheck("stockanalysis_retry_empty", "StockAnalysis stock/financial retry set", recovery.degraded.length === 0, `${recovery.degraded.length} deferred: ${recovery.degraded_entities.join(", ") || "none"}`, { service_gate: false }),
   ], {
@@ -1495,7 +1705,10 @@ function buildStockS1Lane(coverageIndex, stockanalysisRecovery) {
       blocked_excluded_count: number(counts.blocked_excluded_rows),
       current_public_candidate_overlap_plus_blocked: closedCount,
     },
-    details: { stockanalysis_recovery: recovery },
+    details: {
+      stockanalysis_recovery: recovery,
+      ...(denominatorReconciliation ? { stock_denominator_reconciliation: denominatorReconciliation } : {}),
+    },
     asOf: promotion.artifact_generated_at || coverageIndex?.generated_at || null,
   });
 }
@@ -2515,6 +2728,7 @@ function buildSourceArtifacts(loaded) {
 
 export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, recoverySources = RECOVERY_STATE_SOURCES) {
   const coverageIndex = readJson("admin/fenok-edge-coverage-index.json");
+  const stockPromotionDryRun = readJson("admin/fenok-s1-stock-public-promotion-dry-run.json");
   const rimInputs = readJson("computed/rim-index/inputs.json") || readJson("computed/rim-index/inputs.json", PUBLIC_DATA_ROOT);
   const productCoverage = readJson("admin/product-surface-coverage.json");
   const finraOccLedger = readJson("admin/fenok-s0-finra-occ-mapping-ledger.json");
@@ -2563,7 +2777,7 @@ export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, r
 
   const lanes = [
     buildStockS0Lane(coverageIndex),
-    buildStockS1Lane(coverageIndex, stockanalysisRecovery),
+    buildStockS1Lane(coverageIndex, stockanalysisRecovery, yahooBatchState, stockPromotionDryRun),
     buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCoreBasket, stockanalysisRecovery),
     buildYahooBatchLane(yahooBatchState, nowIso),
     buildSlickChartsDeliveryLane(nowIso, { assessment: slickchartsDelivery }),
