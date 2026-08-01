@@ -35,7 +35,11 @@ export function buildLaneRunIdMap(payload) {
     const laneId = safeString(lane?.id);
     if (!laneId) continue;
     const attempt = normalizeAttempt(lane?.details?.last_attempt)
-      ?? normalizeAttempt(lane?.details?.current_attempt);
+      ?? normalizeAttempt(lane?.details?.current_attempt)
+      // Recovery indexes keep the authenticated run identity under the
+      // private lane recovery detail. The public projector removes this
+      // identity; use it only for the server-side admin map.
+      ?? normalizeAttempt(lane?.details?.recovery?.current_attempt);
     if (attempt) entries.push([laneId, attempt]);
   }
   return Object.fromEntries(entries.sort(([first], [second]) => first.localeCompare(second)));

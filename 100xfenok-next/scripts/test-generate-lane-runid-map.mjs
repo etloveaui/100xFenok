@@ -43,6 +43,24 @@ const fixture = {
         },
       },
     },
+    {
+      id: "nested_recovery_lane",
+      details: {
+        last_attempt: {
+          observed_at: "2026-07-20T05:06:07Z",
+          outcome: "success",
+          failure_class: null,
+        },
+        recovery: {
+          current_attempt: {
+            run_id: "99345678900013",
+            run_attempt: 3,
+            event_name: "schedule",
+            observed_at: "2026-07-20T05:00:00Z",
+          },
+        },
+      },
+    },
     { id: "null_lane", details: { last_attempt: null, current_attempt: null } },
     { id: "missing_lane", details: {} },
     { id: "unsafe_lane", details: { last_attempt: { run_id: "12/not-a-run" } } },
@@ -55,6 +73,12 @@ const expected = {
     run_attempt: 2,
     event_name: "workflow_dispatch",
     observed_at: "2026-07-20T04:05:06Z",
+  },
+  nested_recovery_lane: {
+    run_id: "99345678900013",
+    run_attempt: 3,
+    event_name: "schedule",
+    observed_at: "2026-07-20T05:00:00Z",
   },
   last_lane: {
     run_id: "99123456789001",
