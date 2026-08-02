@@ -110,6 +110,7 @@ concurrency:
 jobs:
   update-manifest:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     # KPI v2 builder reads GITHUB_* defaults plus this origin envelope from env.
     # KPI_EVENT_SCHEDULE = the exact cron that triggered a scheduled run, so slot
     # inference uses the run's OWN cron (never latest-across-crons).

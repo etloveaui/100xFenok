@@ -67,6 +67,7 @@ jobs:
   membership:
     if: ${{ github.event.inputs.batch != 'single' || github.event.inputs.scraper == 'membership' || github.event_name == 'schedule' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 120
 
     steps:
       - name: Checkout repository
@@ -106,6 +107,7 @@ jobs:
     if: ${{ (github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'returns' || github.event_name == 'schedule') && github.event.inputs.batch != 'single' }}
     needs: membership
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
@@ -161,6 +163,7 @@ jobs:
     if: ${{ (github.event.inputs.scraper == 'all' || github.event.inputs.scraper == 'dividends' || github.event_name == 'schedule') && github.event.inputs.batch != 'single' }}
     needs: membership
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
@@ -215,6 +218,7 @@ jobs:
   merge-history:
     needs: [scrape-returns, scrape-dividends]
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     if: >-
       ${{ always()
           && (github.event.inputs.batch == 'ALL' || github.event_name == 'schedule')
@@ -442,6 +446,7 @@ jobs:
   scrape-single:
     if: ${{ github.event.inputs.batch == 'single' && github.event.inputs.symbol != '' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 120
 
     steps:
       - name: Configure single-symbol attempt telemetry path

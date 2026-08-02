@@ -54,6 +54,7 @@ jobs:
   scrape-batch:
     if: ${{ github.event.inputs.batch != 'single' || github.event_name == 'schedule' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
@@ -113,6 +114,7 @@ jobs:
   merge-batches:
     needs: scrape-batch
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     if: ${{ always() && (github.event.inputs.batch == 'ALL' || github.event_name == 'schedule') }}
 
     steps:
@@ -239,6 +241,7 @@ jobs:
   scrape-single:
     if: ${{ github.event.inputs.batch == 'single' && github.event.inputs.symbol != '' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 120
 
     steps:
       - name: Configure single-symbol attempt telemetry path

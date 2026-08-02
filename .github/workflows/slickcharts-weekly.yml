@@ -45,6 +45,7 @@ concurrency:
 jobs:
   scrape-weekly:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
 
     steps:
       - name: Configure attempt telemetry path
