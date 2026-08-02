@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-01T23:15:25.119Z",
+  "generated_at": "2026-08-02T09:26:10.565Z",
   "status": "open",
-  "open_incident_count": 6,
+  "open_incident_count": 5,
   "open_incidents": [
     {
       "workflow": "fetch-fred-macro.yml",
@@ -12,10 +12,11 @@
       "first_failing_run_id": null,
       "first_failing_run_url": null,
       "alarm_reasons": [
-        "lost_schedule_slot"
+        "lost_schedule_slot",
+        "unrecovered_overdue"
       ],
       "lost_schedule_slot_count": 1,
-      "cadence_status": "not_due"
+      "cadence_status": "overdue"
     },
     {
       "workflow": "fetch-oecd-cli.yml",
@@ -47,10 +48,10 @@
     {
       "workflow": "slickcharts-daily.yml",
       "label": "SlickCharts Daily",
-      "streak": 0,
+      "streak": 1,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
+      "first_failing_run_id": 30739823043,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30739823043",
       "alarm_reasons": [
         "lost_schedule_slot"
       ],
@@ -66,19 +67,6 @@
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/28513565916",
       "alarm_reasons": [
         "failure_streak",
-        "lost_schedule_slot"
-      ],
-      "lost_schedule_slot_count": 1,
-      "cadence_status": "not_due"
-    },
-    {
-      "workflow": "slickcharts-weekly.yml",
-      "label": "SlickCharts Weekly",
-      "streak": 0,
-      "failure_streak_threshold": 1,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
         "lost_schedule_slot"
       ],
       "lost_schedule_slot_count": 1,
@@ -238,8 +226,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "suspected_skip"
+      ]
     },
     {
       "file": "fetch-fred-yardeni.yml",
@@ -447,8 +437,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 24,
-    "overdue": 2,
+    "not_due": 23,
+    "overdue": 3,
     "recovered": 0,
     "no_declaration": 6,
     "unknown": 0
@@ -464,17 +454,16 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "30722925012",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30722925012",
-    "observed_at": "2026-08-01T23:15:25.119Z",
+    "run_id": "30741708820",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30741708820",
+    "observed_at": "2026-08-02T09:26:10.565Z",
     "event": "schedule",
     "workflows": [
       "fetch-fred-macro.yml",
       "fetch-oecd-cli.yml",
       "fetch-stockanalysis.yml",
       "slickcharts-daily.yml",
-      "slickcharts-monthly.yml",
-      "slickcharts-weekly.yml"
+      "slickcharts-monthly.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
