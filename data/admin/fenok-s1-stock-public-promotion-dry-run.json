@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-s1-stock-public-promotion-dry-run/v0.1",
-  "generated_at": "2026-08-02T12:26:19.209Z",
+  "generated_at": "2026-08-02T12:38:53.352Z",
   "purpose": "Persist an admin-only dry-run and fail-closed explicit-enable plan for future S1 public stock promotion.",
   "contract_doc": "docs/planning/CONTRACT_fenok_s1_stock_promotion_scoring_v0_1_20260630.md",
   "source_gate": "s1_stock_promotion_candidates.joined_gate",
@@ -58,10 +58,10 @@
         "100xfenok-next/public/data/computed/fenok_signals_summary.json"
       ],
       "before_counts": {
-        "public_s0_rows": 1179
+        "public_s0_rows": 1181
       },
       "after_counts_if_enabled": {
-        "public_s0_rows": 1179,
+        "public_s0_rows": 1181,
         "promoted_rows": 0,
         "blocked_rows_excluded": 6,
         "duplicate_symbols": 0
@@ -84,11 +84,11 @@
     "full_public_mirror": false
   },
   "counts": {
-    "public_s0_before": 1179,
+    "public_s0_before": 1181,
     "s1_gap_total": 6,
     "promotion_rows": 0,
     "excluded_blocked_rows": 6,
-    "public_s0_after_if_enabled": 1179,
+    "public_s0_after_if_enabled": 1181,
     "s0_overlap_rows": 0,
     "etf_rows": 0,
     "non_stock_rows": 0,
@@ -119,12 +119,12 @@
     {
       "id": "s1_public_promotion_dry_run_counts_current",
       "ok": true,
-      "detail": "s0=1179, gap=6, promotion=0, blocked=6"
+      "detail": "s0=1181, gap=6, promotion=0, blocked=6"
     },
     {
       "id": "s1_public_promotion_dry_run_hypothetical_denominator",
       "ok": true,
-      "detail": "1179+0=1179; blocked=6; gap=6"
+      "detail": "1181+0=1181; blocked=6; gap=6"
     },
     {
       "id": "s1_public_promotion_dry_run_no_s0_overlap",
@@ -179,7 +179,7 @@
     {
       "id": "s1_public_mutation_plan_fail_closed_with_rollback",
       "ok": true,
-      "detail": "{\"after\":{\"public_s0_rows\":1179,\"promoted_rows\":0,\"blocked_rows_excluded\":6,\"duplicate_symbols\":0},\"rollback_targets\":[\"data/computed/stock_action_index.json\",\"data/computed/fenok_signals.json\",\"data/computed/fenok_signals_summary.json\",\"100xfenok-next/public/data/computed/fenok_signals_summary.json\"],\"validation\":{\"no_s0_overlap\":true,\"no_etf_or_non_stock_rows\":true,\"missing_axes_null_explicit\":true,\"blocked_rows_excluded\":true,\"full_public_signal_file_forbidden\":true}}"
+      "detail": "{\"after\":{\"public_s0_rows\":1181,\"promoted_rows\":0,\"blocked_rows_excluded\":6,\"duplicate_symbols\":0},\"rollback_targets\":[\"data/computed/stock_action_index.json\",\"data/computed/fenok_signals.json\",\"data/computed/fenok_signals_summary.json\",\"100xfenok-next/public/data/computed/fenok_signals_summary.json\"],\"validation\":{\"no_s0_overlap\":true,\"no_etf_or_non_stock_rows\":true,\"missing_axes_null_explicit\":true,\"blocked_rows_excluded\":true,\"full_public_signal_file_forbidden\":true}}"
     },
     {
       "id": "s1_public_mutation_no_write_check_mode",
@@ -196,7 +196,7 @@
     {
       "id": "s1_promotion_gate_plan_preserves_s0_count",
       "ok": true,
-      "detail": "1179->1179, future=1179, s0_overlap_rows=0"
+      "detail": "1181->1181, future=1181, s0_overlap_rows=0"
     },
     {
       "id": "s1_promotion_gate_plan_no_etf_or_non_stock_rows",
