@@ -1,6 +1,6 @@
 {
   "schema_version": "rim_index_inputs.v2",
-  "generated_at": "2026-08-02T00:32:30.252Z",
+  "generated_at": "2026-08-02T01:33:38.354Z",
   "generated_by": "scripts/build-rim-index.mjs",
   "product": "Fenok Index RIM Workbench",
   "output_scope": "inputs_and_assumption_labelled_range_no_single_target",
@@ -163,10 +163,10 @@
           },
           "qa": {
             "formula": "index-weighted YF payoutRatio cross-check",
-            "value": 0.270666,
-            "total_weight": 99.94,
-            "covered_weight": 99.06,
-            "covered_weight_ratio": 0.991195,
+            "value": 0.268026,
+            "total_weight": 100.15,
+            "covered_weight": 99.3,
+            "covered_weight_ratio": 0.991513,
             "missing_sample": [
               "DLR",
               "O",
@@ -177,7 +177,7 @@
               "EL",
               "ARES",
               "FISV",
-              "OMC"
+              "DOW"
             ]
           },
           "notes": [
@@ -185,7 +185,7 @@
           ]
         },
         "explicit_eps_growth_3y": {
-          "value": 0.179358,
+          "value": 0.176324,
           "formula": "weighted_average(((forward_eps_fy3 / forward_eps_fy1)^(1/2)) - 1)",
           "sources": [
             "computed/stock_action_index.json",
@@ -193,9 +193,9 @@
           ],
           "source_tier": "derived_formula",
           "coverage": {
-            "total_weight": 99.94,
-            "covered_weight": 95.19,
-            "covered_weight_ratio": 0.952471,
+            "total_weight": 100.15,
+            "covered_weight": 95.42,
+            "covered_weight_ratio": 0.952771,
             "covered_rows": 399,
             "min_covered_weight_ratio": 0.75,
             "missing_sample": [
@@ -206,9 +206,9 @@
               "MRSH",
               "CTAS",
               "GM",
-              "URI",
               "APO",
-              "TDG"
+              "TDG",
+              "URI"
             ]
           },
           "notes": [
@@ -371,7 +371,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 1.0903,
+                "value": 1.109,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -537,7 +537,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 0.9056,
+                "value": 0.9212,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -703,7 +703,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 0.7742,
+                "value": 0.7875,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -732,7 +732,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-07-24",
-            "stock_action_generated_at": "2026-08-01T22:43:10.509Z",
+            "stock_action_generated_at": "2026-08-02T01:32:28.543Z",
             "index_key": "sp500",
             "index_diagnostics": {
               "index_key": "sp500",
@@ -818,7 +818,7 @@
                 "kind": "collected_at",
                 "as_of": "2026-08-01",
                 "reason": "provider publishes no source date for the index yield observation",
-                "collection_age_hours": 2.97,
+                "collection_age_hours": 3.99,
                 "collection_sla_hours": 750,
                 "clock_policy_failures": []
               }
@@ -1686,7 +1686,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-07-24",
-            "stock_action_generated_at": "2026-08-01T22:43:10.509Z",
+            "stock_action_generated_at": "2026-08-02T01:32:28.543Z",
             "index_key": "nasdaq100",
             "index_diagnostics": {
               "index_key": "nasdaq100",
@@ -1772,7 +1772,7 @@
                 "kind": "collected_at",
                 "as_of": "2026-08-01",
                 "reason": "provider publishes no source date for the index yield observation",
-                "collection_age_hours": 2.97,
+                "collection_age_hours": 3.99,
                 "collection_sla_hours": 750,
                 "clock_policy_failures": []
               }
@@ -2722,7 +2722,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-07-24",
-            "stock_action_generated_at": "2026-08-01T22:43:10.509Z",
+            "stock_action_generated_at": "2026-08-02T01:32:28.543Z",
             "index_key": "kospi_krx_mktcap",
             "index_diagnostics": {
               "index_key": "kospi_krx_mktcap",
@@ -3409,7 +3409,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-07-24",
-            "stock_action_generated_at": "2026-08-01T22:43:10.509Z",
+            "stock_action_generated_at": "2026-08-02T01:32:28.543Z",
             "index_key": "sox_nasdaq_giw_methodology_mktcap",
             "index_diagnostics": {
               "index_key": "sox_nasdaq_giw_methodology_mktcap",
