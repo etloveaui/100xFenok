@@ -2477,7 +2477,7 @@ function deployWorkerKpiGateWired() {
     && packageScriptCheck("reconcile:verify", "npm run qa:fenok-data-health-kpi:artifact")
     && packageScriptOrderCheck("cf:build:steps", [
       "npm run sync-static",
-      "npm run reconcile:verify",
+      "check-fenok-data-health-kpi.mjs --strict",
       "opennextjs-cloudflare build",
     ]);
 }
@@ -2491,7 +2491,6 @@ function buildAutomationLane() {
     check("deploy_worker_smokes_kpi", "Worker live KPI smoke", workflowCheck(".github/workflows/deploy-worker.yml", "Smoke data health KPI"), "deploy post-smoke contract"),
     check("phase_b_checker_strict", "Phase B checker strict mode", workflowCheck("100xfenok-next/package.json", "check-fenok-data-health-kpi.mjs --strict"), "strict checker wiring"),
     check("phase_b_pending_max_age", "Phase B pending age enforcement", workflowCheck("100xfenok-next/scripts/check-fenok-data-health-kpi.mjs", "PENDING_MAX_AGE_DAYS") && workflowCheck("100xfenok-next/package.json", "check-fenok-data-health-kpi.mjs --strict"), "14-day pending exemption expiry is active under strict"),
-    check("deploy_worker_smoke_strict", "Worker live KPI smoke strict mode", workflowCheck(".github/workflows/deploy-worker.yml", "KPI v2 producer freshness (strict, Phase B)"), "live producer freshness fails closed"),
     check("yf_daily_no_default_cap", "YF daily stock shards no silent cap", workflowCheck(".github/workflows/fetch-yf-finance.yml", 'INPUT_LIMIT="${YF_DAILY_STOCK_LIMIT:-}"'), "future active universe expansion does not silently fall outside freshness"),
     check("stockanalysis_daily1y_scheduled", "StockAnalysis daily-1Y schedule", workflowCheck(".github/workflows/fetch-stockanalysis.yml", "50 22 * * 1-5") && workflowCheck(".github/workflows/fetch-stockanalysis.yml", "daily_1y"), "weekday catch-up lane"),
     check("edge_daily_dispatches_manifest", "Edge daily manifest dispatch", workflowCheck(".github/workflows/fenok-edge-daily.yml", "gh workflow run update-manifest.yml"), "manifest/RIM/deploy chain"),

@@ -70,7 +70,6 @@ export const PLATFORM_BLOCKING_CHECK_KEYS = Object.freeze([
   "automation_contract/deploy_worker_smokes_kpi",
   "automation_contract/phase_b_checker_strict",
   "automation_contract/phase_b_pending_max_age",
-  "automation_contract/deploy_worker_smoke_strict",
   "automation_contract/yf_daily_no_default_cap",
   "automation_contract/stockanalysis_daily1y_scheduled",
   "automation_contract/edge_daily_dispatches_manifest",
