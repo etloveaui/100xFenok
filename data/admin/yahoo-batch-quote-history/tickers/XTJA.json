@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 537,
+      "natural": true,
+      "observed_at": "2026-08-02T22:59:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30771231562",
+      "schedule": "0 22 * * 0",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T00:22:43Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XTJA.json",
-    "payload_sha256": "3a0a66058fa2796310f5e0fad6a0e8effb36e12153be815268d66b6920c53b19",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-08-02T23:00:08Z",
+    "history_as_of": "2026-07-31",
+    "path": "data/yf/finance/XTJA.json",
+    "payload_sha256": "d9def89b74f7f1d59b3ad66cc472c15f8d105ffd39bdb8bc0eb735bc77939fd8",
+    "quote_as_of": "2026-07-29T16:05:47Z",
+    "source_as_of": "2026-07-29T16:05:47Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 537,
+    "natural": true,
+    "observed_at": "2026-08-02T22:59:12Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30771231562",
+    "schedule": "0 22 * * 0",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-06-30T00:22:43Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-31",
+    "observed_at": "2026-08-02T22:59:12Z",
+    "payload_sha256": "015970d3ee6061dbb970400d3d3e2829c751f5e1b383c1c630af1cdab17aa913",
+    "quote_as_of": "2026-07-29T16:05:47Z",
+    "run_attempt": 1,
+    "run_id": "30771231562",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-29T16:05:47Z"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "XTJA",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-08-02T22:59:12Z"
 }

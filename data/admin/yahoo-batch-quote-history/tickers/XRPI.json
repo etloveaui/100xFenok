@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 552,
+      "natural": true,
+      "observed_at": "2026-08-02T22:59:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30771231562",
+      "schedule": "0 22 * * 0",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T00:22:29Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XRPI.json",
-    "payload_sha256": "1f1f4d51c60d0785dc9a962822c86a4c330e82b5052ed64dd95894b2a60859a3",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-08-02T23:00:02Z",
+    "history_as_of": "2026-07-31",
+    "path": "data/yf/finance/XRPI.json",
+    "payload_sha256": "50699eff2d3c71c31e6671e2d184193ff140e0104e0e70186e83f84f2658b864",
+    "quote_as_of": "2026-07-31T20:00:00Z",
+    "source_as_of": "2026-07-31"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 552,
+    "natural": true,
+    "observed_at": "2026-08-02T22:59:12Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30771231562",
+    "schedule": "0 22 * * 0",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-06-30T00:22:29Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-31",
+    "observed_at": "2026-08-02T22:59:12Z",
+    "payload_sha256": "efbd6e164125bc551fe7692be3aee03f23f1cf6461510f4bf241ccc62399d704",
+    "quote_as_of": "2026-07-31T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "30771231562",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-31"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "XRPI",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-08-02T22:59:12Z"
 }
