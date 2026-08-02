@@ -364,7 +364,6 @@ jobs:
             if [ -n "$INPUT_OFFSET" ]; then ARGS="$ARGS --offset $INPUT_OFFSET"; fi
             if [ -n "$INPUT_LIMIT_ETFS" ]; then ARGS="$ARGS --limit-etfs $INPUT_LIMIT_ETFS"; fi
             if [ -n "$INPUT_MAX_UNIVERSE_PAGES" ]; then ARGS="$ARGS --max-universe-pages $INPUT_MAX_UNIVERSE_PAGES"; fi
-            if [ "${INPUT_YF_ETF_FALLBACK:-true}" != "true" ] && [ -n "$INPUT_ETFS" ]; then ARGS="$ARGS --fail-on-error"; fi
           fi
           if [ "$EVENT_NAME" = "schedule" ]; then
             ARGS="$ARGS --natural-run --natural-recovery-kinds $NATURAL_RECOVERY_KINDS"
