@@ -1,7 +1,7 @@
 {
   "schema_version": "producer-lkg-index/v2",
   "lane_id": "slickcharts_daily_delivery",
-  "generated_at": "2026-07-31T09:02:45.753Z",
+  "generated_at": "2026-08-02T08:39:22.067Z",
   "keys": [
     "gainers.json",
     "losers.json",
@@ -11,15 +11,57 @@
   ],
   "counts": {
     "keys": 5,
-    "fresh": 5,
-    "lkg": 0,
-    "retry": 0,
+    "fresh": 0,
+    "lkg": 5,
+    "retry": 5,
     "unavailable": 0,
-    "failed": 0,
+    "failed": 5,
     "recovered": 0
   },
-  "retry_keys": [],
-  "lkg_details": [],
+  "retry_keys": [
+    "gainers.json",
+    "losers.json",
+    "treasury.json",
+    "currency.json",
+    "mortgage.json"
+  ],
+  "lkg_details": [
+    {
+      "key": "gainers.json",
+      "payload_sha256": "635802e27b744de833fa87e5ab52eb95551d51e0b10ef9705d94d80a54d7f5e6",
+      "source_as_of": "2026-07-31",
+      "failure_run_id": "30739823043",
+      "failure_run_attempt": 1
+    },
+    {
+      "key": "losers.json",
+      "payload_sha256": "babfba7f256249d68fd8e0da8e8b0e5555128c6a6937553a8a5cd10437e1ba99",
+      "source_as_of": "2026-07-31",
+      "failure_run_id": "30739823043",
+      "failure_run_attempt": 1
+    },
+    {
+      "key": "treasury.json",
+      "payload_sha256": "8cfc117845b014a47017897d35bd7ed35aba253b8cbbb53da4dd9261f6415afb",
+      "source_as_of": "2026-07-31",
+      "failure_run_id": "30739823043",
+      "failure_run_attempt": 1
+    },
+    {
+      "key": "currency.json",
+      "payload_sha256": "030e97ba6cd7a1cdc6ea2090585b6a9bbe4a8dd78801d906e661dfa928ddccb9",
+      "source_as_of": "2026-07-31",
+      "failure_run_id": "30739823043",
+      "failure_run_attempt": 1
+    },
+    {
+      "key": "mortgage.json",
+      "payload_sha256": "cc2f6784574592549ba48fff719aa0074e9e4d78a1872beda2acd670c5806fb4",
+      "source_as_of": "2026-07-31",
+      "failure_run_id": "30739823043",
+      "failure_run_attempt": 1
+    }
+  ],
   "recovery_details": [
     {
       "key": "gainers.json",
@@ -69,14 +111,20 @@
   ],
   "promotion_deferral_details": [],
   "current_attempt": {
-    "run_id": "30617920408",
+    "run_id": "30739823043",
     "run_attempt": 1,
     "event_name": "schedule",
-    "observed_at": "2026-07-31T09:02:45.753Z",
+    "observed_at": "2026-08-02T08:39:22.067Z",
     "attempted": 5,
-    "successes": 5,
-    "failed": 0,
-    "failed_keys": [],
+    "successes": 0,
+    "failed": 5,
+    "failed_keys": [
+      "gainers.json",
+      "losers.json",
+      "treasury.json",
+      "currency.json",
+      "mortgage.json"
+    ],
     "promotion_deferrals": 0,
     "promotion_deferral_keys": []
   }

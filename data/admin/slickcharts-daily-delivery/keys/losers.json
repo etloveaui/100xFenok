@@ -2,36 +2,34 @@
   "schema_version": "producer-lkg-key-state/v1",
   "lane_id": "slickcharts_daily_delivery",
   "key": "losers.json",
-  "updated_at": "2026-07-31T09:02:45.753Z",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "updated_at": "2026-08-02T08:39:22.067Z",
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "current": {
-    "path": "data/slickcharts/losers.json",
+    "path": "data/admin/slickcharts-daily-delivery/lkg/losers.json",
     "payload_sha256": "babfba7f256249d68fd8e0da8e8b0e5555128c6a6937553a8a5cd10437e1ba99",
     "source_as_of": "2026-07-31"
   },
-  "canonical_ref": "data/slickcharts/losers.json",
   "lkg": {
     "path": "data/admin/slickcharts-daily-delivery/lkg/losers.json",
     "payload_sha256": "babfba7f256249d68fd8e0da8e8b0e5555128c6a6937553a8a5cd10437e1ba99",
     "source_as_of": "2026-07-31"
   },
-  "latest_failure": null,
+  "canonical_ref": "data/slickcharts/losers.json",
+  "latest_failure": {
+    "run_id": "30739823043",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "observed_at": "2026-08-02T08:39:22.067Z",
+    "failure_kind": "unexpected",
+    "error": "selected scraper has no outcome after job status failure"
+  },
   "recovered_from_run_id": "30285019322",
   "recovery_run_id": "30343230102",
   "recovery_run_attempt": 1,
   "recovery_event_name": "schedule",
   "recovered_at": "2026-07-28T08:43:16.742Z",
-  "last_run_id": "30617920408",
+  "last_run_id": "30739823043",
   "last_run_attempt": 1,
-  "last_event_name": "schedule",
-  "promotion_contract": "legacy_source_marker/v1",
-  "last_recovered_failure": {
-    "run_id": "30285019322",
-    "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-07-27T16:31:30.918Z",
-    "failure_kind": "unexpected",
-    "error": "selected scraper has no outcome after job status failure"
-  }
+  "last_event_name": "schedule"
 }
