@@ -130,6 +130,7 @@ jobs:
       queue: max
     outputs:
       artifact_digest: ${{ steps.upload.outputs.artifact-digest }}
+      artifact_name: ${{ steps.artifact_identity.outputs.name }}
     # 60 was structurally too short for post-outage catch-up: 261 rate-limited
     # ETF fetches x ~20s ≈ 87min, so the job died before its commit step and
     # the backlog could never drain (run 29117945172 cancelled at 60m, 171/261
@@ -154,6 +155,10 @@ jobs:
           echo "STOCKANALYSIS_ARTIFACT_ROOT=$RUNNER_TEMP/stockanalysis-artifact" >> "$GITHUB_ENV"
           echo "STOCKANALYSIS_ARTIFACT_NAME=stockanalysis-${{ github.run_id }}-${{ github.run_attempt }}" >> "$GITHUB_ENV"
           echo "STOCKANALYSIS_BASE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Expose immutable artifact identity
+        id: artifact_identity
+        run: echo "name=$STOCKANALYSIS_ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Install optional Yahoo fallback dependency
         run: pip install yfinance
@@ -465,14 +470,14 @@ jobs:
       - name: Download immutable StockAnalysis candidate
         uses: actions/download-artifact@v4
         with:
-          name: stockanalysis-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ${{ needs.acquire-stockanalysis.outputs.artifact_name }}
           path: ${{ runner.temp }}/stockanalysis-artifact
 
       - name: Publish candidate to latest main
         id: publish
         env:
           ARTIFACT_DIGEST: ${{ needs.acquire-stockanalysis.outputs.artifact_digest }}
-          ARTIFACT_NAME: stockanalysis-${{ github.run_id }}-${{ github.run_attempt }}
+          ARTIFACT_NAME: ${{ needs.acquire-stockanalysis.outputs.artifact_name }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
