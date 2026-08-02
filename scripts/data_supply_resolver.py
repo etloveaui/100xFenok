@@ -53,6 +53,30 @@ def _provider_object_path(row: Mapping[str, Any]) -> str:
     ).as_posix()
 
 
+def _legacy_lkg_primary_advanced(
+    prior: Mapping[str, Any] | None,
+    primary: Mapping[str, Any],
+    *,
+    fallback_provider: str,
+) -> bool:
+    """Recognize a newer primary artifact that can exit the migration LKG.
+
+    A migration LKG is a one-time bridge for legacy data, not evidence of a
+    runtime primary failure.  It therefore does not need the three-natural-
+    observation recovery sequence that applies after a normal fallback.
+    """
+
+    if prior is None:
+        return False
+    if (
+        prior["provider"] != fallback_provider
+        or prior["resolution_state"] != "lkg_fallback"
+        or prior["reason_code"] != "legacy_migration_fallback_lkg"
+    ):
+        return False
+    return _timestamp(primary["source_as_of"]) > _timestamp(prior["source_as_of"])
+
+
 def _semantically_same_selection(
     left: Mapping[str, Any] | None,
     right: Mapping[str, Any] | None,
@@ -217,20 +241,29 @@ class DataSupplyResolver:
                 raise SchemaError("no fresh provider candidate exists for initial selection")
         elif prior["provider"] == fallback_provider:
             if primary_fresh:
-                is_new_natural = (
-                    primary.get("observation_origin") == "natural"
-                    and primary["event_id"] != last_primary_event_id
-                )
-                next_recovery_count = recovery_count + 1 if is_new_natural else recovery_count
-                next_primary_event_id = primary["event_id"] if is_new_natural else last_primary_event_id
-                if next_recovery_count >= policy.recovery_green_required:
+                if domain == "etf_detail" and _legacy_lkg_primary_advanced(
+                    prior,
+                    primary,
+                    fallback_provider=fallback_provider,
+                ):
                     selected = self._selection(primary, decided_at=decided_at, primary=True)
-                    transition = "fallback_to_primary"
-                    reason_code = "primary_recovered_three_natural"
+                    transition = "legacy_lkg_to_primary"
+                    reason_code = "legacy_lkg_primary_advanced"
                 else:
-                    selected = prior
-                    transition = "primary_recovery_observation" if is_new_natural else "primary_recovery_ignored"
-                    reason_code = "primary_recovery_pending" if is_new_natural else "non_natural_recovery_ignored"
+                    is_new_natural = (
+                        primary.get("observation_origin") == "natural"
+                        and primary["event_id"] != last_primary_event_id
+                    )
+                    next_recovery_count = recovery_count + 1 if is_new_natural else recovery_count
+                    next_primary_event_id = primary["event_id"] if is_new_natural else last_primary_event_id
+                    if next_recovery_count >= policy.recovery_green_required:
+                        selected = self._selection(primary, decided_at=decided_at, primary=True)
+                        transition = "fallback_to_primary"
+                        reason_code = "primary_recovered_three_natural"
+                    else:
+                        selected = prior
+                        transition = "primary_recovery_observation" if is_new_natural else "primary_recovery_ignored"
+                        reason_code = "primary_recovery_pending" if is_new_natural else "non_natural_recovery_ignored"
             elif fallback_fresh:
                 selected = self._selection(fallback, decided_at=decided_at, primary=False)
                 transition = "fallback_refresh" if selected != prior else "fallback_hold"
