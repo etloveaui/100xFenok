@@ -79,6 +79,18 @@ on:
         description: 'Use Yahoo ETF/fund fallback when StockAnalysis ETF detail endpoints are 404'
         required: false
         default: 'true'
+      recovery_artifact_run_id:
+        description: 'Owner-approved immutable artifact run ID to republish without provider acquisition'
+        required: false
+        default: ''
+      recovery_artifact_name:
+        description: 'Exact immutable artifact name from the retained acquire run'
+        required: false
+        default: ''
+      recovery_artifact_digest:
+        description: 'Exact GitHub artifact digest from the retained acquire run'
+        required: false
+        default: ''
       fetch_surfaces:
         description: 'Refresh high-value StockAnalysis public table/devalue surfaces'
         required: false
@@ -129,7 +141,7 @@ jobs:
       cancel-in-progress: false
       queue: max
     outputs:
-      artifact_digest: ${{ steps.upload.outputs.artifact-digest }}
+      artifact_digest: ${{ steps.upload.outputs.artifact-digest || steps.recovery_artifact.outputs.digest }}
       artifact_name: ${{ steps.artifact_identity.outputs.name }}
     # 60 was structurally too short for post-outage catch-up: 261 rate-limited
     # ETF fetches x ~20s ≈ 87min, so the job died before its commit step and
@@ -150,20 +162,49 @@ jobs:
           python-version: '3.12'
 
       - name: Configure external candidate root
+        env:
+          INPUT_RECOVERY_ARTIFACT_RUN_ID: ${{ github.event.inputs.recovery_artifact_run_id }}
+          INPUT_RECOVERY_ARTIFACT_NAME: ${{ github.event.inputs.recovery_artifact_name }}
+          INPUT_RECOVERY_ARTIFACT_DIGEST: ${{ github.event.inputs.recovery_artifact_digest }}
         run: |
           echo "STOCKANALYSIS_CANDIDATE_ROOT=$RUNNER_TEMP/stockanalysis-candidate" >> "$GITHUB_ENV"
           echo "STOCKANALYSIS_ARTIFACT_ROOT=$RUNNER_TEMP/stockanalysis-artifact" >> "$GITHUB_ENV"
-          echo "STOCKANALYSIS_ARTIFACT_NAME=stockanalysis-${{ github.run_id }}-${{ github.run_attempt }}" >> "$GITHUB_ENV"
+          if [ -n "${INPUT_RECOVERY_ARTIFACT_RUN_ID:-}" ]; then
+            test -n "${INPUT_RECOVERY_ARTIFACT_NAME:-}" || { echo "recovery artifact name is required" >&2; exit 64; }
+            test -n "${INPUT_RECOVERY_ARTIFACT_DIGEST:-}" || { echo "recovery artifact digest is required" >&2; exit 64; }
+            echo "STOCKANALYSIS_ARTIFACT_NAME=$INPUT_RECOVERY_ARTIFACT_NAME" >> "$GITHUB_ENV"
+          else
+            echo "STOCKANALYSIS_ARTIFACT_NAME=stockanalysis-${{ github.run_id }}-${{ github.run_attempt }}" >> "$GITHUB_ENV"
+          fi
           echo "STOCKANALYSIS_BASE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Expose immutable artifact identity
         id: artifact_identity
         run: echo "name=$STOCKANALYSIS_ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
 
+      - name: Download retained immutable candidate
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.recovery_artifact_run_id != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.event.inputs.recovery_artifact_name }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.inputs.recovery_artifact_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/stockanalysis-artifact
+
+      - name: Expose retained artifact digest
+        id: recovery_artifact
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.recovery_artifact_run_id != '' }}
+        run: echo "digest=$INPUT_RECOVERY_ARTIFACT_DIGEST" >> "$GITHUB_OUTPUT"
+        env:
+          INPUT_RECOVERY_ARTIFACT_DIGEST: ${{ github.event.inputs.recovery_artifact_digest }}
+
       - name: Install optional Yahoo fallback dependency
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.recovery_artifact_run_id == '' }}
         run: pip install yfinance
 
       - name: Run StockAnalysis fetch
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.recovery_artifact_run_id == '' }}
         env:
           INPUT_ETFS: ${{ github.event.inputs.etfs }}
           INPUT_STOCKS: ${{ github.event.inputs.stocks }}
@@ -392,7 +433,7 @@ jobs:
             | sort -u > "$PRIMARY_FETCHED_TICKERS"
 
       - name: Refresh history-gap plan after live backfill
-        if: ${{ github.event.inputs.history_gaps_only == 'true' || github.event.schedule == '50 22 * * 1-5' }}
+        if: ${{ (github.event.inputs.history_gaps_only == 'true' || github.event.schedule == '50 22 * * 1-5') && (github.event_name != 'workflow_dispatch' || github.event.inputs.recovery_artifact_run_id == '') }}
         env:
           INPUT_REQUIRED_HISTORY_PERIODS: ${{ github.event.inputs.required_history_periods }}
           INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS: ${{ github.event.inputs.incremental_etf_max_age_hours }}
@@ -409,6 +450,7 @@ jobs:
             --no-public-mirror
 
       - name: Assert acquisition checkout stayed byte-clean
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.recovery_artifact_run_id == '' }}
         run: |
           git diff --exit-code
           git diff --cached --exit-code
@@ -418,6 +460,7 @@ jobs:
           fi
 
       - name: Pack immutable StockAnalysis candidate
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.recovery_artifact_run_id == '' }}
         run: |
           python3 scripts/stockanalysis_artifact.py pack \
             --candidate-root "$STOCKANALYSIS_CANDIDATE_ROOT" \
@@ -430,6 +473,7 @@ jobs:
 
       - name: Upload immutable StockAnalysis candidate
         id: upload
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.recovery_artifact_run_id == '' }}
         uses: actions/upload-artifact@v4
         with:
           name: stockanalysis-${{ github.run_id }}-${{ github.run_attempt }}
@@ -471,6 +515,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.acquire-stockanalysis.outputs.artifact_name }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.recovery_artifact_run_id || github.run_id }}
+          github-token: ${{ github.token }}
           path: ${{ runner.temp }}/stockanalysis-artifact
 
       - name: Publish candidate to latest main
@@ -478,11 +525,25 @@ jobs:
         env:
           ARTIFACT_DIGEST: ${{ needs.acquire-stockanalysis.outputs.artifact_digest }}
           ARTIFACT_NAME: ${{ needs.acquire-stockanalysis.outputs.artifact_name }}
+          RECOVERY_ARTIFACT_RUN_ID: ${{ github.event.inputs.recovery_artifact_run_id }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           ARTIFACT_ROOT="$RUNNER_TEMP/stockanalysis-artifact"
+          APPLY_RUN_ID="${{ github.run_id }}"
+          APPLY_RUN_NUMBER="${{ github.run_number }}"
+          APPLY_RUN_ATTEMPT="${{ github.run_attempt }}"
+          APPLY_ARTIFACT_NAME="$ARTIFACT_NAME"
+          if [ -n "${RECOVERY_ARTIFACT_RUN_ID:-}" ]; then
+            test -f "$ARTIFACT_ROOT/manifest.json" || { echo "recovery artifact manifest is missing" >&2; exit 64; }
+            APPLY_RUN_ID="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["run_id"])' "$ARTIFACT_ROOT/manifest.json")"
+            APPLY_RUN_NUMBER="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["run_number"])' "$ARTIFACT_ROOT/manifest.json")"
+            APPLY_RUN_ATTEMPT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["run_attempt"])' "$ARTIFACT_ROOT/manifest.json")"
+            APPLY_ARTIFACT_NAME="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["artifact_name"])' "$ARTIFACT_ROOT/manifest.json")"
+            test "$APPLY_RUN_ID" = "$RECOVERY_ARTIFACT_RUN_ID" || { echo "recovery artifact run ID does not match manifest" >&2; exit 64; }
+            test "$APPLY_ARTIFACT_NAME" = "$ARTIFACT_NAME" || { echo "recovery artifact name does not match manifest" >&2; exit 64; }
+          fi
           for attempt in $(seq 1 5); do
             git fetch origin main
             git checkout -f -B main origin/main
@@ -497,10 +558,10 @@ jobs:
             APPLY_JSON="$(
               python3 scripts/stockanalysis_artifact.py apply \
                 --artifact-root "$ARTIFACT_ROOT" \
-                --run-id "${{ github.run_id }}" \
-                --run-number "${{ github.run_number }}" \
-                --run-attempt "${{ github.run_attempt }}" \
-                --artifact-name "$ARTIFACT_NAME" \
+                --run-id "$APPLY_RUN_ID" \
+                --run-number "$APPLY_RUN_NUMBER" \
+                --run-attempt "$APPLY_RUN_ATTEMPT" \
+                --artifact-name "$APPLY_ARTIFACT_NAME" \
                 --artifact-digest "$ARTIFACT_DIGEST" \
                 --github-output "$RUNNER_TEMP/stockanalysis-apply-output"
             )"
