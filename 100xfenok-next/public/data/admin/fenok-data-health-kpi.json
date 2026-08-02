@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-08-02T09:05:12.047Z",
+  "generated_at": "2026-08-02T09:19:29.048Z",
   "status": "degraded",
   "status_label": "저하",
   "status_message": "14 required lane(s) are not ready; healthy lanes may still publish.",
@@ -22,7 +22,7 @@
   "runtime": {
     "projection": "kpi_runtime_projection.v2",
     "built_at": "2026-08-02T05:50:49.872Z",
-    "evaluated_at": "2026-08-02T09:05:12.047Z",
+    "evaluated_at": "2026-08-02T09:19:29.048Z",
     "verdict": "degraded",
     "slot_status": "degraded",
     "status_message": "8 retained missed slot(s) recovered by later authoritative ready full snapshot(s). Recovery evidence: dispatch_snapshot:2, scheduled_slot:6.",
@@ -38,21 +38,20 @@
     "fetch_cron_skip_detection": {
       "schema_version": "fetch-cron-attempt-coverage/v1",
       "mode": "shadow",
-      "evaluated_at": "2026-08-02T09:05:08.600Z",
+      "evaluated_at": "2026-08-02T09:19:26.456Z",
       "status": "warning",
       "deployment_blocking": false,
       "counts": {
         "scheduled_members": 30,
         "schedule_bindings": 32,
-        "observed": 26,
-        "suspected_skips": 4,
+        "observed": 27,
+        "suspected_skips": 3,
         "attempt_gaps": 2
       },
       "pre_activation_lane_ids": [
         "yahoo_batch_quote_history"
       ],
       "suspected_skip_lane_ids": [
-        "fred_banking",
         "fred_macro",
         "oecd_cli",
         "stockanalysis_stock_financial"
@@ -326,7 +325,7 @@
               "collection_fresh_count": 0,
               "stale_count": 23,
               "collected_at_floor": "2026-07-30T01:04:12Z",
-              "collection_age_hours": 80.017,
+              "collection_age_hours": 80.255,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -525,7 +524,7 @@
               "collection_fresh_count": 0,
               "stale_count": 16,
               "collected_at_floor": "2026-07-30T01:04:28Z",
-              "collection_age_hours": 80.012,
+              "collection_age_hours": 80.25,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -582,7 +581,7 @@
               "collection_fresh_count": 0,
               "stale_count": 3,
               "collected_at_floor": "2026-07-30T01:04:40Z",
-              "collection_age_hours": 80.009,
+              "collection_age_hours": 80.247,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -4240,7 +4239,7 @@
               "collection_fresh_count": 0,
               "stale_count": 5,
               "collected_at_floor": "2026-07-30T01:04:12Z",
-              "collection_age_hours": 80.017,
+              "collection_age_hours": 80.255,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -4303,7 +4302,7 @@
     {
       "source_id": "etf_daily1y_readiness_admin",
       "freshness_basis": ".generated_at",
-      "source_date": "2026-08-02T09:04:44.634Z",
+      "source_date": "2026-08-02T09:19:07.919Z",
       "unit": "hours",
       "calendar": "wall_clock",
       "max_staleness": 50,
@@ -4319,18 +4318,18 @@
       "calendar": "wall_clock",
       "max_staleness": 30,
       "required": true,
-      "age": 48.05,
+      "age": 48.28,
       "status": "stale"
     },
     {
       "source_id": "slickcharts_weekly_delivery",
       "freshness_basis": ".updated (fetch/write delivery time, OLDEST; not provider publication time)",
-      "source_date": "2026-08-02T01:14:04.000Z",
+      "source_date": "2026-08-02T09:14:54.000Z",
       "unit": "hours",
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 7.85,
+      "age": 0.08,
       "status": "ready"
     },
     {
@@ -4341,7 +4340,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 7.71,
+      "age": 7.95,
       "status": "ready"
     },
     {
@@ -4352,7 +4351,7 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 11.52,
+      "age": 11.76,
       "status": "ready"
     },
     {
@@ -4363,44 +4362,44 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 11.46,
+      "age": 11.7,
       "status": "ready"
     }
   ],
   "source_artifacts": [
     {
       "id": "fenok_edge_coverage_index",
-      "generated_at": "2026-08-02T09:04:33.608Z",
+      "generated_at": "2026-08-02T09:18:59.504Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "rim_index_inputs",
-      "generated_at": "2026-08-02T09:05:00.492Z",
+      "generated_at": "2026-08-02T09:19:19.858Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-08-02T09:05:02.140Z",
+      "generated_at": "2026-08-02T09:19:21.192Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "s0_finra_occ_mapping_ledger",
-      "generated_at": "2026-08-02T09:04:44.571Z",
+      "generated_at": "2026-08-02T09:19:07.869Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_daily1y_readiness_admin",
-      "generated_at": "2026-08-02T09:04:44.634Z",
+      "generated_at": "2026-08-02T09:19:07.919Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_core_daily_basket_admin",
-      "generated_at": "2026-08-02T09:04:24.736Z",
+      "generated_at": "2026-08-02T09:18:52.735Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -4424,7 +4423,7 @@
     },
     {
       "id": "data_supply_detection_floor",
-      "generated_at": "2026-08-02T09:05:08.600Z",
+      "generated_at": "2026-08-02T09:19:26.456Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -4436,7 +4435,7 @@
     },
     {
       "id": "slickcharts_composite_recovery_state",
-      "generated_at": "2026-08-02T01:22:24.230Z",
+      "generated_at": "2026-08-02T09:15:09.726Z",
       "public_mirror": false,
       "public_safe": false
     }
@@ -4460,7 +4459,7 @@
       "status_message": "S0 active stocks daily gate is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-02T09:04:33.608Z",
+      "as_of": "2026-08-02T09:18:59.504Z",
       "counts": {
         "active_total": 1179,
         "by_market": [
@@ -4618,7 +4617,7 @@
       "status_message": "S1 candidate promotion gate is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-02T09:03:27.364Z",
+      "as_of": "2026-08-02T09:18:06.854Z",
       "counts": {
         "denominator": 1185,
         "current_public_stock": 1179,
@@ -5030,7 +5029,7 @@
           "label": "promotion artifact",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-08-02T09:03:27.364Z",
+          "detail": "2026-08-02T09:18:06.854Z",
           "platform_blocking": false
         },
         {
@@ -5095,7 +5094,7 @@
       "status_message": "ETF public scoring and daily gate is not ready: PUBLIC+DAILY+GATED: PUBLIC. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-02T09:04:44.634Z",
+      "as_of": "2026-08-02T09:19:07.919Z",
       "counts": {
         "eligible_etf_count": 4431,
         "scored_public_etf": 4431,
@@ -8053,7 +8052,7 @@
       "label": "SlickCharts delivery freshness",
       "status": "degraded",
       "status_label": "저하",
-      "status_message": "SlickCharts delivery freshness is not ready: SlickCharts delivery readiness: 548 current, 0 missing, 5 stale, 0 invalid; slickcharts-daily/gainers.json: 48.05h old exceeds 30h delivery SLA. Other lanes may publish.",
+      "status_message": "SlickCharts delivery freshness is not ready: SlickCharts delivery readiness: 548 current, 0 missing, 5 stale, 0 invalid; slickcharts-daily/gainers.json: 48.28h old exceeds 30h delivery SLA. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
       "as_of": "2026-07-31T09:02:28.000Z",
@@ -8088,7 +8087,7 @@
             "missing": 0,
             "stale": 0,
             "invalid": 0,
-            "oldest_delivery_at": "2026-08-02T01:14:04.000Z"
+            "oldest_delivery_at": "2026-08-02T09:14:54.000Z"
           },
           {
             "source_id": "slickcharts_symbols_delivery",
@@ -8129,9 +8128,9 @@
             "workflow_id": "slickcharts-daily",
             "artifact": "gainers.json",
             "symbol": null,
-            "reason": "48.05h old exceeds 30h delivery SLA",
+            "reason": "48.28h old exceeds 30h delivery SLA",
             "delivery_at": "2026-07-31T09:02:28.000Z",
-            "age_hours": 48.05,
+            "age_hours": 48.28,
             "max_hours": 30,
             "status": "stale"
           },
@@ -8139,9 +8138,9 @@
             "workflow_id": "slickcharts-daily",
             "artifact": "losers.json",
             "symbol": null,
-            "reason": "48.04h old exceeds 30h delivery SLA",
+            "reason": "48.28h old exceeds 30h delivery SLA",
             "delivery_at": "2026-07-31T09:02:33.000Z",
-            "age_hours": 48.04,
+            "age_hours": 48.28,
             "max_hours": 30,
             "status": "stale"
           },
@@ -8149,9 +8148,9 @@
             "workflow_id": "slickcharts-daily",
             "artifact": "treasury.json",
             "symbol": null,
-            "reason": "48.04h old exceeds 30h delivery SLA",
+            "reason": "48.28h old exceeds 30h delivery SLA",
             "delivery_at": "2026-07-31T09:02:40.000Z",
-            "age_hours": 48.04,
+            "age_hours": 48.28,
             "max_hours": 30,
             "status": "stale"
           },
@@ -8159,9 +8158,9 @@
             "workflow_id": "slickcharts-daily",
             "artifact": "currency.json",
             "symbol": null,
-            "reason": "48.04h old exceeds 30h delivery SLA",
+            "reason": "48.28h old exceeds 30h delivery SLA",
             "delivery_at": "2026-07-31T09:02:43.000Z",
-            "age_hours": 48.04,
+            "age_hours": 48.28,
             "max_hours": 30,
             "status": "stale"
           },
@@ -8169,9 +8168,9 @@
             "workflow_id": "slickcharts-daily",
             "artifact": "mortgage.json",
             "symbol": null,
-            "reason": "48.04h old exceeds 30h delivery SLA",
+            "reason": "48.28h old exceeds 30h delivery SLA",
             "delivery_at": "2026-07-31T09:02:45.000Z",
-            "age_hours": 48.04,
+            "age_hours": 48.28,
             "max_hours": 30,
             "status": "stale"
           }
@@ -8203,7 +8202,7 @@
           "label": "SlickCharts delivery readiness",
           "status": "blocked",
           "status_label": "차단",
-          "detail": "548 current, 0 missing, 5 stale, 0 invalid; slickcharts-daily/gainers.json: 48.05h old exceeds 30h delivery SLA",
+          "detail": "548 current, 0 missing, 5 stale, 0 invalid; slickcharts-daily/gainers.json: 48.28h old exceeds 30h delivery SLA",
           "platform_blocking": false
         }
       ]
@@ -8216,7 +8215,7 @@
       "status_message": "RIM inputs is not ready: KOSPI RIM input: input_only_krx_exact_weights_no_fair_value. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-02T09:05:00.492Z",
+      "as_of": "2026-08-02T09:19:19.858Z",
       "counts": {
         "required_ready": 3,
         "required_total": 4,
@@ -8371,7 +8370,7 @@
       "status_message": "Product surface freshness is not ready: stale surfaces: 1 stale; product surface true-date/collection taxonomy v2: stock_detail:collection_stale, market_events:collection_stale, sectors:collection_stale, etf_center:pending_true_date. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-02T09:05:02.140Z",
+      "as_of": "2026-08-02T09:19:21.192Z",
       "counts": {
         "surfaces": 7,
         "ready": 1,
@@ -8435,7 +8434,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-08-02T09:05:02.140Z",
+          "detail": "2026-08-02T09:19:21.192Z",
           "platform_blocking": false
         },
         {
@@ -8500,7 +8499,7 @@
       "status_message": "FINRA/OCC source gate is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-02T09:04:44.571Z",
+      "as_of": "2026-08-02T09:19:07.869Z",
       "counts": {
         "active_us_total": 751,
         "plain_us_finra_denominator": 691,
@@ -8512,10 +8511,10 @@
       },
       "details": {
         "source_dates": {
-          "signals_generated_at": "2026-08-02T09:03:51.729Z",
+          "signals_generated_at": "2026-08-02T09:18:27.344Z",
           "finra_source_date": "20260731",
           "occ_source_date": "20260731",
-          "coverage_index_generated_at": "2026-08-02T09:04:33.608Z",
+          "coverage_index_generated_at": "2026-08-02T09:18:59.504Z",
           "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
         },
         "action_policy": [
@@ -8555,7 +8554,7 @@
           "label": "ledger acceptance",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-08-02T09:04:44.571Z",
+          "detail": "2026-08-02T09:19:07.869Z",
           "platform_blocking": false
         },
         {
@@ -8608,7 +8607,7 @@
       "status_message": "Daily automation and deploy gates is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-02T09:05:12.443Z",
+      "as_of": "2026-08-02T09:19:29.360Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
@@ -8809,7 +8808,7 @@
       "label": "FRED banking series",
       "status": "degraded",
       "status_label": "저하",
-      "status_message": "FRED banking series is not ready: Detection floor status: stale; source_as_of 2026-01-01; LKG retry set empty: quarterly lkg_primary after run 29406166955; recovery_not_advanced_by_provider at run 30620666006. Other lanes may publish.",
+      "status_message": "FRED banking series is not ready: LKG retry set empty: quarterly lkg_primary after run 29406166955; recovery_not_advanced_by_provider at run 30741062555. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
       "as_of": "2026-01-01",
@@ -8821,7 +8820,7 @@
             "resolution_state": "lkg_primary",
             "failure_run_id": "29406166955",
             "promotion_deferral_reason": "recovery_not_advanced_by_provider",
-            "promotion_deferral_run_id": "30620666006",
+            "promotion_deferral_run_id": "30741062555",
             "recovered_from_run_id": null
           }
         ],
@@ -8848,12 +8847,12 @@
             "recovery_event_name": "schedule",
             "recovered_at": "2026-07-18T08:45:50.573Z",
             "lkg_source_as_of": "2026-07-01",
-            "source_as_of": "2026-07-15"
+            "source_as_of": "2026-07-22"
           }
         ],
         "last_attempt": {
           "event_name": null,
-          "observed_at": "2026-07-31T10:02:09.254Z",
+          "observed_at": "2026-08-02T09:08:41.032Z",
           "outcome": "success",
           "failure_class": null
         },
@@ -8863,9 +8862,9 @@
         {
           "id": "detection_floor_status",
           "label": "Detection floor status",
-          "status": "blocked",
-          "status_label": "차단",
-          "detail": "stale; source_as_of 2026-01-01",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "ok; source_as_of 2026-01-01",
           "platform_blocking": false
         },
         {
@@ -8873,11 +8872,11 @@
           "label": "LKG retry set empty",
           "status": "blocked",
           "status_label": "차단",
-          "detail": "quarterly lkg_primary after run 29406166955; recovery_not_advanced_by_provider at run 30620666006",
+          "detail": "quarterly lkg_primary after run 29406166955; recovery_not_advanced_by_provider at run 30741062555",
           "platform_blocking": false
         }
       ],
-      "reason": "stale",
+      "reason": "ok",
       "artifact": {
         "source_as_of": "2026-01-01"
       }
@@ -9724,7 +9723,7 @@
         "detection_reason": "unexpected_error",
         "recovery": {
           "lane_id": "slickcharts",
-          "generated_at": "2026-08-02T01:22:24.230Z",
+          "generated_at": "2026-08-02T09:15:09.726Z",
           "composite_state": "ready",
           "members": {
             "daily": {
@@ -9770,17 +9769,17 @@
           },
           "retry_members": [],
           "current_attempt": {
-            "event_name": "workflow_dispatch",
-            "observed_at": "2026-08-02T01:22:22.461Z",
-            "member_id": "symbols",
+            "event_name": "schedule",
+            "observed_at": "2026-08-02T09:15:08.419Z",
+            "member_id": "weekly",
             "decision": "candidate_promoted"
           }
         },
         "last_attempt": {
           "event_name": null,
-          "observed_at": "2026-08-02T08:39:22.370Z",
-          "outcome": "failed",
-          "failure_class": "unknown"
+          "observed_at": "2026-08-02T09:15:08.359Z",
+          "outcome": "success",
+          "failure_class": null
         },
         "last_attempt_reason": null,
         "source_statuses": {
@@ -9820,7 +9819,7 @@
           "label": "Recovery current attempt",
           "status": "ready",
           "status_label": "정상",
-          "detail": "run 30726728162",
+          "detail": "run 30741320858",
           "platform_blocking": false
         },
         {
@@ -10326,7 +10325,7 @@
       "check_id": "delivery_ready",
       "status": "blocked",
       "label": "SlickCharts delivery readiness",
-      "detail": "548 current, 0 missing, 5 stale, 0 invalid; slickcharts-daily/gainers.json: 48.05h old exceeds 30h delivery SLA",
+      "detail": "548 current, 0 missing, 5 stale, 0 invalid; slickcharts-daily/gainers.json: 48.28h old exceeds 30h delivery SLA",
       "required": true
     },
     {
@@ -10371,18 +10370,10 @@
     },
     {
       "lane_id": "fred_banking",
-      "check_id": "detection_floor_status",
-      "status": "blocked",
-      "label": "Detection floor status",
-      "detail": "stale; source_as_of 2026-01-01",
-      "required": true
-    },
-    {
-      "lane_id": "fred_banking",
       "check_id": "lkg_retry_set_empty",
       "status": "blocked",
       "label": "LKG retry set empty",
-      "detail": "quarterly lkg_primary after run 29406166955; recovery_not_advanced_by_provider at run 30620666006",
+      "detail": "quarterly lkg_primary after run 29406166955; recovery_not_advanced_by_provider at run 30741062555",
       "required": true
     },
     {
@@ -10423,6 +10414,14 @@
       "status": "blocked",
       "label": "Detection floor status",
       "detail": "transport_error; source_as_of 2026-06-01",
+      "required": true
+    },
+    {
+      "lane_id": "oecd_cli",
+      "check_id": "lkg_retry_set_empty",
+      "status": "blocked",
+      "label": "LKG retry set empty",
+      "detail": "oecd_cli lkg_primary after run 30263715684",
       "required": true
     }
   ]

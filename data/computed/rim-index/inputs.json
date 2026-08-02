@@ -1,6 +1,6 @@
 {
   "schema_version": "rim_index_inputs.v2",
-  "generated_at": "2026-08-02T09:05:00.492Z",
+  "generated_at": "2026-08-02T09:19:19.858Z",
   "generated_by": "scripts/build-rim-index.mjs",
   "product": "Fenok Index RIM Workbench",
   "output_scope": "inputs_and_assumption_labelled_range_no_single_target",
@@ -78,11 +78,11 @@
           "as_of": "2026-07-24"
         },
         "risk_free_rate": {
-          "value": 0.0467,
+          "value": 0.0468,
           "source": "macro/fred-banking-daily.json",
           "source_field": "series.DGS10[-1].value / 100",
           "source_tier": "observed_source",
-          "as_of": "2026-07-29",
+          "as_of": "2026-07-30",
           "label": "US 10Y Treasury"
         },
         "equity_risk_premium": {
@@ -216,7 +216,7 @@
           ]
         },
         "cost_of_equity": {
-          "value": 0.097,
+          "value": 0.0971,
           "formula": "risk_free_rate + equity_risk_premium",
           "sources": [
             "observed.risk_free_rate",
@@ -383,7 +383,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 251.3922,
+                "value": 251.2606,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -549,7 +549,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 299.643,
+                "value": 299.4815,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -715,7 +715,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 342.1776,
+                "value": 341.98,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -766,7 +766,7 @@
               "2026-07-24",
               "2026-07-24",
               "2026-07-24",
-              "2026-07-29",
+              "2026-07-30",
               "2026-08-01"
             ],
             "contributing_sources": [
@@ -810,7 +810,7 @@
                 "source": "observed.risk_free_rate",
                 "route": "main",
                 "kind": "source_as_of",
-                "as_of": "2026-07-29"
+                "as_of": "2026-07-30"
               },
               {
                 "source": "reconciliation.index_yield",
@@ -818,7 +818,7 @@
                 "kind": "collected_at",
                 "as_of": "2026-08-01",
                 "reason": "provider publishes no source date for the index yield observation",
-                "collection_age_hours": 11.51,
+                "collection_age_hours": 11.75,
                 "collection_sla_hours": 750,
                 "clock_policy_failures": []
               }
@@ -878,7 +878,7 @@
               ]
             },
             "discount_rate": {
-              "value": 0.097,
+              "value": 0.0971,
               "source_tier": "derived_formula",
               "sources": [
                 "derived.cost_of_equity"
@@ -896,22 +896,22 @@
             "residual_income_by_period": [
               {
                 "period": "fy1",
-                "value": 251.3922,
+                "value": 251.2606,
                 "source": "derived.forecast_grid_v1.residual_income_proxy"
               },
               {
                 "period": "fy2",
-                "value": 299.643,
+                "value": 299.4815,
                 "source": "derived.forecast_grid_v1.residual_income_proxy"
               },
               {
                 "period": "fy3",
-                "value": 342.1776,
+                "value": 341.98,
                 "source": "derived.forecast_grid_v1.residual_income_proxy"
               }
             ],
             "discount_rate": {
-              "value": 0.097,
+              "value": 0.0971,
               "source": "derived.cost_of_equity"
             },
             "payout_cross_check": {
@@ -932,31 +932,31 @@
             }
           },
           "range": {
-            "low": 2900.8,
-            "high": 5743.26,
-            "width_ratio": 1.9799
+            "low": 2899.29,
+            "high": 5734.47,
+            "width_ratio": 1.9779
           },
           "scenarios": [
             {
               "id": "conservative",
-              "value": 2900.8,
+              "value": 2899.29,
               "source_tier": "assumption_labelled_scenario",
               "assumption_version": "rim-assumptions-20260708",
               "reviewed_at": "2026-07-08",
               "terminal_growth": 0,
               "terminal_treatment": "residual income fades linearly to zero over 10 years; no perpetuity",
-              "continuing_value_at_fy3": 1118.83,
+              "continuing_value_at_fy3": 1117.86,
               "formula": "book_value_beginning + sum(residual_income_proxy_t / (1 + discount_rate)^t for t in fy1..fy3) + continuing_value / (1 + discount_rate)^3"
             },
             {
               "id": "optimistic",
-              "value": 5743.26,
+              "value": 5734.47,
               "source_tier": "assumption_labelled_scenario",
               "assumption_version": "rim-assumptions-20260708",
               "reviewed_at": "2026-07-08",
               "terminal_growth": 0.025,
               "terminal_treatment": "residual income persists and grows at 0.025 in perpetuity",
-              "continuing_value_at_fy3": 4871.28,
+              "continuing_value_at_fy3": 4861.71,
               "formula": "book_value_beginning + sum(residual_income_proxy_t / (1 + discount_rate)^t for t in fy1..fy3) + continuing_value / (1 + discount_rate)^3"
             }
           ],
@@ -1041,11 +1041,11 @@
           "as_of": "2026-07-24"
         },
         "risk_free_rate": {
-          "value": 0.0467,
+          "value": 0.0468,
           "source": "macro/fred-banking-daily.json",
           "source_field": "series.DGS10[-1].value / 100",
           "source_tier": "observed_source",
-          "as_of": "2026-07-29",
+          "as_of": "2026-07-30",
           "label": "US 10Y Treasury"
         },
         "equity_risk_premium": {
@@ -1175,7 +1175,7 @@
           ]
         },
         "cost_of_equity": {
-          "value": 0.097,
+          "value": 0.0971,
           "formula": "risk_free_rate + equity_risk_premium",
           "sources": [
             "observed.risk_free_rate",
@@ -1340,7 +1340,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 991.3927,
+                "value": 991.0728,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -1505,7 +1505,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 1188.4956,
+                "value": 1188.0585,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -1669,7 +1669,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 1622.5085,
+                "value": 1621.9263,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -1720,7 +1720,7 @@
               "2026-07-24",
               "2026-07-24",
               "2026-07-24",
-              "2026-07-29",
+              "2026-07-30",
               "2026-08-01"
             ],
             "contributing_sources": [
@@ -1764,7 +1764,7 @@
                 "source": "observed.risk_free_rate",
                 "route": "main",
                 "kind": "source_as_of",
-                "as_of": "2026-07-29"
+                "as_of": "2026-07-30"
               },
               {
                 "source": "reconciliation.index_yield",
@@ -1772,7 +1772,7 @@
                 "kind": "collected_at",
                 "as_of": "2026-08-01",
                 "reason": "provider publishes no source date for the index yield observation",
-                "collection_age_hours": 11.51,
+                "collection_age_hours": 11.75,
                 "collection_sla_hours": 750,
                 "clock_policy_failures": []
               }
@@ -1832,7 +1832,7 @@
               ]
             },
             "discount_rate": {
-              "value": 0.097,
+              "value": 0.0971,
               "source_tier": "derived_formula",
               "sources": [
                 "derived.cost_of_equity"
@@ -1850,22 +1850,22 @@
             "residual_income_by_period": [
               {
                 "period": "fy1",
-                "value": 991.3927,
+                "value": 991.0728,
                 "source": "derived.forecast_grid_v1.residual_income_proxy"
               },
               {
                 "period": "fy2",
-                "value": 1188.4956,
+                "value": 1188.0585,
                 "source": "derived.forecast_grid_v1.residual_income_proxy"
               },
               {
                 "period": "fy3",
-                "value": 1622.5085,
+                "value": 1621.9263,
                 "source": "derived.forecast_grid_v1.residual_income_proxy"
               }
             ],
             "discount_rate": {
-              "value": 0.097,
+              "value": 0.0971,
               "source": "derived.cost_of_equity"
             },
             "payout_cross_check": {
@@ -2849,11 +2849,11 @@
           "as_of": "2026-07-24"
         },
         "risk_free_rate": {
-          "value": 0.0467,
+          "value": 0.0468,
           "source": "macro/fred-banking-daily.json",
           "source_field": "series.DGS10[-1].value / 100",
           "source_tier": "observed_source",
-          "as_of": "2026-07-29",
+          "as_of": "2026-07-30",
           "label": "US 10Y Treasury"
         },
         "equity_risk_premium": {
@@ -2950,7 +2950,7 @@
           ]
         },
         "cost_of_equity": {
-          "value": 0.097,
+          "value": 0.0971,
           "formula": "risk_free_rate + equity_risk_premium",
           "sources": [
             "observed.risk_free_rate",
@@ -3098,7 +3098,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 445.7448,
+                "value": 445.6362,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -3245,7 +3245,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 629.6871,
+                "value": 629.5296,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -3392,7 +3392,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 763.8533,
+                "value": 763.6265,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
