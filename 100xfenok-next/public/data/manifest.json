@@ -34,12 +34,12 @@
     },
     "global-scouter": {
       "version": "2.4.0",
-      "updated": "2026-07-24",
+      "updated": "2026-07-31",
       "update_frequency": "on-demand",
       "source": "Global Scouter Tool",
-      "file_count": 1083,
+      "file_count": 1085,
       "schema": true,
-      "description": "Stock screening (1,065), ETFs (22), indicators (1,069 records) from the owner's weekly Global Scouter export"
+      "description": "Stock screening (1,067), ETFs (22), indicators (1,070 records) from the owner's weekly Global Scouter export"
     },
     "indices": {
       "version": "2.0.0",
@@ -166,6 +166,12 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-08-02",
+      "folder": "global-scouter",
+      "version": "2.4.0",
+      "change": "Weekly refresh from the owner-supplied 2026-07-31 Global Scouter workbook: 1,067 stocks (+2), 22 ETFs, 1,070 indicator records; stocks_analyzer, per_bands_index, slick_index and revision_movers rebuilt so the screener reads 2026-07-31 instead of 2026-07-24. Added Kioxia Holdings (285A.T, Tokyo) and CXMT A (688825.SS, Shanghai) with zero symbols dropped. Provider states Tokyo and Shanghai listings have no realtime current price, so both carry null price - matching the unchanged non-US baseline. CXMT has no forward consensus yet and its forward blocks are honest nulls with a market_cap_not_comparable quality annotation; Kioxia's ROE(Fwd) 174.3% and PER(Fwd) 4.27 are preserved without clamping."
+    },
     {
       "date": "2026-07-27",
       "folder": "benchmarks",
