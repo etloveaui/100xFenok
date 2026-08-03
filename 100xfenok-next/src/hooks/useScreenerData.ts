@@ -70,11 +70,14 @@ export function projectFenokShortTermFields(
   fenokSignal: FenokSignalsSummaryRecord | null | undefined,
 ): FenokShortTermFields {
   return {
-    fenokShortTermScore: fenokSignal?.shortTermScore ?? fenokSignal?.shortTermConvictionScore ?? fenokSignal?.convictionScore ?? null,
-    fenokShortTermConvictionScore: fenokSignal?.shortTermConvictionScore ?? fenokSignal?.convictionScore ?? null,
+    // No convictionScore fallback anywhere on this path. That is the retired
+    // integrated score, and a fallback would land it on screen under a 단기 label
+    // for exactly the tickers whose short-term axes are missing.
+    fenokShortTermScore: fenokSignal?.shortTermScore ?? fenokSignal?.shortTermConvictionScore ?? null,
+    fenokShortTermConvictionScore: fenokSignal?.shortTermConvictionScore ?? null,
     fenokShortTermConvictionCall: convictionCallFromRecord(
       fenokSignal?.shortTermConvictionCall,
-      fenokSignal?.shortTermConvictionScore ?? fenokSignal?.convictionScore,
+      fenokSignal?.shortTermConvictionScore,
     ),
     fenokShortTermCommonBasisScore: fenokSignal?.shortTermCommonBasisScore ?? null,
     fenokShortTermCommonBasisCall: convictionCallFromRecord(
@@ -246,11 +249,11 @@ export function useScreenerData(): ScreenerDataResult {
           fenokConvictionScore: fenokSignal?.convictionScore ?? null,
           fenokConvictionCall: convictionCallFromRecord(fenokSignal?.convictionCall, fenokSignal?.convictionScore),
           ...fenokShortTermFields,
-          fenokLongTermScore: fenokSignal?.longTermConvictionScore ?? fenokSignal?.longTermScore ?? fenokSignal?.convictionScore ?? null,
-          fenokLongTermConvictionScore: fenokSignal?.longTermConvictionScore ?? fenokSignal?.convictionScore ?? null,
+          fenokLongTermScore: fenokSignal?.longTermConvictionScore ?? fenokSignal?.longTermScore ?? null,
+          fenokLongTermConvictionScore: fenokSignal?.longTermConvictionScore ?? null,
           fenokLongTermConvictionCall: convictionCallFromRecord(
             fenokSignal?.longTermConvictionCall,
-            fenokSignal?.longTermConvictionScore ?? fenokSignal?.convictionScore,
+            fenokSignal?.longTermConvictionScore,
           ),
           profitabilityScore: fenokSignal?.profitabilityScore ?? null,
           profitabilityDirection: fenokSignal?.profitabilityDirection ?? null,

@@ -157,7 +157,9 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "rank", label: "순위", align: "right" },
   { key: "guruHolders", label: "대가 보유", align: "right" },
   { key: "connectionCount", label: "연결", align: "left" },
-  { key: "fenokConvictionScore", label: "Fenok 컨빅션", align: "right" },
+  // Column id kept for saved sorts and shared URLs; the label says what the cell
+  // actually renders, which is the two surviving scores, not a single conviction.
+  { key: "fenokConvictionScore", label: "Fenok 단기·장기", align: "right" },
   { key: "profitabilityScore", label: "수익성", align: "right" },
   { key: "growthScore", label: "성장", align: "right" },
   { key: "technicalFlowScore", label: "기술/자금", align: "right" },
@@ -1625,7 +1627,14 @@ export default function ScreenerClient({
         const long = typeof stock.fenokLongTermScore === "number" ? stock.fenokLongTermScore : -1;
         if (Math.max(short, long) < fenokEdgeMinValue) return false;
       }
-      if (convictionMinValue !== null && (stock.fenokConvictionScore === null || stock.fenokConvictionScore === undefined || stock.fenokConvictionScore < convictionMinValue)) return false;
+      if (convictionMinValue !== null) {
+        // Was comparing the retired integrated score, which meant it silently
+        // decided which rows the list showed. Same rule as the edge filter
+        // above: the higher of the two surviving scores.
+        const shortC = typeof stock.fenokShortTermConvictionScore === "number" ? stock.fenokShortTermConvictionScore : -1;
+        const longC = typeof stock.fenokLongTermConvictionScore === "number" ? stock.fenokLongTermConvictionScore : -1;
+        if (Math.max(shortC, longC) < convictionMinValue) return false;
+      }
       if (connectionFilter && !stock.connection?.flags[connectionFilter]) return false;
       if (perMinValue !== null && (stock.per === null || stock.per < perMinValue)) return false;
       if (perMaxValue !== null && (stock.per === null || stock.per <= 0 || stock.per > perMaxValue)) return false;
