@@ -1,12 +1,12 @@
-// Cloudflare KV + Durable Object adapter for the cloud-data-plane generation
-// contract. Step A pilot: node-safe (no `cloudflare:workers` import) so plain
+// Cloudflare R2 + Durable Object adapter for the cloud-data-plane generation
+// contract. Step B pilot: node-safe (no `cloudflare:workers` import) so plain
 // node tests can drive it against Miniflare-emulated bindings; importing or
 // calling this module never creates a Cloudflare resource.
 //
 // Port mapping (architect's decision):
-// - objectStore -> Workers KV. putIfAbsent reads back an existing key and
-//   byte-compares before writing; content addressing makes a mismatch
-//   unreachable in practice, but the guard stays.
+// - objectStore -> Workers R2 bucket binding. putIfAbsent heads/gets the
+//   existing key and byte-compares before writing; content addressing makes a
+//   mismatch unreachable in practice, but the guard stays.
 // - ledger + pointerStore -> CloudDataPlaneCoordinator Durable Object via stub
 //   fetch, so compareAndSwap is real CAS inside a storage transaction.
 
@@ -44,23 +44,25 @@ async function coordinatorCall(coordinatorNamespace, action, payload) {
   return body.result;
 }
 
-export function createCloudflareCloudDataPlane({ kvNamespace, coordinatorNamespace }) {
-  if (!kvNamespace || !coordinatorNamespace) {
-    fail("ADAPTER_CONFIG_INVALID", "kvNamespace and coordinatorNamespace are required");
+export function createCloudflareCloudDataPlane({ r2Bucket, coordinatorNamespace }) {
+  if (!r2Bucket || !coordinatorNamespace) {
+    fail("ADAPTER_CONFIG_INVALID", "r2Bucket and coordinatorNamespace are required");
   }
   return {
     objectStore: {
       async putIfAbsent(key, bytes) {
-        const prior = await kvNamespace.get(key, { type: "arrayBuffer" });
+        const prior = await r2Bucket.get(key);
         if (prior !== null) {
-          if (!bytesEqual(new Uint8Array(prior), bytes)) fail("IMMUTABILITY_VIOLATION", key);
+          const priorBytes = new Uint8Array(await prior.arrayBuffer());
+          if (!bytesEqual(priorBytes, bytes)) fail("IMMUTABILITY_VIOLATION", key);
           return;
         }
-        await kvNamespace.put(key, bytes);
+        await r2Bucket.put(key, bytes);
       },
       async get(key) {
-        const value = await kvNamespace.get(key, { type: "arrayBuffer" });
-        return value === null ? null : new Uint8Array(value);
+        const object = await r2Bucket.get(key);
+        if (object === null) return null;
+        return new Uint8Array(await object.arrayBuffer());
       },
     },
     ledger: {
@@ -92,9 +94,9 @@ export function createCloudflareCloudDataPlane({ kvNamespace, coordinatorNamespa
       const objectKeys = [];
       let cursor;
       do {
-        const page = await kvNamespace.list({ cursor });
-        for (const { name } of page.keys) objectKeys.push(name);
-        cursor = page.list_complete ? undefined : page.cursor;
+        const page = await r2Bucket.list({ cursor });
+        for (const { key } of page.objects) objectKeys.push(key);
+        cursor = page.truncated ? page.cursor : undefined;
       } while (cursor);
       const { receipts, pointer } = await coordinatorCall(coordinatorNamespace, "inspect");
       return { object_keys: objectKeys.sort(), receipts, pointer };

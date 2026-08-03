@@ -49,13 +49,13 @@ const miniflare = new Miniflare({
       contents: await moduleSource("json-canonical.mjs"),
     },
   ],
-  kvNamespaces: ["CLOUD_OBJECTS"],
+  r2Buckets: ["CLOUD_OBJECTS"],
   durableObjects: { CLOUD_COORDINATOR: "CloudDataPlaneCoordinator" },
 });
 
-const kvNamespace = await miniflare.getKVNamespace("CLOUD_OBJECTS");
+const r2Bucket = await miniflare.getR2Bucket("CLOUD_OBJECTS");
 const coordinatorNamespace = await miniflare.getDurableObjectNamespace("CLOUD_COORDINATOR");
-const plane = createCloudflareCloudDataPlane({ kvNamespace, coordinatorNamespace });
+const plane = createCloudflareCloudDataPlane({ r2Bucket, coordinatorNamespace });
 
 async function assertRejectsCode(promise, code) {
   await assert.rejects(promise, (error) => {
@@ -262,8 +262,8 @@ try {
   {
     const pointerBefore = await plane.pointerStore.get();
     const manifestKey = pointerBefore.active.manifest_key;
-    const manifestBytes = await kvNamespace.get(manifestKey, { type: "arrayBuffer" });
-    await kvNamespace.put(manifestKey, encoder.encode("{\"schema_version\":\"tampered\"}\n"));
+    const manifestBytes = await plane.objectStore.get(manifestKey);
+    await r2Bucket.put(manifestKey, encoder.encode("{\"schema_version\":\"tampered\"}\n"));
 
     const tampered = await resolvePublicAsset({
       publicPath: "public/data/oecd/cli.json",
@@ -273,7 +273,7 @@ try {
     assert.deepEqual(tampered, { kind: "unavailable", reason: "MANIFEST_INTEGRITY_UNAVAILABLE" });
     assert.equal((await plane.pointerStore.get()).sequence, pointerBefore.sequence);
 
-    await kvNamespace.put(manifestKey, manifestBytes);
+    await r2Bucket.put(manifestKey, manifestBytes);
     const restored = await resolvePublicAsset({
       publicPath: "public/data/oecd/cli.json",
       pointerStore: plane.pointerStore,
