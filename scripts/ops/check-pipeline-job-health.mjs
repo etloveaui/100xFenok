@@ -626,12 +626,27 @@ export function evaluateWorkflow(workflow, runs) {
   const lostScheduledSlotRunUrls = lostScheduledSlots
     .map((run) => run?.html_url)
     .filter(Boolean);
+  // The same recovery rule applies to a failure streak: on a slow-cadence
+  // lane the streak can otherwise only break at the NEXT natural slot, so a
+  // producer fixed and proven by dispatch keeps paging for weeks. The newest
+  // run the streak counted is the first failure-class, non-transparent run
+  // from the top; a success minted after it means the producer ran clean
+  // more recently than it last failed.
+  const newestStreakFailure = countedRuns.find((run) =>
+    run?.queue_evicted !== true
+      && !TRANSPARENT_CONCLUSIONS.has(run?.conclusion)
+      && FAILURE_CONCLUSIONS.has(run?.conclusion));
+  const streakRecovered = Boolean(
+    newestStreakFailure
+      && Number.isFinite(Number(newestStreakFailure.id))
+      && Number(newestStreakFailure.id) < newestSuccessId,
+  );
   const latest = countedRuns[0] || null;
   const failureStreakThreshold = workflow.failure_streak_threshold === SLOW_CADENCE_FAILURE_STREAK_THRESHOLD
     ? SLOW_CADENCE_FAILURE_STREAK_THRESHOLD
     : FAST_CADENCE_FAILURE_STREAK_THRESHOLD;
   const alarmReasons = [];
-  if (streak >= failureStreakThreshold) alarmReasons.push("failure_streak");
+  if (streak >= failureStreakThreshold && !streakRecovered) alarmReasons.push("failure_streak");
   if (lostScheduledSlots.length > 0) alarmReasons.push("lost_schedule_slot");
   const base = {
     file: workflow.file,
@@ -645,6 +660,7 @@ export function evaluateWorkflow(workflow, runs) {
     lost_schedule_slot_count: lostScheduledSlots.length,
     resolved_lost_schedule_slot_count: resolvedLostSlotCount,
     lost_schedule_slot_run_urls: lostScheduledSlotRunUrls,
+    failure_streak_recovered: streakRecovered,
   };
   if (workflow.events) base.events = workflow.events;
   if (countedRuns.length === 0) {

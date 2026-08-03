@@ -635,6 +635,47 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
 }
 
 {
+  // A jobs_empty run executed nothing, exactly like a queue eviction — it is
+  // contention evidence, not producer evidence, so it neither inflates nor
+  // breaks a streak (it still pages separately as a lost scheduled slot).
+  const { streak } = computeFailureStreak([F(3), { ...C(2), jobs_empty: true }, F(1)]);
+  assert.equal(streak, 2, "a never-executed run is transparent to the streak");
+}
+
+{
+  // A failure streak is recovered by a strictly newer successful run of any
+  // event. slickcharts-monthly live case: schedule failed 07-01, its 08-01
+  // slot was evicted, three dispatch successes then proved the producer end
+  // to end — yet the streak could only break on the NEXT monthly slot.
+  const result = evaluateWorkflow(
+    { file: "slickcharts-monthly.yml", label: "Monthly", events: ["schedule"] },
+    [
+      { ...S(30700000010), event: "workflow_dispatch" },
+      { ...F(30700000001), event: "schedule" },
+      { ...S(30690000000), event: "schedule" },
+    ],
+  );
+  assert.equal(result.status, "ok", "a newer success of any event recovers the streak");
+  assert.equal(result.failure_streak_recovered, true);
+  assert.deepEqual(result.alarm_reasons, []);
+}
+
+{
+  // A dispatch success OLDER than the newest failure recovers nothing.
+  const result = evaluateWorkflow(
+    { file: "slickcharts-monthly.yml", label: "Monthly", events: ["schedule"] },
+    [
+      { ...F(30700000020), event: "schedule" },
+      { ...S(30700000010), event: "workflow_dispatch" },
+      { ...F(30700000001), event: "schedule" },
+    ],
+  );
+  assert.equal(result.status, "alarm");
+  assert.ok(result.alarm_reasons.includes("failure_streak"));
+  assert.equal(result.failure_streak_recovered, false);
+}
+
+{
   // Mixed ages: only slots older than the newest success resolve; a slot
   // newer than every success keeps paging.
   const result = evaluateWorkflow(
