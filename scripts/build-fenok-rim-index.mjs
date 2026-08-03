@@ -116,6 +116,29 @@ export function computeCase({ px, bookValue, roePath, retention, riskFree, erpCe
 
 const RIM_INDEX_KEY = { sp500: "SPX", nasdaq100: "NDX", kospi: "KOSPI", philadelphia_semi: "SOX", nasdaq_composite: "CCMP" };
 
+// The vendor earnings field is a twelve-month BLEND of FY1 and FY2, so the ROE
+// built on it overstates the FY1 consensus ROE the source sheets use. With f the
+// fraction of the fiscal year already elapsed and g12 the FY1->FY2 growth,
+// BEST = FY1 * (1 + f * g12), so dividing by that factor recovers FY1.
+// Measured 2026-08-03: this lands the S&P at 26.34% against the 26.33% backed out
+// of his published upside, and puts all three indices within 1.5~4.9% of the FY1
+// ROE printed on his own sheets, versus 13~24% too high before.
+export function fiscalYearElapsed(dateIso) {
+  const d = dateIso ? new Date(dateIso) : null;
+  if (!d || Number.isNaN(d.getTime())) return null;
+  // Index constituents are overwhelmingly December fiscal-year-end.
+  return (d.getUTCMonth() + d.getUTCDate() / 31) / 12;
+}
+
+export function deblendRoe({ blendedRoe, growthFy2, elapsed }) {
+  if (!Number.isFinite(blendedRoe) || !Number.isFinite(growthFy2) || !Number.isFinite(elapsed)) return null;
+  const factor = 1 + elapsed * growthFy2;
+  // A non-positive or extreme factor means the growth input is broken, not that
+  // the ROE should be rescaled: refuse rather than emit a silently wrong number.
+  if (!(factor > 0.5) || factor > 3) return null;
+  return blendedRoe / factor;
+}
+
 export function loadRimDerived() {
   try {
     const payload = JSON.parse(fs.readFileSync(RIM_INPUTS, "utf8"));
@@ -123,22 +146,33 @@ export function loadRimDerived() {
       ?? Object.values(payload?.indices ?? {})[0]?.observed?.risk_free_rate?.value
       ?? null;
     const paths = {};
+    const roeBases = {};
     const retentions = {};
+    const elapsed = fiscalYearElapsed(payload?.generated_at);
     for (const [ourKey, rimKey] of Object.entries(RIM_INDEX_KEY)) {
       const derived = payload?.indices?.[rimKey]?.derived;
       const periods = derived?.forecast_grid_v1?.periods ?? [];
-      const roePath = periods
+      const blended = periods
         .map((p) => p?.roe_on_beginning_book?.value)
         .filter((v) => Number.isFinite(v));
+      // The whole path is built off the same blended base, so the FY1 correction
+      // carries through it.
+      const growthFy2 = periods[1]?.eps_growth?.value;
+      const fy1 = deblendRoe({ blendedRoe: blended[0], growthFy2, elapsed });
+      const scale = Number.isFinite(fy1) && blended[0] > 0 ? fy1 / blended[0] : null;
+      const roePath = scale ? blended.map((v) => v * scale) : blended;
+      roeBases[ourKey] = scale
+        ? `FY1 consensus ROE, de-blended from the vendor 12-month field (factor ${round(scale, 4)}, ${round(elapsed, 3)} of fiscal year elapsed)`
+        : "vendor 12-month blended ROE — de-blend unavailable, reads high versus the source sheets";
       if (roePath.length >= 3) paths[ourKey] = roePath.slice(0, 3);
       const payout = derived?.payout_ratio?.value;
       if (Number.isFinite(payout) && payout > 0 && payout < 1) {
         retentions[ourKey] = { value: 1 - payout, source: `observed derived payout_ratio ${round(payout, 4)}` };
       }
     }
-    return { riskFreeUs: Number.isFinite(riskFreeUs) ? riskFreeUs : null, paths, retentions };
+    return { riskFreeUs: Number.isFinite(riskFreeUs) ? riskFreeUs : null, paths, retentions, roeBases };
   } catch {
-    return { riskFreeUs: null, paths: {}, retentions: {} };
+    return { riskFreeUs: null, paths: {}, retentions: {}, roeBases: {} };
   }
 }
 
@@ -224,7 +258,7 @@ export function buildArtifact({ nowIso }) {
     const roePath = derived.paths[source.key]
       ?? (Number.isFinite(latest?.roe) ? [latest.roe, latest.roe, latest.roe] : null);
     const roePathSource = derived.paths[source.key]
-      ? "weekly consensus grid (rim-index)"
+      ? `weekly consensus grid (rim-index) — ${derived.roeBases?.[source.key] ?? "basis unrecorded"}`
       : "spot forward ROE held constant (no consensus grid for this index)";
     const riskFree = source.market === "kr"
       ? (koreaRiskFree?.value ?? RIM_KR_RISK_FREE_ANCHOR.value)
@@ -280,8 +314,15 @@ export function buildArtifact({ nowIso }) {
     // The index cell math is pinned: the engine reproduces the captured
     // 2025-12-09 sheet outputs (S&P -0.4%, Russell -0.8%), enforced as a
     // permanent regression test.
-    index_math_pinned: true,
-    display_ready: true,
+    // NOT display-ready. The cell maths in computeCell is the superseded shape:
+    // it discounts at Ke and runs 5 explicit years, while the identified
+    // structure discounts at a separate ~10% constant over 9 years and lets the
+    // risk premium touch only the residual. Inputs have been corrected ahead of
+    // the formula, so these numbers are an intermediate state and must not reach
+    // a surface. See docs/references/fenok-rim-formula-identification.md.
+    index_math_pinned: false,
+    display_ready: false,
+    display_block_reason: "engine still runs the superseded discount-at-Ke, N=5 cell maths; formula replacement pending Korea discount-rate confirmation",
     // RESOLVED 2026-08-03. The 2026-08-03 KOSPI sheet's red "Premiumn Adj.
     // 12.00%" cell is NOT his equity risk premium: fed through this formula
     // with his own sheet inputs it returns 6,301 against a spot of 6,690, i.e.
