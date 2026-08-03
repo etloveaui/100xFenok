@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-03T09:34:29.166Z",
+  "generated_at": "2026-08-03T12:04:02.562Z",
   "status": "open",
-  "open_incident_count": 2,
+  "open_incident_count": 3,
   "open_incidents": [
     {
       "workflow": "fetch-stockanalysis.yml",
@@ -29,6 +29,19 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "overdue"
+    },
+    {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 30797056385,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30797056385",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
     }
   ],
   "watched_workflows": [
@@ -414,13 +427,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "30801858091",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30801858091",
-    "observed_at": "2026-08-03T09:34:29.166Z",
+    "run_id": "30811878843",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30811878843",
+    "observed_at": "2026-08-03T12:04:02.562Z",
     "event": "workflow_run",
     "workflows": [
       "fetch-stockanalysis.yml",
-      "fetch-yf-finance.yml"
+      "fetch-yf-finance.yml",
+      "global-writer-queue-observer.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
