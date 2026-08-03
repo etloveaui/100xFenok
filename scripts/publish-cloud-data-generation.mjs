@@ -22,6 +22,33 @@
 // the live sequence with a rebuilt manifest would instead collide with the
 // contract's "active and previous generation must differ" rule.
 //
+// Crash recovery: resolveExpectedPointerSequence also stabilizes a retry of an
+// interrupted publish. If the manifest object for this generation is already
+// stored (written before the crash) it is adopted verbatim so putIfAbsent
+// stays byte-identical, and if the deterministic receipt id already exists in
+// state "prepared" its created_at is reused as the publish `now` so
+// ledger.prepare stays byte-identical (the contract rejects a same-id receipt
+// with different bytes as RECEIPT_CONFLICT).
+//
+// Chaos drills (--chaos=<mode>, explicit opt-in only):
+//   stale-sequence      publish with expectedPointerSequence one behind the
+//                       live pointer; the contract's STALE_WRITER must surface
+//                       and the pointer must not advance.
+//   abort-after-prepare inject CHAOS_ABORT_AFTER_PREPARE from a pointerStore
+//                       wrapper whose compareAndSwap throws before delegating,
+//                       simulating a crash after ledger.prepare; the pointer
+//                       must not advance and the receipt stays "prepared". An
+//                       unchanged re-run then resumes the same receipt_id and
+//                       advances the pointer exactly once (see above).
+//
+// Rollback (--rollback): restore the pointer's previous generation through the
+// contract's rollbackGeneration. The live pointer is read first and the mode
+// refuses with ROLLBACK_TARGET_MISSING unless previous is non-null; the live
+// sequence is passed as expectedPointerSequence. Rollback moves the sequence
+// FORWARD (never rewinds) and writes no objects — only the coordinator ledger
+// and pointer change. The JSON summary reports the sequence and both
+// generation ids before and after.
+//
 // Env: CLOUDFLARE_API_TOKEN (gate + R2 REST), CLOUDFLARE_ACCOUNT_ID (defaulted
 // below), DATA_PLANE_ENDPOINT, DATA_PLANE_WRITE_KEY. A missing endpoint or key
 // is a clear error before any write; the token is enforced by the gate first.
@@ -34,9 +61,11 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   GENERATION_MANIFEST_SCHEMA,
   publishGeneration,
+  rollbackGeneration,
   sha256Bytes,
   sha256Canonical,
   validateGenerationManifest,
+  validatePublicationReceipt,
 } from "./lib/cloud-data-plane-generation.mjs";
 import { createCloudflareCloudDataPlane } from "./lib/cloud-data-plane-cloudflare-adapter.mjs";
 import { createR2RestBucket } from "./lib/cloud-data-plane-r2-rest.mjs";
@@ -128,40 +157,176 @@ export async function buildFamilyManifest({
   return { manifest, payloads, summary };
 }
 
+// The contract's deterministic publish receipt id for a given manifest and
+// expected sequence (mirrors deterministicReceiptId in the byte-locked
+// contract, which is not exported). Stable across retries of the same logical
+// publish as long as the manifest bytes are.
+export function deterministicPublishReceiptId({ manifest, expectedPointerSequence }) {
+  const summary = validateGenerationManifest(manifest);
+  return `publish-${expectedPointerSequence}-${summary.manifest_sha256.slice(0, 32)}`;
+}
+
+// Drift guard for the mirror above. Crash-retry depends on the locally
+// computed receipt id matching the contract's format; if the contract's
+// format ever changes, the ledger lookup would silently miss and crash-retry
+// would quietly stop working. Called after every successful publishGeneration
+// with the receipt the contract actually returned; a mismatch is a loud
+// RECEIPT_ID_DRIFT failure, never a silent fallthrough.
+export function assertPublishReceiptId({ manifest, expectedPointerSequence, receipt }) {
+  const computed = deterministicPublishReceiptId({ manifest, expectedPointerSequence });
+  if (receipt?.receipt_id !== computed) {
+    fail(
+      "RECEIPT_ID_DRIFT",
+      `contract returned receipt_id ${receipt?.receipt_id ?? "<none>"}`
+        + ` but deterministic computation gives ${computed}`,
+    );
+  }
+  return computed;
+}
+
 // Decide the expectedPointerSequence for publishGeneration from the live
 // pointer. Normal case: the live sequence (or 0 when no pointer exists).
 // Resume case: the pointer already targets this exact generation, so we adopt
 // the STORED manifest (byte-identical to what the pointer binds, including the
 // original created_at) and pass sequence - 1; the contract then resumes the
 // existing receipt through finalizeOrResumePromotion without advancing.
-export async function resolveExpectedPointerSequence({ pointer, manifest, objectStore }) {
+//
+// Crash-retry stabilization (both cases): when the manifest object for this
+// generation is already stored and binds the same source_sha, it is adopted
+// verbatim so a rebuilt manifest with a fresh created_at cannot collide with
+// the immutability guard. When the deterministic receipt id for the resolved
+// sequence already exists in the ledger (a previous attempt crashed between
+// ledger.prepare and compareAndSwap), its created_at is returned as
+// resumeCreatedAt so the retried receipt is byte-identical and prepare stays
+// idempotent. Without a prior interrupted attempt nothing changes. Because
+// crash-retry leans on a local mirror of the contract's (unexported) receipt
+// id format, every successful publish is followed by a drift guard
+// (assertPublishReceiptId) that fails loudly with RECEIPT_ID_DRIFT if the
+// contract's returned receipt_id and the mirror ever diverge.
+export async function resolveExpectedPointerSequence({
+  pointer,
+  manifest,
+  objectStore,
+  ledger = null,
+}) {
   const alreadyActive = pointer
     && pointer.active.generation_id === manifest.generation_id
     && pointer.source_sha === manifest.source_sha;
-  if (!alreadyActive) {
-    return { manifest, expectedPointerSequence: pointer?.sequence ?? 0, resume: false };
+  const manifestKey = alreadyActive
+    ? pointer.active.manifest_key
+    : `manifests/${manifest.generation_id}.json`;
+  const storedBytes = await objectStore.get(manifestKey);
+  let effectiveManifest = manifest;
+  if (storedBytes instanceof Uint8Array) {
+    if (alreadyActive && sha256Bytes(storedBytes) !== pointer.active.manifest_sha256) {
+      fail("STORED_MANIFEST_INTEGRITY", manifestKey);
+    }
+    const storedManifest = JSON.parse(new TextDecoder().decode(storedBytes));
+    const storedSummary = validateGenerationManifest(storedManifest);
+    if (
+      storedSummary.manifest_sha256 !== sha256Bytes(storedBytes)
+      || storedSummary.generation_id !== manifest.generation_id
+      || storedManifest.source_sha !== manifest.source_sha
+    ) {
+      fail("STORED_MANIFEST_CROSS_BIND", manifestKey);
+    }
+    effectiveManifest = storedManifest;
+  } else if (alreadyActive) {
+    fail("STORED_MANIFEST_MISSING", manifestKey);
   }
-  const storedBytes = await objectStore.get(pointer.active.manifest_key);
-  if (!(storedBytes instanceof Uint8Array)) {
-    fail("STORED_MANIFEST_MISSING", pointer.active.manifest_key);
+  if (alreadyActive) {
+    return {
+      manifest: effectiveManifest,
+      expectedPointerSequence: pointer.sequence - 1,
+      resume: true,
+      resumeCreatedAt: null,
+    };
   }
-  if (sha256Bytes(storedBytes) !== pointer.active.manifest_sha256) {
-    fail("STORED_MANIFEST_INTEGRITY", pointer.active.manifest_key);
-  }
-  const storedManifest = JSON.parse(new TextDecoder().decode(storedBytes));
-  const storedSummary = validateGenerationManifest(storedManifest);
-  if (
-    storedSummary.generation_id !== pointer.active.generation_id
-    || storedSummary.manifest_sha256 !== pointer.active.manifest_sha256
-    || storedManifest.source_sha !== manifest.source_sha
-  ) {
-    fail("STORED_MANIFEST_CROSS_BIND", pointer.active.manifest_key);
+  const expectedPointerSequence = pointer?.sequence ?? 0;
+  let resumeCreatedAt = null;
+  if (ledger) {
+    const receiptId = deterministicPublishReceiptId({
+      manifest: effectiveManifest,
+      expectedPointerSequence,
+    });
+    const prior = await ledger.get(receiptId);
+    if (prior) {
+      validatePublicationReceipt(prior);
+      const summary = validateGenerationManifest(effectiveManifest);
+      if (
+        prior.operation !== "publish"
+        || prior.generation_id !== effectiveManifest.generation_id
+        || prior.manifest_sha256 !== summary.manifest_sha256
+        || prior.source_sha !== effectiveManifest.source_sha
+        || prior.expected_pointer_sequence !== expectedPointerSequence
+      ) {
+        fail("RECEIPT_CROSS_BIND", receiptId);
+      }
+      resumeCreatedAt = prior.created_at;
+    }
   }
   return {
-    manifest: storedManifest,
-    expectedPointerSequence: pointer.sequence - 1,
-    resume: true,
+    manifest: effectiveManifest,
+    expectedPointerSequence,
+    resume: false,
+    resumeCreatedAt,
   };
+}
+
+// Chaos drills, injected only through the publisher's own --chaos flag.
+export const CHAOS_MODES = Object.freeze(["stale-sequence", "abort-after-prepare"]);
+
+// stale-sequence: publish with an expectedPointerSequence one behind the live
+// pointer value. The contract re-reads the pointer and fails STALE_WRITER
+// before any object write or ledger mutation.
+export function chaosExpectedPointerSequence({ chaos, pointerSequence, resolved }) {
+  if (chaos !== "stale-sequence") return resolved;
+  if (!Number.isSafeInteger(pointerSequence) || pointerSequence < 1) {
+    fail("CHAOS_PRECONDITION", "stale-sequence requires a live pointer with sequence >= 1");
+  }
+  return pointerSequence - 1;
+}
+
+// abort-after-prepare: wrap the pointerStore so compareAndSwap throws before
+// delegating, simulating a crash after ledger.prepare returned. The CAS never
+// crosses the wire; the receipt stays in state "prepared".
+export function chaosPointerStore({ chaos, pointerStore }) {
+  if (chaos !== "abort-after-prepare") return pointerStore;
+  return {
+    ...pointerStore,
+    async compareAndSwap() {
+      fail("CHAOS_ABORT_AFTER_PREPARE", "injected crash after ledger.prepare, before compareAndSwap");
+    },
+  };
+}
+
+// Rollback the active pointer to its previous generation via the contract's
+// rollbackGeneration. The live pointer is read first and the call is refused
+// with ROLLBACK_TARGET_MISSING (the contract's own code for this case) unless
+// previous is non-null, so a refusal never reaches a write. The live sequence
+// is passed as expectedPointerSequence; rollback moves the sequence forward
+// and touches only the coordinator ledger and pointer — no object writes.
+export async function rollbackLiveGeneration({
+  objectStore,
+  ledger,
+  pointerStore,
+  now,
+}) {
+  const pointer = await pointerStore.get();
+  if (!pointer) {
+    fail("ROLLBACK_TARGET_MISSING", "no active pointer — nothing to roll back");
+  }
+  if (!pointer.previous) {
+    fail("ROLLBACK_TARGET_MISSING", "pointer has no previous generation — rollback refused before any write");
+  }
+  const result = await rollbackGeneration({
+    expectedPointerSequence: pointer.sequence,
+    objectStore,
+    ledger,
+    pointerStore,
+    now,
+  });
+  return { pointerBefore: pointer, ...result };
 }
 
 // Exit evidence: resolve the active generation through the pointer and compare
@@ -235,15 +400,23 @@ function gateVerdict(gate) {
 }
 
 function parseArgs(argv) {
-  const args = { family: null, dryRun: false, json: false, tolerateGateBlock: false };
+  const args = {
+    family: null, dryRun: false, json: false, tolerateGateBlock: false, chaos: null, rollback: false,
+  };
   for (const arg of argv) {
     if (arg.startsWith("--family=")) args.family = arg.slice("--family=".length);
     else if (arg === "--dry-run") args.dryRun = true;
     else if (arg === "--json") args.json = true;
     else if (arg === "--tolerate-gate-block") args.tolerateGateBlock = true;
-    else fail("ARGS_INVALID", arg);
+    else if (arg === "--rollback") args.rollback = true;
+    else if (arg.startsWith("--chaos=")) {
+      const mode = arg.slice("--chaos=".length);
+      if (!CHAOS_MODES.includes(mode)) fail("ARGS_INVALID", `unknown chaos mode ${mode}`);
+      args.chaos = mode;
+    } else fail("ARGS_INVALID", arg);
   }
   if (!args.family) fail("ARGS_INVALID", "--family=<name> is required");
+  if (args.rollback && args.chaos) fail("ARGS_INVALID", "--rollback cannot be combined with --chaos");
   return args;
 }
 
@@ -289,10 +462,13 @@ async function main() {
     return;
   }
 
-  // 2. Cost gate (declares >= 2x the real spend) before any write.
+  // 2. Cost gate (declares >= 2x the real spend) before any write. Rollback
+  // touches only the coordinator (no object writes), so it declares a small
+  // but still generous plan.
+  const gatePlan = args.rollback ? { class_a: 10, bytes: 0 } : family.plan;
   const gateBefore = await runCostGate({
-    planClassA: family.plan.class_a,
-    planBytes: family.plan.bytes,
+    planClassA: gatePlan.class_a,
+    planBytes: gatePlan.bytes,
     env: process.env,
   });
   if (!args.json && gateBefore.stdout.trim()) {
@@ -303,6 +479,7 @@ async function main() {
     if (args.tolerateGateBlock) {
       emit({
         result: "gate_blocked",
+        mode: args.rollback ? "rollback" : "publish",
         generation_id: manifest.generation_id,
         gate_exit: gateBefore.code,
         ...plan,
@@ -329,6 +506,38 @@ async function main() {
     process.exit(2);
   }
 
+  // Rollback mode: pointer-only change through the contract's
+  // rollbackGeneration; the summary records the sequence and both generation
+  // ids before and after, because rollback moves the sequence FORWARD.
+  if (args.rollback) {
+    const plane = createCloudflareCloudDataPlane({
+      r2Bucket: createR2RestBucket({ accountId, bucket: R2_BUCKET, token }),
+      coordinatorNamespace: createRemoteCoordinatorNamespace({ endpoint, key: writeKey }),
+    });
+    const rolled = await rollbackLiveGeneration({
+      objectStore: plane.objectStore,
+      ledger: plane.ledger,
+      pointerStore: plane.pointerStore,
+    });
+    const pointerAfter = await plane.pointerStore.get();
+    const gateAfter = await runCostGate({ planClassA: 0, planBytes: 0, env: process.env });
+    emit({
+      result: "rolled_back",
+      receipt_id: rolled.receipt.receipt_id,
+      receipt_state: rolled.receipt.state,
+      pointer_sequence_before: rolled.pointerBefore.sequence,
+      pointer_sequence_after: pointerAfter?.sequence ?? null,
+      active_generation_before: rolled.pointerBefore.active.generation_id,
+      previous_generation_before: rolled.pointerBefore.previous?.generation_id ?? null,
+      active_generation_after: pointerAfter?.active.generation_id ?? null,
+      previous_generation_after: pointerAfter?.previous?.generation_id ?? null,
+      objects_written: 0,
+      gate_before: gateVerdict(gateBefore),
+      gate_after: gateVerdict(gateAfter),
+    });
+    return;
+  }
+
   // 3. Publish through the REST R2 bridge + remote coordinator shim.
   const r2Bucket = createR2RestBucket({ accountId, bucket: R2_BUCKET, token });
   let objectsWritten = 0;
@@ -350,6 +559,19 @@ async function main() {
     pointer: livePointer,
     manifest,
     objectStore: plane.objectStore,
+    ledger: plane.ledger,
+  });
+  if (args.chaos === "stale-sequence" && resolved.resume) {
+    fail("CHAOS_PRECONDITION", "stale-sequence needs a generation the pointer does not already target");
+  }
+  const expectedForPublish = chaosExpectedPointerSequence({
+    chaos: args.chaos,
+    pointerSequence: pointerSequenceBefore,
+    resolved: resolved.expectedPointerSequence,
+  });
+  const publishPointerStore = chaosPointerStore({
+    chaos: args.chaos,
+    pointerStore: plane.pointerStore,
   });
   const policy = {
     max_assets: family.policy.max_assets,
@@ -357,14 +579,67 @@ async function main() {
     validate_freshness: () => true,
     validate_public_payload: () => true,
   };
-  const published = await publishGeneration({
+  let published;
+  try {
+    published = await publishGeneration({
+      manifest: resolved.manifest,
+      payloads,
+      expectedPointerSequence: expectedForPublish,
+      objectStore: plane.objectStore,
+      ledger: plane.ledger,
+      pointerStore: publishPointerStore,
+      policy,
+      now: resolved.resumeCreatedAt ? () => resolved.resumeCreatedAt : undefined,
+    });
+  } catch (error) {
+    if (args.chaos === "stale-sequence" && error.code === "STALE_WRITER") {
+      const pointerNow = await plane.pointerStore.get();
+      const gateAfter = await runCostGate({ planClassA: 0, planBytes: 0, env: process.env });
+      emit({
+        result: "chaos_stale_writer",
+        chaos: args.chaos,
+        error_code: error.code,
+        generation_id: manifest.generation_id,
+        attempted_expected_sequence: expectedForPublish,
+        pointer_sequence_before: pointerSequenceBefore,
+        pointer_sequence_after: pointerNow?.sequence ?? 0,
+        gate_before: gateVerdict(gateBefore),
+        gate_after: gateVerdict(gateAfter),
+      });
+      return;
+    }
+    if (args.chaos === "abort-after-prepare" && error.code === "CHAOS_ABORT_AFTER_PREPARE") {
+      const receiptId = deterministicPublishReceiptId({
+        manifest: resolved.manifest,
+        expectedPointerSequence: resolved.expectedPointerSequence,
+      });
+      const receipt = await plane.ledger.get(receiptId);
+      const pointerNow = await plane.pointerStore.get();
+      const gateAfter = await runCostGate({ planClassA: 0, planBytes: 0, env: process.env });
+      emit({
+        result: "chaos_abort_after_prepare",
+        chaos: args.chaos,
+        error_code: error.code,
+        generation_id: manifest.generation_id,
+        receipt_id: receiptId,
+        receipt_state: receipt?.state ?? null,
+        pointer_sequence_before: pointerSequenceBefore,
+        pointer_sequence_after: pointerNow?.sequence ?? 0,
+        gate_before: gateVerdict(gateBefore),
+        gate_after: gateVerdict(gateAfter),
+      });
+      return;
+    }
+    throw error;
+  }
+  // Drift guard (only reached on a successful publish): the receipt id the
+  // contract actually returned must equal our deterministic mirror of its
+  // format. A mismatch means the contract's format changed and crash-retry
+  // would silently miss — fail loudly before any summary claims success.
+  assertPublishReceiptId({
     manifest: resolved.manifest,
-    payloads,
-    expectedPointerSequence: resolved.expectedPointerSequence,
-    objectStore: plane.objectStore,
-    ledger: plane.ledger,
-    pointerStore: plane.pointerStore,
-    policy,
+    expectedPointerSequence: expectedForPublish,
+    receipt: published.receipt,
   });
   log(`${resolved.resume ? "resumed" : "published"} generation ${manifest.generation_id}:`
     + ` pointer ${pointerSequenceBefore} -> ${published.pointer.sequence},`

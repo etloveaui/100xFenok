@@ -24,8 +24,13 @@ import { createCloudflareCloudDataPlane } from "./lib/cloud-data-plane-cloudflar
 import { createR2RestBucket } from "./lib/cloud-data-plane-r2-rest.mjs";
 import { createRemoteCoordinatorNamespace } from "./lib/cloud-data-plane-remote-coordinator.mjs";
 import {
+  assertPublishReceiptId,
   buildFamilyManifest,
+  chaosExpectedPointerSequence,
+  chaosPointerStore,
+  deterministicPublishReceiptId,
   resolveExpectedPointerSequence,
+  rollbackLiveGeneration,
   verifyGenerationParity,
 } from "./publish-cloud-data-generation.mjs";
 
@@ -33,6 +38,8 @@ const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const PUBLISH_SCRIPT = path.join(REPO_ROOT, "scripts", "publish-cloud-data-generation.mjs");
 const NOW_1 = "2026-08-03T00:00:00.000Z";
 const NOW_2 = "2026-08-03T01:00:00.000Z";
+const NOW_3 = "2026-08-03T02:00:00.000Z";
+const NOW_4 = "2026-08-03T03:00:00.000Z";
 const encoder = new TextEncoder();
 
 const POLICY = {
@@ -302,6 +309,16 @@ try {
   });
   assert.equal(published.pointer.sequence, 1);
   assert.equal(published.receipt.state, "promoted");
+  // Drift guard passes on a normal publish: the contract's returned
+  // receipt_id equals the deterministic mirror of its format.
+  assert.equal(
+    assertPublishReceiptId({
+      manifest: resolved.manifest,
+      expectedPointerSequence: resolved.expectedPointerSequence,
+      receipt: published.receipt,
+    }),
+    published.receipt.receipt_id,
+  );
   assert.equal(r2Counters.put, 4); // 3 unique asset objects + 1 manifest
   assert.deepEqual(
     [...r2Keys].sort(),
@@ -405,6 +422,284 @@ try {
   assert.equal(inspection.pointer.sequence, 1);
   assert.equal(inspection.object_keys.length, 4);
   assert.equal(inspection.receipts.length, 1);
+
+  // --- chaos: stale-sequence -------------------------------------------------
+  // A new generation (index.json changes) published with an
+  // expectedPointerSequence one behind the live value must surface
+  // STALE_WRITER and leave the pointer, the ledger and the objects untouched.
+  await writeFile(path.join(fixtureRoot, "index.json"), "{\"fixture\":\"index-v2\"}\n");
+  const buildV2 = await buildFamilyManifest({
+    familyName: "oecd-cli",
+    absRoot: fixtureRoot,
+    relRoot: FIXTURE_REL_ROOT,
+    now: () => NOW_3,
+  });
+  const { manifest: manifestV2, payloads: payloadsV2 } = buildV2;
+  assert.notEqual(manifestV2.generation_id, manifest.generation_id);
+
+  const pointerBeforeChaos = await plane.pointerStore.get();
+  assert.equal(pointerBeforeChaos.sequence, 1);
+  const resolvedV2 = await resolveExpectedPointerSequence({
+    pointer: pointerBeforeChaos,
+    manifest: manifestV2,
+    objectStore: plane.objectStore,
+    ledger: plane.ledger,
+  });
+  assert.deepEqual(
+    { expected: resolvedV2.expectedPointerSequence, resume: resolvedV2.resume },
+    { expected: 1, resume: false },
+  );
+  const staleExpected = chaosExpectedPointerSequence({
+    chaos: "stale-sequence",
+    pointerSequence: pointerBeforeChaos.sequence,
+    resolved: resolvedV2.expectedPointerSequence,
+  });
+  assert.equal(staleExpected, 0); // one behind the live value
+  assert.throws(
+    () => chaosExpectedPointerSequence({ chaos: "stale-sequence", pointerSequence: 0, resolved: 0 }),
+    (error) => {
+      assert.equal(error.code, "CHAOS_PRECONDITION");
+      return true;
+    },
+  );
+  const putsBeforeStale = r2Counters.put;
+  const requestsBeforeStale = requests.length;
+  await assertRejectsCode(
+    publishGeneration({
+      manifest: resolvedV2.manifest,
+      payloads: payloadsV2,
+      expectedPointerSequence: staleExpected,
+      objectStore: plane.objectStore,
+      ledger: plane.ledger,
+      pointerStore: plane.pointerStore,
+      policy: POLICY,
+    }),
+    "STALE_WRITER",
+  );
+  assert.equal((await plane.pointerStore.get()).sequence, 1); // pointer did not advance
+  assert.equal(r2Counters.put, putsBeforeStale); // stale check fires before any object write
+  const staleWire = requests.slice(requestsBeforeStale);
+  // The staleness verdict is computed from pointer state read across the HTTP
+  // stub; no prepare or compare-and-swap may cross the wire afterwards.
+  assert.ok(staleWire.some((request) => request.pathname === "/pointer/get"));
+  assert.ok(!staleWire.some((request) => request.pathname === "/ledger/prepare"));
+  assert.ok(!staleWire.some((request) => request.pathname === "/pointer/compare-and-swap"));
+  console.log("chaos stale-sequence ok (STALE_WRITER surfaced, pointer held at 1)");
+
+  // --- chaos: abort-after-prepare --------------------------------------------
+  // The same new generation, now with the correct expected sequence, but the
+  // publisher crashes after ledger.prepare returns and before compareAndSwap.
+  const putsBeforeAbort = r2Counters.put;
+  const requestsBeforeAbort = requests.length;
+  const abortingPointerStore = chaosPointerStore({
+    chaos: "abort-after-prepare",
+    pointerStore: plane.pointerStore,
+  });
+  await assertRejectsCode(
+    publishGeneration({
+      manifest: resolvedV2.manifest,
+      payloads: payloadsV2,
+      expectedPointerSequence: resolvedV2.expectedPointerSequence,
+      objectStore: plane.objectStore,
+      ledger: plane.ledger,
+      pointerStore: abortingPointerStore,
+      policy: POLICY,
+    }),
+    "CHAOS_ABORT_AFTER_PREPARE",
+  );
+  assert.equal((await plane.pointerStore.get()).sequence, 1); // pointer did not advance
+  const abortReceiptId = deterministicPublishReceiptId({
+    manifest: resolvedV2.manifest,
+    expectedPointerSequence: resolvedV2.expectedPointerSequence,
+  });
+  const abortedReceipt = await plane.ledger.get(abortReceiptId); // crosses the wire
+  assert.equal(abortedReceipt.state, "prepared");
+  assert.equal(abortedReceipt.promoted_pointer_sequence, null);
+  const abortWire = requests.slice(requestsBeforeAbort);
+  assert.ok(abortWire.some((request) => request.pathname === "/ledger/prepare"));
+  // The injected crash fires before the CAS: no compare-and-swap on the wire.
+  assert.ok(!abortWire.some((request) => request.pathname === "/pointer/compare-and-swap"));
+  assert.equal(r2Counters.put, putsBeforeAbort + 2); // changed index.json + new manifest object
+  console.log("chaos abort-after-prepare ok (pointer held at 1, receipt prepared, no CAS)");
+
+  // Unchanged re-run: rebuilt with a fresh created_at, so only the publisher's
+  // crash-retry stabilization (stored manifest + prepared receipt created_at)
+  // can keep the bytes identical. Must resume the same receipt_id and advance
+  // the pointer exactly once.
+  const rerunV2 = await buildFamilyManifest({
+    familyName: "oecd-cli",
+    absRoot: fixtureRoot,
+    relRoot: FIXTURE_REL_ROOT,
+    now: () => NOW_4,
+  });
+  assert.equal(rerunV2.manifest.generation_id, manifestV2.generation_id);
+  assert.notEqual(rerunV2.manifest.created_at, resolvedV2.manifest.created_at);
+  const reresolved = await resolveExpectedPointerSequence({
+    pointer: await plane.pointerStore.get(),
+    manifest: rerunV2.manifest,
+    objectStore: plane.objectStore,
+    ledger: plane.ledger,
+  });
+  assert.equal(reresolved.resume, false);
+  assert.equal(reresolved.expectedPointerSequence, 1);
+  assert.equal(reresolved.manifest.created_at, NOW_3); // stored manifest adopted
+  assert.equal(reresolved.resumeCreatedAt, abortedReceipt.created_at); // receipt bytes stabilized
+  assert.equal(
+    deterministicPublishReceiptId({
+      manifest: reresolved.manifest,
+      expectedPointerSequence: reresolved.expectedPointerSequence,
+    }),
+    abortReceiptId,
+  );
+  const putsBeforeRerun = r2Counters.put;
+  const requestsBeforeRerun = requests.length;
+  const resumed = await publishGeneration({
+    manifest: reresolved.manifest,
+    payloads: rerunV2.payloads,
+    expectedPointerSequence: reresolved.expectedPointerSequence,
+    objectStore: plane.objectStore,
+    ledger: plane.ledger,
+    pointerStore: plane.pointerStore,
+    policy: POLICY,
+    now: reresolved.resumeCreatedAt ? () => reresolved.resumeCreatedAt : undefined,
+  });
+  assert.equal(resumed.pointer.sequence, 2); // advanced exactly once
+  assert.equal(resumed.pointer.active.generation_id, manifestV2.generation_id);
+  assert.equal(resumed.pointer.previous.generation_id, manifest.generation_id);
+  assert.equal(resumed.receipt.receipt_id, abortReceiptId); // same receipt resumed
+  assert.equal(resumed.receipt.state, "promoted");
+  assert.equal(resumed.receipt.promoted_pointer_sequence, 2);
+  assert.equal(r2Counters.put, putsBeforeRerun); // every object already stored, nothing rewritten
+  const rerunWire = requests.slice(requestsBeforeRerun);
+  assert.equal(
+    rerunWire.filter((request) => request.pathname === "/pointer/compare-and-swap").length,
+    1,
+  );
+  const parityV2 = await verifyGenerationParity({
+    pointerStore: plane.pointerStore,
+    objectStore: plane.objectStore,
+    payloads: rerunV2.payloads,
+  });
+  assert.equal(parityV2.assets, 4);
+  assert.equal((await plane.pointerStore.get()).sequence, 2);
+  console.log("chaos abort-after-prepare resume ok (same receipt_id, pointer advanced once to 2)");
+
+  // Drift guard: passes again on the resumed publish, and fires loudly on an
+  // induced mismatch — a receipt whose id the deterministic mirror cannot
+  // reproduce (as if the contract's receipt-id format had changed) must raise
+  // RECEIPT_ID_DRIFT, never pass silently.
+  assert.equal(
+    assertPublishReceiptId({
+      manifest: reresolved.manifest,
+      expectedPointerSequence: reresolved.expectedPointerSequence,
+      receipt: resumed.receipt,
+    }),
+    resumed.receipt.receipt_id,
+  );
+  const driftedReceipt = { ...resumed.receipt, receipt_id: `publish-9-${"f".repeat(32)}` };
+  assert.throws(
+    () => assertPublishReceiptId({
+      manifest: reresolved.manifest,
+      expectedPointerSequence: reresolved.expectedPointerSequence,
+      receipt: driftedReceipt,
+    }),
+    (error) => {
+      assert.equal(error.code, "RECEIPT_ID_DRIFT");
+      assert.match(error.message, /RECEIPT_ID_DRIFT:contract returned receipt_id/);
+      assert.match(error.message, /deterministic computation gives/);
+      return true;
+    },
+  );
+  console.log("receipt-id drift guard ok (passes on match, RECEIPT_ID_DRIFT on mismatch)");
+
+  // --- rollback --------------------------------------------------------------
+  // Pointer is at sequence 2 (active V2, previous V1). Rollback must move the
+  // sequence FORWARD by exactly one, make the old previous active, and write
+  // no objects.
+  const putsBeforeRollback = r2Counters.put;
+  const requestsBeforeRollback = requests.length;
+  const rolled = await rollbackLiveGeneration({
+    objectStore: plane.objectStore,
+    ledger: plane.ledger,
+    pointerStore: plane.pointerStore,
+  });
+  assert.equal(rolled.pointerBefore.sequence, 2);
+  assert.equal(rolled.pointerBefore.active.generation_id, manifestV2.generation_id);
+  assert.equal(rolled.pointer.sequence, 3); // advanced by exactly one, forward
+  assert.equal(rolled.pointer.active.generation_id, manifest.generation_id); // old previous
+  assert.equal(rolled.pointer.previous.generation_id, manifestV2.generation_id); // rolled-back-from
+  assert.equal(rolled.receipt.operation, "rollback");
+  assert.equal(rolled.receipt.state, "promoted");
+  assert.equal(rolled.receipt.promoted_pointer_sequence, 3);
+  assert.equal(r2Counters.put, putsBeforeRollback); // zero object writes
+  const rollbackWire = requests.slice(requestsBeforeRollback);
+  // Wire-delta proof: only coordinator traffic crossed — one prepare, one CAS,
+  // one mark-promoted — and no object mutation exists on this wire at all.
+  assert.equal(
+    rollbackWire.filter((request) => request.pathname === "/ledger/prepare").length,
+    1,
+  );
+  assert.equal(
+    rollbackWire.filter((request) => request.pathname === "/pointer/compare-and-swap").length,
+    1,
+  );
+  assert.equal(
+    rollbackWire.filter((request) => request.pathname === "/ledger/mark-promoted").length,
+    1,
+  );
+  const parityRestored = await verifyGenerationParity({
+    pointerStore: plane.pointerStore,
+    objectStore: plane.objectStore,
+    payloads, // original V1 payloads, now active again
+  });
+  assert.equal(parityRestored.assets, 4);
+
+  // Rolling back again restores V2 at sequence 4 — the sequence never rewinds.
+  const rolledForward = await rollbackLiveGeneration({
+    objectStore: plane.objectStore,
+    ledger: plane.ledger,
+    pointerStore: plane.pointerStore,
+  });
+  assert.equal(rolledForward.pointer.sequence, 4);
+  assert.equal(rolledForward.pointer.active.generation_id, manifestV2.generation_id);
+  assert.equal(rolledForward.pointer.previous.generation_id, manifest.generation_id);
+  assert.equal(r2Counters.put, putsBeforeRollback); // still zero object writes
+  console.log("rollback ok (2->3 active=V1, 3->4 active=V2; sequence only moves forward)");
+
+  // Rollback refusal: a pointer with no previous fails with a clean typed
+  // error before any write; an empty plane refuses the same way.
+  const singlePlane = createMemoryCloudDataPlane();
+  await publishGeneration({
+    manifest,
+    payloads,
+    expectedPointerSequence: 0,
+    objectStore: singlePlane.objectStore,
+    ledger: singlePlane.ledger,
+    pointerStore: singlePlane.pointerStore,
+    policy: POLICY,
+    now: () => NOW_1,
+  });
+  await assertRejectsCode(
+    rollbackLiveGeneration({
+      objectStore: singlePlane.objectStore,
+      ledger: singlePlane.ledger,
+      pointerStore: singlePlane.pointerStore,
+    }),
+    "ROLLBACK_TARGET_MISSING",
+  );
+  assert.equal((await singlePlane.pointerStore.get()).sequence, 1); // untouched
+  assert.equal((await singlePlane.pointerStore.get()).active.generation_id, manifest.generation_id);
+  const emptyPlane = createMemoryCloudDataPlane();
+  await assertRejectsCode(
+    rollbackLiveGeneration({
+      objectStore: emptyPlane.objectStore,
+      ledger: emptyPlane.ledger,
+      pointerStore: emptyPlane.pointerStore,
+    }),
+    "ROLLBACK_TARGET_MISSING",
+  );
+  assert.equal(await emptyPlane.pointerStore.get(), null);
+  console.log("rollback refusal ok (ROLLBACK_TARGET_MISSING, no previous / no pointer, no writes)");
 } finally {
   await new Promise((resolve) => server.close(resolve));
   await rm(fixtureRoot, { recursive: true, force: true });
@@ -455,6 +750,26 @@ function runCli(extraArgs) {
   assert.equal(refused.code, 3);
   assert.equal(refused.stdout.trim(), "");
   assert.match(refused.stderr, /cost gate blocked/);
+
+  // Chaos flag parsing: a known mode is accepted (the gate still blocks first,
+  // offline), an unknown mode is rejected before anything runs.
+  const chaosAccepted = await runCli(["--chaos=stale-sequence", "--tolerate-gate-block"]);
+  assert.equal(chaosAccepted.code, 0, chaosAccepted.stderr);
+  assert.equal(JSON.parse(chaosAccepted.stdout.trim()).result, "gate_blocked");
+  const chaosRejected = await runCli(["--chaos=bogus"]);
+  assert.equal(chaosRejected.code, 1);
+  assert.match(chaosRejected.stderr, /ARGS_INVALID/);
+
+  // Rollback flag parsing: accepted (gate blocks first, offline, with the
+  // rollback mode reported), and --rollback + --chaos is rejected.
+  const rollbackAccepted = await runCli(["--rollback", "--tolerate-gate-block"]);
+  assert.equal(rollbackAccepted.code, 0, rollbackAccepted.stderr);
+  const rollbackGateSummary = JSON.parse(rollbackAccepted.stdout.trim());
+  assert.equal(rollbackGateSummary.result, "gate_blocked");
+  assert.equal(rollbackGateSummary.mode, "rollback");
+  const rollbackChaos = await runCli(["--rollback", "--chaos=stale-sequence"]);
+  assert.equal(rollbackChaos.code, 1);
+  assert.match(rollbackChaos.stderr, /ARGS_INVALID/);
   console.log("gate-blocked behaviour ok (tolerate -> typed line exit 0; strict -> exit 3)");
 }
 
