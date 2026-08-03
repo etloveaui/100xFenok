@@ -51,15 +51,28 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 987,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-19T07:14:57Z",
-    "history_as_of": "2026-07-17",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AMUB.json",
-    "payload_sha256": "b1b08f48a3611027897ff4fee4c51716d170eba5c5fce73cc049fcdd620ca864",
-    "quote_as_of": "2026-07-10T19:48:43Z",
-    "source_as_of": "2026-07-10T19:48:43Z"
+    "fetched_at": "2026-08-03T22:58:45Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/yf/finance/AMUB.json",
+    "payload_sha256": "6db865ae840c4387c31b35ac5477e32089645c4ee700e57c8768f023032723bc",
+    "quote_as_of": "2026-08-03T14:35:10Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -68,14 +81,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 769,
+    "latency_ms": 987,
     "natural": true,
-    "observed_at": "2026-07-16T00:19:31Z",
+    "observed_at": "2026-08-03T22:58:08Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "30860500094",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-07-19T07:14:57Z",
@@ -85,8 +98,20 @@
     "quote_as_of": "2026-07-10T19:48:43Z",
     "source_as_of": "2026-07-10T19:48:43Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-03T22:58:08Z",
+    "payload_sha256": "52a5be3e82d2ca2546783587d5e85d5c9c0f4cd37d556a6e1354d3ecc67fe996",
+    "quote_as_of": "2026-08-03T14:35:10Z",
+    "run_attempt": 1,
+    "run_id": "30860500094",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-03"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -99,5 +124,5 @@
     "source_as_of": "2026-07-10T19:48:43Z"
   },
   "ticker": "AMUB",
-  "updated_at": "2026-07-21T00:18:00Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

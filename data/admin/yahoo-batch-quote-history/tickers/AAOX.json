@@ -38,15 +38,28 @@
       "run_id": "29378156187",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1004,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-15T00:12:49Z",
-    "history_as_of": "2026-07-14",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AAOX.json",
-    "payload_sha256": "1407df45b37a2dcb26167cfc6275d36b6c7403ed0ebdf30af9e57e63b85fee81",
-    "quote_as_of": "2026-07-14T20:00:01Z",
-    "source_as_of": "2026-07-14"
+    "fetched_at": "2026-08-03T22:58:37Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/yf/finance/AAOX.json",
+    "payload_sha256": "b150275a345f1057916575bc9a219bb48b153c5d7f123f8becef7e5d1c17879a",
+    "quote_as_of": "2026-08-03T20:00:01Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -55,14 +68,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 759,
+    "latency_ms": 1004,
     "natural": true,
-    "observed_at": "2026-07-15T00:10:40Z",
+    "observed_at": "2026-08-03T22:58:08Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29378156187",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "30860500094",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-07-15T00:12:49Z",
@@ -72,8 +85,20 @@
     "quote_as_of": "2026-07-14T20:00:01Z",
     "source_as_of": "2026-07-14"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-03T22:58:08Z",
+    "payload_sha256": "402128533bbf4fb30788cc94566d53b021a04179b86601db93961ba57bccaf72",
+    "quote_as_of": "2026-08-03T20:00:01Z",
+    "run_attempt": 1,
+    "run_id": "30860500094",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-03"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -86,5 +111,5 @@
     "source_as_of": "2026-07-14"
   },
   "ticker": "AAOX",
-  "updated_at": "2026-07-23T00:49:28Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

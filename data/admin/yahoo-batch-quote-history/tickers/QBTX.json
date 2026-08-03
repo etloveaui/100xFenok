@@ -64,15 +64,28 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 756,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:23:47Z",
-    "history_as_of": "2026-07-15",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/QBTX.json",
-    "payload_sha256": "04b0571da88f13ac29b7c4af490558a783183d8b00687515408eba61b234fbba",
-    "quote_as_of": "2026-07-15T20:00:00Z",
-    "source_as_of": "2026-07-15"
+    "fetched_at": "2026-08-03T22:58:49Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/yf/finance/QBTX.json",
+    "payload_sha256": "badc4476e7e4fd65063672a263e727b7c1b75003f342e4f5c3b8fe975f9f93c5",
+    "quote_as_of": "2026-08-03T20:00:00Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -81,14 +94,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 712,
+    "latency_ms": 756,
     "natural": true,
-    "observed_at": "2026-07-16T00:19:31Z",
+    "observed_at": "2026-08-03T22:58:08Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "30860500094",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-07-16T00:23:47Z",
@@ -98,8 +111,20 @@
     "quote_as_of": "2026-07-15T20:00:00Z",
     "source_as_of": "2026-07-15"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-03T22:58:08Z",
+    "payload_sha256": "ef37edf91fb5ac2c92da2e92ea0866408559ae07e6c7f81547d35dba8b5a4074",
+    "quote_as_of": "2026-08-03T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "30860500094",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-03"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -112,5 +137,5 @@
     "source_as_of": "2026-07-15"
   },
   "ticker": "QBTX",
-  "updated_at": "2026-07-24T00:27:41Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

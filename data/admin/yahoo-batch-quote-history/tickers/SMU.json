@@ -64,15 +64,28 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 809,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:24:00Z",
-    "history_as_of": "2026-07-15",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SMU.json",
-    "payload_sha256": "da504f47e5caaf6ad7e8bedabb86d24b2b1205e546d5e55312b6bfcf1144e337",
-    "quote_as_of": "2026-07-15T20:00:00Z",
-    "source_as_of": "2026-07-15"
+    "fetched_at": "2026-08-03T22:58:53Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/yf/finance/SMU.json",
+    "payload_sha256": "04320535a57b36de4ad799698df76de693dccbe6249df7751d7bd39e42361361",
+    "quote_as_of": "2026-08-03T20:00:00Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -81,14 +94,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 767,
+    "latency_ms": 809,
     "natural": true,
-    "observed_at": "2026-07-16T00:19:31Z",
+    "observed_at": "2026-08-03T22:58:08Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "30860500094",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-07-16T00:24:00Z",
@@ -98,8 +111,20 @@
     "quote_as_of": "2026-07-15T20:00:00Z",
     "source_as_of": "2026-07-15"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-03T22:58:08Z",
+    "payload_sha256": "deb6ffc8ce0089685cd045e4693be884c514f1539e048dcfc9b605737ec5f73d",
+    "quote_as_of": "2026-08-03T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "30860500094",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-03"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -112,5 +137,5 @@
     "source_as_of": "2026-07-15"
   },
   "ticker": "SMU",
-  "updated_at": "2026-07-24T00:27:41Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-07-27T22:59:41Z",
     "history_as_of": "2026-07-24",
-    "path": "data/yf/finance/ADFI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ADFI.json",
     "payload_sha256": "65be259fa323f70fd86210f356813f1360528deacd3af24e4efe4f92c0436821",
     "quote_as_of": "2026-07-23T19:36:15Z",
     "source_as_of": "2026-07-23T19:36:15Z"
@@ -38,6 +38,14 @@
     "schedule": "0 22 * * 1",
     "shard": "1/6"
   },
+  "lkg": {
+    "fetched_at": "2026-07-27T22:59:41Z",
+    "history_as_of": "2026-07-24",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ADFI.json",
+    "payload_sha256": "65be259fa323f70fd86210f356813f1360528deacd3af24e4efe4f92c0436821",
+    "quote_as_of": "2026-07-23T19:36:15Z",
+    "source_as_of": "2026-07-23T19:36:15Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-23T19:36:15Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-03T22:58:08Z",
+    "classified_run_id": "30860500094",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "ADFI holds LKG because Yahoo source date 2026-07-23T19:36:15Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-23T19:36:15Z"
+  },
   "ticker": "ADFI",
-  "updated_at": "2026-07-27T22:58:21Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

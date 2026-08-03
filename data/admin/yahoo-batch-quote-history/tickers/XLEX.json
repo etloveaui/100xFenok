@@ -25,15 +25,28 @@
       "run_id": "29295146902",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 815,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-14T00:15:16Z",
-    "history_as_of": "2026-07-13",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XLEX.json",
-    "payload_sha256": "a487b816552e21ce6b53e4d6b18c944853fc8db564690257aa67c24bffb400bf",
-    "quote_as_of": "2026-07-13T19:29:01Z",
-    "source_as_of": "2026-07-13"
+    "fetched_at": "2026-08-03T22:58:35Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/yf/finance/XLEX.json",
+    "payload_sha256": "0dfede55333efa52bbfd02b848ee5c0aee5765776c683e862e6cc9346fc3268f",
+    "quote_as_of": "2026-08-03T18:24:33Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 488,
+    "latency_ms": 815,
     "natural": true,
-    "observed_at": "2026-07-14T00:11:54Z",
+    "observed_at": "2026-08-03T22:58:08Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29295146902",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "30860500094",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-07-14T00:15:16Z",
@@ -59,8 +72,20 @@
     "quote_as_of": "2026-07-13T19:29:01Z",
     "source_as_of": "2026-07-13"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-03T22:58:08Z",
+    "payload_sha256": "d0b04835d7e906e9ec40091f11c984ff9d1dc142e235a7bb2eeadea1f1b26226",
+    "quote_as_of": "2026-08-03T18:24:33Z",
+    "run_attempt": 1,
+    "run_id": "30860500094",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-03"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -73,5 +98,5 @@
     "source_as_of": "2026-07-13"
   },
   "ticker": "XLEX",
-  "updated_at": "2026-07-22T00:47:32Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

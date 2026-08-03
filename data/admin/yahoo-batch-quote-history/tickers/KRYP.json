@@ -28,10 +28,10 @@
     }
   ],
   "current": {
-    "fetched_at": "2026-07-27T23:01:57Z",
+    "fetched_at": "2026-07-27T23:47:31Z",
     "history_as_of": "2026-07-24",
-    "path": "data/yf/finance/KRYP.json",
-    "payload_sha256": "0cf1a5f60daf70424f4ec5651b3835d9b30eec00c62ba17ed38c2297d5227861",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/KRYP.json",
+    "payload_sha256": "11b80635a221d68cb586b10f21c6c9d3c35d50c2e9f1966364a6132ec316502c",
     "quote_as_of": "2026-07-23T13:41:12Z",
     "source_as_of": "2026-07-23T13:41:12Z"
   },
@@ -51,6 +51,14 @@
     "schedule": "0 22 * * 1",
     "shard": "1/6"
   },
+  "lkg": {
+    "fetched_at": "2026-07-27T23:47:31Z",
+    "history_as_of": "2026-07-24",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/KRYP.json",
+    "payload_sha256": "11b80635a221d68cb586b10f21c6c9d3c35d50c2e9f1966364a6132ec316502c",
+    "quote_as_of": "2026-07-23T13:41:12Z",
+    "source_as_of": "2026-07-23T13:41:12Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -63,9 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-23T13:41:12Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-03T22:58:08Z",
+    "classified_run_id": "30860500094",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "KRYP holds LKG because Yahoo source date 2026-07-23T13:41:12Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-23T13:41:12Z"
+  },
   "ticker": "KRYP",
-  "updated_at": "2026-07-27T22:58:21Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

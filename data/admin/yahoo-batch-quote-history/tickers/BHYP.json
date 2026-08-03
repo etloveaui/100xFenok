@@ -51,15 +51,28 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 807,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:32:16Z",
-    "history_as_of": "2026-07-15",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BHYP.json",
-    "payload_sha256": "c6d540f6d98db27f07ff4b199b65126330a3652b8ccee12ce00cee36338469fd",
-    "quote_as_of": "2026-07-15T20:00:00Z",
-    "source_as_of": "2026-07-15"
+    "fetched_at": "2026-08-03T22:59:11Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/yf/finance/BHYP.json",
+    "payload_sha256": "1a064ecdd8b895945d46247b166a7d8f4902168e558c9bb499d7bd7b6b1d23a4",
+    "quote_as_of": "2026-08-03T20:00:00Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -68,14 +81,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 575,
+    "latency_ms": 807,
     "natural": true,
-    "observed_at": "2026-07-16T00:30:04Z",
+    "observed_at": "2026-08-03T22:58:08Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "30860500094",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-07-16T00:32:16Z",
@@ -85,8 +98,20 @@
     "quote_as_of": "2026-07-15T20:00:00Z",
     "source_as_of": "2026-07-15"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-03T22:58:08Z",
+    "payload_sha256": "cc9e7b5606977a3d23f2dcfc737109e244126aa7052fe00188ea92b49dd79990",
+    "quote_as_of": "2026-08-03T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "30860500094",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-03"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -99,5 +124,5 @@
     "source_as_of": "2026-07-15"
   },
   "ticker": "BHYP",
-  "updated_at": "2026-07-24T00:27:41Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

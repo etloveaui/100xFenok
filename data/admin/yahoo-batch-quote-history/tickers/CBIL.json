@@ -38,15 +38,28 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 902,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:32:22Z",
-    "history_as_of": "2026-07-15",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CBIL.json",
-    "payload_sha256": "d169d2ca74f0cbc8a1325932bd7495f0e92796822812302df5cae08f6f5443cb",
-    "quote_as_of": "2026-07-15T15:40:34Z",
-    "source_as_of": "2026-07-15"
+    "fetched_at": "2026-08-03T22:59:13Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/yf/finance/CBIL.json",
+    "payload_sha256": "3b255d21ce791d927b3f3d6891b8e72331cb96ad6f55691a44fb72e1b874d945",
+    "quote_as_of": "2026-08-03T13:43:10Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -55,14 +68,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 688,
+    "latency_ms": 902,
     "natural": true,
-    "observed_at": "2026-07-16T00:30:04Z",
+    "observed_at": "2026-08-03T22:58:08Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "30860500094",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-07-16T00:32:22Z",
@@ -72,8 +85,20 @@
     "quote_as_of": "2026-07-15T15:40:34Z",
     "source_as_of": "2026-07-15"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-03T22:58:08Z",
+    "payload_sha256": "f229a876a655e332049c65cd319d2a9d653fea2d4a2bc8c8fee5c5bb94970e2f",
+    "quote_as_of": "2026-08-03T13:43:10Z",
+    "run_attempt": 1,
+    "run_id": "30860500094",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-03"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -86,5 +111,5 @@
     "source_as_of": "2026-07-15"
   },
   "ticker": "CBIL",
-  "updated_at": "2026-07-24T00:27:41Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

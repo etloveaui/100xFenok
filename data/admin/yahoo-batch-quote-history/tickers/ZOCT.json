@@ -12,31 +12,44 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1166,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T00:23:32Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ZOCT.json",
-    "payload_sha256": "1a7d4270090aec2fecf64e9eab2226c2529c8ef59c551edf817ad029526c1f8e",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-08-03T22:58:25Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/yf/finance/ZOCT.json",
+    "payload_sha256": "bc78f2e92930886d962e9a26e95b8e79f0d3985b43d9c6de0d6e42a4e77e6163",
+    "quote_as_of": "2026-08-03T18:42:11Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 1,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 1166,
+    "natural": true,
+    "observed_at": "2026-08-03T22:58:08Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30860500094",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-06-30T00:23:32Z",
@@ -46,8 +59,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-03T22:58:08Z",
+    "payload_sha256": "fe68741206e4c83de4bc13cef31c7bf31d8e0c193e5ae7a72448779389bee9a5",
+    "quote_as_of": "2026-08-03T18:42:11Z",
+    "run_attempt": 1,
+    "run_id": "30860500094",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-03"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +85,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "ZOCT",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

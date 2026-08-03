@@ -64,31 +64,44 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 796,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:29:48Z",
-    "history_as_of": "2026-07-14",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VBX.json",
-    "payload_sha256": "8d12dbd081d85848d91ee29bf33f63c9baec098572c35bac4e1c1ec5d53b5f50",
-    "quote_as_of": "2026-07-14T16:32:29Z",
-    "source_as_of": "2026-07-14"
+    "fetched_at": "2026-08-03T22:59:19Z",
+    "history_as_of": "2026-07-31",
+    "path": "data/yf/finance/VBX.json",
+    "payload_sha256": "dea0c770b3d5b6dc2135a80f6448ff9f39bcaf40e2e0e1223eec3ece75f71d98",
+    "quote_as_of": "2026-07-22T15:29:17Z",
+    "source_as_of": "2026-07-22T15:29:17Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 796,
     "natural": true,
-    "observed_at": "2026-07-16T00:35:28Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-03T22:58:08Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
-    "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "run_id": "30860500094",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-07-16T00:29:48Z",
@@ -98,8 +111,20 @@
     "quote_as_of": "2026-07-14T16:32:29Z",
     "source_as_of": "2026-07-14"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-07-31",
+    "observed_at": "2026-08-03T22:58:08Z",
+    "payload_sha256": "bfd7b37c5f2ec4c6e07856a9fbd6f6fa69f213e57470269e46a5fbc76e781f30",
+    "quote_as_of": "2026-07-22T15:29:17Z",
+    "run_attempt": 1,
+    "run_id": "30860500094",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-22T15:29:17Z"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -112,5 +137,5 @@
     "source_as_of": "2026-07-14"
   },
   "ticker": "VBX",
-  "updated_at": "2026-07-23T00:49:28Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

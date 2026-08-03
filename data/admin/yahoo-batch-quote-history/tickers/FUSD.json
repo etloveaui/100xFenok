@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-26T23:03:28Z",
     "history_as_of": "2026-07-24",
-    "path": "data/yf/finance/FUSD.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FUSD.json",
     "payload_sha256": "68c97aadd5410853839fd609a7b12dab30e550d048664c10a44caf1f75b2dc60",
     "quote_as_of": "2026-07-23T19:55:27Z",
     "source_as_of": "2026-07-23T19:55:27Z"
@@ -52,12 +52,12 @@
     "shard": "0/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-30T14:35:22Z",
-    "history_as_of": "2026-06-30",
+    "fetched_at": "2026-07-26T23:03:28Z",
+    "history_as_of": "2026-07-24",
     "path": "data/admin/yahoo-batch-quote-history/lkg/FUSD.json",
-    "payload_sha256": "233cb74d18312c934f065cf9315f01171f83abf3e21f2f3a0f833c844865e4c4",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-30"
+    "payload_sha256": "68c97aadd5410853839fd609a7b12dab30e550d048664c10a44caf1f75b2dc60",
+    "quote_as_of": "2026-07-23T19:55:27Z",
+    "source_as_of": "2026-07-23T19:55:27Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-23T19:55:27Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-03T22:58:08Z",
+    "classified_run_id": "30860500094",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "FUSD holds LKG because Yahoo source date 2026-06-30 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "FUSD holds LKG because Yahoo source date 2026-07-23T19:55:27Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-30"
+    "source_as_of": "2026-07-23T19:55:27Z"
   },
   "ticker": "FUSD",
-  "updated_at": "2026-07-26T23:02:52Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

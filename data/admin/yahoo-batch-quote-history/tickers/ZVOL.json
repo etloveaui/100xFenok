@@ -12,31 +12,106 @@
       "run_id": "29224221077",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: ZVOL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ZVOL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ZVOL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ZVOL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ZVOL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ZVOL: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 989,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T00:23:47Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ZVOL.json",
-    "payload_sha256": "ba3c561d1e742db8622a5931616a85aef6acdfdb58e83469e2c75b8d59db67b8",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-08-03T22:58:33Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/yf/finance/ZVOL.json",
+    "payload_sha256": "7b455d521d03332702789d342ae236f355e6666aaa00b2c0c68e3ae4d07fc5be",
+    "quote_as_of": "2026-08-03T19:59:51Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "workflow_dispatch",
-    "failures": [],
-    "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-07-13T04:33:56Z",
-    "outcome": "skipped_fresh",
+    "attempts_used": 1,
+    "event_name": "schedule",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFDataException: ZVOL: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ZVOL: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ZVOL: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ZVOL: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ZVOL: No Fund data found.",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "YFDataException: ZVOL: No Fund data found.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 989,
+    "natural": true,
+    "observed_at": "2026-08-03T22:58:08Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29224221077",
-    "schedule": "",
-    "shard": ""
+    "run_id": "30860500094",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-06-30T00:23:47Z",
@@ -46,8 +121,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-03T22:58:08Z",
+    "payload_sha256": "052894691d3cd749af2d8b08506ceaac5f62f8fc36865f80495ce5896abfe643",
+    "quote_as_of": "2026-08-03T19:59:51Z",
+    "run_attempt": 1,
+    "run_id": "30860500094",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-03"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -60,5 +147,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "ZVOL",
-  "updated_at": "2026-07-13T04:33:56Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

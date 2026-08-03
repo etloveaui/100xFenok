@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-23T23:20:12Z",
     "history_as_of": "2026-07-23",
-    "path": "data/yf/finance/DDM.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DDM.json",
     "payload_sha256": "294f4cd4eb4366b7d4c94bd2f621caea78d45950d65be87828a3800e528c366d",
     "quote_as_of": "2026-07-23T20:00:00Z",
     "source_as_of": "2026-07-23"
@@ -53,12 +53,12 @@
     "shard": "4/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-27T23:50:02Z",
-    "history_as_of": "2026-06-26",
+    "fetched_at": "2026-07-23T23:20:12Z",
+    "history_as_of": "2026-07-23",
     "path": "data/admin/yahoo-batch-quote-history/lkg/DDM.json",
-    "payload_sha256": "1ecb4bbd259eaec689a9fb2bd53deead40226207ab4fcf13df2c7fd1068b8a77",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-26"
+    "payload_sha256": "294f4cd4eb4366b7d4c94bd2f621caea78d45950d65be87828a3800e528c366d",
+    "quote_as_of": "2026-07-23T20:00:00Z",
+    "source_as_of": "2026-07-23"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -72,19 +72,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-23"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 10,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-03T22:58:08Z",
+    "classified_run_id": "30860500094",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "DDM holds LKG because Yahoo source date 2026-06-26 is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "DDM holds LKG because Yahoo source date 2026-07-23 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-26"
+    "source_as_of": "2026-07-23"
   },
   "ticker": "DDM",
-  "updated_at": "2026-07-23T23:19:22Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

@@ -64,15 +64,28 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 753,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:24:01Z",
-    "history_as_of": "2026-07-15",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SNDQ.json",
-    "payload_sha256": "ec2c1e08005f43f8732b3c9f9a1bffd7cd0436d480465ff02fcb7e944ada9e4d",
-    "quote_as_of": "2026-07-15T20:00:00Z",
-    "source_as_of": "2026-07-15"
+    "fetched_at": "2026-08-03T22:58:54Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/yf/finance/SNDQ.json",
+    "payload_sha256": "5d0032c7c66049d679d02b0a83888d172f4c9b3590f4c56628c4a5a820082725",
+    "quote_as_of": "2026-08-03T20:00:00Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -81,14 +94,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 689,
+    "latency_ms": 753,
     "natural": true,
-    "observed_at": "2026-07-16T00:19:31Z",
+    "observed_at": "2026-08-03T22:58:08Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "30860500094",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-07-16T00:24:01Z",
@@ -98,8 +111,20 @@
     "quote_as_of": "2026-07-15T20:00:00Z",
     "source_as_of": "2026-07-15"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-03T22:58:08Z",
+    "payload_sha256": "56ebeb238353400bba717934ac0b4be75ce68362a8637c84fd738d50589b15ce",
+    "quote_as_of": "2026-08-03T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "30860500094",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-03"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -112,5 +137,5 @@
     "source_as_of": "2026-07-15"
   },
   "ticker": "SNDQ",
-  "updated_at": "2026-07-24T00:27:41Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

@@ -77,15 +77,28 @@
       "run_id": "29544227703",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 703,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-17T00:21:05Z",
-    "history_as_of": "2026-07-16",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XLBI.json",
-    "payload_sha256": "2e40c2b2e330ff2db976723d73cae814626c51e1542e3ecf3ab21a0419e4e104",
-    "quote_as_of": "2026-07-16T19:45:16Z",
-    "source_as_of": "2026-07-16"
+    "fetched_at": "2026-08-03T22:59:32Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/yf/finance/XLBI.json",
+    "payload_sha256": "4b1420ebe55b3c03ed076544e589e38bad617d84eef2a799abbe441a4bc37b50",
+    "quote_as_of": "2026-08-03T18:20:18Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -94,14 +107,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 494,
+    "latency_ms": 703,
     "natural": true,
-    "observed_at": "2026-07-17T00:15:36Z",
+    "observed_at": "2026-08-03T22:58:08Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29544227703",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "30860500094",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-07-17T00:21:05Z",
@@ -114,17 +127,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-16",
-    "observed_at": "2026-07-17T00:15:36Z",
-    "payload_sha256": "14384c87b3f99cc77189681f5313d47275b6b983b248d9f13b2db9566bed56a6",
-    "quote_as_of": "2026-07-16T19:45:16Z",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-03T22:58:08Z",
+    "payload_sha256": "ac8b9c126e53e785937829973b3e94cb67849e344478594749d98061d036d7d0",
+    "quote_as_of": "2026-08-03T18:20:18Z",
     "run_attempt": 1,
-    "run_id": "29544227703",
+    "run_id": "30860500094",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-16"
+    "source_as_of": "2026-08-03"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -137,5 +150,5 @@
     "source_as_of": "2026-07-16"
   },
   "ticker": "XLBI",
-  "updated_at": "2026-07-27T01:53:07Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

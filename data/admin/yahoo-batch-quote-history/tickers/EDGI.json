@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-07-23T23:22:52Z",
     "history_as_of": "2026-07-23",
-    "path": "data/yf/finance/EDGI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EDGI.json",
     "payload_sha256": "825ef491cc1565c54b342cdad02e5d7e4f9cd461ac271d7df3aaa33efbb34b41",
     "quote_as_of": "2026-07-23T19:59:45Z",
     "source_as_of": "2026-07-23"
@@ -38,6 +38,14 @@
     "schedule": "0 22 * * 4",
     "shard": "4/6"
   },
+  "lkg": {
+    "fetched_at": "2026-07-23T23:22:52Z",
+    "history_as_of": "2026-07-23",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EDGI.json",
+    "payload_sha256": "825ef491cc1565c54b342cdad02e5d7e4f9cd461ac271d7df3aaa33efbb34b41",
+    "quote_as_of": "2026-07-23T19:59:45Z",
+    "source_as_of": "2026-07-23"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-23"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-03T22:58:08Z",
+    "classified_run_id": "30860500094",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "EDGI holds LKG because Yahoo source date 2026-07-23 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-23"
+  },
   "ticker": "EDGI",
-  "updated_at": "2026-07-23T23:19:22Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

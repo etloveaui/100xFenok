@@ -64,15 +64,28 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 823,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:23:48Z",
-    "history_as_of": "2026-07-15",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/QTAC.json",
-    "payload_sha256": "2c562b4f618add61f2856662adc1df241c0b0471cfc9d4996eb2f28f895fd826",
-    "quote_as_of": "2026-07-15T19:06:36Z",
-    "source_as_of": "2026-07-15"
+    "fetched_at": "2026-08-03T22:58:51Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/yf/finance/QTAC.json",
+    "payload_sha256": "d1f90f8d99b3ba203c4b806dd395f3a273b23b36eae663d322168a44472e580f",
+    "quote_as_of": "2026-08-03T19:59:46Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -81,14 +94,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 701,
+    "latency_ms": 823,
     "natural": true,
-    "observed_at": "2026-07-16T00:19:31Z",
+    "observed_at": "2026-08-03T22:58:08Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "30860500094",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-07-16T00:23:48Z",
@@ -98,8 +111,20 @@
     "quote_as_of": "2026-07-15T19:06:36Z",
     "source_as_of": "2026-07-15"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-03T22:58:08Z",
+    "payload_sha256": "7227d842a427770b111296c58a8c988dcd169c4a39de90700e485b989b5d12aa",
+    "quote_as_of": "2026-08-03T19:59:46Z",
+    "run_attempt": 1,
+    "run_id": "30860500094",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-03"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -112,5 +137,5 @@
     "source_as_of": "2026-07-15"
   },
   "ticker": "QTAC",
-  "updated_at": "2026-07-24T00:27:41Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

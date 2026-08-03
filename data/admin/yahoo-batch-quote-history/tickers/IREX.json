@@ -90,15 +90,28 @@
       "run_id": "29544227703",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 842,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-17T00:23:22Z",
-    "history_as_of": "2026-07-16",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/IREX.json",
-    "payload_sha256": "0cc3c99963740a1fc76addbb053fcd20d8c03b95b59f99c1d33e37058fd51d14",
-    "quote_as_of": "2026-07-16T20:00:00Z",
-    "source_as_of": "2026-07-16"
+    "fetched_at": "2026-08-03T22:59:34Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/yf/finance/IREX.json",
+    "payload_sha256": "da10e01c908a839a6d0be83996043ede6c8d3e4860ee50f72c9c654cd4a54dfe",
+    "quote_as_of": "2026-08-03T20:00:00Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -107,14 +120,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 351,
+    "latency_ms": 842,
     "natural": true,
-    "observed_at": "2026-07-17T00:21:09Z",
+    "observed_at": "2026-08-03T22:58:08Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29544227703",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "30860500094",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-07-17T00:23:22Z",
@@ -127,17 +140,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-16",
-    "observed_at": "2026-07-17T00:21:09Z",
-    "payload_sha256": "125eaaba797b1df2fe486f53a62bb3320c7921f05f5fb4bdf7568971971b8caa",
-    "quote_as_of": "2026-07-16T20:00:00Z",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-03T22:58:08Z",
+    "payload_sha256": "a6053b32d88b59e20c44bcfdbfd7b3ce938419827491987d0db61ff1266ae398",
+    "quote_as_of": "2026-08-03T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "29544227703",
+    "run_id": "30860500094",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-16"
+    "source_as_of": "2026-08-03"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -150,5 +163,5 @@
     "source_as_of": "2026-07-16"
   },
   "ticker": "IREX",
-  "updated_at": "2026-07-27T01:53:07Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

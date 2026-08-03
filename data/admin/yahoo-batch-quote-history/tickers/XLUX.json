@@ -51,15 +51,28 @@
       "run_id": "29460793523",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 787,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-16T00:24:45Z",
-    "history_as_of": "2026-07-14",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XLUX.json",
-    "payload_sha256": "806909dcf1a61302cd0eb3e6d61d7eb4a35bf6aa91214482d6c2d7a9f7d59fa6",
-    "quote_as_of": "2026-07-13T19:22:55Z",
-    "source_as_of": "2026-07-13T19:22:55Z"
+    "fetched_at": "2026-08-03T22:59:04Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/yf/finance/XLUX.json",
+    "payload_sha256": "72fe08f29cb9df0be0770cf68b208bc16b0e66add908e1af2f6dff108c70500e",
+    "quote_as_of": "2026-08-03T19:58:09Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -68,14 +81,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 657,
+    "latency_ms": 787,
     "natural": true,
-    "observed_at": "2026-07-16T00:19:31Z",
+    "observed_at": "2026-08-03T22:58:08Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29460793523",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "30860500094",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-07-16T00:24:45Z",
@@ -85,8 +98,20 @@
     "quote_as_of": "2026-07-13T19:22:55Z",
     "source_as_of": "2026-07-13T19:22:55Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-03T22:58:08Z",
+    "payload_sha256": "3e249447fa88ba269227f4a27d99c8750370b7102544f13523c99dd23a853ae0",
+    "quote_as_of": "2026-08-03T19:58:09Z",
+    "run_attempt": 1,
+    "run_id": "30860500094",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-03"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -99,5 +124,5 @@
     "source_as_of": "2026-07-13T19:22:55Z"
   },
   "ticker": "XLUX",
-  "updated_at": "2026-07-22T00:47:32Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }

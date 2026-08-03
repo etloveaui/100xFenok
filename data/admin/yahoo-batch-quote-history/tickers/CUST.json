@@ -64,32 +64,44 @@
       "run_id": "29544227703",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 800,
+      "natural": true,
+      "observed_at": "2026-08-03T22:58:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30860500094",
+      "schedule": "0 22 * * 1",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-17T00:15:59Z",
-    "history_as_of": "2026-07-15",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CUST.json",
-    "payload_sha256": "7ebc5c44ff0dcad8a8e0d7e9e22668dab3717cf3ed6cc8405d0089fd17829d53",
-    "quote_as_of": "2026-07-08T13:40:44Z",
-    "source_as_of": "2026-07-08T13:40:44Z"
+    "fetched_at": "2026-08-03T22:59:27Z",
+    "history_as_of": "2026-07-31",
+    "path": "data/yf/finance/CUST.json",
+    "payload_sha256": "0855c3bfa3a288df9b7f65e05c05af6ccafa921546b9e99fc59aa203692b938b",
+    "quote_as_of": "2026-07-20T15:49:39Z",
+    "source_as_of": "2026-07-20T15:49:39Z"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 357,
+    "latency_ms": 800,
     "natural": true,
-    "observed_at": "2026-07-17T00:15:36Z",
+    "observed_at": "2026-08-03T22:58:08Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29544227703",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "30860500094",
+    "schedule": "0 22 * * 1",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-07-17T00:15:59Z",
@@ -102,17 +114,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-15",
-    "observed_at": "2026-07-17T00:15:36Z",
-    "payload_sha256": "80b255b182b5e5da2854458f634983d951579a53a27520c9aa507f93e81ae670",
-    "quote_as_of": "2026-07-08T13:40:44Z",
+    "history_as_of": "2026-07-31",
+    "observed_at": "2026-08-03T22:58:08Z",
+    "payload_sha256": "d1c513fe05f1e6f3d491a86734a37f99338ab8fded5eee3319ceb04406c6916d",
+    "quote_as_of": "2026-07-20T15:49:39Z",
     "run_attempt": 1,
-    "run_id": "29544227703",
+    "run_id": "30860500094",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-08T13:40:44Z"
+    "source_as_of": "2026-07-20T15:49:39Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -125,5 +137,5 @@
     "source_as_of": "2026-07-08T13:40:44Z"
   },
   "ticker": "CUST",
-  "updated_at": "2026-07-17T00:21:09Z"
+  "updated_at": "2026-08-03T22:58:08Z"
 }
