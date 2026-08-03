@@ -123,17 +123,22 @@ function round(value, digits) {
   return Math.round(value * f) / f;
 }
 
-// One grid cell. The residual carries the risk premium; the discounting does
-// not. Years beyond the 3-year consensus path hold the final path year.
-export function computeCell({ bookValue, roePath, retention, riskFree, erp, tailShift = 0, years = RIM_EXPLICIT_YEARS }) {
+// One grid cell. The residual carries the risk premium; the discounting does not.
+//
+// A SINGLE long-run ROE runs the whole horizon. That is what his sheets do: the
+// grid axis is labelled LT ROE and carries one value, and the master tables print
+// one ROE column per index. Every reproduction in the test suite — 90 cells across
+// two weeks — holds ROE flat. The three-year consensus path this engine used to
+// feed was our own invention, appears nowhere in his material, and moved fair
+// values by up to 35% against the form that actually reproduces the sheets.
+export function computeCell({ bookValue, roePath, retention, riskFree, erp, roeShift = 0, years = RIM_EXPLICIT_YEARS }) {
   const ke = riskFree + erp;          // cost of equity: reaches the residual only
   const disc = discountRate(riskFree); // discount rate: a separate rate, no risk premium in it
+  const roe = (Array.isArray(roePath) ? roePath[0] : roePath) + roeShift;
   let book = bookValue;
   let v = bookValue;
   let residual = 0;
   for (let t = 1; t <= years; t += 1) {
-    const base = roePath[Math.min(t - 1, roePath.length - 1)];
-    const roe = t > roePath.length ? base + tailShift : base;
     residual = (roe - ke) * book;
     v += residual / (1 + disc) ** t;
     book *= 1 + roe * retention;
@@ -142,17 +147,19 @@ export function computeCell({ bookValue, roePath, retention, riskFree, erp, tail
   return v;
 }
 
-// One case: 3x3 grid — tail-ROE rows (final-path-year ROE shifted -0.5/0/+0.5%p
-// for the years beyond the consensus path) x ERP columns (center +-0.5%p).
-// Fair value = mean of the nine cells, matching the sheets' 상승여력 블록.
+// One case: the 3x3 grid his sheets print — LT ROE rows (centre +-0.5%p) x risk
+// premium columns (centre +-0.5%p). The sheets report both a 적정가 (the centre
+// cell) and a 평균 (the mean of nine); we publish the centre, which is what his
+// master tables' 적정지수 column matches.
 export function computeCase({ px, bookValue, roePath, retention, riskFree, erpCenter }) {
   const cells = [];
-  for (const tailShift of [-RIM_GRID_STEP, 0, RIM_GRID_STEP]) {
+  for (const roeShift of [-RIM_GRID_STEP, 0, RIM_GRID_STEP]) {
     for (const erp of [erpCenter - RIM_GRID_STEP, erpCenter, erpCenter + RIM_GRID_STEP]) {
-      cells.push(computeCell({ bookValue, roePath, retention, riskFree, erp, tailShift }));
+      cells.push(computeCell({ bookValue, roePath, retention, riskFree, erp, roeShift }));
     }
   }
-  const mean = cells.reduce((a, b) => a + b, 0) / cells.length;
+  const centre = computeCell({ bookValue, roePath, retention, riskFree, erp: erpCenter });
+  const mean = centre;
   return {
     erp_center: erpCenter,
     risk_free: Math.round(riskFree * 10000) / 10000,

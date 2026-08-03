@@ -125,6 +125,23 @@ import {
   assert.ok(rfSens > rpSens * 2, "the two rates must stay distinct");
 }
 
+// The live build calls computeCase, not computeCell, so the reproduction has to
+// hold through that path too — the previous suite validated a form the build did
+// not use, which is how a three-year ROE path shipped for months against sheets
+// that only ever carry one. computeCase's centre must equal the sheet centre, and
+// passing a path must not change the answer.
+{
+  const sheet = {
+    px: 6870.4, bookValue: 6870.4 / 5.4873, retention: 1 - 0.3109,
+    riskFree: 0.042, erpCenter: 0.045,
+  };
+  const flat = computeCase({ ...sheet, roePath: [0.261] });
+  assert.ok(Math.abs(flat.fair_value / 7144 - 1) < 0.02, `computeCase centre drifted: ${flat.fair_value}`);
+  const withPath = computeCase({ ...sheet, roePath: [0.261, 0.24, 0.22] });
+  assert.equal(withPath.fair_value, flat.fair_value, "only the long-run ROE may drive the model");
+  assert.ok(flat.upside_min_pct < flat.upside_pct && flat.upside_pct < flat.upside_max_pct);
+}
+
 // Formula shape, hand-computable. With retention 0 the book never grows and the
 // residual is constant, so the explicit annuity plus the terminal collapse to a
 // perpetuity discounted at the DISCOUNT rate, not at Ke:
@@ -150,7 +167,7 @@ import {
 // Case grid: mean strictly between min and max; a lower 10Y raises value;
 // the tail shift only moves years beyond the consensus path.
 {
-  const base = { px: 1500, bookValue: 1000, roePath: [0.3, 0.25, 0.2], retention: 0.8, erpCenter: 0.05 };
+  const base = { px: 1500, bookValue: 1000, roePath: [0.3], retention: 0.8, erpCenter: 0.05 };
   const cur = computeCase({ ...base, riskFree: 0.0468 });
   const low = computeCase({ ...base, riskFree: RIM_RATE_SCENARIO_10Y });
   assert.ok(low.fair_value > cur.fair_value);
