@@ -1,0 +1,525 @@
+{
+  "schema_version": "rim-yoo-index/v1",
+  "generated_at": "2026-08-03T07:54:07.567Z",
+  "method": "yoo_dongwon_single_stage_residual_income_persistence",
+  "formula": "V = B0 + (ROE - r) * B0 * w / (1 + r - w); B0 = px_last / px_to_book_ratio",
+  "assumptions": {
+    "roe_source": "Bloomberg forward ROE via the weekly benchmarks converter (observed input)",
+    "discount_rates": [
+      0.0971,
+      0.08,
+      0.07
+    ],
+    "discount_rate_note": "0.0971 is the house cost of equity (risk_free + ERP, rim-index derivation); 0.08 and 0.07 are sensitivity alternatives. r is a house assumption, not an observation, and it dominates the result.",
+    "persistence_scenarios": [
+      1,
+      0.9,
+      0.8
+    ],
+    "persistence_note": "w = 1.0 keeps residual income perpetual; 0.9 / 0.8 fade it. House assumptions, not forecasts.",
+    "disclaimer": "Model-implied fair values under stated assumptions. Not price targets, not investment advice."
+  },
+  "tables": [
+    {
+      "discount_rate": 0.0971,
+      "rows": [
+        {
+          "key": "sp500",
+          "name": "S&P 500",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 7489.72,
+          "book_value": 1315.93,
+          "forward_roe": 0.2913,
+          "discount_rate": 0.0971,
+          "scenarios": [
+            {
+              "w": 1,
+              "fair_value": 3947.78,
+              "upside_pct": -47.29
+            },
+            {
+              "w": 0.9,
+              "fair_value": 2482.83,
+              "upside_pct": -66.85
+            },
+            {
+              "w": 0.8,
+              "fair_value": 2004.05,
+              "upside_pct": -73.24
+            }
+          ]
+        },
+        {
+          "key": "nasdaq100",
+          "name": "나스닥 100",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 28274.2,
+          "book_value": 3199.49,
+          "forward_roe": 0.414,
+          "discount_rate": 0.0971,
+          "scenarios": [
+            {
+              "w": 1,
+              "fair_value": 13641.49,
+              "upside_pct": -51.75
+            },
+            {
+              "w": 0.9,
+              "fair_value": 7829.25,
+              "upside_pct": -72.31
+            },
+            {
+              "w": 0.8,
+              "fair_value": 5929.66,
+              "upside_pct": -79.03
+            }
+          ]
+        },
+        {
+          "key": "nasdaq_composite",
+          "name": "나스닥 종합",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 25373.85,
+          "book_value": 3341.52,
+          "forward_roe": 0.3235,
+          "discount_rate": 0.0971,
+          "scenarios": [
+            {
+              "w": 1,
+              "fair_value": 11132.67,
+              "upside_pct": -56.13
+            },
+            {
+              "w": 0.9,
+              "fair_value": 6795.95,
+              "upside_pct": -73.22
+            },
+            {
+              "w": 0.8,
+              "fair_value": 5378.6,
+              "upside_pct": -78.8
+            }
+          ]
+        },
+        {
+          "key": "russell2000",
+          "name": "러셀 2000",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 2931.34,
+          "book_value": 1126.61,
+          "forward_roe": 0.0914,
+          "discount_rate": 0.0971,
+          "scenarios": [
+            {
+              "w": 1,
+              "fair_value": 1060.48,
+              "upside_pct": -63.82
+            },
+            {
+              "w": 0.9,
+              "fair_value": 1097.29,
+              "upside_pct": -62.57
+            },
+            {
+              "w": 0.8,
+              "fair_value": 1109.32,
+              "upside_pct": -62.16
+            }
+          ]
+        },
+        {
+          "key": "kospi",
+          "name": "코스피",
+          "status": "ready",
+          "as_of": "2026-08-02",
+          "px_last": 6595.45,
+          "book_value": 3498.36,
+          "forward_roe": 0.3422,
+          "discount_rate": 0.0971,
+          "scenarios": [
+            {
+              "w": 1,
+              "fair_value": 12328.91,
+              "upside_pct": 86.93
+            },
+            {
+              "w": 0.9,
+              "fair_value": 7413.64,
+              "upside_pct": 12.41
+            },
+            {
+              "w": 0.8,
+              "fair_value": 5807.2,
+              "upside_pct": -11.95
+            }
+          ]
+        },
+        {
+          "key": "philadelphia_semi",
+          "name": "필라델피아 반도체",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 11311.08,
+          "book_value": 1086.18,
+          "forward_roe": 0.5137,
+          "discount_rate": 0.0971,
+          "scenarios": [
+            {
+              "w": 1,
+              "fair_value": 5746.37,
+              "upside_pct": -49.2
+            },
+            {
+              "w": 0.9,
+              "fair_value": 3152.41,
+              "upside_pct": -72.13
+            },
+            {
+              "w": 0.8,
+              "fair_value": 2304.64,
+              "upside_pct": -79.62
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "discount_rate": 0.08,
+      "rows": [
+        {
+          "key": "sp500",
+          "name": "S&P 500",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 7489.72,
+          "book_value": 1315.93,
+          "forward_roe": 0.2913,
+          "discount_rate": 0.08,
+          "scenarios": [
+            {
+              "w": 1,
+              "fair_value": 4791.61,
+              "upside_pct": -36.02
+            },
+            {
+              "w": 0.9,
+              "fair_value": 2706.2,
+              "upside_pct": -63.87
+            },
+            {
+              "w": 0.8,
+              "fair_value": 2110.37,
+              "upside_pct": -71.82
+            }
+          ]
+        },
+        {
+          "key": "nasdaq100",
+          "name": "나스닥 100",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 28274.2,
+          "book_value": 3199.49,
+          "forward_roe": 0.414,
+          "discount_rate": 0.08,
+          "scenarios": [
+            {
+              "w": 1,
+              "fair_value": 16557.35,
+              "upside_pct": -41.44
+            },
+            {
+              "w": 0.9,
+              "fair_value": 8542.63,
+              "upside_pct": -69.79
+            },
+            {
+              "w": 0.8,
+              "fair_value": 6252.71,
+              "upside_pct": -77.89
+            }
+          ]
+        },
+        {
+          "key": "nasdaq_composite",
+          "name": "나스닥 종합",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 25373.85,
+          "book_value": 3341.52,
+          "forward_roe": 0.3235,
+          "discount_rate": 0.08,
+          "scenarios": [
+            {
+              "w": 1,
+              "fair_value": 13512.28,
+              "upside_pct": -46.75
+            },
+            {
+              "w": 0.9,
+              "fair_value": 7409.83,
+              "upside_pct": -70.8
+            },
+            {
+              "w": 0.8,
+              "fair_value": 5666.27,
+              "upside_pct": -77.67
+            }
+          ]
+        },
+        {
+          "key": "russell2000",
+          "name": "러셀 2000",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 2931.34,
+          "book_value": 1126.61,
+          "forward_roe": 0.0914,
+          "discount_rate": 0.08,
+          "scenarios": [
+            {
+              "w": 1,
+              "fair_value": 1287.16,
+              "upside_pct": -56.09
+            },
+            {
+              "w": 0.9,
+              "fair_value": 1190.83,
+              "upside_pct": -59.38
+            },
+            {
+              "w": 0.8,
+              "fair_value": 1163.31,
+              "upside_pct": -60.31
+            }
+          ]
+        },
+        {
+          "key": "kospi",
+          "name": "코스피",
+          "status": "ready",
+          "as_of": "2026-08-02",
+          "px_last": 6595.45,
+          "book_value": 3498.36,
+          "forward_roe": 0.3422,
+          "discount_rate": 0.08,
+          "scenarios": [
+            {
+              "w": 1,
+              "fair_value": 14964.22,
+              "upside_pct": 126.89
+            },
+            {
+              "w": 0.9,
+              "fair_value": 8084.7,
+              "upside_pct": 22.58
+            },
+            {
+              "w": 0.8,
+              "fair_value": 6119.12,
+              "upside_pct": -7.22
+            }
+          ]
+        },
+        {
+          "key": "philadelphia_semi",
+          "name": "필라델피아 반도체",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 11311.08,
+          "book_value": 1086.18,
+          "forward_roe": 0.5137,
+          "discount_rate": 0.08,
+          "scenarios": [
+            {
+              "w": 1,
+              "fair_value": 6974.66,
+              "upside_pct": -38.34
+            },
+            {
+              "w": 0.9,
+              "fair_value": 3441.57,
+              "upside_pct": -69.57
+            },
+            {
+              "w": 0.8,
+              "fair_value": 2432.12,
+              "upside_pct": -78.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "discount_rate": 0.07,
+      "rows": [
+        {
+          "key": "sp500",
+          "name": "S&P 500",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 7489.72,
+          "book_value": 1315.93,
+          "forward_roe": 0.2913,
+          "discount_rate": 0.07,
+          "scenarios": [
+            {
+              "w": 1,
+              "fair_value": 5476.13,
+              "upside_pct": -26.88
+            },
+            {
+              "w": 0.9,
+              "fair_value": 2857.65,
+              "upside_pct": -61.85
+            },
+            {
+              "w": 0.8,
+              "fair_value": 2178.78,
+              "upside_pct": -70.91
+            }
+          ]
+        },
+        {
+          "key": "nasdaq100",
+          "name": "나스닥 100",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 28274.2,
+          "book_value": 3199.49,
+          "forward_roe": 0.414,
+          "discount_rate": 0.07,
+          "scenarios": [
+            {
+              "w": 1,
+              "fair_value": 18922.69,
+              "upside_pct": -33.07
+            },
+            {
+              "w": 0.9,
+              "fair_value": 9026.32,
+              "upside_pct": -68.08
+            },
+            {
+              "w": 0.8,
+              "fair_value": 6460.6,
+              "upside_pct": -77.15
+            }
+          ]
+        },
+        {
+          "key": "nasdaq_composite",
+          "name": "나스닥 종합",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 25373.85,
+          "book_value": 3341.52,
+          "forward_roe": 0.3235,
+          "discount_rate": 0.07,
+          "scenarios": [
+            {
+              "w": 1,
+              "fair_value": 15442.61,
+              "upside_pct": -39.14
+            },
+            {
+              "w": 0.9,
+              "fair_value": 7826.04,
+              "upside_pct": -69.16
+            },
+            {
+              "w": 0.8,
+              "fair_value": 5851.38,
+              "upside_pct": -76.94
+            }
+          ]
+        },
+        {
+          "key": "russell2000",
+          "name": "러셀 2000",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 2931.34,
+          "book_value": 1126.61,
+          "forward_roe": 0.0914,
+          "discount_rate": 0.07,
+          "scenarios": [
+            {
+              "w": 1,
+              "fair_value": 1471.04,
+              "upside_pct": -49.82
+            },
+            {
+              "w": 0.9,
+              "fair_value": 1254.25,
+              "upside_pct": -57.21
+            },
+            {
+              "w": 0.8,
+              "fair_value": 1198.05,
+              "upside_pct": -59.13
+            }
+          ]
+        },
+        {
+          "key": "kospi",
+          "name": "코스피",
+          "status": "ready",
+          "as_of": "2026-08-02",
+          "px_last": 6595.45,
+          "book_value": 3498.36,
+          "forward_roe": 0.3422,
+          "discount_rate": 0.07,
+          "scenarios": [
+            {
+              "w": 1,
+              "fair_value": 17101.96,
+              "upside_pct": 159.3
+            },
+            {
+              "w": 0.9,
+              "fair_value": 8539.69,
+              "upside_pct": 29.48
+            },
+            {
+              "w": 0.8,
+              "fair_value": 6319.84,
+              "upside_pct": -4.18
+            }
+          ]
+        },
+        {
+          "key": "philadelphia_semi",
+          "name": "필라델피아 반도체",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 11311.08,
+          "book_value": 1086.18,
+          "forward_roe": 0.5137,
+          "discount_rate": 0.07,
+          "scenarios": [
+            {
+              "w": 1,
+              "fair_value": 7971.03,
+              "upside_pct": -29.53
+            },
+            {
+              "w": 0.9,
+              "fair_value": 3637.63,
+              "upside_pct": -67.84
+            },
+            {
+              "w": 0.8,
+              "fair_value": 2514.15,
+              "upside_pct": -77.77
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
