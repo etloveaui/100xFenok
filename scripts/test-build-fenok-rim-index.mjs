@@ -67,6 +67,49 @@ import {
   assert.ok(worst < 0.015, `sheet reproduction degraded: worst cell ${(worst * 100).toFixed(2)}%`);
 }
 
+// OUT-OF-SAMPLE: a second week of sheets (2025-11-28), never used to fit any
+// parameter. Two things are asserted. The 3.5% scenario grids must reproduce at
+// a known risk-free rate, and the current-rate grids must RECOVER their own
+// risk-free rate — the sheets never print it, but the transcript for that week
+// says "10년 국채 금리는 지금 현재 4% 수준", and both indices independently solve
+// to about 4.05%. That is the formula predicting an input it was never given.
+{
+  const WEEK1 = [
+    {
+      name: "S&P 500 (2025-11-28)", bookValue: 6849.09 / 5.4698, retention: 1 - 0.3109,
+      roes: [0.255, 0.260, 0.265], erps: [0.050, 0.045, 0.040],
+      scenario35: [[7197, 7370, 7543], [7469, 7645, 7821], [7749, 7928, 8106]],
+      current: [[6767, 6933, 7099], [7025, 7193, 7361], [7289, 7459, 7630]],
+    },
+    {
+      name: "NASDAQ Composite (2025-11-28)", bookValue: 23365.69 / 7.6514, retention: 1 - 0.2180,
+      roes: [0.300, 0.305, 0.310], erps: [0.055, 0.050, 0.045],
+      scenario35: [[28138, 28731, 29324], [29208, 29812, 30416], [30308, 30923, 31538]],
+      current: [[26408, 26974, 27539], [27416, 27992, 28568], [28452, 29038, 29624]],
+    },
+  ];
+  const gridRms = (sheet, riskFree, grid) => {
+    let sum = 0;
+    sheet.roes.forEach((roe, i) => sheet.erps.forEach((erp, j) => {
+      const v = computeCell({ bookValue: sheet.bookValue, roePath: [roe], retention: sheet.retention, riskFree, erp });
+      sum += (v / grid[i][j] - 1) ** 2;
+    }));
+    return Math.sqrt(sum / 9);
+  };
+  for (const sheet of WEEK1) {
+    const known = gridRms(sheet, 0.035, sheet.scenario35);
+    assert.ok(known < 0.02, `${sheet.name} 3.5% scenario drifted: ${(known * 100).toFixed(2)}%`);
+    let bestRf = null;
+    let bestErr = Infinity;
+    for (let rf = 0.02; rf <= 0.06; rf += 0.00025) {
+      const err = gridRms(sheet, rf, sheet.current);
+      if (err < bestErr) { bestErr = err; bestRf = rf; }
+    }
+    assert.ok(bestErr < 0.01, `${sheet.name} current grid drifted: ${(bestErr * 100).toFixed(2)}%`);
+    assert.ok(Math.abs(bestRf - 0.0405) < 0.004, `${sheet.name} recovered risk-free ${bestRf}, expected about 4.05%`);
+  }
+}
+
 // The two rates are genuinely distinct: the risk premium must not reach the
 // discounting. On the captured S&P grid a 1%p risk-free move shifts fair value
 // about 11.2% while a 1%p risk-premium move shifts it about 4.77%; an engine
