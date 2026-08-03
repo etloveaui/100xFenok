@@ -87,6 +87,13 @@ export const SLICKCHARTS_DELIVERY_GROUPS = Object.freeze([
     id: "slickcharts_daily_delivery",
     workflow: "slickcharts-daily",
     max_hours: 30,
+    // Stock movers, Treasury yields, and daily FX/mortgage rates only gain new
+    // content on a US market business day; a Friday delivery read on a Monday
+    // morning must not accrue the weekend's wall-clock hours as staleness.
+    // market_day_bound routes the freshness check through businessHoursAge
+    // over the "us_market" calendar (market-calendar.mjs) instead of raw
+    // wall-clock hours -- see evaluateSlaAge / assessSlickChartsDelivery.
+    market_day_bound: true,
     files: Object.freeze(["gainers.json", "losers.json", "treasury.json", "currency.json", "mortgage.json"]),
   }),
   Object.freeze({
@@ -145,7 +152,11 @@ export const SOURCE_SLA_DEF = Object.freeze([
     source_id: group.id,
     freshness_basis: ".updated (fetch/write delivery time, OLDEST; not provider publication time)",
     unit: "hours",
-    calendar: "wall_clock",
+    // market_day_bound groups (daily) age against "us_market" business hours;
+    // the weekly/symbols/monthly/history groups are genuinely continuous
+    // (fixed Sunday/1st-of-month crons, not tied to a trading day) and stay
+    // wall-clock (contract §5 "no second number" — group is the one source).
+    calendar: group.market_day_bound ? "us_market" : "wall_clock",
     max_staleness: group.max_hours,
     required: true,
   })),

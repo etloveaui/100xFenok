@@ -399,6 +399,77 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   assert.match(identity.checks.find((item) => item.id === "universe_identity")?.detail, /duplicate symbols.*AAPL/i);
 }
 
+// A Monday-morning KPI run reading Friday's SlickCharts daily delivery (stock
+// movers, Treasury yields, daily FX/mortgage rates) must not read the weekend's
+// idle wall-clock hours as staleness -- those five files only gain new content
+// on a US market business day (market_day_bound). A genuinely late delivery --
+// stale across real business days, not merely a weekend gap -- must still fail.
+{
+  const now = "2026-08-03T06:00:00.000Z"; // Monday
+  const tmp = mkTmp("slickcharts-delivery-calendar");
+  const dataRoot = path.join(tmp, "data");
+  const base = path.join(dataRoot, "slickcharts");
+  const fresh = "2026-08-02T20:00:00+00:00"; // within every group's own SLA regardless of calendar
+  for (const group of SLICKCHARTS_DELIVERY_GROUPS) {
+    for (const filename of group.files) writeJson(path.join(base, filename), { updated: fresh });
+  }
+  writeJson(path.join(base, "universe.json"), {
+    updated: fresh,
+    uniqueCount: 1,
+    stocks: [{ symbol: "AAPL", indices: ["sp500"] }],
+  });
+  writeJson(path.join(base, "stocks", "AAPL.json"), { symbol: "AAPL", updated: fresh });
+
+  const dailyGroup = SLICKCHARTS_DELIVERY_GROUPS.find((group) => group.id === "slickcharts_daily_delivery");
+  assert.equal(dailyGroup.market_day_bound, true, "the daily group must stay flagged market-day-bound for this pin to mean anything");
+  const dailyDef = SOURCE_SLA_DEF.find((def) => def.source_id === "slickcharts_daily_delivery");
+  assert.equal(dailyDef.calendar, "us_market");
+
+  // Friday close, read Monday morning: 69h of raw wall-clock age, but only 21h
+  // once Saturday/Sunday are excluded -- under the 30h SLA.
+  const fridayDelivery = "2026-07-31T09:00:00+00:00";
+  for (const filename of dailyGroup.files) writeJson(path.join(base, filename), { updated: fridayDelivery });
+
+  const mondayReady = buildSlickChartsDeliveryLane(now, { dataRoot });
+  assert.equal(mondayReady.status, "ready",
+    "a Friday delivery read Monday morning must not be flagged stale by the weekend gap");
+  assert.equal(mondayReady.counts.stale, 0);
+  const readyDailyRow = mondayReady.details.workflow_sla.find((row) => row.source_id === "slickcharts_daily_delivery");
+  assert.equal(readyDailyRow.stale, 0);
+  assert.equal(readyDailyRow.current, dailyGroup.files.length);
+
+  // Cross-check the SOURCE_SLA_DEF business-hours path directly (the aggregate
+  // check buildSourceSla feeds off of): same source_date, same verdict.
+  const mondayAge = evaluateSlaAge({ sourceDate: fridayDelivery, unit: dailyDef.unit, calendar: dailyDef.calendar, nowIso: now });
+  assert.equal(mondayAge, 21);
+  assert.equal(slaStatusForAge(mondayAge, dailyDef.max_staleness), "ready");
+
+  // A genuinely late delivery -- last Wednesday, i.e. stale across real business
+  // days and not merely a weekend gap -- must still fail even with the
+  // calendar-aware age (69h business-hours > 30h SLA).
+  const wednesdayDelivery = "2026-07-29T09:00:00+00:00";
+  for (const filename of dailyGroup.files) writeJson(path.join(base, filename), { updated: wednesdayDelivery });
+  const genuinelyStale = buildSlickChartsDeliveryLane(now, { dataRoot });
+  assert.equal(genuinelyStale.status, "degraded");
+  assert.equal(genuinelyStale.counts.stale, dailyGroup.files.length);
+  const staleDailyRow = genuinelyStale.details.workflow_sla.find((row) => row.source_id === "slickcharts_daily_delivery");
+  assert.equal(staleDailyRow.stale, dailyGroup.files.length);
+  const staleAge = evaluateSlaAge({ sourceDate: wednesdayDelivery, unit: dailyDef.unit, calendar: dailyDef.calendar, nowIso: now });
+  assert.equal(staleAge, 69);
+  assert.equal(slaStatusForAge(staleAge, dailyDef.max_staleness), "stale");
+
+  // The wall_clock groups are untouched by calendar-awareness: a weekly delivery
+  // from 174h+1h ago (raw wall-clock) must still be stale even though it landed
+  // on a business day, proving we did not blanket-apply the calendar.
+  const weeklyGroup = SLICKCHARTS_DELIVERY_GROUPS.find((group) => group.id === "slickcharts_weekly_delivery");
+  assert.equal(weeklyGroup.market_day_bound, undefined);
+  const tooOldWeekly = "2026-07-26T23:00:00+00:00"; // 175h before "now" in raw wall-clock hours, over the 174h SLA
+  for (const filename of weeklyGroup.files) writeJson(path.join(base, filename), { updated: tooOldWeekly });
+  const weeklyStale = buildSlickChartsDeliveryLane(now, { dataRoot });
+  const staleWeeklyRow = weeklyStale.details.workflow_sla.find((row) => row.source_id === "slickcharts_weekly_delivery");
+  assert.equal(staleWeeklyRow.stale, weeklyGroup.files.length);
+}
+
 // The full 4,515-row daily-1Y lane is a diagnostic backlog. Product availability
 // is gated by the exact Core Daily Basket; non-zero diagnostic gaps must remain
 // visible without blocking reconcile:verify or Worker deployment.

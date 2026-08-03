@@ -174,6 +174,37 @@ export function hoursAge(sourceTimestamp, nowValue) {
 }
 
 /**
+ * Wall-clock hour age, excluding any hour that falls on a non-business day
+ * (weekend/holiday) for the given market. Market-day-bound artifacts (stock
+ * movers, bond yields, daily FX/mortgage rates) only gain new content on a
+ * business day; a Friday delivery read on a Monday morning must not accrue
+ * the weekend's idle hours as staleness. Reuses the same holiday sets /
+ * isBusinessDay classifier as businessDayAge above -- no new weekend/holiday
+ * data is introduced. Future clamps to 0 (mirrors hoursAge).
+ */
+export function businessHoursAge(sourceTimestamp, nowValue, market) {
+  const text = String(sourceTimestamp ?? "").trim();
+  if (!text) return null;
+  const sourceMs = new Date(text).getTime();
+  const nowMs = new Date(nowValue).getTime();
+  if (!Number.isFinite(sourceMs) || !Number.isFinite(nowMs)) return null;
+  if (nowMs <= sourceMs) return 0;
+  let excludedMs = 0;
+  let dayStartMs = Math.floor(sourceMs / 86400000) * 86400000;
+  while (dayStartMs < nowMs) {
+    const dayEndMs = dayStartMs + 86400000;
+    const overlapStart = Math.max(dayStartMs, sourceMs);
+    const overlapEnd = Math.min(dayEndMs, nowMs);
+    if (overlapEnd > overlapStart && !isBusinessDay(isoFromDate(new Date(dayStartMs)), market)) {
+      excludedMs += overlapEnd - overlapStart;
+    }
+    dayStartMs = dayEndMs;
+  }
+  const adjustedMs = Math.max(0, (nowMs - sourceMs) - excludedMs);
+  return Number((adjustedMs / 3600000).toFixed(2));
+}
+
+/**
  * Is the source strictly in the future relative to now? Age helpers clamp future
  * to 0 (which would read as "fresh"); callers must flag this anomaly rather than
  * silently trust a future-dated source (contract §5 fail-closed).

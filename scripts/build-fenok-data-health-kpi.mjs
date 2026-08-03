@@ -20,6 +20,7 @@ import { assertValidCronDeferrals, publicationGateForRuntime } from "./lib/kpi-r
 import {
   calendar_version,
   businessDayAge,
+  businessHoursAge,
   calendarDayAge,
   hoursAge,
   isoDateOf,
@@ -432,7 +433,16 @@ export function buildRuntime({ nowIso, env, priorRuntime, snapshotStatus }) {
 
 export function evaluateSlaAge({ sourceDate, unit, calendar, nowIso }) {
   if (sourceDate == null) return null;
-  if (unit === "hours") return hoursAge(sourceDate, nowIso);
+  if (unit === "hours") {
+    // "wall_clock" = genuinely continuous sources regenerated on a fixed cron
+    // regardless of weekday (etf_daily1y_readiness_admin; SlickCharts weekly/
+    // symbols/monthly/history). Any other calendar id names a market-day-bound
+    // source (SlickCharts daily: stock movers, Treasury yields, daily FX/mortgage
+    // rates) -- age it in business hours so a weekend gap is not read as staleness.
+    return calendar && calendar !== "wall_clock"
+      ? businessHoursAge(sourceDate, nowIso, calendar)
+      : hoursAge(sourceDate, nowIso);
+  }
   if (unit === "calendar_days") return calendarDayAge(sourceDate, nowIso);
   return businessDayAge(sourceDate, nowIso, calendar); // business_days
 }
@@ -2182,13 +2192,24 @@ export function assessSlickChartsDelivery(nowIso, { dataRoot = DATA_ROOT } = {})
       rows.push({ ...item, status: "invalid", delivery_at: null, age_hours: null, reason: stamp.reason, integrity: "delivery" });
       continue;
     }
+    // Market-day-bound groups (SlickCharts daily: stock movers, Treasury yields,
+    // daily FX/mortgage rates) only gain new content on a US market business day;
+    // a Friday delivery read on a Monday morning must not accrue the weekend's
+    // wall-clock hours as staleness. businessHoursAge reuses the same us_market
+    // calendar already used by the business_days SOURCE_SLA_DEF rows -- no new
+    // weekend/holiday data. Weekly/symbols/monthly/history groups are genuinely
+    // continuous (fixed Sunday/1st-of-month crons) and keep raw wall-clock hours.
+    const ageHours = item.group.market_day_bound
+      ? businessHoursAge(stamp.normalized, nowIso, "us_market")
+      : stamp.age_hours;
+    const isStale = ageHours > item.group.max_hours;
     rows.push({
       ...item,
-      status: stamp.age_hours > item.group.max_hours ? "stale" : "current",
+      status: isStale ? "stale" : "current",
       delivery_at: stamp.normalized,
-      age_hours: stamp.age_hours,
-      reason: stamp.age_hours > item.group.max_hours
-        ? `${stamp.age_hours}h old exceeds ${item.group.max_hours}h delivery SLA`
+      age_hours: ageHours,
+      reason: isStale
+        ? `${ageHours}h old exceeds ${item.group.max_hours}h delivery SLA${item.group.market_day_bound ? " (business hours, us_market calendar)" : ""}`
         : null,
     });
   }
