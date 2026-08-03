@@ -1,9 +1,9 @@
 # Benchmarks Data
 
 > **Source**: Bloomberg Terminal (weekly update)
-> **Period**: 2010-07-02 ~ 2026-05-15 (15+ years, 829 data points)
+> **Period**: 2010-01-01 ~ 2026-08-02 (16+ years, 866 data points per index)
 > **Version**: 3.8.0
-> **Last Update**: 2026-05-25
+> **Last Update**: 2026-08-03
 
 ---
 
@@ -13,11 +13,11 @@
 |------|-------------|----------|
 | `us.json` | US Major Indices | `sp500`, `nasdaq100`, `nasdaq_composite`, `russell2000` |
 | `us_sectors.json` | GICS 11 Sectors + Housing | `energy`, `materials`, `industrials`, `consumer_discretionary`, `consumer_staples`, `health_care`, `financials`, `information_technology`, `communication_services`, `utilities`, `real_estate`, `homebuilders` |
-| `micro_sectors.json` | Micro Sectors | `philadelphia_semi`, `us_regional_banks`, `hang_seng_tech`, `us_biotech`, `kosdaq_150` |
+| `micro_sectors.json` | Micro Sectors | `philadelphia_semi`, `us_regional_banks`, `hang_seng_tech`, `us_biotech`, `kosdaq_150`, `과창판_(star50_index)` |
 | `developed.json` | Developed Markets | `euro_stoxx_50`, `topix`, `hong_kong`, `nikkei` |
 | `emerging.json` | Emerging Markets | `shanghai`, `india_sensex`, `kospi`, `brazil`, `vietnam`, `hang_seng_h` |
 | `msci.json` | MSCI Indices | `world`, `developed`, `emerging`, `china`, `india`, `korea` |
-| `summaries.json` | Momentum, Yearly Returns, Source Summaries | 37 sections × price legacy views + 2,353 metric summary values |
+| `summaries.json` | Momentum, Yearly Returns, Source Summaries | 38 sections × price legacy views + 2,404 metric summary values |
 
 ---
 
@@ -129,6 +129,7 @@ console.log(summaries.source_summaries.sp500.momentum.best_pe_ratio.ytd); // val
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.8.0 | 2026-08-03 | Weekly data update (2026-07-31 source): 32,095 records (+6), 2010-01-01 ~ 2026-08-02, 38 sections, 866 data points per index; source summaries 2,404 values + 66 nulls |
 | 3.8.0 | 2026-05-25 | Added backward-compatible `source_summaries` with 1W/1M/3M/6M/YTD and yearly changes for px_last, EPS, PER, PBR, and ROE; source coverage: 2,353 non-null values + 52 null placeholders |
 | 3.7.0 | 2026-05-21 | Weekly data update (2026-05-15 source): 30,438 records (+1), 2010-07-02 ~ 2026-05-15, 37 sections, 829 data points per index |
 | 3.7.0 | 2026-05-11 | Weekly data update (2026-05-08 source): 30,437 records (+1), 2010-06-25 ~ 2026-05-08, 37 sections, 829 data points per index |
