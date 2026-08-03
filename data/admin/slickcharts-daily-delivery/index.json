@@ -1,7 +1,7 @@
 {
   "schema_version": "producer-lkg-index/v2",
   "lane_id": "slickcharts_daily_delivery",
-  "generated_at": "2026-08-02T08:39:22.067Z",
+  "generated_at": "2026-08-03T09:24:11.940Z",
   "keys": [
     "gainers.json",
     "losers.json",
@@ -15,7 +15,7 @@
     "lkg": 5,
     "retry": 5,
     "unavailable": 0,
-    "failed": 5,
+    "failed": 0,
     "recovered": 0
   },
   "retry_keys": [
@@ -109,23 +109,69 @@
       "source_as_of": "2026-07-31"
     }
   ],
-  "promotion_deferral_details": [],
+  "promotion_deferral_details": [
+    {
+      "key": "gainers.json",
+      "run_id": "30800943951",
+      "run_attempt": 1,
+      "event_name": "workflow_dispatch",
+      "observed_at": "2026-08-03T09:24:11.940Z",
+      "source_as_of": "2026-08-03",
+      "reason": "recovery_requires_schedule"
+    },
+    {
+      "key": "losers.json",
+      "run_id": "30800943951",
+      "run_attempt": 1,
+      "event_name": "workflow_dispatch",
+      "observed_at": "2026-08-03T09:24:11.940Z",
+      "source_as_of": "2026-08-03",
+      "reason": "recovery_requires_schedule"
+    },
+    {
+      "key": "treasury.json",
+      "run_id": "30800943951",
+      "run_attempt": 1,
+      "event_name": "workflow_dispatch",
+      "observed_at": "2026-08-03T09:24:11.940Z",
+      "source_as_of": "2026-08-03",
+      "reason": "recovery_requires_schedule"
+    },
+    {
+      "key": "currency.json",
+      "run_id": "30800943951",
+      "run_attempt": 1,
+      "event_name": "workflow_dispatch",
+      "observed_at": "2026-08-03T09:24:11.940Z",
+      "source_as_of": "2026-08-03",
+      "reason": "recovery_requires_schedule"
+    },
+    {
+      "key": "mortgage.json",
+      "run_id": "30800943951",
+      "run_attempt": 1,
+      "event_name": "workflow_dispatch",
+      "observed_at": "2026-08-03T09:24:11.940Z",
+      "source_as_of": "2026-08-03",
+      "reason": "recovery_requires_schedule"
+    }
+  ],
   "current_attempt": {
-    "run_id": "30739823043",
+    "run_id": "30800943951",
     "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-08-02T08:39:22.067Z",
+    "event_name": "workflow_dispatch",
+    "observed_at": "2026-08-03T09:24:11.940Z",
     "attempted": 5,
     "successes": 0,
-    "failed": 5,
-    "failed_keys": [
+    "failed": 0,
+    "failed_keys": [],
+    "promotion_deferrals": 5,
+    "promotion_deferral_keys": [
       "gainers.json",
       "losers.json",
       "treasury.json",
       "currency.json",
       "mortgage.json"
-    ],
-    "promotion_deferrals": 0,
-    "promotion_deferral_keys": []
+    ]
   }
 }
