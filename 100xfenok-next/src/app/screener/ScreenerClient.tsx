@@ -132,7 +132,10 @@ function actionBucketDistributionLabel(bucket: string): string {
 const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left" | "right" }> = [
   { key: "ticker", label: "티커", align: "left" },
   { key: "actionScore", label: "투자 신호", align: "left" },
-  { key: "fenokEdgeScore", label: "Fenok Edge", align: "right" },
+  // Integrated "Fenok Edge" score retired (owner mandate 2026-08-03): the
+  // table now shows the two axes side by side.
+  { key: "fenokShortTermScore", label: "단기", align: "right" },
+  { key: "fenokLongTermScore", label: "장기", align: "right" },
   { key: "name", label: "종목", align: "left" },
   { key: "sector", label: "섹터", align: "left" },
   { key: "country", label: "국가", align: "left" },
@@ -192,7 +195,7 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
 ];
 
 const FISCAL_PERIOD_LABELS = ["내년(FY+1)", "2년차(FY+2)", "3년차(FY+3)"] as const;
-const FENOK_EDGE_PROXY_LABEL = "Fenok 파생 상방·하방 프록시";
+const FENOK_EDGE_PROXY_LABEL = "Fenok 파생 신호 · 단기·장기 스코어";
 const FENOK_SIGNAL_DISCLOSURE = "Fenok 파생 신호 · 투자 조언이 아닙니다";
 const FENOK_CONVICTION_DISCLOSURE = "Fenok 4개 신호 같은 비중 요약 · 투자 조언이 아닙니다";
 
@@ -323,24 +326,26 @@ function fenokEdgeTone(score: number | null): string {
   return "border-slate-200 bg-slate-50 text-slate-700";
 }
 
-function fenokEdgeDirectionLabel(direction: string | null | undefined): string {
-  if (direction === "upside_bias") return "상방";
-  if (direction === "downside_bias") return "하방";
-  if (direction === "balanced") return "중립";
-  return "방향 미정";
-}
-
-function fenokEdgeDirectionMark(direction: string | null | undefined): string {
-  if (direction === "upside_bias") return "▲";
-  if (direction === "downside_bias") return "▼";
-  if (direction === "balanced") return "•";
-  return "·";
-}
-
+// The integrated "Fenok Edge" single score is retired (owner mandate
+// 2026-08-03): it picked the first available of four candidates with no stated
+// aggregation. The two scores shown side by side are each an aggregation of an
+// existing hexagon axis set with a stated formula in
+// scripts/build-fenok-signals.mjs: 단기 = short-term conviction/common-basis
+// composite (technical flow, volume/liquidity trend, relative strength,
+// options-activity proxy, inverted short-volume); 장기 = mean of the five
+// long-term axes (profitability, growth, upside, inverted downside,
+// durability). No new constants here — the UI only reads the summary fields.
 function fenokEdgeTitle(stock: ScreenerStock): string {
+  const short = typeof stock.fenokShortTermScore === "number" && Number.isFinite(stock.fenokShortTermScore)
+    ? `단기 ${Math.round(stock.fenokShortTermScore)}`
+    : null;
+  const long = typeof stock.fenokLongTermScore === "number" && Number.isFinite(stock.fenokLongTermScore)
+    ? `장기 ${Math.round(stock.fenokLongTermScore)}`
+    : null;
   return [
     FENOK_EDGE_PROXY_LABEL,
-    fenokEdgeDirectionLabel(stock.fenokEdgeDirection),
+    short,
+    long,
     confidenceText(stock.fenokSignalConfidence),
     formatCoverageLabel(stock.fenokSignalCoverageRatio),
     formatAsOfLabel(stock.fenokSignalAsOf),
@@ -581,18 +586,19 @@ function renderCell(
         </span>
       );
     }
-    case "fenokEdgeScore": {
-      const score = typeof stock.fenokEdgeScore === "number" && Number.isFinite(stock.fenokEdgeScore)
-        ? Math.round(stock.fenokEdgeScore)
-        : null;
+    case "fenokShortTermScore":
+    case "fenokLongTermScore": {
+      const isShortTerm = key === "fenokShortTermScore";
+      const raw = isShortTerm ? stock.fenokShortTermScore : stock.fenokLongTermScore;
+      const score = typeof raw === "number" && Number.isFinite(raw) ? Math.round(raw) : null;
       return (
         <span className="inline-flex min-w-[64px] justify-end">
           <span
             className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", fenokEdgeTone(score))}
             title={fenokEdgeTitle(stock)}
-            aria-label={`Fenok 엣지 점수 ${fenokEdgeDirectionLabel(stock.fenokEdgeDirection)} ${score ?? "정보 없음"}`}
+            aria-label={`${isShortTerm ? "단기" : "장기"} 스코어 ${score ?? "정보 없음"}`}
           >
-            <span aria-hidden="true">{fenokEdgeDirectionMark(stock.fenokEdgeDirection)}</span>
+            <span aria-hidden="true">{isShortTerm ? "단" : "장"}</span>
             {score ?? "—"}
           </span>
         </span>
@@ -1606,7 +1612,14 @@ export default function ScreenerClient({
       } else if (actionFilter && stock.actionBucket !== actionFilter) {
         return false;
       }
-      if (fenokEdgeMinValue !== null && (stock.fenokEdgeScore === null || stock.fenokEdgeScore === undefined || stock.fenokEdgeScore < fenokEdgeMinValue)) return false;
+      if (fenokEdgeMinValue !== null) {
+        // The retired integrated "Fenok Edge" filter compared a single
+        // upside/downside value. It now applies to the HIGHER of the two
+        // remaining scores (단기/장기) — a stated rule, not a new constant.
+        const short = typeof stock.fenokShortTermScore === "number" ? stock.fenokShortTermScore : -1;
+        const long = typeof stock.fenokLongTermScore === "number" ? stock.fenokLongTermScore : -1;
+        if (Math.max(short, long) < fenokEdgeMinValue) return false;
+      }
       if (convictionMinValue !== null && (stock.fenokConvictionScore === null || stock.fenokConvictionScore === undefined || stock.fenokConvictionScore < convictionMinValue)) return false;
       if (connectionFilter && !stock.connection?.flags[connectionFilter]) return false;
       if (perMinValue !== null && (stock.per === null || stock.per < perMinValue)) return false;
@@ -2049,7 +2062,12 @@ export default function ScreenerClient({
     const withReturn = sorted.filter((stock) => typeof stock.return12m === "number");
     const upCount = withReturn.filter((stock) => (stock.return12m as number) > 0).length;
     const upRatio = withReturn.length > 0 ? Math.round((upCount / withReturn.length) * 100) : 0;
-    const edgeCount = sorted.filter((stock) => typeof stock.fenokEdgeScore === "number" && stock.fenokEdgeScore >= 70).length;
+    const edgeCount = sorted.filter((stock) => {
+      // Same stated rule as the Edge filter: count by the higher of 단기/장기.
+      const short = typeof stock.fenokShortTermScore === "number" ? stock.fenokShortTermScore : -1;
+      const long = typeof stock.fenokLongTermScore === "number" ? stock.fenokLongTermScore : -1;
+      return Math.max(short, long) >= 70;
+    }).length;
     const edgeRatio = sorted.length > 0 ? Math.round((edgeCount / sorted.length) * 100) : 0;
     const actionBucketCounts = sorted.reduce<Record<string, number>>((counts, stock) => {
       const dominantActionBucket = stock.actionBucket?.trim() || "none";

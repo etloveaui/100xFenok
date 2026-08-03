@@ -48,7 +48,7 @@ function canvasPlusColumnWidth(column?: ScreenerColumn): number {
   if (column.key === "name") return 110;
   if (column.key === "sector") return 72;
   if (column.key === "fenokConvictionScore") return 140;
-  if (column.key === "fenokEdgeScore") return 104;
+  if (column.key === "fenokShortTermScore" || column.key === "fenokLongTermScore") return 64;
   if (
     column.key === "profitabilityScore" ||
     column.key === "growthScore" ||
@@ -74,7 +74,8 @@ function canvasPlusStickyCell(columnId: string): "select" | "ticker" | undefined
 
 function canvasPlusCellKind(columnId: string): "score" | "numeric" | undefined {
   if (
-    columnId === "fenokEdgeScore" ||
+    columnId === "fenokShortTermScore" ||
+    columnId === "fenokLongTermScore" ||
     columnId === "fenokConvictionScore" ||
     columnId === "profitabilityScore" ||
     columnId === "growthScore" ||

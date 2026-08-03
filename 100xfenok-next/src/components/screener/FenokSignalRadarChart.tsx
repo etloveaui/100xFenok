@@ -33,8 +33,6 @@ export interface FenokSignalRadarData {
   growthDirection?: string | null;
   technicalFlowScore?: number | null;
   technicalFlowDirection?: string | null;
-  fenokEdgeScore?: number | null;
-  fenokEdgeDirection?: string | null;
 }
 
 export interface FenokSignalRadarAxis {
@@ -60,7 +58,6 @@ const AXES: RadarAxis[] = [
   { label: "수익성", scoreKey: "profitabilityScore", directionKey: "profitabilityDirection" },
   { label: "성장", scoreKey: "growthScore", directionKey: "growthDirection" },
   { label: "기술·자금", scoreKey: "technicalFlowScore", directionKey: "technicalFlowDirection" },
-  { label: "Fenok Edge", scoreKey: "fenokEdgeScore", directionKey: "fenokEdgeDirection" },
 ];
 
 function isFiniteNumber(value: unknown): value is number {
@@ -108,12 +105,7 @@ export function FenokSignalRadar({ data, axes, size = "sm", ariaLabel }: FenokSi
 
   const chartData = useMemo<ChartData<"radar">>(
     () => ({
-      // In the condensed (sm) radar the long "Fenok Edge" axis label clips at the
-      // narrow canvas edge. Render it on two lines there so the full Fenok brand
-      // stays visible without widening the card. md keeps the single-line label.
-      labels: visibleAxes.map((axis) =>
-        size === "sm" && axis.label === "Fenok Edge" ? ["Fenok", "Edge"] : axis.label,
-      ),
+      labels: visibleAxes.map((axis) => axis.label),
       datasets: [
         {
           label: "Fenok 신호",

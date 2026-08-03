@@ -232,8 +232,13 @@ export function useScreenerData(): ScreenerDataResult {
           ret5y: num(item.ret5y),
           guruHolders: num(item.guruHolders),
           actionScore: num(item.actionScore),
-          fenokEdgeScore: fenokSignal?.upsideDownsideScore ?? null,
-          fenokEdgeDirection: fenokSignal?.upsideDownsideDirection ?? null,
+          // The integrated "Fenok Edge" single score is retired (owner mandate
+          // 2026-08-03): no stated aggregation existed — it picked the first
+          // available of four candidates. The two axes carry the substance:
+          // 단기 = short-term conviction/common-basis composite, 장기 = the
+          // five-axis long-term mean. Both are computed in
+          // scripts/build-fenok-signals.mjs with stated formulas and weights;
+          // the UI only reads the summary fields below.
           fenokSignalConfidence: fenokSignal?.confidence ?? null,
           fenokSignalCoverageRatio: fenokSignal?.coverageRatio ?? null,
           fenokSignalAsOf: fenokSignal?.asOf ?? null,

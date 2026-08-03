@@ -53,13 +53,6 @@ function signalScoreTone(score: number | null): string {
   return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]";
 }
 
-function edgeDirectionLabel(direction: string | null | undefined): string {
-  if (direction === "upside_bias") return "상방 우세";
-  if (direction === "downside_bias") return "하방 우세";
-  if (direction === "balanced") return "균형";
-  return "방향 미확인";
-}
-
 function edgeLeadLabel(shortScore: number | null, longScore: number | null): string {
   if (shortScore === null && longScore === null) return "신호 미확인";
   if (shortScore !== null && longScore !== null) {
@@ -2482,10 +2475,9 @@ export default function StockDetailPanel({
   const longTermAxes = stock ? buildDetailLongTermAxes(stock) : [];
   const hasShortTermSignal = shortTermAxes.some((axis) => axis.score !== null);
   const hasLongTermSignal = longTermAxes.some((axis) => axis.score !== null);
-  const edgeScore = isFiniteNumber(stock?.fenokEdgeScore)
-    ? Math.round(stock.fenokEdgeScore)
-    : null;
-  const edgeDirection = edgeDirectionLabel(stock?.fenokEdgeDirection);
+  // The integrated "Fenok Edge" single score (fenokEdgeScore / direction) is
+  // retired (owner mandate 2026-08-03): the panel shows the two axes — Short
+  // Edge (단기) and Long Edge (장기) — as the substance.
   const edgeLead = edgeLeadLabel(shortTermConvictionScore, longTermConvictionScore);
   const signalCoverage = formatSignalCoverage(stock?.fenokSignalCoverageRatio);
   const shortTermBasis = shortTermCommonBasisCopy(stock?.fenokMarketScope, {
@@ -2519,23 +2511,7 @@ export default function StockDetailPanel({
               </span>
             </div>
           </div>
-          <div className="mb-3 grid gap-2 md:grid-cols-3">
-            <div className="min-w-0 rounded-lg border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
-              <div className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-                Fenok Edge Score
-              </div>
-              <div className="mt-1 flex items-end justify-between gap-2">
-                <span className={`orbitron text-2xl font-black tabular-nums ${signalScoreTone(edgeScore)}`}>
-                  {edgeScore ?? "—"}
-                </span>
-                <span className="pb-1 text-[10px] font-black text-[var(--c-ink-2)]">
-                  {edgeDirection}
-                </span>
-              </div>
-              <div className="mt-1 truncate text-[10px] font-semibold text-[var(--c-ink-3)]">
-                {signalCoverage}
-              </div>
-            </div>
+          <div className="mb-3 grid gap-2 md:grid-cols-2">
             <div className="min-w-0 rounded-lg border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
               <div className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
                 Short Edge
@@ -2646,7 +2622,7 @@ export default function StockDetailPanel({
   const weakAxis = allAxes
     .filter((axis) => axis.score !== null)
     .sort((left, right) => (left.score ?? 0) - (right.score ?? 0))[0] ?? null;
-  const detailScore = edgeScore ?? convictionScore;
+  const detailScore = shortTermConvictionScore ?? convictionScore;
   const verdictHeadline = `${edgeLead}${shortTermConvictionCall ? `, 단기 ${shortTermConvictionCall}` : ""}`;
   const verdictCopy = [
     longTermConvictionScore !== null ? `장기 ${longTermConvictionScore}` : "장기 미확인",

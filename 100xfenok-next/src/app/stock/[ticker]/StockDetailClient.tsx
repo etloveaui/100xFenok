@@ -601,15 +601,20 @@ function stockChartSummary(data: readonly CpChartDatum[], currency: string, rang
   return `${range} 종가 ${formatMoney(last, currency)} · 구간 변화 ${formatSignedPercent(change, { digits: 1 })}`;
 }
 
-function resolveFenokEdgeScore(record: FenokSignalsSummaryRecord | null | undefined): number | null {
-  const commonShortTermScore = record ? commonBasisSignalSummaryView(record).score : null;
-  const candidates = [
-    record?.convictionScore,
-    record?.longTermScore,
-    record?.longTermConvictionScore,
-    commonShortTermScore,
-  ];
-  const score = candidates.find(isFiniteNumber);
+// The integrated "Fenok Edge" single score is retired (owner mandate
+// 2026-08-03): resolveFenokEdgeScore picked the first available of four
+// candidates with no stated aggregation. The card now shows the two axes:
+// 단기 = short-term conviction composite (fallback: short-term score, then
+// conviction); 장기 = long-term conviction (fallback: long-term score, then
+// conviction). Both aggregations and their axis weights live in
+// scripts/build-fenok-signals.mjs — the UI only resolves the summary fields.
+function resolveFenokShortTermScore(record: FenokSignalsSummaryRecord | null | undefined): number | null {
+  const score = record?.shortTermConvictionScore ?? record?.shortTermScore ?? record?.convictionScore ?? null;
+  return isFiniteNumber(score) ? Math.max(0, Math.min(100, Math.round(score))) : null;
+}
+
+function resolveFenokLongTermScore(record: FenokSignalsSummaryRecord | null | undefined): number | null {
+  const score = record?.longTermConvictionScore ?? record?.longTermScore ?? record?.convictionScore ?? null;
   return isFiniteNumber(score) ? Math.max(0, Math.min(100, Math.round(score))) : null;
 }
 
@@ -903,13 +908,17 @@ function ValuationBandSummaryCard({
 }
 
 function FenokEdgeDonutCard({ record }: { record: FenokSignalsSummaryRecord | null | undefined }) {
-  const score = resolveFenokEdgeScore(record);
+  const shortScore = resolveFenokShortTermScore(record);
+  const longScore = resolveFenokLongTermScore(record);
   const coverage = record?.lensCoverageRatio ?? record?.coverageRatio;
   const asOfLabel = fmtKstMinute(record?.asOf);
-  const radius = 52;
+  const radius = 46;
   const circumference = 2 * Math.PI * radius;
-  const offset = score === null ? circumference : circumference * (1 - score / 100);
-  const gradientId = `cp-stock-edge-gauge-gradient-${stockTabDomSafe(record?.symbol ?? "stock")}`;
+  const symbolKey = stockTabDomSafe(record?.symbol ?? "stock");
+  const gauges = [
+    { key: "short", label: "단기", score: shortScore },
+    { key: "long", label: "장기", score: longScore },
+  ];
   const rows = [
     { label: "수익성", value: record?.profitabilityScore },
     { label: "성장성", value: record?.growthScore },
@@ -922,31 +931,45 @@ function FenokEdgeDonutCard({ record }: { record: FenokSignalsSummaryRecord | nu
       <header className="cp-stock-rail-card__header">
         <div>
           <p className="cp-stock-rail-eyebrow">Fenok Edge</p>
-          <h2>종합 신호 점수</h2>
+          <h2>단기 · 장기 스코어</h2>
         </div>
         <span>{formatCoverageRatio(coverage)}</span>
       </header>
-      <div className="cp-edge-gauge cp-stock-edge-gauge" data-tone={score !== null && score >= 65 ? "positive" : "neutral"}>
-        <svg viewBox="0 0 120 120" role="img" aria-label={`Fenok Edge ${score ?? "대기"}점`}>
-          <defs>
-            <linearGradient id={gradientId} x1="0%" y1="20%" x2="100%" y2="80%">
-              <stop offset="0%" stopColor="var(--cp-positive)" />
-              <stop offset="100%" stopColor="var(--cp-accent)" />
-            </linearGradient>
-          </defs>
-          <circle className="cp-edge-gauge__track" cx="60" cy="60" r={radius} />
-          <circle
-            className="cp-edge-gauge__progress"
-            cx="60"
-            cy="60"
-            r={radius}
-            style={{ stroke: `url(#${gradientId})`, strokeDasharray: circumference, strokeDashoffset: offset }}
-          />
-        </svg>
-        <div className="cp-edge-gauge__score">
-          <strong>{score ?? "—"}</strong>
-          <span>{fenokEdgeLabel(score)}</span>
-        </div>
+      <div className="grid grid-cols-2 gap-2">
+        {gauges.map((gauge) => {
+          const score = gauge.score;
+          const offset = score === null ? circumference : circumference * (1 - score / 100);
+          const gradientId = `cp-stock-edge-gauge-${gauge.key}-${symbolKey}`;
+          return (
+            <div
+              key={gauge.key}
+              className="cp-edge-gauge cp-stock-edge-gauge"
+              data-tone={score !== null && score >= 65 ? "positive" : "neutral"}
+            >
+              <svg viewBox="0 0 120 120" role="img" aria-label={`${gauge.label} 스코어 ${score ?? "대기"}점`}>
+                <defs>
+                  <linearGradient id={gradientId} x1="0%" y1="20%" x2="100%" y2="80%">
+                    <stop offset="0%" stopColor="var(--cp-positive)" />
+                    <stop offset="100%" stopColor="var(--cp-accent)" />
+                  </linearGradient>
+                </defs>
+                <circle className="cp-edge-gauge__track" cx="60" cy="60" r={radius} />
+                <circle
+                  className="cp-edge-gauge__progress"
+                  cx="60"
+                  cy="60"
+                  r={radius}
+                  style={{ stroke: `url(#${gradientId})`, strokeDasharray: circumference, strokeDashoffset: offset }}
+                />
+              </svg>
+              <div className="cp-edge-gauge__score">
+                <strong>{score ?? "—"}</strong>
+                <span>{fenokEdgeLabel(score)}</span>
+              </div>
+              <div className="cp-edge-gauge__title">{gauge.label}</div>
+            </div>
+          );
+        })}
       </div>
       <div className="cp-stock-edge-rows">
         {rows.map((row) => (

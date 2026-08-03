@@ -6,6 +6,7 @@ import {
   NATIVE_SIGNAL_FORMULA_VERSION,
   OCC_OPTIONS_FORMULA_VERSION,
   assertProxyFormulaVersion,
+  buildLongTermConvictionScore,
   buildShortTermConvictionComposite,
 } from "./lib/fenok-proxy-formula-contract.mjs";
 
@@ -964,19 +965,10 @@ function buildConvictionComposite(signals) {
   return { convictionScore, convictionCall: "mixed" };
 }
 
-function buildLongTermConvictionScore(signals) {
-  const downsidePressure = signals?.upside_downside?.downside_score_0_100;
-  const presentScores = [
-    signals?.profitability?.score_0_100,
-    signals?.growth?.score_0_100,
-    signals?.upside_downside?.upside_score_0_100,
-    finite(downsidePressure) ? 100 - downsidePressure : null,
-    signals?.durability_profitability?.score_0_100,
-  ].filter(finite);
-  return presentScores.length > 0
-    ? round(presentScores.reduce((sum, score) => sum + score, 0) / presentScores.length, 2)
-    : null;
-}
+// buildLongTermConvictionScore now comes from the contract lib
+// (fenok-proxy-formula-contract.mjs): the five-axis mean is the stated
+// long-term aggregation, documented and contract-tested there.
+
 
 function convictionCallFromScore(score) {
   if (score !== null && score >= 70) return "concentrated";

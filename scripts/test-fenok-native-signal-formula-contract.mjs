@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   NATIVE_SIGNAL_FORMULA_VERSION,
+  buildLongTermConvictionScore,
   buildShortTermConvictionComposite,
   shortTermConvictionCallFromScore,
 } from "./lib/fenok-proxy-formula-contract.mjs";
@@ -94,5 +95,21 @@ assert.deepEqual(
   unavailableComposite,
 );
 assert.deepEqual(buildShortTermConvictionComposite(signals(), "unknown"), unavailableComposite);
+
+// Long-term score (장기 스코어, the UI's second axis): plain mean of the five
+// present long-term axes — profitability, growth, upside, inverted downside
+// pressure, durability — no weights, missing axes dropped, never imputed.
+assert.equal(
+  buildLongTermConvictionScore({
+    profitability: { score_0_100: 60 },
+    growth: { score_0_100: 80 },
+    upside_downside: { upside_score_0_100: 70, downside_score_0_100: 20 },
+    durability_profitability: { score_0_100: 50 },
+  }),
+  68, // (60 + 80 + 70 + (100-20) + 50) / 5
+);
+assert.equal(buildLongTermConvictionScore({ profitability: { score_0_100: 60 } }), 60);
+assert.equal(buildLongTermConvictionScore({}), null);
+assert.equal(buildLongTermConvictionScore(null), null);
 
 console.log("fenok native signal formula contract tests passed");
