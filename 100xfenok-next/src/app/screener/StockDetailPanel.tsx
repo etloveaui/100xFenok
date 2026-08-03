@@ -2454,12 +2454,14 @@ export default function StockDetailPanel({
     );
   }
 
-  const convictionScore = isFiniteNumber(stock?.fenokConvictionScore)
-    ? Math.round(stock.fenokConvictionScore)
-    : null;
+  // fenokShortTermCommonBasisScore is a composition disclosure, not the score —
+  // the data contract says so. Reading it as the headline made this panel and
+  // the stock page disagree with every other surface (NVDA 53 against 61).
   const shortTerm = stock ? commonBasisShortTermView(stock) : null;
-  const shortTermConvictionScore = shortTerm?.score ?? null;
-  const shortTermConvictionCall = shortTerm?.call ?? null;
+  const shortTermConvictionScore = isFiniteNumber(stock?.fenokShortTermConvictionScore)
+    ? Math.round(stock.fenokShortTermConvictionScore)
+    : null;
+  const shortTermConvictionCall = stock?.fenokShortTermConvictionCall ?? shortTerm?.call ?? null;
   const longTermConvictionScore = isFiniteNumber(stock?.fenokLongTermConvictionScore)
     ? Math.round(stock.fenokLongTermConvictionScore)
     : null;
@@ -2615,7 +2617,7 @@ export default function StockDetailPanel({
   const weakAxis = allAxes
     .filter((axis) => axis.score !== null)
     .sort((left, right) => (left.score ?? 0) - (right.score ?? 0))[0] ?? null;
-  const detailScore = shortTermConvictionScore ?? convictionScore;
+  const detailScore = shortTermConvictionScore;
   const verdictHeadline = `${edgeLead}${shortTermConvictionCall ? `, 단기 ${shortTermConvictionCall}` : ""}`;
   const verdictCopy = [
     longTermConvictionScore !== null ? `장기 ${longTermConvictionScore}` : "장기 미확인",

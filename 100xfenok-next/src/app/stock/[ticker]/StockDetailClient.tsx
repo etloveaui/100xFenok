@@ -608,13 +608,15 @@ function stockChartSummary(data: readonly CpChartDatum[], currency: string, rang
 // conviction); 장기 = long-term conviction (fallback: long-term score, then
 // conviction). Both aggregations and their axis weights live in
 // scripts/build-fenok-signals.mjs — the UI only resolves the summary fields.
+// No convictionScore fallback: that is the retired integrated score, and falling
+// back to it would put it back on the surface under a 단기 or 장기 label.
 function resolveFenokShortTermScore(record: FenokSignalsSummaryRecord | null | undefined): number | null {
-  const score = record?.shortTermConvictionScore ?? record?.shortTermScore ?? record?.convictionScore ?? null;
+  const score = record?.shortTermConvictionScore ?? record?.shortTermScore ?? null;
   return isFiniteNumber(score) ? Math.max(0, Math.min(100, Math.round(score))) : null;
 }
 
 function resolveFenokLongTermScore(record: FenokSignalsSummaryRecord | null | undefined): number | null {
-  const score = record?.longTermConvictionScore ?? record?.longTermScore ?? record?.convictionScore ?? null;
+  const score = record?.longTermConvictionScore ?? record?.longTermScore ?? null;
   return isFiniteNumber(score) ? Math.max(0, Math.min(100, Math.round(score))) : null;
 }
 
@@ -2882,16 +2884,15 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
   const allAxes = [...shortAxes, ...longAxes];
   if (!allAxes.some((a) => a.score !== null)) return null;
 
+  // shortTermCommonBasisScore is a composition disclosure, not the score — the
+  // data contract says so in field_semantics. This card was reading it as the
+  // headline, which is why NVDA showed 53 here and 61 everywhere else.
   const shortTerm = commonBasisSignalSummaryView(record);
-  const shortScore = shortTerm.score;
+  const shortScore = resolveFenokShortTermScore(record);
   const longScore = isFiniteNumber(record.longTermConvictionScore) ? record.longTermConvictionScore
     : isFiniteNumber(record.longTermScore) ? record.longTermScore : null;
-  const compositeScoreRaw = isFiniteNumber(record.convictionScore) ? record.convictionScore
-    : shortScore !== null && longScore !== null ? (shortScore + longScore) / 2
-    : shortScore ?? longScore;
 
   const round = (v: number | null) => (v === null ? null : Math.round(Math.max(0, Math.min(100, v))));
-  const compositeR = round(compositeScoreRaw);
   const shortR = round(shortScore);
   const longR = round(longScore);
   const shortTermBasis = shortTermCommonBasisCopy(record.marketScope, {
@@ -2919,8 +2920,6 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
   };
   const shortGauge = semiGauge(shortR);
   const longGauge = semiGauge(longR);
-  const donutR2 = 70, donutCirc2 = 2 * Math.PI * donutR2;
-  const donutOffset2 = compositeR === null ? donutCirc2 : donutCirc2 * (1 - compositeR / 100);
 
   function renderRadar(axes: EdgeAxisRow[], color: string, label: string) {
     const cx = 130, cy = 122, maxR = 76;
@@ -2977,6 +2976,7 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
         <div>
           <p className="cpw4-hero__eyebrow">FENOK EDGE · 단기·장기 진단</p>
           <h2 className="cpw4-hero__verdict" style={{ fontSize: 22 }}>{compositeVerdict}</h2>
+          <span className={`cpw4-badge cpw4-badge--${compositeTone}`}>{compositeTone === "positive" ? "장기 우세" : compositeTone === "warning" ? "단기 우세" : "균형"}</span>
           <p className="cpw4-hero__sub">
             {best ? <>최강 신호는 <b>{best.label}</b>({Math.round(best.score ?? 0)}), </> : null}
             {worst ? <>최약 신호는 <b>{worst.label}</b>({Math.round(worst.score ?? 0)})입니다.</> : null}
@@ -2992,20 +2992,6 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
       </div>
 
       <div className="cpw4-edge-hero-row">
-        <div className="cpw4-edge-score-card cpw4-edge-score-card--composite">
-          <span className="cpw4-edge-score-label">종합 컨빅션</span>
-          <div className="cpw4-edge-gauge-wrap" style={{ width: 176, aspectRatio: "1 / 1" }}>
-            <svg viewBox="0 0 176 176">
-              <circle cx="88" cy="88" r={donutR2} fill="none" stroke="var(--cp-surface-strong)" strokeWidth="16" />
-              <circle cx="88" cy="88" r={donutR2} fill="none" stroke="var(--cp-neutral)" strokeWidth="16" strokeLinecap="round"
-                strokeDasharray={donutCirc2} strokeDashoffset={donutOffset2} transform="rotate(-90 88 88)" />
-            </svg>
-            <div className="cpw4-edge-gauge-value"><strong>{compositeR ?? "—"}</strong><span>/ 100</span></div>
-          </div>
-          <span className={`cpw4-badge cpw4-badge--${compositeTone}`}>{compositeTone === "positive" ? "장기 우세" : compositeTone === "warning" ? "단기 우세" : "균형"}</span>
-          <p className="cpw4-edge-score-read">{compositeVerdict}</p>
-        </div>
-
         <div className="cpw4-edge-score-card cpw4-edge-score-card--short">
           <span className="cpw4-edge-score-label">SHORT EDGE · 단기</span>
           <div className="cpw4-edge-gauge-wrap" style={{ width: 220, aspectRatio: "220 / 132" }}>
@@ -3015,7 +3001,7 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
             </svg>
             <div className="cpw4-edge-gauge-value" style={{ bottom: 6 }}><strong>{shortR ?? "—"}</strong><span>/100</span></div>
           </div>
-          <p className="cpw4-edge-score-read"><strong>{shortTermBasis.label}</strong>. {shortTermBasis.comparisonNote} {worst && worst.group === "short" ? <>가장 약한 축은 <b>{worst.label}</b>({Math.round(worst.score ?? 0)})입니다.</> : null}</p>
+          <p className="cpw4-edge-score-read"><strong>{shortTermBasis.label}</strong>. {shortTermBasis.comparisonNote} {isFiniteNumber(shortTerm.score) ? <>공통 3축만으로는 {Math.round(shortTerm.score)}입니다. </> : null}{worst && worst.group === "short" ? <>가장 약한 축은 <b>{worst.label}</b>({Math.round(worst.score ?? 0)})입니다.</> : null}</p>
         </div>
 
         <div className="cpw4-edge-score-card cpw4-edge-score-card--long">

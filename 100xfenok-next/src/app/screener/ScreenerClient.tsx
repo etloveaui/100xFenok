@@ -606,7 +606,12 @@ function renderCell(
     }
     case "fenokConvictionScore": {
       const shortTerm = commonBasisShortTermView(stock);
-      const shortScore = shortTerm.score;
+      // The common-basis figure is a composition disclosure per the data
+      // contract; the headline short score is the directional conviction score.
+      const shortScore = typeof stock.fenokShortTermConvictionScore === "number"
+        && Number.isFinite(stock.fenokShortTermConvictionScore)
+        ? Math.round(stock.fenokShortTermConvictionScore)
+        : null;
       const longScore = typeof stock.fenokLongTermScore === "number" && Number.isFinite(stock.fenokLongTermScore)
         ? Math.round(stock.fenokLongTermScore)
         : null;
