@@ -30,8 +30,16 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BENCHMARKS = path.join(ROOT, "data", "benchmarks");
+const RIM_INPUTS = path.join(ROOT, "data", "computed", "rim-index", "inputs.json");
 const OUT_DIR = path.join(ROOT, "data", "computed", "rim-yoo");
 const MIRROR_DIR = path.join(ROOT, "100xfenok-next", "public", "data", "computed", "rim-yoo");
+
+// Yoo's own published ERP band (Kiwoom column, 2016-09-20, owner-supplied):
+// "Equity Risk Premium을 5.5%~7%에 두고" — the band, applied over the OBSERVED
+// risk-free rate, is what turns his model into a fair RANGE (his 2016 KOSPI
+// 1,800-2,100 box). Likely = low ERP, Worst = high ERP, matching the
+// Worst/Likely two-point output of his current stock RIM sheets.
+export const YOO_ERP_BAND = Object.freeze({ likely: 0.055, worst: 0.07 });
 
 export const YOO_DISCOUNT_SENSITIVITY = [0.08, 0.0971, 0.07];
 export const YOO_EXPLICIT_YEARS = 3;
@@ -88,12 +96,16 @@ function round(value, digits) {
 export function computeYooRimRow({
   key, name, px, pbr, roe, date, discountRate, retention,
   roeOverride = null,
+  roePath = null,
   years = YOO_EXPLICIT_YEARS,
   terminalGrowth = YOO_TERMINAL_GROWTH,
   terminalRoeCap = YOO_TERMINAL_ROE_CAP,
 }) {
   const observedRoe = roe;
   const usedRoe = Number.isFinite(roeOverride?.value) ? roeOverride.value : roe;
+  // Input priority: a speaker-STATED assumption outranks the derived
+  // consensus path, which outranks the spot observation.
+  const effectivePath = Number.isFinite(roeOverride?.value) ? null : roePath;
   const missing = [];
   if (!Number.isFinite(px) || px <= 0) missing.push("px_last");
   if (!Number.isFinite(pbr) || pbr <= 0) missing.push("px_to_book_ratio");
@@ -109,13 +121,19 @@ export function computeYooRimRow({
   let book = bookValue;
   let lastBeginningBook = bookValue;
   let pvExplicit = 0;
+  let lastYearRoe = usedRoe;
   for (let t = 1; t <= years; t += 1) {
-    const residual = (usedRoe - discountRate) * book;
+    // Per-year consensus ROE path when available (Yoo's current sheets fade
+    // ROE year by year, e.g. Samsung 64->58->42); constant otherwise.
+    const yearRoe = Number.isFinite(effectivePath?.[t - 1]) ? effectivePath[t - 1] : usedRoe;
+    lastYearRoe = yearRoe;
+    const residual = (yearRoe - discountRate) * book;
     pvExplicit += residual / (1 + discountRate) ** t;
     lastBeginningBook = book;
-    book *= 1 + usedRoe * retention;
+    book *= 1 + yearRoe * retention;
   }
-  const terminalRoe = Number.isFinite(terminalRoeCap) ? Math.min(usedRoe, terminalRoeCap) : usedRoe;
+  const baseTerminalRoe = Number.isFinite(effectivePath?.[years - 1]) ? lastYearRoe : usedRoe;
+  const terminalRoe = Number.isFinite(terminalRoeCap) ? Math.min(baseTerminalRoe, terminalRoeCap) : baseTerminalRoe;
   const terminalResidual = (terminalRoe - discountRate) * lastBeginningBook;
   const terminalValue = (terminalResidual * (1 + terminalGrowth)) / (discountRate - terminalGrowth)
     / (1 + discountRate) ** years;
@@ -129,6 +147,7 @@ export function computeYooRimRow({
     book_value: round(bookValue, 2),
     forward_roe_observed: round(observedRoe, 4),
     roe_used: round(usedRoe, 4),
+    roe_path: Array.isArray(effectivePath) ? effectivePath.map((v) => round(v, 4)) : null,
     roe_override_source: roeOverride?.source ?? null,
     terminal_roe: round(terminalRoe, 4),
     retention,
@@ -156,7 +175,31 @@ function loadSectionLatest(file, key) {
   };
 }
 
-function rowFor(source, discountRate) {
+// Consensus per-year ROE paths and the observed risk-free rate come from the
+// existing rim-index derivation (weighted stock-consensus grids).
+const RIM_INDEX_KEY = { sp500: "SPX", nasdaq100: "NDX", kospi: "KOSPI", philadelphia_semi: "SOX", nasdaq_composite: "CCMP" };
+
+export function loadRimDerived() {
+  try {
+    const payload = JSON.parse(fs.readFileSync(RIM_INPUTS, "utf8"));
+    const riskFree = payload?.indices?.SPX?.observed?.risk_free_rate?.value
+      ?? Object.values(payload?.indices ?? {})[0]?.observed?.risk_free_rate?.value
+      ?? null;
+    const paths = {};
+    for (const [ourKey, rimKey] of Object.entries(RIM_INDEX_KEY)) {
+      const periods = payload?.indices?.[rimKey]?.derived?.forecast_grid_v1?.periods ?? [];
+      const roePath = periods
+        .map((p) => p?.roe_on_beginning_book?.value)
+        .filter((v) => Number.isFinite(v));
+      if (roePath.length >= 3) paths[ourKey] = roePath.slice(0, 3);
+    }
+    return { riskFree: Number.isFinite(riskFree) ? riskFree : null, paths };
+  } catch {
+    return { riskFree: null, paths: {} };
+  }
+}
+
+function rowFor(source, discountRate, derived = null) {
   const latest = loadSectionLatest(source.file, source.key);
   if (!latest) return { key: source.key, name: source.name, status: "excluded", reason: "section absent from benchmarks" };
   return computeYooRimRow({
@@ -164,6 +207,7 @@ function rowFor(source, discountRate) {
     name: source.name,
     retention: source.retention,
     roeOverride: source.roeOverride ?? null,
+    roePath: derived?.paths?.[source.key] ?? null,
     ...latest,
     discountRate,
   });
@@ -198,12 +242,24 @@ export function checkCalibration(headlineRows) {
 }
 
 export function buildArtifact({ nowIso }) {
+  const derived = loadRimDerived();
   // Headline table: the methodology estimate — per-market discount rates.
-  const headlineRows = INDEX_SOURCES.map((source) => rowFor(source, YOO_MARKET_RATES[source.market]));
+  const headlineRows = INDEX_SOURCES.map((source) => rowFor(source, YOO_MARKET_RATES[source.market], derived));
   const sensitivityTables = YOO_DISCOUNT_SENSITIVITY.map((discountRate) => ({
     discount_rate: discountRate,
-    rows: INDEX_SOURCES.map((source) => rowFor(source, discountRate)),
+    rows: INDEX_SOURCES.map((source) => rowFor(source, discountRate, derived)),
   }));
+  // Yoo-article-faithful preset: r derived from the OBSERVED risk-free rate
+  // plus his published ERP band; per-year consensus ROE paths where the
+  // rim-index grid carries them. Worst/Likely mirrors his sheet output.
+  const articlePresets = derived.riskFree === null ? null : Object.fromEntries(
+    Object.entries(YOO_ERP_BAND).map(([label, erp]) => [label, {
+      discount_rate: round(derived.riskFree + erp, 4),
+      erp,
+      risk_free_observed: derived.riskFree,
+      rows: INDEX_SOURCES.map((source) => rowFor(source, derived.riskFree + erp, derived)),
+    }]),
+  );
   const calibration = checkCalibration(headlineRows);
   return {
     schema_version: "rim-yoo-index/v3",
@@ -217,6 +273,10 @@ export function buildArtifact({ nowIso }) {
     calibration_check: {
       description: "Computed headline output vs Yoo's PUBLISHED numbers (dated, sourced). 'diverged' means our estimate of his methodology has drifted from what he publishes — recalibrate anchors from the latest speaker ledger, do not silently refit.",
       results: calibration,
+    },
+    yoo_article_presets: articlePresets && {
+      description: "Faithful to Yoo's own published parameters (Kiwoom column 2016-09-20): r = observed risk-free + his 5.5%~7% ERP band; per-year consensus ROE paths from the rim-index grid where available. Likely = low ERP, Worst = high ERP, matching his sheet's Worst/Likely output.",
+      ...articlePresets,
     },
     formula: "V = B0 + PV(RI_1..3, book compounds at ROE*retention) + PV(terminal RI at min(ROE, cap), growth g)",
     assumptions: {
@@ -249,6 +309,16 @@ if (invokedDirectly) {
   console.log("--- calibration vs Yoo published ---");
   for (const check of artifact.calibration_check.results) {
     console.log(`${check.key}: ${check.status} | computed ${check.computed} vs published ${JSON.stringify(check.published)} (${check.published_as_of ?? "?"})`);
+  }
+  if (artifact.yoo_article_presets) {
+    for (const label of ["likely", "worst"]) {
+      const preset = artifact.yoo_article_presets[label];
+      console.log(`--- article preset ${label} (r = ${preset.discount_rate} = rf ${preset.risk_free_observed} + ERP ${preset.erp}) ---`);
+      for (const row of preset.rows) {
+        if (row.status !== "ready") { console.log(`${row.name}: excluded (${row.reason})`); continue; }
+        console.log(`${row.name}: fair ${row.fair_value} | upside ${row.upside_pct}% | roe_path ${JSON.stringify(row.roe_path)}`);
+      }
+    }
   }
   console.log(`written: ${path.join(OUT_DIR, "fair-values.json")} (+ public mirror)`);
 }

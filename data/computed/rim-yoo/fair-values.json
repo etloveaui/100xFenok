@@ -1,6 +1,6 @@
 {
   "schema_version": "rim-yoo-index/v3",
-  "generated_at": "2026-08-03T08:14:18.527Z",
+  "generated_at": "2026-08-03T08:21:41.622Z",
   "method": "yoo_dongwon_forward_book_compounding_residual_income",
   "headline": {
     "description": "Methodology estimate: per-market discount rates (us 0.08, kr 0.0971), Yoo-stated ROE overrides where the corpus records them.",
@@ -18,16 +18,21 @@
         "book_value": 1315.93,
         "forward_roe_observed": 0.2913,
         "roe_used": 0.2913,
+        "roe_path": [
+          0.2913,
+          0.2796,
+          0.2716
+        ],
         "roe_override_source": null,
-        "terminal_roe": 0.2913,
+        "terminal_roe": 0.2716,
         "retention": 0.65,
         "discount_rate": 0.08,
-        "fair_value": 7987.98,
-        "upside_pct": 6.65,
+        "fair_value": 7364.46,
+        "upside_pct": -1.67,
         "components": {
           "book": 1315.93,
-          "pv_explicit_residual_income": 853.21,
-          "pv_terminal": 5818.84
+          "pv_explicit_residual_income": 806.59,
+          "pv_terminal": 5241.95
         }
       },
       {
@@ -39,16 +44,21 @@
         "book_value": 3199.49,
         "forward_roe_observed": 0.414,
         "roe_used": 0.414,
+        "roe_path": [
+          0.414,
+          0.3668,
+          0.3811
+        ],
         "roe_override_source": null,
-        "terminal_roe": 0.414,
+        "terminal_roe": 0.3811,
         "retention": 0.65,
         "discount_rate": 0.08,
-        "fair_value": 32180.93,
-        "upside_pct": 13.82,
+        "fair_value": 28786.33,
+        "upside_pct": 1.81,
         "components": {
           "book": 3199.49,
-          "pv_explicit_residual_income": 3518.5,
-          "pv_terminal": 25462.94
+          "pv_explicit_residual_income": 3189.63,
+          "pv_terminal": 22397.21
         }
       },
       {
@@ -60,6 +70,7 @@
         "book_value": 3341.52,
         "forward_roe_observed": 0.3235,
         "roe_used": 0.3235,
+        "roe_path": null,
         "roe_override_source": null,
         "terminal_roe": 0.3235,
         "retention": 0.65,
@@ -81,6 +92,7 @@
         "book_value": 1126.61,
         "forward_roe_observed": 0.0914,
         "roe_used": 0.0914,
+        "roe_path": null,
         "roe_override_source": null,
         "terminal_roe": 0.0914,
         "retention": 0.65,
@@ -102,6 +114,7 @@
         "book_value": 3498.36,
         "forward_roe_observed": 0.3422,
         "roe_used": 0.21,
+        "roe_path": null,
         "roe_override_source": "yoo_stated_3y_average_roe",
         "terminal_roe": 0.21,
         "retention": 0.75,
@@ -123,16 +136,21 @@
         "book_value": 1086.18,
         "forward_roe_observed": 0.5137,
         "roe_used": 0.5137,
+        "roe_path": [
+          0.5137,
+          0.495,
+          0.4325
+        ],
         "roe_override_source": null,
-        "terminal_roe": 0.5137,
+        "terminal_roe": 0.4325,
         "retention": 0.65,
         "discount_rate": 0.08,
-        "fair_value": 15126.78,
-        "upside_pct": 33.73,
+        "fair_value": 12559.04,
+        "upside_pct": 11.03,
         "components": {
           "book": 1086.18,
-          "pv_explicit_residual_income": 1640.29,
-          "pv_terminal": 12400.3
+          "pv_explicit_residual_income": 1487.41,
+          "pv_terminal": 9985.45
         }
       }
     ]
@@ -142,8 +160,8 @@
     "results": [
       {
         "key": "sp500",
-        "status": "within_tolerance",
-        "computed": 6.65,
+        "status": "diverged",
+        "computed": -1.67,
         "published": [
           8,
           12
@@ -154,7 +172,7 @@
       {
         "key": "nasdaq100",
         "status": "diverged",
-        "computed": 13.82,
+        "computed": 1.81,
         "published": [
           25,
           30
@@ -174,6 +192,311 @@
         "source": "speaker ledger 2kV9e8nI3Hw: KOSPI 10,000-12,000"
       }
     ]
+  },
+  "yoo_article_presets": {
+    "description": "Faithful to Yoo's own published parameters (Kiwoom column 2016-09-20): r = observed risk-free + his 5.5%~7% ERP band; per-year consensus ROE paths from the rim-index grid where available. Likely = low ERP, Worst = high ERP, matching his sheet's Worst/Likely output.",
+    "likely": {
+      "discount_rate": 0.1018,
+      "erp": 0.055,
+      "risk_free_observed": 0.0468,
+      "rows": [
+        {
+          "key": "sp500",
+          "name": "S&P 500",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 7489.72,
+          "book_value": 1315.93,
+          "forward_roe_observed": 0.2913,
+          "roe_used": 0.2913,
+          "roe_path": [
+            0.2913,
+            0.2796,
+            0.2716
+          ],
+          "roe_override_source": null,
+          "terminal_roe": 0.2716,
+          "retention": 0.65,
+          "discount_rate": 0.1018,
+          "fair_value": 5139.49,
+          "upside_pct": -31.38,
+          "components": {
+            "book": 1315.93,
+            "pv_explicit_residual_income": 690.34,
+            "pv_terminal": 3133.22
+          }
+        },
+        {
+          "key": "nasdaq100",
+          "name": "나스닥 100",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 28274.2,
+          "book_value": 3199.49,
+          "forward_roe_observed": 0.414,
+          "roe_used": 0.414,
+          "roe_path": [
+            0.414,
+            0.3668,
+            0.3811
+          ],
+          "roe_override_source": null,
+          "terminal_roe": 0.3811,
+          "retention": 0.65,
+          "discount_rate": 0.1018,
+          "fair_value": 20054.79,
+          "upside_pct": -29.07,
+          "components": {
+            "book": 3199.49,
+            "pv_explicit_residual_income": 2842.82,
+            "pv_terminal": 14012.47
+          }
+        },
+        {
+          "key": "nasdaq_composite",
+          "name": "나스닥 종합",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 25373.85,
+          "book_value": 3341.52,
+          "forward_roe_observed": 0.3235,
+          "roe_used": 0.3235,
+          "roe_path": null,
+          "roe_override_source": null,
+          "terminal_roe": 0.3235,
+          "retention": 0.65,
+          "discount_rate": 0.1018,
+          "fair_value": 16391.34,
+          "upside_pct": -35.4,
+          "components": {
+            "book": 3341.52,
+            "pv_explicit_residual_income": 2222.21,
+            "pv_terminal": 10827.61
+          }
+        },
+        {
+          "key": "russell2000",
+          "name": "러셀 2000",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 2931.34,
+          "book_value": 1126.61,
+          "forward_roe_observed": 0.0914,
+          "roe_used": 0.0914,
+          "roe_path": null,
+          "roe_override_source": null,
+          "terminal_roe": 0.0914,
+          "retention": 0.65,
+          "discount_rate": 0.1018,
+          "fair_value": 964.71,
+          "upside_pct": -67.09,
+          "components": {
+            "book": 1126.61,
+            "pv_explicit_residual_income": -30.69,
+            "pv_terminal": -131.22
+          }
+        },
+        {
+          "key": "kospi",
+          "name": "코스피",
+          "status": "ready",
+          "as_of": "2026-08-02",
+          "px_last": 6595.45,
+          "book_value": 3498.36,
+          "forward_roe_observed": 0.3422,
+          "roe_used": 0.21,
+          "roe_path": null,
+          "roe_override_source": "yoo_stated_3y_average_roe",
+          "terminal_roe": 0.21,
+          "retention": 0.75,
+          "discount_rate": 0.1018,
+          "fair_value": 9642.41,
+          "upside_pct": 46.2,
+          "components": {
+            "book": 3498.36,
+            "pv_explicit_residual_income": 1083.63,
+            "pv_terminal": 5060.43
+          }
+        },
+        {
+          "key": "philadelphia_semi",
+          "name": "필라델피아 반도체",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 11311.08,
+          "book_value": 1086.18,
+          "forward_roe_observed": 0.5137,
+          "roe_used": 0.5137,
+          "roe_path": [
+            0.5137,
+            0.495,
+            0.4325
+          ],
+          "roe_override_source": null,
+          "terminal_roe": 0.4325,
+          "retention": 0.65,
+          "discount_rate": 0.1018,
+          "fair_value": 8753.22,
+          "upside_pct": -22.61,
+          "components": {
+            "book": 1086.18,
+            "pv_explicit_residual_income": 1348.68,
+            "pv_terminal": 6318.35
+          }
+        }
+      ]
+    },
+    "worst": {
+      "discount_rate": 0.1168,
+      "erp": 0.07,
+      "risk_free_observed": 0.0468,
+      "rows": [
+        {
+          "key": "sp500",
+          "name": "S&P 500",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 7489.72,
+          "book_value": 1315.93,
+          "forward_roe_observed": 0.2913,
+          "roe_used": 0.2913,
+          "roe_path": [
+            0.2913,
+            0.2796,
+            0.2716
+          ],
+          "roe_override_source": null,
+          "terminal_roe": 0.2716,
+          "retention": 0.65,
+          "discount_rate": 0.11680000000000001,
+          "fair_value": 4226.03,
+          "upside_pct": -43.58,
+          "components": {
+            "book": 1315.93,
+            "pv_explicit_residual_income": 615.44,
+            "pv_terminal": 2294.66
+          }
+        },
+        {
+          "key": "nasdaq100",
+          "name": "나스닥 100",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 28274.2,
+          "book_value": 3199.49,
+          "forward_roe_observed": 0.414,
+          "roe_used": 0.414,
+          "roe_path": [
+            0.414,
+            0.3668,
+            0.3811
+          ],
+          "roe_override_source": null,
+          "terminal_roe": 0.3811,
+          "retention": 0.65,
+          "discount_rate": 0.11680000000000001,
+          "fair_value": 16470.98,
+          "upside_pct": -41.75,
+          "components": {
+            "book": 3199.49,
+            "pv_explicit_residual_income": 2619.3,
+            "pv_terminal": 10652.19
+          }
+        },
+        {
+          "key": "nasdaq_composite",
+          "name": "나스닥 종합",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 25373.85,
+          "book_value": 3341.52,
+          "forward_roe_observed": 0.3235,
+          "roe_used": 0.3235,
+          "roe_path": null,
+          "roe_override_source": null,
+          "terminal_roe": 0.3235,
+          "retention": 0.65,
+          "discount_rate": 0.11680000000000001,
+          "fair_value": 13466.28,
+          "upside_pct": -46.93,
+          "components": {
+            "book": 3341.52,
+            "pv_explicit_residual_income": 2015,
+            "pv_terminal": 8109.76
+          }
+        },
+        {
+          "key": "russell2000",
+          "name": "러셀 2000",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 2931.34,
+          "book_value": 1126.61,
+          "forward_roe_observed": 0.0914,
+          "roe_used": 0.0914,
+          "roe_path": null,
+          "roe_override_source": null,
+          "terminal_roe": 0.0914,
+          "retention": 0.65,
+          "discount_rate": 0.11680000000000001,
+          "fair_value": 796.18,
+          "upside_pct": -72.84,
+          "components": {
+            "book": 1126.61,
+            "pv_explicit_residual_income": -72.99,
+            "pv_terminal": -257.45
+          }
+        },
+        {
+          "key": "kospi",
+          "name": "코스피",
+          "status": "ready",
+          "as_of": "2026-08-02",
+          "px_last": 6595.45,
+          "book_value": 3498.36,
+          "forward_roe_observed": 0.3422,
+          "roe_used": 0.21,
+          "roe_path": null,
+          "roe_override_source": "yoo_stated_3y_average_roe",
+          "terminal_roe": 0.21,
+          "retention": 0.75,
+          "discount_rate": 0.11680000000000001,
+          "fair_value": 7908.19,
+          "upside_pct": 19.9,
+          "components": {
+            "book": 3498.36,
+            "pv_explicit_residual_income": 908.15,
+            "pv_terminal": 3501.68
+          }
+        },
+        {
+          "key": "philadelphia_semi",
+          "name": "필라델피아 반도체",
+          "status": "ready",
+          "as_of": "2026-07-31",
+          "px_last": 11311.08,
+          "book_value": 1086.18,
+          "forward_roe_observed": 0.5137,
+          "roe_used": 0.5137,
+          "roe_path": [
+            0.5137,
+            0.495,
+            0.4325
+          ],
+          "roe_override_source": null,
+          "terminal_roe": 0.4325,
+          "retention": 0.65,
+          "discount_rate": 0.11680000000000001,
+          "fair_value": 7190.98,
+          "upside_pct": -36.43,
+          "components": {
+            "book": 1086.18,
+            "pv_explicit_residual_income": 1259.26,
+            "pv_terminal": 4845.55
+          }
+        }
+      ]
+    }
   },
   "formula": "V = B0 + PV(RI_1..3, book compounds at ROE*retention) + PV(terminal RI at min(ROE, cap), growth g)",
   "assumptions": {
@@ -204,16 +527,21 @@
           "book_value": 1315.93,
           "forward_roe_observed": 0.2913,
           "roe_used": 0.2913,
+          "roe_path": [
+            0.2913,
+            0.2796,
+            0.2716
+          ],
           "roe_override_source": null,
-          "terminal_roe": 0.2913,
+          "terminal_roe": 0.2716,
           "retention": 0.65,
           "discount_rate": 0.08,
-          "fair_value": 7987.98,
-          "upside_pct": 6.65,
+          "fair_value": 7364.46,
+          "upside_pct": -1.67,
           "components": {
             "book": 1315.93,
-            "pv_explicit_residual_income": 853.21,
-            "pv_terminal": 5818.84
+            "pv_explicit_residual_income": 806.59,
+            "pv_terminal": 5241.95
           }
         },
         {
@@ -225,16 +553,21 @@
           "book_value": 3199.49,
           "forward_roe_observed": 0.414,
           "roe_used": 0.414,
+          "roe_path": [
+            0.414,
+            0.3668,
+            0.3811
+          ],
           "roe_override_source": null,
-          "terminal_roe": 0.414,
+          "terminal_roe": 0.3811,
           "retention": 0.65,
           "discount_rate": 0.08,
-          "fair_value": 32180.93,
-          "upside_pct": 13.82,
+          "fair_value": 28786.33,
+          "upside_pct": 1.81,
           "components": {
             "book": 3199.49,
-            "pv_explicit_residual_income": 3518.5,
-            "pv_terminal": 25462.94
+            "pv_explicit_residual_income": 3189.63,
+            "pv_terminal": 22397.21
           }
         },
         {
@@ -246,6 +579,7 @@
           "book_value": 3341.52,
           "forward_roe_observed": 0.3235,
           "roe_used": 0.3235,
+          "roe_path": null,
           "roe_override_source": null,
           "terminal_roe": 0.3235,
           "retention": 0.65,
@@ -267,6 +601,7 @@
           "book_value": 1126.61,
           "forward_roe_observed": 0.0914,
           "roe_used": 0.0914,
+          "roe_path": null,
           "roe_override_source": null,
           "terminal_roe": 0.0914,
           "retention": 0.65,
@@ -288,6 +623,7 @@
           "book_value": 3498.36,
           "forward_roe_observed": 0.3422,
           "roe_used": 0.21,
+          "roe_path": null,
           "roe_override_source": "yoo_stated_3y_average_roe",
           "terminal_roe": 0.21,
           "retention": 0.75,
@@ -309,16 +645,21 @@
           "book_value": 1086.18,
           "forward_roe_observed": 0.5137,
           "roe_used": 0.5137,
+          "roe_path": [
+            0.5137,
+            0.495,
+            0.4325
+          ],
           "roe_override_source": null,
-          "terminal_roe": 0.5137,
+          "terminal_roe": 0.4325,
           "retention": 0.65,
           "discount_rate": 0.08,
-          "fair_value": 15126.78,
-          "upside_pct": 33.73,
+          "fair_value": 12559.04,
+          "upside_pct": 11.03,
           "components": {
             "book": 1086.18,
-            "pv_explicit_residual_income": 1640.29,
-            "pv_terminal": 12400.3
+            "pv_explicit_residual_income": 1487.41,
+            "pv_terminal": 9985.45
           }
         }
       ]
@@ -335,16 +676,21 @@
           "book_value": 1315.93,
           "forward_roe_observed": 0.2913,
           "roe_used": 0.2913,
+          "roe_path": [
+            0.2913,
+            0.2796,
+            0.2716
+          ],
           "roe_override_source": null,
-          "terminal_roe": 0.2913,
+          "terminal_roe": 0.2716,
           "retention": 0.65,
           "discount_rate": 0.0971,
-          "fair_value": 5966.89,
-          "upside_pct": -20.33,
+          "fair_value": 5504.7,
+          "upside_pct": -26.5,
           "components": {
             "book": 1315.93,
-            "pv_explicit_residual_income": 759.21,
-            "pv_terminal": 3891.76
+            "pv_explicit_residual_income": 714.64,
+            "pv_terminal": 3474.14
           }
         },
         {
@@ -356,16 +702,21 @@
           "book_value": 3199.49,
           "forward_roe_observed": 0.414,
           "roe_used": 0.414,
+          "roe_path": [
+            0.414,
+            0.3668,
+            0.3811
+          ],
           "roe_override_source": null,
-          "terminal_roe": 0.414,
+          "terminal_roe": 0.3811,
           "retention": 0.65,
           "discount_rate": 0.0971,
-          "fair_value": 24010.45,
-          "upside_pct": -15.08,
+          "fair_value": 21487.82,
+          "upside_pct": -24,
           "components": {
             "book": 3199.49,
-            "pv_explicit_residual_income": 3229.93,
-            "pv_terminal": 17581.04
+            "pv_explicit_residual_income": 2915.33,
+            "pv_terminal": 15373
           }
         },
         {
@@ -377,6 +728,7 @@
           "book_value": 3341.52,
           "forward_roe_observed": 0.3235,
           "roe_used": 0.3235,
+          "roe_path": null,
           "roe_override_source": null,
           "terminal_roe": 0.3235,
           "retention": 0.65,
@@ -398,6 +750,7 @@
           "book_value": 1126.61,
           "forward_roe_observed": 0.0914,
           "roe_used": 0.0914,
+          "roe_path": null,
           "roe_override_source": null,
           "terminal_roe": 0.0914,
           "retention": 0.65,
@@ -419,6 +772,7 @@
           "book_value": 3498.36,
           "forward_roe_observed": 0.3422,
           "roe_used": 0.21,
+          "roe_path": null,
           "roe_override_source": "yoo_stated_3y_average_roe",
           "terminal_roe": 0.21,
           "retention": 0.75,
@@ -440,16 +794,21 @@
           "book_value": 1086.18,
           "forward_roe_observed": 0.5137,
           "roe_used": 0.5137,
+          "roe_path": [
+            0.5137,
+            0.495,
+            0.4325
+          ],
           "roe_override_source": null,
-          "terminal_roe": 0.5137,
+          "terminal_roe": 0.4325,
           "retention": 0.65,
           "discount_rate": 0.0971,
-          "fair_value": 11277.91,
-          "upside_pct": -0.29,
+          "fair_value": 9377.87,
+          "upside_pct": -17.09,
           "components": {
             "book": 1086.18,
-            "pv_explicit_residual_income": 1523.66,
-            "pv_terminal": 8668.07
+            "pv_explicit_residual_income": 1377.69,
+            "pv_terminal": 6914
           }
         }
       ]
@@ -466,16 +825,21 @@
           "book_value": 1315.93,
           "forward_roe_observed": 0.2913,
           "roe_used": 0.2913,
+          "roe_path": [
+            0.2913,
+            0.2796,
+            0.2716
+          ],
           "roe_override_source": null,
-          "terminal_roe": 0.2913,
+          "terminal_roe": 0.2716,
           "retention": 0.65,
           "discount_rate": 0.07,
-          "fair_value": 9886.16,
-          "upside_pct": 32,
+          "fair_value": 9111.01,
+          "upside_pct": 21.65,
           "components": {
             "book": 1315.93,
-            "pv_explicit_residual_income": 910.94,
-            "pv_terminal": 7659.29
+            "pv_explicit_residual_income": 863.05,
+            "pv_terminal": 6932.03
           }
         },
         {
@@ -487,16 +851,21 @@
           "book_value": 3199.49,
           "forward_roe_observed": 0.414,
           "roe_used": 0.414,
+          "roe_path": [
+            0.414,
+            0.3668,
+            0.3811
+          ],
           "roe_override_source": null,
-          "terminal_roe": 0.414,
+          "terminal_roe": 0.3811,
           "retention": 0.65,
           "discount_rate": 0.07,
-          "fair_value": 39855.43,
-          "upside_pct": 40.96,
+          "fair_value": 35641.59,
+          "upside_pct": 26.06,
           "components": {
             "book": 3199.49,
-            "pv_explicit_residual_income": 3695.68,
-            "pv_terminal": 32960.27
+            "pv_explicit_residual_income": 3358.05,
+            "pv_terminal": 29084.05
           }
         },
         {
@@ -508,6 +877,7 @@
           "book_value": 3341.52,
           "forward_roe_observed": 0.3235,
           "roe_used": 0.3235,
+          "roe_path": null,
           "roe_override_source": null,
           "terminal_roe": 0.3235,
           "retention": 0.65,
@@ -529,6 +899,7 @@
           "book_value": 1126.61,
           "forward_roe_observed": 0.0914,
           "roe_used": 0.0914,
+          "roe_path": null,
           "roe_override_source": null,
           "terminal_roe": 0.0914,
           "retention": 0.65,
@@ -550,6 +921,7 @@
           "book_value": 3498.36,
           "forward_roe_observed": 0.3422,
           "roe_used": 0.21,
+          "roe_path": null,
           "roe_override_source": "yoo_stated_3y_average_roe",
           "terminal_roe": 0.21,
           "retention": 0.75,
@@ -571,16 +943,21 @@
           "book_value": 1086.18,
           "forward_roe_observed": 0.5137,
           "roe_used": 0.5137,
+          "roe_path": [
+            0.5137,
+            0.495,
+            0.4325
+          ],
           "roe_override_source": null,
-          "terminal_roe": 0.5137,
+          "terminal_roe": 0.4325,
           "retention": 0.65,
           "discount_rate": 0.07,
-          "fair_value": 18742.27,
-          "upside_pct": 65.7,
+          "fair_value": 15546.83,
+          "upside_pct": 37.45,
           "components": {
             "book": 1086.18,
-            "pv_explicit_residual_income": 1711.9,
-            "pv_terminal": 15944.19
+            "pv_explicit_residual_income": 1554.77,
+            "pv_terminal": 12905.88
           }
         }
       ]

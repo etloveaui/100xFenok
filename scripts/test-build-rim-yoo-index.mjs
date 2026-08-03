@@ -88,6 +88,35 @@ import {
   assert.equal(row.roe_override_source, "yoo_stated_3y_average_roe");
 }
 
+// Input priority: a speaker-stated override beats the consensus path.
+{
+  const row = computeYooRimRow({
+    px: 2000, pbr: 2.0, roe: 0.34, discountRate: 0.1, retention: 0.5,
+    terminalGrowth: 0, terminalRoeCap: 0.99,
+    roeOverride: { value: 0.2, source: "yoo_stated_3y_average_roe" },
+    roePath: [0.34, 0.35, 0.29],
+    key: "t", name: "T", date: "d",
+  });
+  assert.equal(Math.round(row.fair_value * 100) / 100, 2181.82, "path is ignored when a stated override exists");
+  assert.equal(row.roe_path, null);
+}
+
+// A per-year path drives each year and the terminal uses the faded final year.
+{
+  const constant = computeYooRimRow({
+    px: 2000, pbr: 2.0, roe: 0.2, discountRate: 0.1, retention: 0.5,
+    terminalGrowth: 0, terminalRoeCap: 0.99, key: "t", name: "T", date: "d",
+  });
+  const fading = computeYooRimRow({
+    px: 2000, pbr: 2.0, roe: 0.2, discountRate: 0.1, retention: 0.5,
+    terminalGrowth: 0, terminalRoeCap: 0.99, roePath: [0.2, 0.18, 0.15],
+    key: "t", name: "T", date: "d",
+  });
+  assert.ok(fading.fair_value < constant.fair_value, "a fading path lowers the value");
+  assert.equal(fading.terminal_roe, 0.15, "terminal uses the final path year");
+  assert.deepEqual(fading.roe_path, [0.2, 0.18, 0.15]);
+}
+
 // Calibration check: within-tolerance and diverged classifications, and the
 // KOSPI fair-range anchor path.
 {
