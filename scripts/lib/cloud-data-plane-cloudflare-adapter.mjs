@@ -15,6 +15,13 @@ import {
   validatePublicationReceipt,
 } from "./cloud-data-plane-generation.mjs";
 
+// One coordinator Durable Object instance PER FAMILY: coordinatorName selects
+// the instance (idFromName), so each family gets its own pointer, ledger and
+// sequence and no publish can displace another family's active generation. The
+// default is the legacy constant, so a caller that declares no name keeps
+// talking to the instance that already holds history — nothing existing
+// changes shape.
+
 const COORDINATOR_ID = "cloud-data-plane-coordinator";
 
 function fail(code, detail) {
@@ -30,8 +37,8 @@ function bytesEqual(left, right) {
     && leftBytes.every((byte, index) => byte === rightBytes[index]);
 }
 
-async function coordinatorCall(coordinatorNamespace, action, payload) {
-  const stub = coordinatorNamespace.get(coordinatorNamespace.idFromName(COORDINATOR_ID));
+async function coordinatorCall(coordinatorNamespace, action, payload, coordinatorName = COORDINATOR_ID) {
+  const stub = coordinatorNamespace.get(coordinatorNamespace.idFromName(coordinatorName));
   const response = await stub.fetch(`https://cloud-data-plane-coordinator/${action}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -44,7 +51,7 @@ async function coordinatorCall(coordinatorNamespace, action, payload) {
   return body.result;
 }
 
-export function createCloudflareCloudDataPlane({ r2Bucket, coordinatorNamespace }) {
+export function createCloudflareCloudDataPlane({ r2Bucket, coordinatorNamespace, coordinatorName = COORDINATOR_ID }) {
   if (!r2Bucket || !coordinatorNamespace) {
     fail("ADAPTER_CONFIG_INVALID", "r2Bucket and coordinatorNamespace are required");
   }
@@ -68,26 +75,26 @@ export function createCloudflareCloudDataPlane({ r2Bucket, coordinatorNamespace 
     ledger: {
       async prepare(receipt) {
         validatePublicationReceipt(receipt);
-        await coordinatorCall(coordinatorNamespace, "ledger/prepare", { receipt });
+        await coordinatorCall(coordinatorNamespace, "ledger/prepare", { receipt }, coordinatorName);
       },
       async markPromoted(receipt) {
         validatePublicationReceipt(receipt);
-        await coordinatorCall(coordinatorNamespace, "ledger/mark-promoted", { receipt });
+        await coordinatorCall(coordinatorNamespace, "ledger/mark-promoted", { receipt }, coordinatorName);
       },
       async get(receiptId) {
-        return coordinatorCall(coordinatorNamespace, "ledger/get", { receipt_id: receiptId });
+        return coordinatorCall(coordinatorNamespace, "ledger/get", { receipt_id: receiptId }, coordinatorName);
       },
     },
     pointerStore: {
       async get() {
-        return coordinatorCall(coordinatorNamespace, "pointer/get");
+        return coordinatorCall(coordinatorNamespace, "pointer/get", undefined, coordinatorName);
       },
       async compareAndSwap(expectedSequence, nextPointer) {
         validateActivePointer(nextPointer);
         await coordinatorCall(coordinatorNamespace, "pointer/compare-and-swap", {
           expected_sequence: expectedSequence,
           pointer: nextPointer,
-        });
+        }, coordinatorName);
       },
     },
     async inspect() {
@@ -98,7 +105,7 @@ export function createCloudflareCloudDataPlane({ r2Bucket, coordinatorNamespace 
         for (const { key } of page.objects) objectKeys.push(key);
         cursor = page.truncated ? page.cursor : undefined;
       } while (cursor);
-      const { receipts, pointer } = await coordinatorCall(coordinatorNamespace, "inspect");
+      const { receipts, pointer } = await coordinatorCall(coordinatorNamespace, "inspect", undefined, coordinatorName);
       return { object_keys: objectKeys.sort(), receipts, pointer };
     },
   };

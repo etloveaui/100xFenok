@@ -107,6 +107,7 @@ try {
   const plane = createCloudflareCloudDataPlane({
     r2Bucket: DATA_PLANE_BUCKET,
     coordinatorNamespace: CLOUD_DATA_PLANE_COORDINATOR,
+    coordinatorName: "fred-macro",
   });
   await publishGeneration({
     manifest,

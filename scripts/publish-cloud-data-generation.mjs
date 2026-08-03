@@ -49,6 +49,48 @@
 // and pointer change. The JSON summary reports the sequence and both
 // generation ids before and after.
 //
+// Per-family coordinators: publish, chaos and rollback talk to the family's
+// OWN coordinator Durable Object instance; retention (bucket-level) talks to
+// EVERY family's instance. The family name is passed as coordinatorName to the
+// adapter and as the x-data-plane-family header through the remote shim; the
+// worker route selects the instance by that header. One family can never
+// displace another's active generation. Cutover is clean: each family restarts
+// at sequence 0 in its own instance, the legacy shared instance keeps its
+// history, and
+// content-addressed objects make the first republish a no-op for the bucket.
+//
+// Retention (--retention, dry-run by default; --retention-delete for real
+// deletion): collect objects/sha256/* payloads that NO retained manifest of
+// ANY family references. Pointers and receipts are PER FAMILY (each family has
+// its own coordinator instance, its own sequence and its own ledger), so the
+// retained set is computed per family — the 3 newest generations of that
+// family by created_at, that family's pointer active AND previous entries
+// (non-negotiable, that is the family's rollback target), and that family's
+// generations named by receipts still in state "prepared" — and then unioned.
+// The OBJECT STORE stays shared and content-addressed, so the reference scan
+// is the union across families: an object referenced by a retained manifest of
+// family A survives even if the only other referencing generation belongs to
+// family B and is otherwise collectable. Every manifest in the bucket is read,
+// parsed and validated; ANY unreadable or corrupt manifest — or a retained
+// generation whose manifest is missing — aborts the whole run with
+// RETENTION_REFERENCE_SET_INCOMPLETE and ZERO deletions. Retention is
+// BUCKET-LEVEL: it scans every family's own coordinator instance (pointer +
+// prepared receipts) and rejects --family outright; a family that fails to
+// answer aborts with RETENTION_FAMILY_UNREADABLE and ZERO deletions. Manifest
+// keys, pointer keys, probe/* and the explicit RETENTION_PROTECTED_KEYS (the
+// six keys the owner rule names: five P1 evidence objects + probe/lag.json)
+// are never candidates. The dry run emits one JSON line listing every
+// candidate with key, size and the reason it is unreferenced; real deletion
+// additionally requires --retention-delete. The cost gate runs first in both
+// modes even though DeleteObject is free on the free tier.
+//
+// Migration semantics (per-family coordinators): CLEAN CUTOVER. Both families
+// restart at sequence 0 in their own instances; the legacy shared instance
+// keeps its history untouched; objects are content-addressed, so the first
+// republish into a fresh family instance writes nothing — putIfAbsent finds
+// every payload already present and only the coordinator ledger and pointer
+// change.
+//
 // Env: CLOUDFLARE_API_TOKEN (gate + R2 REST), CLOUDFLARE_ACCOUNT_ID (defaulted
 // below), DATA_PLANE_ENDPOINT, DATA_PLANE_WRITE_KEY. A missing endpoint or key
 // is a clear error before any write; the token is enforced by the gate first.
@@ -371,10 +413,237 @@ export async function rollbackLiveGeneration({
   return { pointerBefore: pointer, ...result };
 }
 
+// --- retention ----------------------------------------------------------------
+//
+// computeRetentionPlan is a pure planner: it takes a bucket listing, every
+// manifest body, and each family's pointer + prepared-but-unpromoted
+// generation names, and decides exactly which objects/sha256/* keys may be
+// deleted. Pointers/receipts are per family; the object store is shared, so
+// the retained set is per family while the reference union is cross-family.
+// It never touches the network, which is what makes the mandated retention
+// cases testable offline.
+
+// Keys retention must never collect, whatever the reference scan says.
+// MEMBERSHIP RULE (owner mandate): exactly the five P1 live-pilot evidence
+// objects and probe/lag.json are protected, and nothing else. A protected key
+// needs an owner-named reason to be added — "we were not sure" is not one, and
+// the list must never grow by default because an object being collected when
+// nothing references it is the system working. Content-addressed probe objects
+// (including our Step-0 probe) are deliberately NOT protected.
+export const RETENTION_PROTECTED_KEYS = Object.freeze(new Set([
+  "manifests/r2-live-pilot-1.json",
+  "objects/sha256/32098e38aa809da54d44ca13df2c9031b259c14a1b600a0ef4b5fec7ca65ad8b",
+  "objects/sha256/3d55e186eefcfdfd546005031b443221212eb4081b8c7ec279f135a657e531eb",
+  "objects/sha256/7893ece3ecba0b3bea4ee13c4d780524f71e8e07f324d918a3c5c2b0c6544946",
+  "objects/sha256/c612b423798aa69c3e5bc971d20c9352f11ff41ef8c84cca4d38938a5550e288",
+  "probe/lag.json",
+]));
+
+export const RETENTION_KEEP_NEWEST = 3;
+export const RETENTION_OBJECT_PREFIX = "objects/";
+const GENERATION_MANIFEST_KEY = /^manifests\/.+-[0-9a-f]{16}\.json$/;
+
+// manifestEntries: [{key, text|null}] for every manifests/* key in the bucket
+// (text null when the object could not be read). objectEntries: [{key, size}]
+// for every key in the bucket listing. families: [{ name, pointer,
+// preparedGenerations }] — one entry per family, with THAT family's live
+// pointer (or null) and the generation ids named by THAT family's receipts in
+// state "prepared".
+//
+// Retained set, PER FAMILY: the keepNewest newest generation manifests of the
+// family by created_at, the family's pointer active AND previous generation
+// (non-negotiable — the family's rollback target), and the family's prepared-
+// but-unpromoted generations. The reference union is then CROSS-FAMILY because
+// the object store is shared: an object referenced by any retained manifest of
+// any family survives.
+//
+// Returns { keepNewest, retainedGenerations, retainedByFamily, referencedKeys,
+// candidates, skippedProtected, manifestCount }. candidates are
+// [{key, size, reason}] sorted by key — the ONLY keys deletion may touch.
+// Throws RETENTION_REFERENCE_SET_INCOMPLETE (before any deletion can happen)
+// when any manifest is unreadable/corrupt or a retained generation has no
+// manifest.
+export function computeRetentionPlan({
+  families = [],
+  manifestEntries = [],
+  objectEntries = [],
+  keepNewest = RETENTION_KEEP_NEWEST,
+  protectedKeys = RETENTION_PROTECTED_KEYS,
+}) {
+  const generationManifests = []; // [{key, manifest, family}]
+  const nonGenerationManifests = []; // aliases / legacy keys: always retained
+  for (const entry of manifestEntries) {
+    let manifest = null;
+    if (typeof entry.text === "string") {
+      try {
+        manifest = JSON.parse(entry.text);
+      } catch {
+        manifest = null;
+      }
+    }
+    if (manifest === null) {
+      fail("RETENTION_REFERENCE_SET_INCOMPLETE", `${entry.key}: unreadable or not JSON`);
+    }
+    try {
+      validateGenerationManifest(manifest);
+    } catch (error) {
+      fail("RETENTION_REFERENCE_SET_INCOMPLETE", `${entry.key}: ${error.message}`);
+    }
+    if (GENERATION_MANIFEST_KEY.test(entry.key) && `manifests/${manifest.generation_id}.json` === entry.key) {
+      generationManifests.push({
+        key: entry.key,
+        manifest,
+        family: manifest.generation_id.slice(0, -17), // strip "-<hex16>"
+      });
+    } else {
+      nonGenerationManifests.push({ key: entry.key, manifest });
+    }
+  }
+
+  const familyStateByName = new Map(families.map((state) => [state.name, state]));
+  const familyNames = new Set([
+    ...generationManifests.map((entry) => entry.family),
+    ...families.map((state) => state.name),
+  ]);
+
+  // Newest-N window per family, by created_at (ISO strings sort
+  // lexicographically); generation_id breaks ties for determinism.
+  const retainedIds = new Set();
+  const retainedByFamily = {};
+  for (const familyName of [...familyNames].sort()) {
+    const ids = new Set();
+    const ranked = generationManifests
+      .filter((entry) => entry.family === familyName)
+      .sort((left, right) => {
+        if (left.manifest.created_at !== right.manifest.created_at) {
+          return left.manifest.created_at < right.manifest.created_at ? 1 : -1;
+        }
+        return left.manifest.generation_id < right.manifest.generation_id ? 1 : -1;
+      });
+    for (const entry of ranked.slice(0, keepNewest)) ids.add(entry.manifest.generation_id);
+    const state = familyStateByName.get(familyName);
+    for (const id of [
+      state?.pointer?.active?.generation_id,
+      state?.pointer?.previous?.generation_id,
+      ...(state?.preparedGenerations ?? []),
+    ]) {
+      if (id) ids.add(id);
+    }
+    retainedByFamily[familyName] = [...ids].sort();
+    for (const id of ids) retainedIds.add(id);
+  }
+
+  const byGenerationId = new Map(
+    generationManifests.map((entry) => [entry.manifest.generation_id, entry.manifest]),
+  );
+  const retainedManifests = [];
+  for (const id of retainedIds) {
+    const manifest = byGenerationId.get(id);
+    if (!manifest) {
+      fail("RETENTION_REFERENCE_SET_INCOMPLETE", `retained generation ${id} has no readable manifest`);
+    }
+    retainedManifests.push(manifest);
+  }
+  retainedManifests.push(...nonGenerationManifests.map((entry) => entry.manifest));
+
+  const referencedKeys = new Set();
+  for (const manifest of retainedManifests) {
+    for (const asset of manifest.assets) referencedKeys.add(asset.object_key);
+  }
+  // Non-retained manifests still explain WHY a candidate is unreferenced.
+  const referencingNonRetained = new Map(); // object_key -> [generation_id]
+  for (const { manifest } of generationManifests) {
+    if (retainedIds.has(manifest.generation_id)) continue;
+    for (const asset of manifest.assets) {
+      const list = referencingNonRetained.get(asset.object_key) ?? [];
+      list.push(manifest.generation_id);
+      referencingNonRetained.set(asset.object_key, list);
+    }
+  }
+
+  const candidates = [];
+  const skippedProtected = [];
+  for (const { key, size } of objectEntries) {
+    if (protectedKeys.has(key)) {
+      skippedProtected.push(key);
+      continue;
+    }
+    if (!key.startsWith(RETENTION_OBJECT_PREFIX)) continue; // manifests, pointers, probe/*: never collected
+    if (referencedKeys.has(key)) continue;
+    const nonRetained = referencingNonRetained.get(key);
+    candidates.push({
+      key,
+      size: size ?? null,
+      reason: nonRetained
+        ? `referenced only by non-retained generation(s): ${nonRetained.sort().join(", ")}`
+        : "orphaned: no manifest in the bucket references this object",
+    });
+  }
+  candidates.sort((left, right) => left.key.localeCompare(right.key));
+  skippedProtected.sort();
+
+  return {
+    keepNewest,
+    retainedGenerations: [...retainedIds].sort(),
+    retainedByFamily,
+    referencedKeys: [...referencedKeys].sort(),
+    candidates,
+    skippedProtected,
+    manifestCount: generationManifests.length + nonGenerationManifests.length,
+  };
+}
+
+// Bucket-level family scan for retention: every family answers with its OWN
+// coordinator instance's pointer and prepared-but-unpromoted receipts. A
+// family that fails to answer aborts the whole run — an unreadable family is
+// indistinguishable from one with no live generations, and guessing wrong
+// deletes production data. Success with pointer null (family never published)
+// is a legitimate answer and contributes nothing to the retained set.
+export async function collectFamiliesRetentionState({ families, createPlane }) {
+  const states = [];
+  for (const name of families) {
+    let inspection;
+    try {
+      inspection = await createPlane(name).inspect();
+    } catch (error) {
+      fail(
+        "RETENTION_FAMILY_UNREADABLE",
+        `${name}: ${error.code ?? "ERROR"}: ${error.message}`,
+      );
+    }
+    const preparedGenerations = [...new Set((inspection?.receipts ?? [])
+      .filter((receipt) => receipt?.state === "prepared")
+      .map((receipt) => receipt.generation_id)
+      .filter(Boolean))].sort();
+    states.push({
+      name,
+      pointer: inspection?.pointer ?? null,
+      preparedGenerations,
+    });
+  }
+  return states;
+}
+
+// Execute an approved plan through an injected deleter (REST live, recording
+// stub in tests). Individual delete failures never throw; they are collected
+// so one bad key cannot strand the rest of the batch.
+export async function executeRetentionPlan({ plan, deleteObject }) {
+  const deleted = [];
+  const failures = [];
+  for (const candidate of plan.candidates) {
+    const outcome = await deleteObject(candidate.key);
+    if (outcome?.ok === false) {
+      failures.push({ key: candidate.key, size: candidate.size, error: outcome.error ?? "delete failed" });
+    } else {
+      deleted.push({ key: candidate.key, size: candidate.size });
+    }
+  }
+  return { deleted, failures };
+}
+
 // Exit evidence: resolve the active generation through the pointer and compare
 // every asset byte-for-byte against the files read from disk.
-export async function verifyGenerationParity({ pointerStore, objectStore, payloads }) {
-  const pointer = await pointerStore.get();
+export async function verifyGenerationParity({ pointerStore, objectStore, payloads }) {  const pointer = await pointerStore.get();
   if (!pointer) fail("PARITY_POINTER_MISSING", "no active pointer after publish");
   const manifestBytes = await objectStore.get(pointer.active.manifest_key);
   if (
@@ -441,9 +710,82 @@ function gateVerdict(gate) {
   return "blocked";
 }
 
+// --- retention REST helpers ---------------------------------------------------
+// createR2RestBucket (byte-locked lib) maps list() to keys only and has no
+// delete; retention needs key+size and DeleteObject, so these two helpers talk
+// to the same account-level REST endpoint directly, mirroring the lib's retry
+// policy (never retry 4xx; network/5xx get 3 attempts with backoff).
+const R2_API_BASE = "https://api.cloudflare.com/client/v4/accounts";
+const R2_REST_MAX_ATTEMPTS = 3;
+const R2_REST_BACKOFF_BASE_MS = 200;
+
+async function r2DataPlaneRequest({ accountId, bucket, token, fetchImpl, method, keyPath, query }) {
+  const base = `${R2_API_BASE}/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucket)}/objects`;
+  const url = `${base}${keyPath ? `/${encodeURIComponent(keyPath)}` : ""}${query ?? ""}`;
+  let lastError = null;
+  for (let attempt = 1; attempt <= R2_REST_MAX_ATTEMPTS; attempt += 1) {
+    let response;
+    try {
+      response = await fetchImpl(url, { method, headers: { Authorization: `Bearer ${token}` } });
+    } catch (error) {
+      lastError = error;
+      if (attempt < R2_REST_MAX_ATTEMPTS) {
+        await new Promise((resolve) => setTimeout(resolve, R2_REST_BACKOFF_BASE_MS * 2 ** (attempt - 1)));
+      }
+      continue;
+    }
+    if (response.status >= 500 && attempt < R2_REST_MAX_ATTEMPTS) {
+      await new Promise((resolve) => setTimeout(resolve, R2_REST_BACKOFF_BASE_MS * 2 ** (attempt - 1)));
+      continue;
+    }
+    return response;
+  }
+  fail("R2_REST_NETWORK", lastError?.message ?? "request failed without a response");
+}
+
+// Full bucket listing with sizes (the retention report's per-object size).
+export async function listR2ObjectsDetailed({ accountId, bucket, token, fetchImpl = fetch }) {
+  const objects = [];
+  let cursor;
+  do {
+    const query = `?per_page=1000${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
+    const response = await r2DataPlaneRequest({
+      accountId, bucket, token, fetchImpl, method: "GET", query,
+    });
+    if (!response.ok) {
+      fail("R2_REST_HTTP", `list http ${response.status}: ${(await response.text()).slice(0, 500)}`);
+    }
+    const body = await response.json();
+    if (!body?.success) {
+      fail("R2_REST_HTTP", `list envelope not successful: ${JSON.stringify(body?.errors ?? null)}`);
+    }
+    for (const object of body.result ?? []) {
+      objects.push({ key: object.key, size: object.size ?? null });
+    }
+    cursor = body?.result_info?.cursor || undefined;
+  } while (cursor);
+  return objects;
+}
+
+// DeleteObject for one key. 404 means the key is already gone, which satisfies
+// retention's intent, so it counts as ok. Never throws on an HTTP answer —
+// returns {ok:false, error} so executeRetentionPlan can record the failure.
+export async function deleteR2Object({ accountId, bucket, token, key, fetchImpl = fetch }) {
+  try {
+    const response = await r2DataPlaneRequest({
+      accountId, bucket, token, fetchImpl, method: "DELETE", keyPath: key,
+    });
+    if (response.ok || response.status === 404) return { ok: true };
+    return { ok: false, error: `http ${response.status}: ${(await response.text()).slice(0, 500)}` };
+  } catch (error) {
+    return { ok: false, error: `${error.code ?? "ERROR"}: ${error.message}` };
+  }
+}
+
 function parseArgs(argv) {
   const args = {
     family: null, dryRun: false, json: false, tolerateGateBlock: false, chaos: null, rollback: false,
+    retention: false, retentionDelete: false,
   };
   for (const arg of argv) {
     if (arg.startsWith("--family=")) args.family = arg.slice("--family=".length);
@@ -451,29 +793,157 @@ function parseArgs(argv) {
     else if (arg === "--json") args.json = true;
     else if (arg === "--tolerate-gate-block") args.tolerateGateBlock = true;
     else if (arg === "--rollback") args.rollback = true;
+    else if (arg === "--retention") args.retention = true;
+    else if (arg === "--retention-delete") args.retentionDelete = true;
     else if (arg.startsWith("--chaos=")) {
       const mode = arg.slice("--chaos=".length);
       if (!CHAOS_MODES.includes(mode)) fail("ARGS_INVALID", `unknown chaos mode ${mode}`);
       args.chaos = mode;
     } else fail("ARGS_INVALID", arg);
   }
-  if (!args.family) fail("ARGS_INVALID", "--family=<name> is required");
+  if (!args.retention && !args.family) fail("ARGS_INVALID", "--family=<name> is required");
+  if (args.retention && args.family) {
+    fail("ARGS_INVALID", "--retention is bucket-level and accepts no --family (the named-family invocation is unsafe)");
+  }
   if (args.rollback && args.chaos) fail("ARGS_INVALID", "--rollback cannot be combined with --chaos");
+  if (args.retentionDelete && !args.retention) {
+    fail("ARGS_INVALID", "--retention-delete requires --retention (dry-run is the default)");
+  }
+  if (args.retention && (args.chaos || args.rollback)) {
+    fail("ARGS_INVALID", "--retention cannot be combined with --chaos or --rollback");
+  }
   return args;
+}
+
+// Bucket-level retention: dry-run by default. Reads EVERY family's own
+// coordinator instance (pointer + prepared receipts), unions the newest-3
+// windows across all of them, and collects only objects/sha256/* keys no
+// retained manifest of ANY family references. Any family that fails to answer,
+// any unreadable manifest, or any retained generation with no manifest aborts
+// with zero deletions (RETENTION_REFERENCE_SET_INCOMPLETE /
+// RETENTION_FAMILY_UNREADABLE). DeleteObject is free on the free tier, so the
+// gate still runs first with a small declaration. --family is deliberately not
+// accepted anywhere on this path.
+async function runRetention({ tolerateGateBlock, retentionDelete, json }) {
+  const log = (line) => {
+    if (!json) console.error(line);
+  };
+  const emit = (summary) => console.log(JSON.stringify(summary));
+
+  const gateBefore = await runCostGate({ planClassA: 10, planBytes: 0, env: process.env });
+  if (gateBefore.stdout.trim()) log(gateBefore.stdout.trim());
+  if (gateBefore.code !== 0 && gateBefore.code !== 1) {
+    if (gateBefore.stderr.trim()) console.error(gateBefore.stderr.trim());
+    if (tolerateGateBlock) {
+      emit({ result: "gate_blocked", mode: "retention", gate_exit: gateBefore.code });
+      return;
+    }
+    console.error("publish-cloud-data-generation: cost gate blocked the retention run"
+      + ` (exit ${gateBefore.code}); rerun with --tolerate-gate-block to record-and-skip`);
+    process.exit(3);
+  }
+
+  const token = process.env.CLOUDFLARE_API_TOKEN;
+  const endpoint = process.env.DATA_PLANE_ENDPOINT;
+  const writeKey = process.env.DATA_PLANE_WRITE_KEY;
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? DEFAULT_ACCOUNT_ID;
+  const missing = [
+    ["CLOUDFLARE_API_TOKEN", token],
+    ["DATA_PLANE_ENDPOINT", endpoint],
+    ["DATA_PLANE_WRITE_KEY", writeKey],
+  ].filter(([, value]) => !value).map(([name]) => name);
+  if (missing.length) {
+    console.error(`publish-cloud-data-generation: missing env ${missing.join(", ")} — no write attempted`);
+    process.exit(2);
+  }
+
+  const r2Bucket = createR2RestBucket({ accountId, bucket: R2_BUCKET, token });
+  // Every family answers from its OWN coordinator instance (the worker route
+  // selects it by the x-data-plane-family header). An unreadable family aborts
+  // the whole run inside collectFamiliesRetentionState.
+  const familiesState = await collectFamiliesRetentionState({
+    families: Object.keys(FAMILIES).sort(),
+    createPlane: (name) => createCloudflareCloudDataPlane({
+      r2Bucket,
+      coordinatorNamespace: createRemoteCoordinatorNamespace({ endpoint, key: writeKey, family: name }),
+      coordinatorName: name,
+    }),
+  });
+  const readObject = async (key) => {
+    const entry = await r2Bucket.get(key);
+    if (entry === null) return null;
+    return new Uint8Array(await entry.arrayBuffer());
+  };
+  const objectEntries = await listR2ObjectsDetailed({ accountId, bucket: R2_BUCKET, token });
+  const manifestEntries = [];
+  for (const { key } of objectEntries) {
+    if (!key.startsWith("manifests/")) continue;
+    const bytes = await readObject(key);
+    manifestEntries.push({
+      key,
+      text: bytes instanceof Uint8Array ? new TextDecoder().decode(bytes) : null,
+    });
+  }
+  const retentionPlan = computeRetentionPlan({
+    families: familiesState,
+    manifestEntries,
+    objectEntries,
+  });
+  const report = {
+    result: retentionDelete ? "retention_deleted" : "retention_dry_run",
+    scope: "bucket-level",
+    families_scanned: familiesState.map((state) => state.name),
+    keep_newest: retentionPlan.keepNewest,
+    manifests_read: retentionPlan.manifestCount,
+    retained_generations: retentionPlan.retainedGenerations,
+    prepared_generations: [...new Set(familiesState.flatMap((state) => state.preparedGenerations))].sort(),
+    referenced_object_count: retentionPlan.referencedKeys.length,
+    protected_keys_present: retentionPlan.skippedProtected,
+    candidate_count: retentionPlan.candidates.length,
+    candidate_bytes: retentionPlan.candidates.reduce((total, candidate) => total + (candidate.size ?? 0), 0),
+    candidates: retentionPlan.candidates,
+    gate_before: gateVerdict(gateBefore),
+  };
+  if (retentionDelete) {
+    const executed = await executeRetentionPlan({
+      plan: retentionPlan,
+      deleteObject: (key) => deleteR2Object({ accountId, bucket: R2_BUCKET, token, key }),
+    });
+    report.deleted = executed.deleted;
+    report.deleted_count = executed.deleted.length;
+    report.delete_failures = executed.failures;
+    emit(report);
+    if (executed.failures.length > 0) {
+      fail("RETENTION_DELETE_FAILED", `${executed.failures.length} object(s) could not be deleted`);
+    }
+    return;
+  }
+  emit(report); // dry-run: zero deletions, always exit 0
 }
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  const log = (...parts) => {
+    if (!args.json) console.error(...parts);
+  };
+  const emit = (summary) => console.log(JSON.stringify(summary));
+
+  // Retention is bucket-level, not family-level: it scans EVERY family and
+  // deliberately accepts no --family (parseArgs rejects the combination).
+  if (args.retention) {
+    return runRetention({
+      tolerateGateBlock: args.tolerateGateBlock,
+      retentionDelete: args.retentionDelete,
+      json: args.json,
+    });
+  }
+
   const family = FAMILIES[args.family];
   if (!family) {
     console.error(`publish-cloud-data-generation: unknown family ${args.family}`
       + ` (known: ${Object.keys(FAMILIES).join(", ")})`);
     process.exit(2);
   }
-  const log = (...parts) => {
-    if (!args.json) console.error(...parts);
-  };
-  const emit = (summary) => console.log(JSON.stringify(summary));
 
   // 1. Manifest from disk.
   const { manifest, payloads, summary } = await buildFamilyManifest({
@@ -492,7 +962,7 @@ async function main() {
     + ` ${plan.unique_object_keys} unique objects (${plan.objects_deduped} deduped)`
     + ` -> generation ${manifest.generation_id}`);
 
-  if (args.dryRun) {
+  if (args.dryRun && !args.retention) {
     emit({
       result: "dry_run",
       generation_id: manifest.generation_id,
@@ -516,8 +986,9 @@ async function main() {
   }
 
   // 2. Cost gate (declares >= 2x the real spend) before any write. Rollback
-  // touches only the coordinator (no object writes), so it declares a small
-  // but still generous plan.
+  // touches only the coordinator (DeleteObject is free on the free tier, so
+  // retention declares a small but still generous plan) — the gate runs first
+  // in every mode.
   const gatePlan = args.rollback ? { class_a: 10, bytes: 0 } : family.plan;
   const gateBefore = await runCostGate({
     planClassA: gatePlan.class_a,
@@ -532,7 +1003,7 @@ async function main() {
     if (args.tolerateGateBlock) {
       emit({
         result: "gate_blocked",
-        mode: args.rollback ? "rollback" : "publish",
+        mode: args.rollback ? "rollback" : (args.retention ? "retention" : "publish"),
         generation_id: manifest.generation_id,
         gate_exit: gateBefore.code,
         ...plan,
@@ -565,7 +1036,8 @@ async function main() {
   if (args.rollback) {
     const plane = createCloudflareCloudDataPlane({
       r2Bucket: createR2RestBucket({ accountId, bucket: R2_BUCKET, token }),
-      coordinatorNamespace: createRemoteCoordinatorNamespace({ endpoint, key: writeKey }),
+      coordinatorNamespace: createRemoteCoordinatorNamespace({ endpoint, key: writeKey, family: args.family }),
+      coordinatorName: args.family,
     });
     const rolled = await rollbackLiveGeneration({
       objectStore: plane.objectStore,
@@ -601,10 +1073,11 @@ async function main() {
       objectsWritten += 1;
     },
   };
-  const coordinatorNamespace = createRemoteCoordinatorNamespace({ endpoint, key: writeKey });
+  const coordinatorNamespace = createRemoteCoordinatorNamespace({ endpoint, key: writeKey, family: args.family });
   const plane = createCloudflareCloudDataPlane({
     r2Bucket: countingR2Bucket,
     coordinatorNamespace,
+    coordinatorName: args.family,
   });
   const livePointer = await plane.pointerStore.get();
   const pointerSequenceBefore = livePointer?.sequence ?? 0;

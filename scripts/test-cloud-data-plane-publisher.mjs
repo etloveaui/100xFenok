@@ -9,6 +9,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { statSync } from "node:fs";
 import http from "node:http";
 import os from "node:os";
 import path from "node:path";
@@ -29,9 +30,15 @@ import {
   buildFamilyManifest,
   chaosExpectedPointerSequence,
   chaosPointerStore,
+  collectFamiliesRetentionState,
+  computeRetentionPlan,
+  deleteR2Object,
   deterministicPublishReceiptId,
+  executeRetentionPlan,
   FAMILIES,
+  listR2ObjectsDetailed,
   resolveExpectedPointerSequence,
+  RETENTION_PROTECTED_KEYS,
   rollbackLiveGeneration,
   verifyGenerationParity,
 } from "./publish-cloud-data-generation.mjs";
@@ -204,6 +211,42 @@ function fail(code, detail) {
   throw error;
 }
 
+// Per-family coordinator state: the worker route selects a Durable Object
+// instance by the x-data-plane-family header, so each family owns its pointer,
+// ledger and sequence over ONE shared object store. This emulates that
+// selection offline — the memory plane gives each family its own pointer and
+// receipts, while the object store (r2Binding) stays shared.
+const perFamilyCoordinators = new Map();
+function makeCoordinatorState() {
+  const state = createMemoryCloudDataPlane();
+  return {
+    async action(pathname, payload) {
+      switch (pathname) {
+        case "/ledger/prepare":
+          await state.ledger.prepare(payload.receipt);
+          return null;
+        case "/ledger/mark-promoted":
+          await state.ledger.markPromoted(payload.receipt);
+          return null;
+        case "/ledger/get":
+          return state.ledger.get(payload.receipt_id);
+        case "/pointer/get":
+          return state.pointerStore.get();
+        case "/pointer/compare-and-swap":
+          await state.pointerStore.compareAndSwap(payload.expected_sequence, payload.pointer);
+          return null;
+        case "/inspect":
+          return {
+            receipts: state.inspect().receipts,
+            pointer: await state.pointerStore.get(),
+          };
+        default:
+          return fail("COORDINATOR_ACTION_UNKNOWN", pathname);
+      }
+    },
+  };
+}
+
 async function dispatchCoordinator(pathname, payload) {
   switch (pathname) {
     case "/ledger/prepare": return stubLedger.prepare(payload.receipt);
@@ -235,7 +278,17 @@ const server = http.createServer(async (req, res) => {
     return;
   }
   try {
-    const result = await dispatchCoordinator(pathname, bodyText ? JSON.parse(bodyText) : {});
+    const family = req.headers["x-data-plane-family"];
+    const payload = bodyText ? JSON.parse(bodyText) : {};
+    let result;
+    if (family) {
+      if (!perFamilyCoordinators.has(family)) {
+        perFamilyCoordinators.set(family, makeCoordinatorState());
+      }
+      result = await perFamilyCoordinators.get(family).action(pathname, payload);
+    } else {
+      result = await dispatchCoordinator(pathname, payload);
+    }
     res.writeHead(200, { "content-type": "application/json" });
     res.end(JSON.stringify({ result: result ?? null }));
   } catch (error) {
@@ -716,7 +769,13 @@ try {
   assert.equal(fredBuild.manifest.assets.length, 1);
   const fredAsset = fredBuild.manifest.assets[0];
   assert.equal(fredAsset.path, "public/data/macro/fred-macro.json");
-  assert.equal(fredAsset.bytes, 530_240);
+  // The upstream data file changes over time (10d32795eb moved it 530240 ->
+  // 530238 bytes); the invariant that matters is that the manifest records the
+  // on-disk size exactly, not any one specific number.
+  assert.equal(
+    fredAsset.bytes,
+    statSync(path.join(REPO_ROOT, "100xfenok-next/public/data/macro/fred-macro.json")).size,
+  );
   assert.equal(fredAsset.privacy_class, "public");
   assert.equal(fredAsset.content_type, "application/json");
   assert.equal(fredAsset.object_key, `objects/sha256/${fredAsset.sha256}`);
@@ -773,20 +832,623 @@ try {
   assert.equal(served.content_type, "application/json");
   assert.equal(served.generation_id, fredBuild.manifest.generation_id);
   console.log("fred-macro family ok (single file, split root/prefix, public class served)");
+
+  // --- per-family coordinators: two families publish and resolve ----------
+  // independently, each against its OWN coordinator instance over the SHARED
+  // object store. Acceptance gate for the per-family pointer fix: publishing
+  // one family must never move another family's pointer.
+  {
+    const requestsAtStart = requests.length;
+    const planeA = createCloudflareCloudDataPlane({
+      r2Bucket: r2Binding,
+      coordinatorNamespace: createRemoteCoordinatorNamespace({
+        endpoint,
+        key: "test-write-key",
+        family: "oecd-cli",
+      }),
+      coordinatorName: "oecd-cli",
+    });
+    const planeB = createCloudflareCloudDataPlane({
+      r2Bucket: r2Binding,
+      coordinatorNamespace: createRemoteCoordinatorNamespace({
+        endpoint,
+        key: "test-write-key",
+        family: "fred-macro",
+      }),
+      coordinatorName: "fred-macro",
+    });
+    const fredPolicy = {
+      ...POLICY,
+      validate_public_payload: FAMILIES["fred-macro"].validate_public_payload,
+    };
+
+    // A publishes oecd -> A sequence 1.
+    const a1Resolved = await resolveExpectedPointerSequence({
+      pointer: await planeA.pointerStore.get(),
+      manifest,
+      objectStore: planeA.objectStore,
+    });
+    assert.equal(a1Resolved.resume, false);
+    const a1 = await publishGeneration({
+      manifest: a1Resolved.manifest,
+      payloads,
+      expectedPointerSequence: a1Resolved.expectedPointerSequence,
+      objectStore: planeA.objectStore,
+      ledger: planeA.ledger,
+      pointerStore: planeA.pointerStore,
+      policy: POLICY,
+    });
+    assert.equal(a1.pointer.sequence, 1);
+
+    // B publishes fred -> B sequence 1; A's pointer must not move.
+    const b1Resolved = await resolveExpectedPointerSequence({
+      pointer: await planeB.pointerStore.get(),
+      manifest: fredBuild.manifest,
+      objectStore: planeB.objectStore,
+    });
+    assert.equal(b1Resolved.resume, false);
+    const b1 = await publishGeneration({
+      manifest: b1Resolved.manifest,
+      payloads: fredBuild.payloads,
+      expectedPointerSequence: b1Resolved.expectedPointerSequence,
+      objectStore: planeB.objectStore,
+      ledger: planeB.ledger,
+      pointerStore: planeB.pointerStore,
+      policy: fredPolicy,
+    });
+    assert.equal(b1.pointer.sequence, 1);
+    assert.equal((await planeA.pointerStore.get()).sequence, 1); // not displaced
+    assert.equal((await planeA.pointerStore.get()).active.generation_id, manifest.generation_id);
+
+    // A republishes oecd (idempotent resume): A stays at 1, B untouched.
+    const a2Resolved = await resolveExpectedPointerSequence({
+      pointer: await planeA.pointerStore.get(),
+      manifest,
+      objectStore: planeA.objectStore,
+      ledger: planeA.ledger,
+    });
+    assert.equal(a2Resolved.resume, true);
+    await publishGeneration({
+      manifest: a2Resolved.manifest,
+      payloads,
+      expectedPointerSequence: a2Resolved.expectedPointerSequence,
+      objectStore: planeA.objectStore,
+      ledger: planeA.ledger,
+      pointerStore: planeA.pointerStore,
+      policy: POLICY,
+      now: a2Resolved.resumeCreatedAt ? () => a2Resolved.resumeCreatedAt : undefined,
+    });
+    assert.equal((await planeA.pointerStore.get()).sequence, 1);
+    const bPointerAfter = await planeB.pointerStore.get();
+    assert.equal(bPointerAfter.sequence, 1);
+    assert.equal(bPointerAfter.active.generation_id, fredBuild.manifest.generation_id);
+
+    // Wire proof: every request this section issued carries the family header
+    // of the family that issued it.
+    const familyRequests = requests.slice(requestsAtStart);
+    assert.ok(familyRequests.length >= 8);
+    assert.ok(familyRequests.every((request) => request.headers["x-data-plane-family"]));
+    const prepares = familyRequests.filter((request) => request.pathname === "/ledger/prepare");
+    assert.ok(prepares.some((request) => request.headers["x-data-plane-family"] === "oecd-cli"));
+    assert.ok(prepares.some((request) => request.headers["x-data-plane-family"] === "fred-macro"));
+    const casRequests = familyRequests.filter((request) => request.pathname === "/pointer/compare-and-swap");
+    assert.ok(casRequests.some((request) => request.headers["x-data-plane-family"] === "oecd-cli"));
+    assert.ok(casRequests.some((request) => request.headers["x-data-plane-family"] === "fred-macro"));
+
+    // Both families still RESOLVE from the shared object store: fred through
+    // the public read path, oecd through a pointer walk.
+    const fredServed = await resolvePublicAsset({
+      publicPath: "public/data/macro/fred-macro.json",
+      pointerStore: planeB.pointerStore,
+      objectStore: planeB.objectStore,
+    });
+    assert.equal(fredServed.kind, "ok");
+    assert.deepEqual(fredServed.bytes, fredBuild.payloads.get("public/data/macro/fred-macro.json"));
+    const aParity = await verifyGenerationParity({
+      pointerStore: planeA.pointerStore,
+      objectStore: planeA.objectStore,
+      payloads,
+    });
+    assert.equal(aParity.assets, manifest.assets.length);
+    console.log("per-family coordinators ok (two families publish/resolve independently, no displacement)");
+  }
 } finally {
   await new Promise((resolve) => server.close(resolve));
   await rm(fixtureRoot, { recursive: true, force: true });
 }
 
+// --- retention planner: the five mandated cases (offline, fabricated state) ---
+// computeRetentionPlan is pure: manifests are fabricated through the real
+// buildFamilyManifest (distinct fixture contents -> distinct generations), the
+// pointer and object listing are fabricated directly, and deletion is a
+// recording stub. No Cloudflare network anywhere in this section.
+
+const retentionRoot = await mkdtemp(path.join(os.tmpdir(), "cloud-data-plane-retention-"));
+const RET_REL_ROOT = "data/test-fixtures/cloud-data-plane-retention";
+const RET_NOW = (hour) => `2026-08-03T${String(hour).padStart(2, "0")}:00:00.000Z`;
+const P1_EVIDENCE_KEY = "objects/sha256/32098e38aa809da54d44ca13df2c9031b259c14a1b600a0ef4b5fec7ca65ad8b";
+
+async function buildRetentionGeneration({ files, now }) {
+  await rm(retentionRoot, { recursive: true, force: true });
+  await mkdir(retentionRoot, { recursive: true });
+  for (const [relative, text] of Object.entries(files)) {
+    await mkdir(path.join(retentionRoot, path.dirname(relative)), { recursive: true });
+    await writeFile(path.join(retentionRoot, relative), text);
+  }
+  const { manifest } = await buildFamilyManifest({
+    familyName: "oecd-cli",
+    absRoot: retentionRoot,
+    relRoot: RET_REL_ROOT,
+    now: () => now,
+  });
+  return manifest;
+}
+const manifestEntry = (manifest) => ({
+  key: `manifests/${manifest.generation_id}.json`,
+  text: JSON.stringify(manifest),
+});
+function retentionObjectEntries(manifests) {
+  const byKey = new Map();
+  for (const manifest of manifests) {
+    for (const asset of manifest.assets) {
+      byKey.set(asset.object_key, { key: asset.object_key, size: asset.bytes });
+    }
+  }
+  return [...byKey.values()];
+}
+const assetKey = (manifest, suffix) => manifest.assets.find((asset) => asset.path.endsWith(suffix))?.object_key;
+const pointerOf = (active, previous) => ({
+  sequence: 9,
+  active: { generation_id: active },
+  previous: previous ? { generation_id: previous } : null,
+});
+// Re-prefix a built manifest onto a second family: family is derived from the
+// generation_id prefix (oecd-cli-<hex> -> <family>-<hex>), so the SAME assets
+// (content-addressed object keys) appear under a different family's window.
+const asFamily = (manifest, familyName) => ({
+  ...manifest,
+  generation_id: `${familyName}-${manifest.generation_id.slice(manifest.generation_id.indexOf("-") + 1)}`,
+});
+
+// Case 1: objects shared across generations survive. G1 (a, b) falls out of
+// the newest-3 window, but b is also in retained G2, so only a is collectable.
+{
+  const g1 = await buildRetentionGeneration({
+    files: { "a.json": "{\"c\":1,\"f\":\"a\"}\n", "b.json": "{\"c\":1,\"f\":\"b\"}\n" },
+    now: RET_NOW(0),
+  });
+  const g2 = await buildRetentionGeneration({
+    files: { "b.json": "{\"c\":1,\"f\":\"b\"}\n", "c.json": "{\"c\":1,\"f\":\"c\"}\n" },
+    now: RET_NOW(1),
+  });
+  const g3 = await buildRetentionGeneration({ files: { "d.json": "{\"c\":1,\"f\":\"d\"}\n" }, now: RET_NOW(2) });
+  const g4 = await buildRetentionGeneration({ files: { "e.json": "{\"c\":1,\"f\":\"e\"}\n" }, now: RET_NOW(3) });
+  const manifests = [g1, g2, g3, g4];
+  const plan = computeRetentionPlan({
+    families: [{ name: "oecd-cli", pointer: pointerOf(g4.generation_id, g3.generation_id), preparedGenerations: [] }],
+    manifestEntries: manifests.map(manifestEntry),
+    objectEntries: retentionObjectEntries(manifests),
+  });
+  assert.deepEqual(
+    plan.retainedGenerations,
+    [g2, g3, g4].map((manifest) => manifest.generation_id).sort(),
+  );
+  const keyA = assetKey(g1, "a.json");
+  const keyB = assetKey(g1, "b.json");
+  assert.equal(keyB, assetKey(g2, "b.json")); // genuinely shared across generations
+  assert.deepEqual(plan.candidates.map((candidate) => candidate.key), [keyA]);
+  assert.ok(plan.referencedKeys.includes(keyB)); // the shared object survives
+  assert.match(plan.candidates[0].reason, new RegExp(`non-retained generation.*${g1.generation_id}`));
+  console.log("retention case 1 ok (objects shared across generations survive)");
+}
+
+// Case 2: the rollback target (pointer previous) survives even though it sits
+// OUTSIDE the newest-3 window. G2 is the only collectable generation.
+{
+  const generations = [];
+  for (let index = 0; index < 5; index += 1) {
+    generations.push(await buildRetentionGeneration({
+      files: { "only.json": `{"c":2,"g":${index}}\n` },
+      now: RET_NOW(index),
+    }));
+  }
+  const [g1, g2, g3, g4, g5] = generations;
+  const plan = computeRetentionPlan({
+    families: [{
+      name: "oecd-cli",
+      pointer: pointerOf(g5.generation_id, g1.generation_id), // previous = rollback target, oldest
+      preparedGenerations: [],
+    }],
+    manifestEntries: generations.map(manifestEntry),
+    objectEntries: retentionObjectEntries(generations),
+  });
+  assert.ok(plan.retainedGenerations.includes(g1.generation_id)); // held by pointer.previous
+  assert.deepEqual(
+    plan.retainedGenerations,
+    [g1, g3, g4, g5].map((manifest) => manifest.generation_id).sort(),
+  );
+  assert.deepEqual(plan.candidates.map((candidate) => candidate.key), [assetKey(g2, "only.json")]);
+  console.log("retention case 2 ok (pointer previous survives outside the newest-3 window)");
+}
+
+// Case 3: a generation named by a prepared-but-unpromoted receipt survives,
+// even though it is the oldest and the pointer does not name it.
+{
+  const generations = [];
+  for (let index = 0; index < 4; index += 1) {
+    generations.push(await buildRetentionGeneration({
+      files: { "only.json": `{"c":3,"g":${index}}\n` },
+      now: RET_NOW(index),
+    }));
+  }
+  const [g1, g2, g3, g4] = generations;
+  const plan = computeRetentionPlan({
+    families: [{
+      name: "oecd-cli",
+      pointer: pointerOf(g4.generation_id, g3.generation_id),
+      preparedGenerations: [g1.generation_id], // receipt in state "prepared"
+    }],
+    manifestEntries: generations.map(manifestEntry),
+    objectEntries: retentionObjectEntries(generations),
+  });
+  assert.ok(plan.retainedGenerations.includes(g1.generation_id));
+  assert.equal(plan.candidates.length, 0); // nothing may be collected
+  console.log("retention case 3 ok (prepared-but-unpromoted generation survives)");
+}
+
+// Case 4: a corrupt (or unreadable, or missing) manifest in the retained set
+// aborts the whole run with RETENTION_REFERENCE_SET_INCOMPLETE — and because
+// the plan never materializes, the executor is never reached: zero deletions.
+{
+  const generations = [];
+  for (let index = 0; index < 4; index += 1) {
+    generations.push(await buildRetentionGeneration({
+      files: { "only.json": `{"c":4,"g":${index}}\n` },
+      now: RET_NOW(index),
+    }));
+  }
+  const [g1, g2, g3, g4] = generations;
+  const entries = generations.map(manifestEntry);
+  const objectEntries = retentionObjectEntries(generations);
+
+  let deleteCalls = 0;
+  const recordingDelete = async () => {
+    deleteCalls += 1;
+    return { ok: true };
+  };
+  const attemptFlow = async (manifestEntries) => {
+    // Mirrors the CLI: executeRetentionPlan is only reachable with a plan.
+    let plan = null;
+    try {
+      plan = computeRetentionPlan({
+        families: [{
+          name: "oecd-cli",
+          pointer: pointerOf(g4.generation_id, g3.generation_id),
+          preparedGenerations: [],
+        }],
+        manifestEntries,
+        objectEntries,
+      });
+    } catch (error) {
+      assert.equal(error.code, "RETENTION_REFERENCE_SET_INCOMPLETE");
+    }
+    if (plan) await executeRetentionPlan({ plan, deleteObject: recordingDelete });
+  };
+
+  // Corrupt JSON at the NEWEST manifest (unambiguously in the retained set).
+  await attemptFlow(entries.map((entry, index) => (index === 3 ? { ...entry, text: "{corrupt" } : entry)));
+  // Unreadable (object vanished between listing and read).
+  await attemptFlow(entries.map((entry, index) => (index === 3 ? { ...entry, text: null } : entry)));
+  // Retained generation (g4, named by pointer.active) with no manifest in the
+  // bucket — its references cannot be known, so the run must abort.
+  await attemptFlow(entries.filter((entry) => entry.key !== `manifests/${g4.generation_id}.json`));
+  assert.equal(deleteCalls, 0); // every variant aborted before any deletion
+  console.log("retention case 4 ok (corrupt/unreadable/missing retained manifest aborts, zero deletions)");
+}
+
+// Case 5: a genuinely unreferenced object from the fourth-oldest generation is
+// the ONLY thing collected — protected evidence keys, probe/lag.json, manifest
+// keys and the shared object all survive, and the executor touches exactly one
+// key.
+{
+  assert.ok(RETENTION_PROTECTED_KEYS.has(P1_EVIDENCE_KEY));
+  assert.ok(RETENTION_PROTECTED_KEYS.has("probe/lag.json"));
+  const g1 = await buildRetentionGeneration({
+    files: { "unique.json": "{\"c\":5,\"f\":\"unique\"}\n", "shared.json": "{\"c\":5,\"f\":\"shared\"}\n" },
+    now: RET_NOW(0),
+  });
+  const g2 = await buildRetentionGeneration({ files: { "x.json": "{\"c\":5,\"f\":\"x\"}\n" }, now: RET_NOW(1) });
+  const g3 = await buildRetentionGeneration({ files: { "y.json": "{\"c\":5,\"f\":\"y\"}\n" }, now: RET_NOW(2) });
+  const g4 = await buildRetentionGeneration({
+    files: { "shared.json": "{\"c\":5,\"f\":\"shared\"}\n", "z.json": "{\"c\":5,\"f\":\"z\"}\n" },
+    now: RET_NOW(3),
+  });
+  const generations = [g1, g2, g3, g4];
+  const uniqueKey = assetKey(g1, "unique.json");
+  const objectEntries = [
+    ...retentionObjectEntries(generations),
+    { key: P1_EVIDENCE_KEY, size: 320_980 }, // protected P1 evidence, unreferenced here
+    { key: "probe/lag.json", size: 128 }, // protected probe
+    { key: "manifests/r2-live-pilot-1.json", size: 900 }, // protected manifest
+    ...generations.map((manifest) => ({ key: `manifests/${manifest.generation_id}.json`, size: 800 })),
+  ];
+  const plan = computeRetentionPlan({
+    families: [{
+      name: "oecd-cli",
+      pointer: pointerOf(g4.generation_id, g3.generation_id),
+      preparedGenerations: [],
+    }],
+    manifestEntries: generations.map(manifestEntry),
+    objectEntries,
+  });
+  assert.deepEqual(plan.candidates.map((candidate) => candidate.key), [uniqueKey]);
+  assert.equal(plan.candidates[0].size, g1.assets.find((asset) => asset.object_key === uniqueKey).bytes);
+  assert.ok(plan.skippedProtected.includes(P1_EVIDENCE_KEY));
+  assert.ok(plan.skippedProtected.includes("probe/lag.json"));
+  const deletedKeys = [];
+  const outcome = await executeRetentionPlan({
+    plan,
+    deleteObject: async (key) => {
+      deletedKeys.push(key);
+      return { ok: true };
+    },
+  });
+  assert.deepEqual(deletedKeys, [uniqueKey]); // exactly one object collected
+  assert.equal(outcome.deleted.length, 1);
+  assert.equal(outcome.failures.length, 0);
+
+  // A failing deleter is recorded, never thrown, and does not strand the batch.
+  const failureOutcome = await executeRetentionPlan({
+    plan,
+    deleteObject: async () => ({ ok: false, error: "http 500: boom" }),
+  });
+  assert.equal(failureOutcome.deleted.length, 0);
+  assert.equal(failureOutcome.failures.length, 1);
+  assert.match(failureOutcome.failures[0].error, /http 500/);
+  console.log("retention case 5 ok (only the fourth-oldest unreferenced object is collected)");
+}
+
+// Case 6: cross-family reference set over the shared object store. An object
+// referenced by a RETAINED generation of family A and only an otherwise-
+// collectable generation of family B survives; a prepared-unpromoted receipt
+// protects within ITS family only (B's prepared generation keeps B's object,
+// but does not rescue A's orphan).
+{
+  const sharedText = "{\"c\":6,\"f\":\"s\"}\n";
+  const aGens = [];
+  for (let index = 0; index < 4; index += 1) {
+    aGens.push(await buildRetentionGeneration({
+      files: index === 0
+        ? { "u.json": "{\"c\":6,\"f\":\"u\"}\n" } // V: only in a1
+        : index === 1
+          ? { "s.json": sharedText } // S: shared with b1
+          : { [`a${index}.json`]: `{\"c\":6,\"g\":${index}}\n` },
+      now: RET_NOW(index),
+    }));
+  }
+  const bGens = [];
+  for (let index = 0; index < 4; index += 1) {
+    bGens.push(asFamily(await buildRetentionGeneration({
+      files: index === 0
+        ? { "s.json": sharedText, "t.json": "{\"c\":6,\"f\":\"t\"}\n" } // S + T: only b1 has T
+        : { [`b${index}.json`]: `{\"c\":6,\"g\":${index}}\n` },
+      now: RET_NOW(index),
+    }), "fred-macro"));
+  }
+  const [a1, a2, a3, a4] = aGens;
+  const [b1, b2, b3, b4] = bGens;
+  const keyS = assetKey(a2, "s.json");
+  const keyT = assetKey(b1, "t.json");
+  const keyV = assetKey(a1, "u.json");
+  assert.equal(keyS, assetKey(b1, "s.json")); // genuinely shared across families
+
+  const plan = computeRetentionPlan({
+    families: [
+      {
+        name: "oecd-cli",
+        pointer: pointerOf(a4.generation_id, a3.generation_id),
+        preparedGenerations: [],
+      },
+      {
+        name: "fred-macro",
+        pointer: pointerOf(b4.generation_id, b3.generation_id),
+        preparedGenerations: [b1.generation_id], // prepared receipt for family B
+      },
+    ],
+    manifestEntries: [...aGens, ...bGens].map(manifestEntry),
+    objectEntries: retentionObjectEntries([...aGens, ...bGens]),
+  });
+  // Per-family retention: A keeps a2..a4 (a1 outside the window), B keeps
+  // b1 (prepared), b2..b4.
+  assert.deepEqual(plan.retainedGenerations, [
+    a2, a3, a4, b1, b2, b3, b4,
+  ].map((manifest) => manifest.generation_id).sort());
+  assert.ok(plan.referencedKeys.includes(keyS)); // shared object survives cross-family
+  assert.ok(plan.referencedKeys.includes(keyT)); // B's prepared generation protects its object
+  // V is referenced only by a1 (non-retained): the ONLY candidate.
+  assert.deepEqual(plan.candidates.map((candidate) => candidate.key), [keyV]);
+  assert.ok(!plan.referencedKeys.includes(keyV));
+  console.log("retention case 6 ok (cross-family shared objects survive; prepared protects within its family)");
+}
+
+// Case 7: retention is BUCKET-LEVEL. Family B rolled back so its pointer
+// ACTIVE (b1) is the oldest generation — outside B's own newest-3 window. A
+// named-family-only scan (family A's state alone) would collect b1's object,
+// i.e. delete the other family's live generation; the bucket-level union that
+// reads every family's pointer keeps it.
+{
+  const aGens = [];
+  for (let index = 0; index < 4; index += 1) {
+    aGens.push(await buildRetentionGeneration({
+      files: { [`a${index}.json`]: `{\"c\":7,\"g\":${index}}\n` },
+      now: RET_NOW(index),
+    }));
+  }
+  const bGens = [];
+  for (let index = 0; index < 4; index += 1) {
+    bGens.push(asFamily(await buildRetentionGeneration({
+      files: { [`b${index}.json`]: `{\"c\":7,\"g\":${index}}\n` },
+      now: RET_NOW(index),
+    }), "fred-macro"));
+  }
+  const [bOldest] = bGens; // B's rolled-back ACTIVE: the oldest generation
+  const bNewest = bGens[3];
+  const aNewest = aGens[3];
+  const aPrev = aGens[2];
+  const keyP = assetKey(bOldest, "b0.json");
+  const bucketLevel = computeRetentionPlan({
+    families: [
+      { name: "oecd-cli", pointer: pointerOf(aNewest.generation_id, aPrev.generation_id), preparedGenerations: [] },
+      // B rolled back: active = bOldest, previous = bNewest. bOldest sits
+      // outside B's newest-3 window and survives ONLY through its pointer.
+      { name: "fred-macro", pointer: pointerOf(bOldest.generation_id, bNewest.generation_id), preparedGenerations: [] },
+    ],
+    manifestEntries: [...aGens, ...bGens].map(manifestEntry),
+    objectEntries: retentionObjectEntries([...aGens, ...bGens]),
+  });
+  assert.ok(bucketLevel.retainedGenerations.includes(bOldest.generation_id));
+  assert.ok(!bucketLevel.candidates.some((candidate) => candidate.key === keyP));
+
+  // The unsafe shape: only family A's state is known — bOldest becomes a candidate.
+  const namedFamilyOnly = computeRetentionPlan({
+    families: [{ name: "oecd-cli", pointer: pointerOf(aNewest.generation_id, aPrev.generation_id), preparedGenerations: [] }],
+    manifestEntries: [...aGens, ...bGens].map(manifestEntry),
+    objectEntries: retentionObjectEntries([...aGens, ...bGens]),
+  });
+  assert.ok(namedFamilyOnly.candidates.some((candidate) => candidate.key === keyP));
+  console.log("retention case 7 ok (bucket-level scan protects every family's live generation)");
+}
+
+// The bucket-level scan aborts when ANY family fails to answer: an unreadable
+// family is indistinguishable from one with no live generations, and guessing
+// wrong deletes production data. A family that legitimately answers with no
+// pointer (never published) is a harmless empty state.
+{
+  let inspected = 0;
+  let aborted = false;
+  try {
+    await collectFamiliesRetentionState({
+      families: ["fred-macro", "oecd-cli"],
+      createPlane: (name) => {
+        inspected += 1;
+        if (name === "fred-macro") {
+          return {
+            async inspect() {
+              throw Object.assign(new Error("http 503: coordinator unavailable"), { code: "COORDINATOR_UNAVAILABLE" });
+            },
+          };
+        }
+        return {
+          async inspect() {
+            return { receipts: [], pointer: { sequence: 1, active: { generation_id: "oecd-cli-abc" }, previous: null } };
+          },
+        };
+      },
+    });
+  } catch (error) {
+    aborted = true;
+    assert.equal(error.code, "RETENTION_FAMILY_UNREADABLE");
+    assert.match(error.message, /fred-macro/);
+  }
+  assert.equal(aborted, true);
+  assert.equal(inspected, 1); // the loop stops at the first failing family — abort = zero deletions
+
+  const emptyStates = await collectFamiliesRetentionState({
+    families: ["fred-macro", "oecd-cli"],
+    createPlane: () => ({ async inspect() { return { receipts: [], pointer: null }; } }),
+  });
+  assert.deepEqual(emptyStates.map((state) => [state.name, state.pointer]), [
+    ["fred-macro", null],
+    ["oecd-cli", null],
+  ]);
+  console.log("retention family-scan ok (unreadable family aborts with zero deletions; empty family answers harmlessly)");
+}
+
+await rm(retentionRoot, { recursive: true, force: true });
+
+// --- retention REST helpers: list-with-size pagination + delete semantics -----
+
+{
+  const pages = [
+    {
+      success: true,
+      result: [
+        { key: "objects/sha256/aa", size: 10 },
+        { key: "objects/sha256/bb", size: 20 },
+      ],
+      result_info: { cursor: "next-page" },
+    },
+    {
+      success: true,
+      result: [{ key: "manifests/oecd-cli-x.json", size: 30 }],
+      result_info: {},
+    },
+  ];
+  let listCalls = 0;
+  const listed = await listR2ObjectsDetailed({
+    accountId: "acct",
+    bucket: "bucket",
+    token: "token",
+    fetchImpl: async () => {
+      const body = pages[listCalls];
+      listCalls += 1;
+      return new Response(JSON.stringify(body), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    },
+  });
+  assert.equal(listCalls, 2); // cursor followed exactly once
+  assert.deepEqual(listed, [
+    { key: "objects/sha256/aa", size: 10 },
+    { key: "objects/sha256/bb", size: 20 },
+    { key: "manifests/oecd-cli-x.json", size: 30 },
+  ]);
+
+  const deleteBase = { accountId: "acct", bucket: "bucket", token: "token", key: "objects/sha256/aa" };
+  const okDelete = await deleteR2Object({
+    ...deleteBase,
+    fetchImpl: async () => new Response("{}", { status: 200 }),
+  });
+  assert.equal(okDelete.ok, true);
+  const goneDelete = await deleteR2Object({
+    ...deleteBase,
+    fetchImpl: async () => new Response(JSON.stringify({ success: false, errors: [{ code: 10007 }] }), { status: 404 }),
+  });
+  assert.equal(goneDelete.ok, true); // already absent satisfies retention's intent
+  let deleteAttempts = 0;
+  const badDelete = await deleteR2Object({
+    ...deleteBase,
+    fetchImpl: async () => {
+      deleteAttempts += 1;
+      return new Response("bad request", { status: 400 });
+    },
+  });
+  assert.equal(badDelete.ok, false);
+  assert.equal(deleteAttempts, 1); // 4xx is a semantic answer: never retried
+  let networkAttempts = 0;
+  const deadDelete = await deleteR2Object({
+    ...deleteBase,
+    fetchImpl: async () => {
+      networkAttempts += 1;
+      throw new Error("socket hang up");
+    },
+  });
+  assert.equal(deadDelete.ok, false);
+  assert.equal(networkAttempts, 3); // network errors exhaust the retry budget
+  console.log("retention REST helpers ok (list pagination, delete 200/404/400/network)");
+}
+
 // --- gate-blocked behaviour through the real CLI (offline) -------------------
 
-function runCli(extraArgs) {
+function runCli(extraArgs, includeFamily = true) {
   const env = { ...process.env };
   delete env.CLOUDFLARE_API_TOKEN; // the gate fails closed without a token — offline by design
   delete env.DATA_PLANE_ENDPOINT;
   delete env.DATA_PLANE_WRITE_KEY;
+  const argv = [PUBLISH_SCRIPT, ...(includeFamily ? ["--family=oecd-cli"] : []), ...extraArgs];
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [PUBLISH_SCRIPT, "--family=oecd-cli", ...extraArgs], {
+    const child = spawn(process.execPath, argv, {
       cwd: REPO_ROOT,
       env,
       stdio: ["ignore", "pipe", "pipe"],
@@ -843,6 +1505,39 @@ function runCli(extraArgs) {
   const rollbackChaos = await runCli(["--rollback", "--chaos=stale-sequence"]);
   assert.equal(rollbackChaos.code, 1);
   assert.match(rollbackChaos.stderr, /ARGS_INVALID/);
+
+  // Retention flags: bucket-level, so --family is REJECTED on this path; the
+  // cost gate runs FIRST even though retention is a dry-run by default and
+  // DeleteObject is free (offline the gate fails closed, which is exactly the
+  // gate-first proof). Flag validation fires before anything runs.
+  const retentionTolerated = await runCli(["--retention", "--tolerate-gate-block"], false);
+  assert.equal(retentionTolerated.code, 0, retentionTolerated.stderr);
+  const retentionSummary = JSON.parse(retentionTolerated.stdout.trim());
+  assert.equal(retentionSummary.result, "gate_blocked");
+  assert.equal(retentionSummary.mode, "retention");
+
+  const retentionExplicitDry = await runCli(["--retention", "--dry-run", "--tolerate-gate-block"], false);
+  assert.equal(retentionExplicitDry.code, 0, retentionExplicitDry.stderr);
+  assert.equal(JSON.parse(retentionExplicitDry.stdout.trim()).mode, "retention");
+
+  // The unsafe named-family invocation must not be expressible.
+  const retentionWithFamily = await runCli(["--retention", "--family=fred-macro"]);
+  assert.equal(retentionWithFamily.code, 1);
+  assert.match(retentionWithFamily.stderr, /ARGS_INVALID/);
+  assert.match(retentionWithFamily.stderr, /bucket-level/);
+
+  const deleteWithoutRetention = await runCli(["--retention-delete"]);
+  assert.equal(deleteWithoutRetention.code, 1);
+  assert.match(deleteWithoutRetention.stderr, /ARGS_INVALID/);
+
+  const retentionRollback = await runCli(["--retention", "--rollback"], false);
+  assert.equal(retentionRollback.code, 1);
+  assert.match(retentionRollback.stderr, /ARGS_INVALID/);
+
+  const retentionChaos = await runCli(["--retention", "--chaos=stale-sequence"], false);
+  assert.equal(retentionChaos.code, 1);
+  assert.match(retentionChaos.stderr, /ARGS_INVALID/);
+  console.log("retention CLI flags ok (bucket-level, gate-first offline, dry-run default, ARGS_INVALID validation)");
   console.log("gate-blocked behaviour ok (tolerate -> typed line exit 0; strict -> exit 3)");
 }
 

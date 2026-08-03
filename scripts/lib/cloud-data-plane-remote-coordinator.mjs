@@ -18,6 +18,12 @@
 // protocol. Network errors and 5xx get at most 3 attempts with exponential
 // backoff.
 
+// Family routing: when `family` is given, every POST carries it as the
+// x-data-plane-family header and the worker route selects that Durable Object
+// instance (its own pointer/ledger/sequence). When `family` is absent the
+// request is byte-identical to the legacy shape — no header, the route's
+// default instance — so existing callers change nothing.
+
 const MAX_ATTEMPTS = 3;
 const BACKOFF_BASE_MS = 200;
 
@@ -31,7 +37,7 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function createRemoteCoordinatorNamespace({ endpoint, key, fetchImpl = fetch }) {
+export function createRemoteCoordinatorNamespace({ endpoint, key, fetchImpl = fetch, family = null }) {
   if (!endpoint || !key) {
     fail("REMOTE_COORDINATOR_CONFIG_INVALID", "endpoint and key are required");
   }
@@ -39,6 +45,7 @@ export function createRemoteCoordinatorNamespace({ endpoint, key, fetchImpl = fe
     fail("REMOTE_COORDINATOR_CONFIG_INVALID", "fetchImpl must be a function");
   }
   const base = String(endpoint).replace(/\/+$/, "");
+  const familyHeaders = family ? { "x-data-plane-family": String(family) } : {};
 
   async function post(actionUrl, body) {
     const { pathname } = new URL(actionUrl);
@@ -52,6 +59,7 @@ export function createRemoteCoordinatorNamespace({ endpoint, key, fetchImpl = fe
           headers: {
             "content-type": "application/json",
             "x-data-plane-key": key,
+            ...familyHeaders,
           },
           body,
         });

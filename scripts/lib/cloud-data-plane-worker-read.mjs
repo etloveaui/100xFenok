@@ -17,10 +17,15 @@
 import { resolvePublicAsset } from "./cloud-data-plane-generation.mjs";
 import { createCloudflareCloudDataPlane } from "./cloud-data-plane-cloudflare-adapter.mjs";
 
-// One path at a time. Enrolment is explicit: a family that is not listed here
-// is served exactly as it was before, with no code path in common.
-export const ENROLLED_PATHS = new Set([
-  "/data/macro/fred-macro.json",
+// One path at a time, and each path declares which family publishes it.
+// Enrolment is explicit: a path that is not listed here is served exactly as it
+// was before, with no code path in common.
+//
+// The family matters because each one owns its own pointer. Reading the wrong
+// family's pointer would not error — it would resolve nothing and fall back —
+// so the mapping is data here rather than a convention to be re-derived.
+export const ENROLLED_PATHS = new Map([
+  ["/data/macro/fred-macro.json", "fred-macro"],
 ]);
 
 // The repository publishes these files under `public/`, and the generation
@@ -34,6 +39,10 @@ export function isEnrolledPath(pathname) {
   return ENROLLED_PATHS.has(pathname);
 }
 
+export function familyForPath(pathname) {
+  return ENROLLED_PATHS.get(pathname) ?? null;
+}
+
 export async function handleCloudDataPlaneAsset(request, env) {
   if (request.method !== "GET" && request.method !== "HEAD") return null;
 
@@ -43,7 +52,8 @@ export async function handleCloudDataPlaneAsset(request, env) {
   } catch {
     return null;
   }
-  if (!isEnrolledPath(url.pathname)) return null;
+  const family = familyForPath(url.pathname);
+  if (family === null) return null;
   if (!env?.DATA_PLANE_BUCKET || !env?.CLOUD_DATA_PLANE_COORDINATOR) return null;
 
   let resolved;
@@ -51,6 +61,7 @@ export async function handleCloudDataPlaneAsset(request, env) {
     const plane = createCloudflareCloudDataPlane({
       r2Bucket: env.DATA_PLANE_BUCKET,
       coordinatorNamespace: env.CLOUD_DATA_PLANE_COORDINATOR,
+      coordinatorName: family,
     });
     resolved = await resolvePublicAsset({
       publicPath: manifestPathFor(url.pathname),
