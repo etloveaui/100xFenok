@@ -72,13 +72,34 @@ const INDEX_SOURCES = [
   { file: "micro_sectors.json", key: "philadelphia_semi", name: "필라델피아 반도체", market: "us", erp: 0.055, erpSource: "estimated: NASDAQ-family centre, no dedicated sheet" },
 ];
 
-// Calibration anchors: the source analyst's published outputs, dated. A
-// diverged flag means our estimate has drifted from what he publishes —
-// refresh anchors from new material, never silently refit.
+// Calibration anchors: the source analyst's published outputs, dated. A diverged
+// flag means our estimate has drifted from what he publishes — refresh anchors
+// from new material, never silently refit.
+//
+// These replace an earlier set attributed vaguely to an internal catalogue. He
+// publishes current residual-income outputs in English under his own byline, so
+// each row below is a dated figure with a retrievable source rather than a
+// remembered range. His employer is Yuanta and has been since 2019-09-02, so all
+// captured material is Yuanta-era; the earlier Kiwoom framing was wrong.
 export const RIM_CALIBRATION_ANCHORS = Object.freeze([
-  { key: "sp500", published_upside_pct: [8, 12], as_of: "2026-06-11", source: "internal source catalog" },
-  { key: "nasdaq100", published_upside_pct: [25, 30], as_of: "2026-06-10", source: "internal source catalog" },
-  { key: "kospi", published_fair_range: [10000, 12000], as_of: "2026-05-19", source: "internal source catalog" },
+  {
+    key: "sp500",
+    published_fair_range: [8812, 8855],
+    as_of: "2026-06-20",
+    source: "his own English write-ups, 2026-06-13 and 2026-06-20 (fair value 8,812 then 8,854.61)",
+  },
+  {
+    key: "nasdaq100",
+    published_upside_pct: [28, 30],
+    as_of: "2026-06-20",
+    source: "his own English write-ups, 2026-06-10 and 2026-06-20 (over 28% near-term, over 30% through 2026 year-end)",
+  },
+  {
+    key: "kospi",
+    published_upside_pct: [49.5, 49.5],
+    as_of: "2026-06-13",
+    source: "his own English write-up, 2026-06-13 (KOSPI residual-income upside 49.5% over 12 months)",
+  },
 ]);
 
 // Dividend payout, per index. Auditing our live inputs against his 2026-08-03

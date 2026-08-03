@@ -177,10 +177,16 @@ import {
 // Calibration verdicts on the single-case row shape.
 {
   const mk = (key, upside, fair) => ({ key, status: "ready", rate_current: { upside_pct: upside, fair_value: fair } });
-  const results = checkCalibration([mk("sp500", 9, 8000), mk("nasdaq100", 5, 30000), mk("kospi", 60, 10500)]);
+  // Anchors are his published figures: S&P as a fair-value range, NASDAQ 100 and
+  // KOSPI as upside percentages. A row inside its anchor passes, one outside
+  // diverges.
+  const results = checkCalibration([mk("sp500", 9, 8830), mk("nasdaq100", 5, 30000), mk("kospi", 50, 9800)]);
   assert.equal(results.find((r) => r.key === "sp500").status, "within_tolerance");
   assert.equal(results.find((r) => r.key === "nasdaq100").status, "diverged");
   assert.equal(results.find((r) => r.key === "kospi").status, "within_tolerance");
+  const far = checkCalibration([mk("sp500", 9, 4000), mk("kospi", 260, 24000)]);
+  assert.equal(far.find((r) => r.key === "sp500").status, "diverged");
+  assert.equal(far.find((r) => r.key === "kospi").status, "diverged");
   assert.ok(checkCalibration([]).every((r) => r.status === "unavailable"));
 }
 
