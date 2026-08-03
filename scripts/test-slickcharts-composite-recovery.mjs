@@ -142,21 +142,24 @@ function failMember(member, providerDate) {
   });
 }
 
-// Migration never fabricates row-9 evidence. A healthy dispatch cannot
-// establish a baseline, and a pre-baseline failure must not create an
-// unrecoverable retry whose provider floor does not exist.
+// Policy since 6e26769b92 ("allow verified bootstrap publication"): a healthy
+// FULL dispatch with a valid provider receipt MAY establish the baseline —
+// the same admission rule the promotion gate adopted in 1f3fc3518f. The old
+// baseline_requires_natural_schedule_attempt_1 refusal applied only before
+// that change; this test previously pinned it and killed every natural run
+// from 2026-08-02 on (the KPI's degraded slickcharts lane).
 const initialDailyBefore = inspectSlickchartsMemberBundle(root, "daily");
 let initialManual = finalize("daily", {
   eventName: "workflow_dispatch",
   providerDate: "2026-07-30T00:00:00.000Z",
   mutateAfterSnapshot: true,
 });
-assert.equal(initialManual.status.decision, "baseline_requires_natural_schedule_attempt_1");
-assert.equal(initialManual.status.publish_data, false);
-assert.equal(initialManual.index.members.daily.resolution_state, "bootstrap_unverified");
+assert.equal(initialManual.status.decision, "candidate_promoted");
+assert.equal(initialManual.status.publish_data, true);
+assert.equal(initialManual.index.members.daily.resolution_state, "fresh_primary");
 assert.equal(initialManual.index.members.daily.retry, false);
-assert.deepEqual(initialManual.index.members.daily.bundle, initialDailyBefore);
-assert.deepEqual(inspectSlickchartsMemberBundle(root, "daily"), initialDailyBefore);
+assert.notDeepEqual(initialManual.index.members.daily.bundle, initialDailyBefore,
+  "the verified bootstrap publishes the new bundle instead of restoring the snapshot");
 
 const prebaselineFailure = failMember("monthly", "2026-07-31T00:00:00.000Z");
 assert.equal(prebaselineFailure.status.decision, "bootstrap_failure_retained");
