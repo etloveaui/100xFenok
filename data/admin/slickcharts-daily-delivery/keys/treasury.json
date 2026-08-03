@@ -2,42 +2,36 @@
   "schema_version": "producer-lkg-key-state/v1",
   "lane_id": "slickcharts_daily_delivery",
   "key": "treasury.json",
-  "updated_at": "2026-08-03T09:24:11.940Z",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "updated_at": "2026-08-03T10:03:31.253Z",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "current": {
-    "path": "data/admin/slickcharts-daily-delivery/lkg/treasury.json",
-    "payload_sha256": "8cfc117845b014a47017897d35bd7ed35aba253b8cbbb53da4dd9261f6415afb",
-    "source_as_of": "2026-07-31"
+    "path": "data/slickcharts/treasury.json",
+    "payload_sha256": "444c0457a45b61d496d285963c674adcfaaf7ff3a7d05c1586d5740d4bd7328a",
+    "source_as_of": "2026-08-03"
   },
+  "canonical_ref": "data/slickcharts/treasury.json",
   "lkg": {
     "path": "data/admin/slickcharts-daily-delivery/lkg/treasury.json",
     "payload_sha256": "8cfc117845b014a47017897d35bd7ed35aba253b8cbbb53da4dd9261f6415afb",
     "source_as_of": "2026-07-31"
   },
-  "canonical_ref": "data/slickcharts/treasury.json",
-  "latest_failure": {
+  "latest_failure": null,
+  "recovered_from_run_id": "30739823043",
+  "recovery_run_id": "30803180687",
+  "recovery_run_attempt": 1,
+  "recovery_event_name": "schedule",
+  "recovered_at": "2026-08-03T10:03:31.253Z",
+  "last_run_id": "30803180687",
+  "last_run_attempt": 1,
+  "last_event_name": "schedule",
+  "promotion_contract": "legacy_source_marker/v1",
+  "last_recovered_failure": {
     "run_id": "30739823043",
     "run_attempt": 1,
     "event_name": "schedule",
     "observed_at": "2026-08-02T08:39:22.067Z",
     "failure_kind": "unexpected",
     "error": "selected scraper has no outcome after job status failure"
-  },
-  "recovered_from_run_id": "30286602995",
-  "recovery_run_id": "30343230102",
-  "recovery_run_attempt": 1,
-  "recovery_event_name": "schedule",
-  "recovered_at": "2026-07-28T08:43:16.742Z",
-  "last_run_id": "30800943951",
-  "last_run_attempt": 1,
-  "last_event_name": "workflow_dispatch",
-  "latest_promotion_deferral": {
-    "run_id": "30800943951",
-    "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-03T09:24:11.940Z",
-    "source_as_of": "2026-08-03",
-    "reason": "recovery_requires_schedule"
   }
 }
