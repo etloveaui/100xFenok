@@ -27,6 +27,7 @@ concurrency:
   # 22:00 sentiment/YF/US-indices schedules from cancelling one another.
   group: fenok-data-writer-sentiment-${{ github.ref }}
   cancel-in-progress: false
+  queue: max
 
 jobs:
   fetch-sentiment:

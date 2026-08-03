@@ -21,6 +21,7 @@ concurrency:
   # not replace one another in GitHub's one-pending global writer queue.
   group: fenok-data-writer-us-indices-daily-${{ github.ref }}
   cancel-in-progress: false
+  queue: max
 
 jobs:
   fetch-us-indices-daily:
