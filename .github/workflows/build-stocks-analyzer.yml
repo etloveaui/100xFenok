@@ -58,7 +58,7 @@ jobs:
       # Fenok RIM refreshes daily so the fair-value table tracks the observed
       # risk-free rate between weekly benchmark conversions.
       - name: Build Fenok RIM fair values
-        run: node scripts/build-fenok-rim-index.mjs || echo "fenok-rim build skipped"
+        run: node scripts/build-fenok-rim-index.mjs
 
       - name: Build calendar previous-release values (FRED)
         env:

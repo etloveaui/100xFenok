@@ -18,6 +18,8 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BENCHMARKS = path.join(ROOT, "data", "benchmarks");
 const RIM_INPUTS = path.join(ROOT, "data", "computed", "rim-index", "inputs.json");
+const KRX_DERIVED_INPUTS = path.join(ROOT, "data", "admin", "fenok-edge-korea-krx-daily-index.json");
+const DAMODARAN_ERP = path.join(ROOT, "data", "damodaran", "erp.json");
 const OUT_DIR = path.join(ROOT, "data", "computed", "fenok-rim");
 const MIRROR_DIR = path.join(ROOT, "100xfenok-next", "public", "data", "computed", "fenok-rim");
 
@@ -26,20 +28,31 @@ export const RIM_GRID_STEP = 0.005;
 export const RIM_RATE_SCENARIO_10Y = 0.035;
 // Korean indices discount with the DOMESTIC rate (patent-era calc sheets and
 // the 2026-08-03 KOSPI sheet both use it; the "US 10Y everywhere" claim from
-// the earlier AI-written spec was disproven by the sheets). No automated
-// KR-rate lane exists yet: dated anchor, open data gap.
+// the earlier AI-written spec was disproven by the sheets). The observed rate
+// comes from the KRX KTS 10Y benchmark government bond captured daily by the
+// fenok-edge-korea lane; this dated anchor is only the fallback when that
+// capture is missing.
 export const RIM_KR_RISK_FREE_ANCHOR = { value: 0.044, as_of: "2026-08-03" };
 
-// Per-index ERP centers measured off the source sheets (2025-12-09 index
-// sheets + 2026-08-03 input sheets). philadelphia_semi has no sheet of its
-// own; it inherits the NASDAQ-family center as an estimate.
+// ERP centres come from the Damodaran country file, not from hand-copied sheet
+// cells. The construction is total country ERP over that market's own
+// risk-free rate, which is what the source sheets themselves use: Damodaran US
+// 5.03% against his S&P 5.00% is a 3bp match, and Damodaran Korea 5.49%
+// against his stated KOSPI band floor of 5.5% is a 1bp match. His per-index
+// tilts (NASDAQ +0.5, Russell -0.5) are judgement values with no derivation —
+// beta scaling does not reproduce them (Russell carries the higher beta yet the
+// lower premium) — so they are deliberately dropped rather than frozen as
+// manual constants. RIM_MARKET_ERP_FALLBACK applies only if the Damodaran file
+// is unreadable, and the row says so when it does.
+const RIM_MARKET_ERP_FALLBACK = { us: 0.0503, kr: 0.0549 };
+
 const INDEX_SOURCES = [
-  { file: "us.json", key: "sp500", name: "S&P 500", market: "us", erp: 0.05, erpSource: "sheet 2026-08-03" },
-  { file: "us.json", key: "nasdaq100", name: "나스닥 100", market: "us", erp: 0.055, erpSource: "sheet 2026-08-03" },
-  { file: "us.json", key: "nasdaq_composite", name: "나스닥 종합", market: "us", erp: 0.055, erpSource: "sheet 2026-08-03" },
-  { file: "us.json", key: "russell2000", name: "러셀 2000", market: "us", erp: 0.045, erpSource: "sheet 2025-12-09" },
-  { file: "emerging.json", key: "kospi", name: "코스피", market: "kr", erp: 0.12, erpSource: "sheet 2026-08-03" },
-  { file: "micro_sectors.json", key: "philadelphia_semi", name: "필라델피아 반도체", market: "us", erp: 0.055, erpSource: "estimated: NASDAQ-family center, no dedicated sheet" },
+  { file: "us.json", key: "sp500", name: "S&P 500", market: "us" },
+  { file: "us.json", key: "nasdaq100", name: "나스닥 100", market: "us" },
+  { file: "us.json", key: "nasdaq_composite", name: "나스닥 종합", market: "us" },
+  { file: "us.json", key: "russell2000", name: "러셀 2000", market: "us" },
+  { file: "emerging.json", key: "kospi", name: "코스피", market: "kr" },
+  { file: "micro_sectors.json", key: "philadelphia_semi", name: "필라델피아 반도체", market: "us" },
 ];
 
 // Calibration anchors: the source analyst's published outputs, dated. A
@@ -129,6 +142,38 @@ export function loadRimDerived() {
   }
 }
 
+// Country equity risk premium from the Damodaran shadow converter. Refreshes
+// with that weekly lane; the workbook month travels with the value so a stale
+// publication is visible instead of silent.
+export function loadMarketErp() {
+  try {
+    const payload = JSON.parse(fs.readFileSync(DAMODARAN_ERP, "utf8"));
+    const us = payload?.us_erp;
+    const kr = payload?.countries?.Korea?.equity_risk_premium;
+    const sane = (v) => Number.isFinite(v) && v > 0.01 && v < 0.15;
+    if (!sane(us) || !sane(kr)) return null;
+    return { us, kr, as_of: payload?.metadata?.source_date ?? null };
+  } catch {
+    return null;
+  }
+}
+
+// KRX KTS 10Y benchmark government bond yield, captured daily by the
+// fenok-edge-korea lane. Derived aggregate only: no raw per-issuer row is read
+// or republished here.
+export function loadKoreaRiskFree() {
+  try {
+    const payload = JSON.parse(fs.readFileSync(KRX_DERIVED_INPUTS, "utf8"));
+    const block = payload?.derived_rim_inputs?.korea_10y;
+    const value = block?.value;
+    // Sanity gate: a Korean 10Y outside 0.5%~15% is a broken capture, not a rate.
+    if (!Number.isFinite(value) || value < 0.005 || value > 0.15) return null;
+    return { value, as_of: block?.date ?? payload?.derived_rim_inputs?.as_of ?? null, label: block?.label ?? null };
+  } catch {
+    return null;
+  }
+}
+
 function loadSectionLatest(file, key) {
   const payload = JSON.parse(fs.readFileSync(path.join(BENCHMARKS, file), "utf8"));
   const section = payload?.sections?.[key];
@@ -172,6 +217,8 @@ export function checkCalibration(rows) {
 
 export function buildArtifact({ nowIso }) {
   const derived = loadRimDerived();
+  const koreaRiskFree = loadKoreaRiskFree();
+  const marketErp = loadMarketErp();
   const rows = INDEX_SOURCES.map((source) => {
     const latest = loadSectionLatest(source.file, source.key);
     const roePath = derived.paths[source.key]
@@ -179,22 +226,30 @@ export function buildArtifact({ nowIso }) {
     const roePathSource = derived.paths[source.key]
       ? "weekly consensus grid (rim-index)"
       : "spot forward ROE held constant (no consensus grid for this index)";
-    const riskFree = source.market === "kr" ? RIM_KR_RISK_FREE_ANCHOR.value : derived.riskFreeUs;
+    const riskFree = source.market === "kr"
+      ? (koreaRiskFree?.value ?? RIM_KR_RISK_FREE_ANCHOR.value)
+      : derived.riskFreeUs;
     const riskFreeSource = source.market === "kr"
-      ? `domestic-rate anchor ${RIM_KR_RISK_FREE_ANCHOR.value} (sheet ${RIM_KR_RISK_FREE_ANCHOR.as_of}; automated KR-rate lane is an open data gap)`
+      ? (koreaRiskFree
+        ? `observed KRX KTS 10Y benchmark government bond ${koreaRiskFree.value} (as of ${koreaRiskFree.as_of}, fenok-edge-korea lane, daily)`
+        : `FALLBACK dated anchor ${RIM_KR_RISK_FREE_ANCHOR.value} (sheet ${RIM_KR_RISK_FREE_ANCHOR.as_of}) — KRX 10Y capture unavailable`)
       : "observed US 10Y (FRED DGS10 via rim-index, daily)";
     const retention = derived.retentions[source.key]
       ?? { value: 0.65, source: "house fallback (observed payout blocked or unavailable)" };
+    const erpCenter = marketErp?.[source.market] ?? RIM_MARKET_ERP_FALLBACK[source.market];
+    const erpSource = marketErp
+      ? `Damodaran country ERP for ${source.market.toUpperCase()} market (workbook ${marketErp.as_of}, weekly lane)`
+      : `FALLBACK ${source.market.toUpperCase()} ERP ${RIM_MARKET_ERP_FALLBACK[source.market]} — Damodaran country file unreadable`;
     if (!latest || !Number.isFinite(latest.px) || !Number.isFinite(latest.pbr) || latest.pbr <= 0
-      || !roePath || !Number.isFinite(riskFree)) {
-      return { key: source.key, name: source.name, status: "excluded", reason: "missing price/book/ROE/risk-free inputs" };
+      || !roePath || !Number.isFinite(riskFree) || !Number.isFinite(erpCenter)) {
+      return { key: source.key, name: source.name, status: "excluded", reason: "missing price/book/ROE/risk-free/ERP inputs" };
     }
     const base = {
       px: latest.px,
       bookValue: latest.px / latest.pbr,
       roePath,
       retention: retention.value,
-      erpCenter: source.erp,
+      erpCenter,
     };
     const caseFor = (rf) => computeCase({ ...base, riskFree: rf });
     return {
@@ -209,8 +264,8 @@ export function buildArtifact({ nowIso }) {
       roe_path_source: roePathSource,
       retention: round(retention.value, 4),
       retention_source: retention.source,
-      erp_center: source.erp,
-      erp_source: source.erpSource,
+      erp_center: round(erpCenter, 6),
+      erp_source: erpSource,
       risk_free: round(riskFree, 4),
       risk_free_source: riskFreeSource,
       rate_current: caseFor(riskFree),
@@ -224,17 +279,26 @@ export function buildArtifact({ nowIso }) {
     display_note: "상대적 매력도 지표이며 목표가가 아님. 컨센서스 변화에 따라 언제든 크게 바뀔 수 있음.",
     // The index cell math is pinned: the engine reproduces the captured
     // 2025-12-09 sheet outputs (S&P -0.4%, Russell -0.8%), enforced as a
-    // permanent regression test. KOSPI's ERP is the one open owner decision:
-    // the sheet says 12.0% (upside -8.8% today) while the formula spec range
-    // is 4~6% (+63.0% at 6%) — the artifact ships the sheet value and the
-    // decision is surfaced in kospi_erp_decision below.
+    // permanent regression test.
     index_math_pinned: true,
     display_ready: true,
-    kospi_erp_decision: {
-      sheet_erp: 0.12,
-      spec_range: [0.04, 0.06],
-      historical_range: [0.065, 0.075],
-      note: "OWNER DECISION PENDING: the current sheet uses ERP 12% while his own historical KOSPI range is 6.5~7.5% (patent-era calc sheets). The choice swings KOSPI upside massively. Shipping the sheet value until ruled.",
+    // RESOLVED 2026-08-03. The 2026-08-03 KOSPI sheet's red "Premiumn Adj.
+    // 12.00%" cell is NOT his equity risk premium: fed through this formula
+    // with his own sheet inputs it returns 6,301 against a spot of 6,690, i.e.
+    // it is the premium that makes fair value equal the current index. Four
+    // independent lines put the real premium near 7.0% instead, and the engine
+    // now ships that. Output is never calibrated toward his published numbers;
+    // only inputs are made faithful.
+    kospi_erp_resolution: {
+      shipped_erp_source: "Damodaran country ERP (KR), automatic",
+      sheet_cell_erp: 0.12,
+      evidence: [
+        "his own 2016-09-20 column states a KOSPI equity risk premium band of 5.5~7%, whose floor matches the Damodaran Korea ERP of 5.49% to 1bp",
+        "patent KR20180048140A KOSPI grid is 6.5/7.0/7.5%, so 12% sits outside every band he has published",
+        "his published KOSPI fair range 10,000~12,000 (2026-05-19) is reproduced near 7% with his own sheet inputs; 12% instead returns roughly spot",
+        "fed through this formula with his own sheet inputs, 12% yields 6,301 against a spot of 6,690 — it is the premium that makes fair value equal the index",
+      ],
+      note: "The 12% cell is a reverse-solved hurdle rate, not a valuation assumption. Do not restore it as an ERP without new source material that states otherwise.",
     },
     rows,
     calibration_check: {
@@ -243,10 +307,10 @@ export function buildArtifact({ nowIso }) {
     },
     constants_provenance: {
       risk_free_us: { why: "observed FRED DGS10 via rim-index inputs", refresh: "daily lane, automatic" },
-      risk_free_kr: { why: "domestic rate per the patent-era calc sheets and the current KOSPI sheet (4.4%); dated anchor", refresh: "OPEN DATA GAP — automate a KR-rate lane" },
+      risk_free_kr: { why: "domestic rate per the patent-era calc sheets and the current KOSPI sheet; taken from the KRX KTS 10Y benchmark government bond captured by the fenok-edge-korea lane, with the dated 4.4% sheet value as fallback only", refresh: "daily lane, automatic; falls back to the dated anchor and says so in risk_free_source when the capture is missing" },
       roe_paths: { why: "weighted stock-consensus FY1-3 grids; spot ROE held constant only where no grid exists (flagged per row)", refresh: "weekly conversion, automatic" },
       retention: { why: "1 - observed derived payout per index; house 0.65 fallback only where the payout derivation is blocked", refresh: "weekly, automatic" },
-      erp_centers: { why: "measured per index off the source sheets (values and dates on each row); semi index inherits the NASDAQ-family center as an estimate", refresh: "manual — remeasure when a newer sheet is supplied" },
+      erp_centers: { why: "Damodaran country ERP for each index's own market, applied over that market's risk-free rate — the construction the source sheets themselves use (Damodaran US 5.03% vs his S&P 5.00%, Damodaran Korea 5.49% vs his stated band floor 5.5%). His per-index tilts are judgement values with no derivation and are deliberately not frozen as constants", refresh: "weekly Damodaran lane, automatic; the workbook month travels with the value in erp_source" },
       grid_step: { why: "0.5%p row/column spacing read directly off every captured sheet", refresh: "manual with new sheets" },
       formula: { why: "owner-supplied multi-stage RIM (N=5, terminal RI_5/Ke on B_4), verified against the 2025-12-09 sheet outputs and pinned by regression test", refresh: "only with a new verified source spec" },
       rate_scenario: { why: "3.5% 10Y alternate column shown on every captured index sheet", refresh: "manual with new sheets" },

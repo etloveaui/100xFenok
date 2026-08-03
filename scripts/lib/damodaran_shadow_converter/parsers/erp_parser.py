@@ -24,7 +24,7 @@ from typing import Any, Dict, Optional
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import URLS, OUTPUT_FILES
+from config import URLS, OUTPUT_FILES, resolve_erp_url
 from base.percent_parser import parse_percent
 
 # Set up logging
@@ -96,9 +96,16 @@ class ERPParser:
         Returns:
             Raw content bytes
         """
-        url = URLS.get("erp")
+        # Resolve the newest published ctryprem<Mon><YY>.xlsx rather than a
+        # pinned month, so the weekly lane cannot freeze on a stale workbook.
+        url, source_month, resolved = resolve_erp_url()
         if not url:
             raise ValueError("ERP URL not configured in config.py")
+        self.source_url = url
+        self.source_month = source_month
+        self.source_url_resolved = resolved
+        if not resolved:
+            logger.warning("ERP URL probe failed; falling back to the pinned month %s", source_month)
 
         logger.info(f"Downloading ERP data from {url}...")
         response = requests.get(url, timeout=timeout)
@@ -309,10 +316,13 @@ class ERPParser:
         result = {
             "metadata": {
                 "source": "Damodaran Online",
-                "url": URLS.get("erp", ""),
+                "url": getattr(self, "source_url", None) or URLS.get("erp", ""),
                 "schema_version": "2.0.0",
                 "generated_at": datetime.now().isoformat(),
-                "source_date": "April 1, 2026",
+                # Derived from the workbook actually downloaded, so a newer
+                # publication updates this without a code change.
+                "source_date": getattr(self, "source_month", None) or "Apr26",
+                "source_url_resolved": getattr(self, "source_url_resolved", False),
                 "scope": "Country-level equity risk premiums",
                 "source_format": "Damodaran XLSX current data file",
                 "country_count": len(self.countries) if not us_only else 1,
