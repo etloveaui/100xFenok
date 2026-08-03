@@ -172,13 +172,14 @@ export function computeCase({ px, bookValue, roePath, retention, riskFree, erpCe
 
 const RIM_INDEX_KEY = { sp500: "SPX", nasdaq100: "NDX", kospi: "KOSPI", philadelphia_semi: "SOX", nasdaq_composite: "CCMP" };
 
-// The vendor earnings field is a twelve-month BLEND of FY1 and FY2, so the ROE
-// built on it overstates the FY1 consensus ROE the source sheets use. With f the
-// fraction of the fiscal year already elapsed and g12 the FY1->FY2 growth,
-// BEST = FY1 * (1 + f * g12), so dividing by that factor recovers FY1.
-// Measured 2026-08-03: this lands the S&P at 26.34% against the 26.33% backed out
-// of his published upside, and puts all three indices within 1.5~4.9% of the FY1
-// ROE printed on his own sheets, versus 13~24% too high before.
+// RETIRED, kept as a record of a tested and rejected idea. The vendor earnings
+// field is a twelve-month blend of FY1 and FY2, and de-blending it to FY1 does
+// bring it close to the FY1 ROE printed on his INPUT sheets. But the model does
+// not consume that quantity: its grid axis is the LT ROE, which matches the ROE
+// column of his master tables, and that column is the raw aggregate. Feeding his
+// 2025-11-28 tables through the model settles it — his own ROE reproduces the
+// published 적정지수 to +0.3%/-4.2%/-2.5%, the raw field to -12%/-3%/-27%, and the
+// de-blended field to -35%/-33%/-48%. De-blending is the worst of the three.
 export function fiscalYearElapsed(dateIso) {
   const d = dateIso ? new Date(dateIso) : null;
   if (!d || Number.isNaN(d.getTime())) return null;
@@ -211,15 +212,12 @@ export function loadRimDerived() {
       const blended = periods
         .map((p) => p?.roe_on_beginning_book?.value)
         .filter((v) => Number.isFinite(v));
-      // The whole path is built off the same blended base, so the FY1 correction
-      // carries through it.
-      const growthFy2 = periods[1]?.eps_growth?.value;
-      const fy1 = deblendRoe({ blendedRoe: blended[0], growthFy2, elapsed });
-      const scale = Number.isFinite(fy1) && blended[0] > 0 ? fy1 / blended[0] : null;
-      const roePath = scale ? blended.map((v) => v * scale) : blended;
-      roeBases[ourKey] = scale
-        ? `FY1 consensus ROE, de-blended from the vendor 12-month field (factor ${round(scale, 4)}, ${round(elapsed, 3)} of fiscal year elapsed)`
-        : "vendor 12-month blended ROE — de-blend unavailable, reads high versus the source sheets";
+      // The vendor field is used AS PUBLISHED. It is already an index-level
+      // earnings/book aggregate — recomputing best_eps / (px / pbr) matches it to
+      // 0.46bp across thirteen indices — and it is the family his own ROE column
+      // belongs to, correlating 0.982 with it once Russell is excluded.
+      const roePath = blended;
+      roeBases[ourKey] = "vendor index-level aggregate ROE (best_eps / book), used as published";
       if (roePath.length >= 3) paths[ourKey] = roePath.slice(0, 3);
       const payout = derived?.payout_ratio?.value;
       if (Number.isFinite(payout) && payout > 0 && payout < 1) {
