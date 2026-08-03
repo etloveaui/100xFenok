@@ -1,8 +1,18 @@
 {
   "schema_version": "fenok-rim-index/v6",
-  "generated_at": "2026-08-03T08:53:33.531Z",
+  "generated_at": "2026-08-03T09:06:21.112Z",
   "method": "fenok_rim_forward_book_compounding_residual_income",
   "display_note": "상대적 매력도 지표이며 목표가가 아님. 컨센서스 변화에 따라 언제든 크게 바뀔 수 있음.",
+  "index_math_pinned": true,
+  "display_ready": true,
+  "kospi_erp_decision": {
+    "sheet_erp": 0.12,
+    "spec_range": [
+      0.04,
+      0.06
+    ],
+    "note": "OWNER DECISION PENDING: sheet ERP 12% vs spec range 4~6% swings KOSPI upside between -8.8% and +63% (2026-08-03 inputs). Shipping the sheet value until ruled."
+  },
   "rows": [
     {
       "key": "sp500",
@@ -23,46 +33,22 @@
       "erp_center": 0.05,
       "erp_source": "sheet 2026-08-03",
       "risk_free": 0.0468,
-      "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
-      "likely": {
-        "rate_current": {
-          "lt_roe_center": 0.2612,
-          "erp_center": 0.05,
-          "risk_free": 0.0468,
-          "fair_value": 5164.38,
-          "upside_pct": -31.05,
-          "upside_min_pct": -36.48,
-          "upside_max_pct": -25.3
-        },
-        "rate_scenario_35": {
-          "lt_roe_center": 0.2612,
-          "erp_center": 0.05,
-          "risk_free": 0.035,
-          "fair_value": 6042.66,
-          "upside_pct": -19.32,
-          "upside_min_pct": -26.25,
-          "upside_max_pct": -11.95
-        }
+      "risk_free_source": "observed US 10Y for every index (spec: global-allocation basis; FRED DGS10, daily)",
+      "rate_current": {
+        "erp_center": 0.05,
+        "risk_free": 0.0468,
+        "fair_value": 6009.51,
+        "upside_pct": -19.76,
+        "upside_min_pct": -26.57,
+        "upside_max_pct": -12.53
       },
-      "worst": {
-        "rate_current": {
-          "lt_roe_center": 0.2387,
-          "erp_center": 0.05,
-          "risk_free": 0.0468,
-          "fair_value": 4740.33,
-          "upside_pct": -36.71,
-          "upside_min_pct": -41.78,
-          "upside_max_pct": -31.33
-        },
-        "rate_scenario_35": {
-          "lt_roe_center": 0.2387,
-          "erp_center": 0.05,
-          "risk_free": 0.035,
-          "fair_value": 5543.52,
-          "upside_pct": -25.99,
-          "upside_min_pct": -32.44,
-          "upside_max_pct": -19.11
-        }
+      "rate_scenario_35": {
+        "erp_center": 0.05,
+        "risk_free": 0.035,
+        "fair_value": 7097.94,
+        "upside_pct": -5.23,
+        "upside_min_pct": -13.95,
+        "upside_max_pct": 4.08
       }
     },
     {
@@ -84,46 +70,22 @@
       "erp_center": 0.055,
       "erp_source": "sheet 2026-08-03",
       "risk_free": 0.0468,
-      "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
-      "likely": {
-        "rate_current": {
-          "lt_roe_center": 0.3602,
-          "erp_center": 0.055,
-          "risk_free": 0.0468,
-          "fair_value": 21255.11,
-          "upside_pct": -24.83,
-          "upside_min_pct": -30.35,
-          "upside_max_pct": -19.02
-        },
-        "rate_scenario_35": {
-          "lt_roe_center": 0.3602,
-          "erp_center": 0.055,
-          "risk_free": 0.035,
-          "fair_value": 24784.62,
-          "upside_pct": -12.34,
-          "upside_min_pct": -19.33,
-          "upside_max_pct": -4.95
-        }
+      "risk_free_source": "observed US 10Y for every index (spec: global-allocation basis; FRED DGS10, daily)",
+      "rate_current": {
+        "erp_center": 0.055,
+        "risk_free": 0.0468,
+        "fair_value": 27518.35,
+        "upside_pct": -2.67,
+        "upside_min_pct": -10.47,
+        "upside_max_pct": 5.56
       },
-      "worst": {
-        "rate_current": {
-          "lt_roe_center": 0.3292,
-          "erp_center": 0.055,
-          "risk_free": 0.0468,
-          "fair_value": 19461.76,
-          "upside_pct": -31.17,
-          "upside_min_pct": -36.3,
-          "upside_max_pct": -25.76
-        },
-        "rate_scenario_35": {
-          "lt_roe_center": 0.3292,
-          "erp_center": 0.055,
-          "risk_free": 0.035,
-          "fair_value": 22688.46,
-          "upside_pct": -19.76,
-          "upside_min_pct": -26.24,
-          "upside_max_pct": -12.89
-        }
+      "rate_scenario_35": {
+        "erp_center": 0.055,
+        "risk_free": 0.035,
+        "fair_value": 32422.02,
+        "upside_pct": 14.67,
+        "upside_min_pct": 4.76,
+        "upside_max_pct": 25.18
       }
     },
     {
@@ -145,46 +107,22 @@
       "erp_center": 0.055,
       "erp_source": "sheet 2026-08-03",
       "risk_free": 0.0468,
-      "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
-      "likely": {
-        "rate_current": {
-          "lt_roe_center": 0.3009,
-          "erp_center": 0.055,
-          "risk_free": 0.0468,
-          "fair_value": 14251.73,
-          "upside_pct": -43.83,
-          "upside_min_pct": -47.87,
-          "upside_max_pct": -39.58
-        },
-        "rate_scenario_35": {
-          "lt_roe_center": 0.3009,
-          "erp_center": 0.055,
-          "risk_free": 0.035,
-          "fair_value": 16492.02,
-          "upside_pct": -35,
-          "upside_min_pct": -40.09,
-          "upside_max_pct": -29.61
-        }
+      "risk_free_source": "observed US 10Y for every index (spec: global-allocation basis; FRED DGS10, daily)",
+      "rate_current": {
+        "erp_center": 0.055,
+        "risk_free": 0.0468,
+        "fair_value": 17086.36,
+        "upside_pct": -32.66,
+        "upside_min_pct": -37.83,
+        "upside_max_pct": -27.19
       },
-      "worst": {
-        "rate_current": {
-          "lt_roe_center": 0.275,
-          "erp_center": 0.055,
-          "risk_free": 0.0468,
-          "fair_value": 13123.41,
-          "upside_pct": -48.28,
-          "upside_min_pct": -52.04,
-          "upside_max_pct": -44.31
-        },
-        "rate_scenario_35": {
-          "lt_roe_center": 0.275,
-          "erp_center": 0.055,
-          "risk_free": 0.035,
-          "fair_value": 15173.18,
-          "upside_pct": -40.2,
-          "upside_min_pct": -44.94,
-          "upside_max_pct": -35.18
-        }
+      "rate_scenario_35": {
+        "erp_center": 0.055,
+        "risk_free": 0.035,
+        "fair_value": 19944.95,
+        "upside_pct": -21.4,
+        "upside_min_pct": -27.95,
+        "upside_max_pct": -14.44
       }
     },
     {
@@ -206,46 +144,22 @@
       "erp_center": 0.045,
       "erp_source": "sheet 2025-12-09",
       "risk_free": 0.0468,
-      "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
-      "likely": {
-        "rate_current": {
-          "lt_roe_center": 0.085,
-          "erp_center": 0.045,
-          "risk_free": 0.0468,
-          "fair_value": 1051.64,
-          "upside_pct": -64.12,
-          "upside_min_pct": -68.13,
-          "upside_max_pct": -59.78
-        },
-        "rate_scenario_35": {
-          "lt_roe_center": 0.085,
-          "erp_center": 0.045,
-          "risk_free": 0.035,
-          "fair_value": 1231.82,
-          "upside_pct": -57.98,
-          "upside_min_pct": -63.01,
-          "upside_max_pct": -52.47
-        }
+      "risk_free_source": "observed US 10Y for every index (spec: global-allocation basis; FRED DGS10, daily)",
+      "rate_current": {
+        "erp_center": 0.045,
+        "risk_free": 0.0468,
+        "fair_value": 1123.58,
+        "upside_pct": -61.67,
+        "upside_min_pct": -66.03,
+        "upside_max_pct": -56.93
       },
-      "worst": {
-        "rate_current": {
-          "lt_roe_center": 0.0777,
-          "erp_center": 0.045,
-          "risk_free": 0.0468,
-          "fair_value": 969.45,
-          "upside_pct": -66.93,
-          "upside_min_pct": -70.74,
-          "upside_max_pct": -62.78
-        },
-        "rate_scenario_35": {
-          "lt_roe_center": 0.0777,
-          "erp_center": 0.045,
-          "risk_free": 0.035,
-          "fair_value": 1134.3,
-          "upside_pct": -61.3,
-          "upside_min_pct": -66.08,
-          "upside_max_pct": -56.06
-        }
+      "rate_scenario_35": {
+        "erp_center": 0.045,
+        "risk_free": 0.035,
+        "fair_value": 1325.84,
+        "upside_pct": -54.77,
+        "upside_min_pct": -60.28,
+        "upside_max_pct": -48.73
       }
     },
     {
@@ -266,47 +180,23 @@
       "retention_source": "house fallback (observed payout blocked or unavailable)",
       "erp_center": 0.12,
       "erp_source": "sheet 2026-08-03",
-      "risk_free": 0.044,
-      "risk_free_source": "KR 10Y anchor 0.044 (sheet 2026-08-03; automated KR-10Y lane is an open data gap)",
-      "likely": {
-        "rate_current": {
-          "lt_roe_center": 0.3024,
-          "erp_center": 0.12,
-          "risk_free": 0.044,
-          "fair_value": 8352.33,
-          "upside_pct": 26.64,
-          "upside_min_pct": 20.02,
-          "upside_max_pct": 33.52
-        },
-        "rate_scenario_35": {
-          "lt_roe_center": 0.3024,
-          "erp_center": 0.12,
-          "risk_free": 0.035,
-          "fair_value": 8973.56,
-          "upside_pct": 36.06,
-          "upside_min_pct": 28.68,
-          "upside_max_pct": 43.73
-        }
+      "risk_free": 0.0468,
+      "risk_free_source": "observed US 10Y for every index (spec: global-allocation basis; FRED DGS10, daily)",
+      "rate_current": {
+        "erp_center": 0.12,
+        "risk_free": 0.0468,
+        "fair_value": 8258.03,
+        "upside_pct": 25.21,
+        "upside_min_pct": 18.06,
+        "upside_max_pct": 32.67
       },
-      "worst": {
-        "rate_current": {
-          "lt_roe_center": 0.2764,
-          "erp_center": 0.12,
-          "risk_free": 0.044,
-          "fair_value": 7726.44,
-          "upside_pct": 17.15,
-          "upside_min_pct": 10.94,
-          "upside_max_pct": 23.61
-        },
-        "rate_scenario_35": {
-          "lt_roe_center": 0.2764,
-          "erp_center": 0.12,
-          "risk_free": 0.035,
-          "fair_value": 8295.67,
-          "upside_pct": 25.78,
-          "upside_min_pct": 18.87,
-          "upside_max_pct": 32.99
-        }
+      "rate_scenario_35": {
+        "erp_center": 0.12,
+        "risk_free": 0.035,
+        "fair_value": 9122.1,
+        "upside_pct": 38.31,
+        "upside_min_pct": 30.05,
+        "upside_max_pct": 46.95
       }
     },
     {
@@ -328,46 +218,22 @@
       "erp_center": 0.055,
       "erp_source": "estimated: NASDAQ-family center, no dedicated sheet",
       "risk_free": 0.0468,
-      "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
-      "likely": {
-        "rate_current": {
-          "lt_roe_center": 0.4467,
-          "erp_center": 0.055,
-          "risk_free": 0.0468,
-          "fair_value": 10563.85,
-          "upside_pct": -6.61,
-          "upside_min_pct": -13.23,
-          "upside_max_pct": 0.34
-        },
-        "rate_scenario_35": {
-          "lt_roe_center": 0.4467,
-          "erp_center": 0.055,
-          "risk_free": 0.035,
-          "fair_value": 12316.49,
-          "upside_pct": 8.89,
-          "upside_min_pct": 0.48,
-          "upside_max_pct": 17.75
-        }
+      "risk_free_source": "observed US 10Y for every index (spec: global-allocation basis; FRED DGS10, daily)",
+      "rate_current": {
+        "erp_center": 0.055,
+        "risk_free": 0.0468,
+        "fair_value": 12903.03,
+        "upside_pct": 14.07,
+        "upside_min_pct": 5.14,
+        "upside_max_pct": 23.49
       },
-      "worst": {
-        "rate_current": {
-          "lt_roe_center": 0.4083,
-          "erp_center": 0.055,
-          "risk_free": 0.0468,
-          "fair_value": 9673.47,
-          "upside_pct": -14.48,
-          "upside_min_pct": -20.62,
-          "upside_max_pct": -8.03
-        },
-        "rate_scenario_35": {
-          "lt_roe_center": 0.4083,
-          "erp_center": 0.055,
-          "risk_free": 0.035,
-          "fair_value": 11275.77,
-          "upside_pct": -0.31,
-          "upside_min_pct": -8.1,
-          "upside_max_pct": 7.9
-        }
+      "rate_scenario_35": {
+        "erp_center": 0.055,
+        "risk_free": 0.035,
+        "fair_value": 15197.19,
+        "upside_pct": 34.36,
+        "upside_min_pct": 22.98,
+        "upside_max_pct": 46.4
       }
     }
   ],
@@ -377,7 +243,7 @@
       {
         "key": "sp500",
         "status": "diverged",
-        "computed": -31.05,
+        "computed": -19.76,
         "published": [
           8,
           12
@@ -388,7 +254,7 @@
       {
         "key": "nasdaq100",
         "status": "diverged",
-        "computed": -24.83,
+        "computed": -2.67,
         "published": [
           25,
           30
@@ -399,7 +265,7 @@
       {
         "key": "kospi",
         "status": "diverged",
-        "computed": 8352.33,
+        "computed": 8258.03,
         "published": [
           10000,
           12000
@@ -414,9 +280,9 @@
       "why": "observed FRED DGS10 via rim-index inputs",
       "refresh": "daily lane, automatic"
     },
-    "risk_free_kr": {
-      "why": "sheet-dated anchor 0.044 (2026-08-03)",
-      "refresh": "OPEN DATA GAP — replace with an automated KR-10Y source lane"
+    "risk_free_all_indices": {
+      "why": "US 10Y for every index per the validated spec (global-allocation basis)",
+      "refresh": "daily, automatic"
     },
     "roe_paths": {
       "why": "weighted stock-consensus FY1-3 grids; spot ROE held constant only where no grid exists (flagged per row)",
@@ -434,13 +300,9 @@
       "why": "0.5%p row/column spacing read directly off every captured sheet",
       "refresh": "manual with new sheets"
     },
-    "lt_haircut": {
-      "why": "likely 0.93 = the one cross-vintage LT/path-average ratio measurable today; worst = likely x 0.907 (the stock-sheet worst/likely ratio). Estimates pending a same-vintage pair",
-      "refresh": "manual — a same-vintage sheet pair confirms or re-fits"
-    },
-    "terminal": {
-      "why": "flat perpetuity at LT ROE; the sheets' 50% long-term payout is recorded but NOT wired as terminal growth because ROE_LT x 0.5 exceeds r for every high-ROE index (divergent perpetuity)",
-      "refresh": "owner decision"
+    "formula": {
+      "why": "owner-supplied multi-stage RIM (N=5, terminal RI_5/Ke on B_4), verified against the 2025-12-09 sheet outputs and pinned by regression test",
+      "refresh": "only with a new verified source spec"
     },
     "rate_scenario": {
       "why": "3.5% 10Y alternate column shown on every captured index sheet",
