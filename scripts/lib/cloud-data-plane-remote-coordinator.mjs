@@ -1,0 +1,85 @@
+// Remote bridge for the CloudDataPlaneCoordinator Durable Object. Presents
+// the Durable Object namespace shape (idFromName/get -> stub.fetch) that
+// cloud-data-plane-cloudflare-adapter.mjs already consumes, backed by plain
+// HTTPS POSTs to the deployed worker route instead of a Workers binding.
+//
+// Wire contract (the worker end implements exactly this):
+// - The adapter builds stub URLs like https://cloud-data-plane-coordinator/<action>;
+//   only the pathname is significant (/ledger/prepare, /ledger/mark-promoted,
+//   /ledger/get, /pointer/get, /pointer/compare-and-swap, /inspect).
+// - Every call is POST ${endpoint}${pathname} with headers
+//   content-type: application/json and x-data-plane-key: <key>; the JSON body
+//   is passed through byte-for-byte.
+// - The Response is returned unchanged: the adapter reads .ok and .json(), and
+//   contract errors arrive as HTTP 409 with { error: { code, detail } }.
+//
+// Retry policy: never retry a 409 (or any 4xx) — those are semantic contract
+// errors such as STALE_WRITER, and retrying them would corrupt the receipt
+// protocol. Network errors and 5xx get at most 3 attempts with exponential
+// backoff.
+
+const MAX_ATTEMPTS = 3;
+const BACKOFF_BASE_MS = 200;
+
+function fail(code, detail) {
+  const error = new Error(`${code}:${detail}`);
+  error.code = code;
+  throw error;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function createRemoteCoordinatorNamespace({ endpoint, key, fetchImpl = fetch }) {
+  if (!endpoint || !key) {
+    fail("REMOTE_COORDINATOR_CONFIG_INVALID", "endpoint and key are required");
+  }
+  if (typeof fetchImpl !== "function") {
+    fail("REMOTE_COORDINATOR_CONFIG_INVALID", "fetchImpl must be a function");
+  }
+  const base = String(endpoint).replace(/\/+$/, "");
+
+  async function post(actionUrl, body) {
+    const { pathname } = new URL(actionUrl);
+    const target = `${base}${pathname}`;
+    let lastError = null;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+      let response;
+      try {
+        response = await fetchImpl(target, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-data-plane-key": key,
+          },
+          body,
+        });
+      } catch (error) {
+        lastError = error;
+        if (attempt < MAX_ATTEMPTS) await sleep(BACKOFF_BASE_MS * 2 ** (attempt - 1));
+        continue;
+      }
+      if (response.status >= 500 && attempt < MAX_ATTEMPTS) {
+        await sleep(BACKOFF_BASE_MS * 2 ** (attempt - 1));
+        continue;
+      }
+      return response;
+    }
+    fail("REMOTE_COORDINATOR_NETWORK", lastError?.message ?? `no response from ${target}`);
+  }
+
+  return {
+    idFromName(name) {
+      return String(name);
+    },
+    get(id) {
+      if (!id) fail("REMOTE_COORDINATOR_CONFIG_INVALID", "stub id is required");
+      return {
+        async fetch(url, init = {}) {
+          return post(url, init.body ?? "{}");
+        },
+      };
+    },
+  };
+}
