@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-rim-index/v6",
-  "generated_at": "2026-08-03T09:06:21.112Z",
+  "generated_at": "2026-08-03T09:17:24.486Z",
   "method": "fenok_rim_forward_book_compounding_residual_income",
   "display_note": "상대적 매력도 지표이며 목표가가 아님. 컨센서스 변화에 따라 언제든 크게 바뀔 수 있음.",
   "index_math_pinned": true,
@@ -11,7 +11,11 @@
       0.04,
       0.06
     ],
-    "note": "OWNER DECISION PENDING: sheet ERP 12% vs spec range 4~6% swings KOSPI upside between -8.8% and +63% (2026-08-03 inputs). Shipping the sheet value until ruled."
+    "historical_range": [
+      0.065,
+      0.075
+    ],
+    "note": "OWNER DECISION PENDING: the current sheet uses ERP 12% while his own historical KOSPI range is 6.5~7.5% (patent-era calc sheets). The choice swings KOSPI upside massively. Shipping the sheet value until ruled."
   },
   "rows": [
     {
@@ -33,7 +37,7 @@
       "erp_center": 0.05,
       "erp_source": "sheet 2026-08-03",
       "risk_free": 0.0468,
-      "risk_free_source": "observed US 10Y for every index (spec: global-allocation basis; FRED DGS10, daily)",
+      "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
       "rate_current": {
         "erp_center": 0.05,
         "risk_free": 0.0468,
@@ -70,7 +74,7 @@
       "erp_center": 0.055,
       "erp_source": "sheet 2026-08-03",
       "risk_free": 0.0468,
-      "risk_free_source": "observed US 10Y for every index (spec: global-allocation basis; FRED DGS10, daily)",
+      "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
       "rate_current": {
         "erp_center": 0.055,
         "risk_free": 0.0468,
@@ -107,7 +111,7 @@
       "erp_center": 0.055,
       "erp_source": "sheet 2026-08-03",
       "risk_free": 0.0468,
-      "risk_free_source": "observed US 10Y for every index (spec: global-allocation basis; FRED DGS10, daily)",
+      "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
       "rate_current": {
         "erp_center": 0.055,
         "risk_free": 0.0468,
@@ -144,7 +148,7 @@
       "erp_center": 0.045,
       "erp_source": "sheet 2025-12-09",
       "risk_free": 0.0468,
-      "risk_free_source": "observed US 10Y for every index (spec: global-allocation basis; FRED DGS10, daily)",
+      "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
       "rate_current": {
         "erp_center": 0.045,
         "risk_free": 0.0468,
@@ -180,15 +184,15 @@
       "retention_source": "house fallback (observed payout blocked or unavailable)",
       "erp_center": 0.12,
       "erp_source": "sheet 2026-08-03",
-      "risk_free": 0.0468,
-      "risk_free_source": "observed US 10Y for every index (spec: global-allocation basis; FRED DGS10, daily)",
+      "risk_free": 0.044,
+      "risk_free_source": "domestic-rate anchor 0.044 (sheet 2026-08-03; automated KR-rate lane is an open data gap)",
       "rate_current": {
         "erp_center": 0.12,
-        "risk_free": 0.0468,
-        "fair_value": 8258.03,
-        "upside_pct": 25.21,
-        "upside_min_pct": 18.06,
-        "upside_max_pct": 32.67
+        "risk_free": 0.044,
+        "fair_value": 8450.8,
+        "upside_pct": 28.13,
+        "upside_min_pct": 20.74,
+        "upside_max_pct": 35.85
       },
       "rate_scenario_35": {
         "erp_center": 0.12,
@@ -218,7 +222,7 @@
       "erp_center": 0.055,
       "erp_source": "estimated: NASDAQ-family center, no dedicated sheet",
       "risk_free": 0.0468,
-      "risk_free_source": "observed US 10Y for every index (spec: global-allocation basis; FRED DGS10, daily)",
+      "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
       "rate_current": {
         "erp_center": 0.055,
         "risk_free": 0.0468,
@@ -265,7 +269,7 @@
       {
         "key": "kospi",
         "status": "diverged",
-        "computed": 8258.03,
+        "computed": 8450.8,
         "published": [
           10000,
           12000
@@ -280,9 +284,9 @@
       "why": "observed FRED DGS10 via rim-index inputs",
       "refresh": "daily lane, automatic"
     },
-    "risk_free_all_indices": {
-      "why": "US 10Y for every index per the validated spec (global-allocation basis)",
-      "refresh": "daily, automatic"
+    "risk_free_kr": {
+      "why": "domestic rate per the patent-era calc sheets and the current KOSPI sheet (4.4%); dated anchor",
+      "refresh": "OPEN DATA GAP — automate a KR-rate lane"
     },
     "roe_paths": {
       "why": "weighted stock-consensus FY1-3 grids; spot ROE held constant only where no grid exists (flagged per row)",

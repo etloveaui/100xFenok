@@ -24,6 +24,11 @@ const MIRROR_DIR = path.join(ROOT, "100xfenok-next", "public", "data", "computed
 export const RIM_EXPLICIT_YEARS = 5;
 export const RIM_GRID_STEP = 0.005;
 export const RIM_RATE_SCENARIO_10Y = 0.035;
+// Korean indices discount with the DOMESTIC rate (patent-era calc sheets and
+// the 2026-08-03 KOSPI sheet both use it; the "US 10Y everywhere" claim from
+// the earlier AI-written spec was disproven by the sheets). No automated
+// KR-rate lane exists yet: dated anchor, open data gap.
+export const RIM_KR_RISK_FREE_ANCHOR = { value: 0.044, as_of: "2026-08-03" };
 
 // Per-index ERP centers measured off the source sheets (2025-12-09 index
 // sheets + 2026-08-03 input sheets). philadelphia_semi has no sheet of its
@@ -174,8 +179,10 @@ export function buildArtifact({ nowIso }) {
     const roePathSource = derived.paths[source.key]
       ? "weekly consensus grid (rim-index)"
       : "spot forward ROE held constant (no consensus grid for this index)";
-    const riskFree = derived.riskFreeUs;
-    const riskFreeSource = "observed US 10Y for every index (spec: global-allocation basis; FRED DGS10, daily)";
+    const riskFree = source.market === "kr" ? RIM_KR_RISK_FREE_ANCHOR.value : derived.riskFreeUs;
+    const riskFreeSource = source.market === "kr"
+      ? `domestic-rate anchor ${RIM_KR_RISK_FREE_ANCHOR.value} (sheet ${RIM_KR_RISK_FREE_ANCHOR.as_of}; automated KR-rate lane is an open data gap)`
+      : "observed US 10Y (FRED DGS10 via rim-index, daily)";
     const retention = derived.retentions[source.key]
       ?? { value: 0.65, source: "house fallback (observed payout blocked or unavailable)" };
     if (!latest || !Number.isFinite(latest.px) || !Number.isFinite(latest.pbr) || latest.pbr <= 0
@@ -226,7 +233,8 @@ export function buildArtifact({ nowIso }) {
     kospi_erp_decision: {
       sheet_erp: 0.12,
       spec_range: [0.04, 0.06],
-      note: "OWNER DECISION PENDING: sheet ERP 12% vs spec range 4~6% swings KOSPI upside between -8.8% and +63% (2026-08-03 inputs). Shipping the sheet value until ruled.",
+      historical_range: [0.065, 0.075],
+      note: "OWNER DECISION PENDING: the current sheet uses ERP 12% while his own historical KOSPI range is 6.5~7.5% (patent-era calc sheets). The choice swings KOSPI upside massively. Shipping the sheet value until ruled.",
     },
     rows,
     calibration_check: {
@@ -235,7 +243,7 @@ export function buildArtifact({ nowIso }) {
     },
     constants_provenance: {
       risk_free_us: { why: "observed FRED DGS10 via rim-index inputs", refresh: "daily lane, automatic" },
-      risk_free_all_indices: { why: "US 10Y for every index per the validated spec (global-allocation basis)", refresh: "daily, automatic" },
+      risk_free_kr: { why: "domestic rate per the patent-era calc sheets and the current KOSPI sheet (4.4%); dated anchor", refresh: "OPEN DATA GAP — automate a KR-rate lane" },
       roe_paths: { why: "weighted stock-consensus FY1-3 grids; spot ROE held constant only where no grid exists (flagged per row)", refresh: "weekly conversion, automatic" },
       retention: { why: "1 - observed derived payout per index; house 0.65 fallback only where the payout derivation is blocked", refresh: "weekly, automatic" },
       erp_centers: { why: "measured per index off the source sheets (values and dates on each row); semi index inherits the NASDAQ-family center as an estimate", refresh: "manual — remeasure when a newer sheet is supplied" },
