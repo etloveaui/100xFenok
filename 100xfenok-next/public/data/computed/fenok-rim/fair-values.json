@@ -1,11 +1,11 @@
 {
   "schema_version": "fenok-rim-index/v6",
-  "generated_at": "2026-08-03T13:33:11.154Z",
+  "generated_at": "2026-08-03T14:11:46.505Z",
   "method": "fenok_rim_forward_book_compounding_residual_income",
   "display_note": "상대적 매력도 지표이며 목표가가 아님. 컨센서스 변화에 따라 언제든 크게 바뀔 수 있음.",
-  "index_math_pinned": false,
+  "index_math_pinned": true,
   "display_ready": false,
-  "display_block_reason": "engine still runs the superseded discount-at-Ke, N=5 cell maths; formula replacement pending Korea discount-rate confirmation",
+  "display_block_reason": "formula verified on 54 cells; risk premiums remain dated sheet anchors and the discount slope is fitted on two risk-free points only",
   "kospi_erp_resolution": {
     "shipped_erp_source": "Damodaran country ERP (KR), automatic",
     "sheet_cell_erp": 0.12,
@@ -34,25 +34,25 @@
       "roe_path_source": "weekly consensus grid (rim-index) — FY1 consensus ROE, de-blended from the vendor 12-month field (factor 0.903, 0.591 of fiscal year elapsed)",
       "retention": 0.7928,
       "retention_source": "observed derived payout_ratio 0.2072",
-      "erp_center": 0.0503,
-      "erp_source": "Damodaran country ERP for US market (workbook April 1, 2026, weekly lane)",
+      "erp_center": 0.05,
+      "erp_source": "sheet 2026-08-03; Damodaran US 5.03% agrees to 3bp [drift check: Damodaran US 0.0503, workbook April 1, 2026]",
       "risk_free": 0.0468,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
       "rate_current": {
-        "erp_center": 0.0503,
+        "erp_center": 0.05,
         "risk_free": 0.0468,
-        "fair_value": 5047.42,
-        "upside_pct": -32.61,
-        "upside_min_pct": -38.43,
-        "upside_max_pct": -26.41
+        "fair_value": 6982.03,
+        "upside_pct": -6.78,
+        "upside_min_pct": -12.49,
+        "upside_max_pct": -0.98
       },
       "rate_scenario_35": {
-        "erp_center": 0.0503,
+        "erp_center": 0.05,
         "risk_free": 0.035,
-        "fair_value": 5957.03,
-        "upside_pct": -20.46,
-        "upside_min_pct": -27.9,
-        "upside_max_pct": -12.51
+        "fair_value": 7979.37,
+        "upside_pct": 6.54,
+        "upside_min_pct": 0.19,
+        "upside_max_pct": 12.98
       }
     },
     {
@@ -71,25 +71,25 @@
       "roe_path_source": "weekly consensus grid (rim-index) — FY1 consensus ROE, de-blended from the vendor 12-month field (factor 0.8862, 0.591 of fiscal year elapsed)",
       "retention": 0.9029,
       "retention_source": "observed derived payout_ratio 0.0971",
-      "erp_center": 0.0503,
-      "erp_source": "Damodaran country ERP for US market (workbook April 1, 2026, weekly lane)",
+      "erp_center": 0.055,
+      "erp_source": "sheet 2026-08-03 [drift check: Damodaran US 0.0503, workbook April 1, 2026]",
       "risk_free": 0.0468,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
       "rate_current": {
-        "erp_center": 0.0503,
+        "erp_center": 0.055,
         "risk_free": 0.0468,
-        "fair_value": 23096.8,
-        "upside_pct": -18.31,
-        "upside_min_pct": -25.17,
-        "upside_max_pct": -11.05
+        "fair_value": 42846.62,
+        "upside_pct": 51.54,
+        "upside_min_pct": 43.85,
+        "upside_max_pct": 59.35
       },
       "rate_scenario_35": {
-        "erp_center": 0.0503,
+        "erp_center": 0.055,
         "risk_free": 0.035,
-        "fair_value": 27388.97,
-        "upside_pct": -3.13,
-        "upside_min_pct": -11.94,
-        "upside_max_pct": 6.25
+        "fair_value": 48887.09,
+        "upside_pct": 72.9,
+        "upside_min_pct": 64.31,
+        "upside_max_pct": 81.64
       }
     },
     {
@@ -108,25 +108,25 @@
       "roe_path_source": "spot forward ROE held constant (no consensus grid for this index)",
       "retention": 0.65,
       "retention_source": "house fallback (observed payout blocked or unavailable)",
-      "erp_center": 0.0503,
-      "erp_source": "Damodaran country ERP for US market (workbook April 1, 2026, weekly lane)",
+      "erp_center": 0.055,
+      "erp_source": "sheet 2026-08-03 [drift check: Damodaran US 0.0503, workbook April 1, 2026]",
       "risk_free": 0.0468,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
       "rate_current": {
-        "erp_center": 0.0503,
+        "erp_center": 0.055,
         "risk_free": 0.0468,
-        "fair_value": 18137.72,
-        "upside_pct": -28.52,
-        "upside_min_pct": -34.18,
-        "upside_max_pct": -22.52
+        "fair_value": 26295.37,
+        "upside_pct": 3.63,
+        "upside_min_pct": -1.16,
+        "upside_max_pct": 8.48
       },
       "rate_scenario_35": {
-        "erp_center": 0.0503,
+        "erp_center": 0.055,
         "risk_free": 0.035,
-        "fair_value": 21314.74,
-        "upside_pct": -16,
-        "upside_min_pct": -23.25,
-        "upside_max_pct": -8.28
+        "fair_value": 29727.97,
+        "upside_pct": 17.16,
+        "upside_min_pct": 11.84,
+        "upside_max_pct": 22.54
       }
     },
     {
@@ -145,25 +145,25 @@
       "roe_path_source": "spot forward ROE held constant (no consensus grid for this index)",
       "retention": 0.65,
       "retention_source": "house fallback (observed payout blocked or unavailable)",
-      "erp_center": 0.0503,
-      "erp_source": "Damodaran country ERP for US market (workbook April 1, 2026, weekly lane)",
+      "erp_center": 0.045,
+      "erp_source": "sheet 2025-12-09 [drift check: Damodaran US 0.0503, workbook April 1, 2026]",
       "risk_free": 0.0468,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
       "rate_current": {
-        "erp_center": 0.0503,
+        "erp_center": 0.045,
         "risk_free": 0.0468,
-        "fair_value": 1049.33,
-        "upside_pct": -64.2,
-        "upside_min_pct": -68.16,
-        "upside_max_pct": -59.91
+        "fair_value": 1121.04,
+        "upside_pct": -61.76,
+        "upside_min_pct": -66.4,
+        "upside_max_pct": -57.05
       },
       "rate_scenario_35": {
-        "erp_center": 0.0503,
+        "erp_center": 0.045,
         "risk_free": 0.035,
-        "fair_value": 1227.8,
-        "upside_pct": -58.11,
-        "upside_min_pct": -63.05,
-        "upside_max_pct": -52.72
+        "fair_value": 1313.48,
+        "upside_pct": -55.19,
+        "upside_min_pct": -60.28,
+        "upside_max_pct": -50.02
       }
     },
     {
@@ -182,25 +182,25 @@
       "roe_path_source": "weekly consensus grid (rim-index) — FY1 consensus ROE, de-blended from the vendor 12-month field (factor 0.8247, 0.591 of fiscal year elapsed)",
       "retention": 0.65,
       "retention_source": "house fallback (observed payout blocked or unavailable)",
-      "erp_center": 0.054908,
-      "erp_source": "Damodaran country ERP for KR market (workbook April 1, 2026, weekly lane)",
+      "erp_center": 0.12,
+      "erp_source": "sheet 2026-08-03; reproduces his published 10,000~12,000 under the solved formula (10,074), whereas Damodaran 5.49% gives 15,634 [drift check: Damodaran KR 0.0549, workbook April 1, 2026]",
       "risk_free": 0.0432,
       "risk_free_source": "observed KRX KTS 10Y benchmark government bond 0.04315 (as of 2026-07-30, fenok-edge-korea lane, daily)",
       "rate_current": {
-        "erp_center": 0.054907702180474256,
+        "erp_center": 0.12,
         "risk_free": 0.0432,
-        "fair_value": 12158.64,
-        "upside_pct": 84.35,
-        "upside_min_pct": 69.14,
-        "upside_max_pct": 100.52
+        "fair_value": 10087.43,
+        "upside_pct": 52.95,
+        "upside_min_pct": 39.87,
+        "upside_max_pct": 66.2
       },
       "rate_scenario_35": {
-        "erp_center": 0.054907702180474256,
+        "erp_center": 0.12,
         "risk_free": 0.035,
-        "fair_value": 13531.7,
-        "upside_pct": 105.17,
-        "upside_min_pct": 87.28,
-        "upside_max_pct": 124.26
+        "fair_value": 11203.33,
+        "upside_pct": 69.86,
+        "upside_min_pct": 55.84,
+        "upside_max_pct": 84.09
       }
     },
     {
@@ -219,25 +219,25 @@
       "roe_path_source": "weekly consensus grid (rim-index) — FY1 consensus ROE, de-blended from the vendor 12-month field (factor 0.8077, 0.591 of fiscal year elapsed)",
       "retention": 0.887,
       "retention_source": "observed derived payout_ratio 0.113",
-      "erp_center": 0.0503,
-      "erp_source": "Damodaran country ERP for US market (workbook April 1, 2026, weekly lane)",
+      "erp_center": 0.055,
+      "erp_source": "estimated: NASDAQ-family centre, no dedicated sheet [drift check: Damodaran US 0.0503, workbook April 1, 2026]",
       "risk_free": 0.0468,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
       "rate_current": {
-        "erp_center": 0.0503,
+        "erp_center": 0.055,
         "risk_free": 0.0468,
-        "fair_value": 8831.08,
-        "upside_pct": -21.93,
-        "upside_min_pct": -28.42,
-        "upside_max_pct": -15.05
+        "fair_value": 16650.54,
+        "upside_pct": 47.21,
+        "upside_min_pct": 39.99,
+        "upside_max_pct": 54.53
       },
       "rate_scenario_35": {
-        "erp_center": 0.0503,
+        "erp_center": 0.055,
         "risk_free": 0.035,
-        "fair_value": 10466.18,
-        "upside_pct": -7.47,
-        "upside_min_pct": -15.81,
-        "upside_max_pct": 1.4
+        "fair_value": 18973.61,
+        "upside_pct": 67.74,
+        "upside_min_pct": 59.68,
+        "upside_max_pct": 75.93
       }
     }
   ],
@@ -247,7 +247,7 @@
       {
         "key": "sp500",
         "status": "diverged",
-        "computed": -32.61,
+        "computed": -6.78,
         "published": [
           8,
           12
@@ -258,7 +258,7 @@
       {
         "key": "nasdaq100",
         "status": "diverged",
-        "computed": -18.31,
+        "computed": 51.54,
         "published": [
           25,
           30
@@ -269,7 +269,7 @@
       {
         "key": "kospi",
         "status": "within_tolerance",
-        "computed": 12158.64,
+        "computed": 10087.43,
         "published": [
           10000,
           12000

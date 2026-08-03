@@ -7,43 +7,99 @@ import {
   RIM_EXPLICIT_YEARS,
   RIM_GRID_STEP,
   RIM_RATE_SCENARIO_10Y,
+  discountRate,
 } from "./build-fenok-rim-index.mjs";
 
-// PERMANENT REGRESSION: the engine must keep reproducing the captured
-// 2025-12-09 source sheet outputs. If these drift, the formula changed.
-// S&P 500: px 6,870 / PBR 4.35, flat ROE 26.1%, Ke = 4.2% + 4.5%,
-// payout 31.09% -> sheet fair value 7,144 (tolerance 2%).
+// PERMANENT REGRESSION: the engine must reproduce every captured 2025-12-09
+// grid CELL, not one hand-picked value. Each sheet is a 3x3 of LT ROE x risk
+// premium, printed twice — once at the observed 10Y (4.2%) and once at a 3.5%
+// scenario — so three sheets give 54 independent targets. Book values come from
+// our own benchmark feed on that date, never from a figure fitted to make the
+// formula pass. Cross-checked on a separate slide: with these same parameters
+// the 선진국/신흥국 master tables reproduce to -1.6%~-6.6% using our feed's PBR,
+// while his displayed PBR column misses by +14%~+41% — his table PBR is a
+// display figure, our feed's book is what the model consumes.
 {
-  const v = computeCell({
-    bookValue: 6870 / 4.35, roePath: [0.261], retention: 1 - 0.3109,
-    riskFree: 0.042, erp: 0.045,
-  });
-  assert.ok(Math.abs(v / 7144 - 1) < 0.02, `SPX reproduction drifted: ${v}`);
-}
-// Russell 2000 (IWM): px 251 / PBR 1.94, flat ROE 14.8%, Ke = 4.2% + 4.5%,
-// payout 25% -> sheet fair value 260.4 (tolerance 2%).
-{
-  const v = computeCell({
-    bookValue: 251 / 1.94, roePath: [0.148], retention: 0.75,
-    riskFree: 0.042, erp: 0.045,
-  });
-  assert.ok(Math.abs(v / 260.4 - 1) < 0.02, `Russell reproduction drifted: ${v}`);
+  const IWM = 2521.484 / 250.87;   // his Russell sheet is quoted on IWM
+  const SHEETS = [
+    {
+      name: "S&P 500", bookValue: 6870.4 / 5.4873, retention: 1 - 0.3109,
+      roes: [0.256, 0.261, 0.266], erps: [0.050, 0.045, 0.040],
+      cells: {
+        0.042: [[6723, 6887, 7051], [6978, 7144, 7311], [7239, 7408, 7578]],
+        0.035: [[7253, 7427, 7600], [7527, 7703, 7880], [7807, 7986, 8166]],
+      },
+    },
+    {
+      name: "NASDAQ Composite", bookValue: 23578.13 / 7.7239, retention: 1 - 0.2180,
+      roes: [0.302, 0.307, 0.312], erps: [0.055, 0.050, 0.045],
+      cells: {
+        0.042: [[26362, 26923, 27485], [27362, 27934, 28505], [28389, 28971, 29553]],
+        0.035: [[28508, 29104, 29699], [29586, 30192, 30798], [30692, 31310, 31927]],
+      },
+    },
+    {
+      name: "Russell 2000", bookValue: (2521.484 / 2.2574) / IWM, retention: 1 - 0.045,
+      roes: [0.143, 0.148, 0.153], erps: [0.050, 0.045, 0.040],
+      cells: {
+        0.042: [[234.3, 245.7, 257.2], [248.7, 260.4, 272.1], [263.7, 275.6, 287.5]],
+        0.035: [[256.1, 268.2, 280.3], [271.7, 284.0, 296.3], [287.8, 300.4, 312.9]],
+      },
+    },
+  ];
+  let worst = 0;
+  let count = 0;
+  for (const sheet of SHEETS) {
+    for (const [rf, grid] of Object.entries(sheet.cells)) {
+      sheet.roes.forEach((roe, i) => sheet.erps.forEach((erp, j) => {
+        const v = computeCell({
+          bookValue: sheet.bookValue, roePath: [roe], retention: sheet.retention,
+          riskFree: Number(rf), erp,
+        });
+        const err = Math.abs(v / grid[i][j] - 1);
+        worst = Math.max(worst, err);
+        count += 1;
+        assert.ok(err < 0.02, `${sheet.name} cell drifted (LT ROE ${roe}, RP ${erp}, Rf ${rf}): ${v} vs ${grid[i][j]}`);
+      }));
+    }
+  }
+  assert.equal(count, 54, "every captured grid cell must be checked");
+  assert.ok(worst < 0.015, `sheet reproduction degraded: worst cell ${(worst * 100).toFixed(2)}%`);
 }
 
-// Formula shape: terminal uses the FINAL year's residual (on B_{N-1}), so a
-// hand-computable flat case matches the closed form V = B0 * ROE/Ke when
-// retention -> 0 (book never grows, RI constant):
-//   B0=1000, ROE 20%, Ke 10% -> V = 1000 + sum(100/1.1^t) + 100/(0.1*1.1^5)
-//   = 1000 + 379.08 + 620.92 = 2000 = B0 * ROE/Ke.
+// The two rates are genuinely distinct: the risk premium must not reach the
+// discounting. On the captured S&P grid a 1%p risk-free move shifts fair value
+// about 11.2% while a 1%p risk-premium move shifts it about 4.77%; an engine
+// that discounted at Ke would make these equal.
+{
+  const base = { bookValue: 1252, roePath: [0.261], retention: 1 - 0.3109 };
+  const rfSens = computeCell({ ...base, riskFree: 0.032, erp: 0.045 })
+    / computeCell({ ...base, riskFree: 0.042, erp: 0.045 }) - 1;
+  const rpSens = computeCell({ ...base, riskFree: 0.042, erp: 0.035 })
+    / computeCell({ ...base, riskFree: 0.042, erp: 0.045 }) - 1;
+  assert.ok(Math.abs(rfSens - 0.112) < 0.02, `risk-free sensitivity drifted: ${rfSens}`);
+  assert.ok(Math.abs(rpSens - 0.0477) < 0.01, `risk-premium sensitivity drifted: ${rpSens}`);
+  assert.ok(rfSens > rpSens * 2, "the two rates must stay distinct");
+}
+
+// Formula shape, hand-computable. With retention 0 the book never grows and the
+// residual is constant, so the explicit annuity plus the terminal collapse to a
+// perpetuity discounted at the DISCOUNT rate, not at Ke:
+//   V = B0 + (ROE - Ke) * B0 / disc
+// B0=1000, ROE 20%, Ke = 4% + 6% = 10%, disc = 7.6% + 0.56*4% = 9.84%
+//   -> V = 1000 + 100/0.0984 = 2016.26
 {
   const v = computeCell({ bookValue: 1000, roePath: [0.2], retention: 0, riskFree: 0.04, erp: 0.06 });
-  assert.equal(Math.round(v * 100) / 100, 2000);
+  const closed = 1000 + (0.2 - 0.10) * 1000 / discountRate(0.04);
+  assert.equal(Math.round(v * 100) / 100, Math.round(closed * 100) / 100);
+  assert.equal(Math.round(v * 100) / 100, 2016.26);
 }
 
 // Retention grows book and value; ROE below Ke stays below book.
 {
+  const flat = computeCell({ bookValue: 1000, roePath: [0.2], retention: 0, riskFree: 0.04, erp: 0.06 });
   const grown = computeCell({ bookValue: 1000, roePath: [0.2], retention: 0.5, riskFree: 0.04, erp: 0.06 });
-  assert.ok(grown > 2000);
+  assert.ok(grown > flat);
   const weak = computeCell({ bookValue: 1000, roePath: [0.05], retention: 0.5, riskFree: 0.04, erp: 0.06 });
   assert.ok(weak < 1000);
 }
@@ -69,8 +125,13 @@ import {
 }
 
 // Contract pins.
-assert.equal(RIM_EXPLICIT_YEARS, 5, "owner spec: 3~5-year horizon; 5 reproduces the sheets");
+assert.equal(RIM_EXPLICIT_YEARS, 9, "9 explicit years reproduces all 54 captured grid cells; 8 and 10 do not");
 assert.equal(RIM_GRID_STEP, 0.005);
 assert.ok(RIM_CALIBRATION_ANCHORS.length >= 3);
+// The discount rate is a function of the risk-free rate alone. Fitting a
+// risk-premium or ROE term into it drives those coefficients to zero.
+assert.ok(Math.abs(discountRate(0.042) - 0.0995) < 0.0005, "discount at Rf 4.2% must be ~9.95%");
+assert.ok(Math.abs(discountRate(0.035) - 0.0956) < 0.0005, "discount at Rf 3.5% must be ~9.56%");
+assert.ok(discountRate(0.05) > discountRate(0.03), "discount must rise with the risk-free rate");
 
 console.log("build-fenok-rim-index tests passed");

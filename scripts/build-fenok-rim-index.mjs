@@ -1,15 +1,18 @@
-// Fenok RIM — self-sustaining index fair-value engine (v7).
+// Fenok RIM — self-sustaining index fair-value engine (v8).
 //
-// Formula (owner-supplied spec, VERIFIED by reproducing the captured
-// 2025-12-09 index sheet outputs: S&P -0.4%, Russell -0.8%):
-//   V = B0 + sum_{t=1..5} (ROE_t - Ke) * B_{t-1} / (1+Ke)^t
-//          + (ROE_5 - Ke) * B_4 / (Ke * (1+Ke)^5)
-//   B_t = B_{t-1} * (1 + ROE_t * retention),  Ke = US 10Y + ERP.
-// Per the spec the risk-free leg is the US 10Y for every index (global
-// allocation basis) — this removes the KR-10Y data gap.
-// Inputs run on our data alone, daily: observed US 10Y, weekly consensus
-// ROE paths, observed payout retention, sheet-measured per-index ERP centers.
-// The reproduction check lives in the test suite as a permanent regression.
+// The model was identified, not assumed. Two rates do different jobs:
+//   Ke   = Rf + RiskPremium        -> the residual only
+//   disc = 0.076 + 0.560 * Rf      -> all discounting, no risk premium in it
+//   RI_t = B_{t-1} * (ROE_t - Ke)
+//   V    = B0 + sum_{t=1..9} RI_t/(1+disc)^t + (RI_9/disc)/(1+disc)^9
+//   B_t  = B_{t-1} * (1 + ROE_t * retention)
+// Verified against all 54 captured 2025-12-09 grid cells (three indices, each
+// printed at the observed 10Y and at a 3.5% scenario): RMS 0.41%, max 1.06%,
+// with book values from our own feed. Cross-checked on a separate slide — the
+// 선진국/신흥국 master tables reproduce to -1.6%~-6.6%.
+// Inputs run on our data alone: observed US 10Y (FRED), KRX KTS 10Y for Korea,
+// FY1 consensus ROE de-blended from the vendor 12-month field, observed payout.
+// Account of the identification: docs/references/fenok-rim-formula-identification.md
 
 import fs from "node:fs";
 import path from "node:path";
@@ -23,9 +26,26 @@ const DAMODARAN_ERP = path.join(ROOT, "data", "damodaran", "erp.json");
 const OUT_DIR = path.join(ROOT, "data", "computed", "fenok-rim");
 const MIRROR_DIR = path.join(ROOT, "100xfenok-next", "public", "data", "computed", "fenok-rim");
 
-export const RIM_EXPLICIT_YEARS = 5;
+export const RIM_EXPLICIT_YEARS = 9;
 export const RIM_GRID_STEP = 0.005;
 export const RIM_RATE_SCENARIO_10Y = 0.035;
+
+// The source model discounts at a rate that is NOT the cost of equity. The two
+// are separate columns on the patent's own tool screen (Government bond rate |
+// Risk premium | Cost of capital | ... | Discount rate), and the sheets prove
+// they behave differently: on the 2025-12-09 S&P grid a 1%p move in the risk
+// free rate shifts fair value 11.2% while a 1%p move in the risk premium shifts
+// it only 4.77%. If both travelled through Ke = Rf + RP those would be equal.
+// So the risk premium reaches the residual only, and the discount rate follows
+// the risk-free rate on its own slope. Fitted across all 54 captured grid cells
+// (three indices x two rate scenarios): RMS 0.41%, max 1.06%.
+// CAUTION: the slope is identified from two risk-free points (4.2% and 3.5%)
+// only. Outside roughly 3~5% it is an extrapolation.
+export const RIM_DISCOUNT = { intercept: 0.076, slope: 0.560, fitted_rf_range: [0.035, 0.042] };
+export function discountRate(riskFree) {
+  if (!Number.isFinite(riskFree)) return null;
+  return RIM_DISCOUNT.intercept + RIM_DISCOUNT.slope * riskFree;
+}
 // Korean indices discount with the DOMESTIC rate (patent-era calc sheets and
 // the 2026-08-03 KOSPI sheet both use it; the "US 10Y everywhere" claim from
 // the earlier AI-written spec was disproven by the sheets). The observed rate
@@ -34,25 +54,22 @@ export const RIM_RATE_SCENARIO_10Y = 0.035;
 // capture is missing.
 export const RIM_KR_RISK_FREE_ANCHOR = { value: 0.044, as_of: "2026-08-03" };
 
-// ERP centres come from the Damodaran country file, not from hand-copied sheet
-// cells. The construction is total country ERP over that market's own
-// risk-free rate, which is what the source sheets themselves use: Damodaran US
-// 5.03% against his S&P 5.00% is a 3bp match, and Damodaran Korea 5.49%
-// against his stated KOSPI band floor of 5.5% is a 1bp match. His per-index
-// tilts (NASDAQ +0.5, Russell -0.5) are judgement values with no derivation —
-// beta scaling does not reproduce them (Russell carries the higher beta yet the
-// lower premium) — so they are deliberately dropped rather than frozen as
-// manual constants. RIM_MARKET_ERP_FALLBACK applies only if the Damodaran file
-// is unreadable, and the row says so when it does.
-const RIM_MARKET_ERP_FALLBACK = { us: 0.0503, kr: 0.0549 };
-
+// The risk premium is the analyst's own judgement input and it does NOT come
+// from a derivable market quantity. That was tested, not assumed. Substituting
+// the Damodaran country ERP was tried and is refuted by measurement: Korea's
+// 5.49% returns a KOSPI fair value of 15,634 against the 10,000~12,000 he
+// published, while the 12% printed on his own sheet returns 10,074 — inside the
+// range, and the value that reproduces his midpoint is 10.92%. Beta scaling is
+// refuted too, since Russell carries the higher beta yet the lower premium.
+// So these stay dated anchors read off his sheets, each carrying its capture
+// date. Damodaran remains useful as a drift check, not as the input.
 const INDEX_SOURCES = [
-  { file: "us.json", key: "sp500", name: "S&P 500", market: "us" },
-  { file: "us.json", key: "nasdaq100", name: "나스닥 100", market: "us" },
-  { file: "us.json", key: "nasdaq_composite", name: "나스닥 종합", market: "us" },
-  { file: "us.json", key: "russell2000", name: "러셀 2000", market: "us" },
-  { file: "emerging.json", key: "kospi", name: "코스피", market: "kr" },
-  { file: "micro_sectors.json", key: "philadelphia_semi", name: "필라델피아 반도체", market: "us" },
+  { file: "us.json", key: "sp500", name: "S&P 500", market: "us", erp: 0.05, erpSource: "sheet 2026-08-03; Damodaran US 5.03% agrees to 3bp" },
+  { file: "us.json", key: "nasdaq100", name: "나스닥 100", market: "us", erp: 0.055, erpSource: "sheet 2026-08-03" },
+  { file: "us.json", key: "nasdaq_composite", name: "나스닥 종합", market: "us", erp: 0.055, erpSource: "sheet 2026-08-03" },
+  { file: "us.json", key: "russell2000", name: "러셀 2000", market: "us", erp: 0.045, erpSource: "sheet 2025-12-09" },
+  { file: "emerging.json", key: "kospi", name: "코스피", market: "kr", erp: 0.12, erpSource: "sheet 2026-08-03; reproduces his published 10,000~12,000 under the solved formula (10,074), whereas Damodaran 5.49% gives 15,634" },
+  { file: "micro_sectors.json", key: "philadelphia_semi", name: "필라델피아 반도체", market: "us", erp: 0.055, erpSource: "estimated: NASDAQ-family centre, no dedicated sheet" },
 ];
 
 // Calibration anchors: the source analyst's published outputs, dated. A
@@ -70,15 +87,11 @@ function round(value, digits) {
   return Math.round(value * f) / f;
 }
 
-// One grid cell — the owner-supplied multi-stage RIM, VERIFIED by
-// reproducing the captured 2025-12-09 index sheet outputs (S&P -0.4%,
-// Russell -0.8%; NASDAQ -10% traces to its unknown then-payout):
-//   V = B0 + sum_{t=1..N} (ROE_t - Ke) * B_{t-1} / (1+Ke)^t
-//          + (ROE_N - Ke) * B_{N-1} / (Ke * (1+Ke)^N)
-//   B_t = B_{t-1} * (1 + ROE_t * retention),  Ke = US10Y + ERP,  N = 5.
-// Years beyond the 3-year consensus path hold the final path year.
+// One grid cell. The residual carries the risk premium; the discounting does
+// not. Years beyond the 3-year consensus path hold the final path year.
 export function computeCell({ bookValue, roePath, retention, riskFree, erp, tailShift = 0, years = RIM_EXPLICIT_YEARS }) {
-  const ke = riskFree + erp;
+  const ke = riskFree + erp;          // cost of equity: reaches the residual only
+  const disc = discountRate(riskFree); // discount rate: a separate rate, no risk premium in it
   let book = bookValue;
   let v = bookValue;
   let residual = 0;
@@ -86,10 +99,10 @@ export function computeCell({ bookValue, roePath, retention, riskFree, erp, tail
     const base = roePath[Math.min(t - 1, roePath.length - 1)];
     const roe = t > roePath.length ? base + tailShift : base;
     residual = (roe - ke) * book;
-    v += residual / (1 + ke) ** t;
+    v += residual / (1 + disc) ** t;
     book *= 1 + roe * retention;
   }
-  v += residual / (ke * (1 + ke) ** years);
+  v += residual / (disc * (1 + disc) ** years);
   return v;
 }
 
@@ -270,10 +283,11 @@ export function buildArtifact({ nowIso }) {
       : "observed US 10Y (FRED DGS10 via rim-index, daily)";
     const retention = derived.retentions[source.key]
       ?? { value: 0.65, source: "house fallback (observed payout blocked or unavailable)" };
-    const erpCenter = marketErp?.[source.market] ?? RIM_MARKET_ERP_FALLBACK[source.market];
-    const erpSource = marketErp
-      ? `Damodaran country ERP for ${source.market.toUpperCase()} market (workbook ${marketErp.as_of}, weekly lane)`
-      : `FALLBACK ${source.market.toUpperCase()} ERP ${RIM_MARKET_ERP_FALLBACK[source.market]} — Damodaran country file unreadable`;
+    const erpCenter = source.erp;
+    const damodaranRef = marketErp?.[source.market];
+    const erpSource = Number.isFinite(damodaranRef)
+      ? `${source.erpSource} [drift check: Damodaran ${source.market.toUpperCase()} ${round(damodaranRef, 4)}, workbook ${marketErp.as_of}]`
+      : source.erpSource;
     if (!latest || !Number.isFinite(latest.px) || !Number.isFinite(latest.pbr) || latest.pbr <= 0
       || !roePath || !Number.isFinite(riskFree) || !Number.isFinite(erpCenter)) {
       return { key: source.key, name: source.name, status: "excluded", reason: "missing price/book/ROE/risk-free/ERP inputs" };
@@ -314,15 +328,13 @@ export function buildArtifact({ nowIso }) {
     // The index cell math is pinned: the engine reproduces the captured
     // 2025-12-09 sheet outputs (S&P -0.4%, Russell -0.8%), enforced as a
     // permanent regression test.
-    // NOT display-ready. The cell maths in computeCell is the superseded shape:
-    // it discounts at Ke and runs 5 explicit years, while the identified
-    // structure discounts at a separate ~10% constant over 9 years and lets the
-    // risk premium touch only the residual. Inputs have been corrected ahead of
-    // the formula, so these numbers are an intermediate state and must not reach
-    // a surface. See docs/references/fenok-rim-formula-identification.md.
-    index_math_pinned: false,
+    // The cell maths now reproduces all 54 captured grid cells to 1.06%.
+    index_math_pinned: true,
+    // Still not display-ready: the formula is settled but the risk premiums are
+    // dated sheet anchors and the Korea discount slope is extrapolated from two
+    // risk-free points. Surfaces wait until those carry their own evidence.
     display_ready: false,
-    display_block_reason: "engine still runs the superseded discount-at-Ke, N=5 cell maths; formula replacement pending Korea discount-rate confirmation",
+    display_block_reason: "formula verified on 54 cells; risk premiums remain dated sheet anchors and the discount slope is fitted on two risk-free points only",
     // RESOLVED 2026-08-03. The 2026-08-03 KOSPI sheet's red "Premiumn Adj.
     // 12.00%" cell is NOT his equity risk premium: fed through this formula
     // with his own sheet inputs it returns 6,301 against a spot of 6,690, i.e.
