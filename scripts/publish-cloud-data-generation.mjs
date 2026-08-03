@@ -130,11 +130,23 @@ const DEFAULT_ACCOUNT_ID = "aeeb5ea3affe55a2219d08ea02dad9e1";
 //   policy           contract publication policy budgets
 //   validate_public_payload  required for public families: the contract calls
 //                    it on every public asset before writing
+//   source_as_of     where the family's SOURCE time comes from (see
+//                    resolveSourceAsOf): { file, key } reads key from the JSON
+//                    at <root>/<file>; { key } (no file) reads key from the
+//                    single enrolled payload. The value is normalized to an ISO
+//                    day (YYYY-MM-DD) and written to every asset's
+//                    source_as_of. A declared file that is absent from the
+//                    built tree falls back to the manifest created_at — marked
+//                    as "created_at-fallback" in the emitted origin so
+//                    acquisition time is never silently blurred into source
+//                    time. A present-but-invalid value fails loudly.
 // P5+ adds more families here.
 export const FAMILIES = {
   "oecd-cli": {
     root: "data/admin/oecd_cli",
     privacy_class: "private",
+    // The lane's LKG state index records when the family data was acquired.
+    source_as_of: { file: "index.json", key: "updated_at" },
     // Gate declaration: >= 2x the measured 4 PutObject / 592,351 bytes.
     plan: { class_a: 40, bytes: 1_200_000 },
     policy: { max_assets: 64, max_total_bytes: 16_000_000 },
@@ -148,6 +160,8 @@ export const FAMILIES = {
     manifest_prefix: "public/data/macro",
     files: ["fred-macro.json"],
     privacy_class: "public",
+    // The payload itself carries the as-of date in its top-level "updated".
+    source_as_of: { key: "updated" },
     // Gate declaration: >= 2x the measured 1 PutObject / 530,240 bytes.
     plan: { class_a: 10, bytes: 1_100_000 },
     policy: { max_assets: 8, max_total_bytes: 4_000_000 },
@@ -184,6 +198,65 @@ async function walkFiles(absDir, prefix = "") {
   return files;
 }
 
+// Normalize an as-of value (ISO date-time or ISO date) to the contract's
+// "ISO day" form (YYYY-MM-DD). Anything else is invalid.
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+function toIsoDay(value) {
+  if (typeof value !== "string") return null;
+  const match = value.trim().match(ISO_DAY);
+  if (match) return match[0];
+  const dateTime = value.trim().match(/^(\d{4}-\d{2}-\d{2})[T ]/);
+  return dateTime ? dateTime[1] : null;
+}
+
+// Resolve the family's SOURCE time for the manifest's source_as_of field.
+//   - { file, key }: read key from the JSON file at <root>/<file>; the value
+//     must be date-like (fail FAMILY_ASOF_INVALID otherwise).
+//   - { key } (no file): read key from the single enrolled payload (fail
+//     FAMILY_ASOF_AMBIGUOUS if the family enrolls more than one file).
+// A declared file ABSENT from the built tree means this family genuinely does
+// not provide a source time in this tree (e.g. synthetic offline fixtures):
+// fall back to the manifest created_at and mark the origin
+// "created_at-fallback" so acquisition time is never silently blurred into
+// source time. No source_as_of config at all also falls back.
+// Returns { value, origin } where origin is "payload" | "family-index" |
+// "created_at-fallback".
+export function resolveSourceAsOf({ family, payloads, createdIsoDay }) {
+  const config = family?.source_as_of;
+  if (!config) return { value: createdIsoDay, origin: "created_at-fallback" };
+  const decodeJson = (bytes) => {
+    try {
+      return JSON.parse(new TextDecoder().decode(bytes));
+    } catch (error) {
+      fail("FAMILY_ASOF_INVALID", `declared source_as_of is not JSON: ${error.message}`);
+    }
+  };
+  let json;
+  let origin;
+  if (config.file) {
+    const bytes = payloads.get(`${family.manifest_prefix ?? family.root}/${config.file}`);
+    if (!bytes) {
+      // The family declares a source but this tree does not carry it (for
+      // example an offline fixture tree): fall back, explicitly marked.
+      return { value: createdIsoDay, origin: "created_at-fallback" };
+    }
+    json = decodeJson(bytes);
+    origin = "family-index";
+  } else {
+    if (payloads.size !== 1) {
+      fail("FAMILY_ASOF_AMBIGUOUS", `source_as_of without a file needs a single enrolled payload (${payloads.size} present)`);
+    }
+    json = decodeJson(payloads.values().next().value);
+    origin = "payload";
+  }
+  const raw = json?.[config.key];
+  const value = toIsoDay(raw);
+  if (value === null) {
+    fail("FAMILY_ASOF_INVALID", `${config.file ?? "<payload>"}.${config.key} = ${JSON.stringify(raw)} is not an ISO date or date-time`);
+  }
+  return { value, origin };
+}
+
 // Build the generation manifest for a family from the files under absRoot,
 // recording asset paths relRoot-relative (they must satisfy the contract's
 // privacy prefixes, e.g. "data/" for private, "public/data/" for public).
@@ -203,6 +276,8 @@ export async function buildFamilyManifest({
   const files = (enrolled ?? await walkFiles(absRoot))
     .sort((left, right) => left.localeCompare(right));
   if (files.length === 0) fail("FAMILY_EMPTY", absRoot);
+  const createdAt = now();
+  const createdIsoDay = createdAt.slice(0, 10);
   const payloads = new Map();
   const assets = [];
   for (const relative of files) {
@@ -223,22 +298,27 @@ export async function buildFamilyManifest({
       sha256,
       bytes: bytes.byteLength,
       content_type: CONTENT_TYPES[path.extname(relative).toLowerCase()] ?? "application/octet-stream",
-      source_as_of: null,
+      source_as_of: null, // filled below, after the family source time is resolved
       privacy_class: family.privacy_class,
     });
     payloads.set(assetPath, bytes);
   }
   assets.sort((left, right) => left.path.localeCompare(right.path));
+  // The family's SOURCE time (never the acquisition time): real value where
+  // the family provides one, created_at fallback otherwise — always with an
+  // explicit origin marker so the two are never blurred.
+  const sourceAsOf = resolveSourceAsOf({ family, payloads, createdIsoDay });
+  for (const asset of assets) asset.source_as_of = sourceAsOf.value;
   const sourceSha = sha256Canonical(assets.map((asset) => [asset.path, asset.sha256]));
   const manifest = {
     schema_version: GENERATION_MANIFEST_SCHEMA,
     generation_id: `${familyName}-${sourceSha.slice(0, 16)}`,
     source_sha: sourceSha,
-    created_at: now(),
+    created_at: createdAt,
     assets,
   };
   const summary = validateGenerationManifest(manifest);
-  return { manifest, payloads, summary };
+  return { manifest, payloads, summary, sourceAsOf };
 }
 
 // The contract's deterministic publish receipt id for a given manifest and
@@ -641,6 +721,42 @@ export async function executeRetentionPlan({ plan, deleteObject }) {
   return { deleted, failures };
 }
 
+// --- result vocabulary + health classifier -----------------------------------
+//
+// The CLI emits exactly ONE JSON line on stdout per run, with a `result`
+// field. The complete set is the vocabulary below; a result outside it (or a
+// line that is not JSON, or a missing result) is a BUG, not a known outcome.
+// gate_blocked is a known outcome: a blocked cost gate exits 0 by design so it
+// cannot fail the lane (git stays authoritative). The chaos results are known
+// deliberate outcomes. classifyResultLine gives the workflow step and any
+// future monitor the SAME judgement — no grepping for strings on either side.
+export const PUBLISH_RESULT_VOCABULARY = Object.freeze([
+  "dry_run",
+  "published",
+  "resumed",
+  "gate_blocked",
+  "chaos_stale_writer",
+  "chaos_abort_after_prepare",
+  "rolled_back",
+  "retention_dry_run",
+  "retention_deleted",
+]);
+
+export function classifyResultLine(line) {
+  let parsed;
+  try {
+    parsed = JSON.parse(String(line).trim());
+  } catch {
+    return { healthy: false, result: null, reason: "not-json" };
+  }
+  const result = typeof parsed?.result === "string" ? parsed.result : null;
+  if (!result) return { healthy: false, result: null, reason: "missing-result" };
+  if (!PUBLISH_RESULT_VOCABULARY.includes(result)) {
+    return { healthy: false, result, reason: `unknown-result:${result}` };
+  }
+  return { healthy: true, result, reason: "ok" };
+}
+
 // Exit evidence: resolve the active generation through the pointer and compare
 // every asset byte-for-byte against the files read from disk.
 export async function verifyGenerationParity({ pointerStore, objectStore, payloads }) {  const pointer = await pointerStore.get();
@@ -946,7 +1062,7 @@ async function main() {
   }
 
   // 1. Manifest from disk.
-  const { manifest, payloads, summary } = await buildFamilyManifest({
+  const { manifest, payloads, summary, sourceAsOf } = await buildFamilyManifest({
     familyName: args.family,
     absRoot: path.join(REPO_ROOT, family.root),
     relRoot: family.manifest_prefix ?? family.root,
@@ -966,6 +1082,8 @@ async function main() {
     emit({
       result: "dry_run",
       generation_id: manifest.generation_id,
+      source_as_of: sourceAsOf.value,
+      source_as_of_origin: sourceAsOf.origin,
       ...plan,
       // Explicit-enrollment families also list each enrolled asset; tree
       // families (oecd-cli) keep the original summary shape byte-identical.
@@ -1187,6 +1305,8 @@ async function main() {
     result: resolved.resume ? "resumed" : "published",
     generation_id: manifest.generation_id,
     source_sha: manifest.source_sha,
+    source_as_of: sourceAsOf.value,
+    source_as_of_origin: sourceAsOf.origin,
     receipt_id: published.receipt.receipt_id,
     receipt_state: published.receipt.state,
     pointer_sequence_before: pointerSequenceBefore,

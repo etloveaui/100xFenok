@@ -8,7 +8,7 @@
 
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, rm, writeFile, readFile } from "node:fs/promises";
 import { statSync } from "node:fs";
 import http from "node:http";
 import os from "node:os";
@@ -30,6 +30,7 @@ import {
   buildFamilyManifest,
   chaosExpectedPointerSequence,
   chaosPointerStore,
+  classifyResultLine,
   collectFamiliesRetentionState,
   computeRetentionPlan,
   deleteR2Object,
@@ -776,6 +777,14 @@ try {
     fredAsset.bytes,
     statSync(path.join(REPO_ROOT, "100xfenok-next/public/data/macro/fred-macro.json")).size,
   );
+  // source_as_of comes from the payload's own top-level "updated", explicitly
+  // marked as such — never the acquisition time.
+  const fredUpdated = JSON.parse(await readFile(
+    path.join(REPO_ROOT, "100xfenok-next/public/data/macro/fred-macro.json"),
+    "utf8",
+  )).updated;
+  assert.equal(fredAsset.source_as_of, fredUpdated.slice(0, 10));
+  assert.equal(fredBuild.sourceAsOf.origin, "payload");
   assert.equal(fredAsset.privacy_class, "public");
   assert.equal(fredAsset.content_type, "application/json");
   assert.equal(fredAsset.object_key, `objects/sha256/${fredAsset.sha256}`);
@@ -951,6 +960,61 @@ try {
     });
     assert.equal(aParity.assets, manifest.assets.length);
     console.log("per-family coordinators ok (two families publish/resolve independently, no displacement)");
+  }
+
+  // --- source_as_of: real value from the family index, created_at fallback
+  // marked explicitly, and a loud failure for a declared-but-invalid value ---
+  {
+    const asofRoot = await mkdtemp(path.join(os.tmpdir(), "cloud-data-plane-asof-"));
+    try {
+      // Live-shaped oecd-cli tree: index.json carries the real as-of date.
+      await mkdir(path.join(asofRoot, "data/admin/oecd_cli"), { recursive: true });
+      await writeFile(
+        path.join(asofRoot, "data/admin/oecd_cli/index.json"),
+        JSON.stringify({ updated_at: "2026-08-02T10:00:00.000Z" }),
+      );
+      await writeFile(path.join(asofRoot, "data/admin/oecd_cli/obs.json"), "{\"a\":1}\n");
+      const withIndex = await buildFamilyManifest({
+        familyName: "oecd-cli",
+        absRoot: path.join(asofRoot, "data/admin/oecd_cli"),
+        relRoot: "data/admin/oecd_cli",
+        now: () => "2026-08-03T00:00:00.000Z",
+      });
+      assert.equal(withIndex.sourceAsOf.origin, "family-index");
+      assert.ok(withIndex.manifest.assets.every((asset) => asset.source_as_of === "2026-08-02"));
+
+      // Fixture-shaped tree without index.json: acquisition time is NOT
+      // silently blurred into source time — the fallback is explicit.
+      await rm(asofRoot, { recursive: true, force: true });
+      await mkdir(asofRoot, { recursive: true });
+      await writeFile(path.join(asofRoot, "obs.json"), "{\"a\":1}\n");
+      const noIndex = await buildFamilyManifest({
+        familyName: "oecd-cli",
+        absRoot: asofRoot,
+        relRoot: "data/admin/oecd_cli",
+        now: () => "2026-08-03T09:00:00.000Z",
+      });
+      assert.equal(noIndex.sourceAsOf.origin, "created_at-fallback");
+      assert.equal(noIndex.manifest.assets[0].source_as_of, "2026-08-03");
+
+      // A declared source that is present but not a date fails loudly.
+      await rm(asofRoot, { recursive: true, force: true });
+      await mkdir(asofRoot, { recursive: true });
+      await writeFile(path.join(asofRoot, "index.json"), JSON.stringify({ updated_at: "not a date" }));
+      await writeFile(path.join(asofRoot, "obs.json"), "{\"a\":1}\n");
+      await assertRejectsCode(
+        buildFamilyManifest({
+          familyName: "oecd-cli",
+          absRoot: asofRoot,
+          relRoot: "data/admin/oecd_cli",
+          now: () => "2026-08-03T09:00:00.000Z",
+        }),
+        "FAMILY_ASOF_INVALID",
+      );
+      console.log("source_as_of ok (family-index real value, created_at fallback marked, invalid fails loudly)");
+    } finally {
+      await rm(asofRoot, { recursive: true, force: true });
+    }
   }
 } finally {
   await new Promise((resolve) => server.close(resolve));
@@ -1539,6 +1603,41 @@ function runCli(extraArgs, includeFamily = true) {
   assert.match(retentionChaos.stderr, /ARGS_INVALID/);
   console.log("retention CLI flags ok (bucket-level, gate-first offline, dry-run default, ARGS_INVALID validation)");
   console.log("gate-blocked behaviour ok (tolerate -> typed line exit 0; strict -> exit 3)");
+}
+
+// --- result vocabulary: known outcomes are healthy, anything else is a bug ---
+
+{
+  const healthy = [
+    "dry_run",
+    "published",
+    "resumed",
+    "gate_blocked",
+    "chaos_stale_writer",
+    "chaos_abort_after_prepare",
+    "rolled_back",
+    "retention_dry_run",
+    "retention_deleted",
+  ];
+  for (const result of healthy) {
+    assert.deepEqual(classifyResultLine(JSON.stringify({ result })), {
+      healthy: true,
+      result,
+      reason: "ok",
+    });
+  }
+  assert.deepEqual(classifyResultLine(JSON.stringify({ result: "bogus" })), {
+    healthy: false,
+    result: "bogus",
+    reason: "unknown-result:bogus",
+  });
+  assert.deepEqual(classifyResultLine("{not json"), { healthy: false, result: null, reason: "not-json" });
+  assert.deepEqual(classifyResultLine(JSON.stringify({ foo: 1 })), {
+    healthy: false,
+    result: null,
+    reason: "missing-result",
+  });
+  console.log("result vocabulary ok (known results healthy; unknown/not-json/missing are bugs)");
 }
 
 console.log("test-cloud-data-plane-publisher: ok");
