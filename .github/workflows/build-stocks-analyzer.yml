@@ -55,6 +55,11 @@ jobs:
           node scripts/build-revision-movers.mjs
           node scripts/build-industry-benchmarks.mjs
 
+      # Fenok RIM refreshes daily so the fair-value table tracks the observed
+      # risk-free rate between weekly benchmark conversions.
+      - name: Build Fenok RIM fair values
+        run: node scripts/build-fenok-rim-index.mjs || echo "fenok-rim build skipped"
+
       - name: Build calendar previous-release values (FRED)
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
@@ -99,6 +104,8 @@ jobs:
             data/sec-13f/analytics/guru_holders_index.json \
             data/global-scouter/core/revision_movers.json \
             data/damodaran/industry_benchmarks.json \
+            data/computed/fenok-rim/fair-values.json \
+            100xfenok-next/public/data/computed/fenok-rim/fair-values.json \
             data/calendar/prev-values.json \
             100xfenok-next/public/data/calendar/prev-values.json \
             100xfenok-next/public/data/global-scouter/core/revision_movers.json \

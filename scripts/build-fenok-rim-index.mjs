@@ -1,28 +1,20 @@
-// Fenok RIM fair-value table for major indices.
+// Fenok RIM — self-sustaining index fair-value engine (v6).
 //
-// v1 (single-stage persistence on CURRENT book) was wrong in shape: the source analyst's
-// published numbers (S&P 500 ~+10%, Nasdaq 100 +25~30% through YE26 — persona
-// corpus, 2026-06 anchors) come from a FORWARD model where book value
-// compounds with retained earnings over an explicit window before a terminal
-// stage. v2 implements that shape:
+// Owner mandate 2026-08-03: with the full set of source sheets captured, the
+// calculation must now run on OUR data alone, daily, with no further source
+// material required. Every fixed value states why it is that value and what
+// refreshes it (constants_provenance) — no silent magic numbers.
 //
+// Model (reconstructed cell-for-cell from the captured sheets; provenance in
+// docs/references/fenok-rim-source-catalog.md):
 //   B0 = px_last / px_to_book_ratio
-//   for t = 1..3:  RI_t = (ROE - r) * B_{t-1};  B_t = B_{t-1} * (1 + ROE * retention)
-//   terminal: RI_3' = (min(ROE, roe_cap) - r) * B_2 ; TV = RI_3' * (1+g) / (r-g), discounted 3y
-//   V = B0 + PV(RI_1..3) + PV(TV)
-//
-// ROE is the Bloomberg forward ROE flowing weekly through the benchmarks
-// converter. r, retention, terminal growth g, and the terminal ROE cap are
-// HOUSE assumptions and are published as such; r dominates the answer, so a
-// sensitivity axis is emitted instead of one authoritative-looking number.
-// r = 0.08 reproduces the source analyst's published upside ballpark (S&P +6.7%, NDX +13.8%
-// on 2026-07-31 inputs); the house ERP-derived 0.0971 and 0.07 bracket it.
-// The terminal ROE cap (0.22) prevents a cyclical-peak forward ROE (KOSPI
-// 34.2%) from being compounded forever — the source analyst's KOSPI assumption is
-// "3-year average ROE slightly above 20%" with a 10,000-12,000 target band.
-//
-// This builder does not touch build-rim-index.mjs; that artifact keeps its
-// multi-period assumption band.
+//   explicit years t=1..3: RI_t = (ROE_t - r) * B_{t-1};
+//                          B_t = B_{t-1} * (1 + ROE_t * retention)
+//   terminal: flat perpetuity (ROE_LT - r) * B_3 / r, discounted 3y
+//   fair value = mean of a 3x3 grid: LT-ROE rows (center ± 0.5%p) x ERP
+//   columns (center ± 0.5%p); r = market risk-free + ERP.
+//   Cases: Likely / Worst (LT-ROE haircut variants) x rate scenarios
+//   (current 10Y / 3.5% 10Y).
 
 import fs from "node:fs";
 import path from "node:path";
@@ -34,73 +26,38 @@ const RIM_INPUTS = path.join(ROOT, "data", "computed", "rim-index", "inputs.json
 const OUT_DIR = path.join(ROOT, "data", "computed", "fenok-rim");
 const MIRROR_DIR = path.join(ROOT, "100xfenok-next", "public", "data", "computed", "fenok-rim");
 
-// the source analyst's published ERP band (Kiwoom column, 2016-09-20, owner-supplied):
-// "Equity Risk Premium을 5.5%~7%에 두고" — the band, applied over the OBSERVED
-// risk-free rate, is what turns his model into a fair RANGE (his 2016 KOSPI
-// 1,800-2,100 box). Likely = low ERP, Worst = high ERP, matching the
-// Worst/Likely two-point output of his current stock RIM sheets.
-export const RIM_ERP_BAND = Object.freeze({ likely: 0.055, worst: 0.07 });
-
-// His current source sheets (owner-supplied 2026-08-03 screenshots, archived at
-// platform the internal source-catalog archive) pin the full cell structure:
-//   - a 3x3 matrix per case: ERP columns {6.5%, 7.0%, 7.5%} (center = the
-//     sheet's "R.Premium Adj 7.00%") x three LT (long-term) ROE rows spaced
-//     0.5%p around a center;
-//   - the LT ROE center is a haircut of the FINAL explicit-year consensus
-//     ROE — measured from both sheets: Likely ~0.81x FY3 (Samsung
-//     34.1/41.62 = 0.819, Hynix 42.5/52.46 = 0.810), Worst ~0.735x FY3
-//     (Samsung 0.728, Hynix 0.743);
-//   - Fair Value = the mean of the nine cells (Samsung check: mean upside
-//     189.1% x 324,500 = 938,131 vs sheet Fair Value 938,244).
-export const RIM_SHEET_ERP_GRID = Object.freeze([0.065, 0.07, 0.075]);
-export const RIM_SHEET_LT_STEP = 0.005;
-export const RIM_SHEET_LT_HAIRCUT = Object.freeze({ likely: 0.81, worst: 0.735 });
-
-export const RIM_DISCOUNT_SENSITIVITY = [0.08, 0.0971, 0.07];
 export const RIM_EXPLICIT_YEARS = 3;
-export const RIM_TERMINAL_GROWTH = 0.025;
+export const RIM_GRID_STEP = 0.005;
+export const RIM_RATE_SCENARIO_10Y = 0.035;
+// Korean 10Y has no local automated source yet (data gap): dated anchor from
+// the 2026-08-03 source sheets until a KR-10Y lane exists.
+export const RIM_KR_RISK_FREE_ANCHOR = { value: 0.044, as_of: "2026-08-03" };
+// LT-ROE haircuts vs the 3-year consensus-path average. likely 0.93 is the one
+// cross-vintage measurable ratio (source LT 26.1% vs current SPX path average
+// 27.99%); worst applies the stock-sheet worst/likely ratio (0.735/0.81 =
+// 0.907). Both are estimates pending a same-vintage sheet pair.
+export const RIM_LT_HAIRCUT = Object.freeze({ likely: 0.93, worst: 0.85 });
 
-// Estimated per-market discount rates — part of the methodology estimate, not
-// a fit knob: US megacap COE ~8% reproduces his published US upsides, and the
-// house ERP-derived 9.71% (country premium included) lands KOSPI inside his
-// stated 10,000-12,000 band. Revisit when his published numbers move.
-export const RIM_MARKET_RATES = Object.freeze({ us: 0.08, kr: 0.0971 });
-
-// Calibration anchors: the source analyst's PUBLISHED model outputs, dated and sourced from
-// the persona corpus. Every run compares its own headline upside against
-// these and reports the divergence — the system tells us when our estimate
-// of his methodology drifts from what he actually publishes. Update this
-// table whenever the speaker ledger records fresh numbers.
-export const RIM_CALIBRATION_ANCHORS = Object.freeze([
-  { key: "sp500", published_upside_pct: [8, 12], as_of: "2026-06-11", source: "persona work.md: RIM upside S&P ~10%" },
-  { key: "nasdaq100", published_upside_pct: [25, 30], as_of: "2026-06-10", source: "persona work.md: NDX RIM +30% through YE26" },
-  { key: "kospi", published_fair_range: [10000, 12000], as_of: "2026-05-19", source: "speaker ledger 2kV9e8nI3Hw: KOSPI 10,000-12,000" },
-]);
-// No global terminal ROE cap: the source analyst's US mega-cap numbers require sustained
-// high ROE, and capping crushed them. Where the persona corpus records his
-// OWN ROE assumption for an index, that value overrides the Bloomberg spot
-// forward ROE instead (see roeOverride below).
-export const RIM_TERMINAL_ROE_CAP = null;
-
+// Per-index ERP centers measured off the source sheets (2025-12-09 index
+// sheets + 2026-08-03 input sheets). philadelphia_semi has no sheet of its
+// own; it inherits the NASDAQ-family center as an estimate.
 const INDEX_SOURCES = [
-  { file: "us.json", key: "sp500", name: "S&P 500", retention: 0.65, market: "us" },
-  { file: "us.json", key: "nasdaq100", name: "나스닥 100", retention: 0.65, market: "us" },
-  { file: "us.json", key: "nasdaq_composite", name: "나스닥 종합", retention: 0.65, market: "us" },
-  { file: "us.json", key: "russell2000", name: "러셀 2000", retention: 0.65, market: "us" },
-  {
-    file: "emerging.json", key: "kospi", name: "코스피", retention: 0.75, market: "kr",
-    // source-analyst stated assumption: KOSPI 3-year average ROE "slightly above 20%"
-    // (persona corpus 2026-06). The Bloomberg spot forward ROE (34.2% on
-    // 2026-07-31) is a cyclical peak; compounding it forever produced +300%
-    // class upsides far outside his own 10,000-12,000 target band.
-    roeOverride: { value: 0.21, source: "source_analyst_stated_3y_average_roe" },
-  },
-  { file: "micro_sectors.json", key: "philadelphia_semi", name: "필라델피아 반도체", retention: 0.65, market: "us" },
+  { file: "us.json", key: "sp500", name: "S&P 500", market: "us", erp: 0.05, erpSource: "sheet 2026-08-03" },
+  { file: "us.json", key: "nasdaq100", name: "나스닥 100", market: "us", erp: 0.055, erpSource: "sheet 2026-08-03" },
+  { file: "us.json", key: "nasdaq_composite", name: "나스닥 종합", market: "us", erp: 0.055, erpSource: "sheet 2026-08-03" },
+  { file: "us.json", key: "russell2000", name: "러셀 2000", market: "us", erp: 0.045, erpSource: "sheet 2025-12-09" },
+  { file: "emerging.json", key: "kospi", name: "코스피", market: "kr", erp: 0.12, erpSource: "sheet 2026-08-03" },
+  { file: "micro_sectors.json", key: "philadelphia_semi", name: "필라델피아 반도체", market: "us", erp: 0.055, erpSource: "estimated: NASDAQ-family center, no dedicated sheet" },
 ];
 
-function numberOrNull(value) {
-  return Number.isFinite(value) ? value : null;
-}
+// Calibration anchors: the source analyst's published outputs, dated. A
+// diverged flag means our estimate has drifted from what he publishes —
+// refresh anchors from new material, never silently refit.
+export const RIM_CALIBRATION_ANCHORS = Object.freeze([
+  { key: "sp500", published_upside_pct: [8, 12], as_of: "2026-06-11", source: "internal source catalog" },
+  { key: "nasdaq100", published_upside_pct: [25, 30], as_of: "2026-06-10", source: "internal source catalog" },
+  { key: "kospi", published_fair_range: [10000, 12000], as_of: "2026-05-19", source: "internal source catalog" },
+]);
 
 function round(value, digits) {
   if (!Number.isFinite(value)) return null;
@@ -108,93 +65,12 @@ function round(value, digits) {
   return Math.round(value * f) / f;
 }
 
-export function computeFenokRimRow({
-  key, name, px, pbr, roe, date, discountRate, retention,
-  roeOverride = null,
-  roePath = null,
-  years = RIM_EXPLICIT_YEARS,
-  terminalGrowth = RIM_TERMINAL_GROWTH,
-  terminalRoeCap = RIM_TERMINAL_ROE_CAP,
-}) {
-  const observedRoe = roe;
-  const usedRoe = Number.isFinite(roeOverride?.value) ? roeOverride.value : roe;
-  // Input priority: a speaker-STATED assumption outranks the derived
-  // consensus path, which outranks the spot observation.
-  const effectivePath = Number.isFinite(roeOverride?.value) ? null : roePath;
-  const missing = [];
-  if (!Number.isFinite(px) || px <= 0) missing.push("px_last");
-  if (!Number.isFinite(pbr) || pbr <= 0) missing.push("px_to_book_ratio");
-  if (!Number.isFinite(usedRoe)) missing.push("roe");
-  if (!Number.isFinite(retention) || retention <= 0 || retention >= 1) missing.push("retention");
-  if (missing.length > 0) {
-    return { key, name, status: "excluded", reason: `missing or invalid inputs: ${missing.join(", ")}` };
-  }
-  if (discountRate <= terminalGrowth) {
-    return { key, name, status: "excluded", reason: "discount rate must exceed terminal growth" };
-  }
-  const bookValue = px / pbr;
-  let book = bookValue;
-  let lastBeginningBook = bookValue;
-  let pvExplicit = 0;
-  let lastYearRoe = usedRoe;
-  for (let t = 1; t <= years; t += 1) {
-    // Per-year consensus ROE path when available (the source analyst's current sheets fade
-    // ROE year by year, e.g. Samsung 64->58->42); constant otherwise.
-    const yearRoe = Number.isFinite(effectivePath?.[t - 1]) ? effectivePath[t - 1] : usedRoe;
-    lastYearRoe = yearRoe;
-    const residual = (yearRoe - discountRate) * book;
-    pvExplicit += residual / (1 + discountRate) ** t;
-    lastBeginningBook = book;
-    book *= 1 + yearRoe * retention;
-  }
-  const baseTerminalRoe = Number.isFinite(effectivePath?.[years - 1]) ? lastYearRoe : usedRoe;
-  const terminalRoe = Number.isFinite(terminalRoeCap) ? Math.min(baseTerminalRoe, terminalRoeCap) : baseTerminalRoe;
-  const terminalResidual = (terminalRoe - discountRate) * lastBeginningBook;
-  const terminalValue = (terminalResidual * (1 + terminalGrowth)) / (discountRate - terminalGrowth)
-    / (1 + discountRate) ** years;
-  const fairValue = bookValue + pvExplicit + terminalValue;
-  return {
-    key,
-    name,
-    status: "ready",
-    as_of: date,
-    px_last: round(px, 2),
-    book_value: round(bookValue, 2),
-    forward_roe_observed: round(observedRoe, 4),
-    roe_used: round(usedRoe, 4),
-    roe_path: Array.isArray(effectivePath) ? effectivePath.map((v) => round(v, 4)) : null,
-    roe_override_source: roeOverride?.source ?? null,
-    terminal_roe: round(terminalRoe, 4),
-    retention,
-    discount_rate: discountRate,
-    fair_value: round(fairValue, 2),
-    upside_pct: round((fairValue / px - 1) * 100, 2),
-    components: {
-      book: round(bookValue, 2),
-      pv_explicit_residual_income: round(pvExplicit, 2),
-      pv_terminal: round(terminalValue, 2),
-    },
-  };
-}
-
-function loadSectionLatest(file, key) {
-  const payload = JSON.parse(fs.readFileSync(path.join(BENCHMARKS, file), "utf8"));
-  const section = payload?.sections?.[key];
-  const last = section?.data?.[section.data.length - 1];
-  if (!last) return null;
-  return {
-    date: last.date ?? null,
-    px: numberOrNull(last.px_last),
-    pbr: numberOrNull(last.px_to_book_ratio),
-    roe: numberOrNull(last.roe),
-  };
-}
-
-// One cell of the source sheets: explicit years on the consensus ROE path with
-// book compounding, then a perpetuity of residual income at the LT ROE on the
-// terminal book (his 2016 article: constant long-run ROE — no terminal
-// growth). Returns the fair value for one (LT ROE, ERP) pair.
-export function computeSheetCell({ bookValue, roePath, retention, riskFree, erp, ltRoe, years = RIM_EXPLICIT_YEARS }) {
+// One grid cell: explicit consensus-path years then a flat terminal
+// perpetuity at the LT ROE. Flat (g=0) is deliberate: the sheets carry a
+// long-term payout of 50%, but a perpetuity growing at ROE_LT * 0.5 diverges
+// for every high-ROE index (growth > r), so the LT payout is recorded as a
+// sheet fact and not wired into terminal growth.
+export function computeCell({ bookValue, roePath, retention, riskFree, erp, ltRoe, years = RIM_EXPLICIT_YEARS }) {
   const r = riskFree + erp;
   let book = bookValue;
   let pvExplicit = 0;
@@ -207,23 +83,22 @@ export function computeSheetCell({ bookValue, roePath, retention, riskFree, erp,
   return bookValue + pvExplicit + terminal;
 }
 
-// Full Worst/Likely reproduction for one index: 3x3 matrix per case, fair
-// value = mean of the nine cells, with min/max upside like the sheet's
-// 상승여력 최저/최고/평균 block.
-export function computeSheetCase({ px, bookValue, roePath, retention, riskFree, haircut }) {
-  const fy3 = roePath[roePath.length - 1];
-  const ltCenter = fy3 * haircut;
-  const ltRows = [ltCenter - RIM_SHEET_LT_STEP, ltCenter, ltCenter + RIM_SHEET_LT_STEP];
+// One case (Likely or Worst, one rate scenario): 3x3 grid, mean = fair value,
+// with the min/max upsides the sheets print as 상승여력 최저/최고.
+export function computeCase({ px, bookValue, roePath, retention, riskFree, erpCenter, haircut }) {
+  const pathAvg = roePath.reduce((a, b) => a + b, 0) / roePath.length;
+  const ltCenter = pathAvg * haircut;
   const cells = [];
-  for (const ltRoe of ltRows) {
-    for (const erp of RIM_SHEET_ERP_GRID) {
-      cells.push(computeSheetCell({ bookValue, roePath, retention, riskFree, erp, ltRoe }));
+  for (const ltRoe of [ltCenter - RIM_GRID_STEP, ltCenter, ltCenter + RIM_GRID_STEP]) {
+    for (const erp of [erpCenter - RIM_GRID_STEP, erpCenter, erpCenter + RIM_GRID_STEP]) {
+      cells.push(computeCell({ bookValue, roePath, retention, riskFree, erp, ltRoe }));
     }
   }
   const mean = cells.reduce((a, b) => a + b, 0) / cells.length;
   return {
-    lt_roe_rows: ltRows.map((v) => round(v, 4)),
-    erp_grid: RIM_SHEET_ERP_GRID,
+    lt_roe_center: round(ltCenter, 4),
+    erp_center: erpCenter,
+    risk_free: round(riskFree, 4),
     fair_value: round(mean, 2),
     upside_pct: round((mean / px - 1) * 100, 2),
     upside_min_pct: round((Math.min(...cells) / px - 1) * 100, 2),
@@ -231,14 +106,12 @@ export function computeSheetCase({ px, bookValue, roePath, retention, riskFree, 
   };
 }
 
-// Consensus per-year ROE paths and the observed risk-free rate come from the
-// existing rim-index derivation (weighted stock-consensus grids).
 const RIM_INDEX_KEY = { sp500: "SPX", nasdaq100: "NDX", kospi: "KOSPI", philadelphia_semi: "SOX", nasdaq_composite: "CCMP" };
 
 export function loadRimDerived() {
   try {
     const payload = JSON.parse(fs.readFileSync(RIM_INPUTS, "utf8"));
-    const riskFree = payload?.indices?.SPX?.observed?.risk_free_rate?.value
+    const riskFreeUs = payload?.indices?.SPX?.observed?.risk_free_rate?.value
       ?? Object.values(payload?.indices ?? {})[0]?.observed?.risk_free_rate?.value
       ?? null;
     const paths = {};
@@ -250,54 +123,44 @@ export function loadRimDerived() {
         .map((p) => p?.roe_on_beginning_book?.value)
         .filter((v) => Number.isFinite(v));
       if (roePath.length >= 3) paths[ourKey] = roePath.slice(0, 3);
-      // Retention = 1 - observed payout, matching the sheets' Bloomberg
-      // Div.Payout input. A zero/absent payout is a blocked derivation
-      // (KOSPI's payout coverage gate), not a real 100% retention.
       const payout = derived?.payout_ratio?.value;
       if (Number.isFinite(payout) && payout > 0 && payout < 1) {
-        retentions[ourKey] = { value: 1 - payout, source: `rim-index derived payout_ratio ${round(payout, 4)}` };
+        retentions[ourKey] = { value: 1 - payout, source: `observed derived payout_ratio ${round(payout, 4)}` };
       }
     }
-    return { riskFree: Number.isFinite(riskFree) ? riskFree : null, paths, retentions };
+    return { riskFreeUs: Number.isFinite(riskFreeUs) ? riskFreeUs : null, paths, retentions };
   } catch {
-    return { riskFree: null, paths: {}, retentions: {} };
+    return { riskFreeUs: null, paths: {}, retentions: {} };
   }
 }
 
-function retentionFor(source, derived) {
-  const observed = derived?.retentions?.[source.key];
-  if (observed) return { value: observed.value, source: observed.source };
-  return { value: source.retention, source: "house fallback (observed payout blocked or unavailable)" };
+function loadSectionLatest(file, key) {
+  const payload = JSON.parse(fs.readFileSync(path.join(BENCHMARKS, file), "utf8"));
+  const section = payload?.sections?.[key];
+  const last = section?.data?.[section.data.length - 1];
+  if (!last) return null;
+  return {
+    date: last.date ?? null,
+    px: Number.isFinite(last.px_last) ? last.px_last : null,
+    pbr: Number.isFinite(last.px_to_book_ratio) ? last.px_to_book_ratio : null,
+    roe: Number.isFinite(last.roe) ? last.roe : null,
+  };
 }
 
-function rowFor(source, discountRate, derived = null) {
-  const latest = loadSectionLatest(source.file, source.key);
-  if (!latest) return { key: source.key, name: source.name, status: "excluded", reason: "section absent from benchmarks" };
-  return computeFenokRimRow({
-    key: source.key,
-    name: source.name,
-    retention: source.retention,
-    roeOverride: source.roeOverride ?? null,
-    roePath: derived?.paths?.[source.key] ?? null,
-    ...latest,
-    discountRate,
-  });
-}
-
-export function checkCalibration(headlineRows) {
+export function checkCalibration(rows) {
   return RIM_CALIBRATION_ANCHORS.map((anchor) => {
-    const row = headlineRows.find((r) => r.key === anchor.key);
+    const row = rows.find((r) => r.key === anchor.key);
     if (!row || row.status !== "ready") {
       return { key: anchor.key, status: "unavailable", source: anchor.source };
     }
     let within;
     let computed;
     if (anchor.published_upside_pct) {
-      computed = row.upside_pct;
+      computed = row.likely.rate_current.upside_pct;
       const [lo, hi] = anchor.published_upside_pct;
       within = computed >= lo - 5 && computed <= hi + 5;
     } else {
-      computed = row.fair_value;
+      computed = row.likely.rate_current.fair_value;
       const [lo, hi] = anchor.published_fair_range;
       within = computed >= lo * 0.9 && computed <= hi * 1.1;
     }
@@ -314,103 +177,80 @@ export function checkCalibration(headlineRows) {
 
 export function buildArtifact({ nowIso }) {
   const derived = loadRimDerived();
-  // Headline table: the methodology estimate — per-market discount rates.
-  const headlineRows = INDEX_SOURCES.map((source) => rowFor(source, RIM_MARKET_RATES[source.market], derived));
-  const sensitivityTables = RIM_DISCOUNT_SENSITIVITY.map((discountRate) => ({
-    discount_rate: discountRate,
-    rows: INDEX_SOURCES.map((source) => rowFor(source, discountRate, derived)),
-  }));
-  // the source analyst-article-faithful preset: r derived from the OBSERVED risk-free rate
-  // plus his published ERP band; per-year consensus ROE paths where the
-  // rim-index grid carries them. Worst/Likely mirrors his sheet output.
-  const articlePresets = derived.riskFree === null ? null : Object.fromEntries(
-    Object.entries(RIM_ERP_BAND).map(([label, erp]) => [label, {
-      discount_rate: round(derived.riskFree + erp, 4),
-      erp,
-      risk_free_observed: derived.riskFree,
-      rows: INDEX_SOURCES.map((source) => rowFor(source, derived.riskFree + erp, derived)),
-    }]),
-  );
-  // Source-sheet reproduction per index: Worst/Likely 3x3 matrices wherever a
-  // consensus ROE path exists.
-  const sheetModel = derived.riskFree === null ? null : INDEX_SOURCES.map((source) => {
-    const roePath = derived.paths[source.key];
+  const rows = INDEX_SOURCES.map((source) => {
     const latest = loadSectionLatest(source.file, source.key);
-    if (!roePath || !latest || !Number.isFinite(latest.px) || !Number.isFinite(latest.pbr) || latest.pbr <= 0) {
-      return { key: source.key, name: source.name, status: "excluded", reason: roePath ? "missing price/book inputs" : "no consensus ROE path in the rim-index grid" };
+    const roePath = derived.paths[source.key]
+      ?? (Number.isFinite(latest?.roe) ? [latest.roe, latest.roe, latest.roe] : null);
+    const roePathSource = derived.paths[source.key]
+      ? "weekly consensus grid (rim-index)"
+      : "spot forward ROE held constant (no consensus grid for this index)";
+    const riskFree = source.market === "kr" ? RIM_KR_RISK_FREE_ANCHOR.value : derived.riskFreeUs;
+    const riskFreeSource = source.market === "kr"
+      ? `KR 10Y anchor ${RIM_KR_RISK_FREE_ANCHOR.value} (sheet ${RIM_KR_RISK_FREE_ANCHOR.as_of}; automated KR-10Y lane is an open data gap)`
+      : "observed US 10Y (FRED DGS10 via rim-index, daily)";
+    const retention = derived.retentions[source.key]
+      ?? { value: 0.65, source: "house fallback (observed payout blocked or unavailable)" };
+    if (!latest || !Number.isFinite(latest.px) || !Number.isFinite(latest.pbr) || latest.pbr <= 0
+      || !roePath || !Number.isFinite(riskFree)) {
+      return { key: source.key, name: source.name, status: "excluded", reason: "missing price/book/ROE/risk-free inputs" };
     }
-    const retention = retentionFor(source, derived);
     const base = {
       px: latest.px,
       bookValue: latest.px / latest.pbr,
       roePath,
       retention: retention.value,
-      riskFree: derived.riskFree,
+      erpCenter: source.erp,
     };
+    const caseFor = (haircut, rf) => computeCase({ ...base, riskFree: rf, haircut });
     return {
       key: source.key,
       name: source.name,
       status: "ready",
       as_of: latest.date,
       px_last: round(latest.px, 2),
+      pbr: round(latest.pbr, 4),
+      book_value: round(latest.px / latest.pbr, 2),
       roe_path: roePath.map((v) => round(v, 4)),
+      roe_path_source: roePathSource,
       retention: round(retention.value, 4),
       retention_source: retention.source,
-      risk_free_observed: derived.riskFree,
-      worst: computeSheetCase({ ...base, haircut: RIM_SHEET_LT_HAIRCUT.worst }),
-      likely: computeSheetCase({ ...base, haircut: RIM_SHEET_LT_HAIRCUT.likely }),
+      erp_center: source.erp,
+      erp_source: source.erpSource,
+      risk_free: round(riskFree, 4),
+      risk_free_source: riskFreeSource,
+      likely: {
+        rate_current: caseFor(RIM_LT_HAIRCUT.likely, riskFree),
+        rate_scenario_35: caseFor(RIM_LT_HAIRCUT.likely, RIM_RATE_SCENARIO_10Y),
+      },
+      worst: {
+        rate_current: caseFor(RIM_LT_HAIRCUT.worst, riskFree),
+        rate_scenario_35: caseFor(RIM_LT_HAIRCUT.worst, RIM_RATE_SCENARIO_10Y),
+      },
     };
   });
-  const calibration = checkCalibration(headlineRows);
   return {
     schema_version: "fenok-rim-index/v6",
     generated_at: nowIso,
     method: "fenok_rim_forward_book_compounding_residual_income",
-    headline: {
-      description: "Methodology estimate: per-market discount rates (us 0.08, kr 0.0971), the source analyst-stated ROE overrides where the corpus records them.",
-      market_rates: RIM_MARKET_RATES,
-      rows: headlineRows,
-    },
+    display_note: "상대적 매력도 지표이며 목표가가 아님. 컨센서스 변화에 따라 언제든 크게 바뀔 수 있음.",
+    rows,
     calibration_check: {
-      description: "Computed headline output vs the source analyst's PUBLISHED numbers (dated, sourced). 'diverged' means our estimate of his methodology has drifted from what he publishes — recalibrate anchors from the latest speaker ledger, do not silently refit.",
-      results: calibration,
+      description: "Computed Likely upside vs the source analyst's dated published outputs. diverged = refresh anchors from new material; never silently refit.",
+      results: checkCalibration(rows),
     },
-    sheet_model: sheetModel && {
-      description: "Cell-structure reproduction of the source analyst's source RIM sheets (owner-supplied 2026-08-03, archived in the internal source catalog): per case a 3x3 matrix of LT-ROE rows (FY3 x 0.81 Likely / x 0.735 Worst, +-0.5%p) by ERP columns {6.5,7.0,7.5}%, over the observed risk-free rate; fair value = mean of the nine cells; terminal is a constant-ROE perpetuity (2016 article), no growth.",
-      rows: sheetModel,
-    },
-    erp_band_presets: articlePresets && {
-      description: "Faithful to the source analyst's published parameters (Kiwoom column 2016-09-20): r = observed risk-free + his 5.5%~7% ERP band; per-year consensus ROE paths from the rim-index grid where available. Likely = low ERP, Worst = high ERP, matching his sheet's Worst/Likely output.",
-      ...articlePresets,
-    },
-    formula: "V = B0 + PV(RI_1..3, book compounds at ROE*retention) + PV(terminal RI at min(ROE, cap), growth g)",
-    assumptions: {
-      roe_source: "Bloomberg forward ROE via the weekly benchmarks converter (observed input)",
-      explicit_years: RIM_EXPLICIT_YEARS,
-      terminal_growth: RIM_TERMINAL_GROWTH,
-      terminal_roe_cap: RIM_TERMINAL_ROE_CAP,
-      discount_rates: RIM_DISCOUNT_SENSITIVITY,
-      discount_rate_note: "0.08 is the headline rate, calibrated so the model reproduces the source analyst's published upside ballpark (S&P ~+10%, NDX +25~30% through YE26, persona corpus 2026-06); 0.0971 is the house ERP-derived cost of equity; 0.07 is the lower bracket. r is a house assumption and dominates the result.",
-      retention_note: "Retention (1 - payout) is a house assumption per index: 0.65 US families, 0.75 KOSPI.",
-      terminal_roe_note: "No global terminal ROE cap. Where the persona corpus records a source-analyst stated ROE assumption for an index (KOSPI: 3-year average slightly above 20% -> 0.21), it overrides the Bloomberg spot forward ROE, with both values published.",
-      disclaimer: "Model-implied fair values under stated assumptions. Not price targets, not investment advice.",
-    },
-    // Every fixed value states WHY it is that value and WHAT refreshes it, so
-    // the system stays self-computing instead of accumulating silent magic
-    // numbers (owner rule, 2026-08-03).
     constants_provenance: {
-      risk_free: { why: "observed FRED DGS10 via rim-index inputs", refresh: "daily lane, automatic" },
-      roe_paths: { why: "weighted stock-consensus FY1-3 grids from rim-index", refresh: "weekly benchmarks/scouter conversion, automatic" },
-      retention: { why: "1 - observed derived payout_ratio per index (the sheets' Bloomberg Div.Payout input); house fallback only where the payout derivation is blocked, with the reason on the row", refresh: "weekly, automatic; KOSPI unblocks when payout coverage passes its gate" },
-      sheet_erp_grid: { why: "source sheets columns {6.5,7.0,7.5}% with center 7.00% = the sheet's R.Premium Adj", refresh: "manual — remeasure when a newer source sheets is supplied" },
-      sheet_lt_haircut: { why: "measured from the two 2026-08-03 sheets: Likely LT/FY3 = 0.819 (Samsung) and 0.810 (Hynix) -> 0.81; Worst = 0.728/0.743 -> 0.735; n=2 estimate", refresh: "manual — a third sheet either confirms or re-fits; do not silently change" },
-      sheet_lt_step: { why: "0.5%p row spacing read directly off both sheets", refresh: "manual with new sheets" },
-      article_erp_band: { why: "his 2016 Kiwoom column: ERP 5.5%~7%", refresh: "manual — supersede if he publishes a newer band" },
-      market_rates_headline: { why: "reverse-calibrated reconciliation view only (us 0.08 reproduces his 2026-06 published upsides); NOT a measured parameter", refresh: "recalibrate only when calibration_check diverges after an anchor update" },
-      terminal_growth_headline: { why: "2.5% perpetual growth in the headline variant mirrors the existing rim-index optimistic endpoint; the sheet model instead uses his 2016 constant-ROE perpetuity (g=0)", refresh: "owner decision" },
-      calibration_anchors: { why: "his published outputs, dated and sourced", refresh: "update from speaker ledger whenever he publishes; divergence flags, never silent refits" },
+      risk_free_us: { why: "observed FRED DGS10 via rim-index inputs", refresh: "daily lane, automatic" },
+      risk_free_kr: { why: `sheet-dated anchor ${RIM_KR_RISK_FREE_ANCHOR.value} (${RIM_KR_RISK_FREE_ANCHOR.as_of})`, refresh: "OPEN DATA GAP — replace with an automated KR-10Y source lane" },
+      roe_paths: { why: "weighted stock-consensus FY1-3 grids; spot ROE held constant only where no grid exists (flagged per row)", refresh: "weekly conversion, automatic" },
+      retention: { why: "1 - observed derived payout per index; house 0.65 fallback only where the payout derivation is blocked", refresh: "weekly, automatic" },
+      erp_centers: { why: "measured per index off the source sheets (values and dates on each row); semi index inherits the NASDAQ-family center as an estimate", refresh: "manual — remeasure when a newer sheet is supplied" },
+      grid_step: { why: "0.5%p row/column spacing read directly off every captured sheet", refresh: "manual with new sheets" },
+      lt_haircut: { why: "likely 0.93 = the one cross-vintage LT/path-average ratio measurable today; worst = likely x 0.907 (the stock-sheet worst/likely ratio). Estimates pending a same-vintage pair", refresh: "manual — a same-vintage sheet pair confirms or re-fits" },
+      terminal: { why: "flat perpetuity at LT ROE; the sheets' 50% long-term payout is recorded but NOT wired as terminal growth because ROE_LT x 0.5 exceeds r for every high-ROE index (divergent perpetuity)", refresh: "owner decision" },
+      rate_scenario: { why: "3.5% 10Y alternate column shown on every captured index sheet", refresh: "manual with new sheets" },
+      calibration_anchors: { why: "dated published outputs from the internal source catalog", refresh: "update on new material; divergence flags, never silent refits" },
     },
-    sensitivity_tables: sensitivityTables,
+    disclaimer: "Model-implied fair values under stated assumptions. Not price targets, not investment advice.",
   };
 }
 
@@ -421,31 +261,14 @@ if (invokedDirectly) {
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, "fair-values.json"), `${JSON.stringify(artifact, null, 2)}\n`);
   }
-  console.log("--- headline (per-market rates) ---");
-  for (const row of artifact.headline.rows) {
+  for (const row of artifact.rows) {
     if (row.status !== "ready") { console.log(`${row.name}: excluded (${row.reason})`); continue; }
-    console.log(`${row.name}: px ${row.px_last} | r ${row.discount_rate} | fair ${row.fair_value} | upside ${row.upside_pct}%`);
+    const L = row.likely.rate_current;
+    const W = row.worst.rate_current;
+    console.log(`${row.name}: px ${row.px_last} | Likely ${L.fair_value} (${L.upside_pct}%) | Worst ${W.fair_value} (${W.upside_pct}%) | r=${row.risk_free}+${row.erp_center}`);
   }
-  console.log("--- calibration vs the source analyst published ---");
   for (const check of artifact.calibration_check.results) {
-    console.log(`${check.key}: ${check.status} | computed ${check.computed} vs published ${JSON.stringify(check.published)} (${check.published_as_of ?? "?"})`);
-  }
-  if (artifact.sheet_model) {
-    console.log("--- source sheets model (Worst / Likely, matrix mean) ---");
-    for (const row of artifact.sheet_model.rows) {
-      if (row.status !== "ready") { console.log(`${row.name}: excluded (${row.reason})`); continue; }
-      console.log(`${row.name}: px ${row.px_last} | Worst ${row.worst.fair_value} (${row.worst.upside_pct}%) | Likely ${row.likely.fair_value} (${row.likely.upside_pct}%)`);
-    }
-  }
-  if (artifact.erp_band_presets) {
-    for (const label of ["likely", "worst"]) {
-      const preset = artifact.erp_band_presets[label];
-      console.log(`--- article preset ${label} (r = ${preset.discount_rate} = rf ${preset.risk_free_observed} + ERP ${preset.erp}) ---`);
-      for (const row of preset.rows) {
-        if (row.status !== "ready") { console.log(`${row.name}: excluded (${row.reason})`); continue; }
-        console.log(`${row.name}: fair ${row.fair_value} | upside ${row.upside_pct}% | roe_path ${JSON.stringify(row.roe_path)}`);
-      }
-    }
+    console.log(`calibration ${check.key}: ${check.status} (${check.computed} vs ${JSON.stringify(check.published)})`);
   }
   console.log(`written: ${path.join(OUT_DIR, "fair-values.json")} (+ public mirror)`);
 }
