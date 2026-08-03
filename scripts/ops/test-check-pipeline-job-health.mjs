@@ -391,6 +391,10 @@ function writeWorkflow(root, file, source) {
     "every scheduled workflow must be watched or explicitly excluded",
   );
   assert.deepEqual(policy.excluded, [{
+    file: "data-plane-serving-probe.yml",
+    label: "Data Plane Serving Probe",
+    reason: SCHEDULED_WORKFLOW_EXCLUSIONS["data-plane-serving-probe.yml"],
+  }, {
     file: "pipeline-failure-alarm.yml",
     label: "Pipeline Failure Alarm",
     reason: SCHEDULED_WORKFLOW_EXCLUSIONS["pipeline-failure-alarm.yml"],
