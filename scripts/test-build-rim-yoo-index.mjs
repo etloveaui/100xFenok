@@ -1,54 +1,95 @@
 import assert from "node:assert/strict";
-import { computeYooRimRow, YOO_PERSISTENCE_SCENARIOS, YOO_DISCOUNT_SENSITIVITY } from "./build-rim-yoo-index.mjs";
+import {
+  computeYooRimRow,
+  YOO_DISCOUNT_SENSITIVITY,
+  YOO_EXPLICIT_YEARS,
+  YOO_TERMINAL_GROWTH,
+  YOO_TERMINAL_ROE_CAP,
+} from "./build-rim-yoo-index.mjs";
 
-// Hand-computed reference: B0 = 1000, ROE 20%, r 10%, w = 1.0
-//   V = B0 + (ROE - r) * B0 * w / (1 + r - w) = 1000 + 0.10*1000*1/(1.10-1.0) = 2000
+// Hand-computed reference (g = 0, cap above ROE so it does not bind):
+//   B0 = 1000, ROE 20%, r 10%, retention 0.5 -> book grows 10%/yr
+//   RI_1 = 0.10*1000 = 100        PV = 100/1.1   =  90.909
+//   RI_2 = 0.10*1100 = 110        PV = 110/1.21  =  90.909
+//   RI_3 = 0.10*1210 = 121        PV = 121/1.331 =  90.909
+//   TV   = 121/0.10 = 1210        PV = 1210/1.331 = 909.09
+//   V = 1000 + 272.73 + 909.09 = 2181.82
 {
   const row = computeYooRimRow({
-    key: "test_index",
-    name: "Test",
-    px: 1500,
-    pbr: 1.5,
-    roe: 0.2,
-    date: "2026-07-31",
-    discountRate: 0.1,
+    key: "t", name: "T",
+    px: 2000, pbr: 2.0, roe: 0.2, date: "2026-07-31",
+    discountRate: 0.1, retention: 0.5, terminalGrowth: 0, terminalRoeCap: 0.99,
   });
+  assert.equal(row.status, "ready");
   assert.equal(row.book_value, 1000);
-  const w1 = row.scenarios.find((s) => s.w === 1.0);
-  assert.equal(Math.round(w1.fair_value), 2000);
-  assert.equal(Math.round(w1.upside_pct * 100) / 100, 33.33, "2000/1500 - 1 = +33.33%");
-  // w = 0.9: 0.10*1000*0.9 / (1.10 - 0.9) = 90/0.20 = 450 -> V = 1450
-  const w09 = row.scenarios.find((s) => s.w === 0.9);
-  assert.equal(Math.round(w09.fair_value), 1450);
-  assert.ok(w09.fair_value < w1.fair_value, "lower persistence must not raise fair value");
+  assert.equal(Math.round(row.fair_value * 100) / 100, 2181.82);
+  assert.equal(Math.round(row.upside_pct * 100) / 100, 9.09, "2181.82/2000 - 1");
+  assert.equal(Math.round(row.components.pv_explicit_residual_income * 100) / 100, 272.73);
 }
 
-// ROE below the discount rate produces a fair value BELOW book plus nothing —
-// negative residual income must reduce, never inflate.
+// The terminal ROE cap binds: with cap 0.15 the terminal residual uses
+// (0.15 - r), shrinking the terminal leg but leaving the explicit leg alone.
 {
-  const row = computeYooRimRow({
-    key: "t", name: "T", px: 900, pbr: 1.0, roe: 0.05, date: "2026-07-31", discountRate: 0.1,
+  const capped = computeYooRimRow({
+    px: 2000, pbr: 2.0, roe: 0.2, discountRate: 0.1, retention: 0.5,
+    terminalGrowth: 0, terminalRoeCap: 0.15, key: "t", name: "T", date: "d",
   });
-  const w1 = row.scenarios.find((s) => s.w === 1.0);
-  assert.ok(w1.fair_value < row.book_value, "negative spread lowers value below book");
+  const uncapped = computeYooRimRow({
+    px: 2000, pbr: 2.0, roe: 0.2, discountRate: 0.1, retention: 0.5,
+    terminalGrowth: 0, terminalRoeCap: 0.99, key: "t", name: "T", date: "d",
+  });
+  assert.equal(capped.components.pv_explicit_residual_income, uncapped.components.pv_explicit_residual_income);
+  assert.ok(capped.components.pv_terminal < uncapped.components.pv_terminal);
+  // TV_capped = (0.05 * 1210) / 0.10 = 605 -> PV 454.55
+  assert.equal(Math.round(capped.components.pv_terminal * 100) / 100, 454.55);
 }
 
-// Missing inputs exclude the row with an explicit reason instead of emitting
-// a fabricated number.
+// Terminal growth raises value; r <= g is rejected instead of exploding.
 {
-  const row = computeYooRimRow({ key: "t", name: "T", px: 100, pbr: null, roe: 0.2, date: "2026-07-31", discountRate: 0.1 });
+  const g0 = computeYooRimRow({ px: 2000, pbr: 2, roe: 0.2, discountRate: 0.1, retention: 0.5, terminalGrowth: 0, key: "t", name: "T", date: "d" });
+  const g25 = computeYooRimRow({ px: 2000, pbr: 2, roe: 0.2, discountRate: 0.1, retention: 0.5, terminalGrowth: 0.025, key: "t", name: "T", date: "d" });
+  assert.ok(g25.fair_value > g0.fair_value);
+  const bad = computeYooRimRow({ px: 2000, pbr: 2, roe: 0.2, discountRate: 0.02, retention: 0.5, terminalGrowth: 0.025, key: "t", name: "T", date: "d" });
+  assert.equal(bad.status, "excluded");
+}
+
+// ROE below r produces fair value below book — negative spread reduces.
+{
+  const row = computeYooRimRow({ px: 900, pbr: 1.0, roe: 0.05, discountRate: 0.1, retention: 0.5, key: "t", name: "T", date: "d" });
+  assert.ok(row.fair_value < row.book_value);
+}
+
+// Missing inputs exclude with reasons; no fabricated numbers.
+{
+  const row = computeYooRimRow({ px: 100, pbr: null, roe: 0.2, discountRate: 0.1, retention: 0.5, key: "t", name: "T", date: "d" });
   assert.equal(row.status, "excluded");
   assert.match(row.reason, /px_to_book_ratio/);
-}
-{
-  const row = computeYooRimRow({ key: "t", name: "T", px: 100, pbr: 0, roe: 0.2, date: "2026-07-31", discountRate: 0.1 });
-  assert.equal(row.status, "excluded", "zero PBR cannot produce a book value");
+  const zero = computeYooRimRow({ px: 100, pbr: 0, roe: 0.2, discountRate: 0.1, retention: 0.5, key: "t", name: "T", date: "d" });
+  assert.equal(zero.status, "excluded");
+  const badRet = computeYooRimRow({ px: 100, pbr: 1, roe: 0.2, discountRate: 0.1, retention: 1.2, key: "t", name: "T", date: "d" });
+  assert.equal(badRet.status, "excluded");
 }
 
-// Contract pins: the published scenario and sensitivity axes are explicit
-// house assumptions, not observations.
-assert.deepEqual(YOO_PERSISTENCE_SCENARIOS, [1.0, 0.9, 0.8]);
-assert.ok(YOO_DISCOUNT_SENSITIVITY.length >= 2, "at least house rate plus one alternative");
-for (const r of YOO_DISCOUNT_SENSITIVITY) assert.ok(r > 0.03 && r < 0.2);
+// A speaker-stated ROE override replaces the observed spot ROE for the whole
+// computation, and both values plus the source stay visible in the row.
+{
+  const row = computeYooRimRow({
+    px: 2000, pbr: 2.0, roe: 0.34, discountRate: 0.1, retention: 0.5,
+    terminalGrowth: 0, terminalRoeCap: 0.99,
+    roeOverride: { value: 0.2, source: "yoo_stated_3y_average_roe" },
+    key: "t", name: "T", date: "d",
+  });
+  assert.equal(Math.round(row.fair_value * 100) / 100, 2181.82, "override 0.20 reproduces the ROE-20% reference value");
+  assert.equal(row.forward_roe_observed, 0.34);
+  assert.equal(row.roe_used, 0.2);
+  assert.equal(row.roe_override_source, "yoo_stated_3y_average_roe");
+}
+
+// Contract pins: house assumption axes are explicit.
+assert.equal(YOO_DISCOUNT_SENSITIVITY[0], 0.08, "headline rate is the Yoo-calibrated 8%");
+assert.ok(YOO_DISCOUNT_SENSITIVITY.includes(0.0971), "house ERP-derived rate stays visible");
+assert.equal(YOO_EXPLICIT_YEARS, 3);
+assert.equal(YOO_TERMINAL_GROWTH, 0.025);
+assert.equal(YOO_TERMINAL_ROE_CAP, null, "no global cap; speaker overrides carry the correction");
 
 console.log("build-rim-yoo-index tests passed");

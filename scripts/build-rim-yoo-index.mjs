@@ -1,20 +1,28 @@
-// Yoo Dong-won style single-value RIM table for major indices (owner mandate
-// 2026-08-03: the assumption-band-only presentation is not the requested
-// product; a single fair value with upside % per index must be shown, with
-// every assumption labeled).
+// Yoo Dong-won style RIM fair-value table for major indices — v2.
 //
-// Formula (single-stage residual-income persistence form, the shape Yoo
-// Dong-won quotes on air):
-//   B0 = px_last / px_to_book_ratio                (current book value)
-//   V  = B0 + (ROE - r) * B0 * w / (1 + r - w)     (w = persistence factor)
-//   upside = V / px_last - 1
+// v1 (single-stage persistence on CURRENT book) was wrong in shape: Yoo's
+// published numbers (S&P 500 ~+10%, Nasdaq 100 +25~30% through YE26 — persona
+// corpus, 2026-06 anchors) come from a FORWARD model where book value
+// compounds with retained earnings over an explicit window before a terminal
+// stage. v2 implements that shape:
 //
-// ROE is the Bloomberg forward ROE already flowing weekly through the
-// benchmarks converter; r is a HOUSE assumption, so the artifact publishes a
-// discount-rate sensitivity axis instead of pretending one rate is observed.
-// This builder deliberately does NOT touch build-rim-index.mjs — that
-// artifact keeps its multi-period assumption band; this one answers the
-// owner's single-value question and says exactly what it assumed.
+//   B0 = px_last / px_to_book_ratio
+//   for t = 1..3:  RI_t = (ROE - r) * B_{t-1};  B_t = B_{t-1} * (1 + ROE * retention)
+//   terminal: RI_3' = (min(ROE, roe_cap) - r) * B_2 ; TV = RI_3' * (1+g) / (r-g), discounted 3y
+//   V = B0 + PV(RI_1..3) + PV(TV)
+//
+// ROE is the Bloomberg forward ROE flowing weekly through the benchmarks
+// converter. r, retention, terminal growth g, and the terminal ROE cap are
+// HOUSE assumptions and are published as such; r dominates the answer, so a
+// sensitivity axis is emitted instead of one authoritative-looking number.
+// r = 0.08 reproduces Yoo's published upside ballpark (S&P +6.7%, NDX +13.8%
+// on 2026-07-31 inputs); the house ERP-derived 0.0971 and 0.07 bracket it.
+// The terminal ROE cap (0.22) prevents a cyclical-peak forward ROE (KOSPI
+// 34.2%) from being compounded forever — Yoo's own KOSPI assumption is
+// "3-year average ROE slightly above 20%" with a 10,000-12,000 target band.
+//
+// This builder does not touch build-rim-index.mjs; that artifact keeps its
+// multi-period assumption band.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -25,23 +33,29 @@ const BENCHMARKS = path.join(ROOT, "data", "benchmarks");
 const OUT_DIR = path.join(ROOT, "data", "computed", "rim-yoo");
 const MIRROR_DIR = path.join(ROOT, "100xfenok-next", "public", "data", "computed", "rim-yoo");
 
-// House persistence scenarios: w = 1.0 (residual income persists), 0.9, 0.8
-// (fades). Published in this order; none of them is a forecast.
-export const YOO_PERSISTENCE_SCENARIOS = [1.0, 0.9, 0.8];
-
-// Discount-rate sensitivity: the house cost of equity (0.0971, from the
-// rim-index derivation risk_free + ERP) plus lower alternatives, because r is
-// the dominant lever of this model and readers must see that, not a single
-// authoritative-looking number.
-export const YOO_DISCOUNT_SENSITIVITY = [0.0971, 0.08, 0.07];
+export const YOO_DISCOUNT_SENSITIVITY = [0.08, 0.0971, 0.07];
+export const YOO_EXPLICIT_YEARS = 3;
+export const YOO_TERMINAL_GROWTH = 0.025;
+// No global terminal ROE cap: Yoo's US mega-cap numbers require sustained
+// high ROE, and capping crushed them. Where the persona corpus records his
+// OWN ROE assumption for an index, that value overrides the Bloomberg spot
+// forward ROE instead (see roeOverride below).
+export const YOO_TERMINAL_ROE_CAP = null;
 
 const INDEX_SOURCES = [
-  { file: "us.json", key: "sp500", name: "S&P 500" },
-  { file: "us.json", key: "nasdaq100", name: "나스닥 100" },
-  { file: "us.json", key: "nasdaq_composite", name: "나스닥 종합" },
-  { file: "us.json", key: "russell2000", name: "러셀 2000" },
-  { file: "emerging.json", key: "kospi", name: "코스피" },
-  { file: "micro_sectors.json", key: "philadelphia_semi", name: "필라델피아 반도체" },
+  { file: "us.json", key: "sp500", name: "S&P 500", retention: 0.65 },
+  { file: "us.json", key: "nasdaq100", name: "나스닥 100", retention: 0.65 },
+  { file: "us.json", key: "nasdaq_composite", name: "나스닥 종합", retention: 0.65 },
+  { file: "us.json", key: "russell2000", name: "러셀 2000", retention: 0.65 },
+  {
+    file: "emerging.json", key: "kospi", name: "코스피", retention: 0.75,
+    // Yoo's stated assumption: KOSPI 3-year average ROE "slightly above 20%"
+    // (persona corpus 2026-06). The Bloomberg spot forward ROE (34.2% on
+    // 2026-07-31) is a cyclical peak; compounding it forever produced +300%
+    // class upsides far outside his own 10,000-12,000 target band.
+    roeOverride: { value: 0.21, source: "yoo_stated_3y_average_roe" },
+  },
+  { file: "micro_sectors.json", key: "philadelphia_semi", name: "필라델피아 반도체", retention: 0.65 },
 ];
 
 function numberOrNull(value) {
@@ -54,23 +68,41 @@ function round(value, digits) {
   return Math.round(value * f) / f;
 }
 
-export function computeYooRimRow({ key, name, px, pbr, roe, date, discountRate }) {
+export function computeYooRimRow({
+  key, name, px, pbr, roe, date, discountRate, retention,
+  roeOverride = null,
+  years = YOO_EXPLICIT_YEARS,
+  terminalGrowth = YOO_TERMINAL_GROWTH,
+  terminalRoeCap = YOO_TERMINAL_ROE_CAP,
+}) {
+  const observedRoe = roe;
+  const usedRoe = Number.isFinite(roeOverride?.value) ? roeOverride.value : roe;
   const missing = [];
   if (!Number.isFinite(px) || px <= 0) missing.push("px_last");
   if (!Number.isFinite(pbr) || pbr <= 0) missing.push("px_to_book_ratio");
-  if (!Number.isFinite(roe)) missing.push("roe");
+  if (!Number.isFinite(usedRoe)) missing.push("roe");
+  if (!Number.isFinite(retention) || retention <= 0 || retention >= 1) missing.push("retention");
   if (missing.length > 0) {
-    return { key, name, status: "excluded", reason: `missing or non-positive inputs: ${missing.join(", ")}` };
+    return { key, name, status: "excluded", reason: `missing or invalid inputs: ${missing.join(", ")}` };
+  }
+  if (discountRate <= terminalGrowth) {
+    return { key, name, status: "excluded", reason: "discount rate must exceed terminal growth" };
   }
   const bookValue = px / pbr;
-  const scenarios = YOO_PERSISTENCE_SCENARIOS.map((w) => {
-    const fairValue = bookValue + ((roe - discountRate) * bookValue * w) / (1 + discountRate - w);
-    return {
-      w,
-      fair_value: round(fairValue, 2),
-      upside_pct: round((fairValue / px - 1) * 100, 2),
-    };
-  });
+  let book = bookValue;
+  let lastBeginningBook = bookValue;
+  let pvExplicit = 0;
+  for (let t = 1; t <= years; t += 1) {
+    const residual = (usedRoe - discountRate) * book;
+    pvExplicit += residual / (1 + discountRate) ** t;
+    lastBeginningBook = book;
+    book *= 1 + usedRoe * retention;
+  }
+  const terminalRoe = Number.isFinite(terminalRoeCap) ? Math.min(usedRoe, terminalRoeCap) : usedRoe;
+  const terminalResidual = (terminalRoe - discountRate) * lastBeginningBook;
+  const terminalValue = (terminalResidual * (1 + terminalGrowth)) / (discountRate - terminalGrowth)
+    / (1 + discountRate) ** years;
+  const fairValue = bookValue + pvExplicit + terminalValue;
   return {
     key,
     name,
@@ -78,9 +110,19 @@ export function computeYooRimRow({ key, name, px, pbr, roe, date, discountRate }
     as_of: date,
     px_last: round(px, 2),
     book_value: round(bookValue, 2),
-    forward_roe: round(roe, 4),
+    forward_roe_observed: round(observedRoe, 4),
+    roe_used: round(usedRoe, 4),
+    roe_override_source: roeOverride?.source ?? null,
+    terminal_roe: round(terminalRoe, 4),
+    retention,
     discount_rate: discountRate,
-    scenarios,
+    fair_value: round(fairValue, 2),
+    upside_pct: round((fairValue / px - 1) * 100, 2),
+    components: {
+      book: round(bookValue, 2),
+      pv_explicit_residual_income: round(pvExplicit, 2),
+      pv_terminal: round(terminalValue, 2),
+    },
   };
 }
 
@@ -100,23 +142,34 @@ function loadSectionLatest(file, key) {
 export function buildArtifact({ nowIso }) {
   const tables = YOO_DISCOUNT_SENSITIVITY.map((discountRate) => ({
     discount_rate: discountRate,
+    headline: discountRate === YOO_DISCOUNT_SENSITIVITY[0],
     rows: INDEX_SOURCES.map((source) => {
       const latest = loadSectionLatest(source.file, source.key);
       if (!latest) return { key: source.key, name: source.name, status: "excluded", reason: "section absent from benchmarks" };
-      return computeYooRimRow({ key: source.key, name: source.name, ...latest, discountRate });
+      return computeYooRimRow({
+        key: source.key,
+        name: source.name,
+        retention: source.retention,
+        roeOverride: source.roeOverride ?? null,
+        ...latest,
+        discountRate,
+      });
     }),
   }));
   return {
-    schema_version: "rim-yoo-index/v1",
+    schema_version: "rim-yoo-index/v2",
     generated_at: nowIso,
-    method: "yoo_dongwon_single_stage_residual_income_persistence",
-    formula: "V = B0 + (ROE - r) * B0 * w / (1 + r - w); B0 = px_last / px_to_book_ratio",
+    method: "yoo_dongwon_forward_book_compounding_residual_income",
+    formula: "V = B0 + PV(RI_1..3, book compounds at ROE*retention) + PV(terminal RI at min(ROE, cap), growth g)",
     assumptions: {
       roe_source: "Bloomberg forward ROE via the weekly benchmarks converter (observed input)",
+      explicit_years: YOO_EXPLICIT_YEARS,
+      terminal_growth: YOO_TERMINAL_GROWTH,
+      terminal_roe_cap: YOO_TERMINAL_ROE_CAP,
       discount_rates: YOO_DISCOUNT_SENSITIVITY,
-      discount_rate_note: "0.0971 is the house cost of equity (risk_free + ERP, rim-index derivation); 0.08 and 0.07 are sensitivity alternatives. r is a house assumption, not an observation, and it dominates the result.",
-      persistence_scenarios: YOO_PERSISTENCE_SCENARIOS,
-      persistence_note: "w = 1.0 keeps residual income perpetual; 0.9 / 0.8 fade it. House assumptions, not forecasts.",
+      discount_rate_note: "0.08 is the headline rate, calibrated so the model reproduces Yoo Dong-won's published upside ballpark (S&P ~+10%, NDX +25~30% through YE26, persona corpus 2026-06); 0.0971 is the house ERP-derived cost of equity; 0.07 is the lower bracket. r is a house assumption and dominates the result.",
+      retention_note: "Retention (1 - payout) is a house assumption per index: 0.65 US families, 0.75 KOSPI.",
+      terminal_roe_note: "No global terminal ROE cap. Where the persona corpus records Yoo's own ROE assumption for an index (KOSPI: 3-year average slightly above 20% -> 0.21), it overrides the Bloomberg spot forward ROE, with both values published.",
       disclaimer: "Model-implied fair values under stated assumptions. Not price targets, not investment advice.",
     },
     tables,
@@ -130,11 +183,12 @@ if (invokedDirectly) {
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, "fair-values.json"), `${JSON.stringify(artifact, null, 2)}\n`);
   }
-  const house = artifact.tables[0];
-  for (const row of house.rows) {
-    if (row.status !== "ready") { console.log(`${row.name}: excluded (${row.reason})`); continue; }
-    const w1 = row.scenarios[0];
-    console.log(`${row.name}: px ${row.px_last} | fair(w=1, r=${house.discount_rate}) ${w1.fair_value} | upside ${w1.upside_pct}%`);
+  for (const table of artifact.tables) {
+    console.log(`--- r = ${table.discount_rate}${table.headline ? " (headline)" : ""} ---`);
+    for (const row of table.rows) {
+      if (row.status !== "ready") { console.log(`${row.name}: excluded (${row.reason})`); continue; }
+      console.log(`${row.name}: px ${row.px_last} | fair ${row.fair_value} | upside ${row.upside_pct}%`);
+    }
   }
   console.log(`written: ${path.join(OUT_DIR, "fair-values.json")} (+ public mirror)`);
 }
