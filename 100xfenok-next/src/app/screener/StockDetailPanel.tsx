@@ -2371,18 +2371,25 @@ function w4Initials(ticker: string): string {
   return ticker.trim().slice(0, 2).toUpperCase() || "ST";
 }
 
-function W4ScoreDonut({ score }: { score: number | null }) {
+// The donut must say which score it is. Unlabelled and solitary beside a
+// 장기 우세 / 단기 우세 verdict it reads as a single integrated score, which is
+// exactly the thing the 2026-08-03 mandate retired — it carried the short-term
+// number while looking like an overall one.
+function W4ScoreDonut({ score, label }: { score: number | null; label: string }) {
   const value = w4ClampScore(score);
   return (
-    <div
-      className="cpw4-detail-donut"
-      style={{
-        background: `conic-gradient(var(--cpw4-accent) 0 ${value * 3.6}deg, var(--cp-divider) ${value * 3.6}deg 360deg)`,
-      }}
-      aria-label={`Fenok Edge ${w4ScoreText(score)}점`}
-    >
-      <span>{w4ScoreText(score)}</span>
-      <small>/100</small>
+    <div className="cpw4-detail-donut-wrap">
+      <span className="cpw4-detail-donut-label">{label}</span>
+      <div
+        className="cpw4-detail-donut"
+        style={{
+          background: `conic-gradient(var(--cpw4-accent) 0 ${value * 3.6}deg, var(--cp-divider) ${value * 3.6}deg 360deg)`,
+        }}
+        aria-label={`Fenok Edge ${label} ${w4ScoreText(score)}점`}
+      >
+        <span>{w4ScoreText(score)}</span>
+        <small>/100</small>
+      </div>
     </div>
   );
 }
@@ -2675,7 +2682,7 @@ export default function StockDetailPanel({
             </div>
 
             <div className="cpw4-hero-verdict">
-              <W4ScoreDonut score={detailScore} />
+              <W4ScoreDonut score={detailScore} label="단기" />
               <div className="cpw4-hero-verdict__copy">
                 <span className="cpw4-verdict-badge">
                   {edgeLead}
