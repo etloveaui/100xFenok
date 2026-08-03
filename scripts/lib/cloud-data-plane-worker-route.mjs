@@ -26,7 +26,21 @@ const ALLOWED_ACTIONS = new Set([
   "inspect",
 ]);
 
-const COORDINATOR_ID = "cloud-data-plane-coordinator";
+// One coordinator instance per family. Families publish on their own
+// schedules, so a single shared pointer would let each publish displace the
+// last — measured live, when publishing FRED moved the pointer off the OECD
+// generation and left it reachable only as `previous`.
+//
+// The legacy name stays the default so a caller that does not declare a family
+// keeps talking to the instance that already holds history.
+const DEFAULT_COORDINATOR_ID = "cloud-data-plane-coordinator";
+const FAMILY_HEADER = "x-data-plane-family";
+
+// Deliberately narrower than the contract's id rule: this string selects a
+// Durable Object instance, so anything surprising in it is refused rather than
+// normalised. A silently mis-selected instance would read an empty pointer and
+// look exactly like a family that has never published.
+const SAFE_FAMILY = /^[a-z0-9][a-z0-9._-]{0,63}$/;
 
 // Receipts and pointers are ~1 KB. Payloads are not supposed to come through
 // here at all, so anything large is a mistake worth refusing early.
@@ -92,12 +106,18 @@ export async function handleCloudDataPlaneRequest(request, env) {
     return typed(503, "DATA_PLANE_COORDINATOR_UNBOUND", action);
   }
 
+  const declaredFamily = request.headers.get(FAMILY_HEADER);
+  if (declaredFamily !== null && !SAFE_FAMILY.test(declaredFamily)) {
+    return typed(400, "DATA_PLANE_FAMILY_INVALID", declaredFamily.slice(0, 40));
+  }
+  const coordinatorName = declaredFamily ?? DEFAULT_COORDINATOR_ID;
+
   const body = await request.text();
   if (body.length > MAX_BODY_BYTES) {
     return typed(413, "DATA_PLANE_BODY_TOO_LARGE", String(body.length));
   }
 
-  const stub = namespace.get(namespace.idFromName(COORDINATOR_ID));
+  const stub = namespace.get(namespace.idFromName(coordinatorName));
   const forwarded = await stub.fetch(`https://cloud-data-plane-coordinator/${action}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -110,6 +130,10 @@ export async function handleCloudDataPlaneRequest(request, env) {
     headers: {
       "content-type": forwarded.headers.get("content-type") ?? "application/json",
       "cache-control": "no-store",
+      // Echo the instance that answered. Reading the wrong family's pointer
+      // returns an empty pointer, which is indistinguishable from a family that
+      // has never published — this header is what makes that mistake visible.
+      "x-data-plane-coordinator": coordinatorName,
     },
   });
 }

@@ -80,9 +80,10 @@ async function createWorker(bindings) {
   });
 }
 
-function post(worker, action, { key = WRITE_KEY, body = "{}", method = "POST" } = {}) {
+function post(worker, action, { key = WRITE_KEY, body = "{}", method = "POST", family = null } = {}) {
   const headers = { "content-type": "application/json" };
   if (key !== null) headers["x-data-plane-key"] = key;
+  if (family !== null) headers["x-data-plane-family"] = family;
   return worker.dispatchFetch(`${ROUTE}/${action}`, { method, headers, body: method === "POST" ? body : undefined });
 }
 
@@ -93,7 +94,7 @@ async function errorCode(response) {
 
 // The wire shim the CI publisher uses: it turns the adapter's Durable Object
 // stub calls into authenticated HTTPS calls against the route.
-function createRouteCoordinatorNamespace(worker, key = WRITE_KEY) {
+function createRouteCoordinatorNamespace(worker, key = WRITE_KEY, family = null) {
   return {
     idFromName(name) {
       return { name };
@@ -102,9 +103,11 @@ function createRouteCoordinatorNamespace(worker, key = WRITE_KEY) {
       return {
         async fetch(url, init) {
           const { pathname } = new URL(url);
+          const headers = { "content-type": "application/json", "x-data-plane-key": key };
+          if (family !== null) headers["x-data-plane-family"] = family;
           return worker.dispatchFetch(`${ROUTE}${pathname}`, {
             method: "POST",
-            headers: { "content-type": "application/json", "x-data-plane-key": key },
+            headers,
             body: init?.body ?? "{}",
           });
         },
@@ -260,7 +263,53 @@ try {
   assert.equal(pointerAfter.sequence, 1);
   assert.equal(pointerAfter.active.generation_id, "route-proof-1");
 
-  console.log("test-cloud-data-plane-worker-route: ok (13 assertions across refusal, publish, and error transit)");
+  // --- families do not share a pointer -------------------------------------
+  // The defect this replaces was only visible with two families live: one
+  // shared instance meant each family's publish displaced the last.
+  const legacyPointer = await post(worker, "pointer/get");
+  assert.equal(legacyPointer.headers.get("x-data-plane-coordinator"), "cloud-data-plane-coordinator");
+  assert.deepEqual((await legacyPointer.json()).result?.active?.generation_id, "route-proof-1");
+
+  const otherFamily = await post(worker, "pointer/get", { family: "fred-macro" });
+  assert.equal(otherFamily.status, 200);
+  assert.equal(otherFamily.headers.get("x-data-plane-coordinator"), "fred-macro");
+  assert.deepEqual(await otherFamily.json(), { result: null }, "a different family sees its own empty pointer");
+
+  const badFamily = await post(worker, "pointer/get", { family: "../escape" });
+  assert.equal(badFamily.status, 400);
+  assert.equal(await errorCode(badFamily), "DATA_PLANE_FAMILY_INVALID");
+
+  // A publish under one family must leave the other family untouched.
+  const familyPlane = createCloudflareCloudDataPlane({
+    r2Bucket,
+    coordinatorNamespace: createRouteCoordinatorNamespace(worker, WRITE_KEY, "fred-macro"),
+  });
+  const familyValues = { "public/data/pilot/family-alpha.json": "{\"family\":\"fred\"}\n" };
+  const familyManifest = buildManifest(
+    "family-proof-1",
+    Object.entries(familyValues).map(([path, text]) => ({ path, text })),
+  );
+  const familyPublished = await publishGeneration({
+    manifest: familyManifest,
+    payloads: new Map(Object.entries(familyValues).map(([p, t]) => [p, encoder.encode(t)])),
+    expectedPointerSequence: 0,
+    objectStore: familyPlane.objectStore,
+    ledger: familyPlane.ledger,
+    pointerStore: familyPlane.pointerStore,
+    policy: POLICY,
+  });
+  assert.equal(familyPublished.pointer.sequence, 1, "the new family starts its own sequence at 1");
+
+  const legacyUnchanged = await plane.pointerStore.get();
+  assert.equal(legacyUnchanged.sequence, 1);
+  assert.equal(
+    legacyUnchanged.active.generation_id,
+    "route-proof-1",
+    "publishing another family must not displace this one",
+  );
+
+  console.log("test-cloud-data-plane-worker-route: ok"
+    + " (refusal, publish, error transit, and per-family pointer isolation)");
 } finally {
   await worker.dispose();
   await unconfigured.dispose();
