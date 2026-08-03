@@ -10,7 +10,14 @@
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS",
-    "html_handling": "none"
+    "html_handling": "none",
+    // One enrolled data asset reaches the Worker instead of the asset worker,
+    // so it can be served from the published generation. Every unhealthy
+    // outcome falls back to this same asset directory, which is why enrolling a
+    // path cannot make it less available than it was.
+    "run_worker_first": [
+      "/data/macro/fred-macro.json"
+    ]
   },
   "observability": {
     "enabled": true,

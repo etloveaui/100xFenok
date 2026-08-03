@@ -4,6 +4,7 @@ import handler from "./.open-next/worker.js";
 // Plain-JS data-plane modules, shared byte-for-byte with the node publisher so
 // the Worker and CI cannot drift into two different contracts.
 import { handleCloudDataPlaneRequest } from "../scripts/lib/cloud-data-plane-worker-route.mjs";
+import { handleCloudDataPlaneAsset, isEnrolledPath } from "../scripts/lib/cloud-data-plane-worker-read.mjs";
 import {
   handleMonaVnextProfileCoordinatorRequest,
   type WindDownReviewCoordinatorEnv,
@@ -16,6 +17,19 @@ const worker = {
     // Next middleware and rate limits never see it and it cannot be cached.
     const routed = await handleCloudDataPlaneRequest(request, env);
     if (routed) return routed;
+
+    // Enrolled data assets are served from the published generation when it
+    // resolves cleanly, and from the bundled copy otherwise. Declining is the
+    // whole safety story: the bundled copy is the last known good, so a broken
+    // data plane degrades to today's behaviour instead of to an error or, worse,
+    // a 200 carrying a shape consumers do not expect.
+    if (isEnrolledPath(new URL(request.url).pathname)) {
+      const served = await handleCloudDataPlaneAsset(request, env);
+      if (served) return served;
+      const assets = (env as { ASSETS?: { fetch: (request: Request) => Promise<Response> } })?.ASSETS;
+      if (assets) return assets.fetch(request);
+    }
+
     return handler.fetch(request, env, ctx);
   },
 };
