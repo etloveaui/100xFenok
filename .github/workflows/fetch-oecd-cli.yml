@@ -29,7 +29,24 @@ jobs:
     environment: production
     timeout-minutes: 15
     steps:
+      # Measured on this repo: a plain shallow checkout costs ~66s, of which
+      # ~53s is fetching blob content for 49,082 files and ~13s is writing them
+      # out — to do 2 seconds of actual work. `filter: blob:none` stops the
+      # blob transfer and cone-mode sparse-checkout stops materialising the
+      # tree, so only this lane's own paths are ever fetched.
+      #
+      # The cone must cover everything this lane reads or stages. If it does
+      # not, the failure is loud rather than silent: git refuses `git add` on a
+      # path outside the cone, and stage-lane-manifest.sh exits non-zero when a
+      # required path is absent.
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            .github/workflows
+            data/admin/oecd_cli
+            data/admin/data-supply-state/detection-attempts
       - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6
         with:
           node-version: '20'
