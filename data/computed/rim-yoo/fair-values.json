@@ -1,6 +1,6 @@
 {
   "schema_version": "rim-yoo-index/v3",
-  "generated_at": "2026-08-03T08:21:41.622Z",
+  "generated_at": "2026-08-03T08:29:06.690Z",
   "method": "yoo_dongwon_forward_book_compounding_residual_income",
   "headline": {
     "description": "Methodology estimate: per-market discount rates (us 0.08, kr 0.0971), Yoo-stated ROE overrides where the corpus records them.",
@@ -190,6 +190,211 @@
         ],
         "published_as_of": "2026-05-19",
         "source": "speaker ledger 2kV9e8nI3Hw: KOSPI 10,000-12,000"
+      }
+    ]
+  },
+  "yoo_sheet_model": {
+    "description": "Cell-structure reproduction of Yoo's DWY RIM sheets (owner-supplied 2026-08-03, archived at platform docs/archive/2026-08/yoo-rim-sheets/): per case a 3x3 matrix of LT-ROE rows (FY3 x 0.81 Likely / x 0.735 Worst, +-0.5%p) by ERP columns {6.5,7.0,7.5}%, over the observed risk-free rate; fair value = mean of the nine cells; terminal is a constant-ROE perpetuity (2016 article), no growth.",
+    "rows": [
+      {
+        "key": "sp500",
+        "name": "S&P 500",
+        "status": "ready",
+        "as_of": "2026-07-31",
+        "px_last": 7489.72,
+        "roe_path": [
+          0.2913,
+          0.2796,
+          0.2716
+        ],
+        "retention": 0.7928,
+        "retention_source": "rim-index derived payout_ratio 0.2072",
+        "risk_free_observed": 0.0468,
+        "worst": {
+          "lt_roe_rows": [
+            0.1946,
+            0.1996,
+            0.2046
+          ],
+          "erp_grid": [
+            0.065,
+            0.07,
+            0.075
+          ],
+          "fair_value": 3182,
+          "upside_pct": -57.52,
+          "upside_min_pct": -60.66,
+          "upside_max_pct": -54.19
+        },
+        "likely": {
+          "lt_roe_rows": [
+            0.215,
+            0.22,
+            0.225
+          ],
+          "erp_grid": [
+            0.065,
+            0.07,
+            0.075
+          ],
+          "fair_value": 3483.6,
+          "upside_pct": -53.49,
+          "upside_min_pct": -56.86,
+          "upside_max_pct": -49.93
+        }
+      },
+      {
+        "key": "nasdaq100",
+        "name": "나스닥 100",
+        "status": "ready",
+        "as_of": "2026-07-31",
+        "px_last": 28274.2,
+        "roe_path": [
+          0.414,
+          0.3668,
+          0.3811
+        ],
+        "retention": 0.9029,
+        "retention_source": "rim-index derived payout_ratio 0.0971",
+        "risk_free_observed": 0.0468,
+        "worst": {
+          "lt_roe_rows": [
+            0.2751,
+            0.2801,
+            0.2851
+          ],
+          "erp_grid": [
+            0.065,
+            0.07,
+            0.075
+          ],
+          "fair_value": 13958.01,
+          "upside_pct": -50.63,
+          "upside_min_pct": -54.11,
+          "upside_max_pct": -46.98
+        },
+        "likely": {
+          "lt_roe_rows": [
+            0.3037,
+            0.3087,
+            0.3137
+          ],
+          "erp_grid": [
+            0.065,
+            0.07,
+            0.075
+          ],
+          "fair_value": 15341.89,
+          "upside_pct": -45.74,
+          "upside_min_pct": -49.49,
+          "upside_max_pct": -41.8
+        }
+      },
+      {
+        "key": "nasdaq_composite",
+        "name": "나스닥 종합",
+        "status": "excluded",
+        "reason": "no consensus ROE path in the rim-index grid"
+      },
+      {
+        "key": "russell2000",
+        "name": "러셀 2000",
+        "status": "excluded",
+        "reason": "no consensus ROE path in the rim-index grid"
+      },
+      {
+        "key": "kospi",
+        "name": "코스피",
+        "status": "ready",
+        "as_of": "2026-08-02",
+        "px_last": 6595.45,
+        "roe_path": [
+          0.3422,
+          0.3466,
+          0.2868
+        ],
+        "retention": 0.75,
+        "retention_source": "house fallback (observed payout blocked or unavailable)",
+        "risk_free_observed": 0.0468,
+        "worst": {
+          "lt_roe_rows": [
+            0.2058,
+            0.2108,
+            0.2158
+          ],
+          "erp_grid": [
+            0.065,
+            0.07,
+            0.075
+          ],
+          "fair_value": 9593.95,
+          "upside_pct": 45.46,
+          "upside_min_pct": 35.04,
+          "upside_max_pct": 56.46
+        },
+        "likely": {
+          "lt_roe_rows": [
+            0.2273,
+            0.2323,
+            0.2373
+          ],
+          "erp_grid": [
+            0.065,
+            0.07,
+            0.075
+          ],
+          "fair_value": 10485.32,
+          "upside_pct": 58.98,
+          "upside_min_pct": 47.81,
+          "upside_max_pct": 70.75
+        }
+      },
+      {
+        "key": "philadelphia_semi",
+        "name": "필라델피아 반도체",
+        "status": "ready",
+        "as_of": "2026-07-31",
+        "px_last": 11311.08,
+        "roe_path": [
+          0.5137,
+          0.495,
+          0.4325
+        ],
+        "retention": 0.887,
+        "retention_source": "rim-index derived payout_ratio 0.113",
+        "risk_free_observed": 0.0468,
+        "worst": {
+          "lt_roe_rows": [
+            0.3129,
+            0.3179,
+            0.3229
+          ],
+          "erp_grid": [
+            0.065,
+            0.07,
+            0.075
+          ],
+          "fair_value": 6368,
+          "upside_pct": -43.7,
+          "upside_min_pct": -47.55,
+          "upside_max_pct": -39.67
+        },
+        "likely": {
+          "lt_roe_rows": [
+            0.3453,
+            0.3503,
+            0.3553
+          ],
+          "erp_grid": [
+            0.065,
+            0.07,
+            0.075
+          ],
+          "fair_value": 6996.65,
+          "upside_pct": -38.14,
+          "upside_min_pct": -42.3,
+          "upside_max_pct": -33.79
+        }
       }
     ]
   },
@@ -513,6 +718,48 @@
     "retention_note": "Retention (1 - payout) is a house assumption per index: 0.65 US families, 0.75 KOSPI.",
     "terminal_roe_note": "No global terminal ROE cap. Where the persona corpus records Yoo's own ROE assumption for an index (KOSPI: 3-year average slightly above 20% -> 0.21), it overrides the Bloomberg spot forward ROE, with both values published.",
     "disclaimer": "Model-implied fair values under stated assumptions. Not price targets, not investment advice."
+  },
+  "constants_provenance": {
+    "risk_free": {
+      "why": "observed FRED DGS10 via rim-index inputs",
+      "refresh": "daily lane, automatic"
+    },
+    "roe_paths": {
+      "why": "weighted stock-consensus FY1-3 grids from rim-index",
+      "refresh": "weekly benchmarks/scouter conversion, automatic"
+    },
+    "retention": {
+      "why": "1 - observed derived payout_ratio per index (the sheets' Bloomberg Div.Payout input); house fallback only where the payout derivation is blocked, with the reason on the row",
+      "refresh": "weekly, automatic; KOSPI unblocks when payout coverage passes its gate"
+    },
+    "sheet_erp_grid": {
+      "why": "DWY sheet columns {6.5,7.0,7.5}% with center 7.00% = the sheet's R.Premium Adj",
+      "refresh": "manual — remeasure when a newer DWY sheet is supplied"
+    },
+    "sheet_lt_haircut": {
+      "why": "measured from the two 2026-08-03 sheets: Likely LT/FY3 = 0.819 (Samsung) and 0.810 (Hynix) -> 0.81; Worst = 0.728/0.743 -> 0.735; n=2 estimate",
+      "refresh": "manual — a third sheet either confirms or re-fits; do not silently change"
+    },
+    "sheet_lt_step": {
+      "why": "0.5%p row spacing read directly off both sheets",
+      "refresh": "manual with new sheets"
+    },
+    "article_erp_band": {
+      "why": "his 2016 Kiwoom column: ERP 5.5%~7%",
+      "refresh": "manual — supersede if he publishes a newer band"
+    },
+    "market_rates_headline": {
+      "why": "reverse-calibrated reconciliation view only (us 0.08 reproduces his 2026-06 published upsides); NOT a measured parameter",
+      "refresh": "recalibrate only when calibration_check diverges after an anchor update"
+    },
+    "terminal_growth_headline": {
+      "why": "2.5% perpetual growth in the headline variant mirrors the existing rim-index optimistic endpoint; the sheet model instead uses his 2016 constant-ROE perpetuity (g=0)",
+      "refresh": "owner decision"
+    },
+    "calibration_anchors": {
+      "why": "his published outputs, dated and sourced",
+      "refresh": "update from speaker ledger whenever he publishes; divergence flags, never silent refits"
+    }
   },
   "sensitivity_tables": [
     {

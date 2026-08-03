@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import {
   checkCalibration,
   computeYooRimRow,
+  computeYooSheetCase,
+  computeYooSheetCell,
   YOO_CALIBRATION_ANCHORS,
   YOO_DISCOUNT_SENSITIVITY,
   YOO_EXPLICIT_YEARS,
@@ -131,6 +133,30 @@ import {
   assert.equal(results.find((r) => r.key === "kospi").status, "within_tolerance", "10,500 sits in the published 10,000-12,000 band");
   const missing = checkCalibration([]);
   assert.ok(missing.every((r) => r.status === "unavailable"));
+}
+
+// DWY sheet cell: hand-computed reference. B0 = 1000, path [0.2, 0.2, 0.2],
+// retention 0.5, rf 0.04, ERP 0.06 -> r = 0.10. Explicit legs are the 2181.82
+// case's 272.73; terminal book = 1331, LT ROE 0.15 -> RI = 0.05*1331 = 66.55,
+// perpetuity 665.5, PV 665.5/1.331 = 500 -> V = 1000 + 272.73 + 500 = 1772.73.
+{
+  const v = computeYooSheetCell({
+    bookValue: 1000, roePath: [0.2, 0.2, 0.2], retention: 0.5,
+    riskFree: 0.04, erp: 0.06, ltRoe: 0.15,
+  });
+  assert.equal(Math.round(v * 100) / 100, 1772.73);
+}
+
+// Sheet case: 3x3 matrix mean sits between the min and max cells, the LT rows
+// are FY3 x haircut +-0.5%p, and a higher haircut (Likely) beats Worst.
+{
+  const base = { px: 1500, bookValue: 1000, roePath: [0.3, 0.25, 0.2], retention: 0.8, riskFree: 0.0468 };
+  const worst = computeYooSheetCase({ ...base, haircut: 0.735 });
+  const likely = computeYooSheetCase({ ...base, haircut: 0.81 });
+  assert.deepEqual(likely.lt_roe_rows, [0.157, 0.162, 0.167], "0.2 x 0.81 = 0.162 center, +-0.5%p");
+  assert.ok(likely.fair_value > worst.fair_value);
+  assert.ok(likely.upside_min_pct < likely.upside_pct && likely.upside_pct < likely.upside_max_pct);
+  assert.equal(likely.erp_grid.length * likely.lt_roe_rows.length, 9, "nine cells");
 }
 
 // Contract pins: house assumption axes are explicit.
