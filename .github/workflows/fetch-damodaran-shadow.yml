@@ -32,6 +32,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            .github/workflows
+            data/admin/data-supply-state/detection-attempts
+            data/admin/damodaran
+            data/damodaran
+            100xfenok-next/public/data/damodaran
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

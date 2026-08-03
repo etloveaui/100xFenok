@@ -30,6 +30,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            .github/workflows
+            data/admin/data-supply-state/detection-attempts
+            data/admin/yahoo_private_options
+            data/computed
+            100xfenok-next/public/data/computed
+            100xfenok-next/public/data/yf/finance
 
       - name: Start from latest main
         run: |

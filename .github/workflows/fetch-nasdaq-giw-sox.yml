@@ -32,6 +32,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            .github/workflows
+            data/admin/data-supply-state/detection-attempts
+            data/admin/nasdaq_giw_sox
+            data/indices
 
       - name: Start from latest main
         run: |

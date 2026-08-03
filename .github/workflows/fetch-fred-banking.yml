@@ -40,6 +40,15 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            .github/workflows
+            data/admin/data-supply-state/detection-attempts
+            data/admin/fred_banking
+            data/macro
+            100xfenok-next/public/data/macro
 
       - name: Start from latest main
         run: |

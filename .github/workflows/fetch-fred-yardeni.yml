@@ -36,6 +36,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            .github/workflows
+            data/admin/data-supply-state/detection-attempts
+            data/admin/fred_yardeni
+            data/yardney
+            100xfenok-next/public/data/yardney
+            100xfenok-next/scripts
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

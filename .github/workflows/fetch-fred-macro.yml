@@ -36,6 +36,15 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            .github/workflows
+            data/admin/data-supply-state/detection-attempts
+            data/admin/fred_macro
+            data/macro
+            100xfenok-next/public/data/macro
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

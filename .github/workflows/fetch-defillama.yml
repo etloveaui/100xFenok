@@ -27,6 +27,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            .github/workflows
+            data/admin/data-supply-state/detection-attempts
+            data/admin/defillama_stablecoins
+            data/macro
+            100xfenok-next/public/data/macro
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
