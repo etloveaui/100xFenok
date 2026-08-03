@@ -2367,13 +2367,6 @@ function w4FormatSignedFractionPercent(value: MaybeNumber, digits = 1): string {
   return formatSignedPercent(value, { digits });
 }
 
-function w4DirectionEnglish(direction: string): string {
-  if (direction === "상방 우세") return "UPSIDE";
-  if (direction === "하방 우세") return "DOWNSIDE";
-  if (direction === "균형") return "BALANCED";
-  return "UNCONFIRMED";
-}
-
 function w4Initials(ticker: string): string {
   return ticker.trim().slice(0, 2).toUpperCase() || "ST";
 }
@@ -2683,7 +2676,7 @@ export default function StockDetailPanel({
               <W4ScoreDonut score={detailScore} />
               <div className="cpw4-hero-verdict__copy">
                 <span className="cpw4-verdict-badge">
-                  {edgeDirection} · {w4DirectionEnglish(edgeDirection)}
+                  {edgeLead}
                 </span>
                 <h3>{verdictHeadline}</h3>
                 <p>{verdictCopy}. {shortTermBasis.comparisonNote} Fenok 파생 신호는 축별 강도와 약점을 함께 보여주는 참고 지표입니다.</p>
