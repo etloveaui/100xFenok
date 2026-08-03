@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import {
+  checkCalibration,
   computeYooRimRow,
+  YOO_CALIBRATION_ANCHORS,
   YOO_DISCOUNT_SENSITIVITY,
   YOO_EXPLICIT_YEARS,
+  YOO_MARKET_RATES,
   YOO_TERMINAL_GROWTH,
   YOO_TERMINAL_ROE_CAP,
 } from "./build-rim-yoo-index.mjs";
@@ -85,7 +88,25 @@ import {
   assert.equal(row.roe_override_source, "yoo_stated_3y_average_roe");
 }
 
+// Calibration check: within-tolerance and diverged classifications, and the
+// KOSPI fair-range anchor path.
+{
+  const rows = [
+    { key: "sp500", status: "ready", upside_pct: 9.0, fair_value: 8000 },
+    { key: "nasdaq100", status: "ready", upside_pct: 5.0, fair_value: 30000 },
+    { key: "kospi", status: "ready", upside_pct: 60, fair_value: 10500 },
+  ];
+  const results = checkCalibration(rows);
+  assert.equal(results.find((r) => r.key === "sp500").status, "within_tolerance");
+  assert.equal(results.find((r) => r.key === "nasdaq100").status, "diverged", "+5% vs published +25~30% must flag");
+  assert.equal(results.find((r) => r.key === "kospi").status, "within_tolerance", "10,500 sits in the published 10,000-12,000 band");
+  const missing = checkCalibration([]);
+  assert.ok(missing.every((r) => r.status === "unavailable"));
+}
+
 // Contract pins: house assumption axes are explicit.
+assert.deepEqual(YOO_MARKET_RATES, { us: 0.08, kr: 0.0971 });
+assert.equal(YOO_CALIBRATION_ANCHORS.length >= 3, true, "anchors exist for sp500/nasdaq100/kospi");
 assert.equal(YOO_DISCOUNT_SENSITIVITY[0], 0.08, "headline rate is the Yoo-calibrated 8%");
 assert.ok(YOO_DISCOUNT_SENSITIVITY.includes(0.0971), "house ERP-derived rate stays visible");
 assert.equal(YOO_EXPLICIT_YEARS, 3);

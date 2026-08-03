@@ -36,6 +36,23 @@ const MIRROR_DIR = path.join(ROOT, "100xfenok-next", "public", "data", "computed
 export const YOO_DISCOUNT_SENSITIVITY = [0.08, 0.0971, 0.07];
 export const YOO_EXPLICIT_YEARS = 3;
 export const YOO_TERMINAL_GROWTH = 0.025;
+
+// Estimated per-market discount rates — part of the methodology estimate, not
+// a fit knob: US megacap COE ~8% reproduces his published US upsides, and the
+// house ERP-derived 9.71% (country premium included) lands KOSPI inside his
+// stated 10,000-12,000 band. Revisit when his published numbers move.
+export const YOO_MARKET_RATES = Object.freeze({ us: 0.08, kr: 0.0971 });
+
+// Calibration anchors: Yoo's PUBLISHED model outputs, dated and sourced from
+// the persona corpus. Every run compares its own headline upside against
+// these and reports the divergence — the system tells us when our estimate
+// of his methodology drifts from what he actually publishes. Update this
+// table whenever the speaker ledger records fresh numbers.
+export const YOO_CALIBRATION_ANCHORS = Object.freeze([
+  { key: "sp500", published_upside_pct: [8, 12], as_of: "2026-06-11", source: "persona work.md: RIM upside S&P ~10%" },
+  { key: "nasdaq100", published_upside_pct: [25, 30], as_of: "2026-06-10", source: "persona work.md: NDX RIM +30% through YE26" },
+  { key: "kospi", published_fair_range: [10000, 12000], as_of: "2026-05-19", source: "speaker ledger 2kV9e8nI3Hw: KOSPI 10,000-12,000" },
+]);
 // No global terminal ROE cap: Yoo's US mega-cap numbers require sustained
 // high ROE, and capping crushed them. Where the persona corpus records his
 // OWN ROE assumption for an index, that value overrides the Bloomberg spot
@@ -43,19 +60,19 @@ export const YOO_TERMINAL_GROWTH = 0.025;
 export const YOO_TERMINAL_ROE_CAP = null;
 
 const INDEX_SOURCES = [
-  { file: "us.json", key: "sp500", name: "S&P 500", retention: 0.65 },
-  { file: "us.json", key: "nasdaq100", name: "나스닥 100", retention: 0.65 },
-  { file: "us.json", key: "nasdaq_composite", name: "나스닥 종합", retention: 0.65 },
-  { file: "us.json", key: "russell2000", name: "러셀 2000", retention: 0.65 },
+  { file: "us.json", key: "sp500", name: "S&P 500", retention: 0.65, market: "us" },
+  { file: "us.json", key: "nasdaq100", name: "나스닥 100", retention: 0.65, market: "us" },
+  { file: "us.json", key: "nasdaq_composite", name: "나스닥 종합", retention: 0.65, market: "us" },
+  { file: "us.json", key: "russell2000", name: "러셀 2000", retention: 0.65, market: "us" },
   {
-    file: "emerging.json", key: "kospi", name: "코스피", retention: 0.75,
+    file: "emerging.json", key: "kospi", name: "코스피", retention: 0.75, market: "kr",
     // Yoo's stated assumption: KOSPI 3-year average ROE "slightly above 20%"
     // (persona corpus 2026-06). The Bloomberg spot forward ROE (34.2% on
     // 2026-07-31) is a cyclical peak; compounding it forever produced +300%
     // class upsides far outside his own 10,000-12,000 target band.
     roeOverride: { value: 0.21, source: "yoo_stated_3y_average_roe" },
   },
-  { file: "micro_sectors.json", key: "philadelphia_semi", name: "필라델피아 반도체", retention: 0.65 },
+  { file: "micro_sectors.json", key: "philadelphia_semi", name: "필라델피아 반도체", retention: 0.65, market: "us" },
 ];
 
 function numberOrNull(value) {
@@ -139,27 +156,68 @@ function loadSectionLatest(file, key) {
   };
 }
 
+function rowFor(source, discountRate) {
+  const latest = loadSectionLatest(source.file, source.key);
+  if (!latest) return { key: source.key, name: source.name, status: "excluded", reason: "section absent from benchmarks" };
+  return computeYooRimRow({
+    key: source.key,
+    name: source.name,
+    retention: source.retention,
+    roeOverride: source.roeOverride ?? null,
+    ...latest,
+    discountRate,
+  });
+}
+
+export function checkCalibration(headlineRows) {
+  return YOO_CALIBRATION_ANCHORS.map((anchor) => {
+    const row = headlineRows.find((r) => r.key === anchor.key);
+    if (!row || row.status !== "ready") {
+      return { key: anchor.key, status: "unavailable", source: anchor.source };
+    }
+    let within;
+    let computed;
+    if (anchor.published_upside_pct) {
+      computed = row.upside_pct;
+      const [lo, hi] = anchor.published_upside_pct;
+      within = computed >= lo - 5 && computed <= hi + 5;
+    } else {
+      computed = row.fair_value;
+      const [lo, hi] = anchor.published_fair_range;
+      within = computed >= lo * 0.9 && computed <= hi * 1.1;
+    }
+    return {
+      key: anchor.key,
+      status: within ? "within_tolerance" : "diverged",
+      computed,
+      published: anchor.published_upside_pct ?? anchor.published_fair_range,
+      published_as_of: anchor.as_of,
+      source: anchor.source,
+    };
+  });
+}
+
 export function buildArtifact({ nowIso }) {
-  const tables = YOO_DISCOUNT_SENSITIVITY.map((discountRate) => ({
+  // Headline table: the methodology estimate — per-market discount rates.
+  const headlineRows = INDEX_SOURCES.map((source) => rowFor(source, YOO_MARKET_RATES[source.market]));
+  const sensitivityTables = YOO_DISCOUNT_SENSITIVITY.map((discountRate) => ({
     discount_rate: discountRate,
-    headline: discountRate === YOO_DISCOUNT_SENSITIVITY[0],
-    rows: INDEX_SOURCES.map((source) => {
-      const latest = loadSectionLatest(source.file, source.key);
-      if (!latest) return { key: source.key, name: source.name, status: "excluded", reason: "section absent from benchmarks" };
-      return computeYooRimRow({
-        key: source.key,
-        name: source.name,
-        retention: source.retention,
-        roeOverride: source.roeOverride ?? null,
-        ...latest,
-        discountRate,
-      });
-    }),
+    rows: INDEX_SOURCES.map((source) => rowFor(source, discountRate)),
   }));
+  const calibration = checkCalibration(headlineRows);
   return {
-    schema_version: "rim-yoo-index/v2",
+    schema_version: "rim-yoo-index/v3",
     generated_at: nowIso,
     method: "yoo_dongwon_forward_book_compounding_residual_income",
+    headline: {
+      description: "Methodology estimate: per-market discount rates (us 0.08, kr 0.0971), Yoo-stated ROE overrides where the corpus records them.",
+      market_rates: YOO_MARKET_RATES,
+      rows: headlineRows,
+    },
+    calibration_check: {
+      description: "Computed headline output vs Yoo's PUBLISHED numbers (dated, sourced). 'diverged' means our estimate of his methodology has drifted from what he publishes — recalibrate anchors from the latest speaker ledger, do not silently refit.",
+      results: calibration,
+    },
     formula: "V = B0 + PV(RI_1..3, book compounds at ROE*retention) + PV(terminal RI at min(ROE, cap), growth g)",
     assumptions: {
       roe_source: "Bloomberg forward ROE via the weekly benchmarks converter (observed input)",
@@ -172,7 +230,7 @@ export function buildArtifact({ nowIso }) {
       terminal_roe_note: "No global terminal ROE cap. Where the persona corpus records Yoo's own ROE assumption for an index (KOSPI: 3-year average slightly above 20% -> 0.21), it overrides the Bloomberg spot forward ROE, with both values published.",
       disclaimer: "Model-implied fair values under stated assumptions. Not price targets, not investment advice.",
     },
-    tables,
+    sensitivity_tables: sensitivityTables,
   };
 }
 
@@ -183,12 +241,14 @@ if (invokedDirectly) {
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, "fair-values.json"), `${JSON.stringify(artifact, null, 2)}\n`);
   }
-  for (const table of artifact.tables) {
-    console.log(`--- r = ${table.discount_rate}${table.headline ? " (headline)" : ""} ---`);
-    for (const row of table.rows) {
-      if (row.status !== "ready") { console.log(`${row.name}: excluded (${row.reason})`); continue; }
-      console.log(`${row.name}: px ${row.px_last} | fair ${row.fair_value} | upside ${row.upside_pct}%`);
-    }
+  console.log("--- headline (per-market rates) ---");
+  for (const row of artifact.headline.rows) {
+    if (row.status !== "ready") { console.log(`${row.name}: excluded (${row.reason})`); continue; }
+    console.log(`${row.name}: px ${row.px_last} | r ${row.discount_rate} | fair ${row.fair_value} | upside ${row.upside_pct}%`);
+  }
+  console.log("--- calibration vs Yoo published ---");
+  for (const check of artifact.calibration_check.results) {
+    console.log(`${check.key}: ${check.status} | computed ${check.computed} vs published ${JSON.stringify(check.published)} (${check.published_as_of ?? "?"})`);
   }
   console.log(`written: ${path.join(OUT_DIR, "fair-values.json")} (+ public mirror)`);
 }

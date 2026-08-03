@@ -1,7 +1,180 @@
 {
-  "schema_version": "rim-yoo-index/v2",
-  "generated_at": "2026-08-03T08:02:53.925Z",
+  "schema_version": "rim-yoo-index/v3",
+  "generated_at": "2026-08-03T08:14:18.527Z",
   "method": "yoo_dongwon_forward_book_compounding_residual_income",
+  "headline": {
+    "description": "Methodology estimate: per-market discount rates (us 0.08, kr 0.0971), Yoo-stated ROE overrides where the corpus records them.",
+    "market_rates": {
+      "us": 0.08,
+      "kr": 0.0971
+    },
+    "rows": [
+      {
+        "key": "sp500",
+        "name": "S&P 500",
+        "status": "ready",
+        "as_of": "2026-07-31",
+        "px_last": 7489.72,
+        "book_value": 1315.93,
+        "forward_roe_observed": 0.2913,
+        "roe_used": 0.2913,
+        "roe_override_source": null,
+        "terminal_roe": 0.2913,
+        "retention": 0.65,
+        "discount_rate": 0.08,
+        "fair_value": 7987.98,
+        "upside_pct": 6.65,
+        "components": {
+          "book": 1315.93,
+          "pv_explicit_residual_income": 853.21,
+          "pv_terminal": 5818.84
+        }
+      },
+      {
+        "key": "nasdaq100",
+        "name": "나스닥 100",
+        "status": "ready",
+        "as_of": "2026-07-31",
+        "px_last": 28274.2,
+        "book_value": 3199.49,
+        "forward_roe_observed": 0.414,
+        "roe_used": 0.414,
+        "roe_override_source": null,
+        "terminal_roe": 0.414,
+        "retention": 0.65,
+        "discount_rate": 0.08,
+        "fair_value": 32180.93,
+        "upside_pct": 13.82,
+        "components": {
+          "book": 3199.49,
+          "pv_explicit_residual_income": 3518.5,
+          "pv_terminal": 25462.94
+        }
+      },
+      {
+        "key": "nasdaq_composite",
+        "name": "나스닥 종합",
+        "status": "ready",
+        "as_of": "2026-07-31",
+        "px_last": 25373.85,
+        "book_value": 3341.52,
+        "forward_roe_observed": 0.3235,
+        "roe_used": 0.3235,
+        "roe_override_source": null,
+        "terminal_roe": 0.3235,
+        "retention": 0.65,
+        "discount_rate": 0.08,
+        "fair_value": 23517.28,
+        "upside_pct": -7.32,
+        "components": {
+          "book": 3341.52,
+          "pv_explicit_residual_income": 2543.76,
+          "pv_terminal": 17631.99
+        }
+      },
+      {
+        "key": "russell2000",
+        "name": "러셀 2000",
+        "status": "ready",
+        "as_of": "2026-07-31",
+        "px_last": 2931.34,
+        "book_value": 1126.61,
+        "forward_roe_observed": 0.0914,
+        "roe_used": 0.0914,
+        "roe_override_source": null,
+        "terminal_roe": 0.0914,
+        "retention": 0.65,
+        "discount_rate": 0.08,
+        "fair_value": 1374.87,
+        "upside_pct": -53.1,
+        "components": {
+          "book": 1126.61,
+          "pv_explicit_residual_income": 35,
+          "pv_terminal": 213.25
+        }
+      },
+      {
+        "key": "kospi",
+        "name": "코스피",
+        "status": "ready",
+        "as_of": "2026-08-02",
+        "px_last": 6595.45,
+        "book_value": 3498.36,
+        "forward_roe_observed": 0.3422,
+        "roe_used": 0.21,
+        "roe_override_source": "yoo_stated_3y_average_roe",
+        "terminal_roe": 0.21,
+        "retention": 0.75,
+        "discount_rate": 0.0971,
+        "fair_value": 10335.98,
+        "upside_pct": 56.71,
+        "components": {
+          "book": 3498.36,
+          "pv_explicit_residual_income": 1140.57,
+          "pv_terminal": 5697.05
+        }
+      },
+      {
+        "key": "philadelphia_semi",
+        "name": "필라델피아 반도체",
+        "status": "ready",
+        "as_of": "2026-07-31",
+        "px_last": 11311.08,
+        "book_value": 1086.18,
+        "forward_roe_observed": 0.5137,
+        "roe_used": 0.5137,
+        "roe_override_source": null,
+        "terminal_roe": 0.5137,
+        "retention": 0.65,
+        "discount_rate": 0.08,
+        "fair_value": 15126.78,
+        "upside_pct": 33.73,
+        "components": {
+          "book": 1086.18,
+          "pv_explicit_residual_income": 1640.29,
+          "pv_terminal": 12400.3
+        }
+      }
+    ]
+  },
+  "calibration_check": {
+    "description": "Computed headline output vs Yoo's PUBLISHED numbers (dated, sourced). 'diverged' means our estimate of his methodology has drifted from what he publishes — recalibrate anchors from the latest speaker ledger, do not silently refit.",
+    "results": [
+      {
+        "key": "sp500",
+        "status": "within_tolerance",
+        "computed": 6.65,
+        "published": [
+          8,
+          12
+        ],
+        "published_as_of": "2026-06-11",
+        "source": "persona work.md: RIM upside S&P ~10%"
+      },
+      {
+        "key": "nasdaq100",
+        "status": "diverged",
+        "computed": 13.82,
+        "published": [
+          25,
+          30
+        ],
+        "published_as_of": "2026-06-10",
+        "source": "persona work.md: NDX RIM +30% through YE26"
+      },
+      {
+        "key": "kospi",
+        "status": "within_tolerance",
+        "computed": 10335.98,
+        "published": [
+          10000,
+          12000
+        ],
+        "published_as_of": "2026-05-19",
+        "source": "speaker ledger 2kV9e8nI3Hw: KOSPI 10,000-12,000"
+      }
+    ]
+  },
   "formula": "V = B0 + PV(RI_1..3, book compounds at ROE*retention) + PV(terminal RI at min(ROE, cap), growth g)",
   "assumptions": {
     "roe_source": "Bloomberg forward ROE via the weekly benchmarks converter (observed input)",
@@ -18,10 +191,9 @@
     "terminal_roe_note": "No global terminal ROE cap. Where the persona corpus records Yoo's own ROE assumption for an index (KOSPI: 3-year average slightly above 20% -> 0.21), it overrides the Bloomberg spot forward ROE, with both values published.",
     "disclaimer": "Model-implied fair values under stated assumptions. Not price targets, not investment advice."
   },
-  "tables": [
+  "sensitivity_tables": [
     {
       "discount_rate": 0.08,
-      "headline": true,
       "rows": [
         {
           "key": "sp500",
@@ -153,7 +325,6 @@
     },
     {
       "discount_rate": 0.0971,
-      "headline": false,
       "rows": [
         {
           "key": "sp500",
@@ -285,7 +456,6 @@
     },
     {
       "discount_rate": 0.07,
-      "headline": false,
       "rows": [
         {
           "key": "sp500",
