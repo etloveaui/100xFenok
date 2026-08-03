@@ -81,6 +81,42 @@ export const RIM_CALIBRATION_ANCHORS = Object.freeze([
   { key: "kospi", published_fair_range: [10000, 12000], as_of: "2026-05-19", source: "internal source catalog" },
 ]);
 
+// Dividend payout, per index. Auditing our live inputs against his 2026-08-03
+// sheets showed price, book, ROE, risk-free and risk premium all agreeing within
+// 2% while payout was off by -62%~+61% — it is the one input that was actually
+// wrong, and the model is sensitive to it because retention drives the book path.
+// Our derived payout is not trusted as primary: it reads 20.72% for the S&P
+// against the 31.09% printed on his sheet, and 9.71% for NASDAQ 100 against
+// 25.65%. So the sheet figure leads, our derived figure follows as a drift
+// check, and there is no silent house fallback — an index with neither is
+// excluded loudly rather than shipped on a guess.
+const RIM_PAYOUT_ANCHOR = {
+  sp500: { value: 0.3109, as_of: "2026-08-03" },
+  nasdaq100: { value: 0.2565, as_of: "2026-08-03" },
+  nasdaq_composite: { value: 0.2180, as_of: "2026-08-03" },
+  kospi: { value: 0.3789, as_of: "2026-08-03" },
+  russell2000: { value: 0.045, as_of: "2025-12-09 grid, implied by the captured cells" },
+};
+// A payout outside this band is a broken derivation, not a real distribution
+// policy. Widest real value we carry is Russell's 4.5%; the S&P's is 31%.
+const RIM_PAYOUT_BOUNDS = [0.01, 0.75];
+
+function resolvePayout(key, derivedRetention) {
+  const anchor = RIM_PAYOUT_ANCHOR[key];
+  const derivedPayout = derivedRetention ? 1 - derivedRetention.value : null;
+  const sane = (v) => Number.isFinite(v) && v >= RIM_PAYOUT_BOUNDS[0] && v <= RIM_PAYOUT_BOUNDS[1];
+  if (anchor && sane(anchor.value)) {
+    const drift = sane(derivedPayout)
+      ? ` [drift check: our derived payout ${round(derivedPayout, 4)}, ${round((derivedPayout / anchor.value - 1) * 100, 1)}% off]`
+      : " [drift check unavailable: our derived payout is missing or out of bounds]";
+    return { value: 1 - anchor.value, source: `sheet payout ${anchor.value} (${anchor.as_of})${drift}` };
+  }
+  if (sane(derivedPayout)) {
+    return { value: derivedRetention.value, source: `${derivedRetention.source} — no sheet anchor for this index` };
+  }
+  return null;
+}
+
 function round(value, digits) {
   if (!Number.isFinite(value)) return null;
   const f = 10 ** digits;
@@ -281,16 +317,16 @@ export function buildArtifact({ nowIso }) {
         ? `observed KRX KTS 10Y benchmark government bond ${koreaRiskFree.value} (as of ${koreaRiskFree.as_of}, fenok-edge-korea lane, daily)`
         : `FALLBACK dated anchor ${RIM_KR_RISK_FREE_ANCHOR.value} (sheet ${RIM_KR_RISK_FREE_ANCHOR.as_of}) — KRX 10Y capture unavailable`)
       : "observed US 10Y (FRED DGS10 via rim-index, daily)";
-    const retention = derived.retentions[source.key]
-      ?? { value: 0.65, source: "house fallback (observed payout blocked or unavailable)" };
+    const retention = resolvePayout(source.key, derived.retentions[source.key]);
     const erpCenter = source.erp;
     const damodaranRef = marketErp?.[source.market];
     const erpSource = Number.isFinite(damodaranRef)
       ? `${source.erpSource} [drift check: Damodaran ${source.market.toUpperCase()} ${round(damodaranRef, 4)}, workbook ${marketErp.as_of}]`
       : source.erpSource;
     if (!latest || !Number.isFinite(latest.px) || !Number.isFinite(latest.pbr) || latest.pbr <= 0
-      || !roePath || !Number.isFinite(riskFree) || !Number.isFinite(erpCenter)) {
-      return { key: source.key, name: source.name, status: "excluded", reason: "missing price/book/ROE/risk-free/ERP inputs" };
+      || !roePath || !Number.isFinite(riskFree) || !Number.isFinite(erpCenter) || !retention) {
+      const missing = !retention ? "payout" : "price/book/ROE/risk-free/ERP";
+      return { key: source.key, name: source.name, status: "excluded", reason: `missing ${missing} inputs` };
     }
     const base = {
       px: latest.px,
@@ -362,7 +398,7 @@ export function buildArtifact({ nowIso }) {
       risk_free_us: { why: "observed FRED DGS10 via rim-index inputs", refresh: "daily lane, automatic" },
       risk_free_kr: { why: "domestic rate per the patent-era calc sheets and the current KOSPI sheet; taken from the KRX KTS 10Y benchmark government bond captured by the fenok-edge-korea lane, with the dated 4.4% sheet value as fallback only", refresh: "daily lane, automatic; falls back to the dated anchor and says so in risk_free_source when the capture is missing" },
       roe_paths: { why: "weighted stock-consensus FY1-3 grids; spot ROE held constant only where no grid exists (flagged per row)", refresh: "weekly conversion, automatic" },
-      retention: { why: "1 - observed derived payout per index; house 0.65 fallback only where the payout derivation is blocked", refresh: "weekly, automatic" },
+      retention: { why: "1 - the payout printed on his source sheets, which our derived payout misses by -62%~+61%; the derived figure rides along as a drift check and there is no silent house fallback — an index with neither is excluded", refresh: "manual with new sheets; the drift check is weekly and automatic" },
       erp_centers: { why: "Damodaran country ERP for each index's own market, applied over that market's risk-free rate — the construction the source sheets themselves use (Damodaran US 5.03% vs his S&P 5.00%, Damodaran Korea 5.49% vs his stated band floor 5.5%). His per-index tilts are judgement values with no derivation and are deliberately not frozen as constants", refresh: "weekly Damodaran lane, automatic; the workbook month travels with the value in erp_source" },
       grid_step: { why: "0.5%p row/column spacing read directly off every captured sheet", refresh: "manual with new sheets" },
       formula: { why: "owner-supplied multi-stage RIM (N=5, terminal RI_5/Ke on B_4), verified against the 2025-12-09 sheet outputs and pinned by regression test", refresh: "only with a new verified source spec" },
