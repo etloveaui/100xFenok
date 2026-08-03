@@ -129,6 +129,11 @@ jobs:
             '`last_firing`).' \
             '' \
             "Observed by: $RUN_URL")"
+          # Close on all-clear so each incident owns one bounded issue. Leaving
+          # the issue open made it an eternal comment sink (162 comments by
+          # 2026-08-03); the next incident opens a fresh issue with a clean
+          # timeline instead of appending to a finished one.
+          gh issue close "$existing" --reason completed --comment "Closed by all-clear; the next incident opens a new issue."
 
       - name: Fail on alarm
         if: steps.pipeline.outcome == 'failure'

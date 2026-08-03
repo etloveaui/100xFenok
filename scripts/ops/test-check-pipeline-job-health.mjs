@@ -597,6 +597,60 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
   assert.deepEqual(result.alarm_reasons, []);
 }
 
+{
+  // A lost scheduled slot is RESOLVED by any strictly newer successful run,
+  // including workflow_dispatch. The 2026-08-01 eviction storm left monthly
+  // lanes (OECD, slickcharts-monthly) paging hourly toward their NEXT natural
+  // slot on September 1 even after repeated dispatch successes refreshed the
+  // same data — recovery evidence the alarm never fetched.
+  const result = evaluateWorkflow(
+    { file: "fetch-oecd-cli.yml", label: "OECD", events: ["schedule"] },
+    [
+      { ...S(30700000010), event: "workflow_dispatch" },
+      { ...C(30700000001), event: "schedule", jobs_empty: true },
+      { ...S(30690000000), event: "schedule" },
+    ],
+  );
+  assert.equal(result.status, "ok", "a newer successful run resolves the lost slot");
+  assert.equal(result.lost_schedule_slot_count, 0);
+  assert.equal(result.resolved_lost_schedule_slot_count, 1);
+  assert.deepEqual(result.lost_schedule_slot_run_urls, []);
+  assert.deepEqual(result.alarm_reasons, []);
+}
+
+{
+  // A newer dispatch FAILURE is not recovery evidence; the slot still pages.
+  const result = evaluateWorkflow(
+    { file: "fetch-oecd-cli.yml", label: "OECD", events: ["schedule"] },
+    [
+      { ...F(30700000010), event: "workflow_dispatch" },
+      { ...C(30700000001), event: "schedule", jobs_empty: true },
+      { ...S(30690000000), event: "schedule" },
+    ],
+  );
+  assert.equal(result.status, "alarm");
+  assert.equal(result.lost_schedule_slot_count, 1);
+  assert.equal(result.resolved_lost_schedule_slot_count, 0);
+  assert.deepEqual(result.alarm_reasons, ["lost_schedule_slot"]);
+}
+
+{
+  // Mixed ages: only slots older than the newest success resolve; a slot
+  // newer than every success keeps paging.
+  const result = evaluateWorkflow(
+    { file: "fetch-oecd-cli.yml", label: "OECD", events: ["schedule"] },
+    [
+      { ...C(30700000020), event: "schedule", jobs_empty: true },
+      { ...S(30700000010), event: "workflow_dispatch" },
+      { ...C(30700000001), event: "schedule", jobs_empty: true },
+    ],
+  );
+  assert.equal(result.status, "alarm");
+  assert.equal(result.lost_schedule_slot_count, 1);
+  assert.equal(result.resolved_lost_schedule_slot_count, 1);
+  assert.deepEqual(result.lost_schedule_slot_run_urls, ["https://gh/run/30700000020"]);
+}
+
 // --- The classifier must actually be wired to run data ----------------------
 {
   const asked = [];

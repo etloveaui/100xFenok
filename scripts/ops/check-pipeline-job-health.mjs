@@ -603,7 +603,26 @@ export function evaluateWorkflow(workflow, runs) {
     return !Array.isArray(workflow.events) || !run?.event || workflow.events.includes(run.event);
   });
   const { streak, firstFailingIndex, evictedRunUrls } = computeFailureStreak(countedRuns);
-  const lostScheduledSlots = countedRuns.filter(isLostScheduledSlot);
+  // A lost scheduled slot means "this refresh never happened". Any strictly
+  // newer successful run of the same workflow — workflow_dispatch included —
+  // is proof the refresh has since happened, so the slot stops paging. Without
+  // this, one evicted monthly slot pages hourly until the NEXT natural slot
+  // (the 2026-08-01 storm left OECD paging toward September 1 past five
+  // dispatch recoveries). Dispatch runs stay excluded from streak/alarm
+  // counting above; they participate only as recovery evidence, the same
+  // admission rule the promotion gate adopted in 1f3fc3518f. Run ids are
+  // monotonic, so "newer" is an id comparison.
+  const newestSuccessId = runs.reduce((max, run) => {
+    if (run?.conclusion !== "success") return max;
+    const id = Number(run?.id);
+    return Number.isFinite(id) && id > max ? id : max;
+  }, -Infinity);
+  const lostSlotCandidates = countedRuns.filter(isLostScheduledSlot);
+  const lostScheduledSlots = lostSlotCandidates.filter((run) => {
+    const id = Number(run?.id);
+    return !Number.isFinite(id) || id > newestSuccessId;
+  });
+  const resolvedLostSlotCount = lostSlotCandidates.length - lostScheduledSlots.length;
   const lostScheduledSlotRunUrls = lostScheduledSlots
     .map((run) => run?.html_url)
     .filter(Boolean);
@@ -624,6 +643,7 @@ export function evaluateWorkflow(workflow, runs) {
     latestRunUrl: latest?.html_url || null,
     queue_evicted_run_urls: evictedRunUrls,
     lost_schedule_slot_count: lostScheduledSlots.length,
+    resolved_lost_schedule_slot_count: resolvedLostSlotCount,
     lost_schedule_slot_run_urls: lostScheduledSlotRunUrls,
   };
   if (workflow.events) base.events = workflow.events;
@@ -825,7 +845,13 @@ export async function main() {
   for (const workflow of calibratedWatched) {
     try {
       const batches = [];
-      for (const event of workflow.events) {
+      // workflow_dispatch is fetched even when it is not a counted event:
+      // evaluateWorkflow uses dispatch successes purely as lost-slot recovery
+      // evidence, never for streak or alarm counting.
+      const fetchEvents = workflow.events.includes("workflow_dispatch")
+        ? workflow.events
+        : [...workflow.events, "workflow_dispatch"];
+      for (const event of fetchEvents) {
         batches.push(await fetchCompletedRuns({
           token,
           owner,
