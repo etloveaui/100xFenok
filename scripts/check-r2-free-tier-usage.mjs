@@ -43,14 +43,10 @@ const CLASS_B = new Set([
 const FREE_ACTIONS = new Set(["DeleteObject", "DeleteBucket", "AbortMultipartUpload"]);
 
 // The free allowance resets on the account's billing anniversary, NOT on the
-// first of the calendar month. This account's dashboard showed a
-// "July 11 - August 11" period on 2026-08-03. The billing API is outside this
-// token's permissions on purpose, so the anchor is configuration, not a
-// measurement — and the guard never trusts it alone (see TRAILING_DAYS).
-const CYCLE_ANCHOR_DAY = Number(process.env.R2_BILLING_CYCLE_ANCHOR_DAY ?? 11);
-const CYCLE_ANCHOR_SOURCE = process.env.R2_BILLING_CYCLE_ANCHOR_DAY
-  ? "environment"
-  : "dashboard observation 2026-08-03, not API-verified";
+// first of the calendar month. The anchor is read from the R2 subscription when
+// the token carries billing read; otherwise it falls back to configuration. The
+// guard never trusts it alone either way (see TRAILING_DAYS).
+const CYCLE_ANCHOR_FALLBACK = Number(process.env.R2_BILLING_CYCLE_ANCHOR_DAY ?? 11);
 
 // A trailing window at least as long as any monthly cycle. Usage is scored on
 // the LARGER of the anchored cycle and this window, so a wrong anchor can only
@@ -60,8 +56,30 @@ const TRAILING_DAYS = 31;
 const iso = (d) => d.toISOString().slice(0, 10);
 const addDays = (d, n) => new Date(d.getTime() + n * 86_400_000);
 
-function cycleBounds(now) {
-  const anchor = Math.min(Math.max(CYCLE_ANCHOR_DAY, 1), 28);
+// Ask the billing API for the R2 subscription's period end and derive the
+// anchor day from it. Returns null when the token lacks billing read or the
+// shape is unfamiliar — the caller then falls back to configuration and says so.
+async function fetchCycleAnchor() {
+  try {
+    const response = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/subscriptions`,
+      { headers: { Authorization: `Bearer ${TOKEN}` } },
+    );
+    if (!response.ok) return null;
+    const body = await response.json();
+    if (!body.success) return null;
+    const r2 = (body.result ?? []).find((s) => (s?.rate_plan?.id ?? "").startsWith("r2"));
+    const end = r2?.current_period_end;
+    if (!end) return null;
+    const day = new Date(end).getUTCDate();
+    return Number.isInteger(day) && day >= 1 && day <= 31 ? { day, source: `billing API, subscription ${r2.rate_plan.id}, period end ${end}` } : null;
+  } catch {
+    return null;
+  }
+}
+
+function cycleBounds(now, anchorInfo) {
+  const anchor = Math.min(Math.max(anchorInfo?.day ?? CYCLE_ANCHOR_FALLBACK, 1), 28);
   const y = now.getUTCFullYear();
   const m = now.getUTCMonth();
   const startsThisMonth = now.getUTCDate() >= anchor;
@@ -79,14 +97,14 @@ function cycleBounds(now) {
     // Query range must cover whichever window starts earlier.
     query_start: iso(new Date(Math.min(start.getTime(), addDays(now, -(TRAILING_DAYS - 1)).getTime()))),
     anchor_day: anchor,
-    anchor_source: CYCLE_ANCHOR_SOURCE,
+    anchor_source: anchorInfo?.source ?? `configuration fallback (day ${CYCLE_ANCHOR_FALLBACK}), billing API unavailable`,
   };
 }
 
 const QUERY = `query($acc:String!,$start:Date!,$end:Date!){
   viewer{ accounts(filter:{accountTag:$acc}){
     r2StorageAdaptiveGroups(limit:200, filter:{date_geq:$start, date_leq:$end}){
-      max{ payloadSize objectCount } dimensions{ date }
+      max{ payloadSize objectCount uploadCount } dimensions{ date }
     }
     r2OperationsAdaptiveGroups(limit:5000, filter:{date_geq:$start, date_leq:$end}){
       sum{ requests } dimensions{ actionType date }
@@ -148,8 +166,12 @@ function summarise(account, bounds) {
   const peakSince = (from) => storageDays.reduce(
     (acc, row) => (row?.dimensions?.date && row.dimensions.date < from)
       ? acc
-      : { bytes: Math.max(acc.bytes, row?.max?.payloadSize ?? 0), objects: Math.max(acc.objects, row?.max?.objectCount ?? 0) },
-    { bytes: 0, objects: 0 },
+      : {
+          bytes: Math.max(acc.bytes, row?.max?.payloadSize ?? 0),
+          objects: Math.max(acc.objects, row?.max?.objectCount ?? 0),
+          uploads: Math.max(acc.uploads, row?.max?.uploadCount ?? 0),
+        },
+    { bytes: 0, objects: 0, uploads: 0 },
   );
 
   // Score every axis on the LARGER of the anchored billing cycle and a trailing
@@ -158,6 +180,10 @@ function summarise(account, bounds) {
   const trailingPeak = peakSince(bounds.trailing_start);
   const peakBytes = Math.max(cyclePeak.bytes, trailingPeak.bytes);
   const peakObjects = Math.max(cyclePeak.objects, trailingPeak.objects);
+  // Pending multipart uploads hold bytes that `payloadSize` may not include.
+  // Nothing here uploads multipart today, so any non-zero value means a code
+  // path we did not expect is storing bytes this projection cannot see.
+  const pendingUploads = Math.max(cyclePeak.uploads, trailingPeak.uploads);
 
   // Conservative storage projection: assume the observed peak is sustained for
   // the whole cycle. Under-projecting is the only failure mode that costs money.
@@ -186,6 +212,7 @@ function summarise(account, bounds) {
     storage: {
       peak_bytes: peakBytes,
       peak_objects: peakObjects,
+      pending_multipart_uploads: pendingUploads,
       projected_gb_month: projectedGbMonth,
       free_gb_month: FREE.storage_gb_month,
       used_fraction: projectedGbMonth / FREE.storage_gb_month,
@@ -244,7 +271,7 @@ async function main() {
     console.error("check-r2-free-tier-usage: CLOUDFLARE_API_TOKEN is not set — refusing to report ok on an unmeasured account");
     process.exit(2);
   }
-  const bounds = cycleBounds(new Date());
+  const bounds = cycleBounds(new Date(), await fetchCycleAnchor());
   const plan = {
     class_a: numericFlag("plan-class-a"),
     class_b: numericFlag("plan-class-b"),
@@ -289,6 +316,9 @@ async function main() {
     if (plan.class_a || plan.class_b || plan.bytes) {
       console.log(`  planned run: +${plan.class_a} class A, +${plan.class_b} class B, +${plan.bytes} bytes`);
       console.log(`  including plan: storage ${pct(with_plan.storage)}, class A ${pct(with_plan.class_a)}, class B ${pct(with_plan.class_b)}`);
+    }
+    if (summary.storage.pending_multipart_uploads > 0) {
+      console.log(`  WARN: ${summary.storage.pending_multipart_uploads} pending multipart upload(s) hold bytes this projection may not cover`);
     }
     if (blind) console.log(`  BLIND: ${buckets} bucket(s) exist but the storage dataset reports nothing — refusing to certify`);
     else if (breaches.length) console.log(`  BREACH: ${breaches.join(", ")} at or above ${pct(FAIL_AT)} of the free allowance`);
