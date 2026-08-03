@@ -129,19 +129,49 @@ async function fetchUsage(bounds) {
   return account;
 }
 
-// Empty analytics is not the same claim as zero usage. If buckets exist while
-// the storage dataset reports nothing, the measurement is blind and must not
-// pass. Returns the bucket count, or throws so the caller fails closed.
-async function fetchBucketCount() {
-  const response = await fetch(
-    `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/r2/buckets`,
-    { headers: { Authorization: `Bearer ${TOKEN}` } },
-  );
-  if (!response.ok) throw new Error(`r2 bucket list http ${response.status}`);
+// The storage analytics dataset is daily-granular: measured 2026-08-03, a fresh
+// object was still invisible to it 57 minutes after the write while operations
+// appeared within about one minute. Storage therefore cannot depend on
+// analytics — it is measured directly from the object listing, which is ground
+// truth. Analytics remains the source for operations.
+const INVENTORY_PAGE_SIZE = 1000;
+const INVENTORY_MAX_PAGES = 100; // 100k objects; the current estate is ~31.7k
+
+async function cf(path) {
+  const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}${path}`, {
+    headers: { Authorization: `Bearer ${TOKEN}` },
+  });
+  if (!response.ok) throw new Error(`cf ${path} http ${response.status}`);
   const body = await response.json();
-  if (!body.success) throw new Error(`r2 bucket list: ${JSON.stringify(body.errors)}`);
-  const buckets = body?.result?.buckets ?? body?.result ?? [];
-  return Array.isArray(buckets) ? buckets.length : 0;
+  if (!body.success) throw new Error(`cf ${path}: ${JSON.stringify(body.errors)}`);
+  return body;
+}
+
+// Walk every bucket and sum real object bytes. Throws so the caller fails closed;
+// a truncated walk is reported rather than silently under-counted.
+async function fetchInventory() {
+  const list = await cf("/r2/buckets");
+  const buckets = (list?.result?.buckets ?? list?.result ?? []).map((b) => b.name).filter(Boolean);
+  let bytes = 0;
+  let objects = 0;
+  let truncated = false;
+  let listCalls = 1;
+  for (const bucket of buckets) {
+    let cursor = "";
+    for (let page = 0; page < INVENTORY_MAX_PAGES; page += 1) {
+      const query = `?per_page=${INVENTORY_PAGE_SIZE}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
+      const body = await cf(`/r2/buckets/${encodeURIComponent(bucket)}/objects${query}`);
+      listCalls += 1;
+      for (const object of body.result ?? []) {
+        bytes += object?.size ?? 0;
+        objects += 1;
+      }
+      cursor = body?.result_info?.cursor ?? "";
+      if (!cursor) break;
+      if (page === INVENTORY_MAX_PAGES - 1) truncated = true;
+    }
+  }
+  return { buckets: buckets.length, bytes, objects, truncated, list_calls: listCalls };
 }
 
 function tallyOperations(rows, fromDate) {
@@ -161,7 +191,7 @@ function tallyOperations(rows, fromDate) {
   return { classA, classB, unknown: [...unknown].map(([action, requests]) => ({ action, requests })) };
 }
 
-function summarise(account, bounds) {
+function summarise(account, bounds, inventory) {
   const storageDays = account.r2StorageAdaptiveGroups ?? [];
   const peakSince = (from) => storageDays.reduce(
     (acc, row) => (row?.dimensions?.date && row.dimensions.date < from)
@@ -178,8 +208,10 @@ function summarise(account, bounds) {
   // 31-day window. If the anchor day is wrong, this can only overstate usage.
   const cyclePeak = peakSince(bounds.cycle_start);
   const trailingPeak = peakSince(bounds.trailing_start);
-  const peakBytes = Math.max(cyclePeak.bytes, trailingPeak.bytes);
-  const peakObjects = Math.max(cyclePeak.objects, trailingPeak.objects);
+  // Ground truth from the listing wins whenever it is larger than what the
+  // daily analytics snapshot has caught up to.
+  const peakBytes = Math.max(cyclePeak.bytes, trailingPeak.bytes, inventory?.bytes ?? 0);
+  const peakObjects = Math.max(cyclePeak.objects, trailingPeak.objects, inventory?.objects ?? 0);
   // Pending multipart uploads hold bytes that `payloadSize` may not include.
   // Nothing here uploads multipart today, so any non-zero value means a code
   // path we did not expect is storing bytes this projection cannot see.
@@ -212,6 +244,8 @@ function summarise(account, bounds) {
     storage: {
       peak_bytes: peakBytes,
       peak_objects: peakObjects,
+      measured_from_listing: { bytes: inventory?.bytes ?? 0, objects: inventory?.objects ?? 0, truncated: Boolean(inventory?.truncated) },
+      analytics_peak_bytes: Math.max(cyclePeak.bytes, trailingPeak.bytes),
       pending_multipart_uploads: pendingUploads,
       projected_gb_month: projectedGbMonth,
       free_gb_month: FREE.storage_gb_month,
@@ -280,16 +314,17 @@ async function main() {
   let summary;
   let buckets;
   try {
-    const [account, bucketCount] = await Promise.all([fetchUsage(bounds), fetchBucketCount()]);
-    summary = summarise(account, bounds);
-    buckets = bucketCount;
+    const [account, inv] = await Promise.all([fetchUsage(bounds), fetchInventory()]);
+    summary = summarise(account, bounds, inv);
+    buckets = inv;
   } catch (error) {
     console.error(`check-r2-free-tier-usage: measurement failed (${error.message}) — treating as fail, not as ok`);
     process.exit(2);
   }
-  // Buckets exist but the storage dataset reports nothing: the analytics view is
-  // blind, not empty. Refuse rather than certify an account we cannot see.
-  const blind = buckets > 0 && summary.storage.peak_bytes === 0 && summary.storage.peak_objects === 0;
+  // Storage now comes from the object listing, so an empty analytics dataset is
+  // no longer blindness. The remaining blind case is a listing we could not
+  // finish: we cannot certify bytes we did not count.
+  const blind = buckets.truncated;
   const { verdict, breaches, warnings, with_plan } = verdictFor(summary, plan, blind);
   const report = {
     schema_version: "r2-free-tier-usage/v2",
@@ -297,7 +332,8 @@ async function main() {
     thresholds: { warn_at: WARN_AT, fail_at: FAIL_AT },
     planned_operations: plan,
     used_fraction_including_plan: with_plan,
-    bucket_count: buckets,
+    bucket_count: buckets.buckets,
+    inventory_list_calls: buckets.list_calls,
     measurement_blind: blind,
     ...summary,
   };
@@ -320,7 +356,8 @@ async function main() {
     if (summary.storage.pending_multipart_uploads > 0) {
       console.log(`  WARN: ${summary.storage.pending_multipart_uploads} pending multipart upload(s) hold bytes this projection may not cover`);
     }
-    if (blind) console.log(`  BLIND: ${buckets} bucket(s) exist but the storage dataset reports nothing — refusing to certify`);
+    console.log(`  measured   ${summary.storage.measured_from_listing.objects} objects / ${summary.storage.measured_from_listing.bytes} bytes from the listing across ${buckets.buckets} bucket(s); analytics peak ${summary.storage.analytics_peak_bytes} bytes`);
+    if (blind) console.log(`  BLIND: object listing truncated — cannot certify bytes that were not counted`);
     else if (breaches.length) console.log(`  BREACH: ${breaches.join(", ")} at or above ${pct(FAIL_AT)} of the free allowance`);
     else if (warnings.length) console.log(`  WARN: ${warnings.join(", ")} at or above ${pct(WARN_AT)} of the free allowance`);
   }
