@@ -17,6 +17,7 @@ import { fileURLToPath } from "node:url";
 import {
   createMemoryCloudDataPlane,
   publishGeneration,
+  resolvePublicAsset,
   sha256Canonical,
   validateGenerationManifest,
 } from "./lib/cloud-data-plane-generation.mjs";
@@ -29,6 +30,7 @@ import {
   chaosExpectedPointerSequence,
   chaosPointerStore,
   deterministicPublishReceiptId,
+  FAMILIES,
   resolveExpectedPointerSequence,
   rollbackLiveGeneration,
   verifyGenerationParity,
@@ -700,6 +702,77 @@ try {
   );
   assert.equal(await emptyPlane.pointerStore.get(), null);
   console.log("rollback refusal ok (ROLLBACK_TARGET_MISSING, no previous / no pointer, no writes)");
+
+  // --- fred-macro family: split root/prefix, single file, public class -------
+  // Built from the REAL source file (read-only): 100xfenok-next is never
+  // edited, only read as the publish source.
+  const fredBuild = await buildFamilyManifest({
+    familyName: "fred-macro",
+    absRoot: path.join(REPO_ROOT, "100xfenok-next/public/data/macro"),
+    relRoot: "public/data/macro",
+    now: () => NOW_1,
+  });
+  validateGenerationManifest(fredBuild.manifest);
+  assert.equal(fredBuild.manifest.assets.length, 1);
+  const fredAsset = fredBuild.manifest.assets[0];
+  assert.equal(fredAsset.path, "public/data/macro/fred-macro.json");
+  assert.equal(fredAsset.bytes, 530_240);
+  assert.equal(fredAsset.privacy_class, "public");
+  assert.equal(fredAsset.content_type, "application/json");
+  assert.equal(fredAsset.object_key, `objects/sha256/${fredAsset.sha256}`);
+  assert.match(fredBuild.manifest.generation_id, /^fred-macro-[0-9a-f]{16}$/);
+  assert.equal(
+    fredBuild.manifest.generation_id,
+    `fred-macro-${fredBuild.manifest.source_sha.slice(0, 16)}`,
+  );
+
+  // Publish through the plane: the contract must accept the public class and
+  // invoke the family's real public-payload validator, which the payload
+  // satisfies (top-level keys updated/series, nothing secret-shaped).
+  assert.equal(
+    FAMILIES["fred-macro"].validate_public_payload({
+      bytes: fredBuild.payloads.get("public/data/macro/fred-macro.json"),
+    }),
+    true,
+  );
+  const fredResolved = await resolveExpectedPointerSequence({
+    pointer: await plane.pointerStore.get(),
+    manifest: fredBuild.manifest,
+    objectStore: plane.objectStore,
+    ledger: plane.ledger,
+  });
+  assert.equal(fredResolved.resume, false);
+  const fredPublished = await publishGeneration({
+    manifest: fredResolved.manifest,
+    payloads: fredBuild.payloads,
+    expectedPointerSequence: fredResolved.expectedPointerSequence,
+    objectStore: plane.objectStore,
+    ledger: plane.ledger,
+    pointerStore: plane.pointerStore,
+    policy: {
+      ...POLICY,
+      validate_public_payload: FAMILIES["fred-macro"].validate_public_payload,
+    },
+    now: () => NOW_1,
+  });
+  assert.equal(fredPublished.pointer.sequence, 5);
+  assert.equal(fredPublished.pointer.active.generation_id, fredBuild.manifest.generation_id);
+  assertPublishReceiptId({
+    manifest: fredResolved.manifest,
+    expectedPointerSequence: fredResolved.expectedPointerSequence,
+    receipt: fredPublished.receipt,
+  });
+  // The contract's public read path serves the enrolled asset byte-exactly.
+  const served = await resolvePublicAsset({
+    publicPath: "public/data/macro/fred-macro.json",
+    pointerStore: plane.pointerStore,
+    objectStore: plane.objectStore,
+  });
+  assert.equal(served.kind, "ok");
+  assert.deepEqual(served.bytes, fredBuild.payloads.get("public/data/macro/fred-macro.json"));
+  assert.equal(served.content_type, "application/json");
+  assert.equal(served.generation_id, fredBuild.manifest.generation_id);
+  console.log("fred-macro family ok (single file, split root/prefix, public class served)");
 } finally {
   await new Promise((resolve) => server.close(resolve));
   await rm(fixtureRoot, { recursive: true, force: true });

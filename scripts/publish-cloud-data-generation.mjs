@@ -76,7 +76,19 @@ const GATE_SCRIPT = path.join(REPO_ROOT, "scripts", "check-r2-free-tier-usage.mj
 const R2_BUCKET = "fenok-data-plane";
 const DEFAULT_ACCOUNT_ID = "aeeb5ea3affe55a2219d08ea02dad9e1";
 
-// Family descriptor table. P4 adds FRED here.
+// Family descriptor table. Fields:
+//   root             filesystem location of the source file(s), repo-relative
+//   manifest_prefix  logical asset path prefix in the plane (defaults to root;
+//                    must satisfy the contract's privacy prefixes: "data/" for
+//                    private, "public/data/" or "public/generated/" for public)
+//   files            explicit enrollment list (defaults to walking the whole
+//                    root tree); paths are relative to root
+//   privacy_class    "private" or "public" (contract-enforced against prefix)
+//   plan             cost-gate declaration, >= 2x the real spend
+//   policy           contract publication policy budgets
+//   validate_public_payload  required for public families: the contract calls
+//                    it on every public asset before writing
+// P5+ adds more families here.
 export const FAMILIES = {
   "oecd-cli": {
     root: "data/admin/oecd_cli",
@@ -84,6 +96,23 @@ export const FAMILIES = {
     // Gate declaration: >= 2x the measured 4 PutObject / 592,351 bytes.
     plan: { class_a: 40, bytes: 1_200_000 },
     policy: { max_assets: 64, max_total_bytes: 16_000_000 },
+  },
+  "fred-macro": {
+    // Source lives under 100xfenok-next (READ ONLY — the standing prohibition
+    // on editing 100xfenok-next/** is unaffected; it is only read as the
+    // publish source) while the manifest path uses the contract's public
+    // prefix, so root and manifest_prefix are deliberately different strings.
+    root: "100xfenok-next/public/data/macro",
+    manifest_prefix: "public/data/macro",
+    files: ["fred-macro.json"],
+    privacy_class: "public",
+    // Gate declaration: >= 2x the measured 1 PutObject / 530,240 bytes.
+    plan: { class_a: 10, bytes: 1_100_000 },
+    policy: { max_assets: 8, max_total_bytes: 4_000_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
   },
 };
 
@@ -115,22 +144,35 @@ async function walkFiles(absDir, prefix = "") {
 
 // Build the generation manifest for a family from the files under absRoot,
 // recording asset paths relRoot-relative (they must satisfy the contract's
-// privacy prefixes, e.g. "data/" for private). Deterministic in content:
-// identical file bytes always yield the same generation_id.
+// privacy prefixes, e.g. "data/" for private, "public/data/" for public).
+// Deterministic in content: identical file bytes always yield the same
+// generation_id. Enrollment is the explicit files argument, else the family
+// descriptor's files list, else a recursive walk of absRoot.
 export async function buildFamilyManifest({
   familyName,
   absRoot,
   relRoot,
+  files: explicitFiles = null,
   now = () => new Date().toISOString(),
 }) {
   const family = FAMILIES[familyName];
   if (!family) fail("FAMILY_UNKNOWN", familyName);
-  const files = (await walkFiles(absRoot)).sort((left, right) => left.localeCompare(right));
+  const enrolled = explicitFiles ?? family.files ?? null;
+  const files = (enrolled ?? await walkFiles(absRoot))
+    .sort((left, right) => left.localeCompare(right));
   if (files.length === 0) fail("FAMILY_EMPTY", absRoot);
   const payloads = new Map();
   const assets = [];
   for (const relative of files) {
-    const bytes = new Uint8Array(await readFile(path.join(absRoot, relative)));
+    if (relative.startsWith("/") || relative.includes("\\") || relative.split("/").includes("..")) {
+      fail("FAMILY_FILE_INVALID", relative);
+    }
+    let bytes;
+    try {
+      bytes = new Uint8Array(await readFile(path.join(absRoot, relative)));
+    } catch (error) {
+      fail("FAMILY_FILE_MISSING", `${relative} under ${absRoot} (${error.code ?? error.message})`);
+    }
     const sha256 = sha256Bytes(bytes);
     const assetPath = `${relRoot}/${relative}`;
     assets.push({
@@ -437,7 +479,7 @@ async function main() {
   const { manifest, payloads, summary } = await buildFamilyManifest({
     familyName: args.family,
     absRoot: path.join(REPO_ROOT, family.root),
-    relRoot: family.root,
+    relRoot: family.manifest_prefix ?? family.root,
   });
   const uniqueAssetKeys = new Set(manifest.assets.map((asset) => asset.object_key)).size;
   const plan = {
@@ -455,6 +497,17 @@ async function main() {
       result: "dry_run",
       generation_id: manifest.generation_id,
       ...plan,
+      // Explicit-enrollment families also list each enrolled asset; tree
+      // families (oecd-cli) keep the original summary shape byte-identical.
+      ...(family.files
+        ? {
+          enrolled: manifest.assets.map((asset) => ({
+            path: asset.path,
+            bytes: asset.bytes,
+            privacy_class: asset.privacy_class,
+          })),
+        }
+        : {}),
       planned_class_a: family.plan.class_a,
       planned_bytes: family.plan.bytes,
       gate: "not_run",
@@ -577,7 +630,9 @@ async function main() {
     max_assets: family.policy.max_assets,
     max_total_bytes: family.policy.max_total_bytes,
     validate_freshness: () => true,
-    validate_public_payload: () => true,
+    // The contract invokes this on every public asset before writing;
+    // public families must provide a real validator in the descriptor.
+    validate_public_payload: family.validate_public_payload ?? (() => true),
   };
   let published;
   try {
