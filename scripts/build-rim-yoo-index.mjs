@@ -363,7 +363,7 @@ export function buildArtifact({ nowIso }) {
   });
   const calibration = checkCalibration(headlineRows);
   return {
-    schema_version: "rim-yoo-index/v3",
+    schema_version: "rim-yoo-index/v5",
     generated_at: nowIso,
     method: "yoo_dongwon_forward_book_compounding_residual_income",
     headline: {
