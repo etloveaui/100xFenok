@@ -334,8 +334,9 @@ const ctx = { roe: 0.2576, rf: 0.0425, premium: 0.05, payout: 0.3109 };
   assert.equal(FX.instruments.SPX.spot, 6840.51);
   assert.equal(FX.instruments.CCMP.spot, 23578.13);
 
-  // artifact hashes match the actual archived files (paths are repo-root relative)
-  const REPO_ROOT = path.resolve(REPO, "../.."); // 100xFenok-platform (nested repo sits under source/)
+  // Immutable provenance bytes live inside this repo so CI and local runs test
+  // the same artifacts. Paths are nested-repo relative.
+  const REPO_ROOT = REPO;
   for (const inst of ["SPX", "CCMP", "IWM"]) {
     const p = path.join(REPO_ROOT, FX.artifacts[inst].path);
     assert.ok(fs.existsSync(p), `artifact missing: ${p}`);
