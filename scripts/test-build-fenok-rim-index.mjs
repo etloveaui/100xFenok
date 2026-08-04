@@ -306,7 +306,11 @@ assert.ok(discountRate(0.05) > discountRate(0.03), "discount must rise with the 
   const rows = evaluate(loadContext());
   assert.ok(rows.length >= 8, "the harness must still score most of its anchors");
   for (const row of rows) {
-    const expected = resolvePayout(row.key, null);
+    // Called on the same argument the scoring used: indices with a sheet anchor
+    // ignore it, Philadelphia Semi has no anchor and resolves through the
+    // derived value. Passing null here would assert a contract the engine does
+    // not have and would fail on any anchor-less index.
+    const expected = resolvePayout(row.key, row.derivedRetention);
     assert.ok(expected, `${row.key}: the engine must resolve a retention for every scored index`);
     assert.equal(
       row.retention,

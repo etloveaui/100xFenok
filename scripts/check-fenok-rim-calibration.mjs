@@ -32,6 +32,14 @@ const INDEX = {
   nasdaq100: { file: "us.json", section: "nasdaq100", rimKey: "NDX", label: "NASDAQ 100", rp: 0.055, market: "us" },
   nasdaq_composite: { file: "us.json", section: "nasdaq_composite", rimKey: "CCMP", label: "NASDAQ Composite", rp: 0.055, market: "us" },
   kospi: { file: "emerging.json", section: "kospi", rimKey: "KOSPI", label: "KOSPI", rp: 0.12, market: "kr" },
+  // The row the formula record called the one most likely to be wrong and least
+  // likely to be caught: it ships +360% with no published figure to score it
+  // against. It has three now. Its ROE sits at 2.21x its own five-year median,
+  // just inside the 2.3x bound, so nothing currently restrains it.
+  philadelphia_semi: {
+    file: "micro_sectors.json", section: "philadelphia_semi", rimKey: "SOX",
+    label: "Philadelphia Semi", rp: 0.055, market: "us",
+  },
 };
 
 // His own RIM-labelled outputs, dated, from his weekly letters and English
@@ -49,6 +57,25 @@ export const PUBLISHED = [
   { date: "2026-07-26", key: "sp500", upside: [0.19, 0.29], note: "12m range" },
   { date: "2026-08-02", key: "sp500", upside: [0.18, 0.18], floor: true, note: "over 18%, 6-12m" },
   { date: "2026-08-02", key: "nasdaq100", upside: [0.50, 0.50], floor: true, note: "over 50%, 6-12m" },
+  // Philadelphia Semi — RIM-labelled only. He also states 89.4%, 74% and 40~55%
+  // for semis on nearby dates without naming the model, and those are excluded
+  // for the same reason his bottom-up 적정가 is: they would train the ROE rule on
+  // a different model. Identity caveat: he quotes SOXX, the ETF, while our feed
+  // section is the Philadelphia Semi index. Near-identical baskets, but this is
+  // the exact shape of the Russell 2000/3000 mislabel that invalidated months of
+  // comparisons, so it is recorded rather than assumed away.
+  {
+    date: "2026-04-26", key: "philadelphia_semi", upside: [0.945, 0.945],
+    note: "RIM 상 상승여력 94.5% (uid 1609)",
+  },
+  {
+    date: "2026-06-21", key: "philadelphia_semi", upside: [0.563, 1.473],
+    note: "잔존 가치 모델 상 향후 1년간 56.3~147.3% (uid 1643, verified at source)",
+  },
+  {
+    date: "2026-06-28", key: "philadelphia_semi", upside: [0.63, 0.63], floor: true,
+    note: "RIM 모델 상 6~12개월 최소 63% (uid 1647)",
+  },
 ];
 
 // Retention comes from the ENGINE's resolver, never from a table kept here.
@@ -247,7 +274,14 @@ export function evaluate({ feeds, rim, fred }) {
     // retention is published on the row so a test can assert the harness scored
     // the retention the build resolves, rather than trusting that it imported
     // the right function.
-    results.push({ ...target, label: cfg.label, px, book, retention, riskFree, riskFreeSource, gapDays: hit.gapDays, scored });
+    results.push({
+      ...target, label: cfg.label, px, book,
+      // derivedRetention travels with the row so a test can re-run the engine's
+      // resolver on the SAME argument this scoring used. Indices with a sheet
+      // anchor ignore it; Philadelphia Semi has none and resolves through it.
+      derivedRetention, retention, retentionSource: resolved?.source ?? null,
+      riskFree, riskFreeSource, gapDays: hit.gapDays, scored,
+    });
   }
   return results;
 }
