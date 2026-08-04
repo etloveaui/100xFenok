@@ -47,6 +47,10 @@ export const PUBLISHED = [
   { date: "2026-08-02", key: "nasdaq100", upside: [0.50, 0.50], floor: true, note: "over 50%, 6-12m" },
 ];
 
+// Forward-basis payouts for indices whose derived value is unusable. KOSPI is
+// market-cap weighted across 269 Korean names in data/global-scouter (2026-07-31).
+const PAYOUT_FALLBACK = { kospi: 0.1382, nasdaq_composite: 0.2180 };
+
 function nearestRow(section, dateIso) {
   const target = new Date(dateIso).getTime();
   let best = null;
@@ -122,8 +126,15 @@ export function evaluate({ feeds, rim }) {
     const px = hit.row.px_last;
     const book = px / hit.row.px_to_book_ratio;
     const periods = rim.indices?.[cfg.rimKey]?.derived?.forecast_grid_v1?.periods ?? [];
-    const payout = periods[0]?.payout_ratio?.value;
-    const retention = Number.isFinite(payout) && payout > 0 && payout < 1 ? 1 - payout : null;
+    const derivedPayout = periods[0]?.payout_ratio?.value;
+    // KOSPI's derived payout is zero — the Korean dividend join covers almost no
+    // weight — so every KOSPI row scored n/a and the index that matters most was
+    // invisible. A market-cap weighting of the Korean names in the Global Scouter
+    // export gives a real forward-basis payout.
+    const payout = Number.isFinite(derivedPayout) && derivedPayout > 0 && derivedPayout < 1
+      ? derivedPayout
+      : PAYOUT_FALLBACK[target.key] ?? null;
+    const retention = Number.isFinite(payout) ? 1 - payout : null;
     const riskFree = cfg.market === "kr"
       ? 0.0426
       : rim.indices?.SPX?.observed?.risk_free_rate?.value ?? 0.0468;
