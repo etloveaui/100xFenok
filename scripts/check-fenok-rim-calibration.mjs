@@ -16,7 +16,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { computeCell } from "./build-fenok-rim-index.mjs";
+import {
+  computeCell,
+  resolvePayout,
+  RIM_KR_RISK_FREE_ANCHOR,
+} from "./build-fenok-rim-index.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BENCHMARKS = path.join(ROOT, "data", "benchmarks");
@@ -47,13 +51,21 @@ export const PUBLISHED = [
   { date: "2026-08-02", key: "nasdaq100", upside: [0.50, 0.50], floor: true, note: "over 50%, 6-12m" },
 ];
 
-// Forward-basis payouts for indices whose derived value is unusable. KOSPI is
-// market-cap weighted across 269 Korean names in data/global-scouter (2026-07-31).
-// Measured from the filings themselves: sum of Cash Dividends Paid over sum of
-// Net Income across each index's constituents, four completed fiscal years, from
-// data/yf/finance. 2026 is excluded because most constituents have not reported.
-const PAYOUT_MEASURED = { sp500: 0.2072, nasdaq100: 0.0971, philadelphia_semi: 0.1130, kospi: 0.1382, nasdaq_composite: 0.2180 };
-const PAYOUT_FALLBACK = PAYOUT_MEASURED;
+// Retention comes from the ENGINE's resolver, never from a table kept here.
+// This file used to carry its own: measured filings-based payouts of
+// sp500 20.72% / nasdaq100 9.71% / kospi 13.82%, while the build resolved
+// 31.09% / 25.65% / 37.89% from the sheet anchors. Every ranking printed here
+// therefore described an engine that does not exist, and KOSPI — the row the
+// 2.3x ROE bound was fitted on — was scored 2.7x away from what ships.
+//
+// This is the same failure the formula record names as the trap to check first,
+// firing for the third time in this track: a test that exercises different
+// inputs from the build. The fix is structural, not a corrected copy — there is
+// one resolver and both callers use it.
+//
+// The measured filings series still exists and is still worth scoring, but it is
+// a CANDIDATE basis to be ranked, not the harness's silent default. It lives in
+// data/computed/fenok-rim/payout-history.json, produced daily.
 
 function nearestRow(section, dateIso) {
   const target = new Date(dateIso).getTime();
@@ -116,7 +128,7 @@ export const CANDIDATES = {
   },
 };
 
-function loadContext() {
+export function loadContext() {
   const feeds = {};
   for (const cfg of Object.values(INDEX)) {
     if (!feeds[cfg.file]) feeds[cfg.file] = JSON.parse(fs.readFileSync(path.join(BENCHMARKS, cfg.file), "utf8"));
@@ -142,11 +154,15 @@ export function evaluate({ feeds, rim }) {
     // export gives a real forward-basis payout.
     // Measured filings beat the derived surface: the derived payout is a
     // point-in-time forward figure and reads zero for KOSPI.
-    const payout = PAYOUT_MEASURED[target.key]
-      ?? (Number.isFinite(derivedPayout) && derivedPayout > 0 && derivedPayout < 1 ? derivedPayout : null);
-    const retention = Number.isFinite(payout) ? 1 - payout : null;
+    // The engine's own resolver, with the same derived-retention argument the
+    // build passes it, so the sheet anchor leads here exactly as it does there.
+    const derivedRetention = Number.isFinite(derivedPayout)
+      ? { value: 1 - derivedPayout, source: "forecast_grid_v1 period 0" }
+      : null;
+    const resolved = resolvePayout(target.key, derivedRetention);
+    const retention = resolved?.value ?? null;
     const riskFree = cfg.market === "kr"
-      ? 0.0426
+      ? RIM_KR_RISK_FREE_ANCHOR.value
       : rim.indices?.SPX?.observed?.risk_free_rate?.value ?? 0.0468;
     const all = (feeds[cfg.file]?.sections?.[cfg.section]?.data ?? [])
       .filter((r) => r.date <= target.date && Number.isFinite(r.roe))
@@ -175,7 +191,10 @@ export function evaluate({ feeds, rim }) {
       const err = fair < lo ? fair / lo - 1 : (target.floor || fair <= hi) ? 0 : fair / hi - 1;
       scored[name] = { roe, fair, err, inside: err === 0 };
     }
-    results.push({ ...target, label: cfg.label, px, book, gapDays: hit.gapDays, scored });
+    // retention is published on the row so a test can assert the harness scored
+    // the retention the build resolves, rather than trusting that it imported
+    // the right function.
+    results.push({ ...target, label: cfg.label, px, book, retention, riskFree, gapDays: hit.gapDays, scored });
   }
   return results;
 }

@@ -134,7 +134,11 @@ export const RIM_CALIBRATION_ANCHORS = Object.freeze([
 // 25.65%. So the sheet figure leads, our derived figure follows as a drift
 // check, and there is no silent house fallback — an index with neither is
 // excluded loudly rather than shipped on a guess.
-const RIM_PAYOUT_ANCHOR = {
+// Exported because the calibration harness must score the retention THIS build
+// resolves, not a copy of it. It previously kept its own table and drifted:
+// the harness scored KOSPI at a 13.82% payout while the build shipped 37.89%,
+// so every candidate ranking it printed described an engine we do not run.
+export const RIM_PAYOUT_ANCHOR = {
   sp500: { value: 0.3109, as_of: "2026-08-03" },
   nasdaq100: { value: 0.2565, as_of: "2026-08-03" },
   nasdaq_composite: { value: 0.2180, as_of: "2026-08-03" },
@@ -145,7 +149,7 @@ const RIM_PAYOUT_ANCHOR = {
 // policy. Widest real value we carry is Russell's 4.5%; the S&P's is 31%.
 const RIM_PAYOUT_BOUNDS = [0.01, 0.75];
 
-function resolvePayout(key, derivedRetention) {
+export function resolvePayout(key, derivedRetention) {
   const anchor = RIM_PAYOUT_ANCHOR[key];
   const derivedPayout = derivedRetention ? 1 - derivedRetention.value : null;
   const sane = (v) => Number.isFinite(v) && v >= RIM_PAYOUT_BOUNDS[0] && v <= RIM_PAYOUT_BOUNDS[1];

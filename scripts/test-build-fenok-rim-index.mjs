@@ -8,7 +8,9 @@ import {
   RIM_EXPLICIT_YEARS,
   RIM_GRID_STEP,
   RIM_RATE_SCENARIO_10Y,
+  RIM_KR_RISK_FREE_ANCHOR,
   discountRate,
+  resolvePayout,
 } from "./build-fenok-rim-index.mjs";
 
 // PERMANENT REGRESSION: the engine must reproduce every captured 2025-12-09
@@ -287,5 +289,38 @@ assert.ok(RIM_CALIBRATION_ANCHORS.length >= 3);
 assert.ok(Math.abs(discountRate(0.042) - 0.0995) < 0.0005, "discount at Rf 4.2% must be ~9.95%");
 assert.ok(Math.abs(discountRate(0.035) - 0.0956) < 0.0005, "discount at Rf 3.5% must be ~9.56%");
 assert.ok(discountRate(0.05) > discountRate(0.03), "discount must rise with the risk-free rate");
+
+// RECURRENCE GUARD — the calibration harness must score the engine the build
+// runs. It kept its own payout table for a while: it scored KOSPI at a 13.82%
+// payout while the build resolved 37.89% from the sheet anchor, so the ranking
+// it printed — including the 3.0% mean error that justified the 2.3x ROE bound —
+// described an engine nobody ships. Correcting it moved that candidate to 7.4%.
+//
+// This asserts BEHAVIOUR, not the presence of an import: every row the harness
+// scores must carry the retention and risk-free the engine's own resolvers
+// return. A future copy-paste of the table would fail here even if the import
+// line survived.
+{
+  const { PUBLISHED, evaluate, loadContext } = await import("./check-fenok-rim-calibration.mjs");
+  assert.ok(PUBLISHED.length >= 10, "the harness must keep its published anchor series");
+  const rows = evaluate(loadContext());
+  assert.ok(rows.length >= 8, "the harness must still score most of its anchors");
+  for (const row of rows) {
+    const expected = resolvePayout(row.key, null);
+    assert.ok(expected, `${row.key}: the engine must resolve a retention for every scored index`);
+    assert.equal(
+      row.retention,
+      expected.value,
+      `${row.date} ${row.key}: harness retention must equal the engine's resolved retention`,
+    );
+    if (row.key === "kospi") {
+      assert.equal(
+        row.riskFree,
+        RIM_KR_RISK_FREE_ANCHOR.value,
+        "KOSPI rows must use the engine's Korean risk-free anchor, not a literal copied into the harness",
+      );
+    }
+  }
+}
 
 console.log("build-fenok-rim-index tests passed");
