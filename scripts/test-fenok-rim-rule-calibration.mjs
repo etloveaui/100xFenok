@@ -136,10 +136,19 @@ assert.ok(spxDiagnostic.lt_roe_transform.bridge.derivation);
 assert.equal(spxDiagnostic.lt_roe_transform.reusable, false);
 assert.match(spxDiagnostic.lt_roe_transform.assumed_relative_uncertainty.basis, /assumed sensitivity/);
 
-const expectedCenters = { SPX: 7853, NDX: 32066, KOSPI: 14075, SOX: 12995 };
-const centreRelativeTolerance = 0.001;
+// Current market inputs are allowed to move. Replay every row from its own
+// automatic operands instead of freezing target levels into the test.
 for (const row of yooCurrent.rows) {
-  assert.ok(Math.abs(row.center.nine_cell_mean / expectedCenters[row.id] - 1) <= centreRelativeTolerance, `${row.id} centre drifted beyond relative tolerance`);
+  const replay = computeYooLogicInferredRange({
+    id: row.id,
+    price: row.runtime_inputs.price,
+    book: row.runtime_inputs.book,
+    fy3Roe: row.runtime_inputs.fy3_roe,
+    payout: row.runtime_inputs.payout,
+    riskFree: row.runtime_inputs.risk_free,
+    publicErp: row.runtime_inputs.public_erp,
+  });
+  assert.ok(Math.abs(replay.center.nine_cell_mean - row.center.nine_cell_mean) < 1e-9, `${row.id} must replay without a target-level constant`);
 }
 
 const kospiShifted = computeYooLogicInferredRange({
@@ -183,6 +192,25 @@ assert.ok(Math.abs(sharedToy.transformed_inputs.lt_roe.high - 0.1755606109847254
 assert.equal(sharedToy.lt_roe_transform.persistence_weight.evidence_status, "inferred_transfer");
 assert.equal(sharedToy.lt_roe_transform.persistence_weight.observations, 4);
 assert.equal(sharedToy.lt_roe_transform.reusable_transformation, "form_only");
+
+const sharedToyBookUp = computeYooLogicSharedInferredRange({
+  id: "SPX", price: 100, book: 25.25, fy3Roe: 0.20, normalRoe: 0.10,
+  payout: 0.30, riskFree: 0.04, publicErp: 0.05,
+});
+assert.ok(Math.abs(sharedToyBookUp.sweep.range.low / sharedToy.sweep.range.low - 1.01) < 1e-12);
+assert.ok(Math.abs(sharedToyBookUp.sweep.range.high / sharedToy.sweep.range.high - 1.01) < 1e-12);
+const sharedToyErpUp = computeYooLogicSharedInferredRange({
+  id: "SPX", price: 100, book: 25, fy3Roe: 0.20, normalRoe: 0.10,
+  payout: 0.30, riskFree: 0.04, publicErp: 0.051,
+});
+assert.ok(sharedToyErpUp.sweep.range.low < sharedToy.sweep.range.low);
+assert.ok(sharedToyErpUp.sweep.range.high < sharedToy.sweep.range.high);
+const sharedToyRoeUp = computeYooLogicSharedInferredRange({
+  id: "SPX", price: 100, book: 25, fy3Roe: 0.21, normalRoe: 0.10,
+  payout: 0.30, riskFree: 0.04, publicErp: 0.05,
+});
+assert.ok(sharedToyRoeUp.sweep.range.low > sharedToy.sweep.range.low);
+assert.ok(sharedToyRoeUp.sweep.range.high > sharedToy.sweep.range.high);
 
 const sharedToyPayoutBand = computeYooLogicSharedInferredRange({
   id: "SPX",

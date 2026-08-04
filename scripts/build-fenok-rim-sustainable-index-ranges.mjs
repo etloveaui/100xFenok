@@ -33,7 +33,6 @@ function valueSummary(row) {
   return {
     current_price: row.runtime_inputs.price,
     range: row.sweep.range,
-    center_diagnostic: row.center.nine_cell_mean,
     point_estimate: null,
     upside_range: {
       low: row.price_context.low_upside,
@@ -42,19 +41,86 @@ function valueSummary(row) {
   };
 }
 
-function baseRow(row, payoutEvidence) {
+function discountDomain(riskFree) {
+  const measured = { low: 0.035, high: 0.042 };
+  const houseExtrapolation = { low: 0.03, high: 0.05 };
+  const inside = riskFree >= measured.low && riskFree <= measured.high;
+  const bounded = riskFree >= houseExtrapolation.low && riskFree <= houseExtrapolation.high;
+  return {
+    status: inside ? "inside_measured_domain" : bounded ? "extrapolated" : "outside_house_domain",
+    measured_risk_free_domain: measured,
+    bounded_house_extrapolation_domain: houseExtrapolation,
+    current_risk_free: riskFree,
+    distance_from_domain: inside ? 0 : Math.min(Math.abs(riskFree - measured.low), Math.abs(riskFree - measured.high)),
+  };
+}
+
+function dayAge(asOf, generatedAt) {
+  const start = Date.parse(`${String(asOf).slice(0, 10)}T00:00:00Z`);
+  const end = Date.parse(`${String(generatedAt).slice(0, 10)}T00:00:00Z`);
+  return Number.isFinite(start) && Number.isFinite(end) ? Math.floor((end - start) / 86400000) : null;
+}
+
+function freshnessSummary(generatedAt, definitions) {
+  const items = definitions.map(({ id, as_of: asOf, max_age_days: maxAgeDays }) => {
+    const ageDays = dayAge(asOf, generatedAt);
+    const passed = Number.isFinite(ageDays) && ageDays >= 0 && ageDays <= maxAgeDays;
+    return { id, as_of: asOf ?? null, age_days: ageDays, max_age_days: maxAgeDays, status: passed ? "passed" : "failed" };
+  });
+  return { status: items.every((item) => item.status === "passed") ? "passed" : "failed", items };
+}
+
+function assertPromotableHouseRows(rows) {
+  if (rows.length !== 6 || new Set(rows.map((row) => row.id)).size !== 6) {
+    throw new Error("FENO house range promotion requires six unique indices");
+  }
+  for (const row of rows) {
+    const range = row.value?.range;
+    if (![row.value?.current_price, range?.low, range?.high].every(Number.isFinite) || range.low > range.high) {
+      throw new Error(`${row.id}: finite ordered fair-value range required`);
+    }
+    if (row.value.point_estimate !== null || row.runtime_yoo_value_injection !== false) {
+      throw new Error(`${row.id}: point or runtime Yoo target injection is forbidden`);
+    }
+    if (row.house_policy_proxy_used && row.confidence !== "low") {
+      throw new Error(`${row.id}: proxy-backed house range must be low confidence`);
+    }
+    if (row.model_domain?.discount?.status === "outside_house_domain") {
+      throw new Error(`${row.id}: risk-free rate is outside the bounded FENO discount domain`);
+    }
+    if (row.input_freshness?.status !== "passed") {
+      throw new Error(`${row.id}: stale or future input blocks FENO house range publication`);
+    }
+    const payout = row.automatic_inputs?.payout;
+    const payouts = typeof payout === "number" ? [payout] : [payout?.low, payout?.center, payout?.high];
+    if (!payouts.every((value) => Number.isFinite(value) && value >= 0 && value <= 1)) {
+      throw new Error(`${row.id}: payout inputs must be finite fractions`);
+    }
+  }
+}
+
+function baseRow(row, payoutEvidence, inputEvidence, generatedAt) {
   const exactCore = ["SPX", "NDX"].includes(row.id);
   const quality = exactCore ? "medium" : "low";
   return {
     id: row.id,
-    status: exactCore ? "automatic_narrow_house_diagnostic" : "automatic_narrow_proxy_diagnostic",
+    status: "feno_house_fair_value_range",
+    publication_status: "RANGE",
     confidence: quality,
-    production_promoted: false,
+    production_promoted: true,
+    house_policy_proxy_used: !exactCore,
+    model_domain: { discount: discountDomain(row.runtime_inputs.risk_free) },
+    input_freshness: freshnessSummary(generatedAt, [
+      { id: "price", as_of: inputEvidence.observed.price.as_of, max_age_days: 10 },
+      { id: "risk_free", as_of: inputEvidence.observed.risk_free_rate.as_of, max_age_days: 10 },
+      { id: "erp", as_of: inputEvidence.observed.equity_risk_premium.as_of, max_age_days: 180 },
+      { id: "payout_policy_build", as_of: payoutEvidence.generated_at, max_age_days: 10 },
+    ]),
     value: valueSummary(row),
     automatic_inputs: row.runtime_inputs,
     transformed_inputs: row.transformed_inputs,
     payout_basis: {
-      role: "measured trailing policy band",
+      role: "measured trailing four-year policy band",
       generated_at: payoutEvidence.generated_at,
       basis_id: payoutEvidence.basis_id,
       eligibility: payoutEvidence.indices[row.id === "SPX" ? "sp500" : row.id === "NDX" ? "nasdaq100" : row.id === "KOSPI" ? "kospi" : "philadelphia_semi"].eligibility,
@@ -73,18 +139,27 @@ function baseRow(row, payoutEvidence) {
   };
 }
 
-function extendedRow(row) {
+function extendedRow(row, marketInput, generatedAt) {
   return {
     id: row.id,
-    status: "automatic_narrow_proxy_diagnostic",
+    status: "feno_house_fair_value_range",
+    publication_status: "RANGE",
     confidence: "low",
-    production_promoted: false,
+    production_promoted: true,
+    house_policy_proxy_used: true,
+    model_domain: { discount: discountDomain(row.runtime_inputs.risk_free) },
+    input_freshness: freshnessSummary(generatedAt, [
+      { id: "price", as_of: row.proxy_inputs.index_fundamentals.as_of, max_age_days: 10 },
+      { id: "risk_free", as_of: marketInput.observed.risk_free_rate.as_of, max_age_days: 10 },
+      { id: "erp", as_of: marketInput.observed.equity_risk_premium.as_of, max_age_days: 180 },
+      { id: "payout_proxy_build", as_of: row.proxy_inputs.payout.generated_at, max_age_days: 10 },
+    ]),
     value: valueSummary(row),
     automatic_inputs: row.runtime_inputs,
     transformed_inputs: row.transformed_inputs,
     source_quality: "exact Nasdaq Composite benchmark fundamentals combined with ONEQ payout proxy; exact Composite dividend weights are unavailable",
     proxy_inputs: row.proxy_inputs,
-    promotion_blockers: row.identity_blockers,
+    exact_input_limitations: row.identity_blockers,
     method: {
       lt_roe: row.lt_roe_transform.equation,
       residual_value: YOO_LOGIC_INFERRED_RULE.structure_components.terminal,
@@ -94,19 +169,28 @@ function extendedRow(row) {
   };
 }
 
-function russellRow(row) {
+function russellRow(row, marketInput, generatedAt) {
   return {
     id: "RUT",
-    status: "automatic_narrow_official_input_diagnostic",
+    status: "feno_house_fair_value_range",
+    publication_status: "RANGE",
     confidence: "low",
-    production_promoted: false,
+    production_promoted: true,
+    house_policy_proxy_used: true,
+    model_domain: { discount: discountDomain(row.runtime_inputs.risk_free) },
+    input_freshness: freshnessSummary(generatedAt, [
+      { id: "price", as_of: row.price_as_of, max_age_days: 10 },
+      { id: "risk_free", as_of: marketInput.observed.risk_free_rate.as_of, max_age_days: 10 },
+      { id: "erp", as_of: marketInput.observed.equity_risk_premium.as_of, max_age_days: 180 },
+      { id: "official_quarterly_fundamentals", as_of: row.official_fundamentals.as_of, max_age_days: 120 },
+    ]),
     value: valueSummary(row),
     automatic_inputs: row.runtime_inputs,
     transformed_inputs: row.transformed_inputs,
     source_quality: "official recurring LSEG Russell 2000 fundamentals; current price is newer than the quarterly fundamentals snapshot",
     official_fundamentals: row.official_fundamentals,
     fundamentals_age_days_at_price: row.fundamentals_age_days_at_price,
-    promotion_blockers: row.identity_blockers,
+    exact_input_limitations: row.identity_blockers,
     method: {
       lt_roe: row.lt_roe_transform.equation,
       residual_value: YOO_LOGIC_INFERRED_RULE.structure_components.terminal,
@@ -126,10 +210,11 @@ export function buildSustainableIndexRanges({ root = ROOT, generatedAt = new Dat
   const extended = buildCurrentExtendedYooLogicProxyRanges(root);
   const russell = buildRussellCurrentOfficialFundamentalsDiagnostic(root).row;
   const rows = [
-    ...core.rows.map((row) => baseRow(row, payoutEvidence)),
-    extendedRow(extended.rows.find((row) => row.id === "CCMP")),
-    russellRow(russell),
+    ...core.rows.map((row) => baseRow(row, payoutEvidence, indexInputs.indices[row.id], generatedAt)),
+    extendedRow(extended.rows.find((row) => row.id === "CCMP"), indexInputs.indices.SPX, generatedAt),
+    russellRow(russell, indexInputs.indices.SPX, generatedAt),
   ];
+  assertPromotableHouseRows(rows);
   const coverageSafeRows = core.rows.map((row) => {
     const strict = strictPath.rows.find((candidate) => candidate.id === row.id);
     if (strict?.status === "blocked") {
@@ -180,7 +265,7 @@ export function buildSustainableIndexRanges({ root = ROOT, generatedAt = new Dat
   return {
     schema_version: "fenok_rim_sustainable_index_ranges.v1",
     generated_at: generatedAt,
-    status: "automatic_research_diagnostics_ready_no_promotable_fair_value_rule",
+    status: "automatic_feno_house_fair_value_ranges_ready",
     scope: ["SPX", "NDX", "KOSPI", "SOX", "CCMP", "RUT"],
     runtime_contract: {
       automatic_diagnostic_fallback_inputs_refreshable: true,
@@ -189,20 +274,48 @@ export function buildSustainableIndexRanges({ root = ROOT, generatedAt = new Dat
       runtime_yoo_value_injection: false,
       runtime_target_level_injection: false,
       frozen_historical_yoo_calibration_parameters_used: true,
-      output_type: "range_only",
+      output_type: "FENO_house_fair_value_range",
       point_estimate: false,
     },
     official_input_producers: {
       RUT: "ready recurring official LSEG quarterly snapshot with immutable archive",
       KOSPI: "producer and parser ready; live official screen refresh blocked pending an authorized KRX Data Marketplace session",
       SPX_NDX: "automatic benchmark and constituent paths ready",
-      CCMP_SOX: "exact payout or official-weight routes unavailable; diagnostics use explicit proxies only",
+      CCMP_SOX: "exact payout or official-weight routes unavailable; FENO house ranges use explicit low-confidence proxies",
     },
     methodology: {
+      feno_house_policy: {
+        starting_book: {
+          equation: "B0 = current automatic benchmark price / current automatic benchmark P/B",
+          fallback: "same-instrument automatic proxy only; proxy use lowers confidence but never injects a target level",
+        },
+        payout: {
+          equation: "same-date direct index dividend yield / forward earnings yield when eligible; otherwise the disclosed automatic trailing or instrument proxy band",
+          safeguard: "no Yoo payout or fair-value inversion is a runtime operand",
+        },
+        risk_free: {
+          equation: "market-local automatic 10-year government yield",
+        },
+        erp: {
+          equation: "public Damodaran ERP plus the frozen FENO asset-class lattice/range",
+          safeguard: "historical calibration is frozen; current Yoo output is never used",
+        },
+        lt_roe: {
+          equation: YOO_LOGIC_SHARED_INFERRED_RULE.equation,
+          persistence_weight: YOO_LOGIC_SHARED_INFERRED_RULE.persistence_weight,
+        },
+        discount: YOO_LOGIC_INFERRED_RULE.structure_components.discount,
+        horizon_and_residual_value: {
+          horizon: YOO_LOGIC_INFERRED_RULE.structure_components.horizon,
+          residual_income: YOO_LOGIC_INFERRED_RULE.structure_components.residual_income,
+          book_roll_forward: YOO_LOGIC_INFERRED_RULE.structure_components.book_roll_forward,
+          terminal: YOO_LOGIC_INFERRED_RULE.structure_components.terminal,
+        },
+      },
       structure_components_with_mixed_evidence_status: YOO_LOGIC_INFERRED_RULE.structure_components,
-      narrow_house_diagnostic_rule: {
+      narrow_house_range_rule: {
         ...YOO_LOGIC_SHARED_INFERRED_RULE,
-        promotion_status: "rejected_as_index_point_or_narrow_range_without_index_holdout",
+        promotion_status: "adopted_as_FENO_house_range_policy",
       },
       coverage_safe_ltroe_rule: {
         equation: "LTROE = hull(normal ROE, automatic FY1-FY3 ROE path) +/- 3.5 percentage points",
@@ -216,13 +329,26 @@ export function buildSustainableIndexRanges({ root = ROOT, generatedAt = new Dat
         runner_up_validation_mae_pp: horizon.runner_up_validation_mae_pp,
         classification: horizon.classification,
       },
-      unresolved_for_production: {
+      unresolved_for_exact_yoo_identification: {
         erp: calibration.erp.blocking_reasons,
         lt_roe: calibration.lt_roe.blocking_reasons,
         discount_horizon: calibration.discount_horizon.blocking_reasons,
       },
     },
-    interpretation: "Narrow rows are reproducible diagnostics, not promotable fair values. coverage_safe_rows remove unsupported point precision and are fair-value sensitivities only, not claims of Yoo's current values.",
+    promotion_gate: {
+      status: "passed",
+      checks: {
+        six_unique_indices: true,
+        finite_ordered_ranges: true,
+        point_estimates_forbidden: true,
+        runtime_yoo_target_injection_forbidden: true,
+        proxy_rows_low_confidence: true,
+        bounded_discount_extrapolation: true,
+        input_freshness_enforced: true,
+        payout_fraction_bounds_enforced: true,
+      },
+    },
+    interpretation: "Rows are automatic FENO house fair-value ranges. They deliberately convert unresolved Yoo identification into frozen FENO policy, disclose proxy use, discount-domain extrapolation and confidence, and never claim to be Yoo's current values. No point estimate is published.",
     rows,
     coverage_safe_rows: coverageSafeRows,
   };

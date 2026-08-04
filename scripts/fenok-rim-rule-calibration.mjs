@@ -925,7 +925,11 @@ export function buildCurrentYooLogicSharedInferredRanges(root = ROOT) {
       book: periods[0]?.book_value_beginning?.value,
       fy3Roe: periods[2]?.roe_on_beginning_book?.value,
       normalRoe,
-      payout: payouts?.indices?.[config.payoutKey]?.summary?.mean,
+      payout: {
+        low: payouts?.indices?.[config.payoutKey]?.summary?.min,
+        center: payouts?.indices?.[config.payoutKey]?.summary?.mean,
+        high: payouts?.indices?.[config.payoutKey]?.summary?.max,
+      },
       riskFree: source?.observed?.risk_free_rate?.value,
       publicErp: source?.observed?.equity_risk_premium?.value,
     });
@@ -1164,6 +1168,7 @@ export function buildCurrentExtendedYooLogicProxyRanges(root = ROOT) {
       eps_growth: { ...growth, formula: "range of exact-index forward-EPS 3y and 5y CAGRs; midpoint is diagnostic center" },
       payout: {
         ...payout,
+        generated_at: etfAction.generated_at,
         observations: payoutObservations,
         formula: "ETF dividend yield / exact-index forward earnings yield",
       },
