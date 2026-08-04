@@ -95,6 +95,11 @@ export const CANDIDATES = {
     fn: ({ rawRoe, history }) => (Number.isFinite(rawRoe) && Number.isFinite(history?.median10y)
       ? (rawRoe + history.median10y) / 2 : null),
   },
+  capped_2_3x: {
+    label: "raw ROE, capped at 2.3x the index's own 5-year median",
+    fn: ({ rawRoe, history }) => (Number.isFinite(rawRoe) && Number.isFinite(history?.median5y)
+      ? Math.min(rawRoe, 2.3 * history.median5y) : rawRoe ?? null),
+  },
   fy1_ending: {
     label: "FY1 earnings over END-of-FY1 book",
     fn: ({ rawRoe, growthFy2, elapsed, retention, book }) => {

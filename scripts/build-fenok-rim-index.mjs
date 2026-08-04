@@ -248,6 +248,7 @@ export function loadRimDerived() {
       ?? null;
     const paths = {};
     const roeBases = {};
+    const medians = {};
     const retentions = {};
     const elapsed = fiscalYearElapsed(payload?.generated_at);
     for (const [ourKey, rimKey] of Object.entries(RIM_INDEX_KEY)) {
@@ -262,16 +263,41 @@ export function loadRimDerived() {
       // belongs to, correlating 0.982 with it once Russell is excluded.
       const roePath = blended;
       roeBases[ourKey] = "vendor index-level aggregate ROE (best_eps / book), used as published";
+      medians[ourKey] = null; // filled from the benchmark history at row build time
       if (roePath.length >= 3) paths[ourKey] = roePath.slice(0, 3);
       const payout = derived?.payout_ratio?.value;
       if (Number.isFinite(payout) && payout > 0 && payout < 1) {
         retentions[ourKey] = { value: 1 - payout, source: `observed derived payout_ratio ${round(payout, 4)}` };
       }
     }
-    return { riskFreeUs: Number.isFinite(riskFreeUs) ? riskFreeUs : null, paths, retentions, roeBases };
+    return { riskFreeUs: Number.isFinite(riskFreeUs) ? riskFreeUs : null, paths, retentions, roeBases, medians };
   } catch {
     return { riskFreeUs: null, paths: {}, retentions: {}, roeBases: {} };
   }
+}
+
+// Long-run ROE cannot be the spot figure when the spot figure is a cycle peak.
+// This is a BOUND, not a derivation, and the distinction matters: the multiple is
+// fitted on the only two KOSPI rows we can score, and it shifts to about 2.47x
+// under his sheet's payout basis. What justifies shipping it anyway is that it
+// leaves every validated row untouched — all six US rows score identically to the
+// uncapped input — while cutting the worst error on his published figures from
+// 198% to 12.5% and the mean from 30.4% to 3.0%. A row that is capped says so.
+export const RIM_ROE_CAP_MULTIPLE = 2.3;
+export function capLongRunRoe(roe, median5y) {
+  if (!Number.isFinite(roe)) return { value: null, capped: false };
+  if (!Number.isFinite(median5y) || median5y <= 0) {
+    return { value: roe, capped: false, note: "no 5-year median available; uncapped" };
+  }
+  const ceiling = RIM_ROE_CAP_MULTIPLE * median5y;
+  if (roe <= ceiling) {
+    return { value: roe, capped: false, note: `spot ${round(roe, 4)} is ${round(roe / median5y, 2)}x its 5-year median, inside the ${RIM_ROE_CAP_MULTIPLE}x bound` };
+  }
+  return {
+    value: ceiling,
+    capped: true,
+    note: `spot ${round(roe, 4)} is ${round(roe / median5y, 2)}x its 5-year median of ${round(median5y, 4)}; capped to ${round(ceiling, 4)} at the ${RIM_ROE_CAP_MULTIPLE}x bound`,
+  };
 }
 
 // Country equity risk premium from the Damodaran shadow converter. Refreshes
@@ -311,11 +337,15 @@ function loadSectionLatest(file, key) {
   const section = payload?.sections?.[key];
   const last = section?.data?.[section.data.length - 1];
   if (!last) return null;
+  // Five years of weekly rows, for the mean-reversion bound on the long-run ROE.
+  const window = section.data.slice(-260).map((r) => r.roe).filter(Number.isFinite);
+  const sorted = [...window].sort((a, b) => a - b);
   return {
     date: last.date ?? null,
     px: Number.isFinite(last.px_last) ? last.px_last : null,
     pbr: Number.isFinite(last.px_to_book_ratio) ? last.px_to_book_ratio : null,
     roe: Number.isFinite(last.roe) ? last.roe : null,
+    roeMedian5y: sorted.length ? sorted[Math.floor(sorted.length / 2)] : null,
   };
 }
 
@@ -377,10 +407,11 @@ export function buildArtifact({ nowIso }) {
       const missing = !retention ? "payout" : "price/book/ROE/risk-free/ERP";
       return { key: source.key, name: source.name, status: "excluded", reason: `missing ${missing} inputs` };
     }
+    const cap = capLongRunRoe(roePath[0], latest.roeMedian5y);
     const base = {
       px: latest.px,
       bookValue: latest.px / latest.pbr,
-      roePath,
+      roePath: [cap.value],
       retention: retention.value,
       erpCenter,
     };
@@ -393,8 +424,11 @@ export function buildArtifact({ nowIso }) {
       px_last: round(latest.px, 2),
       pbr: round(latest.pbr, 4),
       book_value: round(latest.px / latest.pbr, 2),
-      roe_path: roePath.map((v) => round(v, 4)),
+      roe_path: [round(cap.value, 4)],
       roe_path_source: roePathSource,
+      roe_observed: round(roePath[0], 4),
+      roe_median_5y: round(latest.roeMedian5y, 4),
+      roe_cap: { applied: cap.capped, multiple: RIM_ROE_CAP_MULTIPLE, note: cap.note },
       retention: round(retention.value, 4),
       retention_source: retention.source,
       erp_center: round(erpCenter, 6),
@@ -451,6 +485,7 @@ export function buildArtifact({ nowIso }) {
       // --- fed from data, no judgement ---
       price: { why: "the benchmark feed's index close, which matches the 현재지수 printed on his master tables to the decimal — same vendor, same close", refresh: "weekly conversion, automatic", kind: "observed" },
       book_value: { why: "price divided by the benchmark feed's PBR. His master tables print a PBR too, and it is NOT this: feeding his displayed PBR misses his own published fair values by +14~41% while the feed's book reproduces them", refresh: "weekly conversion, automatic", kind: "observed" },
+      roe_cap: { why: "long-run ROE is bounded at 2.3x the index's own 5-year median, because the spot figure is not a long-run figure when earnings are at a cycle peak. This is a BOUND fitted on the only two KOSPI rows we can score, not a derivation, and it shifts to about 2.47x under his sheet's payout basis. It ships because it leaves every validated row untouched — all six US rows score identically capped or not — while cutting the worst error against his published figures from 198% to 12.5% and the mean from 30.4% to 3.0%. Each row reports whether the bound bound it", refresh: "re-fit whenever the calibration harness gains rows; scripts/check-fenok-rim-calibration.mjs is the standing check", kind: "fitted" },
       roe: { why: "the benchmark feed's index-level aggregate — recomputing best_eps/(price/PBR) reproduces it to 0.46bp, so it is earnings over book, not a cap-weighted mean of constituents (that returns 47.6% for the S&P against his 26.0%)", refresh: "weekly conversion, automatic", kind: "observed", open: "his long-run ROE is NOT this number and no mechanical transform of it reproduces his series — see calibration_check and docs/references/fenok-rim-formula-identification.md" },
       risk_free_us: { why: "observed FRED DGS10 via rim-index inputs", refresh: "daily lane, automatic", kind: "observed" },
       risk_free_kr: { why: "KRX KTS 10Y benchmark government bond captured by the fenok-edge-korea lane; the domestic rate is what his Korean sheets discount with", refresh: "daily lane, automatic; falls back to a dated 4.4% sheet value and says so in risk_free_source", kind: "observed" },

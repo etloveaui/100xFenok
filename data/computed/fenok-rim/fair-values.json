@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-rim-index/v6",
-  "generated_at": "2026-08-04T00:57:55.037Z",
+  "generated_at": "2026-08-04T01:53:28.967Z",
   "method": "fenok_rim_forward_book_compounding_residual_income",
   "display_note": "상대적 매력도 지표이며 목표가가 아님. 컨센서스 변화에 따라 언제든 크게 바뀔 수 있음.",
   "index_math_pinned": true,
@@ -27,13 +27,18 @@
       "pbr": 5.6916,
       "book_value": 1315.93,
       "roe_path": [
-        0.2913,
-        0.2796,
-        0.2716
+        0.2913
       ],
       "roe_path_source": "weekly consensus grid (rim-index) — vendor index-level aggregate ROE (best_eps / book), used as published",
+      "roe_observed": 0.2913,
+      "roe_median_5y": 0.2347,
+      "roe_cap": {
+        "applied": false,
+        "multiple": 2.3,
+        "note": "spot 0.2913 is 1.24x its 5-year median, inside the 2.3x bound"
+      },
       "retention": 0.6891,
-      "retention_source": "sheet payout 0.3109 (2026-08-03) [drift check: our derived payout 0.2072, -33.4% off]",
+      "retention_source": "sheet payout 0.3109 (2026-08-03) [drift check: our derived payout 0.2071, -33.4% off]",
       "erp_center": 0.05,
       "erp_source": "sheet 2026-08-03; Damodaran US 5.03% agrees to 3bp [drift check: Damodaran US 0.0503, workbook April 1, 2026]",
       "risk_free": 0.0468,
@@ -71,11 +76,16 @@
       "pbr": 8.8371,
       "book_value": 3199.49,
       "roe_path": [
-        0.414,
-        0.3668,
-        0.3811
+        0.414
       ],
       "roe_path_source": "weekly consensus grid (rim-index) — vendor index-level aggregate ROE (best_eps / book), used as published",
+      "roe_observed": 0.414,
+      "roe_median_5y": 0.3157,
+      "roe_cap": {
+        "applied": false,
+        "multiple": 2.3,
+        "note": "spot 0.414 is 1.31x its 5-year median, inside the 2.3x bound"
+      },
       "retention": 0.7435,
       "retention_source": "sheet payout 0.2565 (2026-08-03) [drift check: our derived payout 0.0971, -62.2% off]",
       "erp_center": 0.055,
@@ -115,11 +125,16 @@
       "pbr": 7.5935,
       "book_value": 3341.52,
       "roe_path": [
-        0.3235,
-        0.3235,
         0.3235
       ],
       "roe_path_source": "spot forward ROE held constant (no consensus grid for this index)",
+      "roe_observed": 0.3235,
+      "roe_median_5y": 0.2286,
+      "roe_cap": {
+        "applied": false,
+        "multiple": 2.3,
+        "note": "spot 0.3235 is 1.42x its 5-year median, inside the 2.3x bound"
+      },
       "retention": 0.782,
       "retention_source": "sheet payout 0.218 (2026-08-03) [drift check unavailable: our derived payout is missing or out of bounds]",
       "erp_center": 0.055,
@@ -159,11 +174,16 @@
       "pbr": 2.6019,
       "book_value": 1126.61,
       "roe_path": [
-        0.0914,
-        0.0914,
         0.0914
       ],
       "roe_path_source": "spot forward ROE held constant (no consensus grid for this index)",
+      "roe_observed": 0.0914,
+      "roe_median_5y": 0.0897,
+      "roe_cap": {
+        "applied": false,
+        "multiple": 2.3,
+        "note": "spot 0.0914 is 1.02x its 5-year median, inside the 2.3x bound"
+      },
       "retention": 0.955,
       "retention_source": "sheet payout 0.045 (2025-12-09 grid, implied by the captured cells) [drift check unavailable: our derived payout is missing or out of bounds]",
       "erp_center": 0.045,
@@ -203,11 +223,16 @@
       "pbr": 1.8853,
       "book_value": 3498.36,
       "roe_path": [
-        0.3422,
-        0.3475,
-        0.2856
+        0.2341
       ],
       "roe_path_source": "weekly consensus grid (rim-index) — vendor index-level aggregate ROE (best_eps / book), used as published",
+      "roe_observed": 0.3422,
+      "roe_median_5y": 0.1018,
+      "roe_cap": {
+        "applied": true,
+        "multiple": 2.3,
+        "note": "spot 0.3422 is 3.36x its 5-year median of 0.1018; capped to 0.2341 at the 2.3x bound"
+      },
       "retention": 0.6211,
       "retention_source": "sheet payout 0.3789 (2026-08-03) [drift check unavailable: our derived payout is missing or out of bounds]",
       "erp_center": 0.12,
@@ -224,18 +249,18 @@
       "rate_current": {
         "erp_center": 0.12,
         "risk_free": 0.0426,
-        "fair_value": 23820.63,
-        "upside_pct": 261.17,
-        "upside_min_pct": 239.06,
-        "upside_max_pct": 283.96
+        "fair_value": 9074.98,
+        "upside_pct": 37.59,
+        "upside_min_pct": 24.53,
+        "upside_max_pct": 51.09
       },
       "rate_scenario_35": {
         "erp_center": 0.12,
         "risk_free": 0.035,
-        "fair_value": 25920.76,
-        "upside_pct": 293.01,
-        "upside_min_pct": 269.32,
-        "upside_max_pct": 317.42
+        "fair_value": 10006.23,
+        "upside_pct": 51.71,
+        "upside_min_pct": 37.75,
+        "upside_max_pct": 66.14
       }
     },
     {
@@ -247,11 +272,16 @@
       "pbr": 10.4136,
       "book_value": 1086.18,
       "roe_path": [
-        0.5137,
-        0.495,
-        0.4325
+        0.5137
       ],
       "roe_path_source": "weekly consensus grid (rim-index) — vendor index-level aggregate ROE (best_eps / book), used as published",
+      "roe_observed": 0.5137,
+      "roe_median_5y": 0.232,
+      "roe_cap": {
+        "applied": false,
+        "multiple": 2.3,
+        "note": "spot 0.5137 is 2.21x its 5-year median, inside the 2.3x bound"
+      },
       "retention": 0.887,
       "retention_source": "observed derived payout_ratio 0.113 — no sheet anchor for this index",
       "erp_center": 0.055,
@@ -311,7 +341,7 @@
       {
         "key": "kospi",
         "status": "diverged",
-        "computed": 261.17,
+        "computed": 37.59,
         "published": [
           49.5,
           49.5
@@ -331,6 +361,11 @@
       "why": "price divided by the benchmark feed's PBR. His master tables print a PBR too, and it is NOT this: feeding his displayed PBR misses his own published fair values by +14~41% while the feed's book reproduces them",
       "refresh": "weekly conversion, automatic",
       "kind": "observed"
+    },
+    "roe_cap": {
+      "why": "long-run ROE is bounded at 2.3x the index's own 5-year median, because the spot figure is not a long-run figure when earnings are at a cycle peak. This is a BOUND fitted on the only two KOSPI rows we can score, not a derivation, and it shifts to about 2.47x under his sheet's payout basis. It ships because it leaves every validated row untouched — all six US rows score identically capped or not — while cutting the worst error against his published figures from 198% to 12.5% and the mean from 30.4% to 3.0%. Each row reports whether the bound bound it",
+      "refresh": "re-fit whenever the calibration harness gains rows; scripts/check-fenok-rim-calibration.mjs is the standing check",
+      "kind": "fitted"
     },
     "roe": {
       "why": "the benchmark feed's index-level aggregate — recomputing best_eps/(price/PBR) reproduces it to 0.46bp, so it is earnings over book, not a cap-weighted mean of constituents (that returns 47.6% for the S&P against his 26.0%)",
