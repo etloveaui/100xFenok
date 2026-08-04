@@ -63,8 +63,17 @@ jobs:
       - name: Build index payout history
         run: node scripts/build-index-payout-history.mjs
 
+      - name: Verify index payout history contract
+        run: node scripts/test-build-index-payout-history.mjs
+
       - name: Build Fenok RIM fair values
         run: node scripts/build-fenok-rim-index.mjs
+
+      - name: Verify Fenok RIM evidence and publication gates
+        run: |
+          node scripts/test-build-fenok-rim-index.mjs
+          node scripts/test-fenok-rim-publication-policy.mjs
+          node scripts/test-analyze-fenok-rim-identifiability.mjs
 
       - name: Build calendar previous-release values (FRED)
         env:

@@ -1,6 +1,8 @@
-// Fenok RIM — self-sustaining index fair-value engine (v8).
+// Fenok RIM — conditional index RIM diagnostic (v8 hypothesis).
 //
-// The model was identified, not assumed. Two rates do different jobs:
+// The captured grids support this structural hypothesis conditionally on the
+// chosen book/payout inputs. They do not identify those inputs jointly. Two
+// rates do different jobs inside the reproduced candidate:
 //   Ke   = Rf + RiskPremium        -> the residual only
 //   disc = 0.076 + 0.560 * Rf      -> all discounting, no risk premium in it
 //   RI_t = B_{t-1} * (ROE_t - Ke)
@@ -10,19 +12,22 @@
 // printed at the observed 10Y and at a 3.5% scenario): RMS 0.41%, max 1.06%,
 // with book values from our own feed. Cross-checked on a separate slide — the
 // 선진국/신흥국 master tables reproduce to -1.6%~-6.6%.
-// Inputs run on our data alone: observed US 10Y (FRED), KRX KTS 10Y for Korea,
-// FY1 consensus ROE de-blended from the vendor 12-month field, observed payout.
+// Observed price/rate/ROE candidates refresh from our data, while payout and
+// risk premium remain dated anchors. Therefore every emitted value is a
+// diagnostic and every publication state is NULL.
 // Account of the identification: docs/references/fenok-rim-formula-identification.md
 
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { classifyRimPublication } from "./fenok-rim-publication-policy.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BENCHMARKS = path.join(ROOT, "data", "benchmarks");
 const RIM_INPUTS = path.join(ROOT, "data", "computed", "rim-index", "inputs.json");
 const KRX_DERIVED_INPUTS = path.join(ROOT, "data", "admin", "fenok-edge-korea-krx-daily-index.json");
 const DAMODARAN_ERP = path.join(ROOT, "data", "damodaran", "erp.json");
+const PAYOUT_HISTORY = path.join(ROOT, "data", "computed", "fenok-rim", "payout-history.json");
 const OUT_DIR = path.join(ROOT, "data", "computed", "fenok-rim");
 const MIRROR_DIR = path.join(ROOT, "100xfenok-next", "public", "data", "computed", "fenok-rim");
 
@@ -49,9 +54,10 @@ export function discountRate(riskFree) {
 
 // How far outside the fitted band a risk-free rate sits, and whether that is
 // tolerable. This is not a theoretical caution: his 2021-01 KOSPI grid, at a
-// Korean 10Y near 1.7%, implies a discount of roughly 5.6% where this relation
-// returns 8.55%. Extrapolation to low rates fails badly, so a row that strays
-// must say so on its own face rather than quietly shipping a number.
+// Korean 10Y near 1.7%, implies a 5.04~6.61% discount across explicit payout
+// assumptions of 60~5%, while this relation returns 8.55%. The old 5.6% point
+// silently assumed a 39.35% payout and is withdrawn. Extrapolation to low rates
+// fails across the full tested band, so a row that strays must say so.
 export const RIM_DISCOUNT_TOLERANCE = 0.005;
 export function discountExtrapolation(riskFree) {
   const [lo, hi] = RIM_DISCOUNT.fitted_rf_range;
@@ -65,7 +71,7 @@ export function discountExtrapolation(riskFree) {
       ? `risk-free ${round(riskFree, 4)} is inside the fitted band ${lo}~${hi}`
       : `risk-free ${round(riskFree, 4)} is ${round(Math.abs(gap) * 10000, 0)}bp ${gap < 0 ? "below" : "above"} the fitted band ${lo}~${hi}`
         + (Math.abs(gap) > RIM_DISCOUNT_TOLERANCE
-          ? " — BEYOND TOLERANCE; the relation is known to fail at low rates (his 2021 KOSPI grid implies ~5.6% where this returns 8.55%)"
+          ? " — BEYOND TOLERANCE; the relation is known to fail at low rates (his 2021 KOSPI grid implies 5.04~6.61% across payout assumptions 60~5%, while this returns 8.55%)"
           : " — within tolerance"),
   };
 }
@@ -77,15 +83,11 @@ export function discountExtrapolation(riskFree) {
 // capture is missing.
 export const RIM_KR_RISK_FREE_ANCHOR = { value: 0.044, as_of: "2026-08-03" };
 
-// The risk premium is the analyst's own judgement input and it does NOT come
-// from a derivable market quantity. That was tested, not assumed. Substituting
-// the Damodaran country ERP was tried and is refuted by measurement: Korea's
-// 5.49% returns a KOSPI fair value of 15,634 against the 10,000~12,000 he
-// published, while the 12% printed on his own sheet returns 10,074 — inside the
-// range, and the value that reproduces his midpoint is 10.92%. Beta scaling is
-// refuted too, since Russell carries the higher beta yet the lower premium.
-// So these stay dated anchors read off his sheets, each carrying its capture
-// date. Damodaran remains useful as a drift check, not as the input.
+// The risk premium is not yet separately identified from payout. Damodaran and
+// beta substitutions have both failed as direct replacements, while inversion
+// remains conditional on which dated payout basis is fixed before scoring.
+// These values therefore stay dated sheet anchors, not automatically derived
+// market quantities. Damodaran is a drift check only.
 const INDEX_SOURCES = [
   { file: "us.json", key: "sp500", name: "S&P 500", market: "us", erp: 0.05, erpSource: "sheet 2026-08-03; Damodaran US 5.03% agrees to 3bp" },
   { file: "us.json", key: "nasdaq100", name: "나스닥 100", market: "us", erp: 0.055, erpSource: "sheet 2026-08-03" },
@@ -113,7 +115,7 @@ export const RIM_CALIBRATION_ANCHORS = Object.freeze([
   },
   {
     key: "nasdaq100",
-    published_upside_pct: [28, 30],
+    published_upside_floor_pct: 30,
     as_of: "2026-06-20",
     source: "his own English write-ups, 2026-06-10 and 2026-06-20 (over 28% near-term, over 30% through 2026 year-end)",
   },
@@ -280,13 +282,12 @@ export function loadRimDerived() {
   }
 }
 
-// Long-run ROE cannot be the spot figure when the spot figure is a cycle peak.
-// This is a BOUND, not a derivation, and the distinction matters: the multiple is
-// fitted on the only two KOSPI rows we can score, and it shifts to about 2.47x
-// under his sheet's payout basis. What justifies shipping it anyway is that it
-// leaves every validated row untouched — all six US rows score identically to the
-// uncapped input — while cutting the worst error on his published figures from
-// 198% to 12.5% and the mean from 30.4% to 3.0%. A row that is capped says so.
+// Experimental long-run ROE cap retained for continuity in computation-only
+// rows. It is fitted on two KOSPI observations, changes under another payout
+// basis, and is not an identified production rule. Once floors are treated as
+// constraints and SOXX observations are excluded from the Philadelphia index,
+// the calibration harness finds no admissible ROE candidate. Every public row
+// is therefore NULL-gated; a row still says when this experimental cap binds.
 export const RIM_ROE_CAP_MULTIPLE = 2.3;
 export function capLongRunRoe(roe, median5y) {
   if (!Number.isFinite(roe)) return { value: null, capped: false };
@@ -403,25 +404,40 @@ function loadSectionLatest(file, key) {
 export function checkCalibration(rows) {
   return RIM_CALIBRATION_ANCHORS.map((anchor) => {
     const row = rows.find((r) => r.key === anchor.key);
-    if (!row || row.status !== "ready") {
+    if (!row || row.computation_status !== "ready") {
       return { key: anchor.key, status: "unavailable", source: anchor.source };
     }
     let within;
     let computed;
-    if (anchor.published_upside_pct) {
-      computed = row.rate_current.upside_pct;
+    let targetKind;
+    let published;
+    let status;
+    if (Number.isFinite(anchor.published_upside_floor_pct)) {
+      computed = row.diagnostic.rate_current.upside_pct;
+      published = anchor.published_upside_floor_pct;
+      targetKind = "lower_bound";
+      status = computed >= published ? "constraint_satisfied" : "constraint_violated";
+    } else if (anchor.published_upside_pct) {
+      computed = row.diagnostic.rate_current.upside_pct;
       const [lo, hi] = anchor.published_upside_pct;
       within = computed >= lo - 5 && computed <= hi + 5;
+      published = anchor.published_upside_pct;
+      targetKind = lo === hi ? "point" : "range";
+      status = within ? "within_tolerance" : "diverged";
     } else {
-      computed = row.rate_current.fair_value;
+      computed = row.diagnostic.rate_current.fair_value;
       const [lo, hi] = anchor.published_fair_range;
       within = computed >= lo * 0.9 && computed <= hi * 1.1;
+      published = anchor.published_fair_range;
+      targetKind = "range";
+      status = within ? "within_tolerance" : "diverged";
     }
     return {
       key: anchor.key,
-      status: within ? "within_tolerance" : "diverged",
+      status,
       computed,
-      published: anchor.published_upside_pct ?? anchor.published_fair_range,
+      published,
+      target_kind: targetKind,
       published_as_of: anchor.as_of,
       source: anchor.source,
     };
@@ -430,6 +446,10 @@ export function checkCalibration(rows) {
 
 export function buildArtifact({ nowIso }) {
   const derived = loadRimDerived();
+  const payoutHistory = (() => {
+    try { return JSON.parse(fs.readFileSync(PAYOUT_HISTORY, "utf8")); }
+    catch { return null; }
+  })();
   const koreaRiskFree = loadKoreaRiskFree();
   const latestSourceDate = (() => {
     try {
@@ -480,10 +500,59 @@ export function buildArtifact({ nowIso }) {
       erpCenter,
     };
     const caseFor = (rf) => computeCase({ ...base, riskFree: rf });
+    const discountGuard = discountExtrapolation(riskFree);
+    const payoutCandidate = payoutHistory?.indices?.[source.key] ?? null;
+    const sheetPayout = RIM_PAYOUT_ANCHOR[source.key]?.value ?? null;
+    const forwardPayout = Number.isFinite(derived.retentions[source.key]?.value)
+      ? 1 - derived.retentions[source.key].value
+      : null;
+    const payoutBasisComparison = {
+      sheet_anchor: {
+        value: sheetPayout,
+        basis: "printed dated sheet field",
+        production_eligible: false,
+        reason: "manual anchor; no sustainable refresh rule",
+      },
+      forward_current: {
+        value: round(forwardPayout, 6),
+        basis: "current index dividend yield / forward benchmark earnings yield",
+        production_eligible: false,
+        reason: "forward denominator is observable but the model role has not passed held-out bounded validation",
+      },
+      realised_trailing: {
+        range: payoutCandidate?.summary
+          ? [payoutCandidate.summary.min, payoutCandidate.summary.max]
+          : null,
+        mean: payoutCandidate?.summary?.mean ?? null,
+        basis: payoutHistory?.basis_id ?? null,
+        production_eligible: false,
+        reason: payoutCandidate?.eligibility?.blocking_reasons ?? ["candidate unavailable"],
+      },
+    };
+    const publication = classifyRimPublication({
+      identity_status: source.key === "philadelphia_semi" ? "unresolved" : "verified",
+      inputs: [
+        { name: "price", kind: "point", observable: true, current: true },
+        { name: "book_value", kind: "point", observable: true, current: true },
+        { name: "roe", kind: "point", observable: true, current: true },
+        { name: "risk_free", kind: "point", observable: true, current: true },
+        // These are observed sheet anchors, but their sustainable bases are not
+        // identified independently. Marking them latent prevents a computed
+        // row from being mistaken for a publishable point estimate.
+        { name: "book_roe_basis", kind: "latent", observable: false, current: true },
+        { name: "payout", kind: "latent", observable: false, current: true },
+        { name: "risk_premium", kind: "latent", observable: false, current: true },
+      ],
+      holdout: null,
+      fitted_relations: [
+        { name: "discount_relation", inside_domain: discountGuard?.outside === false },
+      ],
+    });
     return {
       key: source.key,
       name: source.name,
-      status: "ready",
+      status: "NULL",
+      computation_status: "ready",
       as_of: latest.date,
       px_last: round(latest.px, 2),
       pbr: round(latest.pbr, 4),
@@ -495,18 +564,31 @@ export function buildArtifact({ nowIso }) {
       roe_cap: { applied: cap.capped, multiple: RIM_ROE_CAP_MULTIPLE, note: cap.note },
       retention: round(retention.value, 4),
       retention_source: retention.source,
+      payout_basis_comparison: payoutBasisComparison,
+      payout_candidate_band: payoutCandidate
+        ? {
+          basis_id: payoutHistory.basis_id ?? null,
+          generated_at: payoutHistory.generated_at ?? null,
+          newest_statement_period: payoutCandidate.newest_statement_period ?? null,
+          summary: payoutCandidate.summary ?? null,
+          eligibility: payoutCandidate.eligibility ?? null,
+        }
+        : null,
       erp_center: round(erpCenter, 6),
       erp_source: erpSource,
       risk_free: round(riskFree, 4),
       risk_free_source: riskFreeSource,
       discount_rate: round(discountRate(riskFree), 6),
-      discount_extrapolation: discountExtrapolation(riskFree),
-      rate_current: caseFor(riskFree),
-      rate_scenario_35: caseFor(RIM_RATE_SCENARIO_10Y),
+      discount_extrapolation: discountGuard,
+      publication,
+      diagnostic: {
+        rate_current: caseFor(riskFree),
+        rate_scenario_35: caseFor(RIM_RATE_SCENARIO_10Y),
+      },
     };
   });
   return {
-    schema_version: "fenok-rim-index/v6",
+    schema_version: "fenok-rim-index/v7",
     generated_at: nowIso,
     method: "fenok_rim_forward_book_compounding_residual_income",
     display_note: "상대적 매력도 지표이며 목표가가 아님. 컨센서스 변화에 따라 언제든 크게 바뀔 수 있음.",
@@ -519,28 +601,26 @@ export function buildArtifact({ nowIso }) {
       weeklyExportAge("global scouter", scouterSourceDate),
     ],
     index_math_pinned: true,
-    // Still not display-ready: the formula is settled but the risk premiums are
-    // dated sheet anchors and the Korea discount slope is extrapolated from two
-    // risk-free points. Surfaces wait until those carry their own evidence.
+    // Still not display-ready: only conditional structural reproduction is
+    // established. Book/payout/ERP/ROE bases remain unresolved and the discount
+    // slope is fitted from two risk-free points.
     display_ready: false,
-    display_block_reason: "formula verified on 54 cells; risk premiums remain dated sheet anchors and the discount slope is fitted on two risk-free points only",
-    // RESOLVED 2026-08-03. The 2026-08-03 KOSPI sheet's red "Premiumn Adj.
-    // 12.00%" cell is NOT his equity risk premium: fed through this formula
-    // with his own sheet inputs it returns 6,301 against a spot of 6,690, i.e.
-    // it is the premium that makes fair value equal the current index. Four
-    // independent lines put the real premium near 7.0% instead, and the engine
-    // now ships that. Output is never calibrated toward his published numbers;
-    // only inputs are made faithful.
+    display_block_reason: "formula structure reproduces the captured grids, but risk premium and payout are not separately identified, bounded holdout reproduction is incomplete, and the discount slope remains fitted",
+    // The row consumes the 12% value printed on the 2026-08-03 sheet. An older
+    // disclosure falsely said the row shipped an automatic Damodaran ERP even
+    // though the arithmetic used 12%. The meaning of the printed cell remains
+    // unresolved because premium and payout trade off in the same output.
     kospi_erp_resolution: {
-      shipped_erp_source: "Damodaran country ERP (KR), automatic",
+      status: "unresolved_not_separately_identified_from_payout",
+      current_erp: 0.12,
+      current_erp_source: "sheet 2026-08-03 dated anchor; not independently identified from payout",
       sheet_cell_erp: 0.12,
       evidence: [
-        "his own 2016-09-20 column states a KOSPI equity risk premium band of 5.5~7%, whose floor matches the Damodaran Korea ERP of 5.49% to 1bp",
-        "patent KR20180048140A KOSPI grid is 6.5/7.0/7.5%, so 12% sits outside every band he has published",
-        "his published KOSPI fair range 10,000~12,000 (2026-05-19) is reproduced near 7% with his own sheet inputs; 12% instead returns roughly spot",
-        "fed through this formula with his own sheet inputs, 12% yields 6,301 against a spot of 6,690 — it is the premium that makes fair value equal the index",
+        "the 2026-08-03 sheet prints 12% and the current row consumes 12%",
+        "Damodaran Korea ERP is a comparison series and is not the row input",
+        "premium inversion is conditional on a payout basis declared before scoring",
       ],
-      note: "The 12% cell is a reverse-solved hurdle rate, not a valuation assumption. Do not restore it as an ERP without new source material that states otherwise.",
+      note: "Do not interpret the 12% anchor as a sustainable ERP rule or publish its implied point value until payout is fixed ex ante and bounded holdouts pass.",
     },
     rows,
     calibration_check: {
@@ -553,26 +633,26 @@ export function buildArtifact({ nowIso }) {
       // --- fed from data, no judgement ---
       price: { why: "the benchmark feed's index close, which matches the 현재지수 printed on his master tables to the decimal — same vendor, same close", refresh: "weekly conversion, automatic", kind: "observed" },
       book_value: { why: "price divided by the benchmark feed's PBR. His master tables print a PBR too, and it is NOT this: feeding his displayed PBR misses his own published fair values by +14~41% while the feed's book reproduces them", refresh: "weekly conversion, automatic", kind: "observed" },
-      roe_cap: { why: "long-run ROE is bounded at 2.3x the index's own 5-year median, because the spot figure is not a long-run figure when earnings are at a cycle peak. This is a BOUND fitted on the only two KOSPI rows we can score, not a derivation, and it shifts to about 2.47x under his sheet's payout basis. It ships because it leaves every validated row untouched — all six US rows score identically capped or not — while cutting the worst error against his published figures from 198% to 12.5% and the mean from 30.4% to 3.0%. Each row reports whether the bound bound it", refresh: "re-fit whenever the calibration harness gains rows; scripts/check-fenok-rim-calibration.mjs is the standing check", kind: "fitted" },
+      roe_cap: { why: "2.3x the index's own 5-year median is an experimental bound fitted on two KOSPI observations. It changes under another payout basis and remains only in computation-ready rows for continuity; it is not a sustainable publication rule", refresh: "replace only after a pre-declared candidate passes bounded held-out rows and every floor constraint in scripts/check-fenok-rim-calibration.mjs", kind: "fitted", open: "no admissible candidate remains after floors are removed from MAE and SOXX observations are excluded from the Philadelphia index" },
       roe: { why: "the benchmark feed's index-level aggregate — recomputing best_eps/(price/PBR) reproduces it to 0.46bp, so it is earnings over book, not a cap-weighted mean of constituents (that returns 47.6% for the S&P against his 26.0%)", refresh: "weekly conversion, automatic", kind: "observed", open: "his long-run ROE is NOT this number and no mechanical transform of it reproduces his series — see calibration_check and docs/references/fenok-rim-formula-identification.md" },
       risk_free_us: { why: "observed FRED DGS10 via rim-index inputs", refresh: "daily lane, automatic", kind: "observed" },
       risk_free_kr: { why: "KRX KTS 10Y benchmark government bond captured by the fenok-edge-korea lane; the domestic rate is what his Korean sheets discount with", refresh: "daily lane, automatic; falls back to a dated 4.4% sheet value and says so in risk_free_source", kind: "observed" },
 
       // --- fitted to his own outputs, reproducible, no story behind the value ---
-      explicit_years: { why: "9 explicit years reproduces all 90 captured grid cells; 8 and 10 do not. Consistent with the patent tool's visible forecast columns", refresh: "only against new captured grids", kind: "fitted" },
-      discount_rate: { why: "0.076 + 0.560 x risk-free. The risk premium does NOT enter discounting: on his grids a 1%p risk-free move shifts value 11.2% against 4.77% for a 1%p premium move, and the patent tool lists cost of capital and discount rate as separate columns. Fitted across 90 cells at RMS 0.41%", refresh: "only against new captured grids", kind: "fitted", open: "the 0.560 coefficient is measured and reproduced out of sample but has no mechanism; a rising-discount reading was tested and refuted. Calibrated over risk-free 3.5~4.2%, so Korea at 4.26% is a 6bp extrapolation worth 0.76% of fair value" },
+      explicit_years: { why: "9 explicit years is the current fitted hypothesis and reproduces the 54 machine-linked cells under anchored book/payout inputs; the present suite does not independently identify N against alternatives", refresh: "only against new captured grids with frozen alternative-N tests", kind: "fitted" },
+      discount_rate: { why: "0.076 + 0.560 x risk-free. The risk premium does NOT enter discounting inside the candidate: on the captured grids a 1%p risk-free move shifts value 11.2% against 4.77% for a 1%p premium move. Conditional 54-cell reproduction is RMS 0.41% under anchored book/payout inputs", refresh: "only against new captured grids", kind: "fitted", open: "the coefficient has no identified mechanism and is calibrated only over risk-free 3.5~4.2%; conditional reproduction does not identify the full level model" },
 
       // --- read directly off his sheets ---
       grid_step: { why: "0.5%p row and column spacing printed on every captured sheet", refresh: "manual with new sheets", kind: "read" },
       rate_scenario: { why: "the 3.5% 10Y alternate column printed on every captured index sheet", refresh: "manual with new sheets", kind: "read" },
       fair_value_definition: { why: "the centre cell, not the mean of nine. His sheets print both — 상승여력 적정가 and 평균 — and his master tables' 적정지수 matches the centre: his week1 S&P grid centres on 7,193 against the table's 7,195", refresh: "manual with new sheets", kind: "read" },
 
-      // --- his judgement, confirmed non-derivable, held as dated anchors ---
-      erp_centers: { why: "read off his sheets per index. Substitution was tested and refuted twice: the Damodaran country ERP predicts his implied premium WORSE than the cross-sectional mean across 34 rows at a correlation of -0.52, and beta scaling fails because Russell carries the higher beta and the lower premium. His premium does not price country risk", refresh: "manual with new sheets; each row carries its capture date and a Damodaran drift check", kind: "anchor" },
-      retention: { why: "1 minus the payout printed on his sheets. Our derived payout misses it by -62%~+61%, so it rides along as a drift check only. There is no silent house fallback: an index with neither a sheet anchor nor a sane derived payout is excluded", refresh: "manual with new sheets; the drift check is weekly and automatic", kind: "anchor" },
+      // --- dated anchors whose joint basis is still being identified ---
+      erp_centers: { why: "read off dated sheets per index. Damodaran and beta substitutions failed as direct replacements, but the premium is not separately identified from payout; it remains an anchor rather than a sustainable derived rule", refresh: "manual with new sheets until an ex-ante payout estimator and bounded holdouts identify a replacement", kind: "anchor", open: "premium and payout trade off; never select either by minimising the same outputs later used to score it" },
+      retention: { why: "1 minus the payout printed on dated sheets. The engine now exposes filings-based trailing and current-forward candidates beside that anchor, but does not promote either candidate into the valuation because their denominator, horizon, and historical-membership bases are not production-eligible", refresh: "daily candidate history plus manual sheet anchor; production replacement requires a pre-declared basis and held-out bounded validation", kind: "anchor", open: "the payout-history candidates are comparison evidence only; the valuation still consumes the dated sheet anchor" },
 
       // --- what we measure ourselves against ---
-      discount_extrapolation_guard: { why: "the discount relation is calibrated over risk-free 3.5~4.2% and is known to fail outside it: his 2021-01 KOSPI grid at a Korean 10Y near 1.7% implies roughly 5.6% where the relation returns 8.55%. Each row now carries how far its risk-free sits from the band", refresh: "widens only when a captured grid at a new rate extends the calibration", kind: "fitted" },
+      discount_extrapolation_guard: { why: "the discount relation is calibrated over risk-free 3.5~4.2% and fails in the 2021 low-rate grid across the tested payout band: at Korean 10Y near 1.7%, the grid implies discount 5.04~6.61% for payout 60~5%, while the linear relation returns 8.55%. The previously quoted 5.6% point hid a 39.35% payout assumption", refresh: "widens only when a captured grid at a new rate extends the calibration", kind: "fitted" },
       calibration_anchors: { why: "his own dated, RIM-labelled published outputs, each with a retrievable source. Replaces an earlier set attributed to an internal catalogue", refresh: "he publishes weekly; scripts/check-fenok-rim-calibration.mjs scores candidate inputs against the whole series", kind: "target" },
     },
     disclaimer: "Model-implied fair values under stated assumptions. Not price targets, not investment advice.",
@@ -587,12 +667,12 @@ if (invokedDirectly) {
     fs.writeFileSync(path.join(dir, "fair-values.json"), `${JSON.stringify(artifact, null, 2)}\n`);
   }
   for (const row of artifact.rows) {
-    if (row.status !== "ready") { console.log(`${row.name}: excluded (${row.reason})`); continue; }
-    const C = row.rate_current;
-    console.log(`${row.name}: px ${row.px_last} | fair ${C.fair_value} (${C.upside_pct}%) | Ke=${row.risk_free}+${row.erp_center}`);
+    if (row.computation_status !== "ready") { console.log(`${row.name}: excluded (${row.reason})`); continue; }
+    const C = row.diagnostic.rate_current;
+    console.log(`${row.name}: computed fair ${C.fair_value} (${C.upside_pct}%) | publication=${row.publication.status} | Ke=${row.risk_free}+${row.erp_center}`);
   }
   for (const check of artifact.calibration_check.results) {
-    console.log(`calibration ${check.key}: ${check.status} (${check.computed} vs ${JSON.stringify(check.published)})`);
+    console.log(`diagnostic ${check.key}: ${check.status} ${check.target_kind ?? "unknown"} (${check.computed} vs ${JSON.stringify(check.published)})`);
   }
   console.log(`written: ${path.join(OUT_DIR, "fair-values.json")} (+ public mirror)`);
 }

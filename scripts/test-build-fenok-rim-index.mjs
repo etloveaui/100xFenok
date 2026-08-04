@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {
+  buildArtifact,
   checkCalibration,
   computeCase,
   computeCell,
@@ -9,9 +10,66 @@ import {
   RIM_GRID_STEP,
   RIM_RATE_SCENARIO_10Y,
   RIM_KR_RISK_FREE_ANCHOR,
+  discountExtrapolation,
   discountRate,
   resolvePayout,
 } from "./build-fenok-rim-index.mjs";
+
+// HONESTY GUARD — the top-level KOSPI ERP disclosure must describe the value
+// the row actually consumes. The artifact previously said Damodaran automatic
+// while the engine used the 12% sheet anchor, reversing the interpretation of
+// the live number without changing its arithmetic.
+{
+  const artifact = buildArtifact({ nowIso: "2026-08-04T04:45:00.000Z" });
+  assert.equal(artifact.schema_version, "fenok-rim-index/v7");
+  const kospi = artifact.rows.find((row) => row.key === "kospi");
+  assert.ok(kospi && kospi.computation_status === "ready", "KOSPI row must be computed for the disclosure check");
+  assert.equal(artifact.kospi_erp_resolution.current_erp, kospi.erp_center);
+  assert.ok(
+    artifact.kospi_erp_resolution.current_erp_source.includes("sheet 2026-08-03"),
+    "the KOSPI ERP disclosure must name the dated source the row consumes",
+  );
+  assert.equal(
+    artifact.kospi_erp_resolution.status,
+    "unresolved_not_separately_identified_from_payout",
+  );
+  assert.equal(artifact.display_ready, false, "an unidentified ERP/payout pair cannot publish a point value");
+  for (const row of artifact.rows.filter((item) => item.computation_status === "ready")) {
+    assert.equal(row.status, "NULL", `${row.key}: legacy status must fail closed`);
+    assert.equal(row.publication?.status, "NULL", `${row.key}: computed must not mean publishable`);
+    assert.ok(
+      row.publication.reasons.includes("material_input_latent:payout"),
+      `${row.key}: unresolved payout basis must block publication`,
+    );
+    assert.ok(
+      row.publication.reasons.includes("material_input_latent:risk_premium"),
+      `${row.key}: unidentified risk premium must block publication`,
+    );
+  }
+  const sox = artifact.rows.find((row) => row.key === "philadelphia_semi");
+  assert.ok(
+    sox.publication.reasons.includes("asset_identity_unverified"),
+    "SOXX prose anchors must not validate the Philadelphia Semiconductor Index row",
+  );
+  const sp500 = artifact.rows.find((row) => row.key === "sp500");
+  assert.equal(sp500.payout_candidate_band?.eligibility?.production_eligible, false);
+  assert.ok(sp500.payout_candidate_band?.summary?.years >= 3);
+  assert.equal(sp500.payout_basis_comparison.sheet_anchor.value, 0.3109);
+  assert.ok(Number.isFinite(sp500.payout_basis_comparison.forward_current.value));
+  assert.equal(
+    sp500.payout_basis_comparison.realised_trailing.range[0],
+    sp500.payout_candidate_band.summary.min,
+  );
+  assert.ok(
+    Object.values(sp500.payout_basis_comparison).every((candidate) => candidate.production_eligible === false),
+    "no payout candidate is allowed to become a production input by being listed",
+  );
+  assert.equal(
+    artifact.rows.find((row) => row.key === "nasdaq_composite").payout_candidate_band,
+    null,
+    "NASDAQ Composite has no constituent payout universe",
+  );
+}
 
 // PERMANENT REGRESSION: the engine must reproduce every captured 2025-12-09
 // grid CELL, not one hand-picked value. Each sheet is a 3x3 of LT ROE x risk
@@ -179,14 +237,18 @@ import {
 
 // Calibration verdicts on the single-case row shape.
 {
-  const mk = (key, upside, fair) => ({ key, status: "ready", rate_current: { upside_pct: upside, fair_value: fair } });
-  // Anchors are his published figures: S&P as a fair-value range, NASDAQ 100 and
-  // KOSPI as upside percentages. A row inside its anchor passes, one outside
-  // diverges.
+  const mk = (key, upside, fair) => ({ key, status: "NULL", computation_status: "ready", diagnostic: { rate_current: { upside_pct: upside, fair_value: fair } } });
+  // Anchors preserve their published type: S&P is a bounded fair-value range,
+  // NASDAQ 100 is a lower bound, and KOSPI is a point.
   const results = checkCalibration([mk("sp500", 9, 8830), mk("nasdaq100", 5, 30000), mk("kospi", 50, 9800)]);
   assert.equal(results.find((r) => r.key === "sp500").status, "within_tolerance");
-  assert.equal(results.find((r) => r.key === "nasdaq100").status, "diverged");
+  assert.equal(results.find((r) => r.key === "nasdaq100").status, "constraint_violated");
   assert.equal(results.find((r) => r.key === "kospi").status, "within_tolerance");
+  assert.equal(
+    checkCalibration([mk("nasdaq100", 97, 30000)]).find((r) => r.key === "nasdaq100").status,
+    "constraint_satisfied",
+    "overshooting a floor satisfies only the inequality; it is not a point fit",
+  );
   const far = checkCalibration([mk("sp500", 9, 4000), mk("kospi", 260, 24000)]);
   assert.equal(far.find((r) => r.key === "sp500").status, "diverged");
   assert.equal(far.find((r) => r.key === "kospi").status, "diverged");
@@ -205,7 +267,7 @@ import {
 {
   const artifactPath = new URL("../data/computed/fenok-rim/fair-values.json", import.meta.url);
   const artifact = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
-  const ready = (artifact.rows ?? []).filter((r) => r.status === "ready");
+  const ready = (artifact.rows ?? []).filter((r) => r.computation_status === "ready");
   assert.ok(ready.length >= 4, "artifact must carry ready rows to audit");
   for (const row of ready) {
     const recomputed = computeCase({
@@ -216,11 +278,11 @@ import {
       riskFree: row.risk_free,
       erpCenter: row.erp_center,
     });
-    const drift = Math.abs(recomputed.fair_value / row.rate_current.fair_value - 1);
+    const drift = Math.abs(recomputed.fair_value / row.diagnostic.rate_current.fair_value - 1);
     assert.ok(
       drift < 0.005,
       `${row.name}: the artifact is not reproducible from its own recorded inputs `
-      + `(recorded ${row.rate_current.fair_value}, recomputed ${recomputed.fair_value.toFixed(2)}). `
+      + `(recorded ${row.diagnostic.rate_current.fair_value}, recomputed ${recomputed.fair_value.toFixed(2)}). `
       + "Either the build uses an input it does not disclose, or it discloses one it does not use.",
     );
   }
@@ -258,6 +320,11 @@ import {
   // Anything fitted-but-unexplained, or a known-open input, must say so.
   assert.ok(prov.discount_rate.open, "the discount slope has no mechanism and must keep saying so");
   assert.ok(prov.roe.open, "his long-run ROE is not our ROE field and must keep saying so");
+  assert.ok(prov.roe_cap.open, "the circular ROE cap must remain explicitly unsupported");
+  assert.ok(
+    prov.roe_cap.open.includes("no admissible candidate"),
+    "the provenance must reflect bounded-only scoring and floor constraints",
+  );
 }
 
 // GUARD 3 — a hand-delivered export that never arrived must not pass silently.
@@ -289,6 +356,14 @@ assert.ok(RIM_CALIBRATION_ANCHORS.length >= 3);
 assert.ok(Math.abs(discountRate(0.042) - 0.0995) < 0.0005, "discount at Rf 4.2% must be ~9.95%");
 assert.ok(Math.abs(discountRate(0.035) - 0.0956) < 0.0005, "discount at Rf 3.5% must be ~9.56%");
 assert.ok(discountRate(0.05) > discountRate(0.03), "discount must rise with the risk-free rate");
+{
+  const lowRate = discountExtrapolation(0.017);
+  assert.equal(lowRate.beyondTolerance, true);
+  assert.ok(
+    lowRate.note.includes("5.04~6.61%") && lowRate.note.includes("payout"),
+    "the 2021 implied discount must disclose its payout-conditioned band, not a hidden 5.6% point",
+  );
+}
 
 // RECURRENCE GUARD — the calibration harness must score the engine the build
 // runs. It kept its own payout table for a while: it scored KOSPI at a 13.82%
@@ -301,7 +376,12 @@ assert.ok(discountRate(0.05) > discountRate(0.03), "discount must rise with the 
 // return. A future copy-paste of the table would fail here even if the import
 // line survived.
 {
-  const { PUBLISHED, evaluate, loadContext } = await import("./check-fenok-rim-calibration.mjs");
+  const {
+    PUBLISHED,
+    evaluate,
+    loadContext,
+    summarizeCalibration,
+  } = await import("./check-fenok-rim-calibration.mjs");
   assert.ok(PUBLISHED.length >= 10, "the harness must keep its published anchor series");
   const rows = evaluate(loadContext());
   assert.ok(rows.length >= 8, "the harness must still score most of its anchors");
@@ -334,6 +414,22 @@ assert.ok(discountRate(0.05) > discountRate(0.03), "discount must rise with the 
     Number.isFinite(RIM_KR_RISK_FREE_ANCHOR.value),
     "the engine's Korean anchor stays the fallback for a KOSPI date with no dated capture",
   );
+  for (const row of rows.filter((item) => item.floor && item.scoreable !== false)) {
+    for (const score of Object.values(row.scored).filter(Boolean)) {
+      assert.equal(score.err, null, `${row.date} ${row.key}: a floor must not contribute point error`);
+      assert.equal(typeof score.constraint_satisfied, "boolean");
+    }
+  }
+  for (const row of rows.filter((item) => item.key === "philadelphia_semi")) {
+    assert.equal(row.scoreable, false, "SOXX prose must not score the Philadelphia Semiconductor Index");
+    assert.equal(row.exclusion_reason, "asset_identity_unverified");
+    assert.ok(Object.values(row.scored).every((score) => score === null));
+  }
+  const summary = summarizeCalibration(rows);
+  const raw = summary.find((item) => item.n === "raw");
+  assert.equal(raw.bounded_count, 4, "only non-SOX point/range rows may measure raw-model error");
+  assert.equal(raw.floor_count, 6, "floors remain separately reported as constraints");
+  assert.ok(Number.isFinite(raw.bounded_mae));
 }
 
 console.log("build-fenok-rim-index tests passed");

@@ -1,10 +1,9 @@
 // Fenok RIM calibration harness.
 //
-// The engine's formula is settled. Its long-run ROE input is not, and single-date
-// comparisons have produced contradictory answers twice — one index favours one
-// definition, another index favours a different one. This scores candidate ROE
-// definitions against a TIME SERIES of the analyst's own dated, RIM-labelled
-// outputs, so a definition that only wins on one row cannot win overall.
+// The engine is a conditional structural hypothesis, not an identified level
+// model. This harness falsifies candidate ROE definitions against dated,
+// RIM-labelled outputs while preserving floors as one-sided constraints. A green
+// diagnostic never promotes publication by itself.
 //
 // Run it whenever new source material arrives:
 //   node scripts/check-fenok-rim-calibration.mjs
@@ -38,7 +37,7 @@ const INDEX = {
   // just inside the 2.3x bound, so nothing currently restrains it.
   philadelphia_semi: {
     file: "micro_sectors.json", section: "philadelphia_semi", rimKey: "SOX",
-    label: "Philadelphia Semi", rp: 0.055, market: "us",
+    label: "Philadelphia Semi", rp: 0.055, market: "us", identityStatus: "unresolved",
   },
 };
 
@@ -262,14 +261,37 @@ export function evaluate({ feeds, rim, fred }) {
     };
     const scored = {};
     for (const [name, cand] of Object.entries(CANDIDATES)) {
+      if (cfg.identityStatus === "unresolved") { scored[name] = null; continue; }
       const roe = cand.fn(inputs);
       if (!Number.isFinite(roe) || !Number.isFinite(retention)) { scored[name] = null; continue; }
       const fair = computeCell({ bookValue: book, roePath: [roe], retention, riskFree, erp: cfg.rp });
       const lo = target.fair ? target.fair[0] : px * (1 + target.upside[0]);
       const hi = target.fair ? target.fair[1] : px * (1 + target.upside[1]);
-      // A floor has no upper edge: anything at or above it satisfies what he said.
-      const err = fair < lo ? fair / lo - 1 : (target.floor || fair <= hi) ? 0 : fair / hi - 1;
-      scored[name] = { roe, fair, err, inside: err === 0 };
+      if (target.floor) {
+        // A floor is a one-sided constraint. A satisfied floor has no point
+        // error and cannot improve MAE; an undershoot is a constraint failure.
+        const constraintSatisfied = fair >= lo;
+        scored[name] = {
+          roe,
+          fair,
+          err: null,
+          bounded: false,
+          inside: constraintSatisfied,
+          constraint_satisfied: constraintSatisfied,
+          constraint_gap: constraintSatisfied ? 0 : fair / lo - 1,
+        };
+      } else {
+        const err = fair < lo ? fair / lo - 1 : fair <= hi ? 0 : fair / hi - 1;
+        scored[name] = {
+          roe,
+          fair,
+          err,
+          bounded: true,
+          inside: err === 0,
+          constraint_satisfied: null,
+          constraint_gap: null,
+        };
+      }
     }
     // retention is published on the row so a test can assert the harness scored
     // the retention the build resolves, rather than trusting that it imported
@@ -281,9 +303,33 @@ export function evaluate({ feeds, rim, fred }) {
       // anchor ignore it; Philadelphia Semi has none and resolves through it.
       derivedRetention, retention, retentionSource: resolved?.source ?? null,
       riskFree, riskFreeSource, gapDays: hit.gapDays, scored,
+      scoreable: cfg.identityStatus !== "unresolved",
+      exclusion_reason: cfg.identityStatus === "unresolved" ? "asset_identity_unverified" : null,
     });
   }
   return results;
+}
+
+export function summarizeCalibration(rows, names = Object.keys(CANDIDATES)) {
+  return names.map((n) => {
+    const available = rows.map((r) => r.scored[n]).filter(Boolean);
+    const bounded = available.filter((score) => score.bounded === true);
+    const floors = available.filter((score) => score.bounded === false);
+    const boundedMae = bounded.length
+      ? bounded.reduce((sum, score) => sum + Math.abs(score.err), 0) / bounded.length
+      : null;
+    const floorViolations = floors.filter((score) => score.constraint_satisfied === false).length;
+    return {
+      n,
+      count: available.length,
+      bounded_count: bounded.length,
+      bounded_hits: bounded.filter((score) => score.inside).length,
+      bounded_mae: boundedMae,
+      floor_count: floors.length,
+      floor_violations: floorViolations,
+      admissible: floors.length > 0 && floorViolations === 0,
+    };
+  });
 }
 
 function main() {
@@ -291,7 +337,7 @@ function main() {
   const rows = evaluate(ctx);
   const names = Object.keys(CANDIDATES);
   console.log("Fenok RIM calibration — his own dated RIM outputs vs our engine\n");
-  console.log("A row scores 0 when the engine lands inside his stated figure or range.\n");
+  console.log("Point/range rows measure error. Floors are pass/fail constraints and never enter MAE.\n");
   const head = "date        index               his figure".padEnd(48) + names.map((n) => n.padStart(16)).join("");
   console.log(head);
   console.log("-".repeat(head.length));
@@ -299,28 +345,26 @@ function main() {
     const shown = r.fair ? `${r.fair[0]}` : `${(r.upside[0] * 100).toFixed(1)}~${(r.upside[1] * 100).toFixed(1)}%`;
     const cells = names.map((n) => {
       const s = r.scored[n];
-      return (s ? (s.inside ? "  hit" : `${(s.err * 100).toFixed(1)}%`) : "  n/a").padStart(16);
+      if (!s) return "  n/a".padStart(16);
+      if (r.floor) {
+        return (s.constraint_satisfied ? "  floor pass" : `${(s.constraint_gap * 100).toFixed(1)}% fail`).padStart(16);
+      }
+      return (s.inside ? "  hit" : `${(s.err * 100).toFixed(1)}%`).padStart(16);
     }).join("");
     console.log(`${r.date}  ${r.label.padEnd(18)} ${shown.padEnd(14)}${cells}`);
   }
   console.log("-".repeat(head.length));
-  // Rank by mean absolute error and worst case, NOT by hit count. Floor rows
-  // count any overshoot as inside, so hits alone reward a candidate that blows
-  // past every floor — which is exactly how a payout change that put the S&P far
-  // outside his published fair value scored 5 of 10 here.
-  const summary = names.map((n) => {
-    const scored = rows.map((r) => r.scored[n]).filter(Boolean);
-    if (!scored.length) return { n, hits: 0, mae: null, count: 0 };
-    const mae = scored.reduce((a, s) => a + Math.abs(s.err), 0) / scored.length;
-    return { n, hits: scored.filter((s) => s.inside).length, mae, count: scored.length };
-  });
-  console.log("scored".padEnd(48) + summary.map((s) => `${s.count}`.padStart(16)).join(""));
-  console.log("inside".padEnd(48) + summary.map((s) => `${s.hits}`.padStart(16)).join(""));
-  console.log("mean abs err".padEnd(48) + summary.map((s) => (s.mae === null ? "n/a" : `${(s.mae * 100).toFixed(1)}%`).padStart(16)).join(""));
-  const best = summary.filter((s) => s.mae !== null).sort((a, b) => a.mae - b.mae || b.hits - a.hits)[0];
-  console.log(`\nBest across the series: ${best ? `${best.n} (${best.hits}/${best.count} inside, mean abs err ${(best.mae * 100).toFixed(1)}%)` : "none scorable"}`);
-  console.log("\nRanked by mean absolute error. Hit count is NOT the ranking key: a floor row");
-  console.log("counts any overshoot as inside, so hits reward blowing past every floor.");
+  const summary = summarizeCalibration(rows, names);
+  console.log("bounded scored".padEnd(48) + summary.map((s) => `${s.bounded_count}`.padStart(16)).join(""));
+  console.log("bounded inside".padEnd(48) + summary.map((s) => `${s.bounded_hits}`.padStart(16)).join(""));
+  console.log("floor constraints".padEnd(48) + summary.map((s) => `${s.floor_count}`.padStart(16)).join(""));
+  console.log("floor violations".padEnd(48) + summary.map((s) => `${s.floor_violations}`.padStart(16)).join(""));
+  console.log("bounded mean abs err".padEnd(48) + summary.map((s) => (s.bounded_mae === null ? "n/a" : `${(s.bounded_mae * 100).toFixed(1)}%`).padStart(16)).join(""));
+  const best = summary
+    .filter((s) => s.admissible && s.bounded_mae !== null)
+    .sort((a, b) => a.bounded_mae - b.bounded_mae || b.bounded_hits - a.bounded_hits)[0];
+  console.log(`\nBest admissible candidate: ${best ? `${best.n} (${best.bounded_hits}/${best.bounded_count} bounded rows inside, bounded mean abs err ${(best.bounded_mae * 100).toFixed(1)}%)` : "none — every candidate violates at least one floor or lacks bounded evidence"}`);
+  console.log("\nRanked only among candidates satisfying every floor. Floor overshoot contributes no error.");
   console.log("A candidate that wins on one index and loses on another is not a winner.");
   console.log("Read the per-row column before changing the engine.");
 }

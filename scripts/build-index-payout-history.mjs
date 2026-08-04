@@ -133,6 +133,13 @@ export function buildArtifact({ nowIso }) {
   const indices = {};
   for (const u of universes) {
     const built = payoutByYear(u.symbols);
+    const blockingReasons = [
+      "current_membership_applied_to_historical_years",
+      "trailing_realised_basis_not_forward_policy",
+      "loss_making_constituent_years_excluded",
+    ];
+    if (u.key === "kospi") blockingReasons.push("exact_historical_index_membership_unavailable");
+    if (u.key === "philadelphia_semi") blockingReasons.push("published_anchor_instrument_identity_unresolved");
     indices[u.key] = {
       name: u.name,
       constituents_requested: built.requested,
@@ -140,14 +147,20 @@ export function buildArtifact({ nowIso }) {
       newest_statement_period: built.newest_statement_period,
       history: built.rows,
       summary: summarise(built.rows),
+      eligibility: {
+        status: "measured_candidate_band_only",
+        production_eligible: false,
+        blocking_reasons: blockingReasons,
+      },
     };
   }
   return {
-    schema_version: "fenok_rim_payout_history.v1",
+    schema_version: "fenok_rim_payout_history.v2",
     generated_at: nowIso,
+    basis_id: "realised_cash_dividends_over_positive_net_income_current_membership",
     method: "sum(Cash Dividends Paid) / sum(Net Income) across index constituents, per fiscal year",
     source: "data/yf/finance constituent statements; membership from computed/stock_action_index.json and indices/nasdaq-giw-sox-constituents.json",
-    purpose: "sanity band for the RIM engine's retention input, not the input itself — this is realised trailing payout while the model consumes a forward figure",
+    purpose: "measured candidate band for the RIM retention input; production-ineligible until historical membership and a forward policy are fixed ex ante",
     caveats: [
       `a year is kept only when at least ${Math.round(MIN_REPORTING_SHARE * 100)}% of the constituents that ever report have reported for it, so the current fiscal year is absent until reporting completes`,
       "loss-making constituent years are excluded; a negative denominator has no payout ratio",

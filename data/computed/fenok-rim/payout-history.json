@@ -1,9 +1,10 @@
 {
-  "schema_version": "fenok_rim_payout_history.v1",
-  "generated_at": "2026-08-04T02:36:14.000Z",
+  "schema_version": "fenok_rim_payout_history.v2",
+  "generated_at": "2026-08-04T05:01:29.564Z",
+  "basis_id": "realised_cash_dividends_over_positive_net_income_current_membership",
   "method": "sum(Cash Dividends Paid) / sum(Net Income) across index constituents, per fiscal year",
   "source": "data/yf/finance constituent statements; membership from computed/stock_action_index.json and indices/nasdaq-giw-sox-constituents.json",
-  "purpose": "sanity band for the RIM engine's retention input, not the input itself — this is realised trailing payout while the model consumes a forward figure",
+  "purpose": "measured candidate band for the RIM retention input; production-ineligible until historical membership and a forward policy are fixed ex ante",
   "caveats": [
     "a year is kept only when at least 60% of the constituents that ever report have reported for it, so the current fiscal year is absent until reporting completes",
     "loss-making constituent years are excluded; a negative denominator has no payout ratio",
@@ -53,6 +54,15 @@
         "min": 0.3445,
         "max": 0.3761,
         "latest": 0.3494
+      },
+      "eligibility": {
+        "status": "measured_candidate_band_only",
+        "production_eligible": false,
+        "blocking_reasons": [
+          "current_membership_applied_to_historical_years",
+          "trailing_realised_basis_not_forward_policy",
+          "loss_making_constituent_years_excluded"
+        ]
       }
     },
     "nasdaq100": {
@@ -96,6 +106,15 @@
         "min": 0.2004,
         "max": 0.2411,
         "latest": 0.2004
+      },
+      "eligibility": {
+        "status": "measured_candidate_band_only",
+        "production_eligible": false,
+        "blocking_reasons": [
+          "current_membership_applied_to_historical_years",
+          "trailing_realised_basis_not_forward_policy",
+          "loss_making_constituent_years_excluded"
+        ]
       }
     },
     "philadelphia_semi": {
@@ -139,6 +158,16 @@
         "min": 0.2699,
         "max": 0.3481,
         "latest": 0.2699
+      },
+      "eligibility": {
+        "status": "measured_candidate_band_only",
+        "production_eligible": false,
+        "blocking_reasons": [
+          "current_membership_applied_to_historical_years",
+          "trailing_realised_basis_not_forward_policy",
+          "loss_making_constituent_years_excluded",
+          "published_anchor_instrument_identity_unresolved"
+        ]
       }
     },
     "kospi": {
@@ -182,6 +211,16 @@
         "min": 0.2049,
         "max": 0.345,
         "latest": 0.2049
+      },
+      "eligibility": {
+        "status": "measured_candidate_band_only",
+        "production_eligible": false,
+        "blocking_reasons": [
+          "current_membership_applied_to_historical_years",
+          "trailing_realised_basis_not_forward_policy",
+          "loss_making_constituent_years_excluded",
+          "exact_historical_index_membership_unavailable"
+        ]
       }
     }
   }
