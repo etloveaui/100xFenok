@@ -1,6 +1,6 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-08-04T21:50:04Z",
+  "generated_at": "2026-08-04T22:45:49Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6774,
@@ -9,15 +9,15 @@
     "divergence_rows": 37420,
     "percent_scale_warnings": 78,
     "diagnosis_counts": {
-      "agreement": 18796,
+      "agreement": 18789,
       "scale_mismatch": 78,
-      "sign_divergence": 1375,
-      "stale": 11917,
-      "value_drift": 5254
+      "sign_divergence": 1380,
+      "stale": 11913,
+      "value_drift": 5260
     },
-    "stale_rows": 11917,
+    "stale_rows": 11913,
     "scale_mismatch_rows": 78,
-    "sign_divergence_rows": 1375
+    "sign_divergence_rows": 1380
   },
   "by_field": {
     "beta": {
@@ -14539,6 +14539,46 @@
       }
     },
     {
+      "ticker": "AAPL",
+      "asset_type": "stock",
+      "field": "change",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 3,
+      "relative_spread_pct": 192.114094,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": 5.96
+        },
+        {
+          "source": "yf",
+          "value": -5.48999
+        },
+        {
+          "source": "yf.derived",
+          "value": -5.490000000000009
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 192.114094,
+      "fresh_spread_pct": 192.114094,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.quote",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.quote": 0.0,
+        "yf": 1.0,
+        "yf.derived": 1.0
+      }
+    },
+    {
       "ticker": "DBND",
       "asset_type": "etf",
       "field": "return_1m",
@@ -15133,6 +15173,46 @@
       }
     },
     {
+      "ticker": "AAPL",
+      "asset_type": "stock",
+      "field": "change_pct",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 3,
+      "relative_spread_pct": 190.67432,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": 1.96
+        },
+        {
+          "source": "yf",
+          "value": -1.77721
+        },
+        {
+          "source": "yf.derived",
+          "value": -1.7772166650480752
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 190.67432,
+      "fresh_spread_pct": 190.67432,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.quote",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.quote": 0.0,
+        "yf": 1.0,
+        "yf.derived": 1.0
+      }
+    },
+    {
       "ticker": "CORN",
       "asset_type": "etf",
       "field": "return_1m",
@@ -15171,88 +15251,6 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.performance": 40.0
-      }
-    },
-    {
-      "ticker": "ICOW",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 3,
-      "relative_spread_pct": 190.579791,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": 4.052130458666716
-        },
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": -3.6704113014970305
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": -3.6704113014970305
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 190.579791,
-      "fresh_spread_pct": 190.579791,
-      "stale_sources": [
-        "stockanalysis.detail.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.performance": 46.0
-      }
-    },
-    {
-      "ticker": "GTO",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 3,
-      "relative_spread_pct": 190.546832,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -1.0385721594392394
-        },
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": 1.147
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": 1.147
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 190.546832,
-      "fresh_spread_pct": 190.546832,
-      "stale_sources": [
-        "stockanalysis.detail.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.performance": 46.0
       }
     }
   ]
