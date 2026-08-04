@@ -1,8 +1,8 @@
 {
   "ok": true,
   "schema_version": "fenok-edge-etf-daily1y-readiness-admin/v0.1",
-  "generated_at": "2026-08-04T00:47:46.756Z",
-  "classification_as_of": "2026-08-04T00:47:23.141Z",
+  "generated_at": "2026-08-04T01:58:08.454Z",
+  "classification_as_of": "2026-08-04T01:57:30.901Z",
   "purpose": "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
   "asset_type": "etf",
   "stage": "PUBLIC",
@@ -27,34 +27,34 @@
     "denominator": 4431,
     "daily_1y_complete": 3648,
     "daily_1y_missing": 783,
-    "daily_1y_fetchable": 19,
+    "daily_1y_fetchable": 20,
     "inception_limited_daily_1y_gap": 739,
-    "terminal_limited_daily_1y_gap": 25,
+    "terminal_limited_daily_1y_gap": 24,
     "fetchable_breakdown": {
       "counts": {
-        "stockanalysis_short_rows": 19
+        "stockanalysis_short_rows": 20
       },
       "samples": {
         "stockanalysis_short_rows": [
           "ACII",
           "BGGG",
+          "EDGQ",
           "EDGX",
           "ESUM",
           "FSTB",
           "GEQ",
           "KRYP",
           "RAAR",
-          "RAAY",
-          "RCLR"
+          "RAAY"
         ]
       }
     },
     "terminal_limited_breakdown": {
       "data_supply_unavailable": 11,
       "provider_history_start_limited": 10,
-      "provider_rejected_non_etf": 4
+      "provider_rejected_non_etf": 3
     },
-    "etf_no_fetchable_daily_1y_gap": 19,
+    "etf_no_fetchable_daily_1y_gap": 20,
     "count_equation": "daily_1y_complete + daily_1y_fetchable + inception_limited_daily_1y_gap + terminal_limited_daily_1y_gap == denominator",
     "count_equation_ok": true,
     "no_fetchable_daily_1y_gap": false,
@@ -73,17 +73,17 @@
     "summary_count_ok": true,
     "coverage_index_count_ok": true,
     "coverage_index_daily_check_count_ok": true,
-    "coverage_index_fetchable_daily_1y_gap": 19,
+    "coverage_index_fetchable_daily_1y_gap": 20,
     "coverage_index_inception_limited_daily_1y_gap": 739,
-    "coverage_index_terminal_limited_daily_1y_gap": 25,
+    "coverage_index_terminal_limited_daily_1y_gap": 24,
     "history_gap_report_count_ok": true,
     "history_gap_classification_clock_match": true,
     "coverage_index_classification_clock_match": true,
     "coverage_index_daily_check_classification_clock_match": true,
     "history_gap_report_scored_etf_count": 4431,
-    "history_gap_report_fetchable_daily_1y_gap": 19,
+    "history_gap_report_fetchable_daily_1y_gap": 20,
     "history_gap_report_inception_limited_daily_1y_gap": 739,
-    "history_gap_report_terminal_limited_daily_1y_gap": 25
+    "history_gap_report_terminal_limited_daily_1y_gap": 24
   },
   "samples": {
     "fetchable": [
@@ -100,6 +100,14 @@
         "actual_rows": 30,
         "missing_file": false,
         "inception_date": "2026-06-02",
+        "classification_reason": "unconfirmed_short_history",
+        "effective_start_source": null
+      },
+      {
+        "ticker": "EDGQ",
+        "actual_rows": 0,
+        "missing_file": false,
+        "inception_date": null,
         "classification_reason": "unconfirmed_short_history",
         "effective_start_source": null
       },
@@ -153,14 +161,6 @@
       },
       {
         "ticker": "RAAY",
-        "actual_rows": 0,
-        "missing_file": false,
-        "inception_date": null,
-        "classification_reason": "unconfirmed_short_history",
-        "effective_start_source": null
-      },
-      {
-        "ticker": "RCLR",
         "actual_rows": 0,
         "missing_file": false,
         "inception_date": null,
@@ -324,11 +324,11 @@
         "effective_start_source": null
       },
       {
-        "ticker": "EDGQ",
+        "ticker": "FPAS",
         "actual_rows": 0,
-        "missing_file": false,
+        "missing_file": true,
         "inception_date": null,
-        "classification_reason": "unconfirmed_short_history",
+        "classification_reason": null,
         "effective_start_source": null
       }
     ],
@@ -377,8 +377,8 @@
   },
   "exact_fetchable_plan": {
     "output": "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
-    "fetchable_count": 19,
-    "ticker_count": 19,
+    "fetchable_count": 20,
+    "ticker_count": 20,
     "can_drive_bounded_ticker_batches": true,
     "batch_count": 1,
     "default_batch_size": 120,
