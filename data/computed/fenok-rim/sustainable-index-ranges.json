@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok_rim_sustainable_index_ranges.v2",
-  "generated_at": "2026-08-04T22:15:33.449Z",
+  "generated_at": "2026-08-04T22:22:27.424Z",
   "as_of": "2026-08-04",
   "status": "six_index_residual_value_ranges_ready",
   "scope": [
@@ -89,48 +89,97 @@
     ],
     "lt_roe_rule": {
       "frozen": {
-        "equation": "LTROE_centre = 0.044026 + 0.905268 * forward_ROE",
-        "intercept": 0.044026,
-        "slope": 0.905268,
-        "observations": 4,
+        "equation": "LTROE_centre = median_260w + 0.020486 + 0.029099 * ln(1 + 100 * max(forward_ROE - median_260w, 0))",
+        "anchor": "the index's own rolling 260-week median forward ROE",
+        "intercept": 0.020486,
+        "log_gap_coefficient": 0.029099,
+        "observations": 5,
         "fit_dates": [
           "2025-12-09",
+          "2026-06-14",
           "2026-07-26"
         ],
-        "fit_observables": "three printed 2025-12-09 LTROE axis centres plus the LTROE that reproduces the published 2026-07-26 S&P 500 upside span under the printed lattice",
-        "max_abs_residual_pp": 1.56,
+        "fit_observables": "three printed 2025-12-09 LTROE axis centres, plus the LTROE that reproduces the published 2026-07-26 S&P 500 span and the published 2026-06-14 KOSPI upside under the printed lattice",
+        "max_abs_residual_pp": 1.49,
         "lattice_half_width": 0.005,
-        "lattice_note": "Yoo prints a +/-0.5pp LTROE axis; the same half width is retained",
-        "slope_note": "a slope below one is the mean reversion Yoo applies: his long-run ROE moves less than the index's own forward ROE"
+        "lattice_note": "Yoo prints a +/-0.5pp LTROE axis; the same half width is retained"
       },
       "refit": {
-        "intercept": 0.044026348149001776,
-        "slope": 0.9052681558532073,
-        "max_abs_residual_pp": 1.5563864856316667,
+        "intercept": 0.020486455794257716,
+        "log_gap_coefficient": 0.02909879667689735,
+        "max_abs_residual_pp": 1.491259071351081,
         "residuals": [
           {
             "id": "SPX@2025-12-09",
-            "predicted": 0.2651833586239403,
+            "kind": "printed_axis_centre",
+            "predicted": 0.2759125907135108,
             "printed": 0.261,
-            "residual_pp": 0.4183358623940314
+            "residual_pp": 1.491259071351081
           },
           {
             "id": "CCMP@2025-12-09",
-            "predicted": 0.29143613514368333,
+            "kind": "printed_axis_centre",
+            "predicted": 0.29524824115861575,
             "printed": 0.307,
-            "residual_pp": -1.5563864856316667
+            "residual_pp": -1.175175884138424
           },
           {
             "id": "RUT@2025-12-09",
-            "predicted": 0.14826598470555574,
+            "kind": "printed_axis_centre",
+            "predicted": 0.13898585024407853,
             "printed": 0.148,
-            "residual_pp": 0.02659847055557496
+            "residual_pp": -0.9014149755921463
           },
           {
             "id": "SPX@2026-07-26",
-            "predicted": 0.30474357703472543,
-            "printed": 0.29362905550790486,
-            "residual_pp": 1.1114521526820575
+            "kind": "inverted_from_published_upside_span",
+            "predicted": 0.3088824721739943,
+            "printed": 0.30336035211283807,
+            "residual_pp": 0.552212006115621
+          },
+          {
+            "id": "KOSPI@2026-06-14",
+            "kind": "inverted_from_published_upside_span",
+            "predicted": 0.21012035182868688,
+            "printed": 0.2097891540060482,
+            "residual_pp": 0.03311978226386847
+          }
+        ],
+        "observations": [
+          {
+            "id": "SPX@2025-12-09",
+            "kind": "printed_axis_centre",
+            "median_roe": 0.2317,
+            "model_forward_roe": 0.2443,
+            "lt_roe": 0.261
+          },
+          {
+            "id": "CCMP@2025-12-09",
+            "kind": "printed_axis_centre",
+            "median_roe": 0.222,
+            "model_forward_roe": 0.2733,
+            "lt_roe": 0.307
+          },
+          {
+            "id": "RUT@2025-12-09",
+            "kind": "printed_axis_centre",
+            "median_roe": 0.11191190615590497,
+            "model_forward_roe": 0.11445247156239544,
+            "lt_roe": 0.148
+          },
+          {
+            "id": "SPX@2026-07-26",
+            "kind": "inverted_from_published_upside_span",
+            "median_roe": 0.2347,
+            "model_forward_roe": 0.288,
+            "lt_roe": 0.30336035211283807
+          },
+          {
+            "id": "KOSPI@2026-06-14",
+            "kind": "inverted_from_published_upside_span",
+            "median_roe": 0.1018,
+            "model_forward_roe": 0.2964,
+            "lt_roe": 0.2097891540060482
           }
         ]
       }
@@ -146,16 +195,16 @@
           "high": 0.29,
           "feno": {
             "upside": {
-              "low": 0.2006782161361098,
-              "high": 0.30155783551408444
+              "low": 0.23690591067026112,
+              "high": 0.33926871035150397
             },
             "convexity": "convex",
             "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": -0.35507418936475443,
-              "high": -0.30899083127016236
+              "low": -0.3455367601265552,
+              "high": -0.29945340203196325
             },
             "convexity": "bounded",
             "passed": false
@@ -170,16 +219,16 @@
           "low": 0.14,
           "feno": {
             "upside": {
-              "low": 0.14621916022752823,
-              "high": 0.2440114745385753
+              "low": 0.2010659144795548,
+              "high": 0.30111891673701896
             },
             "convexity": "convex",
             "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": -0.3692299959608374,
-              "high": -0.3232695828343646
+              "low": -0.35436276719995485,
+              "high": -0.30840235407348193
             },
             "convexity": "bounded",
             "passed": false
@@ -194,16 +243,16 @@
           "low": 0.36,
           "feno": {
             "upside": {
-              "low": 0.8595812230425142,
-              "high": 0.97729360551103
+              "low": 0.8213851081007493,
+              "high": 0.9376723751177116
             },
             "convexity": "amplifying",
             "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": -0.3462173317577827,
-              "high": -0.3095052673351528
+              "low": -0.35157837156044014,
+              "high": -0.3148663071378104
             },
             "convexity": "bounded",
             "passed": false
@@ -218,16 +267,16 @@
           "low": 0.3,
           "feno": {
             "upside": {
-              "low": 0.8007872181115696,
-              "high": 0.9201124416767232
+              "low": 0.9076147702446384,
+              "high": 1.031009350040128
             },
             "convexity": "amplifying",
             "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": -0.3255040419374491,
-              "high": -0.28588197070752597
+              "low": -0.30966634271120974,
+              "high": -0.2700442714812866
             },
             "convexity": "bounded",
             "passed": false
@@ -242,16 +291,16 @@
           "low": 0.28,
           "feno": {
             "upside": {
-              "low": 0.8069170186646766,
-              "high": 0.9219271248811387
+              "low": 0.7925802287417099,
+              "high": 0.9070542035933029
             },
             "convexity": "amplifying",
             "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": -0.3601468699787904,
-              "high": -0.3240136065089392
+              "low": -0.36216832308510505,
+              "high": -0.3260350596152537
             },
             "convexity": "bounded",
             "passed": false
@@ -266,16 +315,16 @@
           "low": 0.24,
           "feno": {
             "upside": {
-              "low": 0.2150449318594585,
-              "high": 0.31532964893215887
+              "low": 0.11879055243032965,
+              "high": 0.21475157997900496
             },
             "convexity": "amplifying",
-            "passed": true
+            "passed": false
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": -0.4415091724400245,
-              "high": -0.40174277891708643
+              "low": -0.46195877914865713,
+              "high": -0.42219238562571904
             },
             "convexity": "bounded",
             "passed": false
@@ -291,16 +340,16 @@
           "high": 0.495,
           "feno": {
             "upside": {
-              "low": 2.428668419010198,
-              "high": 2.9004944902827043
+              "low": 0.34188818073448,
+              "high": 0.6509920734289285
             },
-            "convexity": "amplifying",
-            "passed": false
+            "convexity": "convex",
+            "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": 0.5635691525149509,
-              "high": 0.7417365108100007
+              "low": -0.043547555897174184,
+              "high": 0.13461980239787574
             },
             "convexity": "bounded",
             "passed": false
@@ -311,7 +360,7 @@
       "feno": {
         "passed": 6,
         "total": 7,
-        "informative_passed": 1,
+        "informative_passed": 2,
         "informative_total": 2
       },
       "measured_growth_diagnostic": {
@@ -328,7 +377,7 @@
         "book": "B0 = px_last / px_to_book_ratio from the benchmark panel; reproduces Yoo's printed feed book to 0.0004%~0.013%",
         "risk_free": "sovereign 10Y for the index's own market; DGS10 read 4.18% on the day Yoo printed 4.2%",
         "erp": "Yoo's printed three-point 0.5pp lattice for the asset class",
-        "lt_roe": "LTROE = 0.044026 + 0.905268 * panel forward ROE, swept +/-0.5pp on Yoo's printed axis width",
+        "lt_roe": "anchored on the index's own 260-week median, plus a concave function of how far its forward ROE runs above that median; swept +/-0.5pp on Yoo's printed axis width",
         "payout": "Yoo's own cash dividend payout, read from the automatic trailing payout series so it refreshes instead of being hand-entered",
         "discount_horizon_terminal": "d(Rf) = 0.076 + 0.560 * Rf, N = 9, terminal RI_N / d; reproduces the 54 published cells"
       },
@@ -374,19 +423,21 @@
         "price_to_book": 5.6916,
         "panel_forward_roe": 0.2913,
         "model_forward_roe": 0.2913,
+        "median_roe_260w": 0.2347,
+        "roe_gap_over_median": 0.05660000000000001,
         "forward_roe_basis": "panel forward ROE",
-        "lt_roe_centre": 0.3077305684,
+        "lt_roe_centre": 0.3103611808809873,
         "lt_roe_axis": [
-          0.3027305684,
-          0.3077305684,
-          0.3127305684
+          0.3053611808809873,
+          0.3103611808809873,
+          0.3153611808809873
         ],
         "erp_axis": [
           0.04,
           0.045,
           0.05
         ],
-        "book_growth": 0.19661675341497,
+        "book_growth": 0.1982975174943848,
         "payout": 0.361075,
         "retention": 0.638925,
         "payout_as_of": "2026-08-04T09:06:51.365Z",
@@ -405,20 +456,20 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.19661675341497,
+        "book_growth": 0.1982975174943848,
         "convexity": {
-          "book_growth": 0.19661675341497,
+          "book_growth": 0.1982975174943848,
           "discount": 0.1026,
-          "growth_over_discount": 1.9163426258769007,
+          "growth_over_discount": 1.932724342050534,
           "status": "convex"
         },
         "range": {
-          "low": 9036.834070061544,
-          "high": 9789.24721271556
+          "low": 9208.610059322145,
+          "high": 9968.02889863927
         },
         "upside": {
-          "low": 0.2065650077788681,
-          "high": 0.3070244565505198
+          "low": 0.22949990911838425,
+          "high": 0.33089473286575055
         },
         "point_estimate": null
       },
@@ -431,12 +482,12 @@
           "status": "bounded"
         },
         "range": {
-          "low": 4809.919399489283,
-          "high": 5150.413917785752
+          "low": 4854.704855966204,
+          "high": 5195.199374262675
         },
         "upside": {
-          "low": -0.35779716738552536,
-          "high": -0.3123355856045684
+          "low": -0.35181757716360507,
+          "high": -0.3063559953826479
         },
         "point_estimate": null
       },
@@ -482,19 +533,21 @@
         "price_to_book": 8.8371,
         "panel_forward_roe": 0.414,
         "model_forward_roe": 0.414,
+        "median_roe_260w": 0.31555,
+        "roe_gap_over_median": 0.09844999999999998,
         "forward_roe_basis": "panel forward ROE",
-        "lt_roe_centre": 0.41880695199999995,
+        "lt_roe_centre": 0.40539940689436993,
         "lt_roe_axis": [
-          0.41380695199999995,
-          0.41880695199999995,
-          0.42380695199999996
+          0.4003994068943699,
+          0.40539940689436993,
+          0.41039940689436993
         ],
         "erp_axis": [
           0.045,
           0.05,
           0.055
         ],
-        "book_growth": 0.32568522622279994,
+        "book_growth": 0.31525884877140675,
         "payout": 0.22235,
         "retention": 0.77765,
         "payout_as_of": "2026-08-04T09:06:51.365Z",
@@ -513,20 +566,20 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.32568522622279994,
+        "book_growth": 0.31525884877140675,
         "convexity": {
-          "book_growth": 0.32568522622279994,
+          "book_growth": 0.31525884877140675,
           "discount": 0.1026,
-          "growth_over_discount": 3.1743199436920073,
+          "growth_over_discount": 3.072698331105329,
           "status": "amplifying"
         },
         "range": {
-          "low": 60625.8934357797,
-          "high": 64315.26847522888
+          "low": 55176.46754594125,
+          "high": 58666.033340503694
         },
         "upside": {
-          "low": 1.1442125130252916,
-          "high": 1.2746980807672323
+          "low": 0.951477585429163,
+          "high": 1.07489631326452
         },
         "point_estimate": null
       },
@@ -539,12 +592,12 @@
           "status": "bounded"
         },
         "range": {
-          "low": 20134.037648502963,
-          "high": 21222.00237397517
+          "low": 19404.69084199782,
+          "high": 20492.65556747002
         },
         "upside": {
-          "low": -0.2879007134241477,
-          "high": -0.24942165033934927
+          "low": -0.31369620212073834,
+          "high": -0.27521713903594014
         },
         "point_estimate": null
       },
@@ -590,19 +643,21 @@
         "price_to_book": 1.8853,
         "panel_forward_roe": 0.3422,
         "model_forward_roe": 0.3422,
+        "median_roe_260w": 0.1018,
+        "roe_gap_over_median": 0.2404,
         "forward_roe_basis": "panel forward ROE",
-        "lt_roe_centre": 0.3538087096,
+        "lt_roe_centre": 0.215998588820802,
         "lt_roe_axis": [
-          0.3488087096,
-          0.3538087096,
-          0.3588087096
+          0.210998588820802,
+          0.215998588820802,
+          0.220998588820802
         ],
         "erp_axis": [
           0.055,
           0.065,
           0.075
         ],
-        "book_growth": 0.26383515474872,
+        "book_growth": 0.16107014768367206,
         "payout": 0.25429999999999997,
         "retention": 0.7457,
         "payout_as_of": "2026-08-04T09:06:51.365Z",
@@ -621,20 +676,20 @@
         "discount": 0.0998896
       },
       "value": {
-        "book_growth": 0.26383515474872,
+        "book_growth": 0.16107014768367206,
         "convexity": {
-          "book_growth": 0.26383515474872,
+          "book_growth": 0.16107014768367206,
           "discount": 0.0998896,
-          "growth_over_discount": 2.6412675068147236,
-          "status": "amplifying"
+          "growth_over_discount": 1.6124816565855913,
+          "status": "convex"
         },
         "range": {
-          "low": 38157.20256284454,
-          "high": 42655.45569046914
+          "low": 11431.499848439369,
+          "high": 13981.295463298658
         },
         "upside": {
-          "low": 4.785382735498645,
-          "high": 5.467406422680657
+          "low": 0.7332403169517423,
+          "high": 1.1198395050070364
         },
         "point_estimate": null
       },
@@ -647,12 +702,12 @@
           "status": "bounded"
         },
         "range": {
-          "low": 14553.28216155494,
-          "high": 15988.063235781203
+          "low": 7962.370390527316,
+          "high": 9397.151464753579
         },
         "upside": {
-          "low": 1.2065639435603241,
-          "high": 1.424104986889629
+          "low": 0.20725202837218326,
+          "high": 0.42479307170148806
         },
         "point_estimate": null
       },
@@ -698,19 +753,21 @@
         "price_to_book": 10.4136,
         "panel_forward_roe": 0.5137,
         "model_forward_roe": 0.5137,
+        "median_roe_260w": 0.23170000000000002,
+        "roe_gap_over_median": 0.28200000000000003,
         "forward_roe_basis": "panel forward ROE",
-        "lt_roe_centre": 0.5090621716,
+        "lt_roe_centre": 0.350370935271171,
         "lt_roe_axis": [
-          0.5040621716,
-          0.5090621716,
-          0.5140621716
+          0.345370935271171,
+          0.350370935271171,
+          0.35537093527117103
         ],
         "erp_axis": [
           0.045,
           0.05,
           0.055
         ],
-        "book_growth": 0.35284371769024997,
+        "book_growth": 0.2428508545098304,
         "payout": 0.306875,
         "retention": 0.693125,
         "payout_as_of": "2026-08-04T09:06:51.365Z",
@@ -729,20 +786,20 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.35284371769024997,
+        "book_growth": 0.2428508545098304,
         "convexity": {
-          "book_growth": 0.35284371769024997,
+          "book_growth": 0.2428508545098304,
           "discount": 0.1026,
-          "growth_over_discount": 3.4390225895735864,
+          "growth_over_discount": 2.3669673928833372,
           "status": "amplifying"
         },
         "range": {
-          "low": 30130.030223889764,
-          "high": 31576.57319160796
+          "low": 10808.342086017983,
+          "high": 11608.944976005998
         },
         "upside": {
-          "low": 1.6637624545038814,
-          "high": 1.7916497091001
+          "low": -0.04444649971373349,
+          "high": 0.026333911174352798
         },
         "point_estimate": null
       },
@@ -755,12 +812,12 @@
           "status": "bounded"
         },
         "range": {
-          "low": 8502.021540318494,
-          "high": 8871.370976713968
+          "low": 5571.395605370806,
+          "high": 5940.745041766279
         },
         "upside": {
-          "low": -0.24834573353574607,
-          "high": -0.21569196073991448
+          "low": -0.5074391123243045,
+          "high": -0.474785339528473
         },
         "point_estimate": null
       },
@@ -806,19 +863,21 @@
         "price_to_book": 7.5935,
         "panel_forward_roe": 0.3235,
         "model_forward_roe": 0.3235,
+        "median_roe_260w": 0.22849999999999998,
+        "roe_gap_over_median": 0.09500000000000003,
         "forward_roe_basis": "panel forward ROE",
-        "lt_roe_centre": 0.336880198,
+        "lt_roe_centre": 0.31740866860820005,
         "lt_roe_axis": [
-          0.331880198,
-          0.336880198,
-          0.341880198
+          0.31240866860820005,
+          0.31740866860820005,
+          0.32240866860820006
         ],
         "erp_axis": [
           0.045,
           0.05,
           0.055
         ],
-        "book_growth": 0.2639793231528,
+        "book_growth": 0.24872143272138555,
         "payout": 0.2164,
         "retention": 0.7836,
         "payout_as_of": "fenok-rim-yoo-panel/2026-08-05",
@@ -837,20 +896,20 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.2639793231528,
+        "book_growth": 0.24872143272138555,
         "convexity": {
-          "book_growth": 0.2639793231528,
+          "book_growth": 0.24872143272138555,
           "discount": 0.1026,
-          "growth_over_discount": 2.572897886479532,
+          "growth_over_discount": 2.4241855041070717,
           "status": "amplifying"
         },
         "range": {
-          "low": 35038.05150598507,
-          "high": 37801.718939155544
+          "low": 30033.81726794172,
+          "high": 32577.046672451746
         },
         "upside": {
-          "low": 0.3808724929793892,
-          "high": 0.48979043145425494
+          "low": 0.183652353424558,
+          "high": 0.28388268522324167
         },
         "point_estimate": null
       },
@@ -863,12 +922,12 @@
           "status": "bounded"
         },
         "range": {
-          "low": 15191.942257985284,
-          "high": 16225.197962415343
+          "low": 14185.988817082534,
+          "high": 15219.244521512599
         },
         "upside": {
-          "low": -0.4012756338519663,
-          "high": -0.36055435172765093
+          "low": -0.4409209159397358,
+          "high": -0.40019963381542023
         },
         "point_estimate": null
       },
@@ -910,27 +969,29 @@
       "current_price": 2931.339,
       "inputs": {
         "price": 2931.339,
-        "book": 1126.6147815058225,
-        "price_to_book": 2.6019,
+        "book": 1206.3123456790122,
+        "price_to_book": 2.43,
         "panel_forward_roe": 0.0914,
-        "model_forward_roe": 0.1168092,
+        "model_forward_roe": 0.1239795918367347,
+        "median_roe_260w": 0.1138808443459351,
+        "roe_gap_over_median": 0.0100987474907996,
         "forward_roe_basis": "LSEG ex-negative earnings bridge",
-        "lt_roe_centre": 0.1497696308656,
+        "lt_roe_centre": 0.1546800532950787,
         "lt_roe_axis": [
-          0.1447696308656,
-          0.1497696308656,
-          0.1547696308656
+          0.1496800532950787,
+          0.1546800532950787,
+          0.1596800532950787
         ],
         "erp_axis": [
           0.04,
           0.045,
           0.05
         ],
-        "book_growth": 0.1142502652095143,
+        "book_growth": 0.11799613185561783,
         "payout": 0.23716,
         "retention": 0.76284,
-        "payout_as_of": "fenok-rim-yoo-panel/2026-08-05",
-        "payout_source": "LSEG official dividend yield times ex-negative P/E",
+        "payout_as_of": "2026-06-30",
+        "payout_source": "https://research.ftserussell.com/Analytics/FactSheets/Home/DownloadSingleIssue?issueName=US2000USD&isManual=True ex-negative dividend yield times P/E",
         "measured_book_growth": {
           "value": 0.0680591835425699,
           "window_start": "2011-08-19",
@@ -945,20 +1006,20 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.1142502652095143,
+        "book_growth": 0.11799613185561783,
         "convexity": {
-          "book_growth": 0.1142502652095143,
+          "book_growth": 0.11799613185561783,
           "discount": 0.1026,
-          "growth_over_discount": 1.1135503431726541,
+          "growth_over_discount": 1.1500597646746378,
           "status": "convex"
         },
         "range": {
-          "low": 2092.187314211767,
-          "high": 2500.725529985578
+          "low": 2371.4534447833166,
+          "high": 2818.0383083576876
         },
         "upside": {
-          "low": -0.28626906877308733,
-          "high": -0.1468999218495104
+          "low": -0.1909999338925601,
+          "high": -0.03865151442474324
         },
         "point_estimate": null
       },
@@ -971,12 +1032,12 @@
           "status": "bounded"
         },
         "range": {
-          "low": 1875.5687107652764,
-          "high": 2192.4545909994276
+          "low": 2091.5537909799114,
+          "high": 2430.856413112109
         },
         "upside": {
-          "low": -0.36016656184587437,
-          "high": -0.2520637868907596
+          "low": -0.28648518953969115,
+          "high": -0.17073514420812164
         },
         "point_estimate": null
       },
@@ -985,7 +1046,7 @@
         "panel": "data/benchmarks/us.json#sections.russell2000",
         "risk_free": "DGS10",
         "erp": "printed 2025-12-09 IWM axis",
-        "payout": "LSEG official dividend yield times ex-negative P/E",
+        "payout": "https://research.ftserussell.com/Analytics/FactSheets/Home/DownloadSingleIssue?issueName=US2000USD&isManual=True ex-negative dividend yield times P/E",
         "forward_roe_basis": "LSEG ex-negative earnings bridge"
       },
       "runtime_yoo_value_injection": false

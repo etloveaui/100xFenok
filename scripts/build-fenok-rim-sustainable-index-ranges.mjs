@@ -136,7 +136,13 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
       book_identity: bookIdentity,
       lt_roe_rule: {
         frozen: FROZEN_CALIBRATION.lt_roe_rule,
-        refit: { intercept: ltRoeFit.intercept, slope: ltRoeFit.slope, max_abs_residual_pp: ltRoeFit.max_abs_residual_pp, residuals: ltRoeFit.residuals },
+        refit: {
+          intercept: ltRoeFit.intercept,
+          log_gap_coefficient: ltRoeFit.log_gap_coefficient,
+          max_abs_residual_pp: ltRoeFit.max_abs_residual_pp,
+          residuals: ltRoeFit.residuals,
+          observations: ltRoeFit.observations.map((row) => ({ id: row.id, kind: row.kind, median_roe: row.median_roe, model_forward_roe: row.model_forward_roe, lt_roe: row.printed_lt_roe })),
+        },
       },
       published_upside_holdout: holdout,
       feno_rule: FENO_RULE,

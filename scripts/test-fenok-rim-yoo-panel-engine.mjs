@@ -56,19 +56,36 @@ assert.ok(Math.abs(decemberRate.value - 0.042) < 0.0005, "the 2025-12-09 soverei
 
 const fit = runLtRoeCalibration(ENGINE_ROOT);
 assert.ok(Math.abs(fit.intercept - FROZEN_CALIBRATION.lt_roe_rule.intercept) < 1e-5, "frozen LTROE intercept must match the refit");
-assert.ok(Math.abs(fit.slope - FROZEN_CALIBRATION.lt_roe_rule.slope) < 1e-5, "frozen LTROE slope must match the refit");
-assert.ok(fit.slope > 0 && fit.slope < 1, "the fitted slope must be a mean reversion, not an amplification");
+assert.ok(Math.abs(fit.log_gap_coefficient - FROZEN_CALIBRATION.lt_roe_rule.log_gap_coefficient) < 1e-5, "frozen LTROE gap coefficient must match the refit");
+assert.ok(fit.log_gap_coefficient > 0, "a wider gap must raise the long-run ROE, not lower it");
+// Concavity is the whole point: a gap twice as wide must not double the excess.
+const narrow = ltRoeCentre(0.20, 0.15) - 0.15;
+const wide = ltRoeCentre(0.25, 0.15) - 0.15;
+assert.ok(wide > narrow, "a wider gap must raise the excess");
+assert.ok(wide < narrow * 2, "the excess must be concave in the gap, not proportional to it");
+// A forward ROE at its own median must not earn a gap premium beyond the intercept.
+assert.ok(Math.abs(ltRoeCentre(0.15, 0.15) - 0.15 - FROZEN_CALIBRATION.lt_roe_rule.intercept) < 1e-12,
+  "a zero gap must return the anchor plus the intercept");
+// Both fit vintages must be represented, otherwise the rule is one-dated again.
+assert.ok(fit.observations.some((row) => row.id.endsWith("2025-12-09")), "the printed-axis vintage must be in the fit");
+assert.ok(fit.observations.some((row) => row.id.startsWith("KOSPI")), "Korea must be in the fit, not extrapolated from US indices");
 assert.ok(fit.max_abs_residual_pp <= FROZEN_CALIBRATION.lt_roe_rule.max_abs_residual_pp + 0.01, "recorded residual must not understate the fit error");
 
 // Fit and evaluation sets must be disjoint in date and in observable.
 const holdout = runPublishedUpsideHoldout(ENGINE_ROOT);
 const fitKeys = new Set(fit.observations.map((row) => row.id));
 const evaluated = holdout.rows.filter((row) => fitKeys.has(`${row.id}@${row.date}`));
-assert.equal(evaluated.length, 1, "exactly the inverted SPX anchor may appear in both sets");
-assert.ok(evaluated[0].informative, "the shared anchor must be declared, not hidden among the one-sided floors");
+// Only the two inverted anchors may be shared, and both must be two-sided so
+// the overlap is visible rather than hidden among the one-sided floors.
+assert.equal(evaluated.length, 2, "only the two inverted anchors may appear in both sets");
+assert.ok(evaluated.every((row) => row.informative), "every shared anchor must be a declared two-sided claim");
 assert.ok(
-  holdout.rows.filter((row) => !fitKeys.has(`${row.id}@${row.date}`)).length >= 6,
-  "at least six evaluation anchors must be outside the fit set",
+  fit.observations.filter((row) => row.kind === "inverted_from_published_upside_span").length === 2,
+  "the inverted observations must be labelled as such in the fit receipt",
+);
+assert.ok(
+  holdout.rows.filter((row) => !fitKeys.has(`${row.id}@${row.date}`)).length >= 5,
+  "at least five evaluation anchors must be outside the fit set",
 );
 
 // --- runtime target independence --------------------------------------------
@@ -107,8 +124,11 @@ assert.ok(residualValueFairValue({ ...base, ltRoe: base.ltRoe + 0.005 }) > baseV
 assert.ok(residualValueFairValue({ ...base, growth: base.growth + 0.01 }) > baseValue, "faster book growth must raise the fair value");
 
 // The LTROE rule must be monotone and damped.
-assert.ok(ltRoeCentre(0.30) > ltRoeCentre(0.25), "the LTROE rule must be increasing in forward ROE");
-assert.ok(ltRoeCentre(0.30) - ltRoeCentre(0.25) < 0.05, "the LTROE rule must damp the forward ROE move");
+assert.ok(ltRoeCentre(0.30, 0.20) > ltRoeCentre(0.25, 0.20), "the LTROE rule must be increasing in forward ROE");
+assert.ok(ltRoeCentre(0.30, 0.20) - ltRoeCentre(0.25, 0.20) < 0.05, "the LTROE rule must damp the forward ROE move");
+// The anchor must dominate: two indices with the same gap but different
+// long-run levels must not receive the same long-run ROE.
+assert.ok(ltRoeCentre(0.35, 0.30) > ltRoeCentre(0.15, 0.10), "the rule must anchor on each index's own long-run level");
 
 // The discount relation must be the fitted one, not the cost of equity.
 assert.ok(Math.abs(discountRate(0.042) - 0.09952) < 1e-9, "the discount relation must be 0.076 + 0.560 * Rf");
@@ -127,6 +147,9 @@ for (const id of SCOPE) {
   assert.ok(Math.abs(row.feno.growth - row.inputs.lt_roe_centre * row.inputs.retention) < 1e-12,
     `${id}: growth must be LTROE * (1 - payout)`);
   assert.ok(row.inputs.payout > 0 && row.inputs.payout < 1, `${id}: the payout must be a fraction`);
+  assert.ok(Number.isFinite(row.inputs.median_roe_260w), `${id}: the long-run anchor must exist`);
+  assert.ok(Math.abs(row.inputs.lt_roe_centre - ltRoeCentre(row.inputs.model_forward_roe, row.inputs.median_roe_260w)) < 1e-12,
+    `${id}: the published LTROE must come from the frozen rule`);
   assert.ok(row.inputs.payout_source.length > 0, `${id}: the payout must name its source`);
   // Convexity is disclosed, never silently corrected.
   assert.ok(["bounded", "convex", "amplifying"].includes(row.feno.convexity.status));

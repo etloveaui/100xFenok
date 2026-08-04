@@ -192,25 +192,30 @@ export const FROZEN_CALIBRATION = Object.freeze({
   // LTROE axis centres Yoo printed on 2025-12-09. RUT enters on the LSEG
   // ex-negative earnings basis through the bridge below, because the panel's
   // Russell ROE includes loss-making constituents and Yoo's does not.
+  // LTROE is anchored on the index's OWN long-run level, not on its current
+  // forward ROE. The excess over that anchor is concave in the gap: the
+  // further a forward ROE runs above the index's own history, the smaller the
+  // share of that gap Yoo carries into his long-run number. A linear form
+  // cannot hold both the US indices, whose gap is a few points, and KOSPI,
+  // whose gap is nearly twenty.
   lt_roe_rule: Object.freeze({
-    equation: "LTROE_centre = 0.044026 + 0.905268 * forward_ROE",
-    intercept: 0.044026,
-    slope: 0.905268,
-    observations: 4,
-    fit_dates: Object.freeze(["2025-12-09", "2026-07-26"]),
-    fit_observables: "three printed 2025-12-09 LTROE axis centres plus the LTROE that reproduces the published 2026-07-26 S&P 500 upside span under the printed lattice",
-    max_abs_residual_pp: 1.56,
+    equation: "LTROE_centre = median_260w + 0.020486 + 0.029099 * ln(1 + 100 * max(forward_ROE - median_260w, 0))",
+    anchor: "the index's own rolling 260-week median forward ROE",
+    intercept: 0.020486,
+    log_gap_coefficient: 0.029099,
+    observations: 5,
+    fit_dates: Object.freeze(["2025-12-09", "2026-06-14", "2026-07-26"]),
+    fit_observables: "three printed 2025-12-09 LTROE axis centres, plus the LTROE that reproduces the published 2026-07-26 S&P 500 span and the published 2026-06-14 KOSPI upside under the printed lattice",
+    max_abs_residual_pp: 1.49,
     lattice_half_width: 0.005,
     lattice_note: "Yoo prints a +/-0.5pp LTROE axis; the same half width is retained",
-    slope_note: "a slope below one is the mean reversion Yoo applies: his long-run ROE moves less than the index's own forward ROE",
   }),
 
   // Russell's panel ROE counts loss makers; the LSEG factsheet reports
   // price/earnings ex-negative. One same-quarter ratio bridges the two.
   russell_ex_negative_bridge: Object.freeze({
-    ratio: 1.278,
-    derivation: "LSEG 2026-06-30 ex-negative ROE 12.398% / panel forward ROE 9.70% at the same quarter end",
-    observations: 1,
+    basis: "official LSEG ex-negative fundamentals when a snapshot is available; the same-quarter ratio to the panel bridges the rolling median",
+    derivation: "LSEG ex-negative ROE / panel forward ROE at the snapshot quarter end",
     source: "data/computed/fenok-rim/russell2000-official-fundamentals.json",
   }),
 
@@ -260,7 +265,7 @@ export const FENO_RULE = Object.freeze({
     book: "B0 = px_last / px_to_book_ratio from the benchmark panel; reproduces Yoo's printed feed book to 0.0004%~0.013%",
     risk_free: "sovereign 10Y for the index's own market; DGS10 read 4.18% on the day Yoo printed 4.2%",
     erp: "Yoo's printed three-point 0.5pp lattice for the asset class",
-    lt_roe: "LTROE = 0.044026 + 0.905268 * panel forward ROE, swept +/-0.5pp on Yoo's printed axis width",
+    lt_roe: "anchored on the index's own 260-week median, plus a concave function of how far its forward ROE runs above that median; swept +/-0.5pp on Yoo's printed axis width",
     payout: "Yoo's own cash dividend payout, read from the automatic trailing payout series so it refreshes instead of being hand-entered",
     discount_horizon_terminal: "d(Rf) = 0.076 + 0.560 * Rf, N = 9, terminal RI_N / d; reproduces the 54 published cells",
   }),
@@ -302,8 +307,35 @@ export function readAutomaticPayout(root, id) {
   return { value: frozen.value, as_of: FROZEN_CALIBRATION.version, source: frozen.source, automatic: false };
 }
 
-export function ltRoeCentre(forwardRoe) {
-  return FROZEN_CALIBRATION.lt_roe_rule.intercept + FROZEN_CALIBRATION.lt_roe_rule.slope * forwardRoe;
+export function ltRoeCentre(forwardRoe, medianRoe) {
+  const rule = FROZEN_CALIBRATION.lt_roe_rule;
+  const gap = Math.max(forwardRoe - medianRoe, 0);
+  return medianRoe + rule.intercept + rule.log_gap_coefficient * Math.log(1 + 100 * gap);
+}
+
+/**
+ * Russell's panel earnings include loss makers and Yoo's do not. When the LSEG
+ * factsheet snapshot is available it supplies the book and the ROE directly;
+ * its same-quarter ratio to the panel bridges the rolling median, which has no
+ * ex-negative history of its own.
+ */
+export function russellOfficialBasis(root, asOf) {
+  let official;
+  try {
+    official = readJson(root, "data/computed/fenok-rim/russell2000-official-fundamentals.json");
+  } catch {
+    return null;
+  }
+  if (!official || official.as_of > asOf) return null;
+  const atSnapshot = readPanelObservation(root, "RUT", official.as_of);
+  return {
+    as_of: official.as_of,
+    price_to_book: official.fundamentals.price_to_book,
+    roe: official.derived.current_roe_ex_negative_basis,
+    payout: official.derived.payout_ex_negative_basis,
+    median_ratio: official.derived.current_roe_ex_negative_basis / atSnapshot.forward_roe,
+    source: official.source.url,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -313,11 +345,15 @@ export function ltRoeCentre(forwardRoe) {
 export function buildPanelIndexRow(root, id, { asOf }) {
   const panel = readPanelObservation(root, id, asOf);
   const riskFree = readRiskFree(root, id, asOf);
-  const bridge = id === "RUT" ? FROZEN_CALIBRATION.russell_ex_negative_bridge.ratio : 1;
-  const modelRoe = panel.forward_roe * bridge;
-  const centre = ltRoeCentre(modelRoe);
+  const official = id === "RUT" ? russellOfficialBasis(root, asOf) : null;
+  const modelRoe = official ? official.roe : panel.forward_roe;
+  const medianRoe = official ? panel.median_roe_260w * official.median_ratio : panel.median_roe_260w;
+  const book = official ? panel.price / official.price_to_book : panel.book;
+  const centre = ltRoeCentre(modelRoe, medianRoe);
   const half = FROZEN_CALIBRATION.lt_roe_rule.lattice_half_width;
-  const payoutSource = readAutomaticPayout(root, id);
+  const payoutSource = official
+    ? { value: official.payout, as_of: official.as_of, source: `${official.source} ex-negative dividend yield times P/E`, automatic: true }
+    : readAutomaticPayout(root, id);
   const payout = payoutSource.value;
   const retention = 1 - payout;
   const erpAxis = FROZEN_CALIBRATION.erp_lattice[id];
@@ -341,7 +377,7 @@ export function buildPanelIndexRow(root, id, { asOf }) {
     const cells = [];
     for (const ltRoe of ltRoeAxis) {
       for (const erp of erpAxis) {
-        cells.push({ lt_roe: ltRoe, erp, fair_value: residualValueFairValue({ book: panel.book, ltRoe, growth, riskFree: riskFree.value, erp }) });
+        cells.push({ lt_roe: ltRoe, erp, fair_value: residualValueFairValue({ book, ltRoe, growth, riskFree: riskFree.value, erp }) });
       }
     }
     const values = cells.map((cell) => cell.fair_value);
@@ -373,11 +409,13 @@ export function buildPanelIndexRow(root, id, { asOf }) {
     as_of: panel.as_of,
     inputs: {
       price: panel.price,
-      book: panel.book,
-      price_to_book: panel.price_to_book,
+      book,
+      price_to_book: panel.price / book,
       panel_forward_roe: panel.forward_roe,
       model_forward_roe: modelRoe,
-      forward_roe_basis: id === "RUT" ? "LSEG ex-negative earnings bridge" : "panel forward ROE",
+      median_roe_260w: medianRoe,
+      roe_gap_over_median: modelRoe - medianRoe,
+      forward_roe_basis: official ? "LSEG ex-negative earnings bridge" : "panel forward ROE",
       lt_roe_centre: centre,
       lt_roe_axis: ltRoeAxis,
       erp_axis: [...erpAxis],
@@ -489,7 +527,7 @@ export function runBookIdentityCheck(root = ROOT) {
 export function inferLtRoeFromPublishedSpan(root, { id, date, low, high }) {
   const panel = readPanelObservation(root, id, date);
   const riskFree = readRiskFree(root, id, date);
-  const retention = 1 - FROZEN_CALIBRATION.payout[id].value;
+  const retention = 1 - readAutomaticPayout(root, id).value;
   const half = FROZEN_CALIBRATION.lt_roe_rule.lattice_half_width;
   const erpAxis = FROZEN_CALIBRATION.erp_lattice[id];
   const spanMid = (centre) => {
@@ -515,6 +553,7 @@ export function inferLtRoeFromPublishedSpan(root, { id, date, low, high }) {
     forward_roe: panel.forward_roe,
     model_forward_roe: panel.forward_roe,
     printed_lt_roe: centre,
+    median_roe: panel.median_roe_260w,
     kind: "inverted_from_published_upside_span",
     published_span: { low, high },
   };
@@ -530,24 +569,39 @@ export function runLtRoeCalibration(root = ROOT) {
   const printedCentres = { SPX: 0.261, CCMP: 0.307, RUT: 0.148 };
   const observations = Object.entries(printedCentres).map(([id, printed]) => {
     const panel = readPanelObservation(root, id, "2025-12-09");
-    const bridge = id === "RUT" ? FROZEN_CALIBRATION.russell_ex_negative_bridge.ratio : 1;
-    return { id: `${id}@2025-12-09`, forward_roe: panel.forward_roe, model_forward_roe: panel.forward_roe * bridge, printed_lt_roe: printed, kind: "printed_axis_centre" };
+    const official = id === "RUT" ? russellOfficialBasis(root, "2026-12-31") : null;
+    const ratio = official ? official.median_ratio : 1;
+    return {
+      id: `${id}@2025-12-09`,
+      forward_roe: panel.forward_roe,
+      model_forward_roe: panel.forward_roe * ratio,
+      median_roe: panel.median_roe_260w * ratio,
+      printed_lt_roe: printed,
+      kind: "printed_axis_centre",
+    };
   });
   observations.push(inferLtRoeFromPublishedSpan(root, { id: "SPX", date: "2026-07-26", low: 0.19, high: 0.29 }));
-  const xs = observations.map((row) => row.model_forward_roe);
-  const ys = observations.map((row) => row.printed_lt_roe);
+  observations.push(inferLtRoeFromPublishedSpan(root, { id: "KOSPI", date: "2026-06-14", low: 0.495, high: 0.495 }));
+
+  const xs = observations.map((row) => Math.log(1 + 100 * Math.max(row.model_forward_roe - row.median_roe, 0)));
+  const ys = observations.map((row) => row.printed_lt_roe - row.median_roe);
   const meanX = xs.reduce((a, b) => a + b, 0) / xs.length;
   const meanY = ys.reduce((a, b) => a + b, 0) / ys.length;
-  const slope = xs.reduce((sum, x, index) => sum + (x - meanX) * (ys[index] - meanY), 0)
+  const coefficient = xs.reduce((sum, x, index) => sum + (x - meanX) * (ys[index] - meanY), 0)
     / xs.reduce((sum, x) => sum + (x - meanX) ** 2, 0);
-  const intercept = meanY - slope * meanX;
-  const residuals = observations.map((row, index) => ({
-    id: row.id,
-    predicted: intercept + slope * xs[index],
-    printed: row.printed_lt_roe,
-    residual_pp: (intercept + slope * xs[index] - row.printed_lt_roe) * 100,
-  }));
-  return { fit_date: "2025-12-09", observations, intercept, slope, residuals, max_abs_residual_pp: Math.max(...residuals.map((row) => Math.abs(row.residual_pp))) };
+  const intercept = meanY - coefficient * meanX;
+  const residuals = observations.map((row, index) => {
+    const predicted = row.median_roe + intercept + coefficient * xs[index];
+    return { id: row.id, kind: row.kind, predicted, printed: row.printed_lt_roe, residual_pp: (predicted - row.printed_lt_roe) * 100 };
+  });
+  return {
+    fit_dates: ["2025-12-09", "2026-06-14", "2026-07-26"],
+    observations,
+    intercept,
+    log_gap_coefficient: coefficient,
+    residuals,
+    max_abs_residual_pp: Math.max(...residuals.map((row) => Math.abs(row.residual_pp))),
+  };
 }
 
 /**

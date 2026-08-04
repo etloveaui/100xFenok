@@ -25,7 +25,11 @@ const reproduced = artifact.calibration.structural_reproduction.instruments.filt
 assert.ok(reproduced.length >= 2, "the artifact must carry the grid reproduction receipt");
 for (const row of reproduced) assert.ok(row.rmse_pct_of_mean_fair_value < 0.005, `${row.instrument}: reproduction receipt out of tolerance`);
 for (const row of artifact.calibration.book_identity) assert.ok(Math.abs(row.relative_error) < 0.0005, `${row.id}: book identity receipt out of tolerance`);
-assert.ok(artifact.calibration.lt_roe_rule.refit.slope < 1, "the recorded LTROE slope must be a mean reversion");
+assert.ok(artifact.calibration.lt_roe_rule.refit.log_gap_coefficient > 0, "the recorded gap coefficient must be positive");
+assert.ok(artifact.calibration.lt_roe_rule.refit.max_abs_residual_pp < 2,
+  "the LTROE fit must hold every observation inside two percentage points");
+assert.ok(artifact.calibration.lt_roe_rule.refit.observations.some((row) => row.id.startsWith("KOSPI")),
+  "Korea must be a fitted observation rather than a US extrapolation");
 assert.ok(artifact.calibration.published_upside_holdout.rows.length >= 7, "the hold-out receipt must list every scored anchor");
 assert.equal(artifact.calibration.published_upside_holdout.feno.informative_total, 2);
 // The rule must reproduce the only two-sided index anchor Yoo has published.
