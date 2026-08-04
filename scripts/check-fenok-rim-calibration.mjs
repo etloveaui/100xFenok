@@ -49,7 +49,11 @@ export const PUBLISHED = [
 
 // Forward-basis payouts for indices whose derived value is unusable. KOSPI is
 // market-cap weighted across 269 Korean names in data/global-scouter (2026-07-31).
-const PAYOUT_FALLBACK = { kospi: 0.1382, nasdaq_composite: 0.2180 };
+// Measured from the filings themselves: sum of Cash Dividends Paid over sum of
+// Net Income across each index's constituents, four completed fiscal years, from
+// data/yf/finance. 2026 is excluded because most constituents have not reported.
+const PAYOUT_MEASURED = { sp500: 0.2072, nasdaq100: 0.0971, philadelphia_semi: 0.1130, kospi: 0.1382, nasdaq_composite: 0.2180 };
+const PAYOUT_FALLBACK = PAYOUT_MEASURED;
 
 function nearestRow(section, dateIso) {
   const target = new Date(dateIso).getTime();
@@ -136,9 +140,10 @@ export function evaluate({ feeds, rim }) {
     // weight — so every KOSPI row scored n/a and the index that matters most was
     // invisible. A market-cap weighting of the Korean names in the Global Scouter
     // export gives a real forward-basis payout.
-    const payout = Number.isFinite(derivedPayout) && derivedPayout > 0 && derivedPayout < 1
-      ? derivedPayout
-      : PAYOUT_FALLBACK[target.key] ?? null;
+    // Measured filings beat the derived surface: the derived payout is a
+    // point-in-time forward figure and reads zero for KOSPI.
+    const payout = PAYOUT_MEASURED[target.key]
+      ?? (Number.isFinite(derivedPayout) && derivedPayout > 0 && derivedPayout < 1 ? derivedPayout : null);
     const retention = Number.isFinite(payout) ? 1 - payout : null;
     const riskFree = cfg.market === "kr"
       ? 0.0426
@@ -193,6 +198,10 @@ function main() {
     console.log(`${r.date}  ${r.label.padEnd(18)} ${shown.padEnd(14)}${cells}`);
   }
   console.log("-".repeat(head.length));
+  // Rank by mean absolute error and worst case, NOT by hit count. Floor rows
+  // count any overshoot as inside, so hits alone reward a candidate that blows
+  // past every floor — which is exactly how a payout change that put the S&P far
+  // outside his published fair value scored 5 of 10 here.
   const summary = names.map((n) => {
     const scored = rows.map((r) => r.scored[n]).filter(Boolean);
     if (!scored.length) return { n, hits: 0, mae: null, count: 0 };
@@ -202,9 +211,11 @@ function main() {
   console.log("scored".padEnd(48) + summary.map((s) => `${s.count}`.padStart(16)).join(""));
   console.log("inside".padEnd(48) + summary.map((s) => `${s.hits}`.padStart(16)).join(""));
   console.log("mean abs err".padEnd(48) + summary.map((s) => (s.mae === null ? "n/a" : `${(s.mae * 100).toFixed(1)}%`).padStart(16)).join(""));
-  const best = summary.filter((s) => s.mae !== null).sort((a, b) => b.hits - a.hits || a.mae - b.mae)[0];
+  const best = summary.filter((s) => s.mae !== null).sort((a, b) => a.mae - b.mae || b.hits - a.hits)[0];
   console.log(`\nBest across the series: ${best ? `${best.n} (${best.hits}/${best.count} inside, mean abs err ${(best.mae * 100).toFixed(1)}%)` : "none scorable"}`);
-  console.log("\nA candidate that wins on one index and loses on another is not a winner.");
+  console.log("\nRanked by mean absolute error. Hit count is NOT the ranking key: a floor row");
+  console.log("counts any overshoot as inside, so hits reward blowing past every floor.");
+  console.log("A candidate that wins on one index and loses on another is not a winner.");
   console.log("Read the per-row column before changing the engine.");
 }
 
