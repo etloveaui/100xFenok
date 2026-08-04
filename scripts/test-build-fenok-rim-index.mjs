@@ -313,14 +313,23 @@ assert.ok(discountRate(0.05) > discountRate(0.03), "discount must rise with the 
       expected.value,
       `${row.date} ${row.key}: harness retention must equal the engine's resolved retention`,
     );
-    if (row.key === "kospi") {
-      assert.equal(
-        row.riskFree,
-        RIM_KR_RISK_FREE_ANCHOR.value,
-        "KOSPI rows must use the engine's Korean risk-free anchor, not a literal copied into the harness",
-      );
-    }
+    // A dated row must be priced at the rate observable on its own date. Scoring
+    // every row at today's rate lets a ROE candidate absorb rate-date error and
+    // be rewarded for it, which is what the harness did: six US dates all at
+    // 4.68% and both KOSPI dates at the 4.4% engine anchor.
+    assert.ok(
+      row.riskFreeSource && !row.riskFreeSource.startsWith("FALLBACK"),
+      `${row.date} ${row.key}: every scored anchor needs a dated risk-free, got "${row.riskFreeSource}"`,
+    );
   }
+  assert.ok(
+    new Set(rows.map((r) => r.riskFree)).size > 1,
+    "rows spanning different dates must not all be priced at one rate",
+  );
+  assert.ok(
+    Number.isFinite(RIM_KR_RISK_FREE_ANCHOR.value),
+    "the engine's Korean anchor stays the fallback for a KOSPI date with no dated capture",
+  );
 }
 
 console.log("build-fenok-rim-index tests passed");

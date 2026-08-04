@@ -128,16 +128,57 @@ export const CANDIDATES = {
   },
 };
 
+// Every row must be scored at the risk-free rate that was observable ON ITS OWN
+// DATE. Scoring dated rows at today's rate lets a ROE candidate absorb rate-date
+// error and be rewarded for it — the harness was doing exactly that, running all
+// six US dates at 4.68% and both KOSPI dates at the engine's 4.4% anchor.
+//
+// The US side needs no table: our own FRED capture carries the daily series, so
+// it refreshes itself and a new anchor date is priced automatically.
+function usRiskFreeOn(dateIso, fred) {
+  const raw = fred?.series?.DGS10;
+  const series = Array.isArray(raw) ? raw : raw?.observations ?? [];
+  let best = null;
+  for (const row of series) {
+    const value = Number(row.value);
+    if (!Number.isFinite(value) || row.date > dateIso) continue;
+    if (!best || row.date > best.date) best = { date: row.date, value: value / 100 };
+  }
+  return best;
+}
+
+// Korea has no dated series in this repo — the KRX artifact publishes only its
+// latest observation, so a past date is not recoverable at runtime. These are
+// the KOSPI anchor dates, each read from the 국고 10년 지표물 capture that was
+// current on that date. Values are historical and cannot change once observed.
+// Refresh: add one row per new KOSPI anchor, sourced the same way. A KOSPI date
+// missing here is scored at the engine's anchor and reported as a fallback
+// rather than silently priced at today's rate.
+const KR_RISK_FREE_ON = {
+  "2026-06-14": {
+    value: 0.04201,
+    observed: "2026-06-12",
+    source: "_private/.../krx_backfill_20d_20260626/raw/bond_commodity_esg/kts_bydd_trd/20260612.json 국고04250-3606 지표",
+  },
+  "2026-07-19": {
+    value: 0.04294,
+    observed: "2026-07-16",
+    source: "data/admin/fenok-edge-korea-krx-daily-index.json at 160b6c48dc, korea_10y observed 2026-07-16",
+  },
+};
+
 export function loadContext() {
   const feeds = {};
   for (const cfg of Object.values(INDEX)) {
     if (!feeds[cfg.file]) feeds[cfg.file] = JSON.parse(fs.readFileSync(path.join(BENCHMARKS, cfg.file), "utf8"));
   }
   const rim = JSON.parse(fs.readFileSync(RIM_INPUTS, "utf8"));
-  return { feeds, rim };
+  const fredPath = path.join(ROOT, "data", "macro", "fred-banking-daily.json");
+  const fred = fs.existsSync(fredPath) ? JSON.parse(fs.readFileSync(fredPath, "utf8")) : null;
+  return { feeds, rim, fred };
 }
 
-export function evaluate({ feeds, rim }) {
+export function evaluate({ feeds, rim, fred }) {
   const results = [];
   for (const target of PUBLISHED) {
     const cfg = INDEX[target.key];
@@ -161,9 +202,21 @@ export function evaluate({ feeds, rim }) {
       : null;
     const resolved = resolvePayout(target.key, derivedRetention);
     const retention = resolved?.value ?? null;
-    const riskFree = cfg.market === "kr"
-      ? RIM_KR_RISK_FREE_ANCHOR.value
-      : rim.indices?.SPX?.observed?.risk_free_rate?.value ?? 0.0468;
+    let riskFree;
+    let riskFreeSource;
+    if (cfg.market === "kr") {
+      const dated = KR_RISK_FREE_ON[target.date];
+      riskFree = dated?.value ?? RIM_KR_RISK_FREE_ANCHOR.value;
+      riskFreeSource = dated
+        ? `KR 10Y observed ${dated.observed}`
+        : `FALLBACK engine anchor ${RIM_KR_RISK_FREE_ANCHOR.value} (${RIM_KR_RISK_FREE_ANCHOR.as_of}) — no dated capture for ${target.date}`;
+    } else {
+      const dated = usRiskFreeOn(target.date, fred);
+      riskFree = dated?.value ?? rim.indices?.SPX?.observed?.risk_free_rate?.value ?? 0.0468;
+      riskFreeSource = dated
+        ? `US DGS10 observed ${dated.date}`
+        : "FALLBACK current SPX risk-free — FRED capture unavailable";
+    }
     const all = (feeds[cfg.file]?.sections?.[cfg.section]?.data ?? [])
       .filter((r) => r.date <= target.date && Number.isFinite(r.roe))
       .map((r) => r.roe);
@@ -194,7 +247,7 @@ export function evaluate({ feeds, rim }) {
     // retention is published on the row so a test can assert the harness scored
     // the retention the build resolves, rather than trusting that it imported
     // the right function.
-    results.push({ ...target, label: cfg.label, px, book, retention, riskFree, gapDays: hit.gapDays, scored });
+    results.push({ ...target, label: cfg.label, px, book, retention, riskFree, riskFreeSource, gapDays: hit.gapDays, scored });
   }
   return results;
 }
