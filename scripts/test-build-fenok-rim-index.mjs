@@ -258,6 +258,26 @@ import {
   assert.ok(prov.roe.open, "his long-run ROE is not our ROE field and must keep saying so");
 }
 
+// GUARD 3 — a hand-delivered export that never arrived must not pass silently.
+//
+// The benchmark workbook and the Global Scouter export come in weekly by hand.
+// No workflow can chase them, so the only defence is that the artifact reports
+// their age and says when one is late. A build that stops reporting this would
+// go back to reusing a missed week without comment.
+{
+  const artifactPath = new URL("../data/computed/fenok-rim/fair-values.json", import.meta.url);
+  const artifact = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
+  const exports_ = artifact.weekly_exports ?? [];
+  assert.equal(exports_.length, 2, "both hand-delivered exports must be reported");
+  for (const e of exports_) {
+    assert.ok(e.label && e.note, "each export needs a label and a readable note");
+    assert.ok(e.age_days === null || Number.isFinite(e.age_days), `${e.label}: age must be a number or explicitly null`);
+    if (Number.isFinite(e.age_days)) {
+      assert.equal(e.late, e.age_days > 10, `${e.label}: lateness must follow the stated window`);
+    }
+  }
+}
+
 // Contract pins.
 assert.equal(RIM_EXPLICIT_YEARS, 9, "9 explicit years reproduces all 54 captured grid cells; 8 and 10 do not");
 assert.equal(RIM_GRID_STEP, 0.005);

@@ -306,6 +306,33 @@ export function capLongRunRoe(roe, median5y) {
 // visible rather than implied by a green workflow run.
 export const RIM_ERP_MAX_AGE_DAYS = 180;
 
+// The benchmark workbook and the Global Scouter export arrive weekly, by hand,
+// and that is not going to change. What must change is that a missed week is
+// currently invisible: the daily build reuses the previous export without
+// comment. Anything past this is late enough to say so on the row.
+export const RIM_WEEKLY_EXPORT_MAX_AGE_DAYS = 10;
+
+function ageInDays(dateish) {
+  const t = dateish ? Date.parse(dateish) : NaN;
+  return Number.isFinite(t) ? Math.round((Date.now() - t) / 86400000) : null;
+}
+
+// A hand-delivered export cannot be chased by a workflow, so the engine reports
+// its age instead of assuming it arrived.
+export function weeklyExportAge(label, dateish) {
+  const days = ageInDays(dateish);
+  if (days === null) return { label, as_of: dateish ?? null, age_days: null, late: null, note: `${label}: no source date to check` };
+  const late = days > RIM_WEEKLY_EXPORT_MAX_AGE_DAYS;
+  return {
+    label,
+    as_of: dateish,
+    age_days: days,
+    late,
+    note: `${label} export is ${days} days old`
+      + (late ? ` — LATE past the ${RIM_WEEKLY_EXPORT_MAX_AGE_DAYS}-day weekly window; the build is reusing a prior export` : ", within the weekly window"),
+  };
+}
+
 // Country equity risk premium from the Damodaran shadow converter. Refreshes
 // with that weekly lane; the workbook month travels with the value so a stale
 // publication is visible instead of silent.
@@ -400,6 +427,18 @@ export function checkCalibration(rows) {
 export function buildArtifact({ nowIso }) {
   const derived = loadRimDerived();
   const koreaRiskFree = loadKoreaRiskFree();
+  const latestSourceDate = (() => {
+    try {
+      const p = JSON.parse(fs.readFileSync(path.join(BENCHMARKS, "us.json"), "utf8"));
+      const d = p?.sections?.sp500?.data;
+      return d?.[d.length - 1]?.date ?? null;
+    } catch { return null; }
+  })();
+  const scouterSourceDate = (() => {
+    try {
+      return JSON.parse(fs.readFileSync(path.join(ROOT, "data", "global-scouter", "core", "stocks_analyzer.json"), "utf8"))?.source_date ?? null;
+    } catch { return null; }
+  })();
   const marketErp = loadMarketErp();
   const rows = INDEX_SOURCES.map((source) => {
     const latest = loadSectionLatest(source.file, source.key);
@@ -471,6 +510,10 @@ export function buildArtifact({ nowIso }) {
     // 2025-12-09 sheet outputs (S&P -0.4%, Russell -0.8%), enforced as a
     // permanent regression test.
     // The cell maths now reproduces all 54 captured grid cells to 1.06%.
+    weekly_exports: [
+      weeklyExportAge("benchmark workbook", latestSourceDate),
+      weeklyExportAge("global scouter", scouterSourceDate),
+    ],
     index_math_pinned: true,
     // Still not display-ready: the formula is settled but the risk premiums are
     // dated sheet anchors and the Korea discount slope is extrapolated from two
