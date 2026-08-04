@@ -1,0 +1,129 @@
+{
+  "schema_version": "fenok-rim-structural-transfer-receipt/v1",
+  "source_date": "2026-08-03",
+  "status": "structural_transfer_only",
+  "local_shape_pass": true,
+  "same_sheet_payout_count": 2,
+  "production_identified": false,
+  "cases": [
+    {
+      "instrument": "HYNIX",
+      "grid": "worst",
+      "cells": 9,
+      "solved_book": 225623.26189992853,
+      "grid_rms": 0.002638313388071502,
+      "max_abs_error": 0.003419798061013002,
+      "residual_roe_slope": 0.6448578657087362,
+      "residual_roe_span": 0.006448578657087367
+    },
+    {
+      "instrument": "HYNIX",
+      "grid": "likely",
+      "cells": 9,
+      "solved_book": 219927.67632119718,
+      "grid_rms": 0.0028193929336729744,
+      "max_abs_error": 0.0036484270835910326,
+      "residual_roe_slope": 0.6892467846234904,
+      "residual_roe_span": 0.0068924678462349105
+    },
+    {
+      "instrument": "SAMSUNG",
+      "grid": "worst",
+      "cells": 9,
+      "solved_book": 87116.84272290656,
+      "grid_rms": 0.0010131795743581003,
+      "max_abs_error": 0.0013911524204561765,
+      "residual_roe_slope": 0.24660899558321192,
+      "residual_roe_span": 0.0024660899558321212
+    },
+    {
+      "instrument": "SAMSUNG",
+      "grid": "likely",
+      "cells": 9,
+      "solved_book": 85939.81093416922,
+      "grid_rms": 0.0013610741258150312,
+      "max_abs_error": 0.0018522451010792862,
+      "residual_roe_slope": 0.33187328709742986,
+      "residual_roe_span": 0.003318732870974283
+    }
+  ],
+  "instruments": [
+    {
+      "id": "HYNIX",
+      "external_book": {
+        "value": 171750.93978618982,
+        "fiscal_period": "2025-12-31",
+        "source": "data/yf/finance/000660.KS.json Stockholders Equity / Ordinary Shares Number",
+        "measurement_sha256": "e91ae415fbae148d132115fa8e6505d736d0724a829281ce2626b8feda08db75"
+      },
+      "external_book_min_abs_pct": 0.2805034813491085,
+      "external_book_max_abs_pct": 0.31366537022041086,
+      "external_book_pass": false,
+      "shared_book": 221997.14261749777,
+      "shared_book_rms": 0.013486476033142519,
+      "shared_book_pass": false
+    },
+    {
+      "id": "SAMSUNG",
+      "external_book": {
+        "value": 63997.24384079774,
+        "fiscal_period": "2025-12-31",
+        "source": "data/yf/finance/005930.KS.json Stockholders Equity / Ordinary Shares Number",
+        "measurement_sha256": "3a71b4be62250060a7bc10a434c0628a84a0ee84c796aceae3324ffb34e09579"
+      },
+      "external_book_min_abs_pct": 0.34286737641322085,
+      "external_book_max_abs_pct": 0.361259290159778,
+      "external_book_pass": false,
+      "shared_book": 86353.52329510279,
+      "shared_book_rms": 0.007183499135236684,
+      "shared_book_pass": false
+    }
+  ],
+  "blocking_reasons": [
+    "alternative_structures_not_profiled",
+    "external_book_basis_mismatch",
+    "shared_book_across_panels_not_identified",
+    "temporal_holdout_not_run"
+  ],
+  "fixture": {
+    "path": "scripts/fixtures/fenok-rim-2026-08-03-stock-grids.json",
+    "sha256": "6eda682bd10e48024586332240ad7f1abaed81186e152cba14918f6d7e41b639",
+    "instrument_count": 2,
+    "cell_count": 36
+  },
+  "external_book_sources": {
+    "HYNIX": {
+      "source_file": "data/yf/finance/000660.KS.json",
+      "source_schema": "yf-finance/v2",
+      "ticker": "000660.KS",
+      "currency": "KRW",
+      "source_as_of": "2026-08-04",
+      "fetched_at": "2026-08-04T00:32:32Z",
+      "fiscal_period": "2025-12-31",
+      "numerator": "Stockholders Equity",
+      "denominator": "Ordinary Shares Number",
+      "value": 171750.93978618982,
+      "unit": "KRW_per_share",
+      "measurement_sha256": "e91ae415fbae148d132115fa8e6505d736d0724a829281ce2626b8feda08db75",
+      "temporal_eligible": false,
+      "availability_note": "Fiscal period is not first-knowable availability; this source is a structural cross-check only."
+    },
+    "SAMSUNG": {
+      "source_file": "data/yf/finance/005930.KS.json",
+      "source_schema": "yf-finance/v2",
+      "ticker": "005930.KS",
+      "currency": "KRW",
+      "source_as_of": "2026-08-04",
+      "fetched_at": "2026-08-04T00:26:29Z",
+      "fiscal_period": "2025-12-31",
+      "numerator": "Stockholders Equity",
+      "denominator": "Ordinary Shares Number",
+      "value": 63997.24384079774,
+      "unit": "KRW_per_share",
+      "measurement_sha256": "3a71b4be62250060a7bc10a434c0628a84a0ee84c796aceae3324ffb34e09579",
+      "temporal_eligible": false,
+      "availability_note": "Fiscal period is not first-knowable availability; this source is a structural cross-check only."
+    }
+  },
+  "publication_status": "NULL"
+}

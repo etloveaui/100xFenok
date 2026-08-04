@@ -310,6 +310,10 @@ const ctx = { roe: 0.2576, rf: 0.0425, premium: 0.05, payout: 0.3109 };
   assert.equal(FX.cells.filter((c) => c.scenario === "3.5%").length, 27);
   assert.equal(FX.model_family, "RIM");
   assert.equal(FX.instruments.IWM.feed_book, null, "ETF-price cells must not carry an index-level book value");
+  assert.ok(
+    Object.values(FX.instruments).every((meta) => meta.printed_payout === null),
+    "the 2025-12-09 sheets print no payout; later-dated payout anchors must not be presented as fixture evidence",
+  );
   for (const c of FX.cells) {
     assert.ok(Number.isFinite(c.fair_value) && Number.isFinite(c.x) && Number.isFinite(c.y));
     assert.ok(Number.isFinite(c.lt_roe) && Number.isFinite(c.risk_premium));
@@ -353,17 +357,9 @@ const ctx = { roe: 0.2576, rf: 0.0425, premium: 0.05, payout: 0.3109 };
     assert.ok(Number.isFinite(prof.min_rms) && prof.min_rms <= 0.005, `${inst} min RMS below 0.5%`);
   }
 
-  // Only SPX has an independently printed payout in this fixture. It selects
-  // the feed book within 0.3%; deriving payout from feed book and then solving
-  // the same book (as an earlier CCMP check did) would be circular.
-  const anchors = gridAnchorsFromFixture(FX, "SPX", 0.042);
-  const payout = FX.instruments.SPX.printed_payout;
-  let num = 0, den = 0;
-  for (const a of anchors) { const C = rimBracket({ roe: a.inputs.roe, rf: a.inputs.rf, premium: a.inputs.premium, payout }); num += C * a.value; den += C * C; }
-  const book = num / den;
-  const rms = profileRmsAt(anchors, { roe: 0.261, rf: 0.042, premium: 0.045, payout, book });
-  assert.ok(Math.abs(book - FX.instruments.SPX.feed_book) / FX.instruments.SPX.feed_book <= 0.003, "SPX solved book within 0.3% of feed book");
-  assert.ok(Number.isFinite(rms) && rms <= 0.005, "SPX RMS below 0.5% at printed payout");
+  // The later 2026-08 SPX payout may be tested as a cross-date hypothesis, but
+  // it is not independent evidence for this fixture and cannot identify book.
+  assert.equal(FX.instruments.SPX.printed_payout, null);
 }
 
 console.log("OK test-analyze-fenok-rim-identifiability.mjs");

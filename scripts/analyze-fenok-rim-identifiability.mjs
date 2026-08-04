@@ -487,8 +487,8 @@ export function gridAnchorsFromFixture(fx, instrument, rfCurrent) {
 }
 
 // CLI: --grid-profile <fixture-path> [--rf <decimal>] prints the Sol-style
-// book-free payout bands per instrument. Only SPX carries an independently
-// printed payout in this fixture; CCMP/IWM cannot prove a payout-to-book link.
+// book-free payout bands per instrument. None of these sheets prints a payout,
+// so no instrument can prove a payout-to-book link from this fixture.
 function cliGridProfile(fixturePath, rfCurrent) {
   const fx = validateGridFixture(JSON.parse(fs.readFileSync(fixturePath, "utf8")));
   const cells = fx.cells;
