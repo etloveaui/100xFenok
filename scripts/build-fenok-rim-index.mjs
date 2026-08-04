@@ -46,6 +46,29 @@ export function discountRate(riskFree) {
   if (!Number.isFinite(riskFree)) return null;
   return RIM_DISCOUNT.intercept + RIM_DISCOUNT.slope * riskFree;
 }
+
+// How far outside the fitted band a risk-free rate sits, and whether that is
+// tolerable. This is not a theoretical caution: his 2021-01 KOSPI grid, at a
+// Korean 10Y near 1.7%, implies a discount of roughly 5.6% where this relation
+// returns 8.55%. Extrapolation to low rates fails badly, so a row that strays
+// must say so on its own face rather than quietly shipping a number.
+export const RIM_DISCOUNT_TOLERANCE = 0.005;
+export function discountExtrapolation(riskFree) {
+  const [lo, hi] = RIM_DISCOUNT.fitted_rf_range;
+  if (!Number.isFinite(riskFree)) return null;
+  const gap = riskFree < lo ? riskFree - lo : riskFree > hi ? riskFree - hi : 0;
+  return {
+    gap,
+    outside: gap !== 0,
+    beyondTolerance: Math.abs(gap) > RIM_DISCOUNT_TOLERANCE,
+    note: gap === 0
+      ? `risk-free ${round(riskFree, 4)} is inside the fitted band ${lo}~${hi}`
+      : `risk-free ${round(riskFree, 4)} is ${round(Math.abs(gap) * 10000, 0)}bp ${gap < 0 ? "below" : "above"} the fitted band ${lo}~${hi}`
+        + (Math.abs(gap) > RIM_DISCOUNT_TOLERANCE
+          ? " — BEYOND TOLERANCE; the relation is known to fail at low rates (his 2021 KOSPI grid implies ~5.6% where this returns 8.55%)"
+          : " — within tolerance"),
+  };
+}
 // Korean indices discount with the DOMESTIC rate (patent-era calc sheets and
 // the 2026-08-03 KOSPI sheet both use it; the "US 10Y everywhere" claim from
 // the earlier AI-written spec was disproven by the sheets). The observed rate
@@ -378,6 +401,8 @@ export function buildArtifact({ nowIso }) {
       erp_source: erpSource,
       risk_free: round(riskFree, 4),
       risk_free_source: riskFreeSource,
+      discount_rate: round(discountRate(riskFree), 6),
+      discount_extrapolation: discountExtrapolation(riskFree),
       rate_current: caseFor(riskFree),
       rate_scenario_35: caseFor(RIM_RATE_SCENARIO_10Y),
     };
@@ -444,6 +469,7 @@ export function buildArtifact({ nowIso }) {
       retention: { why: "1 minus the payout printed on his sheets. Our derived payout misses it by -62%~+61%, so it rides along as a drift check only. There is no silent house fallback: an index with neither a sheet anchor nor a sane derived payout is excluded", refresh: "manual with new sheets; the drift check is weekly and automatic", kind: "anchor" },
 
       // --- what we measure ourselves against ---
+      discount_extrapolation_guard: { why: "the discount relation is calibrated over risk-free 3.5~4.2% and is known to fail outside it: his 2021-01 KOSPI grid at a Korean 10Y near 1.7% implies roughly 5.6% where the relation returns 8.55%. Each row now carries how far its risk-free sits from the band", refresh: "widens only when a captured grid at a new rate extends the calibration", kind: "fitted" },
       calibration_anchors: { why: "his own dated, RIM-labelled published outputs, each with a retrievable source. Replaces an earlier set attributed to an internal catalogue", refresh: "he publishes weekly; scripts/check-fenok-rim-calibration.mjs scores candidate inputs against the whole series", kind: "target" },
     },
     disclaimer: "Model-implied fair values under stated assumptions. Not price targets, not investment advice.",

@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-rim-index/v6",
-  "generated_at": "2026-08-04T00:44:26.358Z",
+  "generated_at": "2026-08-04T00:57:55.037Z",
   "method": "fenok_rim_forward_book_compounding_residual_income",
   "display_note": "상대적 매력도 지표이며 목표가가 아님. 컨센서스 변화에 따라 언제든 크게 바뀔 수 있음.",
   "index_math_pinned": true,
@@ -38,6 +38,13 @@
       "erp_source": "sheet 2026-08-03; Damodaran US 5.03% agrees to 3bp [drift check: Damodaran US 0.0503, workbook April 1, 2026]",
       "risk_free": 0.0468,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
+      "discount_rate": 0.102208,
+      "discount_extrapolation": {
+        "gap": 0.004799999999999999,
+        "outside": true,
+        "beyondTolerance": false,
+        "note": "risk-free 0.0468 is 48bp above the fitted band 0.035~0.042 — within tolerance"
+      },
       "rate_current": {
         "erp_center": 0.05,
         "risk_free": 0.0468,
@@ -75,6 +82,13 @@
       "erp_source": "sheet 2026-08-03 [drift check: Damodaran US 0.0503, workbook April 1, 2026]",
       "risk_free": 0.0468,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
+      "discount_rate": 0.102208,
+      "discount_extrapolation": {
+        "gap": 0.004799999999999999,
+        "outside": true,
+        "beyondTolerance": false,
+        "note": "risk-free 0.0468 is 48bp above the fitted band 0.035~0.042 — within tolerance"
+      },
       "rate_current": {
         "erp_center": 0.055,
         "risk_free": 0.0468,
@@ -112,6 +126,13 @@
       "erp_source": "sheet 2026-08-03 [drift check: Damodaran US 0.0503, workbook April 1, 2026]",
       "risk_free": 0.0468,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
+      "discount_rate": 0.102208,
+      "discount_extrapolation": {
+        "gap": 0.004799999999999999,
+        "outside": true,
+        "beyondTolerance": false,
+        "note": "risk-free 0.0468 is 48bp above the fitted band 0.035~0.042 — within tolerance"
+      },
       "rate_current": {
         "erp_center": 0.055,
         "risk_free": 0.0468,
@@ -149,6 +170,13 @@
       "erp_source": "sheet 2025-12-09 [drift check: Damodaran US 0.0503, workbook April 1, 2026]",
       "risk_free": 0.0468,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
+      "discount_rate": 0.102208,
+      "discount_extrapolation": {
+        "gap": 0.004799999999999999,
+        "outside": true,
+        "beyondTolerance": false,
+        "note": "risk-free 0.0468 is 48bp above the fitted band 0.035~0.042 — within tolerance"
+      },
       "rate_current": {
         "erp_center": 0.045,
         "risk_free": 0.0468,
@@ -186,6 +214,13 @@
       "erp_source": "sheet 2026-08-03; reproduces his published 10,000~12,000 under the solved formula (10,074), whereas Damodaran 5.49% gives 15,634 [drift check: Damodaran KR 0.0549, workbook April 1, 2026]",
       "risk_free": 0.0426,
       "risk_free_source": "observed KRX KTS 10Y benchmark government bond 0.04259 (as of 2026-07-31, fenok-edge-korea lane, daily)",
+      "discount_rate": 0.09985,
+      "discount_extrapolation": {
+        "gap": 0.0005900000000000002,
+        "outside": true,
+        "beyondTolerance": false,
+        "note": "risk-free 0.0426 is 6bp above the fitted band 0.035~0.042 — within tolerance"
+      },
       "rate_current": {
         "erp_center": 0.12,
         "risk_free": 0.0426,
@@ -223,6 +258,13 @@
       "erp_source": "estimated: NASDAQ-family centre, no dedicated sheet [drift check: Damodaran US 0.0503, workbook April 1, 2026]",
       "risk_free": 0.0468,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
+      "discount_rate": 0.102208,
+      "discount_extrapolation": {
+        "gap": 0.004799999999999999,
+        "outside": true,
+        "beyondTolerance": false,
+        "note": "risk-free 0.0468 is 48bp above the fitted band 0.035~0.042 — within tolerance"
+      },
       "rate_current": {
         "erp_center": 0.055,
         "risk_free": 0.0468,
@@ -341,6 +383,11 @@
       "why": "1 minus the payout printed on his sheets. Our derived payout misses it by -62%~+61%, so it rides along as a drift check only. There is no silent house fallback: an index with neither a sheet anchor nor a sane derived payout is excluded",
       "refresh": "manual with new sheets; the drift check is weekly and automatic",
       "kind": "anchor"
+    },
+    "discount_extrapolation_guard": {
+      "why": "the discount relation is calibrated over risk-free 3.5~4.2% and is known to fail outside it: his 2021-01 KOSPI grid at a Korean 10Y near 1.7% implies roughly 5.6% where the relation returns 8.55%. Each row now carries how far its risk-free sits from the band",
+      "refresh": "widens only when a captured grid at a new rate extends the calibration",
+      "kind": "fitted"
     },
     "calibration_anchors": {
       "why": "his own dated, RIM-labelled published outputs, each with a retrievable source. Replaces an earlier set attributed to an internal catalogue",
