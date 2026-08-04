@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import {
   buildTemporalReceipt,
   findPrintedRoeRoundingWitness,
+  profileSharedBookUnderPrintedRoeRounding,
   solveBookFromPrintedGrid,
   solveZeroResidualRoeSlopePayout,
   validatePrintedOperandFixture,
@@ -28,12 +29,18 @@ for (const artifact of Object.values(fixture.artifacts)) {
 
 for (const instrument of Object.values(fixture.instruments)) {
   for (const grid of instrument.grids) {
+    assert.equal(
+      Math.round(grid.cells.reduce((sum, cell) => sum + cell.fair_value, 0) / 9),
+      grid.printed_fair_value,
+      `${instrument.name}/${grid.id} printed panel mean checksum`,
+    );
     const solved = solveBookFromPrintedGrid({
       cells: grid.cells,
       riskFree: instrument.printed.risk_free,
       payout: instrument.printed.payout,
     });
     assert.equal(solved.cells, 9);
+    assert.equal(solved.fit_objective, "relative_rms");
     assert.ok(solved.grid_rms <= 0.003, `${instrument.name}/${grid.id} structural RMS exceeds 0.3%`);
     assert.ok(Number.isFinite(solved.residual_roe_slope));
     assert.ok(Math.abs(solved.residual_roe_span) <= 0.01, `${instrument.name}/${grid.id} ROE-linked residual span exceeds 1%`);
@@ -53,11 +60,20 @@ for (const instrument of Object.values(fixture.instruments)) {
     assert.ok(roundingWitness.shift <= instrument.printed.roe_display_resolution / 2);
     assert.ok(roundingWitness.adjusted_roes[0] < roundingWitness.adjusted_roes[1]);
     assert.ok(roundingWitness.adjusted_roes[1] < roundingWitness.adjusted_roes[2]);
+    assert.equal(roundingWitness.scope, "within_panel_only");
+    assert.equal(roundingWitness.bound_saturated, false);
   }
+  const sharedProfile = profileSharedBookUnderPrintedRoeRounding({
+    grids: instrument.grids,
+    riskFree: instrument.printed.risk_free,
+    payout: instrument.printed.payout,
+    roeDisplayResolution: instrument.printed.roe_display_resolution,
+  });
+  assert.equal(sharedProfile.saturated_count, 6);
 }
 
 const transfer = buildIdentificationArtifact();
-assert.equal(transfer.schema_version, "fenok-rim-structural-transfer-receipt/v1");
+assert.equal(transfer.schema_version, "fenok-rim-structural-transfer-receipt/v2");
 assert.equal(transfer.status, "structural_transfer_only");
 assert.equal(transfer.production_identified, false);
 assert.equal(transfer.exact_printed_input_structural_conflict, true);
@@ -65,19 +81,21 @@ assert.equal(transfer.display_rounding_robust, false);
 assert.equal(transfer.printed_roe_rounding_can_remove_conflict, true);
 assert.equal(transfer.same_sheet_payout_count, 2);
 assert.ok(transfer.cases.every((row) => row.grid_rms <= 0.003));
-assert.ok(transfer.instruments.every((row) => row.external_book_pass === false));
-assert.ok(transfer.instruments.every((row) => row.external_book_min_abs_pct > 0.25));
-assert.ok(transfer.blocking_reasons.includes("external_book_basis_mismatch"));
+assert.ok(transfer.instruments.every((row) => row.cross_panel_exact_book_equality.equal === false));
+assert.ok(transfer.instruments.every((row) => row.external_book_cross_check.comparison_status === "diagnostic_mixed_basis_not_a_promotion_gate"));
+assert.ok(transfer.blocking_reasons.includes("exact_cross_panel_book_equality_fails"));
+assert.ok(transfer.blocking_reasons.includes("rounded_cross_panel_shared_book_gate_fails"));
+assert.ok(transfer.blocking_reasons.includes("rounded_shared_book_gate_pass_is_boundary_saturated"));
 assert.ok(transfer.blocking_reasons.includes("printed_payout_residual_roe_conflict"));
 assert.ok(transfer.blocking_reasons.includes("printed_roe_rounding_can_remove_slope"));
 const zeroSlopeRoots = Object.fromEntries(transfer.cases.map((row) => [`${row.instrument}/${row.grid}`, row.payout_zero_residual_roe_slope]));
 assert.ok(Math.abs(zeroSlopeRoots["SAMSUNG/worst"] - 0.2627765951204991) < 1e-12);
 assert.ok(Math.abs(zeroSlopeRoots["SAMSUNG/likely"] - 0.27924570566103457) < 1e-12);
 assert.ok(Math.abs(zeroSlopeRoots["HYNIX/worst"] - 0.17550154323406159) < 1e-12);
-assert.ok(Math.abs(zeroSlopeRoots["HYNIX/likely"] - 0.19121064791130493) < 1e-12);
+assert.ok(Math.abs(zeroSlopeRoots["HYNIX/likely"] - 0.19121064791128922) < 1e-12);
 
 const artifact = transfer;
-assert.equal(artifact.schema_version, "fenok-rim-structural-transfer-receipt/v1");
+assert.equal(artifact.schema_version, "fenok-rim-structural-transfer-receipt/v2");
 assert.equal(artifact.status, "structural_transfer_only");
 assert.equal(artifact.production_identified, false);
 assert.equal(artifact.fixture.cell_count, 36);
@@ -88,7 +106,17 @@ assert.equal(artifact.external_book_sources.SAMSUNG.ticker, "005930.KS");
 assert.equal(artifact.external_book_sources.HYNIX.ticker, "000660.KS");
 assert.ok(Object.values(artifact.external_book_sources).every((row) => row.currency === "KRW" && row.temporal_eligible === false));
 assert.ok(Object.values(artifact.external_book_sources).every((row) => /^[a-f0-9]{64}$/.test(row.measurement_sha256)));
-assert.ok(artifact.instruments.every((row) => row.external_book_pass === false));
+const instruments = Object.fromEntries(artifact.instruments.map((row) => [row.id, row]));
+assert.ok(Math.abs(instruments.SAMSUNG.same_sheet_book_basis.book_per_share - 72790.489008524) < 1e-9);
+assert.ok(Math.abs(instruments.HYNIX.same_sheet_book_basis.book_per_share - 171750.87384810933) < 1e-9);
+assert.ok(artifact.instruments.every((row) => row.same_sheet_book_basis.independent_validation === false));
+assert.ok(artifact.instruments.every((row) => row.printed_book_roll_forward.max_abs_relative_error < 0.00003));
+assert.equal(instruments.SAMSUNG.cross_panel_relative_rms_gate.exact_printed_roes.passed, false);
+assert.equal(instruments.SAMSUNG.cross_panel_relative_rms_gate.printed_roe_rounding_profile.gate.passed, true);
+assert.equal(instruments.SAMSUNG.cross_panel_relative_rms_gate.clean_pass, false);
+assert.equal(instruments.HYNIX.cross_panel_relative_rms_gate.printed_roe_rounding_profile.gate.passed, false);
+assert.ok(Math.abs(instruments.SAMSUNG.cross_panel_relative_rms_gate.printed_roe_rounding_profile.gate.value - 0.003006113744874829) < 1e-12);
+assert.ok(Math.abs(instruments.HYNIX.cross_panel_relative_rms_gate.printed_roe_rounding_profile.gate.value - 0.009187596283510612) < 1e-12);
 assert.deepEqual(
   JSON.parse(fs.readFileSync(path.join(NESTED, "data", "computed", "fenok-rim", "identification-receipt.json"), "utf8")),
   artifact,

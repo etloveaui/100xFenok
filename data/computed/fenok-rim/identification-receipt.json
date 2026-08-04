@@ -1,10 +1,10 @@
 {
-  "schema_version": "fenok-rim-structural-transfer-receipt/v1",
+  "schema_version": "fenok-rim-structural-transfer-receipt/v2",
   "source_date": "2026-08-03",
   "status": "structural_transfer_only",
   "local_shape_pass": true,
   "exact_printed_input_structural_conflict": true,
-  "structural_conflict_scope": "exact_printed_operands_under_the_reproduced_single_book_rim_family_only_component_or_form_not_identified",
+  "structural_conflict_scope": "within_panel_slope_exact_cross_panel_equality_and_gate_level_shared_book_are_separate_diagnostics_component_or_form_not_identified",
   "display_rounding_robust": false,
   "printed_roe_rounding_can_remove_conflict": true,
   "same_sheet_payout_count": 2,
@@ -13,6 +13,7 @@
     {
       "instrument": "HYNIX",
       "grid": "worst",
+      "diagnostic_scope": "within_panel_only",
       "printed_payout": 0.0512,
       "printed_payout_display_resolution": 0.0001,
       "payout_zero_residual_roe_slope": 0.17550154323406159,
@@ -20,75 +21,83 @@
       "exact_printed_input_structural_conflict": true,
       "printed_roe_rounding_zero_slope_witness": {
         "found": true,
+        "scope": "within_panel_only",
         "path": "lower_row_plus_t_middle_fixed_upper_row_minus_t",
         "shift_interval": [
           0,
           0.0005
         ],
         "endpoint_slopes": [
-          0.6448578657087362,
-          -0.19464207672261988
+          0.6449630465639247,
+          -0.1946336747476317
         ],
         "shift": 0.0003932070724050052,
+        "bound_saturated": false,
         "adjusted_roes": [
           0.385393207072405,
           0.39,
           0.39460679292759504
         ],
-        "solved_book": 225659.06516292354,
-        "grid_rms": 0.00003988949240803642,
-        "max_abs_error": 0.00007488072141126345,
-        "residual_roe_slope": 7.22988300642801e-14,
-        "residual_roe_span": 6.661314780270405e-16
+        "solved_book": 225659.26769406456,
+        "grid_rms": 0.00003987939421335862,
+        "max_abs_error": 0.00007577829805649472,
+        "residual_roe_slope": 5.6233023910318186e-14,
+        "residual_roe_span": 5.181077936946717e-16
       },
       "cells": 9,
-      "solved_book": 225623.26189992853,
-      "grid_rms": 0.002638313388071502,
-      "max_abs_error": 0.003419798061013002,
-      "residual_roe_slope": 0.6448578657087362,
-      "residual_roe_span": 0.006448578657087367
+      "fit_objective": "relative_rms",
+      "solved_book": 225660.06264145675,
+      "grid_rms": 0.0026332684043418137,
+      "max_abs_error": 0.0032676172162511286,
+      "residual_roe_slope": 0.6449630465639247,
+      "residual_roe_span": 0.0064496304656392524
     },
     {
       "instrument": "HYNIX",
       "grid": "likely",
+      "diagnostic_scope": "within_panel_only",
       "printed_payout": 0.0512,
       "printed_payout_display_resolution": 0.0001,
-      "payout_zero_residual_roe_slope": 0.19121064791130493,
-      "printed_to_zero_slope_payout_gap": 0.14001064791130494,
+      "payout_zero_residual_roe_slope": 0.19121064791128922,
+      "printed_to_zero_slope_payout_gap": 0.14001064791128923,
       "exact_printed_input_structural_conflict": true,
       "printed_roe_rounding_zero_slope_witness": {
         "found": true,
+        "scope": "within_panel_only",
         "path": "lower_row_plus_t_middle_fixed_upper_row_minus_t",
         "shift_interval": [
           0,
           0.0005
         ],
         "endpoint_slopes": [
-          0.6892467846234904,
-          -0.10511485548639025
+          0.6893581017414878,
+          -0.105112216920617
         ],
         "shift": 0.0004396652284764657,
+        "bound_saturated": false,
         "adjusted_roes": [
           0.4204396652284764,
           0.425,
           0.42956033477152356
         ],
-        "solved_book": 219963.39750807133,
-        "grid_rms": 0.00004288493914970006,
-        "max_abs_error": 0.00007597583592344748,
-        "residual_roe_slope": 2.8402316724990167e-14,
-        "residual_roe_span": 2.59048145105596e-16
+        "solved_book": 219962.82990199933,
+        "grid_rms": 0.0000398224197057857,
+        "max_abs_error": 0.00007339518294768865,
+        "residual_roe_slope": 4.0575283660137195e-14,
+        "residual_roe_span": 3.700737538795113e-16
       },
       "cells": 9,
-      "solved_book": 219927.67632119718,
-      "grid_rms": 0.0028193929336729744,
-      "max_abs_error": 0.0036484270835910326,
-      "residual_roe_slope": 0.6892467846234904,
-      "residual_roe_span": 0.0068924678462349105
+      "fit_objective": "relative_rms",
+      "solved_book": 219963.19584140662,
+      "grid_rms": 0.002814521542695623,
+      "max_abs_error": 0.003488427672444727,
+      "residual_roe_slope": 0.6893581017414878,
+      "residual_roe_span": 0.006893581017414884
     },
     {
       "instrument": "SAMSUNG",
       "grid": "worst",
+      "diagnostic_scope": "within_panel_only",
       "printed_payout": 0.2237,
       "printed_payout_display_resolution": 0.0001,
       "payout_zero_residual_roe_slope": 0.2627765951204991,
@@ -96,37 +105,41 @@
       "exact_printed_input_structural_conflict": true,
       "printed_roe_rounding_zero_slope_witness": {
         "found": true,
+        "scope": "within_panel_only",
         "path": "lower_row_plus_t_middle_fixed_upper_row_minus_t",
         "shift_interval": [
           0,
           0.0005
         ],
         "endpoint_slopes": [
-          0.24660899558321192,
-          -0.6514510129886286
+          0.24662616158864387,
+          -0.6513504525082661
         ],
         "shift": 0.00014806234813932728,
+        "bound_saturated": false,
         "adjusted_roes": [
           0.2981480623481393,
           0.303,
           0.3078519376518607
         ],
-        "solved_book": 87122.12267062522,
-        "grid_rms": 0.0000909402518958676,
-        "max_abs_error": 0.00014216164172042856,
-        "residual_roe_slope": 1.4110589950978568e-13,
-        "residual_roe_span": 1.3692740534624041e-15
+        "solved_book": 87122.40970204612,
+        "grid_rms": 0.00009088055447882985,
+        "max_abs_error": 0.0001420776228593379,
+        "residual_roe_slope": 1.4491985610133162e-13,
+        "residual_roe_span": 1.4062842126405723e-15
       },
       "cells": 9,
-      "solved_book": 87116.84272290656,
-      "grid_rms": 0.0010131795743581003,
-      "max_abs_error": 0.0013911524204561765,
-      "residual_roe_slope": 0.24660899558321192,
-      "residual_roe_span": 0.0024660899558321212
+      "fit_objective": "relative_rms",
+      "solved_book": 87122.90676850724,
+      "grid_rms": 0.0010107859463947752,
+      "max_abs_error": 0.00135781386105438,
+      "residual_roe_slope": 0.24662616158864387,
+      "residual_roe_span": 0.0024662616158864408
     },
     {
       "instrument": "SAMSUNG",
       "grid": "likely",
+      "diagnostic_scope": "within_panel_only",
       "printed_payout": 0.2237,
       "printed_payout_display_resolution": 0.0001,
       "payout_zero_residual_roe_slope": 0.27924570566103457,
@@ -134,78 +147,293 @@
       "exact_printed_input_structural_conflict": true,
       "printed_roe_rounding_zero_slope_witness": {
         "found": true,
+        "scope": "within_panel_only",
         "path": "lower_row_plus_t_middle_fixed_upper_row_minus_t",
         "shift_interval": [
           0,
           0.0005
         ],
         "endpoint_slopes": [
-          0.33187328709742986,
-          -0.5002095253794755
+          0.33190176259501936,
+          -0.5001549406331518
         ],
         "shift": 0.00021220200617830254,
+        "bound_saturated": false,
         "adjusted_roes": [
           0.3362122020061783,
           0.341,
           0.34578779799382164
         ],
-        "solved_book": 85946.44002559678,
-        "grid_rms": 0.00009710291218705786,
-        "max_abs_error": 0.00014586669222271809,
-        "residual_roe_slope": 1.9294690259723612e-14,
-        "residual_roe_span": 1.8475815863383062e-16
+        "solved_book": 85946.70505484774,
+        "grid_rms": 0.00009705393696260048,
+        "max_abs_error": 0.00014478469525114335,
+        "residual_roe_slope": 2.3157631359440063e-14,
+        "residual_roe_span": 2.2174812192877805e-16
       },
       "cells": 9,
-      "solved_book": 85939.81093416922,
-      "grid_rms": 0.0013610741258150312,
-      "max_abs_error": 0.0018522451010792862,
-      "residual_roe_slope": 0.33187328709742986,
-      "residual_roe_span": 0.003318732870974283
+      "fit_objective": "relative_rms",
+      "solved_book": 85947.18476922307,
+      "grid_rms": 0.0013583674078959697,
+      "max_abs_error": 0.0017844539027285222,
+      "residual_roe_slope": 0.33190176259501936,
+      "residual_roe_span": 0.003319017625950178
     }
   ],
   "instruments": [
     {
       "id": "HYNIX",
-      "external_book": {
-        "value": 171750.93978618982,
-        "fiscal_period": "2025-12-31",
-        "source": "data/yf/finance/000660.KS.json Stockholders Equity / Ordinary Shares Number",
-        "measurement_sha256": "e91ae415fbae148d132115fa8e6505d736d0724a829281ce2626b8feda08db75"
+      "same_sheet_book_basis": {
+        "method": "last_price_divided_by_latest_actual_pbr",
+        "period": "2024",
+        "last_price": 2162000,
+        "pbr": 12.588,
+        "book_per_share": 171750.87384810933,
+        "independent_validation": false,
+        "limitation": "PBR-derived book is same-sheet and reproducible but circular as an independent book validation."
       },
-      "external_book_min_abs_pct": 0.2805034813491085,
-      "external_book_max_abs_pct": 0.31366537022041086,
-      "external_book_pass": false,
-      "shared_book": 221997.14261749777,
-      "shared_book_rms": 0.013486476033142519,
-      "shared_book_pass": false
+      "printed_book_roll_forward": {
+        "equation": "B_t = B_(t-1) + NI_t * (1 - payout)",
+        "source": "same_image_printed_intermediates",
+        "identified_scope": "forecast_accounting_path_only_not_rim_B0_mapping",
+        "rows": [
+          {
+            "from": "2024",
+            "to": "2025E",
+            "printed_total_equity": 320112064,
+            "predicted_total_equity": 320120837.0016,
+            "relative_error": 0.00002740603240747319
+          },
+          {
+            "from": "2025E",
+            "to": "2026E",
+            "printed_total_equity": 600785004,
+            "predicted_total_equity": 600797349.8464,
+            "relative_error": 0.000020549524901269933
+          },
+          {
+            "from": "2026E",
+            "to": "2027E",
+            "printed_total_equity": 899822718,
+            "predicted_total_equity": 899835871.776,
+            "relative_error": 0.000014618186157111523
+          }
+        ],
+        "max_abs_relative_error": 0.00002740603240747319
+      },
+      "external_book_cross_check": {
+        "source": {
+          "value": 171750.93978618982,
+          "fiscal_period": "2025-12-31",
+          "source": "data/yf/finance/000660.KS.json Stockholders Equity / Ordinary Shares Number",
+          "measurement_sha256": "e91ae415fbae148d132115fa8e6505d736d0724a829281ce2626b8feda08db75"
+        },
+        "same_sheet_to_external_relative_difference": -3.8391685408534215e-7,
+        "comparison_status": "diagnostic_mixed_basis_not_a_promotion_gate"
+      },
+      "legacy_panel_fit_to_external_min_abs_pct": 0.2807102896510232,
+      "legacy_panel_fit_to_external_max_abs_pct": 0.313879638285401,
+      "cross_panel_exact_book_equality": {
+        "panel_books": [
+          225660.06264145675,
+          219963.19584140662
+        ],
+        "max_relative_difference": 0.025899181807476523,
+        "equal": false
+      },
+      "cross_panel_relative_rms_gate": {
+        "fit_objective": "relative_rms",
+        "exact_printed_roes": {
+          "solved_book": 222738.81355857837,
+          "relative_rms": 0.01307025820482859,
+          "threshold": 0.005,
+          "passed": false
+        },
+        "printed_roe_rounding_profile": {
+          "search_method": "deterministic_multistart_bounded_coordinate_minimization",
+          "optimization_status": "numerical_diagnostic_not_global_proof",
+          "shift_interval": [
+            -0.0005,
+            0.0005
+          ],
+          "printed_roes": [
+            0.385,
+            0.39,
+            0.395,
+            0.42,
+            0.425,
+            0.43
+          ],
+          "adjusted_roes": [
+            0.3855,
+            0.3905,
+            0.3955,
+            0.4195,
+            0.4245,
+            0.4295
+          ],
+          "shifts": [
+            0.0005,
+            0.0005,
+            0.0005,
+            -0.0005,
+            -0.0005,
+            -0.0005
+          ],
+          "bound_saturated": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "saturated_count": 6,
+          "gate": {
+            "metric": "relative_rms",
+            "threshold": 0.005,
+            "value": 0.009187596283510612,
+            "passed": false
+          },
+          "solved_book": 222747.84174531096,
+          "max_abs_error": 0.01226204254111618
+        },
+        "clean_pass": false
+      }
     },
     {
       "id": "SAMSUNG",
-      "external_book": {
-        "value": 63997.24384079774,
-        "fiscal_period": "2025-12-31",
-        "source": "data/yf/finance/005930.KS.json Stockholders Equity / Ordinary Shares Number",
-        "measurement_sha256": "3a71b4be62250060a7bc10a434c0628a84a0ee84c796aceae3324ffb34e09579"
+      "same_sheet_book_basis": {
+        "method": "last_price_divided_by_latest_actual_pbr",
+        "period": "2025",
+        "last_price": 324500,
+        "pbr": 4.458,
+        "book_per_share": 72790.489008524,
+        "independent_validation": false,
+        "limitation": "PBR-derived book is same-sheet and reproducible but circular as an independent book validation."
       },
-      "external_book_min_abs_pct": 0.34286737641322085,
-      "external_book_max_abs_pct": 0.361259290159778,
-      "external_book_pass": false,
-      "shared_book": 86353.52329510279,
-      "shared_book_rms": 0.007183499135236684,
-      "shared_book_pass": false
+      "printed_book_roll_forward": {
+        "equation": "B_t = B_(t-1) + NI_t * (1 - payout)",
+        "source": "same_image_printed_intermediates",
+        "identified_scope": "forecast_accounting_path_only_not_rim_B0_mapping",
+        "rows": [
+          {
+            "from": "2025",
+            "to": "2026E",
+            "printed_total_equity": 653287590,
+            "predicted_total_equity": 653300198.9184,
+            "relative_error": 0.000019300716243675353
+          },
+          {
+            "from": "2026E",
+            "to": "2027E",
+            "printed_total_equity": 946092565,
+            "predicted_total_equity": 946109581.0063,
+            "relative_error": 0.000017985561803879335
+          },
+          {
+            "from": "2027E",
+            "to": "2028E",
+            "printed_total_equity": 1251753521,
+            "predicted_total_equity": 1251771284.1661,
+            "relative_error": 0.000014190626031362896
+          }
+        ],
+        "max_abs_relative_error": 0.000019300716243675353
+      },
+      "external_book_cross_check": {
+        "source": {
+          "value": 63997.24384079774,
+          "fiscal_period": "2025-12-31",
+          "source": "data/yf/finance/005930.KS.json Stockholders Equity / Ordinary Shares Number",
+          "measurement_sha256": "3a71b4be62250060a7bc10a434c0628a84a0ee84c796aceae3324ffb34e09579"
+        },
+        "same_sheet_to_external_relative_difference": 0.13740037289106888,
+        "comparison_status": "diagnostic_mixed_basis_not_a_promotion_gate"
+      },
+      "legacy_panel_fit_to_external_min_abs_pct": 0.3429825975479339,
+      "legacy_panel_fit_to_external_max_abs_pct": 0.3613540449529027,
+      "cross_panel_exact_book_equality": {
+        "panel_books": [
+          87122.90676850724,
+          85947.18476922307
+        ],
+        "max_relative_difference": 0.013679587091085077,
+        "equal": false
+      },
+      "cross_panel_relative_rms_gate": {
+        "fit_objective": "relative_rms",
+        "exact_printed_roes": {
+          "solved_book": 86527.05931358495,
+          "relative_rms": 0.006897865088157313,
+          "threshold": 0.005,
+          "passed": false
+        },
+        "printed_roe_rounding_profile": {
+          "search_method": "deterministic_multistart_bounded_coordinate_minimization",
+          "optimization_status": "numerical_diagnostic_not_global_proof",
+          "shift_interval": [
+            -0.0005,
+            0.0005
+          ],
+          "printed_roes": [
+            0.298,
+            0.303,
+            0.308,
+            0.336,
+            0.341,
+            0.346
+          ],
+          "adjusted_roes": [
+            0.2985,
+            0.3035,
+            0.3085,
+            0.3355,
+            0.3405,
+            0.3455
+          ],
+          "shifts": [
+            0.0005,
+            0.0005,
+            0.0005,
+            -0.0005,
+            -0.0005,
+            -0.0005
+          ],
+          "bound_saturated": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "saturated_count": 6,
+          "gate": {
+            "metric": "relative_rms",
+            "threshold": 0.005,
+            "value": 0.003006113744874829,
+            "passed": true
+          },
+          "solved_book": 86521.22130605987,
+          "max_abs_error": 0.004602761362459518
+        },
+        "clean_pass": false
+      }
     }
   ],
   "blocking_reasons": [
     "alternative_structures_not_profiled",
-    "external_book_basis_mismatch",
+    "exact_cross_panel_book_equality_fails",
     "printed_payout_residual_roe_conflict",
     "printed_roe_rounding_can_remove_slope",
-    "shared_book_across_panels_not_identified",
+    "rounded_cross_panel_shared_book_gate_fails",
+    "rounded_shared_book_gate_pass_is_boundary_saturated",
+    "same_sheet_book_basis_is_pbr_derived_not_independent",
     "temporal_holdout_not_run"
   ],
   "fixture": {
     "path": "scripts/fixtures/fenok-rim-2026-08-03-stock-grids.json",
-    "sha256": "d42328b9598943220991d7bb3c8dd8bac62ef3c69374b5296c924a334b8cb3f5",
+    "sha256": "a27303a0d20541309e7cc16c06f72217103410f97869c437e9a070b6317719df",
     "instrument_count": 2,
     "cell_count": 36
   },

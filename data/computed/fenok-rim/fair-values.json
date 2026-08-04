@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-rim-index/v7",
-  "generated_at": "2026-08-04T07:51:23.283Z",
+  "generated_at": "2026-08-04T08:53:43.656Z",
   "method": "fenok_rim_forward_book_compounding_residual_income",
   "display_note": "상대적 매력도 지표이며 목표가가 아님. 컨센서스 변화에 따라 언제든 크게 바뀔 수 있음.",
   "weekly_exports": [
@@ -107,7 +107,7 @@
         }
       },
       "erp_center": 0.05,
-      "erp_source": "sheet 2026-08-03; Damodaran US 5.03% agrees to 3bp [drift check: Damodaran US 0.0503, workbook April 1, 2026, 125 days old]",
+      "erp_source": "sheet 2026-08-03; Damodaran US 5.03% agrees to 3bp [drift check: Damodaran US 0.0503, workbook April 1, 2026, 126 days old]",
       "risk_free": 0.0468,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
       "discount_rate": 0.102208,
@@ -218,7 +218,7 @@
         }
       },
       "erp_center": 0.055,
-      "erp_source": "sheet 2026-08-03 [drift check: Damodaran US 0.0503, workbook April 1, 2026, 125 days old]",
+      "erp_source": "sheet 2026-08-03 [drift check: Damodaran US 0.0503, workbook April 1, 2026, 126 days old]",
       "risk_free": 0.0468,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
       "discount_rate": 0.102208,
@@ -304,7 +304,7 @@
       },
       "payout_candidate_band": null,
       "erp_center": 0.055,
-      "erp_source": "sheet 2026-08-03 [drift check: Damodaran US 0.0503, workbook April 1, 2026, 125 days old]",
+      "erp_source": "sheet 2026-08-03 [drift check: Damodaran US 0.0503, workbook April 1, 2026, 126 days old]",
       "risk_free": 0.0468,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
       "discount_rate": 0.102208,
@@ -390,7 +390,7 @@
       },
       "payout_candidate_band": null,
       "erp_center": 0.045,
-      "erp_source": "sheet 2025-12-09 [drift check: Damodaran US 0.0503, workbook April 1, 2026, 125 days old]",
+      "erp_source": "sheet 2025-12-09 [drift check: Damodaran US 0.0503, workbook April 1, 2026, 126 days old]",
       "risk_free": 0.0468,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
       "discount_rate": 0.102208,
@@ -503,7 +503,7 @@
         }
       },
       "erp_center": 0.12,
-      "erp_source": "sheet 2026-08-03; reproduces his published 10,000~12,000 under the solved formula (10,074), whereas Damodaran 5.49% gives 15,634 [drift check: Damodaran KR 0.0549, workbook April 1, 2026, 125 days old]",
+      "erp_source": "sheet 2026-08-03; reproduces his published 10,000~12,000 under the solved formula (10,074), whereas Damodaran 5.49% gives 15,634 [drift check: Damodaran KR 0.0549, workbook April 1, 2026, 126 days old]",
       "risk_free": 0.0426,
       "risk_free_source": "observed KRX KTS 10Y benchmark government bond 0.04259 (as of 2026-07-31, fenok-edge-korea lane, daily)",
       "discount_rate": 0.09985,
@@ -616,7 +616,7 @@
         }
       },
       "erp_center": 0.055,
-      "erp_source": "estimated: NASDAQ-family centre, no dedicated sheet [drift check: Damodaran US 0.0503, workbook April 1, 2026, 125 days old]",
+      "erp_source": "estimated: NASDAQ-family centre, no dedicated sheet [drift check: Damodaran US 0.0503, workbook April 1, 2026, 126 days old]",
       "risk_free": 0.0468,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
       "discount_rate": 0.102208,
@@ -661,28 +661,21 @@
     "description": "Computed Likely upside vs the source analyst's dated published outputs. diverged = refresh anchors from new material; never silently refit.",
     "results": [
       {
-        "key": "sp500",
-        "status": "within_tolerance",
-        "computed": 8838.49,
-        "published": [
-          8812,
-          8855
-        ],
-        "target_kind": "range",
-        "published_as_of": "2026-06-20",
-        "source": "his own English write-ups, 2026-06-13 and 2026-06-20 (fair value 8,812 then 8,854.61)"
-      },
-      {
         "key": "nasdaq100",
+        "evidence_id": "rim-df8e2e5aa81bfca036c8b547",
+        "evidence_label": "RIM",
         "status": "constraint_satisfied",
         "computed": 97.45,
         "published": 30,
         "target_kind": "lower_bound",
-        "published_as_of": "2026-06-20",
-        "source": "his own English write-ups, 2026-06-10 and 2026-06-20 (over 28% near-term, over 30% through 2026 year-end)"
+        "floor_multiple": 3.2483333333333335,
+        "published_as_of": "2026-04-18",
+        "source": "https://yellow.kr/blog/economy-board/?mod=document&uid=1606"
       },
       {
         "key": "kospi",
+        "evidence_id": "rim-7041d3d1604bd6d9b5683c04",
+        "evidence_label": "RIM",
         "status": "diverged",
         "computed": 37.59,
         "published": [
@@ -690,8 +683,9 @@
           49.5
         ],
         "target_kind": "point",
-        "published_as_of": "2026-06-13",
-        "source": "his own English write-up, 2026-06-13 (KOSPI residual-income upside 49.5% over 12 months)"
+        "floor_multiple": null,
+        "published_as_of": "2026-06-14",
+        "source": "https://yellow.kr/blog/economy-board/?mod=document&uid=1638"
       }
     ]
   },
@@ -707,7 +701,7 @@
       "kind": "observed"
     },
     "roe_cap": {
-      "why": "2.3x the index's own 5-year median is an experimental bound fitted on two KOSPI observations. It changes under another payout basis and remains only in computation-ready rows for continuity; it is not a sustainable publication rule",
+      "why": "2.3x the index's own 5-year median was fitted on two KOSPI observations, one since withdrawn as FUNDAMENTAL rather than RIM; against the sole admissible KOSPI row it misses by -24.5%. It remains only in computation-ready rows for continuity and is not a sustainable publication rule",
       "refresh": "replace only after a pre-declared candidate passes bounded held-out rows and every floor constraint in scripts/check-fenok-rim-calibration.mjs",
       "kind": "fitted",
       "open": "no admissible candidate remains after floors are removed from MAE and SOXX observations are excluded from the Philadelphia index"
@@ -772,8 +766,8 @@
       "kind": "fitted"
     },
     "calibration_anchors": {
-      "why": "his own dated, RIM-labelled published outputs, each with a retrievable source. Replaces an earlier set attributed to an internal catalogue",
-      "refresh": "he publishes weekly; scripts/check-fenok-rim-calibration.mjs scores candidate inputs against the whole series",
+      "why": "dated outputs admitted only when the evidence ledger labels the exact sentence RIM and its raw value is not ambiguous; bottom-up, fundamental, and model-unnamed values are quarantined",
+      "refresh": "he publishes weekly; scripts/check-fenok-rim-calibration.mjs scores candidate inputs against the whole admissible series",
       "kind": "target"
     }
   },

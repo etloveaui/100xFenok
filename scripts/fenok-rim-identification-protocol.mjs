@@ -74,7 +74,7 @@ function predictionVintage(prediction, label) {
 
 export function validatePrintedOperandFixture(fixture) {
   const fail = (message) => { throw new Error(`printed-operand fixture invalid: ${message}`); };
-  if (fixture?.schema_version !== "fenok-rim-printed-operands/v1") fail("schema_version");
+  if (fixture?.schema_version !== "fenok-rim-printed-operands/v2") fail("schema_version");
   if (fixture?.model_family !== "RIM") fail("model_family");
   const instruments = Object.entries(fixture?.instruments ?? {});
   if (instruments.length < 2) fail("at least two instruments required");
@@ -85,13 +85,20 @@ export function validatePrintedOperandFixture(fixture) {
     if (!finitePositive(instrument?.printed?.risk_free) || !finitePositive(instrument?.printed?.payout)) fail(`${id} printed rates`);
     if (!finitePositive(instrument?.printed?.payout_display_resolution)) fail(`${id} printed payout display resolution`);
     if (!finitePositive(instrument?.printed?.roe_display_resolution)) fail(`${id} printed ROE display resolution`);
+    if (!finitePositive(instrument?.printed?.last_price)) fail(`${id} printed last price`);
     if (instrument?.printed?.source !== "same_image") fail(`${id} printed source`);
+    const path = instrument?.printed?.forecast_path;
+    if (!Array.isArray(path) || path.length < 4) fail(`${id} printed forecast path`);
+    if (!path.some((row) => row.year === instrument.printed.latest_actual_year && row.estimate === false)) fail(`${id} latest actual year`);
+    if (!path.every((row) => typeof row.year === "string" && typeof row.estimate === "boolean"
+      && [row.net_income, row.total_equity, row.roe, row.pbr].every(finitePositive))) fail(`${id} forecast path values`);
     if (!Array.isArray(instrument?.grids) || instrument.grids.length !== 2) fail(`${id} grids`);
     const gridIds = new Set();
     for (const grid of instrument.grids) {
       if (typeof grid?.id !== "string" || gridIds.has(grid.id)) fail(`${id} grid id`);
       gridIds.add(grid.id);
       if (!Array.isArray(grid?.cells) || grid.cells.length !== 9) fail(`${id}/${grid.id} cells`);
+      if (!finitePositive(grid?.printed_fair_value)) fail(`${id}/${grid.id} printed fair value`);
       const coordinates = new Set();
       for (const cell of grid.cells) {
         if (!Number.isInteger(cell?.row) || cell.row < 0 || cell.row > 2 || !Number.isInteger(cell?.col) || cell.col < 0 || cell.col > 2) fail(`${id}/${grid.id} coordinate`);
@@ -100,6 +107,8 @@ export function validatePrintedOperandFixture(fixture) {
         if (cell.source !== "same_image") fail(`${id}/${grid.id} cell source`);
       }
       if (coordinates.size !== 9) fail(`${id}/${grid.id} duplicate coordinate`);
+      const roundedMean = Math.round(grid.cells.reduce((sum, cell) => sum + cell.fair_value, 0) / grid.cells.length);
+      if (roundedMean !== grid.printed_fair_value) fail(`${id}/${grid.id} panel fair-value checksum`);
     }
   }
   return fixture;
@@ -116,8 +125,8 @@ export function solveBookFromPrintedGrid({ cells, riskFree, payout }) {
       coefficient: rimBracket({ roe: cell.roe, rf: riskFree, premium: cell.erp, payout }),
     };
   });
-  const numerator = rows.reduce((sum, row) => sum + row.coefficient * row.fair, 0);
-  const denominator = rows.reduce((sum, row) => sum + row.coefficient ** 2, 0);
+  const numerator = rows.reduce((sum, row) => sum + row.coefficient / row.fair, 0);
+  const denominator = rows.reduce((sum, row) => sum + (row.coefficient / row.fair) ** 2, 0);
   const solvedBook = numerator / denominator;
   const residuals = rows.map((row) => solvedBook * row.coefficient / row.fair - 1);
   const gridRms = Math.sqrt(residuals.reduce((sum, value) => sum + value ** 2, 0) / residuals.length);
@@ -131,6 +140,7 @@ export function solveBookFromPrintedGrid({ cells, riskFree, payout }) {
   const roeValues = rows.map((row) => row.roe);
   return {
     cells: rows.length,
+    fit_objective: "relative_rms",
     solved_book: solvedBook,
     grid_rms: gridRms,
     max_abs_error: Math.max(...residuals.map(Math.abs)),
@@ -228,10 +238,12 @@ export function findPrintedRoeRoundingWitness({ cells, riskFree, payout, roeDisp
   if (Math.abs(result.residual_roe_slope) > 1e-12) throw new Error("ROE-rounding witness slope exceeds tolerance");
   return {
     found: true,
+    scope: "within_panel_only",
     path: "lower_row_plus_t_middle_fixed_upper_row_minus_t",
     shift_interval: [0, halfResolution],
     endpoint_slopes: [evaluate(0).residual_roe_slope, hiResult.residual_roe_slope],
     shift,
+    bound_saturated: Math.abs(shift - halfResolution) <= 1e-12,
     adjusted_roes: adjustedRows,
     solved_book: result.solved_book,
     grid_rms: result.grid_rms,
@@ -244,6 +256,125 @@ export function findPrintedRoeRoundingWitness({ cells, riskFree, payout, roeDisp
 function solveSharedBook(grids, riskFree, payout) {
   const cells = grids.flatMap((grid) => grid.cells);
   return solveBookFromPrintedGrid({ cells, riskFree, payout });
+}
+
+function printedAccountingDiagnostics(instrument) {
+  const path = instrument.printed.forecast_path;
+  const actual = path.find((row) => row.year === instrument.printed.latest_actual_year && row.estimate === false);
+  const rollForward = [];
+  for (let index = path.indexOf(actual) + 1; index < path.length; index += 1) {
+    const previous = path[index - 1];
+    const current = path[index];
+    const predicted = previous.total_equity + current.net_income * (1 - instrument.printed.payout);
+    rollForward.push({
+      from: previous.year,
+      to: current.year,
+      printed_total_equity: current.total_equity,
+      predicted_total_equity: predicted,
+      relative_error: predicted / current.total_equity - 1,
+    });
+  }
+  return {
+    same_sheet_book_basis: {
+      method: "last_price_divided_by_latest_actual_pbr",
+      period: actual.year,
+      last_price: instrument.printed.last_price,
+      pbr: actual.pbr,
+      book_per_share: instrument.printed.last_price / actual.pbr,
+      independent_validation: false,
+      limitation: "PBR-derived book is same-sheet and reproducible but circular as an independent book validation.",
+    },
+    printed_book_roll_forward: {
+      equation: "B_t = B_(t-1) + NI_t * (1 - payout)",
+      source: "same_image_printed_intermediates",
+      identified_scope: "forecast_accounting_path_only_not_rim_B0_mapping",
+      rows: rollForward,
+      max_abs_relative_error: Math.max(...rollForward.map((row) => Math.abs(row.relative_error))),
+    },
+  };
+}
+
+function rowValues(grid) {
+  return [0, 1, 2].map((row) => {
+    const values = [...new Set(grid.cells.filter((cell) => cell.row === row).map((cell) => cell.roe))];
+    if (values.length !== 1) throw new Error(`${grid.id}: each printed row needs one ROE`);
+    return values[0];
+  });
+}
+
+function adjustedGrids(grids, shifts) {
+  return grids.map((grid, gridIndex) => ({
+    ...grid,
+    cells: grid.cells.map((cell) => ({ ...cell, roe: cell.roe + shifts[gridIndex * 3 + cell.row] })),
+  }));
+}
+
+function minimizeCoordinate(fn, lo, hi) {
+  const ratio = (Math.sqrt(5) - 1) / 2;
+  let a = lo;
+  let b = hi;
+  let c = b - ratio * (b - a);
+  let d = a + ratio * (b - a);
+  let fc = fn(c);
+  let fd = fn(d);
+  for (let iteration = 0; iteration < 80; iteration += 1) {
+    if (fc <= fd) {
+      b = d; d = c; fd = fc; c = b - ratio * (b - a); fc = fn(c);
+    } else {
+      a = c; c = d; fc = fd; d = a + ratio * (b - a); fd = fn(d);
+    }
+  }
+  return [lo, hi, (a + b) / 2].map((value) => ({ value, score: fn(value) }))
+    .sort((left, right) => left.score - right.score)[0];
+}
+
+export function profileSharedBookUnderPrintedRoeRounding({ grids, riskFree, payout, roeDisplayResolution }) {
+  if (!Array.isArray(grids) || grids.length !== 2 || !finitePositive(roeDisplayResolution)) {
+    throw new Error("two grids and positive ROE display resolution required");
+  }
+  const printedRows = grids.flatMap(rowValues);
+  const half = roeDisplayResolution / 2;
+  const dimensionCount = printedRows.length;
+  const evaluate = (shifts) => solveSharedBook(adjustedGrids(grids, shifts), riskFree, payout);
+  const seeds = [Array(dimensionCount).fill(0)];
+  for (let mask = 0; mask < 2 ** dimensionCount; mask += 1) {
+    seeds.push(Array.from({ length: dimensionCount }, (_, index) => (mask & (1 << index) ? half : -half)));
+  }
+  let best = null;
+  for (const seed of seeds) {
+    const shifts = [...seed];
+    for (let sweep = 0; sweep < 20; sweep += 1) {
+      let changed = false;
+      for (let dimension = 0; dimension < dimensionCount; dimension += 1) {
+        const before = shifts[dimension];
+        const optimum = minimizeCoordinate((value) => {
+          const candidate = [...shifts];
+          candidate[dimension] = value;
+          return evaluate(candidate).grid_rms;
+        }, -half, half);
+        shifts[dimension] = optimum.value;
+        if (Math.abs(before - optimum.value) > 1e-14) changed = true;
+      }
+      if (!changed) break;
+    }
+    const solved = evaluate(shifts);
+    if (!best || solved.grid_rms < best.solved.grid_rms) best = { shifts: [...shifts], solved };
+  }
+  const saturationTolerance = 1e-10;
+  const saturated = best.shifts.map((shift) => Math.abs(Math.abs(shift) - half) <= saturationTolerance);
+  return {
+    search_method: "deterministic_multistart_bounded_coordinate_minimization",
+    optimization_status: "numerical_diagnostic_not_global_proof",
+    shift_interval: [-half, half],
+    printed_roes: printedRows,
+    adjusted_roes: printedRows.map((value, index) => value + best.shifts[index]),
+    shifts: best.shifts,
+    bound_saturated: saturated,
+    saturated_count: saturated.filter(Boolean).length,
+    gate: { metric: "relative_rms", threshold: 0.005, value: best.solved.grid_rms, passed: best.solved.grid_rms <= 0.005 },
+    solved_book: best.solved.solved_book,
+    max_abs_error: best.solved.max_abs_error,
+  };
 }
 
 export function buildStructuralTransferReceipt(fixture, { externalBooks = {}, externalBookTolerance = 0.03 } = {}) {
@@ -264,6 +395,7 @@ export function buildStructuralTransferReceipt(fixture, { externalBooks = {}, ex
       return {
         instrument: id,
         grid: grid.id,
+        diagnostic_scope: "within_panel_only",
         printed_payout: instrument.printed.payout,
         printed_payout_display_resolution: instrument.printed.payout_display_resolution,
         payout_zero_residual_roe_slope: zeroSlopePayout,
@@ -279,31 +411,56 @@ export function buildStructuralTransferReceipt(fixture, { externalBooks = {}, ex
       ? solvedCases.map((row) => Math.abs(row.solved_book / external.value - 1))
       : [];
     const shared = solveSharedBook(instrument.grids, instrument.printed.risk_free, instrument.printed.payout);
+    const roundedShared = profileSharedBookUnderPrintedRoeRounding({
+      grids: instrument.grids,
+      riskFree: instrument.printed.risk_free,
+      payout: instrument.printed.payout,
+      roeDisplayResolution: instrument.printed.roe_display_resolution,
+    });
+    const panelBooks = solvedCases.map((row) => row.solved_book);
+    const accounting = printedAccountingDiagnostics(instrument);
+    const sameSheetToExternal = external && finitePositive(external.value)
+      ? accounting.same_sheet_book_basis.book_per_share / external.value - 1
+      : null;
     instruments.push({
       id,
-      external_book: external,
-      external_book_min_abs_pct: externalDiffs.length ? Math.min(...externalDiffs) : null,
-      external_book_max_abs_pct: externalDiffs.length ? Math.max(...externalDiffs) : null,
-      external_book_pass: externalDiffs.length > 0 && externalDiffs.every((value) => value <= externalBookTolerance),
-      shared_book: shared.solved_book,
-      shared_book_rms: shared.grid_rms,
-      shared_book_pass: shared.grid_rms <= 0.005,
+      ...accounting,
+      external_book_cross_check: {
+        source: external,
+        same_sheet_to_external_relative_difference: sameSheetToExternal,
+        comparison_status: "diagnostic_mixed_basis_not_a_promotion_gate",
+      },
+      legacy_panel_fit_to_external_min_abs_pct: externalDiffs.length ? Math.min(...externalDiffs) : null,
+      legacy_panel_fit_to_external_max_abs_pct: externalDiffs.length ? Math.max(...externalDiffs) : null,
+      cross_panel_exact_book_equality: {
+        panel_books: panelBooks,
+        max_relative_difference: Math.max(...panelBooks) / Math.min(...panelBooks) - 1,
+        equal: Math.max(...panelBooks) / Math.min(...panelBooks) - 1 <= 1e-12,
+      },
+      cross_panel_relative_rms_gate: {
+        fit_objective: shared.fit_objective,
+        exact_printed_roes: { solved_book: shared.solved_book, relative_rms: shared.grid_rms, threshold: 0.005, passed: shared.grid_rms <= 0.005 },
+        printed_roe_rounding_profile: roundedShared,
+        clean_pass: roundedShared.gate.passed && roundedShared.saturated_count === 0,
+      },
     });
   }
   const localShapePass = cases.every((row) => row.grid_rms <= 0.005 && row.max_abs_error <= 0.005);
   const blocking = [];
-  if (instruments.some((row) => !row.external_book_pass)) blocking.push("external_book_basis_mismatch");
-  if (instruments.some((row) => !row.shared_book_pass)) blocking.push("shared_book_across_panels_not_identified");
+  if (instruments.some((row) => !row.cross_panel_exact_book_equality.equal)) blocking.push("exact_cross_panel_book_equality_fails");
+  if (instruments.some((row) => !row.cross_panel_relative_rms_gate.printed_roe_rounding_profile.gate.passed)) blocking.push("rounded_cross_panel_shared_book_gate_fails");
+  if (instruments.some((row) => row.cross_panel_relative_rms_gate.printed_roe_rounding_profile.gate.passed
+    && row.cross_panel_relative_rms_gate.printed_roe_rounding_profile.saturated_count > 0)) blocking.push("rounded_shared_book_gate_pass_is_boundary_saturated");
   if (cases.some((row) => row.exact_printed_input_structural_conflict)) blocking.push("printed_payout_residual_roe_conflict");
   if (cases.some((row) => row.printed_roe_rounding_zero_slope_witness.found)) blocking.push("printed_roe_rounding_can_remove_slope");
-  blocking.push("temporal_holdout_not_run", "alternative_structures_not_profiled");
+  blocking.push("same_sheet_book_basis_is_pbr_derived_not_independent", "temporal_holdout_not_run", "alternative_structures_not_profiled");
   return {
-    schema_version: "fenok-rim-structural-transfer-receipt/v1",
+    schema_version: "fenok-rim-structural-transfer-receipt/v2",
     source_date: fixture.source_date,
     status: localShapePass ? "structural_transfer_only" : "structural_transfer_failed",
     local_shape_pass: localShapePass,
     exact_printed_input_structural_conflict: cases.some((row) => row.exact_printed_input_structural_conflict),
-    structural_conflict_scope: "exact_printed_operands_under_the_reproduced_single_book_rim_family_only_component_or_form_not_identified",
+    structural_conflict_scope: "within_panel_slope_exact_cross_panel_equality_and_gate_level_shared_book_are_separate_diagnostics_component_or_form_not_identified",
     display_rounding_robust: !cases.some((row) => row.printed_roe_rounding_zero_slope_witness.found),
     printed_roe_rounding_can_remove_conflict: cases.some((row) => row.printed_roe_rounding_zero_slope_witness.found),
     same_sheet_payout_count: Object.keys(fixture.instruments).length,

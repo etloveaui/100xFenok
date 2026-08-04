@@ -30,6 +30,8 @@ const DAMODARAN_ERP = path.join(ROOT, "data", "damodaran", "erp.json");
 const PAYOUT_HISTORY = path.join(ROOT, "data", "computed", "fenok-rim", "payout-history.json");
 const OUT_DIR = path.join(ROOT, "data", "computed", "fenok-rim");
 const MIRROR_DIR = path.join(ROOT, "100xfenok-next", "public", "data", "computed", "fenok-rim");
+const CALIBRATION_EVIDENCE = JSON.parse(fs.readFileSync(path.join(ROOT, "scripts/fixtures/fenok-rim-calibration-evidence.json"), "utf8"));
+const CALIBRATION_CLAIMS = new Map(CALIBRATION_EVIDENCE.claims.map((row) => [row.evidence_id, row]));
 
 export const RIM_EXPLICIT_YEARS = 9;
 export const RIM_GRID_STEP = 0.005;
@@ -108,24 +110,34 @@ const INDEX_SOURCES = [
 // captured material is Yuanta-era; the earlier Kiwoom framing was wrong.
 export const RIM_CALIBRATION_ANCHORS = Object.freeze([
   {
-    key: "sp500",
-    published_fair_range: [8812, 8855],
-    as_of: "2026-06-20",
-    source: "his own English write-ups, 2026-06-13 and 2026-06-20 (fair value 8,812 then 8,854.61)",
-  },
-  {
     key: "nasdaq100",
+    evidence_id: "rim-df8e2e5aa81bfca036c8b547",
+    evidence_label: "RIM",
+    raw_value: "30 이상",
     published_upside_floor_pct: 30,
-    as_of: "2026-06-20",
-    source: "his own English write-ups, 2026-06-10 and 2026-06-20 (over 28% near-term, over 30% through 2026 year-end)",
+    as_of: "2026-04-18",
+    source: "https://yellow.kr/blog/economy-board/?mod=document&uid=1606",
   },
   {
     key: "kospi",
+    evidence_id: "rim-7041d3d1604bd6d9b5683c04",
+    evidence_label: "RIM",
+    raw_value: "49.5",
     published_upside_pct: [49.5, 49.5],
-    as_of: "2026-06-13",
-    source: "his own English write-up, 2026-06-13 (KOSPI residual-income upside 49.5% over 12 months)",
+    as_of: "2026-06-14",
+    source: "https://yellow.kr/blog/economy-board/?mod=document&uid=1638",
   },
 ]);
+
+for (const anchor of RIM_CALIBRATION_ANCHORS) {
+  const claim = CALIBRATION_CLAIMS.get(anchor.evidence_id);
+  const expectedAsset = anchor.key === "nasdaq100" ? "NASDAQ100" : anchor.key.toUpperCase();
+  if (!claim || claim.asset !== expectedAsset || claim.date !== anchor.as_of || claim.label !== "RIM"
+    || claim.label !== anchor.evidence_label || claim.raw_value !== anchor.raw_value
+    || claim.source !== anchor.source || String(claim.raw_value).startsWith("AMBIGUOUS:")) {
+    throw new Error("invalid RIM calibration anchor evidence join");
+  }
+}
 
 // Dividend payout, per index. Auditing our live inputs against his 2026-08-03
 // sheets showed price, book, ROE, risk-free and risk premium all agreeing within
@@ -178,9 +190,10 @@ function round(value, digits) {
 // A SINGLE long-run ROE runs the whole horizon. That is what his sheets do: the
 // grid axis is labelled LT ROE and carries one value, and the master tables print
 // one ROE column per index. Every reproduction in the test suite — 90 cells across
-// two weeks — holds ROE flat. The three-year consensus path this engine used to
-// feed was our own invention, appears nowhere in his material, and moved fair
-// values by up to 35% against the form that actually reproduces the sheets.
+// two weeks — holds ROE flat. Later input sheets do print three-year ROE paths,
+// and those paths reproduce the forecast-equity roll-forward. They are not the
+// singular LT ROE grid axis: feeding them into that axis moved fair values by up
+// to 35% against the form that reproduces the grids.
 export function computeCell({ bookValue, roePath, retention, riskFree, erp, roeShift = 0, years = RIM_EXPLICIT_YEARS }) {
   const ke = riskFree + erp;          // cost of equity: reaches the residual only
   const disc = discountRate(riskFree); // discount rate: a separate rate, no risk premium in it
@@ -283,8 +296,10 @@ export function loadRimDerived() {
 }
 
 // Experimental long-run ROE cap retained for continuity in computation-only
-// rows. It is fitted on two KOSPI observations, changes under another payout
-// basis, and is not an identified production rule. Once floors are treated as
+// rows. It was fitted on two KOSPI observations, one since withdrawn as
+// FUNDAMENTAL rather than RIM; on the sole admissible KOSPI row it misses by
+// -24.5%. It changes under another payout basis and is not an identified rule.
+// Once floors are treated as
 // constraints and SOXX observations are excluded from the Philadelphia index,
 // the calibration harness finds no admissible ROE candidate. Every public row
 // is therefore NULL-gated; a row still says when this experimental cap binds.
@@ -405,18 +420,20 @@ export function checkCalibration(rows) {
   return RIM_CALIBRATION_ANCHORS.map((anchor) => {
     const row = rows.find((r) => r.key === anchor.key);
     if (!row || row.computation_status !== "ready") {
-      return { key: anchor.key, status: "unavailable", source: anchor.source };
+      return { key: anchor.key, evidence_id: anchor.evidence_id, evidence_label: anchor.evidence_label, status: "unavailable", source: anchor.source };
     }
     let within;
     let computed;
     let targetKind;
     let published;
     let status;
+    let floorMultiple = null;
     if (Number.isFinite(anchor.published_upside_floor_pct)) {
       computed = row.diagnostic.rate_current.upside_pct;
       published = anchor.published_upside_floor_pct;
       targetKind = "lower_bound";
       status = computed >= published ? "constraint_satisfied" : "constraint_violated";
+      floorMultiple = computed / published;
     } else if (anchor.published_upside_pct) {
       computed = row.diagnostic.rate_current.upside_pct;
       const [lo, hi] = anchor.published_upside_pct;
@@ -434,10 +451,13 @@ export function checkCalibration(rows) {
     }
     return {
       key: anchor.key,
+      evidence_id: anchor.evidence_id,
+      evidence_label: anchor.evidence_label,
       status,
       computed,
       published,
       target_kind: targetKind,
+      floor_multiple: floorMultiple,
       published_as_of: anchor.as_of,
       source: anchor.source,
     };
@@ -633,7 +653,7 @@ export function buildArtifact({ nowIso }) {
       // --- fed from data, no judgement ---
       price: { why: "the benchmark feed's index close, which matches the 현재지수 printed on his master tables to the decimal — same vendor, same close", refresh: "weekly conversion, automatic", kind: "observed" },
       book_value: { why: "price divided by the benchmark feed's PBR. His master tables print a PBR too, and it is NOT this: feeding his displayed PBR misses his own published fair values by +14~41% while the feed's book reproduces them", refresh: "weekly conversion, automatic", kind: "observed" },
-      roe_cap: { why: "2.3x the index's own 5-year median is an experimental bound fitted on two KOSPI observations. It changes under another payout basis and remains only in computation-ready rows for continuity; it is not a sustainable publication rule", refresh: "replace only after a pre-declared candidate passes bounded held-out rows and every floor constraint in scripts/check-fenok-rim-calibration.mjs", kind: "fitted", open: "no admissible candidate remains after floors are removed from MAE and SOXX observations are excluded from the Philadelphia index" },
+      roe_cap: { why: "2.3x the index's own 5-year median was fitted on two KOSPI observations, one since withdrawn as FUNDAMENTAL rather than RIM; against the sole admissible KOSPI row it misses by -24.5%. It remains only in computation-ready rows for continuity and is not a sustainable publication rule", refresh: "replace only after a pre-declared candidate passes bounded held-out rows and every floor constraint in scripts/check-fenok-rim-calibration.mjs", kind: "fitted", open: "no admissible candidate remains after floors are removed from MAE and SOXX observations are excluded from the Philadelphia index" },
       roe: { why: "the benchmark feed's index-level aggregate — recomputing best_eps/(price/PBR) reproduces it to 0.46bp, so it is earnings over book, not a cap-weighted mean of constituents (that returns 47.6% for the S&P against his 26.0%)", refresh: "weekly conversion, automatic", kind: "observed", open: "his long-run ROE is NOT this number and no mechanical transform of it reproduces his series — see calibration_check and docs/references/fenok-rim-formula-identification.md" },
       risk_free_us: { why: "observed FRED DGS10 via rim-index inputs", refresh: "daily lane, automatic", kind: "observed" },
       risk_free_kr: { why: "KRX KTS 10Y benchmark government bond captured by the fenok-edge-korea lane; the domestic rate is what his Korean sheets discount with", refresh: "daily lane, automatic; falls back to a dated 4.4% sheet value and says so in risk_free_source", kind: "observed" },
@@ -653,7 +673,7 @@ export function buildArtifact({ nowIso }) {
 
       // --- what we measure ourselves against ---
       discount_extrapolation_guard: { why: "the discount relation is calibrated over risk-free 3.5~4.2% and fails in the 2021 low-rate grid across the tested payout band: at Korean 10Y near 1.7%, the grid implies discount 5.04~6.61% for payout 60~5%, while the linear relation returns 8.55%. The previously quoted 5.6% point hid a 39.35% payout assumption", refresh: "widens only when a captured grid at a new rate extends the calibration", kind: "fitted" },
-      calibration_anchors: { why: "his own dated, RIM-labelled published outputs, each with a retrievable source. Replaces an earlier set attributed to an internal catalogue", refresh: "he publishes weekly; scripts/check-fenok-rim-calibration.mjs scores candidate inputs against the whole series", kind: "target" },
+      calibration_anchors: { why: "dated outputs admitted only when the evidence ledger labels the exact sentence RIM and its raw value is not ambiguous; bottom-up, fundamental, and model-unnamed values are quarantined", refresh: "he publishes weekly; scripts/check-fenok-rim-calibration.mjs scores candidate inputs against the whole admissible series", kind: "target" },
     },
     disclaimer: "Model-implied fair values under stated assumptions. Not price targets, not investment advice.",
   };

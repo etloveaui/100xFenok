@@ -24,6 +24,8 @@ import {
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BENCHMARKS = path.join(ROOT, "data", "benchmarks");
 const RIM_INPUTS = path.join(ROOT, "data", "computed", "rim-index", "inputs.json");
+const CALIBRATION_EVIDENCE = JSON.parse(fs.readFileSync(path.join(ROOT, "scripts/fixtures/fenok-rim-calibration-evidence.json"), "utf8"));
+const CALIBRATION_CLAIMS = new Map(CALIBRATION_EVIDENCE.claims.map((row) => [row.evidence_id, row]));
 
 // Where each index lives in our feeds, and the risk premium the engine uses.
 const INDEX = {
@@ -44,18 +46,14 @@ const INDEX = {
 // His own RIM-labelled outputs, dated, from his weekly letters and English
 // write-ups. `upside` is a fraction; `fair` is an index level. A range is stored
 // as [lo, hi] and scored as a hit anywhere inside it. "over X%" is stored as a
-// range from X to X+0.10, because he means a floor rather than a point.
+// as [X, X] plus `floor: true`; scoring treats it as an inequality, never a point.
 export const PUBLISHED = [
-  { date: "2026-06-14", key: "kospi", upside: [0.495, 0.495], note: "12m attractiveness" },
-  { date: "2026-06-21", key: "nasdaq100", upside: [0.28, 0.28], floor: true, note: "over 28%, 12m" },
-  { date: "2026-06-21", key: "sp500", fair: [8854.61, 8854.61], note: "fair value" },
-  { date: "2026-07-12", key: "sp500", upside: [0.14, 0.14], floor: true, note: "over 14%, 6-12m" },
-  { date: "2026-07-12", key: "nasdaq_composite", upside: [0.24, 0.24], floor: true, note: "over 24%, 6-12m" },
-  { date: "2026-07-12", key: "nasdaq100", upside: [0.36, 0.36], floor: true, note: "over 36%, 6-12m" },
-  { date: "2026-07-19", key: "kospi", upside: [0.59, 0.59], note: "12m, after the July drawdown" },
-  { date: "2026-07-26", key: "sp500", upside: [0.19, 0.29], note: "12m range" },
-  { date: "2026-08-02", key: "sp500", upside: [0.18, 0.18], floor: true, note: "over 18%, 6-12m" },
-  { date: "2026-08-02", key: "nasdaq100", upside: [0.50, 0.50], floor: true, note: "over 50%, 6-12m" },
+  { evidence_id: "rim-7041d3d1604bd6d9b5683c04", evidence_label: "RIM", raw_value: "49.5", date: "2026-06-14", key: "kospi", upside: [0.495, 0.495], note: "12m attractiveness" },
+  { evidence_id: "rim-8c8130ac9b05e797d4168d85", evidence_label: "RIM", raw_value: "28 이상", date: "2026-06-21", key: "nasdaq100", upside: [0.28, 0.28], floor: true, note: "over 28%, 12m" },
+  { evidence_id: "rim-657138512272497b9d28fa5e", evidence_label: "RIM", raw_value: "14 이상", date: "2026-07-12", key: "sp500", upside: [0.14, 0.14], floor: true, note: "over 14%, 6-12m" },
+  { evidence_id: "rim-694e999c6f76b4d205ede3c2", evidence_label: "RIM", raw_value: "24 이상", date: "2026-07-12", key: "nasdaq_composite", upside: [0.24, 0.24], floor: true, note: "over 24%, 6-12m" },
+  { evidence_id: "rim-00269321d964013833efea9f", evidence_label: "RIM", raw_value: "36 이상", date: "2026-07-12", key: "nasdaq100", upside: [0.36, 0.36], floor: true, note: "over 36%, 6-12m" },
+  { evidence_id: "rim-ccea4d31accf70a35d5a095e", evidence_label: "RIM", raw_value: "19~29", date: "2026-07-26", key: "sp500", upside: [0.19, 0.29], note: "12m range" },
   // Philadelphia Semi — RIM-labelled only. He also states 89.4%, 74% and 40~55%
   // for semis on nearby dates without naming the model, and those are excluded
   // for the same reason his bottom-up 적정가 is: they would train the ROE rule on
@@ -64,18 +62,43 @@ export const PUBLISHED = [
   // the exact shape of the Russell 2000/3000 mislabel that invalidated months of
   // comparisons, so it is recorded rather than assumed away.
   {
+    evidence_id: "rim-433b0e766bf14890b224bda4", evidence_label: "RIM", raw_value: "94.5",
     date: "2026-04-26", key: "philadelphia_semi", upside: [0.945, 0.945],
     note: "RIM 상 상승여력 94.5% (uid 1609)",
   },
   {
+    evidence_id: "rim-23aa64927d1639a5e1fc0e7d", evidence_label: "RIM", raw_value: "56.3~147.3",
     date: "2026-06-21", key: "philadelphia_semi", upside: [0.563, 1.473],
     note: "잔존 가치 모델 상 향후 1년간 56.3~147.3% (uid 1643, verified at source)",
   },
   {
+    evidence_id: "rim-1d69c85650aa0c41e37616c7", evidence_label: "RIM", raw_value: "63",
     date: "2026-06-28", key: "philadelphia_semi", upside: [0.63, 0.63], floor: true,
     note: "RIM 모델 상 6~12개월 최소 63% (uid 1647)",
   },
 ];
+
+export const QUARANTINED_PUBLISHED = Object.freeze([
+  { evidence_id: "rim-ffdf5e468c603d9c7354fa5a", date: "2026-06-21", key: "sp500", raw_value: "8854.61", evidence_label: "BOTTOM_UP", reason: "wrong_model_family" },
+  { evidence_id: "rim-90a8da619869cbeb67f2418c", date: "2026-07-19", key: "kospi", raw_value: "59", evidence_label: "FUNDAMENTAL", reason: "wrong_model_family" },
+  { evidence_id: "rim-0ea2852fec748faa7f94dfdd", date: "2026-08-02", key: "sp500", raw_value: "AMBIGUOUS:적정가치 산출 모델 문장에 미명시 18 이상", evidence_label: "RIM", reason: "model_not_named_in_sentence" },
+  { evidence_id: "rim-261c0932730c11c55dcff82c", date: "2026-08-02", key: "nasdaq100", raw_value: "AMBIGUOUS:RIM 문단 내 인용이나 해당 문장에 모델 미명시 50 이상", evidence_label: "RIM", reason: "model_not_named_in_sentence" },
+]);
+
+const EXPECTED_ASSET = { kospi: "KOSPI", nasdaq100: "NASDAQ100", sp500: "SP500", nasdaq_composite: "NASDAQ", philadelphia_semi: "SOXX" };
+for (const anchor of PUBLISHED) {
+  const claim = CALIBRATION_CLAIMS.get(anchor.evidence_id);
+  if (!claim || claim.date !== anchor.date || claim.asset !== EXPECTED_ASSET[anchor.key]) throw new Error(`${anchor.evidence_id}: calibration evidence join failed`);
+  if (claim.label !== "RIM") throw new Error(`${anchor.evidence_id}: ledger claim is not RIM-labelled`);
+  if (String(claim.raw_value).startsWith("AMBIGUOUS:")) throw new Error(`${anchor.evidence_id}: ambiguous ledger claim must be quarantined`);
+  if (claim.label !== anchor.evidence_label || claim.raw_value !== anchor.raw_value) throw new Error(`${anchor.evidence_id}: copied evidence metadata drifted from ledger extract`);
+}
+for (const anchor of QUARANTINED_PUBLISHED) {
+  const claim = CALIBRATION_CLAIMS.get(anchor.evidence_id);
+  if (!claim || claim.date !== anchor.date || claim.asset !== EXPECTED_ASSET[anchor.key]) throw new Error(`${anchor.evidence_id}: quarantine evidence join failed`);
+  if (claim.label !== anchor.evidence_label || claim.raw_value !== anchor.raw_value) throw new Error(`${anchor.evidence_id}: quarantine metadata drifted from ledger extract`);
+  if (claim.label === "RIM" && !String(claim.raw_value).startsWith("AMBIGUOUS:")) throw new Error(`${anchor.evidence_id}: admissible RIM claim cannot be quarantined`);
+}
 
 // Retention comes from the ENGINE's resolver, never from a table kept here.
 // This file used to carry its own: measured filings-based payouts of

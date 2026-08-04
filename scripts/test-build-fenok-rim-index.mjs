@@ -238,19 +238,22 @@ import {
 // Calibration verdicts on the single-case row shape.
 {
   const mk = (key, upside, fair) => ({ key, status: "NULL", computation_status: "ready", diagnostic: { rate_current: { upside_pct: upside, fair_value: fair } } });
-  // Anchors preserve their published type: S&P is a bounded fair-value range,
-  // NASDAQ 100 is a lower bound, and KOSPI is a point.
+  // Anchors preserve their published type: NASDAQ 100 is a lower bound and
+  // KOSPI is a point. The former S&P fair-value range was BOTTOM_UP, not RIM.
   const results = checkCalibration([mk("sp500", 9, 8830), mk("nasdaq100", 5, 30000), mk("kospi", 50, 9800)]);
-  assert.equal(results.find((r) => r.key === "sp500").status, "within_tolerance");
+  assert.equal(results.some((r) => r.key === "sp500"), false);
   assert.equal(results.find((r) => r.key === "nasdaq100").status, "constraint_violated");
+  assert.ok(results.find((r) => r.key === "nasdaq100").floor_multiple < 1);
   assert.equal(results.find((r) => r.key === "kospi").status, "within_tolerance");
+  const wideFloor = checkCalibration([mk("nasdaq100", 97, 30000)]).find((r) => r.key === "nasdaq100");
   assert.equal(
-    checkCalibration([mk("nasdaq100", 97, 30000)]).find((r) => r.key === "nasdaq100").status,
+    wideFloor.status,
     "constraint_satisfied",
     "overshooting a floor satisfies only the inequality; it is not a point fit",
   );
+  assert.ok(wideFloor.floor_multiple > 3, "large floor overshoot must remain visible rather than read as a point fit");
   const far = checkCalibration([mk("sp500", 9, 4000), mk("kospi", 260, 24000)]);
-  assert.equal(far.find((r) => r.key === "sp500").status, "diverged");
+  assert.equal(far.some((r) => r.key === "sp500"), false);
   assert.equal(far.find((r) => r.key === "kospi").status, "diverged");
   assert.ok(checkCalibration([]).every((r) => r.status === "unavailable"));
 }
@@ -350,7 +353,9 @@ import {
 // Contract pins.
 assert.equal(RIM_EXPLICIT_YEARS, 9, "9 explicit years reproduces all 54 captured grid cells; 8 and 10 do not");
 assert.equal(RIM_GRID_STEP, 0.005);
-assert.ok(RIM_CALIBRATION_ANCHORS.length >= 3);
+assert.ok(RIM_CALIBRATION_ANCHORS.length >= 2);
+assert.ok(RIM_CALIBRATION_ANCHORS.every((row) => !row.published_fair_range), "BOTTOM_UP fair levels must not remain in RIM calibration anchors");
+assert.ok(RIM_CALIBRATION_ANCHORS.every((row) => row.evidence_label === "RIM" && /^rim-[a-f0-9]{24}$/.test(row.evidence_id)));
 // The discount rate is a function of the risk-free rate alone. Fitting a
 // risk-premium or ROE term into it drives those coefficients to zero.
 assert.ok(Math.abs(discountRate(0.042) - 0.0995) < 0.0005, "discount at Rf 4.2% must be ~9.95%");
@@ -378,11 +383,37 @@ assert.ok(discountRate(0.05) > discountRate(0.03), "discount must rise with the 
 {
   const {
     PUBLISHED,
+    QUARANTINED_PUBLISHED,
     evaluate,
     loadContext,
     summarizeCalibration,
   } = await import("./check-fenok-rim-calibration.mjs");
-  assert.ok(PUBLISHED.length >= 10, "the harness must keep its published anchor series");
+  assert.ok(PUBLISHED.length >= 9, "the harness must keep its published anchor series");
+  assert.ok(PUBLISHED.every((row) => row.evidence_label === "RIM" && !String(row.raw_value).startsWith("AMBIGUOUS:")));
+  const evidenceFixture = JSON.parse(fs.readFileSync(new URL("./fixtures/fenok-rim-calibration-evidence.json", import.meta.url), "utf8"));
+  assert.equal(
+    evidenceFixture.claims.length,
+    new Set([...PUBLISHED, ...QUARANTINED_PUBLISHED, ...RIM_CALIBRATION_ANCHORS].map((row) => row.evidence_id)).size,
+  );
+  assert.match(evidenceFixture.source_ledger_sha256, /^[a-f0-9]{64}$/);
+  const claims = new Map(evidenceFixture.claims.map((row) => [row.evidence_id, row]));
+  assert.ok(PUBLISHED.every((row) => claims.get(row.evidence_id)?.label === "RIM"));
+  assert.ok(RIM_CALIBRATION_ANCHORS.every((row) => {
+    const claim = claims.get(row.evidence_id);
+    return claim?.label === "RIM" && claim.date === row.as_of && claim.raw_value === row.raw_value && claim.source === row.source;
+  }));
+  assert.ok(QUARANTINED_PUBLISHED.every((row) => {
+    const claim = claims.get(row.evidence_id);
+    return claim && (claim.label !== "RIM" || String(claim.raw_value).startsWith("AMBIGUOUS:"));
+  }));
+  assert.deepEqual(
+    new Set(QUARANTINED_PUBLISHED.map((row) => row.reason)),
+    new Set(["wrong_model_family", "model_not_named_in_sentence"]),
+  );
+  assert.ok(
+    PUBLISHED.every((row) => !(row.date === "2026-06-21" && row.key === "sp500" && row.fair?.[0] === 8854.61)),
+    "the BOTTOM_UP 8,854.61 point must never enter the RIM calibration family",
+  );
   const rows = evaluate(loadContext());
   assert.ok(rows.length >= 8, "the harness must still score most of its anchors");
   for (const row of rows) {
@@ -427,8 +458,8 @@ assert.ok(discountRate(0.05) > discountRate(0.03), "discount must rise with the 
   }
   const summary = summarizeCalibration(rows);
   const raw = summary.find((item) => item.n === "raw");
-  assert.equal(raw.bounded_count, 4, "only non-SOX point/range rows may measure raw-model error");
-  assert.equal(raw.floor_count, 6, "floors remain separately reported as constraints");
+  assert.equal(raw.bounded_count, 2, "only non-SOX RIM-labelled point/range rows may measure raw-model error");
+  assert.equal(raw.floor_count, 4, "only unambiguous RIM floors remain separately reported as constraints");
   assert.ok(Number.isFinite(raw.bounded_mae));
 }
 
