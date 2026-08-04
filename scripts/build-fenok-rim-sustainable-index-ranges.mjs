@@ -19,6 +19,7 @@ import {
   buildPanelIndexRow,
   runBookIdentityCheck,
   runLtRoeCalibration,
+  runPayoutCalibration,
   runPublishedUpsideHoldout,
   runStructuralReproduction,
 } from "./fenok-rim-yoo-panel-engine.mjs";
@@ -28,6 +29,8 @@ const DEFAULT_OUTPUT = path.join(ROOT, "data/computed/fenok-rim/sustainable-inde
 const SCOPE = ["SPX", "NDX", "KOSPI", "SOX", "CCMP", "RUT"];
 const MAX_PANEL_AGE_DAYS = 14;
 const MAX_RATE_AGE_DAYS = 45;
+// Tracker distribution yields move slowly, but a quarter-old one is stale.
+const MAX_PAYOUT_AGE_DAYS = 90;
 
 function writeJsonAtomic(destination, payload) {
   fs.mkdirSync(path.dirname(destination), { recursive: true });
@@ -46,6 +49,7 @@ function freshness(row, generatedAt) {
   const items = [
     { id: "panel", as_of: row.as_of, max_age_days: MAX_PANEL_AGE_DAYS },
     { id: "risk_free", as_of: row.inputs.risk_free_as_of, max_age_days: MAX_RATE_AGE_DAYS },
+    { id: "payout", as_of: row.inputs.payout_as_of, max_age_days: MAX_PAYOUT_AGE_DAYS },
   ].map((item) => {
     const age = ageDays(item.as_of, generatedAt);
     return { ...item, age_days: age, status: Number.isFinite(age) && age >= 0 && age <= item.max_age_days ? "passed" : "failed" };
@@ -83,6 +87,7 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
   const structural = runStructuralReproduction(root);
   const bookIdentity = runBookIdentityCheck(root);
   const ltRoeFit = runLtRoeCalibration(root);
+  const payoutFit = runPayoutCalibration(root, effectiveAsOf);
   const holdout = runPublishedUpsideHoldout(root);
 
   const rows = SCOPE.map((id) => {
@@ -145,6 +150,7 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
           observations: ltRoeFit.observations.map((row) => ({ id: row.id, kind: row.kind, median_roe: row.median_roe, model_forward_roe: row.model_forward_roe, lt_roe: row.printed_lt_roe })),
         },
       },
+      payout_multiplier: { frozen: FROZEN_CALIBRATION.payout_multiplier, refit: payoutFit },
       published_upside_holdout: holdout,
       feno_rule: FENO_RULE,
     },

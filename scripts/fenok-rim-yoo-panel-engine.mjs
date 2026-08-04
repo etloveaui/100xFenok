@@ -202,15 +202,15 @@ export const FROZEN_CALIBRATION = Object.freeze({
   // imply. That agreement is the bridge, and it is what stops the rule from
   // damping a semiconductor peak into nothing.
   lt_roe_rule: Object.freeze({
-    equation: "LTROE_centre = median_260w + 0.033112 + 0.568908 * max(forward_ROE - median_260w, 0)",
+    equation: "LTROE_centre = median_260w + 0.030846 + 0.575508 * max(forward_ROE - median_260w, 0)",
     anchor: "the index's own rolling 260-week median forward ROE",
-    intercept: 0.033112,
-    gap_coefficient: 0.568908,
+    intercept: 0.030846,
+    gap_coefficient: 0.575508,
     observations: 9,
     fit_dates: Object.freeze(["2025-12-09", "2026-06-14", "2026-07-26", "2026-08-03"]),
     fit_observables: "three printed 2025-12-09 index LTROE axis centres, the LTROE reproducing the published 2026-07-26 S&P 500 span and the published 2026-06-14 KOSPI upside, and four printed 2026-08-03 Samsung and SK Hynix LTROE scenario centres",
     cross_family_bridge: "the stock sheets contribute the large-gap regime only; their implied gap share of 0.622~0.756 brackets the share the index rows imply, which is the measured agreement that licenses the transfer",
-    max_abs_residual_pp: 3.58,
+    max_abs_residual_pp: 3.49,
     lattice_half_width: 0.005,
     lattice_note: "Yoo prints a +/-0.5pp LTROE axis; the same half width is retained",
   }),
@@ -241,9 +241,26 @@ export const FROZEN_CALIBRATION = Object.freeze({
     KOSPI: "printed 2026-08-03 Korean stock-sheet ERP band, recentred on the index",
   }),
 
-  // Retention uses Yoo's own convention: one minus the cash dividend payout.
-  // The 2025-12-09 grid fit recovers 31.24% for SPX against the 31.09% Yoo
-  // printed on his separate SPX input sheet.
+  // Payout comes from one source for all six indices: the index tracker's
+  // dividend yield over the index's own forward earnings yield. That raw ratio
+  // is systematically low, because a trailing twelve-month distribution is
+  // divided by a price that has risen. The bias is systematic, so it is
+  // calibrated rather than argued about: three payouts are known exactly, and
+  // the multiplier that maps the raw ratio onto them is frozen below with its
+  // full measured spread.
+  etf_proxy: Object.freeze({
+    SPX: "SPY", NDX: "QQQ", CCMP: "ONEQ", SOX: "SOXX", RUT: "IWM", KOSPI: "EWY",
+  }),
+  payout_multiplier: Object.freeze({
+    low: 1.375,
+    center: 1.627,
+    high: 1.881,
+    observations: 3,
+    derivation: "known payout / raw ETF ratio at SPX (Yoo's printed 31.09%), CCMP (his 2025-12-09 grid fit 21.64%) and RUT (LSEG official 23.72%)",
+    swept: "the low and high multipliers are swept into the published endpoints so the calibration spread is visible rather than hidden",
+  }),
+  // Retained as the calibration truths and as a fallback when a tracker yield
+  // is missing or stale.
   payout: Object.freeze({
     SPX: Object.freeze({ value: 0.3109, source: "printed 2026-08-03 SPX input sheet; grid fit recovers 0.3124" }),
     NDX: Object.freeze({ value: 0.2224, source: "measured trailing four-year realised payout" }),
@@ -284,6 +301,57 @@ export const FENO_RULE = Object.freeze({
 });
 
 const PAYOUT_HISTORY_KEYS = Object.freeze({ SPX: "sp500", NDX: "nasdaq100", SOX: "philadelphia_semi", KOSPI: "kospi" });
+
+/**
+ * The index's own forward earnings yield. Russell uses the LSEG ex-negative
+ * basis so that its numerator and denominator agree; the panel's Russell
+ * earnings include loss makers and its tracker's distribution does not.
+ */
+export function forwardEarningsYield(root, id, asOf) {
+  if (id === "RUT") {
+    const official = russellOfficialBasis(root, asOf);
+    if (official) return { value: 1 / official.price_to_earnings_ex_negative, basis: "LSEG ex-negative P/E", as_of: official.as_of };
+  }
+  const panel = readPanelObservation(root, id, asOf);
+  return { value: panel.forward_eps / panel.price, basis: "panel forward EPS over price", as_of: panel.as_of };
+}
+
+/**
+ * Payout from the index tracker's dividend yield, corrected by the frozen
+ * multiplier band. Returns low/center/high so the calibration spread reaches
+ * the published endpoints.
+ */
+export function readTrackerPayout(root, id, asOf) {
+  const ticker = FROZEN_CALIBRATION.etf_proxy[id];
+  let facts;
+  try {
+    facts = readJson(root, `data/computed/market_facts/tickers/${ticker}.json`);
+  } catch {
+    return null;
+  }
+  const yieldFact = facts?.facts?.dividend_yield;
+  if (!yieldFact || !Number.isFinite(yieldFact.value) || yieldFact.unit !== "percent_points") return null;
+  if (yieldFact.as_of > asOf) return null;
+  const earnings = forwardEarningsYield(root, id, asOf);
+  const raw = (yieldFact.value / 100) / earnings.value;
+  const multiplier = FROZEN_CALIBRATION.payout_multiplier;
+  const band = {
+    low: raw * multiplier.low,
+    center: raw * multiplier.center,
+    high: raw * multiplier.high,
+  };
+  if (![band.low, band.center, band.high].every((value) => Number.isFinite(value) && value > 0 && value < 1)) return null;
+  return {
+    ...band,
+    raw,
+    ticker,
+    as_of: yieldFact.as_of,
+    earnings_yield: earnings.value,
+    earnings_basis: earnings.basis,
+    source: `data/computed/market_facts/tickers/${ticker}.json#facts.dividend_yield / ${earnings.basis}, times the frozen calibration multiplier`,
+    automatic: true,
+  };
+}
 
 /**
  * The payout variable, refreshed automatically. `payout-history.json` is
@@ -346,6 +414,7 @@ export function russellOfficialBasis(root, asOf) {
   return {
     as_of: official.as_of,
     price_to_book: official.fundamentals.price_to_book,
+    price_to_earnings_ex_negative: official.fundamentals.price_to_earnings_ex_negative,
     roe: official.derived.current_roe_ex_negative_basis,
     payout: official.derived.payout_ex_negative_basis,
     median_ratio: official.derived.current_roe_ex_negative_basis / atSnapshot.forward_roe,
@@ -366,10 +435,15 @@ export function buildPanelIndexRow(root, id, { asOf }) {
   const book = official ? panel.price / official.price_to_book : panel.book;
   const centre = ltRoeCentre(modelRoe, medianRoe);
   const half = FROZEN_CALIBRATION.lt_roe_rule.lattice_half_width;
-  const payoutSource = official
+  const tracker = readTrackerPayout(root, id, asOf);
+  const fallback = official
     ? { value: official.payout, as_of: official.as_of, source: `${official.source} ex-negative dividend yield times P/E`, automatic: true }
     : readAutomaticPayout(root, id);
-  const payout = payoutSource.value;
+  const payoutBand = tracker
+    ? { low: tracker.low, center: tracker.center, high: tracker.high }
+    : { low: fallback.value, center: fallback.value, high: fallback.value };
+  const payoutSource = tracker ?? fallback;
+  const payout = payoutBand.center;
   const retention = 1 - payout;
   const erpAxis = FROZEN_CALIBRATION.erp_lattice[id];
 
@@ -388,16 +462,21 @@ export function buildPanelIndexRow(root, id, { asOf }) {
     status: growth <= discount ? "bounded" : growth <= discount * 2 ? "convex" : "amplifying",
   });
 
-  const sweep = (growth) => {
+  const payoutAxis = [payoutBand.low, payoutBand.center, payoutBand.high];
+  const sweep = (growthFor) => {
     const cells = [];
     for (const ltRoe of ltRoeAxis) {
       for (const erp of erpAxis) {
-        cells.push({ lt_roe: ltRoe, erp, fair_value: residualValueFairValue({ book, ltRoe, growth, riskFree: riskFree.value, erp }) });
+        for (const cellPayout of payoutAxis) {
+          const growth = growthFor(ltRoe, cellPayout);
+          cells.push({ lt_roe: ltRoe, erp, payout: cellPayout, fair_value: residualValueFairValue({ book, ltRoe, growth, riskFree: riskFree.value, erp }) });
+        }
       }
     }
     const values = cells.map((cell) => cell.fair_value);
     const low = Math.min(...values);
     const high = Math.max(...values);
+    const growth = growthFor(centre, payoutBand.center);
     return {
       growth,
       convexity: convexity(growth),
@@ -411,12 +490,12 @@ export function buildPanelIndexRow(root, id, { asOf }) {
   // dividend payout. The payout is the same sheet variable he enters by hand,
   // read here from the automatic trailing payout series so it refreshes.
   const growth = centre * retention;
-  const feno = sweep(growth);
+  const feno = sweep((ltRoe, cellPayout) => ltRoe * (1 - cellPayout));
 
   // What the same structure returns when book rolls forward at the growth this
   // index's book has actually delivered. Kept as a diagnostic: it is a
   // different variable, not Yoo's, and it is not the published answer.
-  const measuredGrowthDiagnostic = sweep(Math.min(measured.value, discount));
+  const measuredGrowthDiagnostic = sweep(() => Math.min(measured.value, discount));
 
   return {
     id,
@@ -436,6 +515,9 @@ export function buildPanelIndexRow(root, id, { asOf }) {
       erp_axis: [...erpAxis],
       book_growth: growth,
       payout: payout,
+      payout_band: payoutBand,
+      payout_raw_tracker_ratio: tracker ? tracker.raw : null,
+      payout_tracker: tracker ? tracker.ticker : null,
       retention,
       payout_as_of: payoutSource.as_of,
       payout_source: payoutSource.source,
@@ -542,7 +624,8 @@ export function runBookIdentityCheck(root = ROOT) {
 export function inferLtRoeFromPublishedSpan(root, { id, date, low, high }) {
   const panel = readPanelObservation(root, id, date);
   const riskFree = readRiskFree(root, id, date);
-  const retention = 1 - readAutomaticPayout(root, id).value;
+  const tracker = readTrackerPayout(root, id, date);
+  const retention = 1 - (tracker ? tracker.center : readAutomaticPayout(root, id).value);
   const half = FROZEN_CALIBRATION.lt_roe_rule.lattice_half_width;
   const erpAxis = FROZEN_CALIBRATION.erp_lattice[id];
   const spanMid = (centre) => {
@@ -631,6 +714,28 @@ export function runLtRoeCalibration(root = ROOT) {
     stock_gap_share: { low: Math.min(...gapShares), high: Math.max(...gapShares) },
     residuals,
     max_abs_residual_pp: Math.max(...residuals.map((row) => Math.abs(row.residual_pp))),
+  };
+}
+
+/** Recompute the payout multiplier from the three exactly known payouts. */
+export function runPayoutCalibration(root = ROOT, asOf = "2026-08-04") {
+  const official = russellOfficialBasis(root, asOf);
+  const truths = [
+    { id: "SPX", payout: 0.3109, source: "printed 2026-08-03 Yoo S&P 500 input sheet" },
+    { id: "CCMP", payout: 0.2164, source: "fitted on the 18 published 2025-12-09 CCMP cells" },
+    { id: "RUT", payout: official ? official.payout : null, source: "LSEG official ex-negative dividend yield times P/E" },
+  ].filter((row) => Number.isFinite(row.payout));
+  const rows = truths.map((truth) => {
+    const tracker = readTrackerPayout(root, truth.id, asOf);
+    const raw = tracker ? tracker.raw : null;
+    return { ...truth, raw, multiplier: raw ? truth.payout / raw : null, tracker: tracker?.ticker ?? null };
+  }).filter((row) => Number.isFinite(row.multiplier));
+  const multipliers = rows.map((row) => row.multiplier);
+  return {
+    rows,
+    low: Math.min(...multipliers),
+    center: multipliers.reduce((a, b) => a + b, 0) / multipliers.length,
+    high: Math.max(...multipliers),
   };
 }
 

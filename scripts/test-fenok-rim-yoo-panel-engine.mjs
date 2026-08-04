@@ -17,6 +17,8 @@ import {
   residualValueFairValue,
   runBookIdentityCheck,
   runLtRoeCalibration,
+  runPayoutCalibration,
+  readTrackerPayout,
   runPublishedUpsideHoldout,
   runStructuralReproduction,
 } from "./fenok-rim-yoo-panel-engine.mjs";
@@ -150,6 +152,11 @@ for (const id of SCOPE) {
   assert.ok(Math.abs(row.feno.growth - row.inputs.lt_roe_centre * row.inputs.retention) < 1e-12,
     `${id}: growth must be LTROE * (1 - payout)`);
   assert.ok(row.inputs.payout > 0 && row.inputs.payout < 1, `${id}: the payout must be a fraction`);
+  // Payout comes from one tracker source for every index, swept as a band.
+  const band = row.inputs.payout_band;
+  assert.ok(band.low < band.center && band.center < band.high, `${id}: the payout band must be ordered and non-degenerate`);
+  assert.ok([band.low, band.center, band.high].every((v) => v > 0 && v < 1), `${id}: every payout in the band must be a fraction`);
+  assert.ok(row.inputs.payout_tracker, `${id}: the tracker supplying the payout must be named`);
   assert.ok(Number.isFinite(row.inputs.median_roe_260w), `${id}: the long-run anchor must exist`);
   assert.ok(Math.abs(row.inputs.lt_roe_centre - ltRoeCentre(row.inputs.model_forward_roe, row.inputs.median_roe_260w)) < 1e-12,
     `${id}: the published LTROE must come from the frozen rule`);
@@ -160,6 +167,27 @@ for (const id of SCOPE) {
   assert.ok(measured.elapsed_years > 10, `${id}: the measured growth window must span more than ten years`);
   assert.notEqual(row.feno.growth, row.measured_growth_diagnostic.growth, `${id}: the diagnostic must use a different growth`);
 }
+
+// --- payout calibration ------------------------------------------------------
+
+// The multiplier must be recomputable from the three exactly known payouts and
+// must match what the runtime has frozen.
+const payoutFit = runPayoutCalibration(ENGINE_ROOT);
+assert.equal(payoutFit.rows.length, 3, "all three known payouts must take part in the calibration");
+for (const key of ["low", "center", "high"]) {
+  assert.ok(Math.abs(payoutFit[key] - FROZEN_CALIBRATION.payout_multiplier[key]) < 0.005,
+    `the frozen ${key} payout multiplier must match the refit`);
+}
+assert.ok(payoutFit.low > 1, "the raw tracker ratio must understate the payout, never overstate it");
+// Every known payout must fall inside the band the rule publishes.
+for (const row of payoutFit.rows) {
+  const band = readTrackerPayout(ENGINE_ROOT, row.id, AS_OF);
+  // The frozen multipliers are rounded to three decimals, so allow that much.
+  assert.ok(row.payout >= band.low - 0.002 && row.payout <= band.high + 0.002,
+    `${row.id}: its known payout must lie inside the published band`);
+}
+// A tracker yield dated after the as-of must not be used.
+assert.equal(readTrackerPayout(ENGINE_ROOT, "SPX", "2020-01-01"), null, "a future tracker yield must fail closed");
 
 // --- fail closed on a stale or missing panel ---------------------------------
 

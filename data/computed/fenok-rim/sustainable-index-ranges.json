@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok_rim_sustainable_index_ranges.v2",
-  "generated_at": "2026-08-04T22:27:04.306Z",
+  "generated_at": "2026-08-04T23:37:34.013Z",
   "as_of": "2026-08-04",
   "status": "six_index_residual_value_ranges_ready",
   "scope": [
@@ -89,10 +89,10 @@
     ],
     "lt_roe_rule": {
       "frozen": {
-        "equation": "LTROE_centre = median_260w + 0.033112 + 0.568908 * max(forward_ROE - median_260w, 0)",
+        "equation": "LTROE_centre = median_260w + 0.030846 + 0.575508 * max(forward_ROE - median_260w, 0)",
         "anchor": "the index's own rolling 260-week median forward ROE",
-        "intercept": 0.033112,
-        "gap_coefficient": 0.568908,
+        "intercept": 0.030846,
+        "gap_coefficient": 0.575508,
         "observations": 9,
         "fit_dates": [
           "2025-12-09",
@@ -102,81 +102,81 @@
         ],
         "fit_observables": "three printed 2025-12-09 index LTROE axis centres, the LTROE reproducing the published 2026-07-26 S&P 500 span and the published 2026-06-14 KOSPI upside, and four printed 2026-08-03 Samsung and SK Hynix LTROE scenario centres",
         "cross_family_bridge": "the stock sheets contribute the large-gap regime only; their implied gap share of 0.622~0.756 brackets the share the index rows imply, which is the measured agreement that licenses the transfer",
-        "max_abs_residual_pp": 3.58,
+        "max_abs_residual_pp": 3.49,
         "lattice_half_width": 0.005,
         "lattice_note": "Yoo prints a +/-0.5pp LTROE axis; the same half width is retained"
       },
       "refit": {
-        "intercept": 0.03311234282307403,
-        "gap_coefficient": 0.5689077623656775,
+        "intercept": 0.03084641495073051,
+        "gap_coefficient": 0.5755076890742905,
         "stock_gap_share": {
           "low": 0.6221224031443011,
           "high": 0.7556061098472538
         },
-        "max_abs_residual_pp": 3.5832639373386654,
+        "max_abs_residual_pp": 3.485105723853926,
         "residuals": [
           {
             "id": "SPX@2025-12-09",
             "kind": "printed_axis_centre",
-            "predicted": 0.2719805806288816,
+            "predicted": 0.26979781183306656,
             "printed": 0.261,
-            "residual_pp": 1.0980580628881575
+            "residual_pp": 0.8797811833066549
           },
           {
             "id": "CCMP@2025-12-09",
             "kind": "printed_axis_centre",
-            "predicted": 0.2842973110324333,
+            "predicted": 0.2823699594002416,
             "printed": 0.307,
-            "residual_pp": -2.270268896756672
+            "residual_pp": -2.4630040599758374
           },
           {
             "id": "RUT@2025-12-09",
             "kind": "printed_axis_centre",
-            "predicted": 0.14646959635952914,
+            "predicted": 0.1442204360326669,
             "printed": 0.148,
-            "residual_pp": -0.15304036404708565
+            "residual_pp": -0.37795639673330883
           },
           {
             "id": "SPX@2026-07-26",
             "kind": "inverted_from_published_upside_span",
-            "predicted": 0.2981351265571646,
-            "printed": 0.30336035211283807,
-            "residual_pp": -0.5225225555673452
+            "predicted": 0.29622097477839016,
+            "printed": 0.2938050086386693,
+            "residual_pp": 0.24159661397208376
           },
           {
             "id": "KOSPI@2026-06-14",
             "kind": "inverted_from_published_upside_span",
-            "predicted": 0.24562179337943485,
+            "predicted": 0.24464021124458746,
             "printed": 0.2097891540060482,
-            "residual_pp": 3.5832639373386654
+            "residual_pp": 3.485105723853926
           },
           {
             "id": "SAMSUNG-worst@2026-08-03",
             "kind": "printed_stock_scenario_centre",
-            "predicted": 0.316665261302993,
+            "predicted": 0.3164301308788897,
             "printed": 0.303,
-            "residual_pp": 1.3665261302993004
+            "residual_pp": 1.3430130878889723
           },
           {
             "id": "SAMSUNG-likely@2026-08-03",
             "kind": "printed_stock_scenario_centre",
-            "predicted": 0.316665261302993,
+            "predicted": 0.3164301308788897,
             "printed": 0.341,
-            "residual_pp": -2.433473869700703
+            "residual_pp": -2.456986912111031
           },
           {
             "id": "HYNIX-worst@2026-08-03",
             "kind": "printed_stock_scenario_centre",
-            "predicted": 0.4041572877777283,
+            "predicted": 0.40424225379899276,
             "printed": 0.39,
-            "residual_pp": 1.415728777772829
+            "residual_pp": 1.4242253798992743
           },
           {
             "id": "HYNIX-likely@2026-08-03",
             "kind": "printed_stock_scenario_centre",
-            "predicted": 0.4041572877777283,
+            "predicted": 0.40424225379899276,
             "printed": 0.425,
-            "residual_pp": -2.0842712222271684
+            "residual_pp": -2.0757746201007232
           }
         ],
         "observations": [
@@ -206,7 +206,7 @@
             "kind": "inverted_from_published_upside_span",
             "median_roe": 0.2347,
             "model_forward_roe": 0.288,
-            "lt_roe": 0.30336035211283807
+            "lt_roe": 0.2938050086386693
           },
           {
             "id": "KOSPI@2026-06-14",
@@ -246,6 +246,47 @@
         ]
       }
     },
+    "payout_multiplier": {
+      "frozen": {
+        "low": 1.375,
+        "center": 1.627,
+        "high": 1.881,
+        "observations": 3,
+        "derivation": "known payout / raw ETF ratio at SPX (Yoo's printed 31.09%), CCMP (his 2025-12-09 grid fit 21.64%) and RUT (LSEG official 23.72%)",
+        "swept": "the low and high multipliers are swept into the published endpoints so the calibration spread is visible rather than hidden"
+      },
+      "refit": {
+        "rows": [
+          {
+            "id": "SPX",
+            "payout": 0.3109,
+            "source": "printed 2026-08-03 Yoo S&P 500 input sheet",
+            "raw": 0.1914801329522127,
+            "multiplier": 1.6236671408494932,
+            "tracker": "SPY"
+          },
+          {
+            "id": "CCMP",
+            "payout": 0.2164,
+            "source": "fitted on the 18 published 2025-12-09 CCMP cells",
+            "raw": 0.11502045322170851,
+            "multiplier": 1.8814045149246337,
+            "tracker": "ONEQ"
+          },
+          {
+            "id": "RUT",
+            "payout": 0.23716,
+            "source": "LSEG official ex-negative dividend yield times P/E",
+            "raw": 0.17248000000000002,
+            "multiplier": 1.3749999999999998,
+            "tracker": "IWM"
+          }
+        ],
+        "low": 1.3749999999999998,
+        "center": 1.6266905519247088,
+        "high": 1.8814045149246337
+      }
+    },
     "published_upside_holdout": {
       "rows": [
         {
@@ -257,16 +298,16 @@
           "high": 0.29,
           "feno": {
             "upside": {
-              "low": 0.1445373763947726,
-              "high": 0.24309240718089153
+              "low": 0.11283242359521561,
+              "high": 0.43278463294686986
             },
             "convexity": "convex",
             "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": -0.37030102397468756,
-              "high": -0.3242176658800956
+              "low": -0.3747117082612791,
+              "high": -0.328628350166687
             },
             "convexity": "bounded",
             "passed": false
@@ -281,16 +322,16 @@
           "low": 0.14,
           "feno": {
             "upside": {
-              "low": 0.10706655292737932,
-              "high": 0.20322568624309678
+              "low": 0.05406752831187678,
+              "high": 0.3619246711107913
             },
             "convexity": "convex",
             "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": -0.3801806908286506,
-              "high": -0.33422027770217777
+              "low": -0.38466378442603966,
+              "high": -0.33870337129956674
             },
             "convexity": "bounded",
             "passed": false
@@ -305,16 +346,16 @@
           "low": 0.36,
           "feno": {
             "upside": {
-              "low": 0.7516737690798441,
-              "high": 0.8653382710924982
+              "low": 0.8873827101017306,
+              "high": 1.296962220333421
             },
             "convexity": "amplifying",
             "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": -0.3616074025254442,
-              "high": -0.32489533810281446
+              "low": -0.3647813256990703,
+              "high": -0.32806926127644065
             },
             "convexity": "bounded",
             "passed": false
@@ -329,16 +370,16 @@
           "low": 0.3,
           "feno": {
             "upside": {
-              "low": 0.7792750872070966,
-              "high": 0.897772731800045
+              "low": 0.721222438589235,
+              "high": 0.9102598802897521
             },
             "convexity": "amplifying",
             "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": -0.3287867372746005,
-              "high": -0.2891646660446773
+              "low": -0.33247374930186546,
+              "high": -0.2928516780719421
             },
             "convexity": "bounded",
             "passed": false
@@ -353,16 +394,16 @@
           "low": 0.28,
           "feno": {
             "upside": {
-              "low": 0.7145536489191306,
-              "high": 0.826088374141114
+              "low": 0.6602208387698556,
+              "high": 0.8397492503150898
             },
             "convexity": "amplifying",
             "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": -0.3734104649030301,
-              "high": -0.33727720143317874
+              "low": -0.3765713124582142,
+              "high": -0.3404380489883627
             },
             "convexity": "bounded",
             "passed": false
@@ -377,16 +418,16 @@
           "low": 0.24,
           "feno": {
             "upside": {
-              "low": 0.06674433827989024,
-              "high": 0.16032216893777362
+              "low": 0.0036970568302341356,
+              "high": 0.24720490318712307
             },
             "convexity": "amplifying",
-            "passed": false
+            "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": -0.4736097000605538,
-              "high": -0.4338433065376156
+              "low": -0.4770686803851628,
+              "high": -0.4373022868622247
             },
             "convexity": "bounded",
             "passed": false
@@ -402,16 +443,16 @@
           "high": 0.495,
           "feno": {
             "upside": {
-              "low": 0.9102637714730946,
-              "high": 1.2684565984791454
+              "low": 0.8626077806353014,
+              "high": 1.287387791549531
             },
             "convexity": "convex",
             "passed": false
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": 0.16728968003207711,
-              "high": 0.3454570383271267
+              "low": 0.16145980651218528,
+              "high": 0.33962716480723487
             },
             "convexity": "bounded",
             "passed": false
@@ -420,7 +461,7 @@
         }
       ],
       "feno": {
-        "passed": 5,
+        "passed": 6,
         "total": 7,
         "informative_passed": 1,
         "informative_total": 2
@@ -475,6 +516,13 @@
             "max_age_days": 45,
             "age_days": 4,
             "status": "passed"
+          },
+          {
+            "id": "payout",
+            "as_of": "2026-06-26",
+            "max_age_days": 90,
+            "age_days": 39,
+            "status": "passed"
           }
         ]
       },
@@ -488,22 +536,29 @@
         "median_roe_260w": 0.2347,
         "roe_gap_over_median": 0.05660000000000001,
         "forward_roe_basis": "panel forward ROE",
-        "lt_roe_centre": 0.3000121928,
+        "lt_roe_centre": 0.2981197528,
         "lt_roe_axis": [
-          0.2950121928,
-          0.3000121928,
-          0.3050121928
+          0.2931197528,
+          0.2981197528,
+          0.30311975280000003
         ],
         "erp_axis": [
           0.04,
           0.045,
           0.05
         ],
-        "book_growth": 0.19168529028474,
-        "payout": 0.361075,
-        "retention": 0.638925,
-        "payout_as_of": "2026-08-04T09:06:51.365Z",
-        "payout_source": "data/computed/fenok-rim/payout-history.json#indices.sp500 trailing 4-year mean",
+        "book_growth": 0.20524406868973108,
+        "payout": 0.31153817631325004,
+        "payout_band": {
+          "low": 0.2632851828092925,
+          "center": 0.31153817631325004,
+          "high": 0.36017413008311205
+        },
+        "payout_raw_tracker_ratio": 0.1914801329522127,
+        "payout_tracker": "SPY",
+        "retention": 0.6884618236867499,
+        "payout_as_of": "2026-06-26",
+        "payout_source": "data/computed/market_facts/tickers/SPY.json#facts.dividend_yield / panel forward EPS over price, times the frozen calibration multiplier",
         "measured_book_growth": {
           "value": 0.052755115509582895,
           "window_start": "2011-08-19",
@@ -518,20 +573,20 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.19168529028474,
+        "book_growth": 0.20524406868973108,
         "convexity": {
-          "book_growth": 0.19168529028474,
+          "book_growth": 0.20524406868973108,
           "discount": 0.1026,
-          "growth_over_discount": 1.8682776830871344,
-          "status": "convex"
+          "growth_over_discount": 2.0004295193930903,
+          "status": "amplifying"
         },
         "range": {
-          "low": 8547.043052394903,
-          "high": 9279.262944923892
+          "low": 8315.967317399884,
+          "high": 10711.363964719918
         },
         "upside": {
-          "low": 0.1411699038675549,
-          "high": 0.2389332237952677
+          "low": 0.11031751753067986,
+          "high": 0.4301421100815408
         },
         "point_estimate": null
       },
@@ -544,12 +599,12 @@
           "status": "bounded"
         },
         "range": {
-          "low": 4678.516170391621,
-          "high": 5019.010688688091
+          "low": 4646.297898081373,
+          "high": 4986.7924163778425
         },
         "upside": {
-          "low": -0.37534164556330263,
-          "high": -0.3298800637823456
+          "low": -0.3796433113545803,
+          "high": -0.33418172957362324
         },
         "point_estimate": null
       },
@@ -558,7 +613,7 @@
         "panel": "data/benchmarks/us.json#sections.sp500",
         "risk_free": "DGS10",
         "erp": "printed 2025-12-09 SPX axis",
-        "payout": "data/computed/fenok-rim/payout-history.json#indices.sp500 trailing 4-year mean",
+        "payout": "data/computed/market_facts/tickers/SPY.json#facts.dividend_yield / panel forward EPS over price, times the frozen calibration multiplier",
         "forward_roe_basis": "panel forward ROE"
       },
       "runtime_yoo_value_injection": false
@@ -585,6 +640,13 @@
             "max_age_days": 45,
             "age_days": 4,
             "status": "passed"
+          },
+          {
+            "id": "payout",
+            "as_of": "2026-06-26",
+            "max_age_days": 90,
+            "age_days": 39,
+            "status": "passed"
           }
         ]
       },
@@ -598,22 +660,29 @@
         "median_roe_260w": 0.31555,
         "roe_gap_over_median": 0.09844999999999998,
         "forward_roe_basis": "panel forward ROE",
-        "lt_roe_centre": 0.4046709926,
+        "lt_roe_centre": 0.40305476259999995,
         "lt_roe_axis": [
-          0.3996709926,
-          0.4046709926,
-          0.4096709926
+          0.39805476259999995,
+          0.40305476259999995,
+          0.40805476259999995
         ],
         "erp_axis": [
           0.045,
           0.05,
           0.055
         ],
-        "book_growth": 0.31469239739538996,
-        "payout": 0.22235,
-        "retention": 0.77765,
-        "payout_as_of": "2026-08-04T09:06:51.365Z",
-        "payout_source": "data/computed/fenok-rim/payout-history.json#indices.nasdaq100 trailing 4-year mean",
+        "book_growth": 0.3498646174634587,
+        "payout": 0.13196753908433098,
+        "payout_band": {
+          "low": 0.11152757605467431,
+          "center": 0.13196753908433098,
+          "high": 0.15256972404279445
+        },
+        "payout_raw_tracker_ratio": 0.0811109644033995,
+        "payout_tracker": "QQQ",
+        "retention": 0.868032460915669,
+        "payout_as_of": "2026-06-26",
+        "payout_source": "data/computed/market_facts/tickers/QQQ.json#facts.dividend_yield / panel forward EPS over price, times the frozen calibration multiplier",
         "measured_book_growth": {
           "value": 0.114232423821927,
           "window_start": "2011-08-19",
@@ -628,20 +697,20 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.31469239739538996,
+        "book_growth": 0.3498646174634587,
         "convexity": {
-          "book_growth": 0.31469239739538996,
+          "book_growth": 0.3498646174634587,
           "discount": 0.1026,
-          "growth_over_discount": 3.067177362528167,
+          "growth_over_discount": 3.4099865249849777,
           "status": "amplifying"
         },
         "range": {
-          "low": 54892.463042018804,
-          "high": 58371.468450303015
+          "low": 61201.908253377216,
+          "high": 73952.19577065048
         },
         "upside": {
-          "low": 0.9414329332755234,
-          "high": 1.0644781620807313
+          "low": 1.1645849662723338,
+          "high": 1.6155362758504386
         },
         "point_estimate": null
       },
@@ -654,12 +723,12 @@
           "status": "bounded"
         },
         "range": {
-          "low": 19365.066389107615,
-          "high": 20453.03111457981
+          "low": 19277.14632769511,
+          "high": 20365.11105316731
         },
         "upside": {
-          "low": -0.3150976370999846,
-          "high": -0.27661857401518664
+          "low": -0.3182071879064621,
+          "high": -0.27972812482166387
         },
         "point_estimate": null
       },
@@ -668,7 +737,7 @@
         "panel": "data/benchmarks/us.json#sections.nasdaq100",
         "risk_free": "DGS10",
         "erp": "inherits the printed CCMP technology axis; no printed NDX axis exists",
-        "payout": "data/computed/fenok-rim/payout-history.json#indices.nasdaq100 trailing 4-year mean",
+        "payout": "data/computed/market_facts/tickers/QQQ.json#facts.dividend_yield / panel forward EPS over price, times the frozen calibration multiplier",
         "forward_roe_basis": "panel forward ROE"
       },
       "runtime_yoo_value_injection": false
@@ -695,6 +764,13 @@
             "max_age_days": 45,
             "age_days": 1,
             "status": "passed"
+          },
+          {
+            "id": "payout",
+            "as_of": "2026-06-18",
+            "max_age_days": 90,
+            "age_days": 47,
+            "status": "passed"
           }
         ]
       },
@@ -708,22 +784,29 @@
         "median_roe_260w": 0.1018,
         "roe_gap_over_median": 0.2404,
         "forward_roe_basis": "panel forward ROE",
-        "lt_roe_centre": 0.27167748319999996,
+        "lt_roe_centre": 0.2709981232,
         "lt_roe_axis": [
-          0.26667748319999995,
-          0.27167748319999996,
-          0.27667748319999996
+          0.2659981232,
+          0.2709981232,
+          0.2759981232
         ],
         "erp_axis": [
           0.055,
           0.065,
           0.075
         ],
-        "book_growth": 0.20258989922223997,
-        "payout": 0.25429999999999997,
-        "retention": 0.7457,
-        "payout_as_of": "2026-08-04T09:06:51.365Z",
-        "payout_source": "data/computed/fenok-rim/payout-history.json#indices.kospi trailing 4-year mean",
+        "book_growth": 0.2484062879791274,
+        "payout": 0.08336528295511313,
+        "payout_band": {
+          "low": 0.07045314324725295,
+          "center": 0.08336528295511313,
+          "high": 0.09637989996224203
+        },
+        "payout_raw_tracker_ratio": 0.05123864963436578,
+        "payout_tracker": "EWY",
+        "retention": 0.9166347170448869,
+        "payout_as_of": "2026-06-18",
+        "payout_source": "data/computed/market_facts/tickers/EWY.json#facts.dividend_yield / panel forward EPS over price, times the frozen calibration multiplier",
         "measured_book_growth": {
           "value": 0.057451506848358536,
           "window_start": "2011-08-12",
@@ -738,20 +821,20 @@
         "discount": 0.0998896
       },
       "value": {
-        "book_growth": 0.20258989922223997,
+        "book_growth": 0.2484062879791274,
         "convexity": {
-          "book_growth": 0.20258989922223997,
+          "book_growth": 0.2484062879791274,
           "discount": 0.0998896,
-          "growth_over_discount": 2.028138056636927,
+          "growth_over_discount": 2.4868083161723282,
           "status": "amplifying"
         },
         "range": {
-          "low": 19449.134451514416,
-          "high": 22660.323852173184
+          "low": 23056.341315937323,
+          "high": 29195.15076720174
         },
         "upside": {
-          "low": 1.948871487391219,
-          "high": 2.435750987752645
+          "low": 2.495795027774803,
+          "high": 3.426559335178303
         },
         "point_estimate": null
       },
@@ -764,12 +847,12 @@
           "status": "bounded"
         },
         "range": {
-          "low": 10625.27118683119,
-          "high": 12060.052261057454
+          "low": 10592.780091144981,
+          "high": 12027.561165371244
         },
         "upside": {
-          "low": 0.611000187527946,
-          "high": 0.8285412308572506
+          "low": 0.6060738980880731,
+          "high": 0.8236149414173777
         },
         "point_estimate": null
       },
@@ -778,7 +861,7 @@
         "panel": "data/benchmarks/emerging.json#sections.kospi",
         "risk_free": "KRX_KTS_10Y_BENCHMARK",
         "erp": "printed 2026-08-03 Korean stock-sheet ERP band, recentred on the index",
-        "payout": "data/computed/fenok-rim/payout-history.json#indices.kospi trailing 4-year mean",
+        "payout": "data/computed/market_facts/tickers/EWY.json#facts.dividend_yield / panel forward EPS over price, times the frozen calibration multiplier",
         "forward_roe_basis": "panel forward ROE"
       },
       "runtime_yoo_value_injection": false
@@ -805,6 +888,13 @@
             "max_age_days": 45,
             "age_days": 4,
             "status": "passed"
+          },
+          {
+            "id": "payout",
+            "as_of": "2026-06-26",
+            "max_age_days": 90,
+            "age_days": 39,
+            "status": "passed"
           }
         ]
       },
@@ -818,22 +908,29 @@
         "median_roe_260w": 0.23170000000000002,
         "roe_gap_over_median": 0.28200000000000003,
         "forward_roe_basis": "panel forward ROE",
-        "lt_roe_centre": 0.42524405600000004,
+        "lt_roe_centre": 0.42483925600000005,
         "lt_roe_axis": [
-          0.42024405600000003,
-          0.42524405600000004,
-          0.43024405600000004
+          0.41983925600000005,
+          0.42483925600000005,
+          0.42983925600000006
         ],
         "erp_axis": [
           0.045,
           0.05,
           0.055
         ],
-        "book_growth": 0.294747286315,
-        "payout": 0.306875,
-        "retention": 0.693125,
-        "payout_as_of": "2026-08-04T09:06:51.365Z",
-        "payout_source": "data/computed/fenok-rim/payout-history.json#indices.philadelphia_semi trailing 4-year mean",
+        "book_growth": 0.3842022787767005,
+        "payout": 0.09565259483294913,
+        "payout_band": {
+          "low": 0.08083731892766138,
+          "center": 0.09565259483294913,
+          "high": 0.11058545229304077
+        },
+        "payout_raw_tracker_ratio": 0.05879077740193555,
+        "payout_tracker": "SOXX",
+        "retention": 0.9043474051670508,
+        "payout_as_of": "2026-06-26",
+        "payout_source": "data/computed/market_facts/tickers/SOXX.json#facts.dividend_yield / panel forward EPS over price, times the frozen calibration multiplier",
         "measured_book_growth": {
           "value": 0.13753053339458132,
           "window_start": "2011-08-19",
@@ -848,20 +945,20 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.294747286315,
+        "book_growth": 0.3842022787767005,
         "convexity": {
-          "book_growth": 0.294747286315,
+          "book_growth": 0.3842022787767005,
           "discount": 0.1026,
-          "growth_over_discount": 2.87278056837232,
+          "growth_over_discount": 3.7446615865175485,
           "status": "amplifying"
         },
         "range": {
-          "low": 17944.57691331464,
-          "high": 19005.70728806546
+          "low": 26658.23314010417,
+          "high": 31520.832872281182
         },
         "upside": {
-          "low": 0.5864600827962174,
-          "high": 0.6802734387932416
+          "low": 1.3568247364623156,
+          "high": 1.7867217694756983
         },
         "point_estimate": null
       },
@@ -874,12 +971,12 @@
           "status": "bounded"
         },
         "range": {
-          "low": 6954.112852488965,
-          "high": 7323.462288884439
+          "low": 6946.637219896322,
+          "high": 7315.986656291794
         },
         "upside": {
-          "low": -0.3851946186846027,
-          "high": -0.3525408458887711
+          "low": -0.38585553104599013,
+          "high": -0.35320175825015876
         },
         "point_estimate": null
       },
@@ -888,7 +985,7 @@
         "panel": "data/benchmarks/micro_sectors.json#sections.philadelphia_semi",
         "risk_free": "DGS10",
         "erp": "inherits the printed CCMP technology axis; no printed SOX axis exists",
-        "payout": "data/computed/fenok-rim/payout-history.json#indices.philadelphia_semi trailing 4-year mean",
+        "payout": "data/computed/market_facts/tickers/SOXX.json#facts.dividend_yield / panel forward EPS over price, times the frozen calibration multiplier",
         "forward_roe_basis": "panel forward ROE"
       },
       "runtime_yoo_value_injection": false
@@ -915,6 +1012,13 @@
             "max_age_days": 45,
             "age_days": 4,
             "status": "passed"
+          },
+          {
+            "id": "payout",
+            "as_of": "2026-06-18",
+            "max_age_days": 90,
+            "age_days": 47,
+            "status": "passed"
           }
         ]
       },
@@ -928,22 +1032,29 @@
         "median_roe_260w": 0.22849999999999998,
         "roe_gap_over_median": 0.09500000000000003,
         "forward_roe_basis": "panel forward ROE",
-        "lt_roe_centre": 0.31565825999999997,
+        "lt_roe_centre": 0.31401925999999997,
         "lt_roe_axis": [
-          0.31065825999999996,
-          0.31565825999999997,
-          0.32065826
+          0.30901925999999996,
+          0.31401925999999997,
+          0.31901925999999997
         ],
         "erp_axis": [
           0.045,
           0.05,
           0.055
         ],
-        "book_growth": 0.24734981253599997,
-        "payout": 0.2164,
-        "retention": 0.7836,
-        "payout_as_of": "fenok-rim-yoo-panel/2026-08-05",
-        "payout_source": "fitted on the 18 published 2025-12-09 CCMP cells",
+        "book_growth": 0.2552542366157774,
+        "payout": 0.18713827739171973,
+        "payout_band": {
+          "low": 0.1581531231798492,
+          "center": 0.18713827739171973,
+          "high": 0.2163534725100337
+        },
+        "payout_raw_tracker_ratio": 0.11502045322170851,
+        "payout_tracker": "ONEQ",
+        "retention": 0.8128617226082803,
+        "payout_as_of": "2026-06-18",
+        "payout_source": "data/computed/market_facts/tickers/ONEQ.json#facts.dividend_yield / panel forward EPS over price, times the frozen calibration multiplier",
         "measured_book_growth": {
           "value": 0.08533719706830833,
           "window_start": "2011-07-29",
@@ -958,20 +1069,20 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.24734981253599997,
+        "book_growth": 0.2552542366157774,
         "convexity": {
-          "book_growth": 0.24734981253599997,
+          "book_growth": 0.2552542366157774,
           "discount": 0.1026,
-          "growth_over_discount": 2.4108168863157893,
+          "growth_over_discount": 2.4878580566839905,
           "status": "amplifying"
         },
         "range": {
-          "low": 29613.75527282284,
-          "high": 32138.01089622952
+          "low": 28678.399501805037,
+          "high": 35432.4711191395
         },
         "upside": {
-          "low": 0.16709743585710646,
-          "high": 0.26657999855085146
+          "low": 0.13023445404639178,
+          "high": 0.39641682752674523
         },
         "point_estimate": null
       },
@@ -984,12 +1095,12 @@
           "status": "bounded"
         },
         "range": {
-          "low": 14095.557833107223,
-          "high": 15128.813537537288
+          "low": 14010.88252812918,
+          "high": 15044.138232559246
         },
         "upside": {
-          "low": -0.44448486007810306,
-          "high": -0.4037635779537875
+          "low": -0.4478219691481907,
+          "high": -0.40710068702387514
         },
         "point_estimate": null
       },
@@ -998,7 +1109,7 @@
         "panel": "data/benchmarks/us.json#sections.nasdaq_composite",
         "risk_free": "DGS10",
         "erp": "printed 2025-12-09 CCMP axis",
-        "payout": "fitted on the 18 published 2025-12-09 CCMP cells",
+        "payout": "data/computed/market_facts/tickers/ONEQ.json#facts.dividend_yield / panel forward EPS over price, times the frozen calibration multiplier",
         "forward_roe_basis": "panel forward ROE"
       },
       "runtime_yoo_value_injection": false
@@ -1025,6 +1136,13 @@
             "max_age_days": 45,
             "age_days": 4,
             "status": "passed"
+          },
+          {
+            "id": "payout",
+            "as_of": "2026-07-28",
+            "max_age_days": 90,
+            "age_days": 7,
+            "status": "passed"
           }
         ]
       },
@@ -1038,22 +1156,29 @@
         "median_roe_260w": 0.1138808443459351,
         "roe_gap_over_median": 0.0100987474907996,
         "forward_roe_basis": "LSEG ex-negative earnings bridge",
-        "lt_roe_centre": 0.15273810258343093,
+        "lt_roe_centre": 0.15053875431687017,
         "lt_roe_axis": [
-          0.14773810258343092,
-          0.15273810258343093,
-          0.15773810258343093
+          0.14553875431687016,
+          0.15053875431687017,
+          0.15553875431687017
         ],
         "erp_axis": [
           0.04,
           0.045,
           0.05
         ],
-        "book_growth": 0.11651473417474445,
-        "payout": 0.23716,
-        "retention": 0.76284,
-        "payout_as_of": "2026-06-30",
-        "payout_source": "https://research.ftserussell.com/Analytics/FactSheets/Home/DownloadSingleIssue?issueName=US2000USD&isManual=True ex-negative dividend yield times P/E",
+        "book_growth": 0.10829382240824864,
+        "payout": 0.28062496000000003,
+        "payout_band": {
+          "low": 0.23716000000000004,
+          "center": 0.28062496000000003,
+          "high": 0.32443488000000004
+        },
+        "payout_raw_tracker_ratio": 0.17248000000000002,
+        "payout_tracker": "IWM",
+        "retention": 0.71937504,
+        "payout_as_of": "2026-07-28",
+        "payout_source": "data/computed/market_facts/tickers/IWM.json#facts.dividend_yield / LSEG ex-negative P/E, times the frozen calibration multiplier",
         "measured_book_growth": {
           "value": 0.0680591835425699,
           "window_start": "2011-08-19",
@@ -1068,20 +1193,20 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.11651473417474445,
+        "book_growth": 0.10829382240824864,
         "convexity": {
-          "book_growth": 0.11651473417474445,
+          "book_growth": 0.10829382240824864,
           "discount": 0.1026,
-          "growth_over_discount": 1.1356211907869829,
+          "growth_over_discount": 1.0554953451096358,
           "status": "convex"
         },
         "range": {
-          "low": 2318.947173205114,
-          "high": 2761.891779115872
+          "low": 2168.6169079155484,
+          "high": 2731.075252673945
         },
         "upside": {
-          "low": -0.20891197735740774,
-          "high": -0.0578053991312939
+          "low": -0.2601957986041368,
+          "high": -0.06831818064238038
         },
         "point_estimate": null
       },
@@ -1094,12 +1219,12 @@
           "status": "bounded"
         },
         "range": {
-          "low": 2058.608342554233,
-          "high": 2397.910964686431
+          "low": 2021.2961108629345,
+          "high": 2360.5987329951317
         },
         "upside": {
-          "low": -0.29772423368493617,
-          "high": -0.18197418835336654
+          "low": -0.310452966762652,
+          "high": -0.1947029214310826
         },
         "point_estimate": null
       },
@@ -1108,7 +1233,7 @@
         "panel": "data/benchmarks/us.json#sections.russell2000",
         "risk_free": "DGS10",
         "erp": "printed 2025-12-09 IWM axis",
-        "payout": "https://research.ftserussell.com/Analytics/FactSheets/Home/DownloadSingleIssue?issueName=US2000USD&isManual=True ex-negative dividend yield times P/E",
+        "payout": "data/computed/market_facts/tickers/IWM.json#facts.dividend_yield / LSEG ex-negative P/E, times the frozen calibration multiplier",
         "forward_roe_basis": "LSEG ex-negative earnings bridge"
       },
       "runtime_yoo_value_injection": false

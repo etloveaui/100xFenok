@@ -28,6 +28,9 @@ for (const row of artifact.calibration.book_identity) assert.ok(Math.abs(row.rel
 assert.ok(artifact.calibration.lt_roe_rule.refit.gap_coefficient > 0, "the recorded gap coefficient must be positive");
 assert.ok(artifact.calibration.lt_roe_rule.refit.max_abs_residual_pp < 4,
   "the LTROE fit must hold every observation inside four percentage points");
+const payoutRefit = artifact.calibration.payout_multiplier.refit;
+assert.equal(payoutRefit.rows.length, 3, "the payout multiplier receipt must carry all three known payouts");
+assert.ok(payoutRefit.low > 1 && payoutRefit.high < 2.5, "the payout multiplier must stay in its measured band");
 const share = artifact.calibration.lt_roe_rule.refit.stock_gap_share;
 assert.ok(share.low > 0.6 && share.high < 0.8, "the printed stock gap share must stay in its measured 0.62~0.76 band");
 assert.ok(artifact.calibration.lt_roe_rule.refit.observations.some((row) => row.id.startsWith("KOSPI")),
