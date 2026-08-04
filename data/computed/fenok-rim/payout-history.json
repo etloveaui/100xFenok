@@ -1,0 +1,183 @@
+{
+  "schema_version": "fenok_rim_payout_history.v1",
+  "generated_at": "2026-08-04T02:26:02.090Z",
+  "method": "sum(Cash Dividends Paid) / sum(Net Income) across index constituents, per fiscal year",
+  "source": "data/yf/finance constituent statements; membership from computed/stock_action_index.json and indices/nasdaq-giw-sox-constituents.json",
+  "purpose": "sanity band for the RIM engine's retention input, not the input itself — this is realised trailing payout while the model consumes a forward figure",
+  "caveats": [
+    "a year is kept only when at least 60% of the constituents that ever report have reported for it, so the current fiscal year is absent until reporting completes",
+    "loss-making constituent years are excluded; a negative denominator has no payout ratio",
+    "NASDAQ Composite has no constituent list in this repo and is therefore absent",
+    "KOSPI membership is every .KS ticker we collect, not an index-weighted constituent set"
+  ],
+  "indices": {
+    "sp500": {
+      "name": "S&P 500",
+      "constituents_requested": 503,
+      "constituents_with_statements": 401,
+      "history": [
+        {
+          "year": "2022",
+          "payout_ratio": 0.3445,
+          "constituents": 349,
+          "dividends": 528201817000,
+          "net_income": 1533087161000
+        },
+        {
+          "year": "2023",
+          "payout_ratio": 0.3761,
+          "constituents": 379,
+          "dividends": 603096635000,
+          "net_income": 1603655191000
+        },
+        {
+          "year": "2024",
+          "payout_ratio": 0.3743,
+          "constituents": 387,
+          "dividends": 658313716000,
+          "net_income": 1758573235000
+        },
+        {
+          "year": "2025",
+          "payout_ratio": 0.3494,
+          "constituents": 376,
+          "dividends": 697153583000,
+          "net_income": 1995556513000
+        }
+      ],
+      "summary": {
+        "years": 4,
+        "mean": 0.3611,
+        "min": 0.3445,
+        "max": 0.3761,
+        "latest": 0.3494
+      }
+    },
+    "nasdaq100": {
+      "name": "나스닥 100",
+      "constituents_requested": 103,
+      "constituents_with_statements": 65,
+      "history": [
+        {
+          "year": "2022",
+          "payout_ratio": 0.2278,
+          "constituents": 52,
+          "dividends": 114319249000,
+          "net_income": 501938843000
+        },
+        {
+          "year": "2023",
+          "payout_ratio": 0.2201,
+          "constituents": 60,
+          "dividends": 128147192000,
+          "net_income": 582342687000
+        },
+        {
+          "year": "2024",
+          "payout_ratio": 0.2411,
+          "constituents": 59,
+          "dividends": 167100302000,
+          "net_income": 693153856000
+        },
+        {
+          "year": "2025",
+          "payout_ratio": 0.2004,
+          "constituents": 58,
+          "dividends": 172834348000,
+          "net_income": 862536646000
+        }
+      ],
+      "summary": {
+        "years": 4,
+        "mean": 0.2224,
+        "min": 0.2004,
+        "max": 0.2411,
+        "latest": 0.2004
+      }
+    },
+    "philadelphia_semi": {
+      "name": "필라델피아 반도체",
+      "constituents_requested": 30,
+      "constituents_with_statements": 21,
+      "history": [
+        {
+          "year": "2022",
+          "payout_ratio": 0.2932,
+          "constituents": 17,
+          "dividends": 314151963000,
+          "net_income": 1071288306000
+        },
+        {
+          "year": "2023",
+          "payout_ratio": 0.3481,
+          "constituents": 18,
+          "dividends": 319935191000,
+          "net_income": 919127113000
+        },
+        {
+          "year": "2024",
+          "payout_ratio": 0.3163,
+          "constituents": 17,
+          "dividends": 392257761000,
+          "net_income": 1240167871000
+        },
+        {
+          "year": "2025",
+          "payout_ratio": 0.2699,
+          "constituents": 17,
+          "dividends": 497884997000,
+          "net_income": 1844944196000
+        }
+      ],
+      "summary": {
+        "years": 4,
+        "mean": 0.3069,
+        "min": 0.2699,
+        "max": 0.3481,
+        "latest": 0.2699
+      }
+    },
+    "kospi": {
+      "name": "코스피",
+      "constituents_requested": 238,
+      "constituents_with_statements": 185,
+      "history": [
+        {
+          "year": "2022",
+          "payout_ratio": 0.226,
+          "constituents": 151,
+          "dividends": 35542709607100,
+          "net_income": 157257528691450
+        },
+        {
+          "year": "2023",
+          "payout_ratio": 0.345,
+          "constituents": 152,
+          "dividends": 34502949176110,
+          "net_income": 100010688292600
+        },
+        {
+          "year": "2024",
+          "payout_ratio": 0.2413,
+          "constituents": 161,
+          "dividends": 36814337895810,
+          "net_income": 152570127638160
+        },
+        {
+          "year": "2025",
+          "payout_ratio": 0.2049,
+          "constituents": 158,
+          "dividends": 39724606725460,
+          "net_income": 193846481470720
+        }
+      ],
+      "summary": {
+        "years": 4,
+        "mean": 0.2543,
+        "min": 0.2049,
+        "max": 0.345,
+        "latest": 0.2049
+      }
+    }
+  }
+}

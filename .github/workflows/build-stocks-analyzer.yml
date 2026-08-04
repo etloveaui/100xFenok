@@ -57,6 +57,12 @@ jobs:
 
       # Fenok RIM refreshes daily so the fair-value table tracks the observed
       # risk-free rate between weekly benchmark conversions.
+      # The payout band comes first: it is the sanity check the RIM engine's
+      # retention input is measured against, and it reads the same constituent
+      # statements the analyzer has just refreshed.
+      - name: Build index payout history
+        run: node scripts/build-index-payout-history.mjs
+
       - name: Build Fenok RIM fair values
         run: node scripts/build-fenok-rim-index.mjs
 
@@ -105,7 +111,9 @@ jobs:
             data/global-scouter/core/revision_movers.json \
             data/damodaran/industry_benchmarks.json \
             data/computed/fenok-rim/fair-values.json \
+            data/computed/fenok-rim/payout-history.json \
             100xfenok-next/public/data/computed/fenok-rim/fair-values.json \
+            100xfenok-next/public/data/computed/fenok-rim/payout-history.json \
             data/calendar/prev-values.json \
             100xfenok-next/public/data/calendar/prev-values.json \
             100xfenok-next/public/data/global-scouter/core/revision_movers.json \
