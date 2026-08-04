@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok_rim_payout_history.v1",
-  "generated_at": "2026-08-04T02:26:02.090Z",
+  "generated_at": "2026-08-04T02:36:14.000Z",
   "method": "sum(Cash Dividends Paid) / sum(Net Income) across index constituents, per fiscal year",
   "source": "data/yf/finance constituent statements; membership from computed/stock_action_index.json and indices/nasdaq-giw-sox-constituents.json",
   "purpose": "sanity band for the RIM engine's retention input, not the input itself — this is realised trailing payout while the model consumes a forward figure",
@@ -8,13 +8,15 @@
     "a year is kept only when at least 60% of the constituents that ever report have reported for it, so the current fiscal year is absent until reporting completes",
     "loss-making constituent years are excluded; a negative denominator has no payout ratio",
     "NASDAQ Composite has no constituent list in this repo and is therefore absent",
-    "KOSPI membership is every .KS ticker we collect, not an index-weighted constituent set"
+    "KOSPI membership is every .KS ticker we collect, not an index-weighted constituent set",
+    "newest_statement_period is the real age of this data: the yfinance daily lane refreshes quote and history only, merges prior statements forward, and overwrites the file's fetched_at, so fetched_at overstates statement freshness"
   ],
   "indices": {
     "sp500": {
       "name": "S&P 500",
       "constituents_requested": 503,
       "constituents_with_statements": 401,
+      "newest_statement_period": "2026-05-31",
       "history": [
         {
           "year": "2022",
@@ -57,6 +59,7 @@
       "name": "나스닥 100",
       "constituents_requested": 103,
       "constituents_with_statements": 65,
+      "newest_statement_period": "2026-03-31",
       "history": [
         {
           "year": "2022",
@@ -99,6 +102,7 @@
       "name": "필라델피아 반도체",
       "constituents_requested": 30,
       "constituents_with_statements": 21,
+      "newest_statement_period": "2026-03-31",
       "history": [
         {
           "year": "2022",
@@ -141,6 +145,7 @@
       "name": "코스피",
       "constituents_requested": 238,
       "constituents_with_statements": 185,
+      "newest_statement_period": "2025-12-31",
       "history": [
         {
           "year": "2022",

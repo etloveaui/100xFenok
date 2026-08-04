@@ -61,6 +61,11 @@ function koreanMembers() {
 export function payoutByYear(symbols) {
   const years = new Map();
   let withStatements = 0;
+  // A file's fetched_at is NOT the statements' age: the daily lane refreshes
+  // quote and history only and merges the old statements forward, overwriting
+  // fetched_at as it goes. So the newest fiscal period actually present is the
+  // only honest age signal, and it is recorded rather than assumed.
+  let newestPeriod = null;
   for (const symbol of symbols) {
     const payload = readJson(path.join(YF, `${symbol}.json`))?.data;
     if (!payload) continue;
@@ -80,6 +85,7 @@ export function payoutByYear(symbols) {
       bucket.netIncome += netIncome;
       bucket.constituents += 1;
       years.set(year, bucket);
+      if (!newestPeriod || period > newestPeriod) newestPeriod = period;
       used = true;
     }
     if (used) withStatements += 1;
@@ -95,7 +101,7 @@ export function payoutByYear(symbols) {
       dividends: Math.round(b.dividends),
       net_income: Math.round(b.netIncome),
     }));
-  return { rows, requested: symbols.length, with_statements: withStatements };
+  return { rows, requested: symbols.length, with_statements: withStatements, newest_statement_period: newestPeriod };
 }
 
 function summarise(rows) {
@@ -131,6 +137,7 @@ export function buildArtifact({ nowIso }) {
       name: u.name,
       constituents_requested: built.requested,
       constituents_with_statements: built.with_statements,
+      newest_statement_period: built.newest_statement_period,
       history: built.rows,
       summary: summarise(built.rows),
     };
@@ -146,6 +153,7 @@ export function buildArtifact({ nowIso }) {
       "loss-making constituent years are excluded; a negative denominator has no payout ratio",
       "NASDAQ Composite has no constituent list in this repo and is therefore absent",
       "KOSPI membership is every .KS ticker we collect, not an index-weighted constituent set",
+      "newest_statement_period is the real age of this data: the yfinance daily lane refreshes quote and history only, merges prior statements forward, and overwrites the file's fetched_at, so fetched_at overstates statement freshness",
     ],
     indices,
   };

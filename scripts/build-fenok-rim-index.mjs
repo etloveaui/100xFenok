@@ -300,6 +300,12 @@ export function capLongRunRoe(roe, median5y) {
   };
 }
 
+// Damodaran republishes the country workbook a few times a year, so anything
+// past roughly two quarters is a figure the world has moved on from. This does
+// not block — the premium is a drift check, not an input — but it must be
+// visible rather than implied by a green workflow run.
+export const RIM_ERP_MAX_AGE_DAYS = 180;
+
 // Country equity risk premium from the Damodaran shadow converter. Refreshes
 // with that weekly lane; the workbook month travels with the value so a stale
 // publication is visible instead of silent.
@@ -310,7 +316,21 @@ export function loadMarketErp() {
     const kr = payload?.countries?.Korea?.equity_risk_premium;
     const sane = (v) => Number.isFinite(v) && v > 0.01 && v < 0.15;
     if (!sane(us) || !sane(kr)) return null;
-    return { us, kr, as_of: payload?.metadata?.source_date ?? null };
+    // The weekly lane refreshes the FILE; it does not refresh the workbook the
+    // file is built from. Damodaran republishes on his own cadence, so a
+    // successful run proves nothing about the figure's age — today the workbook
+    // is dated 2026-04-01. Carry the age so a stale premium cannot pass as
+    // current just because the job went green.
+    const sourceDate = payload?.metadata?.source_date ?? null;
+    const parsed = sourceDate ? Date.parse(sourceDate) : NaN;
+    const ageDays = Number.isFinite(parsed) ? Math.round((Date.now() - parsed) / 86400000) : null;
+    return {
+      us,
+      kr,
+      as_of: sourceDate,
+      age_days: ageDays,
+      stale: Number.isFinite(ageDays) ? ageDays > RIM_ERP_MAX_AGE_DAYS : null,
+    };
   } catch {
     return null;
   }
@@ -400,7 +420,8 @@ export function buildArtifact({ nowIso }) {
     const erpCenter = source.erp;
     const damodaranRef = marketErp?.[source.market];
     const erpSource = Number.isFinite(damodaranRef)
-      ? `${source.erpSource} [drift check: Damodaran ${source.market.toUpperCase()} ${round(damodaranRef, 4)}, workbook ${marketErp.as_of}]`
+      ? `${source.erpSource} [drift check: Damodaran ${source.market.toUpperCase()} ${round(damodaranRef, 4)}, workbook ${marketErp.as_of}`
+        + (marketErp.stale ? `, STALE at ${marketErp.age_days} days` : `, ${marketErp.age_days} days old`) + "]"
       : source.erpSource;
     if (!latest || !Number.isFinite(latest.px) || !Number.isFinite(latest.pbr) || latest.pbr <= 0
       || !roePath || !Number.isFinite(riskFree) || !Number.isFinite(erpCenter) || !retention) {
