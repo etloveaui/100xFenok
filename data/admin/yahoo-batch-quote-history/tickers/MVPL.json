@@ -64,31 +64,44 @@
       "run_id": "29544227703",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 652,
+      "natural": true,
+      "observed_at": "2026-08-04T23:07:26Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30958820437",
+      "schedule": "0 22 * * 2",
+      "shard": "2/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-17T00:20:12Z",
-    "history_as_of": "2026-07-15",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MVPL.json",
-    "payload_sha256": "be5f49a2c6103372653b0c0a45c45c18dbb79590a3e12aac19b0b0b74751f6aa",
-    "quote_as_of": "2026-07-15T16:45:04Z",
-    "source_as_of": "2026-07-15"
+    "fetched_at": "2026-08-04T23:07:59Z",
+    "history_as_of": "2026-08-04",
+    "path": "data/yf/finance/MVPL.json",
+    "payload_sha256": "162c84a60ebb8cec080dde9c855697dc3e0f8927b9a0537224aedafe909593c9",
+    "quote_as_of": "2026-08-04T15:49:46Z",
+    "source_as_of": "2026-08-04"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 652,
     "natural": true,
-    "observed_at": "2026-07-17T00:31:14Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-04T23:07:26Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29544227703",
-    "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "run_id": "30958820437",
+    "schedule": "0 22 * * 2",
+    "shard": "2/6"
   },
   "lkg": {
     "fetched_at": "2026-07-17T00:20:12Z",
@@ -101,17 +114,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-15",
-    "observed_at": "2026-07-17T00:15:36Z",
-    "payload_sha256": "311ae4c6732140a54a68ef573c74e3d22e1a7c0135916725894e6af8634c2965",
-    "quote_as_of": "2026-07-15T16:45:04Z",
+    "history_as_of": "2026-08-04",
+    "observed_at": "2026-08-04T23:07:26Z",
+    "payload_sha256": "aa7fc172e45badfc2ea40d607a82d7fd3a34717d7835ab3826ce2235fb01ba18",
+    "quote_as_of": "2026-08-04T15:49:46Z",
     "run_attempt": 1,
-    "run_id": "29544227703",
+    "run_id": "30958820437",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-15"
+    "source_as_of": "2026-08-04"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -124,5 +137,5 @@
     "source_as_of": "2026-07-15"
   },
   "ticker": "MVPL",
-  "updated_at": "2026-07-24T00:27:41Z"
+  "updated_at": "2026-08-04T23:07:26Z"
 }

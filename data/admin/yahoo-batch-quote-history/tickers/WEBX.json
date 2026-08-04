@@ -77,32 +77,44 @@
       "run_id": "29622560422",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 480,
+      "natural": true,
+      "observed_at": "2026-08-04T23:07:26Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30958820437",
+      "schedule": "0 22 * * 2",
+      "shard": "2/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-18T00:37:44Z",
-    "history_as_of": "2026-07-16",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/WEBX.json",
-    "payload_sha256": "a97cbbd6a55dd8c3af86ab92906365be8022fc29c3dbec969486b033968b8849",
+    "fetched_at": "2026-08-04T23:08:33Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/yf/finance/WEBX.json",
+    "payload_sha256": "b1a61647a5b74e00d3eb25b5cf02fd8730b90cc50d87fcf52352b05bb6f3e8ff",
     "quote_as_of": "2026-06-17T19:43:29Z",
     "source_as_of": "2026-06-17T19:43:29Z"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 356,
+    "latency_ms": 480,
     "natural": true,
-    "observed_at": "2026-07-18T00:37:10Z",
+    "observed_at": "2026-08-04T23:07:26Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29622560422",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "30958820437",
+    "schedule": "0 22 * * 2",
+    "shard": "2/6"
   },
   "lkg": {
     "fetched_at": "2026-07-18T00:37:44Z",
@@ -115,17 +127,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-16",
-    "observed_at": "2026-07-18T00:37:10Z",
-    "payload_sha256": "2f2fad99725e36b1c63dbb77b2bd9605852183085e619a2d67c002f72b0aeebb",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-04T23:07:26Z",
+    "payload_sha256": "d2546e80129b4e9f19b6fe1c3a0b3cc754f366db5324bab8d36f637fbff1da3c",
     "quote_as_of": "2026-06-17T19:43:29Z",
     "run_attempt": 1,
-    "run_id": "29622560422",
+    "run_id": "30958820437",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-06-17T19:43:29Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 20,
@@ -138,5 +150,5 @@
     "source_as_of": "2026-06-17T19:43:29Z"
   },
   "ticker": "WEBX",
-  "updated_at": "2026-07-18T00:42:07Z"
+  "updated_at": "2026-08-04T23:07:26Z"
 }
