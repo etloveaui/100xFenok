@@ -28,6 +28,10 @@ for (const row of artifact.calibration.book_identity) assert.ok(Math.abs(row.rel
 assert.ok(artifact.calibration.lt_roe_rule.refit.slope < 1, "the recorded LTROE slope must be a mean reversion");
 assert.ok(artifact.calibration.published_upside_holdout.rows.length >= 7, "the hold-out receipt must list every scored anchor");
 assert.equal(artifact.calibration.published_upside_holdout.feno.informative_total, 2);
+// The rule must reproduce the only two-sided index anchor Yoo has published.
+const spxAnchor = artifact.calibration.published_upside_holdout.rows
+  .find((row) => row.id === "SPX" && row.date === "2026-07-26");
+assert.ok(spxAnchor.feno.passed, "the rule must overlap the published 2026-07-26 S&P 500 span");
 assert.equal(artifact.calibration.feno_rule.version, "feno-rim-residual-value/1");
 
 // Every published row exposes two lanes, no point estimate, and a receipt for
@@ -38,24 +42,22 @@ for (const row of artifact.rows) {
   if (row.publication_status === "NULL") {
     assert.ok(row.blocking_reasons.length > 0, `${row.id}: a blocked row must name its blocker`);
     assert.equal(row.value, null);
-    assert.equal(row.yoo_convention_replication, null);
+    assert.equal(row.measured_growth_diagnostic, null);
     continue;
   }
   assert.deepEqual(row.blocking_reasons, []);
   assert.equal(row.input_freshness.status, "passed");
-  for (const lane of [row.value, row.yoo_convention_replication]) {
+  for (const lane of [row.value, row.measured_growth_diagnostic]) {
     assert.equal(lane.point_estimate, null, `${row.id}: no lane may publish a point`);
     assert.ok(Number.isFinite(lane.range.low) && Number.isFinite(lane.range.high));
     assert.ok(lane.range.low <= lane.range.high, `${row.id}: endpoints must be ordered`);
     assert.ok(Number.isFinite(lane.upside.low) && Number.isFinite(lane.upside.high));
   }
-  // The published rule must be well posed for every index; the replication
-  // diagnostic may be an amplifier, but it must say so.
-  assert.equal(row.value.convexity.status, "bounded", `${row.id}: the published rule must be well posed`);
-  assert.ok(row.value.book_growth <= row.inputs.discount, `${row.id}: published growth must not exceed the discount rate`);
-  assert.ok(["bounded", "convex", "amplifying"].includes(row.yoo_convention_replication.convexity.status));
-  assert.ok(row.payout_variable.feno_estimated_effective_payout > row.payout_variable.yoo_hand_entered_dividend_payout,
-    `${row.id}: the estimated payout must exceed the cash dividend ratio it replaces`);
+  // Convexity is disclosed on every row rather than silently corrected.
+  assert.ok(["bounded", "convex", "amplifying"].includes(row.value.convexity.status), `${row.id}: convexity must be disclosed`);
+  assert.ok(Math.abs(row.value.book_growth - row.inputs.lt_roe_centre * row.inputs.retention) < 1e-12,
+    `${row.id}: published growth must be Yoo's own roll-forward`);
+  assert.ok(["bounded", "convex", "amplifying"].includes(row.measured_growth_diagnostic.convexity.status));
   assert.ok(row.source_notes.panel.includes("benchmarks"), `${row.id}: the panel source must be named`);
   assert.ok(row.source_notes.payout.length > 0, `${row.id}: the payout provenance must be named`);
 }

@@ -68,7 +68,7 @@ function gateRow(row, generatedAt) {
   const blockers = [];
   const inputFreshness = freshness(row, generatedAt);
   if (inputFreshness.status !== "passed") blockers.push("stale_or_future_input");
-  for (const lane of [row.feno, row.yoo_convention_replication]) {
+  for (const lane of [row.feno, row.measured_growth_diagnostic]) {
     if (![lane.fair_value.low, lane.fair_value.high].every(Number.isFinite) || lane.fair_value.low > lane.fair_value.high) {
       blockers.push("non_finite_or_inverted_range");
     }
@@ -99,14 +99,13 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
       current_price: row.inputs.price,
       inputs: row.inputs,
       value: publicationStatus === "RANGE" ? laneView(row.feno) : null,
-      payout_variable: row.payout_variable,
-      yoo_convention_replication: publicationStatus === "RANGE" ? laneView(row.yoo_convention_replication) : null,
-      confidence: id === "RUT" ? "low" : row.feno.convexity.status === "bounded" ? "medium" : "low",
+      measured_growth_diagnostic: publicationStatus === "RANGE" ? laneView(row.measured_growth_diagnostic) : null,
+      confidence: row.feno.convexity.status === "bounded" ? "medium" : "low",
       source_notes: {
         panel: `${PANEL_SOURCES[id].file}#sections.${PANEL_SOURCES[id].section}`,
         risk_free: row.inputs.risk_free_series,
         erp: FROZEN_CALIBRATION.erp_provenance[id],
-        payout: FROZEN_CALIBRATION.payout[id].source,
+        payout: row.inputs.payout_source,
         forward_roe_basis: row.inputs.forward_roe_basis,
       },
       runtime_yoo_value_injection: false,
@@ -144,10 +143,9 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
     },
     interpretation:
       "One rule. Every operand refreshes automatically from a panel that carries its own history, and every frozen constant "
-      + "carries a calibration receipt. The payout variable Yoo hand-enters as a cash dividend ratio is estimated here from the "
-      + "growth each index's own book has delivered, then capped at the discount rate so the terminal stays a valuation rather "
-      + "than an extrapolation. `yoo_convention_replication` re-runs the same structure on his hand-entered payout and exists "
-      + "only to score the rule against his published claims. No point estimate, no runtime Yoo value.",
+      + "carries a calibration receipt. The payout is Yoo's own cash dividend ratio, read from the automatic trailing series "
+      + "rather than hand-entered. A row whose book growth runs far above the discount rate is flagged convex or amplifying; "
+      + "the flag is disclosed and the value is left alone. No point estimate, no runtime Yoo value.",
     rows,
   };
 }

@@ -261,20 +261,46 @@ export const FENO_RULE = Object.freeze({
     risk_free: "sovereign 10Y for the index's own market; DGS10 read 4.18% on the day Yoo printed 4.2%",
     erp: "Yoo's printed three-point 0.5pp lattice for the asset class",
     lt_roe: "LTROE = 0.044026 + 0.905268 * panel forward ROE, swept +/-0.5pp on Yoo's printed axis width",
-    payout: "the sheet variable Yoo hand-enters as a cash dividend ratio, estimated instead from the growth this index's own book has delivered",
+    payout: "Yoo's own cash dividend payout, read from the automatic trailing payout series so it refreshes instead of being hand-entered",
     discount_horizon_terminal: "d(Rf) = 0.076 + 0.560 * Rf, N = 9, terminal RI_N / d; reproduces the 54 published cells",
   }),
   book_growth: Object.freeze({
-    equation: "g = min(measured 15-year book CAGR, d(Rf))",
-    implied_payout: "payout = 1 - g / LTROE",
-    cap_reason:
-      "the terminal capitalises year-9 residual income as a zero-growth perpetuity, so book growth above the discount rate "
-      + "makes the ninth-year book dominate and turns the model into an amplifier of its own ROE input",
-    sustainability:
-      "both the growth estimate and the cap move with the panel and the rate; neither needs a human to re-pick a value",
+    equation: "g = LTROE * (1 - payout), which is Yoo's own roll-forward",
+    convexity_disclosure:
+      "the terminal capitalises year-9 residual income as a zero-growth perpetuity, so a row whose growth runs far above the "
+      + "discount rate is reported as convex or amplifying; the flag is disclosed, the published value is not altered",
+    sustainability: "every operand moves with the panel, the rate series and the payout series; none is hand-entered",
   }),
   output: "low/high only, swept over the LTROE and ERP lattices; never a point",
 });
+
+const PAYOUT_HISTORY_KEYS = Object.freeze({ SPX: "sp500", NDX: "nasdaq100", SOX: "philadelphia_semi", KOSPI: "kospi" });
+
+/**
+ * The payout variable, refreshed automatically. `payout-history.json` is
+ * rebuilt from constituent filings on every derived reconciliation, so the
+ * operand moves with the data. CCMP has no constituent list in this repository
+ * and RUT's comes from the LSEG factsheet, so both fall back to their frozen
+ * calibrated value and say so.
+ */
+export function readAutomaticPayout(root, id) {
+  const key = PAYOUT_HISTORY_KEYS[id];
+  if (key) {
+    const history = readJson(root, "data/computed/fenok-rim/payout-history.json");
+    const rows = history.indices?.[key]?.history ?? [];
+    const recent = rows.slice(-4).map((row) => row.payout_ratio).filter(Number.isFinite);
+    if (recent.length) {
+      return {
+        value: recent.reduce((a, b) => a + b, 0) / recent.length,
+        as_of: history.generated_at,
+        source: `data/computed/fenok-rim/payout-history.json#indices.${key} trailing ${recent.length}-year mean`,
+        automatic: true,
+      };
+    }
+  }
+  const frozen = FROZEN_CALIBRATION.payout[id];
+  return { value: frozen.value, as_of: FROZEN_CALIBRATION.version, source: frozen.source, automatic: false };
+}
 
 export function ltRoeCentre(forwardRoe) {
   return FROZEN_CALIBRATION.lt_roe_rule.intercept + FROZEN_CALIBRATION.lt_roe_rule.slope * forwardRoe;
@@ -291,7 +317,8 @@ export function buildPanelIndexRow(root, id, { asOf }) {
   const modelRoe = panel.forward_roe * bridge;
   const centre = ltRoeCentre(modelRoe);
   const half = FROZEN_CALIBRATION.lt_roe_rule.lattice_half_width;
-  const payout = FROZEN_CALIBRATION.payout[id].value;
+  const payoutSource = readAutomaticPayout(root, id);
+  const payout = payoutSource.value;
   const retention = 1 - payout;
   const erpAxis = FROZEN_CALIBRATION.erp_lattice[id];
 
@@ -329,19 +356,16 @@ export function buildPanelIndexRow(root, id, { asOf }) {
     };
   };
 
-  // The FENO book roll-forward. Yoo hand-enters a cash dividend payout; the
-  // same variable is estimated here from the growth this index's own book has
-  // delivered, then capped at the discount rate. The cap is what makes the
-  // rule sustainable rather than an extrapolation: the terminal capitalises
-  // year-9 residual income as a zero-growth perpetuity, so pre-terminal book
-  // growth above the discount rate turns the model into an amplifier of its
-  // own ROE input.
-  const uncappedGrowth = measured.value;
-  const growth = Math.min(uncappedGrowth, discount);
-  const impliedPayout = 1 - growth / centre;
-
+  // The book roll-forward is Yoo's own: LTROE times one minus the cash
+  // dividend payout. The payout is the same sheet variable he enters by hand,
+  // read here from the automatic trailing payout series so it refreshes.
+  const growth = centre * retention;
   const feno = sweep(growth);
-  const yooConvention = sweep(centre * retention);
+
+  // What the same structure returns when book rolls forward at the growth this
+  // index's book has actually delivered. Kept as a diagnostic: it is a
+  // different variable, not Yoo's, and it is not the published answer.
+  const measuredGrowthDiagnostic = sweep(Math.min(measured.value, discount));
 
   return {
     id,
@@ -358,9 +382,10 @@ export function buildPanelIndexRow(root, id, { asOf }) {
       lt_roe_axis: ltRoeAxis,
       erp_axis: [...erpAxis],
       book_growth: growth,
-      book_growth_uncapped: uncappedGrowth,
-      book_growth_capped: growth < uncappedGrowth,
-      implied_payout: impliedPayout,
+      payout: payout,
+      retention,
+      payout_as_of: payoutSource.as_of,
+      payout_source: payoutSource.source,
       measured_book_growth: measured,
       risk_free: riskFree.value,
       risk_free_as_of: riskFree.as_of,
@@ -368,20 +393,11 @@ export function buildPanelIndexRow(root, id, { asOf }) {
       discount,
     },
     // The FENO rule. Every operand is automatic and refreshes with the panel.
-    feno: feno,
-    // Yoo's hand-entered cash dividend payout, kept so the same structure can
-    // be scored against his published claims. It is a calibration diagnostic,
-    // not a second published answer.
-    yoo_convention_replication: {
-      ...yooConvention,
-      dividend_payout: payout,
-      dividend_retention: retention,
-      role: "replication_diagnostic_only",
-    },
-    payout_variable: {
-      yoo_hand_entered_dividend_payout: payout,
-      feno_estimated_effective_payout: impliedPayout,
-      note: "the same sheet variable; Yoo enters cash dividends only, the FENO estimate is what the index's own book growth implies",
+    feno,
+    measured_growth_diagnostic: {
+      ...measuredGrowthDiagnostic,
+      role: "diagnostic_only_not_the_published_rule",
+      note: "book rolled forward at this index's own measured book CAGR instead of Yoo's payout variable",
     },
   };
 }
@@ -557,7 +573,7 @@ export function runPublishedUpsideHoldout(root = ROOT) {
     return {
       ...anchor,
       feno: { upside: row.feno.upside, convexity: row.feno.convexity.status, passed: score(row.feno, anchor) },
-      yoo_convention: { upside: row.yoo_convention_replication.upside, convexity: row.yoo_convention_replication.convexity.status, passed: score(row.yoo_convention_replication, anchor) },
+      measured_growth_diagnostic: { upside: row.measured_growth_diagnostic.upside, convexity: row.measured_growth_diagnostic.convexity.status, passed: score(row.measured_growth_diagnostic, anchor) },
       informative: anchor.kind !== "floor",
     };
   });
@@ -573,7 +589,7 @@ export function runPublishedUpsideHoldout(root = ROOT) {
   return {
     rows,
     feno: summarise("feno"),
-    yoo_convention: summarise("yoo_convention"),
+    measured_growth_diagnostic: summarise("measured_growth_diagnostic"),
     note: "floor anchors are one-sided and are passed by almost any positive band; only the two-sided rows discriminate",
   };
 }
