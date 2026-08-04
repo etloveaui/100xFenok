@@ -119,16 +119,22 @@ for (const id of SCOPE) {
   const row = buildPanelIndexRow(ENGINE_ROOT, id, { asOf: AS_OF });
   assert.ok(Number.isFinite(row.inputs.price) && row.inputs.price > 0, `${id}: needs a current price`);
   assert.ok(Number.isFinite(row.inputs.book) && row.inputs.book > 0, `${id}: needs a positive book`);
-  for (const lane of [row.feno_measured_growth, row.yoo_convention_growth]) {
+  for (const lane of [row.feno, row.yoo_convention_replication]) {
     assert.ok(Number.isFinite(lane.fair_value.low) && Number.isFinite(lane.fair_value.high), `${id}: both lanes need finite endpoints`);
     assert.ok(lane.fair_value.low <= lane.fair_value.high, `${id}: endpoints must be ordered`);
   }
-  // The two lanes must differ only through the growth operand.
-  assert.notEqual(row.feno_measured_growth.growth, row.yoo_convention_growth.growth, `${id}: the two lanes must use different growth`);
+  // The rule's growth operand is this index's own measured book growth, capped
+  // at the discount rate so the terminal stays a valuation.
   const measured = measuredBookGrowth(ENGINE_ROOT, id, AS_OF);
   assert.ok(measured.elapsed_years > 10, `${id}: the measured growth window must span more than ten years`);
-  assert.equal(row.feno_measured_growth.growth, measured.value, `${id}: the measured lane must use the measured growth`);
-  assert.ok(row.feno_measured_growth.convexity.status !== "amplifying", `${id}: the measured lane must not be an amplifier`);
+  assert.equal(row.feno.growth, Math.min(measured.value, row.inputs.discount), `${id}: growth must be the capped measured growth`);
+  assert.ok(row.feno.growth <= row.inputs.discount, `${id}: growth must never exceed the discount rate`);
+  assert.equal(row.feno.convexity.status, "bounded", `${id}: the rule must be well posed for every index`);
+  assert.equal(row.inputs.book_growth_capped, measured.value > row.inputs.discount, `${id}: the cap must be disclosed when it binds`);
+  // The estimated payout is the same sheet variable Yoo hand-enters.
+  const estimated = row.payout_variable.feno_estimated_effective_payout;
+  assert.ok(estimated > 0 && estimated < 1, `${id}: the estimated payout must be a fraction`);
+  assert.ok(estimated > row.payout_variable.yoo_hand_entered_dividend_payout, `${id}: the estimate must exceed the cash dividend ratio it replaces`);
 }
 
 // --- fail closed on a stale or missing panel ---------------------------------

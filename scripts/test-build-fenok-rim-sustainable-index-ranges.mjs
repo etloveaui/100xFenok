@@ -27,7 +27,8 @@ for (const row of reproduced) assert.ok(row.rmse_pct_of_mean_fair_value < 0.005,
 for (const row of artifact.calibration.book_identity) assert.ok(Math.abs(row.relative_error) < 0.0005, `${row.id}: book identity receipt out of tolerance`);
 assert.ok(artifact.calibration.lt_roe_rule.refit.slope < 1, "the recorded LTROE slope must be a mean reversion");
 assert.ok(artifact.calibration.published_upside_holdout.rows.length >= 7, "the hold-out receipt must list every scored anchor");
-assert.equal(artifact.calibration.published_upside_holdout.feno_measured.informative_total, 2);
+assert.equal(artifact.calibration.published_upside_holdout.feno.informative_total, 2);
+assert.equal(artifact.calibration.feno_rule.version, "feno-rim-residual-value/1");
 
 // Every published row exposes two lanes, no point estimate, and a receipt for
 // each operand that is not read straight from a panel.
@@ -36,23 +37,25 @@ for (const row of artifact.rows) {
   assert.ok(["RANGE", "NULL"].includes(row.publication_status));
   if (row.publication_status === "NULL") {
     assert.ok(row.blocking_reasons.length > 0, `${row.id}: a blocked row must name its blocker`);
-    assert.equal(row.feno_measured, null);
-    assert.equal(row.yoo_convention, null);
+    assert.equal(row.value, null);
+    assert.equal(row.yoo_convention_replication, null);
     continue;
   }
   assert.deepEqual(row.blocking_reasons, []);
   assert.equal(row.input_freshness.status, "passed");
-  for (const lane of [row.feno_measured, row.yoo_convention]) {
+  for (const lane of [row.value, row.yoo_convention_replication]) {
     assert.equal(lane.point_estimate, null, `${row.id}: no lane may publish a point`);
     assert.ok(Number.isFinite(lane.range.low) && Number.isFinite(lane.range.high));
     assert.ok(lane.range.low <= lane.range.high, `${row.id}: endpoints must be ordered`);
     assert.ok(Number.isFinite(lane.upside.low) && Number.isFinite(lane.upside.high));
   }
-  // The measured lane must be well posed; the Yoo lane is a diagnostic and may
-  // be an amplifier, but it must say so.
-  assert.notEqual(row.feno_measured.convexity.status, "amplifying", `${row.id}: the measured lane must not amplify`);
-  assert.ok(["bounded", "convex", "amplifying"].includes(row.yoo_convention.convexity.status));
-  assert.ok(row.growth_assumption_gap.ratio > 1, `${row.id}: Yoo's convention must be recorded as the faster book roll-forward`);
+  // The published rule must be well posed for every index; the replication
+  // diagnostic may be an amplifier, but it must say so.
+  assert.equal(row.value.convexity.status, "bounded", `${row.id}: the published rule must be well posed`);
+  assert.ok(row.value.book_growth <= row.inputs.discount, `${row.id}: published growth must not exceed the discount rate`);
+  assert.ok(["bounded", "convex", "amplifying"].includes(row.yoo_convention_replication.convexity.status));
+  assert.ok(row.payout_variable.feno_estimated_effective_payout > row.payout_variable.yoo_hand_entered_dividend_payout,
+    `${row.id}: the estimated payout must exceed the cash dividend ratio it replaces`);
   assert.ok(row.source_notes.panel.includes("benchmarks"), `${row.id}: the panel source must be named`);
   assert.ok(row.source_notes.payout.length > 0, `${row.id}: the payout provenance must be named`);
 }

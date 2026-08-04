@@ -2,22 +2,17 @@
 
 // FENO RIM residual-value ranges for six indices.
 //
-// Two lanes are published per index and they differ in exactly one operand:
-//
-//   feno_measured   book rolls forward at the growth this index's own book has
-//                   actually compounded at on our panel
-//   yoo_convention  book rolls forward at LTROE * (1 - cash dividend payout),
-//                   which is the convention Yoo's published sheets use
-//
-// Everything else - book, risk-free rate, ERP lattice, LTROE rule, horizon,
-// discount relation and terminal - is shared and carries a calibration
-// receipt. The gap between the two lanes is therefore attributable to the book
-// roll-forward assumption alone.
+// One rule, defined once in FENO_RULE. Every operand refreshes from a panel
+// that carries its own history; every frozen constant carries a receipt this
+// build recomputes. `yoo_convention_replication` re-runs the same structure on
+// the cash dividend payout Yoo hand-enters, and exists only so the rule can be
+// scored against his dated published claims.
 
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import {
+  FENO_RULE,
   FROZEN_CALIBRATION,
   PANEL_SOURCES,
   VERIFIED_STRUCTURE,
@@ -73,7 +68,7 @@ function gateRow(row, generatedAt) {
   const blockers = [];
   const inputFreshness = freshness(row, generatedAt);
   if (inputFreshness.status !== "passed") blockers.push("stale_or_future_input");
-  for (const lane of [row.feno_measured_growth, row.yoo_convention_growth]) {
+  for (const lane of [row.feno, row.yoo_convention_replication]) {
     if (![lane.fair_value.low, lane.fair_value.high].every(Number.isFinite) || lane.fair_value.low > lane.fair_value.high) {
       blockers.push("non_finite_or_inverted_range");
     }
@@ -103,10 +98,10 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
       input_freshness: inputFreshness,
       current_price: row.inputs.price,
       inputs: row.inputs,
-      feno_measured: publicationStatus === "RANGE" ? laneView(row.feno_measured_growth) : null,
-      yoo_convention: publicationStatus === "RANGE" ? laneView(row.yoo_convention_growth) : null,
-      growth_assumption_gap: row.growth_assumption_gap,
-      confidence: id === "RUT" ? "low" : row.feno_measured_growth.convexity.status === "bounded" ? "medium" : "low",
+      value: publicationStatus === "RANGE" ? laneView(row.feno) : null,
+      payout_variable: row.payout_variable,
+      yoo_convention_replication: publicationStatus === "RANGE" ? laneView(row.yoo_convention_replication) : null,
+      confidence: id === "RUT" ? "low" : row.feno.convexity.status === "bounded" ? "medium" : "low",
       source_notes: {
         panel: `${PANEL_SOURCES[id].file}#sections.${PANEL_SOURCES[id].section}`,
         risk_free: row.inputs.risk_free_series,
@@ -145,15 +140,14 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
         refit: { intercept: ltRoeFit.intercept, slope: ltRoeFit.slope, max_abs_residual_pp: ltRoeFit.max_abs_residual_pp, residuals: ltRoeFit.residuals },
       },
       published_upside_holdout: holdout,
-      lanes: {
-        feno_measured: "book rolls forward at the index's own measured 15-year book CAGR; every operand is measured on our panel",
-        yoo_convention: "book rolls forward at LTROE * (1 - cash dividend payout), reproducing Yoo's published sheets",
-      },
+      feno_rule: FENO_RULE,
     },
     interpretation:
-      "Both lanes share one structure, one book source and one LTROE rule. They differ only in the book roll-forward rate. "
-      + "The Yoo convention implies book compounding several times faster than the same index's own measured history, which is "
-      + "why its ranges sit far above the measured lane. Neither lane publishes a point estimate and neither reads a current Yoo value.",
+      "One rule. Every operand refreshes automatically from a panel that carries its own history, and every frozen constant "
+      + "carries a calibration receipt. The payout variable Yoo hand-enters as a cash dividend ratio is estimated here from the "
+      + "growth each index's own book has delivered, then capped at the discount rate so the terminal stays a valuation rather "
+      + "than an extrapolation. `yoo_convention_replication` re-runs the same structure on his hand-entered payout and exists "
+      + "only to score the rule against his published claims. No point estimate, no runtime Yoo value.",
     rows,
   };
 }

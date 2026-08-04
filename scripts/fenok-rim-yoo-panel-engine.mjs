@@ -120,7 +120,7 @@ export const VERIFIED_STRUCTURE = Object.freeze({
   discount: Object.freeze({ equation: "d(Rf) = 0.076 + 0.560 * Rf", intercept: 0.076, slope: 0.56 }),
   cost_of_equity: "Ke = Rf + ERP",
   residual_income: "RI_t = (LTROE - Ke) * B_(t-1)",
-  book_roll_forward: "B_t = B_(t-1) * (1 + LTROE * retention)",
+  book_roll_forward: "B_t = B_(t-1) * (1 + g); Yoo sets g = LTROE * (1 - dividend payout)",
   terminal: "RI_N / d(Rf), discounted N years; the omega = 1 case of Ohlson persistence",
   evidence: "reproduces the 54 published 2025-12-09 grid cells; see runStructuralReproduction",
 });
@@ -245,6 +245,37 @@ export const FROZEN_CALIBRATION = Object.freeze({
   }),
 });
 
+/**
+ * The FENO rule. One rule, six indices, no hand-set operand.
+ *
+ * Yoo's sheet has six inputs. Each one below is either read from a panel that
+ * carries sixteen years of its own history, or frozen from a transcribed
+ * artifact with a receipt that this file can recompute. Nothing is entered by
+ * hand and nothing depends on a source that only exists as a current snapshot,
+ * which is what makes the rule refreshable rather than a one-off.
+ */
+export const FENO_RULE = Object.freeze({
+  version: "feno-rim-residual-value/1",
+  operands: Object.freeze({
+    book: "B0 = px_last / px_to_book_ratio from the benchmark panel; reproduces Yoo's printed feed book to 0.0004%~0.013%",
+    risk_free: "sovereign 10Y for the index's own market; DGS10 read 4.18% on the day Yoo printed 4.2%",
+    erp: "Yoo's printed three-point 0.5pp lattice for the asset class",
+    lt_roe: "LTROE = 0.044026 + 0.905268 * panel forward ROE, swept +/-0.5pp on Yoo's printed axis width",
+    payout: "the sheet variable Yoo hand-enters as a cash dividend ratio, estimated instead from the growth this index's own book has delivered",
+    discount_horizon_terminal: "d(Rf) = 0.076 + 0.560 * Rf, N = 9, terminal RI_N / d; reproduces the 54 published cells",
+  }),
+  book_growth: Object.freeze({
+    equation: "g = min(measured 15-year book CAGR, d(Rf))",
+    implied_payout: "payout = 1 - g / LTROE",
+    cap_reason:
+      "the terminal capitalises year-9 residual income as a zero-growth perpetuity, so book growth above the discount rate "
+      + "makes the ninth-year book dominate and turns the model into an amplifier of its own ROE input",
+    sustainability:
+      "both the growth estimate and the cap move with the panel and the rate; neither needs a human to re-pick a value",
+  }),
+  output: "low/high only, swept over the LTROE and ERP lattices; never a point",
+});
+
 export function ltRoeCentre(forwardRoe) {
   return FROZEN_CALIBRATION.lt_roe_rule.intercept + FROZEN_CALIBRATION.lt_roe_rule.slope * forwardRoe;
 }
@@ -298,7 +329,18 @@ export function buildPanelIndexRow(root, id, { asOf }) {
     };
   };
 
-  const fenoMeasured = sweep(measured.value);
+  // The FENO book roll-forward. Yoo hand-enters a cash dividend payout; the
+  // same variable is estimated here from the growth this index's own book has
+  // delivered, then capped at the discount rate. The cap is what makes the
+  // rule sustainable rather than an extrapolation: the terminal capitalises
+  // year-9 residual income as a zero-growth perpetuity, so pre-terminal book
+  // growth above the discount rate turns the model into an amplifier of its
+  // own ROE input.
+  const uncappedGrowth = measured.value;
+  const growth = Math.min(uncappedGrowth, discount);
+  const impliedPayout = 1 - growth / centre;
+
+  const feno = sweep(growth);
   const yooConvention = sweep(centre * retention);
 
   return {
@@ -315,23 +357,31 @@ export function buildPanelIndexRow(root, id, { asOf }) {
       lt_roe_centre: centre,
       lt_roe_axis: ltRoeAxis,
       erp_axis: [...erpAxis],
-      dividend_payout: payout,
-      dividend_retention: retention,
+      book_growth: growth,
+      book_growth_uncapped: uncappedGrowth,
+      book_growth_capped: growth < uncappedGrowth,
+      implied_payout: impliedPayout,
       measured_book_growth: measured,
       risk_free: riskFree.value,
       risk_free_as_of: riskFree.as_of,
       risk_free_series: riskFree.series,
       discount,
     },
-    // The FENO house answer: every operand measured on our own panel.
-    feno_measured_growth: fenoMeasured,
-    // Yoo's own convention, kept as a replication diagnostic. The gap between
-    // the two bands is entirely the book roll-forward assumption.
-    yoo_convention_growth: yooConvention,
-    growth_assumption_gap: {
-      measured: measured.value,
-      yoo_convention: centre * retention,
-      ratio: (centre * retention) / measured.value,
+    // The FENO rule. Every operand is automatic and refreshes with the panel.
+    feno: feno,
+    // Yoo's hand-entered cash dividend payout, kept so the same structure can
+    // be scored against his published claims. It is a calibration diagnostic,
+    // not a second published answer.
+    yoo_convention_replication: {
+      ...yooConvention,
+      dividend_payout: payout,
+      dividend_retention: retention,
+      role: "replication_diagnostic_only",
+    },
+    payout_variable: {
+      yoo_hand_entered_dividend_payout: payout,
+      feno_estimated_effective_payout: impliedPayout,
+      note: "the same sheet variable; Yoo enters cash dividends only, the FENO estimate is what the index's own book growth implies",
     },
   };
 }
@@ -506,8 +556,8 @@ export function runPublishedUpsideHoldout(root = ROOT) {
     const row = buildPanelIndexRow(root, anchor.id, { asOf: anchor.date });
     return {
       ...anchor,
-      feno_measured: { upside: row.feno_measured_growth.upside, convexity: row.feno_measured_growth.convexity.status, passed: score(row.feno_measured_growth, anchor) },
-      yoo_convention: { upside: row.yoo_convention_growth.upside, convexity: row.yoo_convention_growth.convexity.status, passed: score(row.yoo_convention_growth, anchor) },
+      feno: { upside: row.feno.upside, convexity: row.feno.convexity.status, passed: score(row.feno, anchor) },
+      yoo_convention: { upside: row.yoo_convention_replication.upside, convexity: row.yoo_convention_replication.convexity.status, passed: score(row.yoo_convention_replication, anchor) },
       informative: anchor.kind !== "floor",
     };
   });
@@ -522,7 +572,7 @@ export function runPublishedUpsideHoldout(root = ROOT) {
   };
   return {
     rows,
-    feno_measured: summarise("feno_measured"),
+    feno: summarise("feno"),
     yoo_convention: summarise("yoo_convention"),
     note: "floor anchors are one-sided and are passed by almost any positive band; only the two-sided rows discriminate",
   };

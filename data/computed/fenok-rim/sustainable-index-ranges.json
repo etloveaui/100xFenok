@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok_rim_sustainable_index_ranges.v2",
-  "generated_at": "2026-08-04T21:53:19.744Z",
+  "generated_at": "2026-08-04T22:07:28.764Z",
   "as_of": "2026-08-04",
   "status": "six_index_residual_value_ranges_ready",
   "scope": [
@@ -29,7 +29,7 @@
     },
     "cost_of_equity": "Ke = Rf + ERP",
     "residual_income": "RI_t = (LTROE - Ke) * B_(t-1)",
-    "book_roll_forward": "B_t = B_(t-1) * (1 + LTROE * retention)",
+    "book_roll_forward": "B_t = B_(t-1) * (1 + g); Yoo sets g = LTROE * (1 - dividend payout)",
     "terminal": "RI_N / d(Rf), discounted N years; the omega = 1 case of Ohlson persistence",
     "evidence": "reproduces the 54 published 2025-12-09 grid cells; see runStructuralReproduction"
   },
@@ -144,7 +144,7 @@
           "kind": "range",
           "low": 0.19,
           "high": 0.29,
-          "feno_measured": {
+          "feno": {
             "upside": {
               "low": -0.35507418936475443,
               "high": -0.30899083127016236
@@ -168,7 +168,7 @@
           "id": "SPX",
           "kind": "floor",
           "low": 0.14,
-          "feno_measured": {
+          "feno": {
             "upside": {
               "low": -0.3692299959608374,
               "high": -0.3232695828343646
@@ -192,12 +192,12 @@
           "id": "NDX",
           "kind": "floor",
           "low": 0.36,
-          "feno_measured": {
+          "feno": {
             "upside": {
-              "low": -0.3064463349558617,
-              "high": -0.26706262743237363
+              "low": -0.3462173317577827,
+              "high": -0.3095052673351528
             },
-            "convexity": "convex",
+            "convexity": "bounded",
             "passed": false
           },
           "yoo_convention": {
@@ -216,12 +216,12 @@
           "id": "NDX",
           "kind": "floor",
           "low": 0.3,
-          "feno_measured": {
+          "feno": {
             "upside": {
-              "low": -0.2780769308396127,
-              "high": -0.23509863161189226
+              "low": -0.3255040419374491,
+              "high": -0.28588197070752597
             },
-            "convexity": "convex",
+            "convexity": "bounded",
             "passed": false
           },
           "yoo_convention": {
@@ -240,12 +240,12 @@
           "id": "NDX",
           "kind": "floor",
           "low": 0.28,
-          "feno_measured": {
+          "feno": {
             "upside": {
-              "low": -0.319394931994198,
-              "high": -0.2805074198192766
+              "low": -0.3601468699787904,
+              "high": -0.3240136065089392
             },
-            "convexity": "convex",
+            "convexity": "bounded",
             "passed": false
           },
           "yoo_convention": {
@@ -264,7 +264,7 @@
           "id": "CCMP",
           "kind": "floor",
           "low": 0.24,
-          "feno_measured": {
+          "feno": {
             "upside": {
               "low": -0.4415091724400245,
               "high": -0.40174277891708643
@@ -289,7 +289,7 @@
           "kind": "point",
           "low": 0.495,
           "high": 0.495,
-          "feno_measured": {
+          "feno": {
             "upside": {
               "low": 0.5635691525149509,
               "high": 0.7417365108100007
@@ -308,7 +308,7 @@
           "informative": true
         }
       ],
-      "feno_measured": {
+      "feno": {
         "passed": 0,
         "total": 7,
         "informative_passed": 0,
@@ -322,12 +322,26 @@
       },
       "note": "floor anchors are one-sided and are passed by almost any positive band; only the two-sided rows discriminate"
     },
-    "lanes": {
-      "feno_measured": "book rolls forward at the index's own measured 15-year book CAGR; every operand is measured on our panel",
-      "yoo_convention": "book rolls forward at LTROE * (1 - cash dividend payout), reproducing Yoo's published sheets"
+    "feno_rule": {
+      "version": "feno-rim-residual-value/1",
+      "operands": {
+        "book": "B0 = px_last / px_to_book_ratio from the benchmark panel; reproduces Yoo's printed feed book to 0.0004%~0.013%",
+        "risk_free": "sovereign 10Y for the index's own market; DGS10 read 4.18% on the day Yoo printed 4.2%",
+        "erp": "Yoo's printed three-point 0.5pp lattice for the asset class",
+        "lt_roe": "LTROE = 0.044026 + 0.905268 * panel forward ROE, swept +/-0.5pp on Yoo's printed axis width",
+        "payout": "the sheet variable Yoo hand-enters as a cash dividend ratio, estimated instead from the growth this index's own book has delivered",
+        "discount_horizon_terminal": "d(Rf) = 0.076 + 0.560 * Rf, N = 9, terminal RI_N / d; reproduces the 54 published cells"
+      },
+      "book_growth": {
+        "equation": "g = min(measured 15-year book CAGR, d(Rf))",
+        "implied_payout": "payout = 1 - g / LTROE",
+        "cap_reason": "the terminal capitalises year-9 residual income as a zero-growth perpetuity, so book growth above the discount rate makes the ninth-year book dominate and turns the model into an amplifier of its own ROE input",
+        "sustainability": "both the growth estimate and the cap move with the panel and the rate; neither needs a human to re-pick a value"
+      },
+      "output": "low/high only, swept over the LTROE and ERP lattices; never a point"
     }
   },
-  "interpretation": "Both lanes share one structure, one book source and one LTROE rule. They differ only in the book roll-forward rate. The Yoo convention implies book compounding several times faster than the same index's own measured history, which is why its ranges sit far above the measured lane. Neither lane publishes a point estimate and neither reads a current Yoo value.",
+  "interpretation": "One rule. Every operand refreshes automatically from a panel that carries its own history, and every frozen constant carries a calibration receipt. The payout variable Yoo hand-enters as a cash dividend ratio is estimated here from the growth each index's own book has delivered, then capped at the discount rate so the terminal stays a valuation rather than an extrapolation. `yoo_convention_replication` re-runs the same structure on his hand-entered payout and exists only to score the rule against his published claims. No point estimate, no runtime Yoo value.",
   "rows": [
     {
       "id": "SPX",
@@ -373,8 +387,10 @@
           0.045,
           0.05
         ],
-        "dividend_payout": 0.3109,
-        "dividend_retention": 0.6891,
+        "book_growth": 0.052755115509582895,
+        "book_growth_uncapped": 0.052755115509582895,
+        "book_growth_capped": false,
+        "implied_payout": 0.8285671918006866,
         "measured_book_growth": {
           "value": 0.052755115509582895,
           "window_start": "2011-08-19",
@@ -388,7 +404,7 @@
         "risk_free_series": "DGS10",
         "discount": 0.1026
       },
-      "feno_measured": {
+      "value": {
         "book_growth": 0.052755115509582895,
         "convexity": {
           "book_growth": 0.052755115509582895,
@@ -406,7 +422,12 @@
         },
         "point_estimate": null
       },
-      "yoo_convention": {
+      "payout_variable": {
+        "yoo_hand_entered_dividend_payout": 0.3109,
+        "feno_estimated_effective_payout": 0.8285671918006866,
+        "note": "the same sheet variable; Yoo enters cash dividends only, the FENO estimate is what the index's own book growth implies"
+      },
+      "yoo_convention_replication": {
         "book_growth": 0.21205713468444,
         "convexity": {
           "book_growth": 0.21205713468444,
@@ -423,11 +444,6 @@
           "high": 0.4074552698005611
         },
         "point_estimate": null
-      },
-      "growth_assumption_gap": {
-        "measured": 0.052755115509582895,
-        "yoo_convention": 0.21205713468444,
-        "ratio": 4.019650656359953
       },
       "confidence": "medium",
       "source_notes": {
@@ -483,8 +499,10 @@
           0.05,
           0.055
         ],
-        "dividend_payout": 0.2224,
-        "dividend_retention": 0.7776000000000001,
+        "book_growth": 0.1026,
+        "book_growth_uncapped": 0.114232423821927,
+        "book_growth_capped": true,
+        "implied_payout": 0.7550183932954388,
         "measured_book_growth": {
           "value": 0.114232423821927,
           "window_start": "2011-08-19",
@@ -498,25 +516,30 @@
         "risk_free_series": "DGS10",
         "discount": 0.1026
       },
-      "feno_measured": {
-        "book_growth": 0.114232423821927,
+      "value": {
+        "book_growth": 0.1026,
         "convexity": {
-          "book_growth": 0.114232423821927,
+          "book_growth": 0.1026,
           "discount": 0.1026,
-          "growth_over_discount": 1.1133764505061112,
-          "status": "convex"
+          "growth_over_discount": 1,
+          "status": "bounded"
         },
         "range": {
-          "low": 21256.83068212446,
-          "high": 22416.92955213844
+          "low": 20134.037648502963,
+          "high": 21222.00237397517
         },
         "upside": {
-          "low": -0.2481898450840534,
-          "high": -0.20715954643673595
+          "low": -0.2879007134241477,
+          "high": -0.24942165033934927
         },
         "point_estimate": null
       },
-      "yoo_convention": {
+      "payout_variable": {
+        "yoo_hand_entered_dividend_payout": 0.2224,
+        "feno_estimated_effective_payout": 0.7550183932954388,
+        "note": "the same sheet variable; Yoo enters cash dividends only, the FENO estimate is what the index's own book growth implies"
+      },
+      "yoo_convention_replication": {
         "book_growth": 0.32566428587519997,
         "convexity": {
           "book_growth": 0.32566428587519997,
@@ -534,12 +557,7 @@
         },
         "point_estimate": null
       },
-      "growth_assumption_gap": {
-        "measured": 0.114232423821927,
-        "yoo_convention": 0.32566428587519997,
-        "ratio": 2.8508918482099865
-      },
-      "confidence": "low",
+      "confidence": "medium",
       "source_notes": {
         "panel": "data/benchmarks/us.json#sections.nasdaq100",
         "risk_free": "DGS10",
@@ -593,8 +611,10 @@
           0.065,
           0.075
         ],
-        "dividend_payout": 0.2543,
-        "dividend_retention": 0.7457,
+        "book_growth": 0.057451506848358536,
+        "book_growth_uncapped": 0.057451506848358536,
+        "book_growth_capped": false,
+        "implied_payout": 0.8376198626842437,
         "measured_book_growth": {
           "value": 0.057451506848358536,
           "window_start": "2011-08-12",
@@ -608,7 +628,7 @@
         "risk_free_series": "KRX_KTS_10Y_BENCHMARK",
         "discount": 0.0998896
       },
-      "feno_measured": {
+      "value": {
         "book_growth": 0.057451506848358536,
         "convexity": {
           "book_growth": 0.057451506848358536,
@@ -626,7 +646,12 @@
         },
         "point_estimate": null
       },
-      "yoo_convention": {
+      "payout_variable": {
+        "yoo_hand_entered_dividend_payout": 0.2543,
+        "feno_estimated_effective_payout": 0.8376198626842437,
+        "note": "the same sheet variable; Yoo enters cash dividends only, the FENO estimate is what the index's own book growth implies"
+      },
+      "yoo_convention_replication": {
         "book_growth": 0.26383515474872,
         "convexity": {
           "book_growth": 0.26383515474872,
@@ -643,11 +668,6 @@
           "high": 5.467406422680657
         },
         "point_estimate": null
-      },
-      "growth_assumption_gap": {
-        "measured": 0.057451506848358536,
-        "yoo_convention": 0.26383515474872,
-        "ratio": 4.5923104409620565
       },
       "confidence": "medium",
       "source_notes": {
@@ -703,8 +723,10 @@
           0.05,
           0.055
         ],
-        "dividend_payout": 0.3069,
-        "dividend_retention": 0.6931,
+        "book_growth": 0.1026,
+        "book_growth_uncapped": 0.13753053339458132,
+        "book_growth_capped": true,
+        "implied_payout": 0.7984529086545075,
         "measured_book_growth": {
           "value": 0.13753053339458132,
           "window_start": "2011-08-19",
@@ -718,25 +740,30 @@
         "risk_free_series": "DGS10",
         "discount": 0.1026
       },
-      "feno_measured": {
-        "book_growth": 0.13753053339458132,
+      "value": {
+        "book_growth": 0.1026,
         "convexity": {
-          "book_growth": 0.13753053339458132,
+          "book_growth": 0.1026,
           "discount": 0.1026,
-          "growth_over_discount": 1.3404535418575179,
-          "status": "convex"
+          "growth_over_discount": 1,
+          "status": "bounded"
         },
         "range": {
-          "low": 10080.821581547563,
-          "high": 10528.803924769813
+          "low": 8502.021540318494,
+          "high": 8871.370976713968
         },
         "upside": {
-          "low": -0.10876577819734601,
-          "high": -0.06916015758267002
+          "low": -0.24834573353574607,
+          "high": -0.21569196073991448
         },
         "point_estimate": null
       },
-      "yoo_convention": {
+      "payout_variable": {
+        "yoo_hand_entered_dividend_payout": 0.3069,
+        "feno_estimated_effective_payout": 0.7984529086545075,
+        "note": "the same sheet variable; Yoo enters cash dividends only, the FENO estimate is what the index's own book growth implies"
+      },
+      "yoo_convention_replication": {
         "book_growth": 0.35283099113596,
         "convexity": {
           "book_growth": 0.35283099113596,
@@ -754,12 +781,7 @@
         },
         "point_estimate": null
       },
-      "growth_assumption_gap": {
-        "measured": 0.13753053339458132,
-        "yoo_convention": 0.35283099113596,
-        "ratio": 2.5654738800704853
-      },
-      "confidence": "low",
+      "confidence": "medium",
       "source_notes": {
         "panel": "data/benchmarks/micro_sectors.json#sections.philadelphia_semi",
         "risk_free": "DGS10",
@@ -813,8 +835,10 @@
           0.05,
           0.055
         ],
-        "dividend_payout": 0.2164,
-        "dividend_retention": 0.7836,
+        "book_growth": 0.08533719706830833,
+        "book_growth_uncapped": 0.08533719706830833,
+        "book_growth_capped": false,
+        "implied_payout": 0.7466838431735061,
         "measured_book_growth": {
           "value": 0.08533719706830833,
           "window_start": "2011-07-29",
@@ -828,7 +852,7 @@
         "risk_free_series": "DGS10",
         "discount": 0.1026
       },
-      "feno_measured": {
+      "value": {
         "book_growth": 0.08533719706830833,
         "convexity": {
           "book_growth": 0.08533719706830833,
@@ -846,7 +870,12 @@
         },
         "point_estimate": null
       },
-      "yoo_convention": {
+      "payout_variable": {
+        "yoo_hand_entered_dividend_payout": 0.2164,
+        "feno_estimated_effective_payout": 0.7466838431735061,
+        "note": "the same sheet variable; Yoo enters cash dividends only, the FENO estimate is what the index's own book growth implies"
+      },
+      "yoo_convention_replication": {
         "book_growth": 0.2639793231528,
         "convexity": {
           "book_growth": 0.2639793231528,
@@ -863,11 +892,6 @@
           "high": 0.48979043145425494
         },
         "point_estimate": null
-      },
-      "growth_assumption_gap": {
-        "measured": 0.08533719706830833,
-        "yoo_convention": 0.2639793231528,
-        "ratio": 3.093367631251085
       },
       "confidence": "medium",
       "source_notes": {
@@ -923,8 +947,10 @@
           0.045,
           0.05
         ],
-        "dividend_payout": 0.23716,
-        "dividend_retention": 0.76284,
+        "book_growth": 0.0680591835425699,
+        "book_growth_uncapped": 0.0680591835425699,
+        "book_growth_capped": false,
+        "implied_payout": 0.545574205202891,
         "measured_book_growth": {
           "value": 0.0680591835425699,
           "window_start": "2011-08-19",
@@ -938,7 +964,7 @@
         "risk_free_series": "DGS10",
         "discount": 0.1026
       },
-      "feno_measured": {
+      "value": {
         "book_growth": 0.0680591835425699,
         "convexity": {
           "book_growth": 0.0680591835425699,
@@ -956,7 +982,12 @@
         },
         "point_estimate": null
       },
-      "yoo_convention": {
+      "payout_variable": {
+        "yoo_hand_entered_dividend_payout": 0.23716,
+        "feno_estimated_effective_payout": 0.545574205202891,
+        "note": "the same sheet variable; Yoo enters cash dividends only, the FENO estimate is what the index's own book growth implies"
+      },
+      "yoo_convention_replication": {
         "book_growth": 0.1142502652095143,
         "convexity": {
           "book_growth": 0.1142502652095143,
@@ -973,11 +1004,6 @@
           "high": -0.1468999218495104
         },
         "point_estimate": null
-      },
-      "growth_assumption_gap": {
-        "measured": 0.0680591835425699,
-        "yoo_convention": 0.1142502652095143,
-        "ratio": 1.678689917548785
       },
       "confidence": "low",
       "source_notes": {
