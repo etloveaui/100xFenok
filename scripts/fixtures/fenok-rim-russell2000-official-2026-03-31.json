@@ -1,0 +1,36 @@
+{
+  "schema_version": "fenok_rim_official_index_fundamentals_fixture.v1",
+  "identity": "Russell 2000",
+  "ticker": "RTY",
+  "as_of": "2026-03-31",
+  "index_close": 2496.374,
+  "fundamentals": {
+    "price_to_book": 2.29,
+    "dividend_yield": 0.0127,
+    "price_to_earnings_ex_negative": 18.96,
+    "eps_growth_5y": 0.1036,
+    "holdings": 1933
+  },
+  "public_erp": 0.0503,
+  "sources": {
+    "fundamentals": {
+      "publisher": "LSEG FTSE Russell",
+      "url": "https://research.ftserussell.com/Analytics/FactSheets/temp/67f84f64-6afa-4834-8eed-eb6f8bf9a68e.pdf",
+      "landing_page": "https://www.lseg.com/en/ftse-russell/indices/russell-2000-index",
+      "sha256": "7dd880d1129096850d88fb10c8666a39da4da248a1427cf13279a3816fe42d17"
+    },
+    "index_close": {
+      "publisher": "SEC filing by JPMorgan Chase Financial Company LLC",
+      "url": "https://www.sec.gov/Archives/edgar/data/19617/000121390026039370/ea0284822-01_424b2.htm",
+      "evidence": "pricing date 2026-03-31; RTY initial index value 2,496.374"
+    },
+    "risk_free": "data/macro/fred-banking-daily.json series.DGS10 at 2026-03-31",
+    "public_erp": "data/damodaran/erp.json United States, source date 2026-04-01"
+  },
+  "runtime_contract": {
+    "fixture_role": "frozen verification snapshot only",
+    "future_refresh": "resolve the current Russell 2000 factsheet from the LSEG landing page, hash the PDF, parse the named fields, and reject mixed as-of dates",
+    "manual_value_promotion": false,
+    "yoo_value_used": false
+  }
+}
