@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-08-04T23:00:23.048Z",
+  "generated_at": "2026-08-04T23:22:07.750Z",
   "source_file": "computed/stock_action_index.json",
   "source_date": "2026-07-31",
   "source_date_reason": null,
-  "source_generated_at": "2026-08-04T11:45:31.251Z",
+  "source_generated_at": "2026-08-04T23:22:05.882Z",
   "source_score_contract": "action-score-v0.3.1",
   "formula_version": "fenok-native-signals-v0.2.3-common-basis",
   "contract_doc": "docs/planning/CONTRACT_fenok_native_signals_v0_2_phase_a_20260628.md",
@@ -43,7 +43,7 @@
     "signal_counts": {
       "profitability": 1042,
       "growth": 1042,
-      "technical_flow": 1180,
+      "technical_flow": 1181,
       "upside_downside": 1180,
       "market_similarity": 1175,
       "durability_profitability": 1045,
@@ -495517,7 +495517,7 @@
       "as_of_reason": null,
       "formula_version": "fenok-native-signals-v0.2.3-common-basis",
       "confidence": "low",
-      "coverage_ratio": 0.0186,
+      "coverage_ratio": 0.0721,
       "source_families": [
         "computed/stock_action_index.json",
         "global-scouter/stocks/detail/*.json",
@@ -495645,30 +495645,44 @@
           }
         },
         "technical_flow": {
-          "score_0_100": null,
-          "direction": "unavailable",
-          "coverage_ratio": 0,
+          "score_0_100": 50.11,
+          "direction": "neutral",
+          "coverage_ratio": 0.1,
           "confidence": "low",
+          "basis": "local_yf_spot_quote_fallback_when_ohlcv_history_is_short",
+          "caveat": "Uses currentPrice versus previousClose only when 12m/local OHLCV technical inputs are unavailable; this is a minimal short-term axis, not a trend model.",
+          "source_fetched_at": "2026-08-04T23:08:43Z",
           "components": {
             "return12m": null,
             "ret1y": null,
             "slick_latest_return": null,
-            "momentum_consistency": null
+            "momentum_consistency": null,
+            "spot_price_move_1d": {
+              "value": 0.0002,
+              "score": 50.11,
+              "peer_group": "rule",
+              "peer_count": null
+            }
           }
         },
         "upside_downside": {
           "score_0_100": null,
           "direction": "unavailable",
-          "coverage_ratio": 0,
+          "coverage_ratio": 0.075,
           "confidence": "low",
-          "upside_score_0_100": null,
+          "upside_score_0_100": 50.11,
           "downside_score_0_100": null,
           "components": {
             "upside": {
               "valuation_room": null,
               "forward_pe_discount": null,
               "growth_support": null,
-              "technical_confirmation": null,
+              "technical_confirmation": {
+                "value": null,
+                "score": 50.11,
+                "peer_group": "rule",
+                "peer_count": null
+              },
               "revision_support": null
             },
             "downside": {
@@ -495683,11 +495697,11 @@
         "market_similarity": {
           "score_0_100": null,
           "direction": "unavailable",
-          "coverage_ratio": 0.0929,
+          "coverage_ratio": 0.1857,
           "confidence": "low",
           "peer_group": "market_sector",
           "peer_count": 13,
-          "vector_feature_count": 1,
+          "vector_feature_count": 2,
           "nearest_peers": []
         },
         "volume_liquidity_trend": {
