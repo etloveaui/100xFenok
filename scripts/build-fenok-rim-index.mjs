@@ -420,16 +420,31 @@ export function buildArtifact({ nowIso }) {
       description: "Computed Likely upside vs the source analyst's dated published outputs. diverged = refresh anchors from new material; never silently refit.",
       results: checkCalibration(rows),
     },
+    // Every number the model consumes, what justifies it, and what refreshes it.
+    // Kept exhaustive on purpose: an omitted constant is an unexamined one.
     constants_provenance: {
-      risk_free_us: { why: "observed FRED DGS10 via rim-index inputs", refresh: "daily lane, automatic" },
-      risk_free_kr: { why: "domestic rate per the patent-era calc sheets and the current KOSPI sheet; taken from the KRX KTS 10Y benchmark government bond captured by the fenok-edge-korea lane, with the dated 4.4% sheet value as fallback only", refresh: "daily lane, automatic; falls back to the dated anchor and says so in risk_free_source when the capture is missing" },
-      roe_paths: { why: "weighted stock-consensus FY1-3 grids; spot ROE held constant only where no grid exists (flagged per row)", refresh: "weekly conversion, automatic" },
-      retention: { why: "1 - the payout printed on his source sheets, which our derived payout misses by -62%~+61%; the derived figure rides along as a drift check and there is no silent house fallback — an index with neither is excluded", refresh: "manual with new sheets; the drift check is weekly and automatic" },
-      erp_centers: { why: "Damodaran country ERP for each index's own market, applied over that market's risk-free rate — the construction the source sheets themselves use (Damodaran US 5.03% vs his S&P 5.00%, Damodaran Korea 5.49% vs his stated band floor 5.5%). His per-index tilts are judgement values with no derivation and are deliberately not frozen as constants", refresh: "weekly Damodaran lane, automatic; the workbook month travels with the value in erp_source" },
-      grid_step: { why: "0.5%p row/column spacing read directly off every captured sheet", refresh: "manual with new sheets" },
-      formula: { why: "owner-supplied multi-stage RIM (N=5, terminal RI_5/Ke on B_4), verified against the 2025-12-09 sheet outputs and pinned by regression test", refresh: "only with a new verified source spec" },
-      rate_scenario: { why: "3.5% 10Y alternate column shown on every captured index sheet", refresh: "manual with new sheets" },
-      calibration_anchors: { why: "dated published outputs from the internal source catalog", refresh: "update on new material; divergence flags, never silent refits" },
+      // --- fed from data, no judgement ---
+      price: { why: "benchmark feed close", refresh: "weekly conversion, automatic", kind: "observed" },
+      book_value: { why: "price divided by the benchmark feed's PBR. His master tables print a PBR too, and it is NOT this: feeding his displayed PBR misses his own published fair values by +14~41% while the feed's book reproduces them", refresh: "weekly conversion, automatic", kind: "observed" },
+      roe: { why: "the benchmark feed's index-level aggregate — recomputing best_eps/(price/PBR) reproduces it to 0.46bp, so it is earnings over book, not a cap-weighted mean of constituents (that returns 47.6% for the S&P against his 26.0%)", refresh: "weekly conversion, automatic", kind: "observed", open: "his long-run ROE is NOT this number and no mechanical transform of it reproduces his series — see calibration_check and docs/references/fenok-rim-formula-identification.md" },
+      risk_free_us: { why: "observed FRED DGS10 via rim-index inputs", refresh: "daily lane, automatic", kind: "observed" },
+      risk_free_kr: { why: "KRX KTS 10Y benchmark government bond captured by the fenok-edge-korea lane; the domestic rate is what his Korean sheets discount with", refresh: "daily lane, automatic; falls back to a dated 4.4% sheet value and says so in risk_free_source", kind: "observed" },
+
+      // --- fitted to his own outputs, reproducible, no story behind the value ---
+      explicit_years: { why: "9 explicit years reproduces all 90 captured grid cells; 8 and 10 do not. Consistent with the patent tool's visible forecast columns", refresh: "only against new captured grids", kind: "fitted" },
+      discount_rate: { why: "0.076 + 0.560 x risk-free. The risk premium does NOT enter discounting: on his grids a 1%p risk-free move shifts value 11.2% against 4.77% for a 1%p premium move, and the patent tool lists cost of capital and discount rate as separate columns. Fitted across 90 cells at RMS 0.41%", refresh: "only against new captured grids", kind: "fitted", open: "the 0.560 coefficient is measured and reproduced out of sample but has no mechanism; a rising-discount reading was tested and refuted. Calibrated over risk-free 3.5~4.2%, so Korea at 4.26% is a 6bp extrapolation worth 0.76% of fair value" },
+
+      // --- read directly off his sheets ---
+      grid_step: { why: "0.5%p row and column spacing printed on every captured sheet", refresh: "manual with new sheets", kind: "read" },
+      rate_scenario: { why: "the 3.5% 10Y alternate column printed on every captured index sheet", refresh: "manual with new sheets", kind: "read" },
+      fair_value_definition: { why: "the centre cell, not the mean of nine. His sheets print both — 상승여력 적정가 and 평균 — and his master tables' 적정지수 matches the centre: his week1 S&P grid centres on 7,193 against the table's 7,195", refresh: "manual with new sheets", kind: "read" },
+
+      // --- his judgement, confirmed non-derivable, held as dated anchors ---
+      erp_centers: { why: "read off his sheets per index. Substitution was tested and refuted twice: the Damodaran country ERP predicts his implied premium WORSE than the cross-sectional mean across 34 rows at a correlation of -0.52, and beta scaling fails because Russell carries the higher beta and the lower premium. His premium does not price country risk", refresh: "manual with new sheets; each row carries its capture date and a Damodaran drift check", kind: "anchor" },
+      retention: { why: "1 minus the payout printed on his sheets. Our derived payout misses it by -62%~+61%, so it rides along as a drift check only. There is no silent house fallback: an index with neither a sheet anchor nor a sane derived payout is excluded", refresh: "manual with new sheets; the drift check is weekly and automatic", kind: "anchor" },
+
+      // --- what we measure ourselves against ---
+      calibration_anchors: { why: "his own dated, RIM-labelled published outputs, each with a retrievable source. Replaces an earlier set attributed to an internal catalogue", refresh: "he publishes weekly; scripts/check-fenok-rim-calibration.mjs scores candidate inputs against the whole series", kind: "target" },
     },
     disclaimer: "Model-implied fair values under stated assumptions. Not price targets, not investment advice.",
   };
