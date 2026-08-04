@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import {
   checkCalibration,
   computeCase,
@@ -188,6 +189,73 @@ import {
   assert.equal(far.find((r) => r.key === "sp500").status, "diverged");
   assert.equal(far.find((r) => r.key === "kospi").status, "diverged");
   assert.ok(checkCalibration([]).every((r) => r.status === "unavailable"));
+}
+
+// GUARD 1 — the artifact must be reproducible from its own record.
+//
+// Twice in one day a green suite hid a wrong engine, both times because the test
+// fed inputs the build never used: first a book value that appeared in no source,
+// then a flat ROE while the build passed a three-year path. Asserting hand-written
+// inputs cannot catch that. This instead reads the SHIPPED artifact and recomputes
+// every row from the numbers that row itself records. If the build consumes
+// anything it does not disclose, or discloses anything it does not consume, the
+// recomputation misses and this fails.
+{
+  const artifactPath = new URL("../data/computed/fenok-rim/fair-values.json", import.meta.url);
+  const artifact = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
+  const ready = (artifact.rows ?? []).filter((r) => r.status === "ready");
+  assert.ok(ready.length >= 4, "artifact must carry ready rows to audit");
+  for (const row of ready) {
+    const recomputed = computeCase({
+      px: row.px_last,
+      bookValue: row.book_value,
+      roePath: row.roe_path,
+      retention: row.retention,
+      riskFree: row.risk_free,
+      erpCenter: row.erp_center,
+    });
+    const drift = Math.abs(recomputed.fair_value / row.rate_current.fair_value - 1);
+    assert.ok(
+      drift < 0.005,
+      `${row.name}: the artifact is not reproducible from its own recorded inputs `
+      + `(recorded ${row.rate_current.fair_value}, recomputed ${recomputed.fair_value.toFixed(2)}). `
+      + "Either the build uses an input it does not disclose, or it discloses one it does not use.",
+    );
+  }
+}
+
+// GUARD 2 — every constant the model consumes must be documented.
+//
+// The provenance block silently went stale and described an engine that no longer
+// existed: a retired ERP source, a five-year horizon, a three-year ROE path, and
+// two discount coefficients that were never recorded at all. Nothing checked that
+// the record matched the code. This does.
+{
+  const artifactPath = new URL("../data/computed/fenok-rim/fair-values.json", import.meta.url);
+  const artifact = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
+  const prov = artifact.constants_provenance ?? {};
+  const REQUIRED = [
+    "price", "book_value", "roe", "risk_free_us", "risk_free_kr",
+    "explicit_years", "discount_rate",
+    "grid_step", "rate_scenario", "fair_value_definition",
+    "erp_centers", "retention",
+    "calibration_anchors",
+  ];
+  for (const key of REQUIRED) {
+    assert.ok(prov[key], `constants_provenance is missing ${key} — an undocumented constant is an unexamined one`);
+    assert.ok(prov[key].why && prov[key].why.length > 20, `${key} needs a why`);
+    assert.ok(prov[key].refresh, `${key} needs a refresh rule`);
+    assert.ok(["observed", "fitted", "read", "anchor", "target"].includes(prov[key].kind),
+      `${key} needs a kind: observed, fitted, read, anchor or target`);
+  }
+  // The record must not claim a formula the engine no longer runs.
+  const asText = JSON.stringify(prov);
+  for (const stale of ["N=5", "Damodaran country ERP for each", "three-year", "internal source catalog"]) {
+    assert.ok(!asText.includes(stale), `constants_provenance still says "${stale}" — it has drifted from the code`);
+  }
+  // Anything fitted-but-unexplained, or a known-open input, must say so.
+  assert.ok(prov.discount_rate.open, "the discount slope has no mechanism and must keep saying so");
+  assert.ok(prov.roe.open, "his long-run ROE is not our ROE field and must keep saying so");
 }
 
 // Contract pins.

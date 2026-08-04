@@ -424,7 +424,7 @@ export function buildArtifact({ nowIso }) {
     // Kept exhaustive on purpose: an omitted constant is an unexamined one.
     constants_provenance: {
       // --- fed from data, no judgement ---
-      price: { why: "benchmark feed close", refresh: "weekly conversion, automatic", kind: "observed" },
+      price: { why: "the benchmark feed's index close, which matches the 현재지수 printed on his master tables to the decimal — same vendor, same close", refresh: "weekly conversion, automatic", kind: "observed" },
       book_value: { why: "price divided by the benchmark feed's PBR. His master tables print a PBR too, and it is NOT this: feeding his displayed PBR misses his own published fair values by +14~41% while the feed's book reproduces them", refresh: "weekly conversion, automatic", kind: "observed" },
       roe: { why: "the benchmark feed's index-level aggregate — recomputing best_eps/(price/PBR) reproduces it to 0.46bp, so it is earnings over book, not a cap-weighted mean of constituents (that returns 47.6% for the S&P against his 26.0%)", refresh: "weekly conversion, automatic", kind: "observed", open: "his long-run ROE is NOT this number and no mechanical transform of it reproduces his series — see calibration_check and docs/references/fenok-rim-formula-identification.md" },
       risk_free_us: { why: "observed FRED DGS10 via rim-index inputs", refresh: "daily lane, automatic", kind: "observed" },
