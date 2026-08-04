@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-16T00:35:28Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29460793523",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "30718396938",
       "schedule": "",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 535,
+      "natural": true,
+      "observed_at": "2026-08-04T00:26:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30865042195",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T21:20:17Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-04T00:27:54Z",
+    "history_as_of": "2026-08-03",
     "path": "data/yf/finance/BAC.json",
-    "payload_sha256": "3ba6bb89fe348bad43afa3b6c7307a366bfc20fb17cb787d8557fb2878f55c88",
-    "quote_as_of": "2026-07-31T20:00:02Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "3ca526525523ce880811b055793b85bb600c6013ec40848ae12e1ebd28a2cc92",
+    "quote_as_of": "2026-08-03T20:00:02Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -197,32 +197,32 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 619,
-    "natural": false,
-    "observed_at": "2026-08-01T21:18:35Z",
+    "latency_ms": 535,
+    "natural": true,
+    "observed_at": "2026-08-04T00:26:09Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30718396938",
-    "schedule": "",
-    "shard": "3/5"
+    "run_id": "30865042195",
+    "schedule": "20 23 * * 1-5",
+    "shard": "2/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T21:18:35Z",
-    "payload_sha256": "981f6a39f4996524e4d9e84c0a01a1a2d55294fa294df59832362f66fdc37dc7",
-    "quote_as_of": "2026-07-31T20:00:02Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-04T00:26:09Z",
+    "payload_sha256": "b617dfcd917d75f84ae81b1f0910b331684b0d0d2657f62a787f98f1dac2ec8d",
+    "quote_as_of": "2026-08-03T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "30718396938",
+    "run_id": "30865042195",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-03"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "BAC",
-  "updated_at": "2026-08-01T21:18:35Z"
+  "updated_at": "2026-08-04T00:26:09Z"
 }

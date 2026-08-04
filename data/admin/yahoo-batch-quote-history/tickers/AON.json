@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-16T00:35:28Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29460793523",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "30718396938",
       "schedule": "",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 521,
+      "natural": true,
+      "observed_at": "2026-08-04T00:26:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30865042195",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T21:20:12Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-04T00:27:49Z",
+    "history_as_of": "2026-08-03",
     "path": "data/yf/finance/AON.json",
-    "payload_sha256": "94161a0f17ab60bc50e264f94b0932fef1f62d32346f6c9abb6748a6d291e74d",
-    "quote_as_of": "2026-07-31T20:00:03Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "f2266b22cb13494c36c299a6864ca48ef307f12570b00db7e9d8f547ea366d75",
+    "quote_as_of": "2026-08-03T20:00:03Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -197,32 +197,32 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 736,
-    "natural": false,
-    "observed_at": "2026-08-01T21:18:35Z",
+    "latency_ms": 521,
+    "natural": true,
+    "observed_at": "2026-08-04T00:26:09Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30718396938",
-    "schedule": "",
-    "shard": "3/5"
+    "run_id": "30865042195",
+    "schedule": "20 23 * * 1-5",
+    "shard": "2/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T21:18:35Z",
-    "payload_sha256": "b37bd845246a4b74dfbeabace4cc66a848cc198cf5de360f216b4c30592d86e8",
-    "quote_as_of": "2026-07-31T20:00:03Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-04T00:26:09Z",
+    "payload_sha256": "b1856f412fcfe5321b43ac9203aad3b12244e2fd32380d246a405c86d6982555",
+    "quote_as_of": "2026-08-03T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "30718396938",
+    "run_id": "30865042195",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-03"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AON",
-  "updated_at": "2026-08-01T21:18:35Z"
+  "updated_at": "2026-08-04T00:26:09Z"
 }

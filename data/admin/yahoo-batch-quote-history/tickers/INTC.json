@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-14T00:26:44Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29295146902",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "30718396938",
       "schedule": "",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 539,
+      "natural": true,
+      "observed_at": "2026-08-04T00:26:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30865042195",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T21:10:03Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-04T00:28:48Z",
+    "history_as_of": "2026-08-03",
     "path": "data/yf/finance/INTC.json",
-    "payload_sha256": "a93cbd3c621dbb8a864916fbb23d078ce699deaee68a2911cb4e2a1584d2ff33",
-    "quote_as_of": "2026-07-31T20:00:01Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "55eea9ae6fe812dd22f3d3663890be0610e884e3512cb9385c88fe66950f6843",
+    "quote_as_of": "2026-08-03T20:00:01Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -198,32 +198,32 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 640,
-    "natural": false,
-    "observed_at": "2026-08-01T21:07:13Z",
+    "latency_ms": 539,
+    "natural": true,
+    "observed_at": "2026-08-04T00:26:09Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30718396938",
-    "schedule": "",
-    "shard": "0/5"
+    "run_id": "30865042195",
+    "schedule": "20 23 * * 1-5",
+    "shard": "2/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T21:07:13Z",
-    "payload_sha256": "01c94eedd80ebbd1de4abec01de1c211588edcc75d84aad2a16e1b8d0e321f02",
-    "quote_as_of": "2026-07-31T20:00:01Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-04T00:26:09Z",
+    "payload_sha256": "b703c6e348faa64ab44975a97c7528e46b470dc9a9e54870ca807025c43c9166",
+    "quote_as_of": "2026-08-03T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "30718396938",
+    "run_id": "30865042195",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-03"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "INTC",
-  "updated_at": "2026-08-01T21:07:13Z"
+  "updated_at": "2026-08-04T00:26:09Z"
 }

@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-14T00:26:44Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29295146902",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "30718396938",
       "schedule": "",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 536,
+      "natural": true,
+      "observed_at": "2026-08-04T00:22:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30865042195",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T21:14:34Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-04T00:25:50Z",
+    "history_as_of": "2026-08-03",
     "path": "data/yf/finance/TER.json",
-    "payload_sha256": "9168e0bf92fce10492aa8664ccb6f4d59bf32293d7d9b4d28fe151cee5b61537",
-    "quote_as_of": "2026-07-31T20:00:00Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "4a5e29e5b24d394c29550b35fc3fd3f926db20eb8147de14f5f84166d8b566cc",
+    "quote_as_of": "2026-08-03T20:00:00Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -198,32 +198,32 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 526,
-    "natural": false,
-    "observed_at": "2026-08-01T21:11:16Z",
+    "latency_ms": 536,
+    "natural": true,
+    "observed_at": "2026-08-04T00:22:23Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30718396938",
-    "schedule": "",
+    "run_id": "30865042195",
+    "schedule": "20 23 * * 1-5",
     "shard": "1/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T21:11:16Z",
-    "payload_sha256": "9064baa9d0db4fb448659666727f57c4de060923d569083ea9a392e2178ff283",
-    "quote_as_of": "2026-07-31T20:00:00Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-04T00:22:23Z",
+    "payload_sha256": "52bf7e9177326cf524be6ad09bb25682858b2b5b135d6289345ebf4b1178016d",
+    "quote_as_of": "2026-08-03T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30718396938",
+    "run_id": "30865042195",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-03"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "TER",
-  "updated_at": "2026-08-01T21:11:16Z"
+  "updated_at": "2026-08-04T00:22:23Z"
 }

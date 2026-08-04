@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-07-26T23:06:22Z",
     "history_as_of": "2026-07-24",
-    "path": "data/yf/finance/BGEG.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BGEG.json",
     "payload_sha256": "9e4734637b6b08ce36d4e455144f0b28025b171a5e70fcd2e71277d966695df9",
     "quote_as_of": "2026-07-24T20:00:00Z",
     "source_as_of": "2026-07-24"
@@ -65,12 +65,12 @@
     "shard": "0/6"
   },
   "lkg": {
-    "fetched_at": "2026-07-09T09:20:19Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-07-26T23:06:22Z",
+    "history_as_of": "2026-07-24",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BGEG.json",
-    "payload_sha256": "b2d2ebaad32684c2d2d9def0b5a3c592f1ea7afce985af08c3890ef015df28c6",
-    "quote_as_of": "2026-07-08T20:00:00Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "9e4734637b6b08ce36d4e455144f0b28025b171a5e70fcd2e71277d966695df9",
+    "quote_as_of": "2026-07-24T20:00:00Z",
+    "source_as_of": "2026-07-24"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-24"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-07-17T00:15:36Z",
-    "classified_run_id": "29544227703",
+    "classified_at": "2026-08-04T00:18:08Z",
+    "classified_run_id": "30865042195",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BGEG holds LKG because Yahoo source date 2026-07-08 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BGEG holds LKG because Yahoo source date 2026-07-24 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-08"
+    "source_as_of": "2026-07-24"
   },
   "ticker": "BGEG",
-  "updated_at": "2026-07-26T23:02:52Z"
+  "updated_at": "2026-08-04T00:18:08Z"
 }

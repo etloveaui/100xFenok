@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-14T00:29:46Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29295146902",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -188,15 +175,28 @@
       "run_id": "30718396938",
       "schedule": "",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 513,
+      "natural": true,
+      "observed_at": "2026-08-04T00:22:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30865042195",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T21:10:43Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-04T00:25:37Z",
+    "history_as_of": "2026-08-03",
     "path": "data/yf/finance/RKT.json",
-    "payload_sha256": "e1455062e3b9d28f9e14f19a13ed2a010dc249d654e369f14cf3746f9c21a23e",
-    "quote_as_of": "2026-07-31T20:00:02Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "00abca1a675a484050df4e897e2ce9d0c98bc0527826471831d59354d9d28141",
+    "quote_as_of": "2026-08-03T20:00:03Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -204,16 +204,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 561,
-    "natural": false,
-    "observed_at": "2026-08-01T21:07:13Z",
+    "latency_ms": 513,
+    "natural": true,
+    "observed_at": "2026-08-04T00:22:23Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30718396938",
-    "schedule": "",
-    "shard": "0/5"
+    "run_id": "30865042195",
+    "schedule": "20 23 * * 1-5",
+    "shard": "1/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -243,15 +243,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T21:07:13Z",
-    "payload_sha256": "23c7ab78a9d81755b49325637dc6008c47d00aea5fdcca238360edd89f94e24b",
-    "quote_as_of": "2026-07-31T20:00:02Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-04T00:22:23Z",
+    "payload_sha256": "5d9553cda392765e052e9bb97b9e6cdce703fa54bab5a8f43b988263474cd17a",
+    "quote_as_of": "2026-08-03T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "30718396938",
+    "run_id": "30865042195",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-03"
   },
   "recovered_at": "2026-07-24T00:27:41Z",
   "recovered_from_run_id": "29968542251",
@@ -262,5 +262,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "RKT",
-  "updated_at": "2026-08-01T21:07:13Z"
+  "updated_at": "2026-08-04T00:22:23Z"
 }

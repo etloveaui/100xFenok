@@ -1,50 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 2,
-      "error": "empty payload",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "empty payload"
-        },
-        {
-          "attempt": 2,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 2,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-17T00:24:27Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "29544227703",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -219,15 +175,28 @@
       "run_id": "30718396938",
       "schedule": "",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 581,
+      "natural": true,
+      "observed_at": "2026-08-04T00:26:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30865042195",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T21:18:32Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-04T00:29:53Z",
+    "history_as_of": "2026-08-03",
     "path": "data/yf/finance/WSO.json",
-    "payload_sha256": "0d88a0a3704e2e01bbc2b259874382ec662a1a1e4252784ea5f2c05e9f280d9d",
-    "quote_as_of": "2026-07-31T20:00:02Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "f679f9404da4a2f12861134eaca6bd99e17cee4e063a3e2258634868e862631b",
+    "quote_as_of": "2026-08-03T20:00:03Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -235,15 +204,15 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 507,
-    "natural": false,
-    "observed_at": "2026-08-01T21:14:53Z",
+    "latency_ms": 581,
+    "natural": true,
+    "observed_at": "2026-08-04T00:26:09Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30718396938",
-    "schedule": "",
+    "run_id": "30865042195",
+    "schedule": "20 23 * * 1-5",
     "shard": "2/5"
   },
   "last_recovered_failure": {
@@ -274,15 +243,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T21:14:53Z",
-    "payload_sha256": "f39f7c70be0a943317f4da30bff86535a1afac9cce8082a718dd51ebe2315056",
-    "quote_as_of": "2026-07-31T20:00:02Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-04T00:26:09Z",
+    "payload_sha256": "f64128e5864dd418198bc70871632de9d7ae6dc39c0fc093b6f986c8d9ccbcf6",
+    "quote_as_of": "2026-08-03T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "30718396938",
+    "run_id": "30865042195",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-03"
   },
   "recovered_at": "2026-07-24T00:27:41Z",
   "recovered_from_run_id": "29968542251",
@@ -293,5 +262,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "WSO",
-  "updated_at": "2026-08-01T21:14:53Z"
+  "updated_at": "2026-08-04T00:26:09Z"
 }

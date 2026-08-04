@@ -7,29 +7,6 @@
       "failures": [
         {
           "attempt": 1,
-          "error": "empty payload"
-        },
-        {
-          "attempt": 2,
-          "error": "empty payload"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-15T00:10:40Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "29378156187",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 2,
-      "error": "empty payload",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
           "error": "KeyError: 'exchangeTimezoneName'",
           "source": "provider_safe_call"
         },
@@ -451,6 +428,39 @@
       "run_id": "30718396938",
       "schedule": "",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-04T00:18:08Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "30865042195",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -467,7 +477,7 @@
   "last_attempt": {
     "attempts_used": 2,
     "error": "empty payload",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [
       {
         "attempt": 1,
@@ -489,12 +499,12 @@
       }
     ],
     "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-08-01T21:07:13Z",
+    "natural": true,
+    "observed_at": "2026-08-04T00:18:08Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "30718396938",
-    "schedule": "",
+    "run_id": "30865042195",
+    "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
   "latest_failure": {
@@ -524,9 +534,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-08-01T21:07:13Z",
+    "observed_at": "2026-08-04T00:18:08Z",
     "run_attempt": 1,
-    "run_id": "30718396938"
+    "run_id": "30865042195"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:49:09Z",
@@ -550,5 +560,5 @@
     "source_as_of": "2026-05-06"
   },
   "ticker": "CTRA",
-  "updated_at": "2026-08-01T21:07:13Z"
+  "updated_at": "2026-08-04T00:18:08Z"
 }

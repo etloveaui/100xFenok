@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-07-26T23:06:32Z",
     "history_as_of": "2026-07-24",
-    "path": "data/yf/finance/CBTO.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CBTO.json",
     "payload_sha256": "62f6aa9ed14bf3067e14615e6db9491fecfbaf310253ff47c34a3461914aa2a5",
     "quote_as_of": "2026-07-24T19:47:24Z",
     "source_as_of": "2026-07-24"
@@ -65,12 +65,12 @@
     "shard": "0/6"
   },
   "lkg": {
-    "fetched_at": "2026-07-09T09:20:44Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-07-26T23:06:32Z",
+    "history_as_of": "2026-07-24",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CBTO.json",
-    "payload_sha256": "ae0abe7a677cafd3d25f63f357ccb79e3e9877cb989577e4867f981b7f51a92b",
-    "quote_as_of": "2026-07-08T16:50:31Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "62f6aa9ed14bf3067e14615e6db9491fecfbaf310253ff47c34a3461914aa2a5",
+    "quote_as_of": "2026-07-24T19:47:24Z",
+    "source_as_of": "2026-07-24"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-24"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-07-17T00:15:36Z",
-    "classified_run_id": "29544227703",
+    "classified_at": "2026-08-04T00:18:08Z",
+    "classified_run_id": "30865042195",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CBTO holds LKG because Yahoo source date 2026-07-08 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CBTO holds LKG because Yahoo source date 2026-07-24 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-08"
+    "source_as_of": "2026-07-24"
   },
   "ticker": "CBTO",
-  "updated_at": "2026-07-26T23:02:52Z"
+  "updated_at": "2026-08-04T00:18:08Z"
 }

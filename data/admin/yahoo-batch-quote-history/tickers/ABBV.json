@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-14T00:29:46Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29295146902",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "error": "StockDetailValidationError: Yahoo history close must be a finite number",
       "event_name": "schedule",
@@ -182,15 +169,28 @@
       "run_id": "30718396938",
       "schedule": "",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 532,
+      "natural": true,
+      "observed_at": "2026-08-04T00:26:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30865042195",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T21:20:04Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-04T00:27:42Z",
+    "history_as_of": "2026-08-03",
     "path": "data/yf/finance/ABBV.json",
-    "payload_sha256": "b32bf33f793ee563ea52fd4202a8dc5500ddf47c7a7b4eeb09cdd5e3a39d1352",
-    "quote_as_of": "2026-07-31T20:03:25Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "1f8bb5c4dee638cea288ba84ec25e477e0e8eb247a0059dff27c932c3f2883fb",
+    "quote_as_of": "2026-08-03T20:03:57Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -198,16 +198,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 608,
-    "natural": false,
-    "observed_at": "2026-08-01T21:18:35Z",
+    "latency_ms": 532,
+    "natural": true,
+    "observed_at": "2026-08-04T00:26:09Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30718396938",
-    "schedule": "",
-    "shard": "3/5"
+    "run_id": "30865042195",
+    "schedule": "20 23 * * 1-5",
+    "shard": "2/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -231,15 +231,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T21:18:35Z",
-    "payload_sha256": "0a8c92d0555412a92d399f578fd6f11cdf8864a2e2419a60149e69a2838b7591",
-    "quote_as_of": "2026-07-31T20:03:25Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-04T00:26:09Z",
+    "payload_sha256": "afcc65836b804d3f3564035cbc187e0c1ab7ba8ca984581c479d9bf3fd6878ce",
+    "quote_as_of": "2026-08-03T20:03:57Z",
     "run_attempt": 1,
-    "run_id": "30718396938",
+    "run_id": "30865042195",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-03"
   },
   "recovered_at": "2026-07-17T00:15:36Z",
   "recovered_from_run_id": "29460793523",
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "ABBV",
-  "updated_at": "2026-08-01T21:18:35Z"
+  "updated_at": "2026-08-04T00:26:09Z"
 }

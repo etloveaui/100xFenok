@@ -1,50 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 2,
-      "error": "empty payload",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "empty payload"
-        },
-        {
-          "attempt": 2,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 2,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-17T00:24:27Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "29544227703",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -212,15 +168,28 @@
       "run_id": "30718396938",
       "schedule": "",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 475,
+      "natural": true,
+      "observed_at": "2026-08-04T00:26:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30865042195",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T21:18:31Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-04T00:29:52Z",
+    "history_as_of": "2026-08-03",
     "path": "data/yf/finance/WMG.json",
-    "payload_sha256": "96de966b504d5e17e662ef23188ba82fa7337cc2365b85ee35fdf489065e79a0",
-    "quote_as_of": "2026-07-31T20:00:00Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "4f4172b75accc0d9726b8f1ab2fc3a93eae3aeeb0e43da60a36bafe171229e49",
+    "quote_as_of": "2026-08-03T20:00:00Z",
+    "source_as_of": "2026-08-03"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -228,15 +197,15 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 555,
-    "natural": false,
-    "observed_at": "2026-08-01T21:14:53Z",
+    "latency_ms": 475,
+    "natural": true,
+    "observed_at": "2026-08-04T00:26:09Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30718396938",
-    "schedule": "",
+    "run_id": "30865042195",
+    "schedule": "20 23 * * 1-5",
     "shard": "2/5"
   },
   "last_recovered_failure": {
@@ -291,15 +260,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T21:14:53Z",
-    "payload_sha256": "2875df072d7c2e38693284f1b79af474a63875c7ea14ecbfb2e825845544e58f",
-    "quote_as_of": "2026-07-31T20:00:00Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-03",
+    "observed_at": "2026-08-04T00:26:09Z",
+    "payload_sha256": "900f47ef8fe2086333d58d9e81af8db3838f3275c65f1d88983c907a9be08c9f",
+    "quote_as_of": "2026-08-03T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30718396938",
+    "run_id": "30865042195",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-03"
   },
   "recovered_at": "2026-07-18T00:37:10Z",
   "recovered_from_run_id": "29544227703",
@@ -310,5 +279,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "WMG",
-  "updated_at": "2026-08-01T21:14:53Z"
+  "updated_at": "2026-08-04T00:26:09Z"
 }

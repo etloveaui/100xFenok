@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-07-26T23:06:29Z",
     "history_as_of": "2026-07-24",
-    "path": "data/yf/finance/BROL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BROL.json",
     "payload_sha256": "4d3a1a98f41aef4bd45964096fa48a2f82106a65e040b96f71f1fdbe599d938e",
     "quote_as_of": "2026-07-24T17:18:40Z",
     "source_as_of": "2026-07-24"
@@ -65,12 +65,12 @@
     "shard": "0/6"
   },
   "lkg": {
-    "fetched_at": "2026-07-09T09:20:33Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-07-26T23:06:29Z",
+    "history_as_of": "2026-07-24",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BROL.json",
-    "payload_sha256": "b677bbe300dc8a174431f9b3c83513a6ee32fd31d70e32704f1775ee15d99995",
-    "quote_as_of": "2026-07-08T18:30:12Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "4d3a1a98f41aef4bd45964096fa48a2f82106a65e040b96f71f1fdbe599d938e",
+    "quote_as_of": "2026-07-24T17:18:40Z",
+    "source_as_of": "2026-07-24"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-24"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-07-17T00:15:36Z",
-    "classified_run_id": "29544227703",
+    "classified_at": "2026-08-04T00:18:08Z",
+    "classified_run_id": "30865042195",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BROL holds LKG because Yahoo source date 2026-07-08 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BROL holds LKG because Yahoo source date 2026-07-24 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-08"
+    "source_as_of": "2026-07-24"
   },
   "ticker": "BROL",
-  "updated_at": "2026-07-26T23:02:52Z"
+  "updated_at": "2026-08-04T00:18:08Z"
 }

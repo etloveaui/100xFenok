@@ -2,45 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "error": "controlled failure injection for HOLX",
-      "event_name": "workflow_dispatch",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "owner-approved controlled failure injection"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-15T15:30:28Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "29426647114",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: provider source timestamp is unavailable for HOLX",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "KeyError: 'exchangeTimezoneName'",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 1028,
-      "natural": true,
-      "observed_at": "2026-07-16T00:13:37Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "29460793523",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "ValueError: provider source timestamp is unavailable for HOLX",
       "event_name": "schedule",
       "failures": [
@@ -278,6 +239,46 @@
       "run_id": "30718396938",
       "schedule": "",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: provider source timestamp is unavailable for HOLX",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 626,
+      "natural": true,
+      "observed_at": "2026-08-04T00:18:08Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "30865042195",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: provider source timestamp is unavailable for HOLX",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 624,
+      "natural": true,
+      "observed_at": "2026-08-04T00:29:57Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "30865042195",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "discovered_from": [
@@ -286,7 +287,7 @@
   "last_attempt": {
     "attempts_used": 1,
     "error": "ValueError: provider source timestamp is unavailable for HOLX",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [
       {
         "attempt": 1,
@@ -294,14 +295,14 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 554,
-    "natural": false,
-    "observed_at": "2026-08-01T21:11:16Z",
+    "latency_ms": 624,
+    "natural": true,
+    "observed_at": "2026-08-04T00:29:57Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "30718396938",
-    "schedule": "",
-    "shard": "1/5"
+    "run_id": "30865042195",
+    "schedule": "20 23 * * 1-5",
+    "shard": "3/5"
   },
   "latest_failure": {
     "attempts_used": 1,
@@ -317,18 +318,18 @@
       }
     ],
     "lkg_status": "absent",
-    "observed_at": "2026-08-01T21:11:16Z",
+    "observed_at": "2026-08-04T00:29:57Z",
     "run_attempt": 1,
-    "run_id": "30718396938"
+    "run_id": "30865042195"
   },
   "resolution_state": "terminal_provider_unsupported",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "terminal": {
-    "artifact_generated_at": "2026-08-03T21:37:49.428Z",
+    "artifact_generated_at": "2026-08-03T23:45:13.754Z",
     "artifact_path": "admin/fenok-s1-stock-public-promotion-dry-run.json",
-    "classified_at": "2026-08-03T22:58:08Z",
-    "classified_run_id": "30860500094",
+    "classified_at": "2026-08-04T00:32:20Z",
+    "classified_run_id": "30865042195",
     "evidence": [
       {
         "alias_source": null,
@@ -361,8 +362,8 @@
         "type": "Acquisition"
       }
     ],
-    "evidence_sha256": "1bdf7251915ad5d2f9ddb62a30e678e8c9c05205d085057ab85b5d002486526f"
+    "evidence_sha256": "0bcd803b0eeb6503a171f22757c0683e162a40217fdd8cdb3eaca904ce447505"
   },
   "ticker": "HOLX",
-  "updated_at": "2026-08-03T22:58:08Z"
+  "updated_at": "2026-08-04T00:32:20Z"
 }
