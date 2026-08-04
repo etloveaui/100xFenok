@@ -72,12 +72,19 @@ jobs:
       - name: Build Fenok RIM identification receipt
         run: node scripts/build-fenok-rim-identification-receipt.mjs
 
+      - name: Build Fenok RIM input diagnostics
+        run: |
+          node scripts/build-fenok-rim-input-diagnostics.mjs
+          node scripts/build-fenok-rim-membership-sensitivity.mjs
+
       - name: Verify Fenok RIM evidence and publication gates
         run: |
           node scripts/test-build-fenok-rim-index.mjs
           node scripts/test-fenok-rim-publication-policy.mjs
           node scripts/test-analyze-fenok-rim-identifiability.mjs
           node scripts/test-fenok-rim-identification-protocol.mjs
+          node scripts/test-build-fenok-rim-input-diagnostics.mjs
+          node scripts/test-build-fenok-rim-membership-sensitivity.mjs
 
       - name: Build calendar previous-release values (FRED)
         env:
@@ -125,6 +132,8 @@ jobs:
             data/damodaran/industry_benchmarks.json \
             data/computed/fenok-rim/fair-values.json \
             data/computed/fenok-rim/identification-receipt.json \
+            data/computed/fenok-rim/input-diagnostics.json \
+            data/computed/fenok-rim/membership-sensitivity-2026.json \
             data/computed/fenok-rim/payout-history.json \
             100xfenok-next/public/data/computed/fenok-rim/fair-values.json \
             100xfenok-next/public/data/computed/fenok-rim/payout-history.json \
