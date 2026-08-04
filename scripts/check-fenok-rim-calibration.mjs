@@ -36,15 +36,15 @@ const INDEX = {
 // range from X to X+0.10, because he means a floor rather than a point.
 export const PUBLISHED = [
   { date: "2026-06-14", key: "kospi", upside: [0.495, 0.495], note: "12m attractiveness" },
-  { date: "2026-06-21", key: "nasdaq100", upside: [0.28, 0.38], note: "over 28%, 12m" },
+  { date: "2026-06-21", key: "nasdaq100", upside: [0.28, 0.28], floor: true, note: "over 28%, 12m" },
   { date: "2026-06-21", key: "sp500", fair: [8854.61, 8854.61], note: "fair value" },
-  { date: "2026-07-12", key: "sp500", upside: [0.14, 0.24], note: "over 14%, 6-12m" },
-  { date: "2026-07-12", key: "nasdaq_composite", upside: [0.24, 0.34], note: "over 24%, 6-12m" },
-  { date: "2026-07-12", key: "nasdaq100", upside: [0.36, 0.46], note: "over 36%, 6-12m" },
+  { date: "2026-07-12", key: "sp500", upside: [0.14, 0.14], floor: true, note: "over 14%, 6-12m" },
+  { date: "2026-07-12", key: "nasdaq_composite", upside: [0.24, 0.24], floor: true, note: "over 24%, 6-12m" },
+  { date: "2026-07-12", key: "nasdaq100", upside: [0.36, 0.36], floor: true, note: "over 36%, 6-12m" },
   { date: "2026-07-19", key: "kospi", upside: [0.59, 0.59], note: "12m, after the July drawdown" },
   { date: "2026-07-26", key: "sp500", upside: [0.19, 0.29], note: "12m range" },
-  { date: "2026-08-02", key: "sp500", upside: [0.18, 0.28], note: "over 18%, 6-12m" },
-  { date: "2026-08-02", key: "nasdaq100", upside: [0.50, 0.60], note: "over 50%, 6-12m" },
+  { date: "2026-08-02", key: "sp500", upside: [0.18, 0.18], floor: true, note: "over 18%, 6-12m" },
+  { date: "2026-08-02", key: "nasdaq100", upside: [0.50, 0.50], floor: true, note: "over 50%, 6-12m" },
 ];
 
 function nearestRow(section, dateIso) {
@@ -77,6 +77,19 @@ export const CANDIDATES = {
       const factor = 1 + elapsed * growthFy2;
       return factor > 0.5 && factor < 3 ? rawRoe / factor : null;
     },
+  },
+  median_5y: {
+    label: "the index's own 5-year median ROE",
+    fn: ({ history }) => history?.median5y ?? null,
+  },
+  median_10y: {
+    label: "the index's own 10-year median ROE",
+    fn: ({ history }) => history?.median10y ?? null,
+  },
+  blend_spot_median: {
+    label: "midpoint of spot and the 10-year median",
+    fn: ({ rawRoe, history }) => (Number.isFinite(rawRoe) && Number.isFinite(history?.median10y)
+      ? (rawRoe + history.median10y) / 2 : null),
   },
   fy1_ending: {
     label: "FY1 earnings over END-of-FY1 book",
@@ -114,7 +127,16 @@ export function evaluate({ feeds, rim }) {
     const riskFree = cfg.market === "kr"
       ? 0.0426
       : rim.indices?.SPX?.observed?.risk_free_rate?.value ?? 0.0468;
+    const all = (feeds[cfg.file]?.sections?.[cfg.section]?.data ?? [])
+      .filter((r) => r.date <= target.date && Number.isFinite(r.roe))
+      .map((r) => r.roe);
+    const medianOf = (arr) => {
+      if (!arr.length) return null;
+      const sorted = [...arr].sort((a, b) => a - b);
+      return sorted[Math.floor(sorted.length / 2)];
+    };
     const inputs = {
+      history: { median5y: medianOf(all.slice(-260)), median10y: medianOf(all.slice(-520)) },
       rawRoe: hit.row.roe,
       growthFy2: periods[1]?.eps_growth?.value,
       elapsed: fiscalYearElapsed(target.date),
@@ -128,7 +150,8 @@ export function evaluate({ feeds, rim }) {
       const fair = computeCell({ bookValue: book, roePath: [roe], retention, riskFree, erp: cfg.rp });
       const lo = target.fair ? target.fair[0] : px * (1 + target.upside[0]);
       const hi = target.fair ? target.fair[1] : px * (1 + target.upside[1]);
-      const err = fair < lo ? fair / lo - 1 : fair > hi ? fair / hi - 1 : 0;
+      // A floor has no upper edge: anything at or above it satisfies what he said.
+      const err = fair < lo ? fair / lo - 1 : (target.floor || fair <= hi) ? 0 : fair / hi - 1;
       scored[name] = { roe, fair, err, inside: err === 0 };
     }
     results.push({ ...target, label: cfg.label, px, book, gapDays: hit.gapDays, scored });
