@@ -1,7 +1,8 @@
 {
-  "schema_version": "fenok_rim_sustainable_index_ranges.v1",
-  "generated_at": "2026-08-04T15:22:29.236Z",
-  "status": "automatic_feno_house_fair_value_ranges_ready",
+  "schema_version": "fenok_rim_sustainable_index_ranges.v2",
+  "generated_at": "2026-08-04T21:53:19.744Z",
+  "as_of": "2026-08-04",
+  "status": "six_index_residual_value_ranges_ready",
   "scope": [
     "SPX",
     "NDX",
@@ -11,1302 +12,980 @@
     "RUT"
   ],
   "runtime_contract": {
-    "automatic_diagnostic_fallback_inputs_refreshable": true,
-    "exact_official_input_refresh_complete": false,
-    "future_yoo_values_required": false,
+    "output_type": "FENO_residual_value_range",
+    "point_estimate": false,
     "runtime_yoo_value_injection": false,
     "runtime_target_level_injection": false,
     "frozen_historical_yoo_calibration_parameters_used": true,
-    "output_type": "FENO_house_fair_value_range",
-    "point_estimate": false
+    "automatic_refresh": true,
+    "panel_history_available": true
   },
-  "official_input_producers": {
-    "RUT": "ready recurring official LSEG quarterly snapshot with immutable archive",
-    "KOSPI": "producer and parser ready; live official screen refresh blocked pending an authorized KRX Data Marketplace session",
-    "SPX_NDX": "automatic benchmark and constituent paths ready",
-    "CCMP_SOX": "exact payout or official-weight routes unavailable; FENO house ranges use explicit low-confidence proxies"
+  "structure": {
+    "horizon": 9,
+    "discount": {
+      "equation": "d(Rf) = 0.076 + 0.560 * Rf",
+      "intercept": 0.076,
+      "slope": 0.56
+    },
+    "cost_of_equity": "Ke = Rf + ERP",
+    "residual_income": "RI_t = (LTROE - Ke) * B_(t-1)",
+    "book_roll_forward": "B_t = B_(t-1) * (1 + LTROE * retention)",
+    "terminal": "RI_N / d(Rf), discounted N years; the omega = 1 case of Ohlson persistence",
+    "evidence": "reproduces the 54 published 2025-12-09 grid cells; see runStructuralReproduction"
   },
-  "methodology": {
-    "feno_house_policy": {
-      "starting_book": {
-        "equation": "B0 = current automatic benchmark price / current automatic benchmark P/B",
-        "fallback": "same-instrument automatic proxy only; proxy use lowers confidence but never injects a target level"
-      },
-      "payout": {
-        "equation": "same-date direct index dividend yield / forward earnings yield when eligible; otherwise the disclosed automatic trailing or instrument proxy band",
-        "safeguard": "no Yoo payout or fair-value inversion is a runtime operand"
-      },
-      "risk_free": {
-        "equation": "market-local automatic 10-year government yield"
-      },
-      "erp": {
-        "equation": "public Damodaran ERP plus the frozen FENO asset-class lattice/range",
-        "safeguard": "historical calibration is frozen; current Yoo output is never used"
-      },
-      "lt_roe": {
-        "equation": "LTROE = own rolling 260-week median ROE + w * (automatic FY3 ROE - own median)",
-        "persistence_weight": {
-          "low": 0.6221224031443011,
-          "center": 0.682554879558668,
-          "high": 0.7556061098472538,
-          "evidence_status": "inferred_transfer",
-          "observations": 4,
-          "calibration_observations": [
-            {
-              "id": "SAMSUNG-worst",
-              "normal_roe": 0.1085,
-              "fy3_roe": 0.4162,
-              "lt_roe": 0.303
-            },
-            {
-              "id": "SAMSUNG-likely",
-              "normal_roe": 0.1085,
-              "fy3_roe": 0.4162,
-              "lt_roe": 0.341
-            },
-            {
-              "id": "HYNIX-worst",
-              "normal_roe": 0.1684,
-              "fy3_roe": 0.5246,
-              "lt_roe": 0.39
-            },
-            {
-              "id": "HYNIX-likely",
-              "normal_roe": 0.1684,
-              "fy3_roe": 0.5246,
-              "lt_roe": 0.425
-            }
-          ],
-          "normal_roe_basis": "median of five FENO actual annual ROE observations at the calibration vintage",
-          "source_paths": [
-            "scripts/fixtures/fenok-rim-2026-08-03-stock-grids.json",
-            "data/global-scouter/stocks/detail/005930.KS.json",
-            "data/global-scouter/stocks/detail/000660.KS.json"
-          ],
-          "derivation": "gap weights recomputed as (source LTROE - FENO five-actual-year median ROE) / (source FY3 ROE - FENO median ROE) from four 2026-08-03 stock scenarios; transferred to indices as one shared form without index validation"
+  "calibration": {
+    "version": "fenok-rim-yoo-panel/2026-08-05",
+    "structural_reproduction": {
+      "horizon": 9,
+      "artifact": "scripts/fixtures/fenok-rim-2025-12-09-grid.json",
+      "instruments": [
+        {
+          "instrument": "SPX",
+          "status": "reproduced",
+          "cells": 18,
+          "fitted_payout": 0.31242288812522323,
+          "rmse": 18.08625592146117,
+          "rmse_pct_of_mean_fair_value": 0.002435531365669428,
+          "max_abs_error": 24.32141148519986
+        },
+        {
+          "instrument": "CCMP",
+          "status": "reproduced",
+          "cells": 18,
+          "fitted_payout": 0.21639948208336707,
+          "rmse": 78.30009248354845,
+          "rmse_pct_of_mean_fair_value": 0.0026932957475709384,
+          "max_abs_error": 114.78007908198197
+        },
+        {
+          "instrument": "IWM",
+          "status": "skipped_no_unit_coherent_book",
+          "cells": 18
         }
-      },
-      "discount": {
-        "equation": "d(Rf) = 0.076 + 0.560 * Rf, separate from cost of equity",
-        "evidence_status": "locally_fitted"
-      },
-      "horizon_and_residual_value": {
-        "horizon": {
-          "equation": "N=9",
-          "evidence_status": "selected_by_two_index_cross_vintage_payout_validation"
-        },
-        "residual_income": {
-          "equation": "RI_t = (LTROE - (Rf + ERP)) * B_(t-1)",
-          "evidence_status": "structural_transfer"
-        },
-        "book_roll_forward": {
-          "equation": "B_t = B_(t-1) * (1 + LTROE * retention)",
-          "evidence_status": "same_sheet_confirmed"
-        },
-        "terminal": {
-          "equation": "RI_N / d(Rf), discounted from N; Gordon g=0",
-          "evidence_status": "historically_supported_conditional_candidate"
-        }
-      }
-    },
-    "structure_components_with_mixed_evidence_status": {
-      "lt_roe": {
-        "equation": "one flat singular LTROE for the full horizon",
-        "evidence_status": "observed_structure"
-      },
-      "residual_income": {
-        "equation": "RI_t = (LTROE - (Rf + ERP)) * B_(t-1)",
-        "evidence_status": "structural_transfer"
-      },
-      "book_roll_forward": {
-        "equation": "B_t = B_(t-1) * (1 + LTROE * retention)",
-        "evidence_status": "same_sheet_confirmed"
-      },
-      "discount": {
-        "equation": "d(Rf) = 0.076 + 0.560 * Rf, separate from cost of equity",
-        "evidence_status": "locally_fitted"
-      },
-      "terminal": {
-        "equation": "RI_N / d(Rf), discounted from N; Gordon g=0",
-        "evidence_status": "historically_supported_conditional_candidate"
-      },
-      "horizon": {
-        "equation": "N=9",
-        "evidence_status": "selected_by_two_index_cross_vintage_payout_validation"
-      }
-    },
-    "narrow_house_range_rule": {
-      "classification": "YOO_LOGIC_SHARED_PERSISTENCE_INFERRED_RANGE_NOT_POINT",
-      "reusable_transformation": "form_only",
-      "equation": "LTROE = own rolling 260-week median ROE + w * (automatic FY3 ROE - own median)",
-      "persistence_weight": {
-        "low": 0.6221224031443011,
-        "center": 0.682554879558668,
-        "high": 0.7556061098472538,
-        "evidence_status": "inferred_transfer",
-        "observations": 4,
-        "calibration_observations": [
-          {
-            "id": "SAMSUNG-worst",
-            "normal_roe": 0.1085,
-            "fy3_roe": 0.4162,
-            "lt_roe": 0.303
-          },
-          {
-            "id": "SAMSUNG-likely",
-            "normal_roe": 0.1085,
-            "fy3_roe": 0.4162,
-            "lt_roe": 0.341
-          },
-          {
-            "id": "HYNIX-worst",
-            "normal_roe": 0.1684,
-            "fy3_roe": 0.5246,
-            "lt_roe": 0.39
-          },
-          {
-            "id": "HYNIX-likely",
-            "normal_roe": 0.1684,
-            "fy3_roe": 0.5246,
-            "lt_roe": 0.425
-          }
-        ],
-        "normal_roe_basis": "median of five FENO actual annual ROE observations at the calibration vintage",
-        "source_paths": [
-          "scripts/fixtures/fenok-rim-2026-08-03-stock-grids.json",
-          "data/global-scouter/stocks/detail/005930.KS.json",
-          "data/global-scouter/stocks/detail/000660.KS.json"
-        ],
-        "derivation": "gap weights recomputed as (source LTROE - FENO five-actual-year median ROE) / (source FY3 ROE - FENO median ROE) from four 2026-08-03 stock scenarios; transferred to indices as one shared form without index validation"
-      },
-      "runtime_yoo_value_injection": false,
-      "promotion_status": "adopted_as_FENO_house_range_policy"
-    },
-    "coverage_safe_ltroe_rule": {
-      "equation": "LTROE = hull(normal ROE, automatic FY1-FY3 ROE path) +/- 3.5 percentage points",
-      "center": "none",
-      "derivation": "smallest symmetric 0.5 percentage-point lattice margin covering the archived index and stock calibration cases",
-      "evidence_status": "coverage_calibration_not_sealed_validation"
-    },
-    "horizon_validation": {
-      "selected_horizon": 9,
-      "selected_validation_mae_pp": 0.15617030209280763,
-      "runner_up_validation_mae_pp": 6.8849019115566135,
-      "classification": "historical_cross_vintage_validation_not_runtime_operand"
-    },
-    "unresolved_for_exact_yoo_identification": {
-      "erp": [
-        "sealed_holdout_failed"
-      ],
-      "lt_roe": [
-        "no_independent_pre_cutoff_automatic_roe_path",
-        "no_later_single_ltroe_target",
-        "stock_worst_and_likely_axes_are_simultaneous_scenarios"
-      ],
-      "discount_horizon": [
-        "affine_discount_has_only_two_risk_free_points",
-        "very_slow_fade_not_distinguishable_from_perpetuity",
-        "no_independent_later_grid_holdout_for_discount_slope"
       ]
+    },
+    "book_identity": [
+      {
+        "id": "SPX",
+        "panel_book": 1252.054744592058,
+        "printed_book": 1252.05,
+        "relative_error": 0.0000037894589337561513,
+        "panel_as_of": "2025-12-05"
+      },
+      {
+        "id": "CCMP",
+        "panel_book": 3052.619790520333,
+        "printed_book": 3053,
+        "relative_error": -0.00012453635102094296,
+        "panel_as_of": "2025-12-05"
+      },
+      {
+        "id": "RUT",
+        "panel_book": 1116.9859129972533,
+        "printed_book": 1117,
+        "relative_error": -0.000012611461724931772,
+        "panel_as_of": "2025-12-05"
+      }
+    ],
+    "lt_roe_rule": {
+      "frozen": {
+        "equation": "LTROE_centre = 0.044026 + 0.905268 * forward_ROE",
+        "intercept": 0.044026,
+        "slope": 0.905268,
+        "observations": 4,
+        "fit_dates": [
+          "2025-12-09",
+          "2026-07-26"
+        ],
+        "fit_observables": "three printed 2025-12-09 LTROE axis centres plus the LTROE that reproduces the published 2026-07-26 S&P 500 upside span under the printed lattice",
+        "max_abs_residual_pp": 1.56,
+        "lattice_half_width": 0.005,
+        "lattice_note": "Yoo prints a +/-0.5pp LTROE axis; the same half width is retained",
+        "slope_note": "a slope below one is the mean reversion Yoo applies: his long-run ROE moves less than the index's own forward ROE"
+      },
+      "refit": {
+        "intercept": 0.044026348149001776,
+        "slope": 0.9052681558532073,
+        "max_abs_residual_pp": 1.5563864856316667,
+        "residuals": [
+          {
+            "id": "SPX@2025-12-09",
+            "predicted": 0.2651833586239403,
+            "printed": 0.261,
+            "residual_pp": 0.4183358623940314
+          },
+          {
+            "id": "CCMP@2025-12-09",
+            "predicted": 0.29143613514368333,
+            "printed": 0.307,
+            "residual_pp": -1.5563864856316667
+          },
+          {
+            "id": "RUT@2025-12-09",
+            "predicted": 0.14826598470555574,
+            "printed": 0.148,
+            "residual_pp": 0.02659847055557496
+          },
+          {
+            "id": "SPX@2026-07-26",
+            "predicted": 0.30474357703472543,
+            "printed": 0.29362905550790486,
+            "residual_pp": 1.1114521526820575
+          }
+        ]
+      }
+    },
+    "published_upside_holdout": {
+      "rows": [
+        {
+          "evidence_id": "rim-ccea4d31accf70a35d5a095e",
+          "date": "2026-07-26",
+          "id": "SPX",
+          "kind": "range",
+          "low": 0.19,
+          "high": 0.29,
+          "feno_measured": {
+            "upside": {
+              "low": -0.35507418936475443,
+              "high": -0.30899083127016236
+            },
+            "convexity": "bounded",
+            "passed": false
+          },
+          "yoo_convention": {
+            "upside": {
+              "low": 0.29067560464863984,
+              "high": 0.4004288165957919
+            },
+            "convexity": "amplifying",
+            "passed": false
+          },
+          "informative": true
+        },
+        {
+          "evidence_id": "rim-657138512272497b9d28fa5e",
+          "date": "2026-07-12",
+          "id": "SPX",
+          "kind": "floor",
+          "low": 0.14,
+          "feno_measured": {
+            "upside": {
+              "low": -0.3692299959608374,
+              "high": -0.3232695828343646
+            },
+            "convexity": "bounded",
+            "passed": false
+          },
+          "yoo_convention": {
+            "upside": {
+              "low": 0.23039902255123468,
+              "high": 0.33665619174333017
+            },
+            "convexity": "amplifying",
+            "passed": true
+          },
+          "informative": false
+        },
+        {
+          "evidence_id": "rim-00269321d964013833efea9f",
+          "date": "2026-07-12",
+          "id": "NDX",
+          "kind": "floor",
+          "low": 0.36,
+          "feno_measured": {
+            "upside": {
+              "low": -0.3064463349558617,
+              "high": -0.26706262743237363
+            },
+            "convexity": "convex",
+            "passed": false
+          },
+          "yoo_convention": {
+            "upside": {
+              "low": 0.8593917886757656,
+              "high": 0.9770914457649931
+            },
+            "convexity": "amplifying",
+            "passed": true
+          },
+          "informative": false
+        },
+        {
+          "evidence_id": "rim-df8e2e5aa81bfca036c8b547",
+          "date": "2026-04-18",
+          "id": "NDX",
+          "kind": "floor",
+          "low": 0.3,
+          "feno_measured": {
+            "upside": {
+              "low": -0.2780769308396127,
+              "high": -0.23509863161189226
+            },
+            "convexity": "convex",
+            "passed": false
+          },
+          "yoo_convention": {
+            "upside": {
+              "low": 0.8006118495312575,
+              "high": 0.9199246629595601
+            },
+            "convexity": "amplifying",
+            "passed": true
+          },
+          "informative": false
+        },
+        {
+          "evidence_id": "rim-8c8130ac9b05e797d4168d85",
+          "date": "2026-06-21",
+          "id": "NDX",
+          "kind": "floor",
+          "low": 0.28,
+          "feno_measured": {
+            "upside": {
+              "low": -0.319394931994198,
+              "high": -0.2805074198192766
+            },
+            "convexity": "convex",
+            "passed": false
+          },
+          "yoo_convention": {
+            "upside": {
+              "low": 0.8067340541976578,
+              "high": 0.9217317946305208
+            },
+            "convexity": "amplifying",
+            "passed": true
+          },
+          "informative": false
+        },
+        {
+          "evidence_id": "rim-694e999c6f76b4d205ede3c2",
+          "date": "2026-07-12",
+          "id": "CCMP",
+          "kind": "floor",
+          "low": 0.24,
+          "feno_measured": {
+            "upside": {
+              "low": -0.4415091724400245,
+              "high": -0.40174277891708643
+            },
+            "convexity": "bounded",
+            "passed": false
+          },
+          "yoo_convention": {
+            "upside": {
+              "low": 0.2150449318594585,
+              "high": 0.31532964893215887
+            },
+            "convexity": "amplifying",
+            "passed": true
+          },
+          "informative": false
+        },
+        {
+          "evidence_id": "rim-7041d3d1604bd6d9b5683c04",
+          "date": "2026-06-14",
+          "id": "KOSPI",
+          "kind": "point",
+          "low": 0.495,
+          "high": 0.495,
+          "feno_measured": {
+            "upside": {
+              "low": 0.5635691525149509,
+              "high": 0.7417365108100007
+            },
+            "convexity": "bounded",
+            "passed": false
+          },
+          "yoo_convention": {
+            "upside": {
+              "low": 2.428668419010198,
+              "high": 2.9004944902827043
+            },
+            "convexity": "amplifying",
+            "passed": false
+          },
+          "informative": true
+        }
+      ],
+      "feno_measured": {
+        "passed": 0,
+        "total": 7,
+        "informative_passed": 0,
+        "informative_total": 2
+      },
+      "yoo_convention": {
+        "passed": 5,
+        "total": 7,
+        "informative_passed": 0,
+        "informative_total": 2
+      },
+      "note": "floor anchors are one-sided and are passed by almost any positive band; only the two-sided rows discriminate"
+    },
+    "lanes": {
+      "feno_measured": "book rolls forward at the index's own measured 15-year book CAGR; every operand is measured on our panel",
+      "yoo_convention": "book rolls forward at LTROE * (1 - cash dividend payout), reproducing Yoo's published sheets"
     }
   },
-  "promotion_gate": {
-    "status": "passed",
-    "checks": {
-      "six_unique_indices": true,
-      "finite_ordered_ranges": true,
-      "point_estimates_forbidden": true,
-      "runtime_yoo_target_injection_forbidden": true,
-      "proxy_rows_low_confidence": true,
-      "bounded_discount_extrapolation": true,
-      "input_freshness_enforced": true,
-      "payout_fraction_bounds_enforced": true
-    }
-  },
-  "interpretation": "Rows are automatic FENO house fair-value ranges. They deliberately convert unresolved Yoo identification into frozen FENO policy, disclose proxy use, discount-domain extrapolation and confidence, and never claim to be Yoo's current values. No point estimate is published.",
+  "interpretation": "Both lanes share one structure, one book source and one LTROE rule. They differ only in the book roll-forward rate. The Yoo convention implies book compounding several times faster than the same index's own measured history, which is why its ranges sit far above the measured lane. Neither lane publishes a point estimate and neither reads a current Yoo value.",
   "rows": [
     {
       "id": "SPX",
-      "status": "feno_house_fair_value_range",
+      "label": "S&P 500",
       "publication_status": "RANGE",
-      "confidence": "medium",
-      "production_promoted": true,
-      "house_policy_proxy_used": false,
-      "model_domain": {
-        "discount": {
-          "status": "extrapolated",
-          "measured_risk_free_domain": {
-            "low": 0.035,
-            "high": 0.042
-          },
-          "bounded_house_extrapolation_domain": {
-            "low": 0.03,
-            "high": 0.05
-          },
-          "current_risk_free": 0.0475,
-          "distance_from_domain": 0.005499999999999998
-        }
-      },
+      "blocking_reasons": [],
+      "as_of": "2026-07-31",
       "input_freshness": {
         "status": "passed",
         "items": [
           {
-            "id": "price",
+            "id": "panel",
             "as_of": "2026-07-31",
+            "max_age_days": 14,
             "age_days": 4,
-            "max_age_days": 10,
             "status": "passed"
           },
           {
             "id": "risk_free",
             "as_of": "2026-07-31",
+            "max_age_days": 45,
             "age_days": 4,
-            "max_age_days": 10,
-            "status": "passed"
-          },
-          {
-            "id": "erp",
-            "as_of": "2026-04-01",
-            "age_days": 125,
-            "max_age_days": 180,
-            "status": "passed"
-          },
-          {
-            "id": "payout_policy_build",
-            "as_of": "2026-08-04T09:06:51.365Z",
-            "age_days": 0,
-            "max_age_days": 10,
             "status": "passed"
           }
         ]
       },
-      "value": {
-        "current_price": 7489.72,
-        "range": {
-          "low": 6093.621141633438,
-          "high": 6893.96696895865
-        },
-        "point_estimate": null,
-        "upside_range": {
-          "low": -0.18640200946985497,
-          "high": -0.07954276408748928
-        }
-      },
-      "automatic_inputs": {
+      "current_price": 7489.72,
+      "inputs": {
         "price": 7489.72,
-        "book": 1315.9252,
-        "fy3_roe": {
-          "low": 0.271572,
-          "center": 0.271572,
-          "high": 0.271572
-        },
-        "payout": {
-          "low": 0.3445,
-          "center": 0.3611,
-          "high": 0.3761
+        "book": 1315.9252231358494,
+        "price_to_book": 5.6916,
+        "panel_forward_roe": 0.2913,
+        "model_forward_roe": 0.2913,
+        "forward_roe_basis": "panel forward ROE",
+        "lt_roe_centre": 0.3077305684,
+        "lt_roe_axis": [
+          0.3027305684,
+          0.3077305684,
+          0.3127305684
+        ],
+        "erp_axis": [
+          0.04,
+          0.045,
+          0.05
+        ],
+        "dividend_payout": 0.3109,
+        "dividend_retention": 0.6891,
+        "measured_book_growth": {
+          "value": 0.052755115509582895,
+          "window_start": "2011-08-19",
+          "window_end": "2026-07-31",
+          "elapsed_years": 14.948972258157252,
+          "start_book": 610.1830228642807,
+          "end_book": 1315.9252231358494
         },
         "risk_free": 0.0475,
-        "public_erp": 0.0503
-      },
-      "transformed_inputs": {
-        "lt_roe": {
-          "low": 0.2576388972487367,
-          "center": 0.2598671635190872,
-          "high": 0.2625607084822879
-        },
-        "erp": {
-          "low": 0.0453,
-          "center": 0.0503,
-          "high": 0.055299999999999995
-        },
+        "risk_free_as_of": "2026-07-31",
+        "risk_free_series": "DGS10",
         "discount": 0.1026
       },
-      "payout_basis": {
-        "role": "measured trailing four-year policy band",
-        "generated_at": "2026-08-04T09:06:51.365Z",
-        "basis_id": "realised_cash_dividends_over_positive_net_income_current_membership",
-        "eligibility": {
-          "status": "measured_candidate_band_only",
-          "production_eligible": false,
-          "blocking_reasons": [
-            "current_membership_applied_to_historical_years",
-            "trailing_realised_basis_not_forward_policy",
-            "loss_making_constituent_years_excluded"
-          ]
-        }
-      },
-      "source_quality": "exact index benchmark fundamentals plus current named membership; trailing payout remains a sensitivity-calibrated policy input",
-      "method": {
-        "lt_roe": "LTROE = own rolling 260-week median ROE + w * (automatic FY3 ROE - own median)",
-        "residual_value": {
-          "equation": "RI_N / d(Rf), discounted from N; Gordon g=0",
-          "evidence_status": "historically_supported_conditional_candidate"
+      "feno_measured": {
+        "book_growth": 0.052755115509582895,
+        "convexity": {
+          "book_growth": 0.052755115509582895,
+          "discount": 0.1026,
+          "growth_over_discount": 0.5141824123741023,
+          "status": "bounded"
         },
-        "horizon": {
-          "equation": "N=9",
-          "evidence_status": "selected_by_two_index_cross_vintage_payout_validation"
-        }
+        "range": {
+          "low": 4809.919399489283,
+          "high": 5150.413917785752
+        },
+        "upside": {
+          "low": -0.35779716738552536,
+          "high": -0.3123355856045684
+        },
+        "point_estimate": null
+      },
+      "yoo_convention": {
+        "book_growth": 0.21205713468444,
+        "convexity": {
+          "book_growth": 0.21205713468444,
+          "discount": 0.1026,
+          "growth_over_discount": 2.0668336713883044,
+          "status": "amplifying"
+        },
+        "range": {
+          "low": 9722.239083318444,
+          "high": 10541.44588333066
+        },
+        "upside": {
+          "low": 0.29807777638128563,
+          "high": 0.4074552698005611
+        },
+        "point_estimate": null
+      },
+      "growth_assumption_gap": {
+        "measured": 0.052755115509582895,
+        "yoo_convention": 0.21205713468444,
+        "ratio": 4.019650656359953
+      },
+      "confidence": "medium",
+      "source_notes": {
+        "panel": "data/benchmarks/us.json#sections.sp500",
+        "risk_free": "DGS10",
+        "erp": "printed 2025-12-09 SPX axis",
+        "payout": "printed 2026-08-03 SPX input sheet; grid fit recovers 0.3124",
+        "forward_roe_basis": "panel forward ROE"
       },
       "runtime_yoo_value_injection": false
     },
     {
       "id": "NDX",
-      "status": "feno_house_fair_value_range",
+      "label": "NASDAQ 100",
       "publication_status": "RANGE",
-      "confidence": "medium",
-      "production_promoted": true,
-      "house_policy_proxy_used": false,
-      "model_domain": {
-        "discount": {
-          "status": "extrapolated",
-          "measured_risk_free_domain": {
-            "low": 0.035,
-            "high": 0.042
-          },
-          "bounded_house_extrapolation_domain": {
-            "low": 0.03,
-            "high": 0.05
-          },
-          "current_risk_free": 0.0475,
-          "distance_from_domain": 0.005499999999999998
-        }
-      },
+      "blocking_reasons": [],
+      "as_of": "2026-07-31",
       "input_freshness": {
         "status": "passed",
         "items": [
           {
-            "id": "price",
+            "id": "panel",
             "as_of": "2026-07-31",
+            "max_age_days": 14,
             "age_days": 4,
-            "max_age_days": 10,
             "status": "passed"
           },
           {
             "id": "risk_free",
             "as_of": "2026-07-31",
+            "max_age_days": 45,
             "age_days": 4,
-            "max_age_days": 10,
-            "status": "passed"
-          },
-          {
-            "id": "erp",
-            "as_of": "2026-04-01",
-            "age_days": 125,
-            "max_age_days": 180,
-            "status": "passed"
-          },
-          {
-            "id": "payout_policy_build",
-            "as_of": "2026-08-04T09:06:51.365Z",
-            "age_days": 0,
-            "max_age_days": 10,
             "status": "passed"
           }
         ]
       },
-      "value": {
-        "current_price": 28274.2,
-        "range": {
-          "low": 37247.35576257577,
-          "high": 44330.84097403355
-        },
-        "point_estimate": null,
-        "upside_range": {
-          "low": 0.3173619682458131,
-          "high": 0.5678901957980613
-        }
-      },
-      "automatic_inputs": {
+      "current_price": 28274.2,
+      "inputs": {
         "price": 28274.2,
-        "book": 3199.4885,
-        "fy3_roe": {
-          "low": 0.381067,
-          "center": 0.381067,
-          "high": 0.381067
-        },
-        "payout": {
-          "low": 0.2004,
-          "center": 0.2224,
-          "high": 0.2411
+        "book": 3199.48851998959,
+        "price_to_book": 8.8371,
+        "panel_forward_roe": 0.414,
+        "model_forward_roe": 0.414,
+        "forward_roe_basis": "panel forward ROE",
+        "lt_roe_centre": 0.41880695199999995,
+        "lt_roe_axis": [
+          0.41380695199999995,
+          0.41880695199999995,
+          0.42380695199999996
+        ],
+        "erp_axis": [
+          0.045,
+          0.05,
+          0.055
+        ],
+        "dividend_payout": 0.2224,
+        "dividend_retention": 0.7776000000000001,
+        "measured_book_growth": {
+          "value": 0.114232423821927,
+          "window_start": "2011-08-19",
+          "window_end": "2026-07-31",
+          "elapsed_years": 14.948972258157252,
+          "start_book": 635.0979964478236,
+          "end_book": 3199.48851998959
         },
         "risk_free": 0.0475,
-        "public_erp": 0.0503
-      },
-      "transformed_inputs": {
-        "lt_roe": {
-          "low": 0.3563095934868052,
-          "center": 0.36026894804404525,
-          "high": 0.36505504549886253
-        },
-        "erp": {
-          "low": 0.0503,
-          "center": 0.055299999999999995,
-          "high": 0.06029999999999999
-        },
+        "risk_free_as_of": "2026-07-31",
+        "risk_free_series": "DGS10",
         "discount": 0.1026
       },
-      "payout_basis": {
-        "role": "measured trailing four-year policy band",
-        "generated_at": "2026-08-04T09:06:51.365Z",
-        "basis_id": "realised_cash_dividends_over_positive_net_income_current_membership",
-        "eligibility": {
-          "status": "measured_candidate_band_only",
-          "production_eligible": false,
-          "blocking_reasons": [
-            "current_membership_applied_to_historical_years",
-            "trailing_realised_basis_not_forward_policy",
-            "loss_making_constituent_years_excluded"
-          ]
-        }
-      },
-      "source_quality": "exact index benchmark fundamentals plus current named membership; trailing payout remains a sensitivity-calibrated policy input",
-      "method": {
-        "lt_roe": "LTROE = own rolling 260-week median ROE + w * (automatic FY3 ROE - own median)",
-        "residual_value": {
-          "equation": "RI_N / d(Rf), discounted from N; Gordon g=0",
-          "evidence_status": "historically_supported_conditional_candidate"
+      "feno_measured": {
+        "book_growth": 0.114232423821927,
+        "convexity": {
+          "book_growth": 0.114232423821927,
+          "discount": 0.1026,
+          "growth_over_discount": 1.1133764505061112,
+          "status": "convex"
         },
-        "horizon": {
-          "equation": "N=9",
-          "evidence_status": "selected_by_two_index_cross_vintage_payout_validation"
-        }
+        "range": {
+          "low": 21256.83068212446,
+          "high": 22416.92955213844
+        },
+        "upside": {
+          "low": -0.2481898450840534,
+          "high": -0.20715954643673595
+        },
+        "point_estimate": null
+      },
+      "yoo_convention": {
+        "book_growth": 0.32566428587519997,
+        "convexity": {
+          "book_growth": 0.32566428587519997,
+          "discount": 0.1026,
+          "growth_over_discount": 3.174115846736842,
+          "status": "amplifying"
+        },
+        "range": {
+          "low": 60619.48384612451,
+          "high": 64308.4470997389
+        },
+        "upside": {
+          "low": 1.143985819090355,
+          "high": 1.2744568228186437
+        },
+        "point_estimate": null
+      },
+      "growth_assumption_gap": {
+        "measured": 0.114232423821927,
+        "yoo_convention": 0.32566428587519997,
+        "ratio": 2.8508918482099865
+      },
+      "confidence": "low",
+      "source_notes": {
+        "panel": "data/benchmarks/us.json#sections.nasdaq100",
+        "risk_free": "DGS10",
+        "erp": "inherits the printed CCMP technology axis; no printed NDX axis exists",
+        "payout": "measured trailing four-year realised payout",
+        "forward_roe_basis": "panel forward ROE"
       },
       "runtime_yoo_value_injection": false
     },
     {
       "id": "KOSPI",
-      "status": "feno_house_fair_value_range",
+      "label": "KOSPI",
       "publication_status": "RANGE",
-      "confidence": "low",
-      "production_promoted": true,
-      "house_policy_proxy_used": true,
-      "model_domain": {
-        "discount": {
-          "status": "extrapolated",
-          "measured_risk_free_domain": {
-            "low": 0.035,
-            "high": 0.042
-          },
-          "bounded_house_extrapolation_domain": {
-            "low": 0.03,
-            "high": 0.05
-          },
-          "current_risk_free": 0.04266,
-          "distance_from_domain": 0.0006599999999999939
-        }
-      },
+      "blocking_reasons": [],
+      "as_of": "2026-08-02",
       "input_freshness": {
         "status": "passed",
         "items": [
           {
-            "id": "price",
+            "id": "panel",
             "as_of": "2026-08-02",
+            "max_age_days": 14,
             "age_days": 2,
-            "max_age_days": 10,
             "status": "passed"
           },
           {
             "id": "risk_free",
             "as_of": "2026-08-03",
+            "max_age_days": 45,
             "age_days": 1,
-            "max_age_days": 10,
-            "status": "passed"
-          },
-          {
-            "id": "erp",
-            "as_of": "2026-04-01",
-            "age_days": 125,
-            "max_age_days": 180,
-            "status": "passed"
-          },
-          {
-            "id": "payout_policy_build",
-            "as_of": "2026-08-04T09:06:51.365Z",
-            "age_days": 0,
-            "max_age_days": 10,
             "status": "passed"
           }
         ]
       },
-      "value": {
-        "current_price": 6595.45,
-        "range": {
-          "low": 7657.206885893563,
-          "high": 17049.1555161102
-        },
-        "point_estimate": null,
-        "upside_range": {
-          "low": 0.16098323630587186,
-          "high": 1.584987455914335
-        }
-      },
-      "automatic_inputs": {
+      "current_price": 6595.45,
+      "inputs": {
         "price": 6595.45,
-        "book": 3498.3557,
-        "fy3_roe": {
-          "low": 0.287016,
-          "center": 0.287016,
-          "high": 0.287016
-        },
-        "payout": {
-          "low": 0.2049,
-          "center": 0.2543,
-          "high": 0.345
+        "book": 3498.3556993581924,
+        "price_to_book": 1.8853,
+        "panel_forward_roe": 0.3422,
+        "model_forward_roe": 0.3422,
+        "forward_roe_basis": "panel forward ROE",
+        "lt_roe_centre": 0.3538087096,
+        "lt_roe_axis": [
+          0.3488087096,
+          0.3538087096,
+          0.3588087096
+        ],
+        "erp_axis": [
+          0.055,
+          0.065,
+          0.075
+        ],
+        "dividend_payout": 0.2543,
+        "dividend_retention": 0.7457,
+        "measured_book_growth": {
+          "value": 0.057451506848358536,
+          "window_start": "2011-08-12",
+          "window_end": "2026-08-02",
+          "elapsed_years": 14.973613421220149,
+          "start_book": 1515.6440162271804,
+          "end_book": 3498.3556993581924
         },
         "risk_free": 0.04266,
-        "public_erp": 0.0549077
-      },
-      "transformed_inputs": {
-        "lt_roe": {
-          "low": 0.21702702302077487,
-          "center": 0.22822008457233825,
-          "high": 0.24175034124146896
-        },
-        "erp": {
-          "low": 0.065,
-          "center": 0.0925,
-          "high": 0.12,
-          "public_base": 0.0549077,
-          "surcharge": {
-            "low": 0.0100923,
-            "center": 0.0375923,
-            "high": 0.0650923
-          },
-          "surcharge_provenance": "surcharges frozen from 2026-08-03 broad-regime total ERP band relative to same-vintage Damodaran Korea ERP; runtime total moves with current public ERP"
-        },
+        "risk_free_as_of": "2026-08-03",
+        "risk_free_series": "KRX_KTS_10Y_BENCHMARK",
         "discount": 0.0998896
       },
-      "payout_basis": {
-        "role": "measured trailing four-year policy band",
-        "generated_at": "2026-08-04T09:06:51.365Z",
-        "basis_id": "realised_cash_dividends_over_positive_net_income_current_membership",
-        "eligibility": {
-          "status": "measured_candidate_band_only",
-          "production_eligible": false,
-          "blocking_reasons": [
-            "current_membership_applied_to_historical_years",
-            "trailing_realised_basis_not_forward_policy",
-            "loss_making_constituent_years_excluded",
-            "exact_historical_index_membership_unavailable"
-          ]
-        }
-      },
-      "source_quality": "exact KOSPI benchmark fundamentals, but the payout universe is all collected .KS names rather than exact historical KOSPI membership",
-      "method": {
-        "lt_roe": "LTROE = own rolling 260-week median ROE + w * (automatic FY3 ROE - own median)",
-        "residual_value": {
-          "equation": "RI_N / d(Rf), discounted from N; Gordon g=0",
-          "evidence_status": "historically_supported_conditional_candidate"
+      "feno_measured": {
+        "book_growth": 0.057451506848358536,
+        "convexity": {
+          "book_growth": 0.057451506848358536,
+          "discount": 0.0998896,
+          "growth_over_discount": 0.5751500341212552,
+          "status": "bounded"
         },
-        "horizon": {
-          "equation": "N=9",
-          "evidence_status": "selected_by_two_index_cross_vintage_payout_validation"
-        }
+        "range": {
+          "low": 14553.28216155494,
+          "high": 15988.063235781203
+        },
+        "upside": {
+          "low": 1.2065639435603241,
+          "high": 1.424104986889629
+        },
+        "point_estimate": null
+      },
+      "yoo_convention": {
+        "book_growth": 0.26383515474872,
+        "convexity": {
+          "book_growth": 0.26383515474872,
+          "discount": 0.0998896,
+          "growth_over_discount": 2.6412675068147236,
+          "status": "amplifying"
+        },
+        "range": {
+          "low": 38157.20256284454,
+          "high": 42655.45569046914
+        },
+        "upside": {
+          "low": 4.785382735498645,
+          "high": 5.467406422680657
+        },
+        "point_estimate": null
+      },
+      "growth_assumption_gap": {
+        "measured": 0.057451506848358536,
+        "yoo_convention": 0.26383515474872,
+        "ratio": 4.5923104409620565
+      },
+      "confidence": "medium",
+      "source_notes": {
+        "panel": "data/benchmarks/emerging.json#sections.kospi",
+        "risk_free": "KRX_KTS_10Y_BENCHMARK",
+        "erp": "printed 2026-08-03 Korean stock-sheet ERP band, recentred on the index",
+        "payout": "measured trailing four-year realised payout",
+        "forward_roe_basis": "panel forward ROE"
       },
       "runtime_yoo_value_injection": false
     },
     {
       "id": "SOX",
-      "status": "feno_house_fair_value_range",
+      "label": "Philadelphia Semiconductor",
       "publication_status": "RANGE",
-      "confidence": "low",
-      "production_promoted": true,
-      "house_policy_proxy_used": true,
-      "model_domain": {
-        "discount": {
-          "status": "extrapolated",
-          "measured_risk_free_domain": {
-            "low": 0.035,
-            "high": 0.042
-          },
-          "bounded_house_extrapolation_domain": {
-            "low": 0.03,
-            "high": 0.05
-          },
-          "current_risk_free": 0.0475,
-          "distance_from_domain": 0.005499999999999998
-        }
-      },
+      "blocking_reasons": [],
+      "as_of": "2026-07-31",
       "input_freshness": {
         "status": "passed",
         "items": [
           {
-            "id": "price",
+            "id": "panel",
             "as_of": "2026-07-31",
+            "max_age_days": 14,
             "age_days": 4,
-            "max_age_days": 10,
             "status": "passed"
           },
           {
             "id": "risk_free",
             "as_of": "2026-07-31",
+            "max_age_days": 45,
             "age_days": 4,
-            "max_age_days": 10,
-            "status": "passed"
-          },
-          {
-            "id": "erp",
-            "as_of": "2026-04-01",
-            "age_days": 125,
-            "max_age_days": 180,
-            "status": "passed"
-          },
-          {
-            "id": "payout_policy_build",
-            "as_of": "2026-08-04T09:06:51.365Z",
-            "age_days": 0,
-            "max_age_days": 10,
             "status": "passed"
           }
         ]
       },
-      "value": {
-        "current_price": 11311.08,
-        "range": {
-          "low": 10495.424316629085,
-          "high": 15073.045060401028
-        },
-        "point_estimate": null,
-        "upside_range": {
-          "low": -0.0721112116058692,
-          "high": 0.3325911460621822
-        }
-      },
-      "automatic_inputs": {
+      "current_price": 11311.08,
+      "inputs": {
         "price": 11311.08,
-        "book": 1086.1835,
-        "fy3_roe": {
-          "low": 0.432463,
-          "center": 0.432463,
-          "high": 0.432463
-        },
-        "payout": {
-          "low": 0.2699,
-          "center": 0.3069,
-          "high": 0.3481
+        "book": 1086.183452408389,
+        "price_to_book": 10.4136,
+        "panel_forward_roe": 0.5137,
+        "model_forward_roe": 0.5137,
+        "forward_roe_basis": "panel forward ROE",
+        "lt_roe_centre": 0.5090621716,
+        "lt_roe_axis": [
+          0.5040621716,
+          0.5090621716,
+          0.5140621716
+        ],
+        "erp_axis": [
+          0.045,
+          0.05,
+          0.055
+        ],
+        "dividend_payout": 0.3069,
+        "dividend_retention": 0.6931,
+        "measured_book_growth": {
+          "value": 0.13753053339458132,
+          "window_start": "2011-08-19",
+          "window_end": "2026-07-31",
+          "elapsed_years": 14.948972258157252,
+          "start_book": 158.23877412472117,
+          "end_book": 1086.183452408389
         },
         "risk_free": 0.0475,
-        "public_erp": 0.0503
-      },
-      "transformed_inputs": {
-        "lt_roe": {
-          "low": 0.35659916002245934,
-          "center": 0.36873176528483687,
-          "high": 0.38339774943126426
-        },
-        "erp": {
-          "low": 0.0503,
-          "center": 0.055299999999999995,
-          "high": 0.06029999999999999
-        },
+        "risk_free_as_of": "2026-07-31",
+        "risk_free_series": "DGS10",
         "discount": 0.1026
       },
-      "payout_basis": {
-        "role": "measured trailing four-year policy band",
-        "generated_at": "2026-08-04T09:06:51.365Z",
-        "basis_id": "realised_cash_dividends_over_positive_net_income_current_membership",
-        "eligibility": {
-          "status": "measured_candidate_band_only",
-          "production_eligible": false,
-          "blocking_reasons": [
-            "current_membership_applied_to_historical_years",
-            "trailing_realised_basis_not_forward_policy",
-            "loss_making_constituent_years_excluded",
-            "published_anchor_instrument_identity_unresolved"
-          ]
-        }
-      },
-      "source_quality": "exact PHLX benchmark fundamentals and public constituent identity, but trailing payout is current-membership and unweighted",
-      "method": {
-        "lt_roe": "LTROE = own rolling 260-week median ROE + w * (automatic FY3 ROE - own median)",
-        "residual_value": {
-          "equation": "RI_N / d(Rf), discounted from N; Gordon g=0",
-          "evidence_status": "historically_supported_conditional_candidate"
+      "feno_measured": {
+        "book_growth": 0.13753053339458132,
+        "convexity": {
+          "book_growth": 0.13753053339458132,
+          "discount": 0.1026,
+          "growth_over_discount": 1.3404535418575179,
+          "status": "convex"
         },
-        "horizon": {
-          "equation": "N=9",
-          "evidence_status": "selected_by_two_index_cross_vintage_payout_validation"
-        }
+        "range": {
+          "low": 10080.821581547563,
+          "high": 10528.803924769813
+        },
+        "upside": {
+          "low": -0.10876577819734601,
+          "high": -0.06916015758267002
+        },
+        "point_estimate": null
+      },
+      "yoo_convention": {
+        "book_growth": 0.35283099113596,
+        "convexity": {
+          "book_growth": 0.35283099113596,
+          "discount": 0.1026,
+          "growth_over_discount": 3.4388985490834307,
+          "status": "amplifying"
+        },
+        "range": {
+          "low": 30128.07996342757,
+          "high": 31574.52579747133
+        },
+        "upside": {
+          "low": 1.6635900341459502,
+          "high": 1.7914687012620663
+        },
+        "point_estimate": null
+      },
+      "growth_assumption_gap": {
+        "measured": 0.13753053339458132,
+        "yoo_convention": 0.35283099113596,
+        "ratio": 2.5654738800704853
+      },
+      "confidence": "low",
+      "source_notes": {
+        "panel": "data/benchmarks/micro_sectors.json#sections.philadelphia_semi",
+        "risk_free": "DGS10",
+        "erp": "inherits the printed CCMP technology axis; no printed SOX axis exists",
+        "payout": "measured trailing four-year realised payout",
+        "forward_roe_basis": "panel forward ROE"
       },
       "runtime_yoo_value_injection": false
     },
     {
       "id": "CCMP",
-      "status": "feno_house_fair_value_range",
+      "label": "NASDAQ Composite",
       "publication_status": "RANGE",
-      "confidence": "low",
-      "production_promoted": true,
-      "house_policy_proxy_used": true,
-      "model_domain": {
-        "discount": {
-          "status": "extrapolated",
-          "measured_risk_free_domain": {
-            "low": 0.035,
-            "high": 0.042
-          },
-          "bounded_house_extrapolation_domain": {
-            "low": 0.03,
-            "high": 0.05
-          },
-          "current_risk_free": 0.0475,
-          "distance_from_domain": 0.005499999999999998
-        }
-      },
+      "blocking_reasons": [],
+      "as_of": "2026-07-31",
       "input_freshness": {
         "status": "passed",
         "items": [
           {
-            "id": "price",
+            "id": "panel",
             "as_of": "2026-07-31",
+            "max_age_days": 14,
             "age_days": 4,
-            "max_age_days": 10,
             "status": "passed"
           },
           {
             "id": "risk_free",
             "as_of": "2026-07-31",
+            "max_age_days": 45,
             "age_days": 4,
-            "max_age_days": 10,
-            "status": "passed"
-          },
-          {
-            "id": "erp",
-            "as_of": "2026-04-01",
-            "age_days": 125,
-            "max_age_days": 180,
-            "status": "passed"
-          },
-          {
-            "id": "payout_proxy_build",
-            "as_of": "2026-08-04T13:59:46.152Z",
-            "age_days": 0,
-            "max_age_days": 10,
             "status": "passed"
           }
         ]
       },
-      "value": {
-        "current_price": 25373.85,
-        "range": {
-          "low": 20109.342778002,
-          "high": 37754.05542507964
-        },
-        "point_estimate": null,
-        "upside_range": {
-          "low": -0.20747766783511368,
-          "high": 0.4879119812357857
-        }
-      },
-      "automatic_inputs": {
+      "current_price": 25373.85,
+      "inputs": {
         "price": 25373.85,
         "book": 3341.5223546454204,
-        "fy3_roe": {
-          "low": 0.2733291609939995,
-          "center": 0.31123108572546465,
-          "high": 0.3509989285047947
+        "price_to_book": 7.5935,
+        "panel_forward_roe": 0.3235,
+        "model_forward_roe": 0.3235,
+        "forward_roe_basis": "panel forward ROE",
+        "lt_roe_centre": 0.336880198,
+        "lt_roe_axis": [
+          0.331880198,
+          0.336880198,
+          0.341880198
+        ],
+        "erp_axis": [
+          0.045,
+          0.05,
+          0.055
+        ],
+        "dividend_payout": 0.2164,
+        "dividend_retention": 0.7836,
+        "measured_book_growth": {
+          "value": 0.08533719706830833,
+          "window_start": "2011-07-29",
+          "window_end": "2026-07-31",
+          "elapsed_years": 15.00646830530401,
+          "start_book": 977.786449095424,
+          "end_book": 3341.5223546454204
         },
-        "payout": 0.11502064000000001,
         "risk_free": 0.0475,
-        "public_erp": 0.0503
-      },
-      "transformed_inputs": {
-        "lt_roe": {
-          "low": 0.2563892253685297,
-          "center": 0.2849685062531023,
-          "high": 0.32106093882796477
-        },
-        "erp": {
-          "low": 0.0503,
-          "center": 0.055299999999999995,
-          "high": 0.06029999999999999
-        },
+        "risk_free_as_of": "2026-07-31",
+        "risk_free_series": "DGS10",
         "discount": 0.1026
       },
-      "source_quality": "exact Nasdaq Composite benchmark fundamentals combined with ONEQ payout proxy; exact Composite dividend weights are unavailable",
-      "proxy_inputs": {
-        "index_fundamentals": {
-          "identity": "nasdaq_composite",
-          "as_of": "2026-07-31",
-          "price": 25373.85,
-          "forward_eps": 1080.9544,
-          "forward_pe": 23.4736,
-          "price_to_book": 7.5935
+      "feno_measured": {
+        "book_growth": 0.08533719706830833,
+        "convexity": {
+          "book_growth": 0.08533719706830833,
+          "discount": 0.1026,
+          "growth_over_discount": 0.8317465601199643,
+          "status": "bounded"
         },
-        "normal_roe": {
-          "value": 0.22849999999999998,
-          "formula": "median of trailing 260 exact-index weekly ROE observations"
+        "range": {
+          "low": 15191.942257985284,
+          "high": 16225.197962415343
         },
-        "eps_growth": {
-          "low": 0.17044719578350298,
-          "center": 0.2586536259236487,
-          "high": 0.34686005606379444,
-          "observations": [
-            {
-              "years": 3,
-              "from": "2023-07-28",
-              "to": "2026-07-31",
-              "value": 0.34686005606379444
-            },
-            {
-              "years": 5,
-              "from": "2021-07-30",
-              "to": "2026-07-31",
-              "value": 0.17044719578350298
-            }
-          ],
-          "formula": "range of exact-index forward-EPS 3y and 5y CAGRs; midpoint is diagnostic center"
+        "upside": {
+          "low": -0.4012756338519663,
+          "high": -0.36055435172765093
         },
-        "payout": {
-          "low": 0.11502064000000001,
-          "center": 0.11502064000000001,
-          "high": 0.11502064000000001,
-          "generated_at": "2026-08-04T13:59:46.152Z",
-          "observations": [
-            {
-              "ticker": "ONEQ",
-              "dividend_yield": 0.0049,
-              "payout": 0.11502064000000001
-            }
-          ],
-          "formula": "ETF dividend yield / exact-index forward earnings yield"
-        },
-        "fy3_roe_scenarios": [
-          {
-            "status": "ready_proxy",
-            "formula": "FY1 forward EPS anchor; FY2/FY3 grow at exact-index trailing forward-EPS CAGR; book rolls with proxy payout",
-            "earnings_basis": "forward_fy1",
-            "annual_eps_growth": 0.17044719578350298,
-            "payout": 0.11502064000000001,
-            "path": [
-              {
-                "year": 1,
-                "earnings": 1080.9526446731647,
-                "book_beginning": 3341.5223546454204,
-                "roe": 0.323491070819985
-              },
-              {
-                "year": 2,
-                "earnings": 1265.197991732467,
-                "book_beginning": 4298.143134318585,
-                "roe": 0.2943592040084649
-              },
-              {
-                "year": 3,
-                "earnings": 1480.8474415341857,
-                "book_beginning": 5417.817243315269,
-                "roe": 0.2733291609939995
-              }
-            ],
-            "fy3_roe": 0.2733291609939995
-          },
-          {
-            "status": "ready_proxy",
-            "formula": "FY1 forward EPS anchor; FY2/FY3 grow at exact-index trailing forward-EPS CAGR; book rolls with proxy payout",
-            "earnings_basis": "forward_fy1",
-            "annual_eps_growth": 0.2586536259236487,
-            "payout": 0.11502064000000001,
-            "path": [
-              {
-                "year": 1,
-                "earnings": 1080.9526446731647,
-                "book_beginning": 3341.5223546454204,
-                "roe": 0.323491070819985
-              },
-              {
-                "year": 2,
-                "earnings": 1360.5449656696362,
-                "book_beginning": 4298.143134318585,
-                "roe": 0.3165424982724157
-              },
-              {
-                "year": 3,
-                "earnings": 1712.4548542722537,
-                "book_beginning": 5502.197347288122,
-                "roe": 0.31123108572546465
-              }
-            ],
-            "fy3_roe": 0.31123108572546465
-          },
-          {
-            "status": "ready_proxy",
-            "formula": "FY1 forward EPS anchor; FY2/FY3 grow at exact-index trailing forward-EPS CAGR; book rolls with proxy payout",
-            "earnings_basis": "forward_fy1",
-            "annual_eps_growth": 0.34686005606379444,
-            "payout": 0.11502064000000001,
-            "path": [
-              {
-                "year": 1,
-                "earnings": 1080.9526446731647,
-                "book_beginning": 3341.5223546454204,
-                "roe": 0.323491070819985
-              },
-              {
-                "year": 2,
-                "earnings": 1455.8919396068056,
-                "book_beginning": 4298.143134318585,
-                "roe": 0.33872579253636664
-              },
-              {
-                "year": 3,
-                "earnings": 1960.8826994016488,
-                "book_beginning": 5586.577451260974,
-                "roe": 0.3509989285047947
-              }
-            ],
-            "fy3_roe": 0.3509989285047947
-          }
-        ],
-        "generated_from_yoo_runtime_values": false
+        "point_estimate": null
       },
-      "exact_input_limitations": [
-        "ONEQ_sampling_proxy_for_COMP",
-        "exact_COMP_weights_require_Nasdaq_entitlement"
-      ],
-      "method": {
-        "lt_roe": "LTROE = own rolling 260-week median ROE + w * (automatic FY3 ROE - own median)",
-        "residual_value": {
-          "equation": "RI_N / d(Rf), discounted from N; Gordon g=0",
-          "evidence_status": "historically_supported_conditional_candidate"
+      "yoo_convention": {
+        "book_growth": 0.2639793231528,
+        "convexity": {
+          "book_growth": 0.2639793231528,
+          "discount": 0.1026,
+          "growth_over_discount": 2.572897886479532,
+          "status": "amplifying"
         },
-        "horizon": {
-          "equation": "N=9",
-          "evidence_status": "selected_by_two_index_cross_vintage_payout_validation"
-        }
+        "range": {
+          "low": 35038.05150598507,
+          "high": 37801.718939155544
+        },
+        "upside": {
+          "low": 0.3808724929793892,
+          "high": 0.48979043145425494
+        },
+        "point_estimate": null
+      },
+      "growth_assumption_gap": {
+        "measured": 0.08533719706830833,
+        "yoo_convention": 0.2639793231528,
+        "ratio": 3.093367631251085
+      },
+      "confidence": "medium",
+      "source_notes": {
+        "panel": "data/benchmarks/us.json#sections.nasdaq_composite",
+        "risk_free": "DGS10",
+        "erp": "printed 2025-12-09 CCMP axis",
+        "payout": "fitted on the 18 published 2025-12-09 CCMP cells",
+        "forward_roe_basis": "panel forward ROE"
       },
       "runtime_yoo_value_injection": false
     },
     {
       "id": "RUT",
-      "status": "feno_house_fair_value_range",
+      "label": "Russell 2000",
       "publication_status": "RANGE",
-      "confidence": "low",
-      "production_promoted": true,
-      "house_policy_proxy_used": true,
-      "model_domain": {
-        "discount": {
-          "status": "extrapolated",
-          "measured_risk_free_domain": {
-            "low": 0.035,
-            "high": 0.042
-          },
-          "bounded_house_extrapolation_domain": {
-            "low": 0.03,
-            "high": 0.05
-          },
-          "current_risk_free": 0.0475,
-          "distance_from_domain": 0.005499999999999998
-        }
-      },
+      "blocking_reasons": [],
+      "as_of": "2026-07-31",
       "input_freshness": {
         "status": "passed",
         "items": [
           {
-            "id": "price",
+            "id": "panel",
             "as_of": "2026-07-31",
+            "max_age_days": 14,
             "age_days": 4,
-            "max_age_days": 10,
             "status": "passed"
           },
           {
             "id": "risk_free",
             "as_of": "2026-07-31",
+            "max_age_days": 45,
             "age_days": 4,
-            "max_age_days": 10,
-            "status": "passed"
-          },
-          {
-            "id": "erp",
-            "as_of": "2026-04-01",
-            "age_days": 125,
-            "max_age_days": 180,
-            "status": "passed"
-          },
-          {
-            "id": "official_quarterly_fundamentals",
-            "as_of": "2026-06-30",
-            "age_days": 35,
-            "max_age_days": 120,
             "status": "passed"
           }
         ]
       },
-      "value": {
-        "current_price": 2931.339,
-        "range": {
-          "low": 1757.154521284565,
-          "high": 2059.326833406165
-        },
-        "point_estimate": null,
-        "upside_range": {
-          "low": -0.4005625001801003,
-          "high": -0.29747912697706913
-        }
-      },
-      "automatic_inputs": {
+      "current_price": 2931.339,
+      "inputs": {
         "price": 2931.339,
-        "book": 1206.3123456790122,
-        "fy3_roe": {
-          "low": 0.13015255183925475,
-          "center": 0.13015255183925475,
-          "high": 0.13440627551020412
-        },
-        "payout": 0.23716,
-        "risk_free": 0.0475,
-        "public_erp": 0.0503
-      },
-      "transformed_inputs": {
-        "lt_roe": {
-          "low": 0.13015255183925475,
-          "center": 0.13015255183925475,
-          "high": 0.13440627551020412
-        },
-        "erp": {
-          "low": 0.0453,
-          "center": 0.0503,
-          "high": 0.055299999999999995
-        },
-        "discount": 0.1026
-      },
-      "source_quality": "official recurring LSEG Russell 2000 fundamentals; current price is newer than the quarterly fundamentals snapshot",
-      "official_fundamentals": {
-        "schema_version": "fenok_rim_russell2000_official_fundamentals.v1",
-        "generated_at": "2026-08-04T14:45:23.721Z",
-        "source": {
-          "publisher": "LSEG FTSE Russell",
-          "url": "https://research.ftserussell.com/Analytics/FactSheets/Home/DownloadSingleIssue?issueName=US2000USD&isManual=True",
-          "sha256": "12c7c485fd4aac876f8bd071315aa3d6f04f4d65418ad765f9b8e45cf4c55689",
-          "retrieval": "automatic_official_download"
-        },
-        "identity": "Russell 2000",
-        "ticker": "RTY",
-        "as_of": "2026-06-30",
-        "fundamentals": {
-          "price_to_book": 2.43,
-          "dividend_yield": 0.0121,
-          "price_to_earnings_ex_negative": 19.6,
-          "eps_growth_5y": 0.08410000000000001,
-          "holdings": 1975
-        },
-        "derived": {
-          "current_roe_ex_negative_basis": 0.1239795918367347,
-          "payout_ex_negative_basis": 0.23716
-        },
-        "status": "ready_official_quarterly_snapshot",
-        "valuation_role": "exact-index fundamentals snapshot; price/as-of alignment and long-run ROE model remain separate gates",
-        "runtime_yoo_value_injection": false,
-        "archive": {
-          "directory": "data/computed/fenok-rim/russell2000-history",
-          "snapshot_json": "2026-06-30_12c7c485fd4a.json",
-          "raw_pdf": "2026-06-30_12c7c485fd4a.pdf",
-          "latest_pointer": "latest.json"
-        }
-      },
-      "fundamentals_age_days_at_price": 31,
-      "exact_input_limitations": [
-        "official_fundamentals_asof_precedes_current_price",
-        "method_family_not_validated_on_later_RUT_holdout"
-      ],
-      "method": {
-        "lt_roe": "LTROE center = automatic FY3 ROE; range spans the automatic FY1-FY3 ROE path",
-        "residual_value": {
-          "equation": "RI_N / d(Rf), discounted from N; Gordon g=0",
-          "evidence_status": "historically_supported_conditional_candidate"
-        },
-        "horizon": {
-          "equation": "N=9",
-          "evidence_status": "selected_by_two_index_cross_vintage_payout_validation"
-        }
-      },
-      "runtime_yoo_value_injection": false
-    }
-  ],
-  "coverage_safe_rows": [
-    {
-      "id": "SPX",
-      "status": "ltroe_coverage_band_fair_value_sensitivity_only",
-      "classification": "FENO_HOUSE_CALIBRATED_COVERAGE_BAND_NOT_POINT",
-      "production_integrated": false,
-      "point_estimate": null,
-      "rule": {
-        "equation": "LTROE = hull(normal ROE, automatic FY1-FY3 ROE path) +/- 3.5 percentage points",
-        "margin": 0.035,
-        "evidence_status": "coverage_calibration_not_sealed_validation",
-        "center": "none"
-      },
-      "runtime_inputs": {
-        "price": 7489.72,
-        "book": 1315.9252,
-        "normal_roe": 0.2347,
-        "roe_path": [
-          0.291297,
-          0.279623,
-          0.271572
+        "book": 1126.6147815058225,
+        "price_to_book": 2.6019,
+        "panel_forward_roe": 0.0914,
+        "model_forward_roe": 0.1168092,
+        "forward_roe_basis": "LSEG ex-negative earnings bridge",
+        "lt_roe_centre": 0.1497696308656,
+        "lt_roe_axis": [
+          0.1447696308656,
+          0.1497696308656,
+          0.1547696308656
         ],
-        "payout": {
-          "low": 0.207148,
-          "center": 0.207148,
-          "high": 0.207148
-        },
-        "risk_free": 0.0475,
-        "public_erp": 0.0503
-      },
-      "transformed_inputs": {
-        "lt_roe": {
-          "low": 0.1997,
-          "high": 0.32629699999999995,
-          "center": null
-        },
-        "erp": {
-          "low": 0.0453,
-          "center": 0.0503,
-          "high": 0.055299999999999995
-        },
-        "discount": 0.1026
-      },
-      "sweep": {
-        "cells": 4,
-        "range": {
-          "low": 4266.2862779895,
-          "high": 13662.93570141826
-        }
-      },
-      "price_context": {
-        "low_upside": -0.4303810719239838,
-        "high_upside": 0.8242251648150078
-      },
-      "runtime_yoo_value_injection": false
-    },
-    {
-      "id": "NDX",
-      "status": "ltroe_coverage_band_fair_value_sensitivity_only",
-      "classification": "FENO_HOUSE_CALIBRATED_COVERAGE_BAND_NOT_POINT",
-      "production_integrated": false,
-      "point_estimate": null,
-      "rule": {
-        "equation": "LTROE = hull(normal ROE, automatic FY1-FY3 ROE path) +/- 3.5 percentage points",
-        "margin": 0.035,
-        "evidence_status": "coverage_calibration_not_sealed_validation",
-        "center": "none"
-      },
-      "runtime_inputs": {
-        "price": 28274.2,
-        "book": 3199.4885,
-        "normal_roe": 0.31555,
-        "roe_path": [
-          0.414013,
-          0.366772,
-          0.381067
+        "erp_axis": [
+          0.04,
+          0.045,
+          0.05
         ],
-        "payout": {
-          "low": 0.097061,
-          "center": 0.097061,
-          "high": 0.097061
+        "dividend_payout": 0.23716,
+        "dividend_retention": 0.76284,
+        "measured_book_growth": {
+          "value": 0.0680591835425699,
+          "window_start": "2011-08-19",
+          "window_end": "2026-07-31",
+          "elapsed_years": 14.948972258157252,
+          "start_book": 421.0220298468893,
+          "end_book": 1126.6147815058225
         },
         "risk_free": 0.0475,
-        "public_erp": 0.0503
-      },
-      "transformed_inputs": {
-        "lt_roe": {
-          "low": 0.28054999999999997,
-          "high": 0.449013,
-          "center": null
-        },
-        "erp": {
-          "low": 0.0503,
-          "center": 0.055299999999999995,
-          "high": 0.06029999999999999
-        },
+        "risk_free_as_of": "2026-07-31",
+        "risk_free_series": "DGS10",
         "discount": 0.1026
       },
-      "sweep": {
-        "cells": 4,
+      "feno_measured": {
+        "book_growth": 0.0680591835425699,
+        "convexity": {
+          "book_growth": 0.0680591835425699,
+          "discount": 0.1026,
+          "growth_over_discount": 0.663344868835964,
+          "status": "bounded"
+        },
         "range": {
-          "low": 24767.198389884383,
-          "high": 101665.908960549
-        }
-      },
-      "price_context": {
-        "low_upside": -0.1240353965847174,
-        "high_upside": 2.5957130161259734
-      },
-      "runtime_yoo_value_injection": false
-    },
-    {
-      "id": "KOSPI",
-      "status": "blocked",
-      "reason": "LTROE path exists but payout and identity gates do not support a fair-value sensitivity",
-      "blocking_reasons": [
-        "invalid_direct_forward_payout",
-        "covered_weight_below_95pct",
-        "dividend_and_earnings_as_of_mismatch"
-      ]
-    },
-    {
-      "id": "SOX",
-      "status": "blocked",
-      "reason": "LTROE path exists but payout and identity gates do not support a fair-value sensitivity",
-      "blocking_reasons": [
-        "covered_weight_below_95pct",
-        "official_index_weights_unavailable"
-      ]
-    },
-    {
-      "id": "CCMP",
-      "status": "blocked",
-      "reason": "exact constituent weights, payout, and FY1-FY3 path are unavailable"
-    },
-    {
-      "id": "RUT",
-      "status": "diagnostic_only_date_mismatch_and_no_holdout",
-      "classification": "FENO_HOUSE_CALIBRATED_COVERAGE_BAND_NOT_POINT",
-      "production_integrated": false,
-      "point_estimate": null,
-      "rule": {
-        "equation": "LTROE = hull(official current ROE, automatic FY3 scenario band) +/- 3.5 percentage points",
-        "margin": 0.035,
-        "evidence_status": "coverage_calibration_not_sealed_validation",
-        "center": "none",
-        "input_shape": "official current ROE plus FY3 low/high scenarios; not a preserved FY1-FY3 path"
-      },
-      "runtime_inputs": {
-        "price": 2931.339,
-        "book": 1206.3123456790122,
-        "normal_roe": 0.1239795918367347,
-        "roe_path": [
-          0.13015255183925475,
-          0.13440627551020412
-        ],
-        "payout": {
-          "low": 0.23716,
-          "center": 0.23716,
-          "high": 0.23716
+          "low": 1875.5687107652764,
+          "high": 2192.4545909994276
         },
-        "risk_free": 0.0475,
-        "public_erp": 0.0503
-      },
-      "transformed_inputs": {
-        "lt_roe": {
-          "low": 0.08897959183673469,
-          "high": 0.16940627551020412,
-          "center": null
+        "upside": {
+          "low": -0.36016656184587437,
+          "high": -0.2520637868907596
         },
-        "erp": {
-          "low": 0.0453,
-          "center": 0.0503,
-          "high": 0.055299999999999995
-        },
-        "discount": 0.1026
+        "point_estimate": null
       },
-      "sweep": {
-        "cells": 4,
+      "yoo_convention": {
+        "book_growth": 0.1142502652095143,
+        "convexity": {
+          "book_growth": 0.1142502652095143,
+          "discount": 0.1026,
+          "growth_over_discount": 1.1135503431726541,
+          "status": "convex"
+        },
         "range": {
-          "low": 972.0805186515882,
-          "high": 3026.47218760041
-        }
+          "low": 2092.187314211767,
+          "high": 2500.725529985578
+        },
+        "upside": {
+          "low": -0.28626906877308733,
+          "high": -0.1468999218495104
+        },
+        "point_estimate": null
       },
-      "price_context": {
-        "low_upside": -0.6683834525274668,
-        "high_upside": 0.032453833418929046
+      "growth_assumption_gap": {
+        "measured": 0.0680591835425699,
+        "yoo_convention": 0.1142502652095143,
+        "ratio": 1.678689917548785
+      },
+      "confidence": "low",
+      "source_notes": {
+        "panel": "data/benchmarks/us.json#sections.russell2000",
+        "risk_free": "DGS10",
+        "erp": "printed 2025-12-09 IWM axis",
+        "payout": "LSEG official dividend yield times ex-negative P/E",
+        "forward_roe_basis": "LSEG ex-negative earnings bridge"
       },
       "runtime_yoo_value_injection": false
     }
