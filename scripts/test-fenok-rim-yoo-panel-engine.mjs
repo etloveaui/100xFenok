@@ -56,13 +56,16 @@ assert.ok(Math.abs(decemberRate.value - 0.042) < 0.0005, "the 2025-12-09 soverei
 
 const fit = runLtRoeCalibration(ENGINE_ROOT);
 assert.ok(Math.abs(fit.intercept - FROZEN_CALIBRATION.lt_roe_rule.intercept) < 1e-5, "frozen LTROE intercept must match the refit");
-assert.ok(Math.abs(fit.log_gap_coefficient - FROZEN_CALIBRATION.lt_roe_rule.log_gap_coefficient) < 1e-5, "frozen LTROE gap coefficient must match the refit");
-assert.ok(fit.log_gap_coefficient > 0, "a wider gap must raise the long-run ROE, not lower it");
-// Concavity is the whole point: a gap twice as wide must not double the excess.
+assert.ok(Math.abs(fit.gap_coefficient - FROZEN_CALIBRATION.lt_roe_rule.gap_coefficient) < 1e-5, "frozen LTROE gap coefficient must match the refit");
+assert.ok(fit.gap_coefficient > 0 && fit.gap_coefficient < 1, "the rule must carry part of the gap, not all of it and not none");
+// The semiconductor regime must be represented, otherwise a cycle peak is damped into nothing.
+assert.ok(fit.observations.some((row) => row.id.startsWith("HYNIX")), "the large-gap stock evidence must be in the fit");
+assert.ok(fit.stock_gap_share.low > 0.6 && fit.stock_gap_share.high < 0.8, "the printed stock gap share must sit in its measured band");
+// A wider gap must raise the long-run ROE but never carry the whole gap.
 const narrow = ltRoeCentre(0.20, 0.15) - 0.15;
 const wide = ltRoeCentre(0.25, 0.15) - 0.15;
 assert.ok(wide > narrow, "a wider gap must raise the excess");
-assert.ok(wide < narrow * 2, "the excess must be concave in the gap, not proportional to it");
+assert.ok(wide - narrow < 0.05, "the rule must carry only part of a widening gap");
 // A forward ROE at its own median must not earn a gap premium beyond the intercept.
 assert.ok(Math.abs(ltRoeCentre(0.15, 0.15) - 0.15 - FROZEN_CALIBRATION.lt_roe_rule.intercept) < 1e-12,
   "a zero gap must return the anchor plus the intercept");

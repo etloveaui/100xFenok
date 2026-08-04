@@ -193,20 +193,24 @@ export const FROZEN_CALIBRATION = Object.freeze({
   // ex-negative earnings basis through the bridge below, because the panel's
   // Russell ROE includes loss-making constituents and Yoo's does not.
   // LTROE is anchored on the index's OWN long-run level, not on its current
-  // forward ROE. The excess over that anchor is concave in the gap: the
-  // further a forward ROE runs above the index's own history, the smaller the
-  // share of that gap Yoo carries into his long-run number. A linear form
-  // cannot hold both the US indices, whose gap is a few points, and KOSPI,
-  // whose gap is nearly twenty.
+  // forward ROE, and carries a fixed share of the gap above that anchor.
+  //
+  // The fit spans both model families on purpose. Index evidence alone tops
+  // out at a 19pp gap, so it cannot say what Yoo does with a semiconductor
+  // cycle; his 2026-08-03 Samsung and SK Hynix sheets print gaps of 31pp and
+  // 36pp and carry 62%~76% of them, which is the same share the index rows
+  // imply. That agreement is the bridge, and it is what stops the rule from
+  // damping a semiconductor peak into nothing.
   lt_roe_rule: Object.freeze({
-    equation: "LTROE_centre = median_260w + 0.020486 + 0.029099 * ln(1 + 100 * max(forward_ROE - median_260w, 0))",
+    equation: "LTROE_centre = median_260w + 0.033112 + 0.568908 * max(forward_ROE - median_260w, 0)",
     anchor: "the index's own rolling 260-week median forward ROE",
-    intercept: 0.020486,
-    log_gap_coefficient: 0.029099,
-    observations: 5,
-    fit_dates: Object.freeze(["2025-12-09", "2026-06-14", "2026-07-26"]),
-    fit_observables: "three printed 2025-12-09 LTROE axis centres, plus the LTROE that reproduces the published 2026-07-26 S&P 500 span and the published 2026-06-14 KOSPI upside under the printed lattice",
-    max_abs_residual_pp: 1.49,
+    intercept: 0.033112,
+    gap_coefficient: 0.568908,
+    observations: 9,
+    fit_dates: Object.freeze(["2025-12-09", "2026-06-14", "2026-07-26", "2026-08-03"]),
+    fit_observables: "three printed 2025-12-09 index LTROE axis centres, the LTROE reproducing the published 2026-07-26 S&P 500 span and the published 2026-06-14 KOSPI upside, and four printed 2026-08-03 Samsung and SK Hynix LTROE scenario centres",
+    cross_family_bridge: "the stock sheets contribute the large-gap regime only; their implied gap share of 0.622~0.756 brackets the share the index rows imply, which is the measured agreement that licenses the transfer",
+    max_abs_residual_pp: 3.58,
     lattice_half_width: 0.005,
     lattice_note: "Yoo prints a +/-0.5pp LTROE axis; the same half width is retained",
   }),
@@ -309,9 +313,20 @@ export function readAutomaticPayout(root, id) {
 
 export function ltRoeCentre(forwardRoe, medianRoe) {
   const rule = FROZEN_CALIBRATION.lt_roe_rule;
-  const gap = Math.max(forwardRoe - medianRoe, 0);
-  return medianRoe + rule.intercept + rule.log_gap_coefficient * Math.log(1 + 100 * gap);
+  return medianRoe + rule.intercept + rule.gap_coefficient * Math.max(forwardRoe - medianRoe, 0);
 }
+
+/**
+ * The 2026-08-03 stock sheets, which supply the large-gap end of the fit. Each
+ * row is a printed scenario: the five-actual-year median ROE, the printed FY3
+ * ROE, and the printed LTROE axis centre for that scenario.
+ */
+export const STOCK_GAP_OBSERVATIONS = Object.freeze([
+  Object.freeze({ id: "SAMSUNG-worst", median_roe: 0.1085, forward_roe: 0.4162, lt_roe: 0.303 }),
+  Object.freeze({ id: "SAMSUNG-likely", median_roe: 0.1085, forward_roe: 0.4162, lt_roe: 0.341 }),
+  Object.freeze({ id: "HYNIX-worst", median_roe: 0.1684, forward_roe: 0.5246, lt_roe: 0.390 }),
+  Object.freeze({ id: "HYNIX-likely", median_roe: 0.1684, forward_roe: 0.5246, lt_roe: 0.425 }),
+]);
 
 /**
  * Russell's panel earnings include loss makers and Yoo's do not. When the LSEG
@@ -583,22 +598,37 @@ export function runLtRoeCalibration(root = ROOT) {
   observations.push(inferLtRoeFromPublishedSpan(root, { id: "SPX", date: "2026-07-26", low: 0.19, high: 0.29 }));
   observations.push(inferLtRoeFromPublishedSpan(root, { id: "KOSPI", date: "2026-06-14", low: 0.495, high: 0.495 }));
 
-  const xs = observations.map((row) => Math.log(1 + 100 * Math.max(row.model_forward_roe - row.median_roe, 0)));
+  for (const stock of STOCK_GAP_OBSERVATIONS) {
+    observations.push({
+      id: `${stock.id}@2026-08-03`,
+      forward_roe: stock.forward_roe,
+      model_forward_roe: stock.forward_roe,
+      median_roe: stock.median_roe,
+      printed_lt_roe: stock.lt_roe,
+      kind: "printed_stock_scenario_centre",
+    });
+  }
+
+  const xs = observations.map((row) => Math.max(row.model_forward_roe - row.median_roe, 0));
   const ys = observations.map((row) => row.printed_lt_roe - row.median_roe);
   const meanX = xs.reduce((a, b) => a + b, 0) / xs.length;
   const meanY = ys.reduce((a, b) => a + b, 0) / ys.length;
   const coefficient = xs.reduce((sum, x, index) => sum + (x - meanX) * (ys[index] - meanY), 0)
     / xs.reduce((sum, x) => sum + (x - meanX) ** 2, 0);
   const intercept = meanY - coefficient * meanX;
+  const gapShares = observations
+    .filter((row) => row.kind === "printed_stock_scenario_centre")
+    .map((row) => (row.printed_lt_roe - row.median_roe) / (row.model_forward_roe - row.median_roe));
   const residuals = observations.map((row, index) => {
     const predicted = row.median_roe + intercept + coefficient * xs[index];
     return { id: row.id, kind: row.kind, predicted, printed: row.printed_lt_roe, residual_pp: (predicted - row.printed_lt_roe) * 100 };
   });
   return {
-    fit_dates: ["2025-12-09", "2026-06-14", "2026-07-26"],
+    fit_dates: ["2025-12-09", "2026-06-14", "2026-07-26", "2026-08-03"],
     observations,
     intercept,
-    log_gap_coefficient: coefficient,
+    gap_coefficient: coefficient,
+    stock_gap_share: { low: Math.min(...gapShares), high: Math.max(...gapShares) },
     residuals,
     max_abs_residual_pp: Math.max(...residuals.map((row) => Math.abs(row.residual_pp))),
   };

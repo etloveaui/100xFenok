@@ -138,7 +138,8 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
         frozen: FROZEN_CALIBRATION.lt_roe_rule,
         refit: {
           intercept: ltRoeFit.intercept,
-          log_gap_coefficient: ltRoeFit.log_gap_coefficient,
+          gap_coefficient: ltRoeFit.gap_coefficient,
+          stock_gap_share: ltRoeFit.stock_gap_share,
           max_abs_residual_pp: ltRoeFit.max_abs_residual_pp,
           residuals: ltRoeFit.residuals,
           observations: ltRoeFit.observations.map((row) => ({ id: row.id, kind: row.kind, median_roe: row.median_roe, model_forward_roe: row.model_forward_roe, lt_roe: row.printed_lt_roe })),
