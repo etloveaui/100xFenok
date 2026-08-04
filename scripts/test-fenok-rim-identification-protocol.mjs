@@ -7,7 +7,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   buildTemporalReceipt,
+  findPrintedRoeRoundingWitness,
   solveBookFromPrintedGrid,
+  solveZeroResidualRoeSlopePayout,
   validatePrintedOperandFixture,
 } from "./fenok-rim-identification-protocol.mjs";
 import { buildIdentificationArtifact } from "./build-fenok-rim-identification-receipt.mjs";
@@ -35,6 +37,22 @@ for (const instrument of Object.values(fixture.instruments)) {
     assert.ok(solved.grid_rms <= 0.003, `${instrument.name}/${grid.id} structural RMS exceeds 0.3%`);
     assert.ok(Number.isFinite(solved.residual_roe_slope));
     assert.ok(Math.abs(solved.residual_roe_span) <= 0.01, `${instrument.name}/${grid.id} ROE-linked residual span exceeds 1%`);
+    const zeroSlopePayout = solveZeroResidualRoeSlopePayout({
+      cells: grid.cells,
+      riskFree: instrument.printed.risk_free,
+    });
+    assert.ok(Math.abs(zeroSlopePayout - instrument.printed.payout) > instrument.printed.payout_display_resolution / 2);
+    const roundingWitness = findPrintedRoeRoundingWitness({
+      cells: grid.cells,
+      riskFree: instrument.printed.risk_free,
+      payout: instrument.printed.payout,
+      roeDisplayResolution: instrument.printed.roe_display_resolution,
+    });
+    assert.equal(roundingWitness.found, true);
+    assert.ok(Math.abs(roundingWitness.residual_roe_slope) <= 1e-12);
+    assert.ok(roundingWitness.shift <= instrument.printed.roe_display_resolution / 2);
+    assert.ok(roundingWitness.adjusted_roes[0] < roundingWitness.adjusted_roes[1]);
+    assert.ok(roundingWitness.adjusted_roes[1] < roundingWitness.adjusted_roes[2]);
   }
 }
 
@@ -42,11 +60,21 @@ const transfer = buildIdentificationArtifact();
 assert.equal(transfer.schema_version, "fenok-rim-structural-transfer-receipt/v1");
 assert.equal(transfer.status, "structural_transfer_only");
 assert.equal(transfer.production_identified, false);
+assert.equal(transfer.exact_printed_input_structural_conflict, true);
+assert.equal(transfer.display_rounding_robust, false);
+assert.equal(transfer.printed_roe_rounding_can_remove_conflict, true);
 assert.equal(transfer.same_sheet_payout_count, 2);
 assert.ok(transfer.cases.every((row) => row.grid_rms <= 0.003));
 assert.ok(transfer.instruments.every((row) => row.external_book_pass === false));
 assert.ok(transfer.instruments.every((row) => row.external_book_min_abs_pct > 0.25));
 assert.ok(transfer.blocking_reasons.includes("external_book_basis_mismatch"));
+assert.ok(transfer.blocking_reasons.includes("printed_payout_residual_roe_conflict"));
+assert.ok(transfer.blocking_reasons.includes("printed_roe_rounding_can_remove_slope"));
+const zeroSlopeRoots = Object.fromEntries(transfer.cases.map((row) => [`${row.instrument}/${row.grid}`, row.payout_zero_residual_roe_slope]));
+assert.ok(Math.abs(zeroSlopeRoots["SAMSUNG/worst"] - 0.2627765951204991) < 1e-12);
+assert.ok(Math.abs(zeroSlopeRoots["SAMSUNG/likely"] - 0.27924570566103457) < 1e-12);
+assert.ok(Math.abs(zeroSlopeRoots["HYNIX/worst"] - 0.17550154323406159) < 1e-12);
+assert.ok(Math.abs(zeroSlopeRoots["HYNIX/likely"] - 0.19121064791130493) < 1e-12);
 
 const artifact = transfer;
 assert.equal(artifact.schema_version, "fenok-rim-structural-transfer-receipt/v1");

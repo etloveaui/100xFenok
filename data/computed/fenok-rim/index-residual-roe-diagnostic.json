@@ -1,0 +1,203 @@
+{
+  "schema_version": "fenok_rim_index_residual_roe_diagnostic.v1",
+  "source_date": "2025-12-09",
+  "scope": "verified_2025_12_09_index_fixture_only",
+  "status": "local_structural_diagnostic_only",
+  "production_eligible": false,
+  "identified_payout": false,
+  "formula_proof": false,
+  "point_cell_policy": {
+    "required_type": "point_fair_value",
+    "fixture_schema_implies_point_when_cell_type_is_absent": true,
+    "floors_ranges_and_missing_values_rejected": true
+  },
+  "method": {
+    "root": "unique sign-changing residual-versus-ROE slope root in payout interval [0,1]",
+    "simultaneous_book_fit": "at every payout candidate, fit one book/scale per nine-cell panel by least squares before calculating residual slope",
+    "residual": "simultaneously_fitted_book_or_scale * rim_bracket / printed_fair_value - 1",
+    "interpretation": "a local shape constraint only; it does not identify payout or prove the formula"
+  },
+  "blocking_reasons": [
+    "payout_not_printed_same_sheet",
+    "zero_slope_is_in_sample_constraint",
+    "book_basis_not_identified",
+    "no_temporal_holdout"
+  ],
+  "source_inputs": [
+    {
+      "path": "scripts/fixtures/fenok-rim-2025-12-09-grid.json",
+      "sha256": "7d982f0d011745e4ac3ec35e16d946a2804c884d51d26c175dbfb92448e61150"
+    },
+    {
+      "path": "scripts/fixtures/artifacts/fenok-rim-2025-12-09/Screenshot_20251209_192143_YouTube.jpg",
+      "sha256": "6de134fa3cd458866f90d051f885bb83345bf494772502ed3f7d9aa36b13dfc8"
+    },
+    {
+      "path": "scripts/fixtures/artifacts/fenok-rim-2025-12-09/Screenshot_20251209_192210_YouTube.jpg",
+      "sha256": "c538fb9a3349606f30fb9744365c05ab72388d49dfd66a7d9486cead376f7836"
+    },
+    {
+      "path": "scripts/fixtures/artifacts/fenok-rim-2025-12-09/Screenshot_20251209_192235_YouTube.jpg",
+      "sha256": "4ab44b831f23787bf6b45d5492cf3312f0d5b6d5a07ca5cd5fa8f7b1d8380480"
+    },
+    {
+      "path": "scripts/analyze-fenok-rim-identifiability.mjs",
+      "sha256": "b0f48595383c3ebafcdbe57ff6a7c0ca8eda940daef01cfe0aa62e581aa8d64b"
+    },
+    {
+      "path": "scripts/test-analyze-fenok-rim-identifiability.mjs",
+      "sha256": "968bd33e549c7ca8dfb36450a9d858e62f8b4fca644660873e7265499400bcec"
+    },
+    {
+      "path": "scripts/build-fenok-rim-index-residual-roe-diagnostic.mjs",
+      "sha256": "8ab3f7eff519c8892a90fa5b22afdf9cc7fa05759417d942f5616264c333fe6a"
+    }
+  ],
+  "panels": [
+    {
+      "instrument": "SPX",
+      "scenario": "current",
+      "risk_free": 0.042,
+      "point_cell_count": 9,
+      "payout_zero_slope_root": 0.403984887455,
+      "simultaneously_fitted_book_or_scale": 1395.718341527577,
+      "simultaneously_fitted_book": 1395.718341527577,
+      "simultaneously_fitted_scale": null,
+      "book_interpretation": "index_point_book_fitted_simultaneously_with_each_payout_candidate",
+      "grid_rms": 0.000170321545,
+      "max_abs_error": 0.000240495138,
+      "residual_roe_slope": 0,
+      "residual_roe_span": 0
+    },
+    {
+      "instrument": "SPX",
+      "scenario": "3.5%",
+      "risk_free": 0.035,
+      "point_cell_count": 9,
+      "payout_zero_slope_root": 0.403659384007,
+      "simultaneously_fitted_book_or_scale": 1398.935710911931,
+      "simultaneously_fitted_book": 1398.935710911931,
+      "simultaneously_fitted_scale": null,
+      "book_interpretation": "index_point_book_fitted_simultaneously_with_each_payout_candidate",
+      "grid_rms": 0.000252919078,
+      "max_abs_error": 0.000368689882,
+      "residual_roe_slope": 0,
+      "residual_roe_span": 0
+    },
+    {
+      "instrument": "CCMP",
+      "scenario": "current",
+      "risk_free": 0.042,
+      "point_cell_count": 9,
+      "payout_zero_slope_root": 0.322057599461,
+      "simultaneously_fitted_book_or_scale": 3573.709161554463,
+      "simultaneously_fitted_book": 3573.709161554463,
+      "simultaneously_fitted_scale": null,
+      "book_interpretation": "index_point_book_fitted_simultaneously_with_each_payout_candidate",
+      "grid_rms": 0.000152273517,
+      "max_abs_error": 0.000221811439,
+      "residual_roe_slope": 0,
+      "residual_roe_span": 0
+    },
+    {
+      "instrument": "CCMP",
+      "scenario": "3.5%",
+      "risk_free": 0.035,
+      "point_cell_count": 9,
+      "payout_zero_slope_root": 0.321455008228,
+      "simultaneously_fitted_book_or_scale": 3583.724588116622,
+      "simultaneously_fitted_book": 3583.724588116622,
+      "simultaneously_fitted_scale": null,
+      "book_interpretation": "index_point_book_fitted_simultaneously_with_each_payout_candidate",
+      "grid_rms": 0.000191581558,
+      "max_abs_error": 0.000284947398,
+      "residual_roe_slope": 0,
+      "residual_roe_span": 0
+    },
+    {
+      "instrument": "IWM",
+      "scenario": "current",
+      "risk_free": 0.042,
+      "point_cell_count": 9,
+      "payout_zero_slope_root": 0.171107538284,
+      "simultaneously_fitted_book_or_scale": 118.238138226694,
+      "simultaneously_fitted_book": null,
+      "simultaneously_fitted_scale": 118.238138226694,
+      "book_interpretation": "scale_only_not_unit_coherent_book",
+      "grid_rms": 0.000181076562,
+      "max_abs_error": 0.000278757724,
+      "residual_roe_slope": 0,
+      "residual_roe_span": 0
+    },
+    {
+      "instrument": "IWM",
+      "scenario": "3.5%",
+      "risk_free": 0.035,
+      "point_cell_count": 9,
+      "payout_zero_slope_root": 0.170147619177,
+      "simultaneously_fitted_book_or_scale": 117.952621966686,
+      "simultaneously_fitted_book": null,
+      "simultaneously_fitted_scale": 117.952621966686,
+      "book_interpretation": "scale_only_not_unit_coherent_book",
+      "grid_rms": 0.000367542224,
+      "max_abs_error": 0.000741498288,
+      "residual_roe_slope": 0,
+      "residual_roe_span": 0
+    }
+  ],
+  "instruments": {
+    "SPX": {
+      "scenario_root_dispersion": 0.000325503447,
+      "admissible_payout_band_comparison": {
+        "status": "measured_from_point_cells",
+        "method": "book_free_profile_rms_at_or_below_0.5_percent_on_0.25_percentage_point_grid",
+        "canonical_reference_band": [
+          0.2225,
+          0.535
+        ],
+        "canonical_reference_source": "scripts/test-analyze-fenok-rim-identifiability.mjs",
+        "rederived_discrete_band": [
+          0.225,
+          0.535
+        ],
+        "allowed_reference_edge_difference": 0.0025,
+        "reference_band_rederived_within_one_step": true,
+        "zero_slope_roots_inside_band": true,
+        "slope_not_robust_to_payout": true
+      },
+      "blockers": []
+    },
+    "CCMP": {
+      "scenario_root_dispersion": 0.000602591233,
+      "admissible_payout_band_comparison": {
+        "status": "measured_from_point_cells",
+        "method": "book_free_profile_rms_at_or_below_0.5_percent_on_0.25_percentage_point_grid",
+        "canonical_reference_band": [
+          0.1225,
+          0.45
+        ],
+        "canonical_reference_source": "scripts/test-analyze-fenok-rim-identifiability.mjs",
+        "rederived_discrete_band": [
+          0.1225,
+          0.4475
+        ],
+        "allowed_reference_edge_difference": 0.0025,
+        "reference_band_rederived_within_one_step": true,
+        "zero_slope_roots_inside_band": true,
+        "slope_not_robust_to_payout": true
+      },
+      "blockers": []
+    },
+    "IWM": {
+      "scenario_root_dispersion": 0.000959919107,
+      "admissible_payout_band_comparison": {
+        "status": "blocked",
+        "reason": "unit_coherent_book_unavailable",
+        "slope_not_robust_to_payout": null
+      },
+      "blockers": [
+        "unit_coherent_book_unavailable"
+      ]
+    }
+  }
+}

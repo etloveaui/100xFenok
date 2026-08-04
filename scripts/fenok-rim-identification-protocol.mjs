@@ -83,6 +83,8 @@ export function validatePrintedOperandFixture(fixture) {
     if (typeof artifact?.path !== "string" || !/^[a-f0-9]{64}$/.test(artifact?.sha256 ?? "")) fail(`${id} artifact`);
     if (instrument?.artifact !== artifact.path) fail(`${id} artifact link`);
     if (!finitePositive(instrument?.printed?.risk_free) || !finitePositive(instrument?.printed?.payout)) fail(`${id} printed rates`);
+    if (!finitePositive(instrument?.printed?.payout_display_resolution)) fail(`${id} printed payout display resolution`);
+    if (!finitePositive(instrument?.printed?.roe_display_resolution)) fail(`${id} printed ROE display resolution`);
     if (instrument?.printed?.source !== "same_image") fail(`${id} printed source`);
     if (!Array.isArray(instrument?.grids) || instrument.grids.length !== 2) fail(`${id} grids`);
     const gridIds = new Set();
@@ -105,7 +107,7 @@ export function validatePrintedOperandFixture(fixture) {
 
 export function solveBookFromPrintedGrid({ cells, riskFree, payout }) {
   if (!Array.isArray(cells) || cells.length === 0) throw new Error("cells required");
-  if (!finitePositive(riskFree) || !finitePositive(payout)) throw new Error("printed risk-free and payout required");
+  if (!finitePositive(riskFree) || !Number.isFinite(payout) || payout < 0 || payout > 1) throw new Error("risk-free rate and payout in [0,1] required");
   const rows = cells.map((cell) => {
     if (![cell?.roe, cell?.erp, cell?.fair_value].every(finitePositive)) throw new Error("finite positive grid cell required");
     return {
@@ -137,6 +139,108 @@ export function solveBookFromPrintedGrid({ cells, riskFree, payout }) {
   };
 }
 
+export function solveZeroResidualRoeSlopePayout({ cells, riskFree }) {
+  const slopeAt = (payout) => solveBookFromPrintedGrid({ cells, riskFree, payout }).residual_roe_slope;
+  const brackets = [];
+  const scanSteps = 4096;
+  let left = 0;
+  let leftSlope = slopeAt(left);
+  for (let step = 1; step <= scanSteps; step += 1) {
+    const right = step / scanSteps;
+    const rightSlope = slopeAt(right);
+    if (leftSlope === 0) brackets.push([left, left]);
+    else if (rightSlope === 0 || Math.sign(leftSlope) !== Math.sign(rightSlope)) brackets.push([left, right]);
+    left = right;
+    leftSlope = rightSlope;
+  }
+  const unique = brackets.filter((bracket, index) => (
+    index === 0 || bracket[0] !== brackets[index - 1][1] || bracket[0] !== bracket[1]
+  ));
+  if (unique.length !== 1) throw new Error(`expected one zero residual-ROE slope payout, found ${unique.length}`);
+  let [lo, hi] = unique[0];
+  if (lo === hi) return lo;
+  let loSlope = slopeAt(lo);
+  for (let iteration = 0; iteration < 100; iteration += 1) {
+    const mid = (lo + hi) / 2;
+    const midSlope = slopeAt(mid);
+    if (midSlope === 0) return mid;
+    if (Math.sign(loSlope) === Math.sign(midSlope)) {
+      lo = mid;
+      loSlope = midSlope;
+    } else {
+      hi = mid;
+    }
+  }
+  return (lo + hi) / 2;
+}
+
+export function findPrintedRoeRoundingWitness({ cells, riskFree, payout, roeDisplayResolution }) {
+  if (!Array.isArray(cells) || cells.length !== 9 || !finitePositive(roeDisplayResolution)) {
+    throw new Error("nine cells and positive ROE display resolution required");
+  }
+  const printedRows = [0, 1, 2].map((row) => {
+    const values = [...new Set(cells.filter((cell) => cell.row === row).map((cell) => cell.roe))];
+    if (values.length !== 1) throw new Error(`ROE row ${row} must have one printed value`);
+    return values[0];
+  });
+  if (!(printedRows[0] < printedRows[1] && printedRows[1] < printedRows[2])) {
+    throw new Error("printed ROE rows must be strictly increasing");
+  }
+  const adjustedCells = (shift) => cells.map((cell) => ({
+    ...cell,
+    roe: cell.row === 0 ? cell.roe + shift : cell.row === 2 ? cell.roe - shift : cell.roe,
+  }));
+  const evaluate = (shift) => solveBookFromPrintedGrid({ cells: adjustedCells(shift), riskFree, payout });
+  const halfResolution = roeDisplayResolution / 2;
+  let lo = 0;
+  let hi = halfResolution;
+  let loResult = evaluate(lo);
+  const hiResult = evaluate(hi);
+  if (!Number.isFinite(loResult.residual_roe_slope) || !Number.isFinite(hiResult.residual_roe_slope)) {
+    throw new Error("non-finite ROE-rounding endpoint slope");
+  }
+  if (loResult.residual_roe_slope !== 0 && Math.sign(loResult.residual_roe_slope) === Math.sign(hiResult.residual_roe_slope)) {
+    return {
+      found: false,
+      path: "lower_row_plus_t_middle_fixed_upper_row_minus_t",
+      shift_interval: [0, halfResolution],
+      endpoint_slopes: [loResult.residual_roe_slope, hiResult.residual_roe_slope],
+    };
+  }
+  if (loResult.residual_roe_slope !== 0) {
+    for (let iteration = 0; iteration < 100; iteration += 1) {
+      const mid = (lo + hi) / 2;
+      const midResult = evaluate(mid);
+      if (Math.sign(loResult.residual_roe_slope) === Math.sign(midResult.residual_roe_slope)) {
+        lo = mid;
+        loResult = midResult;
+      } else {
+        hi = mid;
+      }
+    }
+  }
+  const shift = loResult.residual_roe_slope === 0 ? lo : (lo + hi) / 2;
+  const result = evaluate(shift);
+  const adjustedRows = [printedRows[0] + shift, printedRows[1], printedRows[2] - shift];
+  if (!(adjustedRows[0] < adjustedRows[1] && adjustedRows[1] < adjustedRows[2])) {
+    throw new Error("ROE-rounding witness breaks row order");
+  }
+  if (Math.abs(result.residual_roe_slope) > 1e-12) throw new Error("ROE-rounding witness slope exceeds tolerance");
+  return {
+    found: true,
+    path: "lower_row_plus_t_middle_fixed_upper_row_minus_t",
+    shift_interval: [0, halfResolution],
+    endpoint_slopes: [evaluate(0).residual_roe_slope, hiResult.residual_roe_slope],
+    shift,
+    adjusted_roes: adjustedRows,
+    solved_book: result.solved_book,
+    grid_rms: result.grid_rms,
+    max_abs_error: result.max_abs_error,
+    residual_roe_slope: result.residual_roe_slope,
+    residual_roe_span: result.residual_roe_span,
+  };
+}
+
 function solveSharedBook(grids, riskFree, payout) {
   const cells = grids.flatMap((grid) => grid.cells);
   return solveBookFromPrintedGrid({ cells, riskFree, payout });
@@ -147,11 +251,28 @@ export function buildStructuralTransferReceipt(fixture, { externalBooks = {}, ex
   const cases = [];
   const instruments = [];
   for (const [id, instrument] of Object.entries(fixture.instruments).sort(([a], [b]) => a.localeCompare(b))) {
-    const solvedCases = instrument.grids.map((grid) => ({
-      instrument: id,
-      grid: grid.id,
-      ...solveBookFromPrintedGrid({ cells: grid.cells, riskFree: instrument.printed.risk_free, payout: instrument.printed.payout }),
-    }));
+    const solvedCases = instrument.grids.map((grid) => {
+      const solved = solveBookFromPrintedGrid({ cells: grid.cells, riskFree: instrument.printed.risk_free, payout: instrument.printed.payout });
+      const zeroSlopePayout = solveZeroResidualRoeSlopePayout({ cells: grid.cells, riskFree: instrument.printed.risk_free });
+      const payoutGap = zeroSlopePayout - instrument.printed.payout;
+      const roundingWitness = findPrintedRoeRoundingWitness({
+        cells: grid.cells,
+        riskFree: instrument.printed.risk_free,
+        payout: instrument.printed.payout,
+        roeDisplayResolution: instrument.printed.roe_display_resolution,
+      });
+      return {
+        instrument: id,
+        grid: grid.id,
+        printed_payout: instrument.printed.payout,
+        printed_payout_display_resolution: instrument.printed.payout_display_resolution,
+        payout_zero_residual_roe_slope: zeroSlopePayout,
+        printed_to_zero_slope_payout_gap: payoutGap,
+        exact_printed_input_structural_conflict: Math.abs(payoutGap) > instrument.printed.payout_display_resolution / 2,
+        printed_roe_rounding_zero_slope_witness: roundingWitness,
+        ...solved,
+      };
+    });
     cases.push(...solvedCases);
     const external = externalBooks[id] ?? null;
     const externalDiffs = external && finitePositive(external.value)
@@ -173,12 +294,18 @@ export function buildStructuralTransferReceipt(fixture, { externalBooks = {}, ex
   const blocking = [];
   if (instruments.some((row) => !row.external_book_pass)) blocking.push("external_book_basis_mismatch");
   if (instruments.some((row) => !row.shared_book_pass)) blocking.push("shared_book_across_panels_not_identified");
+  if (cases.some((row) => row.exact_printed_input_structural_conflict)) blocking.push("printed_payout_residual_roe_conflict");
+  if (cases.some((row) => row.printed_roe_rounding_zero_slope_witness.found)) blocking.push("printed_roe_rounding_can_remove_slope");
   blocking.push("temporal_holdout_not_run", "alternative_structures_not_profiled");
   return {
     schema_version: "fenok-rim-structural-transfer-receipt/v1",
     source_date: fixture.source_date,
     status: localShapePass ? "structural_transfer_only" : "structural_transfer_failed",
     local_shape_pass: localShapePass,
+    exact_printed_input_structural_conflict: cases.some((row) => row.exact_printed_input_structural_conflict),
+    structural_conflict_scope: "exact_printed_operands_under_the_reproduced_single_book_rim_family_only_component_or_form_not_identified",
+    display_rounding_robust: !cases.some((row) => row.printed_roe_rounding_zero_slope_witness.found),
+    printed_roe_rounding_can_remove_conflict: cases.some((row) => row.printed_roe_rounding_zero_slope_witness.found),
     same_sheet_payout_count: Object.keys(fixture.instruments).length,
     production_identified: false,
     cases,

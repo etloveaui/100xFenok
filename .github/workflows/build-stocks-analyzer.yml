@@ -76,6 +76,7 @@ jobs:
         run: |
           node scripts/build-fenok-rim-input-diagnostics.mjs
           node scripts/build-fenok-rim-membership-sensitivity.mjs
+          node scripts/build-fenok-rim-index-residual-roe-diagnostic.mjs
 
       - name: Verify Fenok RIM evidence and publication gates
         run: |
@@ -85,6 +86,7 @@ jobs:
           node scripts/test-fenok-rim-identification-protocol.mjs
           node scripts/test-build-fenok-rim-input-diagnostics.mjs
           node scripts/test-build-fenok-rim-membership-sensitivity.mjs
+          node scripts/test-build-fenok-rim-index-residual-roe-diagnostic.mjs
 
       - name: Build calendar previous-release values (FRED)
         env:
@@ -132,6 +134,7 @@ jobs:
             data/damodaran/industry_benchmarks.json \
             data/computed/fenok-rim/fair-values.json \
             data/computed/fenok-rim/identification-receipt.json \
+            data/computed/fenok-rim/index-residual-roe-diagnostic.json \
             data/computed/fenok-rim/input-diagnostics.json \
             data/computed/fenok-rim/membership-sensitivity-2026.json \
             data/computed/fenok-rim/payout-history.json \
