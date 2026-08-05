@@ -1,14 +1,14 @@
 {
   "schema_version": "fenok_rim_sustainable_index_ranges.v2",
-  "generated_at": "2026-08-05T01:41:10.288Z",
+  "generated_at": "2026-08-05T02:12:29.261Z",
   "as_of": "2026-08-05",
   "status": "research_diagnostic_not_promoted",
   "promotion": {
     "promoted": false,
     "blockers": [
       {
-        "id": "out_of_sample_anchor_failed",
-        "detail": "1/2 two-sided evaluation anchors reproduce"
+        "id": "historical_holdout_not_point_in_time",
+        "detail": "3/7 historical anchors use a later-vintage input and are excluded from pass/fail: rim-df8e2e5aa81bfca036c8b547, rim-8c8130ac9b05e797d4168d85, rim-7041d3d1604bd6d9b5683c04"
       },
       {
         "id": "amplifying_convexity",
@@ -20,11 +20,11 @@
       },
       {
         "id": "ungated_proxy_identity",
-        "detail": "SOX is scored against SOXX claims and RUT against IWM cells; neither bridge is measured"
+        "detail": "SOX uses a SOXX payout proxy while SOXX claims remain excluded, and RUT uses IWM cells/payout; measured book/ROE and payout identity gates fail"
       },
       {
-        "id": "calibration_receipt_not_immutable",
-        "detail": "the frozen block carries no cutoff, evidence hashes or parameter hash, so a rebuild cannot be proven identical"
+        "id": "sustainable_calibration_receipt_not_integrated",
+        "detail": "the immutable receipt primitive now gates the stock structural identification artifact, but the sustainable LTROE/payout calibration has not yet wired its cutoff, evidence IDs, and parameter hashes into that contract"
       }
     ],
     "contract": "every blocker must clear before a row may be published as a usable fair-value range"
@@ -309,7 +309,9 @@
             "passed": false
           },
           "informative": true,
-          "used_for_fitting": false
+          "used_for_fitting": false,
+          "point_in_time_evaluable": true,
+          "not_evaluable_reason": null
         },
         {
           "evidence_id": "rim-657138512272497b9d28fa5e",
@@ -334,7 +336,9 @@
             "passed": false
           },
           "informative": false,
-          "used_for_fitting": false
+          "used_for_fitting": false,
+          "point_in_time_evaluable": true,
+          "not_evaluable_reason": null
         },
         {
           "evidence_id": "rim-00269321d964013833efea9f",
@@ -359,7 +363,9 @@
             "passed": false
           },
           "informative": false,
-          "used_for_fitting": false
+          "used_for_fitting": false,
+          "point_in_time_evaluable": true,
+          "not_evaluable_reason": null
         },
         {
           "evidence_id": "rim-df8e2e5aa81bfca036c8b547",
@@ -373,7 +379,7 @@
               "high": 1.09432755631634
             },
             "convexity": "amplifying",
-            "passed": true
+            "passed": null
           },
           "measured_growth_diagnostic": {
             "upside": {
@@ -381,10 +387,12 @@
               "high": -0.2669450002621654
             },
             "convexity": "bounded",
-            "passed": false
+            "passed": null
           },
           "informative": false,
-          "used_for_fitting": false
+          "used_for_fitting": false,
+          "point_in_time_evaluable": false,
+          "not_evaluable_reason": "payout_not_point_in_time"
         },
         {
           "evidence_id": "rim-8c8130ac9b05e797d4168d85",
@@ -398,7 +406,7 @@
               "high": 1.0077459694154447
             },
             "convexity": "amplifying",
-            "passed": true
+            "passed": null
           },
           "measured_growth_diagnostic": {
             "upside": {
@@ -406,10 +414,12 @@
               "high": -0.31776711131417257
             },
             "convexity": "bounded",
-            "passed": false
+            "passed": null
           },
           "informative": false,
-          "used_for_fitting": false
+          "used_for_fitting": false,
+          "point_in_time_evaluable": false,
+          "not_evaluable_reason": "payout_not_point_in_time"
         },
         {
           "evidence_id": "rim-694e999c6f76b4d205ede3c2",
@@ -434,7 +444,9 @@
             "passed": false
           },
           "informative": false,
-          "used_for_fitting": false
+          "used_for_fitting": false,
+          "point_in_time_evaluable": true,
+          "not_evaluable_reason": null
         },
         {
           "evidence_id": "rim-7041d3d1604bd6d9b5683c04",
@@ -449,7 +461,7 @@
               "high": 1.4694106181170006
             },
             "convexity": "convex",
-            "passed": false
+            "passed": null
           },
           "measured_growth_diagnostic": {
             "upside": {
@@ -457,28 +469,44 @@
               "high": 0.39254780545668955
             },
             "convexity": "bounded",
-            "passed": false
+            "passed": null
           },
           "informative": true,
-          "used_for_fitting": false
+          "used_for_fitting": false,
+          "point_in_time_evaluable": false,
+          "not_evaluable_reason": "payout_not_point_in_time"
         }
       ],
       "feno": {
         "in_sample": 0,
-        "passed": 6,
-        "total": 7,
+        "passed": 4,
+        "total": 4,
         "informative_passed": 1,
-        "informative_total": 2
+        "informative_total": 1,
+        "not_evaluable": 3,
+        "not_evaluable_ids": [
+          "rim-df8e2e5aa81bfca036c8b547",
+          "rim-8c8130ac9b05e797d4168d85",
+          "rim-7041d3d1604bd6d9b5683c04"
+        ],
+        "informative_not_evaluable": 1
       },
       "measured_growth_diagnostic": {
         "in_sample": 0,
         "passed": 0,
-        "total": 7,
+        "total": 4,
         "informative_passed": 0,
-        "informative_total": 2
+        "informative_total": 1,
+        "not_evaluable": 3,
+        "not_evaluable_ids": [
+          "rim-df8e2e5aa81bfca036c8b547",
+          "rim-8c8130ac9b05e797d4168d85",
+          "rim-7041d3d1604bd6d9b5683c04"
+        ],
+        "informative_not_evaluable": 1
       },
       "fit_anchor_ids": [],
-      "note": "floor anchors are one-sided and are passed by almost any positive band; only two-sided rows outside the fit set discriminate"
+      "note": "floor anchors are one-sided and are passed by almost any positive band; only point-in-time two-sided rows outside the fit set discriminate, and later-vintage inputs are reported as not evaluable"
     },
     "feno_rule": {
       "version": "feno-rim-residual-value/1",

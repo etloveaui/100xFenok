@@ -76,6 +76,12 @@ function laneView(lane) {
  */
 function promotionBlockers({ rows, structural, holdout }) {
   const blockers = [];
+  if (holdout.feno.not_evaluable > 0) {
+    blockers.push({
+      id: "historical_holdout_not_point_in_time",
+      detail: `${holdout.feno.not_evaluable}/${holdout.rows.length} historical anchors use a later-vintage input and are excluded from pass/fail: ${holdout.feno.not_evaluable_ids.join(", ")}`,
+    });
+  }
   const informative = holdout.feno.informative_total;
   if (informative === 0) {
     blockers.push({
@@ -98,13 +104,13 @@ function promotionBlockers({ rows, structural, holdout }) {
   }
   const proxyIdentity = rows.filter((row) => ["SOX", "RUT"].includes(row.id)).map((row) => row.id);
   if (proxyIdentity.length) {
-    blockers.push({ id: "ungated_proxy_identity", detail: "SOX is scored against SOXX claims and RUT against IWM cells; neither bridge is measured" });
+    blockers.push({ id: "ungated_proxy_identity", detail: "SOX uses a SOXX payout proxy while SOXX claims remain excluded, and RUT uses IWM cells/payout; measured book/ROE and payout identity gates fail" });
   }
   const notPointInTime = rows.filter((row) => row.inputs?.payout_point_in_time === false).map((row) => row.id);
   if (notPointInTime.length) {
     blockers.push({ id: "payout_not_point_in_time", detail: `${notPointInTime.join(", ")} use payout levels recomputed on a later build vintage` });
   }
-  blockers.push({ id: "calibration_receipt_not_immutable", detail: "the frozen block carries no cutoff, evidence hashes or parameter hash, so a rebuild cannot be proven identical" });
+  blockers.push({ id: "sustainable_calibration_receipt_not_integrated", detail: "the immutable receipt primitive now gates the stock structural identification artifact, but the sustainable LTROE/payout calibration has not yet wired its cutoff, evidence IDs, and parameter hashes into that contract" });
   return blockers;
 }
 

@@ -779,25 +779,33 @@ export function runPublishedUpsideHoldout(root = ROOT) {
   const fitIds = new Set(LT_ROE_FIT_ANCHOR_IDS);
   const rows = anchors.map((anchor) => {
     const row = buildPanelIndexRow(root, anchor.id, { asOf: anchor.date });
+    const pointInTimeEvaluable = row.inputs.payout_point_in_time === true;
     return {
       ...anchor,
-      feno: { upside: row.feno.upside, convexity: row.feno.convexity.status, passed: score(row.feno, anchor) },
-      measured_growth_diagnostic: { upside: row.measured_growth_diagnostic.upside, convexity: row.measured_growth_diagnostic.convexity.status, passed: score(row.measured_growth_diagnostic, anchor) },
+      feno: { upside: row.feno.upside, convexity: row.feno.convexity.status, passed: pointInTimeEvaluable ? score(row.feno, anchor) : null },
+      measured_growth_diagnostic: { upside: row.measured_growth_diagnostic.upside, convexity: row.measured_growth_diagnostic.convexity.status, passed: pointInTimeEvaluable ? score(row.measured_growth_diagnostic, anchor) : null },
       informative: anchor.kind !== "floor",
       used_for_fitting: fitIds.has(`${anchor.id}@${anchor.date}`),
+      point_in_time_evaluable: pointInTimeEvaluable,
+      not_evaluable_reason: pointInTimeEvaluable ? null : "payout_not_point_in_time",
     };
   });
   // An anchor that set a parameter cannot also test it. Only rows outside the
   // fit set count as evaluation; the rest are reported separately as in-sample.
   const summarise = (key) => {
-    const evaluation = rows.filter((row) => !row.used_for_fitting);
+    const outsideFit = rows.filter((row) => !row.used_for_fitting);
+    const evaluation = outsideFit.filter((row) => row.point_in_time_evaluable);
+    const notEvaluable = outsideFit.filter((row) => !row.point_in_time_evaluable);
     const informative = evaluation.filter((row) => row.informative);
     return {
-      in_sample: rows.length - evaluation.length,
-      passed: evaluation.filter((row) => row[key].passed).length,
+      in_sample: rows.length - outsideFit.length,
+      passed: evaluation.filter((row) => row[key].passed === true).length,
       total: evaluation.length,
       informative_passed: informative.filter((row) => row[key].passed).length,
       informative_total: informative.length,
+      not_evaluable: notEvaluable.length,
+      not_evaluable_ids: notEvaluable.map((row) => row.evidence_id),
+      informative_not_evaluable: notEvaluable.filter((row) => row.informative).length,
     };
   };
   return {
@@ -805,7 +813,7 @@ export function runPublishedUpsideHoldout(root = ROOT) {
     feno: summarise("feno"),
     measured_growth_diagnostic: summarise("measured_growth_diagnostic"),
     fit_anchor_ids: [...LT_ROE_FIT_ANCHOR_IDS],
-    note: "floor anchors are one-sided and are passed by almost any positive band; only two-sided rows outside the fit set discriminate",
+    note: "floor anchors are one-sided and are passed by almost any positive band; only point-in-time two-sided rows outside the fit set discriminate, and later-vintage inputs are reported as not evaluable",
   };
 }
 

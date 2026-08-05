@@ -87,17 +87,26 @@ const evaluated = holdout.rows.filter((row) => fitKeys.has(`${row.id}@${row.date
 // remain available to evaluate it.
 assert.equal(evaluated.length, 0, "no evaluation anchor may appear in the fit set");
 assert.equal(holdout.feno.in_sample, 0);
-assert.equal(holdout.feno.total, holdout.rows.length, "every anchor must count as evaluation");
-assert.ok(holdout.feno.informative_total >= 2, "at least two two-sided claims must survive to evaluate the rule");
+assert.equal(holdout.feno.total + holdout.feno.not_evaluable, holdout.rows.length,
+  "every anchor must be either evaluated or explicitly not evaluable");
+assert.equal(holdout.feno.not_evaluable, 3, "three historical anchors currently lack point-in-time payout snapshots");
+assert.equal(holdout.feno.informative_not_evaluable, 1, "KOSPI's two-sided claim must not be scored on a later payout vintage");
+assert.ok(holdout.feno.informative_total >= 1, "at least one point-in-time two-sided claim must survive to evaluate the rule");
 assert.ok(
   fit.observations.every((row) => row.kind !== "inverted_from_published_upside_span"),
   "no inverted upside may enter the fit",
 );
-// Historical rows may not read a payout vintage from after their own as-of.
+// A later build vintage must make the historical anchor not evaluable; changing
+// its display date to the prior fiscal year does not turn it into point-in-time data.
 for (const row of holdout.rows) {
   const built = buildPanelIndexRow(ENGINE_ROOT, row.id, { asOf: row.date });
-  const payoutAsOf = String(built.inputs.payout_as_of).slice(0, 10);
-  assert.ok(payoutAsOf <= row.date, `${row.id}@${row.date}: payout dated ${payoutAsOf} is in that row's future`);
+  assert.equal(row.point_in_time_evaluable, built.inputs.payout_point_in_time,
+    `${row.id}@${row.date}: evaluation eligibility must follow the actual payout vintage`);
+  if (!row.point_in_time_evaluable) {
+    assert.equal(row.feno.passed, null);
+    assert.equal(row.measured_growth_diagnostic.passed, null);
+    assert.equal(row.not_evaluable_reason, "payout_not_point_in_time");
+  }
 }
 assert.ok(
   holdout.rows.filter((row) => !fitKeys.has(`${row.id}@${row.date}`)).length >= 7,

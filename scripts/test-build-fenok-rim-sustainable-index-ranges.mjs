@@ -51,10 +51,14 @@ for (const row of holdout.rows) {
   assert.equal(row.used_for_fitting, fitted, `${row.id}@${row.date}: fit membership must be declared`);
 }
 assert.equal(
-  holdout.rows.filter((row) => !row.used_for_fitting).length,
+  holdout.rows.filter((row) => !row.used_for_fitting && row.point_in_time_evaluable).length,
   holdout.feno.total,
-  "the evaluation total must count only rows outside the fit set",
+  "the evaluation total must count only point-in-time rows outside the fit set",
 );
+assert.equal(holdout.feno.not_evaluable, 3);
+assert.equal(holdout.feno.informative_not_evaluable, 1);
+assert.ok(artifact.promotion.blockers.some((row) => row.id === "historical_holdout_not_point_in_time"),
+  "a later-vintage historical holdout must block promotion rather than enter pass/fail totals");
 
 // Promotion is gated on what the run measured, not on freshness alone. While a
 // blocker stands nothing may be published as a usable range.
@@ -125,6 +129,10 @@ assert.ok(derived.indexOf("npm run build:rim-sustainable-research") > derived.in
   "RIM inputs must precede the residual-value ranges");
 assert.match(packageJson.scripts["qa:rim-sustainable-research"], /test-fenok-rim-yoo-panel-engine\.mjs/,
   "the panel engine suite must gate the artifact");
+assert.match(packageJson.scripts["qa:rim-sustainable-research"], /test-fenok-rim-calibration-receipt\.mjs/,
+  "the immutable calibration receipt must gate the artifact");
+assert.match(packageJson.scripts["qa:rim-sustainable-research"], /test-fenok-rim-proxy-identity\.mjs/,
+  "proxy identity must fail closed inside the artifact QA lane");
 assert.match(packageJson.scripts["reconcile:verify"], /(?:^|&& )npm run qa:rim-sustainable-research(?: &&|$)/);
 
 console.log("FENO RIM residual-value range artifact tests passed");
