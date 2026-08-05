@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok_rim_sustainable_index_ranges.v2",
-  "generated_at": "2026-08-05T03:45:01.574Z",
+  "generated_at": "2026-08-05T03:57:05.618Z",
   "as_of": "2026-08-05",
   "status": "research_diagnostic_not_promoted",
   "promotion": {
@@ -12,7 +12,7 @@
       },
       {
         "id": "convexity_outside_printed_domain",
-        "detail": "printed cells used book growth at 1.80~2.52 times the discount rate; RUT 1.16 sit outside it"
+        "detail": "printed cells used book growth at 1.80~2.52 times the discount rate; RUT 1.22 sit outside it"
       },
       {
         "id": "partial_structural_reproduction",
@@ -116,9 +116,9 @@
     "lt_roe_rule": {
       "frozen": {
         "anchor": "the index's own rolling 260-week median forward ROE",
-        "intercept": 0.045841,
-        "gap_coefficient": 0.544243,
-        "equation": "LTROE_centre = median_260w + 0.045841 + 0.544243 * max(forward_ROE - median_260w, 0)",
+        "intercept": 0.070661,
+        "gap_coefficient": 0.471304,
+        "equation": "LTROE_centre = median_260w + 0.070661 + 0.471304 * max(forward_ROE - median_260w, 0)",
         "fit_dates": [
           "2025-12-09",
           "2026-08-03"
@@ -129,83 +129,83 @@
         "lattice_note": "Yoo prints a +/-0.5pp LTROE axis; the same half width is retained"
       },
       "refit": {
-        "intercept": 0.045841258479183314,
-        "gap_coefficient": 0.5442428002050061,
+        "intercept": 0.07066111131307169,
+        "gap_coefficient": 0.47130422716446396,
         "stock_gap_share": {
           "low": 0.6221224031443011,
           "high": 0.7556061098472538
         },
-        "max_abs_residual_pp": 2.3398717761766386,
+        "max_abs_residual_pp": 2.11814220115773,
         "residuals": [
           {
             "id": "SPX@2025-12-09",
             "kind": "printed_axis_centre",
-            "predicted": 0.2843987177617664,
+            "predicted": 0.2774727188964116,
             "printed": 0.261,
-            "residual_pp": 2.3398717761766386
+            "residual_pp": 1.647271889641161
           },
           {
             "id": "CCMP@2025-12-09",
             "kind": "printed_axis_centre",
-            "predicted": 0.2957609141297001,
+            "predicted": 0.2873027415126468,
             "printed": 0.307,
-            "residual_pp": -1.123908587029987
+            "residual_pp": -1.9697258487353209
           },
           {
             "id": "RUT@2025-12-09",
             "kind": "printed_axis_centre",
-            "predicted": 0.1350297440795933,
+            "predicted": 0.1479823415096797,
             "printed": 0.148,
-            "residual_pp": -1.2970255920406681
+            "residual_pp": -0.00176584903202881
           },
           {
             "id": "SAMSUNG-worst@2026-08-03",
             "kind": "printed_stock_scenario_centre",
-            "predicted": 0.3218047681022637,
+            "predicted": 0.3241814220115773,
             "printed": 0.303,
-            "residual_pp": 1.8804768102263725
+            "residual_pp": 2.11814220115773
           },
           {
             "id": "SAMSUNG-likely@2026-08-03",
             "kind": "printed_stock_scenario_centre",
-            "predicted": 0.3218047681022637,
+            "predicted": 0.3241814220115773,
             "printed": 0.341,
-            "residual_pp": -1.919523189773631
+            "residual_pp": -1.6818577988422734
           },
           {
             "id": "HYNIX-worst@2026-08-03",
             "kind": "printed_stock_scenario_centre",
-            "predicted": 0.40810054391220646,
+            "predicted": 0.40693967702905376,
             "printed": 0.39,
-            "residual_pp": 1.8100543912206446
+            "residual_pp": 1.6939677029053746
           },
           {
             "id": "HYNIX-likely@2026-08-03",
             "kind": "printed_stock_scenario_centre",
-            "predicted": 0.40810054391220646,
+            "predicted": 0.40693967702905376,
             "printed": 0.425,
-            "residual_pp": -1.689945608779353
+            "residual_pp": -1.806032297094623
           }
         ],
         "observations": [
           {
             "id": "SPX@2025-12-09",
             "kind": "printed_axis_centre",
-            "median_roe": 0.2317,
+            "median_roe": 0.17339269499999999,
             "model_forward_roe": 0.2443,
             "lt_roe": 0.261
           },
           {
             "id": "CCMP@2025-12-09",
             "kind": "printed_axis_centre",
-            "median_roe": 0.222,
+            "median_roe": 0.1661337,
             "model_forward_roe": 0.2733,
             "lt_roe": 0.307
           },
           {
             "id": "RUT@2025-12-09",
             "kind": "printed_axis_centre",
-            "median_roe": 0.0881,
+            "median_roe": 0.065929635,
             "model_forward_roe": 0.0901,
             "lt_roe": 0.148
           },
@@ -283,8 +283,8 @@
     },
     "twelve_month_conversion": {
       "frozen": {
-        "intercept": 0.0986,
-        "slope": 0.164426,
+        "intercept": 0.108512,
+        "slope": 0.169422,
         "horizon_months": 12,
         "observations": 157,
         "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest",
@@ -292,8 +292,8 @@
       },
       "refit": {
         "full": {
-          "intercept": 0.09859971097451702,
-          "slope": 0.16442636753727416,
+          "intercept": 0.10851200141409187,
+          "slope": 0.16942205287081505,
           "observations": 157
         },
         "out_of_sample": {
@@ -307,8 +307,8 @@
             "to": "2026-07-17",
             "observations": 66
           },
-          "converted_mae": 0.19811997626965064,
-          "raw_band_mae": 0.3782605833325477,
+          "converted_mae": 0.22015337607519178,
+          "raw_band_mae": 0.24182906734334433,
           "improves": true
         }
       }
@@ -324,16 +324,16 @@
           "high": 0.29,
           "feno": {
             "upside": {
-              "low": 0.19169376507501235,
-              "high": 0.5695011825274259
+              "low": 0.10801037299328131,
+              "high": 0.4528336730086018
             },
             "convexity": "inside_printed_domain",
             "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": -0.3440004323784137,
-              "high": -0.29791707428382175
+              "low": -0.3677186765734983,
+              "high": -0.32163531847890625
             },
             "convexity": "below_printed_domain",
             "passed": false
@@ -351,16 +351,16 @@
           "low": 0.14,
           "feno": {
             "upside": {
-              "low": 0.1283150429263149,
-              "high": 0.4926383866240738
+              "low": 0.05310429565505337,
+              "high": 0.3868181691518495
             },
             "convexity": "inside_printed_domain",
             "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": -0.35363568833986947,
-              "high": -0.30767527521339666
+              "low": -0.3762839541665842,
+              "high": -0.3303235410401114
             },
             "convexity": "below_printed_domain",
             "passed": false
@@ -378,16 +378,16 @@
           "low": 0.36,
           "feno": {
             "upside": {
-              "low": 0.3965504579732755,
-              "high": 0.4824835369927727
+              "low": 0.2973133791190332,
+              "high": 0.38324645813853064
             },
             "convexity": "above_printed_domain",
             "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": -0.34192514285675457,
-              "high": -0.3052130784341247
+              "low": -0.3843209009696915,
+              "high": -0.34760883654706176
             },
             "convexity": "below_printed_domain",
             "passed": false
@@ -405,16 +405,16 @@
           "low": 0.3,
           "feno": {
             "upside": {
-              "low": 0.4549694055685358,
-              "high": 0.5467193208782395
+              "low": 0.35570708569624454,
+              "high": 0.4474570010059482
             },
             "convexity": "inside_printed_domain",
             "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": -0.3065670714920885,
-              "high": -0.2669450002621654
+              "low": -0.34943336401292124,
+              "high": -0.3098112927829979
             },
             "convexity": "below_printed_domain",
             "passed": false
@@ -432,16 +432,16 @@
           "low": 0.28,
           "feno": {
             "upside": {
-              "low": 0.36673463315626664,
-              "high": 0.4510100428382948
+              "low": 0.27036464036687136,
+              "high": 0.35464005004889954
             },
             "convexity": "inside_printed_domain",
             "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": -0.3539003747840238,
-              "high": -0.31776711131417257
+              "low": -0.3952192168185521,
+              "high": -0.35908595334870086
             },
             "convexity": "below_printed_domain",
             "passed": false
@@ -459,16 +459,16 @@
           "low": 0.24,
           "feno": {
             "upside": {
-              "low": 0.1088162696863495,
-              "high": 0.30578996198695396
+              "low": 0.013172932104198232,
+              "high": 0.24815145618515633
             },
             "convexity": "inside_printed_domain",
             "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": -0.4522114708116499,
-              "high": -0.4124450772887117
+              "low": -0.4747287942113426,
+              "high": -0.4349624006884045
             },
             "convexity": "below_printed_domain",
             "passed": false
@@ -487,16 +487,16 @@
           "high": 0.495,
           "feno": {
             "upside": {
-              "low": 1.0241543065117669,
-              "high": 1.4694106181170006
+              "low": 0.9701666929103572,
+              "high": 1.4086194383030493
             },
             "convexity": "inside_printed_domain",
             "passed": null
           },
           "measured_growth_diagnostic": {
             "upside": {
-              "low": 0.21438044716163973,
-              "high": 0.39254780545668955
+              "low": 0.19705041902064613,
+              "high": 0.37521777731569617
             },
             "convexity": "below_printed_domain",
             "passed": null
@@ -593,22 +593,22 @@
         "price_to_book": 5.6916,
         "panel_forward_roe": 0.2913,
         "model_forward_roe": 0.2913,
-        "median_roe_260w": 0.2347,
-        "roe_gap_over_median": 0.05660000000000001,
+        "median_roe_260w": 0.17563774499999998,
+        "roe_gap_over_median": 0.11566225500000002,
         "forward_roe_basis": "panel forward ROE",
-        "lt_roe_centre": 0.3113451538,
+        "lt_roe_centre": 0.30081082843052,
         "lt_roe_axis": [
-          0.3063451538,
-          0.3113451538,
-          0.3163451538
+          0.29581082843052,
+          0.30081082843052,
+          0.30581082843052
         ],
         "erp_axis": [
           0.04,
           0.045,
           0.05
         ],
-        "book_growth": 0.21172097134594584,
-        "book_growth_uncapped": 0.21172097134594584,
+        "book_growth": 0.20455741805957203,
+        "book_growth_uncapped": 0.20455741805957203,
         "book_growth_capped": false,
         "book_growth_ceiling": 0.2581799773372561,
         "payout": 0.319979871978512,
@@ -637,11 +637,11 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.21172097134594584,
+        "book_growth": 0.20455741805957203,
         "convexity": {
-          "book_growth": 0.21172097134594584,
+          "book_growth": 0.20455741805957203,
           "discount": 0.1026,
-          "growth_over_discount": 2.063557225594014,
+          "growth_over_discount": 1.9937370181244838,
           "printed_domain": {
             "low": 1.8032317745108193,
             "high": 2.516374048121405,
@@ -653,16 +653,16 @@
           "distance_from_domain": 0
         },
         "range": {
-          "low": 8895.35204160442,
-          "high": 11721.236368154481
+          "low": 8257.89957988787,
+          "high": 10831.988374731234
         },
         "upside": {
-          "low": 0.18767484520174582,
-          "high": 0.5649765769821142
+          "low": 0.10256452576169317,
+          "high": 0.44624743978830095
         },
         "expected_12m": {
-          "low": 0.12945862409714226,
-          "high": 0.1914968386468611,
+          "low": 0.12588868708359757,
+          "high": 0.18411613374381353,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -684,16 +684,16 @@
           "distance_from_domain": 1.289049362136717
         },
         "range": {
-          "low": 4871.456725220005,
-          "high": 5211.951243516474
+          "low": 4692.112723107036,
+          "high": 5032.607241403506
         },
         "upside": {
-          "low": -0.3495809288972078,
-          "high": -0.30411934711625077
+          "low": -0.3735262836117992,
+          "high": -0.328064701830842
         },
         "expected_12m": {
-          "low": 0.041119806185147705,
-          "high": 0.048594872231063346,
+          "low": 0.04522842997792176,
+          "high": 0.05293062208641509,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -747,14 +747,14 @@
         "price_to_book": 8.8371,
         "panel_forward_roe": 0.414,
         "model_forward_roe": 0.414,
-        "median_roe_260w": 0.31555,
-        "roe_gap_over_median": 0.09844999999999998,
+        "median_roe_260w": 0.23614184249999998,
+        "roe_gap_over_median": 0.1778581575,
         "forward_roe_basis": "panel forward ROE",
-        "lt_roe_centre": 0.41497172335,
+        "lt_roe_centre": 0.39062810356238,
         "lt_roe_axis": [
-          0.40997172335,
-          0.41497172335,
-          0.41997172335
+          0.38562810356238,
+          0.39062810356238,
+          0.39562810356238
         ],
         "erp_axis": [
           0.045,
@@ -762,7 +762,7 @@
           0.055
         ],
         "book_growth": 0.2581799773372561,
-        "book_growth_uncapped": 0.35462611725889265,
+        "book_growth_uncapped": 0.33382257118684094,
         "book_growth_capped": true,
         "book_growth_ceiling": 0.2581799773372561,
         "payout": 0.14542100749406964,
@@ -807,16 +807,16 @@
           "distance_from_domain": 0
         },
         "range": {
-          "low": 42617.34153209734,
-          "high": 45181.340106186566
+          "low": 39496.49121091595,
+          "high": 42060.48978500518
         },
         "upside": {
-          "low": 0.5072872630206104,
-          "high": 0.5979705917828468
+          "low": 0.39690923919742893,
+          "high": 0.48759256795966555
         },
         "expected_12m": {
-          "low": 0.1820112155094269,
-          "high": 0.19692191252448638,
+          "low": 0.1757571571233068,
+          "high": 0.19112090804886245,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -838,16 +838,16 @@
           "distance_from_domain": 0.8032317745108193
         },
         "range": {
-          "low": 19925.407974236947,
-          "high": 21013.37269970915
+          "low": 18601.157993275065,
+          "high": 19689.12271874727
         },
         "upside": {
-          "low": -0.29527951368254646,
-          "high": -0.25680045059774814
+          "low": -0.342115497758555,
+          "high": -0.30363643467375667
         },
         "expected_12m": {
-          "low": 0.05004837068323361,
-          "high": 0.05637532911001466,
+          "low": 0.0505501081387501,
+          "high": 0.057069307964702796,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -901,23 +901,23 @@
         "price_to_book": 1.8853,
         "panel_forward_roe": 0.3422,
         "model_forward_roe": 0.3422,
-        "median_roe_260w": 0.1018,
-        "roe_gap_over_median": 0.2404,
+        "median_roe_260w": 0.07618203,
+        "roe_gap_over_median": 0.26601797,
         "forward_roe_basis": "panel forward ROE",
-        "lt_roe_centre": 0.2784770172,
+        "lt_roe_centre": 0.27221836333287996,
         "lt_roe_axis": [
-          0.2734770172,
-          0.2784770172,
-          0.2834770172
+          0.26721836333287996,
+          0.27221836333287996,
+          0.27721836333287997
         ],
         "erp_axis": [
           0.055,
           0.065,
           0.075
         ],
-        "book_growth": 0.2513595971172279,
-        "book_growth_uncapped": 0.2558395877104052,
-        "book_growth_capped": true,
+        "book_growth": 0.25008970055244223,
+        "book_growth_uncapped": 0.25008970055244223,
+        "book_growth_capped": false,
         "book_growth_ceiling": 0.2513595971172279,
         "payout": 0.0812901176449213,
         "payout_band": {
@@ -945,11 +945,11 @@
         "discount": 0.0998896
       },
       "value": {
-        "book_growth": 0.2513595971172279,
+        "book_growth": 0.25008970055244223,
         "convexity": {
-          "book_growth": 0.2513595971172279,
+          "book_growth": 0.25008970055244223,
           "discount": 0.0998896,
-          "growth_over_discount": 2.516374048121405,
+          "growth_over_discount": 2.5036610473206644,
           "printed_domain": {
             "low": 1.8032317745108193,
             "high": 2.516374048121405,
@@ -961,16 +961,16 @@
           "distance_from_domain": 0
         },
         "range": {
-          "low": 24818.39944720939,
-          "high": 29522.04977885764
+          "low": 23336.46061448836,
+          "high": 28645.524603490612
         },
         "upside": {
-          "low": 2.7629577128489173,
-          "high": 3.476123657803128
+          "low": 2.5382666253990793,
+          "high": 3.34322519365481
         },
         "expected_12m": {
-          "low": 0.552902084892896,
-          "high": 0.6701651085579371,
+          "low": 0.5385502082083629,
+          "high": 0.6749278987593852,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -992,16 +992,16 @@
           "distance_from_domain": 1.228081740389564
         },
         "range": {
-          "low": 10950.465943389792,
-          "high": 12385.247017616055
+          "low": 10651.1393394339,
+          "high": 12085.92041366016
         },
         "upside": {
-          "low": 0.6603061115450488,
-          "high": 0.8778471548743536
+          "low": 0.6149223084753732,
+          "high": 0.8324633518046776
         },
         "expected_12m": {
-          "low": 0.20717149269690618,
-          "high": 0.24294089628737045,
+          "low": 0.21269336734651467,
+          "high": 0.24954960598945208,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1055,14 +1055,14 @@
         "price_to_book": 10.4136,
         "panel_forward_roe": 0.5137,
         "model_forward_roe": 0.5137,
-        "median_roe_260w": 0.23170000000000002,
-        "roe_gap_over_median": 0.28200000000000003,
+        "median_roe_260w": 0.173392695,
+        "roe_gap_over_median": 0.34030730500000006,
         "forward_roe_basis": "panel forward ROE",
-        "lt_roe_centre": 0.4310175260000001,
+        "lt_roe_centre": 0.40444188907572004,
         "lt_roe_axis": [
-          0.4260175260000001,
-          0.4310175260000001,
-          0.4360175260000001
+          0.39944188907572004,
+          0.40444188907572004,
+          0.40944188907572004
         ],
         "erp_axis": [
           0.045,
@@ -1070,7 +1070,7 @@
           0.055
         ],
         "book_growth": 0.2581799773372561,
-        "book_growth_uncapped": 0.39081584536443165,
+        "book_growth_uncapped": 0.3667189597759307,
         "book_growth_capped": true,
         "book_growth_ceiling": 0.2581799773372561,
         "payout": 0.09327156834817076,
@@ -1115,16 +1115,16 @@
           "distance_from_domain": 0
         },
         "range": {
-          "low": 15166.36395784671,
-          "high": 16036.80709454641
+          "low": 14009.73491963858,
+          "high": 14880.178056338278
         },
         "upside": {
-          "low": 0.3408413659744878,
-          "high": 0.41779627538187425
+          "low": 0.2385850793769102,
+          "high": 0.31553998878429623
         },
         "expected_12m": {
-          "low": 0.15464318244172112,
-          "high": 0.16729657037594003,
+          "low": 0.14893356131819488,
+          "high": 0.16197141597981302,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1146,16 +1146,16 @@
           "distance_from_domain": 0.8032317745108193
         },
         "range": {
-          "low": 7060.734247016275,
-          "high": 7430.083683411747
+          "low": 6569.949421024599,
+          "high": 6939.298857420072
         },
         "upside": {
-          "low": -0.37576833980342506,
-          "high": -0.3431145670075937
+          "low": -0.4191580803049223,
+          "high": -0.3865043075090909
         },
         "expected_12m": {
-          "low": 0.03681391495948203,
-          "high": 0.0421830442052094,
+          "low": 0.03749739971857946,
+          "high": 0.0430296672131948,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1209,23 +1209,23 @@
         "price_to_book": 7.5935,
         "panel_forward_roe": 0.3235,
         "model_forward_roe": 0.3235,
-        "median_roe_260w": 0.22849999999999998,
-        "roe_gap_over_median": 0.09500000000000003,
+        "median_roe_260w": 0.17099797499999997,
+        "roe_gap_over_median": 0.15250202500000004,
         "forward_roe_basis": "panel forward ROE",
-        "lt_roe_centre": 0.32604408500000004,
+        "lt_roe_centre": 0.3135337893906,
         "lt_roe_axis": [
-          0.32104408500000003,
-          0.32604408500000004,
-          0.33104408500000004
+          0.3085337893906,
+          0.3135337893906,
+          0.3185337893906
         ],
         "erp_axis": [
           0.045,
           0.05,
           0.055
         ],
-        "book_growth": 0.2581799773372561,
-        "book_growth_uncapped": 0.26654757698563236,
-        "book_growth_capped": true,
+        "book_growth": 0.2563201594814639,
+        "book_growth_uncapped": 0.2563201594814639,
+        "book_growth_capped": false,
         "book_growth_ceiling": 0.2581799773372561,
         "payout": 0.18247994903624054,
         "payout_band": {
@@ -1253,11 +1253,11 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.2581799773372561,
+        "book_growth": 0.2563201594814639,
         "convexity": {
-          "book_growth": 0.2581799773372561,
+          "book_growth": 0.2563201594814639,
           "discount": 0.1026,
-          "growth_over_discount": 2.5163740481214045,
+          "growth_over_discount": 2.498247168435321,
           "printed_domain": {
             "low": 1.8032317745108193,
             "high": 2.516374048121405,
@@ -1269,16 +1269,16 @@
           "distance_from_domain": 0
         },
         "range": {
-          "low": 31567.300348819674,
-          "high": 35280.44411124842
+          "low": 28564.357388504395,
+          "high": 33605.427299908915
         },
         "upside": {
-          "low": 0.24408792315000194,
-          "high": 0.39042534385788596
+          "low": 0.1257399798810348,
+          "high": 0.32441183738017365
         },
         "expected_12m": {
-          "low": 0.1387344008518622,
-          "high": 0.16279607758917675,
+          "low": 0.12981511887140468,
+          "high": 0.16347450231262378,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1300,16 +1300,16 @@
           "distance_from_domain": 0.971485214390855
         },
         "range": {
-          "low": 14632.118479430346,
-          "high": 15665.374183860411
+          "low": 13985.801764304397,
+          "high": 15019.057468734462
         },
         "upside": {
-          "low": -0.42333865458216446,
-          "high": -0.3826173724578489
+          "low": -0.44881041843061276,
+          "high": -0.4080891363062972
         },
         "expected_12m": {
-          "low": 0.028992118381673024,
-          "high": 0.035687755916245734,
+          "low": 0.03247364128864873,
+          "high": 0.03937272234871453,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1363,22 +1363,22 @@
         "price_to_book": 2.43,
         "panel_forward_roe": 0.0914,
         "model_forward_roe": 0.1239795918367347,
-        "median_roe_260w": 0.1138808443459351,
-        "roe_gap_over_median": 0.0100987474907996,
+        "median_roe_260w": 0.08522272986628053,
+        "roe_gap_over_median": 0.038756861970454165,
         "forward_roe_basis": "LSEG ex-negative earnings bridge",
-        "lt_roe_centre": 0.16521801697657035,
+        "lt_roe_centre": 0.17414999394040345,
         "lt_roe_axis": [
-          0.16021801697657034,
-          0.16521801697657035,
-          0.17021801697657035
+          0.16914999394040345,
+          0.17414999394040345,
+          0.17914999394040346
         ],
         "erp_axis": [
           0.04,
           0.045,
           0.05
         ],
-        "book_growth": 0.11870591890738291,
-        "book_growth_uncapped": 0.11870591890738291,
+        "book_growth": 0.12512336993696246,
+        "book_growth_uncapped": 0.12512336993696246,
         "book_growth_capped": false,
         "book_growth_ceiling": 0.2581799773372561,
         "payout": 0.2815195274724992,
@@ -1407,11 +1407,11 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.11870591890738291,
+        "book_growth": 0.12512336993696246,
         "convexity": {
-          "book_growth": 0.11870591890738291,
+          "book_growth": 0.12512336993696246,
           "discount": 0.1026,
-          "growth_over_discount": 1.1569777671284884,
+          "growth_over_discount": 1.219526022777412,
           "printed_domain": {
             "low": 1.8032317745108193,
             "high": 2.516374048121405,
@@ -1420,19 +1420,19 @@
             "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
           },
           "status": "below_printed_domain",
-          "distance_from_domain": 0.6462540073823309
+          "distance_from_domain": 0.5837057517334072
         },
         "range": {
-          "low": 2522.289333395509,
-          "high": 3178.4334670347275
+          "low": 2759.900199048755,
+          "high": 3475.318899025535
         },
         "upside": {
-          "low": -0.13954362378574814,
-          "high": 0.08429406050775001
+          "low": -0.05848480880281848,
+          "high": 0.1855738619878271
         },
         "expected_12m": {
-          "low": 0.07565540011540457,
-          "high": 0.11246013519304729,
+          "low": 0.09860338672300889,
+          "high": 0.13995229484570165,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1454,16 +1454,16 @@
           "distance_from_domain": 1.1398869056748553
         },
         "range": {
-          "low": 2270.331726433111,
-          "high": 2609.634348565308
+          "low": 2421.8638866657584,
+          "high": 2761.166508797956
         },
         "upside": {
-          "low": -0.22549670084793638,
-          "high": -0.10974665551636709
+          "low": -0.17380286392472577,
+          "high": -0.05805281859315625
         },
         "expected_12m": {
-          "low": 0.061522479466377206,
-          "high": 0.08055479642006583,
+          "low": 0.07906597118814511,
+          "high": 0.09867657536831027,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null

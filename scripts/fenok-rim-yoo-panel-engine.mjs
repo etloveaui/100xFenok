@@ -208,8 +208,8 @@ export const FROZEN_CALIBRATION = Object.freeze({
     // agreeing. They are derived now; the test still asserts these literals
     // reproduce the refit.
     anchor: "the index's own rolling 260-week median forward ROE",
-    intercept: 0.045841,
-    gap_coefficient: 0.544243,
+    intercept: 0.070661,
+    gap_coefficient: 0.471304,
     get equation() {
       return `LTROE_centre = median_260w + ${this.intercept} + ${this.gap_coefficient} * max(forward_ROE - median_260w, 0)`;
     },
@@ -218,6 +218,21 @@ export const FROZEN_CALIBRATION = Object.freeze({
     cross_family_bridge: "the stock sheets contribute the large-gap regime only; their implied gap share of 0.622~0.756 brackets the share the index rows imply, which is the measured agreement that licenses the transfer",
     lattice_half_width: 0.005,
     lattice_note: "Yoo prints a +/-0.5pp LTROE axis; the same half width is retained",
+  }),
+
+  // Yoo's sheets anchor on five ACTUAL annual ROE values; our panel carries a
+  // forward ROE, and a rolling median of it sits systematically higher. His
+  // printed 2021-2025 NASDAQ 100 row medians to 23.76% where our 260-week
+  // median reads 31.55%, and the same gap appears on every index whose printed
+  // row exists. The ratio is tight across four of them, so the anchor is
+  // bridged onto his quantity rather than left on ours.
+  actual_roe_anchor_ratio: Object.freeze({
+    value: 0.748350,
+    low: 0.702800,
+    high: 0.786100,
+    observations: 4,
+    derivation: "printed five-actual-year median ROE over our 260-week forward-ROE median, at SPX 18.45/23.47, NDX 23.76/31.55, CCMP 16.06/22.85 and KOSPI 7.65/10.18",
+    source: "docs/archive/2026-08/yoo-rim-sheets printed ROE rows, inventoried in fh-20260805-122",
   }),
 
   // Russell's panel ROE counts loss makers; the LSEG factsheet reports
@@ -502,7 +517,7 @@ export function readAutomaticPayout(root, id, asOf) {
 /**
  * The band is a fair-value statement, and the market takes years to close it.
  * Measured on 157 backtest observations, the share of a stated upside that
- * arrives is 0.35 at twelve months, 0.69 at twenty-four and 1.07 at thirty-six.
+ * arrives is about a third at twelve months and reaches one near thirty-six.
  * So the model was never optimistic; it was a roughly three-year statement
  * being read as a one-year one.
  *
@@ -513,8 +528,8 @@ export function readAutomaticPayout(root, id, asOf) {
  * 19.8% MAE.
  */
 export const TWELVE_MONTH_CONVERSION = Object.freeze({
-  intercept: 0.098600,
-  slope: 0.164426,
+  intercept: 0.108512,
+  slope: 0.169422,
   horizon_months: 12,
   observations: 157,
   basis: "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest",
@@ -577,7 +592,8 @@ export function buildPanelIndexRow(root, id, { asOf }) {
   const riskFree = readRiskFree(root, id, asOf);
   const official = id === "RUT" ? russellOfficialBasis(root, asOf) : null;
   const modelRoe = official ? official.roe : panel.forward_roe;
-  const medianRoe = official ? panel.median_roe_260w * official.median_ratio : panel.median_roe_260w;
+  const anchorRatio = FROZEN_CALIBRATION.actual_roe_anchor_ratio.value;
+  const medianRoe = (official ? panel.median_roe_260w * official.median_ratio : panel.median_roe_260w) * anchorRatio;
   const book = official ? panel.price / official.price_to_book : panel.book;
   const centre = ltRoeCentre(modelRoe, medianRoe);
   const half = FROZEN_CALIBRATION.lt_roe_rule.lattice_half_width;
@@ -885,7 +901,7 @@ export function runLtRoeCalibration(root = ROOT) {
       id: `${id}@2025-12-09`,
       forward_roe: panel.forward_roe,
       model_forward_roe: panel.forward_roe * ratio,
-      median_roe: panel.median_roe_260w * ratio,
+      median_roe: panel.median_roe_260w * ratio * FROZEN_CALIBRATION.actual_roe_anchor_ratio.value,
       printed_lt_roe: printed,
       kind: "printed_axis_centre",
     };
