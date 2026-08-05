@@ -85,6 +85,14 @@ LEVERAGED_AND_FOCUS_ETFS = {
 }
 NON_YAHOO_ETF_LABELS = {"HSCEI", "KOSPI", "NASDAQ", "SHANGHAI", "TOPIX"}
 
+# The index trackers whose distribution yield is the payout operand of the RIM
+# residual-value engine. The ETF universe is ~6,700 names fetched 140 a day
+# across six shards, so an ordinary member comes round about every seven weeks.
+# These six cannot wait that long: a stale yield closes the corresponding index
+# row. They are pinned ahead of the shard page and are exempt from the daily
+# limit, which costs six tickers a run.
+RIM_TRACKER_ETFS = {"SPY", "QQQ", "ONEQ", "SOXX", "IWM", "EWY"}
+
 ANNUAL_PERIODS = 4
 QUARTERLY_PERIODS = 5
 DIVIDEND_ENTRIES = 40  # ~10y of quarterly payments
@@ -1162,6 +1170,7 @@ def load_universe_sources(stocks_only=False, stockanalysis_etfs=False):
         add(load_dashboard_etfs(), "dashboard_configuration")
         add(load_portfolio_symbols(), "portfolio_configuration")
         add(MAJOR_ETFS, "major_etf_configuration")
+        add(RIM_TRACKER_ETFS, "rim_tracker_configuration")
         add(LEVERAGED_AND_FOCUS_ETFS, "focus_etf_configuration")
         if stockanalysis_etfs:
             add(load_stockanalysis_etfs(), "stockanalysis_etf")
@@ -1266,7 +1275,12 @@ def select_ticker_plan(
             raise ValueError("retry limit must be non-negative")
         retry = retry[:retry_limit]
     regular = select_bounded_cycle_page(regular, regular_limit, shard_cycle_index)
-    return [*(retry if claim_retry else []), *regular]
+    selected = [*(retry if claim_retry else []), *regular]
+    # Pin the RIM trackers ahead of the page so neither the shard split nor the
+    # daily limit can defer them into the next rotation.
+    seen = set(selected)
+    pinned = [t for t in sorted(RIM_TRACKER_ETFS) if t in ticker_set and t not in seen]
+    return [*pinned, *selected]
 
 
 def select_campaign_or_rotation_plan(
