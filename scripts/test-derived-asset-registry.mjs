@@ -219,6 +219,47 @@ function materializeRegistryTree(registry) {
 
 {
   const root = materializeRegistryTree(DERIVED_ASSET_REGISTRY);
+  const krxSnapshots = DERIVED_ASSET_REGISTRY.assets.find((asset) => asset.id === "krx_market_snapshots");
+  for (const spec of krxSnapshots.public_outputs) {
+    fs.rmSync(path.join(root, spec.path));
+  }
+  assert.doesNotThrow(
+    () => validateDerivedAssetRegistry(DERIVED_ASSET_REGISTRY, { repoRoot: root }),
+    "an active public output may be absent when it is the exact build-time mirror of a declared canonical output",
+  );
+  fs.rmSync(root, { recursive: true, force: true });
+}
+
+{
+  const root = materializeRegistryTree(DERIVED_ASSET_REGISTRY);
+  const draft = clone(DERIVED_ASSET_REGISTRY);
+  const signals = draft.assets.find((asset) => asset.id === "signals");
+  signals.public_outputs = [
+    { path: "100xfenok-next/public/data/computed/entity_graph.json", kind: "file" },
+  ];
+  fs.rmSync(path.join(root, "100xfenok-next/public/data/computed/entity_graph.json"));
+  assert.throws(
+    () => validateDerivedAssetRegistry(draft, { repoRoot: root }),
+    /active public output is missing/,
+    "an active public output cannot borrow a canonical source owned by another asset",
+  );
+  fs.rmSync(root, { recursive: true, force: true });
+}
+
+{
+  const root = materializeRegistryTree(DERIVED_ASSET_REGISTRY);
+  const draft = clone(DERIVED_ASSET_REGISTRY);
+  draft.assets.find((asset) => asset.id === "signals").public_serving_status = "missing_projection";
+  assert.throws(
+    () => validateDerivedAssetRegistry(draft, { repoRoot: root }),
+    /missing_projection public output unexpectedly exists/,
+    "a missing_projection output must remain invalid when it appears on disk",
+  );
+  fs.rmSync(root, { recursive: true, force: true });
+}
+
+{
+  const root = materializeRegistryTree(DERIVED_ASSET_REGISTRY);
   fs.writeFileSync(path.join(root, "data", "computed", "undeclared.json"), "{}\n");
   assert.throws(
     () => validateDerivedAssetRegistry(DERIVED_ASSET_REGISTRY, { repoRoot: root }),

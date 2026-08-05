@@ -226,7 +226,7 @@ const assets = [
       output("100xfenok-next/public/data/computed/fenok-edge-korea-krx-index-daily.json"),
       output("100xfenok-next/public/data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json"),
     ],
-    public_serving_status: "missing_projection",
+    public_serving_status: "active",
     retention: SNAPSHOT,
     recovery: "lane_lkg",
   }),
@@ -691,6 +691,18 @@ function validRepoPath(value) {
     && !value.split("/").includes("..");
 }
 
+const PUBLIC_MIRROR_PREFIX = "100xfenok-next/public/";
+
+function hasDeclaredCanonicalPublicMirror(assetValue, publicSpec, repoRoot) {
+  if (!publicSpec.path.startsWith(PUBLIC_MIRROR_PREFIX)) return false;
+  const canonicalPath = publicSpec.path.slice(PUBLIC_MIRROR_PREFIX.length);
+  const canonicalSpec = assetValue.outputs.find((outputSpec) => (
+    outputSpec.path === canonicalPath && outputSpec.kind === publicSpec.kind
+  ));
+  if (!canonicalSpec) return false;
+  return fs.existsSync(path.join(repoRoot, canonicalSpec.path));
+}
+
 function validateOutput(spec, context, prefix) {
   exactKeys(spec, ["path", "kind"], context);
   if (!validRepoPath(spec.path) || !spec.path.startsWith(prefix)) fail(`${context}.path is invalid`);
@@ -944,7 +956,10 @@ export function validateDerivedAssetRegistry(
       for (const spec of assetValue.public_outputs) {
         const absolute = path.join(repoRoot, spec.path);
         const exists = fs.existsSync(absolute);
-        if (assetValue.public_serving_status === "active" && !exists) {
+        const buildTimePublicMirror = !exists
+          && assetValue.public_serving_status === "active"
+          && hasDeclaredCanonicalPublicMirror(assetValue, spec, repoRoot);
+        if (assetValue.public_serving_status === "active" && !exists && !buildTimePublicMirror) {
           fail(`active public output is missing: ${spec.path}`);
         }
         if (assetValue.public_serving_status === "missing_projection" && exists) {
