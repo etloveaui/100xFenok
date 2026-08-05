@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-27T22:59:30Z",
     "history_as_of": "2026-07-27",
-    "path": "data/yf/finance/IEF.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/IEF.json",
     "payload_sha256": "f9541662d214c63bb3647e2d58d46cf0fe1b741316a85cf1a2e7c707139ac8ff",
     "quote_as_of": "2026-07-27T20:00:00Z",
     "source_as_of": "2026-07-27"
@@ -53,12 +53,12 @@
     "shard": "1/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-27T23:58:15Z",
-    "history_as_of": "2026-06-26",
+    "fetched_at": "2026-07-27T22:59:30Z",
+    "history_as_of": "2026-07-27",
     "path": "data/admin/yahoo-batch-quote-history/lkg/IEF.json",
-    "payload_sha256": "534d2dffc5707a1ce47f94d3ea6461d1358569cc87150192adfdeb9e9766a6fe",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-26"
+    "payload_sha256": "f9541662d214c63bb3647e2d58d46cf0fe1b741316a85cf1a2e7c707139ac8ff",
+    "quote_as_of": "2026-07-27T20:00:00Z",
+    "source_as_of": "2026-07-27"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -72,19 +72,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-27"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 10,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-05T00:18:15Z",
+    "classified_run_id": "30962773171",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "IEF holds LKG because Yahoo source date 2026-06-26 is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "IEF holds LKG because Yahoo source date 2026-07-27 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-26"
+    "source_as_of": "2026-07-27"
   },
   "ticker": "IEF",
-  "updated_at": "2026-07-27T22:58:21Z"
+  "updated_at": "2026-08-05T00:18:15Z"
 }

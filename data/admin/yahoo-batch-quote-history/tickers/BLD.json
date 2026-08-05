@@ -5,20 +5,6 @@
       "error": "ValueError: source did not advance beyond the retained LKG for BLD",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 586,
-      "natural": true,
-      "observed_at": "2026-07-15T00:10:40Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "29378156187",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: source did not advance beyond the retained LKG for BLD",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 653,
       "natural": true,
       "observed_at": "2026-07-16T00:13:37Z",
@@ -195,6 +181,20 @@
       "run_id": "30718396938",
       "schedule": "",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for BLD despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 545,
+      "natural": true,
+      "observed_at": "2026-08-05T00:18:15Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "30962773171",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -211,16 +211,16 @@
   "last_attempt": {
     "attempts_used": 1,
     "error": "ValueError: quote_as_of is unavailable for BLD despite available history",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 359,
-    "natural": false,
-    "observed_at": "2026-08-01T21:14:53Z",
+    "latency_ms": 545,
+    "natural": true,
+    "observed_at": "2026-08-05T00:18:15Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "30718396938",
-    "schedule": "",
-    "shard": "2/5"
+    "run_id": "30962773171",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "latest_failure": {
     "attempts_used": 1,
@@ -230,9 +230,9 @@
     "failure_kind": "transient_provider_miss",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-08-01T21:14:53Z",
+    "observed_at": "2026-08-05T00:18:15Z",
     "run_attempt": 1,
-    "run_id": "30718396938"
+    "run_id": "30962773171"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:40:31Z",
@@ -246,10 +246,10 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "terminal": {
-    "artifact_generated_at": "2026-08-04T22:59:59.575Z",
+    "artifact_generated_at": "2026-08-05T00:01:35.519Z",
     "artifact_path": "admin/fenok-s1-stock-public-promotion-dry-run.json",
-    "classified_at": "2026-08-04T23:07:26Z",
-    "classified_run_id": "30958820437",
+    "classified_at": "2026-08-05T00:36:25Z",
+    "classified_run_id": "30962773171",
     "evidence": [
       {
         "alias_source": null,
@@ -272,8 +272,8 @@
         "type": "Delisted"
       }
     ],
-    "evidence_sha256": "e84e8cf43678e4b69b5934dcdbb9bc9da6eef52d9d82481848179faa8748dad3"
+    "evidence_sha256": "254585627a2547bf7614fde403d62aeb0b7f4a4e435f60fa9f44b74c59b67d70"
   },
   "ticker": "BLD",
-  "updated_at": "2026-08-04T23:07:26Z"
+  "updated_at": "2026-08-05T00:36:25Z"
 }

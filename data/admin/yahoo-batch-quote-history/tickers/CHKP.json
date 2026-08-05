@@ -2,26 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for CHKP despite available history",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "TypeError: object of type 'NoneType' has no len()",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 373,
-      "natural": true,
-      "observed_at": "2026-07-18T00:49:31Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "29622560422",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 873,
@@ -188,30 +168,43 @@
       "run_id": "30865042195",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 626,
+      "natural": true,
+      "observed_at": "2026-08-05T00:31:57Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30962773171",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-04T00:20:35Z",
-    "history_as_of": "2026-08-03",
+    "fetched_at": "2026-08-05T00:34:17Z",
+    "history_as_of": "2026-08-04",
     "path": "data/yf/finance/CHKP.json",
-    "payload_sha256": "80de858b6d3632f15c6211338939e897cf47b271d1a5923772368297470df2a9",
-    "quote_as_of": "2026-08-03T20:00:01Z",
-    "source_as_of": "2026-08-03"
+    "payload_sha256": "9b2fb1bdd5a0f0325038c32a6872f29ccf45c332572d45fd6896e82b0f6448c2",
+    "quote_as_of": "2026-08-04T20:00:00Z",
+    "source_as_of": "2026-08-04"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 626,
     "natural": true,
-    "observed_at": "2026-08-04T00:29:57Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-05T00:31:57Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30865042195",
+    "run_id": "30962773171",
     "schedule": "20 23 * * 1-5",
     "shard": "3/5"
   },
@@ -244,14 +237,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-03",
-    "observed_at": "2026-08-04T00:18:08Z",
-    "payload_sha256": "69ef647e619c27df820e3670e6e7f820977d21662b8c96e285f761bf527daccf",
-    "quote_as_of": "2026-08-03T20:00:01Z",
+    "history_as_of": "2026-08-04",
+    "observed_at": "2026-08-05T00:31:57Z",
+    "payload_sha256": "984065e001c1bb14cfbdaa47c4f64a3e4fb28e1d2c1e41c460295fcdab721b1b",
+    "quote_as_of": "2026-08-04T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30865042195",
+    "run_id": "30962773171",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03"
+    "source_as_of": "2026-08-04"
   },
   "recovered_at": "2026-07-21T00:18:00Z",
   "recovered_from_run_id": "29622560422",
@@ -262,5 +255,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CHKP",
-  "updated_at": "2026-08-04T00:29:57Z"
+  "updated_at": "2026-08-05T00:31:57Z"
 }

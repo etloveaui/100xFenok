@@ -61,7 +61,7 @@
   "current": {
     "fetched_at": "2026-07-27T22:58:43Z",
     "history_as_of": "2026-07-27",
-    "path": "data/yf/finance/GTOH.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GTOH.json",
     "payload_sha256": "20efe63c832fc30b4b69a0cfef65e9eddfcf7c8d12d1fcc0c633ce870d2dfc1d",
     "quote_as_of": "2026-07-27T19:58:38Z",
     "source_as_of": "2026-07-27"
@@ -114,12 +114,12 @@
     "shard": "1/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:33:11Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-07-27T22:58:43Z",
+    "history_as_of": "2026-07-27",
     "path": "data/admin/yahoo-batch-quote-history/lkg/GTOH.json",
-    "payload_sha256": "2fe0f51190239dc3ceef513d49972f00b9d38b3d73a41b02d443f294deb6e978",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "20efe63c832fc30b4b69a0cfef65e9eddfcf7c8d12d1fcc0c633ce870d2dfc1d",
+    "quote_as_of": "2026-07-27T19:58:38Z",
+    "source_as_of": "2026-07-27"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -133,19 +133,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-27"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-05T00:18:15Z",
+    "classified_run_id": "30962773171",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "GTOH holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "GTOH holds LKG because Yahoo source date 2026-07-27 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-07-27"
   },
   "ticker": "GTOH",
-  "updated_at": "2026-07-27T22:58:21Z"
+  "updated_at": "2026-08-05T00:18:15Z"
 }

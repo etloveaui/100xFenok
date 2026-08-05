@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-27T22:59:33Z",
     "history_as_of": "2026-07-27",
-    "path": "data/yf/finance/IGLD.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/IGLD.json",
     "payload_sha256": "93b42c322b2402d3df4ba8e540e7ae45b03a263e47dc8574fbc58d633dd76e8a",
     "quote_as_of": "2026-07-27T20:00:00Z",
     "source_as_of": "2026-07-27"
@@ -52,12 +52,12 @@
     "shard": "1/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:34:41Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-07-27T22:59:33Z",
+    "history_as_of": "2026-07-27",
     "path": "data/admin/yahoo-batch-quote-history/lkg/IGLD.json",
-    "payload_sha256": "d75ad43e487160233cebed5c7ea2c18707c9783c11f9945e56d8f966e9dbe223",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "93b42c322b2402d3df4ba8e540e7ae45b03a263e47dc8574fbc58d633dd76e8a",
+    "quote_as_of": "2026-07-27T20:00:00Z",
+    "source_as_of": "2026-07-27"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-27"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-05T00:18:15Z",
+    "classified_run_id": "30962773171",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "IGLD holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "IGLD holds LKG because Yahoo source date 2026-07-27 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-07-27"
   },
   "ticker": "IGLD",
-  "updated_at": "2026-07-27T22:58:21Z"
+  "updated_at": "2026-08-05T00:18:15Z"
 }

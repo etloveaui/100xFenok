@@ -2,20 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "error": "ValueError: source did not advance beyond the retained LKG for 012510.KS",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 986,
-      "natural": true,
-      "observed_at": "2026-07-16T00:13:37Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "29460793523",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
@@ -195,6 +181,20 @@
       "run_id": "30865042195",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for 012510.KS despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1119,
+      "natural": true,
+      "observed_at": "2026-08-05T00:18:15Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "30962773171",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -213,12 +213,12 @@
     "error": "ValueError: quote_as_of is unavailable for 012510.KS despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 492,
+    "latency_ms": 1119,
     "natural": true,
-    "observed_at": "2026-08-04T00:18:08Z",
+    "observed_at": "2026-08-05T00:18:15Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "30865042195",
+    "run_id": "30962773171",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -243,9 +243,9 @@
     "failure_kind": "transient_provider_miss",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-08-04T00:18:08Z",
+    "observed_at": "2026-08-05T00:18:15Z",
     "run_attempt": 1,
-    "run_id": "30865042195"
+    "run_id": "30962773171"
   },
   "lkg": {
     "fetched_at": "2026-07-15T00:10:47Z",
@@ -271,5 +271,5 @@
     "source_as_of": "2026-06-25T06:30:30Z"
   },
   "ticker": "012510.KS",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-05T00:18:15Z"
 }

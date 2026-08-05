@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-27T22:58:41Z",
     "history_as_of": "2026-07-27",
-    "path": "data/yf/finance/GSUI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GSUI.json",
     "payload_sha256": "c4fd4ac3823b8389ac39e8c1bcc9f4f4d22060d3baa8fb2ff85eb967bbac521f",
     "quote_as_of": "2026-07-27T19:59:50Z",
     "source_as_of": "2026-07-27"
@@ -52,12 +52,12 @@
     "shard": "1/6"
   },
   "lkg": {
-    "fetched_at": "2026-07-09T09:21:56Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-07-27T22:58:41Z",
+    "history_as_of": "2026-07-27",
     "path": "data/admin/yahoo-batch-quote-history/lkg/GSUI.json",
-    "payload_sha256": "7515e345b8acf6a947fd6246b9dcb048aef1a162244635466a4d04757ac0440f",
-    "quote_as_of": "2026-07-08T19:59:50Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "c4fd4ac3823b8389ac39e8c1bcc9f4f4d22060d3baa8fb2ff85eb967bbac521f",
+    "quote_as_of": "2026-07-27T19:59:50Z",
+    "source_as_of": "2026-07-27"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-27"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-07-17T00:15:36Z",
-    "classified_run_id": "29544227703",
+    "classified_at": "2026-08-05T00:18:15Z",
+    "classified_run_id": "30962773171",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "GSUI holds LKG because Yahoo source date 2026-07-08 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "GSUI holds LKG because Yahoo source date 2026-07-27 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-08"
+    "source_as_of": "2026-07-27"
   },
   "ticker": "GSUI",
-  "updated_at": "2026-07-27T22:58:21Z"
+  "updated_at": "2026-08-05T00:18:15Z"
 }
