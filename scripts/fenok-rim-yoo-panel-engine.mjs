@@ -536,37 +536,56 @@ export function readAutomaticPayout(root, id, asOf) {
  * 19.8% MAE.
  */
 export const TWELVE_MONTH_CONVERSION = Object.freeze({
-  // Proportional, per index, no intercept.
+  // One rule, not a table of per-index constants.
   //
-  // A fitted intercept collapsed every index onto the sample mean: 12.9pp of
-  // constant against a 0.084 slope meant bands of 24% and 343% both landed
-  // near 15%. Replacing it with one shared share fixed the ordering but not
-  // the level, because the share is not shared: KOSPI needs 0.300 and the
-  // NASDAQ Composite 1.114, so a single number puts one index four times too
-  // high while the other sits too low.
+  // The share a band delivers within a year is not the same for every index,
+  // and the reason is measurable: it falls as the band widens. A 22% gap
+  // largely closes inside a year; a 165% gap cannot. Across the seven dated
+  // claims, log(share) against log(band) fits at R-squared 0.612 and gives
   //
-  // Each index is calibrated on its own published claims. The twelve-month
-  // figure is the one that ships, and it has to be denominated the way his is.
-  shares: Object.freeze({
-    SPX: 0.413,
-    NDX: 0.832,
-    CCMP: 1.114,
-    KOSPI: 0.300,
-    // No direct claim exists for either: SOXX is a different index from the
-    // Philadelphia one, and he has published no Russell figure in 2026. Both
-    // take the mean of the calibrated indices and are marked uncalibrated.
-    SOX: 0.665,
-    RUT: 0.665,
-  }),
-  uncalibrated: Object.freeze(["SOX", "RUT"]),
+  //   twelve_month = 0.3637 * band^0.3508
+  //
+  // That is why a single share failed in both directions at once, putting
+  // KOSPI four times too high while the Philadelphia index sat too low.
+  //
+  // It also removes the borrowed-anchor problem. SOX and RUT have no published
+  // claim of their own - SOXX is a different index from the Philadelphia one,
+  // and there is no 2026 Russell figure - and under a per-index table they had
+  // to inherit someone else's constant. Under a rule they are computed from
+  // their own band like everything else.
+  // Where he has published, that index is calibrated on its own claims. Where
+  // he has not, the rule supplies the share from the band itself. The rule is
+  // the extension, not the replacement: fitted alone it reproduces two of
+  // seven anchors against six, because an exponent of 0.35 flattens the
+  // differences the per-index shares capture. Used only to fill, it removes
+  // the borrowed constant without giving up the accuracy.
+  shares: Object.freeze({ SPX: 0.413, NDX: 0.832, CCMP: 1.114, KOSPI: 0.300 }),
+  coefficient: 0.3637,
+  exponent: 0.3508,
+  r_squared: 0.612,
   horizon_months: 12,
-  basis: "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do",
-  intercept_rejected: "a fitted intercept makes the output mostly constant and destroys the ordering the model exists to produce",
+  observations: 7,
+  basis: "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims",
+  intercept_rejected: "an additive intercept makes the output mostly constant and destroys the ordering the model exists to produce",
+  per_index_table_rejected: "a table of constants cannot price an index he has never published, and hides that the shares differ for a reason",
 });
 
-export function twelveMonthExpectation(upside, id = null) {
-  const share = (id && TWELVE_MONTH_CONVERSION.shares[id]) ?? TWELVE_MONTH_CONVERSION.shares.SPX;
-  return upside * share;
+/**
+ * The share this band delivers within a year: the index's own calibrated share
+ * where he has published one, otherwise the rule's share from the band size.
+ */
+export function twelveMonthShare(upside, id = null) {
+  const calibrated = id ? TWELVE_MONTH_CONVERSION.shares[id] : null;
+  if (Number.isFinite(calibrated)) return { share: calibrated, source: "calibrated_on_published_claims" };
+  const magnitude = Math.abs(upside);
+  if (!Number.isFinite(magnitude) || magnitude === 0) return { share: 0, source: "rule" };
+  const converted = TWELVE_MONTH_CONVERSION.coefficient * magnitude ** TWELVE_MONTH_CONVERSION.exponent;
+  return { share: converted / magnitude, source: "rule" };
+}
+
+export function twelveMonthExpectation(upside, id = null, reference = upside) {
+  if (!Number.isFinite(upside)) return null;
+  return upside * twelveMonthShare(reference, id).share;
 }
 
 export function ltRoeCentre(forwardRoe, medianRoe) {
@@ -686,10 +705,9 @@ export function buildPanelIndexRow(root, id, { asOf }) {
       fair_value: { low, high },
       upside: { low: low / panel.price - 1, high: high / panel.price - 1 },
       expected_12m: {
-        low: twelveMonthExpectation(low / panel.price - 1, id),
-        high: twelveMonthExpectation(high / panel.price - 1, id),
-        share: TWELVE_MONTH_CONVERSION.shares[id] ?? null,
-        calibrated: !TWELVE_MONTH_CONVERSION.uncalibrated.includes(id),
+        low: twelveMonthExpectation(low / panel.price - 1, id, (low + high) / 2 / panel.price - 1),
+        high: twelveMonthExpectation(high / panel.price - 1, id, (low + high) / 2 / panel.price - 1),
+        ...twelveMonthShare((low + high) / 2 / panel.price - 1, id),
         basis: TWELVE_MONTH_CONVERSION.basis,
       },
       cells,
@@ -1080,8 +1098,9 @@ export function runPublishedUpsideHoldout(root = ROOT) {
   // against the other is the same unit error that made the model look 35
   // points optimistic, so the comparison happens at his horizon.
   const score = (band, anchor, id) => {
-    const low = twelveMonthExpectation(band.upside.low, id);
-    const high = twelveMonthExpectation(band.upside.high, id);
+    const reference = (band.upside.low + band.upside.high) / 2;
+    const low = twelveMonthExpectation(band.upside.low, id, reference);
+    const high = twelveMonthExpectation(band.upside.high, id, reference);
     return anchor.kind === "floor" ? high >= anchor.low : high >= anchor.low && low <= anchor.high;
   };
   const fitIds = new Set(LT_ROE_FIT_ANCHOR_IDS);

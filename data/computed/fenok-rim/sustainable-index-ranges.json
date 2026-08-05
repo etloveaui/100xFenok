@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok_rim_sustainable_index_ranges.v2",
-  "generated_at": "2026-08-05T05:25:54.080Z",
+  "generated_at": "2026-08-05T05:33:17.368Z",
   "as_of": "2026-08-05",
   "status": "research_diagnostic_not_promoted",
   "promotion": {
@@ -129,17 +129,16 @@
         "SPX": 0.413,
         "NDX": 0.832,
         "CCMP": 1.114,
-        "KOSPI": 0.3,
-        "SOX": 0.665,
-        "RUT": 0.665
+        "KOSPI": 0.3
       },
-      "uncalibrated": [
-        "SOX",
-        "RUT"
-      ],
+      "coefficient": 0.3637,
+      "exponent": 0.3508,
+      "r_squared": 0.612,
       "horizon_months": 12,
-      "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do",
-      "intercept_rejected": "a fitted intercept makes the output mostly constant and destroys the ordering the model exists to produce"
+      "observations": 7,
+      "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims",
+      "intercept_rejected": "an additive intercept makes the output mostly constant and destroys the ordering the model exists to produce",
+      "per_index_table_rejected": "a table of constants cannot price an index he has never published, and hides that the shares differ for a reason"
     },
     "structure": {
       "horizon": 9,
@@ -400,17 +399,16 @@
           "SPX": 0.413,
           "NDX": 0.832,
           "CCMP": 1.114,
-          "KOSPI": 0.3,
-          "SOX": 0.665,
-          "RUT": 0.665
+          "KOSPI": 0.3
         },
-        "uncalibrated": [
-          "SOX",
-          "RUT"
-        ],
+        "coefficient": 0.3637,
+        "exponent": 0.3508,
+        "r_squared": 0.612,
         "horizon_months": 12,
-        "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do",
-        "intercept_rejected": "a fitted intercept makes the output mostly constant and destroys the ordering the model exists to produce"
+        "observations": 7,
+        "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims",
+        "intercept_rejected": "an additive intercept makes the output mostly constant and destroys the ordering the model exists to produce",
+        "per_index_table_rejected": "a table of constants cannot price an index he has never published, and hides that the shares differ for a reason"
       },
       "refit": {
         "full": {
@@ -453,8 +451,8 @@
               "low": 0.16116053371821998,
               "high": 0.23644607602939877,
               "share": 0.413,
-              "calibrated": true,
-              "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
+              "source": "calibrated_on_published_claims",
+              "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
             },
             "convexity": "inside_printed_domain",
             "passed": true
@@ -487,8 +485,8 @@
               "low": 0.1402061896187054,
               "high": 0.21289549541793282,
               "share": 0.413,
-              "calibrated": true,
-              "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
+              "source": "calibrated_on_published_claims",
+              "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
             },
             "convexity": "inside_printed_domain",
             "passed": true
@@ -521,8 +519,8 @@
               "low": 0.2701003199978015,
               "high": 0.3432383853714142,
               "share": 0.832,
-              "calibrated": true,
-              "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
+              "source": "calibrated_on_published_claims",
+              "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
             },
             "convexity": "inside_printed_domain",
             "passed": false
@@ -555,8 +553,8 @@
               "low": 0.319355670790091,
               "high": 0.397422001725678,
               "share": 0.832,
-              "calibrated": true,
-              "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
+              "source": "calibrated_on_published_claims",
+              "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
             },
             "convexity": "inside_printed_domain",
             "passed": true
@@ -589,8 +587,8 @@
               "low": 0.2471083408289579,
               "high": 0.31882868875695125,
               "share": 0.832,
-              "calibrated": true,
-              "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
+              "source": "calibrated_on_published_claims",
+              "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
             },
             "convexity": "inside_printed_domain",
             "passed": true
@@ -623,8 +621,8 @@
               "low": 0.17499362088426795,
               "high": 0.30511836898435885,
               "share": 1.114,
-              "calibrated": true,
-              "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
+              "source": "calibrated_on_published_claims",
+              "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
             },
             "convexity": "inside_printed_domain",
             "passed": true
@@ -658,8 +656,8 @@
               "low": 0.4086457045264195,
               "high": 0.5804859959460085,
               "share": 0.3,
-              "calibrated": true,
-              "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
+              "source": "calibrated_on_published_claims",
+              "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
             },
             "convexity": "inside_printed_domain",
             "passed": true
@@ -832,8 +830,8 @@
           "low": 0.16631872571597398,
           "high": 0.24248155975536417,
           "share": 0.413,
-          "calibrated": true,
-          "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
+          "source": "calibrated_on_published_claims",
+          "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
         },
         "point_estimate": null
       },
@@ -865,8 +863,8 @@
           "low": -0.15426635513167306,
           "high": -0.13549072185613775,
           "share": 0.413,
-          "calibrated": true,
-          "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
+          "source": "calibrated_on_published_claims",
+          "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
         },
         "point_estimate": null
       },
@@ -990,8 +988,8 @@
           "low": 0.3549525907544316,
           "high": 0.432147616194491,
           "share": 0.832,
-          "calibrated": true,
-          "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
+          "source": "calibrated_on_published_claims",
+          "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
         },
         "point_estimate": null
       },
@@ -1023,8 +1021,8 @@
           "low": -0.28464009413511776,
           "high": -0.25262551364856556,
           "share": 0.832,
-          "calibrated": true,
-          "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
+          "source": "calibrated_on_published_claims",
+          "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
         },
         "point_estimate": null
       },
@@ -1148,8 +1146,8 @@
           "low": 0.7953815706951274,
           "high": 1.0289031937239719,
           "share": 0.3,
-          "calibrated": true,
-          "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
+          "source": "calibrated_on_published_claims",
+          "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
         },
         "point_estimate": null
       },
@@ -1181,8 +1179,8 @@
           "low": 0.18447669254261195,
           "high": 0.24973900554140327,
           "share": 0.3,
-          "calibrated": true,
-          "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
+          "source": "calibrated_on_published_claims",
+          "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
         },
         "point_estimate": null
       },
@@ -1404,8 +1402,8 @@
           "low": 0.2718644751515072,
           "high": 0.3921515465648129,
           "share": 1.114,
-          "calibrated": true,
-          "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
+          "source": "calibrated_on_published_claims",
+          "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
         },
         "point_estimate": null
       },
@@ -1437,8 +1435,8 @@
           "low": -0.49997480613170264,
           "high": -0.4546112978452151,
           "share": 1.114,
-          "calibrated": true,
-          "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
+          "source": "calibrated_on_published_claims",
+          "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
         },
         "point_estimate": null
       },

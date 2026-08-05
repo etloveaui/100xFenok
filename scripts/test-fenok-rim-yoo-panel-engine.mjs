@@ -25,6 +25,7 @@ import {
   runHistoricalBacktest,
   runTwelveMonthConversionCalibration,
   twelveMonthExpectation,
+  twelveMonthShare,
   TWELVE_MONTH_CONVERSION,
   trackerPriceFromIndex,
 } from "./fenok-rim-yoo-panel-engine.mjs";
@@ -314,23 +315,34 @@ for (const [id, share] of Object.entries(TWELVE_MONTH_CONVERSION.shares)) {
 }
 assert.ok(TWELVE_MONTH_CONVERSION.shares.KOSPI < TWELVE_MONTH_CONVERSION.shares.CCMP,
   "the spread between indices is the reason a single share fails");
-// An index with no published claim of its own must be marked, never presented
-// as if it had been calibrated.
-for (const id of TWELVE_MONTH_CONVERSION.uncalibrated) {
-  assert.ok(TWELVE_MONTH_CONVERSION.shares[id], `${id}: an uncalibrated index still needs a share`);
-  assert.equal(buildPanelIndexRow(ENGINE_ROOT, id, { asOf: AS_OF }).feno.expected_12m.calibrated, false,
-    `${id}: must be reported as uncalibrated`);
-}
+// An index he has published on uses its own share; one he has not is filled by
+// the rule from its own band, never by borrowing another index's constant.
 for (const id of ["SPX", "NDX", "CCMP", "KOSPI"]) {
-  assert.equal(buildPanelIndexRow(ENGINE_ROOT, id, { asOf: AS_OF }).feno.expected_12m.calibrated, true);
+  const row = buildPanelIndexRow(ENGINE_ROOT, id, { asOf: AS_OF });
+  assert.equal(row.feno.expected_12m.source, "calibrated_on_published_claims", `${id}: has claims of its own`);
+  assert.equal(row.feno.expected_12m.share, TWELVE_MONTH_CONVERSION.shares[id]);
 }
+for (const id of ["SOX", "RUT"]) {
+  const row = buildPanelIndexRow(ENGINE_ROOT, id, { asOf: AS_OF });
+  assert.equal(row.feno.expected_12m.source, "rule", `${id}: has no published claim and must be filled by the rule`);
+  assert.equal(TWELVE_MONTH_CONVERSION.shares[id], undefined, `${id}: must not carry a borrowed constant`);
+  // The rule's share is the band's own, so it must reproduce the fitted curve.
+  const mid = (row.feno.upside.low + row.feno.upside.high) / 2;
+  const expected = TWELVE_MONTH_CONVERSION.coefficient * Math.abs(mid) ** TWELVE_MONTH_CONVERSION.exponent / Math.abs(mid);
+  assert.ok(Math.abs(row.feno.expected_12m.share - expected) < 1e-9, `${id}: the filled share must come from the rule`);
+}
+// The rule must fall as the band widens: that is why one share cannot serve
+// every index, and it is the whole content of the fit.
+assert.ok(twelveMonthShare(0.2).share > twelveMonthShare(2.0).share,
+  "a wider band must deliver a smaller share within a year");
+assert.ok(TWELVE_MONTH_CONVERSION.exponent > 0 && TWELVE_MONTH_CONVERSION.exponent < 1);
 // Scaling must preserve ordering and relative magnitude, which is the whole
 // reason the intercept had to go.
-assert.equal(twelveMonthExpectation(0, "SPX"), 0, "a zero band converts to zero");
-const scaledWide = twelveMonthExpectation(3.0, "SPX");
-const scaledNarrow = twelveMonthExpectation(0.3, "SPX");
+assert.equal(twelveMonthExpectation(0, "SPX", 0), 0, "a zero band converts to zero");
+const scaledWide = twelveMonthExpectation(3.0, "SPX", 3.0);
+const scaledNarrow = twelveMonthExpectation(0.3, "SPX", 0.3);
 assert.ok(Math.abs(scaledWide / scaledNarrow - 10) < 1e-9, "a band ten times larger must convert ten times larger");
-assert.ok(twelveMonthExpectation(0.5, "SPX") > twelveMonthExpectation(0.2, "SPX"));
+assert.ok(twelveMonthExpectation(0.5, "SPX", 0.5) > twelveMonthExpectation(0.2, "SPX", 0.2));
 
 // --- fail closed on a stale or missing panel ---------------------------------
 
