@@ -22,6 +22,8 @@ import {
   runPublishedUpsideHoldout,
   runStructuralReproduction,
   reconstructTrailingYield,
+  runHistoricalBacktest,
+  trackerPriceFromIndex,
 } from "./fenok-rim-yoo-panel-engine.mjs";
 
 const AS_OF = "2026-08-04";
@@ -239,8 +241,42 @@ for (const row of payoutFit.rows) {
   assert.ok(row.payout >= band.low - 0.002 && row.payout <= band.high + 0.002,
     `${row.id}: its known payout must lie inside the published band`);
 }
-// A tracker yield dated after the as-of must not be used.
-assert.equal(readTrackerPayout(ENGINE_ROOT, "SPX", "2020-01-01"), null, "a future tracker yield must fail closed");
+// A 2020 date used to fail closed because only a snapshot existed. It now
+// reconstructs, and what must hold instead is that nothing it reads postdates
+// it: no distribution outside the trailing window, no price from the future.
+const historical = readTrackerPayout(ENGINE_ROOT, "SPX", "2020-01-01");
+assert.ok(historical, "a 2020 anchor must reconstruct from the distribution record");
+assert.ok(historical.as_of <= "2020-01-01", "the price behind a 2020 yield may not postdate it");
+assert.equal(historical.point_in_time, true);
+// A date before the distribution record starts must still fail closed.
+assert.equal(readTrackerPayout(ENGINE_ROOT, "SPX", "2015-01-01"), null, "a date before the record must fail closed");
+
+// --- historical backtest ------------------------------------------------------
+
+// Six published claims is all the evidence Yoo will ever give us unless he
+// writes more. The model's own history is evidence that grows by itself.
+const backtest = runHistoricalBacktest(ENGINE_ROOT, { ids: ["SPX"], from: "2017-01-01" });
+assert.ok(backtest.scored >= 20, "the backtest must score far more observations than the published anchors");
+assert.equal(backtest.horizon_months, 12);
+for (const row of backtest.rows) {
+  // A backtest row may never see past its own date.
+  assert.ok(row.as_of < row.realised_as_of, "the realised level must post-date the observation");
+  const built = buildPanelIndexRow(ENGINE_ROOT, row.id, { asOf: row.as_of });
+  assert.equal(built.inputs.price, row.price, `${row.as_of}: the scored price must be the price at that date`);
+  assert.equal(built.inputs.payout_point_in_time, true, "only point-in-time rows may be scored");
+  assert.ok(String(built.inputs.payout_as_of).slice(0, 10) <= row.as_of, "payout may not post-date the observation");
+}
+assert.ok(backtest.overall.direction_rate >= 0 && backtest.overall.direction_rate <= 1);
+assert.ok(Number.isFinite(backtest.overall.mean_error), "the systematic bias must be reported, not hidden");
+
+// A tracker price bridged from the index must stay close to the real close
+// where both exist, or the reconstruction is not usable further back.
+const history = JSON.parse(fs.readFileSync(path.join(ENGINE_ROOT, "data/yf/finance/SPY.json"), "utf8")).data.history_1y;
+const bridged = trackerPriceFromIndex(ENGINE_ROOT, "SPX", "SPY", "2025-08-01", history);
+const actual = history.filter((row) => row.date <= "2025-08-01").pop();
+assert.ok(bridged && actual, "both a bridged and an actual price must exist for the check");
+assert.ok(Math.abs(bridged.price / actual.Close - 1) < 0.05,
+  `the index/tracker bridge must stay inside 5%, got ${(bridged.price / actual.Close - 1) * 100}%`);
 
 // --- fail closed on a stale or missing panel ---------------------------------
 

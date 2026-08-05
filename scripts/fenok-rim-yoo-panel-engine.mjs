@@ -341,7 +341,25 @@ export function forwardEarningsYield(root, id, asOf) {
  * current snapshot cannot do. That is what makes a historical anchor scorable
  * at all; reading today's snapshot back into an April anchor was the leak.
  */
-export function reconstructTrailingYield(root, ticker, asOf) {
+/**
+ * The tracker's price at a date its own history does not reach, taken from the
+ * index level and the ratio between them. The ratio is measured on the most
+ * recent date where both exist, and is stable: SPX/SPY read 10.153 in July
+ * 2025 and 10.088 in June 2026, 0.6% apart over a year.
+ */
+export function trackerPriceFromIndex(root, indexId, ticker, asOf, history) {
+  const panelRow = readPanelObservation(root, indexId, asOf);
+  const overlap = history.filter((row) => Number.isFinite(row.Close) && row.Close > 0);
+  if (!overlap.length || !Number.isFinite(panelRow?.price)) return null;
+  const anchor = overlap[overlap.length - 1];
+  const anchorPanel = readPanelObservation(root, indexId, anchor.date);
+  if (!Number.isFinite(anchorPanel?.price)) return null;
+  const ratio = anchorPanel.price / anchor.Close;
+  if (!Number.isFinite(ratio) || ratio <= 0) return null;
+  return { price: panelRow.price / ratio, ratio, as_of: panelRow.as_of, ratio_measured_at: anchor.date };
+}
+
+export function reconstructTrailingYield(root, ticker, asOf, indexId = null) {
   let payload;
   try {
     payload = readJson(root, `data/yf/finance/${ticker}.json`);
@@ -357,7 +375,22 @@ export function reconstructTrailingYield(root, ticker, asOf) {
     .map(([, amount]) => amount)
     .filter(Number.isFinite);
   const priced = history.filter((row) => row.date <= asOf);
-  const close = priced.length ? priced[priced.length - 1] : null;
+  let close = priced.length ? priced[priced.length - 1] : null;
+  let priceBasis = "tracker close";
+
+  // The tracker's own price history is only a year deep, while its
+  // distribution record runs to 2016 and the index panel to 2010. A tracker
+  // tracks its index, so where the price history does not reach, the index
+  // level divided by their measured ratio does. That is what lets the rule be
+  // scored against nine years of its own history instead of six published
+  // claims.
+  if (indexId && (!close || close.date < windowStart)) {
+    const bridged = trackerPriceFromIndex(root, indexId, ticker, asOf, history);
+    if (bridged) {
+      close = { date: bridged.as_of, Close: bridged.price };
+      priceBasis = `index level over the measured index/tracker ratio ${bridged.ratio.toFixed(4)}`;
+    }
+  }
   if (!paid.length || !close || !Number.isFinite(close.Close) || close.Close <= 0) return null;
   return {
     value: paid.reduce((a, b) => a + b, 0) / close.Close,
@@ -365,6 +398,7 @@ export function reconstructTrailingYield(root, ticker, asOf) {
     window_start: windowStart,
     price_as_of: close.date,
     price: close.Close,
+    price_basis: priceBasis,
     // The close can only be as recent as the last fetch of this payload. A
     // price older than the anchor is stale, never a look-ahead.
     stale_price_days: Math.round((Date.parse(`${asOf}T00:00:00Z`) - Date.parse(`${close.date}T00:00:00Z`)) / 86400000),
@@ -374,7 +408,7 @@ export function reconstructTrailingYield(root, ticker, asOf) {
 
 export function readTrackerPayout(root, id, asOf) {
   const ticker = FROZEN_CALIBRATION.etf_proxy[id];
-  const reconstructed = reconstructTrailingYield(root, ticker, asOf);
+  const reconstructed = reconstructTrailingYield(root, ticker, asOf, id);
   if (reconstructed) {
     const earnings = forwardEarningsYield(root, id, asOf);
     const raw = reconstructed.value / earnings.value;
@@ -389,6 +423,7 @@ export function readTrackerPayout(root, id, asOf) {
         point_in_time: true,
         distributions: reconstructed.distributions,
         stale_price_days: reconstructed.stale_price_days,
+        price_basis: reconstructed.price_basis,
         earnings_yield: earnings.value,
         earnings_basis: earnings.basis,
         source: `${reconstructed.source}, times the frozen calibration multiplier`,
@@ -939,6 +974,82 @@ export function runPublishedUpsideHoldout(root = ROOT) {
     measured_growth_diagnostic: summarise("measured_growth_diagnostic"),
     fit_anchor_ids: [...LT_ROE_FIT_ANCHOR_IDS],
     note: "floor anchors are one-sided and are passed by almost any positive band; only point-in-time two-sided rows outside the fit set discriminate, and later-vintage inputs are reported as not evaluable",
+  };
+}
+
+/**
+ * Score the rule against what the market actually did, rather than against
+ * what Yoo published.
+ *
+ * Six dated claims is all the published evidence there will ever be unless he
+ * writes more, and only one of them is two-sided. A residual-value model makes
+ * a falsifiable claim of its own - that price converges toward fair value - so
+ * it can be scored on its own history. Point-in-time inputs reach back to
+ * 2017, which is hundreds of observations instead of six.
+ *
+ * `horizonMonths` is how far ahead the realised level is read. A row is only
+ * scored when every operand reconstructs at its own date and the realised
+ * level exists.
+ */
+export function runHistoricalBacktest(root = ROOT, {
+  ids = Object.keys(PANEL_SOURCES),
+  from = "2017-01-01",
+  stepWeeks = 13,
+  horizonMonths = 12,
+} = {}) {
+  const rows = [];
+  for (const id of ids) {
+    const source = PANEL_SOURCES[id];
+    const panel = readJson(root, source.file).sections[source.section].data
+      .filter((row) => Number.isFinite(row.px_last) && row.px_to_book_ratio > 0 && row.date >= from);
+    for (let index = 0; index < panel.length; index += stepWeeks) {
+      const asOf = panel[index].date;
+      const horizonDate = new Date(Date.parse(`${asOf}T00:00:00Z`) + horizonMonths * 30.437 * 86400000)
+        .toISOString().slice(0, 10);
+      const realisedRow = panel.filter((row) => row.date <= horizonDate).pop();
+      if (!realisedRow || realisedRow.date <= asOf) continue;
+      let built;
+      try {
+        built = buildPanelIndexRow(root, id, { asOf });
+      } catch {
+        continue;
+      }
+      if (built.inputs.payout_point_in_time !== true) continue;
+      const realisedReturn = realisedRow.px_last / built.inputs.price - 1;
+      const band = built.feno.upside;
+      const midpoint = (band.low + band.high) / 2;
+      rows.push({
+        id,
+        as_of: asOf,
+        realised_as_of: realisedRow.date,
+        price: built.inputs.price,
+        realised_price: realisedRow.px_last,
+        predicted_upside: { low: band.low, high: band.high, midpoint },
+        realised_return: realisedReturn,
+        inside_band: realisedReturn >= band.low && realisedReturn <= band.high,
+        direction_correct: Math.sign(midpoint) === Math.sign(realisedReturn),
+        error: midpoint - realisedReturn,
+        convexity: built.feno.convexity.status,
+      });
+    }
+  }
+  const scored = rows.length;
+  const summarise = (subset) => (subset.length ? {
+    observations: subset.length,
+    inside_band_rate: subset.filter((row) => row.inside_band).length / subset.length,
+    direction_rate: subset.filter((row) => row.direction_correct).length / subset.length,
+    mean_absolute_error: subset.reduce((sum, row) => sum + Math.abs(row.error), 0) / subset.length,
+    mean_error: subset.reduce((sum, row) => sum + row.error, 0) / subset.length,
+  } : null);
+  return {
+    horizon_months: horizonMonths,
+    step_weeks: stepWeeks,
+    from,
+    scored,
+    overall: summarise(rows),
+    by_index: Object.fromEntries(ids.map((id) => [id, summarise(rows.filter((row) => row.id === id))])),
+    inside_domain: summarise(rows.filter((row) => row.convexity === "inside_printed_domain")),
+    rows,
   };
 }
 
