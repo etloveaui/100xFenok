@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { readTrackerPayout } from "../fenok-rim-yoo-panel-engine.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -112,32 +113,63 @@ export function auditBookRoeIdentity(evidence) {
   };
 }
 
-export function auditPayoutIdentity(proxyPayout, targetPayout, thresholds = DEFAULT_PROXY_IDENTITY_THRESHOLDS) {
-  if (!finitePositive(proxyPayout) || !finitePositive(targetPayout)) {
+export function auditPayoutIdentity(
+  proxyPayout,
+  targetPayout,
+  thresholds = DEFAULT_PROXY_IDENTITY_THRESHOLDS,
+  context = {},
+) {
+  const proxySourceId = typeof context?.proxy_source_id === "string" ? context.proxy_source_id : null;
+  const targetSourceId = typeof context?.target_source_id === "string" ? context.target_source_id : null;
+  const proxyRole = typeof context?.proxy_role === "string" ? context.proxy_role : null;
+  const targetRole = typeof context?.target_role === "string" ? context.target_role : null;
+  const sameSource = (proxySourceId !== null && proxySourceId === targetSourceId)
+    || (proxyRole !== null && proxyRole === targetRole && targetRole === "direct_target");
+  const bridgeApplicable = context?.bridge_applicable !== false;
+  const proxyValue = finitePositive(proxyPayout) ? proxyPayout : null;
+  const targetValue = finitePositive(targetPayout) ? targetPayout : null;
+  const relativeDivergence = proxyValue !== null && targetValue !== null
+    ? Math.abs(proxyValue - targetValue) / Math.min(proxyValue, targetValue)
+    : null;
+  const base = {
+    dimension: "payout_identity",
+    passed: false,
+    scoreable: false,
+    bridge_applicable: bridgeApplicable,
+    source_roles: { proxy: proxyRole, target: targetRole },
+    source_ids: { proxy: proxySourceId, target: targetSourceId },
+    proxy_payout: proxyValue,
+    target_payout: targetValue,
+    relative_divergence: relativeDivergence,
+    divergence_basis: "absolute_gap_divided_by_smaller_payout",
+    threshold: thresholds.payout_max_relative_divergence,
+  };
+  if (!bridgeApplicable) {
     return {
-      dimension: "payout_identity",
-      passed: false,
-      scoreable: false,
+      ...base,
+      reason: "direct_target_source_no_proxy_bridge",
+    };
+  }
+  if (sameSource) {
+    return {
+      ...base,
+      reason: "same_source_payout_identity_not_independent",
+    };
+  }
+  if (proxyValue === null || targetValue === null) {
+    return {
+      ...base,
       reason: "positive_proxy_and_target_payout_required",
-      proxy_payout: finitePositive(proxyPayout) ? proxyPayout : null,
-      target_payout: finitePositive(targetPayout) ? targetPayout : null,
-      relative_divergence: null,
     };
   }
   // Relative to the smaller value so a 20% upward and downward gap cannot
   // produce different identity verdicts merely by swapping operands.
-  const relativeDivergence = Math.abs(proxyPayout - targetPayout) / Math.min(proxyPayout, targetPayout);
   const passed = relativeDivergence <= thresholds.payout_max_relative_divergence + Number.EPSILON * 8;
   return {
-    dimension: "payout_identity",
+    ...base,
     passed,
     scoreable: true,
     reason: passed ? "payout_divergence_within_gate" : "payout_divergence_exceeds_gate",
-    proxy_payout: proxyPayout,
-    target_payout: targetPayout,
-    relative_divergence: relativeDivergence,
-    divergence_basis: "absolute_gap_divided_by_smaller_payout",
-    threshold: thresholds.payout_max_relative_divergence,
   };
 }
 
@@ -254,7 +286,7 @@ export function auditHistoricalClaimIdentity({
 export function auditProxyIdentity(input, thresholds = DEFAULT_PROXY_IDENTITY_THRESHOLDS) {
   const price = auditPriceUnitBridge(input.index_rows, input.proxy_rows, thresholds);
   const bookRoe = auditBookRoeIdentity(input.book_roe_evidence);
-  const payout = auditPayoutIdentity(input.proxy_payout, input.target_payout, thresholds);
+  const payout = auditPayoutIdentity(input.proxy_payout, input.target_payout, thresholds, input.payout_context);
   const dimensions = {
     price_unit_bridge: price,
     book_roe_identity: bookRoe,
@@ -314,6 +346,10 @@ export function readCurrentRepoProxyIdentityInputs(root = ROOT) {
   const soxRange = sustainable.rows.find((row) => row.id === "SOX");
   const soxFairValue = fairValues.rows.find((row) => row.key === "philadelphia_semi");
   const soxClaim = claims.claims.find((row) => row.date === "2026-06-28" && row.asset === "SOXX");
+  // Keep the tracker comparison independent from the value row: RUT's
+  // valuation payout is now direct LSEG, while this diagnostic remains the
+  // IWM reconstruction against the same official target payout.
+  const rutTrackerPayout = readTrackerPayout(root, "RUT", iwm.source_as_of ?? iwm.history_as_of ?? rutRange.as_of);
 
   return {
     RUT_IWM: {
@@ -333,9 +369,21 @@ export function readCurrentRepoProxyIdentityInputs(root = ROOT) {
         validated: false,
         blockers: ["fixture_feed_book_missing", "unit_coherent_book_and_roe_bridge_unvalidated"],
       },
-      proxy_payout: rutRange.inputs.payout,
+      proxy_payout: rutTrackerPayout?.center ?? null,
       target_payout: officialRut.derived.payout_ex_negative_basis,
-      payout_context: { target_source: "LSEG official ex-negative basis", tracker: rutRange.inputs.payout_tracker },
+      payout_context: {
+        bridge_applicable: false,
+        target_role: "direct_target",
+        proxy_role: "proxy_tracker",
+        target_source_id: "lseg_ftse_russell_ex_negative",
+        proxy_source_id: "iwm_tracker_distribution_over_lseg_earnings_yield",
+        target_source: "LSEG official ex-negative basis",
+        proxy_source: rutTrackerPayout?.source ?? "IWM tracker payout unavailable",
+        tracker: "IWM",
+        target_as_of: officialRut.as_of,
+        proxy_as_of: rutTrackerPayout?.as_of ?? iwm.source_as_of ?? null,
+        valuation_payout: rutRange.inputs.payout,
+      },
       historical_claim: {
         observation_at: grid.artifacts.IWM.capture_date,
         available_as_of: grid.artifacts.IWM.capture_date,

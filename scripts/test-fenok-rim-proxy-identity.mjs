@@ -54,25 +54,19 @@ const stableRows = Array.from({ length: 30 }, (_, index) => ({ date: `2026-01-${
 const shiftedProxy = stableRows.map((row, index) => ({ date: row.date, value: index === 29 ? 8 : 10, available_as_of: row.available_as_of }));
 assert.equal(auditPriceUnitBridge(stableRows, shiftedProxy).passed, false, "one shifted scale must fail the max-deviation gate");
 
-// The tracker payout is the engine's output, not a constant. Pinning its exact
-// value here made every payout-basis change break this suite for no reason;
-// what this test is for is the divergence between the two identities.
+// RUT's valuation payout is direct LSEG. The proxy side below is rebuilt
+// independently from IWM so this remains a useful divergence diagnostic.
 assert.ok(rut.dimensions.payout_identity.proxy_payout > 0 && rut.dimensions.payout_identity.proxy_payout < 1);
 closeTo(rut.dimensions.payout_identity.target_payout, 0.23716, 1e-15, "RUT LSEG payout");
-// Measured and reported. It no longer gates anything, because Russell's payout
-// comes from its own publisher rather than from IWM, but the divergence is
-// still the evidence for why a tracker payout would have been wrong there.
-assert.ok(Number.isFinite(rut.dimensions.payout_identity.relative_divergence),
-  "the tracker/official payout divergence must stay measured");
-// This now reads passed=true for a circular reason and must not be trusted:
-// the audit takes the artifact's payout as the "proxy" side, and since Russell
-// switched to the LSEG factsheet that side IS the target, so it compares
-// 0.23716 against 0.23716 and reports zero divergence. Recorded here so the
-// circularity is visible rather than mistaken for a bridge that started
-// working. It gates nothing either way - Russell no longer depends on IWM.
-assert.equal(rut.dimensions.payout_identity.proxy_payout, rut.dimensions.payout_identity.target_payout,
-  "the two sides are the same number, which is what makes this comparison circular");
-assert.equal(rut.dimensions.payout_identity.relative_divergence, 0);
+assert.ok(rut.dimensions.payout_identity.relative_divergence > 0.05,
+  "the independent IWM/LSEG payout divergence must remain measurable");
+assert.equal(rut.dimensions.payout_identity.bridge_applicable, false);
+assert.equal(rut.dimensions.payout_identity.scoreable, false);
+assert.equal(rut.dimensions.payout_identity.passed, false);
+assert.equal(rut.dimensions.payout_identity.reason, "direct_target_source_no_proxy_bridge");
+assert.equal(currentInputs.RUT_IWM.payout_context.target_role, "direct_target");
+assert.equal(currentInputs.RUT_IWM.payout_context.proxy_role, "proxy_tracker");
+assert.equal(currentInputs.RUT_IWM.payout_context.valuation_payout, rut.dimensions.payout_identity.target_payout);
 assert.ok(sox.dimensions.payout_identity.proxy_payout > 0 && sox.dimensions.payout_identity.proxy_payout < 1);
 closeTo(sox.dimensions.payout_identity.target_payout, 0.112985, 1e-15, "SOX GIW payout");
 assert.ok(sox.dimensions.payout_identity.relative_divergence > 0.05,
@@ -80,6 +74,16 @@ assert.ok(sox.dimensions.payout_identity.relative_divergence > 0.05,
 assert.equal(sox.dimensions.payout_identity.passed, false);
 assert.equal(auditPayoutIdentity(0.5, 0.525).passed, true);
 assert.equal(auditPayoutIdentity(0.5, 0.526).passed, false);
+const sameSourcePayout = auditPayoutIdentity(0.5, 0.5, DEFAULT_PROXY_IDENTITY_THRESHOLDS, {
+  bridge_applicable: true,
+  target_role: "direct_target",
+  proxy_role: "direct_target",
+  target_source_id: "same-publisher",
+  proxy_source_id: "same-publisher",
+});
+assert.equal(sameSourcePayout.passed, false, "same-source equality must never pass as an identity bridge");
+assert.equal(sameSourcePayout.scoreable, false);
+assert.equal(sameSourcePayout.reason, "same_source_payout_identity_not_independent");
 
 assert.equal(rut.dimensions.book_roe_identity.passed, false);
 assert.equal(rut.dimensions.book_roe_identity.reason, "book_or_roe_missing");
@@ -134,7 +138,9 @@ assert.equal(dimensionsAreIndependent.dimensions.historical_claim_identity.passe
 assert.equal(dimensionsAreIndependent.passed, true);
 const brokenPayout = auditProxyIdentity({ ...currentInputs.RUT_IWM, proxy_payout: 0.2, target_payout: 0.2 });
 assert.equal(brokenPayout.dimensions.price_unit_bridge.passed, true);
-assert.equal(brokenPayout.dimensions.payout_identity.passed, true);
+assert.equal(brokenPayout.dimensions.payout_identity.passed, false);
+assert.equal(brokenPayout.dimensions.payout_identity.scoreable, false);
+assert.equal(brokenPayout.dimensions.payout_identity.reason, "direct_target_source_no_proxy_bridge");
 assert.equal(brokenPayout.dimensions.book_roe_identity.passed, false);
 assert.equal(brokenPayout.passed, false);
 
