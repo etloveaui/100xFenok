@@ -12,6 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURE_ROOT = path.join(__dirname, "fixtures", "data_supply", "detection_floor");
 const expected = JSON.parse(fs.readFileSync(path.join(FIXTURE_ROOT, "cases.expected.json"), "utf8"));
 const calendars = JSON.parse(fs.readFileSync(path.join(FIXTURE_ROOT, "calendars.fixture.json"), "utf8"));
+const canonicalCalendars = JSON.parse(fs.readFileSync(path.join(__dirname, "lib", "data-supply-detection-calendars.json"), "utf8"));
 const baseline = expected.baseline.expected_report;
 
 const severity = { ready: 0, unobserved: 1, stale: 2, drift: 3, unavailable: 4 };
@@ -108,13 +109,33 @@ for (const [evidence, { actual, claimed }] of workflowUnion) {
   assert.deepEqual(unwatched, [], `${evidence}: cron(s) no detection member claims`);
 }
 
+// The detection calendar is a second projection of the same workflow contract.
+// Keep the promoted SSOT and its test fixture byte-for-data, then require the
+// Yahoo schedule set to match fetch-yf-finance.yml exactly (stock + ETF slots).
+// A future `:00`/`:07` workflow edit must fail here until the calendar is moved
+// with it, preventing the observer from silently watching the wrong minutes.
+assert.deepEqual(canonicalCalendars, calendars, "canonical calendar SSOT matches the detection-floor fixture");
+const yahooWorkflow = ".github/workflows/fetch-yf-finance.yml";
+const yahooWorkflowCrons = new Set(workflowCrons(yahooWorkflow));
+const yahooCalendarSchedules = canonicalCalendars.schedules.filter((schedule) => (
+  schedule.id === "weekday_2320_utc" || schedule.id.startsWith("yahoo_batch_etf_")
+));
+const yahooCalendarCrons = new Set(yahooCalendarSchedules.map((schedule) => schedule.cron));
+assert.equal(yahooCalendarSchedules.length, 13, "Yahoo calendar must cover one stock and twelve ETF slots");
+assert.equal(yahooCalendarCrons.size, yahooCalendarSchedules.length, "Yahoo calendar slots must have unique crons");
+assert.deepEqual(
+  [...yahooCalendarCrons].sort(),
+  [...yahooWorkflowCrons].sort(),
+  "fetch-yf-finance.yml schedules and Yahoo detection calendar must stay exactly in sync",
+);
+
 // The lane this regression exists for: one stock slot plus twelve ETF slots.
 const yahooMember = scheduledMembers.find((member) => member.id === "yahoo_batch_quote_history");
 assert.equal(yahooMember.schedule.length, 13);
 for (let hour = 0; hour < 24; hour += 2) {
   assert.ok(
-    yahooMember.schedule.includes(`0 ${hour} * * 0-5`),
-    `yahoo lane must declare the ${hour}:00 ETF slot`,
+    yahooMember.schedule.includes(`7 ${hour} * * 0-5`),
+    `yahoo lane must declare the ${hour}:07 ETF slot`,
   );
 }
 assert.equal(
@@ -172,9 +193,9 @@ assert.deepEqual(coverage.pre_activation_members, [
     lane_id: "yahoo_batch_quote_history",
     member_id: "yahoo_batch_quote_history",
     workflow: ".github/workflows/fetch-yf-finance.yml",
-    cron: `0 ${hour} * * 0-5`,
+    cron: `7 ${hour} * * 0-5`,
     activated_at: "2026-08-01T01:00:13Z",
-    first_eligible_at: `2026-08-02T${String(hour).padStart(2, "0")}:00:00.000Z`,
+    first_eligible_at: `2026-08-02T${String(hour).padStart(2, "0")}:07:00.000Z`,
   })),
 ]);
 assert.equal(coverage.rows.some((row) => row.lane_id === "oecd_cli"), false);
