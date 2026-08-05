@@ -223,9 +223,17 @@ for (const id of SCOPE) {
   assert.ok(row.inputs.payout > 0 && row.inputs.payout < 1, `${id}: the payout must be a fraction`);
   // Payout comes from one tracker source for every index, swept as a band.
   const band = row.inputs.payout_band;
-  assert.ok(band.low < band.center && band.center < band.high, `${id}: the payout band must be ordered and non-degenerate`);
+  assert.ok(band.low <= band.center && band.center <= band.high, `${id}: the payout band must be ordered`);
+  // A tracker payout carries the calibration spread; a payout taken straight
+  // from the index's own publisher has no spread to carry and is a point.
+  if (row.inputs.payout_tracker) {
+    assert.ok(band.low < band.high, `${id}: a tracker payout must carry its calibration spread`);
+  } else {
+    assert.equal(band.low, band.high, `${id}: a direct payout is a point, not a band`);
+  }
   assert.ok([band.low, band.center, band.high].every((v) => v > 0 && v < 1), `${id}: every payout in the band must be a fraction`);
-  assert.ok(row.inputs.payout_tracker, `${id}: the tracker supplying the payout must be named`);
+  assert.ok(row.inputs.payout_tracker || row.inputs.payout_source,
+    `${id}: whatever supplied the payout must be named, tracker or publisher`);
   assert.ok(Number.isFinite(row.inputs.median_roe_260w), `${id}: the long-run anchor must exist`);
   assert.ok(Math.abs(row.inputs.lt_roe_centre - ltRoeCentre(row.inputs.model_forward_roe, row.inputs.median_roe_260w)) < 1e-12,
     `${id}: the published LTROE must come from the frozen rule`);

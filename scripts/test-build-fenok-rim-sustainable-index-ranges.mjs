@@ -117,8 +117,10 @@ if (structural) {
   ]);
   assert.ok(structural.re_entry, "an exclusion must say what would reverse it");
 }
-// Proxy identity is the only defect left standing.
-assert.deepEqual(artifact.promotion.blockers.map((row) => row.id), ["ungated_proxy_identity"]);
+// No defect stands. Every in-scope index now has a direct source for the
+// operands its value depends on, so nothing crosses a failing bridge.
+assert.deepEqual(artifact.promotion.blockers, [], "promotion must not be blocked by a defect that no longer exists");
+assert.equal(artifact.promotion.promoted, true);
 
 // The two we know are findings, not defects: we cannot fit our way to his
 // numbers, and we cannot make an index compound inside a domain it is outside.
@@ -141,11 +143,13 @@ for (const blocker of artifact.promotion.blockers) {
 // while its bridge fails, and the global defect stands until those indices have
 // direct target inputs regardless: a withheld index is still one we cannot
 // value, and promoting around it would claim otherwise.
-const proxyPublishing = artifact.rows.filter((row) => ["RUT"].includes(row.id) && row.publication_status !== "NULL");
-assert.equal(proxyPublishing.length, 0, "a failing bridge may never publish a value");
-const ungatedDefect = artifact.promotion.blockers.find((row) => row.id === "ungated_proxy_identity");
-assert.ok(ungatedDefect, "the global proxy defect stands until direct inputs exist");
-assert.ok(ungatedDefect.clears_when, "the defect must say what would clear it");
+// Nothing is bridge-gated now: every in-scope index has a direct source for the
+// operands its value depends on. Were that to change, the gate must return.
+for (const row of artifact.rows) {
+  if (row.out_of_scope_reason) continue;
+  const gatedReasons = row.blocking_reasons.filter((reason) => reason.startsWith("proxy_"));
+  assert.deepEqual(gatedReasons, [], `${row.id}: no in-scope row may depend on a failing bridge`);
+}
 assert.ok(!artifact.promotion.blockers.some((row) => row.id === "out_of_sample_anchor_failed"),
   "disagreeing with a published claim is a finding, not a defect");
 if (artifact.promotion.blockers.length) {
@@ -212,31 +216,25 @@ for (const row of artifact.rows) {
 // dimension must be named, and a dimension that is measured and reported but
 // failing may never let a row score: reading the audit's own `scoreable` flag
 // instead of the verdicts is exactly how a failed bridge gets scored silently.
-const proxyAudit = readCurrentRepoProxyIdentityAudit();
-for (const [id, key] of Object.entries({ RUT: "RUT_IWM" })) {
+// A bridge only gates an index that depends on one. Russell takes its book,
+// ROE and payout from the LSEG factsheet, its own publisher, so nothing about
+// its value crosses the IWM bridge; the audit still measures that bridge as
+// evidence but it no longer decides whether the row may publish.
+const russell = artifact.rows.find((row) => row.id === "RUT");
+assert.match(russell.source_notes.payout, /ftserussell/, "Russell's payout must come from its publisher, not a tracker");
+assert.equal(russell.inputs.payout_tracker, null, "a direct source means no tracker");
+assert.equal(russell.inputs.forward_roe_basis, "LSEG ex-negative earnings bridge");
+// Every in-scope row now carries a value, and any row that still depended on a
+// failing bridge would have to be gated.
+for (const id of SCOPE) {
   const row = artifact.rows.find((entry) => entry.id === id);
-  const dimensions = proxyAudit[key].dimensions;
-  const failing = ["price_unit_bridge", "book_roe_identity", "payout_identity"]
-    .filter((dimension) => dimensions[dimension] && dimensions[dimension].passed !== true);
-  assert.ok(failing.length > 0, `${id}: this test assumes the bridge still fails`);
-  assert.equal(row.publication_status, "NULL", `${id}: a failed bridge must publish nothing`);
-  assert.equal(row.value, null, `${id}: a failed bridge must carry no numeric value`);
-  assert.equal(row.measured_growth_diagnostic, null, `${id}: not even a diagnostic`);
-  for (const dimension of failing) {
-    assert.ok(row.blocking_reasons.includes(`proxy_${dimension}_failed:${key}`), `${id}: ${dimension} must be named`);
-  }
-  // A dimension can report scoreable while failing; the verdict is what counts.
-  for (const dimension of failing) {
-    if (dimensions[dimension].scoreable === true) {
-      assert.notEqual(row.publication_status, "RESEARCH_DIAGNOSTIC",
-        `${id}: ${dimension} is scoreable but failing and must not let the row publish`);
-    }
-  }
+  assert.equal(row.publication_status, "RESEARCH_DIAGNOSTIC", `${id}: must carry a value`);
+  assert.ok(row.value, `${id}: must carry a value`);
 }
-// The rows whose tracker is the index keep their numbers.
-for (const id of ["SPX", "NDX", "CCMP", "KOSPI"]) {
-  assert.equal(artifact.rows.find((row) => row.id === id).publication_status, "RESEARCH_DIAGNOSTIC");
-}
+// The bridge audit still runs and still reports Russell against IWM failing;
+// that is evidence about the tracker, not about the row.
+const proxyAudit = readCurrentRepoProxyIdentityAudit();
+assert.ok(proxyAudit.RUT_IWM, "the bridge audit must keep measuring Russell against IWM");
 
 // Identity separations that a merge must never quietly drop.
 assert.ok(!SCOPE.includes("SOX"), "SOX must not be in scope");

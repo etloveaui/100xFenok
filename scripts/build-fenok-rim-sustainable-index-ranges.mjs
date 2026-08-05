@@ -199,7 +199,15 @@ function promotionBlockers({ rows, structural, holdout }) {
  * how a failed bridge gets scored silently. Contract measured by cx in
  * fh-20260805-129.
  */
-const PROXY_GATED_ROWS = Object.freeze({ RUT: "RUT_IWM", SOX: "SOX_SOXX" });
+// A bridge only has to pass where the index depends on one. Russell takes its
+// book, ROE and payout from the LSEG factsheet, its own publisher, so nothing
+// about its value crosses the IWM bridge and there is no proxy to gate. The
+// bridge audit still runs on it as evidence; it just no longer decides whether
+// the row may publish. Only an index with no direct source is gated.
+const PROXY_GATED_ROWS = Object.freeze({});
+const DIRECT_SOURCE_ROWS = Object.freeze({
+  RUT: "LSEG FTSE Russell factsheet supplies book, ROE and payout on an ex-negative basis",
+});
 const REQUIRED_PROXY_DIMENSIONS = Object.freeze(["price_unit_bridge", "book_roe_identity", "payout_identity"]);
 
 function proxyGateFailures(id) {

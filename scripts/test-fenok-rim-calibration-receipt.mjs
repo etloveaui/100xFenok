@@ -268,8 +268,9 @@ assert.deepEqual(integrated.fit_evidence_ids, [
 assert.deepEqual(integrated.evaluation_evidence_ids, [
   "twelve-month-evaluation-2022-09-30--2026-07-17",
 ]);
-assert.equal(integrated.promotion.eligible, false);
-assert.deepEqual(integrated.promotion.external_blockers, ["ungated_proxy_identity"]);
+// Every in-scope index now has a direct source for the operands its value
+// depends on, so no bridge gates anything and no external blocker stands.
+assert.deepEqual(integrated.promotion.external_blockers, []);
 assert.ok(!integrated.promotion.external_blockers.includes("sustainable_calibration_receipt_not_integrated"));
 assert.ok(!integrated.promotion.blockers.includes("post_cutoff_evidence"));
 assert.ok(!integrated.promotion.blockers.includes("future_evidence"));

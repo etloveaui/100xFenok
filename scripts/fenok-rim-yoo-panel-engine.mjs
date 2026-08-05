@@ -645,10 +645,22 @@ export function buildPanelIndexRow(root, id, { asOf }) {
   const book = official ? panel.price / official.price_to_book : panel.book;
   const centre = ltRoeCentre(modelRoe, medianRoe);
   const half = FROZEN_CALIBRATION.lt_roe_rule.lattice_half_width;
-  const tracker = readTrackerPayout(root, id, asOf);
-  const fallback = official
-    ? { value: official.payout, as_of: official.as_of, source: `${official.source} ex-negative dividend yield times P/E`, automatic: true }
-    : readAutomaticPayout(root, id, asOf);
+  // A direct payout from the index's own publisher beats a tracker proxy. This
+  // was inverted: Russell took its book and ROE from the LSEG factsheet and
+  // then its payout from IWM, so a row with a complete direct source was still
+  // being scored across a proxy bridge that fails by 26.6%.
+  const direct = official
+    ? {
+      value: official.payout,
+      as_of: official.as_of,
+      point_in_time: official.as_of <= asOf,
+      source: `${official.source} ex-negative dividend yield times P/E`,
+      automatic: true,
+      direct: true,
+    }
+    : null;
+  const tracker = direct ? null : readTrackerPayout(root, id, asOf);
+  const fallback = direct ?? readAutomaticPayout(root, id, asOf);
   const payoutBand = tracker
     ? { low: tracker.low, center: tracker.center, high: tracker.high }
     : { low: fallback.value, center: fallback.value, high: fallback.value };

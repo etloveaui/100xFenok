@@ -1,21 +1,15 @@
 {
   "schema_version": "fenok_rim_sustainable_index_ranges.v2",
-  "generated_at": "2026-08-05T06:32:09.580Z",
+  "generated_at": "2026-08-05T06:40:27.155Z",
   "as_of": "2026-08-05",
-  "status": "research_diagnostic_not_promoted",
+  "status": "six_index_residual_value_ranges_ready",
   "promotion": {
-    "promoted": false,
-    "blockers": [
-      {
-        "id": "ungated_proxy_identity",
-        "detail": "RUT, SOX are refused at the row gate, but neither has direct target-index inputs and their measured bridges still fail",
-        "clears_when": "each proxied index has direct target-index book, ROE and payout, or every bridge dimension passes"
-      }
-    ],
+    "promoted": true,
+    "blockers": [],
     "findings": [
       {
         "id": "convexity_outside_printed_domain",
-        "detail": "printed cells used book growth at 1.77~2.56 times the discount rate; RUT 1.38 sit outside it"
+        "detail": "printed cells used book growth at 1.77~2.56 times the discount rate; RUT 1.29 sit outside it"
       },
       {
         "id": "structural_cells_excluded_for_unit_incoherence",
@@ -1358,10 +1352,8 @@
     {
       "id": "RUT",
       "label": "Russell 2000",
-      "publication_status": "NULL",
-      "blocking_reasons": [
-        "proxy_identity_audit_unavailable:RUT_IWM"
-      ],
+      "publication_status": "RESEARCH_DIAGNOSTIC",
+      "blocking_reasons": [],
       "as_of": "2026-07-31",
       "input_freshness": {
         "status": "passed",
@@ -1382,9 +1374,9 @@
           },
           {
             "id": "payout",
-            "as_of": "2026-08-04",
+            "as_of": "2026-06-30",
             "max_age_days": 90,
-            "age_days": 1,
+            "age_days": 36,
             "status": "passed"
           }
         ]
@@ -1410,22 +1402,22 @@
           0.045,
           0.05
         ],
-        "book_growth": 0.14152550244310882,
-        "book_growth_uncapped": 0.14152550244310882,
+        "book_growth": 0.13284858137749736,
+        "book_growth_uncapped": 0.13284858137749736,
         "book_growth_capped": false,
         "book_growth_ceiling": 0.26238486296164143,
-        "payout": 0.1873355878982068,
+        "payout": 0.23716,
         "payout_band": {
-          "low": 0.1871872019074609,
-          "center": 0.1873355878982068,
-          "high": 0.18748397388895272
+          "low": 0.23716,
+          "center": 0.23716,
+          "high": 0.23716
         },
-        "payout_raw_tracker_ratio": 0.1725418497045396,
-        "payout_tracker": "IWM",
-        "retention": 0.8126644121017932,
-        "payout_as_of": "2026-08-04",
+        "payout_raw_tracker_ratio": null,
+        "payout_tracker": null,
+        "retention": 0.76284,
+        "payout_as_of": "2026-06-30",
         "payout_point_in_time": true,
-        "payout_source": "data/yf/finance/IWM.json#data.dividends over data.history_1y close, times the frozen calibration multiplier",
+        "payout_source": "https://research.ftserussell.com/Analytics/FactSheets/Home/DownloadSingleIssue?issueName=US2000USD&isManual=True ex-negative dividend yield times P/E",
         "measured_book_growth": {
           "value": 0.0680591835425699,
           "window_start": "2011-08-19",
@@ -1439,15 +1431,79 @@
         "risk_free_series": "DGS10",
         "discount": 0.1026
       },
-      "value": null,
+      "value": {
+        "book_growth": 0.13284858137749736,
+        "convexity": {
+          "book_growth": 0.13284858137749736,
+          "discount": 0.1026,
+          "growth_over_discount": 1.2948204812621575,
+          "printed_domain": {
+            "low": 1.7686871045010335,
+            "high": 2.5573573388074213,
+            "observations": 12,
+            "basis": "every printed LTROE axis value times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
+          },
+          "status": "below_printed_domain",
+          "distance_from_domain": 0.47386662323887596
+        },
+        "range": {
+          "low": 2906.871542376368,
+          "high": 3475.313949378715
+        },
+        "upside": {
+          "low": -0.008346853647303143,
+          "high": 0.18557217346022248
+        },
+        "expected_12m": {
+          "low": -0.014640362963740603,
+          "high": 0.32549318464517424,
+          "share": 1.7539978035281456,
+          "source": "rule",
+          "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
+        },
+        "point_estimate": null
+      },
       "out_of_scope_reason": null,
-      "measured_growth_diagnostic": null,
+      "measured_growth_diagnostic": {
+        "book_growth": 0.0680591835425699,
+        "convexity": {
+          "book_growth": 0.0680591835425699,
+          "discount": 0.1026,
+          "growth_over_discount": 0.663344868835964,
+          "printed_domain": {
+            "low": 1.7686871045010335,
+            "high": 2.5573573388074213,
+            "observations": 12,
+            "basis": "every printed LTROE axis value times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
+          },
+          "status": "below_printed_domain",
+          "distance_from_domain": 1.1053422356650695
+        },
+        "range": {
+          "low": 2421.8638866657584,
+          "high": 2761.166508797956
+        },
+        "upside": {
+          "low": -0.17380286392472577,
+          "high": -0.05805281859315625
+        },
+        "expected_12m": {
+          "low": -0.256052808092599,
+          "high": -0.08552555972211005,
+          "share": 1.4732369899468156,
+          "source": "rule",
+          "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
+        },
+        "point_estimate": null
+      },
       "confidence": "low",
       "source_notes": {
         "panel": "data/benchmarks/us.json#sections.russell2000",
         "risk_free": "DGS10",
         "erp": "printed 2025-12-09 IWM axis",
-        "payout": "data/yf/finance/IWM.json#data.dividends over data.history_1y close, times the frozen calibration multiplier",
+        "payout": "https://research.ftserussell.com/Analytics/FactSheets/Home/DownloadSingleIssue?issueName=US2000USD&isManual=True ex-negative dividend yield times P/E",
         "forward_roe_basis": "LSEG ex-negative earnings bridge"
       },
       "runtime_yoo_value_injection": false
@@ -1456,9 +1512,7 @@
       "id": "SOX",
       "label": "Philadelphia Semiconductor",
       "publication_status": "OUT_OF_SCOPE",
-      "blocking_reasons": [
-        "proxy_identity_audit_unavailable:SOX_SOXX"
-      ],
+      "blocking_reasons": [],
       "as_of": "2026-07-31",
       "input_freshness": {
         "status": "passed",

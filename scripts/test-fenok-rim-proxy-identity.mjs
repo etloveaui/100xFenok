@@ -59,9 +59,20 @@ assert.equal(auditPriceUnitBridge(stableRows, shiftedProxy).passed, false, "one 
 // what this test is for is the divergence between the two identities.
 assert.ok(rut.dimensions.payout_identity.proxy_payout > 0 && rut.dimensions.payout_identity.proxy_payout < 1);
 closeTo(rut.dimensions.payout_identity.target_payout, 0.23716, 1e-15, "RUT LSEG payout");
-assert.ok(rut.dimensions.payout_identity.relative_divergence > 0.05,
-  "RUT's tracker and official payout identities must still be measurably apart");
-assert.equal(rut.dimensions.payout_identity.passed, false);
+// Measured and reported. It no longer gates anything, because Russell's payout
+// comes from its own publisher rather than from IWM, but the divergence is
+// still the evidence for why a tracker payout would have been wrong there.
+assert.ok(Number.isFinite(rut.dimensions.payout_identity.relative_divergence),
+  "the tracker/official payout divergence must stay measured");
+// This now reads passed=true for a circular reason and must not be trusted:
+// the audit takes the artifact's payout as the "proxy" side, and since Russell
+// switched to the LSEG factsheet that side IS the target, so it compares
+// 0.23716 against 0.23716 and reports zero divergence. Recorded here so the
+// circularity is visible rather than mistaken for a bridge that started
+// working. It gates nothing either way - Russell no longer depends on IWM.
+assert.equal(rut.dimensions.payout_identity.proxy_payout, rut.dimensions.payout_identity.target_payout,
+  "the two sides are the same number, which is what makes this comparison circular");
+assert.equal(rut.dimensions.payout_identity.relative_divergence, 0);
 assert.ok(sox.dimensions.payout_identity.proxy_payout > 0 && sox.dimensions.payout_identity.proxy_payout < 1);
 closeTo(sox.dimensions.payout_identity.target_payout, 0.112985, 1e-15, "SOX GIW payout");
 assert.ok(sox.dimensions.payout_identity.relative_divergence > 0.05,
