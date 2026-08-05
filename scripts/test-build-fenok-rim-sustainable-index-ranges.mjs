@@ -105,14 +105,21 @@ for (const row of artifact.rows) {
   }
   // Convexity is disclosed on every row rather than silently corrected, and an
   // amplifying row must appear in the promotion blockers.
-  assert.ok(["bounded", "convex", "amplifying"].includes(row.value.convexity.status), `${row.id}: convexity must be disclosed`);
-  if (row.value.convexity.status === "amplifying") {
-    assert.ok(artifact.promotion.blockers.some((entry) => entry.id === "amplifying_convexity"),
-      `${row.id}: an amplifying row must block promotion`);
+  assert.ok(["inside_printed_domain", "above_printed_domain", "below_printed_domain"].includes(row.value.convexity.status),
+    `${row.id}: convexity must be classified against the printed domain`);
+  // The domain is measured, not chosen: it must come from the printed cells and
+  // must contain the printed evidence itself.
+  const domain = row.value.convexity.printed_domain;
+  assert.ok(domain && domain.observations > 0 && domain.low < domain.high, `${row.id}: the printed domain must be measured`);
+  assert.ok(domain.source.includes("2025-12-09"), `${row.id}: the domain must derive from the printed grid`);
+  if (row.value.convexity.status !== "inside_printed_domain") {
+    assert.ok(artifact.promotion.blockers.some((entry) => entry.id === "convexity_outside_printed_domain"),
+      `${row.id}: a row outside the printed domain must block promotion`);
   }
   assert.ok(Math.abs(row.value.book_growth - row.inputs.lt_roe_centre * row.inputs.retention) < 1e-12,
     `${row.id}: published growth must be Yoo's own roll-forward`);
-  assert.ok(["bounded", "convex", "amplifying"].includes(row.measured_growth_diagnostic.convexity.status));
+  assert.ok(["inside_printed_domain", "above_printed_domain", "below_printed_domain"]
+    .includes(row.measured_growth_diagnostic.convexity.status));
   assert.ok(row.source_notes.panel.includes("benchmarks"), `${row.id}: the panel source must be named`);
   assert.ok(row.source_notes.payout.length > 0, `${row.id}: the payout provenance must be named`);
 }

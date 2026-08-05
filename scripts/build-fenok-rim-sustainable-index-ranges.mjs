@@ -91,9 +91,19 @@ function promotionBlockers({ rows, structural, holdout }) {
   } else if (holdout.feno.informative_passed < informative) {
     blockers.push({ id: "out_of_sample_anchor_failed", detail: `${holdout.feno.informative_passed}/${informative} two-sided evaluation anchors reproduce` });
   }
-  const amplifying = rows.filter((row) => row.convexity?.status === "amplifying").map((row) => row.id);
-  if (amplifying.length) {
-    blockers.push({ id: "amplifying_convexity", detail: `book growth exceeds twice the discount rate for ${amplifying.join(", ")}, so the answer tracks the ROE input rather than valuing it` });
+  // The structure is only known to behave where the printed cells used it. A
+  // row outside that measured band is an extrapolation of a steep function,
+  // which is a different claim from a valuation.
+  const outside = rows.filter((row) => row.convexity?.status && row.convexity.status !== "inside_printed_domain");
+  if (outside.length) {
+    const domain = outside[0].convexity.printed_domain;
+    const detail = outside
+      .map((row) => `${row.id} ${row.convexity.growth_over_discount.toFixed(2)}`)
+      .join(", ");
+    blockers.push({
+      id: "convexity_outside_printed_domain",
+      detail: `printed cells used book growth at ${domain ? `${domain.low.toFixed(2)}~${domain.high.toFixed(2)}` : "an unavailable range"} times the discount rate; ${detail} sit outside it`,
+    });
   }
   const reproduced = structural.instruments.filter((row) => row.status === "reproduced");
   const cells = reproduced.reduce((sum, row) => sum + row.cells, 0);

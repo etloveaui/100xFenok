@@ -205,8 +205,10 @@ for (const id of SCOPE) {
   assert.ok(Math.abs(row.inputs.lt_roe_centre - ltRoeCentre(row.inputs.model_forward_roe, row.inputs.median_roe_260w)) < 1e-12,
     `${id}: the published LTROE must come from the frozen rule`);
   assert.ok(row.inputs.payout_source.length > 0, `${id}: the payout must name its source`);
-  // Convexity is disclosed, never silently corrected.
-  assert.ok(["bounded", "convex", "amplifying"].includes(row.feno.convexity.status));
+  // Convexity is judged against the range the printed cells used, not against a
+  // threshold someone picked. The first threshold here rejected Yoo's own
+  // printed NASDAQ Composite grid.
+  assert.ok(["inside_printed_domain", "above_printed_domain", "below_printed_domain"].includes(row.feno.convexity.status));
   const measured = measuredBookGrowth(ENGINE_ROOT, id, AS_OF);
   assert.ok(measured.elapsed_years > 10, `${id}: the measured growth window must span more than ten years`);
   assert.notEqual(row.feno.growth, row.measured_growth_diagnostic.growth, `${id}: the diagnostic must use a different growth`);

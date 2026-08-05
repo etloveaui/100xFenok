@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok_rim_sustainable_index_ranges.v2",
-  "generated_at": "2026-08-05T03:03:40.273Z",
+  "generated_at": "2026-08-05T03:10:20.270Z",
   "as_of": "2026-08-05",
   "status": "research_diagnostic_not_promoted",
   "promotion": {
@@ -11,8 +11,8 @@
         "detail": "1/7 historical anchors use a later-vintage input and are excluded from pass/fail: rim-7041d3d1604bd6d9b5683c04"
       },
       {
-        "id": "amplifying_convexity",
-        "detail": "book growth exceeds twice the discount rate for SPX, NDX, KOSPI, SOX, CCMP, so the answer tracks the ROE input rather than valuing it"
+        "id": "convexity_outside_printed_domain",
+        "detail": "printed cells used book growth at 1.80~2.52 times the discount rate; NDX 3.46, KOSPI 2.56, SOX 3.81, CCMP 2.60, RUT 1.16 sit outside it"
       },
       {
         "id": "partial_structural_reproduction",
@@ -295,7 +295,7 @@
               "low": 0.19169376507501235,
               "high": 0.5695011825274259
             },
-            "convexity": "amplifying",
+            "convexity": "inside_printed_domain",
             "passed": true
           },
           "measured_growth_diagnostic": {
@@ -303,7 +303,7 @@
               "low": -0.3440004323784137,
               "high": -0.29791707428382175
             },
-            "convexity": "bounded",
+            "convexity": "below_printed_domain",
             "passed": false
           },
           "informative": true,
@@ -322,7 +322,7 @@
               "low": 0.1283150429263149,
               "high": 0.4926383866240738
             },
-            "convexity": "amplifying",
+            "convexity": "inside_printed_domain",
             "passed": true
           },
           "measured_growth_diagnostic": {
@@ -330,7 +330,7 @@
               "low": -0.35363568833986947,
               "high": -0.30767527521339666
             },
-            "convexity": "bounded",
+            "convexity": "below_printed_domain",
             "passed": false
           },
           "informative": false,
@@ -349,7 +349,7 @@
               "low": 0.9803541349810352,
               "high": 1.4585359793248367
             },
-            "convexity": "amplifying",
+            "convexity": "above_printed_domain",
             "passed": true
           },
           "measured_growth_diagnostic": {
@@ -357,7 +357,7 @@
               "low": -0.34192514285675457,
               "high": -0.3052130784341247
             },
-            "convexity": "bounded",
+            "convexity": "below_printed_domain",
             "passed": false
           },
           "informative": false,
@@ -376,7 +376,7 @@
               "low": 1.0202216956853647,
               "high": 1.5042642999970752
             },
-            "convexity": "amplifying",
+            "convexity": "above_printed_domain",
             "passed": true
           },
           "measured_growth_diagnostic": {
@@ -384,7 +384,7 @@
               "low": -0.3065670714920885,
               "high": -0.2669450002621654
             },
-            "convexity": "bounded",
+            "convexity": "below_printed_domain",
             "passed": false
           },
           "informative": false,
@@ -403,7 +403,7 @@
               "low": 1.0075463055483431,
               "high": 1.4685285247014699
             },
-            "convexity": "amplifying",
+            "convexity": "above_printed_domain",
             "passed": true
           },
           "measured_growth_diagnostic": {
@@ -411,7 +411,7 @@
               "low": -0.3539003747840238,
               "high": -0.31776711131417257
             },
-            "convexity": "bounded",
+            "convexity": "below_printed_domain",
             "passed": false
           },
           "informative": false,
@@ -430,7 +430,7 @@
               "low": 0.1088162696863495,
               "high": 0.39045094359657195
             },
-            "convexity": "amplifying",
+            "convexity": "inside_printed_domain",
             "passed": true
           },
           "measured_growth_diagnostic": {
@@ -438,7 +438,7 @@
               "low": -0.4522114708116499,
               "high": -0.4124450772887117
             },
-            "convexity": "bounded",
+            "convexity": "below_printed_domain",
             "passed": false
           },
           "informative": false,
@@ -458,7 +458,7 @@
               "low": 1.0241543065117669,
               "high": 1.4694106181170006
             },
-            "convexity": "convex",
+            "convexity": "inside_printed_domain",
             "passed": null
           },
           "measured_growth_diagnostic": {
@@ -466,7 +466,7 @@
               "low": 0.21438044716163973,
               "high": 0.39254780545668955
             },
-            "convexity": "bounded",
+            "convexity": "below_printed_domain",
             "passed": null
           },
           "informative": true,
@@ -607,7 +607,15 @@
           "book_growth": 0.21172097134594584,
           "discount": 0.1026,
           "growth_over_discount": 2.063557225594014,
-          "status": "amplifying"
+          "printed_domain": {
+            "low": 1.8032317745108193,
+            "high": 2.516374048121405,
+            "observations": 4,
+            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
+          },
+          "status": "inside_printed_domain",
+          "distance_from_domain": 0
         },
         "range": {
           "low": 8895.35204160442,
@@ -625,7 +633,15 @@
           "book_growth": 0.052755115509582895,
           "discount": 0.1026,
           "growth_over_discount": 0.5141824123741023,
-          "status": "bounded"
+          "printed_domain": {
+            "low": 1.8032317745108193,
+            "high": 2.516374048121405,
+            "observations": 4,
+            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
+          },
+          "status": "below_printed_domain",
+          "distance_from_domain": 1.289049362136717
         },
         "range": {
           "low": 4871.456725220005,
@@ -732,7 +748,15 @@
           "book_growth": 0.35462611725889265,
           "discount": 0.1026,
           "growth_over_discount": 3.4563949050574334,
-          "status": "amplifying"
+          "printed_domain": {
+            "low": 1.8032317745108193,
+            "high": 2.516374048121405,
+            "observations": 4,
+            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
+          },
+          "status": "above_printed_domain",
+          "distance_from_domain": 0.9400208569360284
         },
         "range": {
           "low": 64167.37907584453,
@@ -750,7 +774,15 @@
           "book_growth": 0.1026,
           "discount": 0.1026,
           "growth_over_discount": 1,
-          "status": "bounded"
+          "printed_domain": {
+            "low": 1.8032317745108193,
+            "high": 2.516374048121405,
+            "observations": 4,
+            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
+          },
+          "status": "below_printed_domain",
+          "distance_from_domain": 0.8032317745108193
         },
         "range": {
           "low": 19925.407974236947,
@@ -857,7 +889,15 @@
           "book_growth": 0.2558395877104052,
           "discount": 0.0998896,
           "growth_over_discount": 2.561223467812517,
-          "status": "amplifying"
+          "printed_domain": {
+            "low": 1.8032317745108193,
+            "high": 2.516374048121405,
+            "observations": 4,
+            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
+          },
+          "status": "above_printed_domain",
+          "distance_from_domain": 0.044849419691112224
         },
         "range": {
           "low": 24818.39944720939,
@@ -875,7 +915,15 @@
           "book_growth": 0.057451506848358536,
           "discount": 0.0998896,
           "growth_over_discount": 0.5751500341212552,
-          "status": "bounded"
+          "printed_domain": {
+            "low": 1.8032317745108193,
+            "high": 2.516374048121405,
+            "observations": 4,
+            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
+          },
+          "status": "below_printed_domain",
+          "distance_from_domain": 1.228081740389564
         },
         "range": {
           "low": 10950.465943389792,
@@ -982,7 +1030,15 @@
           "book_growth": 0.39081584536443165,
           "discount": 0.1026,
           "growth_over_discount": 3.809121299848262,
-          "status": "amplifying"
+          "printed_domain": {
+            "low": 1.8032317745108193,
+            "high": 2.516374048121405,
+            "observations": 4,
+            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
+          },
+          "status": "above_printed_domain",
+          "distance_from_domain": 1.292747251726857
         },
         "range": {
           "low": 27914.44456358401,
@@ -1000,7 +1056,15 @@
           "book_growth": 0.1026,
           "discount": 0.1026,
           "growth_over_discount": 1,
-          "status": "bounded"
+          "printed_domain": {
+            "low": 1.8032317745108193,
+            "high": 2.516374048121405,
+            "observations": 4,
+            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
+          },
+          "status": "below_printed_domain",
+          "distance_from_domain": 0.8032317745108193
         },
         "range": {
           "low": 7060.734247016275,
@@ -1107,7 +1171,15 @@
           "book_growth": 0.26654757698563236,
           "discount": 0.1026,
           "growth_over_discount": 2.597929600249828,
-          "status": "amplifying"
+          "printed_domain": {
+            "low": 1.8032317745108193,
+            "high": 2.516374048121405,
+            "observations": 4,
+            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
+          },
+          "status": "above_printed_domain",
+          "distance_from_domain": 0.08155555212842325
         },
         "range": {
           "low": 31567.300348819674,
@@ -1125,7 +1197,15 @@
           "book_growth": 0.08533719706830833,
           "discount": 0.1026,
           "growth_over_discount": 0.8317465601199643,
-          "status": "bounded"
+          "printed_domain": {
+            "low": 1.8032317745108193,
+            "high": 2.516374048121405,
+            "observations": 4,
+            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
+          },
+          "status": "below_printed_domain",
+          "distance_from_domain": 0.971485214390855
         },
         "range": {
           "low": 14632.118479430346,
@@ -1232,7 +1312,15 @@
           "book_growth": 0.11870591890738291,
           "discount": 0.1026,
           "growth_over_discount": 1.1569777671284884,
-          "status": "convex"
+          "printed_domain": {
+            "low": 1.8032317745108193,
+            "high": 2.516374048121405,
+            "observations": 4,
+            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
+          },
+          "status": "below_printed_domain",
+          "distance_from_domain": 0.6462540073823309
         },
         "range": {
           "low": 2522.289333395509,
@@ -1250,7 +1338,15 @@
           "book_growth": 0.0680591835425699,
           "discount": 0.1026,
           "growth_over_discount": 0.663344868835964,
-          "status": "bounded"
+          "printed_domain": {
+            "low": 1.8032317745108193,
+            "high": 2.516374048121405,
+            "observations": 4,
+            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
+          },
+          "status": "below_printed_domain",
+          "distance_from_domain": 1.1398869056748553
         },
         "range": {
           "low": 2270.331726433111,

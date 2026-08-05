@@ -540,12 +540,24 @@ export function buildPanelIndexRow(root, id, { asOf }) {
   // no fade. Once book compounds faster than that rate, the ninth-year book
   // dominates the answer and the model amplifies the ROE input instead of
   // estimating a value from it.
-  const convexity = (growth) => ({
-    book_growth: growth,
-    discount,
-    growth_over_discount: growth / discount,
-    status: growth <= discount ? "bounded" : growth <= discount * 2 ? "convex" : "amplifying",
-  });
+  const domain = printedConvexityDomain(root);
+  const convexity = (growth) => {
+    const ratio = growth / discount;
+    return {
+      book_growth: growth,
+      discount,
+      growth_over_discount: ratio,
+      printed_domain: domain,
+      status: !domain ? "domain_unavailable"
+        : ratio < domain.low ? "below_printed_domain"
+          : ratio <= domain.high ? "inside_printed_domain"
+            : "above_printed_domain",
+      distance_from_domain: !domain ? null
+        : ratio < domain.low ? domain.low - ratio
+          : ratio > domain.high ? ratio - domain.high
+            : 0,
+    };
+  };
 
   const payoutAxis = [payoutBand.low, payoutBand.center, payoutBand.high];
   const sweep = (growthFor) => {
@@ -649,6 +661,40 @@ function fitPayoutOnCells(book, cells, rateScenarios, horizon) {
     else low = first;
   }
   return (low + high) / 2;
+}
+
+/**
+ * The book-growth-to-discount range the printed evidence actually used.
+ *
+ * The structure compounds book for nine years and then capitalises the ninth
+ * year's residual income with no fade, so its output is steep in that ratio.
+ * A threshold invented for it is worthless: the first one here rejected Yoo's
+ * own printed NASDAQ Composite grid, which sits at 2.42. The admissible domain
+ * is therefore measured from the cells themselves, exactly as the discount
+ * relation's domain already is.
+ */
+export function printedConvexityDomain(root = ROOT) {
+  const grid = readJson(root, "scripts/fixtures/fenok-rim-2025-12-09-grid.json");
+  const reproduction = runStructuralReproduction(root);
+  const ratios = [];
+  for (const instrument of reproduction.instruments) {
+    if (instrument.status !== "reproduced") continue;
+    const meta = grid.instruments[instrument.instrument];
+    const axis = meta?.lt_roe_axis;
+    if (!Array.isArray(axis) || !axis.length) continue;
+    const centre = axis[Math.floor(axis.length / 2)];
+    for (const scenario of Object.values(grid.rate_scenarios)) {
+      ratios.push((centre * (1 - instrument.fitted_payout)) / discountRate(scenario));
+    }
+  }
+  if (!ratios.length) return null;
+  return {
+    low: Math.min(...ratios),
+    high: Math.max(...ratios),
+    observations: ratios.length,
+    basis: "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+    source: "scripts/fixtures/fenok-rim-2025-12-09-grid.json",
+  };
 }
 
 /** Refit the transcribed grid and report how well the structure reproduces it. */
