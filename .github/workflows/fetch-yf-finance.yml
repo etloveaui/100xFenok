@@ -125,10 +125,6 @@ on:
         description: 'Scheduled weekday 0-5 matching the selected ETF shard'
         required: false
         default: ''
-      scheduled_slot:
-        description: 'Slot index within the weekly shard cycle (0-71 on the ETF lane)'
-        required: false
-        default: ''
       stable_shards:
         description: 'Use deterministic hash shards (required for untracked recovery)'
         required: false
@@ -198,7 +194,6 @@ jobs:
           INPUT_UNTRACKED_LIMIT: ${{ github.event.inputs.untracked_limit || '' }}
           INPUT_SHARD_CYCLE_INDEX: ${{ github.event.inputs.shard_cycle_index || '' }}
           INPUT_SCHEDULED_WEEKDAY: ${{ github.event.inputs.scheduled_weekday || '' }}
-          INPUT_SCHEDULED_SLOT: ${{ github.event.inputs.scheduled_slot || '' }}
           INPUT_STABLE_SHARDS: ${{ github.event.inputs.stable_shards || 'false' }}
           EVENT_NAME: ${{ github.event_name }}
           EVENT_SCHEDULE: ${{ github.event.schedule }}
@@ -293,6 +288,13 @@ jobs:
             fi
             INPUT_INCLUDE_SHARES_FULL="false"
             INPUT_PLAN_ONLY="false"
+          fi
+          # workflow_dispatch is capped at 25 inputs, so the slot is not one of
+          # them. A manual run of a multi-slot shard derives it from the shard
+          # itself; the scheduled branch has already set it explicitly.
+          if [ -z "${INPUT_SCHEDULED_SLOT:-}" ] && [ -n "$INPUT_SHARD" ]; then
+            SHARD_COUNT="${INPUT_SHARD#*/}"
+            if [ "$SHARD_COUNT" != "6" ]; then INPUT_SCHEDULED_SLOT="${INPUT_SHARD%%/*}"; fi
           fi
           echo "YF_PLAN_ONLY=${INPUT_PLAN_ONLY:-false}" >> "$GITHUB_ENV"
           echo "YF_LANE=$([ "${INPUT_STOCKS_ONLY:-false}" = "true" ] && echo stock || echo etf)" >> "$GITHUB_ENV"

@@ -2677,6 +2677,17 @@ assert callable(namespace["load_universe"])
         self.assertIn('INPUT_SCHEDULED_WEEKDAY="$SLOT_WEEKDAY"', run_step)
         self.assertIn('INPUT_SCHEDULED_SLOT="$DAILY_INDEX"', run_step)
         self.assertIn("--scheduled-slot", run_step)
+        # workflow_dispatch is hard-capped at 25 inputs. Exceeding it makes
+        # GitHub reject the whole file, which took the lane down after
+        # e0c95a68f6, so the count is asserted rather than trusted.
+        dispatch_inputs = workflow.split("  workflow_dispatch:")[1].split("\npermissions:")[0]
+        declared = [
+            line for line in dispatch_inputs.split("\n")
+            if line.startswith("      ") and line.rstrip().endswith(":") and not line.startswith("       ")
+        ]
+        self.assertLessEqual(len(declared), 25, f"workflow_dispatch declares {len(declared)} inputs; the limit is 25")
+        # A manual run of a multi-slot shard must still resolve its slot.
+        self.assertIn('SHARD_COUNT="${INPUT_SHARD#*/}"', run_step)
         self.assertIn("--scheduled-weekday", run_step)
         self.assertIn('INPUT_RETRY_LIMIT="${YF_DAILY_STOCK_RETRY_LIMIT:-40}"', run_step)
         self.assertIn("YF_WEEKLY_ETF_RETRY_LIMIT:-40", run_step)
