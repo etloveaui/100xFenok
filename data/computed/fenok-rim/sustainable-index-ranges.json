@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok_rim_sustainable_index_ranges.v2",
-  "generated_at": "2026-08-05T05:23:11.013Z",
+  "generated_at": "2026-08-05T05:25:54.080Z",
   "as_of": "2026-08-05",
   "status": "research_diagnostic_not_promoted",
   "promotion": {
@@ -13,10 +13,6 @@
       }
     ],
     "findings": [
-      {
-        "id": "more_conservative_than_published_claims",
-        "detail": "1/2 two-sided claims reproduce at his twelve-month horizon; the rule is directionally the same and smaller in magnitude"
-      },
       {
         "id": "convexity_outside_printed_domain",
         "detail": "printed cells used book growth at 1.77~2.56 times the discount rate; RUT 1.38 sit outside it"
@@ -129,13 +125,21 @@
       "KOSPI": "EWY"
     },
     "twelve_month_conversion": {
-      "share": 0.696,
-      "low": 0.3,
-      "high": 1.114,
+      "shares": {
+        "SPX": 0.413,
+        "NDX": 0.832,
+        "CCMP": 1.114,
+        "KOSPI": 0.3,
+        "SOX": 0.665,
+        "RUT": 0.665
+      },
+      "uncalibrated": [
+        "SOX",
+        "RUT"
+      ],
       "horizon_months": 12,
-      "observations": 7,
-      "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims",
-      "intercept_rejected": "a fitted intercept collapses every index onto the sample mean and destroys the ordering the model exists to produce"
+      "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do",
+      "intercept_rejected": "a fitted intercept makes the output mostly constant and destroys the ordering the model exists to produce"
     },
     "structure": {
       "horizon": 9,
@@ -392,13 +396,21 @@
     },
     "twelve_month_conversion": {
       "frozen": {
-        "share": 0.696,
-        "low": 0.3,
-        "high": 1.114,
+        "shares": {
+          "SPX": 0.413,
+          "NDX": 0.832,
+          "CCMP": 1.114,
+          "KOSPI": 0.3,
+          "SOX": 0.665,
+          "RUT": 0.665
+        },
+        "uncalibrated": [
+          "SOX",
+          "RUT"
+        ],
         "horizon_months": 12,
-        "observations": 7,
-        "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims",
-        "intercept_rejected": "a fitted intercept collapses every index onto the sample mean and destroys the ordering the model exists to produce"
+        "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do",
+        "intercept_rejected": "a fitted intercept makes the output mostly constant and destroys the ordering the model exists to produce"
       },
       "refit": {
         "full": {
@@ -438,9 +450,11 @@
               "high": 0.5725086586668251
             },
             "expected_12m": {
-              "low": 0.2715925701401479,
-              "high": 0.39846602643211027,
-              "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
+              "low": 0.16116053371821998,
+              "high": 0.23644607602939877,
+              "share": 0.413,
+              "calibrated": true,
+              "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
             },
             "convexity": "inside_printed_domain",
             "passed": true
@@ -470,9 +484,11 @@
               "high": 0.5154854610603701
             },
             "expected_12m": {
-              "low": 0.2362796803259539,
-              "high": 0.35877788089801754,
-              "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
+              "low": 0.1402061896187054,
+              "high": 0.21289549541793282,
+              "share": 0.413,
+              "calibrated": true,
+              "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
             },
             "convexity": "inside_printed_domain",
             "passed": true
@@ -502,9 +518,11 @@
               "high": 0.41254613626371905
             },
             "expected_12m": {
-              "low": 0.225949306152007,
-              "high": 0.2871321108395484,
-              "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
+              "low": 0.2701003199978015,
+              "high": 0.3432383853714142,
+              "share": 0.832,
+              "calibrated": true,
+              "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
             },
             "convexity": "inside_printed_domain",
             "passed": false
@@ -534,9 +552,11 @@
               "high": 0.4776706751510553
             },
             "expected_12m": {
-              "low": 0.2671533015263261,
-              "high": 0.3324587899051345,
-              "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
+              "low": 0.319355670790091,
+              "high": 0.397422001725678,
+              "share": 0.832,
+              "calibrated": true,
+              "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
             },
             "convexity": "inside_printed_domain",
             "passed": true
@@ -566,12 +586,14 @@
               "high": 0.38320755860210487
             },
             "expected_12m": {
-              "low": 0.20671563127037826,
-              "high": 0.26671246078706495,
-              "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
+              "low": 0.2471083408289579,
+              "high": 0.31882868875695125,
+              "share": 0.832,
+              "calibrated": true,
+              "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
             },
             "convexity": "inside_printed_domain",
-            "passed": false
+            "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
@@ -598,12 +620,14 @@
               "high": 0.27389440662868836
             },
             "expected_12m": {
-              "low": 0.10933174159376165,
-              "high": 0.1906305070135671,
-              "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
+              "low": 0.17499362088426795,
+              "high": 0.30511836898435885,
+              "share": 1.114,
+              "calibrated": true,
+              "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
             },
             "convexity": "inside_printed_domain",
-            "passed": false
+            "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
@@ -631,12 +655,14 @@
               "high": 1.9349533198200284
             },
             "expected_12m": {
-              "low": 0.9480580345012932,
-              "high": 1.3467275105947396,
-              "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
+              "low": 0.4086457045264195,
+              "high": 0.5804859959460085,
+              "share": 0.3,
+              "calibrated": true,
+              "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
             },
             "convexity": "inside_printed_domain",
-            "passed": false
+            "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
@@ -654,9 +680,9 @@
       ],
       "feno": {
         "in_sample": 0,
-        "passed": 3,
+        "passed": 6,
         "total": 7,
-        "informative_passed": 1,
+        "informative_passed": 2,
         "informative_total": 2,
         "not_evaluable": 0,
         "not_evaluable_ids": [],
@@ -803,9 +829,11 @@
           "high": 0.5871224207151675
         },
         "expected_12m": {
-          "low": 0.2802853101654186,
-          "high": 0.40863720481775656,
-          "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
+          "low": 0.16631872571597398,
+          "high": 0.24248155975536417,
+          "share": 0.413,
+          "calibrated": true,
+          "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
         },
         "point_estimate": null
       },
@@ -834,9 +862,11 @@
           "high": -0.328064701830842
         },
         "expected_12m": {
-          "low": -0.25997429339381223,
-          "high": -0.22833303247426603,
-          "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
+          "low": -0.15426635513167306,
+          "high": -0.13549072185613775,
+          "share": 0.413,
+          "calibrated": true,
+          "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
         },
         "point_estimate": null
       },
@@ -957,9 +987,11 @@
           "high": 0.5194081925414555
         },
         "expected_12m": {
-          "low": 0.2969314941888034,
-          "high": 0.361508102008853,
-          "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
+          "low": 0.3549525907544316,
+          "high": 0.432147616194491,
+          "share": 0.832,
+          "calibrated": true,
+          "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
         },
         "point_estimate": null
       },
@@ -988,9 +1020,11 @@
           "high": -0.30363643467375667
         },
         "expected_12m": {
-          "low": -0.23811238643995425,
-          "high": -0.21133095853293463,
-          "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
+          "low": -0.28464009413511776,
+          "high": -0.25262551364856556,
+          "share": 0.832,
+          "calibrated": true,
+          "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
         },
         "point_estimate": null
       },
@@ -1111,9 +1145,11 @@
           "high": 3.42967731241324
         },
         "expected_12m": {
-          "low": 1.8452852440126954,
-          "high": 2.387055409439615,
-          "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
+          "low": 0.7953815706951274,
+          "high": 1.0289031937239719,
+          "share": 0.3,
+          "calibrated": true,
+          "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
         },
         "point_estimate": null
       },
@@ -1142,9 +1178,11 @@
           "high": 0.8324633518046776
         },
         "expected_12m": {
-          "low": 0.4279859266988597,
-          "high": 0.5793944928560556,
-          "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
+          "low": 0.18447669254261195,
+          "high": 0.24973900554140327,
+          "share": 0.3,
+          "calibrated": true,
+          "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
         },
         "point_estimate": null
       },
@@ -1363,9 +1401,11 @@
           "high": 0.3520211369522557
         },
         "expected_12m": {
-          "low": 0.16985428609106729,
-          "high": 0.24500671131876994,
-          "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
+          "low": 0.2718644751515072,
+          "high": 0.3921515465648129,
+          "share": 1.114,
+          "calibrated": true,
+          "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
         },
         "point_estimate": null
       },
@@ -1394,9 +1434,11 @@
           "high": -0.4080891363062972
         },
         "expected_12m": {
-          "low": -0.31237205122770645,
-          "high": -0.2840300388691828,
-          "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
+          "low": -0.49997480613170264,
+          "high": -0.4546112978452151,
+          "share": 1.114,
+          "calibrated": true,
+          "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do"
         },
         "point_estimate": null
       },

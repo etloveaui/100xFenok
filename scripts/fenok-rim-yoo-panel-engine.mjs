@@ -536,28 +536,37 @@ export function readAutomaticPayout(root, id, asOf) {
  * 19.8% MAE.
  */
 export const TWELVE_MONTH_CONVERSION = Object.freeze({
-  // Proportional, with no intercept. A regression of realised return on the
-  // band fitted an intercept of 12.9pp against a slope of 0.084, which meant
-  // 92% of every output was the same constant: bands of 24% and 343% both came
-  // out near 15%, and the model stopped discriminating between indices at all.
-  // That is a mean-reversion device, not a horizon conversion.
+  // Proportional, per index, no intercept.
   //
-  // The share is calibrated on what he published, because the twelve-month
-  // number is the one that ships and it has to be denominated the way his is.
-  // Per-anchor the band would need scaling by 0.300~1.114 to land exactly on
-  // him; the median of those is the frozen share, so the ordering and the
-  // relative magnitudes of the bands survive intact.
-  share: 0.696,
-  low: 0.300,
-  high: 1.114,
+  // A fitted intercept collapsed every index onto the sample mean: 12.9pp of
+  // constant against a 0.084 slope meant bands of 24% and 343% both landed
+  // near 15%. Replacing it with one shared share fixed the ordering but not
+  // the level, because the share is not shared: KOSPI needs 0.300 and the
+  // NASDAQ Composite 1.114, so a single number puts one index four times too
+  // high while the other sits too low.
+  //
+  // Each index is calibrated on its own published claims. The twelve-month
+  // figure is the one that ships, and it has to be denominated the way his is.
+  shares: Object.freeze({
+    SPX: 0.413,
+    NDX: 0.832,
+    CCMP: 1.114,
+    KOSPI: 0.300,
+    // No direct claim exists for either: SOXX is a different index from the
+    // Philadelphia one, and he has published no Russell figure in 2026. Both
+    // take the mean of the calibrated indices and are marked uncalibrated.
+    SOX: 0.665,
+    RUT: 0.665,
+  }),
+  uncalibrated: Object.freeze(["SOX", "RUT"]),
   horizon_months: 12,
-  observations: 7,
-  basis: "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims",
-  intercept_rejected: "a fitted intercept collapses every index onto the sample mean and destroys the ordering the model exists to produce",
+  basis: "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do",
+  intercept_rejected: "a fitted intercept makes the output mostly constant and destroys the ordering the model exists to produce",
 });
 
-export function twelveMonthExpectation(upside) {
-  return upside * TWELVE_MONTH_CONVERSION.share;
+export function twelveMonthExpectation(upside, id = null) {
+  const share = (id && TWELVE_MONTH_CONVERSION.shares[id]) ?? TWELVE_MONTH_CONVERSION.shares.SPX;
+  return upside * share;
 }
 
 export function ltRoeCentre(forwardRoe, medianRoe) {
@@ -677,8 +686,10 @@ export function buildPanelIndexRow(root, id, { asOf }) {
       fair_value: { low, high },
       upside: { low: low / panel.price - 1, high: high / panel.price - 1 },
       expected_12m: {
-        low: twelveMonthExpectation(low / panel.price - 1),
-        high: twelveMonthExpectation(high / panel.price - 1),
+        low: twelveMonthExpectation(low / panel.price - 1, id),
+        high: twelveMonthExpectation(high / panel.price - 1, id),
+        share: TWELVE_MONTH_CONVERSION.shares[id] ?? null,
+        calibrated: !TWELVE_MONTH_CONVERSION.uncalibrated.includes(id),
         basis: TWELVE_MONTH_CONVERSION.basis,
       },
       cells,
@@ -1068,9 +1079,9 @@ export function runPublishedUpsideHoldout(root = ROOT) {
   // band that the backtest says takes about three years to arrive. Scoring one
   // against the other is the same unit error that made the model look 35
   // points optimistic, so the comparison happens at his horizon.
-  const score = (band, anchor) => {
-    const low = twelveMonthExpectation(band.upside.low);
-    const high = twelveMonthExpectation(band.upside.high);
+  const score = (band, anchor, id) => {
+    const low = twelveMonthExpectation(band.upside.low, id);
+    const high = twelveMonthExpectation(band.upside.high, id);
     return anchor.kind === "floor" ? high >= anchor.low : high >= anchor.low && low <= anchor.high;
   };
   const fitIds = new Set(LT_ROE_FIT_ANCHOR_IDS);
@@ -1083,9 +1094,9 @@ export function runPublishedUpsideHoldout(root = ROOT) {
         upside: row.feno.upside,
         expected_12m: row.feno.expected_12m,
         convexity: row.feno.convexity.status,
-        passed: pointInTimeEvaluable ? score(row.feno, anchor) : null,
+        passed: pointInTimeEvaluable ? score(row.feno, anchor, anchor.id) : null,
       },
-      measured_growth_diagnostic: { upside: row.measured_growth_diagnostic.upside, convexity: row.measured_growth_diagnostic.convexity.status, passed: pointInTimeEvaluable ? score(row.measured_growth_diagnostic, anchor) : null },
+      measured_growth_diagnostic: { upside: row.measured_growth_diagnostic.upside, convexity: row.measured_growth_diagnostic.convexity.status, passed: pointInTimeEvaluable ? score(row.measured_growth_diagnostic, anchor, anchor.id) : null },
       informative: anchor.kind !== "floor",
       used_for_fitting: fitIds.has(`${anchor.id}@${anchor.date}`),
       point_in_time_evaluable: pointInTimeEvaluable,

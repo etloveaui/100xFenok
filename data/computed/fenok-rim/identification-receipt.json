@@ -615,16 +615,24 @@
           "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
         },
         "twelve_month_conversion": {
-          "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims",
-          "high": 1.114,
+          "basis": "per-index scale that lands the fair-value band on that index's own published upside; SOX and RUT have no direct claim and take the mean of the four that do",
           "horizon_months": 12,
-          "intercept_rejected": "a fitted intercept collapses every index onto the sample mean and destroys the ordering the model exists to produce",
-          "low": 0.3,
-          "observations": 7,
-          "share": 0.696
+          "intercept_rejected": "a fitted intercept makes the output mostly constant and destroys the ordering the model exists to produce",
+          "shares": {
+            "CCMP": 1.114,
+            "KOSPI": 0.3,
+            "NDX": 0.832,
+            "RUT": 0.665,
+            "SOX": 0.665,
+            "SPX": 0.413
+          },
+          "uncalibrated": [
+            "SOX",
+            "RUT"
+          ]
         }
       },
-      "source_sha256": "3160e97225b55084520042050af96293f7939ce5fb91f537ba97e2b40ee7be05",
+      "source_sha256": "476a74130055ba4e84b829ab1861423b1ab7d6ac1b5988f06013c9942821dacd",
       "sources": [
         {
           "path": "scripts/build-fenok-rim-identification-receipt.mjs",
@@ -636,7 +644,7 @@
         },
         {
           "path": "scripts/fenok-rim-yoo-panel-engine.mjs",
-          "raw_sha256": "7a3218199a31e569a44ff5ac38f467c78614efde925930cd6b2758a726895e60"
+          "raw_sha256": "7342fe52ad603e05f37f83ac5e1ce502f7d1ae643a9cbd13b82d025a49455099"
         },
         {
           "path": "scripts/lib/fenok-rim-calibration-receipt.mjs",
@@ -645,15 +653,15 @@
       ],
       "version": "fenok-rim-sustainable-index-calibration/v1"
     },
-    "parameter_sha256": "dfa4690c0240d7747dc47c4476037d7d27edd50c3a0f03ec62fbcd00497bd5ff",
-    "calibration_cutoff_at": "2026-08-05T05:23:11.013Z",
+    "parameter_sha256": "f9dbdc0f96cf3e13b67a612784f3a4f3e3950e72917840d488c4d25f655a645f",
+    "calibration_cutoff_at": "2026-08-05T05:25:54.080Z",
     "calibration_component_sha256": {
       "lt_roe_rule": "d5029af56775518e35d930b2ab8a0d2fb256f7207a981cd53661bc2d05565d75",
       "payout_multiplier": "4e5319c49b44c9dd80b048a61afa4ba7d7da709f143ae649999d4222909e5234",
       "printed_convexity_domain": "73cb379249da5f1be0023d36c0c3a39aae72269302c933d154e26bfdc88e5580",
-      "twelve_month_conversion": "d801f0772c868960e309f22342635c334eb1abe375f9b9ab100cd0f7eafa7472"
+      "twelve_month_conversion": "50e773f720fd8ad67fb4150724fe700967959d9fa31554bb27bf9c5f3ce92642"
     },
-    "measurement_receipt_sha256": "edda7f0b8af23819303fb079e7f1daefab42e9db0cb21a899325fbe6d7a378a2",
+    "measurement_receipt_sha256": "b54441b7d602895c5debaebe770eee5447b20e8f662c519124b27f02a073cdc1",
     "proxy_decision_sha256": "4cf1a00ea8f52445cb44fe42d3d9556fda460a0cf61b46e310470fcd2a61bcf7",
     "fit_evidence_ids": [
       "ltroe-index-centres-2025-12-09",
@@ -681,15 +689,15 @@
         "ungated_proxy_identity"
       ]
     },
-    "generated_at": "2026-08-05T05:23:11.013Z",
-    "receipt_sha256": "0db9f06e8addf77b7cc01daa06ec93f76dbf1edc319225f40c73ecd8dc61fb8d",
-    "source_snapshot_sha256": "72b424f54e3b9014296b571c8a14088d262b34f43eb5eda898db526a1d481175",
+    "generated_at": "2026-08-05T05:25:54.080Z",
+    "receipt_sha256": "da214235eeb4243bf3427460cb404af537dd262c3dab3f6d5ce08cd74bf081f0",
+    "source_snapshot_sha256": "da68f0dd1ede49d5b7d6b28873b0b8047e0d33b0f49c43a2316c63bbbe2582fb",
     "sources": [
       {
         "id": "sustainable-calibration-artifact",
-        "measurement_sha256": "072fef04b13584ad6365c77d39843be4d5e5bf37a1f222d5bcee1f428f9e3cf2",
+        "measurement_sha256": "2ae4b60d7d1baa9f9342e1e37b1c7ebab2440263cff615d0a3fa0f85e257eeb1",
         "path": "data/computed/fenok-rim/sustainable-index-ranges.json",
-        "raw_sha256": "79402496ad9bc2181bbb1b803a940458b06630c678cce9e18e6456433c951c5c"
+        "raw_sha256": "c25670da2a96c69036b51c7ca80439a6eb36d5629a6f0e8aa31bbf9b0ff3aed3"
       },
       {
         "id": "printed-index-grid",

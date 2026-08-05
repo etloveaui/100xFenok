@@ -306,16 +306,31 @@ assert.ok(Math.abs(bridged.price / actual.Close - 1) < 0.05,
 // and collapses every index onto the sample mean, which is what a fitted
 // regression did here: bands of 24% and 343% both landed near 15%.
 assert.equal(TWELVE_MONTH_CONVERSION.intercept, undefined, "the conversion may not carry an intercept");
-assert.ok(TWELVE_MONTH_CONVERSION.share > 0 && TWELVE_MONTH_CONVERSION.share < 1.2);
-assert.ok(TWELVE_MONTH_CONVERSION.low < TWELVE_MONTH_CONVERSION.share
-  && TWELVE_MONTH_CONVERSION.share < TWELVE_MONTH_CONVERSION.high, "the per-anchor spread must bracket the frozen share");
+// The share is not shared. KOSPI needs 0.300 and the NASDAQ Composite 1.114, a
+// factor of nearly four, so one number puts one index far too high while
+// another sits too low. Each index is calibrated on its own claims.
+for (const [id, share] of Object.entries(TWELVE_MONTH_CONVERSION.shares)) {
+  assert.ok(share > 0 && share < 1.5, `${id}: share must be a plausible scale`);
+}
+assert.ok(TWELVE_MONTH_CONVERSION.shares.KOSPI < TWELVE_MONTH_CONVERSION.shares.CCMP,
+  "the spread between indices is the reason a single share fails");
+// An index with no published claim of its own must be marked, never presented
+// as if it had been calibrated.
+for (const id of TWELVE_MONTH_CONVERSION.uncalibrated) {
+  assert.ok(TWELVE_MONTH_CONVERSION.shares[id], `${id}: an uncalibrated index still needs a share`);
+  assert.equal(buildPanelIndexRow(ENGINE_ROOT, id, { asOf: AS_OF }).feno.expected_12m.calibrated, false,
+    `${id}: must be reported as uncalibrated`);
+}
+for (const id of ["SPX", "NDX", "CCMP", "KOSPI"]) {
+  assert.equal(buildPanelIndexRow(ENGINE_ROOT, id, { asOf: AS_OF }).feno.expected_12m.calibrated, true);
+}
 // Scaling must preserve ordering and relative magnitude, which is the whole
 // reason the intercept had to go.
-assert.equal(twelveMonthExpectation(0), 0, "a zero band converts to zero");
-const scaledWide = twelveMonthExpectation(3.0);
-const scaledNarrow = twelveMonthExpectation(0.3);
+assert.equal(twelveMonthExpectation(0, "SPX"), 0, "a zero band converts to zero");
+const scaledWide = twelveMonthExpectation(3.0, "SPX");
+const scaledNarrow = twelveMonthExpectation(0.3, "SPX");
 assert.ok(Math.abs(scaledWide / scaledNarrow - 10) < 1e-9, "a band ten times larger must convert ten times larger");
-assert.ok(twelveMonthExpectation(0.5) > twelveMonthExpectation(0.2));
+assert.ok(twelveMonthExpectation(0.5, "SPX") > twelveMonthExpectation(0.2, "SPX"));
 
 // --- fail closed on a stale or missing panel ---------------------------------
 
