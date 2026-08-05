@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok_rim_sustainable_index_ranges.v2",
-  "generated_at": "2026-08-05T06:05:34.045Z",
+  "generated_at": "2026-08-05T06:32:09.580Z",
   "as_of": "2026-08-05",
   "status": "research_diagnostic_not_promoted",
   "promotion": {
@@ -39,7 +39,6 @@
     "SPX",
     "NDX",
     "KOSPI",
-    "SOX",
     "CCMP",
     "RUT"
   ],
@@ -835,6 +834,7 @@
         },
         "point_estimate": null
       },
+      "out_of_scope_reason": null,
       "measured_growth_diagnostic": {
         "book_growth": 0.052755115509582895,
         "convexity": {
@@ -993,6 +993,7 @@
         },
         "point_estimate": null
       },
+      "out_of_scope_reason": null,
       "measured_growth_diagnostic": {
         "book_growth": 0.1026,
         "convexity": {
@@ -1151,6 +1152,7 @@
         },
         "point_estimate": null
       },
+      "out_of_scope_reason": null,
       "measured_growth_diagnostic": {
         "book_growth": 0.057451506848358536,
         "convexity": {
@@ -1190,104 +1192,6 @@
         "risk_free": "KRX_KTS_10Y_BENCHMARK",
         "erp": "printed 2026-08-03 Korean stock-sheet ERP band, recentred on the index",
         "payout": "data/yf/finance/EWY.json#data.dividends over data.history_1y close, times the frozen calibration multiplier",
-        "forward_roe_basis": "panel forward ROE"
-      },
-      "runtime_yoo_value_injection": false
-    },
-    {
-      "id": "SOX",
-      "label": "Philadelphia Semiconductor",
-      "publication_status": "NULL",
-      "blocking_reasons": [
-        "proxy_price_unit_bridge_failed:SOX_SOXX",
-        "proxy_book_roe_identity_failed:SOX_SOXX",
-        "proxy_payout_identity_failed:SOX_SOXX"
-      ],
-      "as_of": "2026-07-31",
-      "input_freshness": {
-        "status": "passed",
-        "items": [
-          {
-            "id": "panel",
-            "as_of": "2026-07-31",
-            "max_age_days": 14,
-            "age_days": 5,
-            "status": "passed"
-          },
-          {
-            "id": "risk_free",
-            "as_of": "2026-07-31",
-            "max_age_days": 45,
-            "age_days": 5,
-            "status": "passed"
-          },
-          {
-            "id": "payout",
-            "as_of": "2026-08-04",
-            "max_age_days": 90,
-            "age_days": 1,
-            "status": "passed"
-          }
-        ]
-      },
-      "current_price": 11311.08,
-      "inputs": {
-        "price": 11311.08,
-        "book": 1086.183452408389,
-        "price_to_book": 10.4136,
-        "panel_forward_roe": 0.5137,
-        "model_forward_roe": 0.5137,
-        "median_roe_260w": 0.173392695,
-        "roe_gap_over_median": 0.34030730500000006,
-        "forward_roe_basis": "panel forward ROE",
-        "lt_roe_centre": 0.40444188907572004,
-        "lt_roe_axis": [
-          0.39944188907572004,
-          0.40444188907572004,
-          0.40944188907572004
-        ],
-        "erp_axis": [
-          0.045,
-          0.05,
-          0.055
-        ],
-        "book_growth": 0.3803399664257504,
-        "book_growth_uncapped": 0.3803399664257504,
-        "book_growth_capped": false,
-        "book_growth_ceiling": 1.7040141973399467,
-        "payout": 0.059593042414697206,
-        "payout_band": {
-          "low": 0.05954583957011505,
-          "center": 0.059593042414697206,
-          "high": 0.05964024525927938
-        },
-        "payout_raw_tracker_ratio": 0.05488702858391255,
-        "payout_tracker": "SOXX",
-        "retention": 0.9404069575853028,
-        "payout_as_of": "2026-08-04",
-        "payout_point_in_time": true,
-        "payout_source": "data/yf/finance/SOXX.json#data.dividends over data.history_1y close, times the frozen calibration multiplier",
-        "measured_book_growth": {
-          "value": 0.13753053339458132,
-          "window_start": "2011-08-19",
-          "window_end": "2026-07-31",
-          "elapsed_years": 14.948972258157252,
-          "start_book": 158.23877412472117,
-          "end_book": 1086.183452408389
-        },
-        "risk_free": 0.0475,
-        "risk_free_as_of": "2026-07-31",
-        "risk_free_series": "DGS10",
-        "discount": 0.1026
-      },
-      "value": null,
-      "measured_growth_diagnostic": null,
-      "confidence": "low",
-      "source_notes": {
-        "panel": "data/benchmarks/micro_sectors.json#sections.philadelphia_semi",
-        "risk_free": "DGS10",
-        "erp": "inherits the printed CCMP technology axis; no printed SOX axis exists",
-        "payout": "data/yf/finance/SOXX.json#data.dividends over data.history_1y close, times the frozen calibration multiplier",
         "forward_roe_basis": "panel forward ROE"
       },
       "runtime_yoo_value_injection": false
@@ -1407,6 +1311,7 @@
         },
         "point_estimate": null
       },
+      "out_of_scope_reason": null,
       "measured_growth_diagnostic": {
         "book_growth": 0.08533719706830833,
         "convexity": {
@@ -1455,8 +1360,7 @@
       "label": "Russell 2000",
       "publication_status": "NULL",
       "blocking_reasons": [
-        "proxy_book_roe_identity_failed:RUT_IWM",
-        "proxy_payout_identity_failed:RUT_IWM"
+        "proxy_identity_audit_unavailable:RUT_IWM"
       ],
       "as_of": "2026-07-31",
       "input_freshness": {
@@ -1536,6 +1440,7 @@
         "discount": 0.1026
       },
       "value": null,
+      "out_of_scope_reason": null,
       "measured_growth_diagnostic": null,
       "confidence": "low",
       "source_notes": {
@@ -1544,6 +1449,103 @@
         "erp": "printed 2025-12-09 IWM axis",
         "payout": "data/yf/finance/IWM.json#data.dividends over data.history_1y close, times the frozen calibration multiplier",
         "forward_roe_basis": "LSEG ex-negative earnings bridge"
+      },
+      "runtime_yoo_value_injection": false
+    },
+    {
+      "id": "SOX",
+      "label": "Philadelphia Semiconductor",
+      "publication_status": "OUT_OF_SCOPE",
+      "blocking_reasons": [
+        "proxy_identity_audit_unavailable:SOX_SOXX"
+      ],
+      "as_of": "2026-07-31",
+      "input_freshness": {
+        "status": "passed",
+        "items": [
+          {
+            "id": "panel",
+            "as_of": "2026-07-31",
+            "max_age_days": 14,
+            "age_days": 5,
+            "status": "passed"
+          },
+          {
+            "id": "risk_free",
+            "as_of": "2026-07-31",
+            "max_age_days": 45,
+            "age_days": 5,
+            "status": "passed"
+          },
+          {
+            "id": "payout",
+            "as_of": "2026-08-04",
+            "max_age_days": 90,
+            "age_days": 1,
+            "status": "passed"
+          }
+        ]
+      },
+      "current_price": 11311.08,
+      "inputs": {
+        "price": 11311.08,
+        "book": 1086.183452408389,
+        "price_to_book": 10.4136,
+        "panel_forward_roe": 0.5137,
+        "model_forward_roe": 0.5137,
+        "median_roe_260w": 0.173392695,
+        "roe_gap_over_median": 0.34030730500000006,
+        "forward_roe_basis": "panel forward ROE",
+        "lt_roe_centre": 0.40444188907572004,
+        "lt_roe_axis": [
+          0.39944188907572004,
+          0.40444188907572004,
+          0.40944188907572004
+        ],
+        "erp_axis": [
+          0.045,
+          0.05,
+          0.055
+        ],
+        "book_growth": 0.3803399664257504,
+        "book_growth_uncapped": 0.3803399664257504,
+        "book_growth_capped": false,
+        "book_growth_ceiling": 1.7040141973399467,
+        "payout": 0.059593042414697206,
+        "payout_band": {
+          "low": 0.05954583957011505,
+          "center": 0.059593042414697206,
+          "high": 0.05964024525927938
+        },
+        "payout_raw_tracker_ratio": 0.05488702858391255,
+        "payout_tracker": "SOXX",
+        "retention": 0.9404069575853028,
+        "payout_as_of": "2026-08-04",
+        "payout_point_in_time": true,
+        "payout_source": "data/yf/finance/SOXX.json#data.dividends over data.history_1y close, times the frozen calibration multiplier",
+        "measured_book_growth": {
+          "value": 0.13753053339458132,
+          "window_start": "2011-08-19",
+          "window_end": "2026-07-31",
+          "elapsed_years": 14.948972258157252,
+          "start_book": 158.23877412472117,
+          "end_book": 1086.183452408389
+        },
+        "risk_free": 0.0475,
+        "risk_free_as_of": "2026-07-31",
+        "risk_free_series": "DGS10",
+        "discount": 0.1026
+      },
+      "value": null,
+      "out_of_scope_reason": "published claims name SOXX, a different index; measured bridge fails on price and payout",
+      "measured_growth_diagnostic": null,
+      "confidence": "low",
+      "source_notes": {
+        "panel": "data/benchmarks/micro_sectors.json#sections.philadelphia_semi",
+        "risk_free": "DGS10",
+        "erp": "inherits the printed CCMP technology axis; no printed SOX axis exists",
+        "payout": "data/yf/finance/SOXX.json#data.dividends over data.history_1y close, times the frozen calibration multiplier",
+        "forward_roe_basis": "panel forward ROE"
       },
       "runtime_yoo_value_injection": false
     }

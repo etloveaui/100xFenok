@@ -29,7 +29,17 @@ import {
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DEFAULT_OUTPUT = path.join(ROOT, "data/computed/fenok-rim/sustainable-index-ranges.json");
-const SCOPE = ["SPX", "NDX", "KOSPI", "SOX", "CCMP", "RUT"];
+// SOX is out of scope. We compute the Philadelphia Semiconductor index, but
+// every published semiconductor claim names SOXX, which tracks a different
+// index: their price ratio wanders 3.895% against 0.81% for Russell/IWM and
+// their payout identities diverge by 89.59%. So the row can be computed and
+// cannot be checked, and an index we cannot check is not a product. It returns
+// when either an ICE Semiconductor book and forward EPS source exists, or he
+// publishes on the Philadelphia index itself.
+const SCOPE = ["SPX", "NDX", "KOSPI", "CCMP", "RUT"];
+export const OUT_OF_SCOPE = Object.freeze({
+  SOX: "published claims name SOXX, a different index; measured bridge fails on price and payout",
+});
 const MAX_PANEL_AGE_DAYS = 14;
 const MAX_RATE_AGE_DAYS = 45;
 // Tracker distribution yields move slowly, but a quarter-old one is stale.
@@ -231,13 +241,19 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
   const horizonFit = runTwelveMonthConversionCalibration(root);
   const holdout = runPublishedUpsideHoldout(root);
 
-  const panelRows = SCOPE.map((id) => ({ id, row: buildPanelIndexRow(root, id, { asOf: effectiveAsOf }) }));
+  // Out-of-scope indices are still computed. The proxy-identity audit measures
+  // the bridge on their inputs, so withholding a row is not the same as not
+  // computing it; they simply never carry a value.
+  const panelRows = [...SCOPE, ...Object.keys(OUT_OF_SCOPE)]
+    .map((id) => ({ id, row: buildPanelIndexRow(root, id, { asOf: effectiveAsOf }) }));
   const gated = panelRows.map(({ id, row }) => {
     const gate = gateRow({ ...row, id }, generatedAt);
-    return { id, row, gate, publication_status: gate.blockers.length ? "NULL" : "RESEARCH_DIAGNOSTIC" };
+    const status = OUT_OF_SCOPE[id] ? "OUT_OF_SCOPE" : gate.blockers.length ? "NULL" : "RESEARCH_DIAGNOSTIC";
+    return { id, row, gate, publication_status: status };
   });
   const { blockers: promotionDefects, findings: promotionFindings } = promotionBlockers({
-    rows: gated.map(({ id, row, publication_status: status }) => ({ id, publication_status: status, convexity: row.feno.convexity, inputs: row.inputs })),
+    rows: gated.filter(({ id }) => !OUT_OF_SCOPE[id])
+      .map(({ id, row, publication_status: status }) => ({ id, publication_status: status, convexity: row.feno.convexity, inputs: row.inputs })),
     structural,
     holdout,
   });
@@ -254,8 +270,9 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
       input_freshness: inputFreshness,
       current_price: row.inputs.price,
       inputs: row.inputs,
-      value: publicationStatus === "NULL" ? null : laneView(row.feno),
-      measured_growth_diagnostic: publicationStatus === "NULL" ? null : laneView(row.measured_growth_diagnostic),
+      value: publicationStatus === "RESEARCH_DIAGNOSTIC" ? laneView(row.feno) : null,
+      out_of_scope_reason: OUT_OF_SCOPE[id] ?? null,
+      measured_growth_diagnostic: publicationStatus === "RESEARCH_DIAGNOSTIC" ? laneView(row.measured_growth_diagnostic) : null,
       confidence: row.feno.convexity.status === "bounded" ? "medium" : "low",
       source_notes: {
         panel: `${PANEL_SOURCES[id].file}#sections.${PANEL_SOURCES[id].section}`,
@@ -274,7 +291,7 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
     as_of: effectiveAsOf,
     status: promotion.length
       ? "research_diagnostic_not_promoted"
-      : rows.every((row) => row.publication_status !== "NULL")
+      : rows.filter((row) => SCOPE.includes(row.id)).every((row) => row.publication_status !== "NULL")
         ? "six_index_residual_value_ranges_ready"
         : "partial_six_index_coverage",
     promotion: {

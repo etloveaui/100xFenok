@@ -2,10 +2,12 @@
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { buildSustainableIndexRanges } from "./build-fenok-rim-sustainable-index-ranges.mjs";
+import { buildSustainableIndexRanges, OUT_OF_SCOPE } from "./build-fenok-rim-sustainable-index-ranges.mjs";
 import { readCurrentRepoProxyIdentityAudit } from "./lib/fenok-rim-proxy-identity.mjs";
 
-const SCOPE = ["SPX", "NDX", "KOSPI", "SOX", "CCMP", "RUT"];
+// SOX is out of scope: computable, not checkable. Every published semiconductor
+// claim names SOXX, a different index.
+const SCOPE = ["SPX", "NDX", "KOSPI", "CCMP", "RUT"];
 const options = { asOf: "2026-08-04", generatedAt: "2026-08-04T00:00:00.000Z" };
 const artifact = buildSustainableIndexRanges(options);
 
@@ -13,7 +15,16 @@ assert.deepEqual(buildSustainableIndexRanges(options), artifact, "the artifact m
 assert.equal(artifact.schema_version, "fenok_rim_sustainable_index_ranges.v2");
 assert.equal(artifact.generated_at, "2026-08-04T00:00:00.000Z");
 assert.deepEqual(artifact.scope, SCOPE);
-assert.deepEqual(artifact.rows.map((row) => row.id), SCOPE);
+// Out-of-scope indices are still computed so the proxy audit can measure their
+// bridge; they carry no value and never enter promotion.
+assert.deepEqual(artifact.rows.filter((row) => !row.out_of_scope_reason).map((row) => row.id), SCOPE);
+const outOfScope = artifact.rows.filter((row) => row.out_of_scope_reason);
+assert.deepEqual(outOfScope.map((row) => row.id), Object.keys(OUT_OF_SCOPE));
+for (const row of outOfScope) {
+  assert.equal(row.publication_status, "OUT_OF_SCOPE");
+  assert.equal(row.value, null, `${row.id}: an out-of-scope row may not carry a value`);
+  assert.ok(row.inputs, `${row.id}: its inputs must stay available to the bridge audit`);
+}
 
 assert.equal(artifact.runtime_contract.point_estimate, false);
 assert.equal(artifact.runtime_contract.runtime_yoo_value_injection, false);
@@ -130,7 +141,7 @@ for (const blocker of artifact.promotion.blockers) {
 // while its bridge fails, and the global defect stands until those indices have
 // direct target inputs regardless: a withheld index is still one we cannot
 // value, and promoting around it would claim otherwise.
-const proxyPublishing = artifact.rows.filter((row) => ["SOX", "RUT"].includes(row.id) && row.publication_status !== "NULL");
+const proxyPublishing = artifact.rows.filter((row) => ["RUT"].includes(row.id) && row.publication_status !== "NULL");
 assert.equal(proxyPublishing.length, 0, "a failing bridge may never publish a value");
 const ungatedDefect = artifact.promotion.blockers.find((row) => row.id === "ungated_proxy_identity");
 assert.ok(ungatedDefect, "the global proxy defect stands until direct inputs exist");
@@ -156,6 +167,7 @@ assert.equal(artifact.calibration.feno_rule.version, "feno-rim-residual-value/1"
 // Every published row exposes two lanes, no point estimate, and a receipt for
 // each operand that is not read straight from a panel.
 for (const row of artifact.rows) {
+  if (row.out_of_scope_reason) continue;
   assert.equal(row.runtime_yoo_value_injection, false);
   assert.ok(["RESEARCH_DIAGNOSTIC", "RANGE", "NULL"].includes(row.publication_status));
   if (row.publication_status === "NULL") {
@@ -201,7 +213,7 @@ for (const row of artifact.rows) {
 // failing may never let a row score: reading the audit's own `scoreable` flag
 // instead of the verdicts is exactly how a failed bridge gets scored silently.
 const proxyAudit = readCurrentRepoProxyIdentityAudit();
-for (const [id, key] of Object.entries({ RUT: "RUT_IWM", SOX: "SOX_SOXX" })) {
+for (const [id, key] of Object.entries({ RUT: "RUT_IWM" })) {
   const row = artifact.rows.find((entry) => entry.id === id);
   const dimensions = proxyAudit[key].dimensions;
   const failing = ["price_unit_bridge", "book_roe_identity", "payout_identity"]
@@ -227,13 +239,19 @@ for (const id of ["SPX", "NDX", "CCMP", "KOSPI"]) {
 }
 
 // Identity separations that a merge must never quietly drop.
-assert.ok(artifact.rows.find((row) => row.id === "SOX").source_notes.panel.includes("philadelphia_semi"));
+assert.ok(!SCOPE.includes("SOX"), "SOX must not be in scope");
+assert.ok(OUT_OF_SCOPE.SOX && OUT_OF_SCOPE.SOX.includes("SOXX"), "the exclusion must name why");
 assert.ok(artifact.rows.find((row) => row.id === "CCMP").source_notes.panel.includes("nasdaq_composite"));
 assert.equal(artifact.rows.find((row) => row.id === "RUT").inputs.forward_roe_basis, "LSEG ex-negative earnings bridge");
 
 // A stale panel must fail the row closed rather than publish a stale range.
 const stale = buildSustainableIndexRanges({ asOf: "2026-08-04", generatedAt: "2027-01-01T00:00:00.000Z" });
-assert.ok(stale.rows.every((row) => row.publication_status === "NULL"), "a year-old panel must block every row");
+// An out-of-scope row is already withheld and stays that way; every in-scope
+// row must fail closed on a stale panel.
+assert.ok(
+  stale.rows.filter((row) => !row.out_of_scope_reason).every((row) => row.publication_status === "NULL"),
+  "a year-old panel must block every in-scope row",
+);
 assert.ok(["partial_six_index_coverage", "research_diagnostic_not_promoted"].includes(stale.status));
 assert.ok(stale.promotion.blockers.length >= 0);
 
