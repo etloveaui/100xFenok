@@ -1919,7 +1919,15 @@ def main():
     retry_tickers = set(retry_queue)
     regular_tickers = [ticker for ticker in tickers if ticker not in retry_tickers]
     if args.history_gaps_only:
+        # The scheduled ETF slot runs history-gaps-only, which is a backfill
+        # pass: any ticker whose 1Y history is already complete is dropped here
+        # and never reaches the shard page at all. That is correct for history,
+        # but the RIM trackers are read for their dividend yield, which the
+        # backfill filter cannot see. Keep them regardless of history depth.
+        keep = [t for t in regular_tickers if t in RIM_TRACKER_ETFS]
         regular_tickers = filter_history_gaps(regular_tickers, args.history_min_rows)
+        present = set(regular_tickers)
+        regular_tickers = [*[t for t in keep if t not in present], *regular_tickers]
     selected_universe = set(tickers)
 
     if args.untracked_only:
