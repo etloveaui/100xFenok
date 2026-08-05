@@ -116,8 +116,10 @@ for (const row of artifact.rows) {
     assert.ok(artifact.promotion.blockers.some((entry) => entry.id === "convexity_outside_printed_domain"),
       `${row.id}: a row outside the printed domain must block promotion`);
   }
-  assert.ok(Math.abs(row.value.book_growth - row.inputs.lt_roe_centre * row.inputs.retention) < 1e-12,
-    `${row.id}: published growth must be Yoo's own roll-forward`);
+  assert.ok(Math.abs(row.value.book_growth - Math.min(row.inputs.lt_roe_centre * row.inputs.retention, row.inputs.book_growth_ceiling)) < 1e-12,
+    `${row.id}: published growth must be the capped roll-forward`);
+  assert.ok(row.value.convexity.status !== "above_printed_domain",
+    `${row.id}: the cap must keep every row from compounding past the printed domain`);
   assert.ok(["inside_printed_domain", "above_printed_domain", "below_printed_domain"]
     .includes(row.measured_growth_diagnostic.convexity.status));
   assert.ok(row.source_notes.panel.includes("benchmarks"), `${row.id}: the panel source must be named`);

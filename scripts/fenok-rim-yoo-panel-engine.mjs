@@ -583,11 +583,19 @@ export function buildPanelIndexRow(root, id, { asOf }) {
     };
   };
 
-  // The book roll-forward is Yoo's own: LTROE times one minus the cash
-  // dividend payout. The payout is the same sheet variable he enters by hand,
-  // read here from the automatic trailing payout series so it refreshes.
-  const growth = centre * retention;
-  const feno = sweep((ltRoe, cellPayout) => ltRoe * (1 - cellPayout));
+  // The book roll-forward is Yoo's own, LTROE times one minus the payout,
+  // capped at the fastest compounding the printed cells ever used.
+  //
+  // The cap is on growth alone, not on the long-run ROE. A ROE cap would take
+  // the same number out of the residual income, which is what the ROE actually
+  // earns, and that overshoots: it drove the NASDAQ 100 from +98~146% to
+  // -6~7% against a published floor of +36%. Capping only the roll-forward
+  // leaves the residual income intact and stops the ninth-year book from
+  // running past anything the evidence supports.
+  const growthCeiling = domain ? domain.high * discount : Number.POSITIVE_INFINITY;
+  const cappedGrowth = (ltRoe, cellPayout) => Math.min(ltRoe * (1 - cellPayout), growthCeiling);
+  const growth = cappedGrowth(centre, payoutBand.center);
+  const feno = sweep(cappedGrowth);
 
   // What the same structure returns when book rolls forward at the growth this
   // index's book has actually delivered. Kept as a diagnostic: it is a
@@ -611,6 +619,9 @@ export function buildPanelIndexRow(root, id, { asOf }) {
       lt_roe_axis: ltRoeAxis,
       erp_axis: [...erpAxis],
       book_growth: growth,
+      book_growth_uncapped: centre * retention,
+      book_growth_capped: centre * retention > growthCeiling,
+      book_growth_ceiling: Number.isFinite(growthCeiling) ? growthCeiling : null,
       payout: payout,
       payout_band: payoutBand,
       payout_raw_tracker_ratio: tracker ? tracker.raw : null,

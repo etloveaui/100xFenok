@@ -192,9 +192,16 @@ for (const id of SCOPE) {
     assert.ok(Number.isFinite(lane.fair_value.low) && Number.isFinite(lane.fair_value.high), `${id}: both bands need finite endpoints`);
     assert.ok(lane.fair_value.low <= lane.fair_value.high, `${id}: endpoints must be ordered`);
   }
-  // The growth operand is Yoo's own: LTROE times one minus the payout.
-  assert.ok(Math.abs(row.feno.growth - row.inputs.lt_roe_centre * row.inputs.retention) < 1e-12,
-    `${id}: growth must be LTROE * (1 - payout)`);
+  // The growth operand is Yoo's own, LTROE times one minus the payout, capped
+  // at the fastest compounding the printed cells used. The cap is on growth
+  // only: the long-run ROE still earns its full residual income.
+  const uncapped = row.inputs.lt_roe_centre * row.inputs.retention;
+  const ceiling = row.inputs.book_growth_ceiling;
+  assert.ok(Number.isFinite(ceiling) && ceiling > 0, `${id}: the ceiling must be measured, not absent`);
+  assert.ok(Math.abs(row.feno.growth - Math.min(uncapped, ceiling)) < 1e-12, `${id}: growth must be the capped roll-forward`);
+  assert.equal(row.inputs.book_growth_capped, uncapped > ceiling, `${id}: the cap must be disclosed when it binds`);
+  assert.ok(row.feno.convexity.growth_over_discount <= row.feno.convexity.printed_domain.high + 1e-9,
+    `${id}: no row may compound past the printed domain`);
   assert.ok(row.inputs.payout > 0 && row.inputs.payout < 1, `${id}: the payout must be a fraction`);
   // Payout comes from one tracker source for every index, swept as a band.
   const band = row.inputs.payout_band;
