@@ -21,6 +21,7 @@ import {
   buildFromDisk,
   buildPublicProjection,
   findForbiddenTokens,
+  releaseId,
   sha256,
 } from "./build-fenok-rim-sustainable-public-projection.mjs";
 
@@ -36,7 +37,7 @@ const clone = (value) => JSON.parse(JSON.stringify(value));
 // Every key path the projection is allowed to contain, `rows[]` collapsed to one
 // shape. A key that appears in the output and not here fails the test.
 const ALLOWED_DOCUMENT_KEYS = [
-  "as_of", "generated_at", "policy", "promotion", "rows", "schema_version", "source", "withheld",
+  "as_of", "generated_at", "policy", "promotion", "release", "rows", "schema_version", "withheld",
 ].sort();
 const ALLOWED_ROW_KEYS = [
   "as_of", "assumptions", "confidence", "current_price", "expected_12m", "id", "label",
@@ -168,12 +169,28 @@ for (const rel of [
   const onDisk = fs.readFileSync(path.join(ROOT, rel), "utf8");
   assert.equal(onDisk, serialisedBuild, `${rel} is stale; rerun the projection builder`);
 }
-// The recorded canonical hash is the file the projection actually came from.
+// Parity is proved by RECOMPUTING the release id from the sources on disk, not
+// by trusting a hash the document publishes about itself. The published id is
+// opaque, and these assertions are why it can stay opaque.
+const canonicalSha = sha256(fs.readFileSync(path.join(ROOT, CANONICAL_REL), "utf8"));
+const receiptSha = sha256(fs.readFileSync(path.join(ROOT, "data/computed/fenok-rim/identification-receipt.json"), "utf8"));
 assert.equal(
-  projection.source.canonical_sha256,
-  sha256(fs.readFileSync(path.join(ROOT, CANONICAL_REL), "utf8")),
-  "recorded canonical hash does not match the canonical artifact",
+  projection.release.id,
+  releaseId(canonicalSha, receiptSha),
+  "release id does not match the sources the projection was built from",
 );
+assert.deepEqual(Object.keys(projection.release), ["id"], "the release block carries only an id");
+assert.match(projection.release.id, /^[0-9a-f]{16}$/, "the release id is an opaque 16-hex digest");
+// A different canonical must produce a different id, or the id proves nothing.
+assert.notEqual(releaseId(canonicalSha, receiptSha), releaseId(`${canonicalSha}x`, receiptSha));
+assert.notEqual(releaseId(canonicalSha, receiptSha), releaseId(canonicalSha, `${receiptSha}x`));
+// Neither source hash, nor the internal path, may appear in the published document.
+for (const secret of [canonicalSha, receiptSha, CANONICAL_REL, "canonical_path", "sha256"]) {
+  assert.equal(
+    JSON.stringify(projection).includes(secret), false,
+    `'${secret}' must not reach the public projection`,
+  );
+}
 
 // The raw canonical artifact must never appear in the public mirror.
 assert.equal(

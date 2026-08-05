@@ -201,14 +201,23 @@ export function readSources(root = ROOT) {
   };
 }
 
+// An OPAQUE release id, not the source hashes.
+//
+// The first version published `canonical_path` plus the canonical and receipt
+// sha256. None of it was read by the surface, and all of it was useful to
+// somebody else: the path names an internal file precisely enough to ask for it,
+// and a published hash lets a guessed copy of a private artifact be confirmed.
+// This derives one id from both hashes instead, so a rebuild from unchanged
+// sources is still recognisably the same release and nothing about the sources
+// is recoverable from it.
+export function releaseId(canonicalSha256, receiptSha256) {
+  return sha256(`fenok-rim-public-projection:${canonicalSha256}:${receiptSha256}`).slice(0, 16);
+}
+
 export function buildFromDisk(root = ROOT) {
   const { canonical, receipt, canonicalSha256, receiptSha256 } = readSources(root);
   const projection = buildPublicProjection({ canonical, receipt });
-  projection.source = {
-    canonical_path: CANONICAL_REL,
-    canonical_sha256: canonicalSha256,
-    receipt_sha256: receiptSha256,
-  };
+  projection.release = { id: releaseId(canonicalSha256, receiptSha256) };
   return projection;
 }
 
