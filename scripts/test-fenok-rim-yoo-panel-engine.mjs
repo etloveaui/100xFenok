@@ -73,7 +73,7 @@ assert.ok(Math.abs(ltRoeCentre(0.15, 0.15) - 0.15 - FROZEN_CALIBRATION.lt_roe_ru
   "a zero gap must return the anchor plus the intercept");
 // Both fit vintages must be represented, otherwise the rule is one-dated again.
 assert.ok(fit.observations.some((row) => row.id.endsWith("2025-12-09")), "the printed-axis vintage must be in the fit");
-assert.ok(fit.observations.some((row) => row.id.startsWith("KOSPI")), "Korea must be in the fit, not extrapolated from US indices");
+assert.ok(fit.observations.some((row) => row.id.startsWith("HYNIX")), "the large-gap regime must be in the fit");
 assert.ok(fit.max_abs_residual_pp <= FROZEN_CALIBRATION.lt_roe_rule.max_abs_residual_pp + 0.01, "recorded residual must not understate the fit error");
 
 // Fit and evaluation sets must be disjoint in date and in observable.
@@ -82,13 +82,17 @@ const fitKeys = new Set(fit.observations.map((row) => row.id));
 const evaluated = holdout.rows.filter((row) => fitKeys.has(`${row.id}@${row.date}`));
 // Only the two inverted anchors may be shared, and both must be two-sided so
 // the overlap is visible rather than hidden among the one-sided floors.
-// The two inverted anchors are training data. They must be flagged and kept
-// out of the score, not counted as if they validated anything.
-assert.equal(evaluated.length, 2, "only the two inverted anchors may appear in both sets");
-assert.ok(evaluated.every((row) => row.informative), "every shared anchor must be a declared two-sided claim");
-assert.ok(evaluated.every((row) => row.used_for_fitting), "a fitted anchor must be marked as such");
-assert.equal(holdout.feno.in_sample, 2);
-assert.equal(holdout.feno.total, holdout.rows.length - 2, "the score must exclude the fitted anchors");
+// Strict disjointness: every fitted observation is a printed axis centre, so
+// no published upside claim is consumed by the fit and both two-sided claims
+// remain available to evaluate it.
+assert.equal(evaluated.length, 0, "no evaluation anchor may appear in the fit set");
+assert.equal(holdout.feno.in_sample, 0);
+assert.equal(holdout.feno.total, holdout.rows.length, "every anchor must count as evaluation");
+assert.ok(holdout.feno.informative_total >= 2, "at least two two-sided claims must survive to evaluate the rule");
+assert.ok(
+  fit.observations.every((row) => row.kind !== "inverted_from_published_upside_span"),
+  "no inverted upside may enter the fit",
+);
 // Historical rows may not read a payout vintage from after their own as-of.
 for (const row of holdout.rows) {
   const built = buildPanelIndexRow(ENGINE_ROOT, row.id, { asOf: row.date });
@@ -96,12 +100,8 @@ for (const row of holdout.rows) {
   assert.ok(payoutAsOf <= row.date, `${row.id}@${row.date}: payout dated ${payoutAsOf} is in that row's future`);
 }
 assert.ok(
-  fit.observations.filter((row) => row.kind === "inverted_from_published_upside_span").length === 2,
-  "the inverted observations must be labelled as such in the fit receipt",
-);
-assert.ok(
-  holdout.rows.filter((row) => !fitKeys.has(`${row.id}@${row.date}`)).length >= 5,
-  "at least five evaluation anchors must be outside the fit set",
+  holdout.rows.filter((row) => !fitKeys.has(`${row.id}@${row.date}`)).length >= 7,
+  "every anchor must be outside the fit set",
 );
 
 // --- runtime target independence --------------------------------------------

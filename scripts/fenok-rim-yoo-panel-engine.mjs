@@ -202,15 +202,15 @@ export const FROZEN_CALIBRATION = Object.freeze({
   // imply. That agreement is the bridge, and it is what stops the rule from
   // damping a semiconductor peak into nothing.
   lt_roe_rule: Object.freeze({
-    equation: "LTROE_centre = median_260w + 0.037769 + 0.552249 * max(forward_ROE - median_260w, 0)",
+    equation: "LTROE_centre = median_260w + 0.045841 + 0.544243 * max(forward_ROE - median_260w, 0)",
     anchor: "the index's own rolling 260-week median forward ROE",
-    intercept: 0.037769,
-    gap_coefficient: 0.552249,
-    observations: 9,
-    fit_dates: Object.freeze(["2025-12-09", "2026-06-14", "2026-07-26", "2026-08-03"]),
-    fit_observables: "three printed 2025-12-09 index LTROE axis centres, the LTROE reproducing the published 2026-07-26 S&P 500 span and the published 2026-06-14 KOSPI upside, and four printed 2026-08-03 Samsung and SK Hynix LTROE scenario centres",
+    intercept: 0.045841,
+    gap_coefficient: 0.544243,
+    observations: 7,
+    fit_dates: Object.freeze(["2025-12-09", "2026-08-03"]),
+    fit_observables: "printed LTROE axis centres only: three from the 2025-12-09 index sheets and four from the 2026-08-03 Samsung and SK Hynix scenarios. No published upside is inverted into the fit, which leaves both two-sided claims free to evaluate it.",
     cross_family_bridge: "the stock sheets contribute the large-gap regime only; their implied gap share of 0.622~0.756 brackets the share the index rows imply, which is the measured agreement that licenses the transfer",
-    max_abs_residual_pp: 3.72,
+    max_abs_residual_pp: 2.34,
     lattice_half_width: 0.005,
     lattice_note: "Yoo prints a +/-0.5pp LTROE axis; the same half width is retained",
   }),
@@ -302,7 +302,9 @@ export const FENO_RULE = Object.freeze({
 
 // The two published claims inverted into the LTROE fit. They are training
 // data and are excluded from the evaluation score.
-export const LT_ROE_FIT_ANCHOR_IDS = Object.freeze(["SPX@2026-07-26", "KOSPI@2026-06-14"]);
+// Nothing. Every fitted observation is a printed LTROE axis centre, so both
+// published two-sided claims stay available as genuine evaluation anchors.
+export const LT_ROE_FIT_ANCHOR_IDS = Object.freeze([]);
 
 const PAYOUT_HISTORY_KEYS = Object.freeze({ SPX: "sp500", NDX: "nasdaq100", SOX: "philadelphia_semi", KOSPI: "kospi" });
 
@@ -697,8 +699,6 @@ export function runLtRoeCalibration(root = ROOT) {
       kind: "printed_axis_centre",
     };
   });
-  observations.push(inferLtRoeFromPublishedSpan(root, { id: "SPX", date: "2026-07-26", low: 0.19, high: 0.29 }));
-  observations.push(inferLtRoeFromPublishedSpan(root, { id: "KOSPI", date: "2026-06-14", low: 0.495, high: 0.495 }));
 
   for (const stock of STOCK_GAP_OBSERVATIONS) {
     observations.push({
@@ -726,7 +726,7 @@ export function runLtRoeCalibration(root = ROOT) {
     return { id: row.id, kind: row.kind, predicted, printed: row.printed_lt_roe, residual_pp: (predicted - row.printed_lt_roe) * 100 };
   });
   return {
-    fit_dates: ["2025-12-09", "2026-06-14", "2026-07-26", "2026-08-03"],
+    fit_dates: ["2025-12-09", "2026-08-03"],
     observations,
     intercept,
     gap_coefficient: coefficient,

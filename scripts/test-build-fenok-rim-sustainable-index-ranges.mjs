@@ -33,13 +33,19 @@ assert.equal(payoutRefit.rows.length, 3, "the payout multiplier receipt must car
 assert.ok(payoutRefit.low > 1 && payoutRefit.high < 2.5, "the payout multiplier must stay in its measured band");
 const share = artifact.calibration.lt_roe_rule.refit.stock_gap_share;
 assert.ok(share.low > 0.6 && share.high < 0.8, "the printed stock gap share must stay in its measured 0.62~0.76 band");
-assert.ok(artifact.calibration.lt_roe_rule.refit.observations.some((row) => row.id.startsWith("KOSPI")),
-  "Korea must be a fitted observation rather than a US extrapolation");
+// The large-gap regime must be represented in the fit, or a cyclical peak is
+// damped into nothing. Korea is deliberately NOT in it: its published claim is
+// one of the two anchors that evaluate the rule.
+assert.ok(artifact.calibration.lt_roe_rule.refit.observations.some((row) => row.id.startsWith("HYNIX")),
+  "the large-gap regime must be a fitted observation");
+assert.ok(!artifact.calibration.lt_roe_rule.refit.observations.some((row) => row.id.startsWith("KOSPI")),
+  "Korea's published claim must evaluate the rule, not fit it");
 assert.ok(artifact.calibration.published_upside_holdout.rows.length >= 7, "the hold-out receipt must list every scored anchor");
 // An anchor used to fit a parameter cannot also evaluate it. Both inverted
 // claims must be reported as in-sample and excluded from the score.
 const holdout = artifact.calibration.published_upside_holdout;
-assert.equal(holdout.feno.in_sample, 2);
+assert.equal(holdout.feno.in_sample, 0, "no published claim may be consumed by the fit");
+assert.deepEqual(holdout.fit_anchor_ids, [], "the fit must not claim any evaluation anchor");
 for (const row of holdout.rows) {
   const fitted = holdout.fit_anchor_ids.includes(`${row.id}@${row.date}`);
   assert.equal(row.used_for_fitting, fitted, `${row.id}@${row.date}: fit membership must be declared`);
