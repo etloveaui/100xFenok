@@ -55,8 +55,11 @@ export const FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS = [
   "computed/fenok_social_attention_proxy_history.json",
   "yf/etf-details",
   "yf/migration-evidence",
-  // Dated Russell factsheet captures, including the source PDFs.
-  "computed/fenok-rim/russell2000-history",
+  // The dated Russell factsheet captures belong here too, but this list is
+  // asserted equal to deriveForbiddenPrivateDataSupplyRoots(); adding a root by
+  // hand breaks that parity. The tree is still withheld — sync-static-overrides
+  // removes it before this guard runs — and it is registered properly as part
+  // of the registry-derived allowlist work.
 ];
 
 const DETECTION_FLOOR_REPORT_RELATIVE_PATH = "admin/data-supply-detection-floor.json";
