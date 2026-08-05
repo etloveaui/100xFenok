@@ -11,6 +11,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { readCurrentRepoProxyIdentityAudit } from "./lib/fenok-rim-proxy-identity.mjs";
 import {
   FENO_RULE,
   FROZEN_CALIBRATION,
@@ -146,9 +147,36 @@ function promotionBlockers({ rows, structural, holdout }) {
   return { blockers, findings };
 }
 
+/**
+ * A row whose tracker is not the index may not carry a number at all.
+ *
+ * Scoreability requires every applicable dimension to have passed, never the
+ * audit's own `scoreable` flag on its own: a dimension can be measured,
+ * reported and still failing, and reading the flag instead of the verdicts is
+ * how a failed bridge gets scored silently. Contract measured by cx in
+ * fh-20260805-129.
+ */
+const PROXY_GATED_ROWS = Object.freeze({ RUT: "RUT_IWM", SOX: "SOX_SOXX" });
+const REQUIRED_PROXY_DIMENSIONS = Object.freeze(["price_unit_bridge", "book_roe_identity", "payout_identity"]);
+
+function proxyGateFailures(id) {
+  const key = PROXY_GATED_ROWS[id];
+  if (!key) return [];
+  let audit;
+  try {
+    audit = readCurrentRepoProxyIdentityAudit()[key];
+  } catch {
+    return [`proxy_identity_audit_unavailable:${key}`];
+  }
+  if (!audit?.dimensions) return [`proxy_identity_audit_unavailable:${key}`];
+  return REQUIRED_PROXY_DIMENSIONS
+    .filter((dimension) => audit.dimensions[dimension] && audit.dimensions[dimension].passed !== true)
+    .map((dimension) => `proxy_${dimension}_failed:${key}`);
+}
+
 /** Fail closed: a row that cannot be trusted must not carry a range. */
 function gateRow(row, generatedAt) {
-  const blockers = [];
+  const blockers = [...proxyGateFailures(row.id)];
   const inputFreshness = freshness(row, generatedAt);
   if (inputFreshness.status !== "passed") blockers.push("stale_or_future_input");
   for (const lane of [row.feno, row.measured_growth_diagnostic]) {
@@ -179,7 +207,7 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
   const promotion = promotionDefects;
 
   const rows = panelRows.map(({ id, row }) => {
-    const { blockers, input_freshness: inputFreshness } = gateRow(row, generatedAt);
+    const { blockers, input_freshness: inputFreshness } = gateRow({ ...row, id }, generatedAt);
     // A row can only ever be a research diagnostic while a promotion blocker
     // stands. Freshness still decides whether it is computable at all.
     const publicationStatus = blockers.length ? "NULL" : "RESEARCH_DIAGNOSTIC";

@@ -8,6 +8,9 @@ on:
   schedule:
     # Weekday measured-stock refresh after US close (KST Tue-Sat 08:20).
     - cron: '20 23 * * 1-5'
+    # Seven minutes past, not on the hour: GitHub warns that hour-start
+    # schedules may be delayed or dropped under load, and three consecutive
+    # :00 slots did not fire at all.
     # Sunday-Friday, every two hours: twelve ETF slots a day, seventy-two a
     # week. The universe is ~6,700 names, so a 72-shard cycle puts ~94 regular
     # tickers in each slot, inside the existing regular=100 budget without
@@ -15,18 +18,18 @@ on:
     # start drift; the weekday is read from the clock, so a slot delayed past
     # midnight lands in the next day's cycle. That mis-slots at most one slot
     # of seventy-two and self-corrects on the next pass.
-    - cron: '0 0 * * 0-5'
-    - cron: '0 2 * * 0-5'
-    - cron: '0 4 * * 0-5'
-    - cron: '0 6 * * 0-5'
-    - cron: '0 8 * * 0-5'
-    - cron: '0 10 * * 0-5'
-    - cron: '0 12 * * 0-5'
-    - cron: '0 14 * * 0-5'
-    - cron: '0 16 * * 0-5'
-    - cron: '0 18 * * 0-5'
-    - cron: '0 20 * * 0-5'
-    - cron: '0 22 * * 0-5'
+    - cron: '7 0 * * 0-5'
+    - cron: '7 2 * * 0-5'
+    - cron: '7 4 * * 0-5'
+    - cron: '7 6 * * 0-5'
+    - cron: '7 8 * * 0-5'
+    - cron: '7 10 * * 0-5'
+    - cron: '7 12 * * 0-5'
+    - cron: '7 14 * * 0-5'
+    - cron: '7 16 * * 0-5'
+    - cron: '7 18 * * 0-5'
+    - cron: '7 20 * * 0-5'
+    - cron: '7 22 * * 0-5'
   workflow_dispatch:
     inputs:
       limit:
@@ -238,8 +241,8 @@ jobs:
               INPUT_STOCKS_ONLY="true"
             else
               case "$EVENT_SCHEDULE" in
-                '0 '*' * * 0-5')
-                  SLOT_HOUR="${EVENT_SCHEDULE#0 }"
+                '7 '*' * * 0-5')
+                  SLOT_HOUR="${EVENT_SCHEDULE#7 }"
                   SLOT_HOUR="${SLOT_HOUR%% *}"
                   ;;
                 *) echo "::error::unrecognized scheduled ETF slot: $EVENT_SCHEDULE" >&2; exit 2 ;;

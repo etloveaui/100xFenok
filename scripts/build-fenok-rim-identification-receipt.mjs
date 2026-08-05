@@ -17,6 +17,27 @@ const STRUCTURAL_ALGORITHM_SOURCE_RELS = [
   "scripts/build-fenok-rim-identification-receipt.mjs",
   "scripts/fenok-rim-identification-protocol.mjs",
 ];
+const SUSTAINABLE_ARTIFACT_REL = "data/computed/fenok-rim/sustainable-index-ranges.json";
+const PRINTED_INDEX_GRID_REL = "scripts/fixtures/fenok-rim-2025-12-09-grid.json";
+const SUSTAINABLE_ALGORITHM_SOURCE_RELS = [
+  "scripts/build-fenok-rim-sustainable-index-ranges.mjs",
+  "scripts/fenok-rim-yoo-panel-engine.mjs",
+];
+const SUSTAINABLE_SUPPORT_SOURCE_RELS = [
+  "data/benchmarks/emerging.json",
+  "data/benchmarks/micro_sectors.json",
+  "data/benchmarks/us.json",
+  "data/computed/fenok-rim/payout-history.json",
+  "data/computed/fenok-rim/russell2000-official-fundamentals.json",
+  "data/macro/fred-banking-daily.json",
+  "data/yf/finance/EWY.json",
+  "data/yf/finance/IWM.json",
+  "data/yf/finance/ONEQ.json",
+  "data/yf/finance/QQQ.json",
+  "data/yf/finance/SOXX.json",
+  "data/yf/finance/SPY.json",
+];
+const RIM_INDEX_INPUTS_REL = "data/computed/rim-index/inputs.json";
 const OUTPUT_REL = "data/computed/fenok-rim/identification-receipt.json";
 const EXTERNAL_BOOK_CONFIG = {
   HYNIX: { source_file: "data/yf/finance/000660.KS.json", fiscal_period: "2025-12-31", ticker: "000660.KS", currency: "KRW" },
@@ -81,6 +102,174 @@ function externalBookMeasurement(id, config) {
     temporal_eligible: false,
     availability_note: "Fiscal period is not first-knowable availability; this source is a structural cross-check only.",
   };
+}
+
+function fileSource(id, relativePath, measurement) {
+  return {
+    id,
+    path: relativePath,
+    bytes: fs.readFileSync(path.join(REPO, relativePath)),
+    measurement,
+  };
+}
+
+function sustainableCalibrationReceipt({ calibrationEvidence, sourceLedger }) {
+  const sustainable = readJson(SUSTAINABLE_ARTIFACT_REL);
+  const indexGrid = readJson(PRINTED_INDEX_GRID_REL);
+  const stockGrid = readJson(FIXTURE_REL);
+  const rimInputs = readJson(RIM_INDEX_INPUTS_REL);
+  const spy = readJson("data/yf/finance/SPY.json");
+  const qqq = readJson("data/yf/finance/QQQ.json");
+  const domain = sustainable.rows?.[0]?.value?.convexity?.printed_domain;
+  if (!domain || domain.observations !== 12) {
+    throw new Error("sustainable calibration receipt requires the full 12-observation printed convexity domain");
+  }
+  const algorithmSources = SUSTAINABLE_ALGORITHM_SOURCE_RELS.map((relativePath) => ({
+    path: relativePath,
+    raw_sha256: digest(fs.readFileSync(path.join(REPO, relativePath))),
+  }));
+  const selfBlocker = "sustainable_calibration_receipt_not_integrated";
+  const remainingBlockers = (sustainable.promotion?.blockers ?? [])
+    .filter((blocker) => blocker?.id !== selfBlocker);
+  const payoutAvailableAt = new Date(Math.max(
+    Date.parse(rimInputs.generated_at),
+    Date.parse(spy.fetched_at),
+    Date.parse(qqq.fetched_at),
+  )).toISOString();
+  if ([payoutAvailableAt, sustainable.generated_at].some((value) => !Number.isFinite(Date.parse(value)))) {
+    throw new Error("sustainable calibration availability clocks must be valid timestamps");
+  }
+  const supportSources = SUSTAINABLE_SUPPORT_SOURCE_RELS.map((relativePath) => {
+    const measurement = readJson(relativePath);
+    return fileSource(`support-${relativePath.replaceAll(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "")}`, relativePath, measurement);
+  });
+  const sustainableMeasurement = {
+    as_of: sustainable.as_of,
+    status: sustainable.status,
+    calibration: {
+      lt_roe_rule: sustainable.calibration.lt_roe_rule,
+      payout_multiplier: sustainable.calibration.payout_multiplier,
+      twelve_month_conversion: sustainable.calibration.twelve_month_conversion,
+    },
+    printed_convexity_domain: domain,
+    promotion: {
+      blockers: remainingBlockers,
+      findings: sustainable.promotion?.findings ?? [],
+      contract: sustainable.promotion?.contract,
+    },
+  };
+  const ltObservations = sustainable.calibration.lt_roe_rule.refit.observations;
+  const horizon = sustainable.calibration.twelve_month_conversion.refit;
+  return buildCalibrationReceipt({
+    generated_at: sustainable.generated_at,
+    calibration_cutoff_at: sustainable.generated_at,
+    algorithm: {
+      id: "fenok-rim-sustainable-index-calibration",
+      version: "fenok-rim-sustainable-index-calibration/v1",
+      sources: algorithmSources,
+      source_sha256: digest(canonicalJson(algorithmSources)),
+      parameters: {
+        lt_roe_rule: sustainable.calibration.lt_roe_rule.frozen,
+        payout_multiplier: sustainable.calibration.payout_multiplier.frozen,
+        printed_convexity_domain: domain,
+        twelve_month_conversion: sustainable.calibration.twelve_month_conversion.frozen,
+      },
+    },
+    calibration_components: {
+      lt_roe_rule: sustainable.calibration.lt_roe_rule,
+      payout_multiplier: sustainable.calibration.payout_multiplier,
+      printed_convexity_domain: domain,
+      twelve_month_conversion: sustainable.calibration.twelve_month_conversion,
+    },
+    sources: [
+      fileSource("sustainable-calibration-artifact", SUSTAINABLE_ARTIFACT_REL, sustainableMeasurement),
+      fileSource("printed-index-grid", PRINTED_INDEX_GRID_REL, indexGrid),
+      fileSource("printed-stock-grid", FIXTURE_REL, stockGrid),
+      fileSource("rim-index-inputs", RIM_INDEX_INPUTS_REL, {
+        generated_at: rimInputs.generated_at,
+        SPX: rimInputs.indices?.SPX?.derived?.payout_ratio,
+        NDX: rimInputs.indices?.NDX?.derived?.payout_ratio,
+      }),
+      ...supportSources,
+    ],
+    evidence: [
+      {
+        id: "ltroe-index-centres-2025-12-09",
+        observation_at: "2025-12-09T23:59:59.999Z",
+        available_as_of: "2025-12-09T23:59:59.999Z",
+        point_in_time: true,
+        measurement: { observations: ltObservations.filter((row) => row.id.endsWith("@2025-12-09")) },
+      },
+      {
+        id: "ltroe-stock-centres-2026-08-03",
+        observation_at: "2026-08-03T23:59:59.999Z",
+        available_as_of: "2026-08-03T23:59:59.999Z",
+        point_in_time: true,
+        measurement: { observations: ltObservations.filter((row) => row.id.endsWith("@2026-08-03")) },
+      },
+      {
+        id: "payout-multiplier-spx-ndx-2026-07-31",
+        observation_at: payoutAvailableAt,
+        available_as_of: payoutAvailableAt,
+        point_in_time: true,
+        measurement: {
+          source_observation_at: "2026-07-31T23:59:59.999Z",
+          rows: sustainable.calibration.payout_multiplier.refit.rows,
+        },
+      },
+      {
+        id: "printed-convexity-full-cells-2025-12-09",
+        observation_at: "2025-12-09T23:59:59.999Z",
+        available_as_of: "2025-12-09T23:59:59.999Z",
+        point_in_time: true,
+        measurement: domain,
+      },
+      {
+        id: "twelve-month-fit-2017-01-06--2022-07-22",
+        observation_at: sustainable.generated_at,
+        available_as_of: sustainable.generated_at,
+        point_in_time: true,
+        measurement: {
+          source_period: horizon.out_of_sample.fitted_on,
+          full_refit: horizon.full,
+          point_in_time_operand_filter: true,
+        },
+      },
+      {
+        id: "twelve-month-evaluation-2022-09-30--2026-07-17",
+        observation_at: sustainable.generated_at,
+        available_as_of: sustainable.generated_at,
+        point_in_time: true,
+        measurement: {
+          source_period: horizon.out_of_sample.evaluated_on,
+          converted_mae: horizon.out_of_sample.converted_mae,
+          raw_band_mae: horizon.out_of_sample.raw_band_mae,
+          improves: horizon.out_of_sample.improves,
+          point_in_time_operand_filter: true,
+        },
+      },
+    ],
+    fit_evidence_ids: [
+      "ltroe-index-centres-2025-12-09",
+      "ltroe-stock-centres-2026-08-03",
+      "payout-multiplier-spx-ndx-2026-07-31",
+      "printed-convexity-full-cells-2025-12-09",
+      "twelve-month-fit-2017-01-06--2022-07-22",
+    ],
+    evaluation_evidence_ids: ["twelve-month-evaluation-2022-09-30--2026-07-17"],
+    proxy_decisions: [
+      { id: "ndx-to-qqq-payout", accepted: true, reason: "tracker_is_index_and_same_basis_identity_measured" },
+      { id: "rut-to-iwm-payout", accepted: false, reason: "payout_identity_gate_fails" },
+      { id: "sox-to-soxx-payout", accepted: false, reason: "tracker_is_not_the_philadelphia_semiconductor_index" },
+      { id: "spx-to-spy-payout", accepted: true, reason: "tracker_is_index_and_same_basis_identity_measured" },
+    ],
+    source_ledger: sourceLedger,
+    external_promotion: {
+      production_identified: remainingBlockers.length === 0,
+      blockers: remainingBlockers.map((blocker) => blocker.id),
+    },
+    promotion_requested: true,
+  });
 }
 
 export function buildIdentificationArtifact() {
@@ -172,6 +361,7 @@ export function buildIdentificationArtifact() {
     },
     promotion_requested: true,
   });
+  const sustainableReceipt = sustainableCalibrationReceipt({ calibrationEvidence, sourceLedger });
   return {
     ...receipt,
     fixture: {
@@ -185,6 +375,7 @@ export function buildIdentificationArtifact() {
     },
     external_book_sources: externalBookSources,
     calibration_receipt: calibrationReceipt,
+    sustainable_calibration_receipt: sustainableReceipt,
     publication_status: "NULL",
   };
 }

@@ -6,6 +6,7 @@ import {
   buildCalibrationReceipt,
   canonicalJson,
 } from "./lib/fenok-rim-calibration-receipt.mjs";
+import { buildIdentificationArtifact } from "./build-fenok-rim-identification-receipt.mjs";
 
 const ledgerBytes = Buffer.from('{"claims":[]}\n');
 const sha256 = (value) => crypto.createHash("sha256").update(value).digest("hex");
@@ -66,6 +67,13 @@ function input(overrides = {}) {
     source_ledger: sourceLedger,
     external_promotion: { production_identified: true, blockers: [] },
     promotion_requested: true,
+    calibration_cutoff_at: "2026-08-05T01:00:00.000Z",
+    calibration_components: {
+      lt_roe_rule: { intercept: 0.07, gap_coefficient: 0.47 },
+      payout_multiplier: { low: 1.08, center: 1.085, high: 1.09 },
+      printed_convexity_domain: { low: 1.76, high: 2.56, observations: 12 },
+      twelve_month_conversion: { intercept: 0.13, slope: 0.08, horizon_months: 12 },
+    },
     ...overrides,
   };
 }
@@ -79,6 +87,25 @@ assert.match(baseline.measurement_receipt_sha256, /^[a-f0-9]{64}$/);
 assert.match(baseline.source_snapshot_sha256, /^[a-f0-9]{64}$/);
 assert.match(baseline.proxy_decision_sha256, /^[a-f0-9]{64}$/);
 assert.match(baseline.parameter_sha256, /^[a-f0-9]{64}$/);
+assert.equal(baseline.calibration_cutoff_at, "2026-08-05T01:00:00.000Z");
+assert.deepEqual(Object.keys(baseline.calibration_component_sha256), [
+  "lt_roe_rule",
+  "payout_multiplier",
+  "printed_convexity_domain",
+  "twelve_month_conversion",
+]);
+for (const value of Object.values(baseline.calibration_component_sha256)) assert.match(value, /^[a-f0-9]{64}$/);
+
+for (const component of Object.keys(baseline.calibration_component_sha256)) {
+  const changed = input();
+  changed.calibration_components[component] = { ...changed.calibration_components[component], receipt_test_marker: component };
+  const changedReceipt = buildCalibrationReceipt(changed);
+  assert.notEqual(changedReceipt.calibration_component_sha256[component], baseline.calibration_component_sha256[component]);
+  for (const other of Object.keys(baseline.calibration_component_sha256).filter((id) => id !== component)) {
+    assert.equal(changedReceipt.calibration_component_sha256[other], baseline.calibration_component_sha256[other]);
+  }
+  assert.notEqual(changedReceipt.receipt_sha256, baseline.receipt_sha256);
+}
 
 // Raw metadata drift remains visible without changing semantic measurement identity.
 const metadataOnly = input();
@@ -173,6 +200,13 @@ const futureReceipt = buildCalibrationReceipt(futureEvidence);
 assert.equal(futureReceipt.promotion.eligible, false);
 assert.ok(futureReceipt.promotion.blockers.includes("future_evidence"));
 
+const postCutoffEvidence = input();
+postCutoffEvidence.evidence[1].observation_at = "2026-08-05T01:00:00.001Z";
+postCutoffEvidence.evidence[1].available_as_of = "2026-08-05T01:00:00.001Z";
+const postCutoffReceipt = buildCalibrationReceipt(postCutoffEvidence);
+assert.equal(postCutoffReceipt.promotion.eligible, false);
+assert.ok(postCutoffReceipt.promotion.blockers.includes("post_cutoff_evidence"));
+
 const nonPitEvidence = input();
 nonPitEvidence.evidence[0].point_in_time = false;
 const nonPitReceipt = buildCalibrationReceipt(nonPitEvidence);
@@ -208,5 +242,33 @@ assert.equal(structurallyBlocked.promotion.underlying_production_identified, fal
 assert.ok(structurallyBlocked.promotion.blockers.includes("underlying_production_not_identified"));
 assert.ok(structurallyBlocked.promotion.blockers.includes("printed_payout_residual_roe_conflict"));
 assert.ok(structurallyBlocked.promotion.blockers.includes("exact_cross_panel_book_equality_fails"));
+
+const integrated = buildIdentificationArtifact().sustainable_calibration_receipt;
+assert.equal(integrated.schema_version, "fenok-rim-calibration-receipt/v1");
+assert.equal(integrated.algorithm.id, "fenok-rim-sustainable-index-calibration");
+assert.deepEqual(Object.keys(integrated.calibration_component_sha256), [
+  "lt_roe_rule",
+  "payout_multiplier",
+  "printed_convexity_domain",
+  "twelve_month_conversion",
+]);
+assert.deepEqual(integrated.fit_evidence_ids, [
+  "ltroe-index-centres-2025-12-09",
+  "ltroe-stock-centres-2026-08-03",
+  "payout-multiplier-spx-ndx-2026-07-31",
+  "printed-convexity-full-cells-2025-12-09",
+  "twelve-month-fit-2017-01-06--2022-07-22",
+]);
+assert.deepEqual(integrated.evaluation_evidence_ids, [
+  "twelve-month-evaluation-2022-09-30--2026-07-17",
+]);
+assert.equal(integrated.promotion.eligible, false);
+assert.ok(integrated.promotion.external_blockers.includes("partial_structural_reproduction"));
+assert.ok(integrated.promotion.external_blockers.includes("ungated_proxy_identity"));
+assert.ok(!integrated.promotion.external_blockers.includes("sustainable_calibration_receipt_not_integrated"));
+assert.ok(!integrated.promotion.blockers.includes("post_cutoff_evidence"));
+assert.ok(!integrated.promotion.blockers.includes("future_evidence"));
+assert.match(integrated.algorithm.source_sha256, /^[a-f0-9]{64}$/);
+assert.match(integrated.parameter_sha256, /^[a-f0-9]{64}$/);
 
 console.log("fenok-rim calibration receipt tests passed");

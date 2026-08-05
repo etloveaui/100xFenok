@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { buildSustainableIndexRanges } from "./build-fenok-rim-sustainable-index-ranges.mjs";
+import { readCurrentRepoProxyIdentityAudit } from "./lib/fenok-rim-proxy-identity.mjs";
 
 const SCOPE = ["SPX", "NDX", "KOSPI", "SOX", "CCMP", "RUT"];
 const options = { asOf: "2026-08-04", generatedAt: "2026-08-04T00:00:00.000Z" };
@@ -153,6 +154,36 @@ for (const row of artifact.rows) {
     .includes(row.measured_growth_diagnostic.convexity.status));
   assert.ok(row.source_notes.panel.includes("benchmarks"), `${row.id}: the panel source must be named`);
   assert.ok(row.source_notes.payout.length > 0, `${row.id}: the payout provenance must be named`);
+}
+
+// A row whose tracker is not the index carries no number at all. Every failing
+// dimension must be named, and a dimension that is measured and reported but
+// failing may never let a row score: reading the audit's own `scoreable` flag
+// instead of the verdicts is exactly how a failed bridge gets scored silently.
+const proxyAudit = readCurrentRepoProxyIdentityAudit();
+for (const [id, key] of Object.entries({ RUT: "RUT_IWM", SOX: "SOX_SOXX" })) {
+  const row = artifact.rows.find((entry) => entry.id === id);
+  const dimensions = proxyAudit[key].dimensions;
+  const failing = ["price_unit_bridge", "book_roe_identity", "payout_identity"]
+    .filter((dimension) => dimensions[dimension] && dimensions[dimension].passed !== true);
+  assert.ok(failing.length > 0, `${id}: this test assumes the bridge still fails`);
+  assert.equal(row.publication_status, "NULL", `${id}: a failed bridge must publish nothing`);
+  assert.equal(row.value, null, `${id}: a failed bridge must carry no numeric value`);
+  assert.equal(row.measured_growth_diagnostic, null, `${id}: not even a diagnostic`);
+  for (const dimension of failing) {
+    assert.ok(row.blocking_reasons.includes(`proxy_${dimension}_failed:${key}`), `${id}: ${dimension} must be named`);
+  }
+  // A dimension can report scoreable while failing; the verdict is what counts.
+  for (const dimension of failing) {
+    if (dimensions[dimension].scoreable === true) {
+      assert.notEqual(row.publication_status, "RESEARCH_DIAGNOSTIC",
+        `${id}: ${dimension} is scoreable but failing and must not let the row publish`);
+    }
+  }
+}
+// The rows whose tracker is the index keep their numbers.
+for (const id of ["SPX", "NDX", "CCMP", "KOSPI"]) {
+  assert.equal(artifact.rows.find((row) => row.id === id).publication_status, "RESEARCH_DIAGNOSTIC");
 }
 
 // Identity separations that a merge must never quietly drop.

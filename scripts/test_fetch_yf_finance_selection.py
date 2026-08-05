@@ -2666,8 +2666,12 @@ assert callable(namespace["load_universe"])
         # Twelve two-hourly ETF slots, Sunday-Friday, resolved to one of
         # seventy-two stable shards. The hour comes from the cron string so a
         # late start cannot move a slot; only the weekday reads the clock.
+        # Seven minutes past, not on the hour: GitHub warns hour-start
+        # schedules may be delayed or dropped, and three consecutive :00 slots
+        # did not fire.
         for hour in range(0, 24, 2):
-            self.assertIn(f"0 {hour} * * 0-5", workflow)
+            self.assertIn(f"7 {hour} * * 0-5", workflow)
+        self.assertNotIn("- cron: '0 0 * * 0-5'", workflow)
         self.assertIn("SLOT_HOUR=", run_step)
         self.assertIn("DAILY_SHARDS=72", run_step)
         self.assertIn("SLOT_WEEKDAY * 12 + SLOT_HOUR / 2", run_step)

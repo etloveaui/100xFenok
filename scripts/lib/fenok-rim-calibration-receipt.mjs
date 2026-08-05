@@ -112,6 +112,19 @@ export function buildCalibrationReceipt(input) {
     throw new Error("algorithm source_sha256 must match the canonical source manifest");
   }
   canonicalJson(input.algorithm.parameters ?? {});
+  const calibrationCutoffAt = input.calibration_cutoff_at === undefined ? null
+    : normalizeTimestamp(input.calibration_cutoff_at, "calibration_cutoff_at");
+  const componentEntries = input.calibration_components === undefined ? []
+    : Object.entries(input.calibration_components);
+  if (input.calibration_components !== undefined
+    && (!input.calibration_components || Array.isArray(input.calibration_components)
+      || typeof input.calibration_components !== "object" || componentEntries.length === 0
+      || componentEntries.some(([id]) => !id))) {
+    throw new Error("calibration_components must be a non-empty object");
+  }
+  const calibrationComponentSha256 = Object.fromEntries(componentEntries
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([id, value]) => [id, digest(canonicalJson(value))]));
 
   const sourceIds = uniqueRows(input.sources ?? [], "sources");
   const evidenceIds = uniqueRows(input.evidence ?? [], "evidence");
@@ -199,6 +212,10 @@ export function buildCalibrationReceipt(input) {
   if (evidence.some((row) => Date.parse(row.available_as_of) > Date.parse(row.observation_at))) {
     blockers.push("future_evidence");
   }
+  if (calibrationCutoffAt && evidence.some((row) => (
+    Date.parse(row.observation_at) > Date.parse(calibrationCutoffAt)
+    || Date.parse(row.available_as_of) > Date.parse(calibrationCutoffAt)
+  ))) blockers.push("post_cutoff_evidence");
   if (!underlyingProductionIdentified) blockers.push("underlying_production_not_identified");
   blockers.push(...externalBlockers);
   const promotion = {
@@ -214,6 +231,8 @@ export function buildCalibrationReceipt(input) {
     schema_version: "fenok-rim-calibration-receipt/v1",
     algorithm: normalize(input.algorithm),
     parameter_sha256: parameterSha256,
+    ...(calibrationCutoffAt ? { calibration_cutoff_at: calibrationCutoffAt } : {}),
+    ...(componentEntries.length ? { calibration_component_sha256: calibrationComponentSha256 } : {}),
     measurement_receipt_sha256: measurementReceiptSha256,
     proxy_decision_sha256: proxyDecisionSha256,
     fit_evidence_ids: fitEvidenceIds,
