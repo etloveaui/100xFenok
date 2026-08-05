@@ -20,8 +20,10 @@ const STRUCTURAL_ALGORITHM_SOURCE_RELS = [
 const SUSTAINABLE_ARTIFACT_REL = "data/computed/fenok-rim/sustainable-index-ranges.json";
 const PRINTED_INDEX_GRID_REL = "scripts/fixtures/fenok-rim-2025-12-09-grid.json";
 const SUSTAINABLE_ALGORITHM_SOURCE_RELS = [
+  "scripts/build-fenok-rim-identification-receipt.mjs",
   "scripts/build-fenok-rim-sustainable-index-ranges.mjs",
   "scripts/fenok-rim-yoo-panel-engine.mjs",
+  "scripts/lib/fenok-rim-calibration-receipt.mjs",
 ];
 const SUSTAINABLE_SUPPORT_SOURCE_RELS = [
   "data/benchmarks/emerging.json",
@@ -113,7 +115,7 @@ function fileSource(id, relativePath, measurement) {
   };
 }
 
-function sustainableCalibrationReceipt({ calibrationEvidence, sourceLedger }) {
+function sustainableCalibrationReceipt({ sourceLedger }) {
   const sustainable = readJson(SUSTAINABLE_ARTIFACT_REL);
   const indexGrid = readJson(PRINTED_INDEX_GRID_REL);
   const stockGrid = readJson(FIXTURE_REL);
@@ -123,6 +125,24 @@ function sustainableCalibrationReceipt({ calibrationEvidence, sourceLedger }) {
   const domain = sustainable.rows?.[0]?.value?.convexity?.printed_domain;
   if (!domain || domain.observations !== 12) {
     throw new Error("sustainable calibration receipt requires the full 12-observation printed convexity domain");
+  }
+  const printedDomainObservations = sustainable.calibration.structural_reproduction.instruments
+    .filter((instrument) => instrument.status === "reproduced")
+    .flatMap((instrument) => indexGrid.instruments[instrument.instrument].lt_roe_axis.flatMap((ltRoe) => (
+      Object.entries(indexGrid.rate_scenarios).map(([scenario, riskFree]) => ({
+        instrument: instrument.instrument,
+        lt_roe: ltRoe,
+        scenario,
+        risk_free: riskFree,
+        fitted_payout: instrument.fitted_payout,
+        growth_to_discount: (ltRoe * (1 - instrument.fitted_payout)) / (0.076 + 0.56 * riskFree),
+      }))
+    )));
+  const printedDomainMeasurement = { summary: domain, observations: printedDomainObservations };
+  if (printedDomainObservations.length !== domain.observations
+    || Math.min(...printedDomainObservations.map((row) => row.growth_to_discount)) !== domain.low
+    || Math.max(...printedDomainObservations.map((row) => row.growth_to_discount)) !== domain.high) {
+    throw new Error("printed convexity receipt observations must reproduce the published full-cell domain");
   }
   const algorithmSources = SUSTAINABLE_ALGORITHM_SOURCE_RELS.map((relativePath) => ({
     path: relativePath,
@@ -151,7 +171,7 @@ function sustainableCalibrationReceipt({ calibrationEvidence, sourceLedger }) {
       payout_multiplier: sustainable.calibration.payout_multiplier,
       twelve_month_conversion: sustainable.calibration.twelve_month_conversion,
     },
-    printed_convexity_domain: domain,
+    printed_convexity_domain: printedDomainMeasurement,
     promotion: {
       blockers: remainingBlockers,
       findings: sustainable.promotion?.findings ?? [],
@@ -178,7 +198,7 @@ function sustainableCalibrationReceipt({ calibrationEvidence, sourceLedger }) {
     calibration_components: {
       lt_roe_rule: sustainable.calibration.lt_roe_rule,
       payout_multiplier: sustainable.calibration.payout_multiplier,
-      printed_convexity_domain: domain,
+      printed_convexity_domain: printedDomainMeasurement,
       twelve_month_conversion: sustainable.calibration.twelve_month_conversion,
     },
     sources: [
@@ -222,7 +242,7 @@ function sustainableCalibrationReceipt({ calibrationEvidence, sourceLedger }) {
         observation_at: "2025-12-09T23:59:59.999Z",
         available_as_of: "2025-12-09T23:59:59.999Z",
         point_in_time: true,
-        measurement: domain,
+        measurement: printedDomainMeasurement,
       },
       {
         id: "twelve-month-fit-2017-01-06--2022-07-22",
@@ -361,7 +381,7 @@ export function buildIdentificationArtifact() {
     },
     promotion_requested: true,
   });
-  const sustainableReceipt = sustainableCalibrationReceipt({ calibrationEvidence, sourceLedger });
+  const sustainableReceipt = sustainableCalibrationReceipt({ sourceLedger });
   return {
     ...receipt,
     fixture: {

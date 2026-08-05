@@ -480,7 +480,7 @@
         "fit_objective": "relative_rms",
         "printed_roe_rounding_scope": "within_panel_only"
       },
-      "source_sha256": "288ba73bd54c9c078961bb5eb45544d83144d6bc215ed676b68c7c26e2f64c79",
+      "source_sha256": "c5b99b487a1c10d38f6f1ee314e2a0a6a1fcef6d36bc333809d4ed238f2ff636",
       "sources": [
         {
           "path": "scripts/analyze-fenok-rim-identifiability.mjs",
@@ -488,7 +488,7 @@
         },
         {
           "path": "scripts/build-fenok-rim-identification-receipt.mjs",
-          "raw_sha256": "42a05a5358793dea3712fc44e35352d7bc3f00b97c85107806ad0fe2b5e17229"
+          "raw_sha256": "daa5d3f01252f675307238b639b26f106cb42854b7bda9862ef81858f862d9cb"
         },
         {
           "path": "scripts/fenok-rim-identification-protocol.mjs",
@@ -498,7 +498,7 @@
       "version": "fenok-rim-structural-transfer/v2"
     },
     "parameter_sha256": "02d9b4f4d648c7efebdfc1a8ced29d9ca928d455110d32259b618fea70b3e51e",
-    "measurement_receipt_sha256": "fd7427deb9f7518731cbc0bb8b23b187bcad2fadd0581f89a41e18a1bae39dc9",
+    "measurement_receipt_sha256": "db6353573c4449bb8714029d79ad7e0c330e549d2810548a543eab20e8377fdc",
     "proxy_decision_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
     "fit_evidence_ids": [
       "stock-grid-hynix",
@@ -536,8 +536,8 @@
       ]
     },
     "generated_at": "2026-08-05T00:36:36.000Z",
-    "receipt_sha256": "e77074ecff54ec75b5f31b263c1173f4f8c6b4917151ede91f466b13982b5a6a",
-    "source_snapshot_sha256": "28dd7378bbacc1c6765d7eeb7090e86ba71e97e935b0de87aa323ccd3a57b3c2",
+    "receipt_sha256": "62db820e56fb9fbd7b82011024ff622777dbb8d97dbcf3f4a5d98059fc482ee3",
+    "source_snapshot_sha256": "72a51f929e1812011219491925ad0366d5d99bd40c442ff8aae535e2c686c50f",
     "sources": [
       {
         "id": "printed-grid-fixture",
@@ -553,9 +553,9 @@
       },
       {
         "id": "calibration-receipt-implementation",
-        "measurement_sha256": "6185b38ed773bc9c4e58aefa8c7c1a14962da0554bd530743a6b080ba5f1822e",
+        "measurement_sha256": "4b178f752acb4df9fac0665043fb26eccb58d0736c5a758c0a77e166953fc8ba",
         "path": "scripts/lib/fenok-rim-calibration-receipt.mjs",
-        "raw_sha256": "f245d288ad3c5cbad5727bf3c52b3951c8fdfa107c93abc0ee18d5c3506ad15c"
+        "raw_sha256": "9e2b08557f9e3153358550c6b28f271badfbb4871c388ce73e40ef9c0f78152d"
       },
       {
         "id": "hynix-external-book",
@@ -568,6 +568,217 @@
         "measurement_sha256": "0f0cd28b50bb55e74338599bd57a400b26f3f6d8cedf04be134cb7859eee8d89",
         "path": "data/yf/finance/005930.KS.json",
         "raw_sha256": "2b2ebbb0caa042168fa8886089c6dc02b7711d3e12a1138a0deaafadd0e5ed52"
+      }
+    ],
+    "source_ledger": {
+      "exists": true,
+      "path": "docs/agent-work/fenok-rim-evidence-ledger-20260804.json",
+      "resolved_scope": "parent_project",
+      "expected_sha256": "895107dd00af7ae852198c5bd714c26474bb20f44856f26b013f1a53d17f1e5f",
+      "raw_sha256": "895107dd00af7ae852198c5bd714c26474bb20f44856f26b013f1a53d17f1e5f",
+      "measurement_sha256": "b5d71dd21fe4af02d6e926d27c1272e199bd1208cd6cc632dca796d6383a125c"
+    }
+  },
+  "sustainable_calibration_receipt": {
+    "schema_version": "fenok-rim-calibration-receipt/v1",
+    "algorithm": {
+      "id": "fenok-rim-sustainable-index-calibration",
+      "parameters": {
+        "lt_roe_rule": {
+          "anchor": "the index's own rolling 260-week median forward ROE",
+          "cross_family_bridge": "the stock sheets contribute the large-gap regime only; their implied gap share of 0.622~0.756 brackets the share the index rows imply, which is the measured agreement that licenses the transfer",
+          "equation": "LTROE_centre = median_260w + 0.070661 + 0.471304 * max(forward_ROE - median_260w, 0)",
+          "fit_dates": [
+            "2025-12-09",
+            "2026-08-03"
+          ],
+          "fit_observables": "printed LTROE axis centres only: three from the 2025-12-09 index sheets and four from the 2026-08-03 Samsung and SK Hynix scenarios. No published upside is inverted into the fit, which leaves both two-sided claims free to evaluate it.",
+          "gap_coefficient": 0.471304,
+          "intercept": 0.070661,
+          "lattice_half_width": 0.005,
+          "lattice_note": "Yoo prints a +/-0.5pp LTROE axis; the same half width is retained"
+        },
+        "payout_multiplier": {
+          "center": 1.08574,
+          "derivation": "direct index payout over raw tracker ratio on the same basis, both sides being dividend yield over forward earnings yield, measured on the S&P 500 and the NASDAQ 100 where the tracker really is the index",
+          "high": 1.0866,
+          "low": 1.08488,
+          "observations": 2,
+          "rejected": "a universal scalar fitted to the printed/grid/LSEG payouts, which are trailing realised or inverted quantities and not the same variable as a tracker distribution yield",
+          "swept": "the low and high multipliers are swept into the published endpoints so the measured divergence is visible rather than hidden"
+        },
+        "printed_convexity_domain": {
+          "basis": "every printed LTROE axis value times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+          "high": 2.5573573388074213,
+          "low": 1.7686871045010335,
+          "observations": 12,
+          "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
+        },
+        "twelve_month_conversion": {
+          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest",
+          "horizon_months": 12,
+          "intercept": 0.12923,
+          "observations": 157,
+          "slope": 0.08355,
+          "stability": "coefficients differ by sub-period (slope 0.238 fitted on 2017-2022 against 0.124 on 2022-2026), so the level is calibrated but not stationary"
+        }
+      },
+      "source_sha256": "f17c69251280283e74ed58a602c6446a9509d2ec45300e35ce6b85861c40b7df",
+      "sources": [
+        {
+          "path": "scripts/build-fenok-rim-identification-receipt.mjs",
+          "raw_sha256": "daa5d3f01252f675307238b639b26f106cb42854b7bda9862ef81858f862d9cb"
+        },
+        {
+          "path": "scripts/build-fenok-rim-sustainable-index-ranges.mjs",
+          "raw_sha256": "0a32131fd7c1c0f9e16800267ff354768714681beb4a173a92a8713989ad9d76"
+        },
+        {
+          "path": "scripts/fenok-rim-yoo-panel-engine.mjs",
+          "raw_sha256": "243d7a2692736bc64283a9f9fe37929d23bc3b04cd733fcb4b3113046f058398"
+        },
+        {
+          "path": "scripts/lib/fenok-rim-calibration-receipt.mjs",
+          "raw_sha256": "9e2b08557f9e3153358550c6b28f271badfbb4871c388ce73e40ef9c0f78152d"
+        }
+      ],
+      "version": "fenok-rim-sustainable-index-calibration/v1"
+    },
+    "parameter_sha256": "795e809a5e4040894242b1e38026ac825627635c8dd581862dfa6c41e2eaffd8",
+    "calibration_cutoff_at": "2026-08-05T05:14:12.232Z",
+    "calibration_component_sha256": {
+      "lt_roe_rule": "d5029af56775518e35d930b2ab8a0d2fb256f7207a981cd53661bc2d05565d75",
+      "payout_multiplier": "4e5319c49b44c9dd80b048a61afa4ba7d7da709f143ae649999d4222909e5234",
+      "printed_convexity_domain": "73cb379249da5f1be0023d36c0c3a39aae72269302c933d154e26bfdc88e5580",
+      "twelve_month_conversion": "730f21e9d7602e89cdce9f9765ef1b93ea386b97fe1ceb02c346d9553bfbb7da"
+    },
+    "measurement_receipt_sha256": "148cc3abae47378685dc54eaf7e82e7b084749c81bdefd411bf9eeff4973c09d",
+    "proxy_decision_sha256": "4cf1a00ea8f52445cb44fe42d3d9556fda460a0cf61b46e310470fcd2a61bcf7",
+    "fit_evidence_ids": [
+      "ltroe-index-centres-2025-12-09",
+      "ltroe-stock-centres-2026-08-03",
+      "payout-multiplier-spx-ndx-2026-07-31",
+      "printed-convexity-full-cells-2025-12-09",
+      "twelve-month-fit-2017-01-06--2022-07-22"
+    ],
+    "evaluation_evidence_ids": [
+      "twelve-month-evaluation-2022-09-30--2026-07-17"
+    ],
+    "evidence_set_contract": {
+      "fit": "applicable",
+      "evaluation": "applicable"
+    },
+    "promotion": {
+      "requested": true,
+      "underlying_production_identified": false,
+      "external_blockers": [
+        "ungated_proxy_identity"
+      ],
+      "eligible": false,
+      "blockers": [
+        "underlying_production_not_identified",
+        "ungated_proxy_identity"
+      ]
+    },
+    "generated_at": "2026-08-05T05:14:12.232Z",
+    "receipt_sha256": "0c5aeb48bac175e504cc1a1e46d753b833b95a7d25b32b87357bee01e04b1a9d",
+    "source_snapshot_sha256": "8e68182598d816d07e36f7e44c33db01b5c64d0d9c0ed13c5633bce563ec9d23",
+    "sources": [
+      {
+        "id": "sustainable-calibration-artifact",
+        "measurement_sha256": "850e86b32c256aa449ee6a22ce23d44a95d0e1db5b7d1de9c86c79e56a493bad",
+        "path": "data/computed/fenok-rim/sustainable-index-ranges.json",
+        "raw_sha256": "7e2053d8c80f08d0aa887baa664a4b726ce4c190bd8760b2ab373821cc8880e5"
+      },
+      {
+        "id": "printed-index-grid",
+        "measurement_sha256": "d71b213d230c9a1c7314d7d86bc6c8ee3f51b2680cd4c92201a9c856bd4fb27a",
+        "path": "scripts/fixtures/fenok-rim-2025-12-09-grid.json",
+        "raw_sha256": "7d982f0d011745e4ac3ec35e16d946a2804c884d51d26c175dbfb92448e61150"
+      },
+      {
+        "id": "printed-stock-grid",
+        "measurement_sha256": "667eee8dbaad6643e1ae29c22f60ce728b4966a783df3fe47544d6d1722ff021",
+        "path": "scripts/fixtures/fenok-rim-2026-08-03-stock-grids.json",
+        "raw_sha256": "a27303a0d20541309e7cc16c06f72217103410f97869c437e9a070b6317719df"
+      },
+      {
+        "id": "rim-index-inputs",
+        "measurement_sha256": "4635ed579bccd970f1ad7011d8b4804e4d55c4703ec8a8e2b1000e9499155566",
+        "path": "data/computed/rim-index/inputs.json",
+        "raw_sha256": "055359a1eecc5322ba4398ecdc91a9cab47fb7e6ff5f9a3039fa0fe9401cf693"
+      },
+      {
+        "id": "support-data-benchmarks-emerging-json",
+        "measurement_sha256": "8d32ecf039b8c7f006b9e703bc29b453a9ba7ce669a40827382d1a5fec7b1132",
+        "path": "data/benchmarks/emerging.json",
+        "raw_sha256": "248e21cdf2f5990f53bbdf9641b9acabb1f4d6c553989c219c1b8d461ff3e117"
+      },
+      {
+        "id": "support-data-benchmarks-micro-sectors-json",
+        "measurement_sha256": "458bc89458b10cbdeb392feda3931bdb67e289dc8dde38532768bf3f6b82d616",
+        "path": "data/benchmarks/micro_sectors.json",
+        "raw_sha256": "8e7bad42e1b97e6a4de446033118f83ea81052cabd3420c803309304b80d50ef"
+      },
+      {
+        "id": "support-data-benchmarks-us-json",
+        "measurement_sha256": "e014225d7d0b767f4b75d1aab3a5ac27b0f9d2630f8d650ec752bc9e2a81916d",
+        "path": "data/benchmarks/us.json",
+        "raw_sha256": "30417f95d2a4cff5c71251dc658dbc8f540b104d2787b2390fe6ba69906de675"
+      },
+      {
+        "id": "support-data-computed-fenok-rim-payout-history-json",
+        "measurement_sha256": "f67764ee7e5a9dc90c684bc92e1bad2f07b46c5dbeb95153002c6089af2f3e30",
+        "path": "data/computed/fenok-rim/payout-history.json",
+        "raw_sha256": "30f6a2491dd672711c4958f9d1e72ce6195802f8bc06c745ff390e3d49aa6d76"
+      },
+      {
+        "id": "support-data-computed-fenok-rim-russell2000-official-fundamentals-json",
+        "measurement_sha256": "bdf5cea531b8ca944ac18b65ba075ba7fad23cdf1acc2738cd39cea5ab2e0e65",
+        "path": "data/computed/fenok-rim/russell2000-official-fundamentals.json",
+        "raw_sha256": "cb283ec6da8f642b7208e8c5b445241a208c4c91a5888f054ef19d80d2350de0"
+      },
+      {
+        "id": "support-data-macro-fred-banking-daily-json",
+        "measurement_sha256": "7db55870889bd83031b78e9c944955cbf5e932c7972913c6df3406f13ecb3527",
+        "path": "data/macro/fred-banking-daily.json",
+        "raw_sha256": "c7510e680e8d73a6e3c56eccbc56bc978859824efe330914b5e38022e13c83db"
+      },
+      {
+        "id": "support-data-yf-finance-EWY-json",
+        "measurement_sha256": "1cb87b9730184c2bd8f6dd0cfc745c503673dec793ec8dcf8c44c99c3da0a613",
+        "path": "data/yf/finance/EWY.json",
+        "raw_sha256": "ff16beafe4ef5a72d26f70a56a4f240f197f4bcc6c3de801be1161e01e672fb3"
+      },
+      {
+        "id": "support-data-yf-finance-IWM-json",
+        "measurement_sha256": "04532125e5a5567b4c76ac39bf593b3ca6ac39f25d555d46af86f15ff0f23694",
+        "path": "data/yf/finance/IWM.json",
+        "raw_sha256": "ebedb52fac9162d129f9ea58863b4629a174bb688bb2aba5f025a84e34bb8858"
+      },
+      {
+        "id": "support-data-yf-finance-ONEQ-json",
+        "measurement_sha256": "0e38bdbb282f68aa1a96112739be5b54b53224a9c9f24df39f4d3db79a4407de",
+        "path": "data/yf/finance/ONEQ.json",
+        "raw_sha256": "aaad512f22a55eaa10eea9808c923b5e7da19193499e90e96923955ead3e8f47"
+      },
+      {
+        "id": "support-data-yf-finance-QQQ-json",
+        "measurement_sha256": "6d1f04c63d5676b978e8a30e4f4a410e02b8e9389cd24905f63269b466e5b7b7",
+        "path": "data/yf/finance/QQQ.json",
+        "raw_sha256": "9f59cac77d5db33923906da6e9299f2c29559729a7e2da26cfdf9b637e5792ac"
+      },
+      {
+        "id": "support-data-yf-finance-SOXX-json",
+        "measurement_sha256": "eab2e409e119dc516b4dceb39a2a473b51555cd8082bce7fa7c137f7d9634329",
+        "path": "data/yf/finance/SOXX.json",
+        "raw_sha256": "2229d767b2f7abf337d135a13057faa19a18ca3faf2232e69efe83ba82db5549"
+      },
+      {
+        "id": "support-data-yf-finance-SPY-json",
+        "measurement_sha256": "9fb37a7f7d61fec2bf49a2ba9c896aed76574c673a341a64b5040234c8f19a56",
+        "path": "data/yf/finance/SPY.json",
+        "raw_sha256": "3d55598c286483ff7bbd7a3e9020bbd3390ed966a2edc8af2e66b0ddd324fe70"
       }
     ],
     "source_ledger": {

@@ -246,6 +246,12 @@ assert.ok(structurallyBlocked.promotion.blockers.includes("exact_cross_panel_boo
 const integrated = buildIdentificationArtifact().sustainable_calibration_receipt;
 assert.equal(integrated.schema_version, "fenok-rim-calibration-receipt/v1");
 assert.equal(integrated.algorithm.id, "fenok-rim-sustainable-index-calibration");
+assert.deepEqual(integrated.algorithm.sources.map((source) => source.path), [
+  "scripts/build-fenok-rim-identification-receipt.mjs",
+  "scripts/build-fenok-rim-sustainable-index-ranges.mjs",
+  "scripts/fenok-rim-yoo-panel-engine.mjs",
+  "scripts/lib/fenok-rim-calibration-receipt.mjs",
+]);
 assert.deepEqual(Object.keys(integrated.calibration_component_sha256), [
   "lt_roe_rule",
   "payout_multiplier",
@@ -263,8 +269,7 @@ assert.deepEqual(integrated.evaluation_evidence_ids, [
   "twelve-month-evaluation-2022-09-30--2026-07-17",
 ]);
 assert.equal(integrated.promotion.eligible, false);
-assert.ok(integrated.promotion.external_blockers.includes("partial_structural_reproduction"));
-assert.ok(integrated.promotion.external_blockers.includes("ungated_proxy_identity"));
+assert.deepEqual(integrated.promotion.external_blockers, ["ungated_proxy_identity"]);
 assert.ok(!integrated.promotion.external_blockers.includes("sustainable_calibration_receipt_not_integrated"));
 assert.ok(!integrated.promotion.blockers.includes("post_cutoff_evidence"));
 assert.ok(!integrated.promotion.blockers.includes("future_evidence"));
