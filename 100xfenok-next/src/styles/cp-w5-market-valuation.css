@@ -319,3 +319,55 @@
     font-size: 9.5px;
   }
 }
+
+/* Methodology axis — one index, every method measured against today's price.
+   The two lens hues are validated categorical steps, not brand paint: light
+   L 0.43–0.77 / chroma ≥ 0.1 / CVD ΔE 27.9 / contrast ≥ 3:1, and the dark pair
+   is stepped for the dark surface rather than flipped, ΔE 26.7. */
+.mv-methodology { display: grid; gap: 6px; min-width: 0; }
+.mv-methodology svg { display: block; overflow: visible; }
+
+.mv-methodology-legend {
+  display: flex; flex-wrap: wrap; gap: 4px 14px;
+  margin: 0; padding: 0; list-style: none;
+}
+.mv-methodology-legend li {
+  display: flex; align-items: baseline; gap: 6px; min-width: 0;
+  font-size: 11px; line-height: 1.5;
+}
+/* Text wears text tokens; the swatch beside it carries identity. */
+.mv-methodology-legend strong { font-weight: 800; color: var(--c-ink); }
+.mv-methodology-legend .mv-value {
+  font-weight: 800; font-variant-numeric: tabular-nums; color: var(--c-ink);
+}
+.mv-methodology-legend small { color: var(--c-ink-3); font-weight: 600; }
+.mv-swatch {
+  width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto;
+  align-self: center;
+}
+.mv-withheld {
+  margin: 0; font-size: 11px; font-weight: 600; line-height: 1.5;
+  color: var(--c-ink-3);
+}
+
+[data-theme="dark"] .mv-methodology {
+  --mv-lens-1: #468de5;
+  --mv-lens-2: #ba7f14;
+}
+
+.mv-methodology-table {
+  width: 100%; border-collapse: collapse; font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.mv-methodology-table th,
+.mv-methodology-table td { padding: 3px 8px 3px 0; text-align: left; white-space: nowrap; }
+.mv-methodology-table th { font-weight: 800; color: var(--c-ink); }
+.mv-methodology-table td { font-weight: 700; color: var(--c-ink-2); }
+.mv-methodology-table .mv-asof { color: var(--c-ink-3); font-weight: 600; }
+.mv-methodology-table tr + tr th,
+.mv-methodology-table tr + tr td { border-top: 1px solid var(--c-line-2); }
+.mv-methodology-table thead th {
+  font-size: 10px; font-weight: 800; text-transform: none;
+  color: var(--c-ink-3); border-bottom: 1px solid var(--c-line);
+  padding-bottom: 4px;
+}

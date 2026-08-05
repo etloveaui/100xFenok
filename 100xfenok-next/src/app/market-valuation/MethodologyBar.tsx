@@ -1,0 +1,278 @@
+"use client";
+
+// Every index, every method, one axis.
+//
+// The first draft drew a card per index. Each card scaled itself, so a +265%
+// band and a +45% band rendered at the same width, and a reader comparing
+// lengths down the page was reading a lie. This draws ONE figure: one row per
+// index, one shared domain, one zero rule through all of them. Length means the
+// same thing everywhere, which is the only thing that makes stacked rows
+// comparable at all.
+//
+// The axis is percent against each index's own current price, so zero reads as
+// "the market is right" and distance from it is the size of the claim. A band
+// draws as a band and a point as a point; neither collapses into the other,
+// because a midpoint is the single target the producers refuse to publish.
+//
+// Colour carries method identity only. It deliberately does not encode sign:
+// position already carries that, and colouring by sign would repaint the same
+// method between rows. Both hues are validated against the light and the dark
+// surface — lightness band, chroma floor, CVD separation, contrast — and the
+// dark pair is stepped for the dark surface rather than flipped from the light.
+// Identity never rests on colour alone: each method is named in the legend and
+// every row is repeated as text.
+
+import type { MethodologyAxisView, MethodologyReading } from "./methodologyAxis";
+
+const PERCENT = new Intl.NumberFormat("ko-KR", {
+  style: "percent",
+  maximumFractionDigits: 0,
+  signDisplay: "exceptZero",
+});
+const PERCENT_1 = new Intl.NumberFormat("ko-KR", {
+  style: "percent",
+  maximumFractionDigits: 1,
+  signDisplay: "exceptZero",
+});
+const LEVEL = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 });
+
+const VIEW_W = 720;
+const LABEL_W = 132;
+const PAD_R = 52;
+const ROW_H = 30;
+const HEAD_H = 22;
+const AXIS_H = 26;
+const BAND_H = 13;
+const MARKER_R = 5.5;
+
+function lensColor(lensIndex: number): string {
+  return lensIndex === 0 ? "var(--mv-lens-1)" : "var(--mv-lens-2)";
+}
+
+/** A step from the 1/2/5 family, so tick labels are round numbers. */
+function buildTicks(min: number, max: number): number[] {
+  const span = max - min;
+  const raw = span / 5;
+  const magnitude = 10 ** Math.floor(Math.log10(Math.max(raw, 1e-6)));
+  const step = [1, 2, 5, 10].map((m) => m * magnitude).find((s) => s >= raw) ?? magnitude * 10;
+  const ticks: number[] = [];
+  for (let t = Math.ceil(min / step) * step; t <= max + 1e-9; t += step) {
+    ticks.push(Math.abs(t) < 1e-9 ? 0 : t);
+  }
+  return ticks;
+}
+
+function horizonOf(axes: MethodologyAxisView[], lens: string): string {
+  for (const axis of axes) {
+    const reading = axis.readings.find((r) => r.lens === lens);
+    if (reading) return reading.horizon;
+  }
+  return "";
+}
+
+function Mark({
+  reading,
+  x,
+  mid,
+  color,
+}: {
+  reading: MethodologyReading;
+  x: (pct: number) => number;
+  mid: number;
+  color: string;
+}) {
+  const title = `${reading.lens} · ${reading.kind === "band"
+    ? `${PERCENT_1.format(reading.lowPct)}~${PERCENT_1.format(reading.highPct)}`
+    : PERCENT_1.format(reading.lowPct)} · 기준일 ${reading.asOf}`;
+
+  if (reading.kind === "band") {
+    const x1 = x(reading.lowPct);
+    const x2 = x(reading.highPct);
+    return (
+      <g>
+        <title>{title}</title>
+        {/* A surface ring keeps the band legible where it crosses the zero rule
+            or the other method's marker. */}
+        <rect
+          x={x1 - 1.5} y={mid - BAND_H / 2 - 1.5} width={Math.max(x2 - x1, 2) + 3} height={BAND_H + 3}
+          rx={(BAND_H + 3) / 2} fill="var(--c-panel)"
+        />
+        <rect
+          x={x1} y={mid - BAND_H / 2} width={Math.max(x2 - x1, 1)} height={BAND_H}
+          rx={BAND_H / 2} fill={color} fillOpacity={0.3} stroke={color} strokeWidth={2}
+        />
+      </g>
+    );
+  }
+
+  const cx = x(reading.lowPct);
+  return (
+    <g>
+      <title>{title}</title>
+      <circle cx={cx} cy={mid} r={MARKER_R + 2} fill="var(--c-panel)" />
+      <circle cx={cx} cy={mid} r={MARKER_R} fill={color} />
+    </g>
+  );
+}
+
+export interface MethodologyChartProps {
+  axes: MethodologyAxisView[];
+  /** Rows the gate withheld, so a short list is not read as a short market. */
+  withheldRows?: Array<{ label: string; reason: string }>;
+}
+
+export default function MethodologyBar({ axes, withheldRows = [] }: MethodologyChartProps) {
+  const drawable = axes.filter((axis) => axis.readings.length > 0);
+  if (drawable.length === 0) return null;
+
+  // ONE domain for every row. This is the whole point of the redraw.
+  const values = drawable.flatMap((axis) => axis.readings.flatMap((r) => [r.lowPct, r.highPct]));
+  values.push(0);
+  const rawMin = Math.min(...values);
+  const rawMax = Math.max(...values);
+  const pad = (rawMax - rawMin || 0.02) * 0.06;
+  const min = rawMin - pad;
+  const max = rawMax + pad;
+  const inner = VIEW_W - LABEL_W - PAD_R;
+  const x = (pct: number) => LABEL_W + ((pct - min) / (max - min)) * inner;
+
+  const plotH = drawable.length * ROW_H;
+  const height = HEAD_H + plotH + AXIS_H;
+  const zeroX = x(0);
+  const ticks = buildTicks(min, max);
+
+  // Lens order is fixed across rows so a colour never changes meaning.
+  const lensOrder: string[] = [];
+  for (const axis of drawable) {
+    for (const reading of axis.readings) {
+      if (!lensOrder.includes(reading.lens)) lensOrder.push(reading.lens);
+    }
+  }
+  const colorOf = (lens: string) => lensColor(lensOrder.indexOf(lens));
+
+  const spoken = drawable
+    .map((axis) => `${axis.label} ${axis.readings.map((r) => `${r.lens} ${r.kind === "band"
+      ? `${PERCENT.format(r.lowPct)}에서 ${PERCENT.format(r.highPct)}`
+      : PERCENT.format(r.lowPct)}`).join(", ")}`)
+    .join("; ");
+
+  return (
+    <div
+      className="mv-methodology"
+      style={{
+        // Validated categorical steps. Light L 0.43–0.77, chroma >= 0.1,
+        // CVD dE 27.9, contrast >= 3:1. The dark steps live in the stylesheet.
+        ["--mv-lens-1" as string]: "#1B73D3",
+        ["--mv-lens-2" as string]: "#c9821a",
+      }}
+    >
+      <svg
+        viewBox={`0 0 ${VIEW_W} ${height}`}
+        width="100%"
+        height={height}
+        role="img"
+        aria-label={`지수별 현재가 대비 업사이드. ${spoken}`}
+      >
+        {ticks.map((tick) => (
+          <g key={tick}>
+            <line
+              x1={x(tick)} x2={x(tick)} y1={HEAD_H - 4} y2={HEAD_H + plotH}
+              stroke="var(--c-line-2)" strokeWidth={1}
+            />
+            <text
+              x={x(tick)} y={height - 9} textAnchor="middle"
+              fontSize={10} fontWeight={700} fill="var(--c-ink-3)"
+            >
+              {PERCENT.format(tick)}
+            </text>
+          </g>
+        ))}
+
+        {/* The anchor rule. One line for every row: today's price is the shared
+            reference, not a per-row artefact. */}
+        <line
+          x1={zeroX} x2={zeroX} y1={HEAD_H - 10} y2={HEAD_H + plotH}
+          stroke="var(--c-ink-3)" strokeWidth={2}
+        />
+        <text
+          x={zeroX} y={HEAD_H - 14} textAnchor="middle"
+          fontSize={10} fontWeight={800} fill="var(--c-ink-2)"
+        >
+          오늘 가격
+        </text>
+
+        {drawable.map((axis, rowIndex) => {
+          const mid = HEAD_H + rowIndex * ROW_H + ROW_H / 2;
+          return (
+            <g key={axis.indexId}>
+              <text
+                x={LABEL_W - 10} y={mid + 3} textAnchor="end"
+                fontSize={11} fontWeight={800} fill="var(--c-ink)"
+              >
+                {axis.label}
+              </text>
+              <text
+                x={VIEW_W - 6} y={mid + 3} textAnchor="end"
+                fontSize={10} fontWeight={700} fill="var(--c-ink-3)"
+              >
+                {LEVEL.format(axis.anchorPrice)}
+              </text>
+              {axis.readings.map((reading) => (
+                <Mark key={reading.lens} reading={reading} x={x} mid={mid} color={colorOf(reading.lens)} />
+              ))}
+            </g>
+          );
+        })}
+      </svg>
+
+      <ul className="mv-methodology-legend">
+        {lensOrder.map((lens, index) => (
+          <li key={lens}>
+            <span className="mv-swatch" style={{ background: lensColor(index) }} aria-hidden="true" />
+            <strong>{lens}</strong>
+            <small>{horizonOf(drawable, lens)}</small>
+          </li>
+        ))}
+      </ul>
+
+      {/* The numbers in full, for anyone the figure does not serve. The column
+          heads carry the lens names: the legend sits above the figure, and a
+          table read on its own would otherwise be unlabelled numbers. */}
+      <table className="mv-methodology-table">
+        <thead>
+          <tr>
+            <th scope="col">지수</th>
+            {lensOrder.map((lens) => <th key={lens} scope="col">{lens}</th>)}
+            <th scope="col">기준일</th>
+          </tr>
+        </thead>
+        <tbody>
+          {drawable.map((axis) => (
+            <tr key={axis.indexId}>
+              <th scope="row">{axis.label}</th>
+              {lensOrder.map((lens) => {
+                const reading = axis.readings.find((r) => r.lens === lens);
+                return (
+                  <td key={lens}>
+                    {reading
+                      ? reading.kind === "band"
+                        ? `${PERCENT_1.format(reading.lowPct)} ~ ${PERCENT_1.format(reading.highPct)}`
+                        : PERCENT_1.format(reading.lowPct)
+                      : "—"}
+                  </td>
+                );
+              })}
+              <td className="mv-asof">{axis.anchorAsOf}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {withheldRows.map((row) => (
+        <p key={row.label} className="mv-withheld">
+          {row.label}: {row.reason}
+        </p>
+      ))}
+    </div>
+  );
+}
