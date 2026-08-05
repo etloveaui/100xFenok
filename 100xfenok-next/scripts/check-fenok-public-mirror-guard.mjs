@@ -15,12 +15,19 @@ export const FORBIDDEN_PATTERNS = [
   /^admin\/fenok-etf-core-daily-basket\.json$/,
   /^admin\/fenok-s0-finra-occ-mapping-ledger\.json$/,
   /^admin\/data-supply-detection-floor\.json$/,
-  // The canonical FENO RIM research record: every operand, the frozen
-  // calibration constants, and the fitted discount equation. Only the redacted
-  // projection built by build-fenok-rim-sustainable-public-projection.mjs may
-  // be published, so the raw artifact is forbidden here rather than left to a
-  // reviewer noticing a stray copy.
+  // The FENO RIM research records: every operand, the frozen calibration
+  // constants, and the fitted discount equation. Only the redacted projection
+  // built by build-fenok-rim-sustainable-public-projection.mjs may be
+  // published, so the raw artifacts are forbidden here rather than left to a
+  // reviewer noticing a stray copy. fair-values.json and payout-history.json
+  // are the two deliberately public ones and are not listed.
   /^computed\/fenok-rim\/sustainable-index-ranges\.json$/,
+  /^computed\/fenok-rim\/identification-receipt\.json$/,
+  /^computed\/fenok-rim\/input-diagnostics\.json$/,
+  /^computed\/fenok-rim\/index-residual-roe-diagnostic\.json$/,
+  /^computed\/fenok-rim\/membership-sensitivity-2026\.json$/,
+  /^computed\/fenok-rim\/russell2000-official-fundamentals\.json$/,
+  /^computed\/fenok-rim\/russell2000-history\//,
   /^computed\/fenok_signals\.json$/,
   /^computed\/fenok_etf_signals\.json$/,
   /^computed\/etf_action_index\.json$/,
@@ -48,6 +55,8 @@ export const FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS = [
   "computed/fenok_social_attention_proxy_history.json",
   "yf/etf-details",
   "yf/migration-evidence",
+  // Dated Russell factsheet captures, including the source PDFs.
+  "computed/fenok-rim/russell2000-history",
 ];
 
 const DETECTION_FLOOR_REPORT_RELATIVE_PATH = "admin/data-supply-detection-floor.json";

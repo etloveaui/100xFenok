@@ -10,6 +10,9 @@ const PRIVATE_DATA_SUPPLY_PUBLIC_ROOTS = Object.freeze([
   "public/data/admin/data-supply-state",
   "public/data/yf/etf-details",
   "public/data/yf/migration-evidence",
+  // Dated Russell factsheet captures, including the source PDFs. Evidence for
+  // the RIM research record, never a product surface.
+  "public/data/computed/fenok-rim/russell2000-history",
 ]);
 
 const STALE_PRIVATE_PUBLIC_FILE = "public/data/admin/data-supply-detection-floor.json";
@@ -464,6 +467,23 @@ function compactFenokEdgePublicMirror() {
 // pipeline against the importer's cwd. Executed only when run as the sync-static step.
 if (isMain) {
 removePrivateDataSupplyPublicTrees();
+// The FENO RIM research records. They carry every operand, the frozen
+// calibration constants, the fitted discount equation, and the source notes that
+// name where each constant came from. Only the redacted projection built by
+// build-fenok-rim-sustainable-public-projection.mjs, plus the two artifacts
+// deliberately committed under public/, are publishable. These five were
+// reaching the deployed site through the blanket computed/ copy, and no surface
+// reads any of them.
+for (const relativePath of [
+  "public/data/computed/fenok-rim/sustainable-index-ranges.json",
+  "public/data/computed/fenok-rim/identification-receipt.json",
+  "public/data/computed/fenok-rim/input-diagnostics.json",
+  "public/data/computed/fenok-rim/index-residual-roe-diagnostic.json",
+  "public/data/computed/fenok-rim/membership-sensitivity-2026.json",
+  "public/data/computed/fenok-rim/russell2000-official-fundamentals.json",
+]) {
+  removeGeneratedPublicMirror(relativePath);
+}
 removeGeneratedPublicMirror("public/data/computed/fenok_signals.json");
 removeGeneratedPublicMirror("public/data/computed/fenok_etf_signals.json");
 removeGeneratedPublicMirror("public/data/computed/etf_action_index.json");
