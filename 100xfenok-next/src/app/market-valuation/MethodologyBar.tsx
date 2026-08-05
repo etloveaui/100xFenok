@@ -89,9 +89,14 @@ function Mark({
     : PERCENT_1.format(reading.lowPct)} · 기준일 ${reading.asOf}`;
 
   if (reading.kind === "band") {
-    const x1 = x(reading.lowPct);
+    const rawX1 = x(reading.lowPct);
     const rawX2 = x(reading.highPct);
+    // Clamp BOTH ends. A row can sit entirely past the axis — KOSPI's band
+    // starts at +265% — and capping only the right end left it drawn as a
+    // one-pixel sliver off-canvas, i.e. an empty row. It now runs to the edge
+    // and the chevron beside it says the rest is off-axis.
     const x2 = clipAt === null ? rawX2 : Math.min(rawX2, clipAt);
+    const x1 = clipAt === null ? rawX1 : Math.min(rawX1, clipAt - 28);
     return (
       <g>
         <title>{title}</title>
