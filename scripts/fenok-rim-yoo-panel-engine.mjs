@@ -252,11 +252,11 @@ export const FROZEN_CALIBRATION = Object.freeze({
     SPX: "SPY", NDX: "QQQ", CCMP: "ONEQ", SOX: "SOXX", RUT: "IWM", KOSPI: "EWY",
   }),
   payout_multiplier: Object.freeze({
-    low: 1.375,
-    center: 1.627,
-    high: 1.881,
+    low: 1.3365,
+    center: 1.5865,
+    high: 1.8814,
     observations: 3,
-    derivation: "known payout / raw ETF ratio at SPX (Yoo's printed 31.09%), CCMP (his 2025-12-09 grid fit 21.64%) and RUT (LSEG official 23.72%)",
+    derivation: "known payout / raw tracker ratio at SPX (Yoo's printed 31.09%), CCMP (his 2025-12-09 grid fit 21.64%) and RUT (LSEG official 23.72%); the raw ratio is the reconstructed trailing distribution yield over the index's own forward earnings yield",
     swept: "the low and high multipliers are swept into the published endpoints so the calibration spread is visible rather than hidden",
   }),
   // Retained as the calibration truths and as a fallback when a tracker yield
@@ -327,8 +327,70 @@ export function forwardEarningsYield(root, id, asOf) {
  * multiplier band. Returns low/center/high so the calibration spread reaches
  * the published endpoints.
  */
+/**
+ * Trailing twelve-month distribution yield rebuilt from the tracker's own
+ * dividend record and its close on the date in question.
+ *
+ * A distribution, once paid, is a permanent fact: it is never revised. So this
+ * reconstructs a genuinely point-in-time yield for any past date, which a
+ * current snapshot cannot do. That is what makes a historical anchor scorable
+ * at all; reading today's snapshot back into an April anchor was the leak.
+ */
+export function reconstructTrailingYield(root, ticker, asOf) {
+  let payload;
+  try {
+    payload = readJson(root, `data/yf/finance/${ticker}.json`);
+  } catch {
+    return null;
+  }
+  const dividends = payload?.data?.dividends;
+  const history = payload?.data?.history_1y;
+  if (!dividends || !Array.isArray(history) || !history.length) return null;
+  const windowStart = new Date(Date.parse(`${asOf}T00:00:00Z`) - 365.2425 * 86400000).toISOString().slice(0, 10);
+  const paid = Object.entries(dividends)
+    .filter(([date]) => date > windowStart && date <= asOf)
+    .map(([, amount]) => amount)
+    .filter(Number.isFinite);
+  const priced = history.filter((row) => row.date <= asOf);
+  const close = priced.length ? priced[priced.length - 1] : null;
+  if (!paid.length || !close || !Number.isFinite(close.Close) || close.Close <= 0) return null;
+  return {
+    value: paid.reduce((a, b) => a + b, 0) / close.Close,
+    distributions: paid.length,
+    window_start: windowStart,
+    price_as_of: close.date,
+    price: close.Close,
+    // The close can only be as recent as the last fetch of this payload. A
+    // price older than the anchor is stale, never a look-ahead.
+    stale_price_days: Math.round((Date.parse(`${asOf}T00:00:00Z`) - Date.parse(`${close.date}T00:00:00Z`)) / 86400000),
+    source: `data/yf/finance/${ticker}.json#data.dividends over data.history_1y close`,
+  };
+}
+
 export function readTrackerPayout(root, id, asOf) {
   const ticker = FROZEN_CALIBRATION.etf_proxy[id];
+  const reconstructed = reconstructTrailingYield(root, ticker, asOf);
+  if (reconstructed) {
+    const earnings = forwardEarningsYield(root, id, asOf);
+    const raw = reconstructed.value / earnings.value;
+    const multiplier = FROZEN_CALIBRATION.payout_multiplier;
+    const band = { low: raw * multiplier.low, center: raw * multiplier.center, high: raw * multiplier.high };
+    if ([band.low, band.center, band.high].every((value) => Number.isFinite(value) && value > 0 && value < 1)) {
+      return {
+        ...band,
+        raw,
+        ticker,
+        as_of: reconstructed.price_as_of,
+        point_in_time: true,
+        distributions: reconstructed.distributions,
+        stale_price_days: reconstructed.stale_price_days,
+        earnings_yield: earnings.value,
+        earnings_basis: earnings.basis,
+        source: `${reconstructed.source}, times the frozen calibration multiplier`,
+        automatic: true,
+      };
+    }
+  }
   let facts;
   try {
     facts = readJson(root, `data/computed/market_facts/tickers/${ticker}.json`);
@@ -352,6 +414,7 @@ export function readTrackerPayout(root, id, asOf) {
     raw,
     ticker,
     as_of: yieldFact.as_of,
+    point_in_time: yieldFact.as_of <= asOf,
     earnings_yield: earnings.value,
     earnings_basis: earnings.basis,
     source: `data/computed/market_facts/tickers/${ticker}.json#facts.dividend_yield / ${earnings.basis}, times the frozen calibration multiplier`,

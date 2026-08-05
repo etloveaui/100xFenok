@@ -21,6 +21,7 @@ import {
   readTrackerPayout,
   runPublishedUpsideHoldout,
   runStructuralReproduction,
+  reconstructTrailingYield,
 } from "./fenok-rim-yoo-panel-engine.mjs";
 
 const AS_OF = "2026-08-04";
@@ -89,8 +90,24 @@ assert.equal(evaluated.length, 0, "no evaluation anchor may appear in the fit se
 assert.equal(holdout.feno.in_sample, 0);
 assert.equal(holdout.feno.total + holdout.feno.not_evaluable, holdout.rows.length,
   "every anchor must be either evaluated or explicitly not evaluable");
-assert.equal(holdout.feno.not_evaluable, 3, "three historical anchors currently lack point-in-time payout snapshots");
-assert.equal(holdout.feno.informative_not_evaluable, 1, "KOSPI's two-sided claim must not be scored on a later payout vintage");
+// Payout is rebuilt from the tracker's own distribution record, which is a
+// permanent fact, so any anchor whose tracker has a payload is evaluable at
+// its own date. Only a tracker with no payload at all can block a row; KOSPI's
+// EWY is the last one, and it resolves the first time the ETF lane fetches it.
+assert.ok(holdout.feno.not_evaluable <= 1, "only a tracker with no distribution record may block an anchor");
+for (const row of holdout.rows) {
+  if (row.point_in_time_evaluable) continue;
+  assert.equal(row.not_evaluable_reason, "payout_not_point_in_time");
+  assert.equal(reconstructTrailingYield(ENGINE_ROOT, FROZEN_CALIBRATION.etf_proxy[row.id], row.date), null,
+    `${row.id}@${row.date}: a row is only unevaluable when its tracker has no distribution record`);
+}
+// A reconstructed yield must never see past its own date.
+const early = reconstructTrailingYield(ENGINE_ROOT, "QQQ", "2026-04-18");
+const late = reconstructTrailingYield(ENGINE_ROOT, "QQQ", "2026-08-04");
+assert.ok(early && late, "QQQ must reconstruct at both dates");
+assert.ok(early.price_as_of <= "2026-04-18", "the price used must not post-date the anchor");
+assert.ok(early.window_start < "2026-04-18");
+assert.notEqual(early.value, late.value, "a point-in-time yield must move with its date");
 assert.ok(holdout.feno.informative_total >= 1, "at least one point-in-time two-sided claim must survive to evaluate the rule");
 assert.ok(
   fit.observations.every((row) => row.kind !== "inverted_from_published_upside_span"),

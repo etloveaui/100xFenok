@@ -55,8 +55,12 @@ assert.equal(
   holdout.feno.total,
   "the evaluation total must count only point-in-time rows outside the fit set",
 );
-assert.equal(holdout.feno.not_evaluable, 3);
-assert.equal(holdout.feno.informative_not_evaluable, 1);
+// Payout is rebuilt from each tracker's own distribution record, so an anchor
+// is only unevaluable when that tracker has no record at all. That is now KOSPI
+// alone, and it clears the first time the ETF lane fetches EWY.
+assert.ok(holdout.feno.not_evaluable <= 1, "only a tracker with no distribution record may block an anchor");
+assert.ok(holdout.feno.informative_not_evaluable <= 1);
+assert.ok(holdout.feno.informative_total >= 1, "at least one point-in-time two-sided claim must evaluate the rule");
 assert.ok(artifact.promotion.blockers.some((row) => row.id === "historical_holdout_not_point_in_time"),
   "a later-vintage historical holdout must block promotion rather than enter pass/fail totals");
 
