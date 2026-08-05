@@ -58,6 +58,7 @@ export const DERIVED_WRITER_RECOVERY_CONTRACTS = Object.freeze({
   "scripts/build-fenok-etf-core-daily-basket.mjs": "rebuild_from_inputs",
   "scripts/build-fenok-etf-signals.mjs": "rebuild_from_inputs",
   "scripts/build-fenok-flow-proxies.mjs": "rebuild_from_inputs",
+  "scripts/build-fenok-rim-index.mjs": "rebuild_from_inputs",
   "scripts/build-fenok-signal-lens-proxies.mjs": "rebuild_from_inputs",
   "scripts/build-fenok-signals.mjs": "rebuild_from_inputs",
   "scripts/build-market-facts.py": "rebuild_from_inputs",
@@ -105,6 +106,7 @@ const KRX_DAILY = cadence("market_weekdays", 1, true, ".github/workflows/fenok-e
 const NEWS_DAILY = cadence("daily", 1, true, ".github/workflows/fetch-fenok-news-tone.yml");
 const SOCIAL_DAILY = cadence("daily", 1, true, ".github/workflows/fetch-fenok-apewisdom.yml");
 const OPTIONS_DAILY = cadence("market_weekdays", 1, true, ".github/workflows/fetch-fenok-private-options.yml");
+const STOCKS_ANALYZER_DAILY = cadence("daily", 1, true, ".github/workflows/build-stocks-analyzer.yml");
 const BUILD_TIME = cadence("build_time", 0, true, "100xfenok-next/package.json");
 const ORPHANED = cadence("orphaned", 0, false, null);
 
@@ -624,6 +626,29 @@ const assets = [
     cadence: TWICE_DAILY,
     privacy_class: "public_mirror",
     public_outputs: [output("100xfenok-next/public/data/computed/market_facts", "directory")],
+    retention: SNAPSHOT,
+    recovery: "rebuild_from_inputs",
+  }),
+  asset({
+    id: "fenok_rim",
+    label: "Fenok RIM research and public projections",
+    outputs: [output("data/computed/fenok-rim", "directory")],
+    owner_workflow: ".github/workflows/build-stocks-analyzer.yml",
+    writer: "scripts/build-fenok-rim-index.mjs",
+    inputs: [
+      lane("fred_macro"),
+      lane("krx"),
+      lane("nasdaq_giw_sox"),
+      lane("yahoo_batch_quote_history"),
+      derived("market_facts"),
+    ],
+    cadence: STOCKS_ANALYZER_DAILY,
+    privacy_class: "public_mirror",
+    public_outputs: [
+      output("100xfenok-next/public/data/computed/fenok-rim/fair-values.json"),
+      output("100xfenok-next/public/data/computed/fenok-rim/payout-history.json"),
+      output("100xfenok-next/public/data/computed/fenok-rim/sustainable-index-ranges.public.json"),
+    ],
     retention: SNAPSHOT,
     recovery: "rebuild_from_inputs",
   }),

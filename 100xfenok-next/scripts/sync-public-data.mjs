@@ -23,6 +23,7 @@ import {
   stockanalysisEtfSourceBindingSha256,
   stockanalysisEtfTickerKey,
 } from "../src/lib/stockanalysis-etf-shard.mjs";
+import { DERIVED_ASSET_REGISTRY } from "../../scripts/lib/derived-asset-registry.mjs";
 import { deriveExcludedPublicDataRoots } from "../../scripts/lib/lane-routing.mjs";
 
 // Registry-derived #366 privacy boundary. A newly registered private admin
@@ -45,6 +46,43 @@ export const EXCLUDED_PUBLIC_DATA_FILES = Object.freeze([
   "computed/fenok_social_attention_proxy.json",
   "computed/fenok_social_attention_proxy_history.json",
 ]);
+
+const CANONICAL_DATA_PREFIX = "data/";
+const PUBLIC_DATA_PREFIX = "100xfenok-next/public/data/";
+
+// A directory-shaped derived asset may expose either its whole directory or a
+// reviewed set of files. The latter is a fail-closed allowlist: adding another
+// canonical child does not publish it until the registry explicitly names it.
+export function deriveRestrictedDerivedPublicDataRoots(registry = DERIVED_ASSET_REGISTRY) {
+  const policies = [];
+  for (const asset of registry.assets) {
+    for (const output of asset.outputs) {
+      if (output.kind !== "directory" || !output.path.startsWith(CANONICAL_DATA_PREFIX)) continue;
+      const relativeRoot = output.path.slice(CANONICAL_DATA_PREFIX.length);
+      const publicSpecs = asset.public_outputs
+        .filter((spec) => spec.path.startsWith(PUBLIC_DATA_PREFIX))
+        .map((spec) => ({ ...spec, relativePath: spec.path.slice(PUBLIC_DATA_PREFIX.length) }))
+        .filter((spec) => spec.relativePath === relativeRoot || spec.relativePath.startsWith(`${relativeRoot}/`));
+      if (publicSpecs.some((spec) => spec.kind === "directory" && spec.relativePath === relativeRoot)) continue;
+      policies.push({
+        assetId: asset.id,
+        relativeRoot,
+        allowedFiles: publicSpecs
+          .filter((spec) => spec.kind === "file")
+          .map((spec) => spec.relativePath)
+          .sort(),
+      });
+    }
+  }
+  return policies.sort((left, right) => left.relativeRoot.localeCompare(right.relativeRoot));
+}
+
+export const RESTRICTED_DERIVED_PUBLIC_DATA_ROOTS = Object.freeze(
+  deriveRestrictedDerivedPublicDataRoots().map((policy) => Object.freeze({
+    ...policy,
+    allowedFiles: Object.freeze([...policy.allowedFiles]),
+  })),
+);
 
 const MARKET_FACTS_TICKER_ROOT = "computed/market_facts/tickers";
 const MARKET_FACTS_SHARD_ROOT = "computed/market_facts/shards";
@@ -159,11 +197,28 @@ function isTransformedRoot(relativePath) {
   return normalizedRelative(relativePath) === MARKET_FACTS_TICKER_ROOT;
 }
 
+function restrictedDerivedDisposition(relativePath, isDirectory) {
+  const normalized = normalizedRelative(relativePath);
+  for (const policy of RESTRICTED_DERIVED_PUBLIC_DATA_ROOTS) {
+    if (normalized !== policy.relativeRoot && !normalized.startsWith(`${policy.relativeRoot}/`)) continue;
+    if (normalized === policy.relativeRoot) return isDirectory ? "traverse" : "reject";
+    if (isDirectory) {
+      return policy.allowedFiles.some((allowed) => allowed.startsWith(`${normalized}/`))
+        ? "traverse"
+        : "reject";
+    }
+    return policy.allowedFiles.includes(normalized) ? "allow" : "reject";
+  }
+  return "unrestricted";
+}
+
 function collectSourceFiles(sourceRoot, sourceRootBinding) {
   const files = [];
   const directories = [];
   let excludedSourceRoots = 0;
   const excludedSourceFilePaths = [];
+  const restrictedSourceRootPaths = [];
+  const restrictedSourceFilePaths = [];
   const transformedSourceRoots = [];
   let marketFactsRootSeen = false;
   let stockanalysisEtfRootSeen = false;
@@ -175,6 +230,13 @@ function collectSourceFiles(sourceRoot, sourceRootBinding) {
       const stat = fs.lstatSync(absolutePath);
       if (stat.isSymbolicLink()) {
         throw new Error(`source public-data path is a symlink: ${absolutePath}`);
+      }
+      const restrictedDisposition = restrictedDerivedDisposition(relativePath, stat.isDirectory());
+      if (restrictedDisposition === "reject") {
+        if (stat.isDirectory()) restrictedSourceRootPaths.push(relativePath);
+        else if (stat.isFile()) restrictedSourceFilePaths.push(relativePath);
+        else throw new Error(`restricted derived source path is not a regular file or directory: ${absolutePath}`);
+        continue;
       }
       if (relativePath === MARKET_FACTS_ROOT) {
         if (!stat.isDirectory()) {
@@ -244,6 +306,10 @@ function collectSourceFiles(sourceRoot, sourceRootBinding) {
     excludedSourceRoots,
     excludedSourceFiles: excludedSourceFilePaths.length,
     excludedSourceFilePaths,
+    restrictedSourceRoots: restrictedSourceRootPaths.length,
+    restrictedSourceRootPaths,
+    restrictedSourceFiles: restrictedSourceFilePaths.length,
+    restrictedSourceFilePaths,
     transformedSourceRoots,
     marketFactsRootSeen,
     stockanalysisEtfRootSeen,
@@ -599,7 +665,44 @@ function collectDestinationRemovalPlan(destinationRoot, transformedRelativeRoots
     exactFiles.push({ relativePath, filePath: target });
   }
 
-  return { roots, transformedRoots, exactFiles, bindings };
+  const restrictedRoots = [];
+  const restrictedExactFiles = [];
+  function visitRestrictedDirectory(directory, relativeDirectory) {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const entryPath = path.join(directory, entry.name);
+      const relativePath = normalizedRelative(path.posix.join(relativeDirectory, entry.name));
+      const stat = capture(entryPath, "destination restricted derived node");
+      if (!stat) throw new Error(`destination removal identity drift during preflight: ${entryPath}`);
+      if (stat.isSymbolicLink()) throw new Error(`destination restricted derived tree contains a symlink: ${entryPath}`);
+      const disposition = restrictedDerivedDisposition(relativePath, stat.isDirectory());
+      if (disposition === "traverse") {
+        if (!stat.isDirectory()) throw new Error(`destination restricted derived parent is not a directory: ${entryPath}`);
+        visitRestrictedDirectory(entryPath, relativePath);
+      } else if (disposition === "allow") {
+        if (!stat.isFile()) throw new Error(`destination allowlisted derived output is not a regular file: ${entryPath}`);
+      } else if (stat.isDirectory()) {
+        const files = [];
+        const directories = [];
+        collectRemovalTree(entryPath, stat, files, directories, capture);
+        restrictedRoots.push({ relativeRoot: relativePath, files, directories });
+      } else if (stat.isFile()) {
+        restrictedExactFiles.push({ relativePath, filePath: entryPath });
+      } else {
+        throw new Error(`destination restricted derived tree contains a special file: ${entryPath}`);
+      }
+    }
+  }
+  for (const policy of RESTRICTED_DERIVED_PUBLIC_DATA_ROOTS) {
+    const target = path.join(destinationRoot, ...policy.relativeRoot.split("/"));
+    const stat = capture(target, "destination restricted derived root");
+    if (!stat) continue;
+    if (stat.isSymbolicLink() || !stat.isDirectory()) {
+      throw new Error(`destination restricted derived root must be a real directory: ${target}`);
+    }
+    visitRestrictedDirectory(target, policy.relativeRoot);
+  }
+
+  return { roots, transformedRoots, exactFiles, restrictedRoots, restrictedExactFiles, bindings };
 }
 
 function revalidateDestinationRemovalPlan(bindings) {
@@ -897,9 +1000,15 @@ export function planPublicDataSync({ sourceRoot, destinationRoot }) {
     excludedSourceRoots: sourcePlan.excludedSourceRoots,
     excludedSourceFiles: sourcePlan.excludedSourceFiles,
     excludedSourceFilePaths: sourcePlan.excludedSourceFilePaths,
+    restrictedSourceRoots: sourcePlan.restrictedSourceRoots,
+    restrictedSourceRootPaths: sourcePlan.restrictedSourceRootPaths,
+    restrictedSourceFiles: sourcePlan.restrictedSourceFiles,
+    restrictedSourceFilePaths: sourcePlan.restrictedSourceFilePaths,
     removals: removalPlan.roots,
     transformedRemovals: removalPlan.transformedRoots,
     exactRemovals: removalPlan.exactFiles,
+    restrictedRemovals: removalPlan.restrictedRoots,
+    restrictedExactRemovals: removalPlan.restrictedExactFiles,
     removalBindings: removalPlan.bindings,
     sourceBindings: [
       sourceRootBinding,
@@ -931,10 +1040,21 @@ export function syncPublicData({
     excludedSourceRoots: plan.excludedSourceRoots,
     excludedSourceFiles: plan.excludedSourceFiles,
     excludedSourceFilePaths: [...plan.excludedSourceFilePaths],
+    restrictedSourceRoots: plan.restrictedSourceRoots,
+    restrictedSourceRootPaths: [...plan.restrictedSourceRootPaths],
+    restrictedSourceFiles: plan.restrictedSourceFiles,
+    restrictedSourceFilePaths: [...plan.restrictedSourceFilePaths],
     removedDestinationRoots: plan.removals.length,
     removedDestinationFiles: plan.removals.reduce((sum, item) => sum + item.files.length, 0),
     removedDestinationExactFiles: plan.exactRemovals.length,
     removedDestinationExactFilePaths: plan.exactRemovals.map((item) => item.relativePath),
+    removedRestrictedDestinationRoots: plan.restrictedRemovals.length,
+    removedRestrictedDestinationFiles: plan.restrictedRemovals.reduce((sum, item) => sum + item.files.length, 0),
+    removedRestrictedDestinationExactFiles: plan.restrictedExactRemovals.length,
+    removedRestrictedDestinationPaths: [
+      ...plan.restrictedRemovals.map((item) => item.relativeRoot),
+      ...plan.restrictedExactRemovals.map((item) => item.relativePath),
+    ],
     marketFactsTickerFiles: plan.marketFactsProjection?.tickerFiles ?? 0,
     marketFactsShardFiles: plan.marketFactsProjection?.shardFiles.length ?? 0,
     marketFactsShardBytes: plan.marketFactsProjection?.bytes ?? 0,
@@ -953,6 +1073,7 @@ export function syncPublicData({
     removedDestinationRoots: plan.removals.map((item) => item.relativeRoot),
     removedTransformedDestinationRoots: plan.transformedRemovals.map((item) => item.relativeRoot),
     removedDestinationExactFilePaths: [...result.removedDestinationExactFilePaths],
+    removedRestrictedDestinationPaths: [...result.removedRestrictedDestinationPaths],
   }));
   revalidateSourceBindings(plan.sourceBindings, "after beforeMutation");
   revalidateDestinationRemovalPlan(plan.removalBindings);
@@ -962,8 +1083,10 @@ export function syncPublicData({
   );
   fs.mkdirSync(plan.destinationRoot, { recursive: true });
   removeDestinationExactFiles(plan.exactRemovals, removalBindingByPath);
+  removeDestinationExactFiles(plan.restrictedExactRemovals, removalBindingByPath);
   removeDestinationRoots(plan.removals, removalBindingByPath);
   removeDestinationRoots(plan.transformedRemovals, removalBindingByPath);
+  removeDestinationRoots(plan.restrictedRemovals, removalBindingByPath);
   for (const relativeDirectory of plan.directories) {
     fs.mkdirSync(path.join(plan.destinationRoot, ...relativeDirectory.split("/")), { recursive: true });
   }
@@ -984,7 +1107,7 @@ export function syncPublicData({
     fs.writeFileSync(target, item.body);
   }
   publishStockanalysisEtfShardProjection(plan.destinationRoot, plan.stockanalysisEtfProjection);
-  logger(`[sync-public-data] copied ${result.filesCopied} files (${result.bytesCopied} bytes); sharded ${result.marketFactsTickerFiles} market-facts tickers into ${result.marketFactsShardFiles} files (${result.marketFactsShardBytes} bytes) and ${result.stockanalysisEtfTickerFiles} StockAnalysis ETF tickers into ${result.stockanalysisEtfShardFiles} files plus ${result.stockanalysisEtfManifestFiles} manifest; excluded ${result.excludedSourceRoots} private roots; removed ${result.removedDestinationRoots} stale private roots; excluded ${result.excludedSourceFiles} exact files; removed ${result.removedDestinationExactFiles} stale exact files`);
+  logger(`[sync-public-data] copied ${result.filesCopied} files (${result.bytesCopied} bytes); sharded ${result.marketFactsTickerFiles} market-facts tickers into ${result.marketFactsShardFiles} files (${result.marketFactsShardBytes} bytes) and ${result.stockanalysisEtfTickerFiles} StockAnalysis ETF tickers into ${result.stockanalysisEtfShardFiles} files plus ${result.stockanalysisEtfManifestFiles} manifest; excluded ${result.excludedSourceRoots} private roots; removed ${result.removedDestinationRoots} stale private roots; excluded ${result.excludedSourceFiles} exact files; removed ${result.removedDestinationExactFiles} stale exact files; restricted ${result.restrictedSourceFiles} derived files and ${result.restrictedSourceRoots} derived roots; removed ${result.removedRestrictedDestinationExactFiles} stale restricted files and ${result.removedRestrictedDestinationRoots} stale restricted roots`);
   return result;
 }
 

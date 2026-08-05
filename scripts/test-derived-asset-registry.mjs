@@ -41,12 +41,45 @@ function clone(value) {
 
 {
   assert.equal(validateDerivedAssetRegistry(DERIVED_ASSET_REGISTRY), true);
-  assert.equal(DERIVED_ASSET_REGISTRY.assets.length, 31, "31 logical derived assets are declared");
+  assert.equal(DERIVED_ASSET_REGISTRY.assets.length, 32, "32 logical derived assets are declared");
   assert.equal(
     DERIVED_ASSET_REGISTRY.assets.flatMap((asset) => asset.outputs).length,
-    35,
-    "all 32 top-level files and three recursive directories are declared exactly once",
+    36,
+    "all 32 top-level files and four recursive directories are declared exactly once",
   );
+  const fenokRim = derivedAssetById("fenok_rim");
+  assert.deepEqual(
+    fenokRim.outputs,
+    [{ path: "data/computed/fenok-rim", kind: "directory" }],
+    "the Fenok RIM directory must have one registry owner",
+  );
+  assert.equal(fenokRim.privacy_class, "public_mirror");
+  assert.equal(fenokRim.public_serving_status, "active");
+  assert.equal(fenokRim.recovery, "rebuild_from_inputs");
+  assert.deepEqual(
+    fenokRim.public_outputs,
+    [
+      { path: "100xfenok-next/public/data/computed/fenok-rim/fair-values.json", kind: "file" },
+      { path: "100xfenok-next/public/data/computed/fenok-rim/payout-history.json", kind: "file" },
+      { path: "100xfenok-next/public/data/computed/fenok-rim/sustainable-index-ranges.public.json", kind: "file" },
+    ],
+    "only the three reviewed Fenok RIM files are public",
+  );
+  for (const rawName of [
+    "sustainable-index-ranges.json",
+    "identification-receipt.json",
+    "input-diagnostics.json",
+    "index-residual-roe-diagnostic.json",
+    "membership-sensitivity-2026.json",
+    "russell2000-official-fundamentals.json",
+    "russell2000-history",
+  ]) {
+    assert.equal(
+      fenokRim.public_outputs.some((spec) => spec.path.includes(rawName)),
+      false,
+      `private Fenok RIM research output must not be public: ${rawName}`,
+    );
+  }
   assert.equal(derivedAssetById("taiwan_data_bridge_index").lifecycle, "orphaned");
   assert.equal(derivedAssetById("taiwan_data_bridge_index").writer, null);
   for (const id of ["fenok_flow_proxies_history", "fenok_signal_lens_proxies_history"]) {

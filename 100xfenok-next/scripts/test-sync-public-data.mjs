@@ -10,6 +10,8 @@ import { fileURLToPath } from "node:url";
 import {
   EXCLUDED_PUBLIC_DATA_FILES,
   EXCLUDED_PUBLIC_DATA_ROOTS,
+  RESTRICTED_DERIVED_PUBLIC_DATA_ROOTS,
+  deriveRestrictedDerivedPublicDataRoots,
   syncPublicData,
   syncStockanalysisEtfShardProjection,
 } from "./sync-public-data.mjs";
@@ -73,6 +75,24 @@ import { FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS } from "./check-fenok-public-mirror
     assert.equal(derived.includes("yf/etf-details"), true,
       "the private Yahoo ETF detail namespace must remain withheld");
   }
+  assert.deepEqual(
+    deriveRestrictedDerivedPublicDataRoots(),
+    [{
+      assetId: "fenok_rim",
+      relativeRoot: "computed/fenok-rim",
+      allowedFiles: [
+        "computed/fenok-rim/fair-values.json",
+        "computed/fenok-rim/payout-history.json",
+        "computed/fenok-rim/sustainable-index-ranges.public.json",
+      ],
+    }],
+    "derived directory allowlists must come from the derived-asset registry",
+  );
+  assert.deepEqual(
+    RESTRICTED_DERIVED_PUBLIC_DATA_ROOTS,
+    deriveRestrictedDerivedPublicDataRoots(),
+    "the active restricted-root policy must equal its registry derivation",
+  );
 
   // materialize.py coverage: every derived private root must be covered by the
   // Python private-token lists (either path form) — the third consumer of the
@@ -280,6 +300,93 @@ function makeSyncCase(parentRoot, label) {
   write(destinationRoot, "admin/safe-sibling.json", '{"sibling":true}\n');
   seedPrivateRoots(sourceRoot, destinationRoot);
   return { root, sourceRoot, destinationRoot };
+}
+
+function assertFenokRimRestrictedProjection(parentRoot) {
+  const root = fs.mkdtempSync(path.join(parentRoot, "fenok-rim-restricted-"));
+  const sourceRoot = path.join(root, "data");
+  const destinationRoot = path.join(root, "100xfenok-next", "public", "data");
+  const allowed = new Map([
+    ["computed/fenok-rim/fair-values.json", '{"public":"fair-values"}\n'],
+    ["computed/fenok-rim/payout-history.json", '{"public":"payout-history"}\n'],
+    ["computed/fenok-rim/sustainable-index-ranges.public.json", '{"public":"redacted-range"}\n'],
+  ]);
+  const privateFiles = [
+    "computed/fenok-rim/sustainable-index-ranges.json",
+    "computed/fenok-rim/identification-receipt.json",
+    "computed/fenok-rim/input-diagnostics.json",
+    "computed/fenok-rim/index-residual-roe-diagnostic.json",
+    "computed/fenok-rim/membership-sensitivity-2026.json",
+    "computed/fenok-rim/russell2000-official-fundamentals.json",
+    "computed/fenok-rim/new-secret.json",
+  ];
+  const privateRoot = "computed/fenok-rim/russell2000-history";
+  for (const [relativePath, body] of allowed) {
+    write(sourceRoot, relativePath, body);
+    write(destinationRoot, relativePath, '{"stale":true}\n');
+  }
+  for (const relativePath of privateFiles) {
+    write(sourceRoot, relativePath, '{"secret":true}\n');
+    write(destinationRoot, relativePath, '{"stale-secret":true}\n');
+  }
+  write(sourceRoot, `${privateRoot}/latest.json`, '{"secret":true}\n');
+  write(sourceRoot, `${privateRoot}/factsheet.pdf`, "%PDF-private\n");
+  write(destinationRoot, `${privateRoot}/latest.json`, '{"stale-secret":true}\n');
+  write(destinationRoot, `${privateRoot}/factsheet.pdf`, "%PDF-stale-private\n");
+
+  const sourceBefore = snapshotNode(sourceRoot);
+  const destinationBefore = snapshotNode(destinationRoot);
+  const rehearsal = syncPublicData({ sourceRoot, destinationRoot, dryRun: true, logger: () => {} });
+  assert.equal(rehearsal.filesCopied, 3, "only the three registry-allowlisted RIM files may copy");
+  assert.deepEqual([...rehearsal.restrictedSourceFilePaths].sort(), [...privateFiles].sort());
+  assert.deepEqual(rehearsal.restrictedSourceRootPaths, [privateRoot]);
+  assert.equal(rehearsal.removedRestrictedDestinationExactFiles, privateFiles.length);
+  assert.equal(rehearsal.removedRestrictedDestinationRoots, 1);
+  assert.deepEqual(
+    [...rehearsal.removedRestrictedDestinationPaths].sort(),
+    [...privateFiles, privateRoot].sort(),
+  );
+  assert.deepEqual(snapshotNode(sourceRoot), sourceBefore, "restricted dry-run must not mutate canonical data");
+  assert.deepEqual(snapshotNode(destinationRoot), destinationBefore, "restricted dry-run must not mutate public data");
+
+  const result = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
+  assert.equal(result.filesCopied, 3);
+  for (const [relativePath, body] of allowed) {
+    assert.equal(fs.readFileSync(path.join(destinationRoot, relativePath), "utf8"), body);
+  }
+  for (const relativePath of [...privateFiles, privateRoot]) {
+    assert.equal(fs.existsSync(path.join(destinationRoot, relativePath)), false, `private RIM path survived: ${relativePath}`);
+  }
+  const firstWrite = snapshotNode(destinationRoot);
+  const rerun = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
+  assert.equal(rerun.removedRestrictedDestinationExactFiles, 0);
+  assert.equal(rerun.removedRestrictedDestinationRoots, 0);
+  assert.deepEqual(snapshotNode(destinationRoot), firstWrite, "restricted sync must be byte-idempotent");
+
+  const outside = write(root, "outside.json", "outside\n");
+  fs.symlinkSync(outside, path.join(destinationRoot, "computed/fenok-rim/new-link.json"));
+  assert.throws(
+    () => syncPublicData({ sourceRoot, destinationRoot, logger: () => {} }),
+    /restricted derived tree contains a symlink/i,
+  );
+  fs.unlinkSync(path.join(destinationRoot, "computed/fenok-rim/new-link.json"));
+
+  const drifting = write(destinationRoot, privateFiles[0], '{"stale-secret":true}\n');
+  const publicBeforeDrift = new Map(
+    [...allowed.keys()].map((relativePath) => [relativePath, fs.readFileSync(path.join(destinationRoot, relativePath), "utf8")]),
+  );
+  assert.throws(
+    () => syncPublicData({
+      sourceRoot,
+      destinationRoot,
+      logger: () => {},
+      beforeMutation: () => fs.appendFileSync(drifting, " "),
+    }),
+    /identity drift/i,
+  );
+  for (const [relativePath, body] of publicBeforeDrift) {
+    assert.equal(fs.readFileSync(path.join(destinationRoot, relativePath), "utf8"), body);
+  }
 }
 
 async function assertMarketFactsShardProjection(parentRoot) {
@@ -972,6 +1079,7 @@ try {
   assertMissingCanonicalTickerSourceFailsClosed(fixtureRoot);
   assertOrphanedDestinationProjectionFailsClosed(fixtureRoot);
   assertMarketFactsSourceDriftFailsBeforeMutation(fixtureRoot);
+  assertFenokRimRestrictedProjection(fixtureRoot);
   await assertMarketFactsShardProjection(fixtureRoot);
   assertStockanalysisEtfShardProjection(fixtureRoot);
   await assertStockanalysisEtfShardPublicGuard(fixtureRoot);
