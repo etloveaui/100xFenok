@@ -106,7 +106,15 @@ assert.equal(holdout.feno.total + holdout.feno.not_evaluable, holdout.rows.lengt
 // permanent fact, so any anchor whose tracker has a payload is evaluable at
 // its own date. Only a tracker with no payload at all can block a row; KOSPI's
 // EWY is the last one, and it resolves the first time the ETF lane fetches it.
-assert.ok(holdout.feno.not_evaluable <= 1, "only a tracker with no distribution record may block an anchor");
+assert.equal(holdout.feno.not_evaluable, 0, "every anchor must be evaluable now that all six trackers are collected");
+// His claims are denominated in six-to-twelve months; the score must compare
+// at that horizon, not against the multi-year band.
+assert.ok(holdout.scored_at.includes("twelve-month"), "the holdout must declare the horizon it scores at");
+for (const row of holdout.rows) {
+  assert.ok(row.feno.expected_12m, `${row.id}@${row.date}: the scored quantity must be reported`);
+  const high = row.feno.expected_12m.high;
+  if (row.kind === "floor") assert.equal(row.feno.passed, high >= row.low, `${row.id}: floor must score at the horizon`);
+}
 for (const row of holdout.rows) {
   if (row.point_in_time_evaluable) continue;
   assert.equal(row.not_evaluable_reason, "payout_not_point_in_time");

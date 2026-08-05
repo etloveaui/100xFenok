@@ -1052,16 +1052,27 @@ export function runPublishedUpsideHoldout(root = ROOT) {
     { evidence_id: "rim-694e999c6f76b4d205ede3c2", date: "2026-07-12", id: "CCMP", kind: "floor", low: 0.24 },
     { evidence_id: "rim-7041d3d1604bd6d9b5683c04", date: "2026-06-14", id: "KOSPI", kind: "point", low: 0.495, high: 0.495 },
   ];
-  const score = (band, anchor) => (anchor.kind === "floor"
-    ? band.upside.high >= anchor.low
-    : band.upside.high >= anchor.low && band.upside.low <= anchor.high);
+  // His claims are denominated in six-to-twelve months. Ours is a fair-value
+  // band that the backtest says takes about three years to arrive. Scoring one
+  // against the other is the same unit error that made the model look 35
+  // points optimistic, so the comparison happens at his horizon.
+  const score = (band, anchor) => {
+    const low = twelveMonthExpectation(band.upside.low);
+    const high = twelveMonthExpectation(band.upside.high);
+    return anchor.kind === "floor" ? high >= anchor.low : high >= anchor.low && low <= anchor.high;
+  };
   const fitIds = new Set(LT_ROE_FIT_ANCHOR_IDS);
   const rows = anchors.map((anchor) => {
     const row = buildPanelIndexRow(root, anchor.id, { asOf: anchor.date });
     const pointInTimeEvaluable = row.inputs.payout_point_in_time === true;
     return {
       ...anchor,
-      feno: { upside: row.feno.upside, convexity: row.feno.convexity.status, passed: pointInTimeEvaluable ? score(row.feno, anchor) : null },
+      feno: {
+        upside: row.feno.upside,
+        expected_12m: row.feno.expected_12m,
+        convexity: row.feno.convexity.status,
+        passed: pointInTimeEvaluable ? score(row.feno, anchor) : null,
+      },
       measured_growth_diagnostic: { upside: row.measured_growth_diagnostic.upside, convexity: row.measured_growth_diagnostic.convexity.status, passed: pointInTimeEvaluable ? score(row.measured_growth_diagnostic, anchor) : null },
       informative: anchor.kind !== "floor",
       used_for_fitting: fitIds.has(`${anchor.id}@${anchor.date}`),
