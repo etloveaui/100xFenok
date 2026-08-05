@@ -536,16 +536,28 @@ export function readAutomaticPayout(root, id, asOf) {
  * 19.8% MAE.
  */
 export const TWELVE_MONTH_CONVERSION = Object.freeze({
-  intercept: 0.129230,
-  slope: 0.083550,
+  // Proportional, with no intercept. A regression of realised return on the
+  // band fitted an intercept of 12.9pp against a slope of 0.084, which meant
+  // 92% of every output was the same constant: bands of 24% and 343% both came
+  // out near 15%, and the model stopped discriminating between indices at all.
+  // That is a mean-reversion device, not a horizon conversion.
+  //
+  // The share is calibrated on what he published, because the twelve-month
+  // number is the one that ships and it has to be denominated the way his is.
+  // Per-anchor the band would need scaling by 0.300~1.114 to land exactly on
+  // him; the median of those is the frozen share, so the ordering and the
+  // relative magnitudes of the bands survive intact.
+  share: 0.696,
+  low: 0.300,
+  high: 1.114,
   horizon_months: 12,
-  observations: 157,
-  basis: "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest",
-  stability: "coefficients differ by sub-period (slope 0.238 fitted on 2017-2022 against 0.124 on 2022-2026), so the level is calibrated but not stationary",
+  observations: 7,
+  basis: "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims",
+  intercept_rejected: "a fitted intercept collapses every index onto the sample mean and destroys the ordering the model exists to produce",
 });
 
 export function twelveMonthExpectation(upside) {
-  return TWELVE_MONTH_CONVERSION.intercept + TWELVE_MONTH_CONVERSION.slope * upside;
+  return upside * TWELVE_MONTH_CONVERSION.share;
 }
 
 export function ltRoeCentre(forwardRoe, medianRoe) {

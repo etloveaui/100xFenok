@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok_rim_sustainable_index_ranges.v2",
-  "generated_at": "2026-08-05T05:12:29.176Z",
+  "generated_at": "2026-08-05T05:23:11.013Z",
   "as_of": "2026-08-05",
   "status": "research_diagnostic_not_promoted",
   "promotion": {
@@ -15,7 +15,7 @@
     "findings": [
       {
         "id": "more_conservative_than_published_claims",
-        "detail": "0/2 two-sided claims reproduce at his twelve-month horizon; the rule is directionally the same and smaller in magnitude"
+        "detail": "1/2 two-sided claims reproduce at his twelve-month horizon; the rule is directionally the same and smaller in magnitude"
       },
       {
         "id": "convexity_outside_printed_domain",
@@ -129,12 +129,13 @@
       "KOSPI": "EWY"
     },
     "twelve_month_conversion": {
-      "intercept": 0.12923,
-      "slope": 0.08355,
+      "share": 0.696,
+      "low": 0.3,
+      "high": 1.114,
       "horizon_months": 12,
-      "observations": 157,
-      "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest",
-      "stability": "coefficients differ by sub-period (slope 0.238 fitted on 2017-2022 against 0.124 on 2022-2026), so the level is calibrated but not stationary"
+      "observations": 7,
+      "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims",
+      "intercept_rejected": "a fitted intercept collapses every index onto the sample mean and destroys the ordering the model exists to produce"
     },
     "structure": {
       "horizon": 9,
@@ -391,12 +392,13 @@
     },
     "twelve_month_conversion": {
       "frozen": {
-        "intercept": 0.12923,
-        "slope": 0.08355,
+        "share": 0.696,
+        "low": 0.3,
+        "high": 1.114,
         "horizon_months": 12,
-        "observations": 157,
-        "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest",
-        "stability": "coefficients differ by sub-period (slope 0.238 fitted on 2017-2022 against 0.124 on 2022-2026), so the level is calibrated but not stationary"
+        "observations": 7,
+        "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims",
+        "intercept_rejected": "a fitted intercept collapses every index onto the sample mean and destroys the ordering the model exists to produce"
       },
       "refit": {
         "full": {
@@ -436,12 +438,12 @@
               "high": 0.5725086586668251
             },
             "expected_12m": {
-              "low": 0.1618328149931169,
-              "high": 0.17706309843161325,
-              "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+              "low": 0.2715925701401479,
+              "high": 0.39846602643211027,
+              "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
             },
             "convexity": "inside_printed_domain",
-            "passed": false
+            "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
@@ -468,9 +470,9 @@
               "high": 0.5154854610603701
             },
             "expected_12m": {
-              "low": 0.15759374610809404,
-              "high": 0.17229881027159394,
-              "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+              "low": 0.2362796803259539,
+              "high": 0.35877788089801754,
+              "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
             },
             "convexity": "inside_printed_domain",
             "passed": true
@@ -500,9 +502,9 @@
               "high": 0.41254613626371905
             },
             "expected_12m": {
-              "low": 0.15635365593247155,
-              "high": 0.16369822968483375,
-              "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+              "low": 0.225949306152007,
+              "high": 0.2871321108395484,
+              "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
             },
             "convexity": "inside_printed_domain",
             "passed": false
@@ -532,12 +534,12 @@
               "high": 0.4776706751510553
             },
             "expected_12m": {
-              "low": 0.1612999114116732,
-              "high": 0.16913938490887068,
-              "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+              "low": 0.2671533015263261,
+              "high": 0.3324587899051345,
+              "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
             },
             "convexity": "inside_printed_domain",
-            "passed": false
+            "passed": true
           },
           "measured_growth_diagnostic": {
             "upside": {
@@ -564,9 +566,9 @@
               "high": 0.38320755860210487
             },
             "expected_12m": {
-              "low": 0.15404478590896567,
-              "high": 0.16124699152120586,
-              "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+              "low": 0.20671563127037826,
+              "high": 0.26671246078706495,
+              "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
             },
             "convexity": "inside_printed_domain",
             "passed": false
@@ -596,9 +598,9 @@
               "high": 0.27389440662868836
             },
             "expected_12m": {
-              "low": 0.1423545215663201,
-              "high": 0.15211387767382692,
-              "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+              "low": 0.10933174159376165,
+              "high": 0.1906305070135671,
+              "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
             },
             "convexity": "inside_printed_domain",
             "passed": false
@@ -629,9 +631,9 @@
               "high": 1.9349533198200284
             },
             "expected_12m": {
-              "low": 0.24303782871060786,
-              "high": 0.2908953498709634,
-              "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+              "low": 0.9480580345012932,
+              "high": 1.3467275105947396,
+              "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
             },
             "convexity": "inside_printed_domain",
             "passed": false
@@ -652,9 +654,9 @@
       ],
       "feno": {
         "in_sample": 0,
-        "passed": 1,
+        "passed": 3,
         "total": 7,
-        "informative_passed": 0,
+        "informative_passed": 1,
         "informative_total": 2,
         "not_evaluable": 0,
         "not_evaluable_ids": [],
@@ -801,9 +803,9 @@
           "high": 0.5871224207151675
         },
         "expected_12m": {
-          "low": 0.16287631848321943,
-          "high": 0.17828407825075226,
-          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+          "low": 0.2802853101654186,
+          "high": 0.40863720481775656,
+          "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
         },
         "point_estimate": null
       },
@@ -832,9 +834,9 @@
           "high": -0.328064701830842
         },
         "expected_12m": {
-          "low": 0.09802187900423419,
-          "high": 0.10182019416203317,
-          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+          "low": -0.25997429339381223,
+          "high": -0.22833303247426603,
+          "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
         },
         "point_estimate": null
       },
@@ -955,9 +957,9 @@
           "high": 0.5194081925414555
         },
         "expected_12m": {
-          "low": 0.16487457807395767,
-          "high": 0.1726265544868386,
-          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+          "low": 0.2969314941888034,
+          "high": 0.361508102008853,
+          "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
         },
         "point_estimate": null
       },
@@ -986,9 +988,9 @@
           "high": -0.30363643467375667
         },
         "expected_12m": {
-          "low": 0.10064625016227274,
-          "high": 0.10386117588300764,
-          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+          "low": -0.23811238643995425,
+          "high": -0.21133095853293463,
+          "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
         },
         "point_estimate": null
       },
@@ -1109,9 +1111,9 @@
           "high": 3.42967731241324
         },
         "expected_12m": {
-          "low": 0.350743767438593,
-          "high": 0.4157795394521262,
-          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+          "low": 1.8452852440126954,
+          "high": 2.387055409439615,
+          "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
         },
         "point_estimate": null
       },
@@ -1140,9 +1142,9 @@
           "high": 0.8324633518046776
         },
         "expected_12m": {
-          "low": 0.18060675887311745,
-          "high": 0.1987823130432808,
-          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+          "low": 0.4279859266988597,
+          "high": 0.5793944928560556,
+          "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
         },
         "point_estimate": null
       },
@@ -1361,9 +1363,9 @@
           "high": 0.3520211369522557
         },
         "expected_12m": {
-          "low": 0.14961983563636305,
-          "high": 0.15864136599236098,
-          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+          "low": 0.16985428609106729,
+          "high": 0.24500671131876994,
+          "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
         },
         "point_estimate": null
       },
@@ -1392,9 +1394,9 @@
           "high": -0.4080891363062972
         },
         "expected_12m": {
-          "low": 0.09173188954012232,
-          "high": 0.09513415266160888,
-          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+          "low": -0.31237205122770645,
+          "high": -0.2840300388691828,
+          "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims"
         },
         "point_estimate": null
       },

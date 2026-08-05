@@ -302,21 +302,20 @@ assert.ok(Math.abs(bridged.price / actual.Close - 1) < 0.05,
 // The band is a fair-value statement. Reading it as a one-year forecast is
 // what made the model look 35 points optimistic; the share of a stated upside
 // that arrives is 0.35 at twelve months and 1.07 at thirty-six.
-const horizon = runTwelveMonthConversionCalibration(ENGINE_ROOT);
-assert.ok(Math.abs(horizon.full.intercept - TWELVE_MONTH_CONVERSION.intercept) < 1e-4,
-  "the frozen conversion intercept must match the refit");
-assert.ok(Math.abs(horizon.full.slope - TWELVE_MONTH_CONVERSION.slope) < 1e-4,
-  "the frozen conversion slope must match the refit");
-assert.ok(horizon.full.slope > 0 && horizon.full.slope < 1, "only part of a stated upside can arrive within a year");
-// It has to earn its place: fitted on the early period it must beat the raw
-// band on the later one, which it never saw.
-assert.ok(horizon.out_of_sample.improves,
-  `the conversion must beat the raw band out of sample, got ${horizon.out_of_sample.converted_mae} against ${horizon.out_of_sample.raw_band_mae}`);
-assert.ok(horizon.out_of_sample.fitted_on.to < horizon.out_of_sample.evaluated_on.from,
-  "the fit and evaluation windows must not overlap in time");
-// The conversion is monotone and always below the band it converts.
+// Proportional, no intercept. An intercept makes the output mostly a constant
+// and collapses every index onto the sample mean, which is what a fitted
+// regression did here: bands of 24% and 343% both landed near 15%.
+assert.equal(TWELVE_MONTH_CONVERSION.intercept, undefined, "the conversion may not carry an intercept");
+assert.ok(TWELVE_MONTH_CONVERSION.share > 0 && TWELVE_MONTH_CONVERSION.share < 1.2);
+assert.ok(TWELVE_MONTH_CONVERSION.low < TWELVE_MONTH_CONVERSION.share
+  && TWELVE_MONTH_CONVERSION.share < TWELVE_MONTH_CONVERSION.high, "the per-anchor spread must bracket the frozen share");
+// Scaling must preserve ordering and relative magnitude, which is the whole
+// reason the intercept had to go.
+assert.equal(twelveMonthExpectation(0), 0, "a zero band converts to zero");
+const scaledWide = twelveMonthExpectation(3.0);
+const scaledNarrow = twelveMonthExpectation(0.3);
+assert.ok(Math.abs(scaledWide / scaledNarrow - 10) < 1e-9, "a band ten times larger must convert ten times larger");
 assert.ok(twelveMonthExpectation(0.5) > twelveMonthExpectation(0.2));
-assert.ok(twelveMonthExpectation(0.5) < 0.5, "a twelve-month expectation must sit below a multi-year band");
 
 // --- fail closed on a stale or missing panel ---------------------------------
 

@@ -615,15 +615,16 @@
           "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
         },
         "twelve_month_conversion": {
-          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest",
+          "basis": "median of the per-anchor scale that lands the fair-value band on his published upside, over the seven dated RIM claims",
+          "high": 1.114,
           "horizon_months": 12,
-          "intercept": 0.12923,
-          "observations": 157,
-          "slope": 0.08355,
-          "stability": "coefficients differ by sub-period (slope 0.238 fitted on 2017-2022 against 0.124 on 2022-2026), so the level is calibrated but not stationary"
+          "intercept_rejected": "a fitted intercept collapses every index onto the sample mean and destroys the ordering the model exists to produce",
+          "low": 0.3,
+          "observations": 7,
+          "share": 0.696
         }
       },
-      "source_sha256": "f17c69251280283e74ed58a602c6446a9509d2ec45300e35ce6b85861c40b7df",
+      "source_sha256": "3160e97225b55084520042050af96293f7939ce5fb91f537ba97e2b40ee7be05",
       "sources": [
         {
           "path": "scripts/build-fenok-rim-identification-receipt.mjs",
@@ -635,7 +636,7 @@
         },
         {
           "path": "scripts/fenok-rim-yoo-panel-engine.mjs",
-          "raw_sha256": "243d7a2692736bc64283a9f9fe37929d23bc3b04cd733fcb4b3113046f058398"
+          "raw_sha256": "7a3218199a31e569a44ff5ac38f467c78614efde925930cd6b2758a726895e60"
         },
         {
           "path": "scripts/lib/fenok-rim-calibration-receipt.mjs",
@@ -644,15 +645,15 @@
       ],
       "version": "fenok-rim-sustainable-index-calibration/v1"
     },
-    "parameter_sha256": "795e809a5e4040894242b1e38026ac825627635c8dd581862dfa6c41e2eaffd8",
-    "calibration_cutoff_at": "2026-08-05T05:14:12.232Z",
+    "parameter_sha256": "dfa4690c0240d7747dc47c4476037d7d27edd50c3a0f03ec62fbcd00497bd5ff",
+    "calibration_cutoff_at": "2026-08-05T05:23:11.013Z",
     "calibration_component_sha256": {
       "lt_roe_rule": "d5029af56775518e35d930b2ab8a0d2fb256f7207a981cd53661bc2d05565d75",
       "payout_multiplier": "4e5319c49b44c9dd80b048a61afa4ba7d7da709f143ae649999d4222909e5234",
       "printed_convexity_domain": "73cb379249da5f1be0023d36c0c3a39aae72269302c933d154e26bfdc88e5580",
-      "twelve_month_conversion": "730f21e9d7602e89cdce9f9765ef1b93ea386b97fe1ceb02c346d9553bfbb7da"
+      "twelve_month_conversion": "d801f0772c868960e309f22342635c334eb1abe375f9b9ab100cd0f7eafa7472"
     },
-    "measurement_receipt_sha256": "148cc3abae47378685dc54eaf7e82e7b084749c81bdefd411bf9eeff4973c09d",
+    "measurement_receipt_sha256": "edda7f0b8af23819303fb079e7f1daefab42e9db0cb21a899325fbe6d7a378a2",
     "proxy_decision_sha256": "4cf1a00ea8f52445cb44fe42d3d9556fda460a0cf61b46e310470fcd2a61bcf7",
     "fit_evidence_ids": [
       "ltroe-index-centres-2025-12-09",
@@ -680,15 +681,15 @@
         "ungated_proxy_identity"
       ]
     },
-    "generated_at": "2026-08-05T05:14:12.232Z",
-    "receipt_sha256": "0c5aeb48bac175e504cc1a1e46d753b833b95a7d25b32b87357bee01e04b1a9d",
-    "source_snapshot_sha256": "8e68182598d816d07e36f7e44c33db01b5c64d0d9c0ed13c5633bce563ec9d23",
+    "generated_at": "2026-08-05T05:23:11.013Z",
+    "receipt_sha256": "0db9f06e8addf77b7cc01daa06ec93f76dbf1edc319225f40c73ecd8dc61fb8d",
+    "source_snapshot_sha256": "72b424f54e3b9014296b571c8a14088d262b34f43eb5eda898db526a1d481175",
     "sources": [
       {
         "id": "sustainable-calibration-artifact",
-        "measurement_sha256": "850e86b32c256aa449ee6a22ce23d44a95d0e1db5b7d1de9c86c79e56a493bad",
+        "measurement_sha256": "072fef04b13584ad6365c77d39843be4d5e5bf37a1f222d5bcee1f428f9e3cf2",
         "path": "data/computed/fenok-rim/sustainable-index-ranges.json",
-        "raw_sha256": "7e2053d8c80f08d0aa887baa664a4b726ce4c190bd8760b2ab373821cc8880e5"
+        "raw_sha256": "79402496ad9bc2181bbb1b803a940458b06630c678cce9e18e6456433c951c5c"
       },
       {
         "id": "printed-index-grid",
