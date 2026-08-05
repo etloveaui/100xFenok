@@ -7,6 +7,7 @@ import MarketSectionNav from "@/components/market/MarketSectionNav";
 import MarketThermometer from "@/components/market/MarketThermometer";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
 import { readRimBand, type RimValuationRange } from "./rimBand";
+import { readSustainableRanges, type SustainableRangesDoc } from "./sustainableRanges";
 import type {
   MarketBondPulse,
   MarketEventRisk,
@@ -404,6 +405,138 @@ function RimReadinessPanel() {
           ))}
         </div>
       )}
+    </PanelShell>
+  );
+}
+
+// The sustainable-range projection is a SEPARATE public document from
+// rim-index/inputs.json, read by a separate module, rendered by this separate
+// panel. Nothing here touches the band above.
+let rimSustainableCache: SustainableRangesDoc | null = null;
+let rimSustainablePending: Promise<SustainableRangesDoc | null> | null = null;
+
+function loadRimSustainable(): Promise<SustainableRangesDoc | null> {
+  if (rimSustainableCache) return Promise.resolve(rimSustainableCache);
+  if (rimSustainablePending) return rimSustainablePending;
+  rimSustainablePending = fetch("/data/computed/fenok-rim/sustainable-index-ranges.public.json")
+    .then((r) => (r.ok ? r.json() : null))
+    .then((doc) => {
+      rimSustainableCache = doc;
+      return doc;
+    })
+    .catch(() => {
+      rimSustainablePending = null;
+      return null;
+    });
+  return rimSustainablePending;
+}
+
+const RIM_SUSTAINABLE_CONVEXITY_KO: Record<string, string> = {
+  inside_printed_domain: "검증된 성장·할인 비율 범위 안",
+  outside_printed_domain: "검증 범위 밖 — 공시된 한계",
+};
+
+// A two-ended reading, always drawn as a pair. There is no branch in this
+// component that can render one endpoint on its own, and no arithmetic that
+// could produce a middle value.
+function RimSustainableEndpoints({
+  label,
+  low,
+  high,
+  format,
+}: {
+  label: string;
+  low: number;
+  high: number;
+  format: (value: number) => string;
+}) {
+  return (
+    <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+      <span className="text-[10px] font-black text-[var(--c-ink-3)]">{label}</span>
+      <span className="text-sm font-black tabular-nums text-[var(--c-ink)]">{format(low)}</span>
+      <span className="text-[11px] font-black text-[var(--c-ink-3)]">~</span>
+      <span className="text-sm font-black tabular-nums text-[var(--c-ink)]">{format(high)}</span>
+    </div>
+  );
+}
+
+function RimSustainableRangePanel() {
+  const [doc, setDoc] = useState<SustainableRangesDoc | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadRimSustainable().then((next) => {
+      if (cancelled) return;
+      setDoc(next);
+      setLoaded(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const view = readSustainableRanges(doc);
+  // Loading and refusal are different states and say so: a refusal is a
+  // decision the producer made, not data that failed to arrive.
+  const fallbackLabel = !loaded ? DATA_STATE_LABELS.pending : view.refusal ? DATA_STATE_LABELS.unavailable : null;
+
+  return (
+    <PanelShell
+      title="FENO RIM 지속가능 지수 밴드"
+      subtitle="연구·진단 등급 · 3년 밴드와 12개월 환산은 모두 양 끝으로만 표시합니다"
+      asOf={view.asOf || null}
+    >
+      {fallbackLabel ? (
+        <EmptyPanel label={fallbackLabel} />
+      ) : (
+        <div className="grid min-w-0 sm:grid-cols-2">
+          {view.rows.map((row) => (
+            <div
+              key={row.id}
+              className="min-w-0 border-t border-[var(--c-line-2)] px-[var(--panel-pad)] py-3 first:border-t-0 sm:[&:nth-child(-n+2)]:border-t-0"
+            >
+              <div className="flex min-w-0 items-start justify-between gap-2">
+                <p className="min-w-0 truncate text-sm font-black text-[var(--c-ink)]">{row.label}</p>
+                <span className="shrink-0 rounded-full border border-[var(--c-line)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
+                  연구·진단
+                </span>
+              </div>
+              <div className="mt-2 min-w-0 grid gap-1">
+                <RimSustainableEndpoints label="밴드" low={row.range.low} high={row.range.high} format={(v) => RIM_BAND_NUMBER.format(v)} />
+                <RimSustainableEndpoints label="12개월" low={row.twelveMonth.low} high={row.twelveMonth.high} format={(v) => RIM_BAND_PERCENT.format(v)} />
+                <RimSustainableEndpoints label="3년 상승여력" low={row.upside.low} high={row.upside.high} format={(v) => RIM_BAND_PERCENT.format(v)} />
+              </div>
+              <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
+                가정을 명시한 잔존가치 범위입니다. 목표가가 아니며 단일 값은 제공하지 않습니다.
+                {row.currentPrice === null ? "" : ` 현재 지수 ${RIM_BAND_NUMBER.format(row.currentPrice)}.`}
+              </p>
+              <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
+                할인율 {RIM_BAND_PERCENT.format(row.discountRate)} · 명시적 예측 {row.explicitYears}년 ·{" "}
+                {RIM_SUSTAINABLE_CONVEXITY_KO[row.convexityStatus] ?? "검증 상태 미상"}
+                (성장/할인 {row.convexityRatio.toFixed(2)}배)
+              </p>
+              <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
+                기준일 {row.asOf}
+                {row.confidence === null ? "" : ` · 신뢰도 ${row.confidence}`}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+      {/* Disclosed and not resolved: what the measurement says it does not cover. */}
+      {!fallbackLabel && view.findings.length > 0 ? (
+        <div className="border-t border-[var(--c-line-2)] px-[var(--panel-pad)] py-3">
+          <p className="text-[10px] font-black text-[var(--c-ink-3)]">공시된 한계</p>
+          <ul className="mt-1 grid gap-1">
+            {view.findings.map((finding) => (
+              <li key={finding.id} className="min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
+                {finding.detail}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </PanelShell>
   );
 }
@@ -964,6 +1097,8 @@ export default function MarketValuationClient({
       <SecondaryIndexTable indices={indices} />
 
       <RimReadinessPanel />
+
+      <RimSustainableRangePanel />
 
       <MarketSection sectionKey="valuation" index="01 근거" title="이익과 멀티플이 만든 현재 위치" summary="S&P 500 판정의 배경을 시장 체온, ERP, Yardeni 모델로 확인합니다." muted={!dataReady}>
         <MarketThermometer />

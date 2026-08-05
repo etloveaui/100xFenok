@@ -5,9 +5,10 @@
   "scripts": {
     "reconcile:derived": "npm run build:fenok-signals && npm run build:rim-index && npm run build:fenok-etf-signals && npm run build:fenok-etf-action-index && npm run build:rim-sustainable-research && npm run build:fenok-etf-core-daily-basket && npm run build:fenok-edge-coverage-index && npm run build:fenok-s0-source-ledger && npm run build:fenok-etf-daily1y-readiness && npm run build:fenok-etf-daily1y-dispatch-plan && npm run build:data-entity-graph && npm run build:product-surface-coverage && npm run build:fenok-data-health-kpi && npm run build:lane-registry-projection",
     "reconcile:verify": "npm run qa:history-gap-profile && npm run qa:fenok-edge-readiness && npm run qa:market-audit && npm run qa:data-graph && npm run qa:data-freshness && npm run qa:history-gap && npm run qa:rim-sustainable-research && npm run qa:fenok-data-health-kpi:artifact",
-    "sync-static": "npm run build:data-supply-public && npm run reconcile:derived && (cp -Rp ../100x ../alpha-scout ../tools ../ib ../admin public/ 2>/dev/null || true) && node scripts/sync-public-data.mjs --write && mkdir -p public/posts-raw public/data/metadata && rm -f public/data/fred-banking-*.json public/data/fdic-tier1.json public/data/computed/etf_action_index.json && (cp -Rp ../posts/. public/posts-raw/ 2>/dev/null || true) && (cp -Rp ../100x/data/* public/data/ 2>/dev/null || true) && (cp -Rp ../alpha-scout/data/metadata/* public/data/metadata/ 2>/dev/null || true) && (cp -p ../alpha-scout/data/reports-index.json public/data/reports-index.json 2>/dev/null || true) && node sync-static-overrides.mjs && npm run reconcile:data-supply-public-mirror && node ../scripts/build-phase2-closeout-indexes.mjs --usage-manifest-only && npm run build:rim-index && python3 ../scripts/materialize_data_supply_public.py --check && node scripts/check-fenok-public-mirror-guard.mjs && npm run build:lane-runid-map && npm run build:static-route-manifest",
+    "sync-static": "npm run build:data-supply-public && npm run reconcile:derived && (cp -Rp ../100x ../alpha-scout ../tools ../ib ../admin public/ 2>/dev/null || true) && node scripts/sync-public-data.mjs --write && mkdir -p public/posts-raw public/data/metadata && rm -f public/data/fred-banking-*.json public/data/fdic-tier1.json public/data/computed/etf_action_index.json && (cp -Rp ../posts/. public/posts-raw/ 2>/dev/null || true) && (cp -Rp ../100x/data/* public/data/ 2>/dev/null || true) && (cp -Rp ../alpha-scout/data/metadata/* public/data/metadata/ 2>/dev/null || true) && (cp -p ../alpha-scout/data/reports-index.json public/data/reports-index.json 2>/dev/null || true) && node sync-static-overrides.mjs && npm run reconcile:data-supply-public-mirror && node ../scripts/build-phase2-closeout-indexes.mjs --usage-manifest-only && npm run build:rim-index && npm run build:rim-sustainable-public && python3 ../scripts/materialize_data_supply_public.py --check && node scripts/check-fenok-public-mirror-guard.mjs && npm run build:lane-runid-map && npm run build:static-route-manifest",
     "build:fenok-signals": "npm run build:history-gap-daily1y && node ../scripts/build-fenok-signals.mjs",
     "build:rim-index": "node ../scripts/build-rim-index.mjs",
+    "build:rim-sustainable-public": "node ../scripts/build-fenok-rim-sustainable-public-projection.mjs",
     "build:rim-sustainable-research": "node ../scripts/build-fenok-rim-sustainable-index-ranges.mjs",
     "qa:rim-sustainable-research": "node ../scripts/test-build-fenok-rim-krx-kospi-fundamentals.mjs && node ../scripts/test-build-fenok-rim-russell2000-fundamentals.mjs && node ../scripts/test-fenok-rim-rule-calibration.mjs && node ../scripts/test-fenok-rim-calibration-receipt.mjs && node ../scripts/test-fenok-rim-identification-protocol.mjs && node ../scripts/test-fenok-rim-proxy-identity.mjs && node ../scripts/test-fenok-rim-yoo-panel-engine.mjs && node ../scripts/test-build-fenok-rim-sustainable-index-ranges.mjs",
     "build:fenok-etf-signals": "node ../scripts/build-fenok-etf-signals.mjs",
@@ -71,7 +72,7 @@
     "build:static": "bash scripts/load-guard.sh npm run build:static:steps",
     "build:static:steps": "npm run qa:data-supply-policy-registry && npm run build:version && npm run sync-static && npm run qa:fenok-edge-readiness && npm run qa:routes && npm run qa:tokens && NEXT_BUILD_TARGET=static next build",
     "cf:build": "bash scripts/load-guard.sh npm run cf:build:steps",
-    "cf:build:steps": "npm run build:version && npm run sync-static && node scripts/check-fenok-data-health-kpi.mjs --strict && npm run qa:tokens && NEXT_BUILD_TARGET=cloudflare opennextjs-cloudflare build && node scripts/check-cloudflare-asset-budget.mjs",
+    "cf:build:steps": "npm run build:version && npm run sync-static && node scripts/check-fenok-data-health-kpi.mjs --strict && npm run qa:rim-sustainable-public && npm run qa:tokens && NEXT_BUILD_TARGET=cloudflare opennextjs-cloudflare build && node scripts/check-cloudflare-asset-budget.mjs",
     "verify:contracts": "bash scripts/load-guard.sh npm run qa:registry-contracts",
     "cf:build:next": "NEXT_BUILD_TARGET=${NEXT_BUILD_TARGET:-cloudflare} next build",
     "cf:preview": "opennextjs-cloudflare preview",
@@ -188,7 +189,8 @@
     "qa:a11y:p2": "QA_A11Y_VIEWPORTS=desktop,mobile,fold QA_A11Y_ROUTES=/explore,/screener,/stock/NVDA,/stock/ZZZZ,/market-valuation,/sectors node .qa-a11y.js",
     "qa:a11y:mobile": "QA_A11Y_VIEWPORTS=mobile,fold QA_A11Y_ROUTES=/,/posts,/vr,/explore,/screener,/portfolio,/stock/NVDA,/stock/ZZZZ,/superinvestors,/market-valuation,/sectors,/admin,/admin/design-lab?mode=native,/tools/stock-analyzer/native,/etfs,/etfs/new,/etfs/SPY,/etfs/ADIU node .qa-a11y.js",
     "qa:a11y:strict": "QA_A11Y_STRICT=1 node .qa-a11y.js",
-    "qa:rim-band": "tsx scripts/check-rim-band-render-contract.tsx"
+    "qa:rim-band": "tsx scripts/check-rim-band-render-contract.tsx",
+    "qa:rim-sustainable-public": "node ../scripts/test-build-fenok-rim-sustainable-public-projection.mjs && tsx scripts/check-rim-sustainable-render-contract.tsx"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.21.3",

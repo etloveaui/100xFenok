@@ -15,6 +15,12 @@ export const FORBIDDEN_PATTERNS = [
   /^admin\/fenok-etf-core-daily-basket\.json$/,
   /^admin\/fenok-s0-finra-occ-mapping-ledger\.json$/,
   /^admin\/data-supply-detection-floor\.json$/,
+  // The canonical FENO RIM research record: every operand, the frozen
+  // calibration constants, and the fitted discount equation. Only the redacted
+  // projection built by build-fenok-rim-sustainable-public-projection.mjs may
+  // be published, so the raw artifact is forbidden here rather than left to a
+  // reviewer noticing a stray copy.
+  /^computed\/fenok-rim\/sustainable-index-ranges\.json$/,
   /^computed\/fenok_signals\.json$/,
   /^computed\/fenok_etf_signals\.json$/,
   /^computed\/etf_action_index\.json$/,
