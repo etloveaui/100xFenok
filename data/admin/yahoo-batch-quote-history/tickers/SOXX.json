@@ -26,43 +26,47 @@
       "run_id": "30711924670",
       "schedule": "",
       "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 750,
+      "natural": false,
+      "observed_at": "2026-08-05T04:39:14Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30975678913",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-06-28T00:14:11Z",
-    "history_as_of": "2026-06-26",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SOXX.json",
-    "payload_sha256": "0c2aa02cb1835281d3487920bfe9ef73437faed492142f6c1eb6af91380ce192",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-26"
+    "fetched_at": "2026-08-05T04:39:30Z",
+    "history_as_of": "2026-08-04",
+    "path": "data/yf/finance/SOXX.json",
+    "payload_sha256": "2229d767b2f7abf337d135a13057faa19a18ca3faf2232e69efe83ba82db5549",
+    "quote_as_of": "2026-08-04T20:00:01Z",
+    "source_as_of": "2026-08-04"
   },
   "discovered_from": [
     "global_scouter_etf",
     "major_etf_configuration",
+    "rim_tracker_configuration",
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_requires_schedule",
     "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 907,
-    "natural": true,
-    "observed_at": "2026-08-01T18:35:05Z",
-    "outcome": "failed",
+    "latency_ms": 750,
+    "natural": false,
+    "observed_at": "2026-08-05T04:39:14Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711924670",
+    "run_id": "30975678913",
     "schedule": "",
-    "shard": "3/6"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-01T18:35:05Z",
-    "provider_history_as_of": "2026-07-31",
-    "provider_quote_as_of": "2026-07-31T20:00:00Z",
-    "reason": "recovery_requires_schedule",
-    "run_attempt": 1,
-    "run_id": "30711924670"
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-06-28T00:14:11Z",
@@ -72,8 +76,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-26"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-08-04",
+    "observed_at": "2026-08-05T04:39:14Z",
+    "payload_sha256": "ba447eaa52f9d6d0bf38cfc8b7975790ba4eb9c11c0d225bfeff8ef2b0cf4aea",
+    "quote_as_of": "2026-08-04T20:00:01Z",
+    "run_attempt": 1,
+    "run_id": "30975678913",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-04"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
@@ -86,5 +102,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "SOXX",
-  "updated_at": "2026-08-01T18:35:05Z"
+  "updated_at": "2026-08-05T04:39:14Z"
 }

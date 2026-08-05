@@ -26,43 +26,47 @@
       "run_id": "30711924670",
       "schedule": "",
       "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 1068,
+      "natural": false,
+      "observed_at": "2026-08-05T04:39:14Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30975678913",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-06-28T00:14:26Z",
-    "history_as_of": "2026-06-26",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SPY.json",
-    "payload_sha256": "deae94181a14127658f1ed661522e7feedc802b84884795a20c592041bdbc0c4",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-26"
+    "fetched_at": "2026-08-05T04:39:25Z",
+    "history_as_of": "2026-08-04",
+    "path": "data/yf/finance/SPY.json",
+    "payload_sha256": "3d55598c286483ff7bbd7a3e9020bbd3390ed966a2edc8af2e66b0ddd324fe70",
+    "quote_as_of": "2026-08-04T20:00:00Z",
+    "source_as_of": "2026-08-04"
   },
   "discovered_from": [
     "global_scouter_etf",
     "major_etf_configuration",
+    "rim_tracker_configuration",
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_requires_schedule",
     "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 901,
-    "natural": true,
-    "observed_at": "2026-08-01T18:35:05Z",
-    "outcome": "failed",
+    "latency_ms": 1068,
+    "natural": false,
+    "observed_at": "2026-08-05T04:39:14Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711924670",
+    "run_id": "30975678913",
     "schedule": "",
-    "shard": "3/6"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-01T18:35:05Z",
-    "provider_history_as_of": "2026-07-31",
-    "provider_quote_as_of": "2026-07-31T20:00:00Z",
-    "reason": "recovery_requires_schedule",
-    "run_attempt": 1,
-    "run_id": "30711924670"
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-06-28T00:14:26Z",
@@ -72,8 +76,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-26"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-08-04",
+    "observed_at": "2026-08-05T04:39:14Z",
+    "payload_sha256": "5468c4c77356201489bf8eca0b22816125247f57ab27959eb05cc6337a82d69e",
+    "quote_as_of": "2026-08-04T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "30975678913",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-04"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
@@ -86,5 +102,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "SPY",
-  "updated_at": "2026-08-01T18:35:05Z"
+  "updated_at": "2026-08-05T04:39:14Z"
 }
