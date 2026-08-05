@@ -12,15 +12,28 @@
       "run_id": "29707016827",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 751,
+      "natural": true,
+      "observed_at": "2026-08-05T14:29:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31015333400",
+      "schedule": "7 12 * * 0-5",
+      "shard": "42/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-19T23:04:41Z",
-    "history_as_of": "2026-07-17",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BNDC.json",
-    "payload_sha256": "052ebbc47ec311fc2d00fb0a9c2f1b69a6273ace1163579a738a6124625b508f",
-    "quote_as_of": "2026-07-17T19:59:50Z",
-    "source_as_of": "2026-07-17"
+    "fetched_at": "2026-08-05T14:30:27Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/BNDC.json",
+    "payload_sha256": "a649d5b7804316428dc5cf390ec78d0e9b114641f28867663b9562f90aba451f",
+    "quote_as_of": "2026-08-05T14:30:02Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1412,
+    "latency_ms": 751,
     "natural": true,
-    "observed_at": "2026-07-19T22:59:54Z",
+    "observed_at": "2026-08-05T14:29:49Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29707016827",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31015333400",
+    "schedule": "7 12 * * 0-5",
+    "shard": "42/72"
   },
   "lkg": {
     "fetched_at": "2026-07-19T23:04:41Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-17",
-    "observed_at": "2026-07-19T22:59:54Z",
-    "payload_sha256": "aa0ee3d2e55a962ece4bdceff24c1d68b35595c0be8a5dbfc8df4c77de0b6f45",
-    "quote_as_of": "2026-07-17T19:59:50Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-05T14:29:49Z",
+    "payload_sha256": "72a94b4383bdb040682bb15bba72e10d4bcdf7a876ea2dc5513e62a10b7466f2",
+    "quote_as_of": "2026-08-05T14:30:02Z",
     "run_attempt": 1,
-    "run_id": "29707016827",
+    "run_id": "31015333400",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-17"
   },
   "ticker": "BNDC",
-  "updated_at": "2026-07-28T00:14:11Z"
+  "updated_at": "2026-08-05T14:29:49Z"
 }

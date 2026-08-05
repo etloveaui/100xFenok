@@ -12,15 +12,28 @@
       "run_id": "29707016827",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 720,
+      "natural": true,
+      "observed_at": "2026-08-05T14:29:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31015333400",
+      "schedule": "7 12 * * 0-5",
+      "shard": "42/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-19T23:04:21Z",
-    "history_as_of": "2026-07-17",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BIS.json",
-    "payload_sha256": "a0d2387cbc3e6f7dac8d8f33c30bd4f466c9127365b52ed0ef98cb0e0061ae94",
-    "quote_as_of": "2026-07-17T20:00:00Z",
-    "source_as_of": "2026-07-17"
+    "fetched_at": "2026-08-05T14:30:13Z",
+    "history_as_of": "2026-08-04",
+    "path": "data/yf/finance/BIS.json",
+    "payload_sha256": "e5ad8a099212506bbb20e8ccfc2f83d29064ace9d9b78a02f4efd95fe86a7d71",
+    "quote_as_of": "2026-08-04T20:00:00Z",
+    "source_as_of": "2026-08-04"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1585,
+    "latency_ms": 720,
     "natural": true,
-    "observed_at": "2026-07-19T22:59:54Z",
+    "observed_at": "2026-08-05T14:29:49Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29707016827",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31015333400",
+    "schedule": "7 12 * * 0-5",
+    "shard": "42/72"
   },
   "lkg": {
     "fetched_at": "2026-07-19T23:04:21Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-17",
-    "observed_at": "2026-07-19T22:59:54Z",
-    "payload_sha256": "2ec305b3ef5443f41dc767a7cbef3c93a19340cfe71ab76a6c56c5e302bf2ffb",
-    "quote_as_of": "2026-07-17T20:00:00Z",
+    "history_as_of": "2026-08-04",
+    "observed_at": "2026-08-05T14:29:49Z",
+    "payload_sha256": "bce8ee7f13b682dba51847673d21b98596adb608c8bd15c4718bf5620cf29dd3",
+    "quote_as_of": "2026-08-04T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "29707016827",
+    "run_id": "31015333400",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-08-04"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-17"
   },
   "ticker": "BIS",
-  "updated_at": "2026-07-28T00:14:11Z"
+  "updated_at": "2026-08-05T14:29:49Z"
 }
