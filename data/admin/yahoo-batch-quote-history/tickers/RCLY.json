@@ -12,32 +12,44 @@
       "run_id": "29622560422",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 462,
+      "natural": true,
+      "observed_at": "2026-08-05T08:49:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30990520626",
+      "schedule": "7 6 * * 0-5",
+      "shard": "39/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-18T00:01:01Z",
-    "history_as_of": "2026-07-16",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/RCLY.json",
-    "payload_sha256": "ceb07dcb0ee3d880077c4ad0861a1b188f997172cc677c6b99949e9e4230bf67",
+    "fetched_at": "2026-08-05T08:50:31Z",
+    "history_as_of": "2026-08-04",
+    "path": "data/yf/finance/RCLY.json",
+    "payload_sha256": "37fabde357595019facaf329f8468d4f442439aaf0984b37f7d0516a2b79f861",
     "quote_as_of": "2026-05-04T14:23:04Z",
     "source_as_of": "2026-05-04T14:23:04Z"
   },
   "discovered_from": [
-    "market_facts",
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 462,
     "natural": true,
-    "observed_at": "2026-07-18T00:49:31Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-05T08:49:49Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29622560422",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "30990520626",
+    "schedule": "7 6 * * 0-5",
+    "shard": "39/72"
   },
   "lkg": {
     "fetched_at": "2026-07-18T00:01:01Z",
@@ -47,8 +59,20 @@
     "quote_as_of": "2026-05-04T14:23:04Z",
     "source_as_of": "2026-05-04T14:23:04Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-04",
+    "observed_at": "2026-08-05T08:49:49Z",
+    "payload_sha256": "2af1d4c5690d649e1e2692ff690e71368c435367bf38f67ebbcd085fdcc4e64d",
+    "quote_as_of": "2026-05-04T14:23:04Z",
+    "run_attempt": 1,
+    "run_id": "30990520626",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-05-04T14:23:04Z"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 51,
@@ -61,5 +85,5 @@
     "source_as_of": "2026-05-04T14:23:04Z"
   },
   "ticker": "RCLY",
-  "updated_at": "2026-07-18T00:52:19Z"
+  "updated_at": "2026-08-05T08:49:49Z"
 }
