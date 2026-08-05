@@ -12,15 +12,28 @@
       "run_id": "29707016827",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 702,
+      "natural": true,
+      "observed_at": "2026-08-05T12:11:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31004461242",
+      "schedule": "7 10 * * 0-5",
+      "shard": "41/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-19T23:03:13Z",
-    "history_as_of": "2026-07-17",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AVMA.json",
-    "payload_sha256": "197d11365f49a2411796e6bda04120f02c57a52abd1360d4b8bf07249cc09934",
-    "quote_as_of": "2026-07-17T18:58:38Z",
-    "source_as_of": "2026-07-17"
+    "fetched_at": "2026-08-05T12:12:38Z",
+    "history_as_of": "2026-08-04",
+    "path": "data/yf/finance/AVMA.json",
+    "payload_sha256": "549def446278f0f3ba8107eea53056538f566bbf51c283e2fe06a338dea5d2f5",
+    "quote_as_of": "2026-08-04T19:31:15Z",
+    "source_as_of": "2026-08-04"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1353,
+    "latency_ms": 702,
     "natural": true,
-    "observed_at": "2026-07-19T22:59:54Z",
+    "observed_at": "2026-08-05T12:11:49Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29707016827",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31004461242",
+    "schedule": "7 10 * * 0-5",
+    "shard": "41/72"
   },
   "lkg": {
     "fetched_at": "2026-07-19T23:03:13Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-17",
-    "observed_at": "2026-07-19T22:59:54Z",
-    "payload_sha256": "a765c8065079d5aaf77da4c853e47cfc3810ee6c154dbbbd4ae9a1910ad59302",
-    "quote_as_of": "2026-07-17T18:58:38Z",
+    "history_as_of": "2026-08-04",
+    "observed_at": "2026-08-05T12:11:49Z",
+    "payload_sha256": "c0a91aaa21ac04b372b133aeaa0528066a3bd560268685f2966231674ae0fec6",
+    "quote_as_of": "2026-08-04T19:31:15Z",
     "run_attempt": 1,
-    "run_id": "29707016827",
+    "run_id": "31004461242",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-08-04"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-17"
   },
   "ticker": "AVMA",
-  "updated_at": "2026-07-28T00:14:11Z"
+  "updated_at": "2026-08-05T12:11:49Z"
 }

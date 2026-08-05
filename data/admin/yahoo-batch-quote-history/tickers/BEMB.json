@@ -12,15 +12,28 @@
       "run_id": "29707016827",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 629,
+      "natural": true,
+      "observed_at": "2026-08-05T12:11:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31004461242",
+      "schedule": "7 10 * * 0-5",
+      "shard": "41/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-19T23:04:03Z",
-    "history_as_of": "2026-07-17",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BEMB.json",
-    "payload_sha256": "fd7a3958775e174fbff1fa8f308b34ca0166998b9c13bd8676362a7f6ad6f6b4",
-    "quote_as_of": "2026-07-17T19:06:05Z",
-    "source_as_of": "2026-07-17"
+    "fetched_at": "2026-08-05T12:13:08Z",
+    "history_as_of": "2026-08-04",
+    "path": "data/yf/finance/BEMB.json",
+    "payload_sha256": "2eb7fe32cd45874092adf90699e04c111602579b493c6dab3ce0fe456e3ef107",
+    "quote_as_of": "2026-08-04T19:23:42Z",
+    "source_as_of": "2026-08-04"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1196,
+    "latency_ms": 629,
     "natural": true,
-    "observed_at": "2026-07-19T22:59:54Z",
+    "observed_at": "2026-08-05T12:11:49Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29707016827",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31004461242",
+    "schedule": "7 10 * * 0-5",
+    "shard": "41/72"
   },
   "lkg": {
     "fetched_at": "2026-07-19T23:04:03Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-17",
-    "observed_at": "2026-07-19T22:59:54Z",
-    "payload_sha256": "7c4b7f067cc5c13924bc1edd9d123fd74e3856dcce337b7e6ce468ffc8ccd3c3",
-    "quote_as_of": "2026-07-17T19:06:05Z",
+    "history_as_of": "2026-08-04",
+    "observed_at": "2026-08-05T12:11:49Z",
+    "payload_sha256": "08fb4b09672c6caac98ddabc65ee7259b559a2bff2266d60d965770ea76d3d53",
+    "quote_as_of": "2026-08-04T19:23:42Z",
     "run_attempt": 1,
-    "run_id": "29707016827",
+    "run_id": "31004461242",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-08-04"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-17"
   },
   "ticker": "BEMB",
-  "updated_at": "2026-07-28T00:14:11Z"
+  "updated_at": "2026-08-05T12:11:49Z"
 }
