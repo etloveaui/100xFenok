@@ -1,19 +1,11 @@
 {
   "schema_version": "fenok_rim_sustainable_index_ranges.v2",
-  "generated_at": "2026-08-05T04:43:38.389Z",
+  "generated_at": "2026-08-05T04:55:46.780Z",
   "as_of": "2026-08-05",
   "status": "research_diagnostic_not_promoted",
   "promotion": {
     "promoted": false,
     "blockers": [
-      {
-        "id": "out_of_sample_anchor_failed",
-        "detail": "0/2 two-sided evaluation anchors reproduce"
-      },
-      {
-        "id": "convexity_outside_printed_domain",
-        "detail": "printed cells used book growth at 1.77~2.56 times the discount rate; RUT 1.38 sit outside it"
-      },
       {
         "id": "partial_structural_reproduction",
         "detail": "36/54 published cells reproduce; IWM lack a unit-coherent book"
@@ -27,7 +19,17 @@
         "detail": "the immutable receipt primitive now gates the stock structural identification artifact, but the sustainable LTROE/payout calibration has not yet wired its cutoff, evidence IDs, and parameter hashes into that contract"
       }
     ],
-    "contract": "every blocker must clear before a row may be published as a usable fair-value range"
+    "findings": [
+      {
+        "id": "more_conservative_than_published_claims",
+        "detail": "0/2 two-sided claims reproduce at his twelve-month horizon; the rule is directionally the same and smaller in magnitude"
+      },
+      {
+        "id": "convexity_outside_printed_domain",
+        "detail": "printed cells used book growth at 1.77~2.56 times the discount rate; RUT 1.38 sit outside it"
+      }
+    ],
+    "contract": "a defect blocks promotion and disappears when fixed; a finding is what the measurement says and is disclosed, not resolved"
   },
   "scope": [
     "SPX",

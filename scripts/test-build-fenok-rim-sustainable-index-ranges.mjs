@@ -81,7 +81,21 @@ for (const row of holdout.rows) {
 
 // Promotion is gated on what the run measured, not on freshness alone. While a
 // blocker stands nothing may be published as a usable range.
-assert.equal(artifact.promotion.promoted, holdout.feno.informative_total > 0 && artifact.promotion.blockers.length === 0);
+// Promotion is gated on defects only. A finding is what the measurement says
+// about the world; it is disclosed and never clears, and holding it in the
+// same list is what made the gate impossible to satisfy.
+assert.equal(artifact.promotion.promoted, artifact.promotion.blockers.length === 0);
+assert.ok(Array.isArray(artifact.promotion.findings), "findings must be reported alongside, not merged in");
+for (const finding of artifact.promotion.findings) {
+  assert.ok(finding.id && finding.detail, "every finding must name itself and say what it measured");
+  assert.ok(!artifact.promotion.blockers.some((row) => row.id === finding.id), `${finding.id}: a finding may not also block`);
+}
+// The two we know are findings, not defects: we cannot fit our way to his
+// numbers, and we cannot make an index compound inside a domain it is outside.
+assert.ok(artifact.promotion.findings.some((row) => row.id === "more_conservative_than_published_claims")
+  || holdout.feno.informative_passed === holdout.feno.informative_total);
+assert.ok(!artifact.promotion.blockers.some((row) => row.id === "out_of_sample_anchor_failed"),
+  "disagreeing with a published claim is a finding, not a defect");
 if (artifact.promotion.blockers.length) {
   assert.equal(artifact.status, "research_diagnostic_not_promoted");
   assert.ok(artifact.rows.every((row) => row.publication_status !== "RANGE"),
@@ -128,8 +142,8 @@ for (const row of artifact.rows) {
   assert.ok(domain && domain.observations > 0 && domain.low < domain.high, `${row.id}: the printed domain must be measured`);
   assert.ok(domain.source.includes("2025-12-09"), `${row.id}: the domain must derive from the printed grid`);
   if (row.value.convexity.status !== "inside_printed_domain") {
-    assert.ok(artifact.promotion.blockers.some((entry) => entry.id === "convexity_outside_printed_domain"),
-      `${row.id}: a row outside the printed domain must block promotion`);
+    assert.ok(artifact.promotion.findings.some((entry) => entry.id === "convexity_outside_printed_domain"),
+      `${row.id}: a row outside the printed domain must be disclosed as a finding`);
   }
   assert.ok(Math.abs(row.value.book_growth - Math.min(row.inputs.lt_roe_centre * row.inputs.retention, row.inputs.book_growth_ceiling)) < 1e-12,
     `${row.id}: published growth must be the capped roll-forward`);

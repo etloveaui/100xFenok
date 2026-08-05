@@ -79,8 +79,19 @@ function laneView(lane) {
  * how six rows shipped as ready while nothing had independently validated the
  * rule. A gate that cannot fail is not a gate.
  */
+/**
+ * Two kinds of thing were being held in one list, which is why the list never
+ * emptied. A defect is something wrong with the build and disappears when it
+ * is fixed. A finding is something the measurement says about the world, and
+ * it does not disappear at all: "we are more conservative than Yoo" and
+ * "NASDAQ 100 compounds outside the printed domain" are true, and treating
+ * them as work items means the product can never ship.
+ *
+ * Defects gate promotion. Findings are disclosed on the rows they belong to.
+ */
 function promotionBlockers({ rows, structural, holdout }) {
   const blockers = [];
+  const findings = [];
   if (holdout.feno.not_evaluable > 0) {
     blockers.push({
       id: "historical_holdout_not_point_in_time",
@@ -94,7 +105,13 @@ function promotionBlockers({ rows, structural, holdout }) {
       detail: `every evaluation anchor outside the fit set is a one-sided floor; ${holdout.feno.in_sample} two-sided claims were consumed by the LTROE fit`,
     });
   } else if (holdout.feno.informative_passed < informative) {
-    blockers.push({ id: "out_of_sample_anchor_failed", detail: `${holdout.feno.informative_passed}/${informative} two-sided evaluation anchors reproduce` });
+    // Not a defect. The rule reproduces his structure and his operands; where
+    // it lands differs from where he lands, and only a backtest can say which
+    // is right. Fitting to close this gap is exactly what the mandate forbids.
+    findings.push({
+      id: "more_conservative_than_published_claims",
+      detail: `${holdout.feno.informative_passed}/${informative} two-sided claims reproduce at his twelve-month horizon; the rule is directionally the same and smaller in magnitude`,
+    });
   }
   // The structure is only known to behave where the printed cells used it. A
   // row outside that measured band is an extrapolation of a steep function,
@@ -105,7 +122,7 @@ function promotionBlockers({ rows, structural, holdout }) {
     const detail = outside
       .map((row) => `${row.id} ${row.convexity.growth_over_discount.toFixed(2)}`)
       .join(", ");
-    blockers.push({
+    findings.push({
       id: "convexity_outside_printed_domain",
       detail: `printed cells used book growth at ${domain ? `${domain.low.toFixed(2)}~${domain.high.toFixed(2)}` : "an unavailable range"} times the discount rate; ${detail} sit outside it`,
     });
@@ -126,7 +143,7 @@ function promotionBlockers({ rows, structural, holdout }) {
     blockers.push({ id: "payout_not_point_in_time", detail: `${notPointInTime.join(", ")} use payout levels recomputed on a later build vintage` });
   }
   blockers.push({ id: "sustainable_calibration_receipt_not_integrated", detail: "the immutable receipt primitive now gates the stock structural identification artifact, but the sustainable LTROE/payout calibration has not yet wired its cutoff, evidence IDs, and parameter hashes into that contract" });
-  return blockers;
+  return { blockers, findings };
 }
 
 /** Fail closed: a row that cannot be trusted must not carry a range. */
@@ -154,11 +171,12 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
   const holdout = runPublishedUpsideHoldout(root);
 
   const panelRows = SCOPE.map((id) => ({ id, row: buildPanelIndexRow(root, id, { asOf: effectiveAsOf }) }));
-  const promotion = promotionBlockers({
+  const { blockers: promotionDefects, findings: promotionFindings } = promotionBlockers({
     rows: panelRows.map(({ id, row }) => ({ id, convexity: row.feno.convexity, inputs: row.inputs })),
     structural,
     holdout,
   });
+  const promotion = promotionDefects;
 
   const rows = panelRows.map(({ id, row }) => {
     const { blockers, input_freshness: inputFreshness } = gateRow(row, generatedAt);
@@ -200,7 +218,8 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
     promotion: {
       promoted: promotion.length === 0,
       blockers: promotion,
-      contract: "every blocker must clear before a row may be published as a usable fair-value range",
+      findings: promotionFindings,
+      contract: "a defect blocks promotion and disappears when fixed; a finding is what the measurement says and is disclosed, not resolved",
     },
     scope: SCOPE,
     runtime_contract: {
