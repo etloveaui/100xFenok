@@ -46,7 +46,7 @@ const BAND_H = 13;
 const MARKER_R = 5.5;
 
 function lensColor(lensIndex: number): string {
-  return lensIndex === 0 ? "var(--mv-lens-1)" : "var(--mv-lens-2)";
+  return lensIndex === 0 ? "var(--c-chart-lens-1)" : "var(--c-chart-lens-2)";
 }
 
 /** A step from the 1/2/5 family, so tick labels are round numbers. */
@@ -180,15 +180,7 @@ export default function MethodologyBar({ axes, withheldRows = [] }: MethodologyC
     .join("; ");
 
   return (
-    <div
-      className="mv-methodology"
-      style={{
-        // Validated categorical steps. Light L 0.43–0.77, chroma >= 0.1,
-        // CVD dE 27.9, contrast >= 3:1. The dark steps live in the stylesheet.
-        ["--mv-lens-1" as string]: "#1B73D3",
-        ["--mv-lens-2" as string]: "#c9821a",
-      }}
-    >
+    <div className="mv-methodology">
       <svg
         viewBox={`0 0 ${VIEW_W} ${height}`}
         width="100%"

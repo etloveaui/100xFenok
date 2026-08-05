@@ -9,6 +9,8 @@ import { useMarketValuation } from "@/hooks/useMarketValuation";
 import { readSustainableRanges, type SustainableRangesDoc } from "./sustainableRanges";
 import { buildMethodologyAxis } from "./methodologyAxis";
 import MethodologyBar from "./MethodologyBar";
+import OrdinalStrip from "./OrdinalStrip";
+import { useBenchmarkOrdinals } from "@/hooks/useBenchmarkOrdinals";
 
 import type {
   MarketBondPulse,
@@ -329,6 +331,49 @@ function MethodologyPanel() {
     </PanelShell>
   );
 }
+
+// The cardinal panel above answers "how far from today's price". This answers
+// the other half — "where is each index in its OWN history" — which is the only
+// question all 38 can answer on one comparable scale.
+function OrdinalPanel() {
+  const { state, view } = useBenchmarkOrdinals();
+
+  if (state === "pending") {
+    return (
+      <PanelShell title="지수 38개 · 자기 역사 대비 위치" subtitle="선행 PER 백분위">
+        <EmptyPanel label={DATA_STATE_LABELS.pending} />
+      </PanelShell>
+    );
+  }
+  if (state !== "ready" || !view || view.status !== "ready") {
+    return (
+      <PanelShell title="지수 38개 · 자기 역사 대비 위치" subtitle="선행 PER 백분위">
+        <EmptyPanel label={DATA_STATE_LABELS.unavailable} />
+      </PanelShell>
+    );
+  }
+
+  return (
+    <PanelShell
+      title="지수 38개 · 자기 역사 대비 위치"
+      subtitle="선행 PER 백분위 · 위 패널과 같은 지수는 굵게"
+      asOf={view.asOf}
+    >
+      <div className="px-[var(--panel-pad)] py-3">
+        <OrdinalStrip groups={view.groups} highlightIds={ORDINAL_HIGHLIGHT_IDS} />
+        {view.groups.filter((group) => group.refusal).map((group) => (
+          <p key={group.id} className="mt-2 text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
+            {group.label}: 표시할 수 없습니다 ({group.refusal})
+          </p>
+        ))}
+      </div>
+    </PanelShell>
+  );
+}
+
+// The five the cardinal panel also speaks about, so a reader can carry one
+// index between the two figures.
+const ORDINAL_HIGHLIGHT_IDS = ["sp500", "nasdaq100", "nasdaq_composite", "russell2000", "kospi"];
 
 // The producer writes its findings in English research prose. A user-facing
 // surface states the same limitation in the reader's language; an unmapped id
@@ -895,6 +940,8 @@ export default function MarketValuationClient({
 
       <SecondaryIndexTable indices={indices} />
       <MethodologyPanel />
+
+      <OrdinalPanel />
 
       <MarketSection sectionKey="valuation" index="01 근거" title="이익과 멀티플이 만든 현재 위치" summary="S&P 500 판정의 배경을 시장 체온, ERP, Yardeni 모델로 확인합니다." muted={!dataReady}>
         <MarketThermometer />

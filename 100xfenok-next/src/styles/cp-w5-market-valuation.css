@@ -350,10 +350,6 @@
   color: var(--c-ink-3);
 }
 
-[data-theme="dark"] .mv-methodology {
-  --mv-lens-1: #468de5;
-  --mv-lens-2: #ba7f14;
-}
 
 .mv-methodology-table {
   width: 100%; border-collapse: collapse; font-size: 11px;
@@ -371,3 +367,14 @@
   color: var(--c-ink-3); border-bottom: 1px solid var(--c-line);
   padding-bottom: 4px;
 }
+
+/* Ordinal strip — 38 indices on one 0–100 percentile axis.
+   Position carries the value; colour is a redundant third cue, because this
+   project's gain/loss pair separates by only ΔE 3.8 under deuteranopia. The
+   green pole is stepped darker than the shell token so the pair clears the
+   6–8 floor band (ΔE 7.9) with position and printed values as the required
+   secondary encoding. */
+.mv-ordinal { min-width: 0; }
+.mv-ordinal svg { display: block; overflow: visible; }
+
+[data-theme="dark"] .mv-ordinal { min-width: 0; }

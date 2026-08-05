@@ -352,12 +352,33 @@
   --dur-slow: 320ms;
 
   /* Design V2 font aliases (used by design-v2.css) */
+  /* Validated chart steps for the market-valuation figures. Chosen by running
+     the palette validator against each surface, not by eye: the shell's warn
+     token failed the lightness band (0.787) and contrast (1.95:1) as a
+     categorical mark, and the shell's gain/loss pair separates by only dE 3.8
+     under deuteranopia, so neither is used as a chart hue here. */
+  --c-chart-lens-1: #1B73D3;   /* categorical, dE 27.9 vs lens-2, contrast >= 3:1 */
+  --c-chart-lens-2: #c9821a;
+  --c-chart-ord-cheap: #12905d;
+  --c-chart-ord-cheap-soft: #6bbf9a;
+  --c-chart-ord-mid: #94a3b8;
+  --c-chart-ord-rich-soft: #ef8f8f;
+  --c-chart-ord-rich: #cf3b4c;
   --font-display: var(--font-orbitron-face), system-ui, sans-serif;
   --font-body: var(--font-noto-sans-kr), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
 [data-theme="dark"] {
+  /* Chart steps for the dark surface: stepped into the dark lightness band
+     (0.48-0.67) rather than flipped from the light pair. dE 26.7. */
+  --c-chart-lens-1: #468de5;
+  --c-chart-lens-2: #ba7f14;
+  --c-chart-ord-cheap: #35b981;
+  --c-chart-ord-cheap-soft: #2b7f5c;
+  --c-chart-ord-mid: #7c8b9c;
+  --c-chart-ord-rich-soft: #a34450;
+  --c-chart-ord-rich: #ef6b78;
   /* W4 dark ramp: retained as an optional theme; light remains the default. */
   color-scheme: dark;
   --fnk-neutral-50: oklch(0.205 0 0);
