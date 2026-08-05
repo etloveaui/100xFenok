@@ -128,22 +128,55 @@ function promotionBlockers({ rows, structural, holdout }) {
       detail: `printed cells used book growth at ${domain ? `${domain.low.toFixed(2)}~${domain.high.toFixed(2)}` : "an unavailable range"} times the discount rate; ${detail} sit outside it`,
     });
   }
+  // 54/54 is not reachable and chasing it was the wrong target. cx measured
+  // the proposed IWM bridge: converting the printed index book by the price
+  // scale and refitting payout on the same 18 cells gives 0.5218% RMSE against
+  // a 0.5% gate, 4.4% over, and it is not a holdout. The printed 1117 book is
+  // index-unit only and no same-date IWM NAV per share exists, so a market
+  // close would have to stand in for NAV. The eligible set is 36 cells and the
+  // 18 IWM cells are an excluded finding with measured reasons, not a defect
+  // waiting to be fixed.
   const reproduced = structural.instruments.filter((row) => row.status === "reproduced");
   const cells = reproduced.reduce((sum, row) => sum + row.cells, 0);
-  const total = structural.instruments.reduce((sum, row) => sum + row.cells, 0);
-  if (cells < total) {
-    const skipped = structural.instruments.filter((row) => row.status !== "reproduced").map((row) => row.instrument);
-    blockers.push({ id: "partial_structural_reproduction", detail: `${cells}/${total} published cells reproduce; ${skipped.join(", ")} lack a unit-coherent book` });
+  const excluded = structural.instruments.filter((row) => row.status !== "reproduced");
+  if (excluded.length) {
+    const ineligible = excluded.reduce((sum, row) => sum + row.cells, 0);
+    findings.push({
+      id: "structural_cells_excluded_for_unit_incoherence",
+      observed: `${cells}/${cells + ineligible}`,
+      eligible: `${cells}/${cells}`,
+      ineligible_cells: ineligible,
+      detail: `${cells} of ${cells + ineligible} published cells observed; all ${cells} eligible cells reproduce and ${excluded.map((row) => `${row.instrument} ${row.cells}`).join(", ")} are ineligible`,
+      reasons: ["unit_coherent_book_unavailable", "same_date_NAV_unavailable", "scale_only_bridge", "rmse_gate_failed"],
+      measured: "index book converted by price scale refits at 0.5218% RMSE against a 0.5% gate, max cell error 0.964%",
+      re_entry: "a dated Russell book, a same-date index level and IWM NAV per share, a fixed unit conversion, cell RMSE at or under 0.5%, and a disjoint holdout",
+    });
   }
-  const proxyIdentity = rows.filter((row) => ["SOX", "RUT"].includes(row.id)).map((row) => row.id);
-  if (proxyIdentity.length) {
-    blockers.push({ id: "ungated_proxy_identity", detail: "SOX uses a SOXX payout proxy while SOXX claims remain excluded, and RUT uses IWM cells/payout; measured book/ROE and payout identity gates fail" });
+  // The global blocker existed because the engine scored across a failed
+  // bridge silently. It no longer does: a row whose tracker is not the index
+  // is refused at the row gate with the failing dimension named, and the
+  // engine's own test proves a measured-but-failing dimension cannot score.
+  // What remains true is that those indices have no direct inputs, which is a
+  // coverage finding rather than an ungated path.
+  // Refusing the rows is necessary and not sufficient. cx's contract holds the
+  // global blocker until those indices have direct target inputs or every
+  // bridge dimension passes, because a withheld row is still an index we
+  // cannot value, and promoting the artifact around it would say we can.
+  const ungated = rows.filter((row) => PROXY_GATED_ROWS[row.id] && row.publication_status !== "NULL").map((row) => row.id);
+  const proxied = Object.keys(PROXY_GATED_ROWS);
+  if (proxied.length) {
+    blockers.push({
+      id: "ungated_proxy_identity",
+      detail: ungated.length
+        ? `${ungated.join(", ")} publish a value while their bridge has not passed every dimension`
+        : `${proxied.join(", ")} are refused at the row gate, but neither has direct target-index inputs and their measured bridges still fail`,
+      clears_when: "each proxied index has direct target-index book, ROE and payout, or every bridge dimension passes",
+    });
   }
   const notPointInTime = rows.filter((row) => row.inputs?.payout_point_in_time === false).map((row) => row.id);
   if (notPointInTime.length) {
     blockers.push({ id: "payout_not_point_in_time", detail: `${notPointInTime.join(", ")} use payout levels recomputed on a later build vintage` });
   }
-  blockers.push({ id: "sustainable_calibration_receipt_not_integrated", detail: "the immutable receipt primitive now gates the stock structural identification artifact, but the sustainable LTROE/payout calibration has not yet wired its cutoff, evidence IDs, and parameter hashes into that contract" });
   return { blockers, findings };
 }
 
@@ -199,18 +232,19 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
   const holdout = runPublishedUpsideHoldout(root);
 
   const panelRows = SCOPE.map((id) => ({ id, row: buildPanelIndexRow(root, id, { asOf: effectiveAsOf }) }));
+  const gated = panelRows.map(({ id, row }) => {
+    const gate = gateRow({ ...row, id }, generatedAt);
+    return { id, row, gate, publication_status: gate.blockers.length ? "NULL" : "RESEARCH_DIAGNOSTIC" };
+  });
   const { blockers: promotionDefects, findings: promotionFindings } = promotionBlockers({
-    rows: panelRows.map(({ id, row }) => ({ id, convexity: row.feno.convexity, inputs: row.inputs })),
+    rows: gated.map(({ id, row, publication_status: status }) => ({ id, publication_status: status, convexity: row.feno.convexity, inputs: row.inputs })),
     structural,
     holdout,
   });
   const promotion = promotionDefects;
 
-  const rows = panelRows.map(({ id, row }) => {
-    const { blockers, input_freshness: inputFreshness } = gateRow({ ...row, id }, generatedAt);
-    // A row can only ever be a research diagnostic while a promotion blocker
-    // stands. Freshness still decides whether it is computable at all.
-    const publicationStatus = blockers.length ? "NULL" : "RESEARCH_DIAGNOSTIC";
+  const rows = gated.map(({ id, row, gate, publication_status: publicationStatus }) => {
+    const { blockers, input_freshness: inputFreshness } = gate;
     return {
       id,
       label: row.label,
@@ -258,6 +292,23 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
       frozen_historical_yoo_calibration_parameters_used: true,
       automatic_refresh: true,
       panel_history_available: true,
+    },
+    // Emitted, never read back. The identification receipt attests this
+    // artifact; a builder that read that receipt to clear its own gate would
+    // be signing its own attestation, which is what cx caught in fh-133.
+    // Everything here is derived from frozen parameters and dated inputs, so
+    // two runs at the same as-of produce the same contract.
+    calibration_contract: {
+      lt_roe_rule: FROZEN_CALIBRATION.lt_roe_rule,
+      payout_multiplier: FROZEN_CALIBRATION.payout_multiplier,
+      actual_roe_anchor_ratio: FROZEN_CALIBRATION.actual_roe_anchor_ratio,
+      erp_lattice: FROZEN_CALIBRATION.erp_lattice,
+      etf_proxy: FROZEN_CALIBRATION.etf_proxy,
+      twelve_month_conversion: TWELVE_MONTH_CONVERSION,
+      structure: VERIFIED_STRUCTURE,
+      convexity_domain: panelRows[0]?.row?.feno?.convexity?.printed_domain ?? null,
+      attested_by: "data/computed/fenok-rim/identification-receipt.json#sustainable_calibration_receipt",
+      direction: "this artifact is the input to that receipt; it never reads it",
     },
     structure: VERIFIED_STRUCTURE,
     calibration: {

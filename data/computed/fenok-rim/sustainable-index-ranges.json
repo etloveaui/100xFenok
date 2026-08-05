@@ -1,22 +1,15 @@
 {
   "schema_version": "fenok_rim_sustainable_index_ranges.v2",
-  "generated_at": "2026-08-05T05:03:48.240Z",
+  "generated_at": "2026-08-05T05:12:29.176Z",
   "as_of": "2026-08-05",
   "status": "research_diagnostic_not_promoted",
   "promotion": {
     "promoted": false,
     "blockers": [
       {
-        "id": "partial_structural_reproduction",
-        "detail": "36/54 published cells reproduce; IWM lack a unit-coherent book"
-      },
-      {
         "id": "ungated_proxy_identity",
-        "detail": "SOX uses a SOXX payout proxy while SOXX claims remain excluded, and RUT uses IWM cells/payout; measured book/ROE and payout identity gates fail"
-      },
-      {
-        "id": "sustainable_calibration_receipt_not_integrated",
-        "detail": "the immutable receipt primitive now gates the stock structural identification artifact, but the sustainable LTROE/payout calibration has not yet wired its cutoff, evidence IDs, and parameter hashes into that contract"
+        "detail": "RUT, SOX are refused at the row gate, but neither has direct target-index inputs and their measured bridges still fail",
+        "clears_when": "each proxied index has direct target-index book, ROE and payout, or every bridge dimension passes"
       }
     ],
     "findings": [
@@ -27,6 +20,21 @@
       {
         "id": "convexity_outside_printed_domain",
         "detail": "printed cells used book growth at 1.77~2.56 times the discount rate; RUT 1.38 sit outside it"
+      },
+      {
+        "id": "structural_cells_excluded_for_unit_incoherence",
+        "observed": "36/54",
+        "eligible": "36/36",
+        "ineligible_cells": 18,
+        "detail": "36 of 54 published cells observed; all 36 eligible cells reproduce and IWM 18 are ineligible",
+        "reasons": [
+          "unit_coherent_book_unavailable",
+          "same_date_NAV_unavailable",
+          "scale_only_bridge",
+          "rmse_gate_failed"
+        ],
+        "measured": "index book converted by price scale refits at 0.5218% RMSE against a 0.5% gate, max cell error 0.964%",
+        "re_entry": "a dated Russell book, a same-date index level and IWM NAV per share, a fixed unit conversion, cell RMSE at or under 0.5%, and a disjoint holdout"
       }
     ],
     "contract": "a defect blocks promotion and disappears when fixed; a finding is what the measurement says and is disclosed, not resolved"
@@ -47,6 +55,109 @@
     "frozen_historical_yoo_calibration_parameters_used": true,
     "automatic_refresh": true,
     "panel_history_available": true
+  },
+  "calibration_contract": {
+    "lt_roe_rule": {
+      "anchor": "the index's own rolling 260-week median forward ROE",
+      "intercept": 0.070661,
+      "gap_coefficient": 0.471304,
+      "equation": "LTROE_centre = median_260w + 0.070661 + 0.471304 * max(forward_ROE - median_260w, 0)",
+      "fit_dates": [
+        "2025-12-09",
+        "2026-08-03"
+      ],
+      "fit_observables": "printed LTROE axis centres only: three from the 2025-12-09 index sheets and four from the 2026-08-03 Samsung and SK Hynix scenarios. No published upside is inverted into the fit, which leaves both two-sided claims free to evaluate it.",
+      "cross_family_bridge": "the stock sheets contribute the large-gap regime only; their implied gap share of 0.622~0.756 brackets the share the index rows imply, which is the measured agreement that licenses the transfer",
+      "lattice_half_width": 0.005,
+      "lattice_note": "Yoo prints a +/-0.5pp LTROE axis; the same half width is retained"
+    },
+    "payout_multiplier": {
+      "low": 1.08488,
+      "center": 1.08574,
+      "high": 1.0866,
+      "observations": 2,
+      "derivation": "direct index payout over raw tracker ratio on the same basis, both sides being dividend yield over forward earnings yield, measured on the S&P 500 and the NASDAQ 100 where the tracker really is the index",
+      "swept": "the low and high multipliers are swept into the published endpoints so the measured divergence is visible rather than hidden",
+      "rejected": "a universal scalar fitted to the printed/grid/LSEG payouts, which are trailing realised or inverted quantities and not the same variable as a tracker distribution yield"
+    },
+    "actual_roe_anchor_ratio": {
+      "value": 0.74835,
+      "low": 0.7028,
+      "high": 0.7861,
+      "observations": 4,
+      "derivation": "printed five-actual-year median ROE over our 260-week forward-ROE median, at SPX 18.45/23.47, NDX 23.76/31.55, CCMP 16.06/22.85 and KOSPI 7.65/10.18",
+      "source": "docs/archive/2026-08/yoo-rim-sheets printed ROE rows, inventoried in fh-20260805-122"
+    },
+    "erp_lattice": {
+      "SPX": [
+        0.04,
+        0.045,
+        0.05
+      ],
+      "NDX": [
+        0.045,
+        0.05,
+        0.055
+      ],
+      "CCMP": [
+        0.045,
+        0.05,
+        0.055
+      ],
+      "SOX": [
+        0.045,
+        0.05,
+        0.055
+      ],
+      "RUT": [
+        0.04,
+        0.045,
+        0.05
+      ],
+      "KOSPI": [
+        0.055,
+        0.065,
+        0.075
+      ]
+    },
+    "etf_proxy": {
+      "SPX": "SPY",
+      "NDX": "QQQ",
+      "CCMP": "ONEQ",
+      "SOX": "SOXX",
+      "RUT": "IWM",
+      "KOSPI": "EWY"
+    },
+    "twelve_month_conversion": {
+      "intercept": 0.12923,
+      "slope": 0.08355,
+      "horizon_months": 12,
+      "observations": 157,
+      "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest",
+      "stability": "coefficients differ by sub-period (slope 0.238 fitted on 2017-2022 against 0.124 on 2022-2026), so the level is calibrated but not stationary"
+    },
+    "structure": {
+      "horizon": 9,
+      "discount": {
+        "intercept": 0.076,
+        "slope": 0.56,
+        "equation": "d(Rf) = 0.076 + 0.56 * Rf"
+      },
+      "cost_of_equity": "Ke = Rf + ERP",
+      "residual_income": "RI_t = (LTROE - Ke) * B_(t-1)",
+      "book_roll_forward": "B_t = B_(t-1) * (1 + g); Yoo sets g = LTROE * (1 - dividend payout)",
+      "terminal": "RI_N / d(Rf), discounted N years; the omega = 1 case of Ohlson persistence",
+      "evidence": "reproduces the 54 published 2025-12-09 grid cells; see runStructuralReproduction"
+    },
+    "convexity_domain": {
+      "low": 1.7686871045010335,
+      "high": 2.5573573388074213,
+      "observations": 12,
+      "basis": "every printed LTROE axis value times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+      "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
+    },
+    "attested_by": "data/computed/fenok-rim/identification-receipt.json#sustainable_calibration_receipt",
+    "direction": "this artifact is the input to that receipt; it never reads it"
   },
   "structure": {
     "horizon": 9,

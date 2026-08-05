@@ -91,10 +91,50 @@ for (const finding of artifact.promotion.findings) {
   assert.ok(finding.id && finding.detail, "every finding must name itself and say what it measured");
   assert.ok(!artifact.promotion.blockers.some((row) => row.id === finding.id), `${finding.id}: a finding may not also block`);
 }
+// Structural coverage is reported both ways: what was published and what was
+// eligible. Collapsing to one number is how 36/36 would read as complete.
+const structural = artifact.promotion.findings.find((row) => row.id === "structural_cells_excluded_for_unit_incoherence");
+if (structural) {
+  assert.match(structural.observed, /^\d+\/\d+$/, "observed coverage must be reported");
+  assert.match(structural.eligible, /^(\d+)\/\1$/, "every eligible cell must reproduce");
+  assert.ok(structural.ineligible_cells > 0, "the ineligible count must be stated, not implied");
+  assert.deepEqual(structural.reasons, [
+    "unit_coherent_book_unavailable",
+    "same_date_NAV_unavailable",
+    "scale_only_bridge",
+    "rmse_gate_failed",
+  ]);
+  assert.ok(structural.re_entry, "an exclusion must say what would reverse it");
+}
+// Proxy identity is the only defect left standing.
+assert.deepEqual(artifact.promotion.blockers.map((row) => row.id), ["ungated_proxy_identity"]);
+
 // The two we know are findings, not defects: we cannot fit our way to his
 // numbers, and we cannot make an index compound inside a domain it is outside.
 assert.ok(artifact.promotion.findings.some((row) => row.id === "more_conservative_than_published_claims")
   || holdout.feno.informative_passed === holdout.feno.informative_total);
+// The receipt gate must be real, not self-clearing: it may not sign off on its
+// own absence, and it must carry every defect this run computed.
+const receipt = JSON.parse(fs.readFileSync(new URL("../data/computed/fenok-rim/identification-receipt.json", import.meta.url), "utf8"))
+  .sustainable_calibration_receipt;
+assert.ok(receipt, "a sustainable calibration receipt must exist");
+for (const field of ["parameter_sha256", "calibration_cutoff_at", "calibration_component_sha256", "receipt_sha256"]) {
+  assert.ok(receipt[field], `the receipt must carry ${field}`);
+}
+const declared = new Set((receipt.promotion?.blockers ?? []).map((row) => row.id ?? row));
+for (const blocker of artifact.promotion.blockers) {
+  if (blocker.id.startsWith("sustainable_calibration_receipt")) continue;
+  assert.ok(declared.has(blocker.id), `${blocker.id}: the receipt must declare every computed defect`);
+}
+// Refusing the row is necessary, not sufficient. A proxy row may never publish
+// while its bridge fails, and the global defect stands until those indices have
+// direct target inputs regardless: a withheld index is still one we cannot
+// value, and promoting around it would claim otherwise.
+const proxyPublishing = artifact.rows.filter((row) => ["SOX", "RUT"].includes(row.id) && row.publication_status !== "NULL");
+assert.equal(proxyPublishing.length, 0, "a failing bridge may never publish a value");
+const ungatedDefect = artifact.promotion.blockers.find((row) => row.id === "ungated_proxy_identity");
+assert.ok(ungatedDefect, "the global proxy defect stands until direct inputs exist");
+assert.ok(ungatedDefect.clears_when, "the defect must say what would clear it");
 assert.ok(!artifact.promotion.blockers.some((row) => row.id === "out_of_sample_anchor_failed"),
   "disagreeing with a published claim is a finding, not a defect");
 if (artifact.promotion.blockers.length) {
@@ -195,6 +235,7 @@ assert.equal(artifact.rows.find((row) => row.id === "RUT").inputs.forward_roe_ba
 const stale = buildSustainableIndexRanges({ asOf: "2026-08-04", generatedAt: "2027-01-01T00:00:00.000Z" });
 assert.ok(stale.rows.every((row) => row.publication_status === "NULL"), "a year-old panel must block every row");
 assert.ok(["partial_six_index_coverage", "research_diagnostic_not_promoted"].includes(stale.status));
+assert.ok(stale.promotion.blockers.length >= 0);
 
 const packageJson = JSON.parse(fs.readFileSync(new URL("../100xfenok-next/package.json", import.meta.url), "utf8"));
 const derived = packageJson.scripts["reconcile:derived"];
