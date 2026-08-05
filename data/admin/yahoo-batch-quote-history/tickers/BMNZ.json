@@ -12,15 +12,28 @@
       "run_id": "29875696340",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 921,
+      "natural": true,
+      "observed_at": "2026-08-05T23:14:16Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31055557073",
+      "schedule": "7 22 * * 0-5",
+      "shard": "47/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-21T23:09:20Z",
-    "history_as_of": "2026-07-21",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BMNZ.json",
-    "payload_sha256": "5e0e52ed698b1e3eed0979d7043867a3838b292a79f3c132e6f149ddca326987",
-    "quote_as_of": "2026-07-21T20:00:00Z",
-    "source_as_of": "2026-07-21"
+    "fetched_at": "2026-08-05T23:15:37Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/BMNZ.json",
+    "payload_sha256": "8174d05dccc42dc270011ba4202db3daa7afc7db9b6cb218ef7f497dcad6f676",
+    "quote_as_of": "2026-08-05T20:00:00Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1181,
+    "latency_ms": 921,
     "natural": true,
-    "observed_at": "2026-07-21T23:04:26Z",
+    "observed_at": "2026-08-05T23:14:16Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29875696340",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "31055557073",
+    "schedule": "7 22 * * 0-5",
+    "shard": "47/72"
   },
   "lkg": {
     "fetched_at": "2026-07-21T23:09:20Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-21",
-    "observed_at": "2026-07-21T23:04:26Z",
-    "payload_sha256": "c5291e9a3957b4264b3a4e18d0dbfe58181e4c00c9c5ba70f2bff4977c50a63d",
-    "quote_as_of": "2026-07-21T20:00:00Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-05T23:14:16Z",
+    "payload_sha256": "28937a7c7d34b65970dc62e68af2336a994442d98ae4a0a5a793e0b2e686ab0e",
+    "quote_as_of": "2026-08-05T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "29875696340",
+    "run_id": "31055557073",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-21"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-21"
   },
   "ticker": "BMNZ",
-  "updated_at": "2026-07-30T00:35:13Z"
+  "updated_at": "2026-08-05T23:14:16Z"
 }
