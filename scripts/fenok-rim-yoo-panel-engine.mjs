@@ -202,15 +202,15 @@ export const FROZEN_CALIBRATION = Object.freeze({
   // imply. That agreement is the bridge, and it is what stops the rule from
   // damping a semiconductor peak into nothing.
   lt_roe_rule: Object.freeze({
-    equation: "LTROE_centre = median_260w + 0.030846 + 0.575508 * max(forward_ROE - median_260w, 0)",
+    equation: "LTROE_centre = median_260w + 0.037769 + 0.552249 * max(forward_ROE - median_260w, 0)",
     anchor: "the index's own rolling 260-week median forward ROE",
-    intercept: 0.030846,
-    gap_coefficient: 0.575508,
+    intercept: 0.037769,
+    gap_coefficient: 0.552249,
     observations: 9,
     fit_dates: Object.freeze(["2025-12-09", "2026-06-14", "2026-07-26", "2026-08-03"]),
     fit_observables: "three printed 2025-12-09 index LTROE axis centres, the LTROE reproducing the published 2026-07-26 S&P 500 span and the published 2026-06-14 KOSPI upside, and four printed 2026-08-03 Samsung and SK Hynix LTROE scenario centres",
     cross_family_bridge: "the stock sheets contribute the large-gap regime only; their implied gap share of 0.622~0.756 brackets the share the index rows imply, which is the measured agreement that licenses the transfer",
-    max_abs_residual_pp: 3.49,
+    max_abs_residual_pp: 3.72,
     lattice_half_width: 0.005,
     lattice_note: "Yoo prints a +/-0.5pp LTROE axis; the same half width is retained",
   }),
@@ -300,6 +300,10 @@ export const FENO_RULE = Object.freeze({
   output: "low/high only, swept over the LTROE and ERP lattices; never a point",
 });
 
+// The two published claims inverted into the LTROE fit. They are training
+// data and are excluded from the evaluation score.
+export const LT_ROE_FIT_ANCHOR_IDS = Object.freeze(["SPX@2026-07-26", "KOSPI@2026-06-14"]);
+
 const PAYOUT_HISTORY_KEYS = Object.freeze({ SPX: "sp500", NDX: "nasdaq100", SOX: "philadelphia_semi", KOSPI: "kospi" });
 
 /**
@@ -360,23 +364,34 @@ export function readTrackerPayout(root, id, asOf) {
  * and RUT's comes from the LSEG factsheet, so both fall back to their frozen
  * calibrated value and say so.
  */
-export function readAutomaticPayout(root, id) {
+export function readAutomaticPayout(root, id, asOf) {
   const key = PAYOUT_HISTORY_KEYS[id];
   if (key) {
     const history = readJson(root, "data/computed/fenok-rim/payout-history.json");
     const rows = history.indices?.[key]?.history ?? [];
-    const recent = rows.slice(-4).map((row) => row.payout_ratio).filter(Number.isFinite);
+    // Only fiscal years that had closed and reported before `asOf` may enter a
+    // retrospective score. Without this the 2026-08-04 build vintage was being
+    // read back into April and June anchors, so the holdout was scoring the
+    // model against data it could not have had.
+    const latestUsableYear = asOf ? Number(String(asOf).slice(0, 4)) - 1 : Number.POSITIVE_INFINITY;
+    const usable = rows.filter((row) => Number(row.year) <= latestUsableYear);
+    const recent = usable.slice(-4).map((row) => row.payout_ratio).filter(Number.isFinite);
     if (recent.length) {
+      const pointInTime = history.generated_at <= String(asOf ?? "");
       return {
         value: recent.reduce((a, b) => a + b, 0) / recent.length,
-        as_of: history.generated_at,
-        source: `data/computed/fenok-rim/payout-history.json#indices.${key} trailing ${recent.length}-year mean`,
+        as_of: `${latestUsableYear}-12-31`,
+        fiscal_years: usable.slice(-4).map((row) => row.year),
+        build_vintage: history.generated_at,
+        point_in_time: pointInTime,
+        source: `data/computed/fenok-rim/payout-history.json#indices.${key} trailing ${recent.length}-year mean through FY${latestUsableYear}`
+          + (pointInTime ? "" : "; values recomputed on a later build vintage, so the level is not a point-in-time observation"),
         automatic: true,
       };
     }
   }
   const frozen = FROZEN_CALIBRATION.payout[id];
-  return { value: frozen.value, as_of: FROZEN_CALIBRATION.version, source: frozen.source, automatic: false };
+  return { value: frozen.value, as_of: FROZEN_CALIBRATION.version, source: frozen.source, automatic: false, point_in_time: false };
 }
 
 export function ltRoeCentre(forwardRoe, medianRoe) {
@@ -438,7 +453,7 @@ export function buildPanelIndexRow(root, id, { asOf }) {
   const tracker = readTrackerPayout(root, id, asOf);
   const fallback = official
     ? { value: official.payout, as_of: official.as_of, source: `${official.source} ex-negative dividend yield times P/E`, automatic: true }
-    : readAutomaticPayout(root, id);
+    : readAutomaticPayout(root, id, asOf);
   const payoutBand = tracker
     ? { low: tracker.low, center: tracker.center, high: tracker.high }
     : { low: fallback.value, center: fallback.value, high: fallback.value };
@@ -520,6 +535,7 @@ export function buildPanelIndexRow(root, id, { asOf }) {
       payout_tracker: tracker ? tracker.ticker : null,
       retention,
       payout_as_of: payoutSource.as_of,
+      payout_point_in_time: payoutSource.point_in_time !== false,
       payout_source: payoutSource.source,
       measured_book_growth: measured,
       risk_free: riskFree.value,
@@ -625,7 +641,7 @@ export function inferLtRoeFromPublishedSpan(root, { id, date, low, high }) {
   const panel = readPanelObservation(root, id, date);
   const riskFree = readRiskFree(root, id, date);
   const tracker = readTrackerPayout(root, id, date);
-  const retention = 1 - (tracker ? tracker.center : readAutomaticPayout(root, id).value);
+  const retention = 1 - (tracker ? tracker.center : readAutomaticPayout(root, id, date).value);
   const half = FROZEN_CALIBRATION.lt_roe_rule.lattice_half_width;
   const erpAxis = FROZEN_CALIBRATION.erp_lattice[id];
   const spanMid = (centre) => {
@@ -667,7 +683,10 @@ export function runLtRoeCalibration(root = ROOT) {
   const printedCentres = { SPX: 0.261, CCMP: 0.307, RUT: 0.148 };
   const observations = Object.entries(printedCentres).map(([id, printed]) => {
     const panel = readPanelObservation(root, id, "2025-12-09");
-    const official = id === "RUT" ? russellOfficialBasis(root, "2026-12-31") : null;
+    // The 2025-12-09 fit may not read a 2026 factsheet. When no snapshot
+    // predates the anchor the ex-negative bridge is unavailable and the row is
+    // recorded as such rather than borrowed from the future.
+    const official = id === "RUT" ? russellOfficialBasis(root, "2025-12-09") : null;
     const ratio = official ? official.median_ratio : 1;
     return {
       id: `${id}@2025-12-09`,
@@ -757,6 +776,7 @@ export function runPublishedUpsideHoldout(root = ROOT) {
   const score = (band, anchor) => (anchor.kind === "floor"
     ? band.upside.high >= anchor.low
     : band.upside.high >= anchor.low && band.upside.low <= anchor.high);
+  const fitIds = new Set(LT_ROE_FIT_ANCHOR_IDS);
   const rows = anchors.map((anchor) => {
     const row = buildPanelIndexRow(root, anchor.id, { asOf: anchor.date });
     return {
@@ -764,13 +784,18 @@ export function runPublishedUpsideHoldout(root = ROOT) {
       feno: { upside: row.feno.upside, convexity: row.feno.convexity.status, passed: score(row.feno, anchor) },
       measured_growth_diagnostic: { upside: row.measured_growth_diagnostic.upside, convexity: row.measured_growth_diagnostic.convexity.status, passed: score(row.measured_growth_diagnostic, anchor) },
       informative: anchor.kind !== "floor",
+      used_for_fitting: fitIds.has(`${anchor.id}@${anchor.date}`),
     };
   });
+  // An anchor that set a parameter cannot also test it. Only rows outside the
+  // fit set count as evaluation; the rest are reported separately as in-sample.
   const summarise = (key) => {
-    const informative = rows.filter((row) => row.informative);
+    const evaluation = rows.filter((row) => !row.used_for_fitting);
+    const informative = evaluation.filter((row) => row.informative);
     return {
-      passed: rows.filter((row) => row[key].passed).length,
-      total: rows.length,
+      in_sample: rows.length - evaluation.length,
+      passed: evaluation.filter((row) => row[key].passed).length,
+      total: evaluation.length,
       informative_passed: informative.filter((row) => row[key].passed).length,
       informative_total: informative.length,
     };
@@ -779,7 +804,8 @@ export function runPublishedUpsideHoldout(root = ROOT) {
     rows,
     feno: summarise("feno"),
     measured_growth_diagnostic: summarise("measured_growth_diagnostic"),
-    note: "floor anchors are one-sided and are passed by almost any positive band; only the two-sided rows discriminate",
+    fit_anchor_ids: [...LT_ROE_FIT_ANCHOR_IDS],
+    note: "floor anchors are one-sided and are passed by almost any positive band; only two-sided rows outside the fit set discriminate",
   };
 }
 

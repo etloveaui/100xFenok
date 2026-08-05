@@ -1077,14 +1077,25 @@ const config = {
     lane({
       id: "yahoo_batch_quote_history",
       label: "Yahoo batch quote/history",
+      // One stock slot plus twelve two-hourly ETF slots. These keys must stay
+      // identical to the workflow's own `on.schedule`, or the detection
+      // observer cannot attribute a missed slot; see
+      // test-fetch-cron-attempt-coverage.mjs, which derives them from the
+      // workflow file rather than trusting this list.
       members: [registryMember("yahoo_batch_quote_history", [
         "20 23 * * 1-5",
-        "0 22 * * 0",
-        "0 22 * * 1",
-        "0 22 * * 2",
-        "0 22 * * 3",
-        "0 22 * * 4",
-        "0 22 * * 5",
+        "0 0 * * 0-5",
+        "0 2 * * 0-5",
+        "0 4 * * 0-5",
+        "0 6 * * 0-5",
+        "0 8 * * 0-5",
+        "0 10 * * 0-5",
+        "0 12 * * 0-5",
+        "0 14 * * 0-5",
+        "0 16 * * 0-5",
+        "0 18 * * 0-5",
+        "0 20 * * 0-5",
+        "0 22 * * 0-5",
       ], [
         artifact("yahoo_batch_quote_history_index", "data/admin/yahoo-batch-quote-history/index.json", {
           schemaVersion: schemaVersion("/schema_version", "yahoo-batch-quote-history-index/v1"),

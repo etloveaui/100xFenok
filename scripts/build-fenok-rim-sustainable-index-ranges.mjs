@@ -67,6 +67,47 @@ function laneView(lane) {
   };
 }
 
+/**
+ * Promotion gates, computed from what the run actually measured.
+ *
+ * The previous builder set RANGE from freshness and finiteness alone, which is
+ * how six rows shipped as ready while nothing had independently validated the
+ * rule. A gate that cannot fail is not a gate.
+ */
+function promotionBlockers({ rows, structural, holdout }) {
+  const blockers = [];
+  const informative = holdout.feno.informative_total;
+  if (informative === 0) {
+    blockers.push({
+      id: "no_discriminating_out_of_sample_anchor",
+      detail: `every evaluation anchor outside the fit set is a one-sided floor; ${holdout.feno.in_sample} two-sided claims were consumed by the LTROE fit`,
+    });
+  } else if (holdout.feno.informative_passed < informative) {
+    blockers.push({ id: "out_of_sample_anchor_failed", detail: `${holdout.feno.informative_passed}/${informative} two-sided evaluation anchors reproduce` });
+  }
+  const amplifying = rows.filter((row) => row.convexity?.status === "amplifying").map((row) => row.id);
+  if (amplifying.length) {
+    blockers.push({ id: "amplifying_convexity", detail: `book growth exceeds twice the discount rate for ${amplifying.join(", ")}, so the answer tracks the ROE input rather than valuing it` });
+  }
+  const reproduced = structural.instruments.filter((row) => row.status === "reproduced");
+  const cells = reproduced.reduce((sum, row) => sum + row.cells, 0);
+  const total = structural.instruments.reduce((sum, row) => sum + row.cells, 0);
+  if (cells < total) {
+    const skipped = structural.instruments.filter((row) => row.status !== "reproduced").map((row) => row.instrument);
+    blockers.push({ id: "partial_structural_reproduction", detail: `${cells}/${total} published cells reproduce; ${skipped.join(", ")} lack a unit-coherent book` });
+  }
+  const proxyIdentity = rows.filter((row) => ["SOX", "RUT"].includes(row.id)).map((row) => row.id);
+  if (proxyIdentity.length) {
+    blockers.push({ id: "ungated_proxy_identity", detail: "SOX is scored against SOXX claims and RUT against IWM cells; neither bridge is measured" });
+  }
+  const notPointInTime = rows.filter((row) => row.inputs?.payout_point_in_time === false).map((row) => row.id);
+  if (notPointInTime.length) {
+    blockers.push({ id: "payout_not_point_in_time", detail: `${notPointInTime.join(", ")} use payout levels recomputed on a later build vintage` });
+  }
+  blockers.push({ id: "calibration_receipt_not_immutable", detail: "the frozen block carries no cutoff, evidence hashes or parameter hash, so a rebuild cannot be proven identical" });
+  return blockers;
+}
+
 /** Fail closed: a row that cannot be trusted must not carry a range. */
 function gateRow(row, generatedAt) {
   const blockers = [];
@@ -90,10 +131,18 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
   const payoutFit = runPayoutCalibration(root, effectiveAsOf);
   const holdout = runPublishedUpsideHoldout(root);
 
-  const rows = SCOPE.map((id) => {
-    const row = buildPanelIndexRow(root, id, { asOf: effectiveAsOf });
+  const panelRows = SCOPE.map((id) => ({ id, row: buildPanelIndexRow(root, id, { asOf: effectiveAsOf }) }));
+  const promotion = promotionBlockers({
+    rows: panelRows.map(({ id, row }) => ({ id, convexity: row.feno.convexity, inputs: row.inputs })),
+    structural,
+    holdout,
+  });
+
+  const rows = panelRows.map(({ id, row }) => {
     const { blockers, input_freshness: inputFreshness } = gateRow(row, generatedAt);
-    const publicationStatus = blockers.length ? "NULL" : "RANGE";
+    // A row can only ever be a research diagnostic while a promotion blocker
+    // stands. Freshness still decides whether it is computable at all.
+    const publicationStatus = blockers.length ? "NULL" : "RESEARCH_DIAGNOSTIC";
     return {
       id,
       label: row.label,
@@ -103,8 +152,8 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
       input_freshness: inputFreshness,
       current_price: row.inputs.price,
       inputs: row.inputs,
-      value: publicationStatus === "RANGE" ? laneView(row.feno) : null,
-      measured_growth_diagnostic: publicationStatus === "RANGE" ? laneView(row.measured_growth_diagnostic) : null,
+      value: publicationStatus === "NULL" ? null : laneView(row.feno),
+      measured_growth_diagnostic: publicationStatus === "NULL" ? null : laneView(row.measured_growth_diagnostic),
       confidence: row.feno.convexity.status === "bounded" ? "medium" : "low",
       source_notes: {
         panel: `${PANEL_SOURCES[id].file}#sections.${PANEL_SOURCES[id].section}`,
@@ -121,12 +170,19 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
     schema_version: "fenok_rim_sustainable_index_ranges.v2",
     generated_at: generatedAt,
     as_of: effectiveAsOf,
-    status: rows.every((row) => row.publication_status === "RANGE")
-      ? "six_index_residual_value_ranges_ready"
-      : "partial_six_index_coverage",
+    status: promotion.length
+      ? "research_diagnostic_not_promoted"
+      : rows.every((row) => row.publication_status !== "NULL")
+        ? "six_index_residual_value_ranges_ready"
+        : "partial_six_index_coverage",
+    promotion: {
+      promoted: promotion.length === 0,
+      blockers: promotion,
+      contract: "every blocker must clear before a row may be published as a usable fair-value range",
+    },
     scope: SCOPE,
     runtime_contract: {
-      output_type: "FENO_residual_value_range",
+      output_type: "FENO_residual_value_research_diagnostic",
       point_estimate: false,
       runtime_yoo_value_injection: false,
       runtime_target_level_injection: false,

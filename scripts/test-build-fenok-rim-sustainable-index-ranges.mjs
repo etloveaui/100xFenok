@@ -18,7 +18,7 @@ assert.equal(artifact.runtime_contract.point_estimate, false);
 assert.equal(artifact.runtime_contract.runtime_yoo_value_injection, false);
 assert.equal(artifact.runtime_contract.runtime_target_level_injection, false);
 assert.equal(artifact.runtime_contract.frozen_historical_yoo_calibration_parameters_used, true);
-assert.equal(artifact.runtime_contract.output_type, "FENO_residual_value_range");
+assert.equal(artifact.runtime_contract.output_type, "FENO_residual_value_research_diagnostic");
 
 // Calibration receipts must travel with the artifact, not live only in prose.
 const reproduced = artifact.calibration.structural_reproduction.instruments.filter((row) => row.status === "reproduced");
@@ -36,18 +36,44 @@ assert.ok(share.low > 0.6 && share.high < 0.8, "the printed stock gap share must
 assert.ok(artifact.calibration.lt_roe_rule.refit.observations.some((row) => row.id.startsWith("KOSPI")),
   "Korea must be a fitted observation rather than a US extrapolation");
 assert.ok(artifact.calibration.published_upside_holdout.rows.length >= 7, "the hold-out receipt must list every scored anchor");
-assert.equal(artifact.calibration.published_upside_holdout.feno.informative_total, 2);
-// The rule must reproduce the only two-sided index anchor Yoo has published.
-const spxAnchor = artifact.calibration.published_upside_holdout.rows
-  .find((row) => row.id === "SPX" && row.date === "2026-07-26");
-assert.ok(spxAnchor.feno.passed, "the rule must overlap the published 2026-07-26 S&P 500 span");
+// An anchor used to fit a parameter cannot also evaluate it. Both inverted
+// claims must be reported as in-sample and excluded from the score.
+const holdout = artifact.calibration.published_upside_holdout;
+assert.equal(holdout.feno.in_sample, 2);
+for (const row of holdout.rows) {
+  const fitted = holdout.fit_anchor_ids.includes(`${row.id}@${row.date}`);
+  assert.equal(row.used_for_fitting, fitted, `${row.id}@${row.date}: fit membership must be declared`);
+}
+assert.equal(
+  holdout.rows.filter((row) => !row.used_for_fitting).length,
+  holdout.feno.total,
+  "the evaluation total must count only rows outside the fit set",
+);
+
+// Promotion is gated on what the run measured, not on freshness alone. While a
+// blocker stands nothing may be published as a usable range.
+assert.equal(artifact.promotion.promoted, holdout.feno.informative_total > 0 && artifact.promotion.blockers.length === 0);
+if (artifact.promotion.blockers.length) {
+  assert.equal(artifact.status, "research_diagnostic_not_promoted");
+  assert.ok(artifact.rows.every((row) => row.publication_status !== "RANGE"),
+    "no row may claim RANGE while a promotion blocker stands");
+  for (const blocker of artifact.promotion.blockers) {
+    assert.ok(blocker.id && blocker.detail, "every blocker must name itself and say what it measured");
+  }
+}
+// The blocker that matters most: no two-sided claim survives outside the fit.
+assert.ok(
+  artifact.promotion.blockers.some((row) => row.id === "no_discriminating_out_of_sample_anchor")
+    || holdout.feno.informative_total > 0,
+  "a run with no two-sided evaluation anchor must say so",
+);
 assert.equal(artifact.calibration.feno_rule.version, "feno-rim-residual-value/1");
 
 // Every published row exposes two lanes, no point estimate, and a receipt for
 // each operand that is not read straight from a panel.
 for (const row of artifact.rows) {
   assert.equal(row.runtime_yoo_value_injection, false);
-  assert.ok(["RANGE", "NULL"].includes(row.publication_status));
+  assert.ok(["RESEARCH_DIAGNOSTIC", "RANGE", "NULL"].includes(row.publication_status));
   if (row.publication_status === "NULL") {
     assert.ok(row.blocking_reasons.length > 0, `${row.id}: a blocked row must name its blocker`);
     assert.equal(row.value, null);
@@ -56,14 +82,20 @@ for (const row of artifact.rows) {
   }
   assert.deepEqual(row.blocking_reasons, []);
   assert.equal(row.input_freshness.status, "passed");
+  assert.equal(row.publication_status, "RESEARCH_DIAGNOSTIC");
   for (const lane of [row.value, row.measured_growth_diagnostic]) {
     assert.equal(lane.point_estimate, null, `${row.id}: no lane may publish a point`);
     assert.ok(Number.isFinite(lane.range.low) && Number.isFinite(lane.range.high));
     assert.ok(lane.range.low <= lane.range.high, `${row.id}: endpoints must be ordered`);
     assert.ok(Number.isFinite(lane.upside.low) && Number.isFinite(lane.upside.high));
   }
-  // Convexity is disclosed on every row rather than silently corrected.
+  // Convexity is disclosed on every row rather than silently corrected, and an
+  // amplifying row must appear in the promotion blockers.
   assert.ok(["bounded", "convex", "amplifying"].includes(row.value.convexity.status), `${row.id}: convexity must be disclosed`);
+  if (row.value.convexity.status === "amplifying") {
+    assert.ok(artifact.promotion.blockers.some((entry) => entry.id === "amplifying_convexity"),
+      `${row.id}: an amplifying row must block promotion`);
+  }
   assert.ok(Math.abs(row.value.book_growth - row.inputs.lt_roe_centre * row.inputs.retention) < 1e-12,
     `${row.id}: published growth must be Yoo's own roll-forward`);
   assert.ok(["bounded", "convex", "amplifying"].includes(row.measured_growth_diagnostic.convexity.status));
@@ -79,7 +111,7 @@ assert.equal(artifact.rows.find((row) => row.id === "RUT").inputs.forward_roe_ba
 // A stale panel must fail the row closed rather than publish a stale range.
 const stale = buildSustainableIndexRanges({ asOf: "2026-08-04", generatedAt: "2027-01-01T00:00:00.000Z" });
 assert.ok(stale.rows.every((row) => row.publication_status === "NULL"), "a year-old panel must block every row");
-assert.equal(stale.status, "partial_six_index_coverage");
+assert.ok(["partial_six_index_coverage", "research_diagnostic_not_promoted"].includes(stale.status));
 
 const packageJson = JSON.parse(fs.readFileSync(new URL("../100xfenok-next/package.json", import.meta.url), "utf8"));
 const derived = packageJson.scripts["reconcile:derived"];

@@ -82,8 +82,19 @@ const fitKeys = new Set(fit.observations.map((row) => row.id));
 const evaluated = holdout.rows.filter((row) => fitKeys.has(`${row.id}@${row.date}`));
 // Only the two inverted anchors may be shared, and both must be two-sided so
 // the overlap is visible rather than hidden among the one-sided floors.
+// The two inverted anchors are training data. They must be flagged and kept
+// out of the score, not counted as if they validated anything.
 assert.equal(evaluated.length, 2, "only the two inverted anchors may appear in both sets");
 assert.ok(evaluated.every((row) => row.informative), "every shared anchor must be a declared two-sided claim");
+assert.ok(evaluated.every((row) => row.used_for_fitting), "a fitted anchor must be marked as such");
+assert.equal(holdout.feno.in_sample, 2);
+assert.equal(holdout.feno.total, holdout.rows.length - 2, "the score must exclude the fitted anchors");
+// Historical rows may not read a payout vintage from after their own as-of.
+for (const row of holdout.rows) {
+  const built = buildPanelIndexRow(ENGINE_ROOT, row.id, { asOf: row.date });
+  const payoutAsOf = String(built.inputs.payout_as_of).slice(0, 10);
+  assert.ok(payoutAsOf <= row.date, `${row.id}@${row.date}: payout dated ${payoutAsOf} is in that row's future`);
+}
 assert.ok(
   fit.observations.filter((row) => row.kind === "inverted_from_published_upside_span").length === 2,
   "the inverted observations must be labelled as such in the fit receipt",
