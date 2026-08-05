@@ -43,15 +43,59 @@
       "run_id": "29707016827",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: ABLG: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ABLG: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ABLG: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ABLG: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ABLG: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ABLG: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 691,
+      "natural": true,
+      "observed_at": "2026-08-05T10:46:42Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "30998672232",
+      "schedule": "7 8 * * 0-5",
+      "shard": "40/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-19T23:01:44Z",
-    "history_as_of": "2026-07-17",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ABLG.json",
-    "payload_sha256": "79c8c76770a5ee157dc29ae83274f5aa37c4a2d71a301e91620de9f75a5048eb",
-    "quote_as_of": "2026-07-15T18:30:31Z",
-    "source_as_of": "2026-07-15T18:30:31Z"
+    "fetched_at": "2026-08-05T10:47:09Z",
+    "history_as_of": "2026-08-04",
+    "path": "data/yf/finance/ABLG.json",
+    "payload_sha256": "262b04e62262b903f058cd693cda7171856a3ec98889d5b7a671c767444146cc",
+    "quote_as_of": "2026-08-04T19:52:36Z",
+    "source_as_of": "2026-08-04"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -91,14 +135,14 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 1717,
+    "latency_ms": 691,
     "natural": true,
-    "observed_at": "2026-07-19T22:59:54Z",
+    "observed_at": "2026-08-05T10:46:42Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29707016827",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "30998672232",
+    "schedule": "7 8 * * 0-5",
+    "shard": "40/72"
   },
   "lkg": {
     "fetched_at": "2026-07-19T23:01:44Z",
@@ -111,17 +155,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-17",
-    "observed_at": "2026-07-19T22:59:54Z",
-    "payload_sha256": "4bdcbd92ff9da4a291cd377c6b075465592378d86a1d69f040256561bcb83b65",
-    "quote_as_of": "2026-07-15T18:30:31Z",
+    "history_as_of": "2026-08-04",
+    "observed_at": "2026-08-05T10:46:42Z",
+    "payload_sha256": "a07679213893410260a20bd4e770a4af019e83694af191a395212aeb41daadc1",
+    "quote_as_of": "2026-08-04T19:52:36Z",
     "run_attempt": 1,
-    "run_id": "29707016827",
+    "run_id": "30998672232",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-15T18:30:31Z"
+    "source_as_of": "2026-08-04"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -134,5 +178,5 @@
     "source_as_of": "2026-07-15T18:30:31Z"
   },
   "ticker": "ABLG",
-  "updated_at": "2026-07-24T00:27:41Z"
+  "updated_at": "2026-08-05T10:46:42Z"
 }
