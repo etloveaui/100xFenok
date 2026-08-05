@@ -2617,16 +2617,32 @@ assert callable(namespace["load_universe"])
         self.assertIn("--run-id", run_step)
         self.assertIn("--natural-run", run_step)
         self.assertIn("--all-shards-run", run_step)
-        for weekday in range(6):
-            self.assertIn(f"0 22 * * {weekday}", workflow)
-            self.assertIn(f"'0 22 * * {weekday}') DAILY_INDEX={weekday}", run_step)
-        self.assertNotIn('date -u +%w', run_step)
+        # Twelve two-hourly ETF slots, Sunday-Friday, resolved to one of
+        # seventy-two stable shards. The hour comes from the cron string so a
+        # late start cannot move a slot; only the weekday reads the clock.
+        for hour in range(0, 24, 2):
+            self.assertIn(f"0 {hour} * * 0-5", workflow)
+        self.assertIn("SLOT_HOUR=", run_step)
+        self.assertIn("DAILY_SHARDS=72", run_step)
+        self.assertIn("SLOT_WEEKDAY * 12 + SLOT_HOUR / 2", run_step)
+        self.assertIn("date -u +%w", run_step)
         self.assertIn("--scheduled-weekday", run_step)
         self.assertIn('INPUT_RETRY_LIMIT="${YF_DAILY_STOCK_RETRY_LIMIT:-40}"', run_step)
         self.assertIn("YF_WEEKLY_ETF_RETRY_LIMIT:-40", run_step)
-        self.assertIn("YF_WEEKLY_ETF_REGULAR_LIMIT:-100", run_step)
+        # The regular cap must clear the largest 72-way shard, or that shard's
+        # tail is never collected.
+        self.assertIn("YF_WEEKLY_ETF_REGULAR_LIMIT:-140", run_step)
+        self.assertIn("YF_WEEKLY_ETF_LIMIT:-200", run_step)
         self.assertIn("YF_WEEKLY_ETF_UNTRACKED_LIMIT:-80", run_step)
-        self.assertIn('INPUT_UNTRACKED_ONLY="true"', run_step)
+        # The ETF slot is a refresh pass. Either narrowing flag turns it back
+        # into an acquisition-and-backfill pass that never revisits a tracked
+        # ticker with complete history.
+        self.assertIn('INPUT_UNTRACKED_ONLY="${YF_WEEKLY_ETF_UNTRACKED_ONLY:-false}"', run_step)
+        self.assertIn('INPUT_HISTORY_GAPS_ONLY="${YF_WEEKLY_ETF_HISTORY_GAPS_ONLY:-false}"', run_step)
+        # Quarter-close owns a universe of its own and belongs to the stock
+        # lane; running it after an ETF slot is what produced the 429 storm.
+        self.assertIn("YF_LANE=", run_step)
+        self.assertIn("env.YF_LANE != 'etf'", workflow)
         self.assertIn("--retry-limit", run_step)
         self.assertIn("--regular-limit", run_step)
         self.assertIn("--untracked-limit", run_step)

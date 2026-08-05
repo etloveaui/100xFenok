@@ -8,13 +8,25 @@ on:
   schedule:
     # Weekday measured-stock refresh after US close (KST Tue-Sat 08:20).
     - cron: '20 23 * * 1-5'
-    # Sunday-Friday 22:00 UTC: explicit schedule keys bind one stable ETF shard per day.
-    - cron: '0 22 * * 0'
-    - cron: '0 22 * * 1'
-    - cron: '0 22 * * 2'
-    - cron: '0 22 * * 3'
-    - cron: '0 22 * * 4'
-    - cron: '0 22 * * 5'
+    # Sunday-Friday, every two hours: twelve ETF slots a day, seventy-two a
+    # week. The universe is ~6,700 names, so a 72-shard cycle puts ~94 regular
+    # tickers in each slot, inside the existing regular=100 budget without
+    # matrix concurrency. The hour comes from the cron string and is immune to
+    # start drift; the weekday is read from the clock, so a slot delayed past
+    # midnight lands in the next day's cycle. That mis-slots at most one slot
+    # of seventy-two and self-corrects on the next pass.
+    - cron: '0 0 * * 0-5'
+    - cron: '0 2 * * 0-5'
+    - cron: '0 4 * * 0-5'
+    - cron: '0 6 * * 0-5'
+    - cron: '0 8 * * 0-5'
+    - cron: '0 10 * * 0-5'
+    - cron: '0 12 * * 0-5'
+    - cron: '0 14 * * 0-5'
+    - cron: '0 16 * * 0-5'
+    - cron: '0 18 * * 0-5'
+    - cron: '0 20 * * 0-5'
+    - cron: '0 22 * * 0-5'
   workflow_dispatch:
     inputs:
       limit:
@@ -226,18 +238,29 @@ jobs:
               INPUT_STOCKS_ONLY="true"
             else
               case "$EVENT_SCHEDULE" in
-                '0 22 * * 0') DAILY_INDEX=0 ;;
-                '0 22 * * 1') DAILY_INDEX=1 ;;
-                '0 22 * * 2') DAILY_INDEX=2 ;;
-                '0 22 * * 3') DAILY_INDEX=3 ;;
-                '0 22 * * 4') DAILY_INDEX=4 ;;
-                '0 22 * * 5') DAILY_INDEX=5 ;;
+                '0 '*' * * 0-5')
+                  SLOT_HOUR="${EVENT_SCHEDULE#0 }"
+                  SLOT_HOUR="${SLOT_HOUR%% *}"
+                  ;;
                 *) echo "::error::unrecognized scheduled ETF slot: $EVENT_SCHEDULE" >&2; exit 2 ;;
               esac
-              DAILY_SHARDS=6
-              INPUT_LIMIT="${YF_WEEKLY_ETF_LIMIT:-140}"
+              case "$SLOT_HOUR" in
+                0|2|4|6|8|10|12|14|16|18|20|22) : ;;
+                *) echo "::error::ETF slot hour must be even and below 24: $SLOT_HOUR" >&2; exit 2 ;;
+              esac
+              SLOT_WEEKDAY="$(date -u +%w)"
+              if [ "$SLOT_WEEKDAY" -gt 5 ]; then SLOT_WEEKDAY=5; fi
+              DAILY_INDEX=$(( SLOT_WEEKDAY * 12 + SLOT_HOUR / 2 ))
+              DAILY_SHARDS=72
+              echo "ETF slot: weekday=$SLOT_WEEKDAY hour=$SLOT_HOUR shard=$DAILY_INDEX/$DAILY_SHARDS"
+              # Hash-stable 72-shard split of ~6,700 names runs 73~122 per
+              # shard, so a 100 regular cap would truncate 21 of them and leave
+              # their tails permanently uncollected. 140 clears the observed
+              # maximum with headroom for new ETFs; the outer limit also has to
+              # cover retries and the pinned RIM trackers.
+              INPUT_LIMIT="${YF_WEEKLY_ETF_LIMIT:-200}"
               INPUT_RETRY_LIMIT="${YF_WEEKLY_ETF_RETRY_LIMIT:-40}"
-              INPUT_REGULAR_LIMIT="${YF_WEEKLY_ETF_REGULAR_LIMIT:-100}"
+              INPUT_REGULAR_LIMIT="${YF_WEEKLY_ETF_REGULAR_LIMIT:-140}"
               INPUT_UNTRACKED_LIMIT="${YF_WEEKLY_ETF_UNTRACKED_LIMIT:-80}"
               INPUT_SHARD_CYCLE_INDEX="${YF_WEEKLY_ETF_SHARD_CYCLE_INDEX:-}"
               INPUT_SCHEDULED_WEEKDAY="$DAILY_INDEX"
@@ -249,9 +272,13 @@ jobs:
               INPUT_MERGE_EXISTING="${YF_WEEKLY_ETF_MERGE_EXISTING:-false}"
               INPUT_PROFILE="${YF_WEEKLY_ETF_PROFILE:-etf}"
               INPUT_MAX_AGE_HOURS="${YF_WEEKLY_ETF_MAX_AGE_HOURS:-18}"
-              INPUT_HISTORY_GAPS_ONLY="${YF_WEEKLY_ETF_HISTORY_GAPS_ONLY:-true}"
+              # A refresh pass, not an acquisition pass. history-gaps-only
+              # skipped every ticker whose 1Y history was already complete, and
+              # untracked-only skipped every ticker already being tracked;
+              # together they meant an established ETF was never fetched again.
+              INPUT_HISTORY_GAPS_ONLY="${YF_WEEKLY_ETF_HISTORY_GAPS_ONLY:-false}"
               INPUT_HISTORY_MIN_ROWS="${YF_WEEKLY_ETF_HISTORY_MIN_ROWS:-200}"
-              INPUT_UNTRACKED_ONLY="true"
+              INPUT_UNTRACKED_ONLY="${YF_WEEKLY_ETF_UNTRACKED_ONLY:-false}"
               INPUT_STOCKANALYSIS_ETFS="${YF_WEEKLY_ETF_STOCKANALYSIS_ETFS:-true}"
               INPUT_STOCKS_ONLY="false"
             fi
@@ -259,6 +286,7 @@ jobs:
             INPUT_PLAN_ONLY="false"
           fi
           echo "YF_PLAN_ONLY=${INPUT_PLAN_ONLY:-false}" >> "$GITHUB_ENV"
+          echo "YF_LANE=$([ "${INPUT_STOCKS_ONLY:-false}" = "true" ] && echo stock || echo etf)" >> "$GITHUB_ENV"
           ARGS="--profile ${INPUT_PROFILE:-full} --max-age-hours ${INPUT_MAX_AGE_HOURS:-0} --record-batch-state --run-id ${GITHUB_RUN_ID} --run-attempt ${GITHUB_RUN_ATTEMPT}"
           # A bounded manual recovery uses the same deterministic retry lane
           # as the scheduled ETF slot; ordinary manual dispatches keep their
@@ -298,9 +326,13 @@ jobs:
         if: ${{ always() && env.YF_PLAN_ONLY != 'true' }}
         run: node scripts/emit-yahoo-batch-quote-history-attempt.mjs
 
+      # Quarter-close calls a ~1,400-ticker universe of its own. Running it
+      # after every ETF slot is what produced the repeated YFRateLimitError in
+      # run 30711922590, after the fetch itself had completed cleanly. It
+      # belongs to the stock lane, which owns that universe.
       - name: Refresh owned Yahoo quarter-close source
         id: quarter_closes
-        if: ${{ env.YF_PLAN_ONLY != 'true' }}
+        if: ${{ env.YF_PLAN_ONLY != 'true' && env.YF_LANE != 'etf' }}
         run: |
           python3 scripts/build-quarter-closes.py
           mkdir -p 100xfenok-next/public/data/yf
