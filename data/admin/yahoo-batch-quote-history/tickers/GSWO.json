@@ -43,15 +43,59 @@
       "run_id": "30958820437",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: GSWO: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: GSWO: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: GSWO: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: GSWO: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: GSWO: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: GSWO: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 768,
+      "natural": true,
+      "observed_at": "2026-08-05T17:51:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31031814422",
+      "schedule": "7 16 * * 0-5",
+      "shard": "44/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-04T23:10:24Z",
-    "history_as_of": "2026-08-04",
+    "fetched_at": "2026-08-05T17:53:21Z",
+    "history_as_of": "2026-08-05",
     "path": "data/yf/finance/GSWO.json",
-    "payload_sha256": "2576fe0b5e17e854c6b445d773178900684d93a8a02a5d8542ec96140da31e88",
-    "quote_as_of": "2026-08-04T19:21:33Z",
-    "source_as_of": "2026-08-04"
+    "payload_sha256": "e3d133dcf4e673f63f3b410207dda30ed079a5aaada759de2d6ba5a8717e2095",
+    "quote_as_of": "2026-08-05T16:24:57Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -91,30 +135,30 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 729,
+    "latency_ms": 768,
     "natural": true,
-    "observed_at": "2026-08-04T23:07:26Z",
+    "observed_at": "2026-08-05T17:51:24Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30958820437",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "31031814422",
+    "schedule": "7 16 * * 0-5",
+    "shard": "44/72"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-04",
-    "observed_at": "2026-08-04T23:07:26Z",
-    "payload_sha256": "4150f4a43ff5ad1ff82c523efbd13bbbf8c8ac883f89fb2b4ca1c2c71702a6ab",
-    "quote_as_of": "2026-08-04T19:21:33Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-05T17:51:24Z",
+    "payload_sha256": "b3765ecc1c752ff82c45ca3f337cdbef1c474895e2d3d898150813f4a56ac6a9",
+    "quote_as_of": "2026-08-05T16:24:57Z",
     "run_attempt": 1,
-    "run_id": "30958820437",
+    "run_id": "31031814422",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-04"
+    "source_as_of": "2026-08-05"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "GSWO",
-  "updated_at": "2026-08-04T23:07:26Z"
+  "updated_at": "2026-08-05T17:51:24Z"
 }

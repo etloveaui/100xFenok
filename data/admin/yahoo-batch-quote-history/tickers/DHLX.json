@@ -12,15 +12,28 @@
       "run_id": "29785605821",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 638,
+      "natural": true,
+      "observed_at": "2026-08-05T17:51:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31031814422",
+      "schedule": "7 16 * * 0-5",
+      "shard": "44/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-20T23:06:37Z",
-    "history_as_of": "2026-07-20",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DHLX.json",
-    "payload_sha256": "182ee2cd9eee5e24e24add38627f5141b6268d9f146cc19c075b6df887fd1b19",
-    "quote_as_of": "2026-07-20T19:58:30Z",
-    "source_as_of": "2026-07-20"
+    "fetched_at": "2026-08-05T17:51:59Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/DHLX.json",
+    "payload_sha256": "0193ef9d2a45924fce0a54795e3f4f87408e89b3db0281888f2c274cfd44223f",
+    "quote_as_of": "2026-08-05T17:05:27Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 790,
+    "latency_ms": 638,
     "natural": true,
-    "observed_at": "2026-07-20T23:03:20Z",
+    "observed_at": "2026-08-05T17:51:24Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29785605821",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31031814422",
+    "schedule": "7 16 * * 0-5",
+    "shard": "44/72"
   },
   "lkg": {
     "fetched_at": "2026-07-20T23:06:37Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-20",
-    "observed_at": "2026-07-20T23:03:20Z",
-    "payload_sha256": "5381397502649f997cc89fb80608dfeae6bdeaa8cc7b4f77939541f45ba6a248",
-    "quote_as_of": "2026-07-20T19:58:30Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-05T17:51:24Z",
+    "payload_sha256": "d33ec8551fc9811e92635a4a7f7f44b2d538ae502cacbfc2d1479038e12f6bb5",
+    "quote_as_of": "2026-08-05T17:05:27Z",
     "run_attempt": 1,
-    "run_id": "29785605821",
+    "run_id": "31031814422",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-20"
   },
   "ticker": "DHLX",
-  "updated_at": "2026-07-30T00:35:13Z"
+  "updated_at": "2026-08-05T17:51:24Z"
 }

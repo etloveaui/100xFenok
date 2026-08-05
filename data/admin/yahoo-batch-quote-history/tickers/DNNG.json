@@ -12,15 +12,28 @@
       "run_id": "29785605821",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 562,
+      "natural": true,
+      "observed_at": "2026-08-05T17:51:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31031814422",
+      "schedule": "7 16 * * 0-5",
+      "shard": "44/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-20T23:06:46Z",
-    "history_as_of": "2026-07-20",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DNNG.json",
-    "payload_sha256": "1e8ca65b5a36bf304685ed1d626771665497e3e0249a523a931e111d1db59ee2",
-    "quote_as_of": "2026-07-20T20:00:00Z",
-    "source_as_of": "2026-07-20"
+    "fetched_at": "2026-08-05T17:52:08Z",
+    "history_as_of": "2026-07-31",
+    "path": "data/yf/finance/DNNG.json",
+    "payload_sha256": "203c3bfe9e7a5e647d4c62171ee744082028f98a88a2882009e9c3673e22e937",
+    "quote_as_of": "2026-07-28T20:00:00Z",
+    "source_as_of": "2026-07-28T20:00:00Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 758,
+    "latency_ms": 562,
     "natural": true,
-    "observed_at": "2026-07-20T23:03:20Z",
+    "observed_at": "2026-08-05T17:51:24Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29785605821",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31031814422",
+    "schedule": "7 16 * * 0-5",
+    "shard": "44/72"
   },
   "lkg": {
     "fetched_at": "2026-07-20T23:06:46Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-20",
-    "observed_at": "2026-07-20T23:03:20Z",
-    "payload_sha256": "cff74b84c704a28a170212b9c7bcaf5b347ed49242af1512ccff05c8597b6f84",
-    "quote_as_of": "2026-07-20T20:00:00Z",
+    "history_as_of": "2026-07-31",
+    "observed_at": "2026-08-05T17:51:24Z",
+    "payload_sha256": "675268535fa5f6d094726e5b1f0c920f86fe568f97d37ce6883207b7c350d4f0",
+    "quote_as_of": "2026-07-28T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "29785605821",
+    "run_id": "31031814422",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-07-28T20:00:00Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-20"
   },
   "ticker": "DNNG",
-  "updated_at": "2026-07-30T00:35:13Z"
+  "updated_at": "2026-08-05T17:51:24Z"
 }

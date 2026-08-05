@@ -12,15 +12,28 @@
       "run_id": "29785605821",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 797,
+      "natural": true,
+      "observed_at": "2026-08-05T17:51:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31031814422",
+      "schedule": "7 16 * * 0-5",
+      "shard": "44/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-20T23:07:24Z",
-    "history_as_of": "2026-07-20",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/EDV.json",
-    "payload_sha256": "5ae5a448b189592fc42c2c156d2713b6f368b5f25ae03fe1ccc933368003a50f",
-    "quote_as_of": "2026-07-20T20:00:00Z",
-    "source_as_of": "2026-07-20"
+    "fetched_at": "2026-08-05T17:52:37Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/EDV.json",
+    "payload_sha256": "1760cce4c7afc11ba9d624c8fa14aba530f727f1f456f959c89e28d52266b710",
+    "quote_as_of": "2026-08-05T17:51:33Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1240,
+    "latency_ms": 797,
     "natural": true,
-    "observed_at": "2026-07-20T23:03:20Z",
+    "observed_at": "2026-08-05T17:51:24Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29785605821",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31031814422",
+    "schedule": "7 16 * * 0-5",
+    "shard": "44/72"
   },
   "lkg": {
     "fetched_at": "2026-07-20T23:07:24Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-20",
-    "observed_at": "2026-07-20T23:03:20Z",
-    "payload_sha256": "36cd77ddc7331ce122ca48ecdb01d14d7f7327d33f368653478ba22fefa6d939",
-    "quote_as_of": "2026-07-20T20:00:00Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-05T17:51:24Z",
+    "payload_sha256": "322ea420068258f6df3587bc9fa297dd00622f52e7f3d9598ccf32b2f7c6e6be",
+    "quote_as_of": "2026-08-05T17:51:33Z",
     "run_attempt": 1,
-    "run_id": "29785605821",
+    "run_id": "31031814422",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-20"
   },
   "ticker": "EDV",
-  "updated_at": "2026-07-30T00:35:13Z"
+  "updated_at": "2026-08-05T17:51:24Z"
 }
