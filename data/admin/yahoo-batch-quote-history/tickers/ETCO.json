@@ -12,15 +12,28 @@
       "run_id": "29785605821",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 694,
+      "natural": true,
+      "observed_at": "2026-08-05T19:49:13Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31041046015",
+      "schedule": "7 18 * * 0-5",
+      "shard": "45/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-20T23:08:07Z",
-    "history_as_of": "2026-07-20",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ETCO.json",
-    "payload_sha256": "3077cd5208e8956406889dd7c06499a8d23bf98f7ceb39d69ea693d9c0f80586",
-    "quote_as_of": "2026-07-20T19:46:42Z",
-    "source_as_of": "2026-07-20"
+    "fetched_at": "2026-08-05T19:49:51Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/ETCO.json",
+    "payload_sha256": "901fd385bef9d21bf611f80761c79559065dc82dae25f017d89ce1c12db68000",
+    "quote_as_of": "2026-08-05T16:47:59Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 861,
+    "latency_ms": 694,
     "natural": true,
-    "observed_at": "2026-07-20T23:03:20Z",
+    "observed_at": "2026-08-05T19:49:13Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29785605821",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31041046015",
+    "schedule": "7 18 * * 0-5",
+    "shard": "45/72"
   },
   "lkg": {
     "fetched_at": "2026-07-20T23:08:07Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-20",
-    "observed_at": "2026-07-20T23:03:20Z",
-    "payload_sha256": "f6f768ec48ea2f5918d29ec9fe211c94d2ba656ad1368c3a75ff5c817f6b8688",
-    "quote_as_of": "2026-07-20T19:46:42Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-05T19:49:13Z",
+    "payload_sha256": "0e7571dde9ba526625b2fd9c5e6c3331f4f6138bd3b2405345a97439066a9a5f",
+    "quote_as_of": "2026-08-05T16:47:59Z",
     "run_attempt": 1,
-    "run_id": "29785605821",
+    "run_id": "31041046015",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-20"
   },
   "ticker": "ETCO",
-  "updated_at": "2026-07-30T00:35:13Z"
+  "updated_at": "2026-08-05T19:49:13Z"
 }

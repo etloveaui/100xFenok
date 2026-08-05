@@ -38,15 +38,28 @@
       "run_id": "29875696340",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 704,
+      "natural": true,
+      "observed_at": "2026-08-05T19:49:13Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31041046015",
+      "schedule": "7 18 * * 0-5",
+      "shard": "45/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-21T23:06:44Z",
-    "history_as_of": "2026-07-21",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AMEI.json",
-    "payload_sha256": "b446acccdb1119b35e5603a978ba8abe342d281b17fdd59c07a42f225fe4eb01",
-    "quote_as_of": "2026-07-21T20:00:01Z",
-    "source_as_of": "2026-07-21"
+    "fetched_at": "2026-08-05T19:50:27Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/AMEI.json",
+    "payload_sha256": "4f96ebb8283f0b6bd7506fbf7f978b50bdd2e0402817e48cc548189a4bc75bf1",
+    "quote_as_of": "2026-08-05T19:32:25Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -55,14 +68,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1193,
+    "latency_ms": 704,
     "natural": true,
-    "observed_at": "2026-07-21T23:04:26Z",
+    "observed_at": "2026-08-05T19:49:13Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29875696340",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "31041046015",
+    "schedule": "7 18 * * 0-5",
+    "shard": "45/72"
   },
   "lkg": {
     "fetched_at": "2026-07-21T23:06:44Z",
@@ -75,17 +88,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-21",
-    "observed_at": "2026-07-21T23:04:26Z",
-    "payload_sha256": "0b09e4a631aa3729a3a867dbf5ef754e06eff2b26b8306b876b750c8cd1c43ee",
-    "quote_as_of": "2026-07-21T20:00:01Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-05T19:49:13Z",
+    "payload_sha256": "00ea1060ca15c8db4b963dc770b35e8910aa8e238197577b9c4fd3bffb92901f",
+    "quote_as_of": "2026-08-05T19:32:25Z",
     "run_attempt": 1,
-    "run_id": "29875696340",
+    "run_id": "31041046015",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-21"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -98,5 +111,5 @@
     "source_as_of": "2026-07-21"
   },
   "ticker": "AMEI",
-  "updated_at": "2026-07-30T00:35:13Z"
+  "updated_at": "2026-08-05T19:49:13Z"
 }

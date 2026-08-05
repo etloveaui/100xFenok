@@ -12,15 +12,28 @@
       "run_id": "29785605821",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 748,
+      "natural": true,
+      "observed_at": "2026-08-05T19:49:13Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31041046015",
+      "schedule": "7 18 * * 0-5",
+      "shard": "45/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-20T23:08:09Z",
-    "history_as_of": "2026-07-20",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ETEC.json",
-    "payload_sha256": "ef9dea94647f552313555eac9774b5a6e99dde883f03ade0e25d9df06fa0d9c0",
-    "quote_as_of": "2026-07-20T20:00:00Z",
-    "source_as_of": "2026-07-20"
+    "fetched_at": "2026-08-05T19:49:52Z",
+    "history_as_of": "2026-08-04",
+    "path": "data/yf/finance/ETEC.json",
+    "payload_sha256": "a0ea21bd967a911e3e651c3737144ec04052e1885126d3d16ce0aabcc5db17e6",
+    "quote_as_of": "2026-08-05T13:30:00Z",
+    "source_as_of": "2026-08-04"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1408,
+    "latency_ms": 748,
     "natural": true,
-    "observed_at": "2026-07-20T23:03:20Z",
+    "observed_at": "2026-08-05T19:49:13Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29785605821",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31041046015",
+    "schedule": "7 18 * * 0-5",
+    "shard": "45/72"
   },
   "lkg": {
     "fetched_at": "2026-07-20T23:08:09Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-20",
-    "observed_at": "2026-07-20T23:03:20Z",
-    "payload_sha256": "e85f47fc9e6fe1c5fef224fa3867ac84d3850db8e6e4a3785b33476b16207918",
-    "quote_as_of": "2026-07-20T20:00:00Z",
+    "history_as_of": "2026-08-04",
+    "observed_at": "2026-08-05T19:49:13Z",
+    "payload_sha256": "757b3acbd396a3738ca1f8baedeb4eb74d6a2202f8998de76e467e2e754de25a",
+    "quote_as_of": "2026-08-05T13:30:00Z",
     "run_attempt": 1,
-    "run_id": "29785605821",
+    "run_id": "31041046015",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-08-04"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-20"
   },
   "ticker": "ETEC",
-  "updated_at": "2026-07-30T00:35:13Z"
+  "updated_at": "2026-08-05T19:49:13Z"
 }

@@ -12,15 +12,28 @@
       "run_id": "29785605821",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 834,
+      "natural": true,
+      "observed_at": "2026-08-05T19:49:13Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31041046015",
+      "schedule": "7 18 * * 0-5",
+      "shard": "45/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-20T23:07:51Z",
-    "history_as_of": "2026-07-20",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ENOR.json",
-    "payload_sha256": "210cf72b70b5e7dbd005cc7f589202792662e1da9478b7e891fc963f47ccd22f",
-    "quote_as_of": "2026-07-20T20:00:00Z",
-    "source_as_of": "2026-07-20"
+    "fetched_at": "2026-08-05T19:49:37Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/ENOR.json",
+    "payload_sha256": "8b54190f7d9514de489954f5b19c43e8774f5180f03d6b2036110ac90e5acd19",
+    "quote_as_of": "2026-08-05T19:33:58Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1126,
+    "latency_ms": 834,
     "natural": true,
-    "observed_at": "2026-07-20T23:03:20Z",
+    "observed_at": "2026-08-05T19:49:13Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29785605821",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31041046015",
+    "schedule": "7 18 * * 0-5",
+    "shard": "45/72"
   },
   "lkg": {
     "fetched_at": "2026-07-20T23:07:51Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-20",
-    "observed_at": "2026-07-20T23:03:20Z",
-    "payload_sha256": "bc42db705cd48e7c92676f2624980af75fc783872cfbea75f49791366a3f1641",
-    "quote_as_of": "2026-07-20T20:00:00Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-05T19:49:13Z",
+    "payload_sha256": "7028b86826d91ca81002ea3e0656bf24c37228001c24d8ceee31fbddadf03c81",
+    "quote_as_of": "2026-08-05T19:33:58Z",
     "run_attempt": 1,
-    "run_id": "29785605821",
+    "run_id": "31041046015",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-20"
   },
   "ticker": "ENOR",
-  "updated_at": "2026-07-30T00:35:13Z"
+  "updated_at": "2026-08-05T19:49:13Z"
 }

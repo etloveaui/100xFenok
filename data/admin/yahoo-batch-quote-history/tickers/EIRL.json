@@ -12,15 +12,28 @@
       "run_id": "29785605821",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1016,
+      "natural": true,
+      "observed_at": "2026-08-05T19:49:13Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31041046015",
+      "schedule": "7 18 * * 0-5",
+      "shard": "45/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-20T23:07:37Z",
-    "history_as_of": "2026-07-20",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/EIRL.json",
-    "payload_sha256": "d58d2a2c4bf78c64f6a63afa4e77c85bffb16b548c0f841e821cb931fd148b06",
-    "quote_as_of": "2026-07-20T20:00:00Z",
-    "source_as_of": "2026-07-20"
+    "fetched_at": "2026-08-05T19:49:25Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/EIRL.json",
+    "payload_sha256": "2140bca3adadbf4cc5293b08d612e516be1265025c3fe481654d387f966a2625",
+    "quote_as_of": "2026-08-05T18:34:42Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1114,
+    "latency_ms": 1016,
     "natural": true,
-    "observed_at": "2026-07-20T23:03:20Z",
+    "observed_at": "2026-08-05T19:49:13Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29785605821",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31041046015",
+    "schedule": "7 18 * * 0-5",
+    "shard": "45/72"
   },
   "lkg": {
     "fetched_at": "2026-07-20T23:07:37Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-20",
-    "observed_at": "2026-07-20T23:03:20Z",
-    "payload_sha256": "902b34835acec365b4c6f86f7968213cc9289a65c5591a1a785244e90d1b4e06",
-    "quote_as_of": "2026-07-20T20:00:00Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-05T19:49:13Z",
+    "payload_sha256": "3a36fbab31c196b81e9dc734e3da3698bcbac4a3d4495effb9bdeaa718800be9",
+    "quote_as_of": "2026-08-05T18:34:42Z",
     "run_attempt": 1,
-    "run_id": "29785605821",
+    "run_id": "31041046015",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-20"
   },
   "ticker": "EIRL",
-  "updated_at": "2026-07-30T00:35:13Z"
+  "updated_at": "2026-08-05T19:49:13Z"
 }

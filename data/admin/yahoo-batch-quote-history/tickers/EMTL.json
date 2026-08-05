@@ -12,15 +12,28 @@
       "run_id": "29785605821",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 651,
+      "natural": true,
+      "observed_at": "2026-08-05T19:49:13Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31041046015",
+      "schedule": "7 18 * * 0-5",
+      "shard": "45/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-20T23:07:46Z",
-    "history_as_of": "2026-07-20",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/EMTL.json",
-    "payload_sha256": "fe9304c44bf1369be460f23be15e48e1aec3c69ab3805aa600c10dfba1e43643",
-    "quote_as_of": "2026-07-20T19:37:31Z",
-    "source_as_of": "2026-07-20"
+    "fetched_at": "2026-08-05T19:49:33Z",
+    "history_as_of": "2026-07-28",
+    "path": "data/yf/finance/EMTL.json",
+    "payload_sha256": "a6fdd29e294d6adf19aa73a3ee35bf1ef931b12924b20e41dcbba4cb1652e9f5",
+    "quote_as_of": "2026-07-21T18:50:34Z",
+    "source_as_of": "2026-07-21T18:50:34Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1022,
+    "latency_ms": 651,
     "natural": true,
-    "observed_at": "2026-07-20T23:03:20Z",
+    "observed_at": "2026-08-05T19:49:13Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29785605821",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31041046015",
+    "schedule": "7 18 * * 0-5",
+    "shard": "45/72"
   },
   "lkg": {
     "fetched_at": "2026-07-20T23:07:46Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-20",
-    "observed_at": "2026-07-20T23:03:20Z",
-    "payload_sha256": "366b73445a461344dc7cc6df4fdfe1e7a3afa00a482dbd38ef3657f28f754dae",
-    "quote_as_of": "2026-07-20T19:37:31Z",
+    "history_as_of": "2026-07-28",
+    "observed_at": "2026-08-05T19:49:13Z",
+    "payload_sha256": "2f6400c68a75d6453f38a5c18757a0707d66137908418c2209dbaf7d30539330",
+    "quote_as_of": "2026-07-21T18:50:34Z",
     "run_attempt": 1,
-    "run_id": "29785605821",
+    "run_id": "31041046015",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-07-21T18:50:34Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-20"
   },
   "ticker": "EMTL",
-  "updated_at": "2026-07-30T00:35:13Z"
+  "updated_at": "2026-08-05T19:49:13Z"
 }
