@@ -1953,6 +1953,52 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "scheduled weekday must be within 0..5"):
             self.fetcher.validate_scheduled_shard("6/6", 6)
 
+    def test_multi_slot_shard_contract_binds_slot_to_weekday(self) -> None:
+        # A lane running several slots a day declares the slot separately from
+        # the weekday. Overloading the weekday field with a 0..71 slot index
+        # parser-blocked every scheduled ETF run before it fetched anything.
+        for shard, weekday, slot in (("0/72", 0, 0), ("12/72", 1, 12), ("71/72", 5, 71)):
+            self.assertIsNone(self.fetcher.validate_scheduled_shard(shard, weekday, slot))
+        # The legacy single-slot contract must keep working untouched.
+        self.assertIsNone(self.fetcher.validate_scheduled_shard("3/6", 3))
+        with self.assertRaisesRegex(ValueError, "belongs to weekday 1, not the declared weekday 0"):
+            self.fetcher.validate_scheduled_shard("12/72", 0, 12)
+        with self.assertRaisesRegex(ValueError, "must start with the declared slot"):
+            self.fetcher.validate_scheduled_shard("13/72", 1, 12)
+        with self.assertRaisesRegex(ValueError, "must divide into 6 days"):
+            self.fetcher.validate_scheduled_shard("12/71", 1, 12)
+        with self.assertRaisesRegex(ValueError, "scheduled slot must be within 0..71"):
+            self.fetcher.validate_scheduled_shard("72/72", 5, 72)
+
+    def test_scheduled_slot_survives_a_real_argv_run(self) -> None:
+        # The unit check above still passes when the flag never reaches the
+        # parser, which is exactly how the shipped lane broke: the workflow was
+        # text-asserted only, and every scheduled slot exited 2 before
+        # fetching. Drive the real entry point.
+        script = Path(__file__).resolve().parent / "fetch-yf-finance.py"
+        base = [
+            sys.executable, str(script), "--plan-only", "--stockanalysis-etfs",
+            "--natural-run", "--stable-shards", "--limit", "200",
+            "--regular-limit", "140", "--retry-limit", "40",
+        ]
+
+        def run(shard, weekday, slot):
+            argv = [*base, "--shard", shard, "--scheduled-weekday", str(weekday)]
+            if slot is not None:
+                argv += ["--scheduled-slot", str(slot)]
+            return subprocess.run(argv, capture_output=True, text=True, cwd=script.parent.parent)
+
+        for shard, weekday, slot in (("0/72", 0, 0), ("12/72", 1, 12), ("71/72", 5, 71)):
+            result = run(shard, weekday, slot)
+            self.assertEqual(result.returncode, 0, f"{shard} slot {slot} must plan, got: {result.stderr[-400:]}")
+
+        mismatched = run("12/72", 0, 12)
+        self.assertEqual(mismatched.returncode, 2)
+        self.assertIn("belongs to weekday 1", mismatched.stderr)
+
+        overloaded = run("12/72", 12, None)
+        self.assertEqual(overloaded.returncode, 2, "the overloaded-weekday form must stay rejected")
+
     def test_weekly_budget_reserves_retry_and_regular_capacity(self) -> None:
         retries = [f"RETRY{i:04d}" for i in range(200)]
         regular = [f"ETF{i:04d}" for i in range(200)]
@@ -2626,6 +2672,11 @@ assert callable(namespace["load_universe"])
         self.assertIn("DAILY_SHARDS=72", run_step)
         self.assertIn("SLOT_WEEKDAY * 12 + SLOT_HOUR / 2", run_step)
         self.assertIn("date -u +%w", run_step)
+        # The weekday field must carry the real weekday and the slot must be
+        # declared separately, or the runtime validator rejects the run.
+        self.assertIn('INPUT_SCHEDULED_WEEKDAY="$SLOT_WEEKDAY"', run_step)
+        self.assertIn('INPUT_SCHEDULED_SLOT="$DAILY_INDEX"', run_step)
+        self.assertIn("--scheduled-slot", run_step)
         self.assertIn("--scheduled-weekday", run_step)
         self.assertIn('INPUT_RETRY_LIMIT="${YF_DAILY_STOCK_RETRY_LIMIT:-40}"', run_step)
         self.assertIn("YF_WEEKLY_ETF_RETRY_LIMIT:-40", run_step)

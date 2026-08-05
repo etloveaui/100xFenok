@@ -125,6 +125,10 @@ on:
         description: 'Scheduled weekday 0-5 matching the selected ETF shard'
         required: false
         default: ''
+      scheduled_slot:
+        description: 'Slot index within the weekly shard cycle (0-71 on the ETF lane)'
+        required: false
+        default: ''
       stable_shards:
         description: 'Use deterministic hash shards (required for untracked recovery)'
         required: false
@@ -194,6 +198,7 @@ jobs:
           INPUT_UNTRACKED_LIMIT: ${{ github.event.inputs.untracked_limit || '' }}
           INPUT_SHARD_CYCLE_INDEX: ${{ github.event.inputs.shard_cycle_index || '' }}
           INPUT_SCHEDULED_WEEKDAY: ${{ github.event.inputs.scheduled_weekday || '' }}
+          INPUT_SCHEDULED_SLOT: ${{ github.event.inputs.scheduled_slot || '' }}
           INPUT_STABLE_SHARDS: ${{ github.event.inputs.stable_shards || 'false' }}
           EVENT_NAME: ${{ github.event_name }}
           EVENT_SCHEDULE: ${{ github.event.schedule }}
@@ -263,7 +268,11 @@ jobs:
               INPUT_REGULAR_LIMIT="${YF_WEEKLY_ETF_REGULAR_LIMIT:-140}"
               INPUT_UNTRACKED_LIMIT="${YF_WEEKLY_ETF_UNTRACKED_LIMIT:-80}"
               INPUT_SHARD_CYCLE_INDEX="${YF_WEEKLY_ETF_SHARD_CYCLE_INDEX:-}"
-              INPUT_SCHEDULED_WEEKDAY="$DAILY_INDEX"
+              # The weekday stays the real weekday, because the weekly cycle
+              # index is derived from the calendar occurrence. The slot says
+              # which of the day's twelve runs this is.
+              INPUT_SCHEDULED_WEEKDAY="$SLOT_WEEKDAY"
+              INPUT_SCHEDULED_SLOT="$DAILY_INDEX"
               INPUT_STABLE_SHARDS="true"
               INPUT_SHARD="${DAILY_INDEX}/${DAILY_SHARDS}"
               INPUT_SLEEP="${YF_WEEKLY_ETF_SLEEP:-1.0}"
@@ -298,6 +307,7 @@ jobs:
           if [ -n "$INPUT_UNTRACKED_LIMIT" ]; then ARGS="$ARGS --untracked-limit $INPUT_UNTRACKED_LIMIT"; fi
           if [ -n "$INPUT_SHARD_CYCLE_INDEX" ]; then ARGS="$ARGS --shard-cycle-index $INPUT_SHARD_CYCLE_INDEX"; fi
           if [ -n "$INPUT_SCHEDULED_WEEKDAY" ]; then ARGS="$ARGS --scheduled-weekday $INPUT_SCHEDULED_WEEKDAY"; fi
+          if [ -n "$INPUT_SCHEDULED_SLOT" ]; then ARGS="$ARGS --scheduled-slot $INPUT_SCHEDULED_SLOT"; fi
           if [ "$INPUT_STABLE_SHARDS" = "true" ]; then ARGS="$ARGS --stable-shards"; fi
           if [ -n "$INPUT_SHARD" ]; then ARGS="$ARGS --shard $INPUT_SHARD"; fi
           if [ -n "$INPUT_TICKERS" ]; then ARGS="$ARGS --tickers $INPUT_TICKERS"; fi

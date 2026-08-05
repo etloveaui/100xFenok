@@ -1228,14 +1228,45 @@ def scheduled_shard_cycle_index(now, scheduled_weekday):
     return iso_monday.toordinal() // 7
 
 
-def validate_scheduled_shard(shard, scheduled_weekday):
+SCHEDULED_DAYS_PER_WEEK = 6
+
+
+def validate_scheduled_shard(shard, scheduled_weekday, scheduled_slot=None):
+    """Cross-check a scheduled run's shard against the slot it claims to be.
+
+    `scheduled_weekday` stays the real weekday, because
+    `scheduled_shard_cycle_index` needs it to locate the calendar occurrence.
+    A lane that runs several slots a day declares which one through
+    `scheduled_slot`, and the shard must be that slot out of the week.
+    """
     if scheduled_weekday is None:
         return
     if scheduled_weekday < 0 or scheduled_weekday > 5:
         raise ValueError("scheduled weekday must be within 0..5")
-    expected = f"{scheduled_weekday}/6"
-    if shard != expected:
-        raise ValueError(f"scheduled shard must match weekday/6: expected {expected}, got {shard or '<empty>'}")
+    if scheduled_slot is None:
+        expected = f"{scheduled_weekday}/6"
+        if shard != expected:
+            raise ValueError(f"scheduled shard must match weekday/6: expected {expected}, got {shard or '<empty>'}")
+        return
+    expected = f"{scheduled_slot}/"
+    if not shard or not shard.startswith(expected):
+        raise ValueError(f"scheduled shard must start with the declared slot: expected {scheduled_slot}/<count>, got {shard or '<empty>'}")
+    try:
+        shard_index, shard_count = (int(value) for value in shard.split("/"))
+    except ValueError as error:
+        raise ValueError(f"scheduled shard must be i/n: got {shard}") from error
+    if shard_index != scheduled_slot:
+        raise ValueError(f"scheduled shard index must equal the declared slot: expected {scheduled_slot}, got {shard_index}")
+    if shard_count % SCHEDULED_DAYS_PER_WEEK != 0:
+        raise ValueError(f"scheduled shard count must divide into {SCHEDULED_DAYS_PER_WEEK} days: got {shard_count}")
+    if scheduled_slot < 0 or scheduled_slot >= shard_count:
+        raise ValueError(f"scheduled slot must be within 0..{shard_count - 1}: got {scheduled_slot}")
+    slots_per_day = shard_count // SCHEDULED_DAYS_PER_WEEK
+    if scheduled_slot // slots_per_day != scheduled_weekday:
+        raise ValueError(
+            f"scheduled slot {scheduled_slot} belongs to weekday {scheduled_slot // slots_per_day}, "
+            f"not the declared weekday {scheduled_weekday}"
+        )
 
 
 def select_ticker_plan(
@@ -1730,6 +1761,7 @@ def plan_summary(args, tickers, candidate_count):
         "shard": args.shard,
         "shard_cycle_index": args.shard_cycle_index,
         "scheduled_weekday": args.scheduled_weekday,
+        "scheduled_slot": args.scheduled_slot,
         "stable_shards": args.stable_shards,
         "tickers_override": bool(args.tickers),
         "sample_size": args.plan_sample_size,
@@ -1801,6 +1833,7 @@ def main():
     parser.add_argument("--tickers", type=str, default="", help="comma-separated override")
     parser.add_argument("--stocks-only", action="store_true", help="stock universe only: global-scouter stock detail plus market_facts stock candidates")
     parser.add_argument("--stockanalysis-etfs", action="store_true", help="include the full StockAnalysis ETF universe/screener in the Yahoo candidate set")
+    parser.add_argument("--scheduled-slot", type=int, default=None, help="slot index within the weekly shard cycle for lanes that run several slots a day")
     parser.add_argument("--history-gaps-only", action="store_true", help="fetch only tickers whose local payload lacks enough 1Y daily history for return facts")
     parser.add_argument("--history-min-rows", type=int, default=200, help="minimum history_1y rows needed to skip a ticker under --history-gaps-only")
     parser.add_argument("--untracked-only", action="store_true", help="prioritize not-yet-observed regular candidates before reserved maintenance capacity")
@@ -1851,7 +1884,7 @@ def main():
         if args.shard_cycle_index < 0:
             raise ValueError("shard cycle index must be non-negative")
         validate_ticker_plan_limits(args.limit, args.retry_limit, args.regular_limit)
-        validate_scheduled_shard(args.shard, args.scheduled_weekday)
+        validate_scheduled_shard(args.shard, args.scheduled_weekday, args.scheduled_slot)
     except ValueError as exc:
         parser.error(str(exc))
     controlled_failures = {
