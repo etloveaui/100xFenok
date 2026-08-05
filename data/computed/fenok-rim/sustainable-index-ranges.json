@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok_rim_sustainable_index_ranges.v2",
-  "generated_at": "2026-08-05T03:57:05.618Z",
+  "generated_at": "2026-08-05T03:59:58.693Z",
   "as_of": "2026-08-05",
   "status": "research_diagnostic_not_promoted",
   "promotion": {
@@ -11,8 +11,12 @@
         "detail": "1/7 historical anchors use a later-vintage input and are excluded from pass/fail: rim-7041d3d1604bd6d9b5683c04"
       },
       {
+        "id": "out_of_sample_anchor_failed",
+        "detail": "0/1 two-sided evaluation anchors reproduce"
+      },
+      {
         "id": "convexity_outside_printed_domain",
-        "detail": "printed cells used book growth at 1.80~2.52 times the discount rate; RUT 1.22 sit outside it"
+        "detail": "printed cells used book growth at 1.77~2.56 times the discount rate; RUT 1.38 sit outside it"
       },
       {
         "id": "partial_structural_reproduction",
@@ -242,49 +246,44 @@
     },
     "payout_multiplier": {
       "frozen": {
-        "low": 1.3365,
-        "center": 1.5865,
-        "high": 1.8814,
-        "observations": 3,
-        "derivation": "known payout / raw tracker ratio at SPX (Yoo's printed 31.09%), CCMP (his 2025-12-09 grid fit 21.64%) and RUT (LSEG official 23.72%); the raw ratio is the reconstructed trailing distribution yield over the index's own forward earnings yield",
-        "swept": "the low and high multipliers are swept into the published endpoints so the calibration spread is visible rather than hidden"
+        "low": 1.02695,
+        "center": 1.04293,
+        "high": 1.05891,
+        "observations": 2,
+        "derivation": "direct constituent payout over raw tracker ratio on the same basis at 2026-07-31: SPX 0.207125/0.201689 = 1.027 and NDX 0.097061/0.091662 = 1.059; the band spans the two and their midpoint is the centre",
+        "swept": "the low and high multipliers are swept into the published endpoints so the measured divergence is visible rather than hidden",
+        "rejected": "a universal scalar fitted to the printed/grid/LSEG payouts, which are trailing realised or inverted quantities and not the same variable as a tracker distribution yield"
       },
       "refit": {
         "rows": [
           {
             "id": "SPX",
-            "payout": 0.3109,
-            "source": "printed 2026-08-03 Yoo S&P 500 input sheet",
+            "tracker": "SPY",
+            "direct_payout": 0.207125,
             "raw": 0.20168917237851372,
-            "multiplier": 1.5414808654999503,
-            "tracker": "SPY"
+            "multiplier": 1.0269515093814,
+            "divergence": -0.026244188878630226,
+            "basis": "index dividend yield over forward earnings yield, both sides"
           },
           {
-            "id": "CCMP",
-            "payout": 0.2164,
-            "source": "fitted on the 18 published 2025-12-09 CCMP cells",
-            "raw": 0.11502045322170851,
-            "multiplier": 1.8814045149246337,
-            "tracker": "ONEQ"
-          },
-          {
-            "id": "RUT",
-            "payout": 0.23716,
-            "source": "LSEG official ex-negative dividend yield times P/E",
-            "raw": 0.17744691299873885,
-            "multiplier": 1.3365124024540542,
-            "tracker": "IWM"
+            "id": "NDX",
+            "tracker": "QQQ",
+            "direct_payout": 0.097061,
+            "raw": 0.09166152379077822,
+            "multiplier": 1.058906681734272,
+            "divergence": -0.055629719549786016,
+            "basis": "index dividend yield over forward earnings yield, both sides"
           }
         ],
-        "low": 1.3365124024540542,
-        "center": 1.5864659276262127,
-        "high": 1.8814045149246337
+        "low": 1.0269515093814,
+        "center": 1.0429290955578359,
+        "high": 1.058906681734272
       }
     },
     "twelve_month_conversion": {
       "frozen": {
-        "intercept": 0.108512,
-        "slope": 0.169422,
+        "intercept": 0.080571,
+        "slope": 0.184044,
         "horizon_months": 12,
         "observations": 157,
         "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest",
@@ -292,23 +291,23 @@
       },
       "refit": {
         "full": {
-          "intercept": 0.10851200141409187,
-          "slope": 0.16942205287081505,
-          "observations": 157
+          "intercept": 0.08057057717340635,
+          "slope": 0.1840438674653377,
+          "observations": 158
         },
         "out_of_sample": {
           "fitted_on": {
             "from": "2017-01-06",
             "to": "2022-07-01",
-            "observations": 91
+            "observations": 92
           },
           "evaluated_on": {
             "from": "2022-09-30",
             "to": "2026-07-17",
             "observations": 66
           },
-          "converted_mae": 0.22015337607519178,
-          "raw_band_mae": 0.24182906734334433,
+          "converted_mae": 0.21912332098455856,
+          "raw_band_mae": 0.2995967420756093,
           "improves": true
         }
       }
@@ -324,11 +323,11 @@
           "high": 0.29,
           "feno": {
             "upside": {
-              "low": 0.10801037299328131,
-              "high": 0.4528336730086018
+              "low": 0.3953956313394824,
+              "high": 0.5929827794165952
             },
             "convexity": "inside_printed_domain",
-            "passed": true
+            "passed": false
           },
           "measured_growth_diagnostic": {
             "upside": {
@@ -351,8 +350,8 @@
           "low": 0.14,
           "feno": {
             "upside": {
-              "low": 0.05310429565505337,
-              "high": 0.3868181691518495
+              "low": 0.3356847504449849,
+              "high": 0.5251551771713752
             },
             "convexity": "inside_printed_domain",
             "passed": true
@@ -378,10 +377,10 @@
           "low": 0.36,
           "feno": {
             "upside": {
-              "low": 0.2973133791190332,
-              "high": 0.38324645813853064
+              "low": 0.32463980768966527,
+              "high": 0.41254613626371905
             },
-            "convexity": "above_printed_domain",
+            "convexity": "inside_printed_domain",
             "passed": true
           },
           "measured_growth_diagnostic": {
@@ -405,8 +404,8 @@
           "low": 0.3,
           "feno": {
             "upside": {
-              "low": 0.35570708569624454,
-              "high": 0.4474570010059482
+              "low": 0.38384095046885935,
+              "high": 0.4776706751510553
             },
             "convexity": "inside_printed_domain",
             "passed": true
@@ -432,8 +431,8 @@
           "low": 0.28,
           "feno": {
             "upside": {
-              "low": 0.27036464036687136,
-              "high": 0.35464005004889954
+              "low": 0.2970052173424975,
+              "high": 0.38320755860210487
             },
             "convexity": "inside_printed_domain",
             "passed": true
@@ -459,8 +458,8 @@
           "low": 0.24,
           "feno": {
             "upside": {
-              "low": 0.013172932104198232,
-              "high": 0.24815145618515633
+              "low": 0.16976535250465807,
+              "high": 0.27389440662868836
             },
             "convexity": "inside_printed_domain",
             "passed": true
@@ -509,9 +508,9 @@
       ],
       "feno": {
         "in_sample": 0,
-        "passed": 6,
+        "passed": 5,
         "total": 6,
-        "informative_passed": 1,
+        "informative_passed": 0,
         "informative_total": 1,
         "not_evaluable": 1,
         "not_evaluable_ids": [
@@ -607,19 +606,19 @@
           0.045,
           0.05
         ],
-        "book_growth": 0.20455741805957203,
-        "book_growth_uncapped": 0.20455741805957203,
+        "book_growth": 0.23753596597973353,
+        "book_growth_uncapped": 0.23753596597973353,
         "book_growth_capped": false,
-        "book_growth_ceiling": 0.2581799773372561,
-        "payout": 0.319979871978512,
+        "book_growth_ceiling": 0.26238486296164143,
+        "payout": 0.2103476885487233,
         "payout_band": {
-          "low": 0.2695575788838836,
-          "center": 0.319979871978512,
-          "high": 0.3794580089129357
+          "low": 0.20712469557411467,
+          "center": 0.2103476885487233,
+          "high": 0.21357068152333197
         },
         "payout_raw_tracker_ratio": 0.20168917237851372,
         "payout_tracker": "SPY",
-        "retention": 0.6800201280214879,
+        "retention": 0.7896523114512767,
         "payout_as_of": "2026-06-26",
         "payout_point_in_time": true,
         "payout_source": "data/yf/finance/SPY.json#data.dividends over data.history_1y close, times the frozen calibration multiplier",
@@ -637,32 +636,32 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.20455741805957203,
+        "book_growth": 0.23753596597973353,
         "convexity": {
-          "book_growth": 0.20455741805957203,
+          "book_growth": 0.23753596597973353,
           "discount": 0.1026,
-          "growth_over_discount": 1.9937370181244838,
+          "growth_over_discount": 2.3151653604262528,
           "printed_domain": {
-            "low": 1.8032317745108193,
-            "high": 2.516374048121405,
-            "observations": 4,
-            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "low": 1.7686871045010335,
+            "high": 2.5573573388074213,
+            "observations": 12,
+            "basis": "every printed LTROE axis value times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
             "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
           },
           "status": "inside_printed_domain",
           "distance_from_domain": 0
         },
         "range": {
-          "low": 8257.89957988787,
-          "high": 10831.988374731234
+          "low": 10410.413434240225,
+          "high": 11881.324320210631
         },
         "upside": {
-          "low": 0.10256452576169317,
-          "high": 0.44624743978830095
+          "low": 0.3899602968121938,
+          "high": 0.586350934375468
         },
         "expected_12m": {
-          "low": 0.12588868708359757,
-          "high": 0.18411613374381353,
+          "low": 0.1523408528665034,
+          "high": 0.18848537136619864,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -674,14 +673,14 @@
           "discount": 0.1026,
           "growth_over_discount": 0.5141824123741023,
           "printed_domain": {
-            "low": 1.8032317745108193,
-            "high": 2.516374048121405,
-            "observations": 4,
-            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "low": 1.7686871045010335,
+            "high": 2.5573573388074213,
+            "observations": 12,
+            "basis": "every printed LTROE axis value times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
             "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
           },
           "status": "below_printed_domain",
-          "distance_from_domain": 1.289049362136717
+          "distance_from_domain": 1.2545046921269312
         },
         "range": {
           "low": 4692.112723107036,
@@ -692,8 +691,8 @@
           "high": -0.328064701830842
         },
         "expected_12m": {
-          "low": 0.04522842997792176,
-          "high": 0.05293062208641509,
+          "low": 0.011825728658950027,
+          "high": 0.020192660016244514,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -761,19 +760,19 @@
           0.05,
           0.055
         ],
-        "book_growth": 0.2581799773372561,
-        "book_growth_uncapped": 0.33382257118684094,
+        "book_growth": 0.26238486296164143,
+        "book_growth_uncapped": 0.3532854033541096,
         "book_growth_capped": true,
-        "book_growth_ceiling": 0.2581799773372561,
-        "payout": 0.14542100749406964,
+        "book_growth_ceiling": 0.26238486296164143,
+        "payout": 0.09559655300711632,
         "payout_band": {
-          "low": 0.12250562654637509,
-          "center": 0.14542100749406964,
-          "high": 0.17245199085997012
+          "low": 0.09413180185693969,
+          "center": 0.09559655300711632,
+          "high": 0.09706130415729296
         },
         "payout_raw_tracker_ratio": 0.09166152379077822,
         "payout_tracker": "QQQ",
-        "retention": 0.8545789925059304,
+        "retention": 0.9044034469928837,
         "payout_as_of": "2026-06-26",
         "payout_point_in_time": true,
         "payout_source": "data/yf/finance/QQQ.json#data.dividends over data.history_1y close, times the frozen calibration multiplier",
@@ -791,32 +790,32 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.2581799773372561,
+        "book_growth": 0.26238486296164143,
         "convexity": {
-          "book_growth": 0.2581799773372561,
+          "book_growth": 0.26238486296164143,
           "discount": 0.1026,
-          "growth_over_discount": 2.5163740481214045,
+          "growth_over_discount": 2.5573573388074213,
           "printed_domain": {
-            "low": 1.8032317745108193,
-            "high": 2.516374048121405,
-            "observations": 4,
-            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "low": 1.7686871045010335,
+            "high": 2.5573573388074213,
+            "observations": 12,
+            "basis": "every printed LTROE axis value times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
             "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
           },
           "status": "inside_printed_domain",
           "distance_from_domain": 0
         },
         "range": {
-          "low": 39496.49121091595,
-          "high": 42060.48978500518
+          "low": 40336.70065085211,
+          "high": 42960.051117555624
         },
         "upside": {
-          "low": 0.39690923919742893,
-          "high": 0.48759256795966555
+          "low": 0.42662571004138417,
+          "high": 0.5194081925414555
         },
         "expected_12m": {
-          "low": 0.1757571571233068,
-          "high": 0.19112090804886245,
+          "low": 0.15908890217885652,
+          "high": 0.17616496138809967,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -828,14 +827,14 @@
           "discount": 0.1026,
           "growth_over_discount": 1,
           "printed_domain": {
-            "low": 1.8032317745108193,
-            "high": 2.516374048121405,
-            "observations": 4,
-            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "low": 1.7686871045010335,
+            "high": 2.5573573388074213,
+            "observations": 12,
+            "basis": "every printed LTROE axis value times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
             "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
           },
           "status": "below_printed_domain",
-          "distance_from_domain": 0.8032317745108193
+          "distance_from_domain": 0.7686871045010335
         },
         "range": {
           "low": 18601.157993275065,
@@ -846,8 +845,8 @@
           "high": -0.30363643467375667
         },
         "expected_12m": {
-          "low": 0.0505501081387501,
-          "high": 0.057069307964702796,
+          "low": 0.017606695330524502,
+          "high": 0.02468853601690313,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -915,19 +914,19 @@
           0.065,
           0.075
         ],
-        "book_growth": 0.25008970055244223,
-        "book_growth_uncapped": 0.25008970055244223,
-        "book_growth_capped": false,
-        "book_growth_ceiling": 0.2513595971172279,
-        "payout": 0.0812901176449213,
+        "book_growth": 0.25545340163053776,
+        "book_growth_uncapped": 0.25767146999937734,
+        "book_growth_capped": true,
+        "book_growth_ceiling": 0.25545340163053776,
+        "payout": 0.0534383248631691,
         "payout_band": {
-          "low": 0.06848045523632987,
-          "center": 0.0812901176449213,
-          "high": 0.09640039542209577
+          "low": 0.052619531242011935,
+          "center": 0.0534383248631691,
+          "high": 0.05425711848432627
         },
         "payout_raw_tracker_ratio": 0.05123864963436578,
         "payout_tracker": "EWY",
-        "retention": 0.9187098823550787,
+        "retention": 0.9465616751368309,
         "payout_as_of": "2026-06-18",
         "payout_point_in_time": true,
         "payout_source": "data/computed/market_facts/tickers/EWY.json#facts.dividend_yield / panel forward EPS over price, times the frozen calibration multiplier",
@@ -945,32 +944,32 @@
         "discount": 0.0998896
       },
       "value": {
-        "book_growth": 0.25008970055244223,
+        "book_growth": 0.25545340163053776,
         "convexity": {
-          "book_growth": 0.25008970055244223,
+          "book_growth": 0.25545340163053776,
           "discount": 0.0998896,
-          "growth_over_discount": 2.5036610473206644,
+          "growth_over_discount": 2.557357338807421,
           "printed_domain": {
-            "low": 1.8032317745108193,
-            "high": 2.516374048121405,
-            "observations": 4,
-            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "low": 1.7686871045010335,
+            "high": 2.5573573388074213,
+            "observations": 12,
+            "basis": "every printed LTROE axis value times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
             "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
           },
           "status": "inside_printed_domain",
           "distance_from_domain": 0
         },
         "range": {
-          "low": 23336.46061448836,
-          "high": 28645.524603490612
+          "low": 24600.705312402664,
+          "high": 29215.715230155904
         },
         "upside": {
-          "low": 2.5382666253990793,
-          "high": 3.34322519365481
+          "low": 2.7299509984008163,
+          "high": 3.42967731241324
         },
         "expected_12m": {
-          "low": 0.5385502082083629,
-          "high": 0.6749278987593852,
+          "low": 0.5830021015496798,
+          "high": 0.7117825312857824,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -982,14 +981,14 @@
           "discount": 0.0998896,
           "growth_over_discount": 0.5751500341212552,
           "printed_domain": {
-            "low": 1.8032317745108193,
-            "high": 2.516374048121405,
-            "observations": 4,
-            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "low": 1.7686871045010335,
+            "high": 2.5573573388074213,
+            "observations": 12,
+            "basis": "every printed LTROE axis value times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
             "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
           },
           "status": "below_printed_domain",
-          "distance_from_domain": 1.228081740389564
+          "distance_from_domain": 1.1935370703797783
         },
         "range": {
           "low": 10651.1393394339,
@@ -1000,8 +999,8 @@
           "high": 0.8324633518046776
         },
         "expected_12m": {
-          "low": 0.21269336734651467,
-          "high": 0.24954960598945208,
+          "low": 0.1937437613410416,
+          "high": 0.2337808851195401,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1069,19 +1068,19 @@
           0.05,
           0.055
         ],
-        "book_growth": 0.2581799773372561,
-        "book_growth_uncapped": 0.3667189597759307,
+        "book_growth": 0.26238486296164143,
+        "book_growth_uncapped": 0.37964366994264137,
         "book_growth_capped": true,
-        "book_growth_ceiling": 0.2581799773372561,
-        "payout": 0.09327156834817076,
+        "book_growth_ceiling": 0.26238486296164143,
+        "payout": 0.06131466547580064,
         "payout_band": {
-          "low": 0.07857387399768687,
-          "center": 0.09327156834817076,
-          "high": 0.11060896860400155
+          "low": 0.06037518885291771,
+          "center": 0.06131466547580064,
+          "high": 0.062254142098683574
         },
         "payout_raw_tracker_ratio": 0.05879077740193555,
         "payout_tracker": "SOXX",
-        "retention": 0.9067284316518293,
+        "retention": 0.9386853345241993,
         "payout_as_of": "2026-06-26",
         "payout_point_in_time": true,
         "payout_source": "data/computed/market_facts/tickers/SOXX.json#facts.dividend_yield / panel forward EPS over price, times the frozen calibration multiplier",
@@ -1099,32 +1098,32 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.2581799773372561,
+        "book_growth": 0.26238486296164143,
         "convexity": {
-          "book_growth": 0.2581799773372561,
+          "book_growth": 0.26238486296164143,
           "discount": 0.1026,
-          "growth_over_discount": 2.5163740481214045,
+          "growth_over_discount": 2.5573573388074213,
           "printed_domain": {
-            "low": 1.8032317745108193,
-            "high": 2.516374048121405,
-            "observations": 4,
-            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "low": 1.7686871045010335,
+            "high": 2.5573573388074213,
+            "observations": 12,
+            "basis": "every printed LTROE axis value times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
             "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
           },
           "status": "inside_printed_domain",
           "distance_from_domain": 0
         },
         "range": {
-          "low": 14009.73491963858,
-          "high": 14880.178056338278
+          "low": 14308.891575429938,
+          "high": 15199.483883856305
         },
         "upside": {
-          "low": 0.2385850793769102,
-          "high": 0.31553998878429623
+          "low": 0.2650331865241815,
+          "high": 0.3437694617893521
         },
         "expected_12m": {
-          "low": 0.14893356131819488,
-          "high": 0.16197141597981302,
+          "low": 0.12934876778065646,
+          "high": 0.14383970682555952,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1136,14 +1135,14 @@
           "discount": 0.1026,
           "growth_over_discount": 1,
           "printed_domain": {
-            "low": 1.8032317745108193,
-            "high": 2.516374048121405,
-            "observations": 4,
-            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "low": 1.7686871045010335,
+            "high": 2.5573573388074213,
+            "observations": 12,
+            "basis": "every printed LTROE axis value times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
             "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
           },
           "status": "below_printed_domain",
-          "distance_from_domain": 0.8032317745108193
+          "distance_from_domain": 0.7686871045010335
         },
         "range": {
           "low": 6569.949421024599,
@@ -1154,8 +1153,8 @@
           "high": -0.3865043075090909
         },
         "expected_12m": {
-          "low": 0.03749739971857946,
-          "high": 0.0430296672131948,
+          "low": 0.003427470268360877,
+          "high": 0.009437201228796863,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1223,19 +1222,19 @@
           0.05,
           0.055
         ],
-        "book_growth": 0.2563201594814639,
-        "book_growth_uncapped": 0.2563201594814639,
-        "book_growth_capped": false,
-        "book_growth_ceiling": 0.2581799773372561,
-        "payout": 0.18247994903624054,
+        "book_growth": 0.26238486296164143,
+        "book_growth_uncapped": 0.27592281489256326,
+        "book_growth_capped": true,
+        "book_growth_ceiling": 0.26238486296164143,
+        "payout": 0.11995828127851645,
         "payout_band": {
-          "low": 0.15372483573081341,
-          "center": 0.18247994903624054,
-          "high": 0.2163994806913224
+          "low": 0.11812025443603355,
+          "center": 0.11995828127851645,
+          "high": 0.12179630812099936
         },
         "payout_raw_tracker_ratio": 0.11502045322170851,
         "payout_tracker": "ONEQ",
-        "retention": 0.8175200509637595,
+        "retention": 0.8800417187214835,
         "payout_as_of": "2026-06-18",
         "payout_point_in_time": true,
         "payout_source": "data/computed/market_facts/tickers/ONEQ.json#facts.dividend_yield / panel forward EPS over price, times the frozen calibration multiplier",
@@ -1253,32 +1252,32 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.2563201594814639,
+        "book_growth": 0.26238486296164143,
         "convexity": {
-          "book_growth": 0.2563201594814639,
+          "book_growth": 0.26238486296164143,
           "discount": 0.1026,
-          "growth_over_discount": 2.498247168435321,
+          "growth_over_discount": 2.5573573388074213,
           "printed_domain": {
-            "low": 1.8032317745108193,
-            "high": 2.516374048121405,
-            "observations": 4,
-            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "low": 1.7686871045010335,
+            "high": 2.5573573388074213,
+            "observations": 12,
+            "basis": "every printed LTROE axis value times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
             "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
           },
           "status": "inside_printed_domain",
           "distance_from_domain": 0
         },
         "range": {
-          "low": 28564.357388504395,
-          "high": 33605.427299908915
+          "low": 31566.17353036182,
+          "high": 34305.98152585599
         },
         "upside": {
-          "low": 0.1257399798810348,
-          "high": 0.32441183738017365
+          "low": 0.2440435144986599,
+          "high": 0.3520211369522557
         },
         "expected_12m": {
-          "low": 0.12981511887140468,
-          "high": 0.16347450231262378,
+          "low": 0.12548574458239137,
+          "high": 0.14535837812924096,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1290,14 +1289,14 @@
           "discount": 0.1026,
           "growth_over_discount": 0.8317465601199643,
           "printed_domain": {
-            "low": 1.8032317745108193,
-            "high": 2.516374048121405,
-            "observations": 4,
-            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "low": 1.7686871045010335,
+            "high": 2.5573573388074213,
+            "observations": 12,
+            "basis": "every printed LTROE axis value times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
             "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
           },
           "status": "below_printed_domain",
-          "distance_from_domain": 0.971485214390855
+          "distance_from_domain": 0.9369405443810692
         },
         "range": {
           "low": 13985.801764304397,
@@ -1308,8 +1307,8 @@
           "high": -0.4080891363062972
         },
         "expected_12m": {
-          "low": 0.03247364128864873,
-          "high": 0.03937272234871453,
+          "low": -0.0020298646496436923,
+          "high": 0.005464642997643848,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1377,19 +1376,19 @@
           0.045,
           0.05
         ],
-        "book_growth": 0.12512336993696246,
-        "book_growth_uncapped": 0.12512336993696246,
+        "book_growth": 0.14192097599403805,
+        "book_growth_uncapped": 0.14192097599403805,
         "book_growth_capped": false,
-        "book_growth_ceiling": 0.2581799773372561,
-        "payout": 0.2815195274724992,
+        "book_growth_ceiling": 0.26238486296164143,
+        "payout": 0.1850647089737747,
         "payout_band": {
-          "low": 0.2371577992228145,
-          "center": 0.2815195274724992,
-          "high": 0.3338486221158273
+          "low": 0.18222910730405487,
+          "center": 0.1850647089737747,
+          "high": 0.18790031064349455
         },
         "payout_raw_tracker_ratio": 0.17744691299873885,
         "payout_tracker": "IWM",
-        "retention": 0.7184804725275008,
+        "retention": 0.8149352910262253,
         "payout_as_of": "2026-07-28",
         "payout_point_in_time": true,
         "payout_source": "data/yf/finance/IWM.json#data.dividends over data.history_1y close, times the frozen calibration multiplier",
@@ -1407,32 +1406,32 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.12512336993696246,
+        "book_growth": 0.14192097599403805,
         "convexity": {
-          "book_growth": 0.12512336993696246,
+          "book_growth": 0.14192097599403805,
           "discount": 0.1026,
-          "growth_over_discount": 1.219526022777412,
+          "growth_over_discount": 1.3832453800588504,
           "printed_domain": {
-            "low": 1.8032317745108193,
-            "high": 2.516374048121405,
-            "observations": 4,
-            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "low": 1.7686871045010335,
+            "high": 2.5573573388074213,
+            "observations": 12,
+            "basis": "every printed LTROE axis value times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
             "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
           },
           "status": "below_printed_domain",
-          "distance_from_domain": 0.5837057517334072
+          "distance_from_domain": 0.38544172444218305
         },
         "range": {
-          "low": 2759.900199048755,
-          "high": 3475.318899025535
+          "low": 2987.090690654936,
+          "high": 3602.2984389866233
         },
         "upside": {
-          "low": -0.05848480880281848,
-          "high": 0.1855738619878271
+          "low": 0.019019189065111908,
+          "high": 0.2288917927904699
         },
         "expected_12m": {
-          "low": 0.09860338672300889,
-          "high": 0.13995229484570165,
+          "low": 0.08407136763229946,
+          "high": 0.12269716111232926,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1444,14 +1443,14 @@
           "discount": 0.1026,
           "growth_over_discount": 0.663344868835964,
           "printed_domain": {
-            "low": 1.8032317745108193,
-            "high": 2.516374048121405,
-            "observations": 4,
-            "basis": "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+            "low": 1.7686871045010335,
+            "high": 2.5573573388074213,
+            "observations": 12,
+            "basis": "every printed LTROE axis value times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
             "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
           },
           "status": "below_printed_domain",
-          "distance_from_domain": 1.1398869056748553
+          "distance_from_domain": 1.1053422356650695
         },
         "range": {
           "low": 2421.8638866657584,
@@ -1462,8 +1461,8 @@
           "high": -0.05805281859315625
         },
         "expected_12m": {
-          "low": 0.07906597118814511,
-          "high": 0.09867657536831027,
+          "low": 0.048583625711837775,
+          "high": 0.06988672705484116,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null

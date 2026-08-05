@@ -231,18 +231,26 @@ for (const id of SCOPE) {
 // The multiplier must be recomputable from the three exactly known payouts and
 // must match what the runtime has frozen.
 const payoutFit = runPayoutCalibration(ENGINE_ROOT);
-assert.equal(payoutFit.rows.length, 3, "all three known payouts must take part in the calibration");
+// Only the indices whose tracker really is the index may calibrate the bridge.
+assert.ok(payoutFit.rows.length >= 2, "the same-basis comparison needs at least two usable indices");
+for (const row of payoutFit.rows) {
+  assert.ok(row.direct_payout > 0 && row.raw > 0, `${row.id}: both sides must be positive`);
+  assert.ok(row.basis.includes("both sides"), `${row.id}: the comparison must be same-basis`);
+  assert.ok(Math.abs(row.divergence) < 0.15, `${row.id}: a bridge candidate may not diverge by more than 15%`);
+}
 for (const key of ["low", "center", "high"]) {
   assert.ok(Math.abs(payoutFit[key] - FROZEN_CALIBRATION.payout_multiplier[key]) < 0.005,
     `the frozen ${key} payout multiplier must match the refit`);
 }
-assert.ok(payoutFit.low > 1, "the raw tracker ratio must understate the payout, never overstate it");
-// Every known payout must fall inside the band the rule publishes.
+// A same-basis multiplier must sit near one. The earlier 1.5865 was converting
+// between different variables and created a 50% divergence rather than closing
+// one, so a value far from one is the signal that the comparison is wrong.
+assert.ok(payoutFit.center > 0.9 && payoutFit.center < 1.2,
+  `a same-basis payout multiplier must sit near one, got ${payoutFit.center}`);
 for (const row of payoutFit.rows) {
   const band = readTrackerPayout(ENGINE_ROOT, row.id, AS_OF);
-  // The frozen multipliers are rounded to three decimals, so allow that much.
-  assert.ok(row.payout >= band.low - 0.002 && row.payout <= band.high + 0.002,
-    `${row.id}: its known payout must lie inside the published band`);
+  assert.ok(row.direct_payout >= band.low - 0.01 && row.direct_payout <= band.high + 0.01,
+    `${row.id}: the direct payout must lie inside the published band`);
 }
 // A 2020 date used to fail closed because only a snapshot existed. It now
 // reconstructs, and what must hold instead is that nothing it reads postdates

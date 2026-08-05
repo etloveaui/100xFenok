@@ -29,8 +29,12 @@ assert.ok(artifact.calibration.lt_roe_rule.refit.gap_coefficient > 0, "the recor
 assert.ok(artifact.calibration.lt_roe_rule.refit.max_abs_residual_pp < 4,
   "the LTROE fit must hold every observation inside four percentage points");
 const payoutRefit = artifact.calibration.payout_multiplier.refit;
-assert.equal(payoutRefit.rows.length, 3, "the payout multiplier receipt must carry all three known payouts");
-assert.ok(payoutRefit.low > 1 && payoutRefit.high < 2.5, "the payout multiplier must stay in its measured band");
+// The multiplier is a same-basis comparison, so it must sit near one and may
+// only use indices whose tracker really is the index.
+assert.ok(payoutRefit.rows.length >= 2, "the receipt must carry the same-basis comparisons");
+assert.ok(payoutRefit.center > 0.9 && payoutRefit.center < 1.2,
+  "a same-basis payout multiplier must sit near one");
+for (const row of payoutRefit.rows) assert.ok(Math.abs(row.divergence) < 0.15, `${row.id}: divergence must stay small`);
 const share = artifact.calibration.lt_roe_rule.refit.stock_gap_share;
 assert.ok(share.low > 0.6 && share.high < 0.8, "the printed stock gap share must stay in its measured 0.62~0.76 band");
 // The large-gap regime must be represented in the fit, or a cyclical peak is

@@ -271,13 +271,21 @@ export const FROZEN_CALIBRATION = Object.freeze({
   etf_proxy: Object.freeze({
     SPX: "SPY", NDX: "QQQ", CCMP: "ONEQ", SOX: "SOXX", RUT: "IWM", KOSPI: "EWY",
   }),
+  // The multiplier was calibrated against Yoo's printed 31.09%, the grid-fitted
+  // 21.64% and the LSEG 23.72%, and those are a different variable from the
+  // tracker ratio. On a same-basis comparison at 2026-07-31 the raw tracker
+  // ratio is already within 2.6% of the direct constituent payout for the S&P
+  // 500 and 5.6% for the NASDAQ 100, implying a multiplier near 1.03~1.06.
+  // Applying 1.5865 did not remove a bias, it created one of about 50%.
+  // The band is now the measured same-basis divergence, not a conversion.
   payout_multiplier: Object.freeze({
-    low: 1.3365,
-    center: 1.5865,
-    high: 1.8814,
-    observations: 3,
-    derivation: "known payout / raw tracker ratio at SPX (Yoo's printed 31.09%), CCMP (his 2025-12-09 grid fit 21.64%) and RUT (LSEG official 23.72%); the raw ratio is the reconstructed trailing distribution yield over the index's own forward earnings yield",
-    swept: "the low and high multipliers are swept into the published endpoints so the calibration spread is visible rather than hidden",
+    low: 1.02695,
+    center: 1.04293,
+    high: 1.05891,
+    observations: 2,
+    derivation: "direct constituent payout over raw tracker ratio on the same basis at 2026-07-31: SPX 0.207125/0.201689 = 1.027 and NDX 0.097061/0.091662 = 1.059; the band spans the two and their midpoint is the centre",
+    swept: "the low and high multipliers are swept into the published endpoints so the measured divergence is visible rather than hidden",
+    rejected: "a universal scalar fitted to the printed/grid/LSEG payouts, which are trailing realised or inverted quantities and not the same variable as a tracker distribution yield",
   }),
   // Retained as the calibration truths and as a fallback when a tracker yield
   // is missing or stale.
@@ -528,8 +536,8 @@ export function readAutomaticPayout(root, id, asOf) {
  * 19.8% MAE.
  */
 export const TWELVE_MONTH_CONVERSION = Object.freeze({
-  intercept: 0.108512,
-  slope: 0.169422,
+  intercept: 0.080571,
+  slope: 0.184044,
   horizon_months: 12,
   observations: 157,
   basis: "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest",
@@ -775,9 +783,13 @@ export function printedConvexityDomain(root = ROOT) {
     const meta = grid.instruments[instrument.instrument];
     const axis = meta?.lt_roe_axis;
     if (!Array.isArray(axis) || !axis.length) continue;
-    const centre = axis[Math.floor(axis.length / 2)];
-    for (const scenario of Object.values(grid.rate_scenarios)) {
-      ratios.push((centre * (1 - instrument.fitted_payout)) / discountRate(scenario));
+    // Every printed cell, not just the centre of each axis. Taking centres
+    // only gave 1.8032~2.5164 and clipped a printed NASDAQ Composite corner:
+    // the cap would then forbid a combination Yoo actually printed.
+    for (const ltRoe of axis) {
+      for (const scenario of Object.values(grid.rate_scenarios)) {
+        ratios.push((ltRoe * (1 - instrument.fitted_payout)) / discountRate(scenario));
+      }
     }
   }
   if (!ratios.length) return null;
@@ -785,7 +797,7 @@ export function printedConvexityDomain(root = ROOT) {
     low: Math.min(...ratios),
     high: Math.max(...ratios),
     observations: ratios.length,
-    basis: "printed LTROE axis centre times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+    basis: "every printed LTROE axis value times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
     source: "scripts/fixtures/fenok-rim-2025-12-09-grid.json",
   };
 }
@@ -976,19 +988,46 @@ export function runTwelveMonthConversionCalibration(root = ROOT) {
   };
 }
 
-/** Recompute the payout multiplier from the three exactly known payouts. */
+/**
+ * Recompute the payout multiplier on a same-basis comparison.
+ *
+ * The earlier version calibrated against Yoo's printed 31.09%, a grid fit and
+ * an LSEG factsheet figure. Those are trailing realised or inverted payouts,
+ * not the same variable as a tracker's distribution yield over an earnings
+ * yield, and forcing one onto the other produced a 50% divergence rather than
+ * removing one. This compares like with like: the index's own direct payout,
+ * dividend yield over forward earnings yield, against the tracker ratio built
+ * the same way.
+ */
 export function runPayoutCalibration(root = ROOT, asOf = "2026-08-04") {
-  const official = russellOfficialBasis(root, asOf);
-  const truths = [
-    { id: "SPX", payout: 0.3109, source: "printed 2026-08-03 Yoo S&P 500 input sheet" },
-    { id: "CCMP", payout: 0.2164, source: "fitted on the 18 published 2025-12-09 CCMP cells" },
-    { id: "RUT", payout: official ? official.payout : null, source: "LSEG official ex-negative dividend yield times P/E" },
-  ].filter((row) => Number.isFinite(row.payout));
-  const rows = truths.map((truth) => {
-    const tracker = readTrackerPayout(root, truth.id, asOf);
-    const raw = tracker ? tracker.raw : null;
-    return { ...truth, raw, multiplier: raw ? truth.payout / raw : null, tracker: tracker?.ticker ?? null };
-  }).filter((row) => Number.isFinite(row.multiplier));
+  let inputs;
+  try {
+    inputs = readJson(root, "data/computed/rim-index/inputs.json");
+  } catch {
+    return { rows: [], low: null, center: null, high: null };
+  }
+  // Only where the tracker really is the index. SOXX is not the Philadelphia
+  // index and IWM's payout identity fails by about 18%, so neither can
+  // calibrate a bridge; KOSPI's direct payout reads zero and is degenerate.
+  const identityHolds = new Set(["SPX", "NDX", "CCMP"]);
+  const rows = [];
+  for (const id of Object.keys(FROZEN_CALIBRATION.etf_proxy)) {
+    if (!identityHolds.has(id)) continue;
+    const direct = inputs.indices?.[id]?.derived?.payout_ratio;
+    const tracker = readTrackerPayout(root, id, asOf);
+    if (!direct || !Number.isFinite(direct.value) || direct.value <= 0) continue;
+    if (!tracker || !Number.isFinite(tracker.raw) || tracker.raw <= 0) continue;
+    rows.push({
+      id,
+      tracker: tracker.ticker,
+      direct_payout: direct.value,
+      raw: tracker.raw,
+      multiplier: direct.value / tracker.raw,
+      divergence: tracker.raw / direct.value - 1,
+      basis: "index dividend yield over forward earnings yield, both sides",
+    });
+  }
+  if (!rows.length) return { rows, low: null, center: null, high: null };
   const multipliers = rows.map((row) => row.multiplier);
   return {
     rows,
