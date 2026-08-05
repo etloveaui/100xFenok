@@ -443,8 +443,8 @@
       "source_schema": "yf-finance/v2",
       "ticker": "000660.KS",
       "currency": "KRW",
-      "source_as_of": "2026-08-04",
-      "fetched_at": "2026-08-04T00:32:32Z",
+      "source_as_of": "2026-08-05",
+      "fetched_at": "2026-08-05T00:36:36Z",
       "fiscal_period": "2025-12-31",
       "numerator": "Stockholders Equity",
       "denominator": "Ordinary Shares Number",
@@ -459,8 +459,8 @@
       "source_schema": "yf-finance/v2",
       "ticker": "005930.KS",
       "currency": "KRW",
-      "source_as_of": "2026-08-04",
-      "fetched_at": "2026-08-04T00:26:29Z",
+      "source_as_of": "2026-08-05",
+      "fetched_at": "2026-08-05T00:27:52Z",
       "fiscal_period": "2025-12-31",
       "numerator": "Stockholders Equity",
       "denominator": "Ordinary Shares Number",
@@ -469,6 +469,114 @@
       "measurement_sha256": "3a71b4be62250060a7bc10a434c0628a84a0ee84c796aceae3324ffb34e09579",
       "temporal_eligible": false,
       "availability_note": "Fiscal period is not first-knowable availability; this source is a structural cross-check only."
+    }
+  },
+  "calibration_receipt": {
+    "schema_version": "fenok-rim-calibration-receipt/v1",
+    "algorithm": {
+      "id": "fenok-rim-structural-transfer",
+      "parameters": {
+        "external_book_tolerance": 0.03,
+        "fit_objective": "relative_rms",
+        "printed_roe_rounding_scope": "within_panel_only"
+      },
+      "source_sha256": "288ba73bd54c9c078961bb5eb45544d83144d6bc215ed676b68c7c26e2f64c79",
+      "sources": [
+        {
+          "path": "scripts/analyze-fenok-rim-identifiability.mjs",
+          "raw_sha256": "b0f48595383c3ebafcdbe57ff6a7c0ca8eda940daef01cfe0aa62e581aa8d64b"
+        },
+        {
+          "path": "scripts/build-fenok-rim-identification-receipt.mjs",
+          "raw_sha256": "42a05a5358793dea3712fc44e35352d7bc3f00b97c85107806ad0fe2b5e17229"
+        },
+        {
+          "path": "scripts/fenok-rim-identification-protocol.mjs",
+          "raw_sha256": "ed85665a738ca9d2e25093546fbcc627d7a21adc1289b59518e783a958337679"
+        }
+      ],
+      "version": "fenok-rim-structural-transfer/v2"
+    },
+    "parameter_sha256": "02d9b4f4d648c7efebdfc1a8ced29d9ca928d455110d32259b618fea70b3e51e",
+    "measurement_receipt_sha256": "fd7427deb9f7518731cbc0bb8b23b187bcad2fadd0581f89a41e18a1bae39dc9",
+    "proxy_decision_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "fit_evidence_ids": [
+      "stock-grid-hynix",
+      "stock-grid-samsung"
+    ],
+    "evaluation_evidence_ids": [],
+    "evidence_set_contract": {
+      "fit": "applicable",
+      "evaluation": "not_applicable"
+    },
+    "promotion": {
+      "requested": true,
+      "underlying_production_identified": false,
+      "external_blockers": [
+        "alternative_structures_not_profiled",
+        "exact_cross_panel_book_equality_fails",
+        "printed_payout_residual_roe_conflict",
+        "printed_roe_rounding_can_remove_slope",
+        "rounded_cross_panel_shared_book_gate_fails",
+        "rounded_shared_book_gate_pass_is_boundary_saturated",
+        "same_sheet_book_basis_is_pbr_derived_not_independent",
+        "temporal_holdout_not_run"
+      ],
+      "eligible": false,
+      "blockers": [
+        "underlying_production_not_identified",
+        "alternative_structures_not_profiled",
+        "exact_cross_panel_book_equality_fails",
+        "printed_payout_residual_roe_conflict",
+        "printed_roe_rounding_can_remove_slope",
+        "rounded_cross_panel_shared_book_gate_fails",
+        "rounded_shared_book_gate_pass_is_boundary_saturated",
+        "same_sheet_book_basis_is_pbr_derived_not_independent",
+        "temporal_holdout_not_run"
+      ]
+    },
+    "generated_at": "2026-08-05T00:36:36.000Z",
+    "receipt_sha256": "e77074ecff54ec75b5f31b263c1173f4f8c6b4917151ede91f466b13982b5a6a",
+    "source_snapshot_sha256": "28dd7378bbacc1c6765d7eeb7090e86ba71e97e935b0de87aa323ccd3a57b3c2",
+    "sources": [
+      {
+        "id": "printed-grid-fixture",
+        "measurement_sha256": "667eee8dbaad6643e1ae29c22f60ce728b4966a783df3fe47544d6d1722ff021",
+        "path": "scripts/fixtures/fenok-rim-2026-08-03-stock-grids.json",
+        "raw_sha256": "a27303a0d20541309e7cc16c06f72217103410f97869c437e9a070b6317719df"
+      },
+      {
+        "id": "calibration-evidence",
+        "measurement_sha256": "b34d713a70d3d74b25ae1ad74a4cbd6641f0512a2740b80f2dfbdd87fef329f1",
+        "path": "scripts/fixtures/fenok-rim-calibration-evidence.json",
+        "raw_sha256": "04de0fd11f7e6dce4b6c47126842dcf05de2feb9c4b6eb926845f40b4c46e5f5"
+      },
+      {
+        "id": "calibration-receipt-implementation",
+        "measurement_sha256": "6185b38ed773bc9c4e58aefa8c7c1a14962da0554bd530743a6b080ba5f1822e",
+        "path": "scripts/lib/fenok-rim-calibration-receipt.mjs",
+        "raw_sha256": "f245d288ad3c5cbad5727bf3c52b3951c8fdfa107c93abc0ee18d5c3506ad15c"
+      },
+      {
+        "id": "hynix-external-book",
+        "measurement_sha256": "338824f8186adf21ed54a509c8b7bc444b209fd1f1dae1b331d2e4d0a1d81f59",
+        "path": "data/yf/finance/000660.KS.json",
+        "raw_sha256": "082b803695324ea663598543cf9da38e258c232eacb35afd483f2c209f65517d"
+      },
+      {
+        "id": "samsung-external-book",
+        "measurement_sha256": "0f0cd28b50bb55e74338599bd57a400b26f3f6d8cedf04be134cb7859eee8d89",
+        "path": "data/yf/finance/005930.KS.json",
+        "raw_sha256": "2b2ebbb0caa042168fa8886089c6dc02b7711d3e12a1138a0deaafadd0e5ed52"
+      }
+    ],
+    "source_ledger": {
+      "exists": true,
+      "path": "docs/agent-work/fenok-rim-evidence-ledger-20260804.json",
+      "resolved_scope": "parent_project",
+      "expected_sha256": "895107dd00af7ae852198c5bd714c26474bb20f44856f26b013f1a53d17f1e5f",
+      "raw_sha256": "895107dd00af7ae852198c5bd714c26474bb20f44856f26b013f1a53d17f1e5f",
+      "measurement_sha256": "b5d71dd21fe4af02d6e926d27c1272e199bd1208cd6cc632dca796d6383a125c"
     }
   },
   "publication_status": "NULL"

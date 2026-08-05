@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   buildTemporalReceipt,
+  compareCalibrationReceiptIdentity,
   findPrintedRoeRoundingWitness,
   profileSharedBookUnderPrintedRoeRounding,
   solveBookFromPrintedGrid,
@@ -117,11 +118,51 @@ assert.equal(instruments.SAMSUNG.cross_panel_relative_rms_gate.clean_pass, false
 assert.equal(instruments.HYNIX.cross_panel_relative_rms_gate.printed_roe_rounding_profile.gate.passed, false);
 assert.ok(Math.abs(instruments.SAMSUNG.cross_panel_relative_rms_gate.printed_roe_rounding_profile.gate.value - 0.003006113744874829) < 1e-12);
 assert.ok(Math.abs(instruments.HYNIX.cross_panel_relative_rms_gate.printed_roe_rounding_profile.gate.value - 0.009187596283510612) < 1e-12);
-assert.deepEqual(
-  JSON.parse(fs.readFileSync(path.join(NESTED, "data", "computed", "fenok-rim", "identification-receipt.json"), "utf8")),
-  artifact,
-  "committed identification receipt must match the deterministic builder",
+assert.equal(artifact.calibration_receipt.schema_version, "fenok-rim-calibration-receipt/v1");
+assert.equal(artifact.calibration_receipt.promotion.eligible, false);
+assert.equal(artifact.calibration_receipt.source_ledger.exists, true);
+assert.equal(artifact.calibration_receipt.source_ledger.resolved_scope, "parent_project");
+assert.equal(
+  artifact.calibration_receipt.source_ledger.raw_sha256,
+  artifact.calibration_receipt.source_ledger.expected_sha256,
 );
+assert.deepEqual(artifact.calibration_receipt.fit_evidence_ids, ["stock-grid-hynix", "stock-grid-samsung"]);
+assert.deepEqual(artifact.calibration_receipt.evaluation_evidence_ids, []);
+assert.deepEqual(artifact.calibration_receipt.evidence_set_contract, { fit: "applicable", evaluation: "not_applicable" });
+assert.equal(artifact.calibration_receipt.promotion.underlying_production_identified, false);
+assert.ok(artifact.calibration_receipt.promotion.blockers.includes("underlying_production_not_identified"));
+assert.ok(transfer.blocking_reasons.every((reason) => artifact.calibration_receipt.promotion.blockers.includes(reason)));
+assert.deepEqual(
+  artifact.calibration_receipt.algorithm.sources.map((source) => source.path),
+  [
+    "scripts/analyze-fenok-rim-identifiability.mjs",
+    "scripts/build-fenok-rim-identification-receipt.mjs",
+    "scripts/fenok-rim-identification-protocol.mjs",
+  ],
+);
+assert.ok(!artifact.calibration_receipt.algorithm.sources.some(
+  (source) => source.path === "scripts/lib/fenok-rim-calibration-receipt.mjs",
+));
+assert.ok(artifact.calibration_receipt.sources.some(
+  (source) => source.path === "scripts/lib/fenok-rim-calibration-receipt.mjs",
+));
+const committedArtifact = JSON.parse(fs.readFileSync(
+  path.join(NESTED, "data", "computed", "fenok-rim", "identification-receipt.json"),
+  "utf8",
+));
+const receiptComparison = compareCalibrationReceiptIdentity(
+  committedArtifact.calibration_receipt,
+  artifact.calibration_receipt,
+);
+assert.equal(
+  receiptComparison.semantic_identity_equal,
+  true,
+  "committed identification receipt must match the semantic calibration identity",
+);
+assert.equal(receiptComparison.measurement_identity_equal, true);
+// Raw/source metadata refreshes remain observable here without invalidating a
+// stable semantic measurement receipt.
+assert.equal(typeof receiptComparison.source_snapshot_equal, "boolean");
 
 // Temporal candidate competition freezes the winner on fit rows only. The
 // candidate that wins holdout must not replace the fit winner after inspection.

@@ -8,8 +8,29 @@
 //      without using inputs that became knowable after that observation.
 
 import { rimBracket } from "./analyze-fenok-rim-identifiability.mjs";
+import { isSha256 } from "./lib/fenok-rim-calibration-receipt.mjs";
 
 const finitePositive = (value) => Number.isFinite(value) && value > 0;
+
+export function compareCalibrationReceiptIdentity(committed, rebuilt) {
+  for (const [label, receipt] of [["committed", committed], ["rebuilt", rebuilt]]) {
+    if (receipt?.schema_version !== "fenok-rim-calibration-receipt/v1") {
+      throw new Error(`${label} calibration receipt schema mismatch`);
+    }
+    for (const field of ["receipt_sha256", "measurement_receipt_sha256", "source_snapshot_sha256", "proxy_decision_sha256", "parameter_sha256"]) {
+      if (!isSha256(receipt[field])) throw new Error(`${label} calibration receipt ${field} invalid`);
+    }
+    if (typeof receipt.algorithm?.id !== "string" || typeof receipt.algorithm?.version !== "string"
+      || !isSha256(receipt.algorithm?.source_sha256)) {
+      throw new Error(`${label} calibration receipt algorithm identity invalid`);
+    }
+  }
+  return {
+    semantic_identity_equal: committed.receipt_sha256 === rebuilt.receipt_sha256,
+    measurement_identity_equal: committed.measurement_receipt_sha256 === rebuilt.measurement_receipt_sha256,
+    source_snapshot_equal: committed.source_snapshot_sha256 === rebuilt.source_snapshot_sha256,
+  };
+}
 
 function instant(value, label) {
   const match = typeof value === "string"
