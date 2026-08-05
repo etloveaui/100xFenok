@@ -665,7 +665,7 @@ export function buildPanelIndexRow(root, id, { asOf }) {
   // no fade. Once book compounds faster than that rate, the ninth-year book
   // dominates the answer and the model amplifies the ROE input instead of
   // estimating a value from it.
-  const domain = printedConvexityDomain(root);
+  const domain = convexityDomainFor(id, root);
   const convexity = (growth) => {
     const ratio = growth / discount;
     return {
@@ -815,6 +815,67 @@ function fitPayoutOnCells(book, cells, rateScenarios, horizon) {
  * is therefore measured from the cells themselves, exactly as the discount
  * relation's domain already is.
  */
+/**
+ * The compounding domain is not one number, because the printed sheets are not
+ * one regime.
+ *
+ * The 2025-12-09 index grids run book at 1.77~2.56 times the discount rate.
+ * The 2026-08-03 semiconductor sheets run it at 3.25~16.61: SK Hynix takes
+ * equity from 121 to 900 trillion over three years, 95.4% a year, and prints a
+ * terminal PBR of 1.7 against a current 12.6. That is the same author using
+ * the same structure on a different regime, not an inconsistency.
+ *
+ * Capping a semiconductor index at the index-grid ceiling therefore forbids a
+ * combination he printed himself, and it is what drove SOX to a 27~34% band
+ * while KOSPI sat at 265~343%. A regime that compounds equity several times
+ * faster needs its own ceiling or the model prices it as if it did not.
+ */
+export const CONVEXITY_REGIMES = Object.freeze({
+  broad_index: Object.freeze({
+    ids: Object.freeze(["SPX", "NDX", "CCMP", "KOSPI", "RUT"]),
+    source: "scripts/fixtures/fenok-rim-2025-12-09-grid.json",
+    basis: "every printed LTROE axis value times one minus the grid-fitted payout, over d(Rf), across both printed rate scenarios",
+  }),
+  semiconductor: Object.freeze({
+    ids: Object.freeze(["SOX"]),
+    source: "scripts/fixtures/fenok-rim-2026-08-03-stock-grids.json",
+    basis: "year-on-year equity growth printed on the Samsung and SK Hynix forecast paths, over d(Rf) at the rate those sheets print",
+    why_separate: "these sheets compound equity at 3.25~16.61 times the discount rate against 1.77~2.56 on the index grids; one ceiling cannot hold both without forbidding what the author printed",
+  }),
+});
+
+export function printedSemiconductorDomain(root = ROOT) {
+  const sheets = readJson(root, "scripts/fixtures/fenok-rim-2026-08-03-stock-grids.json");
+  const ratios = [];
+  for (const instrument of Object.values(sheets.instruments)) {
+    const path = instrument.printed?.forecast_path;
+    const riskFree = instrument.printed?.risk_free;
+    if (!Array.isArray(path) || path.length < 2 || !Number.isFinite(riskFree)) continue;
+    const discount = discountRate(riskFree);
+    for (let index = 1; index < path.length; index += 1) {
+      const previous = path[index - 1].total_equity;
+      const current = path[index].total_equity;
+      if (!Number.isFinite(previous) || !Number.isFinite(current) || previous <= 0) continue;
+      ratios.push((current / previous - 1) / discount);
+    }
+  }
+  if (!ratios.length) return null;
+  return {
+    low: Math.min(...ratios),
+    high: Math.max(...ratios),
+    observations: ratios.length,
+    basis: CONVEXITY_REGIMES.semiconductor.basis,
+    source: CONVEXITY_REGIMES.semiconductor.source,
+  };
+}
+
+/** The domain that governs this index, by the regime its printed evidence sits in. */
+export function convexityDomainFor(id, root = ROOT) {
+  return CONVEXITY_REGIMES.semiconductor.ids.includes(id)
+    ? printedSemiconductorDomain(root)
+    : printedConvexityDomain(root);
+}
+
 export function printedConvexityDomain(root = ROOT) {
   const grid = readJson(root, "scripts/fixtures/fenok-rim-2025-12-09-grid.json");
   const reproduction = runStructuralReproduction(root);

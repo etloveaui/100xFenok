@@ -21,6 +21,10 @@ import {
   readTrackerPayout,
   runPublishedUpsideHoldout,
   runStructuralReproduction,
+  printedConvexityDomain,
+  printedSemiconductorDomain,
+  convexityDomainFor,
+  CONVEXITY_REGIMES,
   reconstructTrailingYield,
   runHistoricalBacktest,
   runTwelveMonthConversionCalibration,
@@ -270,6 +274,32 @@ assert.ok(historical.as_of <= "2020-01-01", "the price behind a 2020 yield may n
 assert.equal(historical.point_in_time, true);
 // A date before the distribution record starts must still fail closed.
 assert.equal(readTrackerPayout(ENGINE_ROOT, "SPX", "2015-01-01"), null, "a date before the record must fail closed");
+
+// --- convexity regimes --------------------------------------------------------
+
+// One ceiling cannot hold both regimes. The index grids compound equity at
+// 1.77~2.56 times the discount rate; the semiconductor sheets do it at
+// 3.25~16.61, with SK Hynix taking equity from 121 to 900 trillion in three
+// years. Capping a semiconductor index at the index-grid ceiling forbids a
+// combination the author printed himself.
+const broadDomain = printedConvexityDomain(ENGINE_ROOT);
+const semiDomain = printedSemiconductorDomain(ENGINE_ROOT);
+assert.ok(semiDomain.low > broadDomain.high,
+  "the semiconductor regime must sit entirely above the index-grid regime, or there is no case for separating them");
+assert.ok(semiDomain.observations >= 4 && broadDomain.observations >= 8);
+assert.ok(semiDomain.source.includes("2026-08-03") && broadDomain.source.includes("2025-12-09"),
+  "each regime must name the printed evidence it came from");
+// Every index must resolve to exactly one regime, and the assignment must be
+// declared rather than inferred at the call site.
+const assigned = [...CONVEXITY_REGIMES.broad_index.ids, ...CONVEXITY_REGIMES.semiconductor.ids];
+assert.deepEqual([...assigned].sort(), Object.keys(PANEL_SOURCES).sort(),
+  "every index must belong to exactly one convexity regime");
+for (const id of CONVEXITY_REGIMES.semiconductor.ids) {
+  assert.equal(convexityDomainFor(id, ENGINE_ROOT).low, semiDomain.low, `${id}: must take the semiconductor domain`);
+}
+for (const id of CONVEXITY_REGIMES.broad_index.ids) {
+  assert.equal(convexityDomainFor(id, ENGINE_ROOT).low, broadDomain.low, `${id}: must take the index domain`);
+}
 
 // --- historical backtest ------------------------------------------------------
 
