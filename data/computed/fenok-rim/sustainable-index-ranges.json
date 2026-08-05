@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok_rim_sustainable_index_ranges.v2",
-  "generated_at": "2026-08-05T03:33:13.616Z",
+  "generated_at": "2026-08-05T03:45:01.574Z",
   "as_of": "2026-08-05",
   "status": "research_diagnostic_not_promoted",
   "promotion": {
@@ -279,6 +279,38 @@
         "low": 1.3365124024540542,
         "center": 1.5864659276262127,
         "high": 1.8814045149246337
+      }
+    },
+    "twelve_month_conversion": {
+      "frozen": {
+        "intercept": 0.0986,
+        "slope": 0.164426,
+        "horizon_months": 12,
+        "observations": 157,
+        "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest",
+        "stability": "coefficients differ by sub-period (slope 0.238 fitted on 2017-2022 against 0.124 on 2022-2026), so the level is calibrated but not stationary"
+      },
+      "refit": {
+        "full": {
+          "intercept": 0.09859971097451702,
+          "slope": 0.16442636753727416,
+          "observations": 157
+        },
+        "out_of_sample": {
+          "fitted_on": {
+            "from": "2017-01-06",
+            "to": "2022-07-01",
+            "observations": 91
+          },
+          "evaluated_on": {
+            "from": "2022-09-30",
+            "to": "2026-07-17",
+            "observations": 66
+          },
+          "converted_mae": 0.19811997626965064,
+          "raw_band_mae": 0.3782605833325477,
+          "improves": true
+        }
       }
     },
     "published_upside_holdout": {
@@ -628,6 +660,11 @@
           "low": 0.18767484520174582,
           "high": 0.5649765769821142
         },
+        "expected_12m": {
+          "low": 0.12945862409714226,
+          "high": 0.1914968386468611,
+          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+        },
         "point_estimate": null
       },
       "measured_growth_diagnostic": {
@@ -653,6 +690,11 @@
         "upside": {
           "low": -0.3495809288972078,
           "high": -0.30411934711625077
+        },
+        "expected_12m": {
+          "low": 0.041119806185147705,
+          "high": 0.048594872231063346,
+          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
       },
@@ -772,6 +814,11 @@
           "low": 0.5072872630206104,
           "high": 0.5979705917828468
         },
+        "expected_12m": {
+          "low": 0.1820112155094269,
+          "high": 0.19692191252448638,
+          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+        },
         "point_estimate": null
       },
       "measured_growth_diagnostic": {
@@ -797,6 +844,11 @@
         "upside": {
           "low": -0.29527951368254646,
           "high": -0.25680045059774814
+        },
+        "expected_12m": {
+          "low": 0.05004837068323361,
+          "high": 0.05637532911001466,
+          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
       },
@@ -916,6 +968,11 @@
           "low": 2.7629577128489173,
           "high": 3.476123657803128
         },
+        "expected_12m": {
+          "low": 0.552902084892896,
+          "high": 0.6701651085579371,
+          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+        },
         "point_estimate": null
       },
       "measured_growth_diagnostic": {
@@ -941,6 +998,11 @@
         "upside": {
           "low": 0.6603061115450488,
           "high": 0.8778471548743536
+        },
+        "expected_12m": {
+          "low": 0.20717149269690618,
+          "high": 0.24294089628737045,
+          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
       },
@@ -1060,6 +1122,11 @@
           "low": 0.3408413659744878,
           "high": 0.41779627538187425
         },
+        "expected_12m": {
+          "low": 0.15464318244172112,
+          "high": 0.16729657037594003,
+          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+        },
         "point_estimate": null
       },
       "measured_growth_diagnostic": {
@@ -1085,6 +1152,11 @@
         "upside": {
           "low": -0.37576833980342506,
           "high": -0.3431145670075937
+        },
+        "expected_12m": {
+          "low": 0.03681391495948203,
+          "high": 0.0421830442052094,
+          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
       },
@@ -1204,6 +1276,11 @@
           "low": 0.24408792315000194,
           "high": 0.39042534385788596
         },
+        "expected_12m": {
+          "low": 0.1387344008518622,
+          "high": 0.16279607758917675,
+          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+        },
         "point_estimate": null
       },
       "measured_growth_diagnostic": {
@@ -1229,6 +1306,11 @@
         "upside": {
           "low": -0.42333865458216446,
           "high": -0.3826173724578489
+        },
+        "expected_12m": {
+          "low": 0.028992118381673024,
+          "high": 0.035687755916245734,
+          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
       },
@@ -1348,6 +1430,11 @@
           "low": -0.13954362378574814,
           "high": 0.08429406050775001
         },
+        "expected_12m": {
+          "low": 0.07565540011540457,
+          "high": 0.11246013519304729,
+          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
+        },
         "point_estimate": null
       },
       "measured_growth_diagnostic": {
@@ -1373,6 +1460,11 @@
         "upside": {
           "low": -0.22549670084793638,
           "high": -0.10974665551636709
+        },
+        "expected_12m": {
+          "low": 0.061522479466377206,
+          "high": 0.08055479642006583,
+          "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
       },

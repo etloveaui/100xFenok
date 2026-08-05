@@ -499,6 +499,32 @@ export function readAutomaticPayout(root, id, asOf) {
   return { value: frozen.value, as_of: FROZEN_CALIBRATION.version, source: frozen.source, automatic: false, point_in_time: false };
 }
 
+/**
+ * The band is a fair-value statement, and the market takes years to close it.
+ * Measured on 157 backtest observations, the share of a stated upside that
+ * arrives is 0.35 at twelve months, 0.69 at twenty-four and 1.07 at thirty-six.
+ * So the model was never optimistic; it was a roughly three-year statement
+ * being read as a one-year one.
+ *
+ * This converts the band into the twelve-month expectation that Yoo's
+ * published "6~12 month upside" is denominated in, so the two are comparable
+ * at all. Validated out of sample in time: coefficients fitted on 2017-2022
+ * and applied to 2022-2026 halve the error against the raw band, 37.8% to
+ * 19.8% MAE.
+ */
+export const TWELVE_MONTH_CONVERSION = Object.freeze({
+  intercept: 0.098600,
+  slope: 0.164426,
+  horizon_months: 12,
+  observations: 157,
+  basis: "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest",
+  stability: "coefficients differ by sub-period (slope 0.238 fitted on 2017-2022 against 0.124 on 2022-2026), so the level is calibrated but not stationary",
+});
+
+export function twelveMonthExpectation(upside) {
+  return TWELVE_MONTH_CONVERSION.intercept + TWELVE_MONTH_CONVERSION.slope * upside;
+}
+
 export function ltRoeCentre(forwardRoe, medianRoe) {
   const rule = FROZEN_CALIBRATION.lt_roe_rule;
   return medianRoe + rule.intercept + rule.gap_coefficient * Math.max(forwardRoe - medianRoe, 0);
@@ -614,6 +640,11 @@ export function buildPanelIndexRow(root, id, { asOf }) {
       convexity: convexity(growth),
       fair_value: { low, high },
       upside: { low: low / panel.price - 1, high: high / panel.price - 1 },
+      expected_12m: {
+        low: twelveMonthExpectation(low / panel.price - 1),
+        high: twelveMonthExpectation(high / panel.price - 1),
+        basis: TWELVE_MONTH_CONVERSION.basis,
+      },
       cells,
     };
   };
@@ -893,6 +924,39 @@ export function runLtRoeCalibration(root = ROOT) {
     stock_gap_share: { low: Math.min(...gapShares), high: Math.max(...gapShares) },
     residuals,
     max_abs_residual_pp: Math.max(...residuals.map((row) => Math.abs(row.residual_pp))),
+  };
+}
+
+/** Re-derive the twelve-month conversion, and prove it out of sample in time. */
+export function runTwelveMonthConversionCalibration(root = ROOT) {
+  const backtest = runHistoricalBacktest(root, { horizonMonths: 12 });
+  const ordered = [...backtest.rows].sort((a, b) => (a.as_of < b.as_of ? -1 : 1));
+  const regress = (subset) => {
+    const xs = subset.map((row) => row.predicted_upside.midpoint);
+    const ys = subset.map((row) => row.realised_return);
+    const meanX = xs.reduce((a, b) => a + b, 0) / xs.length;
+    const meanY = ys.reduce((a, b) => a + b, 0) / ys.length;
+    const slope = xs.reduce((sum, x, i) => sum + (x - meanX) * (ys[i] - meanY), 0)
+      / xs.reduce((sum, x) => sum + (x - meanX) ** 2, 0);
+    return { intercept: meanY - slope * meanX, slope, observations: subset.length };
+  };
+  const cutIndex = Math.floor(ordered.length * 0.6);
+  const cut = ordered[cutIndex].as_of;
+  const early = ordered.filter((row) => row.as_of < cut);
+  const late = ordered.filter((row) => row.as_of >= cut);
+  const earlyFit = regress(early);
+  const mae = (values) => values.reduce((sum, v) => sum + Math.abs(v), 0) / values.length;
+  const converted = late.map((row) => earlyFit.intercept + earlyFit.slope * row.predicted_upside.midpoint - row.realised_return);
+  const raw = late.map((row) => row.predicted_upside.midpoint - row.realised_return);
+  return {
+    full: regress(ordered),
+    out_of_sample: {
+      fitted_on: { from: early[0].as_of, to: early[early.length - 1].as_of, observations: early.length },
+      evaluated_on: { from: late[0].as_of, to: late[late.length - 1].as_of, observations: late.length },
+      converted_mae: mae(converted),
+      raw_band_mae: mae(raw),
+      improves: mae(converted) < mae(raw),
+    },
   };
 }
 

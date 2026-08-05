@@ -20,6 +20,8 @@ import {
   runBookIdentityCheck,
   runLtRoeCalibration,
   runPayoutCalibration,
+  runTwelveMonthConversionCalibration,
+  TWELVE_MONTH_CONVERSION,
   runPublishedUpsideHoldout,
   runStructuralReproduction,
 } from "./fenok-rim-yoo-panel-engine.mjs";
@@ -63,6 +65,9 @@ function laneView(lane) {
     convexity: lane.convexity,
     range: { low: lane.fair_value.low, high: lane.fair_value.high },
     upside: { low: lane.upside.low, high: lane.upside.high },
+    // The band is a fair-value statement; this is the same band restated at the
+    // twelve-month horizon Yoo's published upside is denominated in.
+    expected_12m: lane.expected_12m ?? null,
     point_estimate: null,
   };
 }
@@ -145,6 +150,7 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
   const bookIdentity = runBookIdentityCheck(root);
   const ltRoeFit = runLtRoeCalibration(root);
   const payoutFit = runPayoutCalibration(root, effectiveAsOf);
+  const horizonFit = runTwelveMonthConversionCalibration(root);
   const holdout = runPublishedUpsideHoldout(root);
 
   const panelRows = SCOPE.map((id) => ({ id, row: buildPanelIndexRow(root, id, { asOf: effectiveAsOf }) }));
@@ -223,6 +229,7 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
         },
       },
       payout_multiplier: { frozen: FROZEN_CALIBRATION.payout_multiplier, refit: payoutFit },
+      twelve_month_conversion: { frozen: TWELVE_MONTH_CONVERSION, refit: horizonFit },
       published_upside_holdout: holdout,
       feno_rule: FENO_RULE,
     },

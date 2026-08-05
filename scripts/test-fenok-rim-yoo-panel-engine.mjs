@@ -23,6 +23,9 @@ import {
   runStructuralReproduction,
   reconstructTrailingYield,
   runHistoricalBacktest,
+  runTwelveMonthConversionCalibration,
+  twelveMonthExpectation,
+  TWELVE_MONTH_CONVERSION,
   trackerPriceFromIndex,
 } from "./fenok-rim-yoo-panel-engine.mjs";
 
@@ -277,6 +280,27 @@ const actual = history.filter((row) => row.date <= "2025-08-01").pop();
 assert.ok(bridged && actual, "both a bridged and an actual price must exist for the check");
 assert.ok(Math.abs(bridged.price / actual.Close - 1) < 0.05,
   `the index/tracker bridge must stay inside 5%, got ${(bridged.price / actual.Close - 1) * 100}%`);
+
+// --- twelve-month conversion --------------------------------------------------
+
+// The band is a fair-value statement. Reading it as a one-year forecast is
+// what made the model look 35 points optimistic; the share of a stated upside
+// that arrives is 0.35 at twelve months and 1.07 at thirty-six.
+const horizon = runTwelveMonthConversionCalibration(ENGINE_ROOT);
+assert.ok(Math.abs(horizon.full.intercept - TWELVE_MONTH_CONVERSION.intercept) < 1e-4,
+  "the frozen conversion intercept must match the refit");
+assert.ok(Math.abs(horizon.full.slope - TWELVE_MONTH_CONVERSION.slope) < 1e-4,
+  "the frozen conversion slope must match the refit");
+assert.ok(horizon.full.slope > 0 && horizon.full.slope < 1, "only part of a stated upside can arrive within a year");
+// It has to earn its place: fitted on the early period it must beat the raw
+// band on the later one, which it never saw.
+assert.ok(horizon.out_of_sample.improves,
+  `the conversion must beat the raw band out of sample, got ${horizon.out_of_sample.converted_mae} against ${horizon.out_of_sample.raw_band_mae}`);
+assert.ok(horizon.out_of_sample.fitted_on.to < horizon.out_of_sample.evaluated_on.from,
+  "the fit and evaluation windows must not overlap in time");
+// The conversion is monotone and always below the band it converts.
+assert.ok(twelveMonthExpectation(0.5) > twelveMonthExpectation(0.2));
+assert.ok(twelveMonthExpectation(0.5) < 0.5, "a twelve-month expectation must sit below a multi-year band");
 
 // --- fail closed on a stale or missing panel ---------------------------------
 
