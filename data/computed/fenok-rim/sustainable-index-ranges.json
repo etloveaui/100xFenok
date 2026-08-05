@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok_rim_sustainable_index_ranges.v2",
-  "generated_at": "2026-08-05T04:41:06.817Z",
+  "generated_at": "2026-08-05T04:43:38.389Z",
   "as_of": "2026-08-05",
   "status": "research_diagnostic_not_promoted",
   "promotion": {
@@ -8,11 +8,11 @@
     "blockers": [
       {
         "id": "out_of_sample_anchor_failed",
-        "detail": "1/2 two-sided evaluation anchors reproduce"
+        "detail": "0/2 two-sided evaluation anchors reproduce"
       },
       {
         "id": "convexity_outside_printed_domain",
-        "detail": "printed cells used book growth at 1.77~2.56 times the discount rate; RUT 1.39 sit outside it"
+        "detail": "printed cells used book growth at 1.77~2.56 times the discount rate; RUT 1.38 sit outside it"
       },
       {
         "id": "partial_structural_reproduction",
@@ -242,11 +242,11 @@
     },
     "payout_multiplier": {
       "frozen": {
-        "low": 1.02695,
-        "center": 1.04293,
-        "high": 1.05891,
+        "low": 1.08488,
+        "center": 1.08574,
+        "high": 1.0866,
         "observations": 2,
-        "derivation": "direct constituent payout over raw tracker ratio on the same basis at 2026-07-31: SPX 0.207125/0.201689 = 1.027 and NDX 0.097061/0.091662 = 1.059; the band spans the two and their midpoint is the centre",
+        "derivation": "direct index payout over raw tracker ratio on the same basis, both sides being dividend yield over forward earnings yield, measured on the S&P 500 and the NASDAQ 100 where the tracker really is the index",
         "swept": "the low and high multipliers are swept into the published endpoints so the measured divergence is visible rather than hidden",
         "rejected": "a universal scalar fitted to the printed/grid/LSEG payouts, which are trailing realised or inverted quantities and not the same variable as a tracker distribution yield"
       },
@@ -278,8 +278,8 @@
     },
     "twelve_month_conversion": {
       "frozen": {
-        "intercept": 0.080571,
-        "slope": 0.184044,
+        "intercept": 0.12923,
+        "slope": 0.08355,
         "horizon_months": 12,
         "observations": 157,
         "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest",
@@ -287,8 +287,8 @@
       },
       "refit": {
         "full": {
-          "intercept": 0.12793883190691674,
-          "slope": 0.08420942370433375,
+          "intercept": 0.12923000910728694,
+          "slope": 0.08355019235876344,
           "observations": 234
         },
         "out_of_sample": {
@@ -302,8 +302,8 @@
             "to": "2026-07-17",
             "observations": 96
           },
-          "converted_mae": 0.20996410416934397,
-          "raw_band_mae": 0.3867279651924169,
+          "converted_mae": 0.20985693578560669,
+          "raw_band_mae": 0.3820665363695536,
           "improves": true
         }
       }
@@ -319,16 +319,16 @@
           "high": 0.29,
           "feno": {
             "upside": {
-              "low": 0.40105993592576605,
-              "high": 0.5995695851750023
+              "low": 0.39021920997147697,
+              "high": 0.5725086586668251
             },
             "expected_12m": {
-              "low": 0.1543836748475217,
-              "high": 0.19091818473394812,
+              "low": 0.1618328149931169,
+              "high": 0.17706309843161325,
               "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
             },
             "convexity": "inside_printed_domain",
-            "passed": true
+            "passed": false
           },
           "measured_growth_diagnostic": {
             "upside": {
@@ -351,12 +351,12 @@
           "low": 0.14,
           "feno": {
             "upside": {
-              "low": 0.3500401430141604,
-              "high": 0.5418664590925701
+              "low": 0.3394822993188993,
+              "high": 0.5154854610603701
             },
             "expected_12m": {
-              "low": 0.14499378808089813,
-              "high": 0.180298270597233,
+              "low": 0.15759374610809404,
+              "high": 0.17229881027159394,
               "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
             },
             "convexity": "inside_printed_domain",
@@ -387,8 +387,8 @@
               "high": 0.41254613626371905
             },
             "expected_12m": {
-              "low": 0.14031900876643677,
-              "high": 0.1564976411025199,
+              "low": 0.15635365593247155,
+              "high": 0.16369822968483375,
               "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
             },
             "convexity": "inside_printed_domain",
@@ -419,8 +419,8 @@
               "high": 0.4776706751510553
             },
             "expected_12m": {
-              "low": 0.15121462388809076,
-              "high": 0.16848342173750083,
+              "low": 0.1612999114116732,
+              "high": 0.16913938490887068,
               "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
             },
             "convexity": "inside_printed_domain",
@@ -451,8 +451,8 @@
               "high": 0.38320755860210487
             },
             "expected_12m": {
-              "low": 0.1352330282205826,
-              "high": 0.1510980519153658,
+              "low": 0.15404478590896567,
+              "high": 0.16124699152120586,
               "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
             },
             "convexity": "inside_printed_domain",
@@ -479,12 +479,12 @@
           "low": 0.24,
           "feno": {
             "upside": {
-              "low": 0.16332602290014497,
+              "low": 0.15708583562322076,
               "high": 0.27389440662868836
             },
             "expected_12m": {
-              "low": 0.11063017455863429,
-              "high": 0.13097962217357034,
+              "low": 0.1423545215663201,
+              "high": 0.15211387767382692,
               "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
             },
             "convexity": "inside_printed_domain",
@@ -512,12 +512,12 @@
           "high": 0.495,
           "feno": {
             "upside": {
-              "low": 1.368001016167347,
-              "high": 1.951459857115612
+              "low": 1.3621523484213984,
+              "high": 1.9349533198200284
             },
             "expected_12m": {
-              "low": 0.3323433790195032,
-              "high": 0.4397254779429857,
+              "low": 0.24303782871060786,
+              "high": 0.2908953498709634,
               "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
             },
             "convexity": "inside_printed_domain",
@@ -539,9 +539,9 @@
       ],
       "feno": {
         "in_sample": 0,
-        "passed": 2,
+        "passed": 1,
         "total": 7,
-        "informative_passed": 1,
+        "informative_passed": 0,
         "informative_total": 2,
         "not_evaluable": 0,
         "not_evaluable_ids": [],
@@ -558,6 +558,7 @@
         "informative_not_evaluable": 0
       },
       "fit_anchor_ids": [],
+      "scored_at": "the twelve-month horizon his published upside is denominated in, not the multi-year band",
       "note": "floor anchors are one-sided and are passed by almost any positive band; only point-in-time two-sided rows outside the fit set discriminate, and later-vintage inputs are reported as not evaluable"
     },
     "feno_rule": {
@@ -633,19 +634,19 @@
           0.045,
           0.05
         ],
-        "book_growth": 0.2410092644590929,
-        "book_growth_uncapped": 0.2410092644590929,
+        "book_growth": 0.23855454079248364,
+        "book_growth_uncapped": 0.23855454079248364,
         "book_growth_capped": false,
         "book_growth_ceiling": 0.26238486296164143,
-        "payout": 0.19880123426221608,
+        "payout": 0.20696159098679534,
         "payout_band": {
-          "low": 0.19575515856824793,
-          "center": 0.19880123426221608,
-          "high": 0.20184730995618425
+          "low": 0.20679765950389095,
+          "center": 0.20696159098679534,
+          "high": 0.20712552246969979
         },
         "payout_raw_tracker_ratio": 0.19061800337723153,
         "payout_tracker": "SPY",
-        "retention": 0.8011987657377839,
+        "retention": 0.7930384090132047,
         "payout_as_of": "2026-08-04",
         "payout_point_in_time": true,
         "payout_source": "data/yf/finance/SPY.json#data.dividends over data.history_1y close, times the frozen calibration multiplier",
@@ -663,11 +664,11 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.2410092644590929,
+        "book_growth": 0.23855454079248364,
         "convexity": {
-          "book_growth": 0.2410092644590929,
+          "book_growth": 0.23855454079248364,
           "discount": 0.1026,
-          "growth_over_discount": 2.3490181721159153,
+          "growth_over_discount": 2.3250929901801527,
           "printed_domain": {
             "low": 1.7686871045010335,
             "high": 2.5573573388074213,
@@ -679,16 +680,16 @@
           "distance_from_domain": 0
         },
         "range": {
-          "low": 10584.806385948346,
-          "high": 12083.989418724817
+          "low": 10505.895996051924,
+          "high": 11887.102536878805
         },
         "upside": {
-          "low": 0.41324460539891295,
-          "high": 0.6134100365200323
+          "low": 0.4027087789733026,
+          "high": 0.5871224207151675
         },
         "expected_12m": {
-          "low": 0.15662619015603754,
-          "high": 0.19346543676129285,
+          "low": 0.16287631848321943,
+          "high": 0.17828407825075226,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -718,8 +719,8 @@
           "high": -0.328064701830842
         },
         "expected_12m": {
-          "low": 0.011825728658950027,
-          "high": 0.020192660016244514,
+          "low": 0.09802187900423419,
+          "high": 0.10182019416203317,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -788,18 +789,18 @@
           0.055
         ],
         "book_growth": 0.26238486296164143,
-        "book_growth_uncapped": 0.35417943854841744,
+        "book_growth_uncapped": 0.35268330040947454,
         "book_growth_capped": true,
         "book_growth_ceiling": 0.26238486296164143,
-        "payout": 0.09330784109377835,
+        "payout": 0.09713792429900271,
         "payout_band": {
-          "low": 0.09187815808468035,
-          "center": 0.09330784109377835,
-          "high": 0.09473752410287635
+          "low": 0.09706098266021522,
+          "center": 0.09713792429900271,
+          "high": 0.09721486593779022
         },
         "payout_raw_tracker_ratio": 0.08946702184593247,
         "payout_tracker": "QQQ",
-        "retention": 0.9066921589062217,
+        "retention": 0.9028620757009973,
         "payout_as_of": "2026-08-04",
         "payout_point_in_time": true,
         "payout_source": "data/yf/finance/QQQ.json#data.dividends over data.history_1y close, times the frozen calibration multiplier",
@@ -841,8 +842,8 @@
           "high": 0.5194081925414555
         },
         "expected_12m": {
-          "low": 0.15908890217885652,
-          "high": 0.17616496138809967,
+          "low": 0.16487457807395767,
+          "high": 0.1726265544868386,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -872,8 +873,8 @@
           "high": -0.30363643467375667
         },
         "expected_12m": {
-          "low": 0.017606695330524502,
-          "high": 0.02468853601690313,
+          "low": 0.10064625016227274,
+          "high": 0.10386117588300764,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -941,19 +942,19 @@
           0.065,
           0.075
         ],
-        "book_growth": 0.2536006298630652,
-        "book_growth_uncapped": 0.2536006298630652,
+        "book_growth": 0.25283641254278216,
+        "book_growth_uncapped": 0.25283641254278216,
         "book_growth_capped": false,
         "book_growth_ceiling": 0.25545340163053776,
-        "payout": 0.0683926434714775,
+        "payout": 0.07120001219901813,
         "payout_band": {
-          "low": 0.06734471653230209,
-          "center": 0.0683926434714775,
-          "high": 0.06944057041065291
+          "low": 0.07114361563032659,
+          "center": 0.07120001219901813,
+          "high": 0.07125640876770968
         },
         "payout_raw_tracker_ratio": 0.06557740545528223,
         "payout_tracker": "EWY",
-        "retention": 0.9316073565285226,
+        "retention": 0.9287999878009818,
         "payout_as_of": "2026-08-04",
         "payout_point_in_time": true,
         "payout_source": "data/yf/finance/EWY.json#data.dividends over data.history_1y close, times the frozen calibration multiplier",
@@ -971,11 +972,11 @@
         "discount": 0.0998896
       },
       "value": {
-        "book_growth": 0.2536006298630652,
+        "book_growth": 0.25283641254278216,
         "convexity": {
-          "book_growth": 0.2536006298630652,
+          "book_growth": 0.25283641254278216,
           "discount": 0.0998896,
-          "growth_over_discount": 2.538809143925546,
+          "growth_over_discount": 2.531158524438802,
           "printed_domain": {
             "low": 1.7686871045010335,
             "high": 2.5573573388074213,
@@ -987,16 +988,16 @@
           "distance_from_domain": 0
         },
         "range": {
-          "low": 24136.627136586376,
+          "low": 24081.78126813726,
           "high": 29215.715230155904
         },
         "upside": {
-          "low": 2.6595876151871938,
+          "low": 2.651271902317091,
           "high": 3.42967731241324
         },
         "expected_12m": {
-          "low": 0.5700521430495119,
-          "high": 0.7117825312857824,
+          "low": 0.350743767438593,
+          "high": 0.4157795394521262,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1026,8 +1027,8 @@
           "high": 0.8324633518046776
         },
         "expected_12m": {
-          "low": 0.1937437613410416,
-          "high": 0.2337808851195401,
+          "low": 0.18060675887311745,
+          "high": 0.1987823130432808,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1096,18 +1097,18 @@
           0.055
         ],
         "book_growth": 0.26238486296164143,
-        "book_growth_uncapped": 0.3812902890708083,
+        "book_growth_uncapped": 0.3803399664257504,
         "book_growth_capped": true,
         "book_growth_ceiling": 0.26238486296164143,
-        "payout": 0.05724332872101991,
+        "payout": 0.059593042414697206,
         "payout_band": {
-          "low": 0.05636623400424899,
-          "center": 0.05724332872101991,
-          "high": 0.058120423437790836
+          "low": 0.05954583957011505,
+          "center": 0.059593042414697206,
+          "high": 0.05964024525927938
         },
         "payout_raw_tracker_ratio": 0.05488702858391255,
         "payout_tracker": "SOXX",
-        "retention": 0.9427566712789801,
+        "retention": 0.9404069575853028,
         "payout_as_of": "2026-08-04",
         "payout_point_in_time": true,
         "payout_source": "data/yf/finance/SOXX.json#data.dividends over data.history_1y close, times the frozen calibration multiplier",
@@ -1149,8 +1150,8 @@
           "high": 0.3437694617893521
         },
         "expected_12m": {
-          "low": 0.12934876778065646,
-          "high": 0.14383970682555952,
+          "low": 0.15137352273409538,
+          "high": 0.1579519385325004,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1180,8 +1181,8 @@
           "high": -0.3865043075090909
         },
         "expected_12m": {
-          "low": 0.003427470268360877,
-          "high": 0.009437201228796863,
+          "low": 0.09420934239052375,
+          "high": 0.09693756510761546,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1250,18 +1251,18 @@
           0.055
         ],
         "book_growth": 0.26238486296164143,
-        "book_growth_uncapped": 0.2741223412725194,
+        "book_growth_uncapped": 0.2725045873542938,
         "book_growth_capped": true,
         "book_growth_ceiling": 0.26238486296164143,
-        "payout": 0.12570079988725513,
+        "payout": 0.13086054334383745,
         "payout_band": {
-          "low": 0.1237747849272882,
-          "center": 0.12570079988725513,
-          "high": 0.1276268148472221
+          "low": 0.13075689047365152,
+          "center": 0.13086054334383745,
+          "high": 0.13096419621402342
         },
         "payout_raw_tracker_ratio": 0.1205265932394841,
         "payout_tracker": "ONEQ",
-        "retention": 0.8742992001127449,
+        "retention": 0.8691394566561625,
         "payout_as_of": "2026-08-04",
         "payout_point_in_time": true,
         "payout_source": "data/yf/finance/ONEQ.json#data.dividends over data.history_1y close, times the frozen calibration multiplier",
@@ -1303,8 +1304,8 @@
           "high": 0.3520211369522557
         },
         "expected_12m": {
-          "low": 0.12548574458239137,
-          "high": 0.14535837812924096,
+          "low": 0.14961983563636305,
+          "high": 0.15864136599236098,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1334,8 +1335,8 @@
           "high": -0.4080891363062972
         },
         "expected_12m": {
-          "low": -0.0020298646496436923,
-          "high": 0.005464642997643848,
+          "low": 0.09173188954012232,
+          "high": 0.09513415266160888,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1403,19 +1404,19 @@
           0.045,
           0.05
         ],
-        "book_growth": 0.14281186426177553,
-        "book_growth_uncapped": 0.14281186426177553,
+        "book_growth": 0.14152550244310882,
+        "book_growth_uncapped": 0.14152550244310882,
         "book_growth_capped": false,
         "book_growth_ceiling": 0.26238486296164143,
-        "payout": 0.17994907131235546,
+        "payout": 0.1873355878982068,
         "payout_band": {
-          "low": 0.17719185255407693,
-          "center": 0.17994907131235546,
-          "high": 0.18270629007063402
+          "low": 0.1871872019074609,
+          "center": 0.1873355878982068,
+          "high": 0.18748397388895272
         },
         "payout_raw_tracker_ratio": 0.1725418497045396,
         "payout_tracker": "IWM",
-        "retention": 0.8200509286876445,
+        "retention": 0.8126644121017932,
         "payout_as_of": "2026-08-04",
         "payout_point_in_time": true,
         "payout_source": "data/yf/finance/IWM.json#data.dividends over data.history_1y close, times the frozen calibration multiplier",
@@ -1433,11 +1434,11 @@
         "discount": 0.1026
       },
       "value": {
-        "book_growth": 0.14281186426177553,
+        "book_growth": 0.14152550244310882,
         "convexity": {
-          "book_growth": 0.14281186426177553,
+          "book_growth": 0.14152550244310882,
           "discount": 0.1026,
-          "growth_over_discount": 1.3919285015767595,
+          "growth_over_discount": 1.3793908620186046,
           "printed_domain": {
             "low": 1.7686871045010335,
             "high": 2.5573573388074213,
@@ -1446,19 +1447,19 @@
             "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
           },
           "status": "below_printed_domain",
-          "distance_from_domain": 0.376758602924274
+          "distance_from_domain": 0.3892962424824289
         },
         "range": {
-          "low": 2995.7684092366353,
-          "high": 3614.2939630710616
+          "low": 2987.7847061212547,
+          "high": 3590.549835945138
         },
         "upside": {
-          "low": 0.021979514903133213,
-          "high": 0.23298395820853934
+          "low": 0.019255946214769004,
+          "high": 0.22488386227083867
         },
         "expected_12m": {
-          "low": 0.08461619784083226,
-          "high": 0.12345029960453242,
+          "low": 0.13083883430624396,
+          "high": 0.14801904669272858,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null
@@ -1488,8 +1489,8 @@
           "high": -0.05805281859315625
         },
         "expected_12m": {
-          "low": 0.048583625711837775,
-          "high": 0.06988672705484116,
+          "low": 0.11470877071908918,
+          "high": 0.12437968700654181,
           "basis": "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest"
         },
         "point_estimate": null

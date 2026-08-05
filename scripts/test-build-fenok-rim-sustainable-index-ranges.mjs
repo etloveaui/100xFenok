@@ -62,11 +62,22 @@ assert.equal(
 // Payout is rebuilt from each tracker's own distribution record, so an anchor
 // is only unevaluable when that tracker has no record at all. That is now KOSPI
 // alone, and it clears the first time the ETF lane fetches EWY.
-assert.ok(holdout.feno.not_evaluable <= 1, "only a tracker with no distribution record may block an anchor");
-assert.ok(holdout.feno.informative_not_evaluable <= 1);
+// All six trackers are collected, so every anchor reconstructs at its own date
+// and nothing is excluded any more. The invariant that survives is the one that
+// mattered: a later-vintage row must never be scored, and while any exists it
+// must block promotion rather than quietly enter the totals.
+assert.equal(holdout.feno.not_evaluable + holdout.feno.total, holdout.rows.length,
+  "every anchor must be either scored or explicitly not evaluable");
 assert.ok(holdout.feno.informative_total >= 1, "at least one point-in-time two-sided claim must evaluate the rule");
-assert.ok(artifact.promotion.blockers.some((row) => row.id === "historical_holdout_not_point_in_time"),
-  "a later-vintage historical holdout must block promotion rather than enter pass/fail totals");
+assert.equal(
+  holdout.feno.not_evaluable > 0,
+  artifact.promotion.blockers.some((row) => row.id === "historical_holdout_not_point_in_time"),
+  "the point-in-time blocker must stand exactly when a later-vintage row exists",
+);
+for (const row of holdout.rows) {
+  if (row.point_in_time_evaluable) continue;
+  assert.equal(row.feno.passed, null, `${row.id}@${row.date}: an unevaluable row may not carry a verdict`);
+}
 
 // Promotion is gated on what the run measured, not on freshness alone. While a
 // blocker stands nothing may be published as a usable range.

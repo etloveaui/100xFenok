@@ -279,11 +279,11 @@ export const FROZEN_CALIBRATION = Object.freeze({
   // Applying 1.5865 did not remove a bias, it created one of about 50%.
   // The band is now the measured same-basis divergence, not a conversion.
   payout_multiplier: Object.freeze({
-    low: 1.02695,
-    center: 1.04293,
-    high: 1.05891,
+    low: 1.08488,
+    center: 1.08574,
+    high: 1.08660,
     observations: 2,
-    derivation: "direct constituent payout over raw tracker ratio on the same basis at 2026-07-31: SPX 0.207125/0.201689 = 1.027 and NDX 0.097061/0.091662 = 1.059; the band spans the two and their midpoint is the centre",
+    derivation: "direct index payout over raw tracker ratio on the same basis, both sides being dividend yield over forward earnings yield, measured on the S&P 500 and the NASDAQ 100 where the tracker really is the index",
     swept: "the low and high multipliers are swept into the published endpoints so the measured divergence is visible rather than hidden",
     rejected: "a universal scalar fitted to the printed/grid/LSEG payouts, which are trailing realised or inverted quantities and not the same variable as a tracker distribution yield",
   }),
@@ -536,8 +536,8 @@ export function readAutomaticPayout(root, id, asOf) {
  * 19.8% MAE.
  */
 export const TWELVE_MONTH_CONVERSION = Object.freeze({
-  intercept: 0.080571,
-  slope: 0.184044,
+  intercept: 0.129230,
+  slope: 0.083550,
   horizon_months: 12,
   observations: 157,
   basis: "least squares of realised twelve-month return on the band midpoint, over the 2017 backtest",
@@ -1103,6 +1103,7 @@ export function runPublishedUpsideHoldout(root = ROOT) {
     feno: summarise("feno"),
     measured_growth_diagnostic: summarise("measured_growth_diagnostic"),
     fit_anchor_ids: [...LT_ROE_FIT_ANCHOR_IDS],
+    scored_at: "the twelve-month horizon his published upside is denominated in, not the multi-year band",
     note: "floor anchors are one-sided and are passed by almost any positive band; only point-in-time two-sided rows outside the fit set discriminate, and later-vintage inputs are reported as not evaluable",
   };
 }
