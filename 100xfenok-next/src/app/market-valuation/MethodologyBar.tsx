@@ -75,11 +75,14 @@ function Mark({
   x,
   mid,
   color,
+  clipAt = null,
 }: {
   reading: MethodologyReading;
   x: (pct: number) => number;
   mid: number;
   color: string;
+  /** Pixel at which a row that runs past the axis is cut, with a marker. */
+  clipAt?: number | null;
 }) {
   const title = `${reading.lens} · ${reading.kind === "band"
     ? `${PERCENT_1.format(reading.lowPct)}~${PERCENT_1.format(reading.highPct)}`
@@ -87,7 +90,8 @@ function Mark({
 
   if (reading.kind === "band") {
     const x1 = x(reading.lowPct);
-    const x2 = x(reading.highPct);
+    const rawX2 = x(reading.highPct);
+    const x2 = clipAt === null ? rawX2 : Math.min(rawX2, clipAt);
     return (
       <g>
         <title>{title}</title>
@@ -126,7 +130,26 @@ export default function MethodologyBar({ axes, withheldRows = [] }: MethodologyC
   if (drawable.length === 0) return null;
 
   // ONE domain for every row. This is the whole point of the redraw.
-  const values = drawable.flatMap((axis) => axis.readings.flatMap((r) => [r.lowPct, r.highPct]));
+  //
+  // One exception, and it is not "drop the inconvenient row". When a single
+  // index's claim is an order of magnitude past the rest, fitting the axis to it
+  // compresses every other row into a stub and the figure stops saying anything.
+  // Dropping it would be worse: it is a real published range for a market the
+  // reader cares about. So the axis is set by the others and that row is drawn
+  // clipped, with a chevron at the edge and its true numbers on the row — the
+  // reader is told the row continues, never shown a shortened version of it.
+  const rowHighs = drawable
+    .map((axis) => Math.max(...axis.readings.map((r) => r.highPct)))
+    .sort((a, b) => b - a);
+  const clipAbove = rowHighs.length >= 2 && rowHighs[0] > rowHighs[1] * 2.5
+    ? rowHighs[1]
+    : Number.POSITIVE_INFINITY;
+  const isClipped = (axis: MethodologyAxisView) =>
+    Math.max(...axis.readings.map((r) => r.highPct)) > clipAbove;
+
+  const values = drawable
+    .filter((axis) => !isClipped(axis))
+    .flatMap((axis) => axis.readings.flatMap((r) => [r.lowPct, r.highPct]));
   values.push(0);
   const rawMin = Math.min(...values);
   const rawMax = Math.max(...values);
@@ -218,8 +241,23 @@ export default function MethodologyBar({ axes, withheldRows = [] }: MethodologyC
                 {LEVEL.format(axis.anchorPrice)}
               </text>
               {axis.readings.map((reading) => (
-                <Mark key={reading.lens} reading={reading} x={x} mid={mid} color={colorOf(reading.lens)} />
+                <Mark
+                  key={reading.lens}
+                  reading={reading}
+                  x={x}
+                  mid={mid}
+                  color={colorOf(reading.lens)}
+                  clipAt={isClipped(axis) ? VIEW_W - PAD_R - 26 : null}
+                />
               ))}
+              {isClipped(axis) ? (
+                <text
+                  x={VIEW_W - PAD_R - 20} y={mid + 3} textAnchor="start"
+                  fontSize={10} fontWeight={800} fill="var(--c-ink-2)"
+                >
+                  ▸ 축 밖
+                </text>
+              ) : null}
             </g>
           );
         })}

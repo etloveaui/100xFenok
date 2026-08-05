@@ -6,8 +6,10 @@ import { DataStateBadge } from "@/components/DataStateNotice";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import MarketThermometer from "@/components/market/MarketThermometer";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
-import { readRimBand, type RimValuationRange } from "./rimBand";
 import { readSustainableRanges, type SustainableRangesDoc } from "./sustainableRanges";
+import { buildMethodologyAxis } from "./methodologyAxis";
+import MethodologyBar from "./MethodologyBar";
+
 import type {
   MarketBondPulse,
   MarketEventRisk,
@@ -36,6 +38,17 @@ import { formatPercent } from "@/lib/dashboard/formatters";
 import { formatAsOf, latestAsOf } from "@/lib/market-valuation/freshness";
 import { formatAsOf as formatDataAsOf, freshnessDataState, DATA_STATE_LABELS, type DataState } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
+
+// §H rule 2: no raw index ids reach users; an unmapped id renders the
+// producer's own label rather than a code.
+const RIM_INDEX_LABELS_KO: Record<string, string> = {
+  SPX: "S&P 500",
+  NDX: "나스닥 100",
+  KOSPI: "코스피",
+  SOX: "필라델피아 반도체",
+  CCMP: "나스닥 종합",
+  RUT: "러셀 2000",
+};
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -196,219 +209,6 @@ function loadMarketStructureIndex(): Promise<MarketStructureIndexDoc | null> {
   return marketStructureIndexPending;
 }
 
-interface RimIndexEntry {
-  public_status?: string;
-  blockers?: Array<{ code?: string; severity?: string }>;
-  observed?: {
-    price?: {
-      as_of?: string | null;
-    } | null;
-  } | null;
-  derived?: {
-    valuation_range_v1?: RimValuationRange | null;
-  } | null;
-}
-
-// Whether a band may be drawn at all is decided in one testable place.
-
-interface RimInputsDoc {
-  generated_at?: string;
-  indices?: Record<string, RimIndexEntry>;
-}
-
-let rimInputsCache: RimInputsDoc | null = null;
-let rimInputsPending: Promise<RimInputsDoc | null> | null = null;
-
-function loadRimInputs(): Promise<RimInputsDoc | null> {
-  if (rimInputsCache) return Promise.resolve(rimInputsCache);
-  if (rimInputsPending) return rimInputsPending;
-  rimInputsPending = fetch("/data/computed/rim-index/inputs.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((doc) => {
-      rimInputsCache = doc;
-      return doc;
-    })
-    .catch(() => {
-      rimInputsPending = null;
-      return null;
-    });
-  return rimInputsPending;
-}
-
-// §H rule 2: no raw index ids leak to users; missing lookup renders an honest generic label.
-const RIM_INDEX_LABELS_KO: Record<string, string> = {
-  SPX: "S&P 500",
-  NDX: "나스닥 100",
-  KOSPI: "코스피",
-  SOX: "필라델피아 반도체",
-  CCMP: "나스닥 종합",
-};
-
-// The payload publishes a two-endpoint assumption BAND for the primary indices
-// and never one number: output_scope=inputs_and_assumption_labelled_range_no_single_target
-// with policy.no_public_single_target=true (public/data/computed/rim-index/inputs.json).
-// Render both endpoints or neither. Showing a midpoint, or one endpoint alone,
-// recreates the single target the producer refuses to emit.
-type RimReadinessTier = "input_ready" | "input_only" | "pending";
-
-const RIM_BAND_NUMBER = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 });
-const RIM_BAND_PERCENT = new Intl.NumberFormat("ko-KR", { style: "percent", maximumFractionDigits: 1 });
-
-const RIM_BAND_POSITION_KO: Record<string, string> = {
-  below_range: "현재 지수는 밴드 아래입니다",
-  within_range: "현재 지수는 밴드 안입니다",
-  above_range: "현재 지수는 밴드 위입니다",
-};
-
-interface RimReadinessMeta {
-  rank: number;
-  badge: string;
-  tone: MarketTone;
-  detail: (blockerCount: number) => string;
-}
-
-const RIM_READINESS_META: Record<RimReadinessTier, RimReadinessMeta> = {
-  input_ready: {
-    rank: 0,
-    badge: "입력 준비",
-    tone: "amber",
-    detail: () => "입력 데이터와 예측 그리드가 준비되었습니다. 단일 목표가는 제공하지 않습니다.",
-  },
-  input_only: {
-    rank: 1,
-    badge: "입력 전용",
-    tone: "slate",
-    detail: (blockerCount) =>
-      blockerCount > 0
-        ? `밴드 공개를 막는 항목이 ${blockerCount}건 남아 입력 데이터만 제공합니다.`
-        : "단일 목표가는 제공하지 않고 입력 데이터만 제공합니다.",
-  },
-  pending: {
-    rank: 2,
-    // Per-index state label sourced from data-state.ts (§H-5): "확인 중".
-    badge: DATA_STATE_LABELS.pending,
-    tone: "slate",
-    detail: () => "준비 상태를 확인하고 있습니다.",
-  },
-};
-
-function classifyRimReadiness(publicStatus: string | undefined, blockerCount: number): RimReadinessTier {
-  if (publicStatus === "blocked_or_input_only" || blockerCount > 0) return "input_only";
-  if (publicStatus === "ready_inputs_and_forecast_grid") return "input_ready";
-  return "pending";
-}
-
-function rimPriceSourceClock(indices: RimInputsDoc["indices"]): { asOf: string | null; reason: string | null } {
-  const required = ["KOSPI", "SOX"] as const;
-  const dates = required.map((id) => {
-    const value = indices?.[id]?.observed?.price?.as_of;
-    return typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(0, 10) : null;
-  });
-  if (dates.some((value) => value === null)) {
-    return { asOf: null, reason: "KOSPI·SOX 관측 가격 기준일 미확인" };
-  }
-  return { asOf: [...dates].sort()[0] ?? null, reason: null };
-}
-
-function RimReadinessPanel() {
-  const [doc, setDoc] = useState<RimInputsDoc | null>(null);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    loadRimInputs().then((next) => {
-      if (cancelled) return;
-      setDoc(next);
-      setLoaded(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const rows = Object.entries(doc?.indices ?? {})
-    .map(([id, entry]) => {
-      const safe = entry ?? {};
-      const blockerCount = Array.isArray(safe.blockers) ? safe.blockers.length : 0;
-      const meta = RIM_READINESS_META[classifyRimReadiness(safe.public_status, blockerCount)];
-      return {
-        id,
-        name: RIM_INDEX_LABELS_KO[id] ?? "지수",
-        meta,
-        detail: meta.detail(blockerCount),
-        band: readRimBand(id, safe, { generatedAt: doc?.generated_at ?? null }),
-      };
-    })
-    .sort((a, b) => a.meta.rank - b.meta.rank || a.id.localeCompare(b.id));
-
-  // Fallback copy comes only from DATA_STATE_LABELS (§H-5): loading vs. unavailable are distinct.
-  const fallbackLabel = !loaded ? DATA_STATE_LABELS.pending : rows.length === 0 ? DATA_STATE_LABELS.unavailable : null;
-  const sourceClock = rimPriceSourceClock(doc?.indices);
-
-  return (
-    <PanelShell
-      title="잔여이익모델(RIM) 지수 준비 상태"
-      subtitle={sourceClock.reason ?? "지수별 입력 준비 현황"}
-      asOf={sourceClock.asOf}
-    >
-      {fallbackLabel ? (
-        <EmptyPanel label={fallbackLabel} />
-      ) : (
-        <div className="grid min-w-0 sm:grid-cols-2">
-          {rows.map((row) => (
-            <div
-              key={row.id}
-              className="min-w-0 border-t border-[var(--c-line-2)] px-[var(--panel-pad)] py-3 first:border-t-0 sm:[&:nth-child(-n+2)]:border-t-0"
-            >
-              <div className="flex min-w-0 items-start justify-between gap-2">
-                <p className="min-w-0 truncate text-sm font-black text-[var(--c-ink)]">{row.name}</p>
-                <span className={cx("shrink-0 rounded-full border px-2 py-1 text-[10px] font-black", toneClass(row.meta.tone))}>
-                  {row.meta.badge}
-                </span>
-              </div>
-              {row.band ? (
-                <div className="mt-2 min-w-0">
-                  <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
-                    <span className="text-[10px] font-black text-[var(--c-ink-3)]">보수</span>
-                    <span className="text-sm font-black tabular-nums text-[var(--c-ink)]">
-                      {RIM_BAND_NUMBER.format(row.band.low)}
-                    </span>
-                    <span className="text-[11px] font-black text-[var(--c-ink-3)]">~</span>
-                    <span className="text-sm font-black tabular-nums text-[var(--c-ink)]">
-                      {RIM_BAND_NUMBER.format(row.band.high)}
-                    </span>
-                    <span className="text-[10px] font-black text-[var(--c-ink-3)]">낙관</span>
-                  </div>
-                  <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
-                    가정을 명시한 밸류에이션 밴드입니다. 목표가가 아니며 단일 값은 제공하지 않습니다.
-                    {row.band.position && RIM_BAND_POSITION_KO[row.band.position]
-                      ? ` ${RIM_BAND_POSITION_KO[row.band.position]}.`
-                      : ""}
-                  </p>
-                  {/* The assumptions are the band. Hiding them would let an
-                      opinion read as a measurement. */}
-                  <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
-                    보수 = 잔여이익이 {row.band.fadeYears}년에 걸쳐 0으로 소멸(영구성장 없음), 낙관 = 영구성장{" "}
-                    {RIM_BAND_PERCENT.format(row.band.terminalGrowthHigh)}. 할인율{" "}
-                    {RIM_BAND_PERCENT.format(row.band.discountRate)}. 성장률은 관측값이 아닌 하우스 가정입니다.
-                  </p>
-                  <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
-                    밴드 기준일 {row.band.asOf} (가장 오래된 입력 기준)
-                    {row.band.reconciliationUsesCollectionTime
-                      ? " · 교차검증 입력은 제공처가 관측일을 발행하지 않아 수집 시각을 사용합니다. 관측일이 아닙니다."
-                      : ""}
-                  </p>
-                </div>
-              ) : null}
-              <p className="mt-2 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">{row.detail}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </PanelShell>
-  );
-}
-
 // The sustainable-range projection is a SEPARATE public document from
 // rim-index/inputs.json, read by a separate module, rendered by this separate
 // panel. Nothing here touches the band above.
@@ -431,44 +231,42 @@ function loadRimSustainable(): Promise<SustainableRangesDoc | null> {
   return rimSustainablePending;
 }
 
-const RIM_SUSTAINABLE_CONVEXITY_KO: Record<string, string> = {
-  inside_printed_domain: "검증된 성장·할인 비율 범위 안",
-  outside_printed_domain: "검증 범위 밖 — 공시된 한계",
-};
+// Yardeni's fair value is the second method on the shared axis. It covers the
+// S&P alone, and its own premium is deliberately not read: the adapter
+// re-derives it against the anchor the rest of the axis uses.
+interface YardeniDoc { data?: Array<{ date?: string; fair_value?: number }> }
+let yardeniCache: YardeniDoc | null = null;
+let yardeniPending: Promise<YardeniDoc | null> | null = null;
 
-// A two-ended reading, always drawn as a pair. There is no branch in this
-// component that can render one endpoint on its own, and no arithmetic that
-// could produce a middle value.
-function RimSustainableEndpoints({
-  label,
-  low,
-  high,
-  format,
-}: {
-  label: string;
-  low: number;
-  high: number;
-  format: (value: number) => string;
-}) {
-  return (
-    <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
-      <span className="text-[10px] font-black text-[var(--c-ink-3)]">{label}</span>
-      <span className="text-sm font-black tabular-nums text-[var(--c-ink)]">{format(low)}</span>
-      <span className="text-[11px] font-black text-[var(--c-ink-3)]">~</span>
-      <span className="text-sm font-black tabular-nums text-[var(--c-ink)]">{format(high)}</span>
-    </div>
-  );
+function loadYardeni(): Promise<YardeniDoc | null> {
+  if (yardeniCache) return Promise.resolve(yardeniCache);
+  if (yardeniPending) return yardeniPending;
+  yardeniPending = fetch("/data/yardney/yardney_model.json")
+    .then((r) => (r.ok ? r.json() : null))
+    .then((doc) => {
+      yardeniCache = doc;
+      return doc;
+    })
+    .catch(() => {
+      yardeniPending = null;
+      return null;
+    });
+  return yardeniPending;
 }
 
-function RimSustainableRangePanel() {
-  const [doc, setDoc] = useState<SustainableRangesDoc | null>(null);
+const YARDENI_INDEX_ID = "SPX";
+
+function MethodologyPanel() {
+  const [ranges, setRanges] = useState<SustainableRangesDoc | null>(null);
+  const [yardeni, setYardeni] = useState<YardeniDoc | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    loadRimSustainable().then((next) => {
+    Promise.all([loadRimSustainable(), loadYardeni()]).then(([r, y]) => {
       if (cancelled) return;
-      setDoc(next);
+      setRanges(r);
+      setYardeni(y);
       setLoaded(true);
     });
     return () => {
@@ -476,70 +274,71 @@ function RimSustainableRangePanel() {
     };
   }, []);
 
-  const view = readSustainableRanges(doc);
-  // Loading and refusal are different states and say so: a refusal is a
-  // decision the producer made, not data that failed to arrive.
-  const fallbackLabel = !loaded ? DATA_STATE_LABELS.pending : view.refusal ? DATA_STATE_LABELS.unavailable : null;
+  const view = readSustainableRanges(ranges);
+  const latestYardeni = Array.isArray(yardeni?.data) && yardeni!.data!.length > 0
+    ? yardeni!.data![yardeni!.data!.length - 1]
+    : null;
+
+  const axes = view.rows
+    .map((row) => buildMethodologyAxis({
+      rim: {
+        id: row.id,
+        label: RIM_INDEX_LABELS_KO[row.id] ?? row.label,
+        asOf: row.asOf,
+        currentPrice: row.currentPrice,
+        range: row.range,
+        confidence: row.confidence,
+      },
+      yardeni: row.id === YARDENI_INDEX_ID && latestYardeni?.date && typeof latestYardeni.fair_value === "number"
+        ? { date: latestYardeni.date, fairValue: latestYardeni.fair_value }
+        : null,
+    }))
+    .filter((axis): axis is NonNullable<typeof axis> => axis !== null);
+
+  const fallbackLabel = !loaded
+    ? DATA_STATE_LABELS.pending
+    : view.refusal || axes.length === 0
+      ? DATA_STATE_LABELS.unavailable
+      : null;
 
   return (
     <PanelShell
-      title="FENO RIM 지속가능 지수 밴드"
-      subtitle="연구·진단 등급 · 3년 밴드와 12개월 환산은 모두 양 끝으로만 표시합니다"
+      title="지수별 현재가 대비 업사이드"
+      subtitle="방법론별 · 연구·진단 등급 · 단일 목표가 없음"
       asOf={view.asOf || null}
     >
       {fallbackLabel ? (
         <EmptyPanel label={fallbackLabel} />
       ) : (
-        <div className="grid min-w-0 sm:grid-cols-2">
-          {view.rows.map((row) => (
-            <div
-              key={row.id}
-              className="min-w-0 border-t border-[var(--c-line-2)] px-[var(--panel-pad)] py-3 first:border-t-0 sm:[&:nth-child(-n+2)]:border-t-0"
-            >
-              <div className="flex min-w-0 items-start justify-between gap-2">
-                <p className="min-w-0 truncate text-sm font-black text-[var(--c-ink)]">{row.label}</p>
-                <span className="shrink-0 rounded-full border border-[var(--c-line)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
-                  연구·진단
-                </span>
-              </div>
-              <div className="mt-2 min-w-0 grid gap-1">
-                <RimSustainableEndpoints label="밴드" low={row.range.low} high={row.range.high} format={(v) => RIM_BAND_NUMBER.format(v)} />
-                <RimSustainableEndpoints label="12개월" low={row.twelveMonth.low} high={row.twelveMonth.high} format={(v) => RIM_BAND_PERCENT.format(v)} />
-                <RimSustainableEndpoints label="3년 상승여력" low={row.upside.low} high={row.upside.high} format={(v) => RIM_BAND_PERCENT.format(v)} />
-              </div>
-              <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
-                가정을 명시한 잔존가치 범위입니다. 목표가가 아니며 단일 값은 제공하지 않습니다.
-                {row.currentPrice === null ? "" : ` 현재 지수 ${RIM_BAND_NUMBER.format(row.currentPrice)}.`}
-              </p>
-              <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
-                할인율 {RIM_BAND_PERCENT.format(row.discountRate)} · 명시적 예측 {row.explicitYears}년 ·{" "}
-                {RIM_SUSTAINABLE_CONVEXITY_KO[row.convexityStatus] ?? "검증 상태 미상"}
-                (성장/할인 {row.convexityRatio.toFixed(2)}배)
-              </p>
-              <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
-                기준일 {row.asOf}
-                {row.confidence === null ? "" : ` · 신뢰도 ${row.confidence}`}
-              </p>
+        <div className="px-[var(--panel-pad)] py-3">
+          <MethodologyBar axes={axes} />
+          {view.findings.length > 0 ? (
+            <div className="mt-3 border-t border-[var(--c-line-2)] pt-3">
+              <p className="text-[10px] font-black text-[var(--c-ink-3)]">공시된 한계</p>
+              <ul className="mt-1 grid gap-1">
+                {view.findings.map((finding) => (
+                  <li key={finding.id} className="min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
+                    {FINDING_KO[finding.id] ?? finding.detail}
+                  </li>
+                ))}
+              </ul>
             </div>
-          ))}
+          ) : null}
         </div>
       )}
-      {/* Disclosed and not resolved: what the measurement says it does not cover. */}
-      {!fallbackLabel && view.findings.length > 0 ? (
-        <div className="border-t border-[var(--c-line-2)] px-[var(--panel-pad)] py-3">
-          <p className="text-[10px] font-black text-[var(--c-ink-3)]">공시된 한계</p>
-          <ul className="mt-1 grid gap-1">
-            {view.findings.map((finding) => (
-              <li key={finding.id} className="min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
-                {finding.detail}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
     </PanelShell>
   );
 }
+
+// The producer writes its findings in English research prose. A user-facing
+// surface states the same limitation in the reader's language; an unmapped id
+// falls back to the producer's own text rather than silently disappearing.
+const FINDING_KO: Record<string, string> = {
+  convexity_outside_printed_domain:
+    "일부 지수의 장부성장 대 할인율 비율이 검증된 구간(1.77~2.56배) 밖입니다. 러셀 2000이 1.29배로 구간 아래입니다.",
+  structural_cells_excluded_for_unit_incoherence:
+    "공표된 54개 검증 칸 중 36개만 사용했습니다. 나머지 18개는 단위가 맞지 않아 제외했습니다.",
+};
 
 function MacroPulsePanel({ items, fallbackAsOf }: { items: MarketMacroPulse[]; fallbackAsOf?: string | null }) {
   const panelAsOf = latestAsOf(items.flatMap((item) => [item.releaseDate, item.period])) ?? fallbackAsOf ?? null;
@@ -1095,10 +894,7 @@ export default function MarketValuationClient({
       <MarketHero sp500={sp500} sourceDate={sourceDate} erpValue={damodaranUsErp} />
 
       <SecondaryIndexTable indices={indices} />
-
-      <RimReadinessPanel />
-
-      <RimSustainableRangePanel />
+      <MethodologyPanel />
 
       <MarketSection sectionKey="valuation" index="01 근거" title="이익과 멀티플이 만든 현재 위치" summary="S&P 500 판정의 배경을 시장 체온, ERP, Yardeni 모델로 확인합니다." muted={!dataReady}>
         <MarketThermometer />
