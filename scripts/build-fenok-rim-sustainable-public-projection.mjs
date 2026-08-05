@@ -138,27 +138,49 @@ function projectRow(row) {
 }
 
 export function buildPublicProjection({ canonical, receipt }) {
-  const refusals = [];
   const promoted = canonical?.promotion?.promoted === true;
   const receiptEligible = receipt?.sustainable_calibration_receipt?.promotion?.eligible === true;
   const explicitYears = canonical?.structure?.horizon;
 
   // Document-level refusal publishes an empty row set rather than a subset.
-  if (!promoted) refusals.push("canonical_not_promoted");
-  if (!receiptEligible) refusals.push("calibration_receipt_not_eligible");
-  if (!isFiniteNumber(explicitYears)) refusals.push("explicit_horizon_absent");
+  const documentRefusals = [];
+  if (!promoted) documentRefusals.push("canonical_not_promoted");
+  if (!receiptEligible) documentRefusals.push("calibration_receipt_not_eligible");
+  if (!isFiniteNumber(explicitYears)) documentRefusals.push("explicit_horizon_absent");
 
+  // DEC-289 quarantine shape: a document that fails promotion publishes NO
+  // rows, NO internal blocker ids and NO findings. The surface explains itself
+  // with one public state and one withheld reason; the audit detail belongs to
+  // the private canonical record and never reaches a public file.
+  if (documentRefusals.length > 0) {
+    return {
+      schema_version: PUBLIC_SCHEMA_VERSION,
+      generated_at: canonical?.generated_at ?? null,
+      as_of: canonical?.as_of ?? null,
+      policy: {
+        no_public_single_target: true,
+        emits_single_target: false,
+      },
+      promotion: {
+        promoted: false,
+        public_state: "MODEL_REVALIDATION",
+        findings: [],
+      },
+      rows: [],
+      withheld: ["model_revalidation_in_progress"],
+    };
+  }
+
+  const refusals = [];
   const rows = [];
-  if (refusals.length === 0) {
-    for (const candidate of Array.isArray(canonical.rows) ? canonical.rows : []) {
-      const { row, reason } = projectRow(candidate);
-      if (row === null) {
-        refusals.push(`${candidate?.id ?? "unknown"}: ${reason}`);
-        continue;
-      }
-      row.assumptions.explicit_years = explicitYears;
-      rows.push(row);
+  for (const candidate of Array.isArray(canonical.rows) ? canonical.rows : []) {
+    const { row, reason } = projectRow(candidate);
+    if (row === null) {
+      refusals.push(`${candidate?.id ?? "unknown"}: ${reason}`);
+      continue;
     }
+    row.assumptions.explicit_years = explicitYears;
+    rows.push(row);
   }
 
   const findings = Array.isArray(canonical?.promotion?.findings)
@@ -179,6 +201,7 @@ export function buildPublicProjection({ canonical, receipt }) {
     },
     promotion: {
       promoted,
+      public_state: null,
       receipt_eligible: receiptEligible,
       // Disclosed and not resolved: a finding is what the measurement says.
       findings,

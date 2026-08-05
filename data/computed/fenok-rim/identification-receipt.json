@@ -631,7 +631,7 @@
           }
         }
       },
-      "source_sha256": "7797a9f043664f6f3cfb0909f9d2381cbbe1150c7a1a811d4f6272b57627490b",
+      "source_sha256": "ff83a56e2583651f233c450e2e3487fd11f9093b88d9ce5786bdb1c3c65b8133",
       "sources": [
         {
           "path": "scripts/build-fenok-rim-identification-receipt.mjs",
@@ -639,7 +639,7 @@
         },
         {
           "path": "scripts/build-fenok-rim-sustainable-index-ranges.mjs",
-          "raw_sha256": "880953b2da78d91d6dcaa5527918c5c610f46079ba3b90ef2dc266658fbae053"
+          "raw_sha256": "3ecd04b98116f6dca527319a35a9ff33d4e173129e9baf41c74eb0436046fac5"
         },
         {
           "path": "scripts/fenok-rim-yoo-panel-engine.mjs",
@@ -653,14 +653,14 @@
       "version": "fenok-rim-sustainable-index-calibration/v1"
     },
     "parameter_sha256": "9e5af5f50f55af1271f3f7bb317b5e5f223f4a52e5ceb544b67fb6a1171663ea",
-    "calibration_cutoff_at": "2026-08-05T06:40:27.155Z",
+    "calibration_cutoff_at": "2026-08-05T15:22:52.611Z",
     "calibration_component_sha256": {
       "lt_roe_rule": "d5029af56775518e35d930b2ab8a0d2fb256f7207a981cd53661bc2d05565d75",
       "payout_multiplier": "4e5319c49b44c9dd80b048a61afa4ba7d7da709f143ae649999d4222909e5234",
       "printed_convexity_domain": "73cb379249da5f1be0023d36c0c3a39aae72269302c933d154e26bfdc88e5580",
       "twelve_month_conversion": "3a28b93fc3778af6fbff4458f7d9ed696ccb755eb488c8f8d6fcdbcb4ca85903"
     },
-    "measurement_receipt_sha256": "8ae30eb06932298e71b149161fa79c5d35fc73c077379b1a697942a94f135eca",
+    "measurement_receipt_sha256": "cd1b0b34463b88866b9c4b9075d99ca06a5986a7f40029244465fb325e613b56",
     "proxy_decision_sha256": "4cf1a00ea8f52445cb44fe42d3d9556fda460a0cf61b46e310470fcd2a61bcf7",
     "fit_evidence_ids": [
       "ltroe-index-centres-2025-12-09",
@@ -678,20 +678,31 @@
     },
     "promotion": {
       "requested": true,
-      "underlying_production_identified": true,
-      "external_blockers": [],
-      "eligible": true,
-      "blockers": []
+      "underlying_production_identified": false,
+      "external_blockers": [
+        "growth_model_not_validated",
+        "model_validation_reopened",
+        "sealed_holdout_absent",
+        "twelve_month_output_targeting"
+      ],
+      "eligible": false,
+      "blockers": [
+        "underlying_production_not_identified",
+        "growth_model_not_validated",
+        "model_validation_reopened",
+        "sealed_holdout_absent",
+        "twelve_month_output_targeting"
+      ]
     },
-    "generated_at": "2026-08-05T06:40:27.155Z",
-    "receipt_sha256": "dd459fe314d05c1c56b7174814dfb28a1605af98befaee3984e1e7f5ca8acffe",
-    "source_snapshot_sha256": "b6c98c4e0995a3caaa3d0f8a569a2995c96bdc8be00094dbb9cf96c1fd4c8b8a",
+    "generated_at": "2026-08-05T15:22:52.611Z",
+    "receipt_sha256": "61eb4f3368f8e9b9616a9c30647039b7e090acf7026c2078f46ffac89e263e5e",
+    "source_snapshot_sha256": "49c445ebcabbc47ef441ea412ed8246d054fdf5073b999b52f000a2611e69593",
     "sources": [
       {
         "id": "sustainable-calibration-artifact",
-        "measurement_sha256": "9227d377e6478a48b3b2b1e5eb68a82ea8e51beb175261f82038eac18ee1fab0",
+        "measurement_sha256": "c5efd445727d61c71176acd966e401b88614a0207c761960f6c4c07c397404fb",
         "path": "data/computed/fenok-rim/sustainable-index-ranges.json",
-        "raw_sha256": "b5a33449a93328b90354ec7f7fd57e2f802eef377398499448b6a57ee88b1023"
+        "raw_sha256": "01ad002e27412717bdaa9cdc646803e9e6b0ed18c702b2ca82aaf25c73c3a06c"
       },
       {
         "id": "printed-index-grid",
@@ -707,9 +718,9 @@
       },
       {
         "id": "rim-index-inputs",
-        "measurement_sha256": "61c0dc8e7e9c6921646eb0444d83f6a4769fcccd31eaf3c1d4bc3c840fc557c1",
+        "measurement_sha256": "bbef26719589ad72e15053fe28c905186d5721e032fce8dfe410bca8ce60e4ca",
         "path": "data/computed/rim-index/inputs.json",
-        "raw_sha256": "f83dc9d96aec8b39ec09ef192518bdc43995d04a9669f9a2dfb7e77bb1e7ae3f"
+        "raw_sha256": "8fb46b5c66d57186c5293f059627261cd403967b429d163b7502e051a5659ed2"
       },
       {
         "id": "support-data-benchmarks-emerging-json",
@@ -743,9 +754,9 @@
       },
       {
         "id": "support-data-macro-fred-banking-daily-json",
-        "measurement_sha256": "7db55870889bd83031b78e9c944955cbf5e932c7972913c6df3406f13ecb3527",
+        "measurement_sha256": "56e4f712ad56143c935eec2c922db4b2803ef791415b6feb17d86df10af6071b",
         "path": "data/macro/fred-banking-daily.json",
-        "raw_sha256": "c7510e680e8d73a6e3c56eccbc56bc978859824efe330914b5e38022e13c83db"
+        "raw_sha256": "34f4c03c18478d0a3f64fdf9e0a68655ab3bbf2fcf45c041a0083f03c1ca0536"
       },
       {
         "id": "support-data-yf-finance-EWY-json",

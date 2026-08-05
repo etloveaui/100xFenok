@@ -1,12 +1,17 @@
 #!/usr/bin/env node
 
-// What this test defends: the public projection is an allowlist, and the two
-// copies on disk are the same bytes as what the allowlist produces right now.
+// Public-projection contract for the FENO RIM sustainable index ranges.
 //
-// The redaction assertions are written against the KEY SET, not against a list
-// of fields we happen to dislike. A denylist passes the moment the canonical
-// artifact grows a new field; an allowlist fails, which is the behaviour we want
-// from a file that ships to the open internet.
+// The projection is an allowlist, not a mirror: only the fields named here
+// survive, so a canonical artifact growing a new field fails loudly instead
+// of leaking by accident. The test enforces the allowlist itself, the
+// refusals, the identity scan and the opaque release id.
+//
+// DEC-289 (2026-08-05): the canonical artifact is under owner-ordered
+// quarantine. The on-disk projection therefore publishes the QUARANTINE
+// SHAPE — no rows, no internal blocker ids, no findings, one public state,
+// one withheld reason. The row-projection rules are still tested against a
+// promoted fixture so the reopen path stays covered by contract.
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -34,6 +39,14 @@ const RECEIPT = JSON.parse(fs.readFileSync(
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
+// The internal audit vocabulary. None of it may reach a public file.
+const QUARANTINE_BLOCKER_IDS = [
+  "model_validation_reopened",
+  "twelve_month_output_targeting",
+  "sealed_holdout_absent",
+  "growth_model_not_validated",
+];
+
 // Every key path the projection is allowed to contain, `rows[]` collapsed to one
 // shape. A key that appears in the output and not here fails the test.
 const ALLOWED_DOCUMENT_KEYS = [
@@ -49,13 +62,48 @@ const ALLOWED_ASSUMPTION_KEYS = [
 
 const projection = buildFromDisk();
 
-// --- shape ----------------------------------------------------------------
+// --- quarantine shape (the on-disk reality under DEC-289) -------------------
 assert.equal(projection.schema_version, PUBLIC_SCHEMA_VERSION);
 assert.deepEqual(Object.keys(projection).sort(), ALLOWED_DOCUMENT_KEYS);
 assert.equal(projection.policy.no_public_single_target, true);
 assert.equal(projection.policy.emits_single_target, false);
-assert.ok(projection.rows.length > 0, "a promoted eligible document must publish rows");
-for (const row of projection.rows) {
+assert.equal(projection.promotion.promoted, false, "the quarantined build is not promoted");
+assert.equal(projection.promotion.public_state, "MODEL_REVALIDATION",
+  "the quarantine declares exactly one public state");
+assert.deepEqual(projection.promotion.findings, [],
+  "no internal finding reaches a quarantined document");
+assert.deepEqual(projection.rows, [], "the quarantine publishes no rows");
+assert.deepEqual(projection.withheld, ["model_revalidation_in_progress"],
+  "one withheld reason and no internal ids");
+
+// The internal blocker ids and the audit vocabulary must not leak, in a key,
+// a value, or a disclosed string.
+const serialised = JSON.stringify(projection);
+for (const id of QUARANTINE_BLOCKER_IDS) {
+  assert.equal(serialised.includes(id), false,
+    `internal blocker '${id}' must not reach the public projection`);
+}
+for (const fragment of ["share", "basis", "calibrated_on_published_claims", "payout", "median_roe", "lt_roe", "detail"]) {
+  assert.equal(serialised.includes(fragment), false, `'${fragment}' must not reach the quarantined projection`);
+}
+assert.deepEqual(findForbiddenTokens(projection), [], "identity tokens in the quarantined projection");
+for (const forbidden of ["point_estimate", "target", "fair_value", "midpoint", "mid"]) {
+  assert.equal(serialised.includes(`"${forbidden}"`), false, `'${forbidden}' key must not reach the public projection`);
+}
+
+// --- promoted fixture: the row rules the reopen path must satisfy -----------
+// Reopening needs BOTH gates clear: promotion and an eligible receipt. The
+// fixture clears them together; the quarantined disk state keeps both closed.
+const promotedCanonical = clone(CANONICAL);
+promotedCanonical.promotion.promoted = true;
+const promotedReceipt = clone(RECEIPT);
+promotedReceipt.sustainable_calibration_receipt.promotion.eligible = true;
+const promotedProjection = buildPublicProjection({ canonical: promotedCanonical, receipt: promotedReceipt });
+
+assert.equal(promotedProjection.promotion.public_state, null,
+  "a promoted document carries no quarantine state");
+assert.ok(promotedProjection.rows.length > 0, "a promoted eligible document must publish rows");
+for (const row of promotedProjection.rows) {
   assert.deepEqual(Object.keys(row).sort(), ALLOWED_ROW_KEYS, `${row.id}: row key set`);
   assert.deepEqual(Object.keys(row.assumptions).sort(), ALLOWED_ASSUMPTION_KEYS, `${row.id}: assumption key set`);
   assert.equal(row.publication_status, PUBLISHABLE_ROW_STATUS);
@@ -65,26 +113,27 @@ for (const row of projection.rows) {
   }
 }
 
-// --- redaction ------------------------------------------------------------
+// --- redaction ----------------------------------------------------------------
 // The canonical blocks that must not survive the projection, by name, so the
 // failure message says WHICH secret leaked rather than "key set changed".
 for (const secret of [
   "calibration", "calibration_contract", "structure", "runtime_contract", "interpretation", "scope", "status",
 ]) {
   assert.equal(secret in projection, false, `canonical '${secret}' must not reach the public projection`);
+  assert.equal(secret in promotedProjection, false, `canonical '${secret}' must not reach a promoted projection`);
 }
-for (const row of projection.rows) {
+for (const row of promotedProjection.rows) {
   for (const secret of ["inputs", "source_notes", "measured_growth_diagnostic", "input_freshness", "value", "out_of_scope_reason", "blocking_reasons"]) {
     assert.equal(secret in row, false, `${row.id}: canonical '${secret}' must not reach the public projection`);
   }
 }
 // The twelve-month share and its basis name where the constant was fitted. The
 // endpoints are the product; how they were calibrated is not.
-const serialised = JSON.stringify(projection);
+const serialisedPromoted = JSON.stringify(promotedProjection);
 for (const fragment of ["share", "basis", "calibrated_on_published_claims", "payout", "median_roe", "lt_roe"]) {
-  assert.equal(serialised.includes(fragment), false, `'${fragment}' must not reach the public projection`);
+  assert.equal(serialisedPromoted.includes(fragment), false, `'${fragment}' must not reach the public projection`);
 }
-assert.deepEqual(findForbiddenTokens(projection), [], "identity tokens in the public projection");
+assert.deepEqual(findForbiddenTokens(promotedProjection), [], "identity tokens in the promoted projection");
 assert.ok(FORBIDDEN_PUBLIC_TOKENS.length > 0, "the identity token list must not be empty");
 // The scan must actually be capable of failing.
 assert.deepEqual(
@@ -95,55 +144,56 @@ assert.deepEqual(
 
 // --- no single target anywhere -------------------------------------------
 for (const forbidden of ["point_estimate", "target", "fair_value", "midpoint", "mid"]) {
-  assert.equal(serialised.includes(`"${forbidden}"`), false, `'${forbidden}' key must not reach the public projection`);
+  assert.equal(serialisedPromoted.includes(`"${forbidden}"`), false, `'${forbidden}' key must not reach the public projection`);
 }
 
 // --- document-level refusals ----------------------------------------------
-const notPromoted = clone(CANONICAL);
+// Every document-level refusal now collapses to the quarantine shape: no
+// rows, no internal reasons, one public withheld reason.
+const notPromoted = clone(promotedCanonical);
 notPromoted.promotion.promoted = false;
-const refusedByPromotion = buildPublicProjection({ canonical: notPromoted, receipt: RECEIPT });
+const refusedByPromotion = buildPublicProjection({ canonical: notPromoted, receipt: promotedReceipt });
 assert.deepEqual(refusedByPromotion.rows, [], "an unpromoted document publishes no rows");
-assert.ok(refusedByPromotion.withheld.includes("canonical_not_promoted"));
+assert.deepEqual(refusedByPromotion.withheld, ["model_revalidation_in_progress"]);
+assert.equal(refusedByPromotion.promotion.public_state, "MODEL_REVALIDATION");
 
-const notEligible = clone(RECEIPT);
+const notEligible = clone(promotedReceipt);
 notEligible.sustainable_calibration_receipt.promotion.eligible = false;
-const refusedByReceipt = buildPublicProjection({ canonical: CANONICAL, receipt: notEligible });
+const refusedByReceipt = buildPublicProjection({ canonical: promotedCanonical, receipt: notEligible });
 assert.deepEqual(refusedByReceipt.rows, [], "an ineligible calibration receipt publishes no rows");
-assert.ok(refusedByReceipt.withheld.includes("calibration_receipt_not_eligible"));
+assert.deepEqual(refusedByReceipt.withheld, ["model_revalidation_in_progress"]);
 
 // A receipt whose eligibility flag is missing entirely is not eligibility.
-const receiptWithoutFlag = clone(RECEIPT);
+const receiptWithoutFlag = clone(promotedReceipt);
 delete receiptWithoutFlag.sustainable_calibration_receipt.promotion.eligible;
 assert.deepEqual(
-  buildPublicProjection({ canonical: CANONICAL, receipt: receiptWithoutFlag }).rows,
+  buildPublicProjection({ canonical: promotedCanonical, receipt: receiptWithoutFlag }).rows,
   [],
   "an absent eligibility flag publishes no rows",
 );
 
-// --- row-level refusals ---------------------------------------------------
-const firstId = CANONICAL.rows.find((row) => row.publication_status === PUBLISHABLE_ROW_STATUS).id;
-function projectWithMutatedFirstRow(mutate) {
-  const mutated = clone(CANONICAL);
-  mutate(mutated.rows.find((row) => row.id === firstId));
-  return buildPublicProjection({ canonical: mutated, receipt: RECEIPT });
-}
-const cases = [
-  ["a collapsed range", (row) => { row.value.range.high = row.value.range.low; }, "range_endpoints_incomplete"],
-  ["a missing high endpoint", (row) => { row.value.range.high = null; }, "range_endpoints_incomplete"],
-  ["a collapsed twelve-month range", (row) => { row.value.expected_12m.high = row.value.expected_12m.low; }, "expected_12m_endpoints_incomplete"],
-  ["a missing upside endpoint", (row) => { delete row.value.upside.low; }, "upside_endpoints_incomplete"],
-  ["an inverted range", (row) => { const { low, high } = row.value.range; row.value.range.low = high; row.value.range.high = low; }, "range_endpoints_incomplete"],
-  ["a point estimate", (row) => { row.value.point_estimate = 11000; }, "point_estimate_present"],
-  ["a runtime injection flag", (row) => { row.runtime_yoo_value_injection = true; }, "runtime_injection_flag_not_false"],
-  ["a blocking reason", (row) => { row.blocking_reasons = ["panel_stale"]; }, "blocking_reasons=panel_stale"],
+// --- row-level refusals ----------------------------------------------------
+// A defective row is withheld by name while healthy rows still publish.
+// Mutations target the CANONICAL row shape: the bands live under `value`.
+const rowDefects = [
+  ["a collapsed band", (row) => { row.value.range.high = row.value.range.low; }, "range_endpoints_incomplete"],
+  ["an inverted band", (row) => { const band = row.value.range; const low = band.low; band.low = band.high; band.high = low; }, "range_endpoints_incomplete"],
+  ["a missing upside endpoint", (row) => { delete row.value.upside.high; }, "upside_endpoints_incomplete"],
+  ["a missing twelve-month endpoint", (row) => { delete row.value.expected_12m.low; }, "expected_12m_endpoints_incomplete"],
+  ["a planted point estimate", (row) => { row.value.point_estimate = 11000; }, "point_estimate_present"],
   ["a downgraded publication status", (row) => { row.publication_status = "OUT_OF_SCOPE"; }, "publication_status=OUT_OF_SCOPE"],
-  ["an absent discount rate", (row) => { row.value.convexity.discount = null; }, "discount_rate_absent"],
+  ["a non-false injection flag", (row) => { row.runtime_yoo_value_injection = true; }, "runtime_injection_flag_not_false"],
+  ["a dropped value block", (row) => { row.value = null; }, "value_absent"],
+  ["a blocking reason standing", (row) => { row.blocking_reasons = ["stale_or_future_input"]; }, "blocking_reasons=stale_or_future_input"],
 ];
-for (const [label, mutate, reason] of cases) {
-  const result = projectWithMutatedFirstRow(mutate);
+for (const [label, mutate, reason] of rowDefects) {
+  const mutated = clone(promotedCanonical);
+  const firstId = mutated.rows.find((row) => row.publication_status === PUBLISHABLE_ROW_STATUS).id;
+  mutate(mutated.rows.find((row) => row.id === firstId));
+  const result = buildPublicProjection({ canonical: mutated, receipt: promotedReceipt });
   assert.equal(
     result.rows.some((row) => row.id === firstId), false,
-    `${label} must withhold ${firstId}`,
+    `${label}: ${firstId} must not publish`,
   );
   assert.ok(
     result.withheld.includes(`${firstId}: ${reason}`),
@@ -154,10 +204,10 @@ for (const [label, mutate, reason] of cases) {
 }
 
 // Out-of-scope rows never publish and always say why they were withheld.
-const outOfScope = CANONICAL.rows.filter((row) => row.publication_status !== PUBLISHABLE_ROW_STATUS);
+const outOfScope = promotedCanonical.rows.filter((row) => row.publication_status !== PUBLISHABLE_ROW_STATUS);
 for (const row of outOfScope) {
-  assert.equal(projection.rows.some((published) => published.id === row.id), false, `${row.id} must not publish`);
-  assert.ok(projection.withheld.some((entry) => entry.startsWith(`${row.id}: `)), `${row.id} must be recorded as withheld`);
+  assert.equal(promotedProjection.rows.some((published) => published.id === row.id), false, `${row.id} must not publish`);
+  assert.ok(promotedProjection.withheld.some((entry) => entry.startsWith(`${row.id}: `)), `${row.id} must be recorded as withheld`);
 }
 
 // --- parity between the two copies on disk and the current build ----------

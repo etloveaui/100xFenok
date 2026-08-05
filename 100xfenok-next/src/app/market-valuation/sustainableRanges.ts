@@ -84,6 +84,7 @@ export interface SustainableRangesDoc {
   policy?: { no_public_single_target?: unknown; emits_single_target?: unknown } | null;
   promotion?: {
     promoted?: unknown;
+    public_state?: unknown;
     receipt_eligible?: unknown;
     findings?: Array<{ id?: unknown; detail?: unknown }> | null;
   } | null;
@@ -128,6 +129,11 @@ export function readSustainableRanges(doc: SustainableRangesDoc | null | undefin
   // payload that stops declaring the policy stops being publishable here.
   if (doc.policy?.no_public_single_target !== true) return refuse("policy_absent");
   if (doc.policy?.emits_single_target !== false) return refuse("payload_emits_single_target");
+
+  // DEC-289: the quarantine state is declared by the producer itself. It gets
+  // its own refusal so the surface renders the revalidation copy; every other
+  // failure below keeps the generic unavailable path.
+  if (doc.promotion?.public_state === "MODEL_REVALIDATION") return refuse("model_revalidation_in_progress");
 
   // Promotion and the calibration receipt are document-level gates: a failure in
   // either withholds every row, never a subset.

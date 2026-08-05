@@ -100,6 +100,29 @@ function laneView(lane) {
  *
  * Defects gate promotion. Findings are disclosed on the rows they belong to.
  */
+// Owner-ordered public quarantine, DEC-289 (2026-08-05), from the independent
+// Yoo-RIM audit. Removing this constant releases the owner quarantine ONLY:
+// promotion reopens after removal only if every other promotion blocker is
+// also clear (status and promotion share the combined array below).
+const AUDIT_QUARANTINE_BLOCKERS = Object.freeze([
+  Object.freeze({
+    id: "model_validation_reopened",
+    detail: "owner-ordered public quarantine pending reconstruction and independent re-validation (DEC-289)",
+  }),
+  Object.freeze({
+    id: "twelve_month_output_targeting",
+    detail: "12-month shares calibrated on the same published claims used for evaluation; no rederivation function",
+  }),
+  Object.freeze({
+    id: "sealed_holdout_absent",
+    detail: "no sealed pre-publication holdout exists; every published claim already entered development",
+  }),
+  Object.freeze({
+    id: "growth_model_not_validated",
+    detail: "retention-model book growth runs 2~4.5x the measured book CAGR without independent validation",
+  }),
+]);
+
 function promotionBlockers({ rows, structural, holdout }) {
   const blockers = [];
   const findings = [];
@@ -265,7 +288,9 @@ export function buildSustainableIndexRanges({ root = ROOT, asOf = null, generate
     structural,
     holdout,
   });
-  const promotion = promotionDefects;
+  // One combined array feeds BOTH the top-level status and the promotion
+  // block, so a quarantined build can never read `ready` while unpromoted.
+  const promotion = [...AUDIT_QUARANTINE_BLOCKERS, ...promotionDefects];
 
   const rows = gated.map(({ id, row, gate, publication_status: publicationStatus }) => {
     const { blockers, input_freshness: inputFreshness } = gate;

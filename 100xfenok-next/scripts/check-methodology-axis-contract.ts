@@ -9,6 +9,11 @@
 // The rest is refusal behaviour. A cardinal axis with a missing anchor, a
 // collapsed band, or an undated reading has to draw nothing rather than draw
 // something plausible.
+//
+// DEC-289 (2026-08-05): the deployed RIM projection is under owner-ordered
+// quarantine (rows=[]), so the axis rules run on a fixture row while the
+// deployed-document assertion pins the quarantine itself. The Yardeni side
+// stays live: its data lane is separate and untouched by the quarantine.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -37,28 +42,38 @@ const yardeniDoc = JSON.parse(fs.readFileSync(
   "utf8",
 ));
 
-const spxRow = projection.rows.find((row: { id: string }) => row.id === "SPX");
-assert(spxRow, "the deployed projection must carry an SPX row");
+// --- the deployed projection is quarantined --------------------------------
+assert(
+  projection.promotion?.public_state === "MODEL_REVALIDATION",
+  "the deployed projection must declare the quarantine state",
+);
+assert(
+  Array.isArray(projection.rows) && projection.rows.length === 0,
+  "the quarantined projection carries no rows",
+);
+
 const yardeniLatest = yardeniDoc.data[yardeniDoc.data.length - 1];
 
+// --- fixture row: the reopen path the axis rules must keep satisfying ------
 const rim: RimRowInput = {
-  id: spxRow.id,
-  label: spxRow.label,
-  asOf: spxRow.as_of,
-  currentPrice: spxRow.current_price,
-  range: spxRow.range,
-  confidence: spxRow.confidence,
+  id: "SPX",
+  label: "S&P 500",
+  asOf: yardeniLatest.date,
+  currentPrice: 7500,
+  range: { low: 10500, high: 11900 },
+  confidence: "UNVERIFIED",
 };
-const yardeni = { date: yardeniLatest.date, fairValue: yardeniLatest.fair_value };
+// A controlled fair value below the band guarantees disagreement.
+const yardeni = { date: yardeniLatest.date, fairValue: rim.range.low * 0.8 };
 
 // --- the re-derivation, which is the whole point --------------------------
 const axis = buildMethodologyAxis({ rim, yardeni });
-assert(axis !== null, "the real SPX payload must produce an axis");
-assert(axis!.anchorPrice === spxRow.current_price, "the anchor is the RIM row's dated price");
+assert(axis !== null, "a well-formed row must produce an axis");
+assert(axis!.anchorPrice === rim.currentPrice, "the anchor is the RIM row's dated price");
 assert(axis!.readings.length === 2, "SPX carries both methods");
 
 const yardeniReading = axis!.readings.find((r) => r.lens === YARDENI_LENS)!;
-const expected = yardeni.fairValue / spxRow.current_price - 1;
+const expected = yardeni.fairValue / rim.currentPrice - 1;
 assert(near(yardeniReading.lowPct, expected), "Yardeni is re-derived against the shared anchor");
 assert(yardeniReading.lowPct === yardeniReading.highPct, "a point reading has equal endpoints");
 
@@ -72,18 +87,18 @@ assert(
 );
 
 const rimReading = axis!.readings.find((r) => r.lens === RIM_LENS)!;
-assert(near(rimReading.lowPct, spxRow.range.low / spxRow.current_price - 1), "RIM low re-derived");
-assert(near(rimReading.highPct, spxRow.range.high / spxRow.current_price - 1), "RIM high re-derived");
+assert(near(rimReading.lowPct, rim.range.low / rim.currentPrice - 1), "RIM low re-derived");
+assert(near(rimReading.highPct, rim.range.high / rim.currentPrice - 1), "RIM high re-derived");
 assert(rimReading.lowPct < rimReading.highPct, "a band keeps both ends");
 
 // --- disagreement is non-overlap, not distance between centres ------------
-assert(axis!.disagrees === true, "SPX's two methods do not overlap today");
+assert(axis!.disagrees === true, "a fair value below the band is a disagreement");
 assert(axis!.spreadPp !== null && axis!.spreadPp > 0, "the spread is reported in percentage points");
 
 const overlapping = buildMethodologyAxis({
   rim,
   // A fair value inside the band agrees with it, however far from its centre.
-  yardeni: { date: yardeni.date, fairValue: (spxRow.range.low + spxRow.range.high) / 2 },
+  yardeni: { date: yardeni.date, fairValue: (rim.range.low + rim.range.high) / 2 },
 })!;
 assert(overlapping.disagrees === false, "a point inside the band is agreement, not disagreement");
 
@@ -100,7 +115,7 @@ for (const [label, run] of refusals) {
 
 // A defective method is withheld with a reason; the other one still renders.
 const collapsed = clone(rim);
-collapsed.range = { low: spxRow.range.low, high: spxRow.range.low };
+collapsed.range = { low: rim.range.low, high: rim.range.low };
 const withCollapsedBand = buildMethodologyAxis({ rim: collapsed, yardeni })!;
 assert(withCollapsedBand.readings.length === 1, "a collapsed band drops one reading, not the axis");
 assert(
@@ -125,17 +140,14 @@ for (const [label, bad] of [
 }
 
 // An index with no Yardeni coverage is a one-reading axis, not a refusal.
-const kospiRow = projection.rows.find((row: { id: string }) => row.id === "KOSPI");
-if (kospiRow) {
-  const kospi = buildMethodologyAxis({
-    rim: {
-      id: kospiRow.id, label: kospiRow.label, asOf: kospiRow.as_of,
-      currentPrice: kospiRow.current_price, range: kospiRow.range, confidence: kospiRow.confidence,
-    },
-  })!;
-  assert(kospi.readings.length === 1, "an index Yardeni does not cover still draws its own band");
-  assert(kospi.withheld.length === 0, "a method that was never offered is not 'withheld'");
-}
+const kospi = buildMethodologyAxis({
+  rim: {
+    id: "KOSPI", label: "KOSPI", asOf: yardeniLatest.date,
+    currentPrice: 4000, range: { low: 4400, high: 5200 }, confidence: "UNVERIFIED",
+  },
+})!;
+assert(kospi.readings.length === 1, "an index Yardeni does not cover still draws its own band");
+assert(kospi.withheld.length === 0, "a method that was never offered is not 'withheld'");
 
 // --- no single target anywhere in the output ------------------------------
 const serialised = JSON.stringify(axis);

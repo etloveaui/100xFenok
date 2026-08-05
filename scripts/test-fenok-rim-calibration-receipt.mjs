@@ -269,8 +269,15 @@ assert.deepEqual(integrated.evaluation_evidence_ids, [
   "twelve-month-evaluation-2022-09-30--2026-07-17",
 ]);
 // Every in-scope index now has a direct source for the operands its value
-// depends on, so no bridge gates anything and no external blocker stands.
-assert.deepEqual(integrated.promotion.external_blockers, []);
+// depends on, so no bridge gates anything. Under DEC-289 the only external
+// blockers are the four owner-ordered quarantine ids (sorted); any other id
+// standing here would be a defect.
+assert.deepEqual(integrated.promotion.external_blockers, [
+  "growth_model_not_validated",
+  "model_validation_reopened",
+  "sealed_holdout_absent",
+  "twelve_month_output_targeting",
+]);
 assert.ok(!integrated.promotion.external_blockers.includes("sustainable_calibration_receipt_not_integrated"));
 assert.ok(!integrated.promotion.blockers.includes("post_cutoff_evidence"));
 assert.ok(!integrated.promotion.blockers.includes("future_evidence"));

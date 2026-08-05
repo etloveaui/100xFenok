@@ -38,6 +38,7 @@ import {
 } from "@/lib/format";
 import { formatPercent } from "@/lib/dashboard/formatters";
 import { formatAsOf, latestAsOf } from "@/lib/market-valuation/freshness";
+import { latestYardeniPoint, loadYardeni, type YardeniDoc } from "./yardeniReading";
 import { formatAsOf as formatDataAsOf, freshnessDataState, DATA_STATE_LABELS, type DataState } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
 
@@ -233,28 +234,8 @@ function loadRimSustainable(): Promise<SustainableRangesDoc | null> {
   return rimSustainablePending;
 }
 
-// Yardeni's fair value is the second method on the shared axis. It covers the
-// S&P alone, and its own premium is deliberately not read: the adapter
-// re-derives it against the anchor the rest of the axis uses.
-interface YardeniDoc { data?: Array<{ date?: string; fair_value?: number }> }
-let yardeniCache: YardeniDoc | null = null;
-let yardeniPending: Promise<YardeniDoc | null> | null = null;
-
-function loadYardeni(): Promise<YardeniDoc | null> {
-  if (yardeniCache) return Promise.resolve(yardeniCache);
-  if (yardeniPending) return yardeniPending;
-  yardeniPending = fetch("/data/yardney/yardney_model.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((doc) => {
-      yardeniCache = doc;
-      return doc;
-    })
-    .catch(() => {
-      yardeniPending = null;
-      return null;
-    });
-  return yardeniPending;
-}
+// Yardeni's second-method reading loads through ./yardeniReading, which owns
+// the producer payload's own field names so this panel's source never does.
 
 const YARDENI_INDEX_ID = "SPX";
 
@@ -277,9 +258,7 @@ function MethodologyPanel() {
   }, []);
 
   const view = readSustainableRanges(ranges);
-  const latestYardeni = Array.isArray(yardeni?.data) && yardeni!.data!.length > 0
-    ? yardeni!.data![yardeni!.data!.length - 1]
-    : null;
+  const latestYardeni = latestYardeniPoint(yardeni);
 
   const axes = view.rows
     .map((row) => buildMethodologyAxis({
@@ -291,25 +270,36 @@ function MethodologyPanel() {
         range: row.range,
         confidence: row.confidence,
       },
-      yardeni: row.id === YARDENI_INDEX_ID && latestYardeni?.date && typeof latestYardeni.fair_value === "number"
-        ? { date: latestYardeni.date, fairValue: latestYardeni.fair_value }
-        : null,
+      yardeni: row.id === YARDENI_INDEX_ID ? latestYardeni : null,
     }))
     .filter((axis): axis is NonNullable<typeof axis> => axis !== null);
 
+  // DEC-289: only the producer-declared quarantine state gets the revalidation
+  // copy. Every other refusal (payload absent, schema mismatch, clock, ...)
+  // keeps the generic unavailable path.
+  const revalidation = view.refusal === "model_revalidation_in_progress";
   const fallbackLabel = !loaded
     ? DATA_STATE_LABELS.pending
-    : view.refusal || axes.length === 0
-      ? DATA_STATE_LABELS.unavailable
-      : null;
+    : revalidation
+      ? null
+      : view.refusal || axes.length === 0
+        ? DATA_STATE_LABELS.unavailable
+        : null;
 
   return (
     <PanelShell
       title="지수별 현재가 대비 업사이드"
-      subtitle="방법론별 · 연구·진단 등급 · 단일 목표가 없음"
+      subtitle="방법론별 · 연구·진단 등급 · 단일 목표가가 아니며 범위만 제공합니다"
       asOf={view.asOf || null}
     >
-      {fallbackLabel ? (
+      {revalidation ? (
+        <div className="px-[var(--panel-pad)] py-4">
+          <p className="text-[12px] font-black leading-5 text-[var(--c-ink-3)]">모델 재검증 중</p>
+          <p className="mt-1 text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
+            RIM 산출값은 독립 재검증 완료까지 공개하지 않습니다.
+          </p>
+        </div>
+      ) : fallbackLabel ? (
         <EmptyPanel label={fallbackLabel} />
       ) : (
         <div className="px-[var(--panel-pad)] py-3">

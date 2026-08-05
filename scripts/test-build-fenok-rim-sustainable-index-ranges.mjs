@@ -118,9 +118,28 @@ if (structural) {
   assert.ok(structural.re_entry, "an exclusion must say what would reverse it");
 }
 // No defect stands. Every in-scope index now has a direct source for the
-// operands its value depends on, so nothing crosses a failing bridge.
-assert.deepEqual(artifact.promotion.blockers, [], "promotion must not be blocked by a defect that no longer exists");
-assert.equal(artifact.promotion.promoted, true);
+// operands its value depends on, so nothing crosses a failing bridge. The
+// only blockers that may remain are the four owner-ordered quarantine ids
+// (DEC-289); releasing them is a separate act from clearing defects.
+const QUARANTINE_IDS = [
+  "model_validation_reopened",
+  "twelve_month_output_targeting",
+  "sealed_holdout_absent",
+  "growth_model_not_validated",
+];
+assert.deepEqual(
+  artifact.promotion.blockers.filter((row) => !QUARANTINE_IDS.includes(row.id)),
+  [],
+  "promotion must not be blocked by a defect that no longer exists",
+);
+assert.deepEqual(
+  artifact.promotion.blockers.filter((row) => QUARANTINE_IDS.includes(row.id)).map((row) => row.id),
+  QUARANTINE_IDS,
+  "the DEC-289 quarantine blockers must stand in declared order",
+);
+assert.equal(artifact.promotion.promoted, false, "the quarantine withholds promotion");
+assert.equal(artifact.status, "research_diagnostic_not_promoted",
+  "status and promotion must share the combined blocker array");
 
 // The two we know are findings, not defects: we cannot fit our way to his
 // numbers, and we cannot make an index compound inside a domain it is outside.
@@ -137,6 +156,9 @@ for (const field of ["parameter_sha256", "calibration_cutoff_at", "calibration_c
 const declared = new Set((receipt.promotion?.blockers ?? []).map((row) => row.id ?? row));
 for (const blocker of artifact.promotion.blockers) {
   if (blocker.id.startsWith("sustainable_calibration_receipt")) continue;
+  // DEC-289: quarantine blockers are owner-ordered policy, not defects the
+  // calibration receipt computes; the receipt gate does not cover them.
+  if (QUARANTINE_IDS.includes(blocker.id)) continue;
   assert.ok(declared.has(blocker.id), `${blocker.id}: the receipt must declare every computed defect`);
 }
 // Refusing the row is necessary, not sufficient. A proxy row may never publish

@@ -443,10 +443,23 @@ assert(
   }) === null,
   "a clock on the wrong route must refuse the band",
 );
-assert(
-  clientSource.includes("수집 시각을 사용합니다") && clientSource.includes("관측일이 아닙니다"),
-  "the panel must state that the reconciliation operand uses collection time, not an observation date",
-);
+// The panel that RENDERS the reconciliation band must carry the caveat copy.
+// Since the 2026-08-05 rebuild no market-valuation component imports the
+// legacy band reader, so the requirement binds whichever file actually does:
+// a consumer must carry both strings, and the check names the offender.
+const bandConsumers = fs.readdirSync(path.join(process.cwd(), "src/app/market-valuation"))
+  .filter((name) => name.endsWith(".tsx"))
+  .map((name) => ({
+    name,
+    body: fs.readFileSync(path.join(process.cwd(), "src/app/market-valuation", name), "utf8"),
+  }))
+  .filter(({ body }) => body.includes("readRimBand("));
+for (const consumer of bandConsumers) {
+  assert(
+    consumer.body.includes("수집 시각을 사용합니다") && consumer.body.includes("관측일이 아닙니다"),
+    `${consumer.name} renders the reconciliation band and must state that it uses collection time, not an observation date`,
+  );
+}
 
 // ---------------------------------------------------------------------------
 // REAL-ARTIFACT INTEGRATION. Every check above is a fixture, and fixtures only

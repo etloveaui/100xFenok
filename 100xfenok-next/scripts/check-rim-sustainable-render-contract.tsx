@@ -9,6 +9,13 @@
 // It also holds the producer and the consumer to the same two constants. They
 // live in different languages and different build systems, so nothing but a
 // regression keeps them identical.
+//
+// DEC-289 (2026-08-05): the deployed payload is under owner-ordered
+// quarantine. The deployed document must refuse with the dedicated
+// `model_revalidation_in_progress` reason — the one refusal the surface
+// renders as "모델 재검증 중" — while every other refusal keeps the generic
+// unavailable path. The row-reading rules are exercised on a renderable
+// fixture so the reopen path stays covered.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -40,16 +47,58 @@ assert(
   `row status drift: reader ${SUSTAINABLE_PUBLISHABLE_ROW_STATUS} vs producer ${PUBLISHABLE_ROW_STATUS}`,
 );
 
-// --- the real deployed payload --------------------------------------------
+// --- the real deployed payload: quarantine ---------------------------------
 const PUBLIC_PATH = path.join(
   path.dirname(new URL(import.meta.url).pathname),
   "..",
   "public/data/computed/fenok-rim/sustainable-index-ranges.public.json",
 );
 const deployed = JSON.parse(fs.readFileSync(PUBLIC_PATH, "utf8")) as SustainableRangesDoc;
-const view = readSustainableRanges(deployed);
-assert(view.refusal === null, `the deployed payload must render: ${view.refusal}`);
-assert(view.rows.length > 0, "the deployed payload must publish at least one row");
+assert(
+  deployed.promotion?.public_state === "MODEL_REVALIDATION",
+  "the deployed payload must declare the quarantine state",
+);
+const deployedView = readSustainableRanges(deployed);
+assert(
+  deployedView.refusal === "model_revalidation_in_progress",
+  `the deployed payload must refuse with the quarantine reason, got ${deployedView.refusal}`,
+);
+assert(deployedView.rows.length === 0, "the quarantined payload renders no rows");
+
+// --- renderable fixture: the reopen path ------------------------------------
+// A minimal well-formed promoted document. The row-reading rules run against
+// this fixture so the quarantine cannot quietly rot the reader.
+function renderableDoc(): SustainableRangesDoc {
+  const rows = ["SPX", "NDX", "KOSPI", "CCMP", "RUT"].map((id, index) => ({
+    id,
+    label: id,
+    as_of: "2026-08-04",
+    publication_status: SUSTAINABLE_PUBLISHABLE_ROW_STATUS,
+    confidence: "UNVERIFIED",
+    current_price: 1000 + index * 10,
+    range: { low: 1100 + index * 10, high: 1200 + index * 10 },
+    upside: { low: 0.10, high: 0.20 },
+    expected_12m: { low: 0.05, high: 0.09 },
+    assumptions: {
+      discount_rate: 0.101,
+      explicit_years: 9,
+      convexity_ratio: 2.1,
+      convexity_status: "inside_printed_domain",
+    },
+  }));
+  return {
+    schema_version: SUSTAINABLE_PUBLIC_SCHEMA_VERSION,
+    as_of: "2026-08-04",
+    policy: { no_public_single_target: true, emits_single_target: false },
+    promotion: { promoted: true, public_state: null, receipt_eligible: true, findings: [] },
+    rows,
+  } as unknown as SustainableRangesDoc;
+}
+
+const baseline = renderableDoc();
+const view = readSustainableRanges(baseline);
+assert(view.refusal === null, `the renderable fixture must read: ${view.refusal}`);
+assert(view.rows.length > 0, "the renderable fixture must publish at least one row");
 for (const row of view.rows) {
   assert(row.range.low < row.range.high, `${row.id}: band endpoints must be ordered`);
   assert(row.upside.low < row.upside.high, `${row.id}: upside endpoints must be ordered`);
@@ -60,14 +109,16 @@ for (const row of view.rows) {
 }
 
 // --- refusals --------------------------------------------------------------
+// Only the producer-declared quarantine state earns the dedicated refusal;
+// every other failure keeps its own reason and the generic unavailable path.
 type Mutate = (doc: SustainableRangesDoc) => void;
 const documentRefusals: Array<[string, Mutate, string]> = [
   ["an absent payload", () => {}, "payload_absent"],
   ["a schema version bump", (doc) => { doc.schema_version = "fenok_rim_sustainable_public_projection.v2"; }, "schema_version_mismatch"],
   ["a dropped policy", (doc) => { doc.policy = null; }, "policy_absent"],
   ["a payload that admits a single target", (doc) => { doc.policy!.emits_single_target = true; }, "payload_emits_single_target"],
-  ["a withdrawn promotion", (doc) => { doc.promotion!.promoted = false; }, "not_promoted"],
-  ["an ineligible calibration receipt", (doc) => { doc.promotion!.receipt_eligible = false; }, "calibration_receipt_not_eligible"],
+  ["the DEC-289 quarantine state", (doc) => { doc.promotion!.public_state = "MODEL_REVALIDATION"; }, "model_revalidation_in_progress"],
+  ["a withdrawn promotion", (doc) => { doc.promotion!.promoted = false; doc.promotion!.public_state = null; }, "not_promoted"],
   ["a planted point estimate", (doc) => { (doc.rows as Array<Record<string, unknown>>)[0].point_estimate = 11000; }, "payload_carries_single_target"],
   ["a planted price target", (doc) => { (doc.rows as Array<Record<string, unknown>>)[0].target_price = 11000; }, "payload_carries_single_target"],
   ["a planted midpoint", (doc) => { (doc.rows as Array<Record<string, unknown>>)[0].midpoint = 11000; }, "payload_carries_single_target"],
@@ -75,7 +126,7 @@ const documentRefusals: Array<[string, Mutate, string]> = [
   ["rows that are not an array", (doc) => { doc.rows = {} as unknown as []; }, "rows_absent"],
 ];
 for (const [label, mutate, expected] of documentRefusals) {
-  const payload = label === "an absent payload" ? null : clone(deployed);
+  const payload = label === "an absent payload" ? null : renderableDoc();
   if (payload) mutate(payload);
   const result = readSustainableRanges(payload);
   assert(result.refusal === expected, `${label}: expected ${expected}, got ${result.refusal}`);
@@ -97,7 +148,7 @@ const rowRefusals: Array<[string, (row: Record<string, unknown>) => void]> = [
   ["a non-string label", (row) => { row.label = 42; }],
 ];
 for (const [label, mutate] of rowRefusals) {
-  const payload = clone(deployed);
+  const payload = renderableDoc();
   const rows = payload.rows as Array<Record<string, unknown>>;
   const targetId = rows[0].id as string;
   mutate(rows[0]);
@@ -110,7 +161,7 @@ for (const [label, mutate] of rowRefusals) {
 }
 
 // Every row defective means nothing may be drawn at all.
-const allDefective = clone(deployed);
+const allDefective = renderableDoc();
 for (const row of allDefective.rows as Array<Record<string, unknown>>) {
   (row.range as Record<string, number>).high = (row.range as Record<string, number>).low;
 }

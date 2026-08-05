@@ -1,15 +1,32 @@
 {
   "schema_version": "fenok_rim_sustainable_index_ranges.v2",
-  "generated_at": "2026-08-05T06:40:27.155Z",
+  "generated_at": "2026-08-05T16:06:13.514Z",
   "as_of": "2026-08-05",
-  "status": "six_index_residual_value_ranges_ready",
+  "status": "research_diagnostic_not_promoted",
   "promotion": {
-    "promoted": true,
-    "blockers": [],
+    "promoted": false,
+    "blockers": [
+      {
+        "id": "model_validation_reopened",
+        "detail": "owner-ordered public quarantine pending reconstruction and independent re-validation (DEC-289)"
+      },
+      {
+        "id": "twelve_month_output_targeting",
+        "detail": "12-month shares calibrated on the same published claims used for evaluation; no rederivation function"
+      },
+      {
+        "id": "sealed_holdout_absent",
+        "detail": "no sealed pre-publication holdout exists; every published claim already entered development"
+      },
+      {
+        "id": "growth_model_not_validated",
+        "detail": "retention-model book growth runs 2~4.5x the measured book CAGR without independent validation"
+      }
+    ],
     "findings": [
       {
         "id": "convexity_outside_printed_domain",
-        "detail": "printed cells used book growth at 1.77~2.56 times the discount rate; RUT 1.29 sit outside it"
+        "detail": "printed cells used book growth at 1.77~2.56 times the discount rate; RUT 1.30 sit outside it"
       },
       {
         "id": "structural_cells_excluded_for_unit_incoherence",
@@ -731,9 +748,9 @@
           },
           {
             "id": "risk_free",
-            "as_of": "2026-07-31",
+            "as_of": "2026-08-03",
             "max_age_days": 45,
-            "age_days": 5,
+            "age_days": 2,
             "status": "passed"
           },
           {
@@ -769,7 +786,7 @@
         "book_growth": 0.23855454079248364,
         "book_growth_uncapped": 0.23855454079248364,
         "book_growth_capped": false,
-        "book_growth_ceiling": 0.26238486296164143,
+        "book_growth_ceiling": 0.26166880290677536,
         "payout": 0.20696159098679534,
         "payout_band": {
           "low": 0.20679765950389095,
@@ -790,17 +807,17 @@
           "start_book": 610.1830228642807,
           "end_book": 1315.9252231358494
         },
-        "risk_free": 0.0475,
-        "risk_free_as_of": "2026-07-31",
+        "risk_free": 0.047,
+        "risk_free_as_of": "2026-08-03",
         "risk_free_series": "DGS10",
-        "discount": 0.1026
+        "discount": 0.10232
       },
       "value": {
         "book_growth": 0.23855454079248364,
         "convexity": {
           "book_growth": 0.23855454079248364,
-          "discount": 0.1026,
-          "growth_over_discount": 2.3250929901801527,
+          "discount": 0.10232,
+          "growth_over_discount": 2.331455637143116,
           "printed_domain": {
             "low": 1.7686871045010335,
             "high": 2.5573573388074213,
@@ -812,16 +829,16 @@
           "distance_from_domain": 0
         },
         "range": {
-          "low": 10505.895996051924,
-          "high": 11887.102536878805
+          "low": 10562.91469694256,
+          "high": 11950.46822779778
         },
         "upside": {
-          "low": 0.4027087789733026,
-          "high": 0.5871224207151675
+          "low": 0.4103217072123604,
+          "high": 0.5955827758311099
         },
         "expected_12m": {
-          "low": 0.16631872571597398,
-          "high": 0.24248155975536417,
+          "low": 0.16946286507870484,
+          "high": 0.24597568641824835,
           "share": 0.413,
           "source": "calibrated_on_published_claims",
           "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
@@ -833,8 +850,8 @@
         "book_growth": 0.052755115509582895,
         "convexity": {
           "book_growth": 0.052755115509582895,
-          "discount": 0.1026,
-          "growth_over_discount": 0.5141824123741023,
+          "discount": 0.10232,
+          "growth_over_discount": 0.515589479178879,
           "printed_domain": {
             "low": 1.7686871045010335,
             "high": 2.5573573388074213,
@@ -843,19 +860,19 @@
             "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
           },
           "status": "below_printed_domain",
-          "distance_from_domain": 1.2545046921269312
+          "distance_from_domain": 1.2530976253221544
         },
         "range": {
-          "low": 4692.112723107036,
-          "high": 5032.607241403506
+          "low": 4710.793174867906,
+          "high": 5052.3105840082735
         },
         "upside": {
-          "low": -0.3735262836117992,
-          "high": -0.328064701830842
+          "low": -0.37103213806819135,
+          "high": -0.3254339836458141
         },
         "expected_12m": {
-          "low": -0.15426635513167306,
-          "high": -0.13549072185613775,
+          "low": -0.15323627302216303,
+          "high": -0.13440423524572123,
           "share": 0.413,
           "source": "calibrated_on_published_claims",
           "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
@@ -890,9 +907,9 @@
           },
           {
             "id": "risk_free",
-            "as_of": "2026-07-31",
+            "as_of": "2026-08-03",
             "max_age_days": 45,
-            "age_days": 5,
+            "age_days": 2,
             "status": "passed"
           },
           {
@@ -925,10 +942,10 @@
           0.05,
           0.055
         ],
-        "book_growth": 0.26238486296164143,
+        "book_growth": 0.26166880290677536,
         "book_growth_uncapped": 0.35268330040947454,
         "book_growth_capped": true,
-        "book_growth_ceiling": 0.26238486296164143,
+        "book_growth_ceiling": 0.26166880290677536,
         "payout": 0.09713792429900271,
         "payout_band": {
           "low": 0.09706098266021522,
@@ -949,16 +966,16 @@
           "start_book": 635.0979964478236,
           "end_book": 3199.48851998959
         },
-        "risk_free": 0.0475,
-        "risk_free_as_of": "2026-07-31",
+        "risk_free": 0.047,
+        "risk_free_as_of": "2026-08-03",
         "risk_free_series": "DGS10",
-        "discount": 0.1026
+        "discount": 0.10232
       },
       "value": {
-        "book_growth": 0.26238486296164143,
+        "book_growth": 0.26166880290677536,
         "convexity": {
-          "book_growth": 0.26238486296164143,
-          "discount": 0.1026,
+          "book_growth": 0.26166880290677536,
+          "discount": 0.10232,
           "growth_over_discount": 2.5573573388074213,
           "printed_domain": {
             "low": 1.7686871045010335,
@@ -971,16 +988,16 @@
           "distance_from_domain": 0
         },
         "range": {
-          "low": 40336.70065085211,
-          "high": 42960.051117555624
+          "low": 40396.41325756845,
+          "high": 43019.34972052004
         },
         "upside": {
-          "low": 0.42662571004138417,
-          "high": 0.5194081925414555
+          "low": 0.42873762149126926,
+          "high": 0.5215054615345451
         },
         "expected_12m": {
-          "low": 0.3549525907544316,
-          "high": 0.432147616194491,
+          "low": 0.356709701080736,
+          "high": 0.43389254399674154,
           "share": 0.832,
           "source": "calibrated_on_published_claims",
           "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
@@ -989,10 +1006,10 @@
       },
       "out_of_scope_reason": null,
       "measured_growth_diagnostic": {
-        "book_growth": 0.1026,
+        "book_growth": 0.10232,
         "convexity": {
-          "book_growth": 0.1026,
-          "discount": 0.1026,
+          "book_growth": 0.10232,
+          "discount": 0.10232,
           "growth_over_discount": 1,
           "printed_domain": {
             "low": 1.7686871045010335,
@@ -1005,16 +1022,16 @@
           "distance_from_domain": 0.7686871045010335
         },
         "range": {
-          "low": 18601.157993275065,
-          "high": 19689.12271874727
+          "low": 18654.233157042458,
+          "high": 19744.02252861324
         },
         "upside": {
-          "low": -0.342115497758555,
-          "high": -0.30363643467375667
+          "low": -0.3402383389435437,
+          "high": -0.30169474189850676
         },
         "expected_12m": {
-          "low": -0.28464009413511776,
-          "high": -0.25262551364856556,
+          "low": -0.28307829800102835,
+          "high": -0.2510100252595576,
           "share": 0.832,
           "source": "calibrated_on_published_claims",
           "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
@@ -1208,9 +1225,9 @@
           },
           {
             "id": "risk_free",
-            "as_of": "2026-07-31",
+            "as_of": "2026-08-03",
             "max_age_days": 45,
-            "age_days": 5,
+            "age_days": 2,
             "status": "passed"
           },
           {
@@ -1243,10 +1260,10 @@
           0.05,
           0.055
         ],
-        "book_growth": 0.26238486296164143,
+        "book_growth": 0.26166880290677536,
         "book_growth_uncapped": 0.2725045873542938,
         "book_growth_capped": true,
-        "book_growth_ceiling": 0.26238486296164143,
+        "book_growth_ceiling": 0.26166880290677536,
         "payout": 0.13086054334383745,
         "payout_band": {
           "low": 0.13075689047365152,
@@ -1267,16 +1284,16 @@
           "start_book": 977.786449095424,
           "end_book": 3341.5223546454204
         },
-        "risk_free": 0.0475,
-        "risk_free_as_of": "2026-07-31",
+        "risk_free": 0.047,
+        "risk_free_as_of": "2026-08-03",
         "risk_free_series": "DGS10",
-        "discount": 0.1026
+        "discount": 0.10232
       },
       "value": {
-        "book_growth": 0.26238486296164143,
+        "book_growth": 0.26166880290677536,
         "convexity": {
-          "book_growth": 0.26238486296164143,
-          "discount": 0.1026,
+          "book_growth": 0.26166880290677536,
+          "discount": 0.10232,
           "growth_over_discount": 2.5573573388074213,
           "printed_domain": {
             "low": 1.7686871045010335,
@@ -1289,16 +1306,16 @@
           "distance_from_domain": 0
         },
         "range": {
-          "low": 31566.17353036182,
-          "high": 34305.98152585599
+          "low": 31630.203650610805,
+          "high": 34369.57926362156
         },
         "upside": {
-          "low": 0.2440435144986599,
-          "high": 0.3520211369522557
+          "low": 0.24656698335533656,
+          "high": 0.3545275653328748
         },
         "expected_12m": {
-          "low": 0.2718644751515072,
-          "high": 0.3921515465648129,
+          "low": 0.27467561945784497,
+          "high": 0.39494370778082255,
           "share": 1.114,
           "source": "calibrated_on_published_claims",
           "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
@@ -1310,8 +1327,8 @@
         "book_growth": 0.08533719706830833,
         "convexity": {
           "book_growth": 0.08533719706830833,
-          "discount": 0.1026,
-          "growth_over_discount": 0.8317465601199643,
+          "discount": 0.10232,
+          "growth_over_discount": 0.8340226453118486,
           "printed_domain": {
             "low": 1.7686871045010335,
             "high": 2.5573573388074213,
@@ -1320,19 +1337,19 @@
             "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
           },
           "status": "below_printed_domain",
-          "distance_from_domain": 0.9369405443810692
+          "distance_from_domain": 0.934664459189185
         },
         "range": {
-          "low": 13985.801764304397,
-          "high": 15019.057468734462
+          "low": 14045.271528154386,
+          "high": 15081.784653206856
         },
         "upside": {
-          "low": -0.44881041843061276,
-          "high": -0.4080891363062972
+          "low": -0.4464666761979602,
+          "high": -0.405617016999515
         },
         "expected_12m": {
-          "low": -0.49997480613170264,
-          "high": -0.4546112978452151,
+          "low": -0.49736387728452774,
+          "high": -0.45185735693745976,
           "share": 1.114,
           "source": "calibrated_on_published_claims",
           "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
@@ -1367,9 +1384,9 @@
           },
           {
             "id": "risk_free",
-            "as_of": "2026-07-31",
+            "as_of": "2026-08-03",
             "max_age_days": 45,
-            "age_days": 5,
+            "age_days": 2,
             "status": "passed"
           },
           {
@@ -1405,7 +1422,7 @@
         "book_growth": 0.13284858137749736,
         "book_growth_uncapped": 0.13284858137749736,
         "book_growth_capped": false,
-        "book_growth_ceiling": 0.26238486296164143,
+        "book_growth_ceiling": 0.26166880290677536,
         "payout": 0.23716,
         "payout_band": {
           "low": 0.23716,
@@ -1426,17 +1443,17 @@
           "start_book": 421.0220298468893,
           "end_book": 1126.6147815058225
         },
-        "risk_free": 0.0475,
-        "risk_free_as_of": "2026-07-31",
+        "risk_free": 0.047,
+        "risk_free_as_of": "2026-08-03",
         "risk_free_series": "DGS10",
-        "discount": 0.1026
+        "discount": 0.10232
       },
       "value": {
         "book_growth": 0.13284858137749736,
         "convexity": {
           "book_growth": 0.13284858137749736,
-          "discount": 0.1026,
-          "growth_over_discount": 1.2948204812621575,
+          "discount": 0.10232,
+          "growth_over_discount": 1.2983637742132268,
           "printed_domain": {
             "low": 1.7686871045010335,
             "high": 2.5573573388074213,
@@ -1445,20 +1462,20 @@
             "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
           },
           "status": "below_printed_domain",
-          "distance_from_domain": 0.47386662323887596
+          "distance_from_domain": 0.4703233302878067
         },
         "range": {
-          "low": 2906.871542376368,
-          "high": 3475.313949378715
+          "low": 2924.4431598830797,
+          "high": 3495.3581898432367
         },
         "upside": {
-          "low": -0.008346853647303143,
-          "high": 0.18557217346022248
+          "low": -0.0023524539867003647,
+          "high": 0.1924100862586131
         },
         "expected_12m": {
-          "low": -0.014640362963740603,
-          "high": 0.32549318464517424,
-          "share": 1.7539978035281456,
+          "low": -0.003943127004719843,
+          "high": 0.3225131761964822,
+          "share": 1.6761760387290772,
           "source": "rule",
           "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
         },
@@ -1469,8 +1486,8 @@
         "book_growth": 0.0680591835425699,
         "convexity": {
           "book_growth": 0.0680591835425699,
-          "discount": 0.1026,
-          "growth_over_discount": 0.663344868835964,
+          "discount": 0.10232,
+          "growth_over_discount": 0.6651601206271491,
           "printed_domain": {
             "low": 1.7686871045010335,
             "high": 2.5573573388074213,
@@ -1479,20 +1496,20 @@
             "source": "scripts/fixtures/fenok-rim-2025-12-09-grid.json"
           },
           "status": "below_printed_domain",
-          "distance_from_domain": 1.1053422356650695
+          "distance_from_domain": 1.1035269838738844
         },
         "range": {
-          "low": 2421.8638866657584,
-          "high": 2761.166508797956
+          "low": 2434.110960201179,
+          "high": 2774.457105077183
         },
         "upside": {
-          "low": -0.17380286392472577,
-          "high": -0.05805281859315625
+          "low": -0.1696248846683448,
+          "high": -0.05351885091516784
         },
         "expected_12m": {
-          "low": -0.256052808092599,
-          "high": -0.08552555972211005,
-          "share": 1.4732369899468156,
+          "low": -0.25618892591850373,
+          "high": -0.08083092854658311,
+          "share": 1.510326308662855,
           "source": "rule",
           "basis": "least squares of log(required scale) on log(band midpoint) across the seven dated RIM claims"
         },
@@ -1526,9 +1543,9 @@
           },
           {
             "id": "risk_free",
-            "as_of": "2026-07-31",
+            "as_of": "2026-08-03",
             "max_age_days": 45,
-            "age_days": 5,
+            "age_days": 2,
             "status": "passed"
           },
           {
@@ -1564,7 +1581,7 @@
         "book_growth": 0.3803399664257504,
         "book_growth_uncapped": 0.3803399664257504,
         "book_growth_capped": false,
-        "book_growth_ceiling": 1.7040141973399467,
+        "book_growth_ceiling": 1.6993638661971087,
         "payout": 0.059593042414697206,
         "payout_band": {
           "low": 0.05954583957011505,
@@ -1585,10 +1602,10 @@
           "start_book": 158.23877412472117,
           "end_book": 1086.183452408389
         },
-        "risk_free": 0.0475,
-        "risk_free_as_of": "2026-07-31",
+        "risk_free": 0.047,
+        "risk_free_as_of": "2026-08-03",
         "risk_free_series": "DGS10",
-        "discount": 0.1026
+        "discount": 0.10232
       },
       "value": null,
       "out_of_scope_reason": "published claims name SOXX, a different index; measured bridge fails on price and payout",
