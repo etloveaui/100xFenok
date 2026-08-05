@@ -12,15 +12,28 @@
       "run_id": "29875696340",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 653,
+      "natural": true,
+      "observed_at": "2026-08-05T21:19:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31047972318",
+      "schedule": "7 20 * * 0-5",
+      "shard": "46/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-21T23:08:02Z",
-    "history_as_of": "2026-07-21",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BAMU.json",
-    "payload_sha256": "ca3baa49a371ccff0db779d4f78f9256890368cf5b22fadc8b9cb074d151c776",
-    "quote_as_of": "2026-07-21T19:37:10Z",
-    "source_as_of": "2026-07-21"
+    "fetched_at": "2026-08-05T21:20:20Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/BAMU.json",
+    "payload_sha256": "16ae4324a3b30186e5f181f4552b6b5904026f249b78661e15dba739419a593e",
+    "quote_as_of": "2026-08-05T19:35:06Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1102,
+    "latency_ms": 653,
     "natural": true,
-    "observed_at": "2026-07-21T23:04:26Z",
+    "observed_at": "2026-08-05T21:19:22Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29875696340",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "31047972318",
+    "schedule": "7 20 * * 0-5",
+    "shard": "46/72"
   },
   "lkg": {
     "fetched_at": "2026-07-21T23:08:02Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-21",
-    "observed_at": "2026-07-21T23:04:26Z",
-    "payload_sha256": "74dcbdeee2e5d9d372de0f00671302bb9ad834074838d16e7f66204f969dcbd3",
-    "quote_as_of": "2026-07-21T19:37:10Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-05T21:19:22Z",
+    "payload_sha256": "229bafb2654b580879ef30ab3ecd459fe955ddc82adb783267fac49fa964bd10",
+    "quote_as_of": "2026-08-05T19:35:06Z",
     "run_attempt": 1,
-    "run_id": "29875696340",
+    "run_id": "31047972318",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-21"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-21"
   },
   "ticker": "BAMU",
-  "updated_at": "2026-07-30T00:35:13Z"
+  "updated_at": "2026-08-05T21:19:22Z"
 }
