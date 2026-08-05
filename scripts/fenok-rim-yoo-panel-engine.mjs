@@ -117,7 +117,7 @@ export function readRiskFree(root, id, asOf) {
 
 export const VERIFIED_STRUCTURE = Object.freeze({
   horizon: 9,
-  discount: Object.freeze({ equation: "d(Rf) = 0.076 + 0.560 * Rf", intercept: 0.076, slope: 0.56 }),
+  discount: Object.freeze({ intercept: 0.076, slope: 0.56, get equation() { return `d(Rf) = ${this.intercept} + ${this.slope} * Rf`; } }),
   cost_of_equity: "Ke = Rf + ERP",
   residual_income: "RI_t = (LTROE - Ke) * B_(t-1)",
   book_roll_forward: "B_t = B_(t-1) * (1 + g); Yoo sets g = LTROE * (1 - dividend payout)",
@@ -202,15 +202,20 @@ export const FROZEN_CALIBRATION = Object.freeze({
   // imply. That agreement is the bridge, and it is what stops the rule from
   // damping a semiconductor peak into nothing.
   lt_roe_rule: Object.freeze({
-    equation: "LTROE_centre = median_260w + 0.045841 + 0.544243 * max(forward_ROE - median_260w, 0)",
+    // Only the two parameters are literals. The equation, the observation
+    // count and the residual are outputs of `runLtRoeCalibration`, and every
+    // one of them was a place a value could be edited without the other
+    // agreeing. They are derived now; the test still asserts these literals
+    // reproduce the refit.
     anchor: "the index's own rolling 260-week median forward ROE",
     intercept: 0.045841,
     gap_coefficient: 0.544243,
-    observations: 7,
+    get equation() {
+      return `LTROE_centre = median_260w + ${this.intercept} + ${this.gap_coefficient} * max(forward_ROE - median_260w, 0)`;
+    },
     fit_dates: Object.freeze(["2025-12-09", "2026-08-03"]),
     fit_observables: "printed LTROE axis centres only: three from the 2025-12-09 index sheets and four from the 2026-08-03 Samsung and SK Hynix scenarios. No published upside is inverted into the fit, which leaves both two-sided claims free to evaluate it.",
     cross_family_bridge: "the stock sheets contribute the large-gap regime only; their implied gap share of 0.622~0.756 brackets the share the index rows imply, which is the measured agreement that licenses the transfer",
-    max_abs_residual_pp: 2.34,
     lattice_half_width: 0.005,
     lattice_note: "Yoo prints a +/-0.5pp LTROE axis; the same half width is retained",
   }),
