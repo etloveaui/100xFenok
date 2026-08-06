@@ -16,18 +16,52 @@
 // The 50 line is not decoration. It is the index's own median, and "which side
 // of its own median" is the one claim every row can make honestly.
 
-import type { BenchmarkOrdinalGroup, BenchmarkOrdinalRow } from "@/lib/market-valuation/benchmarkOrdinals";
+import type { BenchmarkOrdinalGroup, BenchmarkOrdinalRow, BenchmarkWindowId } from "@/lib/market-valuation/benchmarkOrdinals";
 
 const VIEW_W = 720;
 const NAME_W = 150;
 const VALUE_W = 74;
-const ROW_H = 19;
+const ROW_H = 28;
 const GROUP_GAP = 12;
 const HEAD_H = 24;
 const AXIS_H = 22;
 const DOT_R = 4.5;
 
 const PE = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 1 });
+
+/**
+ * Trailing-window readout for one row: "10y 56 · 5y 37 · 3y 17". A window the
+ * data cannot span is REFUSED and shows its ACTUAL held span instead of a
+ * number ("10y 6y" = the 10y window holds only ~6y) — missing is missing,
+ * never substituted. A dash means the window exists but is too short to rank.
+ */
+function windowReadout(row: BenchmarkOrdinalRow): { text: string; hasSpan: boolean } {
+  const w = row.pe.windows;
+  const parts: string[] = [];
+  let hasSpan = false;
+  const order: Array<[BenchmarkWindowId, string]> = [
+    ["w10", "10y"], ["w5", "5y"], ["w3", "3y"],
+  ];
+  for (const [id, label] of order) {
+    const m = w[id];
+    if (m.percentile !== null) {
+      parts.push(`${label} ${m.percentile}`);
+    } else if (m.truncated && m.spanYears !== null) {
+      parts.push(`${label} ${m.spanYears}y`);
+      hasSpan = true;
+    } else {
+      parts.push(`${label} —`);
+    }
+  }
+  return { text: parts.join(" · "), hasSpan };
+}
+
+/** Windows straddle the index's own median: some percentiles ≥ 50, some < 50. */
+function windowsStraddleMedian(row: BenchmarkOrdinalRow): boolean {
+  const pcts = [row.pe.windows.w3.percentile, row.pe.windows.w5.percentile, row.pe.windows.w10.percentile]
+    .filter((p): p is number => p !== null);
+  return pcts.some((p) => p >= 50) && pcts.some((p) => p < 50);
+}
 
 // §H rule 2: no raw index ids reach users. The benchmark payload names carry
 // their Bloomberg ticker in parentheses — and one of them carries a typo in the
@@ -114,7 +148,7 @@ export default function OrdinalStrip({ groups, highlightIds = [] }: OrdinalStrip
   return (
     <div className="mv-ordinal">
       <svg viewBox={`0 0 ${VIEW_W} ${height}`} width="100%" height={height} role="img"
-        aria-label="지수별 선행 PER의 자기 역사 내 백분위">
+        aria-label="지수별 선행 PER 백분위 — 자기 역사 전체와 10년·5년·3년 창, 창이 중앙값을 가로지르는 지수 표시">
         {ticks.map((tick) => (
           <g key={tick}>
             <line
@@ -137,6 +171,9 @@ export default function OrdinalStrip({ groups, highlightIds = [] }: OrdinalStrip
         <text x={x(100)} y={HEAD_H - 14} textAnchor="end" fontSize={10} fontWeight={800} fill="var(--c-chart-ord-rich)">
           역사상 고평가
         </text>
+        <text x={VIEW_W - 6} y={HEAD_H - 14} textAnchor="end" fontSize={8.5} fill="var(--c-ink-3)">
+          행 아래 10y·5y·3y = 창 백분위 · ⇅ = 창이 중앙값을 가로지름 · 이탤릭 "10y 6y" = 10년 창에 보유 약 6년
+        </text>
 
         {placed.map(({ group, rows, top }) => (
           <g key={group.id}>
@@ -147,26 +184,39 @@ export default function OrdinalStrip({ groups, highlightIds = [] }: OrdinalStrip
               const y = top + 14 + index * ROW_H + ROW_H / 2;
               const pct = row.pe.percentile as number;
               const marked = highlight.has(row.id);
+              const straddle = windowsStraddleMedian(row);
+              const windows = windowReadout(row);
+              const titleText = `${displayName(row)} · 선행 PER ${PE.format(row.pe.current ?? 0)} · 자기 역사 ${pct}번째 백분위 · ${row.points}주 기준 · 창 10y/5y/3y: ${windows.text}${straddle ? " · 창이 중앙값을 가로지름" : ""}`;
               return (
                 <g key={row.id}>
-                  <title>{`${displayName(row)} · 선행 PER ${PE.format(row.pe.current ?? 0)} · 자기 역사 ${pct}번째 백분위 · ${row.points}주 기준`}</title>
+                  <title>{titleText}</title>
                   <text
-                    x={NAME_W - 10} y={y + 3} textAnchor="end" fontSize={10.5}
+                    x={NAME_W - 10} y={y - 6} textAnchor="end" fontSize={10.5}
                     fontWeight={marked ? 800 : 600}
                     fill={marked ? "var(--c-ink)" : "var(--c-ink-2)"}
                   >
-                    {displayName(row)}
+                    {straddle ? "⇅ " : ""}{displayName(row)}
+                  </text>
+                  {/* Trailing-window readout (10y/5y/3y) under the name; a span
+                      figure like "10y 6y" is the ACTUAL data held for a refused
+                      window, never a percentile. */}
+                  <text
+                    x={NAME_W - 10} y={y + 10} textAnchor="end" fontSize={8.5}
+                    fill={windows.hasSpan ? "var(--c-ink-3)" : "var(--c-ink-3)"}
+                    fontStyle={windows.hasSpan ? "italic" : undefined}
+                  >
+                    {windows.text}
                   </text>
                   {/* A hairline from the median to the dot: the eye reads the
                       direction and the distance without needing the colour. */}
                   <line
-                    x1={x(50)} x2={x(pct)} y1={y} y2={y}
+                    x1={x(50)} x2={x(pct)} y1={y - 9} y2={y - 9}
                     stroke="var(--c-line)" strokeWidth={1.5}
                   />
-                  <circle cx={x(pct)} cy={y} r={DOT_R + 1.5} fill="var(--c-panel)" />
-                  <circle cx={x(pct)} cy={y} r={DOT_R} fill={dotColor(pct)} />
+                  <circle cx={x(pct)} cy={y - 9} r={DOT_R + 1.5} fill="var(--c-panel)" />
+                  <circle cx={x(pct)} cy={y - 9} r={DOT_R} fill={dotColor(pct)} />
                   <text
-                    x={VIEW_W - 6} y={y + 3} textAnchor="end" fontSize={10}
+                    x={VIEW_W - 6} y={y - 6} textAnchor="end" fontSize={10}
                     fontWeight={marked ? 800 : 600} fill="var(--c-ink-2)"
                   >
                     {PE.format(row.pe.current ?? 0)}배 · {pct}

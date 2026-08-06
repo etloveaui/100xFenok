@@ -17,6 +17,22 @@
 
 export const BENCHMARK_ORDINAL_MIN_HISTORY = 52;
 
+/**
+ * Trailing windows added to the forward-PE reading (owner ruling 2026-08-06):
+ * 3y / 5y / 10y, each trailing from the section's OWN as-of date, plus the
+ * existing all-history percentile. A window whose data does not span its full
+ * requested length is REFUSED (percentile null, truncated true, spanYears
+ * states the actual span) — missing is missing; the all-history percentile is
+ * never substituted and the window is never silently shortened.
+ */
+export const BENCHMARK_ORDINAL_WINDOWS = [
+  { id: "w3", years: 3 },
+  { id: "w5", years: 5 },
+  { id: "w10", years: 10 },
+] as const;
+
+export type BenchmarkWindowId = (typeof BENCHMARK_ORDINAL_WINDOWS)[number]["id"];
+
 export const BENCHMARK_ORDINAL_GROUPS = [
   { id: "us", file: "/data/benchmarks/us.json", label: "미국 지수" },
   { id: "us_sectors", file: "/data/benchmarks/us_sectors.json", label: "미국 섹터" },
@@ -35,6 +51,25 @@ export interface OrdinalMetric {
   percentile: number | null;
   /** Population z-score of `current` within the history. */
   zScore: number | null;
+  /**
+   * Trailing-window percentiles of `current` (3y/5y/10y from the section's own
+   * as-of). A window that cannot span its full length carries percentile null,
+   * truncated true and the ACTUAL span in spanYears — never a substituted or
+   * silently shortened number.
+   */
+  windows: Record<BenchmarkWindowId, WindowedMetric>;
+}
+
+/** One trailing window's reading of the metric. */
+export interface WindowedMetric {
+  /** Percentile of `current` within the window (same strict-below definition); null when the window is refused or the history is too short to rank. */
+  percentile: number | null;
+  /** True when the section's data does not reach back the full window length. */
+  truncated: boolean;
+  /** Actual data span behind the window in years (asOf − earliest dated row), rounded to 1 decimal; equals the requested length when not truncated. */
+  spanYears: number | null;
+  /** Observations inside the window (PE rows strictly after asOf − window, at or before asOf). */
+  points: number;
 }
 
 export interface BenchmarkOrdinalRow {
@@ -134,14 +169,70 @@ function lastFinite(values: readonly number[]): number | null {
   return null;
 }
 
+const YEAR_MS = 365.25 * 86_400_000;
+const msOfDay = (iso: string): number => Date.parse(`${iso}T00:00:00Z`);
+
+/**
+ * Trailing-window percentile, computed from the DATA per index per window:
+ * the window holds the section's PE rows strictly after (asOf − window) and at
+ * or before asOf; the requested length is compared against the section's
+ * EARLIEST dated row — a window whose data cannot span its full length is
+ * refused (percentile null) and reports the ACTUAL span instead. This is never
+ * a hard-coded list: a new section or a backfill re-derives the refusal on its
+ * own.
+ */
+export function windowedMetricFromRows(
+  rows: readonly RawRow[],
+  asOfMs: number,
+  years: number,
+  current: number | null,
+): WindowedMetric {
+  const windowStartMs = asOfMs - years * YEAR_MS;
+  // The window's DATA is the PE series: the span held is measured from the
+  // earliest FINITE PE observation, not from the section's first dated row —
+  // a section can carry rows back to 2010 while its forward-PE history starts
+  // in 2016, and the window must refuse on the metric's own span.
+  let peDataStartMs: number | null = null;
+  const windowValues: number[] = [];
+  for (const row of rows) {
+    if (!isIsoDay(row.date)) continue;
+    if (!isFiniteNumber(row.best_pe_ratio)) continue;
+    const rowMs = msOfDay(row.date);
+    if (peDataStartMs === null || rowMs < peDataStartMs) peDataStartMs = rowMs;
+    if (rowMs > windowStartMs && rowMs <= asOfMs) {
+      windowValues.push(row.best_pe_ratio);
+    }
+  }
+  const truncated = peDataStartMs !== null && peDataStartMs > windowStartMs;
+  const spanYears = truncated && peDataStartMs !== null ? (asOfMs - peDataStartMs) / YEAR_MS : years;
+  const enough = windowValues.length >= BENCHMARK_ORDINAL_MIN_HISTORY;
+  return {
+    percentile: truncated || !enough ? null : percentileRank(windowValues, current),
+    truncated,
+    spanYears: Math.round(spanYears * 10) / 10,
+    points: windowValues.length,
+  };
+}
+
+function windowedMetrics(rows: readonly RawRow[], asOfMs: number, current: number | null): Record<BenchmarkWindowId, WindowedMetric> {
+  return Object.fromEntries(
+    BENCHMARK_ORDINAL_WINDOWS.map((w) => [w.id, windowedMetricFromRows(rows, asOfMs, w.years, current)]),
+  ) as Record<BenchmarkWindowId, WindowedMetric>;
+}
+
 function metricFromSeries(values: readonly number[]): OrdinalMetric {
   const clean = values.filter(isFiniteNumber);
   const current = lastFinite(values);
   const enough = clean.length >= BENCHMARK_ORDINAL_MIN_HISTORY;
+  // Windows are computed for the forward-PE metric only (owner ruling scope:
+  // the 38-index forward-PE panel). pb/roe carry an explicit "not computed"
+  // placeholder — spanYears null, never a fake number.
+  const notComputed = (): WindowedMetric => ({ percentile: null, truncated: false, spanYears: null, points: 0 });
   return {
     current,
     percentile: enough ? percentileRank(clean, current) : null,
     zScore: enough ? zScorePopulation(clean, current) : null,
+    windows: { w3: notComputed(), w5: notComputed(), w10: notComputed() },
   };
 }
 
@@ -196,6 +287,11 @@ function buildGroup(
     const pbSeries = data.map((row) => row.px_to_book_ratio);
     const roeSeries = data.map((row) => row.roe);
     const pe = metricFromSeries(peSeries as unknown[] as readonly number[]);
+    // Forward-PE windows, trailing from the section's own as-of date, computed
+    // from the DATA per index per window (truncation refusal included).
+    if (asOf !== null && pe.current !== null) {
+      pe.windows = windowedMetrics(data, msOfDay(asOf), pe.current);
+    }
     const pb = metricFromSeries(pbSeries as unknown[] as readonly number[]);
     const roe = metricFromSeries(roeSeries as unknown[] as readonly number[]);
     const price = lastFinite(data.map((row) => row.px_last) as unknown[] as number[]);

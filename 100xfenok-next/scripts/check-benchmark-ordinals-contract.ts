@@ -164,6 +164,66 @@ if (badClockView.status !== "ready") throw new Error("unreachable");
 const badClock = badClockView.groups.find((g) => g.id === "msci")?.rows.find((r) => r.id === "badclock");
 assert(badClock?.asOf === longDates[longDates.length - 2], "an impossible calendar day must never become the as-of");
 
+// --- trailing windows: boundary, truncation refusal, definition ----------------
+
+// A ~6y weekly series: 3y/5y windows must rank, the 10y window must be REFUSED
+// (data cannot span it) and state the ACTUAL span instead of a number.
+const sixYDates = weeklyDates(6 * 52 + 1);
+const sixYFixture = payload({ sp500: { name: "S&P 500", data: rows(sixYDates, 15, 0.1) } });
+const sixYView = readBenchmarkOrdinals({ us: sixYFixture });
+assert(sixYView.status === "ready", "6y fixture must be ready");
+if (sixYView.status !== "ready") throw new Error("unreachable");
+const sixYRow = sixYView.groups.find((g) => g.id === "us")?.rows.find((r) => r.id === "sp500");
+assert(sixYRow !== undefined, "6y fixture must yield a row");
+const w6 = sixYRow!.pe.windows;
+// Ramp: PE strictly increasing; current = last (the max). Window percentiles
+// must use the SAME strict-below definition as all-history.
+assert(w6.w3.percentile !== null, "3y window must rank on a 6y series");
+assert(w6.w5.percentile !== null, "5y window must rank on a 6y series");
+assert(
+  w6.w3.percentile === Math.round(((3 * 52) / (3 * 52 + 1)) * 100),
+  "3y window percentile must count strictly-below values inside the window only",
+);
+assert(w6.w10.truncated === true, "10y window on a 6y series must be refused (truncated)");
+assert(w6.w10.percentile === null, "a refused window must never print a percentile");
+assert(w6.w10.spanYears !== null && w6.w10.spanYears < 10 && w6.w10.spanYears >= 5.9, `refused window must state the actual span (~6y), got ${w6.w10.spanYears}`);
+
+// A full ~10y weekly series: the 10y window must rank (not truncated).
+const tenYDates = weeklyDates(10 * 52 + 6);
+const tenYFixture = payload({ sp500: { name: "S&P 500", data: rows(tenYDates, 15, 0.1) } });
+const tenYView = readBenchmarkOrdinals({ us: tenYFixture });
+assert(tenYView.status === "ready", "10y fixture must be ready");
+if (tenYView.status !== "ready") throw new Error("unreachable");
+const tenYRow = tenYView.groups.find((g) => g.id === "us")?.rows.find((r) => r.id === "sp500");
+assert(tenYRow !== undefined, "10y fixture must yield a row");
+const w10 = tenYRow!.pe.windows;
+assert(w10.w10.truncated === false, "a full 10y series must NOT be refused");
+assert(w10.w10.percentile !== null, "a full 10y series must rank its 10y window");
+assert(w10.w10.spanYears === 10, "a non-refused window reports its requested length");
+assert(
+  w10.w10.percentile === Math.round(((10 * 52 + 5) / (10 * 52 + 6)) * 100),
+  "10y window percentile must count strictly-below values inside the window",
+);
+
+// Boundary: a series ending exactly one weekly step short of the window start
+// must refuse; a series with one extra early row must not. The refusal is
+// derived from the DATA (earliest dated row vs window start), never a list.
+const boundaryShort = readBenchmarkOrdinals({ us: payload({ sp500: { data: rows(weeklyDates(10 * 52), 15, 0.1) } }) });
+if (boundaryShort.status === "ready") {
+  const r = boundaryShort.groups.find((g) => g.id === "us")?.rows.find((x) => x.id === "sp500");
+  assert(r?.pe.windows.w10.truncated === true, "a series short of the 10y start by one weekly step must refuse the 10y window");
+}
+const boundaryLong = readBenchmarkOrdinals({ us: payload({ sp500: { data: rows(weeklyDates(10 * 52 + 8), 15, 0.1) } }) });
+if (boundaryLong.status === "ready") {
+  const r = boundaryLong.groups.find((g) => g.id === "us")?.rows.find((x) => x.id === "sp500");
+  assert(r?.pe.windows.w10.truncated === false, "a series reaching past the 10y start must not refuse the 10y window");
+}
+
+// Determinism: identical inputs must produce an identical view.
+const detA = readBenchmarkOrdinals({ us: usFixture, emerging: payload({ kospi: { name: "KOSPI", data: rows(longDates, 9, 0.05) } }) });
+const detB = readBenchmarkOrdinals({ us: usFixture, emerging: payload({ kospi: { name: "KOSPI", data: rows(longDates, 9, 0.05) } }) });
+assert(JSON.stringify(detA) === JSON.stringify(detB), "readBenchmarkOrdinals must be deterministic");
+
 // --- live structural invariants (no exact values: the estate refreshes weekly) ---------
 
 const ROOT = path.join(path.dirname(new URL(import.meta.url).pathname), "..");
@@ -185,6 +245,48 @@ for (const row of liveUsGroup?.rows ?? []) {
     }
   }
   assert(row.spxPremium === null, "live us rows carry no sector premium");
+}
+
+// --- live window invariants across ALL six benchmark files (data-derived) -------------
+
+const LIVE_BENCH_FILES = [
+  "public/data/benchmarks/us.json",
+  "public/data/benchmarks/us_sectors.json",
+  "public/data/benchmarks/developed.json",
+  "public/data/benchmarks/emerging.json",
+  "public/data/benchmarks/msci.json",
+  "public/data/benchmarks/micro_sectors.json",
+] as const;
+const livePayloads: Partial<Record<BenchmarkGroupId, unknown>> = {};
+for (const file of LIVE_BENCH_FILES) {
+  livePayloads[file.split("/").pop()!.replace(".json", "") as BenchmarkGroupId] = JSON.parse(fs.readFileSync(path.join(ROOT, file), "utf8"));
+}
+const liveAllView = readBenchmarkOrdinals(livePayloads);
+assert(liveAllView.status === "ready", "all six live benchmark files must read as ready");
+if (liveAllView.status !== "ready") throw new Error("unreachable");
+
+const liveRows = liveAllView.groups.flatMap((g) => g.rows);
+assert(liveRows.length === 38, `live benchmark estate must yield 38 index rows, got ${liveRows.length}`);
+const shortAt10y = liveRows
+  .filter((r) => r.pe.windows.w10.truncated)
+  .map((r) => ({ id: r.id, spanYears: r.pe.windows.w10.spanYears }));
+const expectedShort = ["hang_seng_tech", "real_estate", "us_regional_banks", "과창판_(star50_index)"];
+assert(
+  shortAt10y.map((s) => s.id).sort().join("|") === [...expectedShort].sort().join("|"),
+  `live 10y-truncated set must be exactly the four short sections, got ${JSON.stringify(shortAt10y)}`,
+);
+for (const row of liveRows) {
+  const w10m = row.pe.windows.w10;
+  if (w10m.truncated) {
+    assert(w10m.percentile === null, `live ${row.id}: a refused 10y window must not print a percentile`);
+    assert(w10m.spanYears !== null && w10m.spanYears < 10, `live ${row.id}: a refused window must state a span under 10y`);
+  } else {
+    assert(w10m.spanYears === 10, `live ${row.id}: a non-refused 10y window must report 10y`);
+  }
+  for (const id of ["w3", "w5", "w10"] as const) {
+    const p = row.pe.windows[id].percentile;
+    if (p !== null) assert(p >= 0 && p <= 100, `live ${row.id} ${id}: percentile must stay within 0–100`);
+  }
 }
 
 console.log("benchmark ordinals contract: ok");
