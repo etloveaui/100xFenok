@@ -25,15 +25,28 @@
       "run_id": "30051682457",
       "schedule": "0 22 * * 4",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1381,
+      "natural": true,
+      "observed_at": "2026-08-06T10:49:28Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31094670683",
+      "schedule": "7 8 * * 0-5",
+      "shard": "52/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-23T23:20:28Z",
-    "history_as_of": "2026-07-23",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DIA.json",
-    "payload_sha256": "350340ad951562330d19ea6b5d1671503a5cab3c536863aeb6f1105ddcdb7237",
-    "quote_as_of": "2026-07-23T20:00:00Z",
-    "source_as_of": "2026-07-23"
+    "fetched_at": "2026-08-06T10:50:23Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/DIA.json",
+    "payload_sha256": "24c78cb1221aebc13d711f9385f38e1048638f28c003a0408354b1c28ad7793d",
+    "quote_as_of": "2026-08-05T20:00:00Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "major_etf_configuration",
@@ -43,14 +56,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1027,
+    "latency_ms": 1381,
     "natural": true,
-    "observed_at": "2026-07-23T23:19:22Z",
+    "observed_at": "2026-08-06T10:49:28Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30051682457",
-    "schedule": "0 22 * * 4",
-    "shard": "4/6"
+    "run_id": "31094670683",
+    "schedule": "7 8 * * 0-5",
+    "shard": "52/72"
   },
   "lkg": {
     "fetched_at": "2026-07-23T23:20:28Z",
@@ -63,17 +76,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-23",
-    "observed_at": "2026-07-23T23:19:22Z",
-    "payload_sha256": "a7db42048148c93a0506fc7ea6aed3831b400f00a19d14a0897e098346ef6b12",
-    "quote_as_of": "2026-07-23T20:00:00Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T10:49:28Z",
+    "payload_sha256": "91fe588233b995e6de30a6c8b0eb6867cb838f718333c262149c283f5453a3e1",
+    "quote_as_of": "2026-08-05T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30051682457",
+    "run_id": "31094670683",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-23"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -86,5 +99,5 @@
     "source_as_of": "2026-07-23"
   },
   "ticker": "DIA",
-  "updated_at": "2026-08-03T22:58:08Z"
+  "updated_at": "2026-08-06T10:49:28Z"
 }

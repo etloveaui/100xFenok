@@ -12,15 +12,28 @@
       "run_id": "30051682457",
       "schedule": "0 22 * * 4",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1113,
+      "natural": true,
+      "observed_at": "2026-08-06T10:49:28Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31094670683",
+      "schedule": "7 8 * * 0-5",
+      "shard": "52/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-23T23:21:55Z",
-    "history_as_of": "2026-07-23",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DFLV.json",
-    "payload_sha256": "384d8148bda02c33ac68839dcc1483a86fac31881798898627036d66c2600523",
-    "quote_as_of": "2026-07-23T19:59:54Z",
-    "source_as_of": "2026-07-23"
+    "fetched_at": "2026-08-06T10:50:08Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/DFLV.json",
+    "payload_sha256": "328dad66c63e8051ea931cfb02a7510a5abaf03af8751ffbc384f3d20760157b",
+    "quote_as_of": "2026-08-05T20:00:00Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 665,
+    "latency_ms": 1113,
     "natural": true,
-    "observed_at": "2026-07-23T23:19:22Z",
+    "observed_at": "2026-08-06T10:49:28Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30051682457",
-    "schedule": "0 22 * * 4",
-    "shard": "4/6"
+    "run_id": "31094670683",
+    "schedule": "7 8 * * 0-5",
+    "shard": "52/72"
   },
   "lkg": {
     "fetched_at": "2026-07-23T23:21:55Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-23",
-    "observed_at": "2026-07-23T23:19:22Z",
-    "payload_sha256": "bfcf010c9076669b7fd7e2c0370ddb5d380edaf8d37cad1902a8540a37cf5643",
-    "quote_as_of": "2026-07-23T19:59:54Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T10:49:28Z",
+    "payload_sha256": "ba8db11c1fa683cc7d7dfd6d8f5721f05d7a20e1f41665008da8ba35bb58eb19",
+    "quote_as_of": "2026-08-05T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30051682457",
+    "run_id": "31094670683",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-23"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-23"
   },
   "ticker": "DFLV",
-  "updated_at": "2026-08-03T22:58:08Z"
+  "updated_at": "2026-08-06T10:49:28Z"
 }

@@ -12,15 +12,28 @@
       "run_id": "30051682457",
       "schedule": "0 22 * * 4",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1032,
+      "natural": true,
+      "observed_at": "2026-08-06T10:49:28Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31094670683",
+      "schedule": "7 8 * * 0-5",
+      "shard": "52/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-23T23:22:15Z",
-    "history_as_of": "2026-07-23",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DMAX.json",
-    "payload_sha256": "ebca36dfc197b90f700d85efe17005f31fb89f5995859fa6f7031ee7edd9846e",
-    "quote_as_of": "2026-07-23T19:43:05Z",
-    "source_as_of": "2026-07-23"
+    "fetched_at": "2026-08-06T10:50:36Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/DMAX.json",
+    "payload_sha256": "449d1e8d55ba93ea73f97587a691aabd040b9ddd4f87eb6537c6324ec0e29d46",
+    "quote_as_of": "2026-08-05T19:27:28Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 668,
+    "latency_ms": 1032,
     "natural": true,
-    "observed_at": "2026-07-23T23:19:22Z",
+    "observed_at": "2026-08-06T10:49:28Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30051682457",
-    "schedule": "0 22 * * 4",
-    "shard": "4/6"
+    "run_id": "31094670683",
+    "schedule": "7 8 * * 0-5",
+    "shard": "52/72"
   },
   "lkg": {
     "fetched_at": "2026-07-23T23:22:15Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-23",
-    "observed_at": "2026-07-23T23:19:22Z",
-    "payload_sha256": "df75623a500ad51e59b867a05cac033482c3cd668e24de4db0deb14ed8217804",
-    "quote_as_of": "2026-07-23T19:43:05Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T10:49:28Z",
+    "payload_sha256": "547fd846ee0388ad0a7364a463915ed528aff88bb056e99e9de02f0de68422cf",
+    "quote_as_of": "2026-08-05T19:27:28Z",
     "run_attempt": 1,
-    "run_id": "30051682457",
+    "run_id": "31094670683",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-23"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-23"
   },
   "ticker": "DMAX",
-  "updated_at": "2026-08-03T22:58:08Z"
+  "updated_at": "2026-08-06T10:49:28Z"
 }

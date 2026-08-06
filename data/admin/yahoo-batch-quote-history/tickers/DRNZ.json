@@ -12,15 +12,28 @@
       "run_id": "30051682457",
       "schedule": "0 22 * * 4",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1019,
+      "natural": true,
+      "observed_at": "2026-08-06T10:49:28Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31094670683",
+      "schedule": "7 8 * * 0-5",
+      "shard": "52/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-23T23:22:25Z",
-    "history_as_of": "2026-07-23",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DRNZ.json",
-    "payload_sha256": "8465fcecaef59ebd010863084a5593ac6d9f46e9c34ae92ba4e3b843e8e772ba",
-    "quote_as_of": "2026-07-23T20:00:00Z",
-    "source_as_of": "2026-07-23"
+    "fetched_at": "2026-08-06T10:50:52Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/DRNZ.json",
+    "payload_sha256": "f6705cf93d1c6ec14ddfaafae6cbb7b466e692076eb010c3118dcf730cc69e6b",
+    "quote_as_of": "2026-08-05T20:00:00Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 491,
+    "latency_ms": 1019,
     "natural": true,
-    "observed_at": "2026-07-23T23:19:22Z",
+    "observed_at": "2026-08-06T10:49:28Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30051682457",
-    "schedule": "0 22 * * 4",
-    "shard": "4/6"
+    "run_id": "31094670683",
+    "schedule": "7 8 * * 0-5",
+    "shard": "52/72"
   },
   "lkg": {
     "fetched_at": "2026-07-23T23:22:25Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-23",
-    "observed_at": "2026-07-23T23:19:22Z",
-    "payload_sha256": "5985fc0a225ad6f75dac1caf0173ef3a673fe792db6f14c5a6bfe43db76d6e53",
-    "quote_as_of": "2026-07-23T20:00:00Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T10:49:28Z",
+    "payload_sha256": "e47fa361bdb04f3bd5d7a5f3dfef9328b1b7420c36d8d1f4300cc50be3614d2c",
+    "quote_as_of": "2026-08-05T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30051682457",
+    "run_id": "31094670683",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-23"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-23"
   },
   "ticker": "DRNZ",
-  "updated_at": "2026-08-03T22:58:08Z"
+  "updated_at": "2026-08-06T10:49:28Z"
 }

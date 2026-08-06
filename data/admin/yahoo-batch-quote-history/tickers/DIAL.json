@@ -12,15 +12,28 @@
       "run_id": "30051682457",
       "schedule": "0 22 * * 4",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1210,
+      "natural": true,
+      "observed_at": "2026-08-06T10:49:28Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31094670683",
+      "schedule": "7 8 * * 0-5",
+      "shard": "52/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-23T23:22:08Z",
-    "history_as_of": "2026-07-23",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DIAL.json",
-    "payload_sha256": "c92e90e9e11c97f8e3346c1a9402c939de459f47c86c8ed7d0b7e7674decab67",
-    "quote_as_of": "2026-07-23T19:58:38Z",
-    "source_as_of": "2026-07-23"
+    "fetched_at": "2026-08-06T10:50:26Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/DIAL.json",
+    "payload_sha256": "aa574222856c27e3799940e042101ac6a7f3f675bf136d60057114c370c45c83",
+    "quote_as_of": "2026-08-05T19:50:05Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 706,
+    "latency_ms": 1210,
     "natural": true,
-    "observed_at": "2026-07-23T23:19:22Z",
+    "observed_at": "2026-08-06T10:49:28Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30051682457",
-    "schedule": "0 22 * * 4",
-    "shard": "4/6"
+    "run_id": "31094670683",
+    "schedule": "7 8 * * 0-5",
+    "shard": "52/72"
   },
   "lkg": {
     "fetched_at": "2026-07-23T23:22:08Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-23",
-    "observed_at": "2026-07-23T23:19:22Z",
-    "payload_sha256": "9e14f511e9b93b3a67f579e355b2080bec74cbf0336988ff56a91dbbbe7913ff",
-    "quote_as_of": "2026-07-23T19:58:38Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T10:49:28Z",
+    "payload_sha256": "72ecaf2571607b2ce23e424706a68d717f0fd0689f682cf0f1873ad999dbf3f4",
+    "quote_as_of": "2026-08-05T19:50:05Z",
     "run_attempt": 1,
-    "run_id": "30051682457",
+    "run_id": "31094670683",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-23"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-23"
   },
   "ticker": "DIAL",
-  "updated_at": "2026-08-03T22:58:08Z"
+  "updated_at": "2026-08-06T10:49:28Z"
 }

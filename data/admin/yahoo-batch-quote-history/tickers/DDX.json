@@ -56,15 +56,59 @@
       "run_id": "30051682457",
       "schedule": "0 22 * * 4",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: DDX: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: DDX: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: DDX: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: DDX: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: DDX: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: DDX: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 1377,
+      "natural": true,
+      "observed_at": "2026-08-06T10:49:28Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31094670683",
+      "schedule": "7 8 * * 0-5",
+      "shard": "52/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-23T23:20:17Z",
-    "history_as_of": "2026-07-23",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DDX.json",
-    "payload_sha256": "a3c49fb27f2020d74e3e749322cd49209add175156988f9d79311a18360249ad",
-    "quote_as_of": "2026-07-23T16:45:00Z",
-    "source_as_of": "2026-07-23"
+    "fetched_at": "2026-08-06T10:49:51Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/DDX.json",
+    "payload_sha256": "a81f460cf97989e34fa2ce65abc7d9cc12aa1fb669b0f160f7cb99154a111528",
+    "quote_as_of": "2026-08-05T19:59:24Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -104,14 +148,14 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 806,
+    "latency_ms": 1377,
     "natural": true,
-    "observed_at": "2026-07-23T23:19:22Z",
+    "observed_at": "2026-08-06T10:49:28Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30051682457",
-    "schedule": "0 22 * * 4",
-    "shard": "4/6"
+    "run_id": "31094670683",
+    "schedule": "7 8 * * 0-5",
+    "shard": "52/72"
   },
   "lkg": {
     "fetched_at": "2026-07-23T23:20:17Z",
@@ -124,17 +168,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-23",
-    "observed_at": "2026-07-23T23:19:22Z",
-    "payload_sha256": "de779a828021ba96ae7afd0d3f657e36848479b3e3ee2734ba8e6f26193d7590",
-    "quote_as_of": "2026-07-23T16:45:00Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T10:49:28Z",
+    "payload_sha256": "44fd4e92b0e6e597fc8f1bc205f0534f2b37033f5bc160d7c67b2dbca1c8b1e1",
+    "quote_as_of": "2026-08-05T19:59:24Z",
     "run_attempt": 1,
-    "run_id": "30051682457",
+    "run_id": "31094670683",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-23"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -147,5 +191,5 @@
     "source_as_of": "2026-07-23"
   },
   "ticker": "DDX",
-  "updated_at": "2026-08-03T22:58:08Z"
+  "updated_at": "2026-08-06T10:49:28Z"
 }
