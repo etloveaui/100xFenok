@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
-// FENO RIM v2 — Phase 3B: H2 research scoring on real Family B outputs.
+// FENO RIM v2 — Phase 3B: H2 research scoring on real Family B outputs,
+// extended with the naive-baseline comparison and the SPEC v3.0 §9
+// minimum-pass check (research mode, no promotion).
 //
 // SPEC v3.0 §9, research mode only. The harness (Phase 3A) pre-froze the
 // method ids and the feasibility receipt; this module is the first consumer
@@ -14,14 +16,21 @@
 //   only, so point-in-time hulls AT HISTORICAL origin dates are not
 //   computable today — coverage therefore tests the current diagnostic band
 //   against the harness's historical 36m origins, not a walk-forward.
+// - NAIVE BASELINE (independent of any Family B output): at each origin, the
+//   trailing-10y price-per-book distribution of the index's own panel, stated
+//   precisely as
+//       baseline_level(origin) = P_q(trailing 10y px_to_book_ratio) × book(origin),
+//       book(origin) = px_last / px_to_book_ratio at the origin,
+//   with band endpoints P25/P75 and midpoint P50. The baseline IS point-in-time
+//   per origin (data ≤ origin only); the hull is current-asOf (see above).
+// - Interval coverage: realized 36m LEVEL (origin price × (1+realized return))
+//   inside the band [low, high]. Directional: sign(band midpoint − price)
+//   agrees with sign(realized return). MAE: mean |band midpoint level −
+//   realized level|. CIs: the harness's seeded 36-month moving-block
+//   bootstrap. ESS/span/regime buckets: read from the feasibility receipt.
 // - Tracker price history covers ~1y (receipt gap), so no origin carries a
 //   dividend-adjusted return; scoring falls back to raw price return with the
-//   §9 bias_unadjusted: dividend_series_absent label, and `dividend_adjusted`
-//   is reported honestly (0 today).
-// - Interval coverage: realized 36m LEVEL (origin price × (1+realized return))
-//   inside the B1 hull [low, high]. Directional: sign(band midpoint − price)
-//   agrees with sign(realized return). CIs: the harness's seeded 36-month
-//   moving-block bootstrap. ESS: read from the feasibility receipt.
+//   §9 bias_unadjusted: dividend_series_absent label.
 //
 // Deterministic for fixed inputs: no clock in the probe, seeded bootstrap,
 // sha over the body excluding generated_at (same pattern as the harness).
@@ -38,7 +47,7 @@ import { buildCcmpInput } from "../adapters/ccmp-panel.mjs";
 import { buildRutInput } from "../adapters/rut-panel.mjs";
 import { buildKospiInput } from "../adapters/kospi-panel.mjs";
 import { buildSoxInput } from "../adapters/sox-panel.mjs";
-import { readJson } from "../adapters/panel-common.mjs";
+import { quantile, readJson, shiftYears } from "../adapters/panel-common.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
@@ -91,6 +100,66 @@ export function probeLatestAsOf(build) {
   throw new Error("h2-research-scoring: no working as-of for an adapter");
 }
 
+// ---------------------------------------------------------------------------
+// naive baseline — pure panel math, no engine, no Family B output
+// ---------------------------------------------------------------------------
+
+/**
+ * Trailing-10y price-per-book band at one origin, stated precisely:
+ *   P_q(px_to_book_ratio over rows in (origin − 10y, origin]) × book(origin)
+ * with band endpoints P25/P75 and midpoint P50. Rows before the panel start
+ * simply do not exist; the window is truncated and flagged.
+ */
+export function naiveBaselineBand(panelRows, originAsOf) {
+  const usable = panelRows.filter((row) => Number.isFinite(row.px_last) && row.px_to_book_ratio > 0);
+  const origin = usable.filter((row) => row.date <= originAsOf).at(-1);
+  if (!origin) return null;
+  const cutoff = shiftYears(originAsOf, -10);
+  const window = usable.filter((row) => row.date > cutoff && row.date <= originAsOf);
+  if (window.length === 0) return null;
+  const pbs = window.map((row) => row.px_to_book_ratio).sort((a, b) => a - b);
+  const book = origin.px_last / origin.px_to_book_ratio;
+  return {
+    as_of: originAsOf,
+    price: origin.px_last,
+    book,
+    window_rows: window.length,
+    truncated: window[0].date > cutoff,
+    p25: quantile(pbs, 0.25),
+    p50: quantile(pbs, 0.5),
+    p75: quantile(pbs, 0.75),
+    low: quantile(pbs, 0.25) * book,
+    mid: quantile(pbs, 0.5) * book,
+    high: quantile(pbs, 0.75) * book,
+  };
+}
+
+/** Coverage / directional / MAE scores of the baseline on the scored origins. */
+export function scoreBaseline(panelRows, scoredOrigins) {
+  const rows = [];
+  for (const o of scoredOrigins) {
+    const band = naiveBaselineBand(panelRows, o.as_of);
+    if (!band) continue;
+    const realizedReturn = o.realized.dividend_adjusted_return_36m ?? o.realized.price_return_36m;
+    const realizedLevel = o.inputs.px_last * (1 + realizedReturn);
+    const covered = realizedLevel >= band.low && realizedLevel <= band.high;
+    const dirSign = Math.sign(band.mid / band.price - 1);
+    const agree = dirSign !== 0 && Math.sign(realizedReturn) === dirSign;
+    rows.push({
+      as_of: o.as_of,
+      covered,
+      agree,
+      mae_level: Math.abs(band.mid - realizedLevel),
+      band,
+    });
+  }
+  return rows;
+}
+
+// ---------------------------------------------------------------------------
+// Family B scoring + baseline comparison
+// ---------------------------------------------------------------------------
+
 function scoreIndex(indexId, cfg, build, receipt) {
   const { asOf, input } = probeLatestAsOf(build);
   const result = computeFamilyB(input);
@@ -114,18 +183,27 @@ function scoreIndex(indexId, cfg, build, receipt) {
       realized_level: round6(realizedLevel),
       covered,
       agree,
+      mae_level: Math.abs((hull.low + hull.high) / 2 - realizedLevel),
       bias_unadjusted: o.realized.bias_unadjusted,
       bias_detail: o.realized.bias_detail,
     });
   }
 
-  const coverageRate = rows.length ? rows.filter((r) => r.covered).length / rows.length : null;
-  const directionalRate = rows.length ? rows.filter((r) => r.agree).length / rows.length : null;
-  const biasPp = rows.length ? rows.reduce((s, r) => s + r.realized_return, 0) / rows.length - upsideMid : null;
+  const mean = (values) => (values.length ? values.reduce((s, x) => s + x, 0) / values.length : null);
+  const coverageRate = mean(rows.map((r) => (r.covered ? 1 : 0)));
+  const directionalRate = mean(rows.map((r) => (r.agree ? 1 : 0)));
+  const maeLevel = mean(rows.map((r) => r.mae_level));
+  const biasPp = mean(rows.map((r) => r.realized_return)) - upsideMid;
   const dividendAdjusted = scored.filter((o) => o.realized.bias_unadjusted === null).length;
 
-  const bootstrap = (values) => (values.length ? blockBootstrap36m(values.map((v) => (v ? 1 : 0))) : null);
+  const bootstrap = (values) => (values.length ? blockBootstrap36m(values) : null);
   const receiptIdx = receipt?.indices?.[indexId];
+
+  // Naive baseline on the SAME scored origins (pure panel math; no engine).
+  const baselineRows = scoreBaseline(panelRows, scored);
+  const baselineCoverage = mean(baselineRows.map((r) => (r.covered ? 1 : 0)));
+  const baselineDirectional = mean(baselineRows.map((r) => (r.agree ? 1 : 0)));
+  const baselineMae = mean(baselineRows.map((r) => r.mae_level));
 
   return {
     as_of: asOf,
@@ -142,11 +220,85 @@ function scoreIndex(indexId, cfg, build, receipt) {
     coverage_rate: round6(coverageRate),
     directional_rate: round6(directionalRate),
     bias_pp: round6(biasPp),
+    mae_level: round6(maeLevel),
     ci: {
-      coverage: bootstrap(rows.map((r) => r.covered)),
-      directional: bootstrap(rows.map((r) => r.agree)),
+      coverage: bootstrap(rows.map((r) => (r.covered ? 1 : 0))),
+      directional: bootstrap(rows.map((r) => (r.agree ? 1 : 0))),
+      mae: bootstrap(rows.map((r) => r.mae_level)),
     },
     ess_capped: receiptIdx?.ess?.ess_capped ?? null,
+    baseline: {
+      origins_scored: baselineRows.length,
+      coverage_rate: round6(baselineCoverage),
+      directional_rate: round6(baselineDirectional),
+      mae_level: round6(baselineMae),
+      ci: {
+        coverage: bootstrap(baselineRows.map((r) => (r.covered ? 1 : 0))),
+        directional: bootstrap(baselineRows.map((r) => (r.agree ? 1 : 0))),
+        mae: bootstrap(baselineRows.map((r) => r.mae_level)),
+      },
+      hull_beats_on_coverage: baselineCoverage !== null && coverageRate >= baselineCoverage,
+      hull_beats_on_mae: baselineMae !== null && maeLevel < baselineMae,
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// SPEC v3.0 §9 minimum-pass table (frozen feasibility-receipt thresholds only)
+// ---------------------------------------------------------------------------
+
+function buildSpec9Table(receipt) {
+  const minimums = receipt.spec_minimums;
+  const indices = receipt.indices;
+  const ids = Object.keys(indices);
+  const spanOk = ids.filter((id) => indices[id].evaluation_span_years >= minimums.evaluation_span_years);
+  const essOk = ids.filter((id) => indices[id].ess.ess_capped >= minimums.effective_origins_per_index);
+  const spanAndEss = ids.filter((id) => spanOk.includes(id) && essOk.includes(id));
+
+  const bucketIds = ["high_rate", "low_rate", "crisis_2008_09", "crisis_2020_03"];
+  const sufficient = [];
+  const insufficient = [];
+  for (const id of ids) {
+    for (const b of bucketIds) {
+      if (indices[id].regime_buckets[b].sufficient) sufficient.push(`${id}.${b}`);
+      else insufficient.push(`${id}.${b}`);
+    }
+  }
+
+  return {
+    spec_minimums: minimums,
+    evaluation_span_8y: {
+      minimum: "evaluation span >= 8 years",
+      met: spanOk.length >= minimums.indices_passing,
+      indices_meeting: spanOk,
+    },
+    indices_passing_4: {
+      minimum: ">= 4 indices pass individually (span + effective origins)",
+      met: spanAndEss.length >= minimums.indices_passing,
+      indices_meeting: spanAndEss,
+    },
+    effective_origins_30: {
+      minimum: ">= 30 effective origins per index",
+      met: essOk.length >= minimums.indices_passing,
+      indices_meeting: essOk,
+    },
+    regime_buckets_20: {
+      minimum: "each regime bucket >= 20 effective origins or reported insufficient and excluded from the pass count",
+      met: sufficient.length > 0,
+      sufficient_buckets: sufficient,
+      insufficient_buckets: insufficient,
+    },
+    coverage_within_bootstrap_ci: {
+      minimum: "interval coverage within bootstrap CI of the nominal level",
+      nominal_level: 0.95,
+      research_only: true,
+      promotion: null,
+    },
+    directional_vs_naive_baseline: {
+      minimum: "directional rate beats the naive baseline on the same origins",
+      research_only: true,
+      promotion: null,
+    },
   };
 }
 
@@ -164,7 +316,22 @@ export function buildResearchScoring({ generatedAt = new Date().toISOString() } 
       gaps.push(`${indexId}: no dividend-adjusted origin scored (tracker price history ~1y; raw price return used, bias_unadjusted=dividend_series_absent)`);
     }
   }
-  gaps.push("hull is computed at the latest point-in-time asOf per index, not walk-forward: adapters supply latest-vintage payout only, so per-origin historical hulls are not computable today");
+  gaps.push("hull is computed at the latest point-in-time asOf per index, not walk-forward: adapters supply latest-vintage payout only, so per-origin historical hulls are not computable today; the naive baseline IS per-origin point-in-time");
+
+  const baselineComparison = {
+    method: "naive baseline = trailing-10y price-per-book distribution (P25/P50/P75) × origin book; same scored origins as the hull",
+    per_index: Object.fromEntries(
+      Object.entries(perIndex).map(([id, s]) => [
+        id,
+        {
+          hull: { coverage_rate: s.coverage_rate, directional_rate: s.directional_rate, mae_level: s.mae_level },
+          baseline: { coverage_rate: s.baseline.coverage_rate, directional_rate: s.baseline.directional_rate, mae_level: s.baseline.mae_level, origins_scored: s.baseline.origins_scored },
+          hull_beats_baseline_on_coverage: s.baseline.hull_beats_on_coverage,
+          hull_beats_baseline_on_mae: s.baseline.hull_beats_on_mae,
+        },
+      ]),
+    ),
+  };
 
   const body = {
     schema_version: H2_SCORING_SCHEMA_VERSION,
@@ -175,8 +342,11 @@ export function buildResearchScoring({ generatedAt = new Date().toISOString() } 
     scoring_method:
       "diagnostic B1 hull (computeFamilyB, b2_admitted=false, erp_band=null) at the latest point-in-time asOf, "
       + "scored against the harness 36m origins: realized level inside hull, directional agreement of the band midpoint, "
-      + "36m block bootstrap CIs, ESS from the feasibility receipt",
+      + "MAE of band midpoint vs realized, 36m block bootstrap CIs, ESS from the feasibility receipt; "
+      + "naive baseline (trailing-10y P/B band) on the same origins, independent of Family B output",
     per_index: perIndex,
+    baseline_comparison: baselineComparison,
+    spec9_minimum_pass: buildSpec9Table(receipt),
     data_gaps: gaps,
   };
   const scoringSha = sha256(JSON.stringify(body));
@@ -189,11 +359,17 @@ if (invokedDirectly) {
   const outDir = path.join(ROOT, "data/computed/feno-rim-v2");
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, "h2-research-scoring.json"), `${JSON.stringify(scoring, null, 2)}\n`);
+  console.log("=== hull vs naive baseline (coverage / directional / mae) ===");
   for (const [id, s] of Object.entries(scoring.per_index)) {
+    const b = s.baseline;
     console.log(
-      `${id}: as_of=${s.as_of} hull=[${s.hull.low.toFixed(0)},${s.hull.high.toFixed(0)}] origins=${s.origins_scored} `
-      + `coverage=${s.coverage_rate} directional=${s.directional_rate} bias_pp=${s.bias_pp} adjusted=${s.dividend_adjusted} ess=${s.ess_capped}`,
+      `${id}: hull ${s.coverage_rate}/${s.directional_rate}/${s.mae_level} vs base ${b.coverage_rate}/${b.directional_rate}/${b.mae_level} `
+      + `-> cov ${b.hull_beats_on_coverage ? "BEAT" : "lose"}, mae ${b.hull_beats_on_mae ? "BEAT" : "lose"}`,
     );
+  }
+  const pass = scoring.spec9_minimum_pass;
+  for (const key of ["evaluation_span_8y", "indices_passing_4", "effective_origins_30", "regime_buckets_20"]) {
+    console.log(`§9 ${key}: met=${pass[key].met} (${JSON.stringify(pass[key].indices_meeting ?? pass[key].sufficient_buckets ?? [])})`);
   }
   console.log(`scoring sha256: ${scoring.scoring_sha256.slice(0, 16)}… written: ${path.join(outDir, "h2-research-scoring.json")}`);
 }

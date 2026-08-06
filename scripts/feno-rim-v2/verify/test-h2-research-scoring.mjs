@@ -1,15 +1,18 @@
 #!/usr/bin/env node
 
-// FENO RIM v2 — Phase 3B: h2-research-scoring contract tests.
+// FENO RIM v2 — Phase 3B: h2-research-scoring contract tests (incl. baseline).
 //
 // Proves on real repo data: determinism (identical per-index block and sha
 // across two builds), the research_only flag, the absence of any promotion
-// key with a value, rates within [0,1], and the origin counts matching the
-// feasibility receipt (same harness call, same data).
+// key with a value, rates within [0,1], origin counts matching the feasibility
+// receipt, and the INDEPENDENCE of the naive baseline: the baseline band is
+// re-derived from the raw panel alone (no Family B output) and must equal the
+// artifact's baseline numbers.
 
 import assert from "node:assert/strict";
-import { buildResearchScoring } from "./h2-research-scoring.mjs";
-import { readJson } from "../adapters/panel-common.mjs";
+import { buildResearchScoring, naiveBaselineBand, scoreBaseline } from "./h2-research-scoring.mjs";
+import { buildOrigins, INDEX_CONFIG, loadTracker } from "./h2-harness.mjs";
+import { quantile, readJson } from "../adapters/panel-common.mjs";
 
 const receipt = readJson("data/computed/feno-rim-v2/h2-feasibility-receipt.json");
 
@@ -18,6 +21,7 @@ const receipt = readJson("data/computed/feno-rim-v2/h2-feasibility-receipt.json"
 const s1 = buildResearchScoring();
 const s2 = buildResearchScoring();
 assert.deepEqual(s1.per_index, s2.per_index, "per-index scoring must be identical across builds");
+assert.deepEqual(s1.baseline_comparison, s2.baseline_comparison, "baseline comparison must be identical across builds");
 assert.equal(s1.scoring_sha256, s2.scoring_sha256, "scoring hash must be stable (generated_at excluded)");
 
 // --- research-only surface --------------------------------------------------
@@ -51,12 +55,18 @@ for (const id of indexIds) {
   const r = receipt.indices[id];
   assert.ok(s, `${id}: scored block present`);
 
-  // Rates within [0,1].
+  // Rates within [0,1]; MAE non-negative.
   assert.ok(s.coverage_rate >= 0 && s.coverage_rate <= 1, `${id}: coverage_rate in [0,1]`);
   assert.ok(s.directional_rate >= 0 && s.directional_rate <= 1, `${id}: directional_rate in [0,1]`);
+  assert.ok(s.baseline.coverage_rate >= 0 && s.baseline.coverage_rate <= 1, `${id}: baseline coverage in [0,1]`);
+  assert.ok(s.baseline.directional_rate >= 0 && s.baseline.directional_rate <= 1, `${id}: baseline directional in [0,1]`);
+  assert.ok(s.mae_level >= 0 && s.baseline.mae_level >= 0, `${id}: MAE non-negative`);
+  assert.equal(typeof s.baseline.hull_beats_on_coverage, "boolean", `${id}: coverage beat flag boolean`);
+  assert.equal(typeof s.baseline.hull_beats_on_mae, "boolean", `${id}: mae beat flag boolean`);
 
   // Origin count must match the feasibility receipt (same harness, same data).
   assert.equal(s.origins_scored, r.origins_scored, `${id}: origins_scored matches the receipt`);
+  assert.equal(s.baseline.origins_scored, r.origins_scored, `${id}: baseline scored the same origins`);
 
   // Hull is a finite ordered band; status NULL while the ERP band is unproven.
   assert.ok(Number.isFinite(s.hull.low) && Number.isFinite(s.hull.high), `${id}: hull finite`);
@@ -70,9 +80,65 @@ for (const id of indexIds) {
   // CIs are ordered when present.
   if (s.ci.coverage) assert.ok(s.ci.coverage.ci_lower <= s.ci.coverage.ci_upper, `${id}: coverage CI ordered`);
   if (s.ci.directional) assert.ok(s.ci.directional.ci_lower <= s.ci.directional.ci_upper, `${id}: directional CI ordered`);
+  if (s.ci.mae) assert.ok(s.ci.mae.ci_lower <= s.ci.mae.ci_upper, `${id}: mae CI ordered`);
+  if (s.baseline.ci.coverage) assert.ok(s.baseline.ci.coverage.ci_lower <= s.baseline.ci.coverage.ci_upper, `${id}: baseline coverage CI ordered`);
 
   // ESS reported from the receipt.
   assert.equal(s.ess_capped, r.ess.ess_capped, `${id}: ess_capped matches the receipt`);
 }
 
-console.log("feno-rim-v2 h2-research-scoring tests passed");
+// --- baseline independence: pure panel math, no Family B output -------------
+
+// 1) The band at the artifact as-of is hand-recomputable from the raw panel.
+{
+  const id = "sp500";
+  const cfg = INDEX_CONFIG[id];
+  const panel = readJson(cfg.panel_file).sections[cfg.panel_section].data;
+  const asOf = s1.per_index[id].as_of;
+  const band = naiveBaselineBand(panel, asOf);
+  assert.ok(band, "baseline band must exist at the scoring as-of");
+  const usable = panel.filter((row) => Number.isFinite(row.px_last) && row.px_to_book_ratio > 0);
+  const origin = usable.filter((row) => row.date <= asOf).at(-1);
+  const book = origin.px_last / origin.px_to_book_ratio;
+  // Recompute the exact P50/P25/P75 over the same window (sorted) and compare.
+  const cutoff = `${Number(asOf.slice(0, 4)) - 10}${asOf.slice(4)}`;
+  const win = usable.filter((row) => row.date > cutoff && row.date <= asOf);
+  const sorted = win.map((row) => row.px_to_book_ratio).sort((a, b) => a - b);
+  assert.ok(Math.abs(band.mid - quantile(sorted, 0.5) * book) < 1e-9, "baseline midpoint = P50(10y P/B) x book");
+  assert.ok(Math.abs(band.low - quantile(sorted, 0.25) * book) < 1e-9, "baseline low = P25(10y P/B) x book");
+  assert.ok(Math.abs(band.high - quantile(sorted, 0.75) * book) < 1e-9, "baseline high = P75(10y P/B) x book");
+
+  // 2) The artifact's baseline rates equal a from-scratch recomputation that
+  //    never imports the engine (panel + harness origins only).
+  const origins = buildOrigins(panel, { horizonMonths: 36, stepWeeks: 13, tracker: loadTracker(cfg.tracker) });
+  const scored = origins.filter((o) => o.scored && Number.isFinite(o.realized.price_return_36m));
+  const rows = scoreBaseline(panel, scored);
+  const coverage = rows.filter((r) => r.covered).length / rows.length;
+  assert.ok(Math.abs(coverage - s1.per_index[id].baseline.coverage_rate) < 1e-9, "baseline coverage re-derived from panel alone");
+}
+
+// --- SPEC §9 minimum-pass table ---------------------------------------------
+
+{
+  const pass = s1.spec9_minimum_pass;
+  assert.deepEqual(pass.spec_minimums, receipt.spec_minimums, "spec minimums come from the frozen receipt");
+  for (const key of ["evaluation_span_8y", "indices_passing_4", "effective_origins_30"]) {
+    assert.equal(typeof pass[key].met, "boolean", `${key}: met flag boolean`);
+    assert.ok(Array.isArray(pass[key].indices_meeting), `${key}: indices_meeting list`);
+  }
+  // Regime buckets must match the receipt's frozen assessment exactly.
+  assert.deepEqual(
+    [...pass.regime_buckets_20.sufficient_buckets].sort(),
+    [...receipt.criteria.regime_buckets_20.buckets_meeting].sort(),
+    "sufficient buckets match the receipt",
+  );
+  assert.deepEqual(
+    [...pass.regime_buckets_20.insufficient_buckets].sort(),
+    [...receipt.criteria.regime_buckets_20.buckets_insufficient].sort(),
+    "insufficient buckets match the receipt",
+  );
+  assert.equal(pass.coverage_within_bootstrap_ci.promotion, null, "coverage criterion stays non-promotable");
+  assert.equal(pass.directional_vs_naive_baseline.promotion, null, "directional criterion stays non-promotable");
+}
+
+console.log("feno-rim-v2 h2-research-scoring (baseline) tests passed");
