@@ -415,5 +415,16 @@
     "bar": "an arm SUCCEEDS when its Spearman rho is positive AND its block-bootstrap 95% CI excludes zero, on the window_complete_18 set"
   },
   "generated_at": "2026-08-06T09:34:57.299Z",
-  "scoring_sha256": "920faa1e3ae7fab8bfa0a9037fbe1edd09b460f6f09425a7a095fd046cb2450f"
+  "scoring_sha256": "920faa1e3ae7fab8bfa0a9037fbe1edd09b460f6f09425a7a095fd046cb2450f",
+  "independent_audit_finding": {
+    "audited_by": "independent red team, contract Step 7",
+    "audit_artifact": "data/computed/feno-rim-v2/X2X3_INDEPENDENT_AUDIT.json",
+    "point_estimates_reproduce_exactly": true,
+    "verdict_is_not_robust": true,
+    "detail": "the committed oracle_fail rests on a CI whose lower bound sits on zero. A non-circular moving-block bootstrap on the identical rows gives [0.041, 0.581] and would flip the matrix key to oracle_pass_deployable_fail. At block sizes 1/4/6 both implementations include zero. Reproduced by the handler: block 12 circular [-0.030, 0.449] vs non-circular [0.041, 0.581]. At n=13 with block 12 the bootstrap is near-degenerate.",
+    "terminal_sensitivity": "oracle rho on the window-complete set by terminal specification: decay10 (committed) +0.231, decay5 +0.474, perpetuity -0.042, no terminal +0.394. The pre-declared 10-year linear decay is load-bearing, so the oracle measured a ceiling of the TERMINAL SPECIFICATION rather than of residual income.",
+    "status": "INDETERMINATE_AT_N13",
+    "original_verdict_preserved": "the committed verdict block is left unchanged per contract section 10-3; this field records that it cannot carry decisive weight",
+    "what_still_stands": "the deployable arm fails on every origin set with CIs that never exclude zero"
+  }
 }
