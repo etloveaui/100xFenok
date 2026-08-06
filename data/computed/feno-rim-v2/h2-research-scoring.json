@@ -1,0 +1,291 @@
+{
+  "schema_version": "feno_rim_v2_h2_research_scoring.v1",
+  "phase": "3B",
+  "spec_ref": "docs/analysis/yoo-rim-audit/FENO_RIM_RECONSTRUCTION_SPEC_v3_0.md §9",
+  "research_only": true,
+  "promotion": null,
+  "scoring_method": "diagnostic B1 hull (computeFamilyB, b2_admitted=false, erp_band=null) at the latest point-in-time asOf, scored against the harness 36m origins: realized level inside hull, directional agreement of the band midpoint, 36m block bootstrap CIs, ESS from the feasibility receipt",
+  "per_index": {
+    "sp500": {
+      "as_of": "2026-08-05",
+      "price": 7489.72,
+      "hull": {
+        "low": 3348.8870667640226,
+        "high": 10464.236533723051,
+        "public_status": "NULL",
+        "null_reasons": [
+          "core_erp_unidentified"
+        ]
+      },
+      "origins_scored": 55,
+      "dividend_adjusted": 0,
+      "bias_unadjusted_origins": 55,
+      "coverage_rate": 0.418182,
+      "directional_rate": 0.018182,
+      "bias_pp": 0.488916,
+      "ci": {
+        "coverage": {
+          "mean": 0.418182,
+          "ci_lower": 0,
+          "ci_upper": 0.781818,
+          "ci_level": 0.95,
+          "n": 55,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "directional": {
+          "mean": 0.018182,
+          "ci_lower": 0,
+          "ci_upper": 0.054545,
+          "ci_level": 0.95,
+          "n": 55,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        }
+      },
+      "ess_capped": 55
+    },
+    "nasdaq100": {
+      "as_of": "2026-08-05",
+      "price": 28274.2,
+      "hull": {
+        "low": 11503.146821811422,
+        "high": 56931.55188050289,
+        "public_status": "NULL",
+        "null_reasons": [
+          "core_erp_unidentified"
+        ]
+      },
+      "origins_scored": 55,
+      "dividend_adjusted": 0,
+      "bias_unadjusted_origins": 55,
+      "coverage_rate": 0.381818,
+      "directional_rate": 1,
+      "bias_pp": 0.43973,
+      "ci": {
+        "coverage": {
+          "mean": 0.381818,
+          "ci_lower": 0,
+          "ci_upper": 0.690909,
+          "ci_level": 0.95,
+          "n": 55,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "directional": {
+          "mean": 1,
+          "ci_lower": 1,
+          "ci_upper": 1,
+          "ci_level": 0.95,
+          "n": 55,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        }
+      },
+      "ess_capped": 55
+    },
+    "nasdaq_composite": {
+      "as_of": "2026-08-05",
+      "price": 25373.85,
+      "hull": {
+        "low": 8132.496506054319,
+        "high": 33123.22829458119,
+        "public_status": "NULL",
+        "null_reasons": [
+          "core_erp_unidentified"
+        ]
+      },
+      "origins_scored": 55,
+      "dividend_adjusted": 0,
+      "bias_unadjusted_origins": 55,
+      "coverage_rate": 0.472727,
+      "directional_rate": 0,
+      "bias_pp": 0.747842,
+      "ci": {
+        "coverage": {
+          "mean": 0.472727,
+          "ci_lower": 0.072727,
+          "ci_upper": 0.872727,
+          "ci_level": 0.95,
+          "n": 55,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "directional": {
+          "mean": 0,
+          "ci_lower": 0,
+          "ci_upper": 0,
+          "ci_level": 0.95,
+          "n": 55,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        }
+      },
+      "ess_capped": 55
+    },
+    "russell2000": {
+      "as_of": "2026-08-05",
+      "price": 2931.339,
+      "hull": {
+        "low": 2019.6153658075298,
+        "high": 4637.504853264132,
+        "public_status": "NULL",
+        "null_reasons": [
+          "core_erp_unidentified"
+        ]
+      },
+      "origins_scored": 55,
+      "dividend_adjusted": 0,
+      "bias_unadjusted_origins": 55,
+      "coverage_rate": 0.254545,
+      "directional_rate": 0.909091,
+      "bias_pp": 0.156588,
+      "ci": {
+        "coverage": {
+          "mean": 0.254545,
+          "ci_lower": 0,
+          "ci_upper": 0.4,
+          "ci_level": 0.95,
+          "n": 55,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "directional": {
+          "mean": 0.909091,
+          "ci_lower": 0.818182,
+          "ci_upper": 1,
+          "ci_level": 0.95,
+          "n": 55,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        }
+      },
+      "ess_capped": 55
+    },
+    "kospi": {
+      "as_of": "2026-06-01",
+      "price": 8476.15,
+      "hull": {
+        "low": 4994.6337134193955,
+        "high": 12640.318209939884,
+        "public_status": "NULL",
+        "null_reasons": [
+          "core_erp_unidentified"
+        ]
+      },
+      "origins_scored": 55,
+      "dividend_adjusted": 0,
+      "bias_unadjusted_origins": 55,
+      "coverage_rate": 0.036364,
+      "directional_rate": 0.745455,
+      "bias_pp": 0.132558,
+      "ci": {
+        "coverage": {
+          "mean": 0.036364,
+          "ci_lower": 0,
+          "ci_upper": 0.036364,
+          "ci_level": 0.95,
+          "n": 55,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "directional": {
+          "mean": 0.745455,
+          "ci_lower": 0.6,
+          "ci_upper": 0.909091,
+          "ci_level": 0.95,
+          "n": 55,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        }
+      },
+      "ess_capped": 42.180311
+    },
+    "philadelphia_semi": {
+      "as_of": "2026-08-05",
+      "price": 11311.08,
+      "hull": {
+        "low": 3076.347161453021,
+        "high": 26528.897481582873,
+        "public_status": "NULL",
+        "null_reasons": [
+          "core_erp_unidentified"
+        ]
+      },
+      "origins_scored": 55,
+      "dividend_adjusted": 0,
+      "bias_unadjusted_origins": 55,
+      "coverage_rate": 0.327273,
+      "directional_rate": 1,
+      "bias_pp": 0.547029,
+      "ci": {
+        "coverage": {
+          "mean": 0.327273,
+          "ci_lower": 0,
+          "ci_upper": 0.6,
+          "ci_level": 0.95,
+          "n": 55,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "directional": {
+          "mean": 1,
+          "ci_lower": 1,
+          "ci_upper": 1,
+          "ci_level": 0.95,
+          "n": 55,
+          "block_size_quarters": 12,
+          "block_months": 36,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        }
+      },
+      "ess_capped": 55
+    }
+  },
+  "data_gaps": [
+    "sp500: no dividend-adjusted origin scored (tracker price history ~1y; raw price return used, bias_unadjusted=dividend_series_absent)",
+    "nasdaq100: no dividend-adjusted origin scored (tracker price history ~1y; raw price return used, bias_unadjusted=dividend_series_absent)",
+    "nasdaq_composite: no dividend-adjusted origin scored (tracker price history ~1y; raw price return used, bias_unadjusted=dividend_series_absent)",
+    "russell2000: no dividend-adjusted origin scored (tracker price history ~1y; raw price return used, bias_unadjusted=dividend_series_absent)",
+    "kospi: no dividend-adjusted origin scored (tracker price history ~1y; raw price return used, bias_unadjusted=dividend_series_absent)",
+    "philadelphia_semi: no dividend-adjusted origin scored (tracker price history ~1y; raw price return used, bias_unadjusted=dividend_series_absent)",
+    "hull is computed at the latest point-in-time asOf per index, not walk-forward: adapters supply latest-vintage payout only, so per-origin historical hulls are not computable today"
+  ],
+  "generated_at": "2026-08-06T03:10:34.471Z",
+  "scoring_sha256": "b1093e17c51c888c1fddd2ef0fdc9a74476c657d16da92276f356a144fcc5cf5"
+}
