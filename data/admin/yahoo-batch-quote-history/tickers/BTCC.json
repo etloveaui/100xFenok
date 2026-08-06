@@ -12,15 +12,28 @@
       "run_id": "29965324287",
       "schedule": "0 22 * * 3",
       "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 739,
+      "natural": true,
+      "observed_at": "2026-08-06T05:27:19Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31074084652",
+      "schedule": "7 2 * * 0-5",
+      "shard": "49/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-22T23:49:20Z",
-    "history_as_of": "2026-07-22",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BTCC.json",
-    "payload_sha256": "a4d18ea5901b619bc3d325241d054d8c24408a95db1cd6c7e649dd719d5e2fe2",
-    "quote_as_of": "2026-07-22T19:05:30Z",
-    "source_as_of": "2026-07-22"
+    "fetched_at": "2026-08-06T05:28:38Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/BTCC.json",
+    "payload_sha256": "826330cef6d4f0c9b1a65b0a10590836615f8836671d8988d469a9a23b6f3c48",
+    "quote_as_of": "2026-08-05T19:47:32Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 900,
+    "latency_ms": 739,
     "natural": true,
-    "observed_at": "2026-07-22T23:45:22Z",
+    "observed_at": "2026-08-06T05:27:19Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29965324287",
-    "schedule": "0 22 * * 3",
-    "shard": "3/6"
+    "run_id": "31074084652",
+    "schedule": "7 2 * * 0-5",
+    "shard": "49/72"
   },
   "lkg": {
     "fetched_at": "2026-07-22T23:49:20Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-22",
-    "observed_at": "2026-07-22T23:45:22Z",
-    "payload_sha256": "0dfef3b4bd3ddfe1ec54ce65e24837cdf53c6647c03cba9fe715bc85aeaf320e",
-    "quote_as_of": "2026-07-22T19:05:30Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T05:27:19Z",
+    "payload_sha256": "a5d369b3ae796bfc105b025e39f055132ac89e4178b1586a764fd561840c18c2",
+    "quote_as_of": "2026-08-05T19:47:32Z",
     "run_attempt": 1,
-    "run_id": "29965324287",
+    "run_id": "31074084652",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-22"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-22"
   },
   "ticker": "BTCC",
-  "updated_at": "2026-07-31T00:55:40Z"
+  "updated_at": "2026-08-06T05:27:19Z"
 }

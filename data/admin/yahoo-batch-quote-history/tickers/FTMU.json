@@ -43,15 +43,59 @@
       "run_id": "30860500094",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: FTMU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: FTMU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: FTMU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: FTMU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: FTMU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: FTMU: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 816,
+      "natural": true,
+      "observed_at": "2026-08-06T05:27:19Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31074084652",
+      "schedule": "7 2 * * 0-5",
+      "shard": "49/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-03T23:00:12Z",
-    "history_as_of": "2026-08-03",
+    "fetched_at": "2026-08-06T05:29:00Z",
+    "history_as_of": "2026-08-05",
     "path": "data/yf/finance/FTMU.json",
-    "payload_sha256": "cf9c83983389cd4126b12364f212e658c29da71a02e7da786df9f79e49419b31",
-    "quote_as_of": "2026-08-03T20:00:00Z",
-    "source_as_of": "2026-08-03"
+    "payload_sha256": "de37076363069c32b505fa37e6f5852483f9926f580675cc33b4989e784883b6",
+    "quote_as_of": "2026-08-05T19:59:51Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -91,30 +135,30 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 993,
+    "latency_ms": 816,
     "natural": true,
-    "observed_at": "2026-08-03T22:58:08Z",
+    "observed_at": "2026-08-06T05:27:19Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30860500094",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31074084652",
+    "schedule": "7 2 * * 0-5",
+    "shard": "49/72"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-03",
-    "observed_at": "2026-08-03T22:58:08Z",
-    "payload_sha256": "af6cc340d957c21d5676e5ba4c68227d5086dc15add82733e31f133d4d9fcc7b",
-    "quote_as_of": "2026-08-03T20:00:00Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T05:27:19Z",
+    "payload_sha256": "c73ba32f1e275cef65d20939b99e39ea4a83b8989c64ff50045062aca7ae584d",
+    "quote_as_of": "2026-08-05T19:59:51Z",
     "run_attempt": 1,
-    "run_id": "30860500094",
+    "run_id": "31074084652",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03"
+    "source_as_of": "2026-08-05"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "FTMU",
-  "updated_at": "2026-08-03T22:58:08Z"
+  "updated_at": "2026-08-06T05:27:19Z"
 }

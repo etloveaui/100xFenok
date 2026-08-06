@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 410,
-      "natural": true,
-      "observed_at": "2026-07-17T00:15:36Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29544227703",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "ValueError: quote_as_of is unavailable for 402340.KS despite available history",
       "event_name": "schedule",
       "failures": [
@@ -188,6 +175,19 @@
       "run_id": "31058959670",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-06T05:27:19Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31074084652",
+      "schedule": "7 2 * * 0-5",
+      "shard": "49/72"
     }
   ],
   "current": {
@@ -203,17 +203,17 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 624,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-06T00:27:12Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-06T05:27:19Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "31058959670",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "31074084652",
+    "schedule": "7 2 * * 0-5",
+    "shard": "49/72"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -262,5 +262,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "402340.KS",
-  "updated_at": "2026-08-06T00:27:12Z"
+  "updated_at": "2026-08-06T05:27:19Z"
 }
