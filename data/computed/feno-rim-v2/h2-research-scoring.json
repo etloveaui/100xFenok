@@ -4,6 +4,17 @@
   "spec_ref": "docs/analysis/yoo-rim-audit/FENO_RIM_RECONSTRUCTION_SPEC_v3_0.md §9",
   "research_only": true,
   "promotion": null,
+  "status": "INFRASTRUCTURE_SMOKE_ONLY",
+  "performance_evaluable": false,
+  "reason": "core_erp_absent",
+  "indices_without_core_erp": [
+    "sp500",
+    "nasdaq100",
+    "nasdaq_composite",
+    "russell2000",
+    "kospi",
+    "philadelphia_semi"
+  ],
   "scoring_method": "walk-forward: per-origin B1 diagnostic hull (computeFamilyB, b2_admitted=false, erp_band=null) at each scored origin's as-of, realized level inside that origin's hull, directional agreement of the band midpoint, MAE of band midpoint vs realized, 36m block bootstrap CIs, ESS from the feasibility receipt; naive baseline (trailing-10y P/B band) on the same origins, independent of Family B output",
   "per_index": {
     "sp500": {
@@ -1041,8 +1052,9 @@
     "russell2000: 55/55 scored origins refused in walk-forward ({\"lseg_factsheet_not_first_knowable\":55})",
     "kospi: 21/55 scored origins refused in walk-forward ({\"no_growth_window\":21})",
     "philadelphia_semi: 21/55 scored origins refused in walk-forward ({\"no_growth_window\":21})",
-    "walk-forward: per-origin B1 hulls at each origin's as-of (payout check scoped to the B2 branch per owner ruling; RUT keeps its consumed LSEG factsheet check)"
+    "walk-forward: per-origin B1 hulls at each origin's as-of (payout check scoped to the B2 branch per owner ruling; RUT keeps its consumed LSEG factsheet check)",
+    "status=INFRASTRUCTURE_SMOKE_ONLY: core_erp_absent for sp500/nasdaq100/nasdaq_composite/russell2000/kospi/philadelphia_semi — walk-forward coverage/directional numbers are smoke, not performance, until the restored ERP band lands (owner ruling 2026-08-06)"
   ],
-  "generated_at": "2026-08-06T05:34:27.085Z",
-  "scoring_sha256": "541495432097d112c929e40bb3142d955aa1c26cc98d7e0a9d2f062524d09993"
+  "generated_at": "2026-08-06T06:14:09.618Z",
+  "scoring_sha256": "56b9277c9e97a0637b3dbf2b65db5ad4f7e65648bd772ae03a1388f40ced94ea"
 }

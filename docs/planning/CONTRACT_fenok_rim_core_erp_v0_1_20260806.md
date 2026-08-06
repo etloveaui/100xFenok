@@ -31,9 +31,9 @@
 
 For market m at evaluation date t, with observation set O(t) = {snapshot s : first_knowable(s) ≤ t} drawn from repo-held dated Damodaran snapshots:
 
-- **Window**: trailing W dated snapshots by first_knowable(s), W = 52 (one year of weekly shadow runs; window is stated in the artifact and fixed — not a search parameter). Until |O(t)| ≥ W, the band is NOT PROVEN for that market and the row stays NULL.
+- **Window** (amended 2026-08-06, owner ruling): W = 52 is **52 point-in-time WEEKLY STATES, not 52 independent releases**. `ERP(week w) = the most recent OFFICIAL ERP published on or before week w`; the band is the min/max over the 52 weekly states. The **count of distinct official releases** inside the window is published separately, so nobody reads 52 weekly states as 52 observations. Until |states(t)| ≥ W, the band is NOT PROVEN for that market and the row stays NULL.
 - **Endpoints rule**: `ERP_band(m,t) = [ min_v ∈ V(m,t), max_v ∈ V(m,t) ]` where V = {ERP_m(s) : s ∈ O(t) window}, ERP_US(s) = snapshot us_erp, ERP_KR(s) = snapshot `countries["Korea"].equity_risk_premium`. Min/max over the window; no percentiles, no smoothing, no fitted constants.
-- **First-knowable date per snapshot**: `first_knowable(s) = observed_at` from `data/admin/damodaran/history.json` (or the matching attempt shard `observed_at` / `owner-guard.json fetched_at`) recorded at the commit that introduced snapshot s; where no receipt exists, the commit timestamp is an upper bound and the observation is flagged `first_knowable=commit_time_upper_bound` (never silently promoted).
+- **First-knowable date per observation** (amended 2026-08-06, owner ruling): for repo-fetched snapshots, `observed_at` from `data/admin/damodaran/history.json` (or the matching attempt shard `observed_at` / `owner-guard.json fetched_at`) at the commit that introduced the snapshot; where no receipt exists, the commit timestamp is an upper bound flagged `first_knowable=commit_time_upper_bound`. For RESTORED history (see §6), the priority order is: (1) the official file/archive of the time; (2) the official publication/update date; (3) where no official date exists, the EARLIEST valid web-archive **Memento-Datetime**. A Memento timestamp is a conservative UPPER BOUND on first-knowable — "it was public no later than this" — which delays availability rather than admitting look-ahead, so it cannot leak (§6).
 - **Risk-free**: unchanged per §4 (sovereign 10Y: US DGS10, KR IRLTLT01KRM156N — dated, point-in-time; KR series staleness must be resolved before KR risk_free use [blocked: KR fred daily series ends 2026-06-01]).
 - **Confidence**: row stays `confidence: UNVERIFIED` (§11) until Gate 4; the ERP band proof is necessary, not sufficient.
 
@@ -67,15 +67,58 @@ required to survive reformatting, the producer should hash canonicalized bytes
 
 ## 5. Gaps (why NOT PROVEN today, and the forward path)
 
-1. **Observation count**: 3 Damodaran snapshot versions in repo (2 shadow runs: 07-25, 07-27; 1 pre-workflow import). Window W=52 unreachable; ~52 weekly runs from the shadow workflow would fill it (first reachable ≈ 2027-07).
+1. **Observation count** (amended 2026-08-06, owner ruling): 3 Damodaran snapshot versions in repo (2 shadow runs: 07-25, 07-27; 1 pre-workflow import). The forward path is no longer weekly accrual alone: past ERP is **restored** per the §6 priority order, and the W=52 weekly states are built from the restored official releases. The distinct-release count is published separately from the state count (§3, §6).
 2. ~~**Receipt integrity**~~ — **CLOSED 2026-08-06, this was a verification defect, not a data defect.** The recorded hashes are correct and the chain is trustworthy; the earlier check compared against committed bytes while the producer hashes the compact serialization of the parsed document. Both files of the 07-27 observation reproduce exactly under the rule now stated in §4. Nothing needs fixing in the producer, and requirement (2) is no longer blocked by receipt integrity — it is blocked by observation count alone (gap 1).
 3. **Per-observation dates absent everywhere**: no candidate file carries per-row fetch timestamps; all granularity is file-version. The snapshot series is the only mechanism that yields per-observation dates (one per snapshot), which is why the contract is snapshot-based.
 4. **KR series thin**: no KR ERP history. The KR risk-free gap is now measured rather than assumed: `data/macro/fred-banking-monthly.json` carries the *same* `IRLTLT01KRM156N` series as the daily file — 309 rows, 2000-10-01 → 2026-06-01, identical end date. The monthly counterpart is therefore not an alternative source and the earlier `[not verified]` is discharged. A roughly two-month lag is the publication cadence of this OECD-sourced monthly series, not a stalled fetch, so the forward path is either an alternative dated KR 10Y source or an explicit point-in-time policy that admits the publication lag. Treating it as staleness to be "resolved" mis-states the problem.
 5. **Annual series excluded from the hull by §5 itself** (stress diagnostic only) and unusable for per-observation first-knowable (wholesale import, one date for 66 observations).
 6. **Benchmarks carry no ERP fields** (verified 0 hits) — excluded as candidates.
 
-## 6. Sources
+## 6. Owner ruling 2026-08-06 — restoration semantics (FROZEN)
 
+> Frozen as of 2026-08-06, **before any ERP-bearing result is produced**. Not
+> open for redesign. Authority: owner ruling relayed via the main handler.
+
+**Restoration priority (for each past ERP observation).** Do not wait for
+weekly accrual to fill the window; restore history in this order:
+
+1. the official file/archive of the time;
+2. the official publication/update date;
+3. where no official date exists, the **earliest valid web-archive
+   Memento-Datetime**.
+
+**Memento-Datetime semantics.** The archive timestamp is NOT a claim about
+exact first publication. It is a conservative **UPPER BOUND** on
+first-knowable — "it was public no later than this". That delays availability
+rather than admitting look-ahead, so it cannot leak: any evaluation uses an
+observation only from a date by which it is *certainly* public, never earlier.
+
+**W=52 corrected meaning.** W = 52 is 52 point-in-time WEEKLY STATES:
+`ERP(week w) = the most recent OFFICIAL ERP published on or before week w`;
+band = min/max over the states. The **count of distinct official releases**
+must be published separately, so 52 states are never read as 52 observations
+(§3).
+
+**Per-market sources.**
+- US: Damodaran monthly implied ERP series, restored — the **core** candidate.
+- KR: Damodaran country ERP, the official publication of the time, restored as
+  a **step function** (value constant between official releases).
+- Kroll US ERP: an **independent benchmark only, never core**.
+- The trailing 10-year min/max of the dated Damodaran implied-ERP series stays
+  a **stress diagnostic** (§5 of SPEC v3.0), never the public hull.
+- **Providers are never averaged or blended** — one core source per market,
+  one benchmark at most, each reported separately.
+
+**B2 / payout (deferred).** B2 is not deleted but is off the core path; B1 is
+completed and validated first. payout gets its point-in-time first-knowable
+check only when B2 is switched back on — the fail-closed guard
+(`b2_admitted && payout_consumed !== true` throws) already enforces exactly
+this. The ETF payout proxy is not used. No paid historical constituent data is
+purchased at this stage. B1 is labelled **`Empirical Book Growth Residual
+Income Model`** and must not claim clean-surplus reproduction.
+
+
+## 7. Sources
 - `docs/analysis/yoo-rim-audit/FENO_RIM_RECONSTRUCTION_SPEC_v3_0.md` §5 (proof requirements), §3 (first_knowable_at semantics), §8/§11 (NULL, confidence)
 - `docs/analysis/yoo-rim-audit/YOO_RIM_AUDIT_FINAL.md` §3 (ERP lattice verdicts: SPX/CCMP/RUT IDENTIFIED printed, NDX/SOX PROXY, KOSPI HAND_SET — all barred; nothing shipped feeds this contract)
 - `source/100xFenok/data/damodaran/{erp.json, historical_erp.json, README.md, schema.json}`

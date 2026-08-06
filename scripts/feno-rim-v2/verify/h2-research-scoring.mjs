@@ -341,12 +341,42 @@ export function buildResearchScoring({ generatedAt = new Date().toISOString() } 
     ),
   };
 
+  // SMOKE-ONLY DECLARATION (owner ruling 2026-08-06): until a core ERP band
+  // lands, the walk-forward rates are infrastructure smoke, never performance.
+  // Derived, not hard-coded: the moment an erp_band stops being absent the
+  // artifact flips to performance-evaluable on its own.
+  // Per index first: ERP is restored market by market, so a partially
+  // restored run must not read as evaluable for the indices still missing it.
+  const indicesWithoutErp = Object.entries(perIndex)
+    .filter(([, s]) => !s.hull || s.hull.null_reasons.includes("core_erp_unidentified"))
+    .map(([id]) => id);
+  // The document-level flag is the conservative one: evaluable only when every
+  // index has a band. Anything looser lets one restored market make the whole
+  // artifact look like a performance result.
+  const erpAbsent = indicesWithoutErp.length > 0;
+  const performance = {
+    status: erpAbsent ? "INFRASTRUCTURE_SMOKE_ONLY" : "PERFORMANCE_EVALUABLE",
+    performance_evaluable: !erpAbsent,
+    reason: erpAbsent ? "core_erp_absent" : null,
+    indices_without_core_erp: indicesWithoutErp,
+  };
+  // Stated only while it is true. A sentence that survives the change it
+  // describes is how the receipt ended up demanding a refetch that had
+  // already landed, twice today.
+  if (erpAbsent) {
+    gaps.push(
+      `status=INFRASTRUCTURE_SMOKE_ONLY: core_erp_absent for ${indicesWithoutErp.join("/")} — walk-forward coverage/directional numbers are smoke, not performance, `
+      + "until the restored ERP band lands (owner ruling 2026-08-06)",
+    );
+  }
+
   const body = {
     schema_version: H2_SCORING_SCHEMA_VERSION,
     phase: "3B",
     spec_ref: "docs/analysis/yoo-rim-audit/FENO_RIM_RECONSTRUCTION_SPEC_v3_0.md §9",
     research_only: true,
     promotion: null,
+    ...performance,
     scoring_method:
       "walk-forward: per-origin B1 diagnostic hull (computeFamilyB, b2_admitted=false, erp_band=null) at each scored origin's as-of, "
       + "realized level inside that origin's hull, directional agreement of the band midpoint, "

@@ -105,5 +105,11 @@ for (const terminal of ["A", "B"]) {
 }
 // B1 sweep census: 3 growth x 2 erp x 2 roe x 2 N x 2 terminal = 48 members.
 assert.equal(memberSet.filter((m) => m.scenario === "B1_observed").length, 3 * 2 * 2 * 2 * 2);
+// B1 human label (owner ruling 2026-08-06): every B1 member disclosure names
+// the model; B1 must not claim clean-surplus reproduction (that is the B2
+// gate's territory).
+for (const member of memberSet.filter((m) => m.scenario === "B1_observed")) {
+  assert.equal(member.scenario_label, "Empirical Book Growth Residual Income Model");
+}
 
 console.log("feno-rim-v2 engine tests passed");

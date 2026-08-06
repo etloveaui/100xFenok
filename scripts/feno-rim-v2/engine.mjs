@@ -97,6 +97,11 @@ export function computeFamilyB(input) {
     disclosures.push({ value, ...provenance });
   };
 
+  // B1 human label (owner ruling 2026-08-06): B1 is the empirical book
+  // growth scenario — it does NOT claim clean-surplus reproduction, which
+  // is the B2 gate's territory.
+  const B1_LABEL = "Empirical Book Growth Residual Income Model";
+
   const b1GrowthMembers = [gObs.w5, gObs.w10, gObs.w15].filter(Number.isFinite);
   const erpMembers = erpBand ? [erpBand.low, erpBand.high] : [null];
 
@@ -110,7 +115,9 @@ export function computeFamilyB(input) {
       horizon,
       terminal,
     });
-    push(value, { scenario: scenarioId, horizon, terminal });
+    const provenance = { scenario: scenarioId, horizon, terminal };
+    if (scenarioId === "B1_observed") provenance.scenario_label = B1_LABEL;
+    push(value, provenance);
     return value;
   };
 

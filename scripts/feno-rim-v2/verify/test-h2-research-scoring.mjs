@@ -144,6 +144,23 @@ for (const id of indexIds) {
   assert.ok(Math.abs(coverage - s1.per_index[id].baseline.coverage_rate) < 1e-9, "baseline coverage re-derived from panel alone");
 }
 
+// --- smoke-only declaration (owner ruling 2026-08-06) -----------------------
+
+// Until a core ERP band lands, the walk-forward rates are infrastructure
+// smoke, never performance — the artifact must say so even when the rates
+// are finite, and a future flip must be the artifact's own derivation, not
+// a silent edit of these assertions.
+assert.equal(s1.status, "INFRASTRUCTURE_SMOKE_ONLY", "status must declare smoke-only while core ERP is absent");
+assert.equal(s1.performance_evaluable, false, "performance_evaluable must be false while core ERP is absent");
+assert.equal(s1.reason, "core_erp_absent", "reason must name core_erp_absent");
+const finiteRates = Object.values(s1.per_index).some((s) => s.coverage_rate !== null);
+assert.ok(finiteRates, "precondition: some walk-forward rates are finite today");
+assert.equal(s1.performance_evaluable, false, "finite coverage/directional with erp_band null must stay non-performance");
+assert.ok(
+  JSON.stringify(s1.data_gaps).includes("INFRASTRUCTURE_SMOKE_ONLY"),
+  "the emitted gap sentences must carry the smoke-only declaration",
+);
+
 // --- SPEC §9 minimum-pass table ---------------------------------------------
 
 {
