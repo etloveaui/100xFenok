@@ -125,10 +125,20 @@ const sha256 = (text) => crypto.createHash("sha256").update(text).digest("hex");
 // the identity check §9 requires ("or its identity fails"). Current files
 // carry only ~1 year of price history (history_1y) and truncated dividend
 // spans; both shortfalls surface as bias_unadjusted origins and data gaps.
+//
+// UNADJUSTED LEG (Phase 3B tracker slice): the dividend adjustment needs a
+// NOMINAL close at the origin — an auto-adjusted close is understated at
+// older origins by the cumulative distribution yield, which would overstate
+// the add-on, one-sided, growing with origin age. The unadjusted leg lives in
+// a SIBLING file data/yf/finance/{SYMBOL}.unadjusted.json and is purely
+// additive: history_1y, its 260 cap and its auto_adjust semantics are
+// untouched for the 18+ existing consumers. When the leg is absent or its
+// identity fails, the §9 bias_unadjusted path is kept — never a silent
+// fallback to the adjusted close.
 export function loadTracker(symbol) {
   const file = `data/yf/finance/${symbol}.json`;
   if (!fs.existsSync(path.join(ROOT, file))) {
-    return Object.freeze({ symbol, identity_ok: false, file_exists: false, prices: [], dividends: [], price_start: null, price_end: null, div_start: null, div_end: null });
+    return Object.freeze({ symbol, identity_ok: false, file_exists: false, prices: [], dividends: [], price_start: null, price_end: null, div_start: null, div_end: null, unadjusted: Object.freeze({ symbol, identity_ok: false, file_exists: false, prices: [], price_start: null, price_end: null }) });
   }
   const raw = readJson(file);
   const identityOk = raw.ticker === symbol;
@@ -140,6 +150,27 @@ export function loadTracker(symbol) {
     .map(([date, amount]) => Object.freeze({ ms: parseDateMs(date), amount }))
     .filter((row) => Number.isFinite(row.amount))
     .sort((a, b) => a.ms - b.ms);
+
+  const unadjFile = `data/yf/finance/${symbol}.unadjusted.json`;
+  const unadjusted = fs.existsSync(path.join(ROOT, unadjFile))
+    ? (() => {
+        const unadjRaw = readJson(unadjFile);
+        const unadjIdentityOk = unadjRaw.ticker === symbol;
+        const unadjPrices = (unadjRaw.data?.history_unadjusted ?? [])
+          .filter((row) => row.date && Number.isFinite(row.Close))
+          .map((row) => Object.freeze({ ms: parseDateMs(row.date), close: row.Close }))
+          .sort((a, b) => a.ms - b.ms);
+        return Object.freeze({
+          symbol,
+          identity_ok: unadjIdentityOk,
+          file_exists: true,
+          prices: unadjPrices,
+          price_start: unadjPrices.length ? isoDate(unadjPrices[0].ms) : null,
+          price_end: unadjPrices.length ? isoDate(unadjPrices[unadjPrices.length - 1].ms) : null,
+        });
+      })()
+    : Object.freeze({ symbol, identity_ok: false, file_exists: false, prices: [], price_start: null, price_end: null });
+
   return Object.freeze({
     symbol,
     identity_ok: identityOk,
@@ -150,6 +181,7 @@ export function loadTracker(symbol) {
     price_end: prices.length ? isoDate(prices[prices.length - 1].ms) : null,
     div_start: dividends.length ? isoDate(dividends[0].ms) : null,
     div_end: dividends.length ? isoDate(dividends[dividends.length - 1].ms) : null,
+    unadjusted,
   });
 }
 
@@ -164,6 +196,16 @@ export function loadTracker(symbol) {
 // failed identity) leaves the origin on raw price return and labels it
 // bias_unadjusted: dividend_series_absent. The direction of the bias is
 // stated: price return alone understates total return.
+//
+// DENOMINATOR (Phase 3B tracker slice): the yield is nominal over NOMINAL —
+// the divisor is the UNADJUSTED close at the origin (tracker.unadjusted).
+// An auto-adjusted close is understated at older origins by the cumulative
+// distribution yield since that date, so the old denominator overstated the
+// add-on, one-sided, growing with origin age (measured at an 11-year-old
+// origin: +0.51pp EWY, +0.33pp SPY, +0.27pp IWM, +0.09pp ONEQ, +0.06pp QQQ,
+// +0.03pp SOXX on a 36-month add-on). When the unadjusted leg is absent or
+// its identity fails, the origin keeps the §9 bias_unadjusted path — there is
+// no silent fallback to the adjusted close.
 export function dividendAdjustment({ t0ms, t1ms, priceReturn }, tracker) {
   const fail = (detail) => Object.freeze({
     dividend_adjusted_return: null,
@@ -173,10 +215,14 @@ export function dividendAdjustment({ t0ms, t1ms, priceReturn }, tracker) {
   if (!tracker || !tracker.file_exists) return fail("tracker_file_missing");
   if (!tracker.identity_ok) return fail("tracker_identity_failed");
 
-  // Tracker price at the origin: latest observation at/before as_of, fresh
+  const unadjusted = tracker.unadjusted;
+  if (!unadjusted || !unadjusted.file_exists) return fail("unadjusted_close_series_absent");
+  if (!unadjusted.identity_ok) return fail("unadjusted_close_identity_failed");
+
+  // Unadjusted price at the origin: latest observation at/before as_of, fresh
   // within 45 days (point-in-time reconstruction at the origin date).
   let priceAtOrigin = null;
-  for (const p of tracker.prices) {
+  for (const p of unadjusted.prices) {
     if (p.ms <= t0ms) priceAtOrigin = p;
     else break;
   }
@@ -200,9 +246,9 @@ export function dividendAdjustment({ t0ms, t1ms, priceReturn }, tracker) {
     if (!tailOk) missing.push("dividend_horizon_tail_short");
     return fail(missing.join("+"));
   }
-  // Yield accrued over the horizon, scaled by the tracker price at the origin
-  // (same security on both sides keeps the ratio coherent), added to the
-  // panel price return per §9.
+  // Yield accrued over the horizon, scaled by the UNADJUSTED tracker price at
+  // the origin (same security on both sides keeps the ratio coherent), added
+  // to the panel price return per §9.
   return Object.freeze({
     dividend_adjusted_return: round6(priceReturn + divSum / priceAtOrigin.close),
     bias: null,

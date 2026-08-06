@@ -92,6 +92,7 @@ NON_YAHOO_ETF_LABELS = {"HSCEI", "KOSPI", "NASDAQ", "SHANGHAI", "TOPIX"}
 # row. They are pinned ahead of the shard page and are exempt from the daily
 # limit, which costs six tickers a run.
 RIM_TRACKER_ETFS = {"SPY", "QQQ", "ONEQ", "SOXX", "IWM", "EWY"}
+TRACKER_UNADJUSTED_SCHEMA_VERSION = "yahoo_finance_tracker_unadjusted.v1"
 
 ANNUAL_PERIODS = 4
 QUARTERLY_PERIODS = 5
@@ -940,6 +941,63 @@ def fetch_with_retry(
             "latency_ms": 0,
         })
     return result
+
+
+def fetch_tracker_unadjusted(ticker, timeout_seconds=90):
+    """Full-history UNADJUSTED daily closes for one RIM tracker (Phase 3B slice).
+
+    Additive lane: writes a SIBLING file data/yf/finance/{SYMBOL}.unadjusted.json
+    and never touches the canonical {SYMBOL}.json — history_1y, its 260 cap and
+    its auto_adjust=True semantics stay byte-identical for the 18+ consumers.
+
+    Why unadjusted: the H2 dividend adjustment divides nominal dividend amounts
+    by a close at the origin; an auto-adjusted close is understated at older
+    origins by the cumulative distribution yield, which overstates the add-on,
+    one-sided, growing with origin age. Nominal over nominal removes it.
+
+    Point-in-time: rows are daily closes, each knowable at that day's close;
+    the file's fetched_at is the collection receipt (SPEC v3.0 section 3
+    first-knowable semantics; the reader additionally enforces <= origin and a
+    45-day freshness cap)."""
+    import yfinance as yf
+    with ticker_timeout(timeout_seconds, ticker):
+        df = yf.Ticker(yahoo_symbol(ticker)).history(period="max", interval="1d", auto_adjust=False)
+    rows = []
+    if df is not None and not getattr(df, "empty", True):
+        for idx, row in df.iterrows():
+            close = clean_value(row.get("Close"))
+            if close is None:
+                continue
+            day = _iso(idx) if hasattr(idx, "strftime") else str(idx)
+            if not _parse_utc(day):
+                continue
+            rows.append({"date": day, "Close": close})
+    if not rows:
+        return None
+    payload = {
+        "schema_version": TRACKER_UNADJUSTED_SCHEMA_VERSION,
+        "ticker": ticker,
+        "fetched_at": _observed_now(),
+        "history_as_of": rows[-1]["date"],
+        "data": {"history_unadjusted": rows},
+    }
+    _atomic_write_bytes(OUT_DIR / f"{ticker}.unadjusted.json", stable_json(payload, separators=(",", ":")).encode("utf-8"))
+    return payload
+
+
+def fetch_tracker_unadjusted_with_retry(ticker, retries=2, backoffs=(5, 20), timeout_seconds=90):
+    last_err = None
+    for attempt in range(retries + 1):
+        try:
+            payload = fetch_tracker_unadjusted(ticker, timeout_seconds=timeout_seconds)
+            if payload is not None:
+                return payload
+            last_err = RuntimeError("no unadjusted history returned")
+        except Exception as exc:  # noqa: BLE001 — provider lane reports, never aborts the batch
+            last_err = exc
+        if attempt < retries:
+            time.sleep(backoffs[min(attempt, len(backoffs) - 1)])
+    raise last_err if last_err else RuntimeError(f"no unadjusted history for {ticker}")
 
 
 def merge_existing_payload_data(existing_payload, fetched_data):
@@ -1855,6 +1913,7 @@ def main():
     parser.add_argument("--event-name", default=os.environ.get("GITHUB_EVENT_NAME", "local"))
     parser.add_argument("--event-schedule", default=os.environ.get("EVENT_SCHEDULE", ""))
     parser.add_argument("--controlled-failure-tickers", default="", help="manual targeted failure proof; forbidden on schedules")
+    parser.add_argument("--tracker-unadjusted", action="store_true", help="RIM tracker lane only: full-history UNADJUSTED closes for SPY/QQQ/ONEQ/IWM/EWY/SOXX into sibling files; additive, canonical files untouched")
     args = parser.parse_args()
 
     if args.include_options:
@@ -1898,6 +1957,21 @@ def main():
         event_name=args.event_name,
         record_batch_state=args.record_batch_state,
     )
+
+    if args.tracker_unadjusted:
+        results = {}
+        for ticker in sorted(RIM_TRACKER_ETFS):
+            try:
+                payload = fetch_tracker_unadjusted_with_retry(ticker)
+                results[ticker] = {
+                    "ok": payload is not None,
+                    "rows": len(payload["data"]["history_unadjusted"]) if payload else 0,
+                    "history_as_of": payload["history_as_of"] if payload else None,
+                }
+            except Exception as exc:  # noqa: BLE001 — lane reports per-ticker failure and continues
+                results[ticker] = {"ok": False, "error": str(exc)}
+        print(stable_json({"tracker_unadjusted": results}, indent=2))
+        return
 
     selection_sources = load_universe_sources(
         stocks_only=args.stocks_only,

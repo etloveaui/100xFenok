@@ -195,6 +195,18 @@ function scoreIndex(indexId, cfg, build, receipt) {
   const maeLevel = mean(rows.map((r) => r.mae_level));
   const biasPp = mean(rows.map((r) => r.realized_return)) - upsideMid;
   const dividendAdjusted = scored.filter((o) => o.realized.bias_unadjusted === null).length;
+  // Why the unadjusted origins are unadjusted, counted rather than asserted:
+  // the reason moves as the inputs change (a missing tracker file, a short
+  // history, an absent unadjusted leg), and a hard-coded gap sentence goes
+  // stale silently. Sorted so the artifact stays hash-stable.
+  const biasDetailCounts = {};
+  for (const o of scored) {
+    const detail = o.realized.bias_detail;
+    if (detail) biasDetailCounts[detail] = (biasDetailCounts[detail] ?? 0) + 1;
+  }
+  const sortedBiasDetailCounts = Object.fromEntries(
+    Object.entries(biasDetailCounts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])),
+  );
 
   const bootstrap = (values) => (values.length ? blockBootstrap36m(values) : null);
   const receiptIdx = receipt?.indices?.[indexId];
@@ -217,6 +229,7 @@ function scoreIndex(indexId, cfg, build, receipt) {
     origins_scored: scored.length,
     dividend_adjusted: dividendAdjusted,
     bias_unadjusted_origins: scored.length - dividendAdjusted,
+    bias_detail_counts: sortedBiasDetailCounts,
     coverage_rate: round6(coverageRate),
     directional_rate: round6(directionalRate),
     bias_pp: round6(biasPp),
@@ -313,7 +326,10 @@ export function buildResearchScoring({ generatedAt = new Date().toISOString() } 
     const scored = scoreIndex(indexId, cfg, build, receipt);
     perIndex[indexId] = scored;
     if (scored.dividend_adjusted === 0) {
-      gaps.push(`${indexId}: no dividend-adjusted origin scored (tracker price history ~1y; raw price return used, bias_unadjusted=dividend_series_absent)`);
+      const reasons = Object.entries(scored.bias_detail_counts)
+        .map(([detail, count]) => `${detail}×${count}`)
+        .join(", ") || "no scored origin";
+      gaps.push(`${indexId}: no dividend-adjusted origin scored (${reasons}); raw price return used, bias_unadjusted=dividend_series_absent`);
     }
   }
   gaps.push("hull is computed at the latest point-in-time asOf per index, not walk-forward: adapters supply latest-vintage payout only, so per-origin historical hulls are not computable today; the naive baseline IS per-origin point-in-time");
