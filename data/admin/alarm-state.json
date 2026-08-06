@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-06T06:13:30.887Z",
+  "generated_at": "2026-08-06T06:42:28.688Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 4,
   "open_incidents": [
     {
       "workflow": "deploy-worker.yml",
@@ -42,6 +42,19 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "overdue"
+    },
+    {
+      "workflow": "update-manifest.yml",
+      "label": "Update Manifest",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 31074255915,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31074255915",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
     }
   ],
   "watched_workflows": [
@@ -315,6 +328,19 @@
       "cadence_evidence": []
     },
     {
+      "file": "qa-rim-v2.yml",
+      "label": "QA RIM v2",
+      "events": [
+        "push",
+        "pull_request",
+        "schedule"
+      ],
+      "event": null,
+      "failure_streak_threshold": 2,
+      "cadence_status": "no_declaration",
+      "cadence_evidence": []
+    },
+    {
       "file": "slickcharts-daily.yml",
       "label": "SlickCharts Daily",
       "events": [
@@ -408,7 +434,7 @@
     "not_due": 24,
     "overdue": 2,
     "recovered": 0,
-    "no_declaration": 6,
+    "no_declaration": 7,
     "unknown": 0
   },
   "excluded_workflows": [
@@ -427,14 +453,15 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31076454880",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31076454880",
-    "observed_at": "2026-08-06T06:13:30.887Z",
+    "run_id": "31078080150",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31078080150",
+    "observed_at": "2026-08-06T06:42:28.688Z",
     "event": "workflow_run",
     "workflows": [
       "deploy-worker.yml",
       "fetch-stockanalysis.yml",
-      "fetch-yf-finance.yml"
+      "fetch-yf-finance.yml",
+      "update-manifest.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
