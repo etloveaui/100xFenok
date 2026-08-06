@@ -856,7 +856,7 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
   const result = JSON.parse(fs.readFileSync(resultPath, "utf8"));
   assert.equal(result.status, "unknown", "missing repository reports unknown status");
   assert.ok(!("issueBody" in result), "unknown status must not produce an alarm issue body");
-  assert.equal(result.watched.length, 32, "the first cadence dry run covers the current 32 watched workflows");
+  assert.equal(result.watched.length, 33, "the first cadence dry run covers the current 33 watched workflows");
   assert.equal(result.workflows.length, result.watched.length, "the first cadence dry run emits one classified row per watched workflow");
   assert.deepEqual(Object.keys(result.cadence_state_counts), CADENCE_STATES);
   assert.equal(
