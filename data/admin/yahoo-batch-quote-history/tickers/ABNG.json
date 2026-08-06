@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-08-05T10:47:11Z",
     "history_as_of": "2026-07-31",
-    "path": "data/yf/finance/ABNG.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ABNG.json",
     "payload_sha256": "45620586c1f20f2c4e133c29b5dabcffaa8c85e69114f0b8378f39f2892e4043",
     "quote_as_of": "2026-07-28T20:00:00Z",
     "source_as_of": "2026-07-28T20:00:00Z"
@@ -52,12 +52,12 @@
     "shard": "40/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-19T23:01:46Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-08-05T10:47:11Z",
+    "history_as_of": "2026-07-31",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ABNG.json",
-    "payload_sha256": "13134b28161ffe5ed503169b3ab076bcfcee0bd5b8028a703684e5b8ed4e84a2",
-    "quote_as_of": "2026-07-17T20:00:00Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "45620586c1f20f2c4e133c29b5dabcffaa8c85e69114f0b8378f39f2892e4043",
+    "quote_as_of": "2026-07-28T20:00:00Z",
+    "source_as_of": "2026-07-28T20:00:00Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-28T20:00:00Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-07-28T00:14:11Z",
-    "classified_run_id": "30316637722",
+    "classified_at": "2026-08-06T00:14:28Z",
+    "classified_run_id": "31058959670",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "ABNG holds LKG because Yahoo source date 2026-07-17 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ABNG holds LKG because Yahoo source date 2026-07-28T20:00:00Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-07-28T20:00:00Z"
   },
   "ticker": "ABNG",
-  "updated_at": "2026-08-05T10:46:42Z"
+  "updated_at": "2026-08-06T00:14:28Z"
 }

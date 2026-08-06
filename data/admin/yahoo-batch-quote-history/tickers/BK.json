@@ -5,20 +5,6 @@
       "error": "ValueError: provider source timestamp is unavailable for BK",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 383,
-      "natural": true,
-      "observed_at": "2026-07-17T00:15:36Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "29544227703",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: provider source timestamp is unavailable for BK",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 498,
       "natural": true,
       "observed_at": "2026-07-18T00:37:10Z",
@@ -366,6 +352,39 @@
       "run_id": "30962773171",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-06T00:14:28Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31058959670",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -405,10 +424,10 @@
     ],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-05T00:18:15Z",
+    "observed_at": "2026-08-06T00:14:28Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "30962773171",
+    "run_id": "31058959670",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -439,9 +458,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-08-05T00:18:15Z",
+    "observed_at": "2026-08-06T00:14:28Z",
     "run_attempt": 1,
-    "run_id": "30962773171"
+    "run_id": "31058959670"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:48:55Z",
@@ -465,5 +484,5 @@
     "source_as_of": "2026-07-02"
   },
   "ticker": "BK",
-  "updated_at": "2026-08-05T00:18:15Z"
+  "updated_at": "2026-08-06T00:14:28Z"
 }

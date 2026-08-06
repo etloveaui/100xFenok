@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-01T18:43:35Z",
     "history_as_of": "2026-07-31",
-    "path": "data/yf/finance/EXEQ.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EXEQ.json",
     "payload_sha256": "7c47a5fe90e659c903adeb1b89d872cbb8c16231b70a25b72c421f7183148dff",
     "quote_as_of": "2026-07-28T14:55:25Z",
     "source_as_of": "2026-07-28T14:55:25Z"
@@ -38,6 +38,14 @@
     "schedule": "",
     "shard": "4/6"
   },
+  "lkg": {
+    "fetched_at": "2026-08-01T18:43:35Z",
+    "history_as_of": "2026-07-31",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EXEQ.json",
+    "payload_sha256": "7c47a5fe90e659c903adeb1b89d872cbb8c16231b70a25b72c421f7183148dff",
+    "quote_as_of": "2026-07-28T14:55:25Z",
+    "source_as_of": "2026-07-28T14:55:25Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "workflow_dispatch",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-28T14:55:25Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-06T00:14:28Z",
+    "classified_run_id": "31058959670",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "EXEQ holds LKG because Yahoo source date 2026-07-28T14:55:25Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-28T14:55:25Z"
+  },
   "ticker": "EXEQ",
-  "updated_at": "2026-08-01T18:41:58Z"
+  "updated_at": "2026-08-06T00:14:28Z"
 }

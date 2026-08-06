@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-28T23:08:12Z",
     "history_as_of": "2026-07-28",
-    "path": "data/yf/finance/IGV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/IGV.json",
     "payload_sha256": "4b0da18e136c3ed9249e77546c6cadd4ca5599fb2373e104ed4b8566b59e3559",
     "quote_as_of": "2026-07-28T20:00:01Z",
     "source_as_of": "2026-07-28"
@@ -53,12 +53,12 @@
     "shard": "2/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-27T23:58:27Z",
-    "history_as_of": "2026-06-26",
+    "fetched_at": "2026-07-28T23:08:12Z",
+    "history_as_of": "2026-07-28",
     "path": "data/admin/yahoo-batch-quote-history/lkg/IGV.json",
-    "payload_sha256": "0d49d9963d3bfadb239f4740f2aaa8f98fac07246b99a0f5d5752296259b35a7",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-26"
+    "payload_sha256": "4b0da18e136c3ed9249e77546c6cadd4ca5599fb2373e104ed4b8566b59e3559",
+    "quote_as_of": "2026-07-28T20:00:01Z",
+    "source_as_of": "2026-07-28"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -72,19 +72,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-28"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 10,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-06T00:14:28Z",
+    "classified_run_id": "31058959670",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "IGV holds LKG because Yahoo source date 2026-06-26 is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "IGV holds LKG because Yahoo source date 2026-07-28 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-26"
+    "source_as_of": "2026-07-28"
   },
   "ticker": "IGV",
-  "updated_at": "2026-07-28T23:07:58Z"
+  "updated_at": "2026-08-06T00:14:28Z"
 }
