@@ -12,15 +12,28 @@
       "run_id": "30132647097",
       "schedule": "0 22 * * 5",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 850,
+      "natural": true,
+      "observed_at": "2026-08-06T14:33:02Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31111230701",
+      "schedule": "7 12 * * 0-5",
+      "shard": "54/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-24T23:14:28Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AXTX.json",
-    "payload_sha256": "3162de829e68cc45717e11bbf63828b608c97b060abc568535df85c63c36cc5d",
-    "quote_as_of": "2026-07-24T20:00:00Z",
-    "source_as_of": "2026-07-24"
+    "fetched_at": "2026-08-06T14:34:13Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/AXTX.json",
+    "payload_sha256": "cb34e1af5fa3910536323202871ec023bf4c8b72c2499a25dbda46241133b014",
+    "quote_as_of": "2026-08-06T14:34:10Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 485,
+    "latency_ms": 850,
     "natural": true,
-    "observed_at": "2026-07-24T23:12:06Z",
+    "observed_at": "2026-08-06T14:33:02Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30132647097",
-    "schedule": "0 22 * * 5",
-    "shard": "5/6"
+    "run_id": "31111230701",
+    "schedule": "7 12 * * 0-5",
+    "shard": "54/72"
   },
   "lkg": {
     "fetched_at": "2026-07-24T23:14:28Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-24T23:12:06Z",
-    "payload_sha256": "0711f8ac56a0b5286ecfd9d087a4a35ea575fd51141701b4ccc68ec0d5b785c8",
-    "quote_as_of": "2026-07-24T20:00:00Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-06T14:33:02Z",
+    "payload_sha256": "f83e5580e4ac02ba5a16261f85347818b965d6d50776476be1200d0a0900caaa",
+    "quote_as_of": "2026-08-06T14:34:10Z",
     "run_attempt": 1,
-    "run_id": "30132647097",
+    "run_id": "31111230701",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "AXTX",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-06T14:33:02Z"
 }

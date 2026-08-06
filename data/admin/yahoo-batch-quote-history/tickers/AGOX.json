@@ -12,15 +12,28 @@
       "run_id": "30132647097",
       "schedule": "0 22 * * 5",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 706,
+      "natural": true,
+      "observed_at": "2026-08-06T14:33:02Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31111230701",
+      "schedule": "7 12 * * 0-5",
+      "shard": "54/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-24T23:13:46Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AGOX.json",
-    "payload_sha256": "2c5dec15c67ca6e485f16113746033f6a791be7bb2103e05d5d5061ece1932b3",
-    "quote_as_of": "2026-07-24T20:00:00Z",
-    "source_as_of": "2026-07-24"
+    "fetched_at": "2026-08-06T14:33:26Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/AGOX.json",
+    "payload_sha256": "a1bfd8fe9e9561c963fe815c70b51cd1ab04439370abde91106832e9b190487e",
+    "quote_as_of": "2026-08-06T13:46:01Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 570,
+    "latency_ms": 706,
     "natural": true,
-    "observed_at": "2026-07-24T23:12:06Z",
+    "observed_at": "2026-08-06T14:33:02Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30132647097",
-    "schedule": "0 22 * * 5",
-    "shard": "5/6"
+    "run_id": "31111230701",
+    "schedule": "7 12 * * 0-5",
+    "shard": "54/72"
   },
   "lkg": {
     "fetched_at": "2026-07-24T23:13:46Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-24T23:12:06Z",
-    "payload_sha256": "c28e420df6ba1dc87cf4c6d8ce460c5a7dbbcffa589a8892713da66d1d3a8c1c",
-    "quote_as_of": "2026-07-24T20:00:00Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-06T14:33:02Z",
+    "payload_sha256": "1a05bc1d8e540856a684f8c400054e3b0c341a52b35ff3b6fc3af8b2675bcee0",
+    "quote_as_of": "2026-08-06T13:46:01Z",
     "run_attempt": 1,
-    "run_id": "30132647097",
+    "run_id": "31111230701",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "AGOX",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-06T14:33:02Z"
 }
