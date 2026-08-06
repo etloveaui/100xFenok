@@ -9,6 +9,7 @@
 
 import { defineAdapter } from "../provenance.mjs";
 import { buildPanelInput, usRiskFree } from "./panel-common.mjs";
+import { erpWindowAt } from "../erp-band.mjs";
 
 export const SOX_OUT_OF_SCOPE_REASON =
   "published semiconductor claims name SOXX, a different index from the Philadelphia Semiconductor index";
@@ -22,6 +23,7 @@ export function buildSoxInput(asOf) {
     rate: usRiskFree(asOf),
     universeId: "philadelphia_semi_micro_sector_panel",
     currency: "USD",
+    erp: erpWindowAt(asOf, "us"),
     extras: {
       publication_scope: "OUT_OF_SCOPE",
       out_of_scope_reason: SOX_OUT_OF_SCOPE_REASON,

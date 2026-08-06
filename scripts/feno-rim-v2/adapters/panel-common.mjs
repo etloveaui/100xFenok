@@ -108,7 +108,7 @@ export function usRiskFree(asOf) {
  * payout's own component date, so a proxy fetched after asOf refuses with
  * `look-ahead` instead of silently mixing vintages.
  */
-export function buildPanelInput({ asOf, panelFile, section, payoutKey, rate, universeId, currency, extras = {}, payoutOverride = null, payoutScenarioId = "ttm_ttm", payoutBasis = null, b2Admitted = false }) {
+export function buildPanelInput({ asOf, panelFile, section, payoutKey, rate, universeId, currency, extras = {}, payoutOverride = null, payoutScenarioId = "ttm_ttm", payoutBasis = null, b2Admitted = false, erp = null }) {
   const panel = usablePanelRows(readJson(panelFile).sections[section].data);
   const row = lastAtOrBefore(panel, asOf);
   if (!row) throw new Error(`${section} adapter: no panel row at or before ${asOf}`);
@@ -127,6 +127,14 @@ export function buildPanelInput({ asOf, panelFile, section, payoutKey, rate, uni
     if (!payoutComponent) throw new Error(`${section} adapter: b2_admitted requires a payout first-knowable component`);
     componentDates.payout_statement = payoutComponent;
   }
+  // ERP is now CONSUMED (band wiring slice): the restored band joins the
+  // first-knowable component set, mirroring payout — an observation whose
+  // first-knowable is after the origin is excluded by the window builder, and
+  // a band without a first-knowable component is a build error.
+  if (erp) {
+    if (!erp.first_knowable) throw new Error(`${section} adapter: erp band requires a first-knowable component`);
+    componentDates.erp = erp.first_knowable;
+  }
   const firstK = firstKnowable(componentDates, asOf);
   return {
     book: row.px_last / row.px_to_book_ratio,
@@ -141,7 +149,8 @@ export function buildPanelInput({ asOf, panelFile, section, payoutKey, rate, uni
       period: payout.year ?? payout.period,
     }],
     growth_observed: growthWindows(panel, asOf),
-    erp_band: null, // core ERP unproven until the ERP contract research lands
+    erp_band: erp ? erp.band : null, // restored archive band, point-in-time per origin
+    erp_first_knowable: erp ? erp.first_knowable : null,
     b2_admitted: b2Admitted,
     b2_exclusion_reason: b2Admitted ? null : "clean-surplus bridge data incomplete: issuance and OCI aggregates absent",
     // Recorded so a reader can see the check was scoped out, not forgotten.

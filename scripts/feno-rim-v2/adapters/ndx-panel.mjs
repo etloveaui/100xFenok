@@ -7,6 +7,7 @@
 
 import { defineAdapter } from "../provenance.mjs";
 import { buildPanelInput, payoutFor, usRiskFree } from "./panel-common.mjs";
+import { erpWindowAt } from "../erp-band.mjs";
 
 export function buildNdxInput(asOf) {
   return buildPanelInput({
@@ -17,6 +18,7 @@ export function buildNdxInput(asOf) {
     rate: usRiskFree(asOf),
     universeId: "nasdaq100_bloomberg_panel",
     currency: "USD",
+    erp: erpWindowAt(asOf, "us"),
   });
 }
 

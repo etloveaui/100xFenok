@@ -26,10 +26,12 @@ assert.throws(() => joinGuard(input, { ...input, membership_as_of: "2026-06-30" 
 // 3. The engine is id-blind on the real adapter input.
 assert.deepEqual(invarianceViolations(computeFamilyB, input), [], "no output may depend on the index id");
 
-// 4. Public status NULL while the core ERP band is unproven.
+// 4. Public status NULL while the holdout calibration gate is unmet (the ERP
+//    band is present but nothing may promote without SPEC §8 calibration).
 const result = computeFamilyB(input);
 assert.equal(result.public_status, "NULL");
-assert.ok(result.null_reasons.includes("core_erp_unidentified"), "NULL must name core_erp_unidentified");
+assert.ok(input.erp_band, "the restored ERP band must be wired into the input");
+assert.ok(result.null_reasons.includes("holdout_interval_calibration_not_met"), "NULL must name the holdout calibration gate");
 
 // 5. B2 excluded with a stated reason, surfaced in the compute output.
 assert.equal(result.b2_admitted, false);

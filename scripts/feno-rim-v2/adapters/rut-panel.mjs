@@ -8,6 +8,7 @@
 // the book-CAGR inputs stay point-in-time.
 
 import { defineAdapter } from "../provenance.mjs";
+import { erpWindowAt } from "../erp-band.mjs";
 import { lastAtOrBefore, readJson, shiftYears, usablePanelRows, usRiskFree } from "./panel-common.mjs";
 
 export function rutOfficialSnapshot() {
@@ -48,6 +49,8 @@ export function buildRutInput(asOf) {
 
   const price = row.px_last;
   const book = price / snap.priceToBook;
+  // ERP from the restored US archive band at THIS origin (point-in-time).
+  const erp = erpWindowAt(asOf, "us");
   return {
     book,
     price,
@@ -70,7 +73,8 @@ export function buildRutInput(asOf) {
       w10: bookCagr(panel, asOf, 10),
       w15: bookCagr(panel, asOf, 15),
     },
-    erp_band: null,
+    erp_band: erp.band,
+    erp_first_knowable: erp.first_knowable,
     b2_admitted: false,
     b2_exclusion_reason: "clean-surplus bridge data incomplete: issuance and OCI aggregates absent",
     // RUT audit (2026-08-06): the factsheet date IS consumed (book and ROE

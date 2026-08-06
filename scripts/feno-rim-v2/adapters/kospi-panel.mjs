@@ -8,6 +8,7 @@
 
 import { defineAdapter } from "../provenance.mjs";
 import { buildPanelInput, lastAtOrBefore, readJson } from "./panel-common.mjs";
+import { erpWindowAt } from "../erp-band.mjs";
 
 export function krRiskFree(asOf) {
   const rates = readJson("data/macro/fred-banking-daily.json").series.IRLTLT01KRM156N;
@@ -30,6 +31,7 @@ export function buildKospiInput(asOf) {
     rate: krRiskFree(asOf),
     universeId: "kospi_emerging_panel",
     currency: "KRW",
+    erp: erpWindowAt(asOf, "kr"),
   });
 }
 

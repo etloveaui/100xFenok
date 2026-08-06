@@ -174,7 +174,16 @@ export function computeFamilyB(input) {
   }
 
   const nullReasons = [];
-  if (!erpBand) nullReasons.push("core_erp_unidentified");
+  if (!erpBand) {
+    nullReasons.push("core_erp_unidentified");
+  } else {
+    // Band wiring slice (owner ruling 2026-08-06): a proven ERP band does NOT
+    // flip anything to RANGE. SPEC v3.0 §8 requires interval calibration on a
+    // holdout for RANGE and §11 keeps confidence UNVERIFIED until Gate 4;
+    // neither exists yet, so the row stays NULL with the genuinely next
+    // blocker named.
+    nullReasons.push("holdout_interval_calibration_not_met");
+  }
   if (reversal) nullReasons.push("scenario_direction_reversal");
 
   return {

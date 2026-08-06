@@ -23,8 +23,9 @@ function assertContract(name, input) {
   assert.equal(validateNormalizedInput(input), true, `${name}: provenance validation`);
   assert.deepEqual(invarianceViolations(computeFamilyB, input), [], `${name}: engine must stay id-blind`);
   const result = computeFamilyB(input);
-  assert.equal(result.public_status, "NULL", `${name}: NULL while core ERP unproven`);
-  assert.ok(result.null_reasons.includes("core_erp_unidentified"), `${name}: null reason named`);
+  assert.equal(result.public_status, "NULL", `${name}: NULL while the holdout calibration gate is unmet`);
+  assert.ok(input.erp_band, `${name}: restored ERP band wired`);
+  assert.ok(result.null_reasons.includes("holdout_interval_calibration_not_met"), `${name}: null reason names the holdout gate`);
   assert.equal(result.b2_admitted, false, `${name}: B2 excluded`);
   assert.ok(typeof result.b2_exclusion_reason === "string" && result.b2_exclusion_reason.length > 0, `${name}: B2 reason stated`);
   assert.ok(Number.isFinite(result.value_hull.low) && Number.isFinite(result.value_hull.high), `${name}: hull finite`);

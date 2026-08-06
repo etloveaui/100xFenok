@@ -4,28 +4,21 @@
   "spec_ref": "docs/analysis/yoo-rim-audit/FENO_RIM_RECONSTRUCTION_SPEC_v3_0.md §9",
   "research_only": true,
   "promotion": null,
-  "status": "INFRASTRUCTURE_SMOKE_ONLY",
-  "performance_evaluable": false,
-  "reason": "core_erp_absent",
-  "indices_without_core_erp": [
-    "sp500",
-    "nasdaq100",
-    "nasdaq_composite",
-    "russell2000",
-    "kospi",
-    "philadelphia_semi"
-  ],
+  "status": "PERFORMANCE_EVALUABLE",
+  "performance_evaluable": true,
+  "reason": null,
+  "indices_without_core_erp": [],
   "scoring_method": "walk-forward: per-origin B1 diagnostic hull (computeFamilyB, b2_admitted=false, erp_band=null) at each scored origin's as-of, realized level inside that origin's hull, directional agreement of the band midpoint, MAE of band midpoint vs realized, 36m block bootstrap CIs, ESS from the feasibility receipt; naive baseline (trailing-10y P/B band) on the same origins, independent of Family B output",
   "per_index": {
     "sp500": {
       "as_of": "2023-06-16",
       "price": 4409.59,
       "hull": {
-        "low": 2490.808889815257,
-        "high": 8477.38305253546,
+        "low": 1724.1187891602306,
+        "high": 3607.2833394491477,
         "public_status": "NULL",
         "null_reasons": [
-          "core_erp_unidentified"
+          "holdout_interval_calibration_not_met"
         ]
       },
       "walk_forward": {
@@ -34,14 +27,17 @@
         "refusals": {
           "no_growth_window": 21
         },
-        "coverage_rate": 1,
-        "directional_rate": 1,
-        "mae_level": 3588.86217,
+        "hull_width_pct_mean": 46.362744,
+        "point_band_origins": 2,
+        "range_band_origins": 32,
+        "coverage_rate": 0,
+        "directional_rate": 0.029412,
+        "mae_level": 2335.719591,
         "ci": {
           "coverage": {
-            "mean": 1,
-            "ci_lower": 1,
-            "ci_upper": 1,
+            "mean": 0,
+            "ci_lower": 0,
+            "ci_upper": 0,
             "ci_level": 0.95,
             "n": 34,
             "block_size_quarters": 12,
@@ -51,9 +47,9 @@
             "method": "moving_block_bootstrap_36m"
           },
           "directional": {
-            "mean": 1,
-            "ci_lower": 1,
-            "ci_upper": 1,
+            "mean": 0.029412,
+            "ci_lower": 0,
+            "ci_upper": 0.088235,
             "ci_level": 0.95,
             "n": 34,
             "block_size_quarters": 12,
@@ -63,9 +59,9 @@
             "method": "moving_block_bootstrap_36m"
           },
           "mae": {
-            "mean": 3588.86217,
-            "ci_lower": 1544.226678,
-            "ci_upper": 6803.512847,
+            "mean": 2335.719591,
+            "ci_lower": 1725.936376,
+            "ci_upper": 2721.135909,
             "ci_level": 0.95,
             "n": 34,
             "block_size_quarters": 12,
@@ -76,14 +72,14 @@
           }
         }
       },
-      "coverage_rate": 1,
-      "directional_rate": 1,
-      "mae_level": 3588.86217,
+      "coverage_rate": 0,
+      "directional_rate": 0.029412,
+      "mae_level": 2335.719591,
       "ci": {
         "coverage": {
-          "mean": 1,
-          "ci_lower": 1,
-          "ci_upper": 1,
+          "mean": 0,
+          "ci_lower": 0,
+          "ci_upper": 0,
           "ci_level": 0.95,
           "n": 34,
           "block_size_quarters": 12,
@@ -93,9 +89,9 @@
           "method": "moving_block_bootstrap_36m"
         },
         "directional": {
-          "mean": 1,
-          "ci_lower": 1,
-          "ci_upper": 1,
+          "mean": 0.029412,
+          "ci_lower": 0,
+          "ci_upper": 0.088235,
           "ci_level": 0.95,
           "n": 34,
           "block_size_quarters": 12,
@@ -105,9 +101,9 @@
           "method": "moving_block_bootstrap_36m"
         },
         "mae": {
-          "mean": 3588.86217,
-          "ci_lower": 1544.226678,
-          "ci_upper": 6803.512847,
+          "mean": 2335.719591,
+          "ci_lower": 1725.936376,
+          "ci_upper": 2721.135909,
           "ci_level": 0.95,
           "n": 34,
           "block_size_quarters": 12,
@@ -123,6 +119,7 @@
       "dividend_source": "sibling_full_history",
       "ess_capped": 55,
       "payout_consumed": false,
+      "erp_present": true,
       "baseline": {
         "origins_scored": 55,
         "coverage_rate": 0,
@@ -174,11 +171,11 @@
       "as_of": "2023-06-16",
       "price": 15083.92,
       "hull": {
-        "low": 7149.180552781898,
-        "high": 33954.28937842035,
+        "low": 4948.379979646114,
+        "high": 13441.914461261535,
         "public_status": "NULL",
         "null_reasons": [
-          "core_erp_unidentified"
+          "holdout_interval_calibration_not_met"
         ]
       },
       "walk_forward": {
@@ -187,14 +184,17 @@
         "refusals": {
           "no_growth_window": 21
         },
-        "coverage_rate": 1,
-        "directional_rate": 1,
-        "mae_level": 13708.036204,
+        "hull_width_pct_mean": 73.30053,
+        "point_band_origins": 2,
+        "range_band_origins": 32,
+        "coverage_rate": 0.088235,
+        "directional_rate": 0.147059,
+        "mae_level": 8144.666894,
         "ci": {
           "coverage": {
-            "mean": 1,
-            "ci_lower": 1,
-            "ci_upper": 1,
+            "mean": 0.088235,
+            "ci_lower": 0,
+            "ci_upper": 0.117647,
             "ci_level": 0.95,
             "n": 34,
             "block_size_quarters": 12,
@@ -204,9 +204,9 @@
             "method": "moving_block_bootstrap_36m"
           },
           "directional": {
-            "mean": 1,
-            "ci_lower": 1,
-            "ci_upper": 1,
+            "mean": 0.147059,
+            "ci_lower": 0.029412,
+            "ci_upper": 0.235294,
             "ci_level": 0.95,
             "n": 34,
             "block_size_quarters": 12,
@@ -216,9 +216,9 @@
             "method": "moving_block_bootstrap_36m"
           },
           "mae": {
-            "mean": 13708.036204,
-            "ci_lower": 5773.278786,
-            "ci_upper": 25994.637402,
+            "mean": 8144.666894,
+            "ci_lower": 5532.497752,
+            "ci_upper": 9720.417037,
             "ci_level": 0.95,
             "n": 34,
             "block_size_quarters": 12,
@@ -229,14 +229,14 @@
           }
         }
       },
-      "coverage_rate": 1,
-      "directional_rate": 1,
-      "mae_level": 13708.036204,
+      "coverage_rate": 0.088235,
+      "directional_rate": 0.147059,
+      "mae_level": 8144.666894,
       "ci": {
         "coverage": {
-          "mean": 1,
-          "ci_lower": 1,
-          "ci_upper": 1,
+          "mean": 0.088235,
+          "ci_lower": 0,
+          "ci_upper": 0.117647,
           "ci_level": 0.95,
           "n": 34,
           "block_size_quarters": 12,
@@ -246,9 +246,9 @@
           "method": "moving_block_bootstrap_36m"
         },
         "directional": {
-          "mean": 1,
-          "ci_lower": 1,
-          "ci_upper": 1,
+          "mean": 0.147059,
+          "ci_lower": 0.029412,
+          "ci_upper": 0.235294,
           "ci_level": 0.95,
           "n": 34,
           "block_size_quarters": 12,
@@ -258,9 +258,9 @@
           "method": "moving_block_bootstrap_36m"
         },
         "mae": {
-          "mean": 13708.036204,
-          "ci_lower": 5773.278786,
-          "ci_upper": 25994.637402,
+          "mean": 8144.666894,
+          "ci_lower": 5532.497752,
+          "ci_upper": 9720.417037,
           "ci_level": 0.95,
           "n": 34,
           "block_size_quarters": 12,
@@ -276,6 +276,7 @@
       "dividend_source": "sibling_full_history",
       "ess_capped": 55,
       "payout_consumed": false,
+      "erp_present": true,
       "baseline": {
         "origins_scored": 55,
         "coverage_rate": 0,
@@ -327,11 +328,11 @@
       "as_of": "2023-06-16",
       "price": 13689.57,
       "hull": {
-        "low": 5974.51500906763,
-        "high": 22890.26432445841,
+        "low": 4060.6240494545204,
+        "high": 9193.994638859458,
         "public_status": "NULL",
         "null_reasons": [
-          "core_erp_unidentified"
+          "holdout_interval_calibration_not_met"
         ]
       },
       "walk_forward": {
@@ -340,14 +341,17 @@
         "refusals": {
           "no_growth_window": 21
         },
-        "coverage_rate": 0.970588,
-        "directional_rate": 1,
-        "mae_level": 10004.629219,
+        "hull_width_pct_mean": 49.457492,
+        "point_band_origins": 2,
+        "range_band_origins": 32,
+        "coverage_rate": 0,
+        "directional_rate": 0,
+        "mae_level": 8351.388262,
         "ci": {
           "coverage": {
-            "mean": 0.970588,
-            "ci_lower": 0.970588,
-            "ci_upper": 1,
+            "mean": 0,
+            "ci_lower": 0,
+            "ci_upper": 0,
             "ci_level": 0.95,
             "n": 34,
             "block_size_quarters": 12,
@@ -357,9 +361,9 @@
             "method": "moving_block_bootstrap_36m"
           },
           "directional": {
-            "mean": 1,
-            "ci_lower": 1,
-            "ci_upper": 1,
+            "mean": 0,
+            "ci_lower": 0,
+            "ci_upper": 0,
             "ci_level": 0.95,
             "n": 34,
             "block_size_quarters": 12,
@@ -369,9 +373,9 @@
             "method": "moving_block_bootstrap_36m"
           },
           "mae": {
-            "mean": 10004.629219,
-            "ci_lower": 4028.587991,
-            "ci_upper": 18974.714737,
+            "mean": 8351.388262,
+            "ci_lower": 6214.048595,
+            "ci_upper": 9606.783712,
             "ci_level": 0.95,
             "n": 34,
             "block_size_quarters": 12,
@@ -382,14 +386,14 @@
           }
         }
       },
-      "coverage_rate": 0.970588,
-      "directional_rate": 1,
-      "mae_level": 10004.629219,
+      "coverage_rate": 0,
+      "directional_rate": 0,
+      "mae_level": 8351.388262,
       "ci": {
         "coverage": {
-          "mean": 0.970588,
-          "ci_lower": 0.970588,
-          "ci_upper": 1,
+          "mean": 0,
+          "ci_lower": 0,
+          "ci_upper": 0,
           "ci_level": 0.95,
           "n": 34,
           "block_size_quarters": 12,
@@ -399,9 +403,9 @@
           "method": "moving_block_bootstrap_36m"
         },
         "directional": {
-          "mean": 1,
-          "ci_lower": 1,
-          "ci_upper": 1,
+          "mean": 0,
+          "ci_lower": 0,
+          "ci_upper": 0,
           "ci_level": 0.95,
           "n": 34,
           "block_size_quarters": 12,
@@ -411,9 +415,9 @@
           "method": "moving_block_bootstrap_36m"
         },
         "mae": {
-          "mean": 10004.629219,
-          "ci_lower": 4028.587991,
-          "ci_upper": 18974.714737,
+          "mean": 8351.388262,
+          "ci_lower": 6214.048595,
+          "ci_upper": 9606.783712,
           "ci_level": 0.95,
           "n": 34,
           "block_size_quarters": 12,
@@ -429,6 +433,7 @@
       "dividend_source": "sibling_full_history",
       "ess_capped": 55,
       "payout_consumed": false,
+      "erp_present": true,
       "baseline": {
         "origins_scored": 55,
         "coverage_rate": 0,
@@ -486,6 +491,9 @@
         "refusals": {
           "lseg_factsheet_not_first_knowable": 55
         },
+        "hull_width_pct_mean": null,
+        "point_band_origins": 0,
+        "range_band_origins": 0,
         "coverage_rate": null,
         "directional_rate": null,
         "mae_level": null,
@@ -509,6 +517,7 @@
       "dividend_source": "sibling_full_history",
       "ess_capped": 55,
       "payout_consumed": null,
+      "erp_present": null,
       "baseline": {
         "origins_scored": 55,
         "coverage_rate": 0,
@@ -560,11 +569,11 @@
       "as_of": "2023-06-23",
       "price": 2570.1,
       "hull": {
-        "low": 3740.0674615211237,
-        "high": 10075.76623151594,
+        "low": 1867.0442991431896,
+        "high": 3713.5422430154867,
         "public_status": "NULL",
         "null_reasons": [
-          "core_erp_unidentified"
+          "holdout_interval_calibration_not_met"
         ]
       },
       "walk_forward": {
@@ -573,14 +582,17 @@
         "refusals": {
           "no_growth_window": 21
         },
-        "coverage_rate": 0.117647,
+        "hull_width_pct_mean": 78.055786,
+        "point_band_origins": 2,
+        "range_band_origins": 32,
+        "coverage_rate": 0.705882,
         "directional_rate": 0.794118,
-        "mae_level": 9176.084596,
+        "mae_level": 991.535713,
         "ci": {
           "coverage": {
-            "mean": 0.117647,
-            "ci_lower": 0,
-            "ci_upper": 0.147059,
+            "mean": 0.705882,
+            "ci_lower": 0.617647,
+            "ci_upper": 0.882353,
             "ci_level": 0.95,
             "n": 34,
             "block_size_quarters": 12,
@@ -602,9 +614,9 @@
             "method": "moving_block_bootstrap_36m"
           },
           "mae": {
-            "mean": 9176.084596,
-            "ci_lower": 8064.812256,
-            "ci_upper": 12397.166709,
+            "mean": 991.535713,
+            "ci_lower": 468.841151,
+            "ci_upper": 1109.800498,
             "ci_level": 0.95,
             "n": 34,
             "block_size_quarters": 12,
@@ -615,14 +627,14 @@
           }
         }
       },
-      "coverage_rate": 0.117647,
+      "coverage_rate": 0.705882,
       "directional_rate": 0.794118,
-      "mae_level": 9176.084596,
+      "mae_level": 991.535713,
       "ci": {
         "coverage": {
-          "mean": 0.117647,
-          "ci_lower": 0,
-          "ci_upper": 0.147059,
+          "mean": 0.705882,
+          "ci_lower": 0.617647,
+          "ci_upper": 0.882353,
           "ci_level": 0.95,
           "n": 34,
           "block_size_quarters": 12,
@@ -644,9 +656,9 @@
           "method": "moving_block_bootstrap_36m"
         },
         "mae": {
-          "mean": 9176.084596,
-          "ci_lower": 8064.812256,
-          "ci_upper": 12397.166709,
+          "mean": 991.535713,
+          "ci_lower": 468.841151,
+          "ci_upper": 1109.800498,
           "ci_level": 0.95,
           "n": 34,
           "block_size_quarters": 12,
@@ -662,6 +674,7 @@
       "dividend_source": "sibling_full_history",
       "ess_capped": 42.180311,
       "payout_consumed": false,
+      "erp_present": true,
       "baseline": {
         "origins_scored": 55,
         "coverage_rate": 0.509091,
@@ -705,7 +718,7 @@
             "method": "moving_block_bootstrap_36m"
           }
         },
-        "hull_beats_on_coverage": false,
+        "hull_beats_on_coverage": true,
         "hull_beats_on_mae": false
       }
     },
@@ -713,11 +726,11 @@
       "as_of": "2023-06-16",
       "price": 3673.144,
       "hull": {
-        "low": 2711.846923606447,
-        "high": 22936.732371521306,
+        "low": 1828.7066160953032,
+        "high": 8305.997791932456,
         "public_status": "NULL",
         "null_reasons": [
-          "core_erp_unidentified"
+          "holdout_interval_calibration_not_met"
         ]
       },
       "walk_forward": {
@@ -726,14 +739,17 @@
         "refusals": {
           "no_growth_window": 21
         },
-        "coverage_rate": 1,
-        "directional_rate": 1,
-        "mae_level": 5439.257066,
+        "hull_width_pct_mean": 128.493144,
+        "point_band_origins": 2,
+        "range_band_origins": 32,
+        "coverage_rate": 0.382353,
+        "directional_rate": 0.529412,
+        "mae_level": 1527.044302,
         "ci": {
           "coverage": {
-            "mean": 1,
-            "ci_lower": 1,
-            "ci_upper": 1,
+            "mean": 0.382353,
+            "ci_lower": 0,
+            "ci_upper": 0.764706,
             "ci_level": 0.95,
             "n": 34,
             "block_size_quarters": 12,
@@ -743,9 +759,9 @@
             "method": "moving_block_bootstrap_36m"
           },
           "directional": {
-            "mean": 1,
-            "ci_lower": 1,
-            "ci_upper": 1,
+            "mean": 0.529412,
+            "ci_lower": 0.176471,
+            "ci_upper": 0.852941,
             "ci_level": 0.95,
             "n": 34,
             "block_size_quarters": 12,
@@ -755,9 +771,9 @@
             "method": "moving_block_bootstrap_36m"
           },
           "mae": {
-            "mean": 5439.257066,
-            "ci_lower": 1104.61683,
-            "ci_upper": 11281.113034,
+            "mean": 1527.044302,
+            "ci_lower": 1124.270966,
+            "ci_upper": 1703.179574,
             "ci_level": 0.95,
             "n": 34,
             "block_size_quarters": 12,
@@ -768,14 +784,14 @@
           }
         }
       },
-      "coverage_rate": 1,
-      "directional_rate": 1,
-      "mae_level": 5439.257066,
+      "coverage_rate": 0.382353,
+      "directional_rate": 0.529412,
+      "mae_level": 1527.044302,
       "ci": {
         "coverage": {
-          "mean": 1,
-          "ci_lower": 1,
-          "ci_upper": 1,
+          "mean": 0.382353,
+          "ci_lower": 0,
+          "ci_upper": 0.764706,
           "ci_level": 0.95,
           "n": 34,
           "block_size_quarters": 12,
@@ -785,9 +801,9 @@
           "method": "moving_block_bootstrap_36m"
         },
         "directional": {
-          "mean": 1,
-          "ci_lower": 1,
-          "ci_upper": 1,
+          "mean": 0.529412,
+          "ci_lower": 0.176471,
+          "ci_upper": 0.852941,
           "ci_level": 0.95,
           "n": 34,
           "block_size_quarters": 12,
@@ -797,9 +813,9 @@
           "method": "moving_block_bootstrap_36m"
         },
         "mae": {
-          "mean": 5439.257066,
-          "ci_lower": 1104.61683,
-          "ci_upper": 11281.113034,
+          "mean": 1527.044302,
+          "ci_lower": 1124.270966,
+          "ci_upper": 1703.179574,
           "ci_level": 0.95,
           "n": 34,
           "block_size_quarters": 12,
@@ -815,6 +831,7 @@
       "dividend_source": "sibling_full_history",
       "ess_capped": 55,
       "payout_consumed": false,
+      "erp_present": true,
       "baseline": {
         "origins_scored": 55,
         "coverage_rate": 0,
@@ -859,7 +876,7 @@
           }
         },
         "hull_beats_on_coverage": true,
-        "hull_beats_on_mae": false
+        "hull_beats_on_mae": true
       }
     }
   },
@@ -868,9 +885,9 @@
     "per_index": {
       "sp500": {
         "hull": {
-          "coverage_rate": 1,
-          "directional_rate": 1,
-          "mae_level": 3588.86217
+          "coverage_rate": 0,
+          "directional_rate": 0.029412,
+          "mae_level": 2335.719591
         },
         "baseline": {
           "coverage_rate": 0,
@@ -883,9 +900,9 @@
       },
       "nasdaq100": {
         "hull": {
-          "coverage_rate": 1,
-          "directional_rate": 1,
-          "mae_level": 13708.036204
+          "coverage_rate": 0.088235,
+          "directional_rate": 0.147059,
+          "mae_level": 8144.666894
         },
         "baseline": {
           "coverage_rate": 0,
@@ -898,9 +915,9 @@
       },
       "nasdaq_composite": {
         "hull": {
-          "coverage_rate": 0.970588,
-          "directional_rate": 1,
-          "mae_level": 10004.629219
+          "coverage_rate": 0,
+          "directional_rate": 0,
+          "mae_level": 8351.388262
         },
         "baseline": {
           "coverage_rate": 0,
@@ -928,9 +945,9 @@
       },
       "kospi": {
         "hull": {
-          "coverage_rate": 0.117647,
+          "coverage_rate": 0.705882,
           "directional_rate": 0.794118,
-          "mae_level": 9176.084596
+          "mae_level": 991.535713
         },
         "baseline": {
           "coverage_rate": 0.509091,
@@ -938,14 +955,14 @@
           "mae_level": 442.183961,
           "origins_scored": 55
         },
-        "hull_beats_baseline_on_coverage": false,
+        "hull_beats_baseline_on_coverage": true,
         "hull_beats_baseline_on_mae": false
       },
       "philadelphia_semi": {
         "hull": {
-          "coverage_rate": 1,
-          "directional_rate": 1,
-          "mae_level": 5439.257066
+          "coverage_rate": 0.382353,
+          "directional_rate": 0.529412,
+          "mae_level": 1527.044302
         },
         "baseline": {
           "coverage_rate": 0,
@@ -954,7 +971,7 @@
           "origins_scored": 55
         },
         "hull_beats_baseline_on_coverage": true,
-        "hull_beats_baseline_on_mae": false
+        "hull_beats_baseline_on_mae": true
       }
     }
   },
@@ -1052,9 +1069,8 @@
     "russell2000: 55/55 scored origins refused in walk-forward ({\"lseg_factsheet_not_first_knowable\":55})",
     "kospi: 21/55 scored origins refused in walk-forward ({\"no_growth_window\":21})",
     "philadelphia_semi: 21/55 scored origins refused in walk-forward ({\"no_growth_window\":21})",
-    "walk-forward: per-origin B1 hulls at each origin's as-of (payout check scoped to the B2 branch per owner ruling; RUT keeps its consumed LSEG factsheet check)",
-    "status=INFRASTRUCTURE_SMOKE_ONLY: core_erp_absent for sp500/nasdaq100/nasdaq_composite/russell2000/kospi/philadelphia_semi — walk-forward coverage/directional numbers are smoke, not performance, until the restored ERP band lands (owner ruling 2026-08-06)"
+    "walk-forward: per-origin B1 hulls at each origin's as-of (payout check scoped to the B2 branch per owner ruling; RUT keeps its consumed LSEG factsheet check)"
   ],
-  "generated_at": "2026-08-06T06:14:09.618Z",
-  "scoring_sha256": "56b9277c9e97a0637b3dbf2b65db5ad4f7e65648bd772ae03a1388f40ced94ea"
+  "generated_at": "2026-08-06T06:44:49.137Z",
+  "scoring_sha256": "0efc9e7a6cd0c0e038d7e412d443ca406a25419d299f32fcd63130c62cadc618"
 }

@@ -48,7 +48,12 @@ assert.deepEqual(invarianceViolations(computeFamilyB, synthetic), []);
 
 // Baseline compute.
 const result = computeFamilyB(synthetic);
-assert.equal(result.public_status, "RANGE_CANDIDATE");
+// Band wiring slice (owner ruling 2026-08-06): a proven ERP band does NOT flip
+// anything to RANGE — SPEC §8 requires interval calibration on a holdout and
+// §11 keeps confidence UNVERIFIED until Gate 4, so the row stays NULL with the
+// next blocker named.
+assert.equal(result.public_status, "NULL");
+assert.ok(result.null_reasons.includes("holdout_interval_calibration_not_met"), "the band must not promote without holdout calibration");
 assert.ok(result.value_hull.high > result.value_hull.low);
 assert.equal(result.confidence, "UNVERIFIED");
 assert.deepEqual(result.disclosures.horizons, [...HORIZONS]);

@@ -9,6 +9,7 @@
 
 import { defineAdapter } from "../provenance.mjs";
 import { buildPanelInput, readJson, usRiskFree } from "./panel-common.mjs";
+import { erpWindowAt } from "../erp-band.mjs";
 
 export function oneqPayoutProxy() {
   const doc = readJson("data/computed/market_facts/tickers/ONEQ.json");
@@ -42,6 +43,7 @@ export function buildCcmpInput(asOf) {
     },
     payoutScenarioId: "oneq_tracker_proxy",
     payoutBasis: "ONEQ tracker dividend yield as payout proxy; not the payout contract (coverage_ok=false)",
+    erp: erpWindowAt(asOf, "us"),
     extras: {
       payout_proxy: { ticker: "ONEQ", coverage_ok: false },
       b2_exclusion_reason: "payout via ONEQ tracker proxy with coverage_ok=false; B2 excluded, B1 stands",

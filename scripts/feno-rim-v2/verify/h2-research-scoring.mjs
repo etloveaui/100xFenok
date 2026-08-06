@@ -138,6 +138,7 @@ function walkForwardScore(indexId, cfg, build, receipt) {
   const rows = [];
   const refusals = {};
   let lastHull = null;
+  let lastNullReasons = null;
   let lastAsOf = null;
   let lastInput = null;
   for (const o of scored) {
@@ -167,11 +168,15 @@ function walkForwardScore(indexId, cfg, build, receipt) {
       as_of: o.as_of,
       hull_low: hull.low,
       hull_high: hull.high,
+      price: input.price,
+      hull_width_pct: ((hull.high - hull.low) / input.price) * 100,
+      erp_point: Boolean(input.erp_band && input.erp_band.low === input.erp_band.high),
       covered,
       agree,
       mae_level: Math.abs(mid - realizedLevel),
     });
     lastHull = hull;
+    lastNullReasons = result.null_reasons;
     lastAsOf = o.as_of;
     lastInput = input;
   }
@@ -210,13 +215,16 @@ function walkForwardScore(indexId, cfg, build, receipt) {
           low: lastHull.low,
           high: lastHull.high,
           public_status: "NULL",
-          null_reasons: ["core_erp_unidentified"],
+          null_reasons: lastNullReasons ?? ["core_erp_unidentified"],
         }
       : null,
     walk_forward: {
       origins_scored: rows.length,
       refused_total: scored.length - rows.length,
       refusals,
+      hull_width_pct_mean: round6(mean(rows.map((r) => r.hull_width_pct))),
+      point_band_origins: rows.filter((r) => r.erp_point).length,
+      range_band_origins: rows.filter((r) => !r.erp_point).length,
       ...rates,
     },
     // Top-level rates = walk-forward rates (research).
@@ -231,6 +239,7 @@ function walkForwardScore(indexId, cfg, build, receipt) {
       : "sibling_absent",
     ess_capped: receiptIdx?.ess?.ess_capped ?? null,
     payout_consumed: lastInput?.payout_consumed ?? null,
+    erp_present: lastInput ? lastInput.erp_band !== null : null,
     baseline: {
       origins_scored: baselineRows.length,
       coverage_rate: round6(baselineCoverage),
@@ -306,6 +315,32 @@ function buildSpec9Table(receipt) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// smoke-only / performance derivation (owner ruling 2026-08-06)
+// ---------------------------------------------------------------------------
+
+/**
+ * Document-level performance declaration, derived from the per-index blocks.
+ * An index refused for a NON-ERP reason (RUT's LSEG factsheet scope refusal)
+ * is a scope fact, not an ERP absence — it must not count as missing ERP and
+ * must not pin the artifact at smoke-only forever. Only indices that produced
+ * walk-forward inputs can testify about ERP presence; the document is
+ * evaluable only when every such index has a band.
+ */
+export function derivePerformance(perIndex) {
+  const indicesWithInputs = Object.entries(perIndex).filter(([, s]) => s.walk_forward.origins_scored > 0);
+  const indicesWithoutErp = indicesWithInputs
+    .filter(([, s]) => s.hull?.null_reasons.includes("core_erp_unidentified"))
+    .map(([id]) => id);
+  const erpAbsent = indicesWithoutErp.length > 0;
+  return {
+    status: erpAbsent ? "INFRASTRUCTURE_SMOKE_ONLY" : "PERFORMANCE_EVALUABLE",
+    performance_evaluable: !erpAbsent,
+    reason: erpAbsent ? "core_erp_absent" : null,
+    indices_without_core_erp: indicesWithoutErp,
+  };
+}
+
 export function buildResearchScoring({ generatedAt = new Date().toISOString() } = {}) {
   const receipt = readJson("data/computed/feno-rim-v2/h2-feasibility-receipt.json");
 
@@ -345,27 +380,13 @@ export function buildResearchScoring({ generatedAt = new Date().toISOString() } 
   // lands, the walk-forward rates are infrastructure smoke, never performance.
   // Derived, not hard-coded: the moment an erp_band stops being absent the
   // artifact flips to performance-evaluable on its own.
-  // Per index first: ERP is restored market by market, so a partially
-  // restored run must not read as evaluable for the indices still missing it.
-  const indicesWithoutErp = Object.entries(perIndex)
-    .filter(([, s]) => !s.hull || s.hull.null_reasons.includes("core_erp_unidentified"))
-    .map(([id]) => id);
-  // The document-level flag is the conservative one: evaluable only when every
-  // index has a band. Anything looser lets one restored market make the whole
-  // artifact look like a performance result.
-  const erpAbsent = indicesWithoutErp.length > 0;
-  const performance = {
-    status: erpAbsent ? "INFRASTRUCTURE_SMOKE_ONLY" : "PERFORMANCE_EVALUABLE",
-    performance_evaluable: !erpAbsent,
-    reason: erpAbsent ? "core_erp_absent" : null,
-    indices_without_core_erp: indicesWithoutErp,
-  };
+  const performance = derivePerformance(perIndex);
   // Stated only while it is true. A sentence that survives the change it
   // describes is how the receipt ended up demanding a refetch that had
   // already landed, twice today.
-  if (erpAbsent) {
+  if (performance.performance_evaluable === false) {
     gaps.push(
-      `status=INFRASTRUCTURE_SMOKE_ONLY: core_erp_absent for ${indicesWithoutErp.join("/")} — walk-forward coverage/directional numbers are smoke, not performance, `
+      `status=INFRASTRUCTURE_SMOKE_ONLY: core_erp_absent for ${performance.indices_without_core_erp.join("/")} — walk-forward coverage/directional numbers are smoke, not performance, `
       + "until the restored ERP band lands (owner ruling 2026-08-06)",
     );
   }

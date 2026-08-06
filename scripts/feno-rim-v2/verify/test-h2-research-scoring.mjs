@@ -10,7 +10,7 @@
 // artifact's baseline numbers.
 
 import assert from "node:assert/strict";
-import { buildResearchScoring, naiveBaselineBand, scoreBaseline } from "./h2-research-scoring.mjs";
+import { buildResearchScoring, derivePerformance, naiveBaselineBand, scoreBaseline } from "./h2-research-scoring.mjs";
 import { buildOrigins, INDEX_CONFIG, loadTracker } from "./h2-harness.mjs";
 import { quantile, readJson } from "../adapters/panel-common.mjs";
 
@@ -87,7 +87,7 @@ for (const id of indexIds) {
     assert.ok(Number.isFinite(s.hull.low) && Number.isFinite(s.hull.high), `${id}: hull finite`);
     assert.ok(s.hull.low < s.hull.high, `${id}: hull ordered`);
     assert.equal(s.hull.public_status, "NULL", `${id}: NULL public status expected in research mode`);
-    assert.ok(s.hull.null_reasons.includes("core_erp_unidentified"), `${id}: null reason named`);
+    assert.ok(!s.hull.null_reasons.includes("core_erp_unidentified"), `${id}: core_erp_unidentified dropped with the band landed`);
   } else {
     assert.equal(s.walk_forward.origins_scored, 0, `${id}: hull null only when no walk-forward origin`);
   }
@@ -144,22 +144,59 @@ for (const id of indexIds) {
   assert.ok(Math.abs(coverage - s1.per_index[id].baseline.coverage_rate) < 1e-9, "baseline coverage re-derived from panel alone");
 }
 
-// --- smoke-only declaration (owner ruling 2026-08-06) -----------------------
+// --- performance declaration (owner ruling 2026-08-06) ----------------------
 
-// Until a core ERP band lands, the walk-forward rates are infrastructure
-// smoke, never performance — the artifact must say so even when the rates
-// are finite, and a future flip must be the artifact's own derivation, not
-// a silent edit of these assertions.
-assert.equal(s1.status, "INFRASTRUCTURE_SMOKE_ONLY", "status must declare smoke-only while core ERP is absent");
-assert.equal(s1.performance_evaluable, false, "performance_evaluable must be false while core ERP is absent");
-assert.equal(s1.reason, "core_erp_absent", "reason must name core_erp_absent");
+// The restored ERP band is wired into every input-producing index, so the
+// artifact is performance-evaluable; RUT (refused for the LSEG factsheet
+// scope, a non-ERP reason) must not pin it back at smoke-only.
+assert.equal(s1.status, "PERFORMANCE_EVALUABLE", "status must flip once every input-producing index has a band");
+assert.equal(s1.performance_evaluable, true, "performance_evaluable must be true with the band landed");
+assert.equal(s1.reason, null, "reason must clear once evaluable");
+assert.deepEqual(s1.indices_without_core_erp, [], "no input-producing index may be missing a band");
+assert.equal(s1.per_index.russell2000.walk_forward.origins_scored, 0, "precondition: RUT contributes no walk-forward origins");
+assert.equal(s1.per_index.russell2000.erp_present, null, "RUT has no input, so its ERP presence is unobservable — and must not pin the flag");
+
+// The derivation itself, pinned on synthetic per-index blocks: an index
+// refused for a non-ERP reason must not count as missing ERP.
+const evaluable = { walk_forward: { origins_scored: 34 }, hull: { null_reasons: ["holdout_interval_calibration_not_met"] } };
+const missingErp = { walk_forward: { origins_scored: 34 }, hull: { null_reasons: ["core_erp_unidentified"] } };
+const rutLike = { walk_forward: { origins_scored: 0 }, hull: null };
+assert.deepEqual(derivePerformance({ sp500: evaluable, nasdaq100: evaluable, russell2000: rutLike }), {
+  status: "PERFORMANCE_EVALUABLE",
+  performance_evaluable: true,
+  reason: null,
+  indices_without_core_erp: [],
+}, "RUT-like (no inputs) must not pin the artifact at smoke-only");
+assert.deepEqual(derivePerformance({ sp500: missingErp, russell2000: rutLike }), {
+  status: "INFRASTRUCTURE_SMOKE_ONLY",
+  performance_evaluable: false,
+  reason: "core_erp_absent",
+  indices_without_core_erp: ["sp500"],
+}, "an input-producing index without a band keeps the artifact at smoke-only");
 const finiteRates = Object.values(s1.per_index).some((s) => s.coverage_rate !== null);
-assert.ok(finiteRates, "precondition: some walk-forward rates are finite today");
-assert.equal(s1.performance_evaluable, false, "finite coverage/directional with erp_band null must stay non-performance");
-assert.ok(
-  JSON.stringify(s1.data_gaps).includes("INFRASTRUCTURE_SMOKE_ONLY"),
-  "the emitted gap sentences must carry the smoke-only declaration",
-);
+assert.ok(finiteRates, "precondition: some walk-forward rates are finite");
+assert.equal(s1.performance_evaluable, true, "finite rates with the band landed are evaluable");
+
+// Walk-forward band fields: hull width, point/range split, erp presence.
+for (const id of indexIds) {
+  const s = s1.per_index[id];
+  if (s.walk_forward.origins_scored > 0) {
+    assert.ok(Number.isFinite(s.walk_forward.hull_width_pct_mean), `${id}: hull width measured`);
+    assert.ok(s.walk_forward.hull_width_pct_mean >= 0, `${id}: hull width non-negative`);
+  } else {
+    assert.equal(s.walk_forward.hull_width_pct_mean, null, `${id}: no hull width without walk-forward origins`);
+  }
+  assert.equal(
+    s.walk_forward.point_band_origins + s.walk_forward.range_band_origins,
+    s.walk_forward.origins_scored,
+    `${id}: point+range band origins reconcile`,
+  );
+  if (s.walk_forward.origins_scored > 0) {
+    assert.equal(s.erp_present, true, `${id}: ERP band present on built inputs`);
+    assert.ok(s.hull.null_reasons.includes("holdout_interval_calibration_not_met"), `${id}: next blocker is the holdout calibration gate`);
+    assert.ok(!s.hull.null_reasons.includes("core_erp_unidentified"), `${id}: core_erp_unidentified must have dropped away`);
+  }
+}
 
 // --- SPEC §9 minimum-pass table ---------------------------------------------
 

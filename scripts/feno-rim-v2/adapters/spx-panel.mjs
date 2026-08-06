@@ -14,6 +14,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineAdapter, firstKnowable } from "../provenance.mjs";
+import { erpWindowAt } from "../erp-band.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 
@@ -90,6 +91,11 @@ export function buildSpxInput(asOf) {
     if (!spx.newest_statement_period) throw new Error("spx adapter: b2_admitted requires a payout first-knowable component");
     componentDates.payout_statement = spx.newest_statement_period;
   }
+  // ERP is consumed (band wiring slice): restored band at THIS origin, joined
+  // to the first-knowable component set — fail-closed if it cannot provide one.
+  const erp = erpWindowAt(asOf, "us");
+  if (!erp.first_knowable) throw new Error("spx adapter: erp band requires a first-knowable component");
+  componentDates.erp = erp.first_knowable;
   const firstK = firstKnowable(componentDates, asOf);
   return {
     // normalized numerics
@@ -113,7 +119,8 @@ export function buildSpxInput(asOf) {
       w10: bookCagr(panel, asOf, 10),
       w15: bookCagr(panel, asOf, 15),
     },
-    erp_band: null, // core ERP unproven until the contract research lands
+    erp_band: erp.band,
+    erp_first_knowable: erp.first_knowable,
     // One flag decides admission, the payout component and payout_consumed
     // together. Two independent literals would let a future engineer flip
     // admission while the component set stays scoped out — the engine guard
