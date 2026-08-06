@@ -14,7 +14,7 @@
 |---|---|---|---|---|---|---|
 | `data/damodaran/erp.json` — country ERP snapshot (178 countries; `countries["United States"].equity_risk_premium` 0.0503; `countries["Korea"].equity_risk_premium` 0.0549077, `country_risk_premium` 0.0072077, rating Aa2) | US + KR (+176) | point-in-time snapshot | vintage `source_date: "April 1, 2026"`; `generated_at` 2026-07-27T08:28:39Z | NO per-country dates — document-level only (`source_date`, `generated_at`) | upstream quarterly/yearly; shadow workflow weekly (`fetch-damodaran-shadow.yml` cron `17 11 * * 6`) | 3 committed versions (06-29 add, 07-25, 07-27); exactly 1 with a recorded fetch receipt (`history.json observed_at` 2026-07-27T08:28:35.146Z, run 30249876677) |
 | `data/damodaran/historical_erp.json` — annual implied ERP (66 rows 1960–2025; fields `tbond_rate` + `implied_erp_ddm` + `implied_erp_fcfe`; `scope: "US market historical implied ERP"`) | US only | 66 annual observations | 1960 → 2025 (year keys) | NO — year key + document-level `source_date: "January 2026"`; no per-year dates | upstream yearly; shadow weekly | 3 committed versions (same commits as erp.json) |
-| `data/macro/fred-banking-daily.json` — `DGS10` (6,847 rows, 1999-03-22 → 2026-08-03), `IRLTLT01KRM156N` (309 rows, 2000-10-01 → 2026-06-01), `BAMLH0A0HYM2` | US (DGS10); KR (IRLTLT01KRM156N) — but these are **10Y sovereign yields (risk-free input, SPEC §4), not ERP** | daily rows | as above | NO per-row fields — rows are `{date, value}` only; file-level `fetched_at` present on 22/37 committed versions (from 07-14) | daily cron `0 7 * * *` UTC (`fetch-fred-banking.yml`) | 37 commits (07-06 → 08-05); 22/37 carry `fetched_at` == attempt-shard `observed_at`; KR series stale (ends 2026-06-01; monthly counterpart `fred-banking-monthly.json` not inspected [not verified]) |
+| `data/macro/fred-banking-daily.json` — `DGS10` (6,847 rows, 1999-03-22 → 2026-08-03), `IRLTLT01KRM156N` (309 rows, 2000-10-01 → 2026-06-01), `BAMLH0A0HYM2` | US (DGS10); KR (IRLTLT01KRM156N) — but these are **10Y sovereign yields (risk-free input, SPEC §4), not ERP** | daily rows | as above | NO per-row fields — rows are `{date, value}` only; file-level `fetched_at` present on 22/37 committed versions (from 07-14) | daily cron `0 7 * * *` UTC (`fetch-fred-banking.yml`) | 37 commits (07-06 → 08-05); 22/37 carry `fetched_at` == attempt-shard `observed_at`; KR series ends 2026-06-01; `fred-banking-monthly.json` inspected 2026-08-06 and carries the identical series (309 rows, same 2000-10-01 → 2026-06-01 span) — not an alternative source, and the lag is this series' publication cadence (§5 gap 4) |
 | `data/benchmarks/*.json` (us/developed/emerging/msci/micro_sectors/us_sectors/summaries) | US/KR (msci.korea, emerging.kospi, micro_sectors.kosdaq_150) | rows `{date, px_last, best_eps, best_pe_ratio, px_to_book_ratio, roe}` | 2010-01-01 → 2026-07-31 | NO — value dates only | weekly (Bloomberg manual) | not ERP-bearing: recursive scan for risk/premium/erp/crp keys: 0 hits — **excluded as ERP candidates** |
 
 ## 2. Proof requirements — verdicts (SPEC v3.0 §5, per market)
@@ -48,12 +48,29 @@ Steps:
 4. Serialize the band record deterministically: `{schema_version, market, window, observations: [{vintage, source_date, first_knowable, erp}], low, high, construction: "trailing_min_max", producer: "Damodaran Online", producer_url}` — fixed key order, no timestamps outside the receipts, no locale-dependent formatting.
 5. Assert: same inputs + same tool version ⇒ byte-identical artifact (hash-stable; test asserts equality over a re-run).
 
+**Receipt verification rule (resolved 2026-08-06).** A recorded `file_sha256` is
+verified as `sha256(JSON.stringify(JSON.parse(file_bytes)))` — the compact
+serialization of the parsed document, not the committed bytes. The producer
+hashes the in-memory document (`scripts/fetch-damodaran-shadow.mjs:308`) while
+the same document is written pretty-printed (two-space indent plus a trailing
+newline), so a byte-level comparison necessarily fails and is not evidence of a
+broken chain. Verified both ways on the 07-27 observation: `erp.json`
+`86186864…9280` and `historical_erp.json` `3e55368e…540a` reproduce exactly
+under the compact rule and match nothing under file-byte or pretty-print
+hashing. Any receipt checker must apply this rule.
+
+Known fragility of the rule: compact serialization depends on key insertion
+order, which `JSON.parse` preserves from the file. A reformat that reorders keys
+would break verification without changing any value. If receipts are ever
+required to survive reformatting, the producer should hash canonicalized bytes
+(sorted keys) and the change must be versioned, not applied retroactively.
+
 ## 5. Gaps (why NOT PROVEN today, and the forward path)
 
 1. **Observation count**: 3 Damodaran snapshot versions in repo (2 shadow runs: 07-25, 07-27; 1 pre-workflow import). Window W=52 unreachable; ~52 weekly runs from the shadow workflow would fill it (first reachable ≈ 2027-07).
-2. **Receipt integrity**: `history.json` records `file_sha256` values that do not match any committed blob (all normalizations tested) [not verified — likely pre-normalization hashing]; receipts are not yet a trustworthy hash chain. Must be fixed before (2) can be claimed.
+2. ~~**Receipt integrity**~~ — **CLOSED 2026-08-06, this was a verification defect, not a data defect.** The recorded hashes are correct and the chain is trustworthy; the earlier check compared against committed bytes while the producer hashes the compact serialization of the parsed document. Both files of the 07-27 observation reproduce exactly under the rule now stated in §4. Nothing needs fixing in the producer, and requirement (2) is no longer blocked by receipt integrity — it is blocked by observation count alone (gap 1).
 3. **Per-observation dates absent everywhere**: no candidate file carries per-row fetch timestamps; all granularity is file-version. The snapshot series is the only mechanism that yields per-observation dates (one per snapshot), which is why the contract is snapshot-based.
-4. **KR series thin**: no KR ERP history; KR fred yield series stale (2026-06-01) with monthly counterpart uninspected [not verified].
+4. **KR series thin**: no KR ERP history. The KR risk-free gap is now measured rather than assumed: `data/macro/fred-banking-monthly.json` carries the *same* `IRLTLT01KRM156N` series as the daily file — 309 rows, 2000-10-01 → 2026-06-01, identical end date. The monthly counterpart is therefore not an alternative source and the earlier `[not verified]` is discharged. A roughly two-month lag is the publication cadence of this OECD-sourced monthly series, not a stalled fetch, so the forward path is either an alternative dated KR 10Y source or an explicit point-in-time policy that admits the publication lag. Treating it as staleness to be "resolved" mis-states the problem.
 5. **Annual series excluded from the hull by §5 itself** (stress diagnostic only) and unusable for per-observation first-knowable (wholesale import, one date for 66 observations).
 6. **Benchmarks carry no ERP fields** (verified 0 hits) — excluded as candidates.
 
