@@ -12,15 +12,28 @@
       "run_id": "30051682457",
       "schedule": "0 22 * * 4",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1561,
+      "natural": true,
+      "observed_at": "2026-08-06T12:16:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31100540842",
+      "schedule": "7 10 * * 0-5",
+      "shard": "53/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-23T23:22:51Z",
-    "history_as_of": "2026-07-23",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/EDEN.json",
-    "payload_sha256": "16ab755b0b77057a5636c90e7039f1ad731e2d6317e93b793883ea78a0926471",
-    "quote_as_of": "2026-07-23T18:54:58Z",
-    "source_as_of": "2026-07-23"
+    "fetched_at": "2026-08-06T12:16:27Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/EDEN.json",
+    "payload_sha256": "42cb85c3f712aff22f0480972073e0ee05c2ced83b2668a12852908f810123d6",
+    "quote_as_of": "2026-08-05T20:00:00Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 748,
+    "latency_ms": 1561,
     "natural": true,
-    "observed_at": "2026-07-23T23:19:22Z",
+    "observed_at": "2026-08-06T12:16:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30051682457",
-    "schedule": "0 22 * * 4",
-    "shard": "4/6"
+    "run_id": "31100540842",
+    "schedule": "7 10 * * 0-5",
+    "shard": "53/72"
   },
   "lkg": {
     "fetched_at": "2026-07-23T23:22:51Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-23",
-    "observed_at": "2026-07-23T23:19:22Z",
-    "payload_sha256": "a77612742b7ebb8614b09f69af3d94cf9627d765e8e1e6a37169e9ea360d0df8",
-    "quote_as_of": "2026-07-23T18:54:58Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T12:16:00Z",
+    "payload_sha256": "e2bb8b7dc807d830f18e90ad0504e0bb72f1bea123e877ef16c59d1f721e29fb",
+    "quote_as_of": "2026-08-05T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30051682457",
+    "run_id": "31100540842",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-23"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-23"
   },
   "ticker": "EDEN",
-  "updated_at": "2026-08-03T22:58:08Z"
+  "updated_at": "2026-08-06T12:16:00Z"
 }

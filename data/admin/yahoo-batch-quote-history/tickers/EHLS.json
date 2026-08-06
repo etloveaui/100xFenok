@@ -12,15 +12,28 @@
       "run_id": "30051682457",
       "schedule": "0 22 * * 4",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1034,
+      "natural": true,
+      "observed_at": "2026-08-06T12:16:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31100540842",
+      "schedule": "7 10 * * 0-5",
+      "shard": "53/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-23T23:23:12Z",
-    "history_as_of": "2026-07-23",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/EHLS.json",
-    "payload_sha256": "f52c4d6f3739f921318e10c94d3426cafc9a9f2dfc3478b1af82e6024baf78c7",
-    "quote_as_of": "2026-07-23T20:00:00Z",
-    "source_as_of": "2026-07-23"
+    "fetched_at": "2026-08-06T12:16:48Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/EHLS.json",
+    "payload_sha256": "9ecb7aba3f782b7b020b295d85a8e08bf1a9b4cfbd034c0b7ed8b1f9cc72f668",
+    "quote_as_of": "2026-08-05T20:00:00Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 671,
+    "latency_ms": 1034,
     "natural": true,
-    "observed_at": "2026-07-23T23:19:22Z",
+    "observed_at": "2026-08-06T12:16:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30051682457",
-    "schedule": "0 22 * * 4",
-    "shard": "4/6"
+    "run_id": "31100540842",
+    "schedule": "7 10 * * 0-5",
+    "shard": "53/72"
   },
   "lkg": {
     "fetched_at": "2026-07-23T23:23:12Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-23",
-    "observed_at": "2026-07-23T23:19:22Z",
-    "payload_sha256": "99ae9d966137631e35ccc939f028e24571b48c0c716a3e438453fc155a18f558",
-    "quote_as_of": "2026-07-23T20:00:00Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T12:16:00Z",
+    "payload_sha256": "c4f46d48868512dd0c91764a003439a150c6e5978461a958d7d76d303c0e8ec4",
+    "quote_as_of": "2026-08-05T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30051682457",
+    "run_id": "31100540842",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-23"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-23"
   },
   "ticker": "EHLS",
-  "updated_at": "2026-08-03T22:58:08Z"
+  "updated_at": "2026-08-06T12:16:00Z"
 }

@@ -12,15 +12,28 @@
       "run_id": "30132647097",
       "schedule": "0 22 * * 5",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 655,
+      "natural": true,
+      "observed_at": "2026-08-06T12:16:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31100540842",
+      "schedule": "7 10 * * 0-5",
+      "shard": "53/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-24T23:13:28Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ABEQ.json",
-    "payload_sha256": "dc29a9c545f550d33dbbc9999fa0664ee62ad09a6a279d70e929cdc2abdac4ab",
-    "quote_as_of": "2026-07-24T19:43:14Z",
-    "source_as_of": "2026-07-24"
+    "fetched_at": "2026-08-06T12:17:18Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/ABEQ.json",
+    "payload_sha256": "89342230bd1aed138cbc807137b1d4dc19cbda9843e41fd8ac372c100fe4513d",
+    "quote_as_of": "2026-08-05T19:59:46Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 672,
+    "latency_ms": 655,
     "natural": true,
-    "observed_at": "2026-07-24T23:12:06Z",
+    "observed_at": "2026-08-06T12:16:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30132647097",
-    "schedule": "0 22 * * 5",
-    "shard": "5/6"
+    "run_id": "31100540842",
+    "schedule": "7 10 * * 0-5",
+    "shard": "53/72"
   },
   "lkg": {
     "fetched_at": "2026-07-24T23:13:28Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-24T23:12:06Z",
-    "payload_sha256": "7054894c1adc44671bc29ba62d88786808f1084b2896e34f9a1da0213f472c02",
-    "quote_as_of": "2026-07-24T19:43:14Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T12:16:00Z",
+    "payload_sha256": "0f4e36b15d23282898dc8f23adc0e7a727c043fcdd24ee6cecf589d3430250a7",
+    "quote_as_of": "2026-08-05T19:59:46Z",
     "run_attempt": 1,
-    "run_id": "30132647097",
+    "run_id": "31100540842",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "ABEQ",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-06T12:16:00Z"
 }

@@ -12,15 +12,28 @@
       "run_id": "30132647097",
       "schedule": "0 22 * * 5",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 574,
+      "natural": true,
+      "observed_at": "2026-08-06T12:16:00Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31100540842",
+      "schedule": "7 10 * * 0-5",
+      "shard": "53/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-24T23:13:32Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ABUF.json",
-    "payload_sha256": "334854747f0775667211d80d42dd53557445a3c76cd76b90e8df2bea42aa2a66",
-    "quote_as_of": "2026-07-24T19:29:32Z",
-    "source_as_of": "2026-07-24"
+    "fetched_at": "2026-08-06T12:17:23Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/ABUF.json",
+    "payload_sha256": "3001320aad5af12b8b4ccac6d95ce516522e0f72c363a0b62f1430222c004c98",
+    "quote_as_of": "2026-08-05T19:32:32Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 505,
+    "latency_ms": 574,
     "natural": true,
-    "observed_at": "2026-07-24T23:12:06Z",
+    "observed_at": "2026-08-06T12:16:00Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30132647097",
-    "schedule": "0 22 * * 5",
-    "shard": "5/6"
+    "run_id": "31100540842",
+    "schedule": "7 10 * * 0-5",
+    "shard": "53/72"
   },
   "lkg": {
     "fetched_at": "2026-07-24T23:13:32Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-24T23:12:06Z",
-    "payload_sha256": "b9d616e8eec31ddda9ad00fe366382b7408fc49ba0d6f8bad5c0838715ac957f",
-    "quote_as_of": "2026-07-24T19:29:32Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T12:16:00Z",
+    "payload_sha256": "fdc87c5bf4d96421ad1cf497f539d2da355a583d9379e1158c5a2758f534d71f",
+    "quote_as_of": "2026-08-05T19:32:32Z",
     "run_attempt": 1,
-    "run_id": "30132647097",
+    "run_id": "31100540842",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "ABUF",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-06T12:16:00Z"
 }
