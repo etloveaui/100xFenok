@@ -47,6 +47,12 @@ export type BenchmarkGroupId = (typeof BENCHMARK_ORDINAL_GROUPS)[number]["id"];
 /** One metric read against the section's own history. */
 export interface OrdinalMetric {
   current: number | null;
+  /**
+   * Age in days of the row behind `current`, when known. Non-null with a null
+   * `current` means the series stopped: the last computable value was this
+   * many days before the as-of date and is deliberately NOT shown.
+   */
+  currentStaleDays: number | null;
   /** Percentile rank of `current` within the history (0–100), rounded. */
   percentile: number | null;
   /** Population z-score of `current` within the history. */
@@ -169,6 +175,36 @@ function lastFinite(values: readonly number[]): number | null {
   return null;
 }
 
+/**
+ * The current value must be CURRENT. `lastFinite` walks back until it finds a
+ * number, which is right for a one-week gap and wrong for a series that stopped
+ * years ago: us_biotech's forward PE last computed on 2011-03-18 because the
+ * sector's forward EPS is now negative, and the panel was printing that 2011
+ * multiple as today's. A stale value is worse than an absent one - the reader
+ * cannot tell it is stale.
+ *
+ * Returns the last finite value only when its own row is within
+ * CURRENT_VALUE_MAX_STALE_DAYS of the section's as-of date, and reports how
+ * stale it actually is so the surface can say why the cell is empty.
+ */
+const CURRENT_VALUE_MAX_STALE_DAYS = 45;
+
+function lastFreshFinite(
+  values: readonly number[],
+  dates: readonly (string | null)[],
+  asOfMs: number | null,
+): { value: number | null; staleDays: number | null } {
+  for (let i = values.length - 1; i >= 0; i -= 1) {
+    if (!Number.isFinite(values[i])) continue;
+    const iso = dates[i];
+    if (asOfMs === null || typeof iso !== "string") return { value: values[i], staleDays: null };
+    const ageDays = (asOfMs - msOfDay(iso)) / 86_400_000;
+    if (ageDays <= CURRENT_VALUE_MAX_STALE_DAYS) return { value: values[i], staleDays: Math.round(ageDays) };
+    return { value: null, staleDays: Math.round(ageDays) };
+  }
+  return { value: null, staleDays: null };
+}
+
 const YEAR_MS = 365.25 * 86_400_000;
 const msOfDay = (iso: string): number => Date.parse(`${iso}T00:00:00Z`);
 
@@ -220,9 +256,14 @@ function windowedMetrics(rows: readonly RawRow[], asOfMs: number, current: numbe
   ) as Record<BenchmarkWindowId, WindowedMetric>;
 }
 
-function metricFromSeries(values: readonly number[]): OrdinalMetric {
+function metricFromSeries(
+  values: readonly number[],
+  dates: readonly (string | null)[] = [],
+  asOfMs: number | null = null,
+): OrdinalMetric {
   const clean = values.filter(isFiniteNumber);
-  const current = lastFinite(values);
+  const fresh = lastFreshFinite(values, dates, asOfMs);
+  const current = fresh.value;
   const enough = clean.length >= BENCHMARK_ORDINAL_MIN_HISTORY;
   // Windows are computed for the forward-PE metric only (owner ruling scope:
   // the 38-index forward-PE panel). pb/roe carry an explicit "not computed"
@@ -230,6 +271,7 @@ function metricFromSeries(values: readonly number[]): OrdinalMetric {
   const notComputed = (): WindowedMetric => ({ percentile: null, truncated: false, spanYears: null, points: 0 });
   return {
     current,
+    currentStaleDays: fresh.staleDays,
     percentile: enough ? percentileRank(clean, current) : null,
     zScore: enough ? zScorePopulation(clean, current) : null,
     windows: { w3: notComputed(), w5: notComputed(), w10: notComputed() },
@@ -286,14 +328,21 @@ function buildGroup(
     const peSeries = data.map((row) => row.best_pe_ratio);
     const pbSeries = data.map((row) => row.px_to_book_ratio);
     const roeSeries = data.map((row) => row.roe);
-    const pe = metricFromSeries(peSeries as unknown[] as readonly number[]);
+    const rowDates = data.map((row) => (typeof row.date === "string" ? row.date : null));
+    const asOfMsForRows = asOf !== null ? msOfDay(asOf) : null;
+    const pe = metricFromSeries(peSeries as unknown[] as readonly number[], rowDates, asOfMsForRows);
     // Forward-PE windows, trailing from the section's own as-of date, computed
     // from the DATA per index per window (truncation refusal included).
-    if (asOf !== null && pe.current !== null) {
+    // Windows are computed even when `current` is absent: the span and its
+    // truncation are properties of the DATA, not of whether today's value
+    // happens to be computable. percentileRank returns null for a null current,
+    // so a section with no fresh value reports honest spans and no ranks
+    // instead of silently reporting nothing at all.
+    if (asOf !== null) {
       pe.windows = windowedMetrics(data, msOfDay(asOf), pe.current);
     }
-    const pb = metricFromSeries(pbSeries as unknown[] as readonly number[]);
-    const roe = metricFromSeries(roeSeries as unknown[] as readonly number[]);
+    const pb = metricFromSeries(pbSeries as unknown[] as readonly number[], rowDates, asOfMsForRows);
+    const roe = metricFromSeries(roeSeries as unknown[] as readonly number[], rowDates, asOfMsForRows);
     const price = lastFinite(data.map((row) => row.px_last) as unknown[] as number[]);
 
     let spxPremium: number | null = null;

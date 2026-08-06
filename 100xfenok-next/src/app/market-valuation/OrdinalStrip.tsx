@@ -130,6 +130,20 @@ export default function OrdinalStrip({ groups, highlightIds = [] }: OrdinalStrip
     .filter((entry) => entry.rows.length > 0);
   if (usable.length === 0) return null;
 
+  // An index that cannot be placed on this axis is NAMED rather than dropped in
+  // silence. us_biotech is the live case: its forward EPS is negative, so no
+  // multiple exists and the strip has no position to plot - but a reader
+  // counting rows would otherwise just find one missing.
+  const withheld = groups
+    .flatMap((group) => group.rows)
+    .filter((r) => r.pe.percentile === null)
+    .map((r) => ({
+      name: displayName(r),
+      reason: r.pe.currentStaleDays !== null && r.pe.currentStaleDays > 45
+        ? `선행 이익 추정치로 배수를 계산할 수 없습니다 (마지막 계산 가능일 ${r.pe.currentStaleDays}일 전)`
+        : "배수를 계산할 수 없습니다",
+    }));
+
   const placed: Placed[] = [];
   let cursor = HEAD_H;
   for (const entry of usable) {
@@ -186,7 +200,7 @@ export default function OrdinalStrip({ groups, highlightIds = [] }: OrdinalStrip
               const marked = highlight.has(row.id);
               const straddle = windowsStraddleMedian(row);
               const windows = windowReadout(row);
-              const titleText = `${displayName(row)} · 선행 PER ${PE.format(row.pe.current ?? 0)} · 자기 역사 ${pct}번째 백분위 · ${row.points}주 기준 · 창 10y/5y/3y: ${windows.text}${straddle ? " · 창이 중앙값을 가로지름" : ""}`;
+              const titleText = `${displayName(row)} · 선행 PER ${row.pe.current === null ? "없음" : PE.format(row.pe.current)} · 자기 역사 ${pct}번째 백분위 · ${row.points}주 기준 · 창 10y/5y/3y: ${windows.text}${straddle ? " · 창이 중앙값을 가로지름" : ""}`;
               return (
                 <g key={row.id}>
                   <title>{titleText}</title>
@@ -219,7 +233,7 @@ export default function OrdinalStrip({ groups, highlightIds = [] }: OrdinalStrip
                     x={VIEW_W - 6} y={y - 6} textAnchor="end" fontSize={10}
                     fontWeight={marked ? 800 : 600} fill="var(--c-ink-2)"
                   >
-                    {PE.format(row.pe.current ?? 0)}배 · {pct}
+                    {row.pe.current === null ? "배수 없음" : `${PE.format(row.pe.current)}배`} · {pct}
                   </text>
                 </g>
               );
@@ -227,6 +241,11 @@ export default function OrdinalStrip({ groups, highlightIds = [] }: OrdinalStrip
           </g>
         ))}
       </svg>
+      {withheld.length > 0 ? (
+        <p className="ordinal-withheld">
+          {withheld.map((w) => `${w.name}: ${w.reason}`).join(" · ")}
+        </p>
+      ) : null}
     </div>
   );
 }

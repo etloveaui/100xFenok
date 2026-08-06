@@ -289,4 +289,28 @@ for (const row of liveRows) {
   }
 }
 
+// A displayed multiple must be CURRENT. us_biotech's forward PE last computed
+// on 2011-03-18 because the sector's forward EPS is now negative, and the panel
+// printed that 2011 value as today's. A stale number is worse than an absent
+// one: the reader cannot tell it is stale.
+const bio = liveRows.find((r) => r.id === "us_biotech");
+assert(bio !== undefined, "live estate must still contain us_biotech");
+assert(
+  bio!.pe.current === null,
+  "us_biotech must not display a multiple: its forward EPS is negative and the last computable value is from 2011",
+);
+assert(
+  bio!.pe.currentStaleDays !== null && bio!.pe.currentStaleDays > 365,
+  "a withheld current value must report how stale the last computable one was",
+);
+const staleShown = liveRows.filter(
+  (r) => r.pe.current !== null && r.pe.currentStaleDays !== null && r.pe.currentStaleDays > 45,
+);
+assert(
+  staleShown.length === 0,
+  `no index may display a multiple older than 45 days, got ${JSON.stringify(staleShown.map((r) => [r.id, r.pe.currentStaleDays]))}`,
+);
+const showing = liveRows.filter((r) => r.pe.current !== null).length;
+assert(showing === 37, `exactly 37 of 38 indices should display a multiple today, got ${showing}`);
+
 console.log("benchmark ordinals contract: ok");
