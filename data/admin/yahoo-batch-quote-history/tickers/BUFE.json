@@ -12,15 +12,28 @@
       "run_id": "29965324287",
       "schedule": "0 22 * * 3",
       "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 399,
+      "natural": true,
+      "observed_at": "2026-08-06T06:42:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31078091927",
+      "schedule": "7 4 * * 0-5",
+      "shard": "50/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-22T23:49:26Z",
-    "history_as_of": "2026-07-22",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BUFE.json",
-    "payload_sha256": "e0e43ac314d83d13b92033925c5d48960ea12dbe87b49376f998bb7574884af5",
-    "quote_as_of": "2026-07-22T17:40:33Z",
-    "source_as_of": "2026-07-22"
+    "fetched_at": "2026-08-06T06:42:36Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/BUFE.json",
+    "payload_sha256": "61ecf3bd5fd0512efad7ebe4e033c3aec10b906ccc937b33baec7aa7b24f5290",
+    "quote_as_of": "2026-08-05T18:05:58Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 879,
+    "latency_ms": 399,
     "natural": true,
-    "observed_at": "2026-07-22T23:45:22Z",
+    "observed_at": "2026-08-06T06:42:20Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29965324287",
-    "schedule": "0 22 * * 3",
-    "shard": "3/6"
+    "run_id": "31078091927",
+    "schedule": "7 4 * * 0-5",
+    "shard": "50/72"
   },
   "lkg": {
     "fetched_at": "2026-07-22T23:49:26Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-22",
-    "observed_at": "2026-07-22T23:45:22Z",
-    "payload_sha256": "8e762994472be2294cd5c2ed4192d550d3525a46fd2ebb975e6a2ed020d21c15",
-    "quote_as_of": "2026-07-22T17:40:33Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T06:42:20Z",
+    "payload_sha256": "2e52da015f63b7ed80180fd56e4f6596042f604fddc9949e18db6adcd65bd890",
+    "quote_as_of": "2026-08-05T18:05:58Z",
     "run_attempt": 1,
-    "run_id": "29965324287",
+    "run_id": "31078091927",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-22"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-22"
   },
   "ticker": "BUFE",
-  "updated_at": "2026-07-31T00:55:40Z"
+  "updated_at": "2026-08-06T06:42:20Z"
 }

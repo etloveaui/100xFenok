@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1209,
-      "natural": true,
-      "observed_at": "2026-07-21T00:29:05Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29789662473",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "StockDetailValidationError: Yahoo history close must be a finite number",
       "event_name": "schedule",
       "failures": [],
@@ -182,6 +169,19 @@
       "run_id": "31058959670",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-06T06:42:20Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31078091927",
+      "schedule": "7 4 * * 0-5",
+      "shard": "50/72"
     }
   ],
   "current": {
@@ -197,17 +197,17 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 778,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-06T00:23:12Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-06T06:42:20Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "31058959670",
-    "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "run_id": "31078091927",
+    "schedule": "7 4 * * 0-5",
+    "shard": "50/72"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CAT",
-  "updated_at": "2026-08-06T00:23:12Z"
+  "updated_at": "2026-08-06T06:42:20Z"
 }

@@ -103,15 +103,28 @@
       "run_id": "29965324287",
       "schedule": "0 22 * * 3",
       "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 370,
+      "natural": true,
+      "observed_at": "2026-08-06T06:42:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31078091927",
+      "schedule": "7 4 * * 0-5",
+      "shard": "50/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-22T23:49:49Z",
-    "history_as_of": "2026-07-22",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CBOX.json",
-    "payload_sha256": "c59208e2657f6735581a6bd73e8c0179083028b66cdd55b8adcec7775e09d9ab",
-    "quote_as_of": "2026-07-22T20:00:00Z",
-    "source_as_of": "2026-07-22"
+    "fetched_at": "2026-08-06T06:42:55Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/CBOX.json",
+    "payload_sha256": "bcb1d8f821e85465ac83a35f5564789c19ba41581285332b3bca5008e7dc4e0b",
+    "quote_as_of": "2026-08-05T20:00:00Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -120,14 +133,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 858,
+    "latency_ms": 370,
     "natural": true,
-    "observed_at": "2026-07-22T23:45:22Z",
+    "observed_at": "2026-08-06T06:42:20Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29965324287",
-    "schedule": "0 22 * * 3",
-    "shard": "3/6"
+    "run_id": "31078091927",
+    "schedule": "7 4 * * 0-5",
+    "shard": "50/72"
   },
   "lkg": {
     "fetched_at": "2026-07-22T23:49:49Z",
@@ -140,17 +153,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-22",
-    "observed_at": "2026-07-22T23:45:22Z",
-    "payload_sha256": "47b4294bb3d3b7836eda5d1411c1904a5ddd905d8e127d7a14f54e942a3927a8",
-    "quote_as_of": "2026-07-22T20:00:00Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T06:42:20Z",
+    "payload_sha256": "a162dc0731d987dd559b50bbe81c8f74d0c648c296dd71fed7445a760ea53517",
+    "quote_as_of": "2026-08-05T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "29965324287",
+    "run_id": "31078091927",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-22"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -163,5 +176,5 @@
     "source_as_of": "2026-07-22"
   },
   "ticker": "CBOX",
-  "updated_at": "2026-07-31T00:55:40Z"
+  "updated_at": "2026-08-06T06:42:20Z"
 }

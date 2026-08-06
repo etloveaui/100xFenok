@@ -12,15 +12,28 @@
       "run_id": "30051682457",
       "schedule": "0 22 * * 4",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 448,
+      "natural": true,
+      "observed_at": "2026-08-06T06:42:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31078091927",
+      "schedule": "7 4 * * 0-5",
+      "shard": "50/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-23T23:20:43Z",
-    "history_as_of": "2026-07-23",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CAPE.json",
-    "payload_sha256": "a51be3b53df90a9e3ec046f4d9b1786dce40f2ce1db27575b6a4466122030a23",
-    "quote_as_of": "2026-07-23T19:58:48Z",
-    "source_as_of": "2026-07-23"
+    "fetched_at": "2026-08-06T06:43:30Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/CAPE.json",
+    "payload_sha256": "263620ed0d59f06fda48901ce148ef7f79dc4253ba9590b35ea86c7187ba881d",
+    "quote_as_of": "2026-08-05T19:56:57Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 669,
+    "latency_ms": 448,
     "natural": true,
-    "observed_at": "2026-07-23T23:19:22Z",
+    "observed_at": "2026-08-06T06:42:20Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30051682457",
-    "schedule": "0 22 * * 4",
-    "shard": "4/6"
+    "run_id": "31078091927",
+    "schedule": "7 4 * * 0-5",
+    "shard": "50/72"
   },
   "lkg": {
     "fetched_at": "2026-07-23T23:20:43Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-23",
-    "observed_at": "2026-07-23T23:19:22Z",
-    "payload_sha256": "030450a34e79dffba95ea0f7e3bb0e422d2bc4cca6b7747142a0c5da49d1a514",
-    "quote_as_of": "2026-07-23T19:58:48Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T06:42:20Z",
+    "payload_sha256": "aa69ac7579249c98dcd6be55b0874ac014bbd29fe11e9f8f1facd48da8f2b8da",
+    "quote_as_of": "2026-08-05T19:56:57Z",
     "run_attempt": 1,
-    "run_id": "30051682457",
+    "run_id": "31078091927",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-23"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-23"
   },
   "ticker": "CAPE",
-  "updated_at": "2026-08-03T22:58:08Z"
+  "updated_at": "2026-08-06T06:42:20Z"
 }

@@ -12,15 +12,28 @@
       "run_id": "29965324287",
       "schedule": "0 22 * * 3",
       "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 357,
+      "natural": true,
+      "observed_at": "2026-08-06T06:42:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31078091927",
+      "schedule": "7 4 * * 0-5",
+      "shard": "50/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-22T23:49:32Z",
-    "history_as_of": "2026-07-22",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BUYB.json",
-    "payload_sha256": "660836c9434b750ab40c8ec8da63f78a5ac849c1a5e16cd819e3e99d4986119b",
-    "quote_as_of": "2026-07-22T18:47:37Z",
-    "source_as_of": "2026-07-22"
+    "fetched_at": "2026-08-06T06:42:40Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/BUYB.json",
+    "payload_sha256": "b9b40bfdbfdbd66c22bbf97588bd63e5699573a9c941f6b270349cd020a92828",
+    "quote_as_of": "2026-08-05T20:00:00Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 835,
+    "latency_ms": 357,
     "natural": true,
-    "observed_at": "2026-07-22T23:45:22Z",
+    "observed_at": "2026-08-06T06:42:20Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29965324287",
-    "schedule": "0 22 * * 3",
-    "shard": "3/6"
+    "run_id": "31078091927",
+    "schedule": "7 4 * * 0-5",
+    "shard": "50/72"
   },
   "lkg": {
     "fetched_at": "2026-07-22T23:49:32Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-22",
-    "observed_at": "2026-07-22T23:45:22Z",
-    "payload_sha256": "78acfc02f1682fa546cab20255a0b71b104338947377d9aa6335a9ea30232f57",
-    "quote_as_of": "2026-07-22T18:47:37Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T06:42:20Z",
+    "payload_sha256": "9bc2c76526a60083d7bb69f0b48567c4cd7bda158807a6c97061a0cc067b27a9",
+    "quote_as_of": "2026-08-05T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "29965324287",
+    "run_id": "31078091927",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-22"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-22"
   },
   "ticker": "BUYB",
-  "updated_at": "2026-07-31T00:55:40Z"
+  "updated_at": "2026-08-06T06:42:20Z"
 }
