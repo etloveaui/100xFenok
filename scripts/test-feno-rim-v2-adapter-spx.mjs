@@ -42,9 +42,17 @@ assert.ok(result.value_hull.high > result.value_hull.low, "hull must be ordered"
 // 7. Deterministic for a fixed asOf: two builds are identical records.
 assert.deepEqual(buildSpxInput(AS_OF), input, "same asOf must produce the same normalized input");
 
-// 8. Look-ahead refuses: an asOf before the payout statement period (the
-//    newest constituent statement 2026-05-31) must throw, never silently
-//    mix vintages.
-assert.throws(() => buildSpxInput("2026-01-15"), /look-ahead/);
+// 8. Historical origins now succeed: the payout first-knowable check is
+//    scoped to the B2 branch (payout is unconsumed while b2_admitted=false),
+//    so 2014/2020 origins no longer refuse on the payout statement.
+const historical2014 = buildSpxInput("2014-01-03");
+assert.equal(historical2014.first_knowable_at <= "2014-01-03", true, "2014 origin is point-in-time");
+assert.equal(historical2014.payout_consumed, false, "payout scoped out while B2 is excluded");
+const historical2020 = buildSpxInput("2020-01-03");
+assert.equal(historical2020.first_knowable_at <= "2020-01-03", true, "2020 origin is point-in-time");
+
+// 9. A genuine data-boundary refusal still holds: no panel row before 2010
+//    (with the payout component scoped out, the panel is the binding edge).
+assert.throws(() => buildSpxInput("1998-01-05"), /no panel row at or before/);
 
 console.log("feno-rim-v2 spx adapter tests passed");

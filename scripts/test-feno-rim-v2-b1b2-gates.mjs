@@ -9,6 +9,7 @@
 
 import assert from "node:assert/strict";
 import { buildSpxInput } from "./feno-rim-v2/adapters/spx-panel.mjs";
+import { buildPanelInput } from "./feno-rim-v2/adapters/panel-common.mjs";
 import { computeFamilyB } from "./feno-rim-v2/engine.mjs";
 import { BRIDGE_TOLERANCE, cleanSurplusBridge } from "./feno-rim-v2/clean-surplus.mjs";
 
@@ -75,5 +76,53 @@ assert.deepEqual(cleanSurplusBridge([]), {
 const partial = [{ date: "2020-12-31", book: 1000 }, { date: "2021-12-31", book: 1090, net_income: 120 }];
 assert.equal(cleanSurplusBridge(partial).admitted, false, "incomplete aggregates must not admit");
 assert.match(cleanSurplusBridge(partial).reason, /issuance and OCI aggregates absent/);
+
+// --- payout first-knowable scoping (owner ruling 2026-08-06) ----------------
+// The payout check applies only where payout is consumed (the B2 branch).
+
+const panelBase = {
+  asOf: "2020-01-03",
+  panelFile: "data/benchmarks/us.json",
+  section: "nasdaq100",
+  payoutKey: "nasdaq100",
+  rate: { value: 0.021, date: "2020-01-02" },
+  universeId: "test_universe",
+  currency: "USD",
+};
+
+// b2_admitted=false (today): the payout component is scoped OUT, so the
+// historical origin builds and the scoping is recorded, not silent.
+const scopedOut = buildPanelInput(panelBase);
+assert.equal(scopedOut.b2_admitted, false);
+assert.equal(scopedOut.payout_consumed, false);
+assert.ok(scopedOut.payout_unconsumed_reason.includes("B2 branch"), "scoping reason recorded");
+assert.equal(scopedOut.first_knowable_at <= "2020-01-03", true, "historical origin point-in-time without the payout component");
+
+// b2_admitted=true WITH a payout component: it rejoins the component set and
+// the look-ahead refusal returns for origins before the payout statement.
+const b2On = buildPanelInput({ ...panelBase, asOf: "2026-08-01", b2Admitted: true });
+assert.equal(b2On.payout_consumed, true, "payout consumed once B2 is admitted");
+assert.equal(b2On.b2_admitted, true);
+// firstK = max(panel 2026-07-31, rate 2020-01-02, payout statement 2026-03-31)
+assert.equal(b2On.first_knowable_at, "2026-07-31", "payout component back in the first-knowable set");
+assert.throws(
+  () => buildPanelInput({ ...panelBase, b2Admitted: true }),
+  /look-ahead/,
+  "B2 admitted at a historical origin refuses on the payout statement (consumed again)",
+);
+
+// FAIL-CLOSED: b2_admitted=true WITHOUT a payout component is a build error.
+assert.throws(
+  () => buildPanelInput({ ...panelBase, b2Admitted: true, payoutKey: null, payoutOverride: { payout_ratio: 0.3, period: "2025" } }),
+  /b2_admitted requires a payout first-knowable component/,
+  "admission without a payout component must throw",
+);
+
+// The engine refuses B2 admission without the check active.
+assert.throws(
+  () => computeFamilyB({ ...input, b2_admitted: true, payout_consumed: false }),
+  /b2_admitted requires payout_consumed=true/,
+  "engine fail-closed: unchecked payout cannot be admitted",
+);
 
 console.log("feno-rim-v2 B1/B2 gate tests passed");

@@ -50,7 +50,9 @@ function bookCagr(bookRows, asOf, years) {
   const b0 = start.px_last / start.px_to_book_ratio;
   const b1 = end.px_last / end.px_to_book_ratio;
   if (!(b0 > 0) || !(b1 > 0)) return null;
-  const span = (Date.parse(end.date) - Date.parse(start.date)) / 365.25 / 86400000 * 365.25;
+  // Annualised over the requested window, not the observed span: the caller
+  // asks for a 5/10/15-year CAGR and the row dates land where the panel has
+  // them. (A dead `span` computation sat here and was never read.)
   return (b1 / b0) ** (1 / years) - 1;
 }
 
@@ -77,13 +79,18 @@ export function buildSpxInput(asOf) {
   const window260 = history.slice(-260).map((candidate) => candidate.roe).filter(Number.isFinite);
 
   const book = row.px_last / row.px_to_book_ratio;
-  // First-knowable = max of the component dates, recomputed with the
-  // look-ahead refusal: an asOf before any component (e.g. before the payout
-  // statement period) must throw, never silently mix vintages.
-  const firstK = firstKnowable(
-    { price: row.date, rate: rate.date, payout_statement: spx.newest_statement_period },
-    asOf,
-  );
+  // SCOPE CORRECTION (owner ruling, 2026-08-06): payout is consumed only
+  // inside the B2 branch of computeFamilyB; with b2_admitted=false (clean-
+  // surplus gate) the payout component must not refuse a historical origin.
+  // It rejoins the component set the moment B2 is admitted; admission
+  // without the component is a build error (fail-closed).
+  const b2Admitted = false; // clean-surplus bridge gate (SPEC v3.0 §7)
+  const componentDates = { price: row.date, rate: rate.date };
+  if (b2Admitted) {
+    if (!spx.newest_statement_period) throw new Error("spx adapter: b2_admitted requires a payout first-knowable component");
+    componentDates.payout_statement = spx.newest_statement_period;
+  }
+  const firstK = firstKnowable(componentDates, asOf);
   return {
     // normalized numerics
     book,
@@ -107,8 +114,12 @@ export function buildSpxInput(asOf) {
       w15: bookCagr(panel, asOf, 15),
     },
     erp_band: null, // core ERP unproven until the contract research lands
-    b2_admitted: false,
-    b2_exclusion_reason: "clean-surplus bridge data incomplete: issuance and OCI aggregates absent",
+    // One flag decides admission, the payout component and payout_consumed
+    // together. Two independent literals would let a future engineer flip
+    // admission while the component set stays scoped out — the engine guard
+    // would catch it, but only after the wrong input had already been built.
+    b2_admitted: b2Admitted,
+    b2_exclusion_reason: b2Admitted ? null : "clean-surplus bridge data incomplete: issuance and OCI aggregates absent",
     // provenance keys
     universe_id: "sp500_bloomberg_panel",
     membership_as_of: row.date,
@@ -117,6 +128,10 @@ export function buildSpxInput(asOf) {
     negative_earners_policy: "positive_net_income_only",
     currency: "USD",
     share_class_policy: "as_published_single_count",
+    payout_consumed: b2Admitted,
+    payout_unconsumed_reason: b2Admitted
+      ? null
+      : "b2_admitted=false: payout enters the engine only inside the B2 branch (engine.mjs:127), excluded by the clean-surplus gate; its first-knowable check is scoped out with it",
     first_knowable_at: firstK,
   };
 }

@@ -73,6 +73,12 @@ export function buildRutInput(asOf) {
     erp_band: null,
     b2_admitted: false,
     b2_exclusion_reason: "clean-surplus bridge data incomplete: issuance and OCI aggregates absent",
+    // RUT audit (2026-08-06): the factsheet date IS consumed (book and ROE
+    // come from the LSEG snapshot), so its first-knowable check stays. The
+    // payout VALUE from the factsheet is unconsumed while B2 is excluded —
+    // recorded explicitly so the scoping is visible, not forgotten.
+    payout_consumed: false,
+    payout_unconsumed_reason: "b2_admitted=false: payout enters the engine only inside the B2 branch (engine.mjs:127); the LSEG factsheet first-knowable check stays because book/ROE are consumed",
     universe_id: "rut_lseg_factsheet",
     membership_as_of: snap.asOf,
     earnings_basis: "ex_negative_earners_lseg_factsheet",

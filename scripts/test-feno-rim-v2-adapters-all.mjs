@@ -48,7 +48,7 @@ function assertContract(name, input) {
   assert.equal(input.universe_id, "nasdaq100_bloomberg_panel");
 }
 
-// --- CCMP (2026-08-06; ONEQ proxy fetched 2026-08-05) -----------------------
+// --- CCMP (2026-08-06; ONEQ proxy present but scoped out while B2 excluded) -
 {
   const input = buildCcmpInput("2026-08-06");
   assertContract("ccmp", input);
@@ -60,8 +60,11 @@ function assertContract(name, input) {
   assert.equal(input.payout_scenarios[0].id, "oneq_tracker_proxy", "ccmp: scenario labelled as the ONEQ proxy");
   assert.equal(input.payout_proxy.coverage_ok, false, "ccmp: proxy coverage_ok=false semantics");
   assert.match(input.b2_exclusion_reason, /ONEQ/, "ccmp: B2 reason names the proxy");
-  // An asOf before the ONEQ fetch must refuse (look-ahead).
-  assert.throws(() => buildCcmpInput("2026-08-01"), /look-ahead/);
+  assert.equal(input.payout_consumed, false, "ccmp: payout scoped out while B2 is excluded");
+  // The ONEQ component is a payout component: with b2_admitted=false it no
+  // longer refuses an origin before the ONEQ fetch — 2026-08-01 now builds.
+  const preOneq = buildCcmpInput("2026-08-01");
+  assert.equal(preOneq.first_knowable_at <= "2026-08-01", true, "ccmp: historical origin is point-in-time without the payout component");
 }
 
 // --- RUT (2026-08-06; LSEG snapshot first-knowable 2026-08-04) --------------

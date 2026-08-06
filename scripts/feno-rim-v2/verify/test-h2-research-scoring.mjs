@@ -55,12 +55,26 @@ for (const id of indexIds) {
   const r = receipt.indices[id];
   assert.ok(s, `${id}: scored block present`);
 
-  // Rates within [0,1]; MAE non-negative.
-  assert.ok(s.coverage_rate >= 0 && s.coverage_rate <= 1, `${id}: coverage_rate in [0,1]`);
-  assert.ok(s.directional_rate >= 0 && s.directional_rate <= 1, `${id}: directional_rate in [0,1]`);
+  // Walk-forward bookkeeping: refused + scored origins reconcile to the
+  // harness origin count (the receipt anchor).
+  assert.ok(s.walk_forward, `${id}: walk_forward block present`);
+  assert.equal(
+    s.walk_forward.origins_scored + s.walk_forward.refused_total,
+    s.origins_scored,
+    `${id}: walk-forward origins reconcile`,
+  );
+
+  // Rates within [0,1] when walk-forward origins exist; null only when none
+  // did (RUT: LSEG factsheet not first-knowable at historical origins).
+  if (s.coverage_rate !== null) {
+    assert.ok(s.coverage_rate >= 0 && s.coverage_rate <= 1, `${id}: coverage_rate in [0,1]`);
+    assert.ok(s.directional_rate >= 0 && s.directional_rate <= 1, `${id}: directional_rate in [0,1]`);
+  } else {
+    assert.equal(s.walk_forward.origins_scored, 0, `${id}: null rates only with zero walk-forward origins`);
+  }
   assert.ok(s.baseline.coverage_rate >= 0 && s.baseline.coverage_rate <= 1, `${id}: baseline coverage in [0,1]`);
   assert.ok(s.baseline.directional_rate >= 0 && s.baseline.directional_rate <= 1, `${id}: baseline directional in [0,1]`);
-  assert.ok(s.mae_level >= 0 && s.baseline.mae_level >= 0, `${id}: MAE non-negative`);
+  if (s.mae_level !== null) assert.ok(s.mae_level >= 0 && s.baseline.mae_level >= 0, `${id}: MAE non-negative`);
   assert.equal(typeof s.baseline.hull_beats_on_coverage, "boolean", `${id}: coverage beat flag boolean`);
   assert.equal(typeof s.baseline.hull_beats_on_mae, "boolean", `${id}: mae beat flag boolean`);
 
@@ -68,14 +82,27 @@ for (const id of indexIds) {
   assert.equal(s.origins_scored, r.origins_scored, `${id}: origins_scored matches the receipt`);
   assert.equal(s.baseline.origins_scored, r.origins_scored, `${id}: baseline scored the same origins`);
 
-  // Hull is a finite ordered band; status NULL while the ERP band is unproven.
-  assert.ok(Number.isFinite(s.hull.low) && Number.isFinite(s.hull.high), `${id}: hull finite`);
-  assert.ok(s.hull.low < s.hull.high, `${id}: hull ordered`);
-  assert.equal(s.hull.public_status, "NULL", `${id}: NULL public status expected in research mode`);
-  assert.ok(s.hull.null_reasons.includes("core_erp_unidentified"), `${id}: null reason named`);
+  // Hull is the last walk-forward origin's band (null when none computed).
+  if (s.hull) {
+    assert.ok(Number.isFinite(s.hull.low) && Number.isFinite(s.hull.high), `${id}: hull finite`);
+    assert.ok(s.hull.low < s.hull.high, `${id}: hull ordered`);
+    assert.equal(s.hull.public_status, "NULL", `${id}: NULL public status expected in research mode`);
+    assert.ok(s.hull.null_reasons.includes("core_erp_unidentified"), `${id}: null reason named`);
+  } else {
+    assert.equal(s.walk_forward.origins_scored, 0, `${id}: hull null only when no walk-forward origin`);
+  }
 
   // Dividend adjustment count must match the receipt.
   assert.equal(s.dividend_adjusted, r.dividend_adjusted_origins, `${id}: dividend_adjusted matches the receipt`);
+
+  // Payout check scoping: today every adapter runs b2_admitted=false, so the
+  // payout first-knowable check is scoped out and RECORDED (never silent).
+  // null only when no walk-forward input built (RUT: factsheet not knowable
+  // at any scored origin) — but never `true` while B2 is excluded.
+  assert.notEqual(s.payout_consumed, true, `${id}: payout must never be marked consumed while B2 is excluded`);
+  if (s.walk_forward.origins_scored > 0) {
+    assert.equal(s.payout_consumed, false, `${id}: payout scoped out while B2 is excluded`);
+  }
 
   // CIs are ordered when present.
   if (s.ci.coverage) assert.ok(s.ci.coverage.ci_lower <= s.ci.coverage.ci_upper, `${id}: coverage CI ordered`);

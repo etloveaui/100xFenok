@@ -81,6 +81,13 @@ function memberValue({ book, ke, riskFree, growthFor, roeFor, horizon, terminal 
  * }
  */
 export function computeFamilyB(input) {
+  // FAIL-CLOSED (owner ruling, 2026-08-06): the payout first-knowable check is
+  // scoped to the B2 branch — the only place payout is consumed. Admitting B2
+  // without the check active is a build error, so a future engineer cannot
+  // silently inherit an unchecked payout.
+  if (input.b2_admitted && input.payout_consumed !== true) {
+    throw new Error("computeFamilyB: b2_admitted requires payout_consumed=true (payout first-knowable check must be active)");
+  }
   const { book, risk_free: riskFree, roe, payout_scenarios: payoutScenarios, growth_observed: gObs, erp_band: erpBand } = input;
   const disclosures = [];
   const values = [];

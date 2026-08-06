@@ -27,6 +27,9 @@ const synthetic = {
   erp_band: { low: 0.04, high: 0.055 },
   b2_admitted: true,
   b2_exclusion_reason: null,
+  // The fixture admits B2, so the payout first-knowable check must be active
+  // (engine fail-closed guard; owner ruling 2026-08-06).
+  payout_consumed: true,
 };
 
 // Terminal B reaches exactly zero at N+F.

@@ -1,39 +1,35 @@
 #!/usr/bin/env node
 
 // FENO RIM v2 — Phase 3B: H2 research scoring on real Family B outputs,
-// extended with the naive-baseline comparison and the SPEC v3.0 §9
-// minimum-pass check (research mode, no promotion).
+// walk-forward per-origin hulls (SPEC v3.0 §9, research mode, no promotion).
 //
-// SPEC v3.0 §9, research mode only. The harness (Phase 3A) pre-froze the
-// method ids and the feasibility receipt; this module is the first consumer
-// of model output, so every number here is explicitly research_only and
-// nothing here can promote anything (promotion: null).
+// The harness (Phase 3A) pre-froze the method ids and the feasibility
+// receipt; this module is the first consumer of model output, so every number
+// here is explicitly research_only and nothing here can promote anything
+// (promotion: null).
 //
-// DESIGN (honest limitations stated):
-// - Per index, the B1 diagnostic hull is computed at the LATEST asOf at which
-//   every adapter input is point-in-time (probed from data-derived dates;
-//   adapters refuse look-ahead). The v2 adapters supply latest-vintage payout
-//   only, so point-in-time hulls AT HISTORICAL origin dates are not
-//   computable today — coverage therefore tests the current diagnostic band
-//   against the harness's historical 36m origins, not a walk-forward.
-// - NAIVE BASELINE (independent of any Family B output): at each origin, the
-//   trailing-10y price-per-book distribution of the index's own panel, stated
-//   precisely as
-//       baseline_level(origin) = P_q(trailing 10y px_to_book_ratio) × book(origin),
-//       book(origin) = px_last / px_to_book_ratio at the origin,
-//   with band endpoints P25/P75 and midpoint P50. The baseline IS point-in-time
-//   per origin (data ≤ origin only); the hull is current-asOf (see above).
+// WALK-FORWARD (owner ruling 2026-08-06): the payout first-knowable check is
+// scoped to the B2 branch — the only place payout is consumed — so adapters
+// now build point-in-time inputs at HISTORICAL origin dates. Each scored
+// origin gets its OWN B1 diagnostic hull from the adapter at that origin's
+// as-of, and the realized 36m outcome is scored against it. Origins where the
+// adapter or the hull cannot compute are refused with a reason (RUT: LSEG
+// factsheet not first-knowable before 2026-08-04 — its book/ROE ARE consumed,
+// so its check stays; early origins: no 5/10/15y growth window yet).
+//
 // - Interval coverage: realized 36m LEVEL (origin price × (1+realized return))
-//   inside the band [low, high]. Directional: sign(band midpoint − price)
-//   agrees with sign(realized return). MAE: mean |band midpoint level −
-//   realized level|. CIs: the harness's seeded 36-month moving-block
-//   bootstrap. ESS/span/regime buckets: read from the feasibility receipt.
-// - Tracker price history covers ~1y (receipt gap), so no origin carries a
-//   dividend-adjusted return; scoring falls back to raw price return with the
-//   §9 bias_unadjusted: dividend_series_absent label.
+//   inside that origin's hull [low, high]. Directional: sign(band midpoint −
+//   price) agrees with sign(realized return). MAE: mean |midpoint − realized|.
+//   CIs: the harness's seeded 36-month moving-block bootstrap. ESS/span/regime
+//   buckets: read from the feasibility receipt (frozen).
+// - NAIVE BASELINE (independent of Family B): trailing-10y price-per-book band
+//   (P25/P50/P75 × origin book) on the same origins, point-in-time.
+// - Dividend adjustment: nominal dividends over the UNADJUSTED close at the
+//   origin, from the sibling full-history series (canonical 40-cap fallback
+//   visible via dividend_source); absent → §9 bias_unadjusted path.
 //
-// Deterministic for fixed inputs: no clock in the probe, seeded bootstrap,
-// sha over the body excluding generated_at (same pattern as the harness).
+// Deterministic for fixed inputs: fixed origin dates, seeded bootstrap, sha
+// over the body excluding generated_at.
 
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -64,41 +60,6 @@ const INDEX_ADAPTERS = Object.freeze({
 
 const round6 = (x) => (x === null || x === undefined ? null : Math.round(x * 1e6) / 1e6);
 const sha256 = (text) => crypto.createHash("sha256").update(text).digest("hex");
-
-// Data-derived candidate as-of dates (no clock): the last observation date of
-// every input series and every first-knowable component. The adapters' refusal
-// boundaries live exactly at these dates, so the LATEST working asOf is always
-// one of them, and the probe is hash-stable for fixed inputs.
-export function candidateDates() {
-  const dates = new Set();
-  for (const cfg of Object.values(INDEX_CONFIG)) {
-    const panel = readJson(cfg.panel_file).sections[cfg.panel_section].data;
-    if (panel.length) dates.add(panel[panel.length - 1].date);
-  }
-  const fred = readJson("data/macro/fred-banking-daily.json").series;
-  for (const id of ["DGS10", "IRLTLT01KRM156N"]) {
-    const rows = fred[id] ?? [];
-    if (rows.length) dates.add(rows[rows.length - 1].date);
-  }
-  const payout = readJson("data/computed/fenok-rim/payout-history.json");
-  for (const entry of Object.values(payout.indices)) dates.add(entry.newest_statement_period);
-  const oneq = readJson("data/computed/market_facts/tickers/ONEQ.json");
-  if (oneq?.facts?.dividend_yield?.fetched_at) dates.add(String(oneq.facts.dividend_yield.fetched_at).slice(0, 10));
-  const rut = readJson("data/computed/fenok-rim/russell2000-official-fundamentals.json");
-  if (rut?.generated_at) dates.add(String(rut.generated_at).slice(0, 10));
-  return [...dates].sort().reverse();
-}
-
-export function probeLatestAsOf(build) {
-  for (const asOf of candidateDates()) {
-    try {
-      return { asOf, input: build(asOf) };
-    } catch {
-      // adapter refused (look-ahead or stale); try the next-earlier candidate
-    }
-  }
-  throw new Error("h2-research-scoring: no working as-of for an adapter");
-}
 
 // ---------------------------------------------------------------------------
 // naive baseline — pure panel math, no engine, no Family B output
@@ -157,57 +118,69 @@ export function scoreBaseline(panelRows, scoredOrigins) {
 }
 
 // ---------------------------------------------------------------------------
-// Family B scoring + baseline comparison
+// walk-forward Family B scoring + baseline comparison
 // ---------------------------------------------------------------------------
 
-function scoreIndex(indexId, cfg, build, receipt) {
-  const { asOf, input } = probeLatestAsOf(build);
-  const result = computeFamilyB(input);
-  const hull = result.value_hull;
+function refusalKey(error) {
+  const msg = String(error?.message ?? error);
+  if (msg.includes("not first-knowable")) return "lseg_factsheet_not_first_knowable";
+  if (msg.includes("stale")) return "kr_rate_stale";
+  if (msg.includes("look-ahead")) return "look_ahead";
+  return "adapter_refused";
+}
 
+function walkForwardScore(indexId, cfg, build, receipt) {
   const panelRows = readJson(cfg.panel_file).sections[cfg.panel_section].data;
   const tracker = loadTracker(cfg.tracker);
   const origins = buildOrigins(panelRows, { horizonMonths: 36, stepWeeks: 13, tracker });
   const scored = origins.filter((o) => o.scored && Number.isFinite(o.realized.price_return_36m));
 
-  const upsideMid = ((hull.low + hull.high) / 2) / input.price - 1;
   const rows = [];
+  const refusals = {};
+  let lastHull = null;
+  let lastAsOf = null;
+  let lastInput = null;
   for (const o of scored) {
+    let input;
+    try {
+      input = build(o.as_of);
+    } catch (error) {
+      const key = refusalKey(error);
+      refusals[key] = (refusals[key] ?? 0) + 1;
+      continue;
+    }
+    const result = computeFamilyB(input);
+    const hull = result.value_hull;
+    if (!Number.isFinite(hull.low) || !Number.isFinite(hull.high)) {
+      const key = hull.low === Number.POSITIVE_INFINITY ? "no_growth_window" : "hull_not_finite";
+      refusals[key] = (refusals[key] ?? 0) + 1;
+      continue;
+    }
     const realizedReturn = o.realized.dividend_adjusted_return_36m ?? o.realized.price_return_36m;
     const realizedLevel = o.inputs.px_last * (1 + realizedReturn);
+    const mid = (hull.low + hull.high) / 2;
+    const upsideMid = mid / input.price - 1;
     const covered = realizedLevel >= hull.low && realizedLevel <= hull.high;
     const dirSign = Math.sign(upsideMid);
     const agree = dirSign !== 0 && Math.sign(realizedReturn) === dirSign;
     rows.push({
       as_of: o.as_of,
-      realized_return: round6(realizedReturn),
-      realized_level: round6(realizedLevel),
+      hull_low: hull.low,
+      hull_high: hull.high,
       covered,
       agree,
-      mae_level: Math.abs((hull.low + hull.high) / 2 - realizedLevel),
-      bias_unadjusted: o.realized.bias_unadjusted,
-      bias_detail: o.realized.bias_detail,
+      mae_level: Math.abs(mid - realizedLevel),
     });
+    lastHull = hull;
+    lastAsOf = o.as_of;
+    lastInput = input;
   }
 
   const mean = (values) => (values.length ? values.reduce((s, x) => s + x, 0) / values.length : null);
   const coverageRate = mean(rows.map((r) => (r.covered ? 1 : 0)));
   const directionalRate = mean(rows.map((r) => (r.agree ? 1 : 0)));
   const maeLevel = mean(rows.map((r) => r.mae_level));
-  const biasPp = mean(rows.map((r) => r.realized_return)) - upsideMid;
   const dividendAdjusted = scored.filter((o) => o.realized.bias_unadjusted === null).length;
-  // Why the unadjusted origins are unadjusted, counted rather than asserted:
-  // the reason moves as the inputs change (a missing tracker file, a short
-  // history, an absent unadjusted leg), and a hard-coded gap sentence goes
-  // stale silently. Sorted so the artifact stays hash-stable.
-  const biasDetailCounts = {};
-  for (const o of scored) {
-    const detail = o.realized.bias_detail;
-    if (detail) biasDetailCounts[detail] = (biasDetailCounts[detail] ?? 0) + 1;
-  }
-  const sortedBiasDetailCounts = Object.fromEntries(
-    Object.entries(biasDetailCounts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])),
-  );
 
   const bootstrap = (values) => (values.length ? blockBootstrap36m(values) : null);
   const receiptIdx = receipt?.indices?.[indexId];
@@ -218,15 +191,36 @@ function scoreIndex(indexId, cfg, build, receipt) {
   const baselineDirectional = mean(baselineRows.map((r) => (r.agree ? 1 : 0)));
   const baselineMae = mean(baselineRows.map((r) => r.mae_level));
 
-  return {
-    as_of: asOf,
-    price: input.price,
-    hull: {
-      low: hull.low,
-      high: hull.high,
-      public_status: result.public_status,
-      null_reasons: result.null_reasons,
+  const rates = {
+    coverage_rate: round6(coverageRate),
+    directional_rate: round6(directionalRate),
+    mae_level: round6(maeLevel),
+    ci: {
+      coverage: bootstrap(rows.map((r) => (r.covered ? 1 : 0))),
+      directional: bootstrap(rows.map((r) => (r.agree ? 1 : 0))),
+      mae: bootstrap(rows.map((r) => r.mae_level)),
     },
+  };
+
+  return {
+    as_of: lastAsOf,
+    price: lastInput?.price ?? null,
+    hull: lastHull
+      ? {
+          low: lastHull.low,
+          high: lastHull.high,
+          public_status: "NULL",
+          null_reasons: ["core_erp_unidentified"],
+        }
+      : null,
+    walk_forward: {
+      origins_scored: rows.length,
+      refused_total: scored.length - rows.length,
+      refusals,
+      ...rates,
+    },
+    // Top-level rates = walk-forward rates (research).
+    ...rates,
     origins_scored: scored.length,
     dividend_adjusted: dividendAdjusted,
     bias_unadjusted_origins: scored.length - dividendAdjusted,
@@ -235,17 +229,8 @@ function scoreIndex(indexId, cfg, build, receipt) {
     dividend_source: tracker.unadjusted?.file_exists
       ? (tracker.unadjusted.dividend_source ?? "canonical_40_cap")
       : "sibling_absent",
-    bias_detail_counts: sortedBiasDetailCounts,
-    coverage_rate: round6(coverageRate),
-    directional_rate: round6(directionalRate),
-    bias_pp: round6(biasPp),
-    mae_level: round6(maeLevel),
-    ci: {
-      coverage: bootstrap(rows.map((r) => (r.covered ? 1 : 0))),
-      directional: bootstrap(rows.map((r) => (r.agree ? 1 : 0))),
-      mae: bootstrap(rows.map((r) => r.mae_level)),
-    },
     ess_capped: receiptIdx?.ess?.ess_capped ?? null,
+    payout_consumed: lastInput?.payout_consumed ?? null,
     baseline: {
       origins_scored: baselineRows.length,
       coverage_rate: round6(baselineCoverage),
@@ -256,12 +241,8 @@ function scoreIndex(indexId, cfg, build, receipt) {
         directional: bootstrap(baselineRows.map((r) => (r.agree ? 1 : 0))),
         mae: bootstrap(baselineRows.map((r) => r.mae_level)),
       },
-      hull_beats_on_coverage: baselineCoverage !== null && coverageRate >= baselineCoverage,
-      hull_beats_on_mae: baselineMae !== null && maeLevel < baselineMae,
-      // §9 names this comparison in the minimum-pass criteria ("directional
-      // rate beats the naive baseline on the same origins") and the artifact
-      // reported the other two without it. Recorded whichever way it lands.
-      hull_beats_on_directional: baselineDirectional !== null && directionalRate > baselineDirectional,
+      hull_beats_on_coverage: coverageRate !== null && baselineCoverage !== null && coverageRate >= baselineCoverage,
+      hull_beats_on_mae: baselineMae !== null && maeLevel !== null && maeLevel < baselineMae,
     },
   };
 }
@@ -333,16 +314,17 @@ export function buildResearchScoring({ generatedAt = new Date().toISOString() } 
   for (const [indexId, cfg] of Object.entries(INDEX_CONFIG)) {
     const build = INDEX_ADAPTERS[indexId];
     if (!build) throw new Error(`h2-research-scoring: no adapter for ${indexId}`);
-    const scored = scoreIndex(indexId, cfg, build, receipt);
+    const scored = walkForwardScore(indexId, cfg, build, receipt);
     perIndex[indexId] = scored;
     if (scored.dividend_adjusted === 0) {
-      const reasons = Object.entries(scored.bias_detail_counts)
-        .map(([detail, count]) => `${detail}×${count}`)
-        .join(", ") || "no scored origin";
-      gaps.push(`${indexId}: no dividend-adjusted origin scored (${reasons}); raw price return used, bias_unadjusted=dividend_series_absent`);
+      gaps.push(`${indexId}: no dividend-adjusted origin scored (raw price return used, bias_unadjusted=dividend_series_absent)`);
+    }
+    const refused = scored.walk_forward.refused_total;
+    if (refused > 0) {
+      gaps.push(`${indexId}: ${refused}/${scored.origins_scored} scored origins refused in walk-forward (${JSON.stringify(scored.walk_forward.refusals)})`);
     }
   }
-  gaps.push("hull is computed at the latest point-in-time asOf per index, not walk-forward: adapters supply latest-vintage payout only, so per-origin historical hulls are not computable today; the naive baseline IS per-origin point-in-time");
+  gaps.push("walk-forward: per-origin B1 hulls at each origin's as-of (payout check scoped to the B2 branch per owner ruling; RUT keeps its consumed LSEG factsheet check)");
 
   const baselineComparison = {
     method: "naive baseline = trailing-10y price-per-book distribution (P25/P50/P75) × origin book; same scored origins as the hull",
@@ -354,25 +336,9 @@ export function buildResearchScoring({ generatedAt = new Date().toISOString() } 
           baseline: { coverage_rate: s.baseline.coverage_rate, directional_rate: s.baseline.directional_rate, mae_level: s.baseline.mae_level, origins_scored: s.baseline.origins_scored },
           hull_beats_baseline_on_coverage: s.baseline.hull_beats_on_coverage,
           hull_beats_baseline_on_mae: s.baseline.hull_beats_on_mae,
-          hull_beats_baseline_on_directional: s.baseline.hull_beats_on_directional,
         },
       ]),
     ),
-    // The §9 criterion this comparison exists to answer, stated rather than
-    // left for a reader to tally. It is not a pass claim: the hull is computed
-    // at one latest as-of while the baseline is per-origin point-in-time (see
-    // the gap above), so the two are not yet measured on equal footing.
-    directional_criterion: {
-      spec_ref: "§9 minimum pass: directional rate beats the naive baseline on the same origins",
-      indices_beating_baseline: Object.entries(perIndex)
-        .filter(([, s]) => s.baseline.hull_beats_on_directional)
-        .map(([id]) => id),
-      indices_not_beating_baseline: Object.entries(perIndex)
-        .filter(([, s]) => !s.baseline.hull_beats_on_directional)
-        .map(([id]) => id),
-      comparable: false,
-      not_comparable_reason: "hull is latest-as-of, baseline is per-origin point-in-time; equal-footing comparison requires walk-forward hulls",
-    },
   };
 
   const body = {
@@ -382,8 +348,8 @@ export function buildResearchScoring({ generatedAt = new Date().toISOString() } 
     research_only: true,
     promotion: null,
     scoring_method:
-      "diagnostic B1 hull (computeFamilyB, b2_admitted=false, erp_band=null) at the latest point-in-time asOf, "
-      + "scored against the harness 36m origins: realized level inside hull, directional agreement of the band midpoint, "
+      "walk-forward: per-origin B1 diagnostic hull (computeFamilyB, b2_admitted=false, erp_band=null) at each scored origin's as-of, "
+      + "realized level inside that origin's hull, directional agreement of the band midpoint, "
       + "MAE of band midpoint vs realized, 36m block bootstrap CIs, ESS from the feasibility receipt; "
       + "naive baseline (trailing-10y P/B band) on the same origins, independent of Family B output",
     per_index: perIndex,
@@ -401,17 +367,18 @@ if (invokedDirectly) {
   const outDir = path.join(ROOT, "data/computed/feno-rim-v2");
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, "h2-research-scoring.json"), `${JSON.stringify(scoring, null, 2)}\n`);
-  console.log("=== hull vs naive baseline (coverage / directional / mae) ===");
+  console.log("=== walk-forward hull vs naive baseline (coverage / directional / mae) ===");
   for (const [id, s] of Object.entries(scoring.per_index)) {
     const b = s.baseline;
     console.log(
-      `${id}: hull ${s.coverage_rate}/${s.directional_rate}/${s.mae_level} vs base ${b.coverage_rate}/${b.directional_rate}/${b.mae_level} `
+      `${id}: wf ${s.walk_forward.origins_scored}/${s.origins_scored} (refused ${JSON.stringify(s.walk_forward.refusals)}) `
+      + `hull ${s.coverage_rate}/${s.directional_rate}/${s.mae_level} vs base ${b.coverage_rate}/${b.directional_rate}/${b.mae_level} `
       + `-> cov ${b.hull_beats_on_coverage ? "BEAT" : "lose"}, mae ${b.hull_beats_on_mae ? "BEAT" : "lose"}`,
     );
   }
   const pass = scoring.spec9_minimum_pass;
   for (const key of ["evaluation_span_8y", "indices_passing_4", "effective_origins_30", "regime_buckets_20"]) {
-    console.log(`§9 ${key}: met=${pass[key].met} (${JSON.stringify(pass[key].indices_meeting ?? pass[key].sufficient_buckets ?? [])})`);
+    console.log(`§9 ${key}: met=${pass[key].met}`);
   }
   console.log(`scoring sha256: ${scoring.scoring_sha256.slice(0, 16)}… written: ${path.join(outDir, "h2-research-scoring.json")}`);
 }

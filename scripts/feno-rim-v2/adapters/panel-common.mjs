@@ -108,16 +108,26 @@ export function usRiskFree(asOf) {
  * payout's own component date, so a proxy fetched after asOf refuses with
  * `look-ahead` instead of silently mixing vintages.
  */
-export function buildPanelInput({ asOf, panelFile, section, payoutKey, rate, universeId, currency, extras = {}, payoutOverride = null, payoutScenarioId = "ttm_ttm", payoutBasis = null }) {
+export function buildPanelInput({ asOf, panelFile, section, payoutKey, rate, universeId, currency, extras = {}, payoutOverride = null, payoutScenarioId = "ttm_ttm", payoutBasis = null, b2Admitted = false }) {
   const panel = usablePanelRows(readJson(panelFile).sections[section].data);
   const row = lastAtOrBefore(panel, asOf);
   if (!row) throw new Error(`${section} adapter: no panel row at or before ${asOf}`);
   const payout = payoutOverride ?? payoutFor(payoutKey);
   const payoutComponent = payout.first_knowable_component ?? payout.newest_statement_period;
-  const firstK = firstKnowable(
-    { price: row.date, rate: rate.date, payout_statement: payoutComponent },
-    asOf,
-  );
+  // SCOPE CORRECTION (owner ruling, 2026-08-06): a first-knowable check applies
+  // to inputs the engine CONSUMES. Payout is consumed only inside the B2
+  // branch of computeFamilyB (engine.mjs), and every adapter today runs with
+  // b2_admitted=false (clean-surplus bridge data absent) — so the payout
+  // component must not refuse a historical origin. It rejoins the component
+  // set the moment B2 is admitted, and admission WITHOUT the component is a
+  // build error (fail-closed: a future engineer cannot silently inherit an
+  // unchecked payout).
+  const componentDates = { price: row.date, rate: rate.date };
+  if (b2Admitted) {
+    if (!payoutComponent) throw new Error(`${section} adapter: b2_admitted requires a payout first-knowable component`);
+    componentDates.payout_statement = payoutComponent;
+  }
+  const firstK = firstKnowable(componentDates, asOf);
   return {
     book: row.px_last / row.px_to_book_ratio,
     price: row.px_last,
@@ -132,8 +142,13 @@ export function buildPanelInput({ asOf, panelFile, section, payoutKey, rate, uni
     }],
     growth_observed: growthWindows(panel, asOf),
     erp_band: null, // core ERP unproven until the ERP contract research lands
-    b2_admitted: false,
-    b2_exclusion_reason: "clean-surplus bridge data incomplete: issuance and OCI aggregates absent",
+    b2_admitted: b2Admitted,
+    b2_exclusion_reason: b2Admitted ? null : "clean-surplus bridge data incomplete: issuance and OCI aggregates absent",
+    // Recorded so a reader can see the check was scoped out, not forgotten.
+    payout_consumed: b2Admitted,
+    payout_unconsumed_reason: b2Admitted
+      ? null
+      : "b2_admitted=false: payout enters the engine only inside the B2 branch (engine.mjs:127), excluded by the clean-surplus gate; its first-knowable check is scoped out with it",
     universe_id: universeId,
     membership_as_of: row.date,
     earnings_basis: "trailing_fiscal_aggregate_ttm_proxy",
