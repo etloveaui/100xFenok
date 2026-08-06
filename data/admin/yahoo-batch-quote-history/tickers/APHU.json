@@ -12,15 +12,28 @@
       "run_id": "29965324287",
       "schedule": "0 22 * * 3",
       "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 362,
+      "natural": true,
+      "observed_at": "2026-08-06T03:31:35Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31068593165",
+      "schedule": "7 0 * * 0-5",
+      "shard": "48/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-22T23:47:34Z",
-    "history_as_of": "2026-07-22",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/APHU.json",
-    "payload_sha256": "95b20f83ca5829dd11a20d1cf5b286c3a68c095756ee263ed1b17f6106a43cfa",
-    "quote_as_of": "2026-07-22T19:59:50Z",
-    "source_as_of": "2026-07-22"
+    "fetched_at": "2026-08-06T03:32:25Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/APHU.json",
+    "payload_sha256": "a9c61a9ef6ea0182ba12cc4a5fed34d3ace4625deea4ee627375f5824adf6dbd",
+    "quote_as_of": "2026-08-05T19:55:26Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 915,
+    "latency_ms": 362,
     "natural": true,
-    "observed_at": "2026-07-22T23:45:22Z",
+    "observed_at": "2026-08-06T03:31:35Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29965324287",
-    "schedule": "0 22 * * 3",
-    "shard": "3/6"
+    "run_id": "31068593165",
+    "schedule": "7 0 * * 0-5",
+    "shard": "48/72"
   },
   "lkg": {
     "fetched_at": "2026-07-22T23:47:34Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-22",
-    "observed_at": "2026-07-22T23:45:22Z",
-    "payload_sha256": "cdafdf6689ad87f2232f91e89956c27b979d17bdb10a505e3a94eb46a02a90ba",
-    "quote_as_of": "2026-07-22T19:59:50Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T03:31:35Z",
+    "payload_sha256": "eec32a57acd1c5cf87c03c51c30fdc0137716ca61973a5da4bcff3f2b4ac9a42",
+    "quote_as_of": "2026-08-05T19:55:26Z",
     "run_attempt": 1,
-    "run_id": "29965324287",
+    "run_id": "31068593165",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-22"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-22"
   },
   "ticker": "APHU",
-  "updated_at": "2026-07-31T00:55:40Z"
+  "updated_at": "2026-08-06T03:31:35Z"
 }

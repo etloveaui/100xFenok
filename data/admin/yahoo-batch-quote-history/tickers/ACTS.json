@@ -12,15 +12,28 @@
       "run_id": "29965324287",
       "schedule": "0 22 * * 3",
       "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 335,
+      "natural": true,
+      "observed_at": "2026-08-06T03:31:35Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31068593165",
+      "schedule": "7 0 * * 0-5",
+      "shard": "48/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-22T23:46:53Z",
-    "history_as_of": "2026-07-22",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ACTS.json",
-    "payload_sha256": "0d9e407f786ca9adf35e085c156ded01b2b44bb3d5e4afea07bd715aa02000c0",
-    "quote_as_of": "2026-07-22T19:08:00Z",
-    "source_as_of": "2026-07-22"
+    "fetched_at": "2026-08-06T03:31:56Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/ACTS.json",
+    "payload_sha256": "f54969d59ad04380a52ef2a07457292f0a4bb8b18f517ef6b407e8a7b6e3367e",
+    "quote_as_of": "2026-08-05T18:13:40Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 761,
+    "latency_ms": 335,
     "natural": true,
-    "observed_at": "2026-07-22T23:45:22Z",
+    "observed_at": "2026-08-06T03:31:35Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29965324287",
-    "schedule": "0 22 * * 3",
-    "shard": "3/6"
+    "run_id": "31068593165",
+    "schedule": "7 0 * * 0-5",
+    "shard": "48/72"
   },
   "lkg": {
     "fetched_at": "2026-07-22T23:46:53Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-22",
-    "observed_at": "2026-07-22T23:45:22Z",
-    "payload_sha256": "e5073ba0331e7bb946c98710ab88aa662addb1e50cc9476124b53ac31bcf2f6c",
-    "quote_as_of": "2026-07-22T19:08:00Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T03:31:35Z",
+    "payload_sha256": "5a2e950028485a20f1ca518eb95d6cf3262bdc1209be4b687ced62454aaf09d1",
+    "quote_as_of": "2026-08-05T18:13:40Z",
     "run_attempt": 1,
-    "run_id": "29965324287",
+    "run_id": "31068593165",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-22"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-22"
   },
   "ticker": "ACTS",
-  "updated_at": "2026-07-31T00:55:40Z"
+  "updated_at": "2026-08-06T03:31:35Z"
 }

@@ -12,15 +12,28 @@
       "run_id": "29965324287",
       "schedule": "0 22 * * 3",
       "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 366,
+      "natural": true,
+      "observed_at": "2026-08-06T03:31:35Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31068593165",
+      "schedule": "7 0 * * 0-5",
+      "shard": "48/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-22T23:47:25Z",
-    "history_as_of": "2026-07-22",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AMAU.json",
-    "payload_sha256": "f2d3b4a95311950dc2a0260a1536aca813ca1c32619061577a68811dc3632081",
-    "quote_as_of": "2026-07-22T20:00:00Z",
-    "source_as_of": "2026-07-22"
+    "fetched_at": "2026-08-06T03:32:19Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/AMAU.json",
+    "payload_sha256": "9567a3df23dd8d7158ebaae3a43fd613cb90549dbeb538237d46cff496b11d3e",
+    "quote_as_of": "2026-08-05T19:59:58Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 965,
+    "latency_ms": 366,
     "natural": true,
-    "observed_at": "2026-07-22T23:45:22Z",
+    "observed_at": "2026-08-06T03:31:35Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29965324287",
-    "schedule": "0 22 * * 3",
-    "shard": "3/6"
+    "run_id": "31068593165",
+    "schedule": "7 0 * * 0-5",
+    "shard": "48/72"
   },
   "lkg": {
     "fetched_at": "2026-07-22T23:47:25Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-22",
-    "observed_at": "2026-07-22T23:45:22Z",
-    "payload_sha256": "c4b6098702ea3ff458bc2cb51b56807130c63643e894033e13cd7500a1b13832",
-    "quote_as_of": "2026-07-22T20:00:00Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T03:31:35Z",
+    "payload_sha256": "8b8e7ddc3d3a5144e31a80b1a484975e6c113e95ef3b517027d1ccc2ccddf764",
+    "quote_as_of": "2026-08-05T19:59:58Z",
     "run_attempt": 1,
-    "run_id": "29965324287",
+    "run_id": "31068593165",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-22"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-22"
   },
   "ticker": "AMAU",
-  "updated_at": "2026-07-31T00:55:40Z"
+  "updated_at": "2026-08-06T03:31:35Z"
 }

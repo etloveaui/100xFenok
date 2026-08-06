@@ -12,15 +12,28 @@
       "run_id": "29965324287",
       "schedule": "0 22 * * 3",
       "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 486,
+      "natural": true,
+      "observed_at": "2026-08-06T03:31:35Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31068593165",
+      "schedule": "7 0 * * 0-5",
+      "shard": "48/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-22T23:47:07Z",
-    "history_as_of": "2026-07-22",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AFMC.json",
-    "payload_sha256": "cf8ede6ae5f835e3408f9628f9ba390f2f6e85e29bf317e9711972e885713314",
-    "quote_as_of": "2026-07-22T20:00:00Z",
-    "source_as_of": "2026-07-22"
+    "fetched_at": "2026-08-06T03:32:06Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/AFMC.json",
+    "payload_sha256": "1e725f82ebc0123590d6cd68bdc3dc5f34b65faeaefe20cf55cd44e43410ddaf",
+    "quote_as_of": "2026-08-05T19:52:33Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 929,
+    "latency_ms": 486,
     "natural": true,
-    "observed_at": "2026-07-22T23:45:22Z",
+    "observed_at": "2026-08-06T03:31:35Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "29965324287",
-    "schedule": "0 22 * * 3",
-    "shard": "3/6"
+    "run_id": "31068593165",
+    "schedule": "7 0 * * 0-5",
+    "shard": "48/72"
   },
   "lkg": {
     "fetched_at": "2026-07-22T23:47:07Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-22",
-    "observed_at": "2026-07-22T23:45:22Z",
-    "payload_sha256": "92d6e5104842473e64f765c5c7b68d12349e3e35c0912b477ec585cb69e34da7",
-    "quote_as_of": "2026-07-22T20:00:00Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T03:31:35Z",
+    "payload_sha256": "6a4d2419ba8912dd8ebd103f80beab459046e36faf75ec56938c16a91fae1182",
+    "quote_as_of": "2026-08-05T19:52:33Z",
     "run_attempt": 1,
-    "run_id": "29965324287",
+    "run_id": "31068593165",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-22"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-22"
   },
   "ticker": "AFMC",
-  "updated_at": "2026-07-31T00:55:40Z"
+  "updated_at": "2026-08-06T03:31:35Z"
 }
