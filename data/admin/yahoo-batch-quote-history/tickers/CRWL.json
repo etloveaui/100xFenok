@@ -25,15 +25,28 @@
       "run_id": "30051682457",
       "schedule": "0 22 * * 4",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1140,
+      "natural": true,
+      "observed_at": "2026-08-06T08:51:05Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31086476783",
+      "schedule": "7 6 * * 0-5",
+      "shard": "51/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-23T23:19:58Z",
-    "history_as_of": "2026-07-23",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CRWL.json",
-    "payload_sha256": "2cd2638bf0b950bcb23380c1465f8af1eadad4665676a6ae1bd63f8f5b69cb40",
-    "quote_as_of": "2026-07-23T20:00:01Z",
-    "source_as_of": "2026-07-23"
+    "fetched_at": "2026-08-06T08:52:10Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/CRWL.json",
+    "payload_sha256": "bfb84250d7094e770c8d75e5d37b52938e86f50c80ebb2b66066e9a7b91d07a7",
+    "quote_as_of": "2026-08-05T20:00:00Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "focus_etf_configuration",
@@ -43,14 +56,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 616,
+    "latency_ms": 1140,
     "natural": true,
-    "observed_at": "2026-07-23T23:19:22Z",
+    "observed_at": "2026-08-06T08:51:05Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30051682457",
-    "schedule": "0 22 * * 4",
-    "shard": "4/6"
+    "run_id": "31086476783",
+    "schedule": "7 6 * * 0-5",
+    "shard": "51/72"
   },
   "lkg": {
     "fetched_at": "2026-07-23T23:19:58Z",
@@ -63,17 +76,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-23",
-    "observed_at": "2026-07-23T23:19:22Z",
-    "payload_sha256": "1053eb20a4f712c117a32512a4b94bb91fe650df22945fbea82ec14dc75cb48b",
-    "quote_as_of": "2026-07-23T20:00:01Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T08:51:05Z",
+    "payload_sha256": "82c8ef8f94663ecedd5d776273ceb7e1deaf60161257bab200bb0a59e50d68ef",
+    "quote_as_of": "2026-08-05T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30051682457",
+    "run_id": "31086476783",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-23"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -86,5 +99,5 @@
     "source_as_of": "2026-07-23"
   },
   "ticker": "CRWL",
-  "updated_at": "2026-08-03T22:58:08Z"
+  "updated_at": "2026-08-06T08:51:05Z"
 }

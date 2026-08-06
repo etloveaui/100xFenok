@@ -12,15 +12,28 @@
       "run_id": "30051682457",
       "schedule": "0 22 * * 4",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1323,
+      "natural": true,
+      "observed_at": "2026-08-06T08:51:05Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31086476783",
+      "schedule": "7 6 * * 0-5",
+      "shard": "51/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-23T23:21:35Z",
-    "history_as_of": "2026-07-23",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CWB.json",
-    "payload_sha256": "4b8be1372c13d91ad260e22430cd534c82d60096089f06d1326eba3177f11c65",
-    "quote_as_of": "2026-07-23T20:00:00Z",
-    "source_as_of": "2026-07-23"
+    "fetched_at": "2026-08-06T08:52:24Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/CWB.json",
+    "payload_sha256": "3b4b38ddadebb2a0fea22850fe4def387adbdb7f07550df0133e470ff72654e6",
+    "quote_as_of": "2026-08-05T20:00:00Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 751,
+    "latency_ms": 1323,
     "natural": true,
-    "observed_at": "2026-07-23T23:19:22Z",
+    "observed_at": "2026-08-06T08:51:05Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30051682457",
-    "schedule": "0 22 * * 4",
-    "shard": "4/6"
+    "run_id": "31086476783",
+    "schedule": "7 6 * * 0-5",
+    "shard": "51/72"
   },
   "lkg": {
     "fetched_at": "2026-07-23T23:21:35Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-23",
-    "observed_at": "2026-07-23T23:19:22Z",
-    "payload_sha256": "6efeacf1417a658ea24072fe0b16c09363094b43b2ea2e7ad5d7bc5541f5ca96",
-    "quote_as_of": "2026-07-23T20:00:00Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T08:51:05Z",
+    "payload_sha256": "7e4a7ab553d6f3b84a68f54595b754a6f5887953c9970800cc6374ceefaad2f0",
+    "quote_as_of": "2026-08-05T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30051682457",
+    "run_id": "31086476783",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-23"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-23"
   },
   "ticker": "CWB",
-  "updated_at": "2026-08-03T22:58:08Z"
+  "updated_at": "2026-08-06T08:51:05Z"
 }

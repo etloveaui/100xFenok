@@ -38,15 +38,28 @@
       "run_id": "30051682457",
       "schedule": "0 22 * * 4",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1030,
+      "natural": true,
+      "observed_at": "2026-08-06T08:51:05Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31086476783",
+      "schedule": "7 6 * * 0-5",
+      "shard": "51/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-23T23:21:18Z",
-    "history_as_of": "2026-07-23",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/COHC.json",
-    "payload_sha256": "abd816978c19b14a4cbe1ca6a74aad2e36e510716b5149510487143fa1f0efdf",
-    "quote_as_of": "2026-07-23T14:14:16Z",
-    "source_as_of": "2026-07-23"
+    "fetched_at": "2026-08-06T08:51:52Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/COHC.json",
+    "payload_sha256": "2cc7d3734591874ac7f10e97d92e278facd80ce7a74dd04e3940d1797a6ee7c6",
+    "quote_as_of": "2026-08-05T13:31:16Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -55,14 +68,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 560,
+    "latency_ms": 1030,
     "natural": true,
-    "observed_at": "2026-07-23T23:19:22Z",
+    "observed_at": "2026-08-06T08:51:05Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30051682457",
-    "schedule": "0 22 * * 4",
-    "shard": "4/6"
+    "run_id": "31086476783",
+    "schedule": "7 6 * * 0-5",
+    "shard": "51/72"
   },
   "lkg": {
     "fetched_at": "2026-07-23T23:21:18Z",
@@ -75,17 +88,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-23",
-    "observed_at": "2026-07-23T23:19:22Z",
-    "payload_sha256": "0330550cc5fe7b01c5010d66ff7ecfb11fc4c47c6f048fa4457335b13b42e74a",
-    "quote_as_of": "2026-07-23T14:14:16Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-06T08:51:05Z",
+    "payload_sha256": "d7c9c3c9fad432712e768bb66e749cf075802d2882a832b65f0359b4ac973cea",
+    "quote_as_of": "2026-08-05T13:31:16Z",
     "run_attempt": 1,
-    "run_id": "30051682457",
+    "run_id": "31086476783",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-23"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -98,5 +111,5 @@
     "source_as_of": "2026-07-23"
   },
   "ticker": "COHC",
-  "updated_at": "2026-08-03T22:58:08Z"
+  "updated_at": "2026-08-06T08:51:05Z"
 }
