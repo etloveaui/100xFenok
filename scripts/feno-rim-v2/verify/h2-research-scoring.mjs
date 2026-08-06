@@ -166,7 +166,8 @@ function scoreIndex(indexId, cfg, build, receipt) {
   const hull = result.value_hull;
 
   const panelRows = readJson(cfg.panel_file).sections[cfg.panel_section].data;
-  const origins = buildOrigins(panelRows, { horizonMonths: 36, stepWeeks: 13, tracker: loadTracker(cfg.tracker) });
+  const tracker = loadTracker(cfg.tracker);
+  const origins = buildOrigins(panelRows, { horizonMonths: 36, stepWeeks: 13, tracker });
   const scored = origins.filter((o) => o.scored && Number.isFinite(o.realized.price_return_36m));
 
   const upsideMid = ((hull.low + hull.high) / 2) / input.price - 1;
@@ -229,6 +230,11 @@ function scoreIndex(indexId, cfg, build, receipt) {
     origins_scored: scored.length,
     dividend_adjusted: dividendAdjusted,
     bias_unadjusted_origins: scored.length - dividendAdjusted,
+    // Which dividend series fed the adjustment: the sibling's full history
+    // when present, else the canonical 40-entry cap — never silent.
+    dividend_source: tracker.unadjusted?.file_exists
+      ? (tracker.unadjusted.dividend_source ?? "canonical_40_cap")
+      : "sibling_absent",
     bias_detail_counts: sortedBiasDetailCounts,
     coverage_rate: round6(coverageRate),
     directional_rate: round6(directionalRate),
@@ -252,6 +258,10 @@ function scoreIndex(indexId, cfg, build, receipt) {
       },
       hull_beats_on_coverage: baselineCoverage !== null && coverageRate >= baselineCoverage,
       hull_beats_on_mae: baselineMae !== null && maeLevel < baselineMae,
+      // §9 names this comparison in the minimum-pass criteria ("directional
+      // rate beats the naive baseline on the same origins") and the artifact
+      // reported the other two without it. Recorded whichever way it lands.
+      hull_beats_on_directional: baselineDirectional !== null && directionalRate > baselineDirectional,
     },
   };
 }
@@ -344,9 +354,25 @@ export function buildResearchScoring({ generatedAt = new Date().toISOString() } 
           baseline: { coverage_rate: s.baseline.coverage_rate, directional_rate: s.baseline.directional_rate, mae_level: s.baseline.mae_level, origins_scored: s.baseline.origins_scored },
           hull_beats_baseline_on_coverage: s.baseline.hull_beats_on_coverage,
           hull_beats_baseline_on_mae: s.baseline.hull_beats_on_mae,
+          hull_beats_baseline_on_directional: s.baseline.hull_beats_on_directional,
         },
       ]),
     ),
+    // The §9 criterion this comparison exists to answer, stated rather than
+    // left for a reader to tally. It is not a pass claim: the hull is computed
+    // at one latest as-of while the baseline is per-origin point-in-time (see
+    // the gap above), so the two are not yet measured on equal footing.
+    directional_criterion: {
+      spec_ref: "§9 minimum pass: directional rate beats the naive baseline on the same origins",
+      indices_beating_baseline: Object.entries(perIndex)
+        .filter(([, s]) => s.baseline.hull_beats_on_directional)
+        .map(([id]) => id),
+      indices_not_beating_baseline: Object.entries(perIndex)
+        .filter(([, s]) => !s.baseline.hull_beats_on_directional)
+        .map(([id]) => id),
+      comparable: false,
+      not_comparable_reason: "hull is latest-as-of, baseline is per-origin point-in-time; equal-footing comparison requires walk-forward hulls",
+    },
   };
 
   const body = {

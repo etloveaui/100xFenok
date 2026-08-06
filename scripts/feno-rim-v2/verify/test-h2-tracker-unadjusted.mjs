@@ -14,7 +14,7 @@
 // 4. determinism — identical inputs, identical output.
 
 import assert from "node:assert/strict";
-import { addMonthsMs, dividendAdjustment, loadTracker, parseDateMs } from "./h2-harness.mjs";
+import { addMonthsMs, dividendAdjustment, isoDate, loadTracker, parseDateMs } from "./h2-harness.mjs";
 
 // --- 1. existing-consumer regression on real repo data ----------------------
 
@@ -120,5 +120,38 @@ assert.deepEqual(
   dividendAdjustment(base, withUnadjusted),
   "identical inputs must produce identical output",
 );
+
+// --- 5. overlap cross-check: sibling dividends must equal the canonical ----
+//        series on the shared window (2016-09 onward) BEFORE it is trusted.
+//        A mismatch means the two series are on different bases — stop.
+
+const CROSSCHECK_SYMBOLS = ["SPY", "QQQ", "ONEQ", "IWM", "EWY", "SOXX"];
+for (const symbol of CROSSCHECK_SYMBOLS) {
+  const t = loadTracker(symbol);
+  assert.equal(t.file_exists, true, `${symbol}: canonical exists`);
+  assert.equal(t.unadjusted.file_exists, true, `${symbol}: sibling exists`);
+  assert.equal(t.unadjusted.dividend_source, "sibling_full_history", `${symbol}: sibling dividends present`);
+  const canonical = new Map(t.dividends.map((row) => [isoDate(row.ms), row.amount]));
+  const sibling = new Map(t.unadjusted.dividends.map((row) => [isoDate(row.ms), row.amount]));
+  assert.ok(sibling.size >= t.dividends.length, `${symbol}: sibling dividend history must be at least the canonical length`);
+  assert.ok(
+    t.unadjusted.dividends[0].ms <= t.dividends[0].ms,
+    `${symbol}: sibling dividends must reach at least as far back as the canonical series`,
+  );
+  let checked = 0;
+  for (const [date, amount] of canonical) {
+    assert.ok(sibling.has(date), `${symbol}: canonical dividend ${date} missing from the sibling series`);
+    assert.ok(
+      Math.abs(sibling.get(date) - amount) < 1e-9,
+      `${symbol}: dividend amount mismatch on ${date} (canonical ${amount} vs sibling ${sibling.get(date)})`,
+    );
+    checked += 1;
+  }
+  assert.equal(checked, t.dividends.length, `${symbol}: every canonical dividend cross-checked`);
+  // The harness must actually USE the sibling series for the adjustment:
+  // it must reach at least as far back as the canonical series (equal for
+  // EWY, whose 29 payments never hit the 40 cap).
+  assert.ok(t.unadjusted.dividends[0].ms <= t.dividends[0].ms, `${symbol}: sibling dividends reach at least as far back as the canonical series`);
+}
 
 console.log("feno-rim-v2 tracker-unadjusted tests passed");

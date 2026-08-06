@@ -944,34 +944,44 @@ def fetch_with_retry(
 
 
 def fetch_tracker_unadjusted(ticker, timeout_seconds=90):
-    """Full-history UNADJUSTED daily closes for one RIM tracker (Phase 3B slice).
+    """Full-history UNADJUSTED daily closes + FULL dividend history for one RIM
+    tracker (Phase 3B slice).
 
     Additive lane: writes a SIBLING file data/yf/finance/{SYMBOL}.unadjusted.json
-    and never touches the canonical {SYMBOL}.json — history_1y, its 260 cap and
-    its auto_adjust=True semantics stay byte-identical for the 18+ consumers.
+    and never touches the canonical {SYMBOL}.json — history_1y, its 260 cap,
+    its auto_adjust=True semantics and DIVIDEND_ENTRIES=40 stay byte-identical
+    for the 18+ consumers. The sibling carries:
+      - history_unadjusted: full-history daily closes (auto_adjust=False, which
+        is split-adjusted per Yahoo — verified continuous across splits);
+      - dividends: the FULL dividend series from the same period=max response
+        (the canonical 40-entry cap is a storage cap, not a market fact; half
+        the US H2 origins were still scoring raw price return because of it).
 
     Why unadjusted: the H2 dividend adjustment divides nominal dividend amounts
     by a close at the origin; an auto-adjusted close is understated at older
     origins by the cumulative distribution yield, which overstates the add-on,
     one-sided, growing with origin age. Nominal over nominal removes it.
 
-    Point-in-time: rows are daily closes, each knowable at that day's close;
-    the file's fetched_at is the collection receipt (SPEC v3.0 section 3
-    first-knowable semantics; the reader additionally enforces <= origin and a
-    45-day freshness cap)."""
+    Point-in-time: rows are daily closes / dated dividends, each knowable at
+    its own date; the file's fetched_at is the collection receipt (SPEC v3.0
+    section 3 first-knowable semantics; the reader additionally enforces <=
+    origin and a 45-day freshness cap on prices)."""
     import yfinance as yf
     with ticker_timeout(timeout_seconds, ticker):
         df = yf.Ticker(yahoo_symbol(ticker)).history(period="max", interval="1d", auto_adjust=False)
     rows = []
+    dividends = {}
     if df is not None and not getattr(df, "empty", True):
         for idx, row in df.iterrows():
-            close = clean_value(row.get("Close"))
-            if close is None:
-                continue
             day = _iso(idx) if hasattr(idx, "strftime") else str(idx)
             if not _parse_utc(day):
                 continue
-            rows.append({"date": day, "Close": close})
+            close = clean_value(row.get("Close"))
+            if close is not None:
+                rows.append({"date": day, "Close": close})
+            dividend = clean_value(row.get("Dividends"))
+            if dividend is not None and dividend > 0:
+                dividends[day] = dividend
     if not rows:
         return None
     payload = {
@@ -979,7 +989,10 @@ def fetch_tracker_unadjusted(ticker, timeout_seconds=90):
         "ticker": ticker,
         "fetched_at": _observed_now(),
         "history_as_of": rows[-1]["date"],
-        "data": {"history_unadjusted": rows},
+        "data": {
+            "history_unadjusted": rows,
+            "dividends": dividends or None,
+        },
     }
     _atomic_write_bytes(OUT_DIR / f"{ticker}.unadjusted.json", stable_json(payload, separators=(",", ":")).encode("utf-8"))
     return payload

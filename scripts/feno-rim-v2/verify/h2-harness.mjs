@@ -160,6 +160,17 @@ export function loadTracker(symbol) {
           .filter((row) => row.date && Number.isFinite(row.Close))
           .map((row) => Object.freeze({ ms: parseDateMs(row.date), close: row.Close }))
           .sort((a, b) => a.ms - b.ms);
+        // FULL dividend history rides in the sibling (the canonical 40-entry
+        // cap is a storage cap, not a market fact). The reader prefers it and
+        // falls back to the canonical 40 when the sibling has none; the chosen
+        // source is exposed as `dividend_source` so the artifact cannot hide
+        // the fallback. Overlap cross-checks pin the two series to equality
+        // on the shared window before the sibling is trusted.
+        const siblingDividends = Object.entries(unadjRaw.data?.dividends ?? {})
+          .map(([date, amount]) => Object.freeze({ ms: parseDateMs(date), amount }))
+          .filter((row) => Number.isFinite(row.amount))
+          .sort((a, b) => a.ms - b.ms);
+        const siblingDivOk = siblingDividends.length > 0;
         return Object.freeze({
           symbol,
           identity_ok: unadjIdentityOk,
@@ -167,6 +178,14 @@ export function loadTracker(symbol) {
           prices: unadjPrices,
           price_start: unadjPrices.length ? isoDate(unadjPrices[0].ms) : null,
           price_end: unadjPrices.length ? isoDate(unadjPrices[unadjPrices.length - 1].ms) : null,
+          dividends: siblingDivOk ? siblingDividends : dividends,
+          dividend_source: siblingDivOk ? "sibling_full_history" : "canonical_40_cap",
+          dividend_start: (siblingDivOk ? siblingDividends : dividends).length
+            ? isoDate((siblingDivOk ? siblingDividends : dividends)[0].ms)
+            : null,
+          dividend_end: (siblingDivOk ? siblingDividends : dividends).length
+            ? isoDate((siblingDivOk ? siblingDividends : dividends)[(siblingDivOk ? siblingDividends : dividends).length - 1].ms)
+            : null,
         });
       })()
     : Object.freeze({ symbol, identity_ok: false, file_exists: false, prices: [], price_start: null, price_end: null });
@@ -219,6 +238,15 @@ export function dividendAdjustment({ t0ms, t1ms, priceReturn }, tracker) {
   if (!unadjusted || !unadjusted.file_exists) return fail("unadjusted_close_series_absent");
   if (!unadjusted.identity_ok) return fail("unadjusted_close_identity_failed");
 
+  // Dividend series: the sibling's FULL history when present (the canonical
+  // 40-entry cap is a storage cap, not a market fact), else the canonical 40.
+  // The chosen source is carried on every return so the artifact cannot hide
+  // the fallback.
+  const divSeries = unadjusted.dividends && unadjusted.dividends.length
+    ? unadjusted.dividends
+    : tracker.dividends;
+  const dividendSource = unadjusted.dividend_source ?? "canonical_40_cap";
+
   // Unadjusted price at the origin: latest observation at/before as_of, fresh
   // within 45 days (point-in-time reconstruction at the origin date).
   let priceAtOrigin = null;
@@ -233,18 +261,20 @@ export function dividendAdjustment({ t0ms, t1ms, priceReturn }, tracker) {
   // knowable at the origin) and cover the window to within one quarter of the
   // horizon end.
   let divSum = 0;
-  for (const d of tracker.dividends) {
+  for (const d of divSeries) {
     if (d.ms > t0ms && d.ms <= t1ms) divSum += d.amount;
   }
-  const trailOk = tracker.div_start !== null && parseDateMs(tracker.div_start) <= t0ms - 300 * DAY_MS;
-  const tailOk = tracker.div_end !== null && parseDateMs(tracker.div_end) >= t1ms - 120 * DAY_MS;
+  const divStart = divSeries.length ? divSeries[0].ms : null;
+  const divEnd = divSeries.length ? divSeries[divSeries.length - 1].ms : null;
+  const trailOk = divStart !== null && divStart <= t0ms - 300 * DAY_MS;
+  const tailOk = divEnd !== null && divEnd >= t1ms - 120 * DAY_MS;
 
   if (!priceOk || !trailOk || !tailOk) {
     const missing = [];
     if (!priceOk) missing.push("tracker_price_at_origin_unavailable");
     if (!trailOk) missing.push("dividend_trailing_history_short");
     if (!tailOk) missing.push("dividend_horizon_tail_short");
-    return fail(missing.join("+"));
+    return Object.freeze({ ...fail(missing.join("+")), dividend_source: dividendSource });
   }
   // Yield accrued over the horizon, scaled by the UNADJUSTED tracker price at
   // the origin (same security on both sides keeps the ratio coherent), added
@@ -253,6 +283,7 @@ export function dividendAdjustment({ t0ms, t1ms, priceReturn }, tracker) {
     dividend_adjusted_return: round6(priceReturn + divSum / priceAtOrigin.close),
     bias: null,
     bias_detail: null,
+    dividend_source: dividendSource,
   });
 }
 
@@ -629,8 +660,12 @@ function buildIndexFeasibility(indexId, cfg, generatedGaps) {
   if (adjustedCount === 0) {
     gaps.push("tracker_price_history_covers_no_scored_origin(history_1y_only;refetch_full_history_to_enable_dividend_adjustment)");
   }
-  if (tracker.div_start && panelRows.length && parseDateMs(tracker.div_start) > parseDateMs(panelRows[0].date) + 365 * DAY_MS) {
-    gaps.push(`dividend_history_starts_${tracker.div_start}(panel_starts_${panelRows[0].date})`);
+  // Measured against the series the scorer consumes: a gap named from the
+  // canonical leg would survive the moment a longer sibling series makes it
+  // false, which is exactly what happened when the full history landed.
+  const effectiveDivStart = tracker.unadjusted?.dividend_start ?? tracker.div_start;
+  if (effectiveDivStart && panelRows.length && parseDateMs(effectiveDivStart) > parseDateMs(panelRows[0].date) + 365 * DAY_MS) {
+    gaps.push(`dividend_history_starts_${effectiveDivStart}(panel_starts_${panelRows[0].date})`);
   }
   if (parseDateMs(panelRows[0].date) > parseDateMs(CRISIS_WINDOWS[0].end)) {
     gaps.push("crisis_2008_09_before_panel_start(bucket_unobservable)");
@@ -645,13 +680,21 @@ function buildIndexFeasibility(indexId, cfg, generatedGaps) {
       first_date: panelRows[0].date,
       last_date: panelRows[panelRows.length - 1].date,
     }),
+    // The receipt is the availability document, so it reports the series the
+    // scorer actually consumes, not the canonical file alone. Reporting the
+    // canonical legs here while the scorer reads the sibling would understate
+    // availability in the one artifact whose purpose is to state it.
     tracker: Object.freeze({
       symbol: cfg.tracker,
       identity_ok: tracker.identity_ok,
-      price_history_start: tracker.price_start,
-      price_history_end: tracker.price_end,
-      dividend_start: tracker.div_start,
-      dividend_end: tracker.div_end,
+      price_history_start: tracker.unadjusted?.price_start ?? tracker.price_start,
+      price_history_end: tracker.unadjusted?.price_end ?? tracker.price_end,
+      price_source: tracker.unadjusted?.file_exists ? "sibling_unadjusted" : "canonical_history_1y",
+      dividend_start: tracker.unadjusted?.dividend_start ?? tracker.div_start,
+      dividend_end: tracker.unadjusted?.dividend_end ?? tracker.div_end,
+      dividend_source: tracker.unadjusted?.dividend_source ?? "canonical_40_cap",
+      canonical_price_history_start: tracker.price_start,
+      canonical_dividend_start: tracker.div_start,
     }),
     risk_free: Object.freeze({
       series: cfg.rf_series,
@@ -741,8 +784,18 @@ export function buildFeasibilityReceipt({ generatedAt = new Date().toISOString()
       .map(([id]) => id),
   );
 
-  gaps.push("all_trackers: data/yf/finance/*.json carry ~1y of price history (history_1y) — full-history refetch required before any dividend-adjusted scoring");
-  gaps.push("us trackers (SPY/QQQ/ONEQ/SOXX/IWM): dividend records start 2016-09; EWY starts 2001-08 — earlier dividend vintages unavailable");
+  // Derived from the trackers as loaded, never asserted. Both of these were
+  // hard-coded sentences that survived the change that made them false: the
+  // full-history refetch had already landed and the dividend cap had already
+  // been lifted while the receipt still reported both as open.
+  const onCanonicalPrice = indexIds.filter((id) => indices[id].tracker.price_source === "canonical_history_1y");
+  if (onCanonicalPrice.length) {
+    gaps.push(`trackers without an unadjusted sibling (${onCanonicalPrice.map((id) => indices[id].tracker.symbol).join("/")}): only canonical history_1y is available, so their origins cannot be dividend-adjusted`);
+  }
+  const onCappedDividends = indexIds.filter((id) => indices[id].tracker.dividend_source === "canonical_40_cap");
+  if (onCappedDividends.length) {
+    gaps.push(`trackers still on the canonical 40-entry dividend cap (${onCappedDividends.map((id) => indices[id].tracker.symbol).join("/")}): earlier vintages exist upstream but are not stored`);
+  }
   gaps.push("kospi risk-free: IRLTLT01KRM156N is monthly (OECD); a point-in-time dated Korean 10Y sovereign series is not in the repo");
 
   const body = {
