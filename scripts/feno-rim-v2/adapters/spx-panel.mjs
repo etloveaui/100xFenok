@@ -13,7 +13,7 @@
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineAdapter } from "../provenance.mjs";
+import { defineAdapter, firstKnowable } from "../provenance.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 
@@ -77,6 +77,13 @@ export function buildSpxInput(asOf) {
   const window260 = history.slice(-260).map((candidate) => candidate.roe).filter(Number.isFinite);
 
   const book = row.px_last / row.px_to_book_ratio;
+  // First-knowable = max of the component dates, recomputed with the
+  // look-ahead refusal: an asOf before any component (e.g. before the payout
+  // statement period) must throw, never silently mix vintages.
+  const firstK = firstKnowable(
+    { price: row.date, rate: rate.date, payout_statement: spx.newest_statement_period },
+    asOf,
+  );
   return {
     // normalized numerics
     book,
@@ -110,7 +117,7 @@ export function buildSpxInput(asOf) {
     negative_earners_policy: "positive_net_income_only",
     currency: "USD",
     share_class_policy: "as_published_single_count",
-    first_knowable_at: [row.date, rate.date, spx.newest_statement_period].sort().at(-1),
+    first_knowable_at: firstK,
   };
 }
 

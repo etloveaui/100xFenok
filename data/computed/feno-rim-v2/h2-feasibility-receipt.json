@@ -1,0 +1,597 @@
+{
+  "schema_version": "feno_rim_v2_h2_feasibility_receipt.v1",
+  "phase": "3A",
+  "spec_ref": "docs/analysis/yoo-rim-audit/FENO_RIM_RECONSTRUCTION_SPEC_v3_0.md §9",
+  "freeze_policy": "thresholds frozen from data availability and overlap autocorrelation alone; no model output computed or consumed",
+  "spec_minimums": {
+    "evaluation_span_years": 8,
+    "indices_passing": 4,
+    "effective_origins_per_index": 30,
+    "effective_origins_per_regime_bucket": 20
+  },
+  "methods": {
+    "origins": "quarterly_rolling_origins:step_weeks=13,horizon_months=36,inputs_first_knowable_at_origin",
+    "purge_embargo": "purge_gap_months=36(train_window_rule)+embargo_quarters=1(after_eval_window)",
+    "bootstrap": "moving_block_bootstrap:block_months=36(=12_quarterly_steps),bartlett_free,seeded",
+    "hac": "newey_west_hac:bartlett_kernel,lag_cap=36",
+    "ess": "n_origins/(1+2*sum(rho_j,j=1..36)):monthly_series=month_end_sampled_panel"
+  },
+  "crisis_windows": [
+    {
+      "id": "crisis_2008_09",
+      "start": "2008-09-01",
+      "end": "2009-06-30"
+    },
+    {
+      "id": "crisis_2020_03",
+      "start": "2020-02-01",
+      "end": "2020-04-30"
+    }
+  ],
+  "indices": {
+    "sp500": {
+      "panel": {
+        "file": "data/benchmarks/us.json",
+        "section": "sp500",
+        "rows": 866,
+        "first_date": "2010-01-01",
+        "last_date": "2026-07-31"
+      },
+      "tracker": {
+        "symbol": "SPY",
+        "identity_ok": true,
+        "price_history_start": "2025-07-24",
+        "price_history_end": "2026-08-05",
+        "dividend_start": "2016-09-16",
+        "dividend_end": "2026-06-18"
+      },
+      "risk_free": {
+        "series": "DGS10",
+        "label": "US 10Y Treasury (FRED DGS10, daily)",
+        "observations": 6847,
+        "first_date": "1999-03-22",
+        "last_date": "2026-08-03"
+      },
+      "origins_total": 67,
+      "origins_scored": 55,
+      "first_scored_as_of": "2010-01-01",
+      "last_scored_as_of": "2023-06-16",
+      "evaluation_span_years": 16.454483,
+      "dividend_adjusted_origins": 0,
+      "bias_unadjusted_origins": 55,
+      "ess": {
+        "n_origins": 55,
+        "monthly_obs": 198,
+        "lags_used": 36,
+        "sum_rho": -0.411468,
+        "sum_rho_unweighted": -0.552784,
+        "denominator": 0.177064,
+        "ess_raw": 310.621604,
+        "ess_capped": 55
+      },
+      "regime_buckets": {
+        "rf_series": "DGS10",
+        "rf_label": "US 10Y Treasury (FRED DGS10, daily)",
+        "rf_quantiles": {
+          "q_one_third": 2.63,
+          "q_two_thirds": 4.19
+        },
+        "high_rate": {
+          "origins": 0,
+          "effective_origins": 0,
+          "sufficient": false
+        },
+        "low_rate": {
+          "origins": 37,
+          "effective_origins": 37,
+          "sufficient": true
+        },
+        "crisis_2008_09": {
+          "origins": 0,
+          "effective_origins": 0,
+          "sufficient": false
+        },
+        "crisis_2020_03": {
+          "origins": 1,
+          "effective_origins": 1,
+          "sufficient": false
+        }
+      },
+      "data_gaps": [
+        "tracker_price_history_covers_no_scored_origin(history_1y_only;refetch_full_history_to_enable_dividend_adjustment)",
+        "dividend_history_starts_2016-09-16(panel_starts_2010-01-01)",
+        "crisis_2008_09_before_panel_start(bucket_unobservable)"
+      ]
+    },
+    "nasdaq100": {
+      "panel": {
+        "file": "data/benchmarks/us.json",
+        "section": "nasdaq100",
+        "rows": 866,
+        "first_date": "2010-01-01",
+        "last_date": "2026-07-31"
+      },
+      "tracker": {
+        "symbol": "QQQ",
+        "identity_ok": true,
+        "price_history_start": "2025-07-24",
+        "price_history_end": "2026-08-05",
+        "dividend_start": "2016-09-16",
+        "dividend_end": "2026-06-22"
+      },
+      "risk_free": {
+        "series": "DGS10",
+        "label": "US 10Y Treasury (FRED DGS10, daily)",
+        "observations": 6847,
+        "first_date": "1999-03-22",
+        "last_date": "2026-08-03"
+      },
+      "origins_total": 67,
+      "origins_scored": 55,
+      "first_scored_as_of": "2010-01-01",
+      "last_scored_as_of": "2023-06-16",
+      "evaluation_span_years": 16.454483,
+      "dividend_adjusted_origins": 0,
+      "bias_unadjusted_origins": 55,
+      "ess": {
+        "n_origins": 55,
+        "monthly_obs": 198,
+        "lags_used": 36,
+        "sum_rho": -0.397227,
+        "sum_rho_unweighted": -0.572477,
+        "denominator": 0.205546,
+        "ess_raw": 267.580486,
+        "ess_capped": 55
+      },
+      "regime_buckets": {
+        "rf_series": "DGS10",
+        "rf_label": "US 10Y Treasury (FRED DGS10, daily)",
+        "rf_quantiles": {
+          "q_one_third": 2.63,
+          "q_two_thirds": 4.19
+        },
+        "high_rate": {
+          "origins": 0,
+          "effective_origins": 0,
+          "sufficient": false
+        },
+        "low_rate": {
+          "origins": 37,
+          "effective_origins": 37,
+          "sufficient": true
+        },
+        "crisis_2008_09": {
+          "origins": 0,
+          "effective_origins": 0,
+          "sufficient": false
+        },
+        "crisis_2020_03": {
+          "origins": 1,
+          "effective_origins": 1,
+          "sufficient": false
+        }
+      },
+      "data_gaps": [
+        "tracker_price_history_covers_no_scored_origin(history_1y_only;refetch_full_history_to_enable_dividend_adjustment)",
+        "dividend_history_starts_2016-09-16(panel_starts_2010-01-01)",
+        "crisis_2008_09_before_panel_start(bucket_unobservable)"
+      ]
+    },
+    "nasdaq_composite": {
+      "panel": {
+        "file": "data/benchmarks/us.json",
+        "section": "nasdaq_composite",
+        "rows": 866,
+        "first_date": "2010-01-01",
+        "last_date": "2026-07-31"
+      },
+      "tracker": {
+        "symbol": "ONEQ",
+        "identity_ok": true,
+        "price_history_start": "2025-08-05",
+        "price_history_end": "2026-08-05",
+        "dividend_start": "2016-12-16",
+        "dividend_end": "2026-06-18"
+      },
+      "risk_free": {
+        "series": "DGS10",
+        "label": "US 10Y Treasury (FRED DGS10, daily)",
+        "observations": 6847,
+        "first_date": "1999-03-22",
+        "last_date": "2026-08-03"
+      },
+      "origins_total": 67,
+      "origins_scored": 55,
+      "first_scored_as_of": "2010-01-01",
+      "last_scored_as_of": "2023-06-16",
+      "evaluation_span_years": 16.454483,
+      "dividend_adjusted_origins": 0,
+      "bias_unadjusted_origins": 55,
+      "ess": {
+        "n_origins": 55,
+        "monthly_obs": 198,
+        "lags_used": 36,
+        "sum_rho": -0.384209,
+        "sum_rho_unweighted": -0.605175,
+        "denominator": 0.231582,
+        "ess_raw": 237.49733,
+        "ess_capped": 55
+      },
+      "regime_buckets": {
+        "rf_series": "DGS10",
+        "rf_label": "US 10Y Treasury (FRED DGS10, daily)",
+        "rf_quantiles": {
+          "q_one_third": 2.63,
+          "q_two_thirds": 4.19
+        },
+        "high_rate": {
+          "origins": 0,
+          "effective_origins": 0,
+          "sufficient": false
+        },
+        "low_rate": {
+          "origins": 37,
+          "effective_origins": 37,
+          "sufficient": true
+        },
+        "crisis_2008_09": {
+          "origins": 0,
+          "effective_origins": 0,
+          "sufficient": false
+        },
+        "crisis_2020_03": {
+          "origins": 1,
+          "effective_origins": 1,
+          "sufficient": false
+        }
+      },
+      "data_gaps": [
+        "tracker_price_history_covers_no_scored_origin(history_1y_only;refetch_full_history_to_enable_dividend_adjustment)",
+        "dividend_history_starts_2016-12-16(panel_starts_2010-01-01)",
+        "crisis_2008_09_before_panel_start(bucket_unobservable)"
+      ]
+    },
+    "russell2000": {
+      "panel": {
+        "file": "data/benchmarks/us.json",
+        "section": "russell2000",
+        "rows": 866,
+        "first_date": "2010-01-01",
+        "last_date": "2026-07-31"
+      },
+      "tracker": {
+        "symbol": "IWM",
+        "identity_ok": true,
+        "price_history_start": "2025-07-24",
+        "price_history_end": "2026-08-05",
+        "dividend_start": "2016-09-26",
+        "dividend_end": "2026-06-15"
+      },
+      "risk_free": {
+        "series": "DGS10",
+        "label": "US 10Y Treasury (FRED DGS10, daily)",
+        "observations": 6847,
+        "first_date": "1999-03-22",
+        "last_date": "2026-08-03"
+      },
+      "origins_total": 67,
+      "origins_scored": 55,
+      "first_scored_as_of": "2010-01-01",
+      "last_scored_as_of": "2023-06-16",
+      "evaluation_span_years": 16.454483,
+      "dividend_adjusted_origins": 0,
+      "bias_unadjusted_origins": 55,
+      "ess": {
+        "n_origins": 55,
+        "monthly_obs": 198,
+        "lags_used": 36,
+        "sum_rho": -0.391413,
+        "sum_rho_unweighted": -0.569904,
+        "denominator": 0.217175,
+        "ess_raw": 253.252317,
+        "ess_capped": 55
+      },
+      "regime_buckets": {
+        "rf_series": "DGS10",
+        "rf_label": "US 10Y Treasury (FRED DGS10, daily)",
+        "rf_quantiles": {
+          "q_one_third": 2.63,
+          "q_two_thirds": 4.19
+        },
+        "high_rate": {
+          "origins": 0,
+          "effective_origins": 0,
+          "sufficient": false
+        },
+        "low_rate": {
+          "origins": 37,
+          "effective_origins": 37,
+          "sufficient": true
+        },
+        "crisis_2008_09": {
+          "origins": 0,
+          "effective_origins": 0,
+          "sufficient": false
+        },
+        "crisis_2020_03": {
+          "origins": 1,
+          "effective_origins": 1,
+          "sufficient": false
+        }
+      },
+      "data_gaps": [
+        "tracker_price_history_covers_no_scored_origin(history_1y_only;refetch_full_history_to_enable_dividend_adjustment)",
+        "dividend_history_starts_2016-09-26(panel_starts_2010-01-01)",
+        "crisis_2008_09_before_panel_start(bucket_unobservable)"
+      ]
+    },
+    "kospi": {
+      "panel": {
+        "file": "data/benchmarks/emerging.json",
+        "section": "kospi",
+        "rows": 866,
+        "first_date": "2010-01-03",
+        "last_date": "2026-08-02"
+      },
+      "tracker": {
+        "symbol": "EWY",
+        "identity_ok": true,
+        "price_history_start": "2025-08-05",
+        "price_history_end": "2026-08-05",
+        "dividend_start": "2001-08-24",
+        "dividend_end": "2025-12-16"
+      },
+      "risk_free": {
+        "series": "IRLTLT01KRM156N",
+        "label": "Korea long-term rate (OECD IRLTLT01KRM156N, monthly)",
+        "observations": 309,
+        "first_date": "2000-10-01",
+        "last_date": "2026-06-01"
+      },
+      "origins_total": 67,
+      "origins_scored": 55,
+      "first_scored_as_of": "2010-01-03",
+      "last_scored_as_of": "2023-06-23",
+      "evaluation_span_years": 16.468172,
+      "dividend_adjusted_origins": 0,
+      "bias_unadjusted_origins": 55,
+      "ess": {
+        "n_origins": 55,
+        "monthly_obs": 199,
+        "lags_used": 36,
+        "sum_rho": 0.151963,
+        "sum_rho_unweighted": 0.055992,
+        "denominator": 1.303926,
+        "ess_raw": 42.180311,
+        "ess_capped": 42.180311
+      },
+      "regime_buckets": {
+        "rf_series": "IRLTLT01KRM156N",
+        "rf_label": "Korea long-term rate (OECD IRLTLT01KRM156N, monthly)",
+        "rf_quantiles": {
+          "q_one_third": 2.925333,
+          "q_two_thirds": 4.816667
+        },
+        "high_rate": {
+          "origins": 3,
+          "effective_origins": 2.300744,
+          "sufficient": false
+        },
+        "low_rate": {
+          "origins": 31,
+          "effective_origins": 23.774357,
+          "sufficient": true
+        },
+        "crisis_2008_09": {
+          "origins": 0,
+          "effective_origins": 0,
+          "sufficient": false
+        },
+        "crisis_2020_03": {
+          "origins": 1,
+          "effective_origins": 0.766915,
+          "sufficient": false
+        }
+      },
+      "data_gaps": [
+        "panel_rows_dropped_missing_px_last(1)",
+        "tracker_price_history_covers_no_scored_origin(history_1y_only;refetch_full_history_to_enable_dividend_adjustment)",
+        "crisis_2008_09_before_panel_start(bucket_unobservable)"
+      ]
+    },
+    "philadelphia_semi": {
+      "panel": {
+        "file": "data/benchmarks/micro_sectors.json",
+        "section": "philadelphia_semi",
+        "rows": 866,
+        "first_date": "2010-01-01",
+        "last_date": "2026-07-31"
+      },
+      "tracker": {
+        "symbol": "SOXX",
+        "identity_ok": true,
+        "price_history_start": "2025-07-24",
+        "price_history_end": "2026-08-05",
+        "dividend_start": "2016-12-21",
+        "dividend_end": "2026-06-15"
+      },
+      "risk_free": {
+        "series": "DGS10",
+        "label": "US 10Y Treasury (FRED DGS10, daily)",
+        "observations": 6847,
+        "first_date": "1999-03-22",
+        "last_date": "2026-08-03"
+      },
+      "origins_total": 67,
+      "origins_scored": 55,
+      "first_scored_as_of": "2010-01-01",
+      "last_scored_as_of": "2023-06-16",
+      "evaluation_span_years": 16.454483,
+      "dividend_adjusted_origins": 0,
+      "bias_unadjusted_origins": 55,
+      "ess": {
+        "n_origins": 55,
+        "monthly_obs": 198,
+        "lags_used": 36,
+        "sum_rho": -0.246275,
+        "sum_rho_unweighted": -0.298233,
+        "denominator": 0.50745,
+        "ess_raw": 108.385162,
+        "ess_capped": 55
+      },
+      "regime_buckets": {
+        "rf_series": "DGS10",
+        "rf_label": "US 10Y Treasury (FRED DGS10, daily)",
+        "rf_quantiles": {
+          "q_one_third": 2.63,
+          "q_two_thirds": 4.19
+        },
+        "high_rate": {
+          "origins": 0,
+          "effective_origins": 0,
+          "sufficient": false
+        },
+        "low_rate": {
+          "origins": 37,
+          "effective_origins": 37,
+          "sufficient": true
+        },
+        "crisis_2008_09": {
+          "origins": 0,
+          "effective_origins": 0,
+          "sufficient": false
+        },
+        "crisis_2020_03": {
+          "origins": 1,
+          "effective_origins": 1,
+          "sufficient": false
+        }
+      },
+      "data_gaps": [
+        "tracker_price_history_covers_no_scored_origin(history_1y_only;refetch_full_history_to_enable_dividend_adjustment)",
+        "dividend_history_starts_2016-12-21(panel_starts_2010-01-01)",
+        "crisis_2008_09_before_panel_start(bucket_unobservable)"
+      ]
+    }
+  },
+  "criteria": {
+    "evaluation_span_8y": {
+      "minimum": "evaluation span >= 8 years",
+      "achievable_now": true,
+      "indices_meeting": [
+        "sp500",
+        "nasdaq100",
+        "nasdaq_composite",
+        "russell2000",
+        "kospi",
+        "philadelphia_semi"
+      ]
+    },
+    "indices_passing_4": {
+      "minimum": ">= 4 indices pass individually (span + effective origins achievable)",
+      "achievable_now": true,
+      "indices_meeting": [
+        "sp500",
+        "nasdaq100",
+        "nasdaq_composite",
+        "russell2000",
+        "kospi",
+        "philadelphia_semi"
+      ]
+    },
+    "effective_origins_30": {
+      "minimum": ">= 30 effective origins per passing index",
+      "achievable_now": true,
+      "indices_meeting": [
+        "sp500",
+        "nasdaq100",
+        "nasdaq_composite",
+        "russell2000",
+        "kospi",
+        "philadelphia_semi"
+      ],
+      "per_index_ess_capped": {
+        "sp500": 55,
+        "nasdaq100": 55,
+        "nasdaq_composite": 55,
+        "russell2000": 55,
+        "kospi": 42.180311,
+        "philadelphia_semi": 55
+      }
+    },
+    "regime_buckets_20": {
+      "minimum": "each regime bucket carries >= 20 effective origins or is reported insufficient and excluded from the pass count",
+      "achievable_now": true,
+      "buckets_meeting": [
+        "sp500.low_rate",
+        "nasdaq100.low_rate",
+        "nasdaq_composite.low_rate",
+        "russell2000.low_rate",
+        "kospi.low_rate",
+        "philadelphia_semi.low_rate"
+      ],
+      "buckets_insufficient": [
+        "sp500.high_rate",
+        "sp500.crisis_2008_09",
+        "sp500.crisis_2020_03",
+        "nasdaq100.high_rate",
+        "nasdaq100.crisis_2008_09",
+        "nasdaq100.crisis_2020_03",
+        "nasdaq_composite.high_rate",
+        "nasdaq_composite.crisis_2008_09",
+        "nasdaq_composite.crisis_2020_03",
+        "russell2000.high_rate",
+        "russell2000.crisis_2008_09",
+        "russell2000.crisis_2020_03",
+        "kospi.high_rate",
+        "kospi.crisis_2008_09",
+        "kospi.crisis_2020_03",
+        "philadelphia_semi.high_rate",
+        "philadelphia_semi.crisis_2008_09",
+        "philadelphia_semi.crisis_2020_03"
+      ],
+      "note": "only low_rate buckets meet the floor with current data; high_rate, crisis_2008_09 and crisis_2020_03 are reported insufficient and excluded from the pass count per §9"
+    },
+    "coverage_within_bootstrap_ci": {
+      "minimum": "interval coverage within bootstrap CI of the nominal level",
+      "achievable_now": null,
+      "reason": "requires model output; frozen method ids only in Phase 3A"
+    },
+    "directional_vs_naive_baseline": {
+      "minimum": "directional rate beats the naive baseline (historical-median multiple) on the same origins",
+      "achievable_now": null,
+      "reason": "requires model output; frozen method ids only in Phase 3A"
+    }
+  },
+  "achievable_thresholds_frozen": [
+    "evaluation_span_8y",
+    "indices_passing_4",
+    "effective_origins_30",
+    "regime_buckets_20"
+  ],
+  "data_gaps": [
+    "sp500: tracker_price_history_covers_no_scored_origin(history_1y_only;refetch_full_history_to_enable_dividend_adjustment)",
+    "sp500: dividend_history_starts_2016-09-16(panel_starts_2010-01-01)",
+    "sp500: crisis_2008_09_before_panel_start(bucket_unobservable)",
+    "nasdaq100: tracker_price_history_covers_no_scored_origin(history_1y_only;refetch_full_history_to_enable_dividend_adjustment)",
+    "nasdaq100: dividend_history_starts_2016-09-16(panel_starts_2010-01-01)",
+    "nasdaq100: crisis_2008_09_before_panel_start(bucket_unobservable)",
+    "nasdaq_composite: tracker_price_history_covers_no_scored_origin(history_1y_only;refetch_full_history_to_enable_dividend_adjustment)",
+    "nasdaq_composite: dividend_history_starts_2016-12-16(panel_starts_2010-01-01)",
+    "nasdaq_composite: crisis_2008_09_before_panel_start(bucket_unobservable)",
+    "russell2000: tracker_price_history_covers_no_scored_origin(history_1y_only;refetch_full_history_to_enable_dividend_adjustment)",
+    "russell2000: dividend_history_starts_2016-09-26(panel_starts_2010-01-01)",
+    "russell2000: crisis_2008_09_before_panel_start(bucket_unobservable)",
+    "kospi: panel_rows_dropped_missing_px_last(1)",
+    "kospi: tracker_price_history_covers_no_scored_origin(history_1y_only;refetch_full_history_to_enable_dividend_adjustment)",
+    "kospi: crisis_2008_09_before_panel_start(bucket_unobservable)",
+    "philadelphia_semi: tracker_price_history_covers_no_scored_origin(history_1y_only;refetch_full_history_to_enable_dividend_adjustment)",
+    "philadelphia_semi: dividend_history_starts_2016-12-21(panel_starts_2010-01-01)",
+    "philadelphia_semi: crisis_2008_09_before_panel_start(bucket_unobservable)",
+    "all_trackers: data/yf/finance/*.json carry ~1y of price history (history_1y) — full-history refetch required before any dividend-adjusted scoring",
+    "us trackers (SPY/QQQ/ONEQ/SOXX/IWM): dividend records start 2016-09; EWY starts 2001-08 — earlier dividend vintages unavailable",
+    "kospi risk-free: IRLTLT01KRM156N is monthly (OECD); a point-in-time dated Korean 10Y sovereign series is not in the repo"
+  ],
+  "generated_at": "2026-08-06T02:55:06.449Z",
+  "receipt_sha256": "8662f17b882fc9fcda985978d64613bad61e4c951751f41e7068a890efc5eb4d"
+}
