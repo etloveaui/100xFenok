@@ -1,0 +1,4065 @@
+{
+  "schema_version": "feno_rim_v2_e1_e2_forensic_audit.v1",
+  "contract_ref": "docs/analysis/yoo-rim-audit/FINAL_FENO_RIM_RESOLUTION_MASTER_PROMPT_QWEN_DEEPSEEK_KR.md sections 3, 6, 12.3",
+  "role": "DeepSeek independent red team — X0 only",
+  "independence": "no import from verify/e1-research-scoring.mjs, verify/e2-research-scoring.mjs, verify/h2-harness.mjs; own spearman/block-bootstrap/HAC/ESS/quantile implementations; adapters and engine read but unmodified",
+  "verdict": [
+    "E1_E2_VALID_AS_IMPLEMENTED",
+    "E1_E2_METRIC_MISSPECIFIED"
+  ],
+  "e1": {
+    "sp500": {
+      "as_ofs": [
+        "2015-03-27",
+        "2015-06-26",
+        "2015-09-25",
+        "2015-12-25",
+        "2016-03-25",
+        "2016-06-24",
+        "2016-09-23",
+        "2016-12-23",
+        "2017-03-24",
+        "2017-06-23",
+        "2017-09-22",
+        "2017-12-22",
+        "2018-03-23",
+        "2018-06-22",
+        "2018-09-21",
+        "2018-12-21",
+        "2019-03-22",
+        "2019-06-21",
+        "2019-09-20",
+        "2019-12-20",
+        "2020-03-20",
+        "2020-06-19",
+        "2020-09-18",
+        "2020-12-18",
+        "2021-03-19",
+        "2021-06-18",
+        "2021-09-17",
+        "2021-12-17",
+        "2022-03-18",
+        "2022-06-17",
+        "2022-09-16",
+        "2022-12-16",
+        "2023-03-17",
+        "2023-06-16"
+      ],
+      "origins_scored_total": 55,
+      "walk_forward_rows": 34,
+      "refusals": {
+        "no_growth_window": 21
+      },
+      "raw_n": 34,
+      "effective_n": 34,
+      "ess": {
+        "raw_n": 34,
+        "monthly_obs": 198,
+        "lags_used": 36,
+        "sum_rho": -0.411468,
+        "sum_rho_unweighted": -0.552784,
+        "denominator": 0.177064,
+        "ess_raw": 192.020628,
+        "ess_capped": 34,
+        "method": "own_ess_n/(1+2*sum_rho_nw)"
+      },
+      "metrics": {
+        "midpoint": {
+          "label": "midpoint",
+          "raw_n": 34,
+          "spearman_rho": -0.036211,
+          "rho_ci": {
+            "mean": 0.029652,
+            "ci_lower": -0.224946,
+            "ci_upper": 0.412701,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0.029412,
+          "directional_ci": {
+            "mean": 0.042824,
+            "ci_lower": 0,
+            "ci_upper": 0.088235,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.164042,
+            0.150507,
+            0.082874,
+            0.137781,
+            0.152279,
+            0.140489,
+            0.153373,
+            0.123532,
+            0.121843,
+            0.158747
+          ]
+        },
+        "low_endpoint": {
+          "label": "low endpoint",
+          "raw_n": 34,
+          "spearman_rho": 0.113827,
+          "rho_ci": {
+            "mean": 0.313908,
+            "ci_lower": -0.091857,
+            "ci_upper": 0.630698,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0.029412,
+          "directional_ci": {
+            "mean": 0.042824,
+            "ci_lower": 0,
+            "ci_upper": 0.088235,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.125902,
+            0.0992,
+            0.162093,
+            0.171535,
+            0.131045,
+            0.149568,
+            0.078256,
+            0.16103,
+            0.101339,
+            0.17628
+          ]
+        },
+        "high_endpoint": {
+          "label": "high endpoint",
+          "raw_n": 34,
+          "spearman_rho": -0.145607,
+          "rho_ci": {
+            "mean": -0.082582,
+            "ci_lower": -0.284884,
+            "ci_upper": 0.275704,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0.029412,
+          "directional_ci": {
+            "mean": 0.042824,
+            "ci_lower": 0,
+            "ci_upper": 0.088235,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.15487,
+            0.105364,
+            0.162359,
+            0.194171,
+            0.101741,
+            0.116652,
+            0.150705,
+            0.116671,
+            0.12004,
+            0.149689
+          ]
+        },
+        "log_midpoint": {
+          "label": "log midpoint",
+          "raw_n": 34,
+          "spearman_rho": -0.036211,
+          "rho_ci": {
+            "mean": 0.029652,
+            "ci_lower": -0.224946,
+            "ci_upper": 0.412701,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0.029412,
+          "directional_ci": {
+            "mean": 0.042824,
+            "ci_lower": 0,
+            "ci_upper": 0.088235,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.164042,
+            0.150507,
+            0.082874,
+            0.137781,
+            0.152279,
+            0.140489,
+            0.153373,
+            0.123532,
+            0.121843,
+            0.158747
+          ]
+        }
+      },
+      "directional_alternatives": {
+        "current_definition_rate": 0.029412,
+        "excess_over_rf_rate": 0.058824,
+        "excess_over_ke_rate": 0.088235,
+        "expensive_but_positive_n": 33,
+        "cheap_but_negative_n": 0,
+        "note": "alternatives are diagnostics only; the contract (P0-1) assigns redefinition to the handler"
+      },
+      "baseline": {
+        "raw_n": 34,
+        "spearman_rho": 0.503743,
+        "rho_ci": {
+          "mean": 0.494628,
+          "ci_lower": 0.211108,
+          "ci_upper": 0.712492,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "own_moving_block_bootstrap_36m"
+        },
+        "windows": [
+          {
+            "as_of": "2015-03-27",
+            "window_rows": 274,
+            "window_first": "2010-01-01",
+            "window_last": "2015-03-27",
+            "window_years": 5.232033,
+            "truncated": true
+          },
+          {
+            "as_of": "2015-06-26",
+            "window_rows": 287,
+            "window_first": "2010-01-01",
+            "window_last": "2015-06-26",
+            "window_years": 5.481177,
+            "truncated": true
+          },
+          {
+            "as_of": "2015-09-25",
+            "window_rows": 300,
+            "window_first": "2010-01-01",
+            "window_last": "2015-09-25",
+            "window_years": 5.730322,
+            "truncated": true
+          },
+          {
+            "as_of": "2015-12-25",
+            "window_rows": 313,
+            "window_first": "2010-01-01",
+            "window_last": "2015-12-25",
+            "window_years": 5.979466,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-03-25",
+            "window_rows": 326,
+            "window_first": "2010-01-01",
+            "window_last": "2016-03-25",
+            "window_years": 6.228611,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-06-24",
+            "window_rows": 339,
+            "window_first": "2010-01-01",
+            "window_last": "2016-06-24",
+            "window_years": 6.477755,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-09-23",
+            "window_rows": 352,
+            "window_first": "2010-01-01",
+            "window_last": "2016-09-23",
+            "window_years": 6.726899,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-12-23",
+            "window_rows": 365,
+            "window_first": "2010-01-01",
+            "window_last": "2016-12-23",
+            "window_years": 6.976044,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-03-24",
+            "window_rows": 378,
+            "window_first": "2010-01-01",
+            "window_last": "2017-03-24",
+            "window_years": 7.225188,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-06-23",
+            "window_rows": 391,
+            "window_first": "2010-01-01",
+            "window_last": "2017-06-23",
+            "window_years": 7.474333,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-09-22",
+            "window_rows": 404,
+            "window_first": "2010-01-01",
+            "window_last": "2017-09-22",
+            "window_years": 7.723477,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-12-22",
+            "window_rows": 417,
+            "window_first": "2010-01-01",
+            "window_last": "2017-12-22",
+            "window_years": 7.972621,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-03-23",
+            "window_rows": 430,
+            "window_first": "2010-01-01",
+            "window_last": "2018-03-23",
+            "window_years": 8.221766,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-06-22",
+            "window_rows": 443,
+            "window_first": "2010-01-01",
+            "window_last": "2018-06-22",
+            "window_years": 8.47091,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-09-21",
+            "window_rows": 456,
+            "window_first": "2010-01-01",
+            "window_last": "2018-09-21",
+            "window_years": 8.720055,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-12-21",
+            "window_rows": 469,
+            "window_first": "2010-01-01",
+            "window_last": "2018-12-21",
+            "window_years": 8.969199,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-03-22",
+            "window_rows": 482,
+            "window_first": "2010-01-01",
+            "window_last": "2019-03-22",
+            "window_years": 9.218344,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-06-21",
+            "window_rows": 495,
+            "window_first": "2010-01-01",
+            "window_last": "2019-06-21",
+            "window_years": 9.467488,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-09-20",
+            "window_rows": 508,
+            "window_first": "2010-01-01",
+            "window_last": "2019-09-20",
+            "window_years": 9.716632,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-12-20",
+            "window_rows": 521,
+            "window_first": "2010-01-01",
+            "window_last": "2019-12-20",
+            "window_years": 9.965777,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-03-20",
+            "window_rows": 522,
+            "window_first": "2010-03-26",
+            "window_last": "2020-03-20",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-06-19",
+            "window_rows": 522,
+            "window_first": "2010-06-25",
+            "window_last": "2020-06-19",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-09-18",
+            "window_rows": 522,
+            "window_first": "2010-09-24",
+            "window_last": "2020-09-18",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-12-18",
+            "window_rows": 522,
+            "window_first": "2010-12-24",
+            "window_last": "2020-12-18",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-03-19",
+            "window_rows": 522,
+            "window_first": "2011-03-25",
+            "window_last": "2021-03-19",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-06-18",
+            "window_rows": 522,
+            "window_first": "2011-06-24",
+            "window_last": "2021-06-18",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-09-17",
+            "window_rows": 522,
+            "window_first": "2011-09-23",
+            "window_last": "2021-09-17",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-12-17",
+            "window_rows": 522,
+            "window_first": "2011-12-23",
+            "window_last": "2021-12-17",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-03-18",
+            "window_rows": 522,
+            "window_first": "2012-03-23",
+            "window_last": "2022-03-18",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-06-17",
+            "window_rows": 522,
+            "window_first": "2012-06-22",
+            "window_last": "2022-06-17",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-09-16",
+            "window_rows": 522,
+            "window_first": "2012-09-21",
+            "window_last": "2022-09-16",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-12-16",
+            "window_rows": 522,
+            "window_first": "2012-12-21",
+            "window_last": "2022-12-16",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2023-03-17",
+            "window_rows": 522,
+            "window_first": "2013-03-22",
+            "window_last": "2023-03-17",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2023-06-16",
+            "window_rows": 522,
+            "window_first": "2013-06-21",
+            "window_last": "2023-06-16",
+            "window_years": 9.984942,
+            "truncated": false
+          }
+        ],
+        "truncated_count": 19,
+        "truncation_sensitivity": {
+          "n_origins_full_window": 16,
+          "baseline_rho_full_window": 0.752941,
+          "model_rho_full_window": 0.147059
+        }
+      },
+      "reconciliation": {
+        "artifact_rho_mid": -0.036211,
+        "our_rho_mid": -0.036211,
+        "artifact_directional": 0.029412,
+        "our_directional": 0.029412,
+        "artifact_baseline_rho": 0.503743,
+        "our_baseline_rho": 0.503743,
+        "rho_delta": 0
+      },
+      "input_flags_sample": {
+        "consensus": null,
+        "coverage_ok": false,
+        "b2_admitted": false,
+        "erp_present": true,
+        "payout_consumed": false
+      }
+    },
+    "nasdaq100": {
+      "as_ofs": [
+        "2015-03-27",
+        "2015-06-26",
+        "2015-09-25",
+        "2015-12-25",
+        "2016-03-25",
+        "2016-06-24",
+        "2016-09-23",
+        "2016-12-23",
+        "2017-03-24",
+        "2017-06-23",
+        "2017-09-22",
+        "2017-12-22",
+        "2018-03-23",
+        "2018-06-22",
+        "2018-09-21",
+        "2018-12-21",
+        "2019-03-22",
+        "2019-06-21",
+        "2019-09-20",
+        "2019-12-20",
+        "2020-03-20",
+        "2020-06-19",
+        "2020-09-18",
+        "2020-12-18",
+        "2021-03-19",
+        "2021-06-18",
+        "2021-09-17",
+        "2021-12-17",
+        "2022-03-18",
+        "2022-06-17",
+        "2022-09-16",
+        "2022-12-16",
+        "2023-03-17",
+        "2023-06-16"
+      ],
+      "origins_scored_total": 55,
+      "walk_forward_rows": 34,
+      "refusals": {
+        "no_growth_window": 21
+      },
+      "raw_n": 34,
+      "effective_n": 34,
+      "ess": {
+        "raw_n": 34,
+        "monthly_obs": 198,
+        "lags_used": 36,
+        "sum_rho": -0.397227,
+        "sum_rho_unweighted": -0.572477,
+        "denominator": 0.205546,
+        "ess_raw": 165.413391,
+        "ess_capped": 34,
+        "method": "own_ess_n/(1+2*sum_rho_nw)"
+      },
+      "metrics": {
+        "midpoint": {
+          "label": "midpoint",
+          "raw_n": 34,
+          "spearman_rho": -0.090298,
+          "rho_ci": {
+            "mean": -0.11886,
+            "ci_lower": -0.626363,
+            "ci_upper": 0.574481,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0.147059,
+          "directional_ci": {
+            "mean": 0.103015,
+            "ci_lower": 0.029412,
+            "ci_upper": 0.235294,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.261072,
+            0.166948,
+            0.140962,
+            0.209101,
+            0.167922,
+            0.21372,
+            0.221687,
+            0.181642,
+            0.172601,
+            0.200548
+          ]
+        },
+        "low_endpoint": {
+          "label": "low endpoint",
+          "raw_n": 34,
+          "spearman_rho": 0.282811,
+          "rho_ci": {
+            "mean": 0.313185,
+            "ci_lower": -0.583973,
+            "ci_upper": 0.755777,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0.147059,
+          "directional_ci": {
+            "mean": 0.103015,
+            "ci_lower": 0.029412,
+            "ci_upper": 0.235294,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.107907,
+            0.165709,
+            0.159485,
+            0.218352,
+            0.223778,
+            0.286843,
+            0.256581,
+            0.160369,
+            0.171298,
+            0.213478
+          ]
+        },
+        "high_endpoint": {
+          "label": "high endpoint",
+          "raw_n": 34,
+          "spearman_rho": -0.259587,
+          "rho_ci": {
+            "mean": -0.334399,
+            "ci_lower": -0.700307,
+            "ci_upper": 0.447704,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0.147059,
+          "directional_ci": {
+            "mean": 0.103015,
+            "ci_lower": 0.029412,
+            "ci_upper": 0.235294,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.261072,
+            0.261812,
+            0.176848,
+            0.13139,
+            0.183828,
+            0.148005,
+            0.259343,
+            0.158435,
+            0.172601,
+            0.200548
+          ]
+        },
+        "log_midpoint": {
+          "label": "log midpoint",
+          "raw_n": 34,
+          "spearman_rho": -0.090298,
+          "rho_ci": {
+            "mean": -0.11886,
+            "ci_lower": -0.626363,
+            "ci_upper": 0.574481,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0.147059,
+          "directional_ci": {
+            "mean": 0.103015,
+            "ci_lower": 0.029412,
+            "ci_upper": 0.235294,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.261072,
+            0.166948,
+            0.140962,
+            0.209101,
+            0.167922,
+            0.21372,
+            0.221687,
+            0.181642,
+            0.172601,
+            0.200548
+          ]
+        }
+      },
+      "directional_alternatives": {
+        "current_definition_rate": 0.147059,
+        "excess_over_rf_rate": 0.147059,
+        "excess_over_ke_rate": 0.147059,
+        "expensive_but_positive_n": 29,
+        "cheap_but_negative_n": 0,
+        "note": "alternatives are diagnostics only; the contract (P0-1) assigns redefinition to the handler"
+      },
+      "baseline": {
+        "raw_n": 34,
+        "spearman_rho": 0.486937,
+        "rho_ci": {
+          "mean": 0.444911,
+          "ci_lower": -0.379183,
+          "ci_upper": 0.810607,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "own_moving_block_bootstrap_36m"
+        },
+        "windows": [
+          {
+            "as_of": "2015-03-27",
+            "window_rows": 274,
+            "window_first": "2010-01-01",
+            "window_last": "2015-03-27",
+            "window_years": 5.232033,
+            "truncated": true
+          },
+          {
+            "as_of": "2015-06-26",
+            "window_rows": 287,
+            "window_first": "2010-01-01",
+            "window_last": "2015-06-26",
+            "window_years": 5.481177,
+            "truncated": true
+          },
+          {
+            "as_of": "2015-09-25",
+            "window_rows": 300,
+            "window_first": "2010-01-01",
+            "window_last": "2015-09-25",
+            "window_years": 5.730322,
+            "truncated": true
+          },
+          {
+            "as_of": "2015-12-25",
+            "window_rows": 313,
+            "window_first": "2010-01-01",
+            "window_last": "2015-12-25",
+            "window_years": 5.979466,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-03-25",
+            "window_rows": 326,
+            "window_first": "2010-01-01",
+            "window_last": "2016-03-25",
+            "window_years": 6.228611,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-06-24",
+            "window_rows": 339,
+            "window_first": "2010-01-01",
+            "window_last": "2016-06-24",
+            "window_years": 6.477755,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-09-23",
+            "window_rows": 352,
+            "window_first": "2010-01-01",
+            "window_last": "2016-09-23",
+            "window_years": 6.726899,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-12-23",
+            "window_rows": 365,
+            "window_first": "2010-01-01",
+            "window_last": "2016-12-23",
+            "window_years": 6.976044,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-03-24",
+            "window_rows": 378,
+            "window_first": "2010-01-01",
+            "window_last": "2017-03-24",
+            "window_years": 7.225188,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-06-23",
+            "window_rows": 391,
+            "window_first": "2010-01-01",
+            "window_last": "2017-06-23",
+            "window_years": 7.474333,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-09-22",
+            "window_rows": 404,
+            "window_first": "2010-01-01",
+            "window_last": "2017-09-22",
+            "window_years": 7.723477,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-12-22",
+            "window_rows": 417,
+            "window_first": "2010-01-01",
+            "window_last": "2017-12-22",
+            "window_years": 7.972621,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-03-23",
+            "window_rows": 430,
+            "window_first": "2010-01-01",
+            "window_last": "2018-03-23",
+            "window_years": 8.221766,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-06-22",
+            "window_rows": 443,
+            "window_first": "2010-01-01",
+            "window_last": "2018-06-22",
+            "window_years": 8.47091,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-09-21",
+            "window_rows": 456,
+            "window_first": "2010-01-01",
+            "window_last": "2018-09-21",
+            "window_years": 8.720055,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-12-21",
+            "window_rows": 469,
+            "window_first": "2010-01-01",
+            "window_last": "2018-12-21",
+            "window_years": 8.969199,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-03-22",
+            "window_rows": 482,
+            "window_first": "2010-01-01",
+            "window_last": "2019-03-22",
+            "window_years": 9.218344,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-06-21",
+            "window_rows": 495,
+            "window_first": "2010-01-01",
+            "window_last": "2019-06-21",
+            "window_years": 9.467488,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-09-20",
+            "window_rows": 508,
+            "window_first": "2010-01-01",
+            "window_last": "2019-09-20",
+            "window_years": 9.716632,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-12-20",
+            "window_rows": 521,
+            "window_first": "2010-01-01",
+            "window_last": "2019-12-20",
+            "window_years": 9.965777,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-03-20",
+            "window_rows": 522,
+            "window_first": "2010-03-26",
+            "window_last": "2020-03-20",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-06-19",
+            "window_rows": 522,
+            "window_first": "2010-06-25",
+            "window_last": "2020-06-19",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-09-18",
+            "window_rows": 522,
+            "window_first": "2010-09-24",
+            "window_last": "2020-09-18",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-12-18",
+            "window_rows": 522,
+            "window_first": "2010-12-24",
+            "window_last": "2020-12-18",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-03-19",
+            "window_rows": 522,
+            "window_first": "2011-03-25",
+            "window_last": "2021-03-19",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-06-18",
+            "window_rows": 522,
+            "window_first": "2011-06-24",
+            "window_last": "2021-06-18",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-09-17",
+            "window_rows": 522,
+            "window_first": "2011-09-23",
+            "window_last": "2021-09-17",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-12-17",
+            "window_rows": 522,
+            "window_first": "2011-12-23",
+            "window_last": "2021-12-17",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-03-18",
+            "window_rows": 522,
+            "window_first": "2012-03-23",
+            "window_last": "2022-03-18",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-06-17",
+            "window_rows": 522,
+            "window_first": "2012-06-22",
+            "window_last": "2022-06-17",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-09-16",
+            "window_rows": 522,
+            "window_first": "2012-09-21",
+            "window_last": "2022-09-16",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-12-16",
+            "window_rows": 522,
+            "window_first": "2012-12-21",
+            "window_last": "2022-12-16",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2023-03-17",
+            "window_rows": 522,
+            "window_first": "2013-03-22",
+            "window_last": "2023-03-17",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2023-06-16",
+            "window_rows": 522,
+            "window_first": "2013-06-21",
+            "window_last": "2023-06-16",
+            "window_years": 9.984942,
+            "truncated": false
+          }
+        ],
+        "truncated_count": 19,
+        "truncation_sensitivity": {
+          "n_origins_full_window": 16,
+          "baseline_rho_full_window": 0.791176,
+          "model_rho_full_window": 0.479412
+        }
+      },
+      "reconciliation": {
+        "artifact_rho_mid": -0.090298,
+        "our_rho_mid": -0.090298,
+        "artifact_directional": 0.147059,
+        "our_directional": 0.147059,
+        "artifact_baseline_rho": 0.486937,
+        "our_baseline_rho": 0.486937,
+        "rho_delta": 0
+      },
+      "input_flags_sample": {
+        "consensus": null,
+        "coverage_ok": false,
+        "b2_admitted": false,
+        "erp_present": true,
+        "payout_consumed": false
+      }
+    },
+    "nasdaq_composite": {
+      "as_ofs": [
+        "2015-03-27",
+        "2015-06-26",
+        "2015-09-25",
+        "2015-12-25",
+        "2016-03-25",
+        "2016-06-24",
+        "2016-09-23",
+        "2016-12-23",
+        "2017-03-24",
+        "2017-06-23",
+        "2017-09-22",
+        "2017-12-22",
+        "2018-03-23",
+        "2018-06-22",
+        "2018-09-21",
+        "2018-12-21",
+        "2019-03-22",
+        "2019-06-21",
+        "2019-09-20",
+        "2019-12-20",
+        "2020-03-20",
+        "2020-06-19",
+        "2020-09-18",
+        "2020-12-18",
+        "2021-03-19",
+        "2021-06-18",
+        "2021-09-17",
+        "2021-12-17",
+        "2022-03-18",
+        "2022-06-17",
+        "2022-09-16",
+        "2022-12-16",
+        "2023-03-17",
+        "2023-06-16"
+      ],
+      "origins_scored_total": 55,
+      "walk_forward_rows": 34,
+      "refusals": {
+        "no_growth_window": 21
+      },
+      "raw_n": 34,
+      "effective_n": 34,
+      "ess": {
+        "raw_n": 34,
+        "monthly_obs": 198,
+        "lags_used": 36,
+        "sum_rho": -0.384209,
+        "sum_rho_unweighted": -0.605175,
+        "denominator": 0.231582,
+        "ess_raw": 146.816531,
+        "ess_capped": 34,
+        "method": "own_ess_n/(1+2*sum_rho_nw)"
+      },
+      "metrics": {
+        "midpoint": {
+          "label": "midpoint",
+          "raw_n": 34,
+          "spearman_rho": 0.097021,
+          "rho_ci": {
+            "mean": 0.066828,
+            "ci_lower": -0.495402,
+            "ci_upper": 0.810194,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0,
+          "directional_ci": {
+            "mean": 0,
+            "ci_lower": 0,
+            "ci_upper": 0,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.194705,
+            0.121426,
+            0.158472,
+            0.218028,
+            0.086475,
+            0.180227,
+            0.168185,
+            0.176957,
+            0.178965,
+            0.202877
+          ]
+        },
+        "low_endpoint": {
+          "label": "low endpoint",
+          "raw_n": 34,
+          "spearman_rho": 0.327731,
+          "rho_ci": {
+            "mean": 0.398074,
+            "ci_lower": -0.412053,
+            "ci_upper": 0.838402,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0,
+          "directional_ci": {
+            "mean": 0,
+            "ci_lower": 0,
+            "ci_upper": 0,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.111831,
+            0.087709,
+            0.175194,
+            0.139447,
+            0.199092,
+            0.219452,
+            0.198307,
+            0.196083,
+            0.16664,
+            0.195162
+          ]
+        },
+        "high_endpoint": {
+          "label": "high endpoint",
+          "raw_n": 34,
+          "spearman_rho": -0.019099,
+          "rho_ci": {
+            "mean": -0.080198,
+            "ci_lower": -0.531178,
+            "ci_upper": 0.75606,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0,
+          "directional_ci": {
+            "mean": 0,
+            "ci_lower": 0,
+            "ci_upper": 0,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.237972,
+            0.169453,
+            0.095317,
+            0.139064,
+            0.169092,
+            0.171586,
+            0.16663,
+            0.182795,
+            0.182488,
+            0.179483
+          ]
+        },
+        "log_midpoint": {
+          "label": "log midpoint",
+          "raw_n": 34,
+          "spearman_rho": 0.097021,
+          "rho_ci": {
+            "mean": 0.066828,
+            "ci_lower": -0.495402,
+            "ci_upper": 0.810194,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0,
+          "directional_ci": {
+            "mean": 0,
+            "ci_lower": 0,
+            "ci_upper": 0,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.194705,
+            0.121426,
+            0.158472,
+            0.218028,
+            0.086475,
+            0.180227,
+            0.168185,
+            0.176957,
+            0.178965,
+            0.202877
+          ]
+        }
+      },
+      "directional_alternatives": {
+        "current_definition_rate": 0,
+        "excess_over_rf_rate": 0,
+        "excess_over_ke_rate": 0.117647,
+        "expensive_but_positive_n": 34,
+        "cheap_but_negative_n": 0,
+        "note": "alternatives are diagnostics only; the contract (P0-1) assigns redefinition to the handler"
+      },
+      "baseline": {
+        "raw_n": 34,
+        "spearman_rho": 0.664171,
+        "rho_ci": {
+          "mean": 0.539974,
+          "ci_lower": -0.120859,
+          "ci_upper": 0.853211,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "own_moving_block_bootstrap_36m"
+        },
+        "windows": [
+          {
+            "as_of": "2015-03-27",
+            "window_rows": 274,
+            "window_first": "2010-01-01",
+            "window_last": "2015-03-27",
+            "window_years": 5.232033,
+            "truncated": true
+          },
+          {
+            "as_of": "2015-06-26",
+            "window_rows": 287,
+            "window_first": "2010-01-01",
+            "window_last": "2015-06-26",
+            "window_years": 5.481177,
+            "truncated": true
+          },
+          {
+            "as_of": "2015-09-25",
+            "window_rows": 300,
+            "window_first": "2010-01-01",
+            "window_last": "2015-09-25",
+            "window_years": 5.730322,
+            "truncated": true
+          },
+          {
+            "as_of": "2015-12-25",
+            "window_rows": 313,
+            "window_first": "2010-01-01",
+            "window_last": "2015-12-25",
+            "window_years": 5.979466,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-03-25",
+            "window_rows": 326,
+            "window_first": "2010-01-01",
+            "window_last": "2016-03-25",
+            "window_years": 6.228611,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-06-24",
+            "window_rows": 339,
+            "window_first": "2010-01-01",
+            "window_last": "2016-06-24",
+            "window_years": 6.477755,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-09-23",
+            "window_rows": 352,
+            "window_first": "2010-01-01",
+            "window_last": "2016-09-23",
+            "window_years": 6.726899,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-12-23",
+            "window_rows": 365,
+            "window_first": "2010-01-01",
+            "window_last": "2016-12-23",
+            "window_years": 6.976044,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-03-24",
+            "window_rows": 378,
+            "window_first": "2010-01-01",
+            "window_last": "2017-03-24",
+            "window_years": 7.225188,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-06-23",
+            "window_rows": 391,
+            "window_first": "2010-01-01",
+            "window_last": "2017-06-23",
+            "window_years": 7.474333,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-09-22",
+            "window_rows": 402,
+            "window_first": "2010-01-01",
+            "window_last": "2017-09-22",
+            "window_years": 7.723477,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-12-22",
+            "window_rows": 414,
+            "window_first": "2010-01-01",
+            "window_last": "2017-12-22",
+            "window_years": 7.972621,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-03-23",
+            "window_rows": 427,
+            "window_first": "2010-01-01",
+            "window_last": "2018-03-23",
+            "window_years": 8.221766,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-06-22",
+            "window_rows": 440,
+            "window_first": "2010-01-01",
+            "window_last": "2018-06-22",
+            "window_years": 8.47091,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-09-21",
+            "window_rows": 453,
+            "window_first": "2010-01-01",
+            "window_last": "2018-09-21",
+            "window_years": 8.720055,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-12-21",
+            "window_rows": 466,
+            "window_first": "2010-01-01",
+            "window_last": "2018-12-21",
+            "window_years": 8.969199,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-03-22",
+            "window_rows": 479,
+            "window_first": "2010-01-01",
+            "window_last": "2019-03-22",
+            "window_years": 9.218344,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-06-21",
+            "window_rows": 492,
+            "window_first": "2010-01-01",
+            "window_last": "2019-06-21",
+            "window_years": 9.467488,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-09-20",
+            "window_rows": 505,
+            "window_first": "2010-01-01",
+            "window_last": "2019-09-20",
+            "window_years": 9.716632,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-12-20",
+            "window_rows": 518,
+            "window_first": "2010-01-01",
+            "window_last": "2019-12-20",
+            "window_years": 9.965777,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-03-20",
+            "window_rows": 519,
+            "window_first": "2010-03-26",
+            "window_last": "2020-03-20",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-06-19",
+            "window_rows": 519,
+            "window_first": "2010-06-25",
+            "window_last": "2020-06-19",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-09-18",
+            "window_rows": 519,
+            "window_first": "2010-09-24",
+            "window_last": "2020-09-18",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-12-18",
+            "window_rows": 519,
+            "window_first": "2010-12-24",
+            "window_last": "2020-12-18",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-03-19",
+            "window_rows": 519,
+            "window_first": "2011-03-25",
+            "window_last": "2021-03-19",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-06-18",
+            "window_rows": 519,
+            "window_first": "2011-06-24",
+            "window_last": "2021-06-18",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-09-17",
+            "window_rows": 519,
+            "window_first": "2011-09-23",
+            "window_last": "2021-09-17",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-12-17",
+            "window_rows": 519,
+            "window_first": "2011-12-23",
+            "window_last": "2021-12-17",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-03-18",
+            "window_rows": 519,
+            "window_first": "2012-03-23",
+            "window_last": "2022-03-18",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-06-17",
+            "window_rows": 519,
+            "window_first": "2012-06-22",
+            "window_last": "2022-06-17",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-09-16",
+            "window_rows": 519,
+            "window_first": "2012-09-21",
+            "window_last": "2022-09-16",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-12-16",
+            "window_rows": 519,
+            "window_first": "2012-12-21",
+            "window_last": "2022-12-16",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2023-03-17",
+            "window_rows": 519,
+            "window_first": "2013-03-22",
+            "window_last": "2023-03-17",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2023-06-16",
+            "window_rows": 519,
+            "window_first": "2013-06-21",
+            "window_last": "2023-06-16",
+            "window_years": 9.984942,
+            "truncated": false
+          }
+        ],
+        "truncated_count": 19,
+        "truncation_sensitivity": {
+          "n_origins_full_window": 16,
+          "baseline_rho_full_window": 0.835294,
+          "model_rho_full_window": 0.564706
+        }
+      },
+      "reconciliation": {
+        "artifact_rho_mid": 0.097021,
+        "our_rho_mid": 0.097021,
+        "artifact_directional": 0,
+        "our_directional": 0,
+        "artifact_baseline_rho": 0.664171,
+        "our_baseline_rho": 0.664171,
+        "rho_delta": 0
+      },
+      "input_flags_sample": {
+        "consensus": null,
+        "coverage_ok": false,
+        "b2_admitted": false,
+        "erp_present": true,
+        "payout_consumed": false
+      }
+    },
+    "philadelphia_semi": {
+      "as_ofs": [
+        "2015-03-27",
+        "2015-06-26",
+        "2015-09-25",
+        "2015-12-25",
+        "2016-03-25",
+        "2016-06-24",
+        "2016-09-23",
+        "2016-12-23",
+        "2017-03-24",
+        "2017-06-23",
+        "2017-09-22",
+        "2017-12-22",
+        "2018-03-23",
+        "2018-06-22",
+        "2018-09-21",
+        "2018-12-21",
+        "2019-03-22",
+        "2019-06-21",
+        "2019-09-20",
+        "2019-12-20",
+        "2020-03-20",
+        "2020-06-19",
+        "2020-09-18",
+        "2020-12-18",
+        "2021-03-19",
+        "2021-06-18",
+        "2021-09-17",
+        "2021-12-17",
+        "2022-03-18",
+        "2022-06-17",
+        "2022-09-16",
+        "2022-12-16",
+        "2023-03-17",
+        "2023-06-16"
+      ],
+      "origins_scored_total": 55,
+      "walk_forward_rows": 34,
+      "refusals": {
+        "no_growth_window": 21
+      },
+      "raw_n": 34,
+      "effective_n": 34,
+      "ess": {
+        "raw_n": 34,
+        "monthly_obs": 198,
+        "lags_used": 36,
+        "sum_rho": -0.246275,
+        "sum_rho_unweighted": -0.298233,
+        "denominator": 0.50745,
+        "ess_raw": 67.001736,
+        "ess_capped": 34,
+        "method": "own_ess_n/(1+2*sum_rho_nw)"
+      },
+      "metrics": {
+        "midpoint": {
+          "label": "midpoint",
+          "raw_n": 34,
+          "spearman_rho": 0.198167,
+          "rho_ci": {
+            "mean": 0.108412,
+            "ci_lower": -0.117368,
+            "ci_upper": 0.591642,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0.529412,
+          "directional_ci": {
+            "mean": 0.529603,
+            "ci_lower": 0.176471,
+            "ci_upper": 0.852941,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.250506,
+            0.273694,
+            0.272099,
+            0.202475,
+            0.237323,
+            0.203597,
+            0.295484,
+            0.326941,
+            0.271943,
+            0.331449
+          ]
+        },
+        "low_endpoint": {
+          "label": "low endpoint",
+          "raw_n": 34,
+          "spearman_rho": 0.607639,
+          "rho_ci": {
+            "mean": 0.542244,
+            "ci_lower": 0.202518,
+            "ci_upper": 0.715688,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0.529412,
+          "directional_ci": {
+            "mean": 0.529603,
+            "ci_lower": 0.176471,
+            "ci_upper": 0.852941,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.144824,
+            0.234604,
+            0.206029,
+            0.253651,
+            0.221517,
+            0.355597,
+            0.267739,
+            0.286361,
+            0.383849,
+            0.331449
+          ]
+        },
+        "high_endpoint": {
+          "label": "high endpoint",
+          "raw_n": 34,
+          "spearman_rho": 0.131245,
+          "rho_ci": {
+            "mean": -0.000926,
+            "ci_lower": -0.219176,
+            "ci_upper": 0.547912,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0.529412,
+          "directional_ci": {
+            "mean": 0.529603,
+            "ci_lower": 0.176471,
+            "ci_upper": 0.852941,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.250506,
+            0.317394,
+            0.239324,
+            0.24185,
+            0.204087,
+            0.238539,
+            0.260446,
+            0.313674,
+            0.271943,
+            0.331449
+          ]
+        },
+        "log_midpoint": {
+          "label": "log midpoint",
+          "raw_n": 34,
+          "spearman_rho": 0.198167,
+          "rho_ci": {
+            "mean": 0.108412,
+            "ci_lower": -0.117368,
+            "ci_upper": 0.591642,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0.529412,
+          "directional_ci": {
+            "mean": 0.529603,
+            "ci_lower": 0.176471,
+            "ci_upper": 0.852941,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.250506,
+            0.273694,
+            0.272099,
+            0.202475,
+            0.237323,
+            0.203597,
+            0.295484,
+            0.326941,
+            0.271943,
+            0.331449
+          ]
+        }
+      },
+      "directional_alternatives": {
+        "current_definition_rate": 0.529412,
+        "excess_over_rf_rate": 0.529412,
+        "excess_over_ke_rate": 0.529412,
+        "expensive_but_positive_n": 16,
+        "cheap_but_negative_n": 0,
+        "note": "alternatives are diagnostics only; the contract (P0-1) assigns redefinition to the handler"
+      },
+      "baseline": {
+        "raw_n": 34,
+        "spearman_rho": 0.657143,
+        "rho_ci": {
+          "mean": 0.518126,
+          "ci_lower": -0.172244,
+          "ci_upper": 0.810239,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "own_moving_block_bootstrap_36m"
+        },
+        "windows": [
+          {
+            "as_of": "2015-03-27",
+            "window_rows": 274,
+            "window_first": "2010-01-01",
+            "window_last": "2015-03-27",
+            "window_years": 5.232033,
+            "truncated": true
+          },
+          {
+            "as_of": "2015-06-26",
+            "window_rows": 287,
+            "window_first": "2010-01-01",
+            "window_last": "2015-06-26",
+            "window_years": 5.481177,
+            "truncated": true
+          },
+          {
+            "as_of": "2015-09-25",
+            "window_rows": 300,
+            "window_first": "2010-01-01",
+            "window_last": "2015-09-25",
+            "window_years": 5.730322,
+            "truncated": true
+          },
+          {
+            "as_of": "2015-12-25",
+            "window_rows": 313,
+            "window_first": "2010-01-01",
+            "window_last": "2015-12-25",
+            "window_years": 5.979466,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-03-25",
+            "window_rows": 326,
+            "window_first": "2010-01-01",
+            "window_last": "2016-03-25",
+            "window_years": 6.228611,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-06-24",
+            "window_rows": 339,
+            "window_first": "2010-01-01",
+            "window_last": "2016-06-24",
+            "window_years": 6.477755,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-09-23",
+            "window_rows": 352,
+            "window_first": "2010-01-01",
+            "window_last": "2016-09-23",
+            "window_years": 6.726899,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-12-23",
+            "window_rows": 365,
+            "window_first": "2010-01-01",
+            "window_last": "2016-12-23",
+            "window_years": 6.976044,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-03-24",
+            "window_rows": 378,
+            "window_first": "2010-01-01",
+            "window_last": "2017-03-24",
+            "window_years": 7.225188,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-06-23",
+            "window_rows": 391,
+            "window_first": "2010-01-01",
+            "window_last": "2017-06-23",
+            "window_years": 7.474333,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-09-22",
+            "window_rows": 404,
+            "window_first": "2010-01-01",
+            "window_last": "2017-09-22",
+            "window_years": 7.723477,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-12-22",
+            "window_rows": 417,
+            "window_first": "2010-01-01",
+            "window_last": "2017-12-22",
+            "window_years": 7.972621,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-03-23",
+            "window_rows": 430,
+            "window_first": "2010-01-01",
+            "window_last": "2018-03-23",
+            "window_years": 8.221766,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-06-22",
+            "window_rows": 443,
+            "window_first": "2010-01-01",
+            "window_last": "2018-06-22",
+            "window_years": 8.47091,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-09-21",
+            "window_rows": 456,
+            "window_first": "2010-01-01",
+            "window_last": "2018-09-21",
+            "window_years": 8.720055,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-12-21",
+            "window_rows": 469,
+            "window_first": "2010-01-01",
+            "window_last": "2018-12-21",
+            "window_years": 8.969199,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-03-22",
+            "window_rows": 482,
+            "window_first": "2010-01-01",
+            "window_last": "2019-03-22",
+            "window_years": 9.218344,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-06-21",
+            "window_rows": 495,
+            "window_first": "2010-01-01",
+            "window_last": "2019-06-21",
+            "window_years": 9.467488,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-09-20",
+            "window_rows": 508,
+            "window_first": "2010-01-01",
+            "window_last": "2019-09-20",
+            "window_years": 9.716632,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-12-20",
+            "window_rows": 521,
+            "window_first": "2010-01-01",
+            "window_last": "2019-12-20",
+            "window_years": 9.965777,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-03-20",
+            "window_rows": 522,
+            "window_first": "2010-03-26",
+            "window_last": "2020-03-20",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-06-19",
+            "window_rows": 522,
+            "window_first": "2010-06-25",
+            "window_last": "2020-06-19",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-09-18",
+            "window_rows": 522,
+            "window_first": "2010-09-24",
+            "window_last": "2020-09-18",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-12-18",
+            "window_rows": 522,
+            "window_first": "2010-12-24",
+            "window_last": "2020-12-18",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-03-19",
+            "window_rows": 522,
+            "window_first": "2011-03-25",
+            "window_last": "2021-03-19",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-06-18",
+            "window_rows": 522,
+            "window_first": "2011-06-24",
+            "window_last": "2021-06-18",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-09-17",
+            "window_rows": 522,
+            "window_first": "2011-09-23",
+            "window_last": "2021-09-17",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-12-17",
+            "window_rows": 522,
+            "window_first": "2011-12-23",
+            "window_last": "2021-12-17",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-03-18",
+            "window_rows": 522,
+            "window_first": "2012-03-23",
+            "window_last": "2022-03-18",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-06-17",
+            "window_rows": 522,
+            "window_first": "2012-06-22",
+            "window_last": "2022-06-17",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-09-16",
+            "window_rows": 522,
+            "window_first": "2012-09-21",
+            "window_last": "2022-09-16",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-12-16",
+            "window_rows": 522,
+            "window_first": "2012-12-21",
+            "window_last": "2022-12-16",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2023-03-17",
+            "window_rows": 522,
+            "window_first": "2013-03-22",
+            "window_last": "2023-03-17",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2023-06-16",
+            "window_rows": 522,
+            "window_first": "2013-06-21",
+            "window_last": "2023-06-16",
+            "window_years": 9.984942,
+            "truncated": false
+          }
+        ],
+        "truncated_count": 19,
+        "truncation_sensitivity": {
+          "n_origins_full_window": 16,
+          "baseline_rho_full_window": 0.720588,
+          "model_rho_full_window": 0.644118
+        }
+      },
+      "reconciliation": {
+        "artifact_rho_mid": 0.198167,
+        "our_rho_mid": 0.198167,
+        "artifact_directional": 0.529412,
+        "our_directional": 0.529412,
+        "artifact_baseline_rho": 0.657143,
+        "our_baseline_rho": 0.657143,
+        "rho_delta": 0
+      },
+      "input_flags_sample": {
+        "consensus": null,
+        "coverage_ok": false,
+        "b2_admitted": false,
+        "erp_present": true,
+        "payout_consumed": false
+      }
+    },
+    "kospi": {
+      "as_ofs": [
+        "2015-03-27",
+        "2015-06-26",
+        "2015-09-25",
+        "2015-12-25",
+        "2016-03-25",
+        "2016-06-24",
+        "2016-09-23",
+        "2016-12-23",
+        "2017-03-24",
+        "2017-06-23",
+        "2017-09-22",
+        "2017-12-29",
+        "2018-03-30",
+        "2018-06-29",
+        "2018-09-28",
+        "2018-12-28",
+        "2019-03-29",
+        "2019-06-28",
+        "2019-09-27",
+        "2019-12-27",
+        "2020-03-27",
+        "2020-06-26",
+        "2020-09-25",
+        "2020-12-25",
+        "2021-03-26",
+        "2021-06-25",
+        "2021-09-24",
+        "2021-12-24",
+        "2022-03-25",
+        "2022-06-24",
+        "2022-09-23",
+        "2022-12-23",
+        "2023-03-24",
+        "2023-06-23"
+      ],
+      "origins_scored_total": 55,
+      "walk_forward_rows": 34,
+      "refusals": {
+        "no_growth_window": 21
+      },
+      "raw_n": 34,
+      "effective_n": 26.075101,
+      "ess": {
+        "raw_n": 34,
+        "monthly_obs": 199,
+        "lags_used": 36,
+        "sum_rho": 0.151963,
+        "sum_rho_unweighted": 0.055992,
+        "denominator": 1.303926,
+        "ess_raw": 26.075101,
+        "ess_capped": 26.075101,
+        "method": "own_ess_n/(1+2*sum_rho_nw)"
+      },
+      "metrics": {
+        "midpoint": {
+          "label": "midpoint",
+          "raw_n": 34,
+          "spearman_rho": 0.201833,
+          "rho_ci": {
+            "mean": 0.43441,
+            "ci_lower": 0.155358,
+            "ci_upper": 0.739171,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0.794118,
+          "directional_ci": {
+            "mean": 0.770147,
+            "ci_lower": 0.588235,
+            "ci_upper": 0.941176,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.131084,
+            0.154015,
+            -0.000098,
+            0.05357,
+            0.100242,
+            0.050054,
+            0.050425,
+            0.097553,
+            0.055887,
+            0.091388
+          ]
+        },
+        "low_endpoint": {
+          "label": "low endpoint",
+          "raw_n": 34,
+          "spearman_rho": 0.27395,
+          "rho_ci": {
+            "mean": 0.55698,
+            "ci_lower": 0.290737,
+            "ci_upper": 0.791737,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0.794118,
+          "directional_ci": {
+            "mean": 0.770147,
+            "ci_lower": 0.588235,
+            "ci_upper": 0.941176,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.204428,
+            -0.035134,
+            0.038189,
+            0.085388,
+            0.056927,
+            0.090655,
+            0.045285,
+            0.076178,
+            0.062221,
+            0.116367
+          ]
+        },
+        "high_endpoint": {
+          "label": "high endpoint",
+          "raw_n": 34,
+          "spearman_rho": 0.134607,
+          "rho_ci": {
+            "mean": 0.331809,
+            "ci_lower": 0.011671,
+            "ci_upper": 0.692731,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0.794118,
+          "directional_ci": {
+            "mean": 0.770147,
+            "ci_lower": 0.588235,
+            "ci_upper": 0.941176,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.146812,
+            -0.009786,
+            0.175787,
+            0.097174,
+            -0.015288,
+            0.035237,
+            0.090378,
+            0.063687,
+            0.060133,
+            0.092345
+          ]
+        },
+        "log_midpoint": {
+          "label": "log midpoint",
+          "raw_n": 34,
+          "spearman_rho": 0.201833,
+          "rho_ci": {
+            "mean": 0.43441,
+            "ci_lower": 0.155358,
+            "ci_upper": 0.739171,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "directional_rate": 0.794118,
+          "directional_ci": {
+            "mean": 0.770147,
+            "ci_lower": 0.588235,
+            "ci_upper": 0.941176,
+            "ci_level": 0.95,
+            "n": 34,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "decile_means": [
+            0.131084,
+            0.154015,
+            -0.000098,
+            0.05357,
+            0.100242,
+            0.050054,
+            0.050425,
+            0.097553,
+            0.055887,
+            0.091388
+          ]
+        }
+      },
+      "directional_alternatives": {
+        "current_definition_rate": 0.794118,
+        "excess_over_rf_rate": 0.764706,
+        "excess_over_ke_rate": 0.352941,
+        "expensive_but_positive_n": 0,
+        "cheap_but_negative_n": 7,
+        "note": "alternatives are diagnostics only; the contract (P0-1) assigns redefinition to the handler"
+      },
+      "baseline": {
+        "raw_n": 34,
+        "spearman_rho": 0.587471,
+        "rho_ci": {
+          "mean": 0.602039,
+          "ci_lower": 0.325264,
+          "ci_upper": 0.84142,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "own_moving_block_bootstrap_36m"
+        },
+        "windows": [
+          {
+            "as_of": "2015-03-27",
+            "window_rows": 274,
+            "window_first": "2010-01-03",
+            "window_last": "2015-03-27",
+            "window_years": 5.226557,
+            "truncated": true
+          },
+          {
+            "as_of": "2015-06-26",
+            "window_rows": 287,
+            "window_first": "2010-01-03",
+            "window_last": "2015-06-26",
+            "window_years": 5.475702,
+            "truncated": true
+          },
+          {
+            "as_of": "2015-09-25",
+            "window_rows": 300,
+            "window_first": "2010-01-03",
+            "window_last": "2015-09-25",
+            "window_years": 5.724846,
+            "truncated": true
+          },
+          {
+            "as_of": "2015-12-25",
+            "window_rows": 313,
+            "window_first": "2010-01-03",
+            "window_last": "2015-12-25",
+            "window_years": 5.97399,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-03-25",
+            "window_rows": 326,
+            "window_first": "2010-01-03",
+            "window_last": "2016-03-25",
+            "window_years": 6.223135,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-06-24",
+            "window_rows": 339,
+            "window_first": "2010-01-03",
+            "window_last": "2016-06-24",
+            "window_years": 6.472279,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-09-23",
+            "window_rows": 352,
+            "window_first": "2010-01-03",
+            "window_last": "2016-09-23",
+            "window_years": 6.721424,
+            "truncated": true
+          },
+          {
+            "as_of": "2016-12-23",
+            "window_rows": 365,
+            "window_first": "2010-01-03",
+            "window_last": "2016-12-23",
+            "window_years": 6.970568,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-03-24",
+            "window_rows": 378,
+            "window_first": "2010-01-03",
+            "window_last": "2017-03-24",
+            "window_years": 7.219713,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-06-23",
+            "window_rows": 391,
+            "window_first": "2010-01-03",
+            "window_last": "2017-06-23",
+            "window_years": 7.468857,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-09-22",
+            "window_rows": 404,
+            "window_first": "2010-01-03",
+            "window_last": "2017-09-22",
+            "window_years": 7.718001,
+            "truncated": true
+          },
+          {
+            "as_of": "2017-12-29",
+            "window_rows": 417,
+            "window_first": "2010-01-03",
+            "window_last": "2017-12-29",
+            "window_years": 7.986311,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-03-30",
+            "window_rows": 430,
+            "window_first": "2010-01-03",
+            "window_last": "2018-03-30",
+            "window_years": 8.235455,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-06-29",
+            "window_rows": 443,
+            "window_first": "2010-01-03",
+            "window_last": "2018-06-29",
+            "window_years": 8.4846,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-09-28",
+            "window_rows": 456,
+            "window_first": "2010-01-03",
+            "window_last": "2018-09-28",
+            "window_years": 8.733744,
+            "truncated": true
+          },
+          {
+            "as_of": "2018-12-28",
+            "window_rows": 469,
+            "window_first": "2010-01-03",
+            "window_last": "2018-12-28",
+            "window_years": 8.982888,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-03-29",
+            "window_rows": 482,
+            "window_first": "2010-01-03",
+            "window_last": "2019-03-29",
+            "window_years": 9.232033,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-06-28",
+            "window_rows": 495,
+            "window_first": "2010-01-03",
+            "window_last": "2019-06-28",
+            "window_years": 9.481177,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-09-27",
+            "window_rows": 508,
+            "window_first": "2010-01-03",
+            "window_last": "2019-09-27",
+            "window_years": 9.730322,
+            "truncated": true
+          },
+          {
+            "as_of": "2019-12-27",
+            "window_rows": 521,
+            "window_first": "2010-01-03",
+            "window_last": "2019-12-27",
+            "window_years": 9.979466,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-03-27",
+            "window_rows": 522,
+            "window_first": "2010-03-28",
+            "window_last": "2020-03-27",
+            "window_years": 9.998631,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-06-26",
+            "window_rows": 522,
+            "window_first": "2010-06-27",
+            "window_last": "2020-06-26",
+            "window_years": 9.998631,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-09-25",
+            "window_rows": 521,
+            "window_first": "2010-10-01",
+            "window_last": "2020-09-25",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2020-12-25",
+            "window_rows": 521,
+            "window_first": "2010-12-31",
+            "window_last": "2020-12-25",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-03-26",
+            "window_rows": 521,
+            "window_first": "2011-04-01",
+            "window_last": "2021-03-26",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-06-25",
+            "window_rows": 521,
+            "window_first": "2011-07-01",
+            "window_last": "2021-06-25",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-09-24",
+            "window_rows": 521,
+            "window_first": "2011-09-30",
+            "window_last": "2021-09-24",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2021-12-24",
+            "window_rows": 521,
+            "window_first": "2011-12-30",
+            "window_last": "2021-12-24",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-03-25",
+            "window_rows": 521,
+            "window_first": "2012-03-30",
+            "window_last": "2022-03-25",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-06-24",
+            "window_rows": 521,
+            "window_first": "2012-06-29",
+            "window_last": "2022-06-24",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-09-23",
+            "window_rows": 521,
+            "window_first": "2012-09-28",
+            "window_last": "2022-09-23",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2022-12-23",
+            "window_rows": 521,
+            "window_first": "2012-12-28",
+            "window_last": "2022-12-23",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2023-03-24",
+            "window_rows": 521,
+            "window_first": "2013-03-29",
+            "window_last": "2023-03-24",
+            "window_years": 9.984942,
+            "truncated": false
+          },
+          {
+            "as_of": "2023-06-23",
+            "window_rows": 521,
+            "window_first": "2013-06-28",
+            "window_last": "2023-06-23",
+            "window_years": 9.984942,
+            "truncated": false
+          }
+        ],
+        "truncated_count": 19,
+        "truncation_sensitivity": {
+          "n_origins_full_window": 16,
+          "baseline_rho_full_window": 0.605882,
+          "model_rho_full_window": 0.067647
+        }
+      },
+      "reconciliation": {
+        "artifact_rho_mid": 0.201833,
+        "our_rho_mid": 0.201833,
+        "artifact_directional": 0.794118,
+        "our_directional": 0.794118,
+        "artifact_baseline_rho": 0.587471,
+        "our_baseline_rho": 0.587471,
+        "rho_delta": 0
+      },
+      "input_flags_sample": {
+        "consensus": null,
+        "coverage_ok": false,
+        "b2_admitted": false,
+        "erp_present": true,
+        "payout_consumed": false
+      }
+    }
+  },
+  "e2": {
+    "as_ofs": [
+      "2015-03-27",
+      "2015-06-26",
+      "2015-09-25",
+      "2015-12-25",
+      "2016-03-25",
+      "2016-06-24",
+      "2016-09-23",
+      "2016-12-23",
+      "2017-03-24",
+      "2017-06-23",
+      "2017-09-22",
+      "2017-12-22",
+      "2018-03-23",
+      "2018-06-22",
+      "2018-09-21",
+      "2018-12-21",
+      "2019-03-22",
+      "2019-06-21",
+      "2019-09-20",
+      "2019-12-20",
+      "2020-03-20",
+      "2020-06-19",
+      "2020-09-18",
+      "2020-12-18",
+      "2021-03-19",
+      "2021-06-18",
+      "2021-09-17",
+      "2021-12-17",
+      "2022-03-18",
+      "2022-06-17",
+      "2022-09-16",
+      "2022-12-16",
+      "2023-03-17",
+      "2023-06-16"
+    ],
+    "raw_n": 34,
+    "effective_n": 21.31926,
+    "ess": {
+      "raw_n": 34,
+      "monthly_obs": 205,
+      "lags_used": 36,
+      "sum_rho": 0.297401,
+      "sum_rho_unweighted": 0.305539,
+      "denominator": 1.594802,
+      "ess_raw": 21.31926,
+      "ess_capped": 21.31926,
+      "method": "own_ess_n/(1+2*sum_rho_nw)"
+    },
+    "metrics": {
+      "top_down": {
+        "label": "top-down midpoint",
+        "raw_n": 34,
+        "spearman_rho": -0.540413,
+        "rho_ci": {
+          "mean": -0.264433,
+          "ci_lower": -0.715991,
+          "ci_upper": 0.309816,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "own_moving_block_bootstrap_36m"
+        },
+        "directional_rate": 0.235294,
+        "directional_ci": {
+          "mean": 0.155647,
+          "ci_lower": 0.029412,
+          "ci_upper": 0.382353,
+          "ci_level": 0.95,
+          "n": 34,
+          "method": "own_moving_block_bootstrap_36m"
+        },
+        "decile_means": [
+          0.292582,
+          0.291344,
+          0.247624,
+          0.260902,
+          0.279496,
+          0.213235,
+          0.188766,
+          0.246916,
+          0.127415,
+          0.196003
+        ]
+      },
+      "bottom_up": {
+        "label": "bottom-up midpoint",
+        "raw_n": 34,
+        "spearman_rho": -0.377846,
+        "rho_ci": {
+          "mean": -0.138205,
+          "ci_lower": -0.771534,
+          "ci_upper": 0.443796,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "own_moving_block_bootstrap_36m"
+        },
+        "directional_rate": 0.205882,
+        "directional_ci": {
+          "mean": 0.104206,
+          "ci_lower": 0,
+          "ci_upper": 0.323529,
+          "ci_level": 0.95,
+          "n": 34,
+          "method": "own_moving_block_bootstrap_36m"
+        },
+        "decile_means": [
+          0.279655,
+          0.260636,
+          0.27389,
+          0.253684,
+          0.13776,
+          0.258658,
+          0.268121,
+          0.282864,
+          0.151535,
+          0.145911
+        ]
+      },
+      "baseline": {
+        "label": "baseline midpoint",
+        "raw_n": 34,
+        "spearman_rho": -0.555386,
+        "rho_ci": {
+          "mean": -0.289709,
+          "ci_lower": -0.739491,
+          "ci_upper": 0.583615,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "own_moving_block_bootstrap_36m"
+        },
+        "directional_rate": 0,
+        "directional_ci": {
+          "mean": 0,
+          "ci_lower": 0,
+          "ci_upper": 0,
+          "ci_level": 0.95,
+          "n": 34,
+          "method": "own_moving_block_bootstrap_36m"
+        },
+        "decile_means": [
+          0.255321,
+          0.238832,
+          0.309003,
+          0.278772,
+          0.281819,
+          0.288666,
+          0.243883,
+          0.114423,
+          0.170882,
+          0.173665
+        ]
+      },
+      "baseline_low": {
+        "label": "baseline low",
+        "raw_n": 34,
+        "spearman_rho": -0.58961,
+        "rho_ci": {
+          "mean": -0.303352,
+          "ci_lower": -0.753412,
+          "ci_upper": 0.589138,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "own_moving_block_bootstrap_36m"
+        },
+        "directional_rate": 0,
+        "directional_ci": {
+          "mean": 0,
+          "ci_lower": 0,
+          "ci_upper": 0,
+          "ci_level": 0.95,
+          "n": 34,
+          "method": "own_moving_block_bootstrap_36m"
+        },
+        "decile_means": [
+          0.281566,
+          0.267991,
+          0.260889,
+          0.283825,
+          0.276766,
+          0.288666,
+          0.243883,
+          0.114423,
+          0.166117,
+          0.17843
+        ]
+      },
+      "baseline_high": {
+        "label": "baseline high",
+        "raw_n": 34,
+        "spearman_rho": -0.483881,
+        "rho_ci": {
+          "mean": -0.161465,
+          "ci_lower": -0.70158,
+          "ci_upper": 0.777334,
+          "ci_level": 0.95,
+          "n": 34,
+          "block_size_quarters": 12,
+          "reps": 2000,
+          "seed": 539363334,
+          "method": "own_moving_block_bootstrap_36m"
+        },
+        "directional_rate": 0,
+        "directional_ci": {
+          "mean": 0,
+          "ci_lower": 0,
+          "ci_upper": 0,
+          "ci_level": 0.95,
+          "n": 34,
+          "method": "own_moving_block_bootstrap_36m"
+        },
+        "decile_means": [
+          0.255321,
+          0.253221,
+          0.284354,
+          0.263447,
+          0.278902,
+          0.29088,
+          0.277649,
+          0.114423,
+          0.166117,
+          0.17843
+        ]
+      }
+    },
+    "per_origin_constituent_coverage": [
+      {
+        "as_of": "2015-03-27",
+        "n_ok": 27,
+        "of_30": true
+      },
+      {
+        "as_of": "2015-06-26",
+        "n_ok": 27,
+        "of_30": true
+      },
+      {
+        "as_of": "2015-09-25",
+        "n_ok": 27,
+        "of_30": true
+      },
+      {
+        "as_of": "2015-12-25",
+        "n_ok": 27,
+        "of_30": true
+      },
+      {
+        "as_of": "2016-03-25",
+        "n_ok": 27,
+        "of_30": true
+      },
+      {
+        "as_of": "2016-06-24",
+        "n_ok": 27,
+        "of_30": true
+      },
+      {
+        "as_of": "2016-09-23",
+        "n_ok": 27,
+        "of_30": true
+      },
+      {
+        "as_of": "2016-12-23",
+        "n_ok": 25,
+        "of_30": true
+      },
+      {
+        "as_of": "2017-03-24",
+        "n_ok": 25,
+        "of_30": true
+      },
+      {
+        "as_of": "2017-06-23",
+        "n_ok": 25,
+        "of_30": true
+      },
+      {
+        "as_of": "2017-09-22",
+        "n_ok": 24,
+        "of_30": true
+      },
+      {
+        "as_of": "2017-12-22",
+        "n_ok": 25,
+        "of_30": true
+      },
+      {
+        "as_of": "2018-03-23",
+        "n_ok": 25,
+        "of_30": true
+      },
+      {
+        "as_of": "2018-06-22",
+        "n_ok": 25,
+        "of_30": true
+      },
+      {
+        "as_of": "2018-09-21",
+        "n_ok": 24,
+        "of_30": true
+      },
+      {
+        "as_of": "2018-12-21",
+        "n_ok": 24,
+        "of_30": true
+      },
+      {
+        "as_of": "2019-03-22",
+        "n_ok": 25,
+        "of_30": true
+      },
+      {
+        "as_of": "2019-06-21",
+        "n_ok": 24,
+        "of_30": true
+      },
+      {
+        "as_of": "2019-09-20",
+        "n_ok": 23,
+        "of_30": true
+      },
+      {
+        "as_of": "2019-12-20",
+        "n_ok": 23,
+        "of_30": true
+      },
+      {
+        "as_of": "2020-03-20",
+        "n_ok": 23,
+        "of_30": true
+      },
+      {
+        "as_of": "2020-06-19",
+        "n_ok": 23,
+        "of_30": true
+      },
+      {
+        "as_of": "2020-09-18",
+        "n_ok": 23,
+        "of_30": true
+      },
+      {
+        "as_of": "2020-12-18",
+        "n_ok": 25,
+        "of_30": true
+      },
+      {
+        "as_of": "2021-03-19",
+        "n_ok": 25,
+        "of_30": true
+      },
+      {
+        "as_of": "2021-06-18",
+        "n_ok": 25,
+        "of_30": true
+      },
+      {
+        "as_of": "2021-09-17",
+        "n_ok": 25,
+        "of_30": true
+      },
+      {
+        "as_of": "2021-12-17",
+        "n_ok": 25,
+        "of_30": true
+      },
+      {
+        "as_of": "2022-03-18",
+        "n_ok": 25,
+        "of_30": true
+      },
+      {
+        "as_of": "2022-06-17",
+        "n_ok": 24,
+        "of_30": true
+      },
+      {
+        "as_of": "2022-09-16",
+        "n_ok": 25,
+        "of_30": true
+      },
+      {
+        "as_of": "2022-12-16",
+        "n_ok": 25,
+        "of_30": true
+      },
+      {
+        "as_of": "2023-03-17",
+        "n_ok": 25,
+        "of_30": true
+      },
+      {
+        "as_of": "2023-06-16",
+        "n_ok": 25,
+        "of_30": true
+      }
+    ],
+    "baseline_windows": [
+      {
+        "as_of": "2015-03-27",
+        "rows": 296,
+        "first": "2009-07-25",
+        "last": "2015-03-21",
+        "years": 5.653662,
+        "truncated": true
+      },
+      {
+        "as_of": "2015-06-26",
+        "rows": 309,
+        "first": "2009-07-25",
+        "last": "2015-06-20",
+        "years": 5.902806,
+        "truncated": true
+      },
+      {
+        "as_of": "2015-09-25",
+        "rows": 322,
+        "first": "2009-07-25",
+        "last": "2015-09-19",
+        "years": 6.151951,
+        "truncated": true
+      },
+      {
+        "as_of": "2015-12-25",
+        "rows": 335,
+        "first": "2009-07-25",
+        "last": "2015-12-19",
+        "years": 6.401095,
+        "truncated": true
+      },
+      {
+        "as_of": "2016-03-25",
+        "rows": 348,
+        "first": "2009-07-25",
+        "last": "2016-03-19",
+        "years": 6.65024,
+        "truncated": true
+      },
+      {
+        "as_of": "2016-06-24",
+        "rows": 361,
+        "first": "2009-07-25",
+        "last": "2016-06-18",
+        "years": 6.899384,
+        "truncated": true
+      },
+      {
+        "as_of": "2016-09-23",
+        "rows": 374,
+        "first": "2009-07-25",
+        "last": "2016-09-17",
+        "years": 7.148528,
+        "truncated": true
+      },
+      {
+        "as_of": "2016-12-23",
+        "rows": 387,
+        "first": "2009-07-25",
+        "last": "2016-12-17",
+        "years": 7.397673,
+        "truncated": true
+      },
+      {
+        "as_of": "2017-03-24",
+        "rows": 400,
+        "first": "2009-07-25",
+        "last": "2017-03-18",
+        "years": 7.646817,
+        "truncated": true
+      },
+      {
+        "as_of": "2017-06-23",
+        "rows": 413,
+        "first": "2009-07-25",
+        "last": "2017-06-17",
+        "years": 7.895962,
+        "truncated": true
+      },
+      {
+        "as_of": "2017-09-22",
+        "rows": 426,
+        "first": "2009-07-25",
+        "last": "2017-09-16",
+        "years": 8.145106,
+        "truncated": true
+      },
+      {
+        "as_of": "2017-12-22",
+        "rows": 439,
+        "first": "2009-07-25",
+        "last": "2017-12-16",
+        "years": 8.394251,
+        "truncated": true
+      },
+      {
+        "as_of": "2018-03-23",
+        "rows": 452,
+        "first": "2009-07-25",
+        "last": "2018-03-17",
+        "years": 8.643395,
+        "truncated": true
+      },
+      {
+        "as_of": "2018-06-22",
+        "rows": 465,
+        "first": "2009-07-25",
+        "last": "2018-06-16",
+        "years": 8.892539,
+        "truncated": true
+      },
+      {
+        "as_of": "2018-09-21",
+        "rows": 478,
+        "first": "2009-07-25",
+        "last": "2018-09-15",
+        "years": 9.141684,
+        "truncated": true
+      },
+      {
+        "as_of": "2018-12-21",
+        "rows": 491,
+        "first": "2009-07-25",
+        "last": "2018-12-15",
+        "years": 9.390828,
+        "truncated": true
+      },
+      {
+        "as_of": "2019-03-22",
+        "rows": 504,
+        "first": "2009-07-25",
+        "last": "2019-03-16",
+        "years": 9.639973,
+        "truncated": true
+      },
+      {
+        "as_of": "2019-06-21",
+        "rows": 517,
+        "first": "2009-07-25",
+        "last": "2019-06-15",
+        "years": 9.889117,
+        "truncated": true
+      },
+      {
+        "as_of": "2019-09-20",
+        "rows": 521,
+        "first": "2009-09-26",
+        "last": "2019-09-14",
+        "years": 9.965777,
+        "truncated": false
+      },
+      {
+        "as_of": "2019-12-20",
+        "rows": 521,
+        "first": "2009-12-26",
+        "last": "2019-12-14",
+        "years": 9.965777,
+        "truncated": false
+      },
+      {
+        "as_of": "2020-03-20",
+        "rows": 521,
+        "first": "2010-03-27",
+        "last": "2020-03-14",
+        "years": 9.965777,
+        "truncated": false
+      },
+      {
+        "as_of": "2020-06-19",
+        "rows": 521,
+        "first": "2010-06-26",
+        "last": "2020-06-13",
+        "years": 9.965777,
+        "truncated": false
+      },
+      {
+        "as_of": "2020-09-18",
+        "rows": 521,
+        "first": "2010-09-25",
+        "last": "2020-09-12",
+        "years": 9.965777,
+        "truncated": false
+      },
+      {
+        "as_of": "2020-12-18",
+        "rows": 521,
+        "first": "2010-12-25",
+        "last": "2020-12-12",
+        "years": 9.965777,
+        "truncated": false
+      },
+      {
+        "as_of": "2021-03-19",
+        "rows": 521,
+        "first": "2011-03-26",
+        "last": "2021-03-13",
+        "years": 9.965777,
+        "truncated": false
+      },
+      {
+        "as_of": "2021-06-18",
+        "rows": 521,
+        "first": "2011-06-25",
+        "last": "2021-06-12",
+        "years": 9.965777,
+        "truncated": false
+      },
+      {
+        "as_of": "2021-09-17",
+        "rows": 521,
+        "first": "2011-09-24",
+        "last": "2021-09-11",
+        "years": 9.965777,
+        "truncated": false
+      },
+      {
+        "as_of": "2021-12-17",
+        "rows": 521,
+        "first": "2011-12-24",
+        "last": "2021-12-11",
+        "years": 9.965777,
+        "truncated": false
+      },
+      {
+        "as_of": "2022-03-18",
+        "rows": 521,
+        "first": "2012-03-24",
+        "last": "2022-03-12",
+        "years": 9.965777,
+        "truncated": false
+      },
+      {
+        "as_of": "2022-06-17",
+        "rows": 521,
+        "first": "2012-06-23",
+        "last": "2022-06-11",
+        "years": 9.965777,
+        "truncated": false
+      },
+      {
+        "as_of": "2022-09-16",
+        "rows": 521,
+        "first": "2012-09-22",
+        "last": "2022-09-10",
+        "years": 9.965777,
+        "truncated": false
+      },
+      {
+        "as_of": "2022-12-16",
+        "rows": 521,
+        "first": "2012-12-22",
+        "last": "2022-12-10",
+        "years": 9.965777,
+        "truncated": false
+      },
+      {
+        "as_of": "2023-03-17",
+        "rows": 521,
+        "first": "2013-03-23",
+        "last": "2023-03-11",
+        "years": 9.965777,
+        "truncated": false
+      },
+      {
+        "as_of": "2023-06-16",
+        "rows": 521,
+        "first": "2013-06-22",
+        "last": "2023-06-10",
+        "years": 9.965777,
+        "truncated": false
+      }
+    ],
+    "baseline_truncated_count": 18,
+    "baseline_window_260_sensitivity": {
+      "full_set": {
+        "n_origins": 34,
+        "baseline_rho": -0.555386,
+        "bottom_up_rho": -0.377846
+      },
+      "windows_ge_9p5y": {
+        "n_origins": 18,
+        "baseline_rho": 0.446852,
+        "bottom_up_rho": 0.302374
+      },
+      "fixed_5y_window_all_origins": {
+        "n_origins": 34,
+        "baseline_rho": -0.435905,
+        "bottom_up_rho": -0.377846
+      },
+      "note": "diagnostics only; the frozen E2 verdict is preserved. The original artifact's truncated flag was true by construction (weekly grid makes window[0] > cutoff always); the real window lengths are 5.7-10.0y (window_years), truncated for the first ~18 origins only."
+    },
+    "directional_alternatives_bottom_up": {
+      "current_definition_rate": 0.205882,
+      "excess_over_rf_rate": 0.205882,
+      "excess_over_ke_rate": 0.235294,
+      "expensive_but_positive_n": 27,
+      "cheap_but_negative_n": 0,
+      "note": "alternatives are diagnostics only; the contract (P0-1) assigns redefinition to the handler"
+    },
+    "total_return": {
+      "cap_plus_yield_method": "cap(t+36m)/cap(t)-1 + sum(div_per_share * origin_shares)/cap(t)",
+      "dividend_yield_samples": [
+        {
+          "as_of": "2015-03-27",
+          "fixed": 0.087680416585066,
+          "buggy": 5.42063521567148e-11
+        },
+        {
+          "as_of": "2015-06-26",
+          "fixed": 0.08957350293772251,
+          "buggy": 5.5796759399285246e-11
+        },
+        {
+          "as_of": "2015-09-25",
+          "fixed": 0.09966854769686687,
+          "buggy": 6.261681562544991e-11
+        }
+      ],
+      "units_bug_effect": "the pre-fix per-share dividends / total-dollar cap understated the yield by ~11 orders of magnitude (bug fixed in the scorer before E2 ran; listed as P0-6 evidence)"
+    },
+    "reconciliation": {
+      "artifact_bu_rho": -0.377846,
+      "our_bu_rho": -0.377846,
+      "artifact_bl_rho": -0.555386,
+      "our_bl_rho": -0.555386,
+      "artifact_td_rho": -0.540413,
+      "our_td_rho": -0.540413,
+      "bu_vs_bl": {
+        "artifact": true,
+        "ours": 0.17754,
+        "pass": true
+      },
+      "shared_origins": 34
+    }
+  },
+  "p0_adjudications": {
+    "p0_1_directional_definition": {
+      "suspicion": "V/P < 1 is treated as predicting a negative future total return, which is economically wrong (an expensive stock can still return positively while underperforming its required return).",
+      "evidence": {
+        "e1_expensive_but_positive": {
+          "sp500": 33,
+          "nasdaq100": 29,
+          "nasdaq_composite": 34,
+          "philadelphia_semi": 16,
+          "kospi": 0
+        },
+        "e1_cheap_but_negative": {
+          "sp500": 0,
+          "nasdaq100": 0,
+          "nasdaq_composite": 0,
+          "philadelphia_semi": 0,
+          "kospi": 7
+        },
+        "e2_bottom_up_expensive_but_positive": 27,
+        "e2_bottom_up_cheap_but_negative": 0
+      },
+      "effect": "the current directional metric charges the model for correct economic behavior (holding an expensive stock that returns positively) and credits it for negative nominal returns; the agreement rate is consequently depressed and is not an economically meaningful hit rate. Alternatives (excess over rf, over Ke) are reported per index as diagnostics; redefinition is the handler's call.",
+      "adjudication": "METRIC_MISSPECIFIED"
+    },
+    "p0_2_not_literature_rim": {
+      "suspicion": "E1/E2 run with consensus:null, coverage_ok:false, b2_admitted:false — a historical-accounting B1 heuristic, not the analyst-forecast RIM of Frankel-Lee / Lee-Swaminathan / Dechow et al.",
+      "evidence": {
+        "input_flags_e1_sample": {
+          "consensus": null,
+          "coverage_ok": false,
+          "b2_admitted": false,
+          "erp_present": true,
+          "payout_consumed": false
+        },
+        "input_flags_e2": "consensus:null, coverage_ok:false, b2_admitted:false (own recompute reproduces the same inputs from the adapters/panel)",
+        "differences_table": [
+          {
+            "component": "forecast source",
+            "fenos": "none (consensus: null)",
+            "literature": "point-in-time analyst consensus FY1-FY3 EPS",
+            "judgement": "MATERIAL_DEVIATION"
+          },
+          {
+            "component": "ROE path",
+            "fenos": "historical ROE band (P25/P75 of trailing 260 weeks) + linear fade to band bound",
+            "literature": "forecast ROE path",
+            "judgement": "MATERIAL_DEVIATION"
+          },
+          {
+            "component": "book roll-forward",
+            "fenos": "observed book CAGR applied as constant growth",
+            "literature": "clean-surplus roll-forward with payout",
+            "judgement": "MATERIAL_DEVIATION"
+          },
+          {
+            "component": "payout",
+            "fenos": "excluded (b2_admitted=false)",
+            "literature": "explicit payout in clean-surplus relation",
+            "judgement": "MATERIAL_DEVIATION"
+          },
+          {
+            "component": "cost of equity",
+            "fenos": "rf + ERP band midpoint, single across constituents",
+            "literature": "firm-level cost of equity",
+            "judgement": "MATERIAL_DEVIATION"
+          },
+          {
+            "component": "terminal value",
+            "fenos": "zero-growth perpetuity / 10y fade sweep",
+            "literature": "terminal residual income with persistence",
+            "judgement": "SUPPORTABLE_APPROXIMATION"
+          },
+          {
+            "component": "residual-income persistence",
+            "fenos": "none (no other-information term)",
+            "literature": "explicit information dynamics",
+            "judgement": "MATERIAL_DEVIATION"
+          }
+        ]
+      },
+      "adjudication": "IMPLEMENTATION_IS_HISTORICAL_ACCOUNTING_HEURISTIC — E2 must be named 'historical-accounting B1 heuristic', not canonical bottom-up RIM (contract 8.1)"
+    },
+    "p0_3_baseline_truncation": {
+      "suspicion": "E2 baseline rho may be an artefact of the truncated 10y window; the artifact reported 34/34 origins truncated.",
+      "evidence": {
+        "e2_baseline_windows": {
+          "truncated_count": 18,
+          "of_origins": 34,
+          "window_years_min": 5.653662,
+          "window_years_max": 9.965777,
+          "window_rows_per_origin": [
+            {
+              "as_of": "2015-03-27",
+              "rows": 296,
+              "first": "2009-07-25",
+              "last": "2015-03-21",
+              "years": 5.653662,
+              "truncated": true
+            },
+            {
+              "as_of": "2015-06-26",
+              "rows": 309,
+              "first": "2009-07-25",
+              "last": "2015-06-20",
+              "years": 5.902806,
+              "truncated": true
+            },
+            {
+              "as_of": "2015-09-25",
+              "rows": 322,
+              "first": "2009-07-25",
+              "last": "2015-09-19",
+              "years": 6.151951,
+              "truncated": true
+            },
+            {
+              "as_of": "2015-12-25",
+              "rows": 335,
+              "first": "2009-07-25",
+              "last": "2015-12-19",
+              "years": 6.401095,
+              "truncated": true
+            },
+            {
+              "as_of": "2016-03-25",
+              "rows": 348,
+              "first": "2009-07-25",
+              "last": "2016-03-19",
+              "years": 6.65024,
+              "truncated": true
+            },
+            {
+              "as_of": "2016-06-24",
+              "rows": 361,
+              "first": "2009-07-25",
+              "last": "2016-06-18",
+              "years": 6.899384,
+              "truncated": true
+            },
+            {
+              "as_of": "2016-09-23",
+              "rows": 374,
+              "first": "2009-07-25",
+              "last": "2016-09-17",
+              "years": 7.148528,
+              "truncated": true
+            },
+            {
+              "as_of": "2016-12-23",
+              "rows": 387,
+              "first": "2009-07-25",
+              "last": "2016-12-17",
+              "years": 7.397673,
+              "truncated": true
+            },
+            {
+              "as_of": "2017-03-24",
+              "rows": 400,
+              "first": "2009-07-25",
+              "last": "2017-03-18",
+              "years": 7.646817,
+              "truncated": true
+            },
+            {
+              "as_of": "2017-06-23",
+              "rows": 413,
+              "first": "2009-07-25",
+              "last": "2017-06-17",
+              "years": 7.895962,
+              "truncated": true
+            },
+            {
+              "as_of": "2017-09-22",
+              "rows": 426,
+              "first": "2009-07-25",
+              "last": "2017-09-16",
+              "years": 8.145106,
+              "truncated": true
+            },
+            {
+              "as_of": "2017-12-22",
+              "rows": 439,
+              "first": "2009-07-25",
+              "last": "2017-12-16",
+              "years": 8.394251,
+              "truncated": true
+            },
+            {
+              "as_of": "2018-03-23",
+              "rows": 452,
+              "first": "2009-07-25",
+              "last": "2018-03-17",
+              "years": 8.643395,
+              "truncated": true
+            },
+            {
+              "as_of": "2018-06-22",
+              "rows": 465,
+              "first": "2009-07-25",
+              "last": "2018-06-16",
+              "years": 8.892539,
+              "truncated": true
+            },
+            {
+              "as_of": "2018-09-21",
+              "rows": 478,
+              "first": "2009-07-25",
+              "last": "2018-09-15",
+              "years": 9.141684,
+              "truncated": true
+            },
+            {
+              "as_of": "2018-12-21",
+              "rows": 491,
+              "first": "2009-07-25",
+              "last": "2018-12-15",
+              "years": 9.390828,
+              "truncated": true
+            },
+            {
+              "as_of": "2019-03-22",
+              "rows": 504,
+              "first": "2009-07-25",
+              "last": "2019-03-16",
+              "years": 9.639973,
+              "truncated": true
+            },
+            {
+              "as_of": "2019-06-21",
+              "rows": 517,
+              "first": "2009-07-25",
+              "last": "2019-06-15",
+              "years": 9.889117,
+              "truncated": true
+            },
+            {
+              "as_of": "2019-09-20",
+              "rows": 521,
+              "first": "2009-09-26",
+              "last": "2019-09-14",
+              "years": 9.965777,
+              "truncated": false
+            },
+            {
+              "as_of": "2019-12-20",
+              "rows": 521,
+              "first": "2009-12-26",
+              "last": "2019-12-14",
+              "years": 9.965777,
+              "truncated": false
+            },
+            {
+              "as_of": "2020-03-20",
+              "rows": 521,
+              "first": "2010-03-27",
+              "last": "2020-03-14",
+              "years": 9.965777,
+              "truncated": false
+            },
+            {
+              "as_of": "2020-06-19",
+              "rows": 521,
+              "first": "2010-06-26",
+              "last": "2020-06-13",
+              "years": 9.965777,
+              "truncated": false
+            },
+            {
+              "as_of": "2020-09-18",
+              "rows": 521,
+              "first": "2010-09-25",
+              "last": "2020-09-12",
+              "years": 9.965777,
+              "truncated": false
+            },
+            {
+              "as_of": "2020-12-18",
+              "rows": 521,
+              "first": "2010-12-25",
+              "last": "2020-12-12",
+              "years": 9.965777,
+              "truncated": false
+            },
+            {
+              "as_of": "2021-03-19",
+              "rows": 521,
+              "first": "2011-03-26",
+              "last": "2021-03-13",
+              "years": 9.965777,
+              "truncated": false
+            },
+            {
+              "as_of": "2021-06-18",
+              "rows": 521,
+              "first": "2011-06-25",
+              "last": "2021-06-12",
+              "years": 9.965777,
+              "truncated": false
+            },
+            {
+              "as_of": "2021-09-17",
+              "rows": 521,
+              "first": "2011-09-24",
+              "last": "2021-09-11",
+              "years": 9.965777,
+              "truncated": false
+            },
+            {
+              "as_of": "2021-12-17",
+              "rows": 521,
+              "first": "2011-12-24",
+              "last": "2021-12-11",
+              "years": 9.965777,
+              "truncated": false
+            },
+            {
+              "as_of": "2022-03-18",
+              "rows": 521,
+              "first": "2012-03-24",
+              "last": "2022-03-12",
+              "years": 9.965777,
+              "truncated": false
+            },
+            {
+              "as_of": "2022-06-17",
+              "rows": 521,
+              "first": "2012-06-23",
+              "last": "2022-06-11",
+              "years": 9.965777,
+              "truncated": false
+            },
+            {
+              "as_of": "2022-09-16",
+              "rows": 521,
+              "first": "2012-09-22",
+              "last": "2022-09-10",
+              "years": 9.965777,
+              "truncated": false
+            },
+            {
+              "as_of": "2022-12-16",
+              "rows": 521,
+              "first": "2012-12-22",
+              "last": "2022-12-10",
+              "years": 9.965777,
+              "truncated": false
+            },
+            {
+              "as_of": "2023-03-17",
+              "rows": 521,
+              "first": "2013-03-23",
+              "last": "2023-03-11",
+              "years": 9.965777,
+              "truncated": false
+            },
+            {
+              "as_of": "2023-06-16",
+              "rows": 521,
+              "first": "2013-06-22",
+              "last": "2023-06-10",
+              "years": 9.965777,
+              "truncated": false
+            }
+          ]
+        },
+        "degenerate_artifact_flag": "the original naiveBaselineBand truncated flag compared window[0].date > cutoff where window is filtered to rows strictly after cutoff — true by construction on a weekly grid; the artifact's '34/34 truncated' was a tautology, not a measurement. This audit measures real truncation as window_years < 9.5.",
+        "sensitivity": {
+          "full_set": {
+            "n_origins": 34,
+            "baseline_rho": -0.555386,
+            "bottom_up_rho": -0.377846
+          },
+          "windows_ge_9p5y": {
+            "n_origins": 18,
+            "baseline_rho": 0.446852,
+            "bottom_up_rho": 0.302374
+          },
+          "fixed_5y_window_all_origins": {
+            "n_origins": 34,
+            "baseline_rho": -0.435905,
+            "bottom_up_rho": -0.377846
+          }
+        },
+        "e1_baseline_windows": {
+          "sp500": {
+            "truncated_real": 19,
+            "of": 34,
+            "min_window_years": 5.232033,
+            "max_window_years": 9.984942
+          },
+          "nasdaq100": {
+            "truncated_real": 19,
+            "of": 34,
+            "min_window_years": 5.232033,
+            "max_window_years": 9.984942
+          },
+          "nasdaq_composite": {
+            "truncated_real": 19,
+            "of": 34,
+            "min_window_years": 5.232033,
+            "max_window_years": 9.984942
+          },
+          "philadelphia_semi": {
+            "truncated_real": 19,
+            "of": 34,
+            "min_window_years": 5.232033,
+            "max_window_years": 9.984942
+          },
+          "kospi": {
+            "truncated_real": 19,
+            "of": 34,
+            "min_window_years": 5.226557,
+            "max_window_years": 9.998631
+          }
+        }
+      },
+      "effect": "the E2 baseline percentile anchors are estimated from 5.7-10.0y of XBRL-era P/B data (first ~18 origins below the full 10y), and the E1 index baselines are window-limited too (5.3-10.0y, panel P/B history starts ~2009; real truncation 19/34). THE BASELINE RHO IS NOT ROBUST TO THE TRUNCATION: on the 18 origins with >= 9.5y windows (2019+), the E2 baseline rho is +0.447 and bottom-up is +0.302 — bottom-up LOSES to the baseline there, reversing the full-set 'pass' (bu -0.378 > bl -0.555). A fixed-5y window across all 34 origins keeps both negative (bl -0.436, bu -0.378), so the negative sign is not purely the varying window; the reversal on full windows is truncation- and regime-confounded (the full-window origins are the 2019-2023 rate era). E1's worse-than-baseline verdict is robust to the same check: on full-window origins the E1 baselines are 0.72-0.84 vs model 0.15-0.64 on all five indices. The frozen E2 verdict (BOTTOM_UP_PASSES) is preserved per the contract; its substance is not robust.",
+      "adjudication": "METRIC_MISSPECIFIED (E2 baseline rho is partly a truncation/regime artefact — the pass reverses on window-complete origins; verdict preserved, not re-labelled; E1 worse-than-baseline robust)"
+    },
+    "p0_4_survivorship": {
+      "suspicion": "the fixed current Dow 30 carries survivorship (and reverse survivorship for late joiners) that is common to all three methods.",
+      "evidence": {
+        "fixed_list": true,
+        "late_joiners_included_at_early_origins": [
+          "GOOGL",
+          "AMZN",
+          "NVDA",
+          "CRM",
+          "SHW"
+        ],
+        "note": "the fixed CURRENT list includes names that joined the Dow after the early origins (GOOGL/AMZN/NVDA/CRM/SHW), so the basket is not the point-in-time Dow; the bias is common to all three methods but bounds generality; results are sensitivity only (contract P0-4)."
+      },
+      "adjudication": "LIMITATION_RECORDED — sensitivity-only; no point-in-time Dow restoration attempted (contract allows fixed-basket sensitivity)"
+    },
+    "p0_5_midpoint": {
+      "suspicion": "the hull midpoint may be an unweighted average of extreme scenarios.",
+      "evidence": {
+        "e1_rho_by_endpoint": {
+          "sp500": {
+            "mid": -0.036211,
+            "low": 0.113827,
+            "high": -0.145607,
+            "log": -0.036211
+          },
+          "nasdaq100": {
+            "mid": -0.090298,
+            "low": 0.282811,
+            "high": -0.259587,
+            "log": -0.090298
+          },
+          "nasdaq_composite": {
+            "mid": 0.097021,
+            "low": 0.327731,
+            "high": -0.019099,
+            "log": 0.097021
+          },
+          "philadelphia_semi": {
+            "mid": 0.198167,
+            "low": 0.607639,
+            "high": 0.131245,
+            "log": 0.198167
+          },
+          "kospi": {
+            "mid": 0.201833,
+            "low": 0.27395,
+            "high": 0.134607,
+            "log": 0.201833
+          }
+        },
+        "e2_rho_by_endpoint": {
+          "top_down_mid": -0.540413,
+          "baseline_mid": -0.555386,
+          "baseline_low": -0.58961,
+          "baseline_high": -0.483881
+        },
+        "note": "the hull is the min/max over horizon x terminal x ROE-bound x ERP-member sweeps; the midpoint is an unweighted average of extremes by construction. Endpoint ranks are reported; the representative-value definition is the handler's call (contract P0-5)."
+      },
+      "adjudication": "CONSTRUCTION_RECORDED — midpoint is a mechanical average of sweep extremes, not an economic estimate; endpoint ranks reported"
+    },
+    "p0_6_total_return": {
+      "suspicion": "cap return + dividend yield may be an approximation.",
+      "evidence": {
+        "e2": "cap(t+36m)/cap(t) uses PIT shares at each weekly row (drifting-share cap index, no rebalancing); dividend yield = sum(per-share divs x origin shares)/cap(t0) — a static-share approximation of the true buy-and-hold return; the pre-fix units bug understated the yield by ~11 orders of magnitude (5.6e-11 vs 4-9%); corrected in the scorer before the E2 result.",
+        "e1": "dividend adjustment = price return + sum(nominal divs)/unadjusted close at origin (nominal/nominal, point-in-time); splits handled by yfinance split-adjusted closes.",
+        "dividend_yield_first_rows": [
+          {
+            "as_of": "2015-03-27",
+            "fixed": 0.087680416585066,
+            "buggy": 5.42063521567148e-11
+          },
+          {
+            "as_of": "2015-06-26",
+            "fixed": 0.08957350293772251,
+            "buggy": 5.5796759399285246e-11
+          },
+          {
+            "as_of": "2015-09-25",
+            "fixed": 0.09966854769686687,
+            "buggy": 6.261681562544991e-11
+          }
+        ]
+      },
+      "adjudication": "APPROXIMATION_DOCUMENTED — direction and magnitude reported; exact reinvestment return not computed (data: no point-in-time reinvestment schedule needed for rank metrics, which are monotone-invariant to the dividend add-on's sign but not its magnitude)"
+    },
+    "p0_7_overlapping_origins": {
+      "suspicion": "34 quarterly origins with 36m windows strongly overlap.",
+      "evidence": {
+        "e1": {
+          "sp500": {
+            "raw_n": 34,
+            "effective_n": 34,
+            "ess_denominator": 0.177064,
+            "rho_ci": {
+              "mean": 0.029652,
+              "ci_lower": -0.224946,
+              "ci_upper": 0.412701,
+              "ci_level": 0.95,
+              "n": 34,
+              "block_size_quarters": 12,
+              "reps": 2000,
+              "seed": 539363334,
+              "method": "own_moving_block_bootstrap_36m"
+            }
+          },
+          "nasdaq100": {
+            "raw_n": 34,
+            "effective_n": 34,
+            "ess_denominator": 0.205546,
+            "rho_ci": {
+              "mean": -0.11886,
+              "ci_lower": -0.626363,
+              "ci_upper": 0.574481,
+              "ci_level": 0.95,
+              "n": 34,
+              "block_size_quarters": 12,
+              "reps": 2000,
+              "seed": 539363334,
+              "method": "own_moving_block_bootstrap_36m"
+            }
+          },
+          "nasdaq_composite": {
+            "raw_n": 34,
+            "effective_n": 34,
+            "ess_denominator": 0.231582,
+            "rho_ci": {
+              "mean": 0.066828,
+              "ci_lower": -0.495402,
+              "ci_upper": 0.810194,
+              "ci_level": 0.95,
+              "n": 34,
+              "block_size_quarters": 12,
+              "reps": 2000,
+              "seed": 539363334,
+              "method": "own_moving_block_bootstrap_36m"
+            }
+          },
+          "philadelphia_semi": {
+            "raw_n": 34,
+            "effective_n": 34,
+            "ess_denominator": 0.50745,
+            "rho_ci": {
+              "mean": 0.108412,
+              "ci_lower": -0.117368,
+              "ci_upper": 0.591642,
+              "ci_level": 0.95,
+              "n": 34,
+              "block_size_quarters": 12,
+              "reps": 2000,
+              "seed": 539363334,
+              "method": "own_moving_block_bootstrap_36m"
+            }
+          },
+          "kospi": {
+            "raw_n": 34,
+            "effective_n": 26.075101,
+            "ess_denominator": 1.303926,
+            "rho_ci": {
+              "mean": 0.43441,
+              "ci_lower": 0.155358,
+              "ci_upper": 0.739171,
+              "ci_level": 0.95,
+              "n": 34,
+              "block_size_quarters": 12,
+              "reps": 2000,
+              "seed": 539363334,
+              "method": "own_moving_block_bootstrap_36m"
+            }
+          }
+        },
+        "e2": {
+          "raw_n": 34,
+          "effective_n": 21.31926,
+          "ess_denominator": 1.594802,
+          "bu_rho_ci": {
+            "mean": -0.138205,
+            "ci_lower": -0.771534,
+            "ci_upper": 0.443796,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "bl_rho_ci": {
+            "mean": -0.289709,
+            "ci_lower": -0.739491,
+            "ci_upper": 0.583615,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          },
+          "td_rho_ci": {
+            "mean": -0.264433,
+            "ci_lower": -0.715991,
+            "ci_upper": 0.309816,
+            "ci_level": 0.95,
+            "n": 34,
+            "block_size_quarters": 12,
+            "reps": 2000,
+            "seed": 539363334,
+            "method": "own_moving_block_bootstrap_36m"
+          }
+        }
+      },
+      "effect": "the block-bootstrap CIs on every rho straddle 0 broadly (e.g. E2 bottom-up [-0.77, +0.44]); raw n is 34 but effective n is ~30+; the CIs do not support calling any relationship statistically distinguishable from zero, positive or negative.",
+      "adjudication": "METRIC_MISSPECIFIED (pass/fail language on point estimates whose CIs straddle zero) — raw n reported beside effective n per contract"
+    }
+  },
+  "reconciliation": {
+    "max_abs_rho_delta_vs_artifact": 0,
+    "e1_rho_deltas": [
+      {
+        "index": "sp500",
+        "delta": 0
+      },
+      {
+        "index": "nasdaq100",
+        "delta": 0
+      },
+      {
+        "index": "nasdaq_composite",
+        "delta": 0
+      },
+      {
+        "index": "philadelphia_semi",
+        "delta": 0
+      },
+      {
+        "index": "kospi",
+        "delta": 0
+      }
+    ],
+    "e2_rho_deltas": [
+      {
+        "method": "bottom_up",
+        "delta": 0
+      },
+      {
+        "method": "baseline",
+        "delta": 0
+      },
+      {
+        "method": "top_down",
+        "delta": 0
+      }
+    ],
+    "note": "deltas <= 0.01 => the artifacts compute what their code says; metric soundness is judged separately"
+  },
+  "constraints": {
+    "quarantine": "KEEP_QUARANTINED",
+    "promotion": "none",
+    "ui": "none",
+    "deploy": "none",
+    "commit": "none",
+    "fifth_experiment": "none"
+  },
+  "generated_at": "2026-08-06T08:08:55.699Z",
+  "audit_sha256": "623c25b196d432303d39ffdac863a7c4623fded9001b3e53b8cc7704205d3ba7"
+}
