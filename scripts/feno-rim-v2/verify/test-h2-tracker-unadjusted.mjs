@@ -26,19 +26,38 @@ assert.equal(tracker.price_start, "2025-07-24", "history_1y start date untouched
 assert.equal(tracker.price_end, "2026-08-05", "history_1y end date untouched");
 assert.equal(tracker.div_start, "2016-09-16", "dividend leg untouched");
 assert.equal(tracker.dividends.length, 40, "dividend count untouched");
-// The unadjusted sibling does not exist yet (no fetch run; additive-only):
-// the harness must keep the bias path, never fall back to the adjusted close.
-assert.equal(tracker.unadjusted.file_exists, false, "unadjusted leg absent today");
-assert.equal(tracker.unadjusted.identity_ok, false, "unadjusted identity fails when absent");
+// The unadjusted sibling now EXISTS (approved fetch ran): full history,
+// identity passes, and the adjusted leg above is untouched by its presence.
+assert.equal(tracker.unadjusted.file_exists, true, "unadjusted leg exists after the approved fetch");
+assert.equal(tracker.unadjusted.identity_ok, true, "unadjusted identity passes");
+assert.ok(tracker.unadjusted.prices.length > 5000, "unadjusted leg is long (full history)");
+assert.equal(tracker.unadjusted.price_start, "1993-01-29", "unadjusted leg reaches SPY inception");
+assert.equal(tracker.unadjusted.price_end, "2026-08-05", "unadjusted leg is current");
 
+// Real-data branch A: a 2019 origin now has full dividend coverage (trailing
+// reach 2016-09, horizon within the 2026-06 dividend tail) and an unadjusted
+// close at the origin, so the adjustment succeeds — no bias label.
 const realOrigin = {
-  t0ms: parseDateMs("2015-01-02"),
-  t1ms: addMonthsMs(parseDateMs("2015-01-02"), 36),
+  t0ms: parseDateMs("2019-01-02"),
+  t1ms: addMonthsMs(parseDateMs("2019-01-02"), 36),
   priceReturn: 0.1,
 };
 const realAdj = dividendAdjustment(realOrigin, tracker);
-assert.equal(realAdj.bias, "dividend_series_absent", "no unadjusted leg => bias path on real data");
-assert.equal(realAdj.dividend_adjusted_return, null, "no silent fallback to the adjusted close");
+assert.equal(realAdj.bias, null, "real-data branch A: adjustment succeeds");
+assert.ok(Number.isFinite(realAdj.dividend_adjusted_return), "real-data branch A: adjusted return is finite");
+// Exact trace: the add-on must equal the repo dividends inside the horizon
+// divided by the repo's unadjusted close at the origin (nominal over nominal).
+const divSum = tracker.dividends
+  .filter((row) => row.ms > realOrigin.t0ms && row.ms <= realOrigin.t1ms)
+  .reduce((s, row) => s + row.amount, 0);
+const unadjAtOrigin = tracker.unadjusted.prices
+  .filter((row) => row.ms <= realOrigin.t0ms)
+  .at(-1);
+assert.ok(unadjAtOrigin && realOrigin.t0ms - unadjAtOrigin.ms <= 45 * 86_400_000, "unadjusted close fresh at origin");
+assert.ok(
+  Math.abs(realAdj.dividend_adjusted_return - (0.1 + divSum / unadjAtOrigin.close)) < 1e-6,
+  "real-data add-on = nominal dividends / nominal unadjusted close (harness rounds to 1e-6)",
+);
 
 // --- 2. both branches of the new denominator (synthetic tracker) ------------
 
