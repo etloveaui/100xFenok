@@ -1,0 +1,49 @@
+{
+  "schema_version": "feno_rim_v2_x3_success_criteria.v1",
+  "frozen_pre_result": true,
+  "freeze_policy": "frozen from the contract alone (section 6 X3 + section 10 anti-loop); no X3 model output computed or consumed at freeze time",
+  "contract_ref": "docs/analysis/yoo-rim-audit/FINAL_FENO_RIM_RESOLUTION_MASTER_PROMPT_QWEN_DEEPSEEK_KR.md section 6 (X3), section 9 (final decision), section 10 (anti-loop)",
+  "handler": "cc",
+  "scope": {
+    "basket": "fixed Dow 30 list, identical to E2 — same basket, same origins, so X3 is comparable to E1/E2 rather than a new universe",
+    "origins": "the same 34 quarterly origins as E1/E2",
+    "primary_metric": "Spearman rank correlation of origin V/P against the subsequent 36-month annualised dividend-adjusted total return",
+    "origin_sets": [
+      "all_34",
+      "window_complete_18 — the subset X0 proved is not truncation-confounded; reported for both arms because a verdict on the confounded set alone would inherit the confound"
+    ]
+  },
+  "success_bar": {
+    "rule": "an arm SUCCEEDS when its Spearman rho is positive AND its block-bootstrap 95% CI excludes zero, on the window_complete_18 set",
+    "rho_must_be": "> 0",
+    "ci_must": "exclude zero",
+    "decisive_origin_set": "window_complete_18",
+    "all_34_role": "reported and required to be non-contradictory: an arm whose all_34 rho is negative while window_complete_18 is positive is recorded as REGIME_DEPENDENT rather than a clean success",
+    "why_positive_is_required": "E2's frozen rule required only beating the baseline and never required a positive relationship, so 'less negative' satisfied it. That gap is not repeated here."
+  },
+  "decision_matrix": {
+    "oracle_pass_deployable_pass": "DATA_AND_FORMULA_BOTH_VIABLE",
+    "oracle_pass_deployable_fail": "POINT_IN_TIME_FORECAST_DATA_IS_THE_BINDING_CONSTRAINT",
+    "oracle_fail_deployable_fail": "RIM_STRUCTURE_UNSUITED_TO_THE_TARGET",
+    "oracle_fail_deployable_pass": "IMPLEMENTATION_ERROR_SUSPECTED_REVERIFY"
+  },
+  "arms": {
+    "oracle": {
+      "definition": "residual income path built from REALISED future book and earnings drawn from EDGAR filings dated after the origin — explicit look-ahead",
+      "never": "never a production input; never promoted; measures the formula's ceiling only",
+      "lookahead_is_intentional": true
+    },
+    "deployable": {
+      "definition": "strictly facts filed on or before the origin, earliest filed value per fiscal period so restatements cannot leak backwards, plus a pre-declared mean-reversion rule for the forward path",
+      "mean_reversion_rule": "ROE fades linearly from the origin's trailing realised ROE toward the constituent's own trailing 5-year median ROE over the forecast horizon; declared here, before any result, and not tuned afterwards",
+      "no_consensus_available": "the repo holds no per-constituent analyst consensus; per contract section 6 the deployable arm therefore uses historical actuals plus the stated rule, and the limitation is disclosed rather than worked around"
+    }
+  },
+  "anti_loop": {
+    "no_fifth_experiment": true,
+    "no_threshold_movement_after_results": true,
+    "prior_verdicts_preserved": true,
+    "representative_value": "V is the hull midpoint, unchanged from E1/E2 — X0 showed the endpoints disagree (sp500 mid -0.036, low +0.114, high -0.146) and switching after seeing that would be fitting to result"
+  },
+  "criteria_sha256": "d9b7fbbc7c1377fec66bde6bac465eb0fd06253657c3aefc673ba771d9458ddd"
+}

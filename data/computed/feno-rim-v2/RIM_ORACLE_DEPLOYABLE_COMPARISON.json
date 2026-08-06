@@ -1,0 +1,419 @@
+{
+  "schema_version": "feno_rim_v2_x3_oracle_deployable.v1",
+  "phase": "X3",
+  "contract_ref": "docs/analysis/yoo-rim-audit/FINAL_FENO_RIM_RESOLUTION_MASTER_PROMPT_QWEN_DEEPSEEK_KR.md section 6 (X3), section 9 (final decision), section 10 (anti-loop)",
+  "research_only": true,
+  "promotion": null,
+  "criteria_sha256": "d9b7fbbc7c1377fec66bde6bac465eb0fd06253657c3aefc673ba771d9458ddd",
+  "lookahead_disclosure": "the oracle arm uses realised post-origin filings on purpose; it is never a production input and measures the formula's ceiling only",
+  "basket": {
+    "name": "Dow Jones Industrial Average (current constituents, fixed list)",
+    "source": "data/slickcharts/dowjones.json (updated 2026-08-01, count 30)",
+    "symbols": [
+      "GS",
+      "CAT",
+      "MSFT",
+      "UNH",
+      "AMGN",
+      "TRV",
+      "V",
+      "GOOGL",
+      "JPM",
+      "SHW",
+      "AXP",
+      "HD",
+      "AAPL",
+      "AMZN",
+      "MCD",
+      "JNJ",
+      "HON",
+      "IBM",
+      "BA",
+      "NVDA",
+      "CVX",
+      "CRM",
+      "MMM",
+      "PG",
+      "MRK",
+      "CSCO",
+      "WMT",
+      "DIS",
+      "KO",
+      "NKE"
+    ],
+    "fixed_list": true,
+    "survivorship_caveat": "a fixed constituent list carries survivorship bias; all three methods share the identical basket, so the bias is common to all three and the comparison stays fair — but the basket is not a clean index and the caveat bounds what E2 can conclude"
+  },
+  "horizon_years": 3,
+  "terminal_years": 10,
+  "origin_rows": [
+    {
+      "as_of": "2015-03-27",
+      "ke": 0.077,
+      "members_oracle": 24,
+      "members_deployable": 27,
+      "vp_oracle": 0.573819,
+      "vp_deployable": 0.718247,
+      "return_annualised": 0.108324,
+      "window_complete": false
+    },
+    {
+      "as_of": "2015-06-26",
+      "ke": 0.0824,
+      "members_oracle": 24,
+      "members_deployable": 27,
+      "vp_oracle": 0.566664,
+      "vp_deployable": 0.706794,
+      "return_annualised": 0.129397,
+      "window_complete": false
+    },
+    {
+      "as_of": "2015-09-25",
+      "ke": 0.0792,
+      "members_oracle": 24,
+      "members_deployable": 27,
+      "vp_oracle": 0.668178,
+      "vp_deployable": 0.77728,
+      "return_annualised": 0.200011,
+      "window_complete": false
+    },
+    {
+      "as_of": "2015-12-25",
+      "ke": 0.08,
+      "members_oracle": 24,
+      "members_deployable": 27,
+      "vp_oracle": 0.628671,
+      "vp_deployable": 0.735304,
+      "return_annualised": 0.119324,
+      "window_complete": false
+    },
+    {
+      "as_of": "2016-03-25",
+      "ke": 0.0766,
+      "members_oracle": 24,
+      "members_deployable": 27,
+      "vp_oracle": 0.629817,
+      "vp_deployable": 0.739936,
+      "return_annualised": 0.154597,
+      "window_complete": false
+    },
+    {
+      "as_of": "2016-06-24",
+      "ke": 0.0732,
+      "members_oracle": 24,
+      "members_deployable": 27,
+      "vp_oracle": 0.639857,
+      "vp_deployable": 0.745487,
+      "return_annualised": 0.180682,
+      "window_complete": false
+    },
+    {
+      "as_of": "2016-09-23",
+      "ke": 0.0787,
+      "members_oracle": 24,
+      "members_deployable": 27,
+      "vp_oracle": 0.60679,
+      "vp_deployable": 0.709336,
+      "return_annualised": 0.185716,
+      "window_complete": false
+    },
+    {
+      "as_of": "2016-12-23",
+      "ke": 0.088,
+      "members_oracle": 22,
+      "members_deployable": 25,
+      "vp_oracle": 0.56162,
+      "vp_deployable": 0.644785,
+      "return_annualised": 0.193311,
+      "window_complete": false
+    },
+    {
+      "as_of": "2017-03-24",
+      "ke": 0.0809,
+      "members_oracle": 21,
+      "members_deployable": 25,
+      "vp_oracle": 0.539471,
+      "vp_deployable": 0.632536,
+      "return_annualised": 0.064266,
+      "window_complete": false
+    },
+    {
+      "as_of": "2017-06-23",
+      "ke": 0.0784,
+      "members_oracle": 21,
+      "members_deployable": 25,
+      "vp_oracle": 0.540279,
+      "vp_deployable": 0.664734,
+      "return_annualised": 0.155704,
+      "window_complete": false
+    },
+    {
+      "as_of": "2017-09-22",
+      "ke": 0.0795,
+      "members_oracle": 21,
+      "members_deployable": 24,
+      "vp_oracle": 0.562159,
+      "vp_deployable": 0.616497,
+      "return_annualised": 0.160396,
+      "window_complete": false
+    },
+    {
+      "as_of": "2017-12-22",
+      "ke": 0.0817,
+      "members_oracle": 21,
+      "members_deployable": 25,
+      "vp_oracle": 0.530326,
+      "vp_deployable": 0.562339,
+      "return_annualised": 0.244512,
+      "window_complete": false
+    },
+    {
+      "as_of": "2018-03-23",
+      "ke": 0.079,
+      "members_oracle": 21,
+      "members_deployable": 25,
+      "vp_oracle": 0.579049,
+      "vp_deployable": 0.585388,
+      "return_annualised": 0.249154,
+      "window_complete": false
+    },
+    {
+      "as_of": "2018-06-22",
+      "ke": 0.0798,
+      "members_oracle": 21,
+      "members_deployable": 25,
+      "vp_oracle": 0.57304,
+      "vp_deployable": 0.580432,
+      "return_annualised": 0.271376,
+      "window_complete": false
+    },
+    {
+      "as_of": "2018-09-21",
+      "ke": 0.0815,
+      "members_oracle": 21,
+      "members_deployable": 24,
+      "vp_oracle": 0.563874,
+      "vp_deployable": 0.485483,
+      "return_annualised": 0.277169,
+      "window_complete": false
+    },
+    {
+      "as_of": "2018-12-21",
+      "ke": 0.0787,
+      "members_oracle": 21,
+      "members_deployable": 24,
+      "vp_oracle": 0.635992,
+      "vp_deployable": 0.551176,
+      "return_annualised": 0.33891,
+      "window_complete": false
+    },
+    {
+      "as_of": "2019-03-22",
+      "ke": 0.084,
+      "members_oracle": 21,
+      "members_deployable": 25,
+      "vp_oracle": 0.546078,
+      "vp_deployable": 0.775728,
+      "return_annualised": 0.295224,
+      "window_complete": true
+    },
+    {
+      "as_of": "2019-06-21",
+      "ke": 0.0803,
+      "members_oracle": 20,
+      "members_deployable": 24,
+      "vp_oracle": 0.532948,
+      "vp_deployable": 1.124431,
+      "return_annualised": 0.207317,
+      "window_complete": true
+    },
+    {
+      "as_of": "2019-09-20",
+      "ke": 0.077,
+      "members_oracle": 20,
+      "members_deployable": 23,
+      "vp_oracle": 0.558073,
+      "vp_deployable": 0.508327,
+      "return_annualised": 0.292328,
+      "window_complete": true
+    },
+    {
+      "as_of": "2019-12-20",
+      "ke": 0.0788,
+      "members_oracle": 20,
+      "members_deployable": 23,
+      "vp_oracle": 0.512574,
+      "vp_deployable": 0.470193,
+      "return_annualised": 0.250425,
+      "window_complete": true
+    },
+    {
+      "as_of": "2020-12-18",
+      "ke": 0.0615,
+      "members_oracle": 21,
+      "members_deployable": 24,
+      "vp_oracle": 0.491086,
+      "vp_deployable": 0.425405,
+      "return_annualised": 0.216106,
+      "window_complete": true
+    },
+    {
+      "as_of": "2021-03-19",
+      "ke": 0.0646,
+      "members_oracle": 22,
+      "members_deployable": 25,
+      "vp_oracle": 0.511602,
+      "vp_deployable": 0.408636,
+      "return_annualised": 0.221662,
+      "window_complete": true
+    },
+    {
+      "as_of": "2021-06-18",
+      "ke": 0.0617,
+      "members_oracle": 22,
+      "members_deployable": 25,
+      "vp_oracle": 0.488751,
+      "vp_deployable": 0.398719,
+      "return_annualised": 0.229622,
+      "window_complete": true
+    },
+    {
+      "as_of": "2021-09-17",
+      "ke": 0.0609,
+      "members_oracle": 22,
+      "members_deployable": 25,
+      "vp_oracle": 0.469402,
+      "vp_deployable": 0.398414,
+      "return_annualised": 0.265842,
+      "window_complete": true
+    },
+    {
+      "as_of": "2021-12-17",
+      "ke": 0.0613,
+      "members_oracle": 22,
+      "members_deployable": 25,
+      "vp_oracle": 0.430558,
+      "vp_deployable": 0.39909,
+      "return_annualised": 0.264224,
+      "window_complete": true
+    },
+    {
+      "as_of": "2022-03-18",
+      "ke": 0.0638,
+      "members_oracle": 22,
+      "members_deployable": 25,
+      "vp_oracle": 0.545714,
+      "vp_deployable": 0.484133,
+      "return_annualised": 0.273146,
+      "window_complete": true
+    },
+    {
+      "as_of": "2022-06-17",
+      "ke": 0.0749,
+      "members_oracle": 21,
+      "members_deployable": 24,
+      "vp_oracle": 0.56894,
+      "vp_deployable": 0.486502,
+      "return_annualised": 0.332512,
+      "window_complete": true
+    },
+    {
+      "as_of": "2022-09-16",
+      "ke": 0.0769,
+      "members_oracle": 21,
+      "members_deployable": 25,
+      "vp_oracle": 0.411121,
+      "vp_deployable": 0.345802,
+      "return_annualised": 0.261266,
+      "window_complete": true
+    },
+    {
+      "as_of": "2022-12-16",
+      "ke": 0.0772,
+      "members_oracle": 20,
+      "members_deployable": 25,
+      "vp_oracle": 0.387011,
+      "vp_deployable": 0.392784,
+      "return_annualised": 0.321858,
+      "window_complete": true
+    }
+  ],
+  "origin_sets": {
+    "all_origins": {
+      "n": 29,
+      "oracle": {
+        "spearman_rho": -0.268473,
+        "rho_ci": {
+          "mean": -0.115166,
+          "ci_lower": -0.564938,
+          "ci_upper": 0.535573,
+          "ci_level": 0.95,
+          "n": 29,
+          "reps": 2000,
+          "block_size_quarters": 12,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "n": 29
+      },
+      "deployable": {
+        "spearman_rho": -0.548768,
+        "rho_ci": {
+          "mean": -0.425085,
+          "ci_lower": -0.712805,
+          "ci_upper": 0.176004,
+          "ci_level": 0.95,
+          "n": 29,
+          "reps": 2000,
+          "block_size_quarters": 12,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "n": 29
+      }
+    },
+    "window_complete": {
+      "n": 13,
+      "oracle": {
+        "spearman_rho": 0.230769,
+        "rho_ci": {
+          "mean": 0.228262,
+          "ci_lower": -0.030303,
+          "ci_upper": 0.449036,
+          "ci_level": 0.95,
+          "n": 13,
+          "reps": 2000,
+          "block_size_quarters": 12,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "n": 13
+      },
+      "deployable": {
+        "spearman_rho": 0.032967,
+        "rho_ci": {
+          "mean": 0.03596,
+          "ci_lower": -0.261708,
+          "ci_upper": 0.322314,
+          "ci_level": 0.95,
+          "n": 13,
+          "reps": 2000,
+          "block_size_quarters": 12,
+          "seed": 539363334,
+          "method": "moving_block_bootstrap_36m"
+        },
+        "n": 13
+      }
+    }
+  },
+  "verdict": {
+    "decisive_origin_set": "window_complete",
+    "oracle_passes": false,
+    "deployable_passes": false,
+    "matrix_key": "oracle_fail_deployable_fail",
+    "conclusion": "RIM_STRUCTURE_UNSUITED_TO_THE_TARGET",
+    "bar": "an arm SUCCEEDS when its Spearman rho is positive AND its block-bootstrap 95% CI excludes zero, on the window_complete_18 set"
+  },
+  "generated_at": "2026-08-06T09:34:57.299Z",
+  "scoring_sha256": "920faa1e3ae7fab8bfa0a9037fbe1edd09b460f6f09425a7a095fd046cb2450f"
+}
