@@ -12,6 +12,20 @@
       "run_id": "30711924670",
       "schedule": "",
       "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for CZAR despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 325,
+      "natural": true,
+      "observed_at": "2026-08-07T19:09:09Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31210066712",
+      "schedule": "7 18 * * 0-5",
+      "shard": "69/72"
     }
   ],
   "current": {
@@ -27,16 +41,29 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "error": "ValueError: quote_as_of is unavailable for CZAR despite available history",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 572,
+    "latency_ms": 325,
     "natural": true,
-    "observed_at": "2026-08-01T18:35:05Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-07T19:09:09Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "30711924670",
-    "schedule": "",
-    "shard": "3/6"
+    "run_id": "31210066712",
+    "schedule": "7 18 * * 0-5",
+    "shard": "69/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for CZAR despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-07T19:09:09Z",
+    "run_attempt": 1,
+    "run_id": "31210066712"
   },
   "lkg": {
     "fetched_at": "2026-08-01T18:36:55Z",
@@ -72,5 +99,5 @@
     "source_as_of": "2026-07-28T20:00:00Z"
   },
   "ticker": "CZAR",
-  "updated_at": "2026-08-06T00:14:28Z"
+  "updated_at": "2026-08-07T19:09:09Z"
 }

@@ -26,41 +26,44 @@
       "run_id": "30711923637",
       "schedule": "",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 454,
+      "natural": true,
+      "observed_at": "2026-08-07T19:09:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31210066712",
+      "schedule": "7 18 * * 0-5",
+      "shard": "69/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-01T23:59:56Z",
-    "history_as_of": "2026-06-30",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/RIZE.json",
-    "payload_sha256": "5aca5f721f248a1db07b09e0ed38df33e68cf122f66970aa751fc3c7bf3c8e2c",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-30"
+    "fetched_at": "2026-08-07T19:10:11Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/RIZE.json",
+    "payload_sha256": "dce3af64dffa24ad99b3bb01d15ca71f7ab9a116949eb8a8cdba369e11bfbd28",
+    "quote_as_of": "2026-08-07T14:45:01Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_requires_schedule",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 503,
+    "latency_ms": 454,
     "natural": true,
-    "observed_at": "2026-08-01T18:28:23Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-07T19:09:09Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711923637",
-    "schedule": "",
-    "shard": "2/6"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-01T18:28:23Z",
-    "provider_history_as_of": "2026-07-31",
-    "provider_quote_as_of": "2026-07-22T14:46:42Z",
-    "reason": "recovery_requires_schedule",
-    "run_attempt": 1,
-    "run_id": "30711923637"
+    "run_id": "31210066712",
+    "schedule": "7 18 * * 0-5",
+    "shard": "69/72"
   },
   "lkg": {
     "fetched_at": "2026-07-01T23:59:56Z",
@@ -70,8 +73,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-30"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-07T19:09:09Z",
+    "payload_sha256": "c9fe07cdc0a96a8d9afb0e1ba788b79e99e7405d193386ca330c2ceca2a0fa1e",
+    "quote_as_of": "2026-08-07T14:45:01Z",
+    "run_attempt": 1,
+    "run_id": "31210066712",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-07"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -84,5 +99,5 @@
     "source_as_of": "2026-06-30"
   },
   "ticker": "RIZE",
-  "updated_at": "2026-08-01T18:28:23Z"
+  "updated_at": "2026-08-07T19:09:09Z"
 }

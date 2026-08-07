@@ -26,41 +26,44 @@
       "run_id": "30711923637",
       "schedule": "",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 558,
+      "natural": true,
+      "observed_at": "2026-08-07T19:09:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31210066712",
+      "schedule": "7 18 * * 0-5",
+      "shard": "69/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T00:34:20Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/QETH.json",
-    "payload_sha256": "b9bdaf8e29c8c2249c783da8c5486b892e894c3a80317431a0c7ab31c209dc26",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-08-07T19:09:47Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/QETH.json",
+    "payload_sha256": "dfcef9ad4c6f6be5764926969d4fc9f4670a20e0f781a72974354558021dcb32",
+    "quote_as_of": "2026-08-07T18:53:40Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_requires_schedule",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 765,
+    "latency_ms": 558,
     "natural": true,
-    "observed_at": "2026-08-01T18:28:23Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-07T19:09:09Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711923637",
-    "schedule": "",
-    "shard": "2/6"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-01T18:28:23Z",
-    "provider_history_as_of": "2026-07-31",
-    "provider_quote_as_of": "2026-07-31T19:59:06Z",
-    "reason": "recovery_requires_schedule",
-    "run_attempt": 1,
-    "run_id": "30711923637"
+    "run_id": "31210066712",
+    "schedule": "7 18 * * 0-5",
+    "shard": "69/72"
   },
   "lkg": {
     "fetched_at": "2026-06-30T00:34:20Z",
@@ -70,8 +73,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-07T19:09:09Z",
+    "payload_sha256": "f60def68503aecd98002a91ae1658a37742bc25b247286b5ca9f6902997533a0",
+    "quote_as_of": "2026-08-07T18:53:40Z",
+    "run_attempt": 1,
+    "run_id": "31210066712",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-07"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -84,5 +99,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "QETH",
-  "updated_at": "2026-08-01T18:28:23Z"
+  "updated_at": "2026-08-07T19:09:09Z"
 }

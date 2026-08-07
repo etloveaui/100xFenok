@@ -26,41 +26,44 @@
       "run_id": "30711923637",
       "schedule": "",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 384,
+      "natural": true,
+      "observed_at": "2026-08-07T19:09:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31210066712",
+      "schedule": "7 18 * * 0-5",
+      "shard": "69/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T09:23:38Z",
-    "history_as_of": "2026-07-08",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/PRXI.json",
-    "payload_sha256": "e8acc0a0a4f3ac5d3c4c29a69a6ed5bc3494d7d3768dae33433d0b3b5daa3013",
-    "quote_as_of": "2026-07-07T19:51:32Z",
-    "source_as_of": "2026-07-07T19:51:32Z"
+    "fetched_at": "2026-08-07T19:09:35Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/PRXI.json",
+    "payload_sha256": "6fce165350277db22c8e01b2bd11414227da16ce1e3199b232b971fd613ef014",
+    "quote_as_of": "2026-08-07T13:46:08Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_requires_schedule",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 468,
+    "latency_ms": 384,
     "natural": true,
-    "observed_at": "2026-08-01T18:28:23Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-07T19:09:09Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711923637",
-    "schedule": "",
-    "shard": "2/6"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-01T18:28:23Z",
-    "provider_history_as_of": "2026-07-31",
-    "provider_quote_as_of": "2026-07-30T14:04:44Z",
-    "reason": "recovery_requires_schedule",
-    "run_attempt": 1,
-    "run_id": "30711923637"
+    "run_id": "31210066712",
+    "schedule": "7 18 * * 0-5",
+    "shard": "69/72"
   },
   "lkg": {
     "fetched_at": "2026-07-09T09:23:38Z",
@@ -70,8 +73,20 @@
     "quote_as_of": "2026-07-07T19:51:32Z",
     "source_as_of": "2026-07-07T19:51:32Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-07T19:09:09Z",
+    "payload_sha256": "59d116f04b65bc444e1c86e771b9024082f1de18983d6ba48ecc50d536b58b0b",
+    "quote_as_of": "2026-08-07T13:46:08Z",
+    "run_attempt": 1,
+    "run_id": "31210066712",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-07"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -84,5 +99,5 @@
     "source_as_of": "2026-07-07T19:51:32Z"
   },
   "ticker": "PRXI",
-  "updated_at": "2026-08-01T18:28:23Z"
+  "updated_at": "2026-08-07T19:09:09Z"
 }

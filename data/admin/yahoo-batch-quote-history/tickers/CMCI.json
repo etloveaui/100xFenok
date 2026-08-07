@@ -12,31 +12,44 @@
       "run_id": "30711924670",
       "schedule": "",
       "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 478,
+      "natural": true,
+      "observed_at": "2026-08-07T19:09:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31210066712",
+      "schedule": "7 18 * * 0-5",
+      "shard": "69/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T18:36:28Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CMCI.json",
-    "payload_sha256": "d74a366bb13a7cda17ed6c1f04be3629a22dea10d8c2bad6ce2251cd13db9912",
-    "quote_as_of": "2026-07-20T19:58:15Z",
-    "source_as_of": "2026-07-20T19:58:15Z"
+    "fetched_at": "2026-08-07T19:10:24Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/CMCI.json",
+    "payload_sha256": "57dc102836221f2fbe6b1948de1c35dbaa2cc930417abe933b7ce9022b5f7442",
+    "quote_as_of": "2026-08-07T15:50:12Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 572,
+    "latency_ms": 478,
     "natural": true,
-    "observed_at": "2026-08-01T18:35:05Z",
+    "observed_at": "2026-08-07T19:09:09Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711924670",
-    "schedule": "",
-    "shard": "3/6"
+    "run_id": "31210066712",
+    "schedule": "7 18 * * 0-5",
+    "shard": "69/72"
   },
   "lkg": {
     "fetched_at": "2026-08-01T18:36:28Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T18:35:05Z",
-    "payload_sha256": "07e9de61aa2a7e06e9f494e8c77eb8f296b980f21a2d8eba3a537f9f3f69f95a",
-    "quote_as_of": "2026-07-20T19:58:15Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-07T19:09:09Z",
+    "payload_sha256": "aad0b003ad906d40d89d9c753463851e1bf18a0385fa77a6fa61bf2d2c0e132f",
+    "quote_as_of": "2026-08-07T15:50:12Z",
     "run_attempt": 1,
-    "run_id": "30711924670",
+    "run_id": "31210066712",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20T19:58:15Z"
+    "source_as_of": "2026-08-07"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-20T19:58:15Z"
   },
   "ticker": "CMCI",
-  "updated_at": "2026-08-01T18:41:58Z"
+  "updated_at": "2026-08-07T19:09:09Z"
 }

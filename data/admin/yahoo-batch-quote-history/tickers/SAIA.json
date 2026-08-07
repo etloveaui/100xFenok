@@ -2,26 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for SAIA despite available history",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 30586,
-      "natural": true,
-      "observed_at": "2026-07-23T00:56:37Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "29968542251",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 713,
@@ -188,32 +168,45 @@
       "run_id": "31138989349",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 479,
+      "natural": true,
+      "observed_at": "2026-08-07T19:09:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31210066712",
+      "schedule": "7 18 * * 0-5",
+      "shard": "69/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T00:16:01Z",
-    "history_as_of": "2026-08-06",
+    "fetched_at": "2026-08-07T19:12:32Z",
+    "history_as_of": "2026-08-07",
     "path": "data/yf/finance/SAIA.json",
-    "payload_sha256": "5e4c2675349de7be121daf0733f03e508203d0ff7ca3719e3e6d5360e6005ce8",
-    "quote_as_of": "2026-08-06T20:00:00Z",
-    "source_as_of": "2026-08-06"
+    "payload_sha256": "7043e1c92cd1717c522b9f495c9f6117707830d5d71a7c0243b0f0fdfe2e2e56",
+    "quote_as_of": "2026-08-07T19:12:15Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 479,
     "natural": true,
-    "observed_at": "2026-08-07T01:46:07Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-07T19:09:09Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31138989349",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "31210066712",
+    "schedule": "7 18 * * 0-5",
+    "shard": "69/72"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -244,14 +237,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T00:12:01Z",
-    "payload_sha256": "cf0b1ac7256a309b6450889097b7ebfaefddb27b77d7694a47004c4041a43906",
-    "quote_as_of": "2026-08-06T20:00:00Z",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-07T19:09:09Z",
+    "payload_sha256": "0cca264c5397fa12da8277c955570eed13061e3d3593e156bbffa09ae562dc7f",
+    "quote_as_of": "2026-08-07T19:12:15Z",
     "run_attempt": 1,
-    "run_id": "31133672903",
+    "run_id": "31210066712",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-06"
+    "source_as_of": "2026-08-07"
   },
   "recovered_at": "2026-07-24T00:27:41Z",
   "recovered_from_run_id": "29968542251",
@@ -262,5 +255,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "SAIA",
-  "updated_at": "2026-08-07T01:46:07Z"
+  "updated_at": "2026-08-07T19:09:09Z"
 }
