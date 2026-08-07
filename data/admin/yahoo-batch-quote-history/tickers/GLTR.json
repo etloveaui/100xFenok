@@ -25,15 +25,28 @@
       "run_id": "30224292652",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 636,
+      "natural": true,
+      "observed_at": "2026-08-07T04:33:03Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31147671265",
+      "schedule": "7 2 * * 0-5",
+      "shard": "61/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-26T23:04:02Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GLTR.json",
-    "payload_sha256": "ce37507e2a88c73a8bf4f9be33bac792bb7493b502eec2f130feacc5c53fcb47",
-    "quote_as_of": "2026-07-24T19:59:51Z",
-    "source_as_of": "2026-07-24"
+    "fetched_at": "2026-08-07T04:33:49Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/GLTR.json",
+    "payload_sha256": "559001969d99aa068adeb49d1406b38c0c7281cc68ac91a474311b9e8641339e",
+    "quote_as_of": "2026-08-06T19:59:15Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 620,
+    "latency_ms": 636,
     "natural": true,
-    "observed_at": "2026-07-26T23:02:52Z",
+    "observed_at": "2026-08-07T04:33:03Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30224292652",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31147671265",
+    "schedule": "7 2 * * 0-5",
+    "shard": "61/72"
   },
   "lkg": {
     "fetched_at": "2026-07-26T23:04:02Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-26T23:02:52Z",
-    "payload_sha256": "a95237a8405a8321d9cbbfb5e2244d8d94f0eb6fef4762f54a23a4f8d3229eb0",
-    "quote_as_of": "2026-07-24T19:59:51Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T04:33:03Z",
+    "payload_sha256": "dbfdd71b28add2714d9210b98188168f72ab696c9b0fd510cf08fc66a607cc40",
+    "quote_as_of": "2026-08-06T19:59:15Z",
     "run_attempt": 1,
-    "run_id": "30224292652",
+    "run_id": "31147671265",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "GLTR",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-07T04:33:03Z"
 }

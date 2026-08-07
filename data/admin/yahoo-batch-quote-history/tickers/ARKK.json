@@ -12,15 +12,28 @@
       "run_id": "30312518312",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 622,
+      "natural": true,
+      "observed_at": "2026-08-07T04:33:03Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31147671265",
+      "schedule": "7 2 * * 0-5",
+      "shard": "61/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-27T23:00:10Z",
-    "history_as_of": "2026-07-27",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ARKK.json",
-    "payload_sha256": "d4d7bbbd547f8b3722c2449514292f2d285a6df3750200594dcbd83475c791e5",
-    "quote_as_of": "2026-07-27T20:00:00Z",
-    "source_as_of": "2026-07-27"
+    "fetched_at": "2026-08-07T04:34:20Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/ARKK.json",
+    "payload_sha256": "3639917e874e3f50333b9c8aaf3b1aa18aff46399c9627af53b526a7ca124377",
+    "quote_as_of": "2026-08-06T20:00:00Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 637,
+    "latency_ms": 622,
     "natural": true,
-    "observed_at": "2026-07-27T22:58:21Z",
+    "observed_at": "2026-08-07T04:33:03Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30312518312",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31147671265",
+    "schedule": "7 2 * * 0-5",
+    "shard": "61/72"
   },
   "lkg": {
     "fetched_at": "2026-07-27T23:00:10Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-27",
-    "observed_at": "2026-07-27T22:58:21Z",
-    "payload_sha256": "fb91c12a0a6a69d7a3256be4e40f87397aec96e11882dc94a14a1f3a38db9298",
-    "quote_as_of": "2026-07-27T20:00:00Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T04:33:03Z",
+    "payload_sha256": "a87d61ff7115e1b077eda7615c8ecc57e4ba16a32b209d07f4d3b2ee5876b5b2",
+    "quote_as_of": "2026-08-06T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30312518312",
+    "run_id": "31147671265",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-27"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-27"
   },
   "ticker": "ARKK",
-  "updated_at": "2026-08-05T00:18:15Z"
+  "updated_at": "2026-08-07T04:33:03Z"
 }

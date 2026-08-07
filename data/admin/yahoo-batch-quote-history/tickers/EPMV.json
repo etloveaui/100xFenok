@@ -25,12 +25,26 @@
       "run_id": "31041046015",
       "schedule": "7 18 * * 0-5",
       "shard": "45/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: source timestamp regression for EPMV: quote_as_of 2026-06-30T19:35:38Z < 2026-08-05T13:46:04Z",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 561,
+      "natural": true,
+      "observed_at": "2026-08-07T04:33:03Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31147671265",
+      "schedule": "7 2 * * 0-5",
+      "shard": "61/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-05T19:49:42Z",
     "history_as_of": "2026-08-05",
-    "path": "data/yf/finance/EPMV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EPMV.json",
     "payload_sha256": "d2077dfb28e49bd80bf5e101af794a792c6af7ff8ea3ce32b1ebe0a4b00339fa",
     "quote_as_of": "2026-08-05T13:46:04Z",
     "source_as_of": "2026-08-05"
@@ -40,24 +54,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: source timestamp regression for EPMV: quote_as_of 2026-06-30T19:35:38Z < 2026-08-05T13:46:04Z",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 612,
+    "latency_ms": 561,
     "natural": true,
-    "observed_at": "2026-08-05T19:49:13Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-07T04:33:03Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31041046015",
-    "schedule": "7 18 * * 0-5",
-    "shard": "45/72"
+    "run_id": "31147671265",
+    "schedule": "7 2 * * 0-5",
+    "shard": "61/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: source timestamp regression for EPMV: quote_as_of 2026-06-30T19:35:38Z < 2026-08-05T13:46:04Z",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-07T04:33:03Z",
+    "run_attempt": 1,
+    "run_id": "31147671265"
   },
   "lkg": {
-    "fetched_at": "2026-07-20T23:07:57Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-08-05T19:49:42Z",
+    "history_as_of": "2026-08-05",
     "path": "data/admin/yahoo-batch-quote-history/lkg/EPMV.json",
-    "payload_sha256": "7514be102ad01712b37d221088017adf04026233a8a27e4bb6c8ad485bcf904f",
-    "quote_as_of": "2026-06-30T19:35:38Z",
-    "source_as_of": "2026-06-30T19:35:38Z"
+    "payload_sha256": "d2077dfb28e49bd80bf5e101af794a792c6af7ff8ea3ce32b1ebe0a4b00339fa",
+    "quote_as_of": "2026-08-05T13:46:04Z",
+    "source_as_of": "2026-08-05"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,8 +98,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-05"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 14,
@@ -85,5 +112,5 @@
     "source_as_of": "2026-06-30T19:35:38Z"
   },
   "ticker": "EPMV",
-  "updated_at": "2026-08-05T19:49:13Z"
+  "updated_at": "2026-08-07T04:33:03Z"
 }
