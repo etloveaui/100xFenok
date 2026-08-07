@@ -1,0 +1,36 @@
+{
+  "schema_version": "feno_rim_recovery_r0_criteria.v3.1",
+  "phase": "R0-CORRECTED",
+  "title": "Re-run of X2/R0 on a unit-consistent market cap after the share-basis STOP finding",
+  "authority": "Owner directive 2026-08-07. DEC-291. Red-team finding fh-20260807-036 ISSUE 1 (STOP, future-information leak via mixed share bases), handler-verified from the panel itself before this freeze: AAPL shares 4,275,634,000 -> 17,001,802,000 between origins 2020-09-18 and 2020-12-18 (ratio 3.98 = the 2020-08-31 4:1 split) while the price series is continuous across that split; data/yf/finance/AAPL.json data.splits carries {2020-08-31: 4}. Public surface stays KEEP_QUARANTINED.",
+  "status_of_prior_runs": "R0 v1 and v2 verdicts are VOID - not superseded by an inference choice, but because every valuation ratio they consumed (B/P, V/P via mcap) mixed a split-adjusted-to-today price basis with an as-reported-at-origin share basis. 274/848 member-origin cells affected (red-team count, to be re-verified). X2's published ICs and DEC-290's factual premise ('RIM does rank returns; B/P ranks better') are equally affected. Returns (tr) are unaffected - they use the price series only. Stated before this run's results are known.",
+  "handler": "km (Kimi Code)",
+  "independent_red_team": "cc (Claude Code) - offered and accepted: independent end-to-end re-derivation of the corrected panel and statistics in parallel; handler and red team compare after both finish, neither reads the other's corrected artifact first.",
+  "correction_rule_precommitted": {
+    "diagnosis": "mc_panel = price_today_basis * shares_as_reported_at_share_fact_period_end. For any split dated after the share fact's period end, mc is understated by exactly the cumulative split factor; the factor is post-origin information, which ranks firms that later split (i.e. rose) as cheapest - a look-ahead leak.",
+    "correction": "For each member-origin cell: F = product of ALL entries in data/yf/finance/{SYM}.json data.splits (share splits AND spinoff ratios - the price basis treats both identically) whose date is STRICTLY AFTER the recovered share-fact basis date. shares_corrected = shares_panel x F. mc_corrected = price x shares_corrected. B/P and V/P recomputed on mc_corrected. Nothing else changes.",
+    "share_fact_period_end_recovery": "Value-anchored recovery: for each member-origin cell, candidates = facts in the union series (dei EntityCommonStockSharesOutstanding + us-gaap CommonStockSharesOutstanding, earliest-filed-per-date exactly as the e2 cache builder stored them) with val === panel member.shares AND date <= origin AND filed <= origin; the chosen basis date is the LATEST candidate date; if no candidate matches, the cell is dropped and counted (no approximation). Rationale: the panel is what X2 consumed; the builder script drifted after panel generation, so the panel value, not a re-run of the current rule, anchors the basis date.",
+    "unit_consistency_assertions_gate": [
+      "After correction, AAPL mc at origin 2015-03-27 within 5% of 718e9",
+      "NVDA 2021-03-19 mc within 5% of 319e9",
+      "JPM 2015-03-27 and KO 2015-03-27 have F=1 and mc unchanged (true no-split controls, verified: last splits 2000-06-12 and 2012-08-13)",
+      "MMM 2015-03-27 corrected mc within 5% of 103.8e9 (red-team corrected reference; the contaminated panel value is 88.4e9)",
+      "For every corrected cell F equals the closed-form product of dated data.splits entries after the recovered basis date - no manual overrides"
+    ],
+    "residual_uncertainty": "If a symbol has a back-adjustment event NOT present in data.splits, that cell stays understated; the post-correction audit lists every cell with F=1 for later attack."
+  },
+  "statistics_contract": "Identical to r0-criteria-v2 (commit c94a4ffb01): reproduction gate ordinal+cardinal, ESS-adjusted CI + NW lag 11 primary with ESS clamp >=3 and <=T diagnostic, block battery sensitivity with independent-block counts and block-12-on-T=18 degeneracy note, partial-correlation R0-B primary, combined mean-S R0-D test, disagreement rule, instrument-free 12-phase binomials, survivorship bound. The ONLY input change is mc_corrected in the B/P and V/P ratios.",
+  "verdict_mapping": "Identical to r0-criteria-v2 (POSITIVE/NEGATIVE written in full, ZERO declared unreachable with minimum detectable effect, INCONCLUSIVE otherwise, disagreement rule). Applied to the corrected series. The artifact must also restate: which prior conclusions survive (none of the ratio-based ones) and what the corrected evidence says in both directions.",
+  "prohibitions": [
+    "No change to V construction, returns, filters, sets, seeds, lags, bands or mapping.",
+    "No post-result choice of correction scope (spinoff cells stay uncorrected and disclosed).",
+    "No overwriting prior artifacts; corrected results go to *_CORRECTED files.",
+    "No public number republication; quarantine untouched."
+  ],
+  "planned_result_paths": [
+    "data/computed/feno-rim-recovery/r0-firm-panel-CORRECTED.json",
+    "data/computed/feno-rim-recovery/R0_ADJUDICATION_CORRECTED.json"
+  ],
+  "supersedes": "r0-criteria-v3.json (sha256 f721c73b0a3ee1002e8acfbe227c8082f33e4896f56c5c57a4371c7533f60c60) - amended before any result; two pre-run defects fixed",
+  "amendment_reason": "Pre-run amendments, both visible before results: (a) v3 claimed spinoff adjustments are not in data.splits - FALSE, verified: MMM {2024-04-01: 1.196}, IBM {2021-11-04: 1.046}, HON fractional 2016-2025, MRK {2021-06-03: 1.048}. The price series is back-adjusted for spinoffs too (red team demonstrated MMM across Solventum and IBM across Kyndryl with no series drop). F therefore applies to ALL data.splits entries; MMM/HON/IBM/MRK are corrected cells; the no-split controls are JPM (last split 2000) and KO (last split 2012), both before every panel share-fact period_end. Red team also corrected its own STOP report: MMM 2015 was contaminated (true ~103.8B, not ~89B), not a control. (b) v3 recovered the share fact by re-running the CURRENT e2-builder PIT rule; the builder script was modified after the panel was generated (panel generated_at 2026-08-06T07:36Z, script mtime 2026-08-06 16:44 local), and the rule demonstrably diverges (HD 2015-03-27: panel 1,317,827,350 = the 2014-11-18 fact, while the current rule selects the 2015-03-06 fact). The panel is ground truth for X2; recovery switches to value-anchoring."
+}
