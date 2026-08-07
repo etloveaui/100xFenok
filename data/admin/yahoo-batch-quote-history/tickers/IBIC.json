@@ -25,15 +25,28 @@
       "run_id": "30312518312",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1106,
+      "natural": true,
+      "observed_at": "2026-08-07T07:38:03Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31158308843",
+      "schedule": "7 6 * * 0-5",
+      "shard": "63/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-27T22:59:13Z",
-    "history_as_of": "2026-07-27",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/IBIC.json",
-    "payload_sha256": "e9fd89b65ee95af6b7a8ed63a2e2ce67035639ef287185e6f921907757b4f38a",
-    "quote_as_of": "2026-07-27T19:45:16Z",
-    "source_as_of": "2026-07-27"
+    "fetched_at": "2026-08-07T07:39:23Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/IBIC.json",
+    "payload_sha256": "e76778021ed1231e9f3bb0ea2bdffeffa9f567d30b5e94808c6d4e2ef47a37dc",
+    "quote_as_of": "2026-08-06T19:59:58Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 560,
+    "latency_ms": 1106,
     "natural": true,
-    "observed_at": "2026-07-27T22:58:21Z",
+    "observed_at": "2026-08-07T07:38:03Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30312518312",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31158308843",
+    "schedule": "7 6 * * 0-5",
+    "shard": "63/72"
   },
   "lkg": {
     "fetched_at": "2026-07-27T22:59:13Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-27",
-    "observed_at": "2026-07-27T22:58:21Z",
-    "payload_sha256": "92966798b82bd841f3c07827b90620ef6b8c9599f8ea184c74eeef0108c42857",
-    "quote_as_of": "2026-07-27T19:45:16Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T07:38:03Z",
+    "payload_sha256": "b4ab9fcbe295850e4589270c66f5d6af877ac775547c5059564eb76aa5686dd2",
+    "quote_as_of": "2026-08-06T19:59:58Z",
     "run_attempt": 1,
-    "run_id": "30312518312",
+    "run_id": "31158308843",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-27"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-07-27"
   },
   "ticker": "IBIC",
-  "updated_at": "2026-08-05T00:18:15Z"
+  "updated_at": "2026-08-07T07:38:03Z"
 }

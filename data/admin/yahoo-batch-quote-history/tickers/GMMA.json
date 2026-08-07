@@ -25,15 +25,28 @@
       "run_id": "30312518312",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1065,
+      "natural": true,
+      "observed_at": "2026-08-07T07:38:03Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31158308843",
+      "schedule": "7 6 * * 0-5",
+      "shard": "63/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-27T22:58:32Z",
-    "history_as_of": "2026-07-27",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GMMA.json",
-    "payload_sha256": "e27cf52e8238f00aff120d427e7f7d88ab5720a4e821eb5da231c363932013e7",
-    "quote_as_of": "2026-07-27T19:49:48Z",
-    "source_as_of": "2026-07-27"
+    "fetched_at": "2026-08-07T07:38:41Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/GMMA.json",
+    "payload_sha256": "8dcd8adfedce30d5b4f9253a860c594fb324c254ac530be36f6b1542d7727bce",
+    "quote_as_of": "2026-08-05T19:59:07Z",
+    "source_as_of": "2026-08-05T19:59:07Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 658,
+    "latency_ms": 1065,
     "natural": true,
-    "observed_at": "2026-07-27T22:58:21Z",
+    "observed_at": "2026-08-07T07:38:03Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30312518312",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31158308843",
+    "schedule": "7 6 * * 0-5",
+    "shard": "63/72"
   },
   "lkg": {
     "fetched_at": "2026-07-27T22:58:32Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-27",
-    "observed_at": "2026-07-27T22:58:21Z",
-    "payload_sha256": "216c45629fcb371fc4a7dbeabddd429cd6a5641d2e3be76a5754a3548223377a",
-    "quote_as_of": "2026-07-27T19:49:48Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T07:38:03Z",
+    "payload_sha256": "9445dd6ddd427913b24901a7fd635331c523b09d5ef64f4fc569d97a3b81ce4c",
+    "quote_as_of": "2026-08-05T19:59:07Z",
     "run_attempt": 1,
-    "run_id": "30312518312",
+    "run_id": "31158308843",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-27"
+    "source_as_of": "2026-08-05T19:59:07Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-07-27"
   },
   "ticker": "GMMA",
-  "updated_at": "2026-08-05T00:18:15Z"
+  "updated_at": "2026-08-07T07:38:03Z"
 }

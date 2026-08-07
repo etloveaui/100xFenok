@@ -2,38 +2,32 @@
   "counts": {
     "active": 6743,
     "failed": 249,
-    "fresh": 4125,
-    "lkg": 492,
-    "pending_acquisition": 2121,
+    "fresh": 4195,
+    "lkg": 452,
+    "pending_acquisition": 2091,
     "pending_history": 0,
-    "retry": 494,
-    "stale": 492,
+    "retry": 454,
+    "stale": 452,
     "terminal": 3,
     "unavailable": 2,
     "untracked": 0
   },
   "current_attempt": {
-    "attempted": 115,
-    "errors": [
-      {
-        "error": "ValueError: source timestamp regression for AAAC: quote_as_of 2026-07-23T15:25:27Z < 2026-08-05T13:46:01Z",
-        "failures": [],
-        "ticker": "AAAC"
-      }
-    ],
+    "attempted": 118,
+    "errors": [],
     "event_name": "schedule",
-    "failed": 1,
-    "fetch_attempts": 95,
+    "failed": 0,
+    "fetch_attempts": 87,
     "natural": true,
     "promotion_deferral_symbols": [],
     "promotion_deferrals": 0,
     "run_attempt": 1,
-    "run_id": "31151738848",
-    "schedule": "7 4 * * 0-5",
-    "skipped": 20,
-    "successes": 94
+    "run_id": "31158308843",
+    "schedule": "7 6 * * 0-5",
+    "skipped": 31,
+    "successes": 87
   },
-  "generated_at": "2026-08-07T05:49:05Z",
+  "generated_at": "2026-08-07T07:38:03Z",
   "lane_id": "yahoo_batch_quote_history",
   "latest_failure": {
     "attempts_used": 1,
@@ -49,17 +43,6 @@
     "ticker": "AAAC"
   },
   "lkg_details": [
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-08-07T05:49:05Z",
-      "failure_run_id": "31151738848",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "d23a0cc30812b6b5c9f6f6b9581f46708e155ac755e19876e08839b46b284ba3",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-08-05",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "AAAC"
-    },
     {
       "expected_resolution": "next_natural_yahoo_run",
       "failure_observed_at": null,
@@ -114,6 +97,17 @@
       "source_as_of": "2026-06-10T06:30:30Z",
       "state_reason": "source_age_exceeds_lane_bound",
       "symbol": "230360.KQ"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-08-07T05:49:05Z",
+      "failure_run_id": "31151738848",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "d23a0cc30812b6b5c9f6f6b9581f46708e155ac755e19876e08839b46b284ba3",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-08-05",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "AAAC"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
@@ -292,7 +286,7 @@
     "BK",
     "BNMC"
   ],
-  "message": "Yahoo quote/history: fresh=4125, lkg=492, pending_history=0, unavailable=2, pending_acquisition=2121, terminal=3, retry=494, failed=249, source_stale=492. Pending history is a normal new-listing state and self-resolves on a natural Yahoo run.",
+  "message": "Yahoo quote/history: fresh=4195, lkg=452, pending_history=0, unavailable=2, pending_acquisition=2091, terminal=3, retry=454, failed=249, source_stale=452. Pending history is a normal new-listing state and self-resolves on a natural Yahoo run.",
   "oldest_source_as_of": "2026-03-06T19:02:43Z",
   "oldest_source_ticker": "RAAY",
   "pending_acquisition_details": [
@@ -307,8 +301,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "ACII"
@@ -324,8 +318,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EBND"
@@ -341,8 +335,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EDGF"
@@ -358,8 +352,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EDGQ"
@@ -375,8 +369,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EDIV"
@@ -392,8 +386,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EDOG"
@@ -409,8 +403,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EEMA"
@@ -426,8 +420,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EEMS"
@@ -443,8 +437,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EES"
@@ -460,8 +454,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EFFI"
@@ -477,8 +471,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EFG"
@@ -494,8 +488,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EFO"
@@ -511,8 +505,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EFV"
@@ -528,8 +522,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EGGY"
@@ -545,8 +539,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EGLE"
@@ -562,8 +556,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EINC"
@@ -579,8 +573,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EIPX"
@@ -596,8 +590,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EMEQ"
@@ -613,8 +607,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EMES"
@@ -630,8 +624,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-07T05:49:05Z",
-      "last_seen_run_id": "31151738848",
+      "last_seen_at": "2026-08-07T07:38:03Z",
+      "last_seen_run_id": "31158308843",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EMIF"
@@ -3056,15 +3050,7 @@
     "BK",
     "BNMC",
     "BRZX",
-    "BSMQ",
-    "BSMR",
-    "BSMT",
-    "BSR",
-    "BSSX",
-    "BSV",
-    "BTAL",
     "BTCK",
-    "BUFB",
     "BUFH",
     "BUSA",
     "CAIE",
@@ -3143,7 +3129,6 @@
     "EAFG",
     "EDGX",
     "EMJL",
-    "EMJN",
     "EMTL",
     "EMXX",
     "EPMV",
@@ -3151,7 +3136,6 @@
     "EUDV",
     "EXEQ",
     "FARX",
-    "FBX",
     "FEBZ",
     "FEMD",
     "FLXI",
@@ -3159,44 +3143,14 @@
     "FPSX",
     "FSPC",
     "GARA",
-    "GASZ",
     "GDOG",
     "GEVC",
     "GGM",
-    "GMMA",
-    "GOOL",
-    "GOOW",
-    "GOP",
     "GOVM",
-    "GPT",
-    "GSOL",
-    "GSUI",
-    "GTOH",
-    "HBR",
     "HBTC",
     "HEMI",
-    "HIGH",
     "HJLY",
-    "HODL",
-    "HOOW",
     "HWAY",
-    "HYSA",
-    "HYTI",
-    "HYTR",
-    "IAPR",
-    "IAU",
-    "IAUG",
-    "IAUM",
-    "IBIC",
-    "IBIH",
-    "IBIJ",
-    "IBIK",
-    "IBIL",
-    "IBIT",
-    "IBUF",
-    "IBX",
-    "IDEC",
-    "IDJL",
     "IDJN",
     "IDMY",
     "IEF",
@@ -4377,15 +4331,6 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 8,
-      "source_as_of": "2026-07-20T17:05:18Z",
-      "symbols": [
-        "EMJN"
-      ]
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "max_source_age_business_days": 6,
       "source_age_business_days": 9,
       "source_as_of": "2026-07-20T17:19:39Z",
       "symbols": [
@@ -4512,15 +4457,6 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-07-22T17:30:25Z",
-      "symbols": [
-        "FBX"
-      ]
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "max_source_age_business_days": 6,
       "source_age_business_days": 9,
       "source_as_of": "2026-07-22T18:50:03Z",
       "symbols": [
@@ -4605,8 +4541,6 @@
       "source_age_business_days": 7,
       "source_as_of": "2026-07-24",
       "symbols": [
-        "BSR",
-        "IDJL",
         "IFEB"
       ]
     },
@@ -4661,46 +4595,10 @@
       "source_age_business_days": 7,
       "source_as_of": "2026-07-27",
       "symbols": [
-        "BSMQ",
-        "BSMR",
-        "BSMT",
-        "BSSX",
-        "BSV",
-        "BTAL",
-        "BUFB",
         "CAMX",
         "CCOR",
         "CPII",
         "DLAG",
-        "GASZ",
-        "GMMA",
-        "GOOL",
-        "GOOW",
-        "GOP",
-        "GPT",
-        "GSOL",
-        "GSUI",
-        "GTOH",
-        "HBR",
-        "HIGH",
-        "HODL",
-        "HOOW",
-        "HYSA",
-        "HYTI",
-        "HYTR",
-        "IAPR",
-        "IAU",
-        "IAUG",
-        "IAUM",
-        "IBIC",
-        "IBIH",
-        "IBIJ",
-        "IBIK",
-        "IBIL",
-        "IBIT",
-        "IBUF",
-        "IBX",
-        "IDEC",
         "IEF",
         "IGLD",
         "VELL",
