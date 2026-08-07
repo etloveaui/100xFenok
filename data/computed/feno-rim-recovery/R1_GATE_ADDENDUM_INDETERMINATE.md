@@ -51,3 +51,13 @@ property of the data.
 
 Executed unit assertions, effective-universe declaration, per-(tau,origin) pool sizes vs the
 300 floor, and the filed>origin spot-check remain open with cc and will be appended here.
+
+## Postscript (2026-08-07) - the INDETERMINATE call was safe, not merely convenient
+
+Red-team R2-B verification (fh-20260807-096) measured, across all 1638 firm-origin
+rows, the RI-path vs EP-path GLS-ICC: median absolute difference 0.092pp, p90 0.329pp,
+max 1.62pp, and only 2 rows (0.1%) differ by more than a full percentage point. The
+forecast choice that the R1 gate could not decide (RI vs EP, tied at 2e-6 avg MAE) turns
+out to be immaterial at the ICC level. This retrospectively de-risks carrying the
+undecided gate forward into R2: the RI/EP ambiguity costs essentially nothing downstream.
+Recorded as the evidence that the INDETERMINATE decision was safe.
