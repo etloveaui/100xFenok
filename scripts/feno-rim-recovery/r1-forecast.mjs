@@ -7,7 +7,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", ".
 const rj = (r) => JSON.parse(fs.readFileSync(path.join(ROOT, r), "utf8"));
 const sha256 = (p) => crypto.createHash("sha256").update(fs.readFileSync(p)).digest("hex");
 const CRIT_PATH = "data/computed/feno-rim-recovery/r1-criteria-v2.json";
-const FROZEN_SHA = "56e2f7cc19eb710624a3d05709b83079baa041fa20304c44611aa8758344fa47";
+const FROZEN_SHA = "0682582d35110e44d829b64213737212748d94c70856249ce49bd267548d777d";
 const EVAL_CUTOFF = ms("2026-08-07");
 const ORIGINS = [2019, 2020, 2021, 2022, 2023];
 const TAUS = [1, 2, 3];
@@ -39,7 +39,10 @@ function annualFacts(concepts, name) {
   return [...byEnd.values()].map(r => ({ end: r.end, endMs: ms(r.end), val: r.val, filed: ms(r.filed), fy: r.fy }))
     .sort((a, b) => a.endMs - b.endMs); }
 function sharesFacts(concepts) {
-  const rows = concepts?.["CommonStockSharesOutstanding"]; if (!rows) return [];
+  // v2.2 amendment (a): union of dei:EntityCommonStockSharesOutstanding (cover-page count,
+  // near-universal) and us-gaap:CommonStockSharesOutstanding, earliest-filed-per-date.
+  const rows = [...(concepts?.["EntityCommonStockSharesOutstanding"] ?? []), ...(concepts?.["CommonStockSharesOutstanding"] ?? [])];
+  if (!rows.length) return [];
   const byDate = new Map();
   for (const r of rows) {
     const date = r.start ?? r.end; if (!date || !Number.isFinite(r.val)) continue;
@@ -50,10 +53,12 @@ function sharesFacts(concepts) {
 
 // build firm-year records
 const firms = {}; let noEdgar = 0;
+const tagCoverage = { fetched: 0, E: 0, book: 0, shares_union: 0, cash: 0, ivst: 0, pstk: 0, all_required: 0 };
 for (const sym of symbols) {
   const p = path.join(ROOT, "data/edgar/r1-panel/" + sym + ".json");
   if (!fs.existsSync(p)) { noEdgar++; continue; }
   const concepts = rj(p).concepts;
+  tagCoverage.fetched++;
   const eP = annualFacts(concepts, E_PRIMARY), eF = annualFacts(concepts, E_FALLBACK);
   const book = annualFacts(concepts, "StockholdersEquity");
   const pstk = annualFacts(concepts, "PreferredStockValue");
@@ -63,6 +68,13 @@ for (const sym of symbols) {
   const ivst = annualFacts(concepts, "ShortTermInvestments").length ? annualFacts(concepts, "ShortTermInvestments") : annualFacts(concepts, "MarketableSecuritiesCurrent");
   const shares = sharesFacts(concepts);
   const unusual = [...annualFacts(concepts, "RestructuringCharges"), ...annualFacts(concepts, "GoodwillImpairmentLoss"), ...annualFacts(concepts, "AssetImpairmentLoss")];
+  if (eP.length || eF.length) tagCoverage.E++;
+  if (book.length) tagCoverage.book++;
+  if (shares.length) tagCoverage.shares_union++;
+  if (cash.length) tagCoverage.cash++;
+  if (ivst.length) tagCoverage.ivst++;
+  if (pstk.length) tagCoverage.pstk++;
+  if ((eP.length || eF.length) && book.length && shares.length && cash.length) tagCoverage.all_required++;
   if (!eP.length && !eF.length) { noEdgar++; continue; }
   // firm-year table keyed by period end
   const years = new Map();
@@ -84,6 +96,24 @@ for (const sym of symbols) {
     sic: (() => { try { return rj("data/edgar/r1-panel/sic/" + sym + ".json").sic; } catch { return null; } })(),
     fye: (() => { try { return rj("data/edgar/r1-panel/sic/" + sym + ".json").fiscalYearEnd; } catch { return null; } })() }; }
 console.log("firms with EDGAR data:", Object.keys(firms).length, "missing:", noEdgar);
+// v2.2 mandated declaration: effective universe (fetched / per-tag survival / retention /
+// SIC distribution kept vs dropped). The result is about the retained subset, not the S&P500.
+const universeReport = (() => {
+  const kept = {}, dropped = {};
+  const sicDigit = (sym) => { const s = firms[sym]?.sic; return s ? String(s).slice(0, 1) : "X"; };
+  for (const sym of symbols) {
+    const f = firms[sym];
+    const usable = f && f.shares.length > 0 && f.years.some(y => y.facts.E != null && y.facts.book != null);
+    const d = usable ? kept : dropped;
+    const k = f ? sicDigit(sym) : "X";
+    d[k] = (d[k] ?? 0) + 1; }
+  const keptN = Object.values(kept).reduce((a, x) => a + x, 0);
+  return { universe_total: symbols.length, no_cache_or_no_E: noEdgar,
+    tag_coverage: tagCoverage, retention_rate: tagCoverage.fetched ? tagCoverage.all_required / tagCoverage.fetched : null,
+    kept_symbols: keptN, dropped_symbols: symbols.length - keptN,
+    sic_distribution_kept: kept, sic_distribution_dropped: dropped,
+    note: "retention driven by filing practice (tag presence), not random across industries" }; })();
+console.log("effective universe:", JSON.stringify({ kept: universeReport.kept_symbols, dropped: universeReport.dropped_symbols, retention: universeReport.retention_rate }));
 
 // shares for a firm-year: instant fact within [end-183d, end+90d], filed <= asOf; prefer closest to end, ties latest
 function sharesAt(f, endMs, asOf) {
@@ -189,20 +219,20 @@ for (const Y of ORIGINS) {
         if (!sh) { diag.missing_shares++; continue; }
         const shBasis = sh.val * sharesFactor(sym, sh.ms); // today's basis (v2.1)
         const E = base.facts.E.v, Ed = dep.facts.E.v;
-        const book = base.facts.book?.v, assets = base.facts.assets?.v, liab = base.facts.liab?.v,
-          cash = base.facts.cash?.v, ivst = base.facts.ivst?.v ?? 0, pstkV = base.facts.pstk?.v ?? 0;
-        // prior-year X for TACC
+        const book = base.facts.book?.v, cash = base.facts.cash?.v, ivst = base.facts.ivst?.v ?? 0, pstkV = base.facts.pstk?.v ?? 0;
+        // prior-year X for TACC (v2.2 amendment b: L = A - E substituted, so
+        // TACC = d(SE - Cash + IVST - PSTK)/shares_basis; declared error = dNCI)
         let tacc = null;
         const prev = ys[i - 1];
-        if (prev && prev.facts.assets && prev.facts.liab && prev.facts.cash && (base.endMs - prev.endMs) < 15 * 30.44 * DAY) {
-          const X1 = assets - (cash ?? 0) - liab + ivst - pstkV;
-          const X0 = prev.facts.assets.v - (prev.facts.cash?.v ?? 0) - prev.facts.liab.v + (prev.facts.ivst?.v ?? 0) - (prev.facts.pstk?.v ?? 0);
+        if (prev && book != null && prev.facts.book && (base.endMs - prev.endMs) < 15 * 30.44 * DAY) {
+          const X1 = book - (cash ?? 0) + ivst - pstkV;
+          const X0 = prev.facts.book.v - (prev.facts.cash?.v ?? 0) + (prev.facts.ivst?.v ?? 0) - (prev.facts.pstk?.v ?? 0);
           tacc = (X1 - X0) / shBasis; }
         if (tacc === null) tacc = 0; // paper: missing TACC -> 0, flagged
         pool.push({ sym, baseEnd: base.endMs, depEnd: dep.endMs, shares_t: shBasis,
           eps_t: E / shBasis, eps_dep: Ed / shBasis,
           bps: book != null ? (book - pstkV) / shBasis : null,
-          tacc, tacc_missing: tacc === 0 && !(assets != null),
+          tacc, tacc_missing: tacc === 0 && book == null,
           negE: E < 0 ? 1 : 0, fy: new Date(base.endMs).getFullYear() }); } }
     if (pool.length < 300) { diag.pools[`${Y}_${tau}`] = { n: pool.length, status: "VOIDED_BELOW_300" }; continue; }
     diag.pools[`${Y}_${tau}`] = { n: pool.length };
@@ -258,9 +288,9 @@ for (const Y of ORIGINS) {
       const book = base.facts.book?.v, assets = base.facts.assets?.v, liab = base.facts.liab?.v,
         cash = base.facts.cash?.v, ivst = base.facts.ivst?.v ?? 0, pstkV = base.facts.pstk?.v ?? 0;
       let tacc = null; const prev = ys[tIdx - 1];
-      if (prev && prev.facts.assets && prev.facts.liab && prev.facts.cash && (base.endMs - prev.endMs) < 15 * 30.44 * DAY) {
-        const X1 = (assets ?? 0) - (cash ?? 0) - (liab ?? 0) + ivst - pstkV;
-        const X0 = prev.facts.assets.v - (prev.facts.cash?.v ?? 0) - prev.facts.liab.v + (prev.facts.ivst?.v ?? 0) - (prev.facts.pstk?.v ?? 0);
+      if (prev && book != null && prev.facts.book && (base.endMs - prev.endMs) < 15 * 30.44 * DAY) {
+        const X1 = book - (cash ?? 0) + ivst - pstkV; // v2.2: L = A - E substitution
+        const X0 = prev.facts.book.v - (prev.facts.cash?.v ?? 0) + (prev.facts.ivst?.v ?? 0) - (prev.facts.pstk?.v ?? 0);
         tacc = (X1 - X0) / shBasis; }
       if (tacc === null) tacc = 0;
       const fy = new Date(base.endMs).getFullYear();
@@ -344,6 +374,7 @@ const assertion2 = splitRatioChecks.slice(0, 20);
 const validation = { schema_version: "feno_rim_recovery_r1_validation.v1", phase: "R1", research_only: true,
   criteria_sha256: FROZEN_SHA,
   universe: { symbols: symbols.length, firms_with_data: Object.keys(firms).length, price_coverage: coverage },
+  effective_universe_declaration: universeReport,
   pools: diag.pools, counts: { forecast_rows: diag.forecast_rows, price_missing: diag.price_missing, voided_pairs: diag.voided_pairs, missing_shares: diag.missing_shares },
   coefficients: "see per-origin detail below",
   gate: { necessary_tau1: gate.necessary_tau1, necessary_tau2: gate.necessary_tau2, necessary_met: necessaryMet,
