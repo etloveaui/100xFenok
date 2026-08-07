@@ -1,0 +1,67 @@
+{
+ "schema_version": "feno_rim_b2b_criteria.v3",
+ "phase": "B2-B",
+ "supersedes": "b2b-criteria-v2.json (v1 and v2 both preserved unchanged)",
+ "research_only": true,
+ "this_is_the_last_attempt_at_this_contract": true,
+
+ "v2_verdict_recorded_first": {
+  "label": "PAYOUT_GROWTH_NOT_DEFENSIBLE",
+  "measured_weight_by_origin": [0.506, 0.380, 0.376, 0.463, 0.337, 0.453, 0.361],
+  "floor": "0.40 at every origin; four origins fall below",
+  "improvement_over_v1": "admitted weight rose from 0.231-0.428 to 0.337-0.506, and median absolute bridge error among admitted now clears the 0.005 bar at every origin (0.00363-0.00471). The share-based-compensation term was necessary and insufficient.",
+  "both_prior_verdicts_stand": "v1 and v2 thresholds were never moved and neither result is withdrawn."
+ },
+
+ "why_a_third_attempt_is_a_completion_and_not_a_fishing_trip": {
+  "the_pair": "Share-based compensation and the cash paid to settle employees' tax withholding on those same awards are two halves of one transaction. The award credits equity; the withholding settlement debits it in cash. v2 added the credit and omitted the debit, so the identity was left half-specified — not extended too little, but specified asymmetrically.",
+  "measured_before_deciding": "The worker recorded the withholding tag as a pure diagnostic in v2, entering nothing into the identity. Its magnitudes line up with the residuals that remain: AAPL 2022-24 withholding of 6.22 / 5.43 / 5.44 billion against v2 residuals of -9.2 / -6.8 / -7.6 percent of opening book; MSFT 4.7 / 3.8 / 5.3 billion. The sign is right, the scale is right, and the firms are the ones still failing.",
+  "the_alternative_was_tested_and_refused": "Raising the admission bound would also raise the pass rate — 3 percent admits 212-308 firms, 5 percent admits 280-367. That is not evidence, it is a looser exam. Non-admitted residuals have a p90 of 29.6-38.8 percent, so a large population fails structurally rather than narrowly, and no bound short of absurd would reach 70 percent weight honestly.",
+  "why_this_is_the_last_one": "After this the identity holds every standard clean-surplus term available in US GAAP filings. If admitted weight still falls below the floor, the conclusion is that this payout contract is not identifiable from EDGAR flow concepts on this universe, and that conclusion is the answer rather than a prompt for a fourth term."
+ },
+
+ "amended_identity": {
+  "formula": "B_t = B_(t-1) + NI_t - CommonDividends_t - Repurchases_t + Issuance_t + ShareBasedCompensation_t - TaxWithholdingOnShareBasedAwards_t + OCI_t + Other_t",
+  "tax_withholding_concept": "PaymentsRelatedToTaxWithholdingForShareBasedCompensation",
+  "concept_correction_recorded": "v2 named no concept for this and the worker's first guess, PaymentsForTaxesRelatedToNetShareSettlementOfEquityAwards, does not exist in any of the 5,801 cached CIKs. The tag above is the one that does. Verified against the cache before being frozen here.",
+  "sign": "negative; EDGAR reports it as cash paid, a positive number, and it reduces equity",
+  "absent_means_zero": "consistent with the ratified rule — XBRL omits zero amounts. Firms using an alternative tag will show no value; that limitation is disclosed, not patched.",
+  "no_further_terms": "Other_t remains the reported residual and is never solved for."
+ },
+
+ "everything_else_unchanged": [
+  "the 0.02 admission threshold",
+  "the three-consecutive-year requirement",
+  "the 70% / 40% index-weight verdict bands",
+  "net shareholder payout as primary, dividends-only as sensitivity",
+  "the three-year normalized-earnings window",
+  "the negative-earnings rule",
+  "the concept fallback orders frozen in v1 and v2"
+ ],
+
+ "required_reporting": [
+  "admitted count and index weight per origin",
+  "median absolute bridge error among admitted, and the non-admitted distribution",
+  "the share of the remaining v2 residual that the withholding term explains, per origin",
+  "firms moving BRIDGE_FAIL to ADMITTED between v2 and v3, by name",
+  "the count of firms with no withholding tag at all, since absent-means-zero silently helps a firm that simply tags differently"
+ ],
+
+ "verdict_rules": {
+  "PAYOUT_GROWTH_IDENTIFIED": "admitted firms cover at least 70% of index weight at every origin, AND median absolute bridge error among admitted is at most 0.005, AND the median net payout ratio moves less than 15 percentage points between adjacent origins",
+  "PAYOUT_GROWTH_PARTIAL": "admitted coverage between 40% and 70% at any origin, or the median payout ratio moves more than 15 points between adjacent origins",
+  "PAYOUT_GROWTH_NOT_DEFENSIBLE": "admitted coverage below 40% of index weight at any origin",
+  "unchanged_from_v1_and_v2": true,
+  "note_on_the_second_condition": "v2's payout-ratio moves were 4.9 / 7.6 / 16.4 / 4.9 / 18.4 / 13.1 points. Two exceed 15, so even at 70% weight the verdict would be PARTIAL rather than IDENTIFIED. PARTIAL does not block the successor; it discloses coverage."
+ },
+
+ "prohibitions_carried_forward": [
+  "no solving for Other_t",
+  "no post-result change to any threshold or band",
+  "no fourth term after this one",
+  "no index-level aggregate applied backward to a reconstructed roster",
+  "no publication or promotion; the public surface remains quarantined"
+ ],
+
+ "frozen_at_utc": "2026-08-08T04:35:00Z"
+}
