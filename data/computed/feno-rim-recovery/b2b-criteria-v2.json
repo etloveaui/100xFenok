@@ -1,0 +1,88 @@
+{
+ "schema_version": "feno_rim_b2b_criteria.v2",
+ "phase": "B2-B",
+ "supersedes": "b2b-criteria.json (v1, preserved unchanged — never edited in place)",
+ "research_only": true,
+
+ "v1_verdict_recorded_first": {
+  "label": "PAYOUT_GROWTH_NOT_DEFENSIBLE",
+  "measured": {
+   "admitted_weight_proxy_by_origin": [0.428, 0.333, 0.315, 0.303, 0.231, 0.291, 0.306],
+   "floor": "v1 required at least 0.40 at every origin; 2023 reads 0.231 and five of seven origins fall below the floor",
+   "admitted_counts": [119, 122, 121, 139, 155, 169, 196],
+   "roster": [505, 505, 505, 503, 503, 503, 503]
+  },
+  "this_verdict_stands_on_the_record": "v1's thresholds were not moved and its result is not withdrawn. What follows is a second, separately frozen attempt, not a revision of the first."
+ },
+
+ "why_v1_failed_and_why_it_is_my_defect": {
+  "the_failure_is_not_data_absence": "NO_FACTS is ZERO at every origin. Every firm had its filings. The dominant exclusion is BRIDGE_FAIL — 409 to 463 firms per origin whose book change the identity could not explain.",
+  "the_cause": "Share-based compensation credits equity without appearing in any concept v1 listed. So does equity settlement of employee tax withholding. For a large-cap technology firm these are billions of dollars a year, and v1's identity had no term for them. Measured residuals: AAPL 3-15%, MSFT 4-12%, ACN 11-26% of opening book.",
+  "the_premise_that_was_wrong": "v1's admission rationale said clean-surplus violations in US GAAP are small — share-based compensation, minority interests, translation — and that 2% would survive them. The first item in my own list is the one I then failed to give the identity a term for. The threshold was not too tight; the equation was incomplete.",
+  "who_found_it": "the worker, by reporting the exclusion reason distribution rather than only the pass rate. A pass-rate-only report would have read as a data problem and sent the next lane looking for missing filings that were never missing."
+ },
+
+ "what_changes_in_v2_and_what_does_not": {
+  "changed": "the identity gains a share-based-compensation term, with its own concept list and fallback order",
+  "explicitly_unchanged": [
+   "the 2% admission threshold",
+   "the three-consecutive-year requirement",
+   "the 70% / 40% index-weight verdict bands",
+   "net shareholder payout as primary, dividends-only as sensitivity",
+   "the three-year normalized-earnings window",
+   "the negative-earnings rule",
+   "Other_t is the reported residual and may never be solved for"
+  ],
+  "why_thresholds_are_held_constant": "Adding a term the accounting identity genuinely requires is a correction. Loosening the bound that judges the result would be fitting. If v2 still fails at these same numbers, the answer is that this contract is not identifiable on this data, and that answer stands."
+ },
+
+ "amended_identity": {
+  "formula": "B_t = B_(t-1) + NI_t - CommonDividends_t - Repurchases_t + Issuance_t + ShareBasedCompensation_t + OCI_t + Other_t",
+  "share_based_compensation_concepts_frozen": [
+   "ShareBasedCompensation",
+   "AdjustmentsToAdditionalPaidInCapitalSharebasedCompensationRequisiteServicePeriodRecognitionValue",
+   "ShareBasedCompensationArrangementByShareBasedPaymentAwardCompensationCost1"
+  ],
+  "sign": "positive; share-based compensation credits equity",
+  "fallback_rule": "first concept present with a usable annual value wins; never sum two from this group; the concept used is recorded per firm-year",
+  "equity_settled_tax_withholding": "if the residual remains above threshold for a firm-year AND the filing carries a tax-withholding equity concept, record its value in a separate diagnostic field. It does NOT enter the identity in v2 — this is an observation lane so that a v3, if one is needed, is decided by measurement rather than by another guess."
+ },
+
+ "additional_reporting_required": {
+  "reason": "v1 could not distinguish a firm that fails by a hair from one that fails structurally.",
+  "required": [
+   "the distribution of |bridge_error| among NON-admitted firms, not only among admitted",
+   "the count that would be admitted at 1%, 2%, 3% and 5%, reported for information and changing no threshold",
+   "the share of the residual explained by the new share-based-compensation term, per origin",
+   "which firms move from BRIDGE_FAIL to ADMITTED between v1 and v2, by name"
+  ]
+ },
+
+ "worker_decisions_from_v1_ratified": {
+  "absent_flow_group_treated_as_zero": "ratified — XBRL omits zero amounts, so an absent dividend concept means no dividend, not unknown. Book and earnings remain required, never defaulted.",
+  "three_year_window_is_most_recent_available": "ratified — a missing year shifts the window back rather than dropping the firm",
+  "cik_corrections": "ratified — eight registrant identifications corrected during the rebuild (PXD, APC, STI, LB resolved against a 2019 ticker snapshot rather than the current one; XOM to its full-history registrant; BLK, BG, DIS registrant splits merged). These also explain why my earlier coverage counts were low."
+ },
+
+ "verdict_rules": {
+  "PAYOUT_GROWTH_IDENTIFIED": "admitted firms cover at least 70% of index weight at every origin, AND median absolute bridge error among admitted is at most 0.005, AND the median net payout ratio moves less than 15 percentage points between adjacent origins",
+  "PAYOUT_GROWTH_PARTIAL": "admitted coverage between 40% and 70% at any origin, or the median payout ratio moves more than 15 points between adjacent origins",
+  "PAYOUT_GROWTH_NOT_DEFENSIBLE": "admitted coverage below 40% of index weight at any origin",
+  "unchanged_from_v1": true
+ },
+
+ "prohibitions_carried_forward": [
+  "no solving for Other_t",
+  "no post-result change to the admission threshold, the verdict bands, the normalization window, or the concept fallback order",
+  "no index-level aggregate applied backward to a reconstructed roster",
+  "no re-tuning of the ROE fade or terminal rule",
+  "no publication or promotion; the public surface remains quarantined"
+ ],
+
+ "result_paths": [
+  "data/computed/feno-rim-recovery/FENO_RIM_CLEAN_SURPLUS_BRIDGE.json",
+  "data/computed/feno-rim-recovery/FENO_RIM_FORWARD_BOOK_PATH.json"
+ ],
+
+ "frozen_at_utc": "2026-08-08T04:25:00Z"
+}
