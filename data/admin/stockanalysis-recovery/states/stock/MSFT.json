@@ -4,17 +4,6 @@
   "entity": "MSFT",
   "attempts": [
     {
-      "run_id": "29558385830",
-      "run_attempt": 1,
-      "event_name": "workflow_dispatch",
-      "schedule": "",
-      "natural": false,
-      "observed_at": "2026-07-17T05:51:44Z",
-      "outcome": "failed",
-      "controlled": false,
-      "error": "HTTPError: HTTP Error 404: Not Found"
-    },
-    {
       "run_id": "29621081806",
       "run_attempt": 1,
       "event_name": "schedule",
@@ -145,24 +134,34 @@
       "observed_at": "2026-08-05T22:31:51Z",
       "outcome": "fresh",
       "controlled": false
+    },
+    {
+      "run_id": "31222117206",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-08-07T22:00:29Z",
+      "outcome": "fresh",
+      "controlled": false
     }
   ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/stocks/MSFT.json",
-    "payload_sha256": "7d39969e46bd70fb7796a9fd54248ea1c0aa58500fc6fd6df71466d79a08bfd3",
-    "source_as_of": "2026-08-05T20:00:00Z",
-    "fetched_at": "2026-08-05T22:31:58Z"
+    "payload_sha256": "2a5a2770737cd0556812d96c826e67524aa36ac18f29b9d368686632abaa989b",
+    "source_as_of": "2026-08-07T20:00:00Z",
+    "fetched_at": "2026-08-07T22:00:37Z"
   },
-  "updated_at": "2026-08-05T22:31:51Z",
+  "updated_at": "2026-08-07T22:00:29Z",
   "last_attempt": {
-    "run_id": "31052986835",
+    "run_id": "31222117206",
     "run_attempt": 1,
     "event_name": "schedule",
     "schedule": "20 21 * * *",
     "natural": true,
-    "observed_at": "2026-08-05T22:31:51Z",
+    "observed_at": "2026-08-07T22:00:29Z",
     "outcome": "fresh",
     "controlled": false
   },

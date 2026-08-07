@@ -4,17 +4,6 @@
   "entity": "AAPL",
   "attempts": [
     {
-      "run_id": "29647721523",
-      "run_attempt": 1,
-      "event_name": "workflow_dispatch",
-      "schedule": "",
-      "natural": false,
-      "observed_at": "2026-07-18T14:17:23Z",
-      "outcome": "failed",
-      "controlled": false,
-      "error": "ValueError: source did not advance beyond the retained LKG for financial:AAPL"
-    },
-    {
       "run_id": "29662946566",
       "run_attempt": 1,
       "event_name": "schedule",
@@ -144,24 +133,34 @@
       "observed_at": "2026-08-05T22:31:51Z",
       "outcome": "fresh",
       "controlled": false
+    },
+    {
+      "run_id": "31222117206",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-08-07T22:00:29Z",
+      "outcome": "fresh",
+      "controlled": false
     }
   ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/financials/AAPL.json",
-    "payload_sha256": "1cb3478f9aca9073ddc667ed70f62d660728e85d7eb9d8ece478cdd66121d656",
+    "payload_sha256": "6e5f848cc150b615236ae01291e0415e8925357c8566628da02499bdc2285fb5",
     "source_as_of": "2026-06-27",
-    "fetched_at": "2026-08-05T22:31:54Z"
+    "fetched_at": "2026-08-07T22:00:31Z"
   },
-  "updated_at": "2026-08-05T22:31:51Z",
+  "updated_at": "2026-08-07T22:00:29Z",
   "last_attempt": {
-    "run_id": "31052986835",
+    "run_id": "31222117206",
     "run_attempt": 1,
     "event_name": "schedule",
     "schedule": "20 21 * * *",
     "natural": true,
-    "observed_at": "2026-08-05T22:31:51Z",
+    "observed_at": "2026-08-07T22:00:29Z",
     "outcome": "fresh",
     "controlled": false
   },
