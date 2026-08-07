@@ -267,3 +267,43 @@ magnitude stronger.
 
 Verdict unchanged: `R0_INCONCLUSIVE`. Record corrected as above. R0 closed with no objection
 from the red team.
+
+## 13. R0-CORRECTED — final close-out (supersedes sections 3-12 where they conflict)
+
+Red-team STOP finding (fh-20260807-036, ISSUE 1) plus handler verification invalidated every
+valuation ratio in X2 and R0 v1/v2: the panel's market cap mixed split-adjusted-to-today
+prices with as-reported shares (284/848 cells; factors 2~40 for true splits, 1.05~1.20 for
+spinoffs, which the price series back-adjusts identically). Freezes v3 → v3.1
+(`r0-criteria-v3.1.json`, sha `3f71fcea…acf7f`) pre-committed the correction: F = product of
+ALL data.splits entries dated after the value-anchored share-fact basis date; unit-consistency
+gate (AAPL 2015 ~718B, NVDA 2021 ~319B, JPM/KO unchanged, MMM ~103.8B) PASSED with zero
+share-recovery mismatches. Machine record: `R0_ADJUDICATION_CORRECTED.json`.
+
+Corrected evidence, honest variance, all instruments:
+
+| statistic | all origins | window-complete |
+|---|---|---|
+| mean IC(V/P) | −0.099 | +0.100 |
+| mean IC(B/P) | −0.029 | +0.159 |
+| R0-A mean D | −0.069, ESS CI [−0.111,−0.027], p<1e-5 | −0.059, ESS CI [−0.097,−0.021], p<1e-6 |
+| R0-C M1 b2 | −0.134, ESS CI [−0.202,−0.066], p=.0002 | −0.080, ESS CI [−0.129,−0.032], p<1e-4 |
+| R0-D mean S | negative, 0/12 phases positive | −0.041, ESS CI [−0.067,−0.014], p=.0001; 1/12 phases positive |
+| R0-B partial corr | −0.063, CI includes 0 | +0.027, CI [−0.027,+0.081] |
+| instrument-free b2 phases | 0/12 positive | 0/12 positive |
+
+Frozen-mapping verdict: **`R0_INCONCLUSIVE`**, triggered solely by the disagreement rule on the
+non-canonical R0-B partial-correlation leg (wc +0.027, CI includes zero). Every canonical and
+decisive test — Fama-MacBeth b2, stratified bi-dimensional S, raw paired difference, and all 12
+non-overlapping phases — points significantly NEGATIVE on both sets. The classification debt of
+section 12.1 reappears mirrored: the imprecise non-canonical leg now blocks NEGATIVE instead of
+POSITIVE, demonstrating the debt is structural. Under the hierarchy the red team recommended
+(canonical tests decide; no veto from non-canonical legs), the same evidence reads
+R0_INCREMENTAL_NEGATIVE. Both readings are recorded; the verdict object carries the frozen label.
+
+**What this means for the mission**: the historical-accounting heuristic V/P is now decisively
+dead on this basket — its apparent return-ranking power was entirely the units artifact, and
+after correction it ranks returns worse than plain B/P (which itself loses most of its edge on
+all_origins: −0.029). DEC-290's retirement of the heuristic product is affirmed by the
+corrected evidence, while DEC-290's stated X2 basis remains invalid and is replaced by this
+record. R0 v1/v2 artifacts stay on disk marked void. Nothing in R0 speaks to the canonical
+path either way — that is R1-R4's job, which proceeds now.
