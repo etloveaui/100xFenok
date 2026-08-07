@@ -12,15 +12,28 @@
       "run_id": "30224292652",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 543,
+      "natural": true,
+      "observed_at": "2026-08-07T03:14:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31143656628",
+      "schedule": "7 0 * * 0-5",
+      "shard": "60/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-26T23:05:58Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DFAU.json",
-    "payload_sha256": "dca9427811e78239a3a7e56a9c2737efbb1c49ecd1af592ac83ea94761a32251",
-    "quote_as_of": "2026-07-24T20:00:00Z",
-    "source_as_of": "2026-07-24"
+    "fetched_at": "2026-08-07T03:15:34Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/DFAU.json",
+    "payload_sha256": "4cab4f902a86485cb7ab1694be28f00b14a528341c4448a8a70e549c8d262905",
+    "quote_as_of": "2026-08-06T20:00:00Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 659,
+    "latency_ms": 543,
     "natural": true,
-    "observed_at": "2026-07-26T23:02:52Z",
+    "observed_at": "2026-08-07T03:14:39Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30224292652",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31143656628",
+    "schedule": "7 0 * * 0-5",
+    "shard": "60/72"
   },
   "lkg": {
     "fetched_at": "2026-07-26T23:05:58Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-26T23:02:52Z",
-    "payload_sha256": "d2db4f5f777b7c91839699aff1b7588e24ccf2d1893235fc88637b1cc11d45cb",
-    "quote_as_of": "2026-07-24T20:00:00Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T03:14:39Z",
+    "payload_sha256": "b00bc92fc3dfb9fe89c3d300e706fb0a13c2f67ce45ab9084c82dc9e1f3a7afc",
+    "quote_as_of": "2026-08-06T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30224292652",
+    "run_id": "31143656628",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "DFAU",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-07T03:14:39Z"
 }

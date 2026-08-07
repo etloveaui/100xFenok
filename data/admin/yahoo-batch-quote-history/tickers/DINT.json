@@ -12,15 +12,28 @@
       "run_id": "30224292652",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 659,
+      "natural": true,
+      "observed_at": "2026-08-07T03:14:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31143656628",
+      "schedule": "7 0 * * 0-5",
+      "shard": "60/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-26T23:06:11Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DINT.json",
-    "payload_sha256": "b1100628cda10aa2d51d708dc8d089afe1780287fb7cdc5c66a4ae2b7fb40442",
-    "quote_as_of": "2026-07-24T19:59:42Z",
-    "source_as_of": "2026-07-24"
+    "fetched_at": "2026-08-07T03:15:47Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/DINT.json",
+    "payload_sha256": "df8461a19937e81b6934287efca2be2dffc3e31155d65528f8b26283a2b1cbbe",
+    "quote_as_of": "2026-08-06T18:46:58Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 611,
+    "latency_ms": 659,
     "natural": true,
-    "observed_at": "2026-07-26T23:02:52Z",
+    "observed_at": "2026-08-07T03:14:39Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30224292652",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31143656628",
+    "schedule": "7 0 * * 0-5",
+    "shard": "60/72"
   },
   "lkg": {
     "fetched_at": "2026-07-26T23:06:11Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-26T23:02:52Z",
-    "payload_sha256": "f088a30b22b10d84e79361b1d91d609efa21a5eb54ebb595e876d0de857b4aa9",
-    "quote_as_of": "2026-07-24T19:59:42Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T03:14:39Z",
+    "payload_sha256": "b2a3f77a05504aea652ffe7fdcc083ae296395c83d4eb7048c076f030f46cdf7",
+    "quote_as_of": "2026-08-06T18:46:58Z",
     "run_attempt": 1,
-    "run_id": "30224292652",
+    "run_id": "31143656628",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "DINT",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-07T03:14:39Z"
 }

@@ -12,15 +12,28 @@
       "run_id": "30224292652",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 588,
+      "natural": true,
+      "observed_at": "2026-08-07T03:14:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31143656628",
+      "schedule": "7 0 * * 0-5",
+      "shard": "60/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-26T23:05:29Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DARP.json",
-    "payload_sha256": "9a7fea77a29d63d6f074ab548eb36700a8455b3bc11a18ee454bec6285320db4",
-    "quote_as_of": "2026-07-24T18:35:02Z",
-    "source_as_of": "2026-07-24"
+    "fetched_at": "2026-08-07T03:15:03Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/DARP.json",
+    "payload_sha256": "eb1cd633a6a2a8512651f5a1cf1ade5a97919e763dce299c93ba920b93c7d93f",
+    "quote_as_of": "2026-08-06T19:57:08Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 547,
+    "latency_ms": 588,
     "natural": true,
-    "observed_at": "2026-07-26T23:02:52Z",
+    "observed_at": "2026-08-07T03:14:39Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30224292652",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31143656628",
+    "schedule": "7 0 * * 0-5",
+    "shard": "60/72"
   },
   "lkg": {
     "fetched_at": "2026-07-26T23:05:29Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-26T23:02:52Z",
-    "payload_sha256": "06a575583ab9daa8dd49278f77bacd647a49fdd658ad1b8a97267dede934053c",
-    "quote_as_of": "2026-07-24T18:35:02Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T03:14:39Z",
+    "payload_sha256": "183cbf03815e990fae034cd2d31340c354520efb69f8c4f2f1278212c9628602",
+    "quote_as_of": "2026-08-06T19:57:08Z",
     "run_attempt": 1,
-    "run_id": "30224292652",
+    "run_id": "31143656628",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "DARP",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-07T03:14:39Z"
 }

@@ -100,15 +100,59 @@
       "run_id": "30224292652",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 492,
+      "natural": true,
+      "observed_at": "2026-08-07T03:14:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31143656628",
+      "schedule": "7 0 * * 0-5",
+      "shard": "60/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-26T23:06:40Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CTJL.json",
-    "payload_sha256": "8e71bfde2ac4eabe71816f20b551c93ac29cc8dd9cf9e30f61121ef887239561",
-    "quote_as_of": "2026-07-16T14:00:08Z",
-    "source_as_of": "2026-07-16T14:00:08Z"
+    "fetched_at": "2026-08-07T03:14:55Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/CTJL.json",
+    "payload_sha256": "f7210f60c17d309efefb2343c2bf58a3bee3b5ab2d78cea718c586b9f32e7ca7",
+    "quote_as_of": "2026-08-03T14:36:32Z",
+    "source_as_of": "2026-08-03T14:36:32Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -148,14 +192,14 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 504,
+    "latency_ms": 492,
     "natural": true,
-    "observed_at": "2026-07-26T23:02:52Z",
+    "observed_at": "2026-08-07T03:14:39Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30224292652",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31143656628",
+    "schedule": "7 0 * * 0-5",
+    "shard": "60/72"
   },
   "lkg": {
     "fetched_at": "2026-07-26T23:06:40Z",
@@ -168,17 +212,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-26T23:02:52Z",
-    "payload_sha256": "8083bcf681af94d30c1ac5f1dbaeaa1dfb8d6983b7969967e460d2def7704422",
-    "quote_as_of": "2026-07-16T14:00:08Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T03:14:39Z",
+    "payload_sha256": "92600fee2564f638ee181f1fadf963e6b78b4e66173f7880df823aa4a985bc1e",
+    "quote_as_of": "2026-08-03T14:36:32Z",
     "run_attempt": 1,
-    "run_id": "30224292652",
+    "run_id": "31143656628",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-16T14:00:08Z"
+    "source_as_of": "2026-08-03T14:36:32Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -191,5 +235,5 @@
     "source_as_of": "2026-07-16T14:00:08Z"
   },
   "ticker": "CTJL",
-  "updated_at": "2026-07-27T01:53:07Z"
+  "updated_at": "2026-08-07T03:14:39Z"
 }
