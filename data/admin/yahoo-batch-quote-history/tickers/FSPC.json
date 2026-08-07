@@ -12,31 +12,44 @@
       "run_id": "30711925747",
       "schedule": "",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 981,
+      "natural": true,
+      "observed_at": "2026-08-07T20:49:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31217379411",
+      "schedule": "7 20 * * 0-5",
+      "shard": "70/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T18:44:46Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FSPC.json",
-    "payload_sha256": "7955149b06cc6b0647ef43e67640df5381ae945562972921b3293c09858f994e",
-    "quote_as_of": "2026-07-29T19:33:19Z",
-    "source_as_of": "2026-07-29T19:33:19Z"
+    "fetched_at": "2026-08-07T20:50:48Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/FSPC.json",
+    "payload_sha256": "06d2ab6ffba3247c36de4102d7132a966b18300b20c14034d2f4caf4fc1018c6",
+    "quote_as_of": "2026-08-04T19:59:57Z",
+    "source_as_of": "2026-08-04T19:59:57Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 647,
+    "latency_ms": 981,
     "natural": true,
-    "observed_at": "2026-08-01T18:41:58Z",
+    "observed_at": "2026-08-07T20:49:21Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711925747",
-    "schedule": "",
-    "shard": "4/6"
+    "run_id": "31217379411",
+    "schedule": "7 20 * * 0-5",
+    "shard": "70/72"
   },
   "lkg": {
     "fetched_at": "2026-08-01T18:44:46Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T18:41:58Z",
-    "payload_sha256": "06425a54d211be84b782a79ec9b723ad9764c5f002a481c59c58b8c3112886f6",
-    "quote_as_of": "2026-07-29T19:33:19Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T20:49:21Z",
+    "payload_sha256": "bbe599001d3fb58eab268ff6bade7e47d28606ec904cf3c73f0c8a588b05f39e",
+    "quote_as_of": "2026-08-04T19:59:57Z",
     "run_attempt": 1,
-    "run_id": "30711925747",
+    "run_id": "31217379411",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-29T19:33:19Z"
+    "source_as_of": "2026-08-04T19:59:57Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-29T19:33:19Z"
   },
   "ticker": "FSPC",
-  "updated_at": "2026-08-07T00:12:01Z"
+  "updated_at": "2026-08-07T20:49:21Z"
 }

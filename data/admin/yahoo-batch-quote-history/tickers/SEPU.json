@@ -26,41 +26,44 @@
       "run_id": "30711924670",
       "schedule": "",
       "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1180,
+      "natural": true,
+      "observed_at": "2026-08-07T20:49:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31217379411",
+      "schedule": "7 20 * * 0-5",
+      "shard": "70/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T00:34:44Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SEPU.json",
-    "payload_sha256": "c3f2c59632e4c5680fc237b053f42aa69152da70fd468a43c183f3f9656b93cc",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-08-07T20:49:37Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/SEPU.json",
+    "payload_sha256": "c91f949088a5618ad94d84ca8230a89ddd9ddd384a9671fdc6970187577036a6",
+    "quote_as_of": "2026-08-07T19:57:07Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_requires_schedule",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 511,
+    "latency_ms": 1180,
     "natural": true,
-    "observed_at": "2026-08-01T18:35:05Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-07T20:49:21Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711924670",
-    "schedule": "",
-    "shard": "3/6"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-01T18:35:05Z",
-    "provider_history_as_of": "2026-07-31",
-    "provider_quote_as_of": "2026-07-31T19:48:02Z",
-    "reason": "recovery_requires_schedule",
-    "run_attempt": 1,
-    "run_id": "30711924670"
+    "run_id": "31217379411",
+    "schedule": "7 20 * * 0-5",
+    "shard": "70/72"
   },
   "lkg": {
     "fetched_at": "2026-06-30T00:34:44Z",
@@ -70,8 +73,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-07T20:49:21Z",
+    "payload_sha256": "6d08c5d353f67e0b2b5e05943f34e0c246f073ac0e1967b92c4c9bd4e0f30ec5",
+    "quote_as_of": "2026-08-07T19:57:07Z",
+    "run_attempt": 1,
+    "run_id": "31217379411",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-07"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -84,5 +99,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "SEPU",
-  "updated_at": "2026-08-01T18:35:05Z"
+  "updated_at": "2026-08-07T20:49:21Z"
 }

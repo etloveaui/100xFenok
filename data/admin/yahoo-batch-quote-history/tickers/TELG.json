@@ -26,41 +26,44 @@
       "run_id": "30711925747",
       "schedule": "",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 867,
+      "natural": true,
+      "observed_at": "2026-08-07T20:49:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31217379411",
+      "schedule": "7 20 * * 0-5",
+      "shard": "70/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-26T04:42:47Z",
-    "history_as_of": "2026-06-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TELG.json",
-    "payload_sha256": "0b55f484156408035958179fd0b98170666829d40ba70c6d2837fea8d5e8ee7b",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-25"
+    "fetched_at": "2026-08-07T20:50:50Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/TELG.json",
+    "payload_sha256": "a4a03da85d7803976ba250b6af6ee67bc86f285d443cebfd853f1cbbdf30f891",
+    "quote_as_of": "2026-08-07T14:17:33Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_requires_schedule",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 708,
+    "latency_ms": 867,
     "natural": true,
-    "observed_at": "2026-08-01T18:41:58Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-07T20:49:21Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711925747",
-    "schedule": "",
-    "shard": "4/6"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-01T18:41:58Z",
-    "provider_history_as_of": "2026-07-31",
-    "provider_quote_as_of": "2026-07-30T18:59:40Z",
-    "reason": "recovery_requires_schedule",
-    "run_attempt": 1,
-    "run_id": "30711925747"
+    "run_id": "31217379411",
+    "schedule": "7 20 * * 0-5",
+    "shard": "70/72"
   },
   "lkg": {
     "fetched_at": "2026-06-26T04:42:47Z",
@@ -70,8 +73,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-07T20:49:21Z",
+    "payload_sha256": "be665ff20151f2c0d6009391ec54ee6e97239f94d3bd034455c52f8d2ead0866",
+    "quote_as_of": "2026-08-07T14:17:33Z",
+    "run_attempt": 1,
+    "run_id": "31217379411",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-07"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 11,
@@ -84,5 +99,5 @@
     "source_as_of": "2026-06-25"
   },
   "ticker": "TELG",
-  "updated_at": "2026-08-01T18:41:58Z"
+  "updated_at": "2026-08-07T20:49:21Z"
 }

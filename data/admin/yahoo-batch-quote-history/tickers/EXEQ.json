@@ -12,13 +12,26 @@
       "run_id": "30711925747",
       "schedule": "",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 723,
+      "natural": true,
+      "observed_at": "2026-08-07T20:49:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31217379411",
+      "schedule": "7 20 * * 0-5",
+      "shard": "70/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T18:43:35Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/EXEQ.json",
-    "payload_sha256": "7c47a5fe90e659c903adeb1b89d872cbb8c16231b70a25b72c421f7183148dff",
+    "fetched_at": "2026-08-07T20:50:44Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/EXEQ.json",
+    "payload_sha256": "20d769ccb0a9f47d8c0dbaa2efd7ad2e3325b3a67ec18eaec77eaa3baa9653a9",
     "quote_as_of": "2026-07-28T14:55:25Z",
     "source_as_of": "2026-07-28T14:55:25Z"
   },
@@ -27,16 +40,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 541,
+    "latency_ms": 723,
     "natural": true,
-    "observed_at": "2026-08-01T18:41:58Z",
+    "observed_at": "2026-08-07T20:49:21Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711925747",
-    "schedule": "",
-    "shard": "4/6"
+    "run_id": "31217379411",
+    "schedule": "7 20 * * 0-5",
+    "shard": "70/72"
   },
   "lkg": {
     "fetched_at": "2026-08-01T18:43:35Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T18:41:58Z",
-    "payload_sha256": "dbef8409940e1d9013ac2af802c1d945cc54f525ed8b0da64eef2f2ba238f218",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T20:49:21Z",
+    "payload_sha256": "6d85a48d4277e4f523d8273b6b1bc6f67eaca609bc6f23fec2b4a775afc5a4f2",
     "quote_as_of": "2026-07-28T14:55:25Z",
     "run_attempt": 1,
-    "run_id": "30711925747",
+    "run_id": "31217379411",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-28T14:55:25Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-28T14:55:25Z"
   },
   "ticker": "EXEQ",
-  "updated_at": "2026-08-06T00:14:28Z"
+  "updated_at": "2026-08-07T20:49:21Z"
 }
