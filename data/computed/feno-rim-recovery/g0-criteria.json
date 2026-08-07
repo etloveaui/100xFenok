@@ -1,0 +1,123 @@
+{
+ "schema_version": "feno_rim_recovery_g0_criteria.v1",
+ "phase": "G0",
+ "gate": "historical market-cap basis hardening",
+ "research_only": true,
+ "frozen_before_any_result": true,
+ "mandate": {
+  "document": "FENO_RIM_OPUS_DEEPSEEK_YOO_SUCCESSOR_RELEASE_GATE.md",
+  "section": "7",
+  "delivered_via": "owner SMB inbox 2026-08-07",
+  "handler": "cc (Opus) — adjudicator",
+  "worker": "DeepSeek — bounded implementation"
+ },
+ "preregistration": {
+  "note": "Thresholds were registered before the input inventory returned and before any statistic was computed. This file restates them verbatim; any divergence is a defect in this file.",
+  "file": "_tmp/handoff/g0-thresholds-preregistered.md",
+  "sha256": "2d1a80c5bf088ca1ce1bbcf56acc357a40cb857ddff123c67ad39c31e6935bcf",
+  "registered_at_utc": "2026-08-07T14:25:15Z"
+ },
+ "execution_contract": {
+  "file": "_tmp/handoff/G0_EXECUTION_CONTRACT.md",
+  "sha256": "13179999e08c1852fc612790f4f0f02a2bb5476c5d911092aac5ba5b46ba3382"
+ },
+
+ "basis_definitions": {
+  "CORRECTED": {
+   "description": "incumbent basis as committed in R2/R3",
+   "market_cap": "split-adjusted close_t x (as-reported shares x cumulative split factor applied from the shares' report date forward)",
+   "source_code": "scripts/feno-rim-recovery/r2-gls-icc.mjs:165 (mcap = price * shBasis)"
+  },
+  "DIRECT": {
+   "description": "G0 route under test",
+   "market_cap": "as-traded UNADJUSTED close_t x point-in-time as-reported shares_t",
+   "unadjusted_close_rule": "unadj(sym,t) = closes[t] x product of split ratios dated strictly after t, using the per-symbol splits map in data/edgar/r1-panel/prices/{SYM}.json",
+   "shares_rule": "raw as-reported EntityCommonStockSharesOutstanding value, filed <= origin and end within the committed sharesAt window, never split-restated"
+  },
+  "unchanged_by_G0": [
+   "realized return construction (split-adjusted close + dividends)",
+   "momentum 12-1 (split-adjusted ratio)",
+   "GLS ICC equation",
+   "forecast RI/EP equations",
+   "ROE fade",
+   "terminal horizon",
+   "payout policy",
+   "industry target",
+   "root solver",
+   "cell selection rule including the shareBasisLo/Hi outlier filter"
+  ]
+ },
+
+ "input_contract": {
+  "panel": "data/computed/feno-rim-recovery/R2_GLS_ICC.json",
+  "committed_rows": 1638,
+  "distinct_symbols": 368,
+  "origins": [2019, 2020, 2021, 2022, 2023],
+  "prices": "data/edgar/r1-panel/prices/{SYM}.json (503 symbols; closes are split-adjusted and dividend-unadjusted)",
+  "shares_facts": "data/edgar/r1-panel/{SYM}.json concepts.EntityCommonStockSharesOutstanding",
+  "independent_unadjusted_evidence": "data/yf/finance/{SYM}.unadjusted.json history_unadjusted (30 Dow symbols)",
+  "origin_anchor": "{Y}-06-30 with the committed <=16-day staleness rule"
+ },
+
+ "pre_stated_predictions": {
+  "note": "Stated before computation. A break is first a suspected implementation error and must be adjudicated as such before it is read as a gate signal.",
+  "P1": "firm-level ICC is bit-identical across bases (ICC is computed from per-share quantities only)",
+  "P2": "B/P unchanged",
+  "P3": "momentum and realized return unchanged",
+  "P4": "bi-dimensional B/P-tercile ICC spread unchanged (uses no market cap)",
+  "P5": "market cap differs only where a split falls between the shares-report date and the origin date; ratio is exactly 1 elsewhere"
+ },
+
+ "pass_conditions": {
+  "all_must_hold": true,
+  "C1_market_cap_rank_correlation": {
+   "quantity": "per-origin cross-sectional Spearman rank correlation of DIRECT vs CORRECTED market cap",
+   "threshold": ">= 0.99 at every origin",
+   "rationale": "two measurements of one economic quantity; below this the ordering itself moves and every downstream cross-sectional statistic is basis-dependent by construction"
+  },
+  "C2_icc_difference": {
+   "quantity": "firm-level absolute GLS-ICC difference",
+   "threshold": "median <= 0.0025 and p95 <= 0.0100",
+   "rationale": "25 bp against the committed 7.4% median ICC is a 3.4% relative shift; the tail bound stops a small median from hiding a broken subset. Expected value under P1 is exactly zero; a non-zero result is investigated as an implementation defect before it is scored."
+  },
+  "C3_r3_fama_macbeth_coefficient": {
+   "quantity": "R3 Fama-MacBeth ICC coefficient",
+   "threshold": "same sign AND relative change <= 0.33",
+   "incumbent": 1.2071,
+   "admissible_interval": [0.809, 1.605]
+  },
+  "C4_bidimensional_spread": {
+   "quantity": "ICC high-minus-low spread within B/P terciles",
+   "threshold": "positive at 5/5 origins",
+   "incumbent_positive_origins": 5
+  },
+  "C5_per_origin_sign": {
+   "quantity": "sign of every per-origin ICC coefficient in the control set",
+   "threshold": "unchanged at all 5 origins"
+  }
+ },
+
+ "verdict_mapping": {
+  "G0_PASS": "all five pass conditions hold",
+  "G0_MATERIAL_BASIS_DEPENDENCE": "any one fails; public numeric release of the ICC lens is refused regardless of later gates",
+  "data_contract_stop": {
+   "condition": "DIRECT computable for fewer than 95% of the firm-origin cells CORRECTED covers",
+   "action": "not a pass and not a fail; report to owner, do not substitute inputs, do not relax the definition"
+  }
+ },
+
+ "prohibitions": [
+  "no output-targeted constant",
+  "no per-index multiplier or offset",
+  "no post-result change to any threshold, band, set, or basis rule",
+  "no feedback of a price-implied ICC into a same-date fair-value discount rate",
+  "no network acquisition to satisfy a coverage gap",
+  "no public promotion or republication"
+ ],
+
+ "result_paths_blocked_until_this_file_is_committed": [
+  "data/computed/feno-rim-recovery/RIM_ICC_G0_MARKETCAP_BASIS_AUDIT.json"
+ ],
+
+ "frozen_at_utc": "2026-08-07T14:32:00Z"
+}
