@@ -12,15 +12,28 @@
       "run_id": "30406712544",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 605,
+      "natural": true,
+      "observed_at": "2026-08-07T11:06:01Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31172586227",
+      "schedule": "7 10 * * 0-5",
+      "shard": "65/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-28T23:10:13Z",
-    "history_as_of": "2026-07-28",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CRPT.json",
-    "payload_sha256": "46bbb6b9e840c45512ce27c6082211d1c068b23c62dff5c1558f45b63d40281e",
-    "quote_as_of": "2026-07-28T19:59:54Z",
-    "source_as_of": "2026-07-28"
+    "fetched_at": "2026-08-07T11:06:17Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/CRPT.json",
+    "payload_sha256": "5ca3ad1b11f8e5240e6b77a11388c058a28ed6d3f6111a1007c906cbb3913e72",
+    "quote_as_of": "2026-08-06T19:59:46Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 635,
+    "latency_ms": 605,
     "natural": true,
-    "observed_at": "2026-07-28T23:07:58Z",
+    "observed_at": "2026-08-07T11:06:01Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30406712544",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "31172586227",
+    "schedule": "7 10 * * 0-5",
+    "shard": "65/72"
   },
   "lkg": {
     "fetched_at": "2026-07-28T23:10:13Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-28",
-    "observed_at": "2026-07-28T23:07:58Z",
-    "payload_sha256": "078935de6aadb87347a735e980c75c5d8b75f58b22fdf53d74fdb2c2d22801ed",
-    "quote_as_of": "2026-07-28T19:59:54Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T11:06:01Z",
+    "payload_sha256": "de65abd9e1e7cf10728f056e3d31bcc47c9e7c538835181d9182adfabfeb0e7e",
+    "quote_as_of": "2026-08-06T19:59:46Z",
     "run_attempt": 1,
-    "run_id": "30406712544",
+    "run_id": "31172586227",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-28"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-28"
   },
   "ticker": "CRPT",
-  "updated_at": "2026-08-06T00:14:28Z"
+  "updated_at": "2026-08-07T11:06:01Z"
 }

@@ -25,15 +25,28 @@
       "run_id": "30406712544",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 782,
+      "natural": true,
+      "observed_at": "2026-08-07T11:06:01Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31172586227",
+      "schedule": "7 10 * * 0-5",
+      "shard": "65/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-28T23:08:33Z",
-    "history_as_of": "2026-07-28",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/IVVW.json",
-    "payload_sha256": "f71ce574920a5f3697ca4b37a04414421e9b49b1ac7556b27e2fc3a68ff86300",
-    "quote_as_of": "2026-07-28T19:59:50Z",
-    "source_as_of": "2026-07-28"
+    "fetched_at": "2026-08-07T11:07:23Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/IVVW.json",
+    "payload_sha256": "01ebb101d3862c603e98c46cac77fc67204a1b2492fafbd9cc8efed5247e8f63",
+    "quote_as_of": "2026-08-06T19:58:45Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 541,
+    "latency_ms": 782,
     "natural": true,
-    "observed_at": "2026-07-28T23:07:58Z",
+    "observed_at": "2026-08-07T11:06:01Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30406712544",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "31172586227",
+    "schedule": "7 10 * * 0-5",
+    "shard": "65/72"
   },
   "lkg": {
     "fetched_at": "2026-07-28T23:08:33Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-28",
-    "observed_at": "2026-07-28T23:07:58Z",
-    "payload_sha256": "6b1acb45d9babcb467d206ac106624ecd627d0a77b78a9b1bd60b320cbc75ea5",
-    "quote_as_of": "2026-07-28T19:59:50Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T11:06:01Z",
+    "payload_sha256": "f1bb455d9604112da84e6275c5140b081da1789615e017195dd69c235e1c4e00",
+    "quote_as_of": "2026-08-06T19:58:45Z",
     "run_attempt": 1,
-    "run_id": "30406712544",
+    "run_id": "31172586227",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-28"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-07-28"
   },
   "ticker": "IVVW",
-  "updated_at": "2026-08-06T00:14:28Z"
+  "updated_at": "2026-08-07T11:06:01Z"
 }

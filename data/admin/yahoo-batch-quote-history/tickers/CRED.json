@@ -12,13 +12,26 @@
       "run_id": "30406712544",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1282,
+      "natural": true,
+      "observed_at": "2026-08-07T11:06:01Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31172586227",
+      "schedule": "7 10 * * 0-5",
+      "shard": "65/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-28T23:10:10Z",
-    "history_as_of": "2026-07-27",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CRED.json",
-    "payload_sha256": "914bc106a2184bd07dff2cefea1237d10ba1689e0e566a8c9cc638db34d9b73e",
+    "fetched_at": "2026-08-07T11:06:15Z",
+    "history_as_of": "2026-07-28",
+    "path": "data/yf/finance/CRED.json",
+    "payload_sha256": "447b2e103a2e378574e9f64b765a3d0bf13271212ff1db2b6e681cb53d8cebd7",
     "quote_as_of": "2026-07-24T18:15:28Z",
     "source_as_of": "2026-07-24T18:15:28Z"
   },
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 592,
+    "latency_ms": 1282,
     "natural": true,
-    "observed_at": "2026-07-28T23:07:58Z",
+    "observed_at": "2026-08-07T11:06:01Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30406712544",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "31172586227",
+    "schedule": "7 10 * * 0-5",
+    "shard": "65/72"
   },
   "lkg": {
     "fetched_at": "2026-07-28T23:10:10Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-27",
-    "observed_at": "2026-07-28T23:07:58Z",
-    "payload_sha256": "e69956ce773edaf4e1293df0641fb705c89ed4fa2aa23c68519a63ad39cf6051",
+    "history_as_of": "2026-07-28",
+    "observed_at": "2026-08-07T11:06:01Z",
+    "payload_sha256": "8f8ab79c2c0a811632b1a92874a259aa6b94e1337298aca16ae7f6c399c27ebe",
     "quote_as_of": "2026-07-24T18:15:28Z",
     "run_attempt": 1,
-    "run_id": "30406712544",
+    "run_id": "31172586227",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-24T18:15:28Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-24T18:15:28Z"
   },
   "ticker": "CRED",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-07T11:06:01Z"
 }

@@ -12,15 +12,28 @@
       "run_id": "30406712544",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 745,
+      "natural": true,
+      "observed_at": "2026-08-07T11:06:01Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31172586227",
+      "schedule": "7 10 * * 0-5",
+      "shard": "65/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-28T23:10:26Z",
-    "history_as_of": "2026-07-28",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CVNY.json",
-    "payload_sha256": "7bae7f590baec716bfb29372e13570624449daa7a8f88a1db33da35d0b3df41e",
-    "quote_as_of": "2026-07-28T19:59:53Z",
-    "source_as_of": "2026-07-28"
+    "fetched_at": "2026-08-07T11:06:26Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/CVNY.json",
+    "payload_sha256": "4c2a94b3c520ff04e40186e1637bff550a024fddace9fa81ff45d33679086722",
+    "quote_as_of": "2026-08-06T19:33:22Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 568,
+    "latency_ms": 745,
     "natural": true,
-    "observed_at": "2026-07-28T23:07:58Z",
+    "observed_at": "2026-08-07T11:06:01Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30406712544",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "31172586227",
+    "schedule": "7 10 * * 0-5",
+    "shard": "65/72"
   },
   "lkg": {
     "fetched_at": "2026-07-28T23:10:26Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-28",
-    "observed_at": "2026-07-28T23:07:58Z",
-    "payload_sha256": "01739adf71794f90837510db83955378a1d56933d351eeda861127820215425d",
-    "quote_as_of": "2026-07-28T19:59:53Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T11:06:01Z",
+    "payload_sha256": "4adc0a07c2ff95046d4794e8836d4c0a04025e641a017efe2cb1b18bcb68f30e",
+    "quote_as_of": "2026-08-06T19:33:22Z",
     "run_attempt": 1,
-    "run_id": "30406712544",
+    "run_id": "31172586227",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-28"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-28"
   },
   "ticker": "CVNY",
-  "updated_at": "2026-08-06T00:14:28Z"
+  "updated_at": "2026-08-07T11:06:01Z"
 }
