@@ -1,0 +1,40 @@
+{
+ "schema_version": "feno_rim_recovery_g3_criteria.v2",
+ "phase": "G3",
+ "supersedes": "g3-criteria.json (v1, preserved unchanged — never edited in place)",
+ "supersession_reason": "v1 named the half-split but not how the three tercile spreads aggregate into one per-origin number. Two precedents exist in this mission and they differ: G2-A weighted by stratum count, the committed R3 bi-dimensional leg took an equal-weight mean of the three tercile spreads. Worker stopped and asked before any result existed. Fourth condition in this mission to depend on an unnamed convention.",
+ "research_only": true,
+ "frozen_before_any_result": true,
+ "no_result_file_existed_at_this_freeze": true,
+
+ "amendment_1_tercile_aggregation": {
+  "decision": "BOTH are computed and reported at every horizon and origin. Verdict condition (d) is evaluated on the EQUAL-WEIGHT mean.",
+  "why_equal_weight_decides": "Condition (d) exists to ask whether the bi-dimensional result established at 36 months survives at 12. The committed R3 robustness leg — which is the thing being re-tested — used the equal-weight mean and reported 5/5 positive origins. Scoring the re-test on a different aggregator would compare two different statistics and call it stability.",
+  "why_count_weight_is_still_reported": "It is G2-A's aggregator, so reporting it keeps this gate commensurable with the permutation gate, and publishing both removes the possibility of choosing an aggregator once the numbers exist.",
+  "equal_weight_formula": "for origin t: mean over the three B/P terciles g of (mean EXC over H_g - mean EXC over L_g), terciles with n_g < 4 excluded and their exclusion reported",
+  "count_weight_formula": "the same spreads combined as sum(spread_g * n_g) / sum(n_g) over included terciles",
+  "no_other_v1_rule_changes": true
+ },
+
+ "verdict_rules": {
+  "G3_STABLE_ACROSS_HORIZONS": "ALL of: (a) the pooled ICC coefficient is positive at all three horizons; (b) at the 12-month horizon, the pooled coefficient is positive with clustered |t| >= 2 and the per-origin sign is positive at >= 4 of 5; (c) rank IC mean is positive at all three horizons; (d) the equal-weight B/P-stratified high-minus-low spread is positive at >= 4 of 5 origins at the 12-month horizon.",
+  "G3_HORIZON_SPECIFIC": "the pooled coefficient is positive at 36 months but condition (b) fails at 12 months, or the sign of the pooled coefficient differs across horizons while remaining positive at 36",
+  "G3_FAIL": "the pooled ICC coefficient is negative at two or more horizons, or negative with clustered |t| >= 2 at the 12-month horizon",
+  "unchanged_from_v1": "conditions (a), (b), (c), the horizon asymmetry rationale, and the note that sector-neutral and large-cap estimates enter no threshold"
+ },
+
+ "carried_forward_verbatim_from_v1": {
+  "conventions": "nearest-rank quantiles with no interpolation, tercile assignment order, half-split H = top ceil(n/2), ties by ascending symbol, Spearman on average ranks, the cluster sandwich",
+  "frozen_vs_varying": "the model is frozen; only the realized horizon varies over 12/24/36 months; the ICC is never re-solved",
+  "overlap_structure": "T_eff = T/h giving 5.0, 2.5, 1.67; raw n and T_eff reported beside every statistic",
+  "primary_specification": "R_h ~ const + BP + SIZE + FEPS1_over_P + ForecastSlope + ICC with origin fixed effects and origin-clustered SEs, momentum excluded from the primary and reported as a sensitivity",
+  "required_reports": "unchanged, with the tercile-spread item now requiring both aggregators",
+  "prohibitions": "unchanged"
+ },
+
+ "result_paths_still_absent_at_freeze": [
+  "data/computed/feno-rim-recovery/RIM_ICC_G3_MULTI_HORIZON.json"
+ ],
+
+ "frozen_at_utc": "2026-08-08T01:12:00Z"
+}
