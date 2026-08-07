@@ -1,0 +1,96 @@
+{
+  "schema_version": "feno_rim_recovery_r1_criteria.v1",
+  "phase": "R1",
+  "title": "Li-Mohanram (2014) mechanical earnings forecasts - free EDGAR point-in-time panel, FY1-FY3 validation",
+  "authority": "Owner directive 2026-08-07 (FENO RIM RECOVERY) sections 5-6 and 14. DEC-291. Public surface stays KEEP_QUARANTINED.",
+  "handler": "km (Kimi Code)",
+  "independent_red_team": "cc (Claude Code) - pre-review window open BEFORE any run this time (charter follows this freeze)",
+  "literature_anchor": {
+    "paper": "Li, K.K. & Mohanram, P.S. (2014). Evaluating cross-sectional forecasting models for implied cost of capital. Review of Accounting Studies 19, 1152-1185. DOI 10.1007/s11142-014-9282-y",
+    "local_copy": "data/edgar/literature/li-mohanram-2014-rast.pdf (+ .txt extraction) - downloaded 2026-08-07 from the authors' Rotman page",
+    "spec_source": "Equations (2),(3),(7), Section 3.2, Appendix A of the paper, read line-by-line from the local text extraction. Every deviation below is declared."
+  },
+
+  "models_frozen": {
+    "RW": "eps_forecast(t+tau) = eps_t. No parameters. Baseline 1.",
+    "EP": "eps(t+tau) = b0 + b1*NegE_t + b2*eps_t + b3*(NegE_t * eps_t) + e. Per-share level (all variables divided by shares outstanding of year t). Baseline 2.",
+    "RI": "eps(t+tau) = c0 + c1*NegE_t + c2*eps_t + c3*(NegE_t * eps_t) + c4*bps_t + c5*tacc_t + e. Per-share level. Primary model.",
+    "expected_signs": "RI: c2>0, c4>0, c3<0, c5<0 (paper section 2.4). Reported, not enforced.",
+    "hvz_note": "HVZ (Eq. 1) is NOT implemented - the owner directive names RW and EP as the R1 baselines. Declared deviation, no action.",
+    "estimation": "Pooled cross-sectional OLS, separate regression per tau in {1,2,3}. Training window for forecast-as-of June 30 of year Y: tau=1 uses fiscal years Y-10..Y-1, tau=2 uses Y-11..Y-2, tau=3 uses Y-12..Y-3 (paper section 3.2). Firm-year rows enter the pool when all regressors are available; forecast requires only non-missing regressors at year t (paper). Missing TACC set to zero with a flag (paper).",
+    "fye_rule": "Paper: at June 30 of year Y, firms with fiscal-year-end April-June do not yet have year-Y-eligible financials; only FYE April_{Y-1}..March_Y counts as 'year t'. Implemented: for origin June 30 of Y, a firm's year t = latest fiscal year with period_end <= June 30 of Y AND filed <= June 30 of Y, EXCEPT FYE in {04,05,06} which must use the prior fiscal year. Declared: this shifts those firms' information back one year, matching the paper's look-ahead guard.",
+    "winsorization": "All continuous regression variables (eps, bps, tacc, and dependent eps at t+tau) winsorized annually at 1st/99th percentiles within each fiscal year, matching the paper. Winsorization boundaries computed per fiscal year from the estimation pool only."
+  },
+
+  "variable_definitions_edgar_mapping": {
+    "earnings_E": {
+      "paper": "IB - SPI (income before extraordinary items minus special items), Compustat",
+      "edgar_primary": "us-gaap:IncomeLossFromContinuingOperationsNetOfTaxAttributableToReportingEntity (closest free analog of earnings before extraordinary items)",
+      "edgar_fallback": "us-gaap:NetIncomeLoss when primary absent for that firm-year; which source was used is recorded per firm-year",
+      "declared_deviation": "Special items (SPI) are not separable from EDGAR XBRL consistently; E is therefore earnings-before-extraordinary-items, not net of special items. Disclosed in the validation artifact."
+    },
+    "book_B": "us-gaap:StockholdersEquity minus us-gaap:PreferredStockValue (preferred missing treated as 0) = common equity, / shares",
+    "shares_CSHOT": "us-gaap:CommonStockSharesOutstanding at fiscal year-end instant",
+    "tacc_components": {
+      "WC": "(AssetsCurrent - CashAndCashEquivalentsAtCarryingValue) - (LiabilitiesCurrent - LongTermDebtCurrent)",
+      "NCO": "(Assets - AssetsCurrent - IVAO) - (Liabilities - LiabilitiesCurrent - LongTermDebtNoncurrent)",
+      "FIN": "(IVST + IVAO) - (LongTermDebtNoncurrent + LongTermDebtCurrent + PreferredStockValue)",
+      "IVST": "us-gaap:ShortTermInvestments, fallback MarketableSecuritiesCurrent, else 0",
+      "IVAO": "us-gaap:OtherNoncurrentAssets as proxy, else 0 (declared: Compustat IVAO has no exact EDGAR analog; appears in NCO with minus and FIN with plus, so partial cancellation limits the proxy damage)",
+      "DLTT": "us-gaap:LongTermDebtNoncurrent, fallback LongTermDebt",
+      "TACC": "(dWC + dNCO + dFIN) / CSHOT_t, changes from fiscal t-1 to t; missing => 0 flagged (paper)"
+    },
+    "fact_selection": "Annual facts only: form in {10-K, 10-K/A}, fp=FY. Point-in-time rule identical to the e2 basket panel (cleared clean by red team in R0): facts with filed <= reference date, earliest filed per period.",
+    " NegE": "indicator E_t < 0"
+  },
+
+  "universe_precommitted": {
+    "definition": "Current S&P 500 membership per data/slickcharts/sp500.json (snapshot 2026-08-02, 503 holdings) UNION the 30 rim-dow symbols. Common stocks only; ADR/ETF excluded by construction of both lists.",
+    "symbol_to_cik": "data/edgar/company_tickers.json; unmatched symbols dropped and listed in the artifact",
+    "sic_industry": "SEC cik-ticker-sic.json fetched once; used only for industry-bucket reporting (10 SIC groups)",
+    "survivorship_bound": "Current membership applied to all sample years; additions after 2009 (e.g. names joining S&P500 post-2015) enter early years as if members. Bias common to all three models (same firms, same origins) so within-model comparison is valid; external validity bounded. Stated in the validation artifact, same pattern as R0.",
+    "minimum_pool_size": "A (tau, origin) forecast is produced only if its pooled training window has >= 300 firm-year rows; below that the origin is voided and recorded. Paper pools are ~4000+; 300 is a floor against degenerate fits, not a tuning knob.",
+    "financials_included": "All industries included (paper covers full Compustat); no sector exclusion. Declared per owner directive 5.2."
+  },
+
+  "sample_precommitted": {
+    "forecast_origins": "June 30 of 2019, 2020, 2021, 2022, 2023 (five origins)",
+    "horizons": "tau in {1,2,3} per owner directive; the paper estimates to tau=5 but R2 consumes FY1-FY3 only (FL3 three-period structure)",
+    "evaluation_actuals": "tau=1..3 evaluated where the realized fiscal year t+tau has a filed annual fact by 2026-08-07 (data cutoff). Origin 2023 tau=3 (fiscal 2026 results) expected mostly unfiled - evaluated on available actuals only, counts reported. No imputation of missing actuals.",
+    "xbirl_coverage_note": "EDGAR XBRL coverage is dense from ~FY2009; training windows for origin 2019 start at FY2009 (tau=1: 2009..2018). Pre-2009 years contribute little; pool construction does not reach before FY2005 in any window. Declared."
+  },
+
+  "price_source_for_error_scaling": {
+    "source": "Stooq daily closes (repo precedent: macro-chart stooq loader), https://stooq.com/q/d/l/?s={sym}.us&i=d, fetched once per symbol",
+    "scaling": "Forecast error scaled by the last close on or before June 30 of the origin year (tolerance 10 trading days), matching the paper's end-of-June price scaling for per-share models. Symbols without a price are excluded from price-scaled metrics and counted.",
+    "fallback": "If Stooq is unreachable for a symbol, that symbol drops from price-scaled metrics (reported); no alternate source substitution after results."
+  },
+
+  "validation_design": {
+    "metrics_per_tau": ["mean signed bias (price-scaled)", "MAE (price-scaled)", "median absolute error (price-scaled)", "count", "share of loss firms in sample"],
+    "buckets": ["loss firms (NegE=1) separately", "size terciles by total assets (declared proxy for market cap)", "10 SIC industry groups"],
+    "comparisons": "RI vs RW, RI vs EP, EP vs RW, on each metric and bucket",
+    "necessary_and_sufficient_declared": {
+      "necessary_to_proceed_to_R2": "RI price-scaled MAE < RW price-scaled MAE at BOTH tau=1 and tau=2 on the full sample (paper's own bar is beating the naive benchmark; tau=3 reported but not gating because its actuals are the thinnest)",
+      "sufficient_to_proceed_to_R2": "the necessary condition alone. EP/RW comparison is sanity of the pooled design, not a gate.",
+      "model_selection_for_R2_input": "pre-committed: whichever of RI and EP has LOWER average price-scaled MAE across tau=1..3 becomes the R2 forecast input; the other is carried as sensitivity. Chosen by this rule, not by judgment after results.",
+      "no_veto_legs": "Per red-team ask (fh-20260807-023): no additional leg can veto the gate. Extra statistics are reported as diagnostics only and listed as such."
+    },
+    "coefficient_diagnostics": "Per-tau pooled coefficients with OLS se, compared to expected signs; sign inversions reported, not gated.",
+    "if_ri_fails_rw": "Per owner directive: stop, do not proceed to R2 with these forecasts, report the cause. The recovery continues to the data decision (C) or retirement (D) on that evidence."
+  },
+
+  "prohibitions": [
+    "No universe, window, metric, scaling, or source change after results are observed.",
+    "No paid data, no account creation, no login (owner directive section 3 and 8).",
+    "No Oracle data in the deployable path.",
+    "No public number republication; quarantine untouched.",
+    "Criteria and receipt commit in a separate earlier commit than any result."
+  ],
+
+  "planned_result_paths": [
+    "data/computed/feno-rim-recovery/r1-edgar-panel.json",
+    "data/computed/feno-rim-recovery/RIM_MECHANICAL_FORECAST_VALIDATION.json"
+  ],
+  "planned_spec_doc": "data/computed/feno-rim-recovery/RIM_MECHANICAL_FORECAST_SPEC.md (deliverable 12.2, written from this criteria after the run)"
+}

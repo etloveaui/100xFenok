@@ -1,0 +1,2128 @@
+                   Evaluating Cross-Sectional Forecasting Models for
+
+                                       Implied Cost of Capital
+
+
+                                                       by
+
+                                                Kevin Li
+                                          University of Toronto
+                                       kevin.li@rotman.utoronto.ca
+
+
+                                                      and
+
+                                          Partha Mohanram*
+                                         University of Toronto
+                                 partha.mohanram@rotman.utoronto.ca
+
+
+                  Forthcoming in the Review of Accounting Studies (2014)
+
+
+Abstract: The computation of implied cost of capital (ICC) is constrained by the fact that around
+half of all firms do not have analysts’ earnings forecasts. Hou, van Dijk and Zhang (2012, HVZ)
+present a cross-sectional model to generate forecasts and compute ICC from these forecasts.
+However, the forecasts from the HVZ model perform worse than those from a naïve random
+walk model and show anomalous correlations with risk factors. We present two parsimonious
+alternatives to the HVZ model: the EP model based on the persistence in earnings and the RI
+model based on the residual income model from Feltham and Ohlson (1996). We show that both
+models outperform the HVZ model in terms of forecast bias, accuracy and earnings response
+coefficients. Further, the ICC metrics generated from the EP and RI models outperform those
+from the HVZ model in terms of correlations with future returns and risk factors. We recommend
+that future research use the RI model or the EP model to generate earnings forecasts.
+
+
+
+
+*Corresponding author, Rotman School of Management, University of Toronto, 105 St. George Street, Toronto,
+Ontario M5S 3E6, Canada. We would like to thank Jim Ohlson (the editor), Mei Feng (the discussant), two
+anonymous referees, Patricia Dechow, Jacob Thomas, Franco Wong, Scott Richardson and seminar participants at
+Boston University, Erasmus University, University of British Columbia, University of Miami, University of Toronto
+and 2013 Review of Accounting Studies Conference for helpful comments. All errors are our own.
+1. Introduction
+
+       Cost of equity plays a central role in valuation, portfolio selection, and capital budgeting.
+
+Therefore, measuring and validating cost of equity metrics has been the subject of much
+
+research. Inferring cost of equity ex-post from realized returns is problematic because the
+
+correlation between expected returns and realized returns is weak (Elton 1999). Prior research
+
+has often documented a weak or even non-existent relation between conventional measures of
+
+risk (e.g.,  and realized returns (Fama and French 1992). This has led to the use of implied cost
+
+of capital (ICC), which is the discount rate that equates current stock price to the present value of
+
+expected future dividends.
+
+       Prior literature has taken different approaches towards measuring ICC. Gebhardt, Lee and
+
+Swaminathan (2001) and Claus and Thomas (2001) use variants of the residual income model to
+
+solve for the discount rate that equates price to the sum of book value and the present value of
+
+future abnormal earnings. Gode and Mohanram (2003) and Easton (2004) develop proxies based
+
+on the abnormal earnings growth model of Ohlson and Juettner-Nauroth (2005). The common
+
+feature of all these approaches to measuring ICC is a reliance on analysts’ EPS forecasts. This
+
+causes two shortcomings for researchers looking to obtain a reliable proxy for expected returns.
+
+First, analyst forecasts are available only for a subset of firms, with almost half of all firms not
+
+having analyst coverage in most years. This problem is not trivial because most of the firms
+
+without analyst following are typically small and young firms - the kind of firms that would be
+
+of the greatest interest to researchers examining issues related to information asymmetry,
+
+earnings quality and disclosure where an ICC approach is used most often. Second, an extensive
+
+literature has shown that the ICC proxies derived from analyst forecasts are unreliable showing
+
+
+
+
+                                                 1
+weak correlations with future returns (Easton and Monahan 2005) and anomalous correlations
+
+with risk factors.
+
+        A recent paper by Hou, van Dijk and Zhang (2012), henceforth HVZ, offers an interesting
+
+approach towards addressing these shortcomings. HVZ run cross-sectional regressions using
+
+lagged information to estimate future earnings for horizons of one to five years. The model they
+
+use builds on models in Fama and French (2000, 2006) and regresses future earnings on total
+
+assets, dividends, earnings and accruals. They use the earnings forecasts from the model to
+
+generate ICC estimates based on the approaches in prior literature. HVZ show that their model
+
+addresses the shortcomings of relying on analyst forecasts, by providing reliable ICC estimates
+
+for a wide cross-section of firms. HVZ show that the model-based ICC generally outperforms the
+
+ICC derived from analysts’ forecasts. Not surprisingly, the HVZ model has been used in recent
+
+research on accounting based valuation (Chang, Landsman and Monahan 2012) and ICC (e.g.,
+
+Jones and Tuzel 2012; Lee, So and Wang 2011; Patatoukas 2011).
+
+        Given the growing attention to the HVZ model, it is imperative to test the model for the
+
+following reasons. First, HVZ test only one model and do not benchmark it against other cross-
+
+sectional models. Although they show that their ICC estimates are correlated with future returns
+
+at the portfolio level, they do not examine the relation between ICC estimates and future returns
+
+at the firm level like the prior studies (Gebhardt, Lee and Swaminathan 2001; Gode and
+
+Mohanram 2003). In addition, their ICC estimates show many anomalous relations with risk
+
+factors, including negative correlations with systematic and idiosyncratic risk.
+
+        Second, a recent paper by Gerakos and Gramacy (2013) shows that the HVZ model
+
+actually underperforms a naïve random walk model that simply sets future earnings to past
+
+earnings. However, a random walk model is impractical for many implied cost of capital metrics
+
+                                                 2
+that anchor on estimates of short term growth. Further, the level of forecast errors reported in the
+
+HVZ model is rather high – the mean absolute error (scaled by price) for one-year-ahead
+
+earnings is 0.084 for firms with analyst coverage (Table 3 of HVZ, page 9). If one assumes an
+
+average P/E ratio of 12, this represents an absolute error that is on average equal to the estimate
+
+of earnings itself. More importantly, the HVZ model generates larger forecast errors for firms
+
+without analyst coverage where the need for a forecasting model is crucial. Our partition results
+
+indicate that the average absolute forecast error for one-year-ahead earnings for this group
+
+generated by the HVZ model is more than twice as large as that for firms with analyst coverage.
+
+       The goal of this paper is to build better cross-sectional models to forecast future earnings
+
+(EPS). We present and test two parsimonious alternatives to the HVZ model. The first model (EP
+
+model) forecasts earnings as a function of past earnings, allowing for the differential persistence
+
+of profits and losses. The second model (RI model) is motivated by the residual income valuation
+
+models in Ohlson (1995), Feltham and Ohlson (1995, 1996) and incorporates book value and
+
+accruals in addition to earnings. We benchmark the HVZ model and our two proposed models
+
+against a naïve random walk (RW) model.
+
+       We test the HVZ model and the above three alternative models along the following
+
+dimensions. We first evaluate the four models on the basis of forecast accuracy and bias. We then
+
+look at the earnings response coefficients (ERC), measured as the correlation between forecast
+
+surprise and future abnormal returns. Finally, we examine the properties of the ICC obtained by
+
+applying forecasts from these models to the commonly used ICC proxies, in terms of correlations
+
+with realized returns as well as correlations with risk factors.
+
+       We find that both the RI model and the EP model outperform the HVZ model in terms of
+
+forecast accuracy, forecast bias and ERC. On average, the forecasts for the whole Compustat
+
+                                                  3
+population from the RI model are 28% to 38% more accurate than the forecasts from the HVZ
+
+model for the one-year to three-year ahead forecast horizons. The improvement is as large as
+
+45% in small firms and firms without analyst coverage, where model-based forecasts are more
+
+relevant and important. On average, the ERCs of the RI and the EP forecasts are 18% to 85%
+
+larger than the ERCs of the HVZ forecasts, indicating that the RI and the EP forecasts better
+
+represent market expectations. Consistent with Gerakos and Gramacy (2013), we find that the
+
+HVZ model significantly underperforms the naïve random walk model in terms of forecast
+
+accuracy, bias, and ERC, in the full sample as well as in the subsamples of small firms and firms
+
+without analyst coverage. On average, the absolute forecast errors from the RW model are 13%
+
+to 37% smaller than the forecast errors from the HVZ model.
+
+       We examine the correlation between ICCs derived from the forecasts and future returns
+
+along two dimensions – return spreads between ICC quintiles, and firm level regressions of
+
+future returns on ICC. We find that both the EP model and the RI model perform better than the
+
+HVZ model in terms of portfolio return spreads. Firm-level regressions indicate that the HVZ
+
+model produces ICC metrics with the weakest correlation with future realized returns, while the
+
+ICC metrics from the RI model show the strongest correlations with future returns.
+
+       We also examine the correlation between the ICC measures and risk factors, consistent
+
+with the analysis in Gebhardt, Lee and Swaminathan (2001), Gode and Mohanram (2003), and
+
+Botosan and Plumlee (2005). We find that the ICCs based on the RI model show expected
+
+correlations with most risk factors. In contrast, the ICCs based on the HVZ model always show
+
+an anomalous negative correlation with systematic risk () and an insignificant correlation with
+
+idiosyncratic risk and analyst following.
+
+
+
+
+                                               4
+        To summarize, we provide two models (RI and EP) that outperform the HVZ model on
+
+all dimensions – forecast accuracy, bias, ERC, and correlations of ICC proxies with future
+
+returns and risk factors. In addition to their superior performance, both models are grounded in
+
+prior theoretical and empirical research in accounting, and are relatively parsimonious. Among
+
+the two models, the RI model performs marginally better on most dimensions. We recommend
+
+that future research use the RI model as the appropriate cross-sectional model to forecast future
+
+earnings.1
+
+        The rest of the paper is organized as follows. In Section 2, we discuss the HVZ model
+
+and the alternative models developed in this paper. Section 3 discusses the data and empirical
+
+execution. Section 4 compares the models on forecast accuracy, bias and ERC. Section 5
+
+examines the properties of ICC estimates derived from the forecasts. Section 6 discusses the
+
+results of sensitivity analyses. Section 7 concludes with implications for future research.
+
+
+
+2. The Models
+
+2.1 The HVZ Model
+
+        The model developed in HVZ is an extension of the cross-sectional profitability models
+
+in Fama and French (2000, 2006), Hou and Robinson (2006), and Hou and van Dijk (2011). The
+
+model is specified as:
+
+                 Et+ = 0 + 1*At + 2*D t + 3*DD t + 4*E t + 5*NegE t + 6*ACt                       (1)
+
+
+
+
+1
+  In our exploration of alternative forecast models, we observe that parsimonious models in general outperform
+complex models. For example, we test the forecast model of Abarbanell and Bushee (1997), which is based on the
+forecast approach by analysts, a model that forecasts future sales growth and profit margins, and a model that
+combines RI and HVZ. None of these more complex models outperforms the EP model or the RI model.
+
+                                                      5
+where Et+is earnings in year t+ (=1 to 5), At is total assets, Dt is dividends, DDt is an indicator
+
+variable for dividend paying firms, Et is earnings, NegEt is an indicator variable for loss firms
+
+and ACt is working capital accruals. The regression is estimated using the previous ten years of
+
+data, ensuring no look-ahead bias (i.e., the regression for one-year-ahead earnings in year t uses
+
+data from year t-10 to t-1, or two-year-ahead regression uses data from year t-11 to t-2, etc.).
+
+Consistent with HVZ, we estimate the regression at the dollar level with unscaled data.2
+
+Forecasted earnings for the next five years are estimated by using the coefficients from the above
+
+regressions and year t data for each firm. The main advantage of the cross-sectional approach is
+
+that it does not impose any survivorship requirement as time series models do. See Appendix A
+
+for details of the empirical execution for the HVZ model and the models introduced in this paper.
+
+
+2.2 The RW Model
+
+        We include random walk (RW) model as the naïve benchmark. Although the forecasts
+
+from the RW model are not suitable for estimating ICC because they do not allow for growth in
+
+earnings, the RW model provides an intuitive benchmark against which to evaluate other
+
+earnings forecast models. The RW model does not rely on any parameters. It is specified as:
+
+                                                    Et+ = Et +                                               (2)
+
+
+2.3 The EP Model
+
+        The earnings persistence (EP) model is one simple extension of the RW model. It allows
+
+for growth in earnings, and hence the forecasts generated by the EP model can be used for ICC
+
+estimation. The EP model is specified as:
+
+
+2
+ We estimate the HVZ model at the dollar level as it is specified in their paper. We also perform robustness test by
+estimating the HVZ model at the per-share level. The inference still holds.
+
+                                                         6
+                          Et+ = 0 + 1*NegEt + 2*Et + 3*NegE*Et +                         (3)
+
+We include the indicator for negative earnings (NegE) and its interaction term with earnings
+
+(NegE*E) to allow for different persistence of profit and loss firms (Li 2011). We estimate the
+
+regression using the same approach of HVZ – i.e., we use lagged ten years of data to estimate the
+
+models using all firms with available data and then apply the regression coefficients to firm-
+
+specific data to estimate the expected values for each firm. We run the regression at the per-share
+
+level by scaling all variables by the number of shares outstanding.
+
+
+2.4 The RI Model
+
+       One potential drawback of the HVZ model is the reliance on dividends as opposed to
+
+earnings and book values. Miller and Modigliani (1961) prove that, ignoring taxes and
+
+contracting costs, dividends are irrelevant for asset pricing. As an alternative to the traditional
+
+dividend discount valuation models, the residual income valuation model derives the relation
+
+between price, book value and earnings. The residual income valuation model was developed in
+
+early work by Preinreich (1936), Edwards and Bell (1961) and Peasnell (1982), and formalized
+
+more recently in a series of papers by Ohlson (1995), Feltham and Ohlson (1995, 1996).
+
+       Ohlson (1995) presents a basic model where future residual income depends on current
+
+residual income and other information. Feltham and Ohlson (1995) introduce the balance sheet
+
+effect of conservatism, which can mechanically increase future residual income because of lower
+
+book values. Feltham and Ohlson (1996) further introduce the income statement effect of
+
+conservatism through capital expenditures (accruals), which will depress future residual income.
+
+Feltham and Ohlson (1996) express future residual income using the following equation
+
+(notation simplified):
+
+
+                                                7
+                                       RIt+1 = 1*RIt + 2*Bt + 3*capxt +                      (4)
+
+where B is book value and RI is residual income. In Eq. (4), 1 and  are expected to be
+
+positive and lie between zero and one, while 3 is expected to be negative. As the definition of
+
+residual income implies that RIt = Et – r*Bt-1 and RIt+1 = Et+1 – r*Bt, we can substitute for RIt and
+
+RIt+1 in Eq. (4) and solve for Et+1:
+
+                            Et+1 = 1*Et + (2 + r)*Bt + (-1* r)*Bt-1 + 3*capxt +             (5)
+
+Based on Eq. (5), our procedure to estimate future earnings is
+
+                                 Et+1 = χ0 + χ1*Et + χ2*Bt + χ3*Bt-1 + χ4*capxt +               (6)
+
+           In Feltham and Ohlson (1996), capital expenditures refer to all expenditures on assets
+
+(not just PP&E as capital expenditures normally pertain to). Accordingly, we set capx to total
+
+accruals (TACC from Richardson et al. 2005). We modify Eq. (6) by introducing an interaction
+
+term between Et and a loss dummy (NegE*E). We also remove book value in year t-1 to reduce
+
+additional data requirement.3 The equation we estimate is hence:
+
+                     Et+ = χ0 + χ1*NegEt + χ2*Et + χ3*NegEt*Et + χ4*Bt + χ5*TACCt +           
+
+           We expect the coefficients χ2 and χ4 to be positive representing the persistence of
+
+earnings, χ3 to be negative representing the lower persistence of losses (Li 2011), and χ5 to be
+
+negative representing the effects of conservatism. We estimate the regression on per-share level
+
+using the same cross-sectional approach of HVZ.
+
+
+
+
+3
+    The model including Bt-1 produces essentially the same results.
+
+                                                            8
+3. Data and Empirical Execution
+
+3.1 Data
+
+        Our estimation sample includes all firms on the Compustat fundamentals annual file up to
+
+2012. We collect stock returns from the CRSP monthly return file and analyst information from
+
+the IBES summary file. The earnings number we estimate is the earnings before special and
+
+extraordinary items.4 Appendix A provides the variable definitions for each model. To minimize
+
+the effect of outliers, we winsorize all variables annually at the 1st and 99th percentiles.
+
+
+3.2 Earnings Forecasts for Year t+1 to Year t+5
+
+        We follow the methodology in HVZ to estimate the cross-sectional forecast models and
+
+the predicted earnings for year t+1 to year t+5. Specifically, for each year between 1969 and
+
+2012, we estimate the three cross-sectional models (HVZ, EP and RI) using all available
+
+observations over the past ten years. For example, if 2000 is the year t, we use data from 1990 to
+
+1999 to estimate the coefficients that will be used to compute the earnings of 2001 (year t+1).
+
+Similarly, we use data from 1989 to 1998 to estimate the coefficients that will be used to
+
+compute the earnings of 2002 (year t+2). This ensures that the earnings forecasts are strictly out
+
+of sample. We estimate each model as of June 30 of each year. To further reduce look-ahead
+
+bias, we assume that financial information for firms with fiscal year ending (FYE) in April to
+
+June is not available on June 30. In other words, only the financials of firms with FYE from
+
+April of year t-1 to March of year t are used for estimation of year t. For each firm and each year
+
+t in our sample, we compute earnings forecasts for year t+1 to year t+5 by multiplying the
+
+
+4
+  This represents a departure from HVZ as they estimate earnings before extraordinary items, without excluding
+special items. We exclude special items because they are less predictable by nature. We perform robustness test
+using earnings before extraordinary items. The forecast errors are bigger for all models. However, the inferences do
+not change as the rank ordering of the models in terms of forecast accuracy and ERCs is unaltered..
+
+                                                         9
+independent variables in year t with the pooled regression coefficients estimated using the
+
+previous ten years of data. This method only requires a firm have non-missing independent
+
+variables in year t to estimate its future earnings. As a result, the survivorship bias is kept to a
+
+minimum. We set the missing value of AC and TACC to zero. However, the results are robust
+
+without this requirement.
+
+
+3.3 Forecast Bias and Accuracy
+
+        Our first set of performance measures used to evaluate the models is forecast bias and
+
+accuracy. Forecast bias is the difference between actual earnings and earnings forecasts. We
+
+scale bias by end-of-June market value of equity if the model forecasts dollar earnings (the HVZ
+
+and RW models), or by end-of-June stock price if the model forecasts earnings per share (the EP
+
+and RI models). Forecast accuracy is defined as the absolute value of forecast bias.
+
+
+3.4 Estimating the ERC
+
+        The second performance measure is the earnings response coefficient (ERC) of the
+
+forecasts. We estimate the ERC using the sum of the quarterly earnings announcement returns
+
+(market-adjusted, from day-1 to day+1) over the next one, two, and three years on firm-specific
+
+unexpected earnings (i.e., the forecast bias) measured over the same horizon.5 We standardize the
+
+unexpected earnings so that they have unit variance each year. As a result, the ERCs are
+
+comparable among all model-based forecasts.
+
+
+3.5 Estimating the ICC Metrics
+
+
+
+5
+ We also perform robustness test by estimating the cumulative ERC the same way as the “Annual ERC” in HVZ.
+Specifically, we estimate ERCs by regressing the buy-and-hold returns over the next one, two, and three years on the
+unexpected earnings over the same horizon. The tenor of the results does not change.
+
+                                                        10
+       We use forecasts from the three cross-sectional models (HVZ, EP and RI) to estimate
+
+implied cost of capital using the four commonly used ICC metrics. We use two ICC metrics
+
+based on the abnormal earnings model of Ohlson and Juettner-Nauroth (2005) – the Gode and
+
+Mohanram (2003) implementation of the full model (ICCGM) and a simplified version based on
+
+the price earnings to growth ratio (ICCPEG). We also use two ICC metrics based on the residual
+
+income valuation model – the Gebhardt, Lee and Swaminathan model (ICCGLS) and the Claus
+
+and Thomas model (ICCCT). The details of the empirical execution are presented in Appendix B.
+
+Consistent with the common approach in the literature, we use the average of the ICCs derived
+
+from the four individual methods as our ICC metric. To allow for comparison across time, we
+
+adjust stock returns and ICCs for the risk-free rate.
+
+
+
+4. Comparison of the Forecast Accuracy, Bias and ERC of the Models
+
+4.1 Coefficient Estimates of the Three Cross-sectional Models
+
+       Panel A of Table 1 presents the average coefficients and the time-series t-statistics from
+
+the HVZ model estimated each year from 1969 to 2012 using the appropriately lagged ten years
+
+of data. To conserve space, we only report the results for t+1, t+2, and t+3 earnings regressions
+
+(those for t+4 and t+5 regressions are available upon request). The magnitude of the coefficients
+
+and the adjusted R2 are generally consistent with the results in HVZ.
+
+       Panel B of Table 1 presents the average coefficients and the corresponding time-series t-
+
+statistics from the EP model. The magnitude of the coefficient on Et is slightly less than 1, and as
+
+expected, losses are less persistent. The model explains approximately 68.1%, 51.5% and 41.5%
+
+of the variations in EPS in year t+1, t+2, and t+3, respectively. Although the adjusted R2 of the
+
+HVZ model is higher than that of the EP model, this is mainly due to the fact that the HVZ
+
+                                                 11
+model is estimated at the dollar level and the inherent heteroskedasticity of the regression boosts
+
+adjusted R2. If the HVZ model is estimated at the per-share level, the adjusted R2 declines to
+
+67.0%, 50.5% and 41.4% (untabulated) for t+1, t+2 and t+3 regressions, respectively.
+
+       Finally, Panel C of Table 1 presents the average coefficients and the corresponding time-
+
+series t-statistics from the RI model. All coefficients have signs consistent with the theoretical
+
+prediction from the residual income valuation model. In addition to the positive coefficient on
+
+earnings and negative coefficient on the loss interaction, the regression has a positive average
+
+coefficient for book value and a negative coefficient for accruals.
+
+       The three cross-sectional models produce non-missing one-, two-, and three-year-ahead
+
+earnings forecasts for 179,362 firm-year observations from 1969 to 2012.
+
+
+
+4.2 Forecast Accuracy of the Four Models
+
+       To evaluate the performance of the cross-sectional earnings models, we first compare
+
+their forecast accuracy. We perform the analysis using the sample of firm-year observations with
+
+non-missing t+1, t+2, and t+3 forecast bias for all four models from 1969 to 2008. The time
+
+period ends in 2008 because we require non-missing realized earnings in the future three years to
+
+calculate forecast bias and accuracy. The sample includes 119,653 firm-year observations. Table
+
+2 reports the comparison of forecast accuracy.
+
+       Panel A of Table 2 reports the time-series averages of the mean and median absolute
+
+forecast error for the HVZ, RW, EP, and RI models in the full sample. A larger number indicates
+
+a less accurate earnings forecast. The RI model produces the most accurate forecasts for all three
+
+forecast horizons with the lowest average absolute forecast error. The EP model has the second
+
+best forecast accuracy, while the HVZ model generates the least accurate forecasts among the
+
+                                                 12
+four models. For example, the mean absolute forecast error of the RI model is 0.073 (t=15.80)
+
+for one-year-ahead forecasts, while the corresponding mean absolute forecast error of the EP,
+
+RW and HVZ models is 0.073 (t=15.77), 0.088 (t=12.32), and 0.101 (t=15.09), respectively.
+
+Compared to the forecasts of the HVZ model, the forecasts of the RI model are on average 28%
+
+more accurate. At the one-year-ahead forecast horizon, the RI model and the EP model have the
+
+similar forecast accuracy. However, as the forecast horizon increases, the RI model produces
+
+more accurate forecasts than the EP model. For example, the mean three-year-ahead absolute
+
+forecast error is 0.126 (t=20.64) for the RI model and 0.133 (t=17.42) for the EP model, with the
+
+difference significant at 1% level. The corresponding values for the RW and HVZ models are
+
+0.128 (t=20.50) and 0.203 (t=16.42), respectively. At the three-year-ahead forecast horizon, the
+
+RI model generates forecasts that are on average 38% more accurate than the forecasts from the
+
+HVZ model. It is also worth noting that the absolute forecast error of the RW model is on
+
+average 13% to 37% smaller than the HVZ model.
+
+        In terms of the median absolute forecast error, both the RI model and the RW model
+
+produce the most accurate forecasts for all three horizons, with none of the differences between
+
+the two models being statistically significant. The EP model generally underperforms both the RI
+
+model and the RW model in all horizons, expect for one-year-ahead forecast where its accuracy
+
+is indistinguishable from the RW model. Finally, the HVZ model consistently has the worst
+
+forecast accuracy among the four models – its pair-wise differences with the other three models
+
+are all significant at 1% level.
+
+        We also adopt an alternative non-parametric measure to evaluate forecast accuracy.
+
+Specifically, we examine how often each model produces the most and the least accurate
+
+forecast. As the results in Panel B of Table 2 show, the RW model produces 31.2% of the most
+
+
+                                               13
+accurate forecasts for year t+1, 34.3% for year t+2, and 38.3% for year t+3. The HVZ model
+
+ranks the second: 27.8% for t+1, 25.4% for t+2, and 22.5% for t+3. However, both the RW
+
+model and the HVZ model are also more likely to produce the least accurate forecast: the HVZ
+
+(RW) model produces 35.5% (31.1%) of the least accurate forecasts for year t+1, 37.9% (27.9%)
+
+for year t+2, and 38.0% (30.3%) for year t+3. respectively. The results suggest that although the
+
+RI model and the EP model do not always produce the best forecast, the forecast errors from
+
+these two models have less variance than the forecast errors from the HVZ model or the RW
+
+model.
+
+         Panel C of Table 2 reports the time-series averages of the absolute forecast error in the
+
+subsamples partitioned by analyst coverage. A firm is considered as covered by analysts if there
+
+is one FY1 consensus forecast on IBES for year t+1. The results show that the mean absolute
+
+forecast error is much bigger for firms without analyst coverage, consistent with the presumption
+
+that these firms are generally smaller and their earnings are harder to forecast. The EP model and
+
+the RI model continue to outperform the HVZ model in both subsamples and the improvements
+
+are more pronounced in the subsample of firms without analyst coverage. For example, for firms
+
+without analyst coverage, the differences in mean absolute forecast error between the RI model
+
+and the HVZ model are 0.043 (or 29% improvement) for the one-year-ahead forecasts and 0.138
+
+(or 44% improvement) for the three-year-ahead forecasts. For firms with analyst coverage, the
+
+corresponding differences in mean absolute forecast error are 0.005 (or 8% improvement) and
+
+0.015 (or 14% improvement), respectively. The RW model still significantly outperforms the
+
+HVZ model in the subsample of firms without analyst coverage. In the subsample of firms with
+
+analyst coverage, the RW model outperforms the HVZ model for year t+2 and t+3 forecasts.
+
+
+
+
+                                                14
+       For the subsample of firms with analyst coverage, researchers have two options to
+
+estimate ICC metrics. First, they could use a model-based approach as in HVZ. Second, they
+
+could correct the predictable biases in the forecasts as Mohanram and Gode (2013) do, who show
+
+that the error correction procedure dramatically improves the performance of ICC metrics.
+
+However, for the subsample of firms without analyst coverage, researchers have to use a model-
+
+based approach to generate forecasts. Hence, model-based earnings forecasts are much more
+
+crucial for firms without analyst coverage. In this important group, the HVZ model significantly
+
+underperforms not only the RI model and the EP model, but also the naïve RW model.
+
+       Panel D of Table 2 reports the time-series averages of the mean absolute forecast error in
+
+the subsamples partitioned by firm size. Each year, observations are sorted into two equal sized
+
+groups based on their end-of-June market value of equity. The results show that in both
+
+subsamples the RI model has the most accurate forecasts. Relative to the HVZ model, the
+
+improvement of the RI model in forecast accuracy is more pronounced in small firms. For
+
+example, in small firms the differences in mean absolute forecast error between the RI model and
+
+the HVZ model are 0.056 (or 34% improvement) for the one-year-ahead forecast and 0.153 (or
+
+45% improvement) for the three-year-ahead forecast. The corresponding differences in the large
+
+firm are 0.000 and 0.002 (or 3% improvement), respectively. The EP model also outperforms the
+
+HVZ model in both subsamples, but the improvements are relatively smaller than those of the RI
+
+model. Finally, the naïve RW model continues to outperform the HVZ model in small firms,
+
+whose earnings are more difficult to forecast.
+
+       In summary, the results in Table 2 show that both the RI model and the EP model
+
+outperform the HVZ model in terms of forecast accuracy. The improvement is more significant
+
+in the groups of firms where model-based forecasts are more relevant and important, i.e., small
+
+
+                                                 15
+firms and firms without analyst coverage. In addition, the HVZ model also significantly
+
+underperforms the naïve random walk model in the full sample as well as in the subsamples of
+
+small firms and firms without analyst coverage.6
+
+4.3 Forecast Bias of the Four Models
+
+        Table 3 reports the comparison of forecast bias of the four models. Forecast bias is the
+
+difference between the actual earnings and the earnings forecasts, scaled by end-of-June market
+
+value of equity (the HVZ and RW models) or end-of-June stock price (the EP and RI models). A
+
+negative bias indicates that the forecast is higher than the actual. Panel A of Table 3 reports the
+
+time-series averages of the mean and median forecast bias for the four models in the full sample
+
+as well as their pair-wise comparisons. Mean forecast biases for the HVZ, EP and RI models are
+
+negative and statistically significant for all forecast horizons. In contrast, mean forecast biases
+
+for the RW model are positive and statistically significant for all forecast horizons. This is
+
+because the naïve random walk model does not allow for growth in earnings. The magnitude of
+
+the forecast bias of the HVZ model is significantly larger than all other models, including the
+
+naïve RW model.
+
+        Panel B of Table 3 reports the time-series averages of the mean forecast bias in the
+
+subsamples partitioned by analyst coverage. The mean forecast bias of the RI model is generally
+
+the smallest in magnitude among all models in both subsamples. However, its one-year-ahead
+
+forecast bias has larger magnitude than the RW model for firms with analyst coverage. In both
+
+subsamples, the HVZ model produces more biased forecast than all other three models.
+
+
+
+6
+ We further partition our sample into four time periods (1969-1978, 1979-1988, 1989-1998, and 1999-2008). We do
+not observe any systematic changes in forecast accuracy of the HVZ, EP and RI models. However, the forecast
+accuracy of the RW model deteriorates over time. This is not surprising as the naïve model is not well suited for
+more complex operations.
+
+                                                       16
+       Panel C of Table 3 reports the time-series averages of the mean forecast bias in the
+
+subsamples partitioned by firm size. For large firms, the mean forecast biases of the EP and RI
+
+models are all statistically insignificant, while the mean forecast biases of the HVZ model are all
+
+significantly negative. For small firms, the mean forecast biases of the HVZ, EP and RI models
+
+are all significantly negative, with the forecasts of the HVZ model being the most biased.
+
+       In summary, the forecasts from the RI model generally are the least biased for the whole
+
+population as well as in the partitions by analyst coverage and by firm size. In contrast, the
+
+forecasts from the HVZ model generally are the most biased, especially for firms without analyst
+
+coverage and small firms.
+
+
+4.4 ERC of Model-based Forecasts
+
+       A higher ERC suggests that the market reacts more strongly to the unexpected earnings
+
+generated from the model. In other words, the earnings forecasts from the model potentially
+
+represent a better approximation of market expectations. Table 4 reports the time-series averages
+
+of the ERCs for all models. We estimate the ERC by regressing the sum of the quarterly earnings
+
+announcement returns (market-adjusted, from day-1 to day+1) over the next one, two, and three
+
+years on firm-specific unexpected earnings (i.e., the forecast bias) measured over the
+
+corresponding horizon.
+
+       Panel A presents the ERCs for the entire sample. The ERCs for one-, two-, and three-
+
+year-ahead forecasts from the RI model are 0.042 (t=18.02), 0.064 (t=13.83), and 0.085
+
+(t=13.57), respectively, which are the highest among all models. The EP model ranks the second
+
+with the corresponding ERCs of 0.040 (t=19.19), 0.062 (t=14.39), and 0.083 (t=12.90),
+
+respectively. The ERCs of the RI and the EP forecasts are 18% to 85% larger than the ERCs of
+
+
+                                                17
+the HVZ forecasts. Surprisingly, even the naïve RW model outperforms the HVZ model for all
+
+forecast horizons. For example, the ERC of the three-year-ahead forecast is 0.046 (t=7.66) for
+
+the HVZ model and 0.078 (t=12.20) for the RW model, with the difference significant at 1%
+
+level. In addition, the adjusted R-squares of the HVZ model are also significantly lower than
+
+those of the other three models. The evidence indicates that compared to the HVZ forecasts, the
+
+RI and the EP forecasts better represent market expectations.
+
+       Panel B of Table 4 reports the time-series averages of the ERCs in the subsamples
+
+partitioned by analyst coverage. For firms without analyst coverage, the ERCs of the HVZ
+
+forecasts are the lowest among all models for all three forecast horizons, while the ERCs of the
+
+RW, EP and RI forecasts are virtually indistinguishable. For firms with analyst coverage, the
+
+HVZ, EP and RI forecasts produce similar ERCs for all horizons, with none of the pair-wise
+
+differences being statistically significant except for the difference between HVZ and EP in year
+
+t+1 forecast.
+
+       Panel C of Table 4 reports the time-series averages of the ERCs in the subsamples
+
+partitioned by firm size. For small firms, both the EP model and the RI model produce the
+
+highest ERCs, while the HVZ model has the lowest ERCs. In large firms, however, the HVZ
+
+model outperforms the other three models, while the RW model is the second best choice.
+
+       To summarize, the forecasts from the EP and RI models represent a better approximation
+
+of the market expectations than the forecasts from the HVZ model, both in the full sample and in
+
+partitions where model-based forecasts are more important. Furthermore, the forecasts of the
+
+HVZ model underperform the forecasts of the naïve random walk model as proxies for the
+
+market expectations in small firms and in firms without analyst coverage.
+
+
+
+                                               18
+5. Properties of ICC Estimates from the Models
+
+5.1 Relation with Future Returns: Portfolio Tests
+
+         In each year, we divide the sample into quintiles based on the ICC metrics. We then
+
+compare the equally weighted mean returns to each of the quintiles, focusing on the spreads
+
+between the lowest and the highest quintiles. The returns are measured annually for the first three
+
+years after portfolio formation, with the compounding period starting four months after the end
+
+of the prior fiscal year.7 To allow for a comparison across time, we subtract the risk-free rate (RF)
+
+from both the annual buy-and-hold returns and the ICC metrics.
+
+         Table 5 presents the pooled results of our portfolio tests using annual quintiles. Panel A
+
+presents the returns over the future three years for the quintiles formed on the composite ICC
+
+metric (average of ICCGM, ICCPEG, ICCGLS and ICCCT) for each forecasting model (HVZ, EP and
+
+RI). Panel B reports the pair-wise comparisons of the return spreads between the lowest and the
+
+highest quintiles.
+
+         The first column in Panel A provides the mean ICC for each quintile for each of the
+
+models. As the results indicate, the mean level of ICC is generally higher for the HVZ model,
+
+especially for the higher quintiles. This is potentially related to the higher bias in the HVZ model
+
+reported earlier. The HVZ model is more likely to have negative forecast errors – i.e., more
+
+likely to generate higher forecasts of earnings, which would naturally lead to higher values of
+
+ICC.
+
+
+
+
+7
+  This represents a departure from HVZ, who form calendar time portfolios starting on July 1st. The advantage of
+our approach is that the financial statement information is equally timely for all observations. The disadvantage is
+the fact that the compounding period may not be identical for all firms in our sample. As a robustness test, we carry
+out all tests in a subset of firms with December fiscal year ends (over 60% of the sample) and find virtually identical
+results.
+
+                                                          19
+       The first set of rows in Panel A of Table 5 presents the returns and return spreads for the
+
+HVZ model. Consistent with their reported results, the return spreads for the three years are
+
+economically meaningful and statistically significant (5.49%, 6.66% and 4.49%, respectively).
+
+Further, the realized returns increase monotonically from the lowest ICC quintile to the highest
+
+ICC quintile for all three years.
+
+       The next set of rows of Panel A presents the return spreads for the EP model. As the
+
+results indicate, the EP model generates higher return spreads. For instance, the return spreads
+
+for the EP model are 7.41%, 7.87% and 7.13% for the three years respectively, while the
+
+corresponding spreads for the HVZ model are 5.49%, 6.66% and 4.49%, with the difference in
+
+spreads being statistically significant in year t+1 and year t+3 (see Table 5, Panel B). Thus, the
+
+EP model presents itself as a superior alternative to the HVZ model, consistent with the results
+
+for forecast bias, accuracy and ERC.
+
+       The final set of rows of Panel A of Table 5 presents the return spreads for the RI model,
+
+which are quantitatively similar to those of the EP model. For instance, the RI model produces
+
+return spreads of 8.39%, 7.86%, and 7.02% for the next three years. This compares favorably
+
+with the returns spreads of 5.49%, 6.66% and 4.49% for the HVZ model (differences significant
+
+for year t+1 and year t+3).
+
+       The return spreads for the ICC metrics, especially those from the EP and RI model,
+
+compare favorably with the results shown in prior literature (Gode and Mohanram 2003,
+
+Gebhardt et al. 2001). They are also comparable to the results using adjusted forecasts shown in
+
+Mohanram and Gode (2013).
+
+
+
+
+                                               20
+5.2 Relation with Future Returns: Firm Level Tests
+
+        In addition to the portfolio tests, we perform firm level tests to measure the relation
+
+between the ICC metrics generated by the models and future returns. For each year, we estimate
+
+cross-sectional univariate regressions with the future returns as the dependent variable and the
+
+ICC metric as the independent variable.8 The benchmark coefficient is “1”, where the realized
+
+return is on average equal to the ICC proxy. We present the Fama and MacBeth (1973)
+
+coefficients and t-statistics in Table 6. Panel A presents the regression results for the ICC metrics
+
+derived from each of the three models. Panel B compares the coefficients on the ICC metrics
+
+across the models.
+
+        The first set of columns of Panel A presents the regression for year t+1. As the results
+
+indicate, the ICC metric based on the HVZ model has the lowest correlation with future realized
+
+returns with a coefficient of 0.314. In comparison, the ICC metric based on the EP model has a
+
+coefficient of 0.569, while the ICC metric based on the RI model has a coefficient of 0.649. The
+
+next set of columns presents the regressions for year t+2 and suggests a similar pattern, with the
+
+coefficient on ICC for the HVZ model at 0.256 trailing that for the EP model (0.544) and the RI
+
+model (0.579). Finally, the last set of columns suggests that the pattern persists for year t+3. The
+
+coefficient on ICC for the HVZ model is 0.147, while the coefficients on ICC for the EP model
+
+and the RI model are 0.559 and 0.573, respectively.
+
+        As the comparison in Panel B suggests, the differences in the coefficients on ICC
+
+between the HVZ model and the RI model or the EP model are statistically significant for year
+
+t+3. In year t+1 and year t+2, the differences appear to be economically significant. For instance,
+
+
+8
+ Easton and Monahan (2005) recommend running regressions with the ICC measure and proxies for cash flow news
+and discount rate news. However, these proxies require forecast revisions, which are not feasible to estimate for
+cross-sectional models. Hence, we only run univariate regressions.
+
+                                                       21
+the mean coefficients of the RI model or the EP model are more than twice as large as the mean
+
+coefficients of the HVZ model for year t+2. However, the differences are statistically
+
+insignificant. Finally, the ICC based on the RI model appears to have slightly stronger
+
+correlations with future realized returns than the ICC based on the EP model.9
+
+        As an alternative to comparing mean coefficients across different sets of regressions, we
+
+also run a “horse race” between the ICC metrics by regressing realized returns on all three
+
+metrics (labeled ICCHVZ, ICCEP and ICCRI). The results are presented in Panel C of Table 6. As
+
+the results suggest, ICCRI is the clear winner in this "horse race”, with a significant coefficient
+
+that approaches the benchmark of 1 for all three years. The coefficients on ICCHVZ and ICCEP are
+
+insignificant for all three years.
+
+        To summarize, the firm level regressions confirm the results from the portfolio tests. The
+
+ICC estimates derived from the EP model and the RI model show stronger correlations with
+
+realized returns than the ICC estimates from the HVZ model. The RI model appears to perform
+
+marginally better than the EP model. Researchers wishing to choose between these two models
+
+will have to make a tradeoff between the greater parsimony of the EP model and the slightly
+
+stronger results of the RI model.
+
+
+
+
+9
+  A potential concern might be that the lower coefficients on the HVZ model in the return regressions might arise
+mechanically due to the greater magnitude and greater spread of the ICC estimates generated from the HVZ model.
+To account for this, we perform the following sensitivity test. We standardize all the ICC measures each year by
+subtracting the minimum and then dividing by the range (maximum – minimum) for ICC using that method in that
+year. In other words, we set each ICC = (ICC – min)/(max – min). We then re-estimate the regressions using the
+standardized ICC measures. We continue to find the weakest relation between ICC from the HVZ model and future
+returns. For instance, for one-year-ahead returns, the average coefficients on ICCHVZ, ICCEP and ICCRI from the
+Fama-MacBeth regressions are 0.230, 0.331, and 0.411, respectively. For two-year-ahead returns, the average
+coefficients on ICCHVZ, ICCEP and ICCRI are 0.190, 0.360, and 0.342, respectively. For three-year-ahead returns, the
+average coefficients on ICCHVZ, ICCEP and ICCRI are 0.120, 0.309, and 0.298, respectively.
+
+                                                        22
+5.3 Relation with Risk Factors
+
+        Prior research has evaluated ICC metrics either by evaluating their correlation with
+
+realized returns or by analyzing their correlation with risk proxies such as systematic risk,
+
+idiosyncratic risk, size, book-to-market, and growth (Gebhardt, Lee and Swaminathan 2001;
+
+Gode and Mohanram 2003; Botosan and Plumlee 2005).10 Our results thus far have shown that
+
+the ICC metrics from the EP and RI models outperform the ICC metrics from the HVZ model as
+
+far as the correlation with realized returns is concerned. We now examine the correlation of the
+
+ICC metrics with risk factors to ensure that this superior performance is not coming at the
+
+expense of anomalous correlations with risk factors.
+
+        We use the following risk factors from prior research: (1) Systematic risk (), calculated
+
+using monthly returns over the lagged five years (ensuring that at least 24 observations are
+
+available); (2) Firm size (LMCAP), the logarithm of market capitalization at the time of the
+
+forecasts; (3) Book-to-market ratio (BM); (4) Idiosyncratic risk (IDIO), the standard deviation of
+
+the prior year’s monthly returns; (5) Earnings volatility (STDNI), the standard deviation of net
+
+income (IBQ) scaled by total assets (ATQ) measured over the previous eight quarters; (6)
+
+Leverage (D2A), the ratio of total debt (DLTT+DLC) to total assets (AT); and (7) Analyst
+
+following (LFOLLOW), the logarithm of 1+number of analysts following the stock. We expect
+
+ICC to be positively related to BM, IDIO, STDNI and D2A, and negatively related to LMCAP
+
+and LFOLLOW.
+
+        We estimate three specifications – the first with only like the CAPM modelthe second
+
+with  augmented with size (LMCAP) and book-to-market (BM) like the Fama and French
+
+10
+  Easton and Monahan (2010) argue that the latter approach is logically inconsistent as ICC metrics are estimated
+precisely because of the flaws in conventional measures of risk that often rely on ex-post returns. We present these
+results to ensure a comparison between our results and those presented in HVZ.
+
+                                                        23
+(1992) model, and the final specification with all the proposed risk factors. Regressions are
+
+estimated annually and aggregated using the Fama and MacBeth (1973) procedure.
+
+       The results are presented in Table 7. At the outset, we note that all proxies correlate
+
+strongly in the expected direction with four of the above seven factors – positively as expected
+
+with book-to-market (BM), earnings volatility (STDNI), and leverage (D2A) and negatively as
+
+expected with size (LMCAP). Our discussion will hence focus on the three remaining risk
+
+proxies, , IDIO, and LFOLLOW, where we find variations among the three forecasting models.
+
+       The first set of rows in Table 7 present the regressions for the ICC metric computed from
+
+the HVZ model. The results suggest an anomalous negative correlation between ICCHVZ and  in
+
+all specifications, and an insignificant correlation with both idiosyncratic risk (IDIO) as well as
+
+analyst following (LFOLLOW).
+
+       The next set of rows presents the results for the EP model. In the univariate regression,
+
+the coefficient on is positive and statistically significant (0.003, t-stat 1.71). In the full
+
+specification, we find a strong positive correlation as hypothesized between ICCEP and IDIO
+
+(0.222, t-stat 9.26) and a significant negative correlation as hypothesized between ICCEP and
+
+LFOLLOW (-0.001, t-stat -2.03). However, the coefficient on  in the full specification is
+
+anomalously negative (-0.008, t-stat -7.00).
+
+       Finally, the last set of rows presents the results for the RI model. The coefficient on is
+
+insignificant in the univariate regression (-0.001, t-stat -0.70). In the full specification, we find a
+
+strong positive coefficient on IDIO (0.115, t-stat 5.10) but an insignificant positive coefficient on
+
+LFOLLOW (0.000, t-stat 1.48). Similar to the other two measures, the coefficient on  in the
+
+full specification is anomalously negative (-0.007, t-stat -6.09).
+
+
+                                                  24
+       To summarize, the EP model shows the strongest correlations with risk factors, with six
+
+of the seven risk factors (all except ) loading significantly and in the correct direction. The RI
+
+model ranks the second best, with five of the seven risk factors (all except  and LFOLLOW)
+
+loading significantly and in the correct direction. For the HVZ model, three risk factors either do
+
+not load or load anomalously (, LFOLLOW and IDIO). The risk regressions hence confirm that
+
+the superior performance of the RI model and the EP model in particular is not coming at the
+
+expense of anomalous correlations with risk factors.
+
+
+
+6. Sensitivity Analysis
+
+       We perform several sensitivity tests to verify the robustness of our results. These results
+
+are not tabulated for brevity, but are discussed below.
+
+       The relation between our prediction variables and future earnings could vary not only
+
+through time but also across industries. We examine this possibility by estimating regressions by
+
+industry and by year, where industry is defined according to the 48 industry classifications in
+
+Fama and French (1997). Interestingly, we find that estimating the regressions at the industry-
+
+year level actually increase forecast errors for all models. In addition, estimating regressions by
+
+industry-year slightly reduces our sample size because certain industries do not have sufficient
+
+historical data. Hence, it appears that the parsimonious approach used here as well as in the HVZ
+
+paper is preferable.
+
+       The evidence in the paper indicates that firm size is an important determinant of the
+
+relation between our prediction variables and future earnings. Consequently, we estimate each
+
+model by size deciles and year. The size deciles are determined using the end-of-June market
+
+value of equity each year. This modification marginally improves the forecast accuracy of all
+
+                                                25
+models but has almost no impact on the performance of the ICC metrics. This confirms the
+
+validity of the parsimonious approach of running annual cross-sectional regression for the entire
+
+population.
+
+       One concern that may affect the comparison of the HVZ model with our models,
+
+especially the EP and RI models, is that the HVZ model is estimated at the dollar level, while the
+
+EP and RI models are estimated at the per-share level. We perform robustness test by estimating
+
+the HVZ model at the per-share level. We find that the per-share estimation improves HVZ’s
+
+forecast accuracy and ERC. However, the per-share HVZ model still significantly underperforms
+
+the RW, EP and RI models in terms of forecast accuracy and ERC performance. For example,
+
+the one-year-ahead to three-year-ahead earnings forecasts for the whole Compustat population
+
+from the RI model are on average 6% to 15% more accurate than the forecasts from the per-share
+
+HVZ model. The improvement can be as large as 20% for firms without analyst coverage or for
+
+small firms. In addition, we also estimate all models by scaling the variables by total assets or
+
+market capitalization, and the inference does not change. Hence, the superiority of the EP model
+
+and the RI model is not an artifact of the differences in scaling.
+
+       The RW model does not have intercept, which may potentially drive the differences in
+
+forecast accuracy between the RW model and the other three models. To address this issue, we
+
+estimate the HVZ, RI and EP models without intercept. This method actually improves the
+
+forecast accuracy for all three models. As a result, the EP model not only outperforms the RW
+
+model in mean forecast accuracy but also reports comparable median forecast accuracy as the
+
+RW model. However, the ranking of the four models in terms of forecast accuracy does not
+
+change.
+
+
+
+
+                                                 26
+       We also explore the non-regression based forecasts. Specifically, we examine the
+
+following methods: 1) Multiply price with the most current EPS yield (earnings/price) for the
+
+market or the industry; 2) Multiply earnings with expected GNP growth; 3) Multiply book value
+
+of equity with the current ROE for the market (or industry); 4) various weighted average of the
+
+first three alternatives. We find that none of these non-regression based forecasts outperform the
+
+EP or the RI forecasts. Among these four alternatives, the method using only EPS yield produces
+
+the most accurate forecast.
+
+       We also use the robust regression technique instead of OLS regression to reduce the
+
+impact of outliers on regression coefficients. Robust regression is an iterative procedure that
+
+keeps eliminating outliers and re-estimating regressions, until no further outliers are deleted. We
+
+find that the robust regression technique marginally improves the mean forecast accuracy of all
+
+models. However, the rankings of the models in terms of forecast accuracy and ERC do not
+
+change. Further, we find a minimal impact on the properties of the ICC metrics. Again, for
+
+reasons of parsimony, we recommend that researchers use a simple OLS regression.
+
+       A potential problem with the ERC estimation is that the magnitude of ERCs is biased
+
+downward in the presence of large forecast errors. Cheong and Thomas (2012) show that ERCs
+
+can increase dramatically when observations with extreme forecast errors are deleted. To
+
+mitigate the concern that our results of ERC comparison could be driven by the outliers in
+
+forecast errors, we truncate at 1%, 5% and 10% on each side of the forecast error distribution for
+
+each forecast model. The magnitude of the ERC estimates for all four models increases after
+
+eliminating the outliers. However, the ranking of the ERCs does not change. In fact, the
+
+significance of the differences between the ERCs actually increases.
+
+
+
+
+                                                27
+7. Conclusions
+
+       Forecasts of future earnings are critical for empirical research in valuation, especially
+
+research using implied cost of capital (ICC). Prior research has traditionally used forecasts from
+
+analysts, which has restricted the analysis to the subset of covered firms. As a result, the most
+
+interesting firms are often omitted from the analysis. Using time series models to generate
+
+forecasts does not satisfactorily address this problem, because these models impose substantial
+
+survivorship and age requirements. A recent paper by Hou, van Dijk and Zhang (2012) addresses
+
+this problem by using a cross-sectional approach that only requires current information from
+
+firms to generate forecasts. Not surprisingly, the HVZ model has been used in recent research on
+
+accounting based valuation (Chang, Landsman and Monahan 2012) and ICC (e.g., Jones and
+
+Tuzel 2012; Lee, So and Wang 2011; Patatoukas 2011).
+
+       Given the widespread adoption of the HVZ model to generate forecasts in lieu of analyst
+
+forecasts, it is crucial to evaluate the HVZ model and present alternatives to address its
+
+weaknesses. Gerakos and Gramacy (2013) show that the HVZ model performs worse than a
+
+naïve random walk model. However, a random walk model is not practical for computing ICC.
+
+       In this paper, we present and evaluate two alternatives to the HVZ model, while adopting
+
+the cross-sectional forecasting approach in HVZ. Our first model (EP) is a simple earnings
+
+persistence model which allows for differential persistence of profits and losses. The second
+
+model (RI) is motivated by the residual income valuation model in Feltham and Ohlson (1996),
+
+and forecasts future income as a function of current income, current book value of equity and
+
+accruals. We test the HVZ model, the above two models and the naïve random walk (RW) model
+
+on the basis of their forecast bias, accuracy and earnings response coefficients (ERCs). We also
+
+
+
+                                               28
+evaluate the ICC estimates generated from the HVZ, EP and RI models on the basis of their
+
+correlations with future returns and risk factors.
+
+       We find that both of our models significantly outperform the HVZ model in virtually all
+
+the dimensions we examine. Both the EP model and the RI model generate forecasts that are
+
+more accurate and show greater ERCs. These differences are greater in settings where model-
+
+based forecasts are likely to be the most useful – for small firms and for firms without analyst
+
+coverage. In contrast, the HVZ model performs worse than a naïve random walk model,
+
+confirming the results in Gerakos and Gramacy (2013).
+
+       In addition, the ICC proxies generated from the EP model and the RI model show
+
+stronger correlations with future returns than the ICC proxies generated from the HVZ model,
+
+both at the portfolio level and at the firm level. Lastly, the ICC metrics from the EP model and
+
+the RI model also show more meaningful correlations with suggested risk factors.
+
+       An interesting question to ponder is why the forecasts from the EP and RI model perform
+
+better than the forecasts from the HVZ model. One conjecture that can be made is that the EP
+
+and RI model rely on financial statement numbers directly such as earnings, book values and
+
+accruals, while the HVZ model relies instead on numbers recast in terms of cash flows and
+
+dividends. This is potentially analogous to the results in Dechow (1994) who shows that earnings
+
+have a much strong correlation with future earnings and returns than cash flows do.
+
+       The results of our paper have crucial implications for all research where proxies for
+
+future expected earnings are required. We recommend that researchers use cross-sectional
+
+forecasting models based either on the EP model or the RI model presented in this paper.
+
+
+
+
+                                                 29
+References
+
+Abarbanell, J. and B. Bushee. 1997. Fundamental Analysis, Future Earnings and Stock Prices.
+      Journal of Accounting Research 35: 1-24.
+Botosan, C. and M. Plumlee. 2005. Assessing Alternative Proxies for the Expected Risk
+      Premium. The Accounting Review 80: 21–53.
+Chang, W., Landsman, W. and S. Monahan. 2012. Selecting an Accounting Based Valuation
+      Model. Working paper, INSEAD/University of North Carolina.
+Cheong, F. and J. Thomas. 2012. Managerial smoothing of analysts’ EPS forecast errors:
+      explanations and implications. Working paper, Rutgers University/ Yale University.
+Claus, J., and J. Thomas. 2001. Equity Risk Premium as Low as Three Percent? Evidence From
+       Analysts’ Earnings Forecasts for Domestic and International Stocks. Journal of Finance
+       56: 1629–1666.
+Dechow. P. 1994. Accounting earnings and cash flows as measures of firm performance: The
+      role of accounting accruals. Journal of Accounting and Economics 18: 3-42.
+Easton, P. 2004. PE Ratios, PEG Ratios, and Estimating the Implied Expected Rate of Return
+       on Equity Capital. The Accounting Review 79: 73–96.
+_________ and S. Monahan. 2005. An Evaluation of Accounting-Based Measures of Expected
+      Returns. The Accounting Review 80: 501–38.
+_________ and ________. 2010. Evaluating Accounting-based Measures of Expected Returns:
+      Easton and Monahan and Botosan and Plumlee Redux. Working paper, University of
+      Notre Dame/INSEAD.
+Edwards, E. and P. Bell. 1961. The Theory of and Measurement of Business Income. University
+      of California Press.
+Elton, J. 1999. Expected Return, Realized Return, and Asset Pricing Tests. Journal of Finance
+        54: 1199–1220.
+Fama, E. and K. French. 1992. The Cross-section of Expected Stock Returns. Journal of Finance
+      47: 427-465.
+_________ and ________. 1997. Industry Costs of Equity. Journal of Financial Economics 43:
+      153-193.
+_________ and ________. 2000. Forecasting Profitability and Earnings. Journal of Business 73:
+      161-175.
+_________ and ________. 2006. Profitability, Investment and Average Returns. Journal of
+      Financial Economics 82: 491-518.
+________ and J. MacBeth. 1973. Risk, Return, and Equilibrium: Empirical Tests. Journal of
+      Political Economy 71: 607-636.
+Feltham, G. and J. Ohlson. 1995. Valuation and Clean Surplus Accounting for Operating and
+       Financial Activities. Contemporary Accounting Research 11 (Spring): 689–732.
+
+
+
+                                             30
+——— and ———. 1996. Uncertainty Resolution and the Theory of Depreciation Measurement.
+   Journal of Accounting Research 34: 209–234.
+Frankel R., and C. Lee, 1998, Accounting Valuation, Market Expectation, and Cross-Sectional
+       Returns. Journal of Accounting and Economics 25: 283-319.
+Gebhardt, W., Lee, C. and B. Swaminathan. 2001. Towards an Implied Cost of Equity. Journal
+      of Accounting Research 39: 135-176.
+Gerakos, J. and R. Gramacy. 2013. Regression-based Earnings Forecasts. Working paper,
+      University of Chicago.
+Gode, D. and P. Mohanram. 2003. Inferring the Cost of equity Using the Ohlson-Juettner Model.
+      Review of Accounting Studies 8: 399-431.
+Hou, K., van Dijk, M., and Y. Zhang. 2012. The Implied Cost of Equity: A New Approach.
+      Journal of Accounting and Economics 53: 504-526.
+Hou, K. and D. Robinson. 2006. Industry Concentration and Average Stock Returns. Journal of
+      Finance 61: 1927–1956.
+Hou, K. and M. van Dijk. 2011. Profitability Shocks and the Size Effect in the Cross-section of
+      Expected Stock Returns. Working Paper - Ohio State University.
+Jones, C. and S. Tuzel . 2012. Inventory Investment and the Cost of Capital. Journal of Financial
+       Economics 107 (3): 557–579.
+Lee, C., So, E. and C. Wang. 2011. Evaluating Implied Cost of Capital Estimates. Working
+       paper, Stanford University.
+Li, K. 2011. How Well Do Investors Understand Loss Persistence? Review of Accounting
+       Studies 16: 630-667.
+Mohanram, P. and D. Gode. 2013. Removing Predictable Analyst Forecast Errors to Improve
+     Implied Cost of Equity Estimates. Review of Accounting Studies 18: 443-478.
+Miller, M. and F. Modigliani. 1961. Dividend Policy, Growth, and the Valuation of Shares.
+        Journal of Business 34: 235-264.
+Ohlson, J. 1995. Earnings, Book Values, and Dividends in Equity Valuation. Contemporary
+      Accounting Research 11: 661-687.
+Ohlson, J. and B. Juettner-Nauroth. 2005. Expected EPS and EPS Growth as Determinants of
+      Value. Review of Accounting Studies 10: 349-365.
+Patatoukas, P. 2011. Customer-Base Concentration: Implications for Firm Performance and
+       Capital Markets. The Accounting Review 87(2): 363-392.
+Peasnell, K. 1982. Some Formal Connections between Economic Values and Yields, and
+       Accounting Numbers. Journal of Business Finance and Accounting 9: 361-381.
+Preinreich, G. 1936. The Fair Value and Yield of Common Stock. The Accounting Review 11:
+       130-140.
+Richardson, S, Sloan, R., Soliman, M. and I. Tuna, 2005. Accrual Reliability, Earnings
+       Persistence and Stock Prices. Journal of Accounting and Economics 39: 437-485.
+
+
+                                               31
+Appendix A: Variable definitions for models used to generate forecasts
+
+HVZ model:
+Ei ,t    0  1 Ai ,t   2 Di ,t   3 DDi ,t   4 Ei ,t   5 NegEi ,t   6 ACi ,t   i ,t 
+Variable        Definition                                                                       Xpressfeed variable
+Et+τ            Earnings in year t+τ                                                             ib-spi
+At              Total asset in year t                                                            at
+Dt              Common dividend                                                                  dvc
+DDt             A dummy variable that equals 1 for dividend payers and 0
+                otherwise
+NegEt           A dummy variable that equals 1 for firms with negative earnings
+                and 0 otherwise.
+ACt             Change in non-cash current assets less change in current                         Δ(act-che)- Δ(lct-dlc-
+                liabilities excluding change in short-term debt and change in                    txp)-dp
+                taxes payable minus depreciation and amortization
+
+EP model:
+Ei ,t    0  1 NegEi ,t   2 Ei ,t  3 NegE * Ei ,t   i ,t 
+Variable        Definition                                                                       Xpressfeed variable
+Et+τ            Earnings in year t+τ divided by number of shares outstanding in                  (ib-spi)t+τ/cshot
+                year t
+NegEt           A dummy variable that equals 1 for firms with negative earnings
+                and 0 otherwise.
+NegE*Et         Interaction term of NegE and E
+
+RI model:
+Ei ,t    0  1 NegEi ,t   2 Ei ,t  3 NegE * Ei ,t   4 Bi ,t   5TACCi ,t   i ,t 
+Variable        Definition                                                                       Xpressfeed variable
+Et+τ            Earnings in year t+τ divided by number of shares outstanding in                  (ib-spi)t+τ/cshot
+                year t
+NegEt           A dummy variable that equals 1 for firms with negative earnings
+                and 0 otherwise.
+NegE*Et         Interaction term of NegE and E
+Bt              Book value of equity divided by number of shares outstanding                     ceqt/cshot
+TACCt           Richardson et al. (2005) total accruals, i.e., the sum of the                    WC=(act-che)-(lct-
+                change in WC, the change in NCO, and the change in FIN,                          dlc);
+                divided by number of shares outstanding                                          NCO=(at-act-ivao)-(lt-
+                                                                                                 lct-dltt);
+                                                                                                 FIN=(ivst+ivao)-
+                                                                                                 (dltt+dlc+pstk);
+                                                                                                 All variables deflated
+                                                                                                 by csho
+
+
+
+
+                                                             32
+Appendix B: Computing implied cost of capital
+
+        The implied cost of equity used in this paper is computed as the average of the four commonly
+used metrics, ICCGM, ICCPEG, ICCGLS and ICCCT. We briefly describe how these four metrics are
+computed below.
+
+ICC based on the OJ Model: ICCGM and ICCPEG
+
+        Ohlson and Juettner-Nauroth (2005) show that the implied cost of capital can be expressed as:
+
+
+                             g 2  (  1)  where A  1  (  1)  dps1  and g 2  (eps2  eps1 ) .
+                       eps1
+    re  A  A 
+              2
+
+                        P0                              2              P0                  eps1
+
+        Gode and Mohanram (2003) make the following assumptions. They set (-1) to rf - 3% where rf is
+the risk free rate. In addition, they use the average of short term growth and analysts’ long term growth
+rate (LTG) instead of g2 to reduce the impact of outliers.
+
+                                 eps2                                                 eps 5
+        If short term growth (         1 ) is greater than long term growth rate ( 4        1 ), we set g2
+                                 eps1                                                 eps1
+to equal the geometric mean of short term and long term growth rate. If short term growth is less than
+long term growth, we set g2 to equal the long term growth rate. Dividends are estimated by calculating
+current payout for all firms, defined as dividends (DVC) divided by income before extraordinary items
+(IB) for firms with positive current earnings or dividends divided by 6% of total assets (AT) for firms
+with negative IB.
+
+        In addition, we compute an ICC from a simplified version of the OJ model that ignores dividends
+and sets ICC to the square root of the inverse of the PEG ratio. We compute ICCPEG as:
+
+                                    g2
+                ICCPEG =                      where g2 is defined as it is for the RGM model
+                              PRICE     
+                                        
+                                    eps1
+
+
+ICC based on the RI Model: ICCGLS and ICCCT
+
+        Gebhardt, Lee and Swaminathan (2001) use the residual income valuation model (RI) to estimate
+implied cost of equity. They use EPS estimates for future two years and the expected dividends payout
+(from historical data) to derive book value and return on equity (ROE) forecasts. Beyond the forecast
+horizon, they assume that ROE fades to the industry median by year 12. Industry Median ROE is
+estimated as the median of all ROEs from firms in the same industry defined using the Fama and French
+(1997) classification over the past five years with positive earnings and non-negative book values, where
+
+                                                     33
+ROE is defined as the ratio of net income before extraordinary items (IB) to lagged total common
+shareholders’ equity (CEQ). Abnormal earnings are assumed to remain constant at year 12 levels for
+perpetuity. The cost of equity is computed numerically by equating current stock price to the sum of the
+current book value and the present value of future residual earnings – i.e. solving for r in the equation:
+                                              12
+                                                  (eps  r * B 1 )       (eps12  r * B11 )
+                             P0  Bo                                  
+                                              1     (1  r )                r (1  r )12
+where eps is the forecasted eps (obtained either from explicit forecast or inferred from expected ROE and
+lagged book value), P0 is current price per share, B0 is current book value per share and B1 through B11 are
+expected future book values per share obtained through the clean surplus relation, setting payout to equal
+current payout. Current payout is defined as dividends (DVC) divided by income before extraordinary
+items (IB) for firms with positive current earnings or dividends divided by 6% of total assets (AT) for
+firms with negative IB. We depart from GLS by using the model forecasts explicitly for years 1 through 5
+and then applying ROE convergence.
+
+         Claus and Thomas (2001) also use the RI model to estimate the implied cost of equity. They
+assume that earnings grow at the analyst’s consensus long-term growth rate until year 5, and at the rate of
+inflation thereafter. The implied cost of equity is estimated numerically by solving the following equation:
+                                         5
+                                             (eps  r * B 1 )        (eps5  r * B4 ) * (1  g )
+                         P0  Bo                                 
+                                         1     (1  r )                  (r  g )(1  r )5
+where eps0 through eps5 are the forecasted future earnings per share, B0 is current book value per share
+and B1 through B4 are expected future book values per share. Consistent with Claus and Thomas (2001), g
+is set to rf – 3%.
+
+
+
+
+                                                        34
+Table 1 Coefficient estimates from the three cross-sectional earnings models, 1969 - 2012.
+Panel A: The HVZ Model
+
+        Intercept       At             Dt          DDt           Et          NegEt           ACt        Adj. R2
+ Et+1    0.3462       0.0018        0.2109        1.3629       0.8715        1.2460       -0.0405       89.6%
+         (3.73)       (11.88)       (11.05)       (6.38)       (84.03)       (5.08)        (-6.37)
+ Et+2    0.9587       0.0034        0.2937        2.2667       0.8365        2.4850       -0.0549        84.0%
+         (8.38)       (11.83)        (8.32)       (6.58)       (46.48)       (7.60)        (-5.01)
+ Et+3    2.2031       0.0051        0.3149        2.6674       0.8378        2.5332       -0.0585        80.1%
+         (8.92)       (10.34)        (5.33)       (8.79)       (29.11)       (7.46)        (-4.39)
+
+Panel B: The EP Model
+
+          Intercept     NegEt          Et        NegE*Et       Adj. R2
+ Et+1      0.1495      -0.1229       0.9614      -0.7096       68.1%
+           (13.02)     (-4.58)      (204.78)     (-19.77)
+ Et+2      0.2873      -0.1717       0.9846      -1.1451        51.5%
+           (11.23)     (-5.88)      (154.65)     (-17.03)
+ Et+3      0.4498      -0.2125       0.9992      -1.4155        41.5%
+           (11.24)     (-5.31)      (118.66)     (-19.97)
+
+Panel C: The RI Model
+
+        Intercept      NegEt           Et        NegE*Et         Bt           TACCt        Adj. R2
+ Et+1    0.0914       -0.1087        0.8649      -0.5436       0.0167        -0.0034       68.1%
+         (6.04)        (-3.98)      (109.26)     (-15.26)      (15.66)        (-2.28)
+ Et+2    0.1855       -0.1475        0.8280      -0.8601       0.0294        -0.0217       52.1%
+         (6.83)       (-4.78)        (86.93)     (-11.91)      (20.70)       (-10.07)
+ Et+3    0.2993       -0.2518        0.8105      -1.3241       0.0409        -0.0413       42.5%
+         (7.59)        (-5.51)       (69.57)      (-6.54)      (21.94)       (-13.38)
+Each model is estimated annually from 1969 to 2012 using previous ten years of data. The average coefficients and
+the time-series t-statistics (in parentheses) are reported for the HVZ model (Panel A), the EP model (Panel B), and
+the RI model (Panel C). Appendix A provides the definitions of the variables in each model.
+
+
+
+
+                                                        35
+Table 2 Absolute forecast error of the cross-sectional earnings models and the random walk
+model
+Panel A: Full sample of 119,653 firm-year observations (1969-2008)
+                                Et+1                                Et+2                                 Et+3
+                     Mean              Median             Mean             Median              Mean             Median
+ HVZ                0.101***           0.034***          0.151***          0.057***           0.203***          0.079***
+                    (15.09)            (14.83)           (15.59)           (16.75)            (16.42)           (17.86)
+ RW                 0.088***           0.028***          0.102***          0.043***           0.128***          0.056***
+                    (12.32)            (22.96)           (18.11)           (26.33)            (20.50)           (23.32)
+ EP                 0.073***           0.028***          0.101***          0.045***           0.133***          0.061***
+                    (15.77)            (21.61)           (18.95)           (22.04)            (17.42)           (19.71)
+ RI                 0.073***           0.027***          0.099***          0.044***           0.126***          0.059***
+                    (15.80)            (22.58)           (20.55)           (23.81)            (20.64)           (21.38)
+ Comparison
+ HVZ-RW             0.013**            0.006***          0.049***          0.014***           0.075***          0.023***
+                     (2.14)             (3.97)            (6.14)            (6.47)             (7.46)            (8.66)
+ HVZ-EP             0.028***           0.006***          0.050***          0.012***           0.070***          0.018***
+                     (6.36)             (4.04)            (7.00)            (5.43)             (7.20)            (6.37)
+ HVZ-RI             0.028***           0.007***          0.052***          0.013***           0.077***          0.020***
+                     (6.21)             (4.23)            (7.22)            (5.79)             (8.16)            (7.41)
+ RW-EP              0.015***            0.000             0.001            -0.002**            -0.005           -0.005**
+                     (3.91)             (0.40)            (0.23)            (-2.32)           (-0.85)            (-2.23)
+ RW-RI              0.015***            0.001             0.003             -0.001             0.002             -0.003
+                     (4.10)             (0.43)            (1.19)            (-1.65)            (0.37)            (-1.42)
+ EP-RI               0.000             0.001***          0.002**           0.001***           0.007***          0.002***
+                     (0.29)             (3.53)            (2.17)            (3.57)             (3.42)            (4.20)
+
+Panel B: Non-parametric test of forecast accuracy for the full sample
+                             Most accurate forecast                                    Least accurate forecast
+                      Et+1              Et+2          Et+3                      Et+1            Et+2              Et+3
+ HVZ                 0.278             0.254      0.225                         0.355          0.379             0.380
+
+ RW                  0.312             0.343      0.383                         0.311          0.279             0.303
+
+ EP                  0.212             0.208      0.203                         0.165          0.189             0.191
+
+ RI                  0.198             0.194      0.189                         0.168          0.152             0.126
+
+
+
+
+                                                         36
+Table 2 continued
+Panel C: Partition analysis of mean absolute forecast error by analyst coverage
+                               No coverage (N=50,242)                        With coverage (N=69,411)
+                        Et+1             Et+2           Et+3            Et+1            Et+2          Et+3
+ HVZ                  0.149***        0.227***       0.315***         0.062***       0.085***       0.107***
+                      (14.28)          (16.05)        (16.58)         (11.69)         (16.49)       (22.14)
+                            ***              ***
+ RW                   0.124           0.144          0.177***         0.078 ***
+                                                                                     0.083  ***
+                                                                                                    0.101***
+                      (10.63)          (12.75)        (14.34)          (9.50)         (14.68)       (17.54)
+ EP                   0.105***        0.141***       0.189***         0.057***       0.075***       0.094***
+                      (12.77)          (15.91)        (14.57)         (13.58)         (20.74)       (28.24)
+ RI                   0.106***        0.138***       0.177***         0.057***       0.074***       0.092***
+                      (12.47)          (15.90)        (16.94)         (13.43)         (20.11)       (28.56)
+ Comparison
+ HVZ-RW               0.025***        0.083***        0.138***        -0.016***        0.002          0.006**
+                       (4.23)          (9.26)         (11.30)          (-5.07)         (1.42)          (2.17)
+ HVZ-EP               0.044***        0.086***        0.126***         0.005***       0.010***        0.013***
+                       (9.62)         (10.34)          (9.81)           (4.09)         (5.11)          (5.70)
+ HVZ-RI               0.043***        0.089***        0.138***         0.005***       0.011***        0.015***
+                       (9.22)         (11.05)         (11.81)           (4.33)         (6.01)          (6.93)
+ RW-EP                0.019***         0.003           -0.012         0.021***        0.008**          0.007*
+                       (3.23)          (0.41)         (-0.98)           (4.98)         (2.63)          (2.05)
+ RW-RI                0.018***         0.006           0.000          0.021***        0.009***        0.009**
+                       (3.10)          (0.97)          (0.04)           (5.08)         (3.09)          (2.70)
+ EP-RI                 -0.001          0.003          0.012**           0.000         0.001**         0.002***
+                      (-1.51)          (1.15)          (2.70)           (0.62)         (2.13)          (5.11)
+
+Panel D: Partition analysis of mean absolute forecast error by size
+                                Small firms (N=59,819)                          Large firms (N=59,834)
+                        Et+1              Et+2           Et+3           Et+1              Et+2           Et+3
+ HVZ                  0.167***          0.251***       0.339***       0.035***          0.052***       0.067***
+                      (14.01)           (14.03)        (14.81)        (20.75)           (26.10)        (26.14)
+ RW                   0.135***          0.151***       0.187***       0.041***          0.053***       0.069***
+                      (11.14)           (15.32)        (17.24)        (17.32)           (27.31)        (27.21)
+                            ***               ***
+ EP                   0.112             0.151          0.200***       0.035 ***
+                                                                                        0.052 ***
+                                                                                                       0.066***
+                      (14.25)           (17.01)        (15.40)        (22.05)           (25.74)        (24.98)
+ RI                   0.111***          0.146***       0.186***       0.035***          0.051***       0.065***
+                      (14.18)           (18.45)        (18.69)        (22.27)           (26.23)        (25.54)
+ Comparison
+ HVZ-RW               0.032***        0.100***        0.152***        -0.006***        -0.001          -0.002
+                       (2.85)          (6.24)          (7.54)          (-5.41)        (-1.13)         (-1.43)
+ HVZ-EP               0.055***        0.100***        0.139***          0.000           0.000           0.001
+                       (6.49)          (7.09)          (7.29)          (0.24)          (0.43)          (0.70)
+ HVZ-RI               0.056***        0.105***        0.153***          0.000           0.001         0.002**
+                       (6.32)          (7.26)          (8.17)          (0.11)          (1.12)          (2.07)
+ RW-EP                0.023***         0.000           -0.013         0.006***         0.001           0.003*
+                       (3.57)          (0.10)         (-1.09)          (5.14)          (1.40)          (1.81)
+ RW-RI                0.024***         0.005           0.001          0.006***         0.002*         0.004***
+                       (3.78)          (1.04)          (0.05)          (5.11)          (1.95)          (2.79)
+ EP-RI                 0.001          0.005**         0.014***          0.000         0.001***        0.001***
+                       (0.35)          (2.07)          (3.29)          (0.98)          (3.77)          (5.49)
+
+                                                        37
+Table 2 continued
+Panel A reports the time-series averages of the mean and median absolute forecast error for the three cross-sectional
+earnings models and the random walk model, and their pair-wise comparisons. The time-series t-statistics are
+reported in the parentheses. ***, **, * denote significance at 0.01, 0.05, and 0.10 level, respectively. Absolute
+forecast error is the absolute value of forecast bias, which is the difference between actual earnings and model-based
+earnings forecasts scaled by the end-of-June market value of equity (HVZ and RW) or by the end-of-June stock
+price (EP and RI). The results are based on the sample of 119,653 firm-year observations with non-missing t+1, t+2,
+and t+3 forecast bias from all models. Panel B reports the non-parametric test of forecast accuracy. The numbers
+represent the proportion of observations for which each model produces the most and least accurate forecast. Panel
+C reports mean absolute forecast error by partition of analyst coverage. A firm is covered by analysts if there is one
+FY1 consensus forecast on IBES for year t+1. Panel D reports mean absolute forecast error by partition of firm size.
+Each year, observations are sorted into two equal sized groups based on their end-of-June market value of equity.
+
+
+
+
+                                                         38
+Table 3 Forecast bias of the cross-sectional earnings models and the random walk model
+Panel A: Full sample of 119,653 firm-year observations (1969-2008)
+                                Et+1                              Et+2                             Et+3
+                      Mean              Median          Mean              Median         Mean              Median
+ HVZ                -0.056***          -0.013***      -0.092***          -0.027***     -0.133***          -0.043***
+                     (-7.86)            (-4.82)        (-8.33)            (-6.68)       (-9.72)            (-8.37)
+ RW                  0.007**            0.008***      0.027***           0.015***       0.040***          0.022***
+                     (2.20)              (7.34)        (5.76)             (7.38)         (6.15)            (7.10)
+ EP                 -0.020***            0.000        -0.032***          -0.006**      -0.052***          -0.015***
+                     (-5.27)             (0.13)        (-5.19)            (-2.17)       (-5.66)            (-3.75)
+ RI                 -0.013***            0.002        -0.019***           -0.003       -0.034***          -0.010***
+                     (-3.50)             (1.32)        (-3.55)            (-1.18)       (-4.40)            (-2.80)
+ Comparison
+ HVZ-RW             -0.063***          -0.021***      -0.119***          -0.042***     -0.173***          -0.065***
+                     (-9.35)            (-7.27)       (-10.42)            (-9.14)      (-11.36)           (-10.23)
+ HVZ-EP             -0.036***          -0.013***      -0.060***          -0.021***     -0.081***          -0.028***
+                     (-6.49)            (-6.53)        (-6.60)            (-7.13)       (-6.53)            (-6.90)
+ HVZ-RI             -0.043***          -0.015***      -0.073***          -0.024***     -0.099***          -0.033***
+                     (-7.62)            (-7.00)        (-7.92)            (-7.67)       (-8.16)            (-7.69)
+ RW-EP               0.027***          0.008***       0.059***           0.021***      0.092***           0.037***
+                     (10.48)            (6.96)         (11.30)            (8.99)        (11.27)            (10.53)
+ RW-RI               0.020***          0.006***       0.046***           0.018***      0.074***           0.032***
+                      (8.01)            (6.05)         (10.60)            (8.76)        (11.16)            (10.46)
+ EP-RI              -0.007***          -0.002***      -0.013***          -0.003***     -0.018***          -0.005***
+                     (-8.26)            (-8.46)        (-8.17)            (-6.76)       (-7.91)            (-7.50)
+
+Panel B: Partition analysis of mean forecast bias by analyst coverage
+                               No coverage (N=50,242)                        With coverage (N=69,411)
+                        Et+1             Et+2           Et+3           Et+1             Et+2           Et+3
+ HVZ                 -0.085***        -0.153***      -0.239***      -0.018***        -0.023***     -0.032***
+                      (-9.06)         (-11.42)       (-13.07)        (-4.69)          (-4.49)        (-5.21)
+                            ***              ***            ***                             ***
+ RW                   0.015           0.042           0.050           0.000          0.014          0.024***
+                       (3.22)           (5.57)         (5.41)         (0.01)           (2.99)         (3.89)
+ EP                  -0.021***        -0.043***      -0.086***      -0.016***        -0.018***     -0.025***
+                      (-4.27)          (-4.85)        (-5.77)        (-4.86)          (-4.42)        (-5.08)
+                                              **             ***            ***              ***
+ RI                    -0.005         -0.017         -0.048         -0.013           -0.014        -0.019***
+                      (-0.96)          (-2.10)        (-4.13)        (-4.24)          (-3.46)        (-3.82)
+ Comparison
+ HVZ-RW              -0.100***        -0.195***      -0.289***      -0.018***        -0.037***     -0.056***
+                     (-11.35)         (-13.80)       (-15.25)       (-13.21)         (-14.08)       (-14.11)
+ HVZ-EP              -0.064***        -0.110***      -0.153***       -0.002*          -0.005*        -0.007*
+                      (-8.08)          (-9.46)        (-9.75)        (-1.71)          (-2.02)        (-1.95)
+ HVZ-RI              -0.080***        -0.136***      -0.191***      -0.005***        -0.009***     -0.013***
+                      (-8.72)         (-10.48)       (-11.51)        (-3.26)          (-3.68)        (-3.70)
+ RW-EP                0.036***        0.085***        0.136***      0.016***         0.032***       0.049***
+                       (9.14)          (10.61)         (9.98)         (8.81)          (10.25)       (11.02)
+                            ***              ***            ***            ***              ***            ***
+ RW-RI                0.020           0.059           0.098         0.013            0.028          0.043
+                       (5.21)           (9.81)        (10.28)         (7.88)           (9.39)       (10.29)
+ EP-RI               -0.016***        -0.026***      -0.038***      -0.003***        -0.004***     -0.006***
+                      (-7.33)          (-7.34)        (-7.11)        (-9.96)         (-11.73)       (-11.90)
+
+                                                       39
+Table 3 continued
+Panel C: Partition analysis of mean forecast bias by size
+                                 Small firms (N=59,819)                              Large firms (N=59,834)
+                          Et+1              Et+2           Et+3              Et+1               Et+2          Et+3
+ HVZ                   -0.108***        -0.178***      -0.260***          -0.005**            -0.006*       -0.006*
+                        (-8.03)           (-8.58)       (-10.02)           (-2.46)            (-1.93)       (-1.75)
+                               *                ***
+ RW                     0.008            0.040          0.055***          0.005  ***
+                                                                                             0.014  ***
+                                                                                                            0.024***
+                        (1.77)             (5.44)        (5.67)            (2.75)              (4.90)        (6.18)
+ EP                    -0.038***        -0.061***      -0.101***           -0.002             -0.003         -0.004
+                        (-6.23)           (-6.00)        (-6.40)           (-0.92)            (-0.92)       (-1.10)
+ RI                    -0.024***        -0.037***      -0.066***           -0.001             -0.002         -0.002
+                        (-4.09)           (-4.19)        (-5.16)           (-0.57)            (-0.50)       (-0.61)
+ Comparison
+ HVZ-RW                -0.116***        -0.218***       -0.315***        -0.010***        -0.020***        -0.030***
+                        (-9.14)         (-10.21)        (-11.18)         (-10.92)         (-11.16)         (-11.49)
+ HVZ-EP                -0.070***        -0.117***       -0.159***        -0.003***        -0.003***         -0.002
+                        (-6.40)          (-6.69)         (-6.74)          (-5.72)          (-3.10)          (-1.45)
+ HVZ-RI                -0.084***        -0.141***       -0.194***        -0.004***        -0.004***        -0.004**
+                        (-7.56)          (-8.05)         (-8.43)          (-6.24)          (-3.81)          (-2.47)
+ RW-EP                  0.046***        0.101***        0.156***         0.007***         0.017***         0.028***
+                        (10.17)          (10.93)         (10.73)          (9.74)           (11.86)          (13.29)
+ RW-RI                  0.032***        0.077***        0.121***         0.006***         0.016***         0.026***
+                         (7.53)          (10.21)         (10.65)          (9.18)           (11.45)          (13.00)
+ EP-RI                 -0.014***        -0.024***       -0.035***        -0.001***        -0.001***        -0.002***
+                        (-7.86)          (-7.76)         (-7.50)          (-5.50)          (-5.06)          (-5.47)
+Panel A reports the time-series averages of the mean and median forecast bias for the three cross-sectional earnings
+models and the random walk model, and their pair-wise comparisons. The time-series t-statistics are reported in the
+parentheses. ***, **, * denote significance at 0.01, 0.05, and 0.10 level, respectively. Forecast bias is the difference
+between actual earnings and model-based earnings forecasts scaled by the end-of-June market value of equity (HVZ
+and RW) or by the end-of-June stock price (EP and RI). The results are based on the sample of 119,653 firm-year
+observations with non-missing t+1, t+2, and t+3 forecast bias from all models. Panel B reports mean forecast bias by
+partition of analyst coverage. A firm is covered by analysts if there is one FY1 consensus forecast on IBES for year
+t+1. Panel C reports mean forecast bias by partition of firm size. Each year, observations are sorted into two equal
+sized groups based on their end-of-June market value of equity.
+
+
+
+
+                                                          40
+Table 4 Earnings response coefficient of the model-based earnings forecast, 1969-2008.
+Panel A: Full sample
+                                            Et+1                            Et+2                          Et+3
+                                     ERC         Adj. R2             ERC         Adj. R2           ERC         Adj. R2
+                                         ***
+ HVZ                               0.034         2.5%***           0.041 ***
+                                                                                 2.0%***         0.046 ***
+                                                                                                               1.6%***
+                                   (13.31)        (7.07)            (9.23)        (5.33)          (7.66)        (5.27)
+ RW                                0.035***      4.5%***           0.057***      5.3%***         0.078***      5.3%***
+                                   (13.33)        (6.02)           (13.07)        (6.55)         (12.20)        (7.06)
+                                         ***
+ EP                                0.040         5.0%***           0.062 ***
+                                                                                 4.9%***         0.083 ***
+                                                                                                               4.7%***
+                                   (19.19)        (7.13)           (14.39)        (6.32)         (12.90)        (6.83)
+ RI                                0.042***      5.2%***           0.064***      5.2%***         0.085***      5.0%***
+                                   (18.02)        (7.27)           (13.83)        (6.45)         (13.57)        (7.05)
+ Comparison
+ HVZ-RW                             -0.001       -2.0%***          -0.016***   -3.3%***          -0.032***     -3.7%***
+                                    (-0.92)       (-3.35)           (-4.10)     (-4.93)           (-6.00)       (-5.76)
+ HVZ-EP                            -0.006***     -2.5%***          -0.021***   -2.9%***          -0.037***     -3.1%***
+                                    (-3.45)       (-4.36)           (-6.67)     (-5.35)           (-8.81)       (-6.00)
+ HVZ-RI                            -0.008***     -2.7%***          -0.023***   -3.2%***          -0.039***     -3.4%***
+                                    (-3.67)       (-4.51)           (-6.73)     (-5.49)           (-8.81)       (-6.14)
+ RW-EP                             -0.005**       -0.5%             -0.005       0.4%             -0.005         0.6%
+                                    (-2.19)       (-1.20)           (-1.14)     (0.58)            (-0.86)       (1.38)
+ RW-RI                             -0.007**       -0.7%             -0.007       0.1%             -0.007         0.3%
+                                    (-2.48)       (-1.51)           (-1.65)     (0.13)            (-1.28)       (0.76)
+ EP-RI                              -0.002*       -0.2%             -0.002      -0.3%*            -0.002        -0.3%*
+                                    (-1.69)       (-1.61)           (-1.26)     (-1.72)           (-0.61)       (-1.87)
+
+Panel B: Partition analysis of ERC by analyst coverage
+                                   No coverage                                         With coverage
+                         Et+1          Et+2              Et+3              Et+1             Et+2               Et+3
+ HVZ                   0.037***     0.034***           0.025**           0.049***        0.080***            0.112***
+                        (9.62)        (6.88)            (2.09)            (7.58)           (7.61)             (9.21)
+ RW                    0.041***     0.059***           0.082***          0.038***        0.061***            0.089***
+                       (11.35)       (11.71)            (9.72)            (7.95)           (8.39)             (8.55)
+ EP                    0.044***     0.062***           0.074***          0.043***        0.072***            0.106***
+                       (14.00)       (11.99)            (9.58)            (9.78)          (11.70)            (13.45)
+ RI                    0.045***     0.064***           0.079***          0.044***        0.073***            0.105***
+                       (13.91)       (12.43)           (11.61)            (9.02)          (10.34)            (13.04)
+ Comparison
+ HVZ-RW                 -0.004*      -0.025***         -0.057***         0.011**           0.019***          0.023***
+                        (-1.71)       (-5.48)           (-3.80)          (2.49)             (3.00)            (3.04)
+ HVZ-EP                -0.007***     -0.028***         -0.049***         0.006*              0.008             0.006
+                        (-2.84)       (-6.29)           (-5.25)          (1.74)             (1.29)            (0.74)
+ HVZ-RI                -0.008***     -0.030***         -0.054***          0.005              0.007             0.007
+                        (-2.98)       (-6.34)           (-4.94)          (1.36)             (1.46)            (1.04)
+ RW-EP                  -0.003        -0.003             0.008           -0.005            -0.011*           -0.017**
+                        (-1.22)       (-0.63)            (0.72)          (-1.04)            (-2.00)           (-2.09)
+ RW-RI                  -0.004        -0.005             0.003           -0.006            -0.012**          -0.016**
+                        (-1.58)       (-1.27)            (0.34)          (-1.13)            (-2.25)           (-2.22)
+ EP-RI                  -0.001        -0.002            -0.005           -0.001             -0.001             0.001
+                        (-1.23)       (-1.34)           (-1.25)          (-1.00)            (-0.37)           (0.29)
+
+
+
+                                                           41
+Table 4 continued
+Panel C: Partition analysis of ERC by size
+                                      Small firms                                       Large firms
+                         Et+1            Et+2             Et+3             Et+1             Et+2            Et+3
+ HVZ                   0.033***        0.040***         0.043***         0.087***        0.149***         0.206***
+                       (11.71)          (8.31)           (7.04)          (14.66)          (18.86)         (16.53)
+ RW                    0.033***        0.053***         0.073***         0.070***        0.106***         0.146***
+                       (12.64)         (11.81)          (10.05)          (12.57)          (14.17)         (12.87)
+ EP                    0.039***        0.058***         0.079***         0.058***        0.099***         0.143***
+                       (16.20)         (12.40)          (11.70)          (14.96)          (17.09)         (17.00)
+ RI                    0.040***        0.061***         0.081***         0.059***        0.099***         0.141***
+                       (15.55)         (12.10)          (12.09)          (15.41)          (17.09)         (17.90)
+ Comparison
+ HVZ-RW                  0.000         -0.013***        -0.030***        0.017***        0.043***         0.060***
+                        (0.10)          (-3.16)          (-5.31)          (3.63)          (6.30)           (6.94)
+ HVZ-EP                -0.006**        -0.018***        -0.036***        0.029***        0.050***         0.063***
+                        (-2.50)         (-5.06)          (-8.20)          (5.92)          (7.54)           (6.07)
+ HVZ-RI                -0.007***       -0.021***        -0.038***        0.028***        0.050***         0.065***
+                        (-2.77)         (-5.36)          (-8.31)          (5.65)          (7.66)           (6.78)
+ RW-EP                 -0.006**         -0.005           -0.006          0.012***         0.007            0.003
+                        (-2.62)         (-1.23)          (-0.86)          (2.80)          (1.29)           (0.38)
+ RW-RI                 -0.007***        -0.008*          -0.008          0.011**          0.007            0.005
+                        (-2.85)         (-1.78)          (-1.40)          (2.64)          (1.49)           (0.76)
+ EP-RI                  -0.001          -0.003           -0.002           -0.001          0.000            0.002
+                        (-1.62)         (-1.52)          (-0.92)         (-0.93)          (0.14)           (0.82)
+Panel A reports the time-series averages of the earnings response coefficients (ERC) for the forecasts from the three
+cross-sectional earnings models and the random walk model, and their pair-wise comparisons. The time-series t-
+statistics are reported in the parentheses. ***, **, * denote significance at 0.01, 0.05, and 0.10 level, respectively.
+The ERC is estimated by regressing the sum of the quarterly earnings announcement returns (market-adjusted, from
+day-1 to day+1) over the next one, two, and three years on firm-specific unexpected earnings (i.e., the forecast bias)
+measured over the same horizon. We standardize the unexpected earnings so that they have unit variance each year.
+The results are based on the sample of 119,653 firm-year observations with non-missing t+1, t+2, and t+3 forecast
+bias from all models. Panel B reports mean ERC by partition of analyst coverage. A firm is covered by analysts if
+there is one FY1 consensus forecast on IBES for year t+1. Panel C reports mean ERC by partition of firm size. Each
+year, observations are sorted into two equal sized groups based on their end-of-June market value of equity.
+
+
+
+
+                                                          42
+Table 5 Return spreads for quintiles of implied cost of capital using model-based forecasts
+Panel A: Mean return spreads (%)
+
+ Model      Quintile   ICC                    RET1 - RF                RET2 - RF               RET3 - RF
+ HVZ        1          -0.73                  5.21                     4.96                    5.36
+            2          2.16                   6.47                     7.60                    8.27
+            3          5.19                   8.38                     8.21                    8.71
+            4          9.19                   8.97                     9.60                    9.69
+            5          22.08                  10.70                    11.62                   9.85
+            5–1        22.81***               5.49***                  6.66***                 4.49***
+            (t-stat)   (290.82)               (8.29)                   (9.68)                  (6.76)
+
+ EP         1          0.47                   5.14                     4.79                    5.48
+            2          2.41                   7.50                     7.91                    7.73
+            3          3.84                   8.50                     9.15                    8.67
+            4          5.67                   9.75                     9.38                    9.82
+            5          12.38                  12.55                    12.66                   12.61
+            5–1        11.91***               7.41***                  7.87***                 7.13***
+            (t-stat)   (212.74)               (11.54)                  (11.53)                 (9.90)
+
+ RI         1          0.05                   4.91                     4.78                    5.24
+            2          2.28                   6.62                     7.57                    8.38
+            3          3.95                   8.10                     9.00                    8.81
+            4          5.79                   9.92                     10.23                   10.33
+            5          11.26                  13.30                    12.64                   12.26
+            5–1        11.21***               8.39***                  7.86***                 7.02***
+            (t-stat)   (236.45)               (13.24)                  (11.79)                 (10.16)
+
+Panel B: Comparison of mean return spreads (%) across models
+
+                                               RET1 - RF                  RET2 - RF                  RET3 - RF
+                                                        **
+ HVZ - EP                                        -1.92                       -1.21                       -2.64***
+ (t-stat)                                        (-2.08)                    (-1.25)                      (-2.69)
+
+ HVZ - RI                                       -2.90***                     -1.20                       -2.53***
+ (t-stat)                                       (-3.17)                     (-1.24)                      (-2.63)
+
+ EP - RI                                          -0.98                      0.01                         0.11
+ (t-stat)                                        (-1.09)                    (0.02)                       (0.12)
+
+Firms are divided into quintiles each year based on the implied cost of capital metric (ICC) computed for each of the
+three models (i.e., HVZ, EP and RI). See Appendix A for details of the model estimation and Appendix B for ICC
+estimation. Panel A presents the pooled equally weighted average of buy-and-hold returns for the first three years
+after portfolio formation, adjusted for the risk-free rate (RET1-RF, RET2-RF, and RET3-RF, respectively) for quintiles
+based on ICC as well as the spread between the extreme quintiles. Panel B reports the pair-wise comparisons the
+spreads. Figures in parentheses represent t-statistics, calculated using a pooled estimate of standard error. ***, **, *
+denote significance at 0.01, 0.05, and 0.10 level, respectively.
+
+
+                                                             43
+Table 6 Regression of future returns on implied cost of capital using model-based forecasts
+Panel A: Univariate regression of future returns on ICC
+
+                         RET1 - RF                            RET2 - RF                                RET3 - RF
+
+ Model      Intercept       ICC      Adj. R2     Intercept         ICC          Adj. R2    Intercept      ICC       Adj. R2
+ HVZ         0.047*       0.314***    1.0%         0.057**        0.256***       0.7%       0.063**      0.147*      0.7%
+             (1.72)        (3.42)                   (1.98)         (3.16)                    (2.19)      (1.80)
+
+ EP          0.040        0.569***    1.5%          0.048*        0.544**        1.0%       0.050**     0.559**      1.2%
+             (1.58)        (2.59)                   (1.89)         (2.46)                    (1.99)      (2.48)
+
+ RI          0.038        0.649***    1.5%          0.049*        0.579***       1.0%       0.053**     0.573***     1.2%
+             (1.47)        (2.81)                   (1.88)         (2.73)                    (1.99)      (2.79)
+
+Panel B: Comparison of coefficient on ICC across the models
+                                     RET1 - RF                               RET2 - RF                      RET3 - RF
+ HVZ - EP                             -0.255                                  -0.288                         -0.412*
+ (t-stat)                             (-1.07)                                 (-1.22)                        (-1.72)
+
+
+ HVZ - RI                             -0.335                                  -0.323                         -0.426*
+ (t-stat)                             (-1.35)                                 (-1.42)                        (-1.92)
+
+
+ EP - RI                              -0.080                                  -0.035                         -0.014
+ (t-stat)                             (-0.25)                                 (-0.11)                        (-0.05)
+
+Panel C: Regression of future returns on all ICC metrics
+
+                      Intercept          ICCHVZ                     ICCEP                  ICCRI                Adj. R2
+ RET1 - RF              0.035             0.075                    -0.257                 0.972***                2.3%
+                        (1.40)            (0.78)                   (-0.69)                 (2.84)
+
+ RET2 - RF              0.042*            0.053                    -0.109                 0.808**                 1.9%
+                        (1.70)            (0.54)                   (-0.26)                 (2.43)
+
+ RET3 - RF              0.048*            -0.102                   -0.210                 1.057***                2.2%
+                        (1.86)            (-0.94)                  (-0.41)                 (2.61)
+Panel A presents univariate Fama and MacBeth (1973) regressions of future realized returns on metrics of implied
+cost of capital (ICC) computed for each of the three models. See Appendix A for details of the model estimation and
+Appendix B for ICC estimation. The dependent variables are the buy-and-hold returns for the first three years after
+portfolio formation, adjusted for the risk-free rate (RET1-RF, RET2-RF, and RET3-RF, respectively). Panel B reports
+the pair-wise comparisons of the coefficients on ICC. Figures in parentheses represent t-statistics, calculated using a
+pooled estimate of standard error. Panel C reports Fama and MacBeth regressions of future realized returns on the
+three ICC metrics (i.e., ICCHVZ, ICCEP and ICCRI). ***, **, * denote significance at 0.01, 0.05, and 0.10 level,
+respectively.
+
+
+
+                                                             44
+Table 7 Implied cost of capital metrics and risk factors
+
+                                LMCAP          BM           IDIO     STDNI       D2A       LFOLLOW
+ Metric Intercept                                                                                            Adj. R2
+                         (+)         (-)          (+)           (+)      (+)        (+)          (-)
+
+
+ ICCHVZ 0.080***      -0.010***                                                                               1.4%
+        (10.47)        (-3.31)
+        0.193***      -0.017***    -0.028***   0.044***                                                       56.0%
+        (15.08)       (-11.21)     (-15.72)    (17.81)
+        0.181***      -0.018***    -0.027***   0.043***        0.027    0.013***   0.017***     -0.000        57.2%
+        (13.40)       (-10.48)      (-15.25)   (18.08)         (1.57)    (2.58)     (5.12)      (-0.37)
+
+  ICCEP 0.046***       0.003*                                                                                 0.9%
+        (24.04)         (1.71)
+        0.090***        0.000      -0.012***   0.025***                                                       41.5%
+        (20.86)        (0.42)      (-15.24)    (22.10)
+        0.045***      -0.008***    -0.008***   0.027***    0.222***     0.028***   0.026***     -0.001**      47.3%
+         (8.91)        (-7.00)     (-12.00)    (20.27)      (9.26)       (5.72)    (10.04)       (-2.03)
+
+  ICCRI 0.048***       -0.001                                                                                  2.1%
+        (20.58)        (-0.70)
+        0.061***      -0.002***    -0.008***   0.038***                                                       57.4%
+        (13.41)        (-2.63)       (-9.98)   (24.21)
+        0.038***      -0.007***    -0.006***   0.038***    0.115***     0.034***   0.019***      0.000        60.9%
+         (8.97)        (-6.09)      (-10.00)   (24.44)      (5.10)       (3.73)     (7.38)       (1.48)
+This table presents firm level regressions of the ICC metrics on the following risk factors:  (systematic risk), LMCAP
+(size), BM (book-to-market), IDIO (idiosyncratic risk), STDNI (earnings volatility), D2A (leverage) and LFOLLOW
+(analyst coverage). is calculated using monthly returns over the lagged five years (ensuring that at least 24
+observations are available). LMCAP is the logarithm of market capitalization at the time of the forecasts. IDIO is the
+standard deviation of the prior year’s monthly returns. STDNI is the standard deviation of net income (IBQ) scaled by
+total assets (ATQ) measured over the previous eight quarters. D2A is the ratio of total debt (DLTT+DLC) to total
+assets (AT). LFOLLOW is the logarithm of 1+number of analysts following the stock. See Appendix A and B for
+details of the model estimation and ICC estimation. Regressions are estimated using the Fama and MacBeth (1973)
+procedure. Figures in parentheses are t-statistics. ***, **, * denote significance at 0.01, 0.05, and 0.10 level,
+respectively.
+
+
+
+
+                                                          45
+
