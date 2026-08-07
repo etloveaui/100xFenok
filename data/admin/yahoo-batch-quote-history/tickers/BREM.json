@@ -12,15 +12,28 @@
       "run_id": "30132647097",
       "schedule": "0 22 * * 5",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 880,
+      "natural": true,
+      "observed_at": "2026-08-07T00:12:01Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31133672903",
+      "schedule": "7 18 * * 0-5",
+      "shard": "69/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-24T23:15:20Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BREM.json",
-    "payload_sha256": "38c209d00c3516113824df57f83b4d2d74f5168914c248ccad9a78d0e8d7bfe0",
-    "quote_as_of": "2026-07-24T20:00:00Z",
-    "source_as_of": "2026-07-24"
+    "fetched_at": "2026-08-07T00:13:13Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/BREM.json",
+    "payload_sha256": "d033fee861741a7b4728d270bd4344df40eb2baf9d90b09132b32ff2601b4c9a",
+    "quote_as_of": "2026-08-06T20:00:00Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 491,
+    "latency_ms": 880,
     "natural": true,
-    "observed_at": "2026-07-24T23:12:06Z",
+    "observed_at": "2026-08-07T00:12:01Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30132647097",
-    "schedule": "0 22 * * 5",
-    "shard": "5/6"
+    "run_id": "31133672903",
+    "schedule": "7 18 * * 0-5",
+    "shard": "69/72"
   },
   "lkg": {
     "fetched_at": "2026-07-24T23:15:20Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-24T23:12:06Z",
-    "payload_sha256": "ae450bf9258fa82b987894b16dfc69f5508c41c9c34fc843962ea7cfd149faeb",
-    "quote_as_of": "2026-07-24T20:00:00Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T00:12:01Z",
+    "payload_sha256": "c2d8f50193615bb99ed8bc02a057d00269eff00e108747f0d0738014f7107b2d",
+    "quote_as_of": "2026-08-06T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30132647097",
+    "run_id": "31133672903",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "BREM",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-07T00:12:01Z"
 }

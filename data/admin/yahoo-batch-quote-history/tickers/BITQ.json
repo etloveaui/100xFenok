@@ -12,15 +12,28 @@
       "run_id": "30132647097",
       "schedule": "0 22 * * 5",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 913,
+      "natural": true,
+      "observed_at": "2026-08-07T00:12:01Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31133672903",
+      "schedule": "7 18 * * 0-5",
+      "shard": "69/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-24T23:14:58Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BITQ.json",
-    "payload_sha256": "3de1a45793263d6dba8ef280d4000debb61318732c6ea15573840a95154061fc",
-    "quote_as_of": "2026-07-24T20:00:00Z",
-    "source_as_of": "2026-07-24"
+    "fetched_at": "2026-08-07T00:12:46Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/BITQ.json",
+    "payload_sha256": "717df23af0e8a6a319a0125d08e747e3235efa1c1f1cb122002b123777c5dd2b",
+    "quote_as_of": "2026-08-06T20:00:00Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 548,
+    "latency_ms": 913,
     "natural": true,
-    "observed_at": "2026-07-24T23:12:06Z",
+    "observed_at": "2026-08-07T00:12:01Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30132647097",
-    "schedule": "0 22 * * 5",
-    "shard": "5/6"
+    "run_id": "31133672903",
+    "schedule": "7 18 * * 0-5",
+    "shard": "69/72"
   },
   "lkg": {
     "fetched_at": "2026-07-24T23:14:58Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-24T23:12:06Z",
-    "payload_sha256": "d2ce8dcac86b5397b7d6a6e0f0d2e240716547d2a6becd3aa24dd29c21334b7f",
-    "quote_as_of": "2026-07-24T20:00:00Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T00:12:01Z",
+    "payload_sha256": "f87c7235f6a6e9329f5ba7381c56b861befbdfb9043df6509e8fa99add944b7f",
+    "quote_as_of": "2026-08-06T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30132647097",
+    "run_id": "31133672903",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "BITQ",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-07T00:12:01Z"
 }

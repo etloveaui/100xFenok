@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-06T03:33:58Z",
     "history_as_of": "2026-08-05",
-    "path": "data/yf/finance/TTOP.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TTOP.json",
     "payload_sha256": "7897bcba13f93f5a4879f93cb873970d1774a7c06d738b4cb89c4c0436a84b12",
     "quote_as_of": "2026-07-29T14:48:59Z",
     "source_as_of": "2026-07-29T14:48:59Z"
@@ -38,6 +38,14 @@
     "schedule": "7 0 * * 0-5",
     "shard": "48/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-06T03:33:58Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TTOP.json",
+    "payload_sha256": "7897bcba13f93f5a4879f93cb873970d1774a7c06d738b4cb89c4c0436a84b12",
+    "quote_as_of": "2026-07-29T14:48:59Z",
+    "source_as_of": "2026-07-29T14:48:59Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-29T14:48:59Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-07T00:12:01Z",
+    "classified_run_id": "31133672903",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "TTOP holds LKG because Yahoo source date 2026-07-29T14:48:59Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-29T14:48:59Z"
+  },
   "ticker": "TTOP",
-  "updated_at": "2026-08-06T03:31:35Z"
+  "updated_at": "2026-08-07T00:12:01Z"
 }

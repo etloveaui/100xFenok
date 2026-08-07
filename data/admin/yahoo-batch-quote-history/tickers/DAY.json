@@ -26,39 +26,6 @@
       ],
       "latency_ms": 0,
       "natural": true,
-      "observed_at": "2026-07-18T00:37:10Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "29622560422",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 2,
-      "error": "empty payload",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "KeyError: 'exchangeTimezoneName'",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "empty payload"
-        },
-        {
-          "attempt": 2,
-          "error": "KeyError: 'exchangeTimezoneName'",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 2,
-          "error": "empty payload"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": true,
       "observed_at": "2026-07-21T00:18:00Z",
       "outcome": "failed",
       "run_attempt": 1,
@@ -461,6 +428,49 @@
       "run_id": "31058959670",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-07T00:12:01Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31133672903",
+      "schedule": "7 18 * * 0-5",
+      "shard": "69/72"
     }
   ],
   "discovered_from": [
@@ -473,12 +483,22 @@
     "failures": [
       {
         "attempt": 1,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
         "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       },
       {
         "attempt": 1,
         "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
       },
       {
         "attempt": 2,
@@ -492,12 +512,12 @@
     ],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-06T00:14:28Z",
+    "observed_at": "2026-08-07T00:12:01Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31058959670",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "31133672903",
+    "schedule": "7 18 * * 0-5",
+    "shard": "69/72"
   },
   "latest_failure": {
     "attempts_used": 2,
@@ -508,12 +528,22 @@
     "failures": [
       {
         "attempt": 1,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
         "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       },
       {
         "attempt": 1,
         "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
       },
       {
         "attempt": 2,
@@ -526,18 +556,18 @@
       }
     ],
     "lkg_status": "absent",
-    "observed_at": "2026-08-06T00:14:28Z",
+    "observed_at": "2026-08-07T00:12:01Z",
     "run_attempt": 1,
-    "run_id": "31058959670"
+    "run_id": "31133672903"
   },
-  "resolution_state": "terminal_provider_unsupported",
-  "retry": false,
+  "resolution_state": "unavailable",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "terminal": {
     "artifact_generated_at": "2026-08-06T01:54:16.135Z",
     "artifact_path": "admin/fenok-s1-stock-public-promotion-dry-run.json",
-    "classified_at": "2026-08-06T14:33:02Z",
-    "classified_run_id": "31111230701",
+    "classified_at": "2026-08-07T00:12:01Z",
+    "classified_run_id": "31133672903",
     "evidence": [
       {
         "alias_source": null,
@@ -563,5 +593,5 @@
     "evidence_sha256": "7a84fb68a0c12462d7e4da4eb0f8102a46adfe572c5b82f09c7473fc06974ed9"
   },
   "ticker": "DAY",
-  "updated_at": "2026-08-06T14:33:02Z"
+  "updated_at": "2026-08-07T00:12:01Z"
 }
