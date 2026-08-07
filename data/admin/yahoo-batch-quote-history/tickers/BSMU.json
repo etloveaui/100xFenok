@@ -12,15 +12,28 @@
       "run_id": "30224292652",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 725,
+      "natural": true,
+      "observed_at": "2026-08-07T00:55:33Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31136222210",
+      "schedule": "7 20 * * 0-5",
+      "shard": "70/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-26T23:04:07Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BSMU.json",
-    "payload_sha256": "7dc6e15970ed11feab3da598c87756727a71ce81c79b5f2948ea9d77db597fc5",
-    "quote_as_of": "2026-07-24T20:00:00Z",
-    "source_as_of": "2026-07-24"
+    "fetched_at": "2026-08-07T00:56:33Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/BSMU.json",
+    "payload_sha256": "8efd6bee055e91f8a1c21762ac79c174752965c7b659e983a53c6484ecabddb7",
+    "quote_as_of": "2026-08-06T20:00:00Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 580,
+    "latency_ms": 725,
     "natural": true,
-    "observed_at": "2026-07-26T23:02:52Z",
+    "observed_at": "2026-08-07T00:55:33Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30224292652",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31136222210",
+    "schedule": "7 20 * * 0-5",
+    "shard": "70/72"
   },
   "lkg": {
     "fetched_at": "2026-07-26T23:04:07Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-26T23:02:52Z",
-    "payload_sha256": "e1f7a9a9420cb0283daa0572269289aa4e6376b86e527385718b8ca201c3f977",
-    "quote_as_of": "2026-07-24T20:00:00Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T00:55:33Z",
+    "payload_sha256": "3b4415710eb4b4ff6129e975f4723461a13c80b3545f654f0525afd5f44a0cb4",
+    "quote_as_of": "2026-08-06T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30224292652",
+    "run_id": "31136222210",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "BSMU",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-07T00:55:33Z"
 }

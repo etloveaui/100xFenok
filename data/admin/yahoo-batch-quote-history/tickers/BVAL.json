@@ -12,15 +12,28 @@
       "run_id": "30224292652",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 597,
+      "natural": true,
+      "observed_at": "2026-08-07T00:55:33Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31136222210",
+      "schedule": "7 20 * * 0-5",
+      "shard": "70/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-26T23:04:21Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BVAL.json",
-    "payload_sha256": "eace5f73ff7427f393573974e01f949a58801291eeda41d371fa6b419f9f7fcf",
-    "quote_as_of": "2026-07-24T19:59:51Z",
-    "source_as_of": "2026-07-24"
+    "fetched_at": "2026-08-07T00:56:48Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/BVAL.json",
+    "payload_sha256": "3bb5e6947366a3da16886e37898edcfa4a6980bf09f2efe30e452674b37892d0",
+    "quote_as_of": "2026-08-06T19:59:51Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 499,
+    "latency_ms": 597,
     "natural": true,
-    "observed_at": "2026-07-26T23:02:52Z",
+    "observed_at": "2026-08-07T00:55:33Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30224292652",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31136222210",
+    "schedule": "7 20 * * 0-5",
+    "shard": "70/72"
   },
   "lkg": {
     "fetched_at": "2026-07-26T23:04:21Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-26T23:02:52Z",
-    "payload_sha256": "f6777f8cf4075a28e73ee51bf59f06649bdecc969316423bcf51ce2b3e1191c9",
-    "quote_as_of": "2026-07-24T19:59:51Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T00:55:33Z",
+    "payload_sha256": "926a3ff69d4b93e504134de1e6bf18e8f44a1a17c827f5935df048e18c476913",
+    "quote_as_of": "2026-08-06T19:59:51Z",
     "run_attempt": 1,
-    "run_id": "30224292652",
+    "run_id": "31136222210",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "BVAL",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-07T00:55:33Z"
 }

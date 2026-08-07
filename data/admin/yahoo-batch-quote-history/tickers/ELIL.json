@@ -25,15 +25,28 @@
       "run_id": "30132647097",
       "schedule": "0 22 * * 5",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 697,
+      "natural": true,
+      "observed_at": "2026-08-07T00:55:33Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31136222210",
+      "schedule": "7 20 * * 0-5",
+      "shard": "70/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-24T23:12:48Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ELIL.json",
-    "payload_sha256": "e0999daf246319304d7bc6867521f11be4e5d2168c306001a7a20490485928e9",
-    "quote_as_of": "2026-07-24T20:00:00Z",
-    "source_as_of": "2026-07-24"
+    "fetched_at": "2026-08-07T00:56:04Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/ELIL.json",
+    "payload_sha256": "e00514bc2c74d3f9f36fe42309d8ed622ad473f6694f9d1ffdc6cae06b425bad",
+    "quote_as_of": "2026-08-06T20:00:00Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "focus_etf_configuration",
@@ -43,14 +56,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 597,
+    "latency_ms": 697,
     "natural": true,
-    "observed_at": "2026-07-24T23:12:06Z",
+    "observed_at": "2026-08-07T00:55:33Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30132647097",
-    "schedule": "0 22 * * 5",
-    "shard": "5/6"
+    "run_id": "31136222210",
+    "schedule": "7 20 * * 0-5",
+    "shard": "70/72"
   },
   "lkg": {
     "fetched_at": "2026-07-24T23:12:48Z",
@@ -63,17 +76,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-24T23:12:06Z",
-    "payload_sha256": "47e334e799b6b49648bcba768a82fd67234981c4bdb8b8e68afcceba8b31c53d",
-    "quote_as_of": "2026-07-24T20:00:00Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T00:55:33Z",
+    "payload_sha256": "455daf15f1fbc3136577b3269b40f2ec6d34f15d82d62137211d5f2d41181612",
+    "quote_as_of": "2026-08-06T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30132647097",
+    "run_id": "31136222210",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -86,5 +99,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "ELIL",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-07T00:55:33Z"
 }

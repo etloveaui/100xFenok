@@ -25,15 +25,28 @@
       "run_id": "30132647097",
       "schedule": "0 22 * * 5",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 604,
+      "natural": true,
+      "observed_at": "2026-08-07T00:55:33Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31136222210",
+      "schedule": "7 20 * * 0-5",
+      "shard": "70/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-24T23:12:56Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/EMSC.json",
-    "payload_sha256": "6e8c63792ddc60837c0d548655673a546106086da5cc2f389ab7dda4f7271cf6",
-    "quote_as_of": "2026-07-24T20:00:00Z",
-    "source_as_of": "2026-07-24"
+    "fetched_at": "2026-08-07T00:56:05Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/EMSC.json",
+    "payload_sha256": "03792e417349a0fb449792c6482933e3e21e3fb4ff0c504c07e971d90f9a6c7c",
+    "quote_as_of": "2026-08-06T20:00:00Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 476,
+    "latency_ms": 604,
     "natural": true,
-    "observed_at": "2026-07-24T23:12:06Z",
+    "observed_at": "2026-08-07T00:55:33Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30132647097",
-    "schedule": "0 22 * * 5",
-    "shard": "5/6"
+    "run_id": "31136222210",
+    "schedule": "7 20 * * 0-5",
+    "shard": "70/72"
   },
   "lkg": {
     "fetched_at": "2026-07-24T23:12:56Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-24T23:12:06Z",
-    "payload_sha256": "ec83c2caf77987c3029676d37a3413ed48c749813103a3dae503d8197c2fa413",
-    "quote_as_of": "2026-07-24T20:00:00Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T00:55:33Z",
+    "payload_sha256": "584db92e72fcf2f9e8a6714ae2486eec19efea10e27889f3abcf3d7ac3db1359",
+    "quote_as_of": "2026-08-06T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30132647097",
+    "run_id": "31136222210",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "EMSC",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-07T00:55:33Z"
 }

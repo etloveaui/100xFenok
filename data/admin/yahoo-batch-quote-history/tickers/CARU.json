@@ -12,15 +12,28 @@
       "run_id": "30132647097",
       "schedule": "0 22 * * 5",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 553,
+      "natural": true,
+      "observed_at": "2026-08-07T00:55:33Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31136222210",
+      "schedule": "7 20 * * 0-5",
+      "shard": "70/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-24T23:15:49Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CARU.json",
-    "payload_sha256": "731c792f6f7ac743da718f1911b40b8e81a0fd2a9a527af51dfe79115b632477",
-    "quote_as_of": "2026-07-24T18:19:01Z",
-    "source_as_of": "2026-07-24"
+    "fetched_at": "2026-08-07T00:55:54Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/yf/finance/CARU.json",
+    "payload_sha256": "a7f523a52be1d1363bf893dab688b9fa5cbb339eda69cd84c9274901dc380097",
+    "quote_as_of": "2026-08-05T17:25:41Z",
+    "source_as_of": "2026-08-05"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 561,
+    "latency_ms": 553,
     "natural": true,
-    "observed_at": "2026-07-24T23:12:06Z",
+    "observed_at": "2026-08-07T00:55:33Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30132647097",
-    "schedule": "0 22 * * 5",
-    "shard": "5/6"
+    "run_id": "31136222210",
+    "schedule": "7 20 * * 0-5",
+    "shard": "70/72"
   },
   "lkg": {
     "fetched_at": "2026-07-24T23:15:49Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-24T23:12:06Z",
-    "payload_sha256": "7ce44e1b56cf7878ca5181fb3b072a582548c9f8ab5617d03a1c4eb6bec9b96f",
-    "quote_as_of": "2026-07-24T18:19:01Z",
+    "history_as_of": "2026-08-05",
+    "observed_at": "2026-08-07T00:55:33Z",
+    "payload_sha256": "986dc791d9ed3f74fd0c1cf2a9e3e663b7d643bbf85e4cca4f0b28af29afcad9",
+    "quote_as_of": "2026-08-05T17:25:41Z",
     "run_attempt": 1,
-    "run_id": "30132647097",
+    "run_id": "31136222210",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-05"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "CARU",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-07T00:55:33Z"
 }

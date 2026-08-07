@@ -25,15 +25,28 @@
       "run_id": "30224292652",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 568,
+      "natural": true,
+      "observed_at": "2026-08-07T00:55:33Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31136222210",
+      "schedule": "7 20 * * 0-5",
+      "shard": "70/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-26T23:06:28Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BREW.json",
-    "payload_sha256": "ada43d9494e0f7c608eb3e71856b7a1a94e51247b39b68eea3bdeb1594082c2d",
-    "quote_as_of": "2026-07-24T17:52:55Z",
-    "source_as_of": "2026-07-24"
+    "fetched_at": "2026-08-07T00:56:28Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/BREW.json",
+    "payload_sha256": "7e627c4db26a33f2632a164ceb5fda1042025c1d266ee2fb30bb7da8c81f2fd2",
+    "quote_as_of": "2026-08-06T19:53:57Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 495,
+    "latency_ms": 568,
     "natural": true,
-    "observed_at": "2026-07-26T23:02:52Z",
+    "observed_at": "2026-08-07T00:55:33Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30224292652",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31136222210",
+    "schedule": "7 20 * * 0-5",
+    "shard": "70/72"
   },
   "lkg": {
     "fetched_at": "2026-07-26T23:06:28Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-26T23:02:52Z",
-    "payload_sha256": "9e9e09a5cf1eb111698a232ae6c5cf74a3f8f9057c6270c89f59cbfb34e904dd",
-    "quote_as_of": "2026-07-24T17:52:55Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T00:55:33Z",
+    "payload_sha256": "ffd39c9a08a9e0b6696bd7f0b6ddb41f7769077f597f1a2e63f663a6b866a2e9",
+    "quote_as_of": "2026-08-06T19:53:57Z",
     "run_attempt": 1,
-    "run_id": "30224292652",
+    "run_id": "31136222210",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "BREW",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-07T00:55:33Z"
 }
