@@ -1,0 +1,79 @@
+{
+ "schema_version": "feno_rim_recovery_r3_s5.v1",
+ "phase": "R3-S5",
+ "research_only": true,
+ "note": "Red-team fh-20260807-098 deciding spec: separate RIM structure from the mechanical forecast earnings yield it is built on. FEPS1 = R1 tau=1 RI-path forecast.",
+ "panel_rows": 1638,
+ "dropped_no_feps": 0,
+ "correlations": {
+  "icc_feps_yield": 0.703094,
+  "feps_yield_tr": 0.194041,
+  "bp_feps_yield": 0.596931
+ },
+ "S2_bp_icc": {
+  "pooled_icc": {
+   "beta": 1.362843,
+   "se": 0.131142,
+   "tstat": 10.39211,
+   "pval": 0
+  },
+  "fm_icc": {
+   "mean": 1.206748,
+   "sd": 0.278352,
+   "n": 5,
+   "per_origin": {
+    "2019": 0.7345,
+    "2020": 1.229463,
+    "2021": 1.373445,
+    "2022": 1.444598,
+    "2023": 1.251736
+   }
+  }
+ },
+ "S5_bp_fepsyield_icc": {
+  "pooled_icc": {
+   "beta": 1.145743,
+   "se": 0.105442,
+   "tstat": 10.866072,
+   "pval": 0
+  },
+  "pooled_feps_yield": {
+   "beta": 0.379495,
+   "se": 0.233759,
+   "tstat": 1.623443,
+   "pval": 0.104495
+  },
+  "pooled_bp": {
+   "beta": -0.029145,
+   "se": 0.024806,
+   "tstat": -1.174931,
+   "pval": 0.240023
+  },
+  "fm_icc": {
+   "mean": 1.07286,
+   "sd": 0.294385,
+   "n": 5,
+   "per_origin": {
+    "2019": 0.647943,
+    "2020": 1.214727,
+    "2021": 0.888178,
+    "2022": 1.27154,
+    "2023": 1.34191
+   }
+  },
+  "fm_feps_yield": {
+   "mean": 0.325302,
+   "sd": 0.569494,
+   "n": 5,
+   "per_origin": {
+    "2019": 0.154252,
+    "2020": 0.023589,
+    "2021": 1.295632,
+    "2022": 0.312821,
+    "2023": -0.159785
+   }
+  }
+ },
+ "significance_note": "Effective independent observations ~2 (5 origins, 36m windows overlap 24/36 months). No t-stat on 5 overlapping origins is meaningful; point estimates + decoupling robustness are reported, significance is not establishable at this T.",
+ "generated_at": "2026-08-07T09:03:56.493Z"
+}
