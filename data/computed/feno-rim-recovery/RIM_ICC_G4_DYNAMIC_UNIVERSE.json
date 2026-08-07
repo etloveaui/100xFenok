@@ -1,0 +1,72 @@
+{
+ "schema_version": "feno_rim_icc_g4_dynamic_universe.v1",
+ "phase": "G4",
+ "research_only": true,
+ "criteria": {
+  "file": "data/computed/feno-rim-recovery/g4-criteria.json",
+  "sha256": "e003557770d08212f41105fddce44ccef83d8fbd36bdecc5fc2ac1f16b45e959",
+  "frozen_in_earlier_commit": "80cd53d46f",
+  "no_threshold_or_cut_changed_after_any_result": true
+ },
+
+ "process": {
+  "worker": "DeepSeek; one mid-run bug found and fixed by the worker (coverage used the primary earnings concept only, empty for NVDA-type filers; switched to the committed primary-plus-fallback selection)",
+  "worker_self_verification": "within-origin demeaning plus Cholesky reproduced pooled coefficients at every cut and horizon; cut rules independently reimplemented with identical n; full-universe values reproduced the committed G3",
+  "handler_independent_re_derivation": "cc, separate implementation, no worker artifact read as input",
+  "agreement": "every coefficient and t matches to six decimals"
+ },
+
+ "results": {
+  "full_universe_reference": {"n": 1638, "b_36m": 0.756535, "t_36m": 7.070, "b_12m": 1.296580, "t_12m": 1.634, "per_origin_positive_36m": "5/5"},
+  "G4_A_top200": {"n": 1000, "b_36m": 0.346457, "t_36m": 1.698, "fm_36m": 0.306972, "fm_t_36m": 3.418,
+                  "rank_ic_36m": 0.130356, "rank_ic_positive_36m": "5/5", "per_origin_positive_36m": "4/5",
+                  "b_12m": 0.628475, "t_12m": 0.781, "fm_12m": 0.253379, "rank_ic_12m": 0.053709,
+                  "rank_ic_positive_12m": "3/5", "per_origin_positive_12m": "3/5"},
+  "G4_A_top300": {"n": 1500, "b_36m": 0.407503, "t_36m": 3.982, "fm_36m": 0.422316, "fm_t_36m": 8.774,
+                  "rank_ic_36m": 0.137681, "rank_ic_positive_36m": "5/5", "per_origin_positive_36m": "5/5",
+                  "b_12m": 0.806767, "t_12m": 1.158, "fm_12m": 0.570625, "rank_ic_12m": 0.063575,
+                  "rank_ic_positive_12m": "3/5", "per_origin_positive_12m": "4/5"},
+  "G4_B_cap_ratio_q25": {"n": 1231, "excluded_per_origin": [78, 81, 83, 82, 83],
+                  "b_36m": 0.353776, "t_36m": 2.255, "fm_36m": 0.349647, "fm_t_36m": 5.126,
+                  "rank_ic_36m": 0.121434, "rank_ic_positive_36m": "5/5", "per_origin_positive_36m": "5/5",
+                  "b_12m": 0.604060, "t_12m": 0.748, "rank_ic_12m": 0.056540,
+                  "rank_ic_positive_12m": "3/5", "per_origin_positive_12m": "3/5"}
+ },
+
+ "the_central_measurement": {
+  "statement": "Removing the firms that were smallest at the origin cuts the 36-month coefficient by more than half. Full universe 0.7565, top-300 0.4075, cap-ratio cut 0.3538, top-200 0.3465 — a 54.2% reduction from full to top-200.",
+  "what_that_means": "Roughly half of the measured effect at 36 months comes from firms that were small at the origin. Those are exactly the firms most likely to have been outside the index then and admitted later, and admission follows appreciation. This is inclusion bias, measured, not hypothesised.",
+  "what_survived": "The sign never flips. The coefficient stays positive at every cut and both horizons, per-origin counts hold at 4/5 or 5/5 at 36 months, and rank IC stays positive at 5/5 at 36 months across all three cuts. Fama-MacBeth remains positive and, at 36 months, above 2 everywhere.",
+  "what_stayed_weak": "Twelve months is not significant at any cut — t of 0.781, 1.158 and 0.748 — consistent with the full-universe 1.634 from G3. Restricting the universe does not rescue the horizon where the origins are independent; it lowers the coefficient there too.",
+  "the_bias_we_could_not_measure_points_the_same_way": "Inclusion bias is the half we can see. Removal bias — firms that were in the index and later failed — is absent from this data entirely, and its omission inflates measured returns in the same direction. The true coefficient is therefore more likely below 0.35 than above it, though this data cannot say by how much."
+ },
+
+ "G4_C_coverage": {
+  "panel_share_of_current_503_member_market_cap_at_each_origin": [0.789, 0.798, 0.841, 0.801, 0.818],
+  "denominator_caveat": "the denominator is the subset of the 503 current members that has data at that origin (401-418 of 503), not the full index and not the market",
+  "refusals_recorded_as_required_output": [
+   {"quantity": "panel share of total US market capitalisation at each origin", "reason": "no total-market series exists in the repository", "proxy_substituted": false},
+   {"quantity": "count of firms that left the S&P 500 between 2019 and 2023", "reason": "no point-in-time membership data exists; membership-changes.json holds 10 records, all 2026, and sp500.json git history reaches only 2026-06-29", "proxy_substituted": false},
+   {"quantity": "return contribution of delisted or acquired firms", "reason": "no price series exists for any firm not currently listed", "proxy_substituted": false}
+  ]
+ },
+
+ "verdict": {
+  "label": "G4_DATA_INSUFFICIENT",
+  "reasoning": "G4_DYNAMIC_UNIVERSE_REPLICATES was fixed as unreachable before any result and is not declared. G4_SURVIVORSHIP_DEPENDENT was not triggered: at the top-200 cut the 36-month coefficient is positive at 0.3465, the sign does not flip at either horizon, and the per-origin positive count is 4 of 5, above the 3-of-5 floor. What remains is the default and expected outcome — the partial tests did not overturn the result, and the gate the mandate specified could not be run.",
+  "this_is_not_a_pass": "The verdict says the test was not available, not that the lens survived a point-in-time universe. No result in this artifact supports the claim that it would.",
+  "release_consequence": "Mandate section 11 forbids public numeric release on a FAIL or INSUFFICIENT G4. That prohibition now applies, independently of G3's HORIZON_SPECIFIC verdict which already blocked RELEASE_RESEARCH_BETA.",
+  "evidence_class": "SUPPORTED_NOT_VALIDATED, further narrowed: about half the 36-month effect is attributable to firms that were small at the origin, and the unmeasurable half of the bias points the same way."
+ },
+
+ "prohibitions_observed": [
+  "no network acquisition of membership history, delisted prices, or any external series",
+  "no proxy substituted for a refused quantity",
+  "G4_DYNAMIC_UNIVERSE_REPLICATES not declared",
+  "cuts held at the frozen 200 and 300",
+  "no change to the GLS equation, forecast equations, fade, terminal horizon, payout policy, industry target, or solver",
+  "no re-solving of the ICC",
+  "no publication or promotion; the public surface remains quarantined"
+ ],
+ "generated_at": "2026-08-08T01:52:00Z"
+}
