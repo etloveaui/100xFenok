@@ -1,0 +1,81 @@
+{
+ "schema_version": "feno_rim_recovery_g0_criteria.v2",
+ "phase": "G0",
+ "supersedes": "g0-criteria.json (v1, preserved unchanged — never edited in place)",
+ "supersession_reason": "v1 named an in-repo validation target that turned out to be the same series it was meant to check, and its enumeration of market-cap consumers was incomplete. Both are handler defects found by the worker. No pass threshold from v1 is weakened; one is added.",
+ "research_only": true,
+ "frozen_before_any_result": true,
+ "adjudicated_by": "cc (Opus) — handler, on independent verification, not by accepting the worker's report",
+
+ "amendment_1_step_a_validation": {
+  "finding": "data/yf/finance/{SYM}.unadjusted.json history_unadjusted is SPLIT-ADJUSTED, not as-traded. It is bit-identical to data/edgar/r1-panel/prices/{SYM}.json closes.",
+  "handler_independent_check": "AAPL, 1323 overlapping dates, max relative difference 0.0. The repo fetcher documents the basis at scripts/fetch-yf-finance.py:954-957 and calls yfinance with auto_adjust=False, which suppresses dividend adjustment only.",
+  "consequence": "v1 Step A1 measured the split factor itself, not a reconstruction error. A1 is VOID as a validation. Its 39.0 pooled max relative error is not evidence against the reconstruction and must never be cited as such.",
+  "no_as_traded_series_exists_in_repo": true,
+  "handler_correction": "The v1 claim that AAPL 49.48 x 4 = 197.92 matches the as-traded close rested on handler outside knowledge, not on repo evidence. It is downgraded to [not verified] and is not used as support anywhere.",
+  "why_G0_survives_this": "The direct route never required an as-traded data source. Both bases start from the same split-adjusted close, and their ratio reduces to a quotient of split-factor products. Split-map correctness, not as-traded availability, is the only external dependency.",
+  "replacement_validation": {
+   "A2": "r1-panel closes vs history_unadjusted, expect exact equality — confirms the basis claim",
+   "A3": "PRIMARY. Reconstruct the as-traded series independently from the r1-panel fetch and the r3-panel fetch and require identical values. Two independent Yahoo fetches agreeing on both closes and split factors is the strongest in-repo evidence available.",
+   "A4": "supporting only. At each split date the reconstructed series must drop by approximately the split ratio; the residual is that day's genuine price move, and spin-off-style ratios (IBM 1.046, MRK 1.048, MMM 1.196) are not expected to match tightly. No numeric threshold is attached, and A4 alone can neither pass nor fail Step A.",
+   "A5": "NEW. Cross-check the split maps against a third independent source already in the repo: data/yf/finance/{SYM}.json field splits. Require agreement on every event dated inside the panel window. Disagreement on any in-window event is a stop.",
+   "pass_rule": "A2 exact AND A3 exact AND A5 agreement on all in-window events. A1 is not scored."
+  }
+ },
+
+ "amendment_2_market_cap_consumers": {
+  "v1_claim": "market cap enters exactly one place, size = log(mcap) in r3-incremental.mjs:64",
+  "corrected_enumeration": [
+   "r3-incremental.mjs:64 — size control",
+   "r3-robustness.mjs:29 — size control in the bounded-survivorship leg",
+   "r2-gls-icc.mjs:176-188 — cap-weighted index aggregates (mean, median, 5% trimmed) and cap_weighted_mean_icc_minus_rf"
+  ],
+  "why_it_matters": "The third consumer is not a control variable, it is the index-level product candidate named in mandate section 13. A basis error there moves the aggregate weights directly. v1 had no pass condition covering it; C6 is added below.",
+  "unchanged": "No consumer feeds the GLS-ICC solve. Predictions P1-P4 stand."
+ },
+
+ "amendment_3_worker_report_correction": {
+  "worker_claim": "Q4: data/yf/finance/{SYM}.json carries no splits field; repo split maps live only in r1-panel and r3-panel.",
+  "verdict": "REFUTED by handler. The field is present: AAPL 5 events, NVDA 6, AMZN 4, each keyed by date with the ratio as value.",
+  "consequence": "A third independent split source exists and is now required as A5. This also confirms that the R0-CORRECTED run, whose script reads exactly this field, was operating on real split data rather than silently applying a unit factor.",
+  "second_correction": "The report names GOOGL@2023 as a P5 candidate while also establishing that GOOGL is absent from the 368 R2 symbols. Both cannot hold; GOOGL is excluded, so it cannot produce a candidate cell."
+ },
+
+ "pass_conditions": {
+  "note": "C1 through C5 are carried over from v1 verbatim and unweakened. C6 is added.",
+  "C1_market_cap_rank_correlation": {"threshold": ">= 0.99 at every origin", "unchanged_from_v1": true},
+  "C2_icc_difference": {"threshold": "median <= 0.0025 and p95 <= 0.0100", "unchanged_from_v1": true},
+  "C3_r3_fama_macbeth_coefficient": {"threshold": "same sign AND relative change <= 0.33", "incumbent": 1.2071, "admissible_interval": [0.809, 1.605], "unchanged_from_v1": true},
+  "C4_bidimensional_spread": {"threshold": "positive at 5/5 origins", "unchanged_from_v1": true},
+  "C5_per_origin_sign": {"threshold": "unchanged at all 5 origins", "unchanged_from_v1": true},
+  "C6_cap_weighted_index_aggregate": {
+   "added_in": "v2",
+   "quantity": "per-origin cap-weighted mean ICC, DIRECT vs CORRECTED",
+   "threshold": "absolute difference <= 0.0025 at every origin",
+   "sensitivity_reported_without_threshold": ["cap-weighted median ICC", "5% trimmed cap-weighted mean ICC", "cap_weighted_mean_icc_minus_rf"],
+   "rationale": "Mandate section 13 names the cap-weighted mean as the primary index aggregation. It is the one quantity where a market-cap basis error reaches a product number directly rather than through a control variable. The 25 bp bound matches C2 so the firm level and the index level are held to the same tolerance.",
+   "registered_before_any_measurement": true
+  }
+ },
+
+ "verdict_mapping": {
+  "G0_PASS": "C1 through C6 all hold",
+  "G0_MATERIAL_BASIS_DEPENDENCE": "any one fails; public numeric release of the ICC lens is refused regardless of later gates",
+  "data_contract_stop": {"condition": "DIRECT computable for fewer than 95% of the cells CORRECTED covers", "action": "report to owner; do not substitute inputs; do not relax the definition"}
+ },
+
+ "prohibitions_carried_forward": [
+  "no output-targeted constant",
+  "no per-index multiplier or offset",
+  "no post-result change to any threshold, band, set, or basis rule",
+  "no feedback of a price-implied ICC into a same-date fair-value discount rate",
+  "no network acquisition to satisfy a coverage gap",
+  "no public promotion or republication"
+ ],
+
+ "result_paths_still_absent_at_freeze": [
+  "data/computed/feno-rim-recovery/RIM_ICC_G0_MARKETCAP_BASIS_AUDIT.json"
+ ],
+
+ "frozen_at_utc": "2026-08-07T14:47:00Z"
+}
