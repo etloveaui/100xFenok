@@ -1,0 +1,48 @@
+{
+ "schema_version": "feno_rim_recovery_g2_criteria.v2",
+ "phase": "G2",
+ "supersedes": "g2-criteria.json (v1, preserved unchanged — never edited in place)",
+ "supersession_reason": "v1 defined the G2-A population as every cell with a non-null icc_ri (1,638 over five origins) but wrote its pass rule against four origins. G2-A's statistic uses only ICC and excess return and needs no momentum, so it runs on all five. The four-origin denominator was carried over from G2-B and G2-C by inattention. Caught by the worker before any result existed, under the stop-and-ask rule.",
+ "research_only": true,
+ "frozen_before_any_result": true,
+ "no_result_file_existed_at_this_freeze": true,
+
+ "amendment_1_G2A_population_and_denominator": {
+  "population": "all cells with non-null icc_ri: 1,638 over origins 2019-2023",
+  "why_five_origins_are_valid_here": "T_t is built from ICC and EXC only. Momentum enters neither the statistic nor the stratification, so the 2019 momentum gap does not bind G2-A.",
+  "v1_rule": "observed T_t significant at p <= 0.05 in at least 3 of 4 origins, for each of the B/P and size stratifications",
+  "v2_rule": "observed T_t significant at p <= 0.05 in at least 4 of 5 origins, for each of the B/P and size stratifications",
+  "tolerance_is_unchanged_in_intent": "v1 allowed one origin to fail out of four. v2 allows one out of five. Expressed as a fraction the bar rises from 0.75 to 0.80; the stricter reading was chosen deliberately, before any T_t was computed, so that fixing my own error cannot be a loosening.",
+  "G2_B_and_G2_C_denominators_unchanged": "G2-B remains PRE12 on 2020-2023 and PRE24 on 2021-2023; G2-C remains the 1,324-cell momentum sample. Those sub-gates genuinely require the lookback windows."
+ },
+
+ "amendment_2_rng_mapping_confirmed": {
+  "origin_index": {"2019": 0, "2020": 1, "2021": 2, "2022": 3, "2023": 4},
+  "stratification_index": {"S_bp": 0, "S_size": 1, "S_sec": 2},
+  "seed_expression": "20260808 + 1000 * origin_index + stratification_index",
+  "generator": "linear congruential, multiplier 1664525, increment 1013904223, modulus 2^32",
+  "requirement": "the artifact records the generator and the seed actually used for every (origin, stratification) pair, and a rerun must reproduce every p-value exactly"
+ },
+
+ "carried_forward_verbatim_from_v1": {
+  "definitions": "unchanged",
+  "G2_A_statistic_T_t": "unchanged — half-split on ICC within stratum, difference of mean EXC, count-weighted over strata with n_g >= 4",
+  "G2_A_stratifications": "unchanged — S_bp, S_size, S_sec run separately, never crossed; S_sec requires groups of at least 6 and reports excluded cells; S_sec enters no threshold",
+  "G2_A_reps": 10000,
+  "G2_B": "unchanged in specification, samples, reported quantities and the fixed interpretation rule (|t| < 2 or partial R-squared < 0.01 is not leakage)",
+  "G2_C": "unchanged — permute price within origin, re-solve ICC, every other regressor keeps its true value, 200 reps, 5% non-convergence stop",
+  "prohibitions": "unchanged"
+ },
+
+ "verdict_rules": {
+  "G2_PASS": "ALL of: (a) G2-A observed T_t significant at p <= 0.05 in at least 4 of 5 origins for the B/P stratification AND at least 4 of 5 for the size stratification; (b) G2-B shows no leakage signal by the fixed interpretation rule, on both PRE12 and PRE24; (c) G2-C places the observed coefficient above the 97.5th percentile of the placebo distribution.",
+  "G2_LEAKAGE_OR_MECHANICAL_ARTIFACT": "ANY of: G2-B shows a leakage signal; G2-C places the observed coefficient inside the central 95% of the placebo distribution; G2-A fails in both the B/P and size stratifications.",
+  "G2_INCONCLUSIVE": "anything else, including a split between the B/P and size stratifications, or a stop condition in G2-C"
+ },
+
+ "result_paths_still_absent_at_freeze": [
+  "data/computed/feno-rim-recovery/RIM_ICC_G2_PERMUTATION_PLACEBO.json"
+ ],
+
+ "frozen_at_utc": "2026-08-08T00:40:00Z"
+}
