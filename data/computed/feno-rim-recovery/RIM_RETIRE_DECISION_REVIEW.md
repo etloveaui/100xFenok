@@ -307,3 +307,37 @@ all_origins: −0.029). DEC-290's retirement of the heuristic product is affirme
 corrected evidence, while DEC-290's stated X2 basis remains invalid and is replaced by this
 record. R0 v1/v2 artifacts stay on disk marked void. Nothing in R0 speaks to the canonical
 path either way — that is R1-R4's job, which proceeds now.
+
+### 13.1 Red-team independent reproduction and the robustness boundary (fh-20260807-045)
+
+cc re-derived the corrected panel end-to-end in its own Python under the v3.1 rule, blind,
+and matched every statistic to the digit (284/848 cells, zero recovery failures, all ICs,
+b2, S, partial correlations, 0/12 phases). Verdict agreed: `R0_INCONCLUSIVE` via the
+set-disagreement rule. Two record corrections from its attack on the negative reading:
+
+1. **The negative significance is carried by five firms.** Dropping AAPL/AMZN/GOOGL/NVDA/SHW
+   (the large-split, largest-appreciation names — the extreme survivorship cases of a
+   current-membership basket) takes all_origins b2 from −0.134 (p .0002) to −0.049 (p .368)
+   and flips the window_complete signs (confound disclosed: T falls 34→27 / 18→11, so part of
+   the CI widening is sample loss; the sign flip is not explained by that).
+2. **What survives is the ordering claim, and it strengthens**: incremental (V/P minus B/P)
+   goes −0.069 → −0.135 (all) and −0.059 → −0.088 (wc); IC(B/P) improves to +0.088/+0.320
+   while V/P does not.
+
+The defensible close-out sentence, replacing "canonical battery uniformly negative":
+**the canonical battery is uniformly negative as computed, but its significance does not
+survive removing five of thirty firms, while the ordering — "V/P adds nothing over B/P, and
+B/P ranks better" — is robust and stronger without them, now on corrected data (more than
+DEC-290 ever had). "RIM is perverse" does not enter the record; it is one basket-composition
+decision away from disappearing.**
+
+**Structural limit, binding on R2/R3**: the current-Dow-30 basket cannot answer a SIGN
+question about valuation and returns at any level of statistical care, because membership is
+a function of the outcome (awarded for past appreciation, which continued in sample; with
+correct market caps those firms are correctly expensive early and still delivered the largest
+returns — a fixed current-membership basket manufactures a negative valuation-to-return
+relation by construction). The corroborating symptom: level ICs flip sign between all_origins
+(both negative) and window_complete (both positive). Any later phase that reads a return sign
+off this or any current-membership panel (including the frozen R1 S&P500 universe) needs a
+point-in-time membership list or a universe not selected on past appreciation. This binds R2/R3
+criteria, not R1 (a forecast-accuracy gate is a within-firm comparison and unaffected).
