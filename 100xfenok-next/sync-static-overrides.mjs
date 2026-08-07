@@ -76,6 +76,24 @@ function removeGeneratedPublicMirror(relativePath) {
   console.log(`[sync-static-overrides] removed private-only public mirror ${relativePath}`);
 }
 
+// Third-party research inputs. These are read under research use and are not ours to
+// republish: the Li-Mohanram paper text and PDF, and the Ken French factor archives.
+// The mirror guard already refuses .csv and .txt in the public tree, which catches the
+// parsed factor files and the paper text -- but not the PDF or the zips, so the whole
+// tree is removed rather than the files the guard happens to name.
+const PRIVATE_RESEARCH_PUBLIC_TREES = [
+  "public/data/edgar/literature",
+  "public/data/kf-french",
+];
+function removePrivateResearchPublicTrees() {
+  for (const relativePath of PRIVATE_RESEARCH_PUBLIC_TREES) {
+    const dirPath = path.join(rootDir, relativePath);
+    if (!fs.existsSync(dirPath)) continue;
+    fs.rmSync(dirPath, { recursive: true, force: true });
+    console.log(`[sync-static-overrides] removed private research tree ${relativePath}`);
+  }
+}
+
 function lstatIfPresent(filePath) {
   try {
     return fs.lstatSync(filePath);
@@ -467,6 +485,7 @@ function compactFenokEdgePublicMirror() {
 // pipeline against the importer's cwd. Executed only when run as the sync-static step.
 if (isMain) {
 removePrivateDataSupplyPublicTrees();
+removePrivateResearchPublicTrees();
 // The FENO RIM research records. They carry every operand, the frozen
 // calibration constants, the fitted discount equation, and the source notes that
 // name where each constant came from. Only the redacted projection built by
