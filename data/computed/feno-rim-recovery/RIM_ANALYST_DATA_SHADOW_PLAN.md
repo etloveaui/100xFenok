@@ -234,3 +234,18 @@ is warranted only if the free panel proves too sparse for the pre-committed cove
   (arbitrary-date retrieval is only partially evidenced via DataScope Select); Intrinio as-of
   retrieval parameter; currency/basis metadata for Intrinio and MarketWatch; FMP/Finnhub PIT-ness;
   redistribution terms of every provider; archive-extraction republication rights.
+
+---
+
+## Addendum (2026-08-07) — status after R3
+
+R3 (R3_INCREMENTAL.json) shows mechanical-forecast GLS-ICC already carries significant
+incremental 36m forward-return information beyond B/P + size + momentum (ICC coefficient
+1.28-1.37, pooled t=10.4-15.0, consistent across all five origins). Consequence for this plan:
+analyst point-in-time forecasts are **WOULD_HELP, not REQUIRED** - RIM is viable on mechanical
+forecasts alone (final verdict Option A, RIM_ICC_VALIDATED on the expected-return lens). This
+shadow plan therefore becomes the OPTIONAL accuracy-upgrade path, not a viability precondition:
+its purpose is to quantify how much analyst PIT forecasts improve ICC accuracy over the
+mechanical baseline, should the owner choose to pursue the procurement/sample route described
+above. The free Wayback shadow panel (MW/MB/Zacks, partial origins) remains the no-cost first
+step if that comparison is ever commissioned.
