@@ -673,6 +673,40 @@ const assets = [
     retention: SNAPSHOT,
     recovery: "rebuild_from_inputs",
   }),
+  // Research records, never served. Both directories hold audit trails for retired or
+  // quarantined work: frozen criteria, freeze receipts, adjudications and the red-team
+  // re-derivations kept beside them. Nothing here is produced by a workflow and nothing
+  // here may reach the public mirror -- the RIM public surface is a separate, redacted
+  // projection that stays quarantined. Declared so the computed-root coverage check
+  // passes; declaring them private is what keeps them out of the mirror.
+  asset({
+    id: "feno_rim_v2_research",
+    label: "FENO RIM v2 research record (private, retired model)",
+    outputs: [output("data/computed/feno-rim-v2", "directory")],
+    owner_workflow: null,
+    writer: null,
+    inputs: [],
+    cadence: ORPHANED,
+    privacy_class: "private",
+    public_outputs: [],
+    retention: ORPHANED_RETENTION,
+    recovery: "none",
+    lifecycle: "orphaned",
+  }),
+  asset({
+    id: "feno_rim_recovery_research",
+    label: "FENO RIM recovery and ICC release-gate record (private)",
+    outputs: [output("data/computed/feno-rim-recovery", "directory")],
+    owner_workflow: null,
+    writer: null,
+    inputs: [],
+    cadence: ORPHANED,
+    privacy_class: "private",
+    public_outputs: [],
+    retention: ORPHANED_RETENTION,
+    recovery: "none",
+    lifecycle: "orphaned",
+  }),
 ];
 
 function exactKeys(value, expected, context) {
