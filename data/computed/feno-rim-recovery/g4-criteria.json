@@ -1,0 +1,77 @@
+{
+ "schema_version": "feno_rim_recovery_g4_criteria.v1",
+ "phase": "G4",
+ "gate": "point-in-time dynamic universe — does the result survive when membership is not decided by who is still in the index today?",
+ "research_only": true,
+ "frozen_before_any_result": true,
+ "mandate_section": "11",
+ "handler": "cc (Opus) — adjudicator. worker: DeepSeek.",
+
+ "the_constraint_measured_before_freezing": {
+  "note": "These are facts about the repository, established by the handler before writing any rule. They determine what this gate can and cannot conclude.",
+  "universe_today": "R2's 368 symbols are ALL current members of data/slickcharts/sp500.json, whose `updated` field reads 2026-08-02. The 2019 origin is populated with the August 2026 index list.",
+  "removed_firms_observable": 0,
+  "why_zero": "No firm that left the S&P 500 between 2019 and 2023 appears anywhere in the panel — not in r1-panel, not in the price caches, not in the EDGAR extracts. There is nothing to add back.",
+  "pit_membership_data_absent": "data/slickcharts/membership-changes.json carries 10 change records, all dated 2026. Git history for sp500.json reaches 2026-06-29 across 8 commits. Neither reconstructs index membership at any origin in 2019-2023.",
+  "delisted_prices_absent": "the r1-panel and r3-panel price caches hold 503 symbols, all currently listed. A delisted firm has no future-return series here.",
+  "no_network_acquisition": "acquiring historical membership or delisted price series is outside this mission's standing permissions and is not attempted."
+ },
+
+ "the_asymmetry_this_gate_is_built_on": {
+  "statement": "Because removed firms cannot be observed at all, no test available here can demonstrate that the result survives a genuine point-in-time universe. Tests CAN still demonstrate that it does not.",
+  "consequence_fixed_in_advance": "G4_DYNAMIC_UNIVERSE_REPLICATES is UNREACHABLE on current data and may not be declared under any result. The reachable verdicts are G4_DATA_INSUFFICIENT and G4_SURVIVORSHIP_DEPENDENT.",
+  "why_this_is_written_before_running": "A partial test that the lens passes must not be reported as if it were the gate the mandate asked for. Fixing the ceiling now removes the temptation to promote a partial result once the numbers look agreeable.",
+  "what_the_partial_tests_are_worth": "They address INCLUSION bias — firms that were small at the origin and later joined the index, which by construction did well in between. They cannot address REMOVAL bias — firms that were in the index and later failed, whose absence inflates measured returns. Only the second is the classic survivorship problem, and it is the one we cannot touch."
+ },
+
+ "G4_A_pit_market_cap_truncation": {
+  "purpose": "Remove the firms most likely to have been outside the index at the origin, and see whether the result holds among those that were plainly large enough to be in it.",
+  "universe_rule": "within each origin, rank cells by the G0-settled market cap (row.mcap) descending, nearest-rank, ties by ascending symbol. Primary cut: top 200. Sensitivity cut: top 300. Both are fixed here, before any result.",
+  "test": "the G1 primary regression, R_h ~ const + BP + SIZE + FEPS1_over_P + ForecastSlope + ICC with origin fixed effects and origin-clustered SEs, run at BOTH the 36-month and 12-month horizons",
+  "reported": ["pooled ICC coefficient, clustered t, n, T_eff at each cut and each horizon",
+               "per-origin coefficient and sign",
+               "Fama-MacBeth mean and NW t",
+               "rank IC mean and count positive",
+               "the full-universe values beside them for direct comparison"]
+ },
+
+ "G4_B_inclusion_proxy": {
+  "purpose": "A second, independent angle on the same bias, in case market-cap rank is too coarse.",
+  "rule": "for each cell, compute the ratio of its origin market cap to the origin's median market cap. Exclude cells below the 25th percentile of that ratio (nearest-rank) within their origin. Re-run the G1 primary at 36 and 12 months.",
+  "reported": ["the same list as G4-A", "the count excluded per origin"]
+ },
+
+ "G4_C_coverage_disclosure": {
+  "purpose": "State plainly how much of the market this universe represents, and refuse what cannot be computed.",
+  "computable": ["cells per origin", "the summed origin market cap of the panel per origin", "the panel's share of the summed market cap of all 503 current S&P 500 members measured at the same origin, for the subset that has data"],
+  "not_computable_and_must_be_refused_explicitly": [
+   "the panel's share of total US market capitalisation at each origin — no total-market series exists in the repository",
+   "the number of firms that left the index between 2019 and 2023 — no point-in-time membership data exists",
+   "any return contribution from delisted or acquired firms — no price series exists"
+  ],
+  "requirement": "each refusal is recorded with its reason in the artifact. A refusal is a result; do not substitute a proxy for it."
+ },
+
+ "verdict_rules": {
+  "G4_DYNAMIC_UNIVERSE_REPLICATES": "UNREACHABLE on current data. Not available as a verdict.",
+  "G4_SURVIVORSHIP_DEPENDENT": "declared if, at the top-200 cut, the 36-month pooled ICC coefficient turns negative, OR the coefficient's sign flips relative to the full universe at both horizons, OR the 36-month per-origin positive count falls below 3 of 5",
+  "G4_DATA_INSUFFICIENT": "declared otherwise — the default and expected outcome, meaning the partial tests did not overturn the result but the gate the mandate specified could not be run",
+  "release_consequence": "mandate section 11 states that a FAIL or INSUFFICIENT G4 forbids public numeric release. That prohibition applies to the expected outcome here, and is independent of the G3 result which already blocked RELEASE_RESEARCH_BETA."
+ },
+
+ "prohibitions": [
+  "no network acquisition of membership history, delisted prices, or any external series",
+  "no substitution of a proxy for a refused quantity",
+  "no declaration of G4_DYNAMIC_UNIVERSE_REPLICATES",
+  "no post-result change to the top-200 / top-300 cuts or any threshold",
+  "no change to the GLS equation, forecast equations, fade, terminal horizon, payout policy, industry target, or solver",
+  "no re-solving of the ICC",
+  "no publication or promotion; the public surface remains quarantined"
+ ],
+
+ "result_paths_blocked_until_this_file_is_committed": [
+  "data/computed/feno-rim-recovery/RIM_ICC_G4_DYNAMIC_UNIVERSE.json"
+ ],
+
+ "frozen_at_utc": "2026-08-08T01:40:00Z"
+}
