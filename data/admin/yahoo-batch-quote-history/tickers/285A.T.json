@@ -141,6 +141,39 @@
       "run_id": "31058959670",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-07T01:46:07Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31138989349",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "discovered_from": [
@@ -172,10 +205,10 @@
     ],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-06T00:14:28Z",
+    "observed_at": "2026-08-07T01:46:07Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31058959670",
+    "run_id": "31138989349",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -206,13 +239,13 @@
       }
     ],
     "lkg_status": "absent",
-    "observed_at": "2026-08-06T00:14:28Z",
+    "observed_at": "2026-08-07T01:46:07Z",
     "run_attempt": 1,
-    "run_id": "31058959670"
+    "run_id": "31138989349"
   },
   "resolution_state": "unavailable",
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "285A.T",
-  "updated_at": "2026-08-06T00:14:28Z"
+  "updated_at": "2026-08-07T01:46:07Z"
 }

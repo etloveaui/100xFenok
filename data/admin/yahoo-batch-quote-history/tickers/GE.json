@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1038,
-      "natural": true,
-      "observed_at": "2026-07-22T00:53:53Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29879427185",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "ValueError: quote_as_of is unavailable for GE despite available history",
       "event_name": "schedule",
       "failures": [
@@ -188,32 +175,45 @@
       "run_id": "31058959670",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1030,
+      "natural": true,
+      "observed_at": "2026-08-07T01:51:40Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31138989349",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-05T23:17:07Z",
-    "history_as_of": "2026-08-05",
+    "fetched_at": "2026-08-07T01:54:47Z",
+    "history_as_of": "2026-08-06",
     "path": "data/yf/finance/GE.json",
-    "payload_sha256": "fcbf529329d7e16797bd02856587a4ffcd9b24081d58e0c618134cb6c76e9825",
-    "quote_as_of": "2026-08-05T20:00:02Z",
-    "source_as_of": "2026-08-05"
+    "payload_sha256": "a13420a45548b1fe3640d997cedc0806df5078157b07f990247f3aa462d00498",
+    "quote_as_of": "2026-08-06T20:00:03Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 1030,
     "natural": true,
-    "observed_at": "2026-08-06T00:23:12Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-07T01:51:40Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31058959670",
+    "run_id": "31138989349",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "1/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -244,14 +244,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-05T23:14:16Z",
-    "payload_sha256": "dbabbb96e7a9e3c9ce9d7afdd947861a739598dcde6e73dc299848825d3f446e",
-    "quote_as_of": "2026-08-05T20:00:02Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T01:51:40Z",
+    "payload_sha256": "fd3695b4bb4ef5ff2f9e764dde5efbcc96b8fd16241d8148323bb6ce6ed24179",
+    "quote_as_of": "2026-08-06T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "31055557073",
+    "run_id": "31138989349",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-05"
+    "source_as_of": "2026-08-06"
   },
   "recovered_at": "2026-07-24T00:27:41Z",
   "recovered_from_run_id": "29968542251",
@@ -262,5 +262,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "GE",
-  "updated_at": "2026-08-06T00:23:12Z"
+  "updated_at": "2026-08-07T01:51:40Z"
 }

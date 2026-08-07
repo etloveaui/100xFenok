@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 900,
-      "natural": true,
-      "observed_at": "2026-07-22T01:04:44Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29879427185",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "ValueError: quote_as_of is unavailable for RS despite available history",
       "event_name": "schedule",
       "failures": [
@@ -188,32 +175,45 @@
       "run_id": "31074084652",
       "schedule": "7 2 * * 0-5",
       "shard": "49/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 889,
+      "natural": true,
+      "observed_at": "2026-08-07T01:46:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31138989349",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T00:22:40Z",
-    "history_as_of": "2026-08-05",
+    "fetched_at": "2026-08-07T01:51:02Z",
+    "history_as_of": "2026-08-06",
     "path": "data/yf/finance/RS.json",
-    "payload_sha256": "784d53ce1cf49a24053e8448335534ca87348fcd01fbff7e24d13d75291474ce",
-    "quote_as_of": "2026-08-05T20:00:02Z",
-    "source_as_of": "2026-08-05"
+    "payload_sha256": "35e840c83f746d651ba3a5831f4889d67ea9d94a062a151e713332b3052a99a3",
+    "quote_as_of": "2026-08-06T20:00:03Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 889,
     "natural": true,
-    "observed_at": "2026-08-06T05:27:19Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-07T01:46:07Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31074084652",
-    "schedule": "7 2 * * 0-5",
-    "shard": "49/72"
+    "run_id": "31138989349",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -244,14 +244,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-06T00:19:10Z",
-    "payload_sha256": "46b4da4e71073b6e18939d4fc307991d96f661dee332ccb9be5b300642af0e3d",
-    "quote_as_of": "2026-08-05T20:00:02Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T01:46:07Z",
+    "payload_sha256": "5767185b6f154afb21a267480160ddd041aea28cfd8070234282daa6ee2dba38",
+    "quote_as_of": "2026-08-06T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "31058959670",
+    "run_id": "31138989349",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-05"
+    "source_as_of": "2026-08-06"
   },
   "recovered_at": "2026-07-24T00:27:41Z",
   "recovered_from_run_id": "29968542251",
@@ -272,5 +272,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "RS",
-  "updated_at": "2026-08-06T05:27:19Z"
+  "updated_at": "2026-08-07T01:46:07Z"
 }
