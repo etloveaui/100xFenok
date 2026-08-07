@@ -1,0 +1,88 @@
+{
+ "schema_version": "feno_rim_icc_g3_multi_horizon.v1",
+ "phase": "G3",
+ "research_only": true,
+ "criteria": {
+  "file": "data/computed/feno-rim-recovery/g3-criteria-v2.json",
+  "sha256": "8cf8541538f0c03bd7e12a6d1b7c9262989e38bef59a413a0d7e84d72fa18177",
+  "frozen_in_earlier_commits": ["14fbbb6bd4", "3ffcff1f57"],
+  "v1_preserved": "g3-criteria.json",
+  "no_threshold_changed_after_any_result": true
+ },
+
+ "process": {
+  "worker": "DeepSeek; one mid-run bug found and fixed by the worker (fixed-effect dummy placement produced NaN clustered t), post-fix numbers cross-checked against the committed G1",
+  "worker_self_verification": "within-origin demeaning plus Cholesky reproduced pooled b and t exactly at all three horizons; Fama-MacBeth rebuilt from scratch; the 36-month momentum sensitivity reproduced the committed G1 primary exactly",
+  "handler_independent_re_derivation": "cc, separate implementation, no worker artifact read as input",
+  "agreement": "every reported statistic matches to six decimals across all three passes"
+ },
+
+ "results": {
+  "12m": {"T_eff": 5.00, "n": 1638, "pooled_b_icc": 1.296580, "clustered_t": 1.6340,
+          "per_origin_b": [1.150, 1.684, -1.926, 3.655, 0.385], "per_origin_positive": "4/5",
+          "fama_macbeth_mean": 0.989546, "fama_macbeth_nw_t": 2.1730,
+          "rank_ic": [-0.135, 0.347, -0.018, 0.190, 0.049], "rank_ic_mean": 0.086629, "rank_ic_positive": "3/5",
+          "bp_tercile_spread_equal_weight": [0.040, 0.189, -0.044, 0.198, 0.052], "spread_positive": "4/5",
+          "sector_neutral_b": 1.327225, "sector_neutral_t": 1.486,
+          "large_cap_b": 0.552404, "large_cap_t": 0.708, "large_cap_n": 823,
+          "momentum_sensitivity_b": 1.305185, "momentum_sensitivity_t": 1.189, "momentum_sensitivity_n": 1324},
+  "24m": {"T_eff": 2.50, "n": 1638, "pooled_b_icc": 0.748383, "clustered_t": 1.4636,
+          "per_origin_b": [1.386, 0.037, 0.439, 2.206, -0.587], "per_origin_positive": "4/5",
+          "fama_macbeth_mean": 0.696292, "fama_macbeth_nw_t": 2.2991,
+          "rank_ic_mean": 0.128979, "rank_ic_positive": "5/5",
+          "bp_tercile_spread_equal_weight": [0.091, 0.037, 0.029, 0.126, -0.017], "spread_positive": "4/5",
+          "sector_neutral_b": 0.732802, "sector_neutral_t": 1.041,
+          "large_cap_b": 0.261736, "large_cap_t": 0.450,
+          "momentum_sensitivity_b": 0.603968, "momentum_sensitivity_t": 0.913},
+  "36m": {"T_eff": 1.67, "n": 1638, "pooled_b_icc": 0.756535, "clustered_t": 7.0700,
+          "per_origin_b": [0.458, 0.824, 0.365, 0.864, 1.159], "per_origin_positive": "5/5",
+          "fama_macbeth_mean": 0.733952, "fama_macbeth_nw_t": 6.0532,
+          "rank_ic_mean": 0.170794, "rank_ic_positive": "5/5",
+          "bp_tercile_spread_equal_weight": [0.035, 0.068, 0.040, 0.062, 0.096], "spread_positive": "5/5",
+          "sector_neutral_b": 0.919216, "sector_neutral_t": 3.285,
+          "large_cap_b": 0.412268, "large_cap_t": 1.748,
+          "momentum_sensitivity_b": 0.819823, "momentum_sensitivity_t": 7.482465,
+          "cross_check": "the 36m momentum sensitivity equals the committed G1 primary exactly, and the 36m primary equals the committed G1 sensitivity exactly"}
+ },
+
+ "tercile_aggregator": "both computed as required by criteria v2; equal-weight and count-weight differ only in the fourth to fifth decimal, and no tercile was excluded at any origin (3/3 everywhere)",
+
+ "the_central_finding": {
+  "statement": "The coefficient is LARGEST where the evidence is weakest and smallest where it looks strongest. At 12 months the point estimate is 1.297; at 36 months it is 0.757. But the clustered t runs 1.63, 1.46, 7.07 across 12, 24 and 36 months.",
+  "why_this_matters": "The 36-month t-statistic of 7.07 is computed on five clusters whose return windows overlap by two years each, giving T_eff 1.67. Overlapping windows make cluster residuals resemble one another, which understates the standard error; the apparent precision is largely a property of the overlap, not of the evidence. The 12-month horizon is the only one whose per-origin observations are genuinely independent, and there the same effect carries t 1.63.",
+  "what_did_not_collapse": "Direction survives everywhere. The pooled coefficient is positive at all three horizons, per-origin signs are 4/5 or better at all three, rank IC means are positive at all three, the B/P-stratified spread is positive at 4/5 or better at all three, and the Fama-MacBeth t exceeds 2 at both 12 and 24 months.",
+  "what_did_collapse": "Conventional statistical significance of the pooled estimate, once windows stop overlapping.",
+  "the_weak_origin": "2021 is negative at 12 months on all three readings — coefficient -1.926, rank IC -0.018, spread -0.044. That origin's 12-month window is July 2021 to June 2022, the growth drawdown. High-ICC (cheap) names did worse over exactly that year."
+ },
+
+ "verdict": {
+  "label": "G3_HORIZON_SPECIFIC",
+  "condition_by_condition": {
+   "a_pooled_positive_at_all_three_horizons": "MET — 1.297, 0.748, 0.757",
+   "b_12m_pooled_positive_with_clustered_t_at_least_2_and_sign_4_of_5": "FAILED — sign is 4/5, but clustered t is 1.634, below the frozen bound of 2",
+   "c_rank_ic_mean_positive_at_all_three": "MET — 0.087, 0.129, 0.171",
+   "d_12m_equal_weight_spread_positive_at_4_of_5": "MET — 4/5"
+  },
+  "mapping": "The frozen rules define G3_HORIZON_SPECIFIC as exactly this case: pooled coefficient positive at 36 months while condition (b) fails at 12. G3_FAIL is not triggered — no horizon carries a negative pooled coefficient, let alone a significant one.",
+  "no_rescue_was_attempted": "The Fama-MacBeth t at 12 months is 2.173 and would clear a threshold of 2. It is not the quantity condition (b) names. The condition says pooled coefficient with clustered t, and it was frozen in an earlier commit specifically so that a second statistic could not be substituted after the fact.",
+  "evidence_class": "SUPPORTED_NOT_VALIDATED, and this gate narrows what the support means: the lens's direction is stable across horizons, its statistical significance is not."
+ },
+
+ "consequences_for_the_release_gate": {
+  "mandate_section_17": "RELEASE_RESEARCH_BETA requires 'G3 stable/consistent'. G3 returned HORIZON_SPECIFIC, so that condition is not met on the evidence as it stands.",
+  "current_path": "KEEP_INTERNAL_SHADOW is the live candidate: G0, G1 and G2 passed, G3 is horizon-specific, and G4 has not run.",
+  "not_a_retirement_signal": "RETIRE_ICC_LENS requires basis dependence, forecast-strip collapse, leakage or placebo failure, inconsistent directions, or a survivor-only artifact. None of those occurred. Direction is consistent at every horizon.",
+  "what_would_change_it": "More non-overlapping origins. Five annual origins is the binding constraint, not the model. This is the same limitation the recovery mission recorded on 2026-08-07 and it has not moved.",
+  "owner_gate_unchanged": "Any public release of the ICC lens requires explicit owner approval; the public surface remains quarantined."
+ },
+
+ "prohibitions_observed": [
+  "no post-result horizon selection — all three computed and all three reported",
+  "no substitution of a different statistic for the one the condition names",
+  "no threshold, convention or specification changed after any result",
+  "no re-solving of the ICC",
+  "no network acquisition",
+  "no publication or promotion"
+ ],
+ "generated_at": "2026-08-08T01:25:00Z"
+}
