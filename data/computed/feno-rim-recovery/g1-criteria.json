@@ -1,0 +1,90 @@
+{
+ "schema_version": "feno_rim_recovery_g1_criteria.v1",
+ "phase": "G1",
+ "gate": "forecast-strip incremental test — is ICC a complicated transform of the FY1 earnings yield?",
+ "research_only": true,
+ "frozen_before_any_result": true,
+ "mandate_section": "8",
+ "handler": "cc (Opus) — adjudicator. worker: DeepSeek.",
+
+ "inherits_from_G0": {
+  "verdict": "G0_PASS (data/computed/feno-rim-recovery/RIM_ICC_G0_MARKETCAP_BASIS_AUDIT.json, commit 03f5bad73a)",
+  "consequence": "the market-cap basis is settled; Size enters G1 as log(mcap) from the committed R2 rows with no further basis work"
+ },
+
+ "input_facts_established_before_freezing": {
+  "note": "Checked by the handler directly so that no missing-data rule has to be invented after seeing a result.",
+  "forecast_strip_completeness": "1638/1638 R2 cells carry tau 1, 2 and 3 on both the RI and EP paths",
+  "forecast_sign_structure": "FEPS1 and FEPS3 are strictly positive in 1638/1638 cells on BOTH paths, so log(FEPS3/FEPS1) is defined everywhere and no slope-missingness rule is needed",
+  "worker_claim_corrected": "the worker reported 115 cells as a ForecastSlope caveat population. That count is the negE flag, which marks a negative REALIZED trailing EPS, not a negative forecast. TSLA 2019 carries eps_t -0.377 with forecasts ep +0.564 and ri +0.364. The forecasts are positive; the slope is computable. negE is retained only as a pre-specified sensitivity split.",
+  "sic_coverage": "1638/1638 cells carry a usable 2-digit SIC across 62 groups",
+  "momentum_availability": "1324/1638 cells, identical to the committed R3 S4 sample"
+ },
+
+ "variable_definitions": {
+  "future_return": "36-month annualized total return, ((p1 + dividends)/p0)^(1/3) - 1, using the split-adjusted r3-panel closes and r3-panel dividends — unchanged from the committed R3",
+  "BP": "B0 / price (per-share, from the committed R2 rows)",
+  "Size": "log(mcap) from the committed R2 rows",
+  "Momentum": "12-1, pm1/pm12 - 1, unchanged from the committed R3",
+  "FEPS1_over_P": "r1-edgar-panel tau-1 value / price",
+  "ForecastSlope": "log(FEPS3 / FEPS1) / 2",
+  "ICC": "icc_ri",
+  "primary_forecast_path": "RI",
+  "sensitivity_forecast_path": "EP — R1's tau1 gate was INDETERMINATE, so both paths were carried forward and both must be reported"
+ },
+
+ "specifications": {
+  "G1_PRIMARY": ["bp", "size", "mom", "feps1_p", "slope", "icc"],
+  "reference_incumbent": "the committed R3 S4 (bp, icc, size, mom) on the same 1324-cell momentum sample",
+  "sample_primary": "1324 cells with momentum available",
+  "sample_sensitivity": "1638 cells, momentum dropped from the specification",
+  "estimation": [
+   "per-origin cross-sectional OLS (Fama-MacBeth inputs)",
+   "pooled with origin fixed effects and origin-clustered standard errors"
+  ],
+  "required_reports": [
+   "per-origin b6",
+   "pooled b6 with clustered t",
+   "Fama-MacBeth mean b6 with NW lag-1 t",
+   "leave-one-origin-out pooled b6, all five",
+   "within-sector rank result (2-digit SIC)",
+   "coefficient sign at every origin",
+   "variance inflation factors or the design condition number for ICC against FEPS1/P and ForecastSlope",
+   "the same table on the EP path",
+   "the same table excluding the 115 negE cells"
+  ]
+ },
+
+ "incumbent_reference_values": {
+  "R3_S2_pooled_b_icc": 1.3628,
+  "R3_S3_pooled_b_icc": 1.2787,
+  "R3_S4_pooled_b_icc": 1.3679,
+  "R3_S4_pooled_t": 14.989,
+  "R3_FM_S2_mean": 1.206748,
+  "R3_FM_S3_mean": 1.121186,
+  "collapse_reference": "R3_S4_pooled_b_icc = 1.3679 on the identical 1324-cell sample"
+ },
+
+ "verdict_rules": {
+  "note": "No single t-statistic decides this gate. The overlapping-window caveat from the recovery mission still governs: five origins twelve months apart are roughly two effective independent return periods, so direction and robustness carry the weight.",
+  "G1_INCREMENTAL_SURVIVES": "ALL of: pooled b6 > 0 with clustered |t| >= 2; Fama-MacBeth mean b6 > 0; per-origin sign positive at >= 4 of 5; all five leave-one-origin-out pooled b6 > 0; within-sector rank effect positive at >= 4 of 5 origins",
+  "G1_COLLAPSES_TO_FORECAST_STRIP": "pooled b6 <= 0, OR (clustered |t| < 2 AND pooled b6 < 0.33 x 1.3679 = 0.4514)",
+  "G1_INCONCLUSIVE": "anything else, including the case where the primary and EP paths disagree in direction",
+  "collinearity_rule": "A high VIF is reported, not treated as a pass or a fail on its own. If ICC cannot be separated from FEPS1/P at all — condition number implying no identification — the verdict is G1_INCONCLUSIVE and the reason is recorded as non-identification rather than collapse."
+ },
+
+ "prohibitions": [
+  "no post-result change to any threshold, specification, sample rule, or path designation",
+  "no selection of the best-performing specification after seeing results",
+  "no change to the GLS equation, forecast equations, ROE fade, terminal horizon, payout policy, industry target, or solver",
+  "no output-targeted constant",
+  "no network acquisition",
+  "no publication or promotion; the public surface remains quarantined"
+ ],
+
+ "result_paths_blocked_until_this_file_is_committed": [
+  "data/computed/feno-rim-recovery/RIM_ICC_G1_FORECAST_STRIP_INCREMENTAL.json"
+ ],
+
+ "frozen_at_utc": "2026-08-07T15:08:00Z"
+}
