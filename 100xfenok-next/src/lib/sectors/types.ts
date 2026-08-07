@@ -99,6 +99,8 @@ export interface SectorSourceMeta {
   valuationVersion: string | null;
   valuationLatestDate: string | null;
   smartMoneyQuarter: string | null;
+  /** Quarter-end date the 13F cohort resolves to; usually the oldest input, so it sets `updatedAt`. */
+  smartMoneySourceDate: string | null;
   smartMoneyGeneratedAt: string | null;
   smartMoneyCohortCount: number | null;
   smartMoneyDisclaimer: string | null;

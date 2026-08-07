@@ -347,6 +347,18 @@ export default function SectorsClient() {
       tone: dataReady && updatedAt !== null ? "neutral" : "warning",
     },
     { id: "count", label: "섹터", value: `${rows.length}개` },
+    // The floor date is almost always the 13F cohort, because 13F filings are due 45 days
+    // after quarter end. Without naming the cause the chip reads as if the whole page were
+    // months stale, when the other three inputs are current. Only shown when 13F actually
+    // is the binding input.
+    ...(updatedAt !== null && sourceMeta.smartMoneySourceDate === updatedAt && sourceMeta.smartMoneyQuarter
+      ? [{
+          id: "asof-cause",
+          label: "최저 기준일 원인",
+          value: `13F ${sourceMeta.smartMoneyQuarter} · 분기 종료 후 45일 공시`,
+          tone: "neutral" as const,
+        }]
+      : []),
     ...(missingLabels.length > 0
       ? [{ id: "missing", label: DATA_STATE_LABELS.unavailable, value: missingLabels.join(" · "), tone: "warning" as const }]
       : []),

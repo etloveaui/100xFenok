@@ -259,6 +259,7 @@ export function useSectorData(): SectorDataResult {
       valuationVersion: null,
       valuationLatestDate: null,
       smartMoneyQuarter: null,
+      smartMoneySourceDate: null,
       smartMoneyGeneratedAt: null,
       smartMoneyCohortCount: null,
       smartMoneyDisclaimer: null,
@@ -378,6 +379,11 @@ export function useSectorData(): SectorDataResult {
         valuationVersion: usSectors?.metadata?.version ?? null,
         valuationLatestDate,
         smartMoneyQuarter: portfolioViews?.metadata?.quarter ?? null,
+        // Quarter-end date the 13F cohort resolves to. Exposed because it is routinely the
+        // oldest of the four inputs and therefore sets `updatedAt`, which reads on screen as
+        // if the whole page were months stale. 13F filings are due 45 days after quarter end,
+        // so a Q1 floor in early August is the regulation working, not a broken lane.
+        smartMoneySourceDate,
         smartMoneyGeneratedAt: portfolioViews?.metadata?.generated_at ?? null,
         smartMoneyCohortCount: num(portfolioViews?.metadata?.cohort_count),
         smartMoneyDisclaimer: portfolioViews?.metadata?.disclaimer ?? null,
