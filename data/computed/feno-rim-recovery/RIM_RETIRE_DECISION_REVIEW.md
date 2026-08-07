@@ -229,7 +229,41 @@ cleared. Two follow-on facts that shape the final record:
      adversarial instrument designs converge on the same answer.
 
 What remains true after every attack, both directions: the retirement basis never had a CI and
-cannot be affirmed; the heuristic increment is positive in direction, robust within strata, but
-not confirmable at this sample under honest variance. That is precisely the gap R1-R4 exist to
-close — with literature-grade forecasts and a larger PIT universe instead of 18~34 overlapping
-Dow origins.
+cannot be affirmed; the controlled evidence points positive but is not confirmable at this
+sample under honest variance. That is precisely the gap R1-R4 exist to close — with
+literature-grade forecasts and a larger PIT universe instead of 18~34 overlapping Dow origins.
+
+### 12.1 Red-team formal objection to the RECORD — accepted
+
+cc verified the sensitivity addendum to the digit against its own run, raised no objection to
+the verdict, and entered one formal objection to the record (mail `fh-20260807-023-cc-a50c0933`),
+which the handler accepts:
+
+- DEC-291 named exactly the two canonical Frankel–Lee incremental tests whose absence voided
+  DEC-290: multivariate cross-sectional regression controlling B/P (**R0-C**) and
+  bi-dimensional portfolios (**R0-D**). **Both point positive** — R0-C at p .017~.063
+  depending on lag, R0-D decisively under every instrument (p ≤ .003 at all lags, block CIs
+  excluding zero on both sets).
+- The single leg blocking POSITIVE was **R0-B, a residual/partial-correlation statistic that is
+  not among the tests DEC-291 asked for** — it was invented in the criteria file, and it fails
+  by imprecision, not contradiction (all its intervals straddle zero). Freezing that hierarchy
+  before results was correct procedure; the verdict stands under it. But the accurate one-line
+  record of R0 is: **both canonical incremental tests point positive, one decisively under every
+  instrument, and the verdict is INCONCLUSIVE because a third non-canonical leg was made a
+  necessary condition.**
+- The R0-D "corroboration" classification was a category error frozen before anyone knew which
+  leg would pass. The reason is stated here specifically, per the red team's request, and the
+  classification must be re-settled — not inherited — in the R1/R3 hierarchy, with necessary
+  and sufficient legs declared in advance so one imprecise leg cannot veto two positive ones.
+
+**Instrument-free caveat, carried forward (cc's self-attack, adopted)**: the R0-D p-values must
+not be quoted as 34 independent observations. The honest instrument-free statement is the sign
+test across the 12 non-overlapping phases: R0-D positive in **10/12** (binomial p .039), R0-C
+positive in **10/12** (p .039), R0-A negative in **11/12** (p .006) — all three simultaneously,
+no variance model. That is the Frankel–Lee pattern in its cleanest available form: raw
+difference robustly negative, both controlled tests positive. It is **consistent evidence, not
+overwhelming evidence**; R0-D equals R0-C on the instrument-free test, it is not an order of
+magnitude stronger.
+
+Verdict unchanged: `R0_INCONCLUSIVE`. Record corrected as above. R0 closed with no objection
+from the red team.
