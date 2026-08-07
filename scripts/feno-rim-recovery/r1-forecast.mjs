@@ -8,8 +8,8 @@ const rj = (r) => JSON.parse(fs.readFileSync(path.join(ROOT, r), "utf8"));
 const sha256 = (p) => crypto.createHash("sha256").update(fs.readFileSync(p)).digest("hex");
 const ms = (d) => Date.parse(d + "T00:00:00Z"), DAY = 864e5;
 const r6 = (x) => Number.isFinite(x) ? Math.round(x * 1e6) / 1e6 : null;
-const CRIT_PATH = "data/computed/feno-rim-recovery/r1-criteria-v2.5.json";
-const FROZEN_SHA = "a1861d50ca33360aaaab0fe6652a02f76ee713bdfe6cccb457cbd0a715f1d0b2";
+const CRIT_PATH = "data/computed/feno-rim-recovery/r1-criteria-v2.6.json";
+const FROZEN_SHA = "0ca58d16d4e474f31dc57278ab275c8836683ae346b7910d52c1fc7059a24723";
 const EVAL_CUTOFF = ms("2026-08-07");
 const ORIGINS = [2019, 2020, 2021, 2022, 2023];
 const TAUS = [1, 2, 3];
@@ -29,16 +29,38 @@ console.log("universe:", symbols.length);
 // ---------- EDGAR fact extraction ----------
 const E_PRIMARY = "IncomeLossFromContinuingOperationsNetOfTaxAttributableToReportingEntity";
 const E_FALLBACK = "NetIncomeLoss";
-function annualFacts(concepts, name) {
+// DURATION concepts (income statement): SEC tags quarterly facts form=10-K fp=FY too,
+// so annual facts are identified by DURATION (~12 months) + 10-K form, not form/fp alone.
+function annualDuration(concepts, name) {
   const rows = concepts?.[name]; if (!rows) return [];
   const byEnd = new Map();
   for (const r of rows) {
-    if (!(r.form === "10-K" || r.form === "10-K/A") || r.fp !== "FY") continue;
-    if (!r.end || !Number.isFinite(r.val)) continue;
+    if (!(r.form === "10-K" || r.form === "10-K/A")) continue;
+    if (!r.end || !r.start || !Number.isFinite(r.val)) continue;
+    const days = (ms(r.end) - ms(r.start)) / DAY;
+    if (days < 300 || days > 400) continue;
     const cur = byEnd.get(r.end);
     if (!cur || r.filed < cur.filed) byEnd.set(r.end, r); }
   return [...byEnd.values()].map(r => ({ end: r.end, endMs: ms(r.end), val: r.val, filed: ms(r.filed), fy: r.fy }))
     .sort((a, b) => a.endMs - b.endMs); }
+// INSTANT concepts (balance sheet): all facts deduped per instant (earliest filed);
+// matched to annual fiscal-year-ends by proximity during firm-year assembly.
+function instantSeries(concepts, name) {
+  const rows = concepts?.[name]; if (!rows) return [];
+  const byEnd = new Map();
+  for (const r of rows) {
+    if (!r.end || !Number.isFinite(r.val)) continue;
+    const cur = byEnd.get(r.end);
+    if (!cur || r.filed < cur.filed) byEnd.set(r.end, r); }
+  return [...byEnd.values()].map(r => ({ endMs: ms(r.end), val: r.val, filed: ms(r.filed) }))
+    .sort((a, b) => a.endMs - b.endMs); }
+function matchInstant(series, targetMs, tolDays) {
+  let best = null;
+  for (const s of series) {
+    const d = Math.abs(s.endMs - targetMs);
+    if (d > tolDays * DAY) continue;
+    if (!best || d < best.d || (d === best.d && s.filed < best.filed)) best = { endMs: s.endMs, val: s.val, filed: s.filed, d }; }
+  return best; }
 function sharesFacts(concepts) {
   // v2.5: shares basis = dei:EntityCommonStockSharesOutstanding ONLY (SEC cover-page count,
   // always raw shares). The v2.2 union with us-gaap:CommonStockSharesOutstanding mixed units:
@@ -55,6 +77,29 @@ function sharesFacts(concepts) {
   return [...byDate.values()].map(r => ({ date: r.start ?? r.end, ms: ms(r.start ?? r.end), val: r.val, filed: ms(r.filed) }))
     .sort((a, b) => a.ms - b.ms); }
 
+// ---------- price helpers ----------
+const priceCache = {};
+function loadPrices(sym) { if (!priceCache[sym]) {
+  const p = path.join(ROOT, "data/edgar/r1-panel/prices/" + sym + ".json");
+  priceCache[sym] = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : null; }
+  return priceCache[sym]; }
+function originClose(sym, Y) { // origin-basis close at June 30 of year Y (10-trading-day tolerance)
+  const pc = loadPrices(sym); if (!pc) return null;
+  const target = `${Y}-06-30`;
+  const dates = Object.keys(pc.closes).filter(d => d <= target).sort();
+  const d = dates.at(-1); if (!d) return null;
+  if (ms(target) - ms(d) > 16 * DAY) return null;
+  let F = 1; for (const [sd, f] of Object.entries(pc.splits)) if (ms(sd) > ms(target)) F *= f;
+  return { close: pc.closes[d], date: d, F_after_origin: F }; }
+// v2.1: ONE split basis (today's) for the whole panel. Shares leg carries the F:
+// shares_basis(t) = shares_reported(t) x product(splits dated after the share-fact date).
+// Prices stay today-basis as fetched - no conversion (BLOCKER 1+2 fix).
+function sharesFactor(sym, afterMs) {
+  const pc = loadPrices(sym); if (!pc) return 1;
+  let F = 1; for (const [sd, f] of Object.entries(pc.splits)) if (ms(sd) > afterMs) F *= f;
+  return F; }
+
+
 // build firm-year records
 const firms = {}; let noEdgar = 0;
 const tagCoverage = { fetched: 0, E: 0, book: 0, shares_union: 0, cash: 0, ivst: 0, pstk: 0, all_required: 0 };
@@ -63,42 +108,45 @@ for (const sym of symbols) {
   if (!fs.existsSync(p)) { noEdgar++; continue; }
   const concepts = JSON.parse(fs.readFileSync(p, "utf8")).concepts;
   tagCoverage.fetched++;
-  const eP = annualFacts(concepts, E_PRIMARY), eF = annualFacts(concepts, E_FALLBACK);
-  const book = annualFacts(concepts, "StockholdersEquity");
-  const pstk = annualFacts(concepts, "PreferredStockValue");
-  const assets = annualFacts(concepts, "Assets");
-  const liab = annualFacts(concepts, "Liabilities");
-  const cash = annualFacts(concepts, "CashAndCashEquivalentsAtCarryingValue");
-  const ivst = annualFacts(concepts, "ShortTermInvestments").length ? annualFacts(concepts, "ShortTermInvestments") : annualFacts(concepts, "MarketableSecuritiesCurrent");
+  const eP = annualDuration(concepts, E_PRIMARY), eF = annualDuration(concepts, E_FALLBACK);
+  const bookS = instantSeries(concepts, "StockholdersEquity");
+  const pstkS = instantSeries(concepts, "PreferredStockValue");
+  const assetsS = instantSeries(concepts, "Assets");
+  const liabS = instantSeries(concepts, "Liabilities");
+  const cashS = instantSeries(concepts, "CashAndCashEquivalentsAtCarryingValue");
+  const ivstS = instantSeries(concepts, "ShortTermInvestments").length ? instantSeries(concepts, "ShortTermInvestments") : instantSeries(concepts, "MarketableSecuritiesCurrent");
   const shares = sharesFacts(concepts);
-  const unusual = [...annualFacts(concepts, "RestructuringCharges"), ...annualFacts(concepts, "GoodwillImpairmentLoss"), ...annualFacts(concepts, "AssetImpairmentLoss")];
-  const discops = annualFacts(concepts, "IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity");
+  const restr = annualDuration(concepts, "RestructuringCharges"), gwi = annualDuration(concepts, "GoodwillImpairmentLoss"), aim = annualDuration(concepts, "AssetImpairmentLoss");
+  const discops = annualDuration(concepts, "IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity");
   if (eP.length || eF.length) tagCoverage.E++;
-  if (book.length) tagCoverage.book++;
+  if (bookS.length) tagCoverage.book++;
   if (shares.length) tagCoverage.shares_union++;
-  if (cash.length) tagCoverage.cash++;
-  if (ivst.length) tagCoverage.ivst++;
-  if (pstk.length) tagCoverage.pstk++;
-  if ((eP.length || eF.length) && book.length && shares.length && cash.length) tagCoverage.all_required++;
+  if (cashS.length) tagCoverage.cash++;
+  if (ivstS.length) tagCoverage.ivst++;
+  if (pstkS.length) tagCoverage.pstk++;
+  if ((eP.length || eF.length) && bookS.length && shares.length && cashS.length) tagCoverage.all_required++;
   if (!eP.length && !eF.length) { noEdgar++; continue; }
-  // firm-year table keyed by period end
+  // firm-year table keyed by ANNUAL earnings period end (duration-identified); balance-sheet
+  // instants and unusual/discops are matched to each annual end by proximity (+/-45d).
   const years = new Map();
-  const put = (endMs, k, v, filed) => { if (!years.has(endMs)) years.set(endMs, { endMs, facts: {} }); years.get(endMs).facts[k] = { v, filed }; };
-  for (const r of eP) put(r.endMs, "E", r.val, r.filed);
-  for (const r of eF) if (!years.get(r.endMs)?.facts["E"]) put(r.endMs, "E", r.val, r.filed);
-  for (const r of eP) put(r.endMs, "E_src", "primary", r.filed);
-  for (const r of eF) if (years.get(r.endMs)?.facts["E"] && !years.get(r.endMs).facts["E_src"]) put(r.endMs, "E_src", "fallback", r.filed);
-  for (const r of book) put(r.endMs, "book", r.val, r.filed);
-  for (const r of pstk) put(r.endMs, "pstk", r.val, r.filed);
-  for (const r of assets) put(r.endMs, "assets", r.val, r.filed);
-  for (const r of liab) put(r.endMs, "liab", r.val, r.filed);
-  for (const r of cash) put(r.endMs, "cash", r.val, r.filed);
-  for (const r of ivst) put(r.endMs, "ivst", r.val, r.filed);
-  for (const r of unusual) { const y = years.get(r.endMs); if (y) y.facts["unusual"] = { v: (y.facts["unusual"]?.v ?? 0) + r.val, filed: r.filed }; }
-  for (const r of discops) { const y = years.get(r.endMs); if (y) y.facts["discops"] = { v: (y.facts["discops"]?.v ?? 0) + r.val, filed: r.filed }; }
-  // mark E_src fallback correctly where only fallback exists
-  for (const [endMs, y] of years) { if (y.facts.E && !y.facts.E_src) y.facts.E_src = { v: "fallback" }; }
-  firms[sym] = { years: [...years.values()].sort((a, b) => a.endMs - b.endMs), shares,
+  const ensure = (endMs) => { if (!years.has(endMs)) years.set(endMs, { endMs, facts: {} }); return years.get(endMs); };
+  for (const r of eP) { const y = ensure(r.endMs); if (!y.facts.E) { y.facts.E = { v: r.val, filed: r.filed }; y.facts.E_src = { v: "primary" }; } }
+  for (const r of eF) { const y = ensure(r.endMs); if (!y.facts.E) { y.facts.E = { v: r.val, filed: r.filed }; y.facts.E_src = { v: "fallback" }; } }
+  for (const [endMs, y] of years) {
+    const bm = matchInstant(bookS, endMs, 45); if (bm) y.facts.book = { v: bm.val, filed: bm.filed };
+    const pm = matchInstant(pstkS, endMs, 45); if (pm) y.facts.pstk = { v: pm.val, filed: pm.filed };
+    const am = matchInstant(assetsS, endMs, 45); if (am) y.facts.assets = { v: am.val, filed: am.filed };
+    const lm = matchInstant(liabS, endMs, 45); if (lm) y.facts.liab = { v: lm.val, filed: lm.filed };
+    const cm = matchInstant(cashS, endMs, 45); if (cm) y.facts.cash = { v: cm.val, filed: cm.filed };
+    const im = matchInstant(ivstS, endMs, 45); if (im) y.facts.ivst = { v: im.val, filed: im.filed };
+    for (const arr of [restr, gwi, aim]) { const um = matchInstant(arr, endMs, 45); if (um) y.facts.unusual = { v: (y.facts.unusual?.v ?? 0) + um.val, filed: um.filed }; }
+    const dm = matchInstant(discops, endMs, 45); if (dm) y.facts.discops = { v: (y.facts.discops?.v ?? 0) + dm.val, filed: dm.filed }; }
+  // v2.6 shares outlier rejection: split-adjust each share fact to today's basis, then bound
+  const sharesTagged = shares.map(sh => ({ ...sh, basis: sh.val * sharesFactor(sym, sh.ms) }));
+  const basisSorted = sharesTagged.map(sh => sh.basis).sort((a, b) => a - b);
+  const medBasis = basisSorted.length ? basisSorted[Math.floor(basisSorted.length / 2)] : null;
+  firms[sym] = { years: [...years.values()].sort((a, b) => a.endMs - b.endMs), shares: sharesTagged,
+    shareBasisLo: medBasis != null ? medBasis / 10 : null, shareBasisHi: medBasis != null ? medBasis * 10 : null,
     sic: (() => { try { return rj("data/edgar/r1-panel/sic/" + sym + ".json").sic; } catch { return null; } })(),
     fye: (() => { try { return rj("data/edgar/r1-panel/sic/" + sym + ".json").fiscalYearEnd; } catch { return null; } })() }; }
 console.log("firms with EDGAR data:", Object.keys(firms).length, "missing:", noEdgar);
@@ -130,6 +178,8 @@ function sharesAt(f, endMs, asOf) {
   for (const s of f.shares) {
     if (s.filed > asOf) continue;
     if (s.ms < endMs - 183 * DAY || s.ms > endMs + 90 * DAY) continue;
+    // v2.6 outlier rejection: skip share facts whose split-adjusted basis is >10x from the firm median
+    if (f.shareBasisLo != null && (s.basis < f.shareBasisLo || s.basis > f.shareBasisHi)) continue;
     const d = Math.abs(s.ms - endMs);
     if (!best || d < best.d || (d === best.d && s.ms > best.s.ms)) best = { s, d }; }
   return best?.s ?? null; }
@@ -151,28 +201,6 @@ function ols(X, y) { const n = y.length, k = X[0].length;
   const resid = y.map((yi, i) => yi - X[i].reduce((s, x, j) => s + x * beta[j], 0));
   const ssr = resid.reduce((s, e) => s + e * e, 0);
   return { beta, n, k, rmse: Math.sqrt(ssr / Math.max(n - k, 1)) }; }
-
-// ---------- price helpers ----------
-const priceCache = {};
-function loadPrices(sym) { if (!priceCache[sym]) {
-  const p = path.join(ROOT, "data/edgar/r1-panel/prices/" + sym + ".json");
-  priceCache[sym] = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : null; }
-  return priceCache[sym]; }
-function originClose(sym, Y) { // origin-basis close at June 30 of year Y (10-trading-day tolerance)
-  const pc = loadPrices(sym); if (!pc) return null;
-  const target = `${Y}-06-30`;
-  const dates = Object.keys(pc.closes).filter(d => d <= target).sort();
-  const d = dates.at(-1); if (!d) return null;
-  if (ms(target) - ms(d) > 16 * DAY) return null;
-  let F = 1; for (const [sd, f] of Object.entries(pc.splits)) if (ms(sd) > ms(target)) F *= f;
-  return { close: pc.closes[d], date: d, F_after_origin: F }; }
-// v2.1: ONE split basis (today's) for the whole panel. Shares leg carries the F:
-// shares_basis(t) = shares_reported(t) x product(splits dated after the share-fact date).
-// Prices stay today-basis as fetched - no conversion (BLOCKER 1+2 fix).
-function sharesFactor(sym, afterMs) {
-  const pc = loadPrices(sym); if (!pc) return 1;
-  let F = 1; for (const [sd, f] of Object.entries(pc.splits)) if (ms(sd) > afterMs) F *= f;
-  return F; }
 
 // ---------- unit-consistency gate ----------
 const gateErrors = [];
@@ -209,7 +237,8 @@ const executedAssertions = { aapl_reference: null };
 
 // ---------- main loop ----------
 const results = []; const diag = { pools: {}, voided_pairs: 0, missing_shares: 0, forecast_rows: 0, price_missing: 0,
-  identity_checks: 0, identity_violations: 0, coeff_tables: {}, row_counts: {}, assertion_log: {} };
+  identity_checks: 0, identity_violations: 0, coeff_tables: {}, row_counts: {}, assertion_log: {},
+  plausibility_rejected: 0, plausibility_symbols: {} };
 for (const Y of ORIGINS) {
   const originMs = ms(`${Y}-06-30`);
   const guardEnd = ms(`${Y}-03-31`); // FYE April-June guard boundary (origin-based, tau-independent)
@@ -218,22 +247,25 @@ for (const Y of ORIGINS) {
     const poolStart = ms(`${Y - tau - 10}-04-01`), poolEnd = ms(`${Y - tau}-03-31`);
     // ---- build pool rows (pairs (t, t+tau), both facts filed <= origin) ----
     const pool = [];
+    const pd = process.env.R1_POOLDEBUG ? { win:0, baseE:0, noDep:0, span:0, depE:0, noSh:0, ok:0, hist:{} } : null;
     for (const [sym, f] of Object.entries(firms)) {
       const ys = f.years;
       for (let i = 0; i < ys.length; i++) {
         const base = ys[i];
-        if (base.endMs < poolStart || base.endMs > poolEnd) continue;
-        if (base.facts.E == null || base.facts.E.filed > originMs) continue;
-        const j = i + tau; if (j >= ys.length) continue;
+        if (base.endMs < poolStart || base.endMs > poolEnd) { if(pd)pd.win++; continue; }
+        if (base.facts.E == null || base.facts.E.filed > originMs) { if(pd)pd.baseE++; continue; }
+        const j = i + tau; if (j >= ys.length) { if(pd)pd.noDep++; continue; }
         const dep = ys[j];
         const spanMonths = (dep.endMs - base.endMs) / (30.44 * DAY);
-        if (spanMonths < tau * 9 || spanMonths > tau * 15) { diag.voided_pairs++; continue; }
-        if (dep.facts.E == null || dep.facts.E.filed > originMs) continue;
+        if (spanMonths < tau * 9 || spanMonths > tau * 15) { diag.voided_pairs++; if(pd)pd.span++; continue; }
+        if (dep.facts.E == null || dep.facts.E.filed > originMs) { if(pd)pd.depE++; continue; }
         const sh = sharesAt(f, base.endMs, originMs);
-        if (!sh) { diag.missing_shares++; continue; }
+        if (!sh) { diag.missing_shares++; if(pd)pd.noSh++; continue; }
+        if (pd) { pd.ok++; const lbl=new Date(base.endMs).getFullYear(); pd.hist[lbl]=(pd.hist[lbl]||0)+1; }
         const shBasis = sh.val * sharesFactor(sym, sh.ms); // today's basis (v2.1)
         const E = base.facts.E.v, Ed = dep.facts.E.v;
-        const book = base.facts.book?.v, cash = base.facts.cash?.v, ivst = base.facts.ivst?.v ?? 0, pstkV = base.facts.pstk?.v ?? 0;
+        const uvP = (fact, dflt = null) => (fact && fact.filed <= originMs) ? fact.v : dflt; // PIT: usable only if filed by origin
+        const book = uvP(base.facts.book), cash = uvP(base.facts.cash, 0), ivst = uvP(base.facts.ivst, 0), pstkV = uvP(base.facts.pstk, 0);
         // prior-year X for TACC (v2.2 amendment b: L = A - E substituted, so
         // TACC = d(SE - Cash + IVST - PSTK)/shares_basis; declared error = dNCI)
         let tacc = null;
@@ -248,6 +280,7 @@ for (const Y of ORIGINS) {
           bps: book != null ? (book - pstkV) / shBasis : null,
           tacc, tacc_missing: tacc === 0 && book == null,
           negE: E < 0 ? 1 : 0, fy: new Date(base.endMs).getFullYear() }); } }
+    if (process.env.R1_POOLDEBUG && Y===2019 && tau===1) console.log('POOLDBG 2019_tau1', JSON.stringify({counts:{win:pd.win,baseE:pd.baseE,noDep:pd.noDep,span:pd.span,depE:pd.depE,noSh:pd.noSh,ok:pd.ok},hist:Object.fromEntries(Object.entries(pd.hist).sort())}));
     if (pool.some(r => r.shares_t <= 0)) gateErrors.push(`pool ${Y}_tau${tau}: non-positive shares_basis survived`);
     if (pool.length < 300) { diag.pools[`${Y}_${tau}`] = { n: pool.length, status: "VOIDED_BELOW_300" }; continue; }
     diag.pools[`${Y}_${tau}`] = { n: pool.length };
@@ -309,8 +342,9 @@ for (const Y of ORIGINS) {
       const F = sharesFactor(sym, sh.ms);
       const shBasis = sh.val * F; // today's basis (v2.1)
       const E = base.facts.E.v;
-      const book = base.facts.book?.v, assets = base.facts.assets?.v, liab = base.facts.liab?.v,
-        cash = base.facts.cash?.v, ivst = base.facts.ivst?.v ?? 0, pstkV = base.facts.pstk?.v ?? 0;
+      const uvF = (fact, dflt = null) => (fact && fact.filed <= originMs) ? fact.v : dflt; // PIT: usable only if filed by origin
+      const book = uvF(base.facts.book), assets = uvF(base.facts.assets), liab = uvF(base.facts.liab),
+        cash = uvF(base.facts.cash, 0), ivst = uvF(base.facts.ivst, 0), pstkV = uvF(base.facts.pstk, 0);
       let tacc = null; const prev = ys[tIdx - 1];
       if (prev && book != null && prev.facts.book && (base.endMs - prev.endMs) < 15 * 30.44 * DAY) {
         const X1 = book - (cash ?? 0) + ivst - pstkV; // v2.2: L = A - E substitution
@@ -333,6 +367,10 @@ for (const Y of ORIGINS) {
         gateErrors.push(`${sym} ${Y} tau${tau}: identity violation aligned_dependent x shares_basis != raw E_(t+tau)`); }
       const rawActualDepShares = sharesAt(f, dep.endMs, EVAL_CUTOFF);
       const oc = originClose(sym, Y);
+      // v2.6 plausibility guard: earnings yield above 100% is economically implausible here
+      if (oc && Number.isFinite(actual)) {
+        const eyT = Math.abs(E / shBasis) / oc.close, eyA = Math.abs(actual) / oc.close;
+        if (eyT > 1 || eyA > 1) { diag.plausibility_rejected++; diag.plausibility_symbols[sym] = (diag.plausibility_symbols[sym] ?? 0) + 1; continue; } }
       diag.forecast_rows++;
       const rcKey = `${Y}_tau${tau}`;
       diag.row_counts[rcKey] = diag.row_counts[rcKey] ?? { rows: 0, priced: 0, with_actual: 0 };
@@ -405,7 +443,9 @@ const validation = { schema_version: "feno_rim_recovery_r1_validation.v1", phase
   criteria_sha256: FROZEN_SHA,
   universe: { symbols: symbols.length, firms_with_data: Object.keys(firms).length, price_coverage: coverage },
   effective_universe_declaration: universeReport,
-  pools: diag.pools, counts: { forecast_rows: diag.forecast_rows, price_missing: diag.price_missing, voided_pairs: diag.voided_pairs, missing_shares: diag.missing_shares },
+  pools: diag.pools, counts: { forecast_rows: diag.forecast_rows, price_missing: diag.price_missing, voided_pairs: diag.voided_pairs, missing_shares: diag.missing_shares,
+    plausibility_rejected: diag.plausibility_rejected },
+  plausibility_rejected_symbols: diag.plausibility_symbols,
   forecast_row_counts: diag.row_counts,
   tau3_origin2023_actuals: diag.row_counts["2023_tau3"] ?? null,
   executed_assertions: { aapl_reference: executedAssertions.aapl_reference,
