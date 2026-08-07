@@ -24,7 +24,7 @@ const t0 = Date.now();
 for (const sym of symbols) {
   const cachePath = path.join(CACHE_DIR, sym + ".json");
   if (!fs.existsSync(cachePath)) { failed.push({ symbol: sym, reason: "no cache file" }); continue; }
-  const cache = rj(cachePath);
+  const cache = JSON.parse(fs.readFileSync(cachePath, "utf8"));
   if (cache.concepts?.EntityCommonStockSharesOutstanding?.length) { skipped++; continue; }
   const cik = resolve(sym);
   if (!cik) { failed.push({ symbol: sym, reason: "no cik" }); continue; }
