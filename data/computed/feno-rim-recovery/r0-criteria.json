@@ -1,0 +1,120 @@
+{
+  "schema_version": "feno_rim_recovery_r0_criteria.v1",
+  "phase": "R0",
+  "title": "Re-adjudication of the X2 'no incremental information over B/P' basis of RETIRE_RIM_PUBLIC_PRODUCT",
+  "authority": "Owner directive 2026-08-07 (web ChatGPT master prompt 'FENO RIM RECOVERY'). Existing FINAL_RIM_DECISION.json RETIRE_RIM_PUBLIC_PRODUCT is preserved as history, not final authority. Public surface stays KEEP_QUARANTINED throughout.",
+  "handler": "km (Kimi Code)",
+  "independent_red_team": "cc (Claude Code, left pane) — reviews criteria and re-computes key statistics with its own code; does not co-author implementation",
+  "frozen_at_note": "This file and its receipt commit BEFORE any R0 result exists. Result paths listed in the receipt must not exist at freeze time.",
+  "model_change": "NONE. R0 re-uses the X2 pipeline verbatim (same V/P construction, same B/P, same returns, same member filters, same origin sets). R0 only adds statistics on top of the identical firm-level rows, plus two pre-registered control variables (size, momentum) for R0-C Model 2.",
+
+  "data_contract": {
+    "sha256": {
+      "data/computed/feno-rim-v2/e2-basket-panel.json": "0417bbef4ccc9b819b4ab2c332c3259ccb4ea5d9e4cced48b98b9e619364d03e",
+      "data/computed/feno-rim-v2/E1_E2_FORENSIC_AUDIT.json": "0bf41b2c42cbf4a4db3305a257685b5c20f08e0976d268797ef1d8077cc38cce",
+      "data/computed/feno-rim-v2/erp-archive-restoration.json": "36d37a65446f7ca3659ade92860b38bfcf49065f4a90a6a7ad28ffb253290e5a",
+      "data/computed/feno-rim-v2/RIM_CROSS_SECTIONAL_BOTTOM_UP.json": "dcf493fec0fdc137622266133d2312ceac950ad68e27962156a83faea18f68a9",
+      "data/macro/fred-banking-daily.json": "9a91207a6f02c187727fe5722c70ccb6df05207d454df803c8ecb4a6bd8b6253"
+    },
+    "yf_unadjusted_sha256": {
+      "AAPL": "219305c2149bbee2a3bd0c6a47cef792cc4099881776d20cabae47f42d266953",
+      "AMGN": "fc6a89156cc5b5c6163d3dfa64b831ea7a874b9b57de36c1680d107fa8b22749",
+      "AMZN": "8cd45bc1a21769c753664b43a503b1b418fd767e1d9100b3aca7615f32e3190d",
+      "AXP": "a109b2b756bee6fd55642738dc22ef092b56cc55d2353c174c421be5ea7d103e",
+      "BA": "5b63bd2f46f6c923adecd382f04d311c4afd3efb8c85c5f1990bf589e220fdfe",
+      "CAT": "f85ebe4a7095eef7f54ca77276155325dac5a989fe103c72c6b84067470f5426",
+      "CRM": "82f09d48dc974b5235936ffd59f0a26183410b18b87bff3da61e09c4fd07f7d9",
+      "CSCO": "cdaf0dc3c6c0e1088dabbf8a29037132facd1c6e6db8f7ec14d36bec28ac97a9",
+      "CVX": "b3039fb81596e9961285382c7f5447b1d5d1f9e50d67be3a53c91b82a0b896c8",
+      "DIS": "94d09121e5185ef696b518ccd7130e452c9483ec859477d4095e50d8e40477be",
+      "GOOGL": "30e5c22c2df9894b2456acd42dff81cdc81615f1d6be045b3782e9559fdb9488",
+      "GS": "eb2c2261918af08c7a543f1b63c50ce8cd0138a7641daab7846d57e46e94a07b",
+      "HD": "9570b3c1378d154ad3cc0f5e85b63a36baaf5099ec7b6a432e5cda4d282d3f80",
+      "HON": "7442cff1fc5a8700762c9b6d2800df88ec650c42799b9889ec5f514b14842212",
+      "IBM": "08d4b9a0de202cc96abac0d74141e065d0be7449d6cbe89de443c75cf2f0c577",
+      "JNJ": "05d942622b1d5fecbe32b4ed4e98b6fda9a633d351338e8c189f91014bf5451c",
+      "JPM": "771aed5617725fe0d0304b49507ad189d1f3fd44414384c821106f68c519a7b7",
+      "KO": "ffb74f719d11c283e5931a146e6765090ec0910bdc00012d9b34f95b2fee2712",
+      "MCD": "4ebca47c2578ac1141b1b30ecb93dd2b9e2a0b58f95a2a510f4ebb3683ce181a",
+      "MMM": "48cd50bb12b456f2fd54bb7848ea77376131c5dea4386657f3db047aebed8d56",
+      "MRK": "1c50576e145fd6bb8c7a132063c070b72e582711ac1b25ab90e1af85aa0ff6f2",
+      "MSFT": "4bdfac5aac2d3024fd662172236057c807a22ab446ba8b7fd3f118dc3f9f1fde",
+      "NKE": "f374f9c6e3f673578a00dfce5baa4db003ca5bca2822355365738e86905549c3",
+      "NVDA": "ef70d3877a06d9b0624c9881bae6bdd866b9bd2c8f0b94e2bfa1dd6bd57001db",
+      "PG": "f38a984de28f369b166acfe8422cd16472bd25b92d70994775bf515fafc5a3b7",
+      "SHW": "24f71078c76345359c2a14071beace1eb4a284900dfdd25b1e048fa99355cf07",
+      "TRV": "6b42cb570b70635fff55c27f0baed07826a38b474a6e0a39be124c7824d30760",
+      "UNH": "14b67121e85efc1e0c43c25f1f75f49bb09d3b24ac67dc0ccba96b21c597ada5",
+      "V": "94208f4aa7a7d09a680e7aebd8438a5085044aad43764c4234d59aabf1b2fb74",
+      "WMT": "331e804783a4ae9c834518747d6a505035952b960ee7df4e3f71725e44e9b432"
+    },
+    "origin_sets": "All 34 origins and the 18 window-complete origins exactly as X2 derived them: window-complete = E1_E2_FORENSIC_AUDIT.json p0_adjudications.p0_3_baseline_truncation.evidence.e2_baseline_windows.window_rows_per_origin filtered years>=9.5.",
+    "member_eligibility": "Identical to x2-cross-sectional.mjs loop: m.ok && m.book>0 && m.price>0 && m.shares>0 && Number.isFinite(m.roe); price series exists; both endpoint prices within 45 calendar days of t0/t1; V finite and >0; per-origin n>=20.",
+    "vp_construction": "Verbatim x2-cross-sectional.mjs: deployPath(H=3, FADE=3, target=roe_band midpoint) then riValue(book0, path, ke) with TERM=10 linear decay. ke = DGS10(as_of)*0.01 + last ERP observation with first_knowable<=t0.",
+    "bp_construction": "book / (price*shares), origin values.",
+    "return_construction": "36-month annualized total return tr = ((p1+div)/p0)^(1/3) - 1, dividends strictly inside (t0, t1], unadjusted prices.",
+    "reproduction_gate": "Before any new statistic is reported, the re-derived firm-level pipeline MUST reproduce every ic_vp and ic_bp in RIM_CROSS_SECTIONAL_BOTTOM_UP.json per_origin_rows within 1e-6 and the same n and complete flags. Any mismatch aborts R0."
+  },
+
+  "common_statistics_contract": {
+    "rank_function": "Same average-tie rank function as x2-cross-sectional.mjs, applied within each origin.",
+    "unit_ranks_for_regressions": "u = (rank-1)/(n-1) in [0,1]; slope units = annualized return spread from u=0 to u=1.",
+    "excess_return": "exc = tr - rf0 where rf0 = DGS10(as_of)*0.01 (annual rate at origin). Note: per-origin location shift; cross-sectional slopes are invariant, only intercepts move. Primary dependent variable = exc.",
+    "bootstrap": "Moving-block bootstrap on origin-level series; reps=10000; block lengths {4,8,12}; block-4 is primary; LCG seed 20260807 (same generator as x2 boot()).",
+    "newey_west": "HAC on origin-level series, Bartlett kernel, lag = max(2, floor(4*(T/100)^(2/9))) which evaluates to lag=2 for T=18 and T=34. Two-sided p from t distribution approximated by normal (report both t-stat and p).",
+    "seeds": "All bootstrap/permutation RNG seeded deterministically; permutation seed = 20260807 + origin_index. No result-dependent re-seeding permitted."
+  },
+
+  "r0a_paired_ic_difference": {
+    "definition": "D_t = IC_t(V/P) - IC_t(B/P), Spearman, identical member set per origin (the X2 loop).",
+    "report": ["mean D", "median D", "share D>0", "naive paired CI (t-based, 95%)", "moving-block bootstrap CI blocks 4/8/12", "Newey-West t-stat and p"],
+    "sets": ["all_origins (n=34)", "window_complete (n=18, primary)"],
+    "instability_rule": "If the sign of the conclusion (positive vs non-positive) differs across block lengths {4,8,12} within either set, flag INCREMENTAL_DIFFERENCE_UNSTABLE and R0-A is recorded as inconclusive regardless of point estimates."
+  },
+
+  "r0b_residualized_vp": {
+    "definition": "Per origin OLS: rank(V/P)_i = a + b*rank(B/P)_i + resid_i (raw average-tie ranks). IC_t(resid, ret) via the same Spearman sp().",
+    "report": ["mean residual IC", "median", "positive-origin ratio", "block-bootstrap CI 4/8/12", "NW t/p", "both sets"],
+    "interpretation_precommitted": "Positive residual IC with CI excluding zero means V/P carries return information not contained in B/P, even when the raw IC difference is negative."
+  },
+
+  "r0c_fama_macbeth": {
+    "model1": "exc_i = a_t + b1_t*u(B/P)_i + b2_t*u(V/P)_i + e_i  (per origin OLS, unit ranks)",
+    "model2": "exc_i = a_t + b1_t*u(B/P)_i + b2_t*u(V/P)_i + b3_t*u(Size)_i + b4_t*u(Mom)_i + e_i",
+    "primary": "Model 1. Model 2 is sensitivity only (small samples).",
+    "size": "u(log(mc)) with mc = member market cap at origin.",
+    "momentum": "Mom = c[i0-21]/c[i0-252] - 1 on unadjusted closes; i0 = last observation on/before t0 (same 45-day tolerance as X2); require i0>=252. Members without momentum are EXCLUDED from Model 2 only; Model 1 member set is never altered. If a origin's Model-2 n < 20, that origin's Model 2 is voided and reported.",
+    "report": ["mean b2", "median b2", "NW t/p on b2 series", "block-bootstrap CI 4/8/12 on mean b2", "b2>0 origin ratio", "both sets", "leave-one-out: max |delta mean| and any sign flip"],
+    "equivalence_band_b2": 0.01
+  },
+
+  "r0d_stratified_permutation": {
+    "design": "Per origin: split members into B/P terciles by rank(B/P) group = floor(3*(rank-1)/n). Within each tercile, median-split by rank(V/P) into high/low halves (odd counts: low gets the extra member). Statistic S = unweighted mean over the 3 terciles of (mean_ret(high) - mean_ret(low)), computed on exc.",
+    "permutation": "Shuffle V/P labels within each B/P tercile, recompute S, reps=10000 per origin, one-sided p for S_obs>0 and two-sided p.",
+    "report": ["per-origin S and one-sided p", "mean S", "share origins with one-sided p<0.05 and S>0", "both sets"],
+    "note": "Small-sample implementation of the Frankel-Lee bi-dimensional logic; 5x5 sorts are too sparse at n~25."
+  },
+
+  "verdict_mapping": {
+    "primary_set": "window_complete",
+    "corroboration_set": "all_origins",
+    "R0_INCREMENTAL_POSITIVE": "ALL of: (1) R0-C Model1 mean b2 > 0 AND NW p <= 0.05 AND block-4 bootstrap CI lower > 0 on window_complete; (2) same-sign mean b2 > 0 on all_origins; (3) R0-B mean residual IC > 0 AND block-4 CI lower > 0 on window_complete. Robustness flag set only if blocks 8 and 12 CIs also exclude zero on the positive side in both (1) and (3); otherwise verdict carries unstable_block_sensitivity.",
+    "R0_INCREMENTAL_NEGATIVE": "Mirror image of POSITIVE with all inequalities reversed.",
+    "R0_INCREMENTAL_ZERO": "Equivalence: R0-C Model1 b2 95% block-4 CI inside [-0.01,+0.01] AND R0-B residual IC block-4 CI inside [-0.05,+0.05] AND R0-A mean D block-4 CI inside [-0.05,+0.05], each on BOTH sets.",
+    "R0_INCONCLUSIVE": "Anything else, including any INCREMENTAL_DIFFERENCE_UNSTABLE flag from block-length sensitivity.",
+    "hierarchy": "Controlled tests (R0-B, R0-C) decide the verdict; raw paired difference (R0-A) and permutation (R0-D) are corroboration. A negative R0-A with positive controlled verdict is the Frankel-Lee pattern, not a contradiction."
+  },
+
+  "prohibitions": [
+    "No change to V/P, B/P, return, or member-filter construction.",
+    "No threshold, seed, lag, band, or set definition may change after results are observed.",
+    "No overwriting FINAL_RIM_DECISION.json or any prior audit artifact; new adjudication goes to R0_ADJUDICATION.json.",
+    "No public number republication; quarantine untouched.",
+    "No fifth experiment beyond R0-A..D."
+  ],
+
+  "planned_result_paths": [
+    "data/computed/feno-rim-recovery/r0-firm-panel.json",
+    "data/computed/feno-rim-recovery/R0_ADJUDICATION.json"
+  ]
+}
