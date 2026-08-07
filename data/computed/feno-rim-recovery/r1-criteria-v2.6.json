@@ -34,7 +34,7 @@
     "book_B": "StockholdersEquity - PreferredStockValue (preferred missing -> 0), / year-t shares.",
     "shares": "Year-t shares = dei:EntityCommonStockSharesOutstanding facts only (SEC cover-page count, always raw shares), earliest-filed-per-date. us-gaap:CommonStockSharesOutstanding is NOT used for the deflator because some filers report it in millions while it is tagged as shares (measured PEG 504 vs dei 497,000,000; RTX/SPG/VTRS 100x-1e6x). Firms with no dei share fact are excluded from per-share rows and counted. Selection per unit_basis_precommitted.share_fact_selection.",
     "tacc": "Telescoped Richardson accruals with the L = A - E substitution (red-team fix b): TACC_t = [ (SE - CHE + IVST - PSTK)_t - (SE - CHE + IVST - PSTK)_{t-1} ] / shares_basis(t), where SE = StockholdersEquity, CHE = CashAndCashEquivalentsAtCarryingValue, IVST = ShortTermInvestments (fallback MarketableSecuritiesCurrent, missing -> 0), PSTK = PreferredStockValue (missing -> 0). Assets and Liabilities drop out; declared approximation error = dNCI (parent-only SE vs total equity), small. Missing TACC -> 0 flagged (paper).",
-    "fact_selection": "Annual facts only: form in {10-K, 10-K/A}, fp=FY; PIT: filed <= as-of, earliest filed per period (e2 rule, red-team cleared).",
+    "fact_selection": "Annual facts only: form in {10-K, 10-K/A} AND duration (end-start) in [300,400] days; fp is NOT used (SEC tags some annual facts fp=Q4 on the original filing; fp=FY can appear only in a later restatement). PIT: filed <= as-of, earliest filed per period. [A1 text-code consistency, red-team fh-20260807-094]",
     "NegE": "indicator E_t < 0",
     "annual_identification": "Annual facts = DURATION-concept facts with form in (10-K,10-K/A) and duration (end-start) in [300,400] days. Form/fp alone is unreliable because SEC tags quarterly income-statement facts as form=10-K fp=FY. Balance-sheet concepts are instant and matched to annual earnings period-ends by +/-45 day proximity.",
     "shares_outlier_rejection": "Each firm's dei share facts are split-adjusted to today's basis (shBasis = val x product(splits after the fact date)); the median shBasis across the firm's share facts is the reference. Only share facts with shBasis in [median/10, median*10] are eligible for selection (sharesAt). This rejects unit-scaling corruption (e.g. RMD 1.457e5 vs 1.457e8) while keeping genuine buyback/issuance drift and split-era facts (which are comparable once split-adjusted)."
@@ -109,5 +109,14 @@
     "data/computed/feno-rim-recovery/RIM_MECHANICAL_FORECAST_VALIDATION.json"
   ],
   "planned_spec_doc": "data/computed/feno-rim-recovery/RIM_MECHANICAL_FORECAST_SPEC.md (deliverable 12.2, written from this criteria after the run)",
-  "amendment_reason": "Pre-results data-integrity amendment. Two corruption classes found in the panel: (1) quarterly income-statement facts were passing the form/fp annual filter because SEC tags quarterly facts form=10-K fp=FY - annual facts are now identified by DURATION (~12 months, [300,400] days) + 10-K form; (2) individual dei share facts are corrupt in units (RMD 2021-08-12 reports 1.457e5 shares vs the true 1.457e8, a 1000x thousands-scaling error), inflating per-share values ~1000x for affected rows. Red-team fh-20260807-082 proposed the guards adopted here. NO statistical choice moves; the gate thresholds, pool window, TACC substitution, and FAIL interpretation are all unchanged from v2.5."
+  "amendment_reason": "Pre-results data-integrity amendment. Two corruption classes found in the panel: (1) quarterly income-statement facts were passing the form/fp annual filter because SEC tags quarterly facts form=10-K fp=FY - annual facts are now identified by DURATION (~12 months, [300,400] days) + 10-K form; (2) individual dei share facts are corrupt in units (RMD 2021-08-12 reports 1.457e5 shares vs the true 1.457e8, a 1000x thousands-scaling error), inflating per-share values ~1000x for affected rows. Red-team fh-20260807-082 proposed the guards adopted here. NO statistical choice moves; the gate thresholds, pool window, TACC substitution, and FAIL interpretation are all unchanged from v2.5.",
+  "amendments": [
+    {
+      "id": "A1",
+      "date": "2026-08-07",
+      "source": "red-team fh-20260807-094",
+      "type": "text-code consistency (no behavior change)",
+      "note": "fact_selection fp=FY text removed; code never enforced fp (verified), so executed R1 results already used the safe fp-agnostic selection. No re-run."
+    }
+  ]
 }

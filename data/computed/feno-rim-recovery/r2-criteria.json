@@ -68,5 +68,15 @@
     "sic_scheme": "2-digit major groups (declared deviation from FF-48)",
     "forecasts": "R1 RI and EP fitted models per (firm, origin, tau)",
     "solver_validation": "reproduces GLS worked example GM r=13.94%"
-  }
+  },
+  "amendments": [
+    {
+      "id": "A1",
+      "date": "2026-08-07",
+      "source": "red-team fh-20260807-094",
+      "type": "text-code consistency (no behavior change)",
+      "change": "Drop fp from annual-fact selection entirely. Annual facts are identified by form in (10-K,10-K/A) PLUS duration (end-start) in [300,400] days; fp is NOT used. Rationale (red-team measurement): SEC tags some ANNUAL income facts fp=Q4 (not FY) on the original filing, and the fp=FY-tagged version sometimes appears only in a LATER filing - so an fp=FY filter silently skips the original and prefers a later restatement (a PIT hazard, 0.2% of firm-periods = 18/7665 across 13 firms). Duration+form is what actually identifies an annual fact; fp adds nothing and sometimes subtracts the original.",
+      "executed_consistency": "VERIFIED the R1/R2 code (annualDuration) never enforced fp (grep: no .fp reference in r1-forecast.mjs or r2-gls-icc.mjs). Therefore ALL executed runs (R1 gate, R2-B GLS-ICC committed 17722e0266) already used the fp-agnostic (safe) selection - this amendment aligns the criteria TEXT with what was executed; NO re-run is required and NO result changes. This closes the restatement-preference hazard."
+    }
+  ]
 }
