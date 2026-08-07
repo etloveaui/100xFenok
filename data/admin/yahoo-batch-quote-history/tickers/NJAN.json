@@ -26,41 +26,44 @@
       "run_id": "30707126488",
       "schedule": "",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 893,
+      "natural": true,
+      "observed_at": "2026-08-07T15:04:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31190633378",
+      "schedule": "7 14 * * 0-5",
+      "shard": "67/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T00:04:14Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/NJAN.json",
-    "payload_sha256": "f129e0843b0c0484cd06129341044441936a2c24c3f31c736c6f38a640467324",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-08-07T15:05:09Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/NJAN.json",
+    "payload_sha256": "019796a3b41f2c9e6a77133568cf7083833c7e3343a622eab8c3a7f763c0dbd8",
+    "quote_as_of": "2026-08-07T14:00:33Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_requires_schedule",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 579,
+    "latency_ms": 893,
     "natural": true,
-    "observed_at": "2026-08-01T17:32:35Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-07T15:04:20Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30707126488",
-    "schedule": "",
-    "shard": "0/6"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-01T17:32:35Z",
-    "provider_history_as_of": "2026-07-31",
-    "provider_quote_as_of": "2026-07-31T17:51:44Z",
-    "reason": "recovery_requires_schedule",
-    "run_attempt": 1,
-    "run_id": "30707126488"
+    "run_id": "31190633378",
+    "schedule": "7 14 * * 0-5",
+    "shard": "67/72"
   },
   "lkg": {
     "fetched_at": "2026-06-30T00:04:14Z",
@@ -70,8 +73,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-07T15:04:20Z",
+    "payload_sha256": "d7fcdcaa15d37a16e6f62061625bda7ac17b35536936fdce59b0c86fa09bbd5d",
+    "quote_as_of": "2026-08-07T14:00:33Z",
+    "run_attempt": 1,
+    "run_id": "31190633378",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-07"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -84,5 +99,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "NJAN",
-  "updated_at": "2026-08-01T17:32:35Z"
+  "updated_at": "2026-08-07T15:04:20Z"
 }

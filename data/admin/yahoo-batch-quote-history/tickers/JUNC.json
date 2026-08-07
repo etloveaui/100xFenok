@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-07T13:26:59Z",
     "history_as_of": "2026-08-06",
-    "path": "data/yf/finance/JUNC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/JUNC.json",
     "payload_sha256": "11d2a33d0a1ed307fbda02604c7470bd4ee4e7671ff7970b095439df6795bbe5",
     "quote_as_of": "2026-07-28T17:07:59Z",
     "source_as_of": "2026-07-28T17:07:59Z"
@@ -65,12 +65,12 @@
     "shard": "66/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-28T23:09:06Z",
-    "history_as_of": "2026-07-28",
+    "fetched_at": "2026-08-07T13:26:59Z",
+    "history_as_of": "2026-08-06",
     "path": "data/admin/yahoo-batch-quote-history/lkg/JUNC.json",
-    "payload_sha256": "34eab8a622179f3be69e2f325a5494a54e888d9e2897845fd61d9bbf8876be44",
+    "payload_sha256": "11d2a33d0a1ed307fbda02604c7470bd4ee4e7671ff7970b095439df6795bbe5",
     "quote_as_of": "2026-07-28T17:07:59Z",
-    "source_as_of": "2026-07-28"
+    "source_as_of": "2026-07-28T17:07:59Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-28T17:07:59Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-06T00:14:28Z",
-    "classified_run_id": "31058959670",
+    "age_business_days": 8,
+    "classified_at": "2026-08-07T15:04:20Z",
+    "classified_run_id": "31190633378",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "JUNC holds LKG because Yahoo source date 2026-07-28 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "JUNC holds LKG because Yahoo source date 2026-07-28T17:07:59Z is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-28"
+    "source_as_of": "2026-07-28T17:07:59Z"
   },
   "ticker": "JUNC",
-  "updated_at": "2026-08-07T13:26:16Z"
+  "updated_at": "2026-08-07T15:04:20Z"
 }
