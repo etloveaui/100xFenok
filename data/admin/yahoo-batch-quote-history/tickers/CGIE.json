@@ -12,15 +12,28 @@
       "run_id": "30224292652",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 917,
+      "natural": true,
+      "observed_at": "2026-08-07T01:34:03Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31138342067",
+      "schedule": "7 22 * * 0-5",
+      "shard": "71/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-26T23:04:46Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CGIE.json",
-    "payload_sha256": "19d0d15ba547b1faecfec468d6cadb4fed589d3407f95d1ca720655850a0957d",
-    "quote_as_of": "2026-07-24T20:00:00Z",
-    "source_as_of": "2026-07-24"
+    "fetched_at": "2026-08-07T01:34:48Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/CGIE.json",
+    "payload_sha256": "3e1f20109369c84b272af65de664189300ade77cdd8e32d828cff98d18d4b9f9",
+    "quote_as_of": "2026-08-06T19:59:56Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 529,
+    "latency_ms": 917,
     "natural": true,
-    "observed_at": "2026-07-26T23:02:52Z",
+    "observed_at": "2026-08-07T01:34:03Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30224292652",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31138342067",
+    "schedule": "7 22 * * 0-5",
+    "shard": "71/72"
   },
   "lkg": {
     "fetched_at": "2026-07-26T23:04:46Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-26T23:02:52Z",
-    "payload_sha256": "34277c80f2b8c164b3439103ac90e8c49b9570499308f511b7fdc96d124ded21",
-    "quote_as_of": "2026-07-24T20:00:00Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T01:34:03Z",
+    "payload_sha256": "e8d24f7e4123bbbff6df7c41f644aa5ddc0a9b5f81153a59fa76a16f696ec13c",
+    "quote_as_of": "2026-08-06T19:59:56Z",
     "run_attempt": 1,
-    "run_id": "30224292652",
+    "run_id": "31138342067",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "CGIE",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-07T01:34:03Z"
 }
