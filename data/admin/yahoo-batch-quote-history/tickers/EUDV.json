@@ -12,31 +12,44 @@
       "run_id": "30711923637",
       "schedule": "",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 750,
+      "natural": true,
+      "observed_at": "2026-08-07T17:02:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31200268852",
+      "schedule": "7 16 * * 0-5",
+      "shard": "68/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T18:30:21Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/EUDV.json",
-    "payload_sha256": "7ff6094d88d42c2cc53372dda2c328b3bbea60385d4e7680ddc8f75d40ff9f4a",
-    "quote_as_of": "2026-07-28T19:40:23Z",
-    "source_as_of": "2026-07-28T19:40:23Z"
+    "fetched_at": "2026-08-07T17:03:26Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/EUDV.json",
+    "payload_sha256": "d842a36d61ca5d2f877098847ff5b0a9b1f35fcc77f6189dbd3be8159ce5b956",
+    "quote_as_of": "2026-08-07T13:46:04Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 659,
+    "latency_ms": 750,
     "natural": true,
-    "observed_at": "2026-08-01T18:28:23Z",
+    "observed_at": "2026-08-07T17:02:12Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711923637",
-    "schedule": "",
-    "shard": "2/6"
+    "run_id": "31200268852",
+    "schedule": "7 16 * * 0-5",
+    "shard": "68/72"
   },
   "lkg": {
     "fetched_at": "2026-08-01T18:30:21Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T18:28:23Z",
-    "payload_sha256": "3c0b50834a473c794ecc625206edcdfc584888da8748219bbd9d2b8cd40f78fe",
-    "quote_as_of": "2026-07-28T19:40:23Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-07T17:02:12Z",
+    "payload_sha256": "162533a2302d136ff7592eb5b0f5fcf5ada497229c9bd4e4ce65dbfa4905e256",
+    "quote_as_of": "2026-08-07T13:46:04Z",
     "run_attempt": 1,
-    "run_id": "30711923637",
+    "run_id": "31200268852",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-28T19:40:23Z"
+    "source_as_of": "2026-08-07"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-28T19:40:23Z"
   },
   "ticker": "EUDV",
-  "updated_at": "2026-08-06T00:14:28Z"
+  "updated_at": "2026-08-07T17:02:12Z"
 }

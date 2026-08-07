@@ -26,15 +26,28 @@
       "run_id": "30711922590",
       "schedule": "",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 583,
+      "natural": true,
+      "observed_at": "2026-08-07T17:02:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31200268852",
+      "schedule": "7 16 * * 0-5",
+      "shard": "68/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-28T00:07:26Z",
-    "history_as_of": "2026-06-26",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ORCX.json",
-    "payload_sha256": "91dd089342d2002d9c4ebb8286ac3d2b44e6904bc64ec7c3444ef1b2e5a72792",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-26"
+    "fetched_at": "2026-08-07T17:02:44Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/ORCX.json",
+    "payload_sha256": "650f010e7a172fa0a6f8d9cd77c30fa5d6d54f73d7d8bb517ce180855d3583ec",
+    "quote_as_of": "2026-08-07T17:02:36Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "focus_etf_configuration",
@@ -42,26 +55,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_requires_schedule",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 595,
+    "latency_ms": 583,
     "natural": true,
-    "observed_at": "2026-08-01T18:21:41Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-07T17:02:12Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711922590",
-    "schedule": "",
-    "shard": "1/6"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-01T18:21:41Z",
-    "provider_history_as_of": "2026-07-31",
-    "provider_quote_as_of": "2026-07-31T20:00:00Z",
-    "reason": "recovery_requires_schedule",
-    "run_attempt": 1,
-    "run_id": "30711922590"
+    "run_id": "31200268852",
+    "schedule": "7 16 * * 0-5",
+    "shard": "68/72"
   },
   "lkg": {
     "fetched_at": "2026-06-28T00:07:26Z",
@@ -71,8 +74,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-26"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-07T17:02:12Z",
+    "payload_sha256": "a8448779008d2015bbd4dddcad6d6d2002f80541617483720220ab1c8faa8ac7",
+    "quote_as_of": "2026-08-07T17:02:36Z",
+    "run_attempt": 1,
+    "run_id": "31200268852",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-07"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
@@ -85,5 +100,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "ORCX",
-  "updated_at": "2026-08-01T18:21:41Z"
+  "updated_at": "2026-08-07T17:02:12Z"
 }

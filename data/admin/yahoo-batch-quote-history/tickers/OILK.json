@@ -26,41 +26,44 @@
       "run_id": "30711922590",
       "schedule": "",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 862,
+      "natural": true,
+      "observed_at": "2026-08-07T17:02:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31200268852",
+      "schedule": "7 16 * * 0-5",
+      "shard": "68/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T00:05:05Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/OILK.json",
-    "payload_sha256": "9b066887f006cc1c3cc63491c8228c987a2acbb2bb9b65345ba3e9e625bd0466",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-08-07T17:02:30Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/OILK.json",
+    "payload_sha256": "89d343e9b332d9941825ae1502afa6bf582e7c38f3f6eb1773a056c634e6ea9c",
+    "quote_as_of": "2026-08-07T16:46:07Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_requires_schedule",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 805,
+    "latency_ms": 862,
     "natural": true,
-    "observed_at": "2026-08-01T18:21:41Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-07T17:02:12Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711922590",
-    "schedule": "",
-    "shard": "1/6"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-01T18:21:41Z",
-    "provider_history_as_of": "2026-07-31",
-    "provider_quote_as_of": "2026-07-31T20:00:00Z",
-    "reason": "recovery_requires_schedule",
-    "run_attempt": 1,
-    "run_id": "30711922590"
+    "run_id": "31200268852",
+    "schedule": "7 16 * * 0-5",
+    "shard": "68/72"
   },
   "lkg": {
     "fetched_at": "2026-06-30T00:05:05Z",
@@ -70,8 +73,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-07T17:02:12Z",
+    "payload_sha256": "49ce911452e7ac71ece33b2ff49ac14fbae5808b8457d9f5274a2a917cb24843",
+    "quote_as_of": "2026-08-07T16:46:07Z",
+    "run_attempt": 1,
+    "run_id": "31200268852",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-07"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -84,5 +99,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "OILK",
-  "updated_at": "2026-08-01T18:21:41Z"
+  "updated_at": "2026-08-07T17:02:12Z"
 }
