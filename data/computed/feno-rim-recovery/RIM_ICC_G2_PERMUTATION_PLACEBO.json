@@ -1,0 +1,95 @@
+{
+ "schema_version": "feno_rim_icc_g2_permutation_placebo.v1",
+ "phase": "G2",
+ "research_only": true,
+ "criteria": {
+  "file": "data/computed/feno-rim-recovery/g2-criteria-v2.json",
+  "sha256": "113f4240b4a3803f656355e01fd55f765a27567ed25bce387d3e70cfd4a2aee4",
+  "frozen_in_earlier_commits": ["1b83189a38", "f4d065cd89"],
+  "v1_preserved": "g2-criteria.json",
+  "no_threshold_changed_after_any_result": true
+ },
+
+ "process": {
+  "worker": "DeepSeek — three sub-gates, 10,000 permutation reps, 200 placebo reps, seed 20260808",
+  "worker_self_verification": "independent reimplementation of T_obs (exact), same-seed p reproduction plus an alternate-seed stability run, alternate-seed placebo, Cholesky re-derivation of G2-B",
+  "worker_defects_found_and_fixed_during_its_own_run": [
+   "the placebo shuffle drew from an integer LCG stream and produced out-of-range indices, manufacturing 99.7% spurious non-convergence; replaced with a uniform stream",
+   "the G2-A half-split assigned the LOW half to H, mirroring the statistic; corrected to the top half, after which it reproduces the committed R3 bi-dimensional sign and magnitude"
+  ],
+  "handler_independent_re_derivation": "cc, separate implementation including a from-scratch GLS solver, no worker artifact read as input, permutation p-values re-run on seed 77777777 rather than the worker's seed — reproducing a p-value under the same seed only proves the same code ran twice"
+ },
+
+ "G2_A_stratified_permutation": {
+  "population": "1,638 cells, origins 2019-2023",
+  "worker_T_obs_and_p": {
+   "S_bp": {"2019": [0.0331, 0.0228], "2020": [0.0721, 0.0001], "2021": [0.0405, 0.0186], "2022": [0.0631, 0.0081], "2023": [0.0962, 0.0006], "significant": "5/5"},
+   "S_size": {"2019": [0.0231, 0.0943], "2020": [0.0835, 0.0001], "2021": [0.0406, 0.0180], "2022": [0.0668, 0.0031], "2023": [0.1084, 0.0001], "significant": "4/5"},
+   "S_sec": {"significant": "3/5", "enters_no_threshold": true, "excluded_cells_per_origin": "89-97"}
+  },
+  "handler_T_obs_and_p_independent_seed": {
+   "S_bp": {"2019": [0.0349, 0.0170], "2020": [0.0675, 0.0005], "2021": [0.0392, 0.0255], "2022": [0.0623, 0.0065], "2023": [0.0965, 0.0025], "significant": "5/5"},
+   "S_size": {"2019": [0.0229, 0.0895], "2020": [0.0828, 0.0005], "2021": [0.0417, 0.0160], "2022": [0.0704, 0.0015], "2023": [0.1087, 0.0005], "significant": "4/5"},
+   "S_sec": {"significant": "3/5"}
+  },
+  "discrepancy_recorded": {
+   "what": "T_obs is deterministic and should match exactly. It matches only to about two significant figures — S_bp 2020 reads 0.0721 against 0.0675, S_size 2022 reads 0.0668 against 0.0704.",
+   "cause": "the frozen criteria said 'cut at the 33.33 and 66.67 percentiles' without naming a percentile convention. Nearest-rank, linear interpolation and lower-index truncation put a handful of firms in different terciles, which moves a count-weighted mean of half-split spreads slightly.",
+   "handler_defect": true,
+   "effect_on_the_gate": "none. Both implementations return 5/5 for S_bp and 4/5 for S_size, with the same origin (2019) as the single S_size failure, at p 0.0943 and 0.0895 respectively.",
+   "note": "This is the third gate condition weakened by an underspecified phrase, after G0's 'as-reported shares_t' and G1's 'within-sector rank result'."
+  }
+ },
+
+ "G2_B_negative_control": {
+  "worker_and_handler_agree_exactly": true,
+  "PRE12": {"origins": "2020-2023", "n": 1324, "b_icc": -0.079752, "t": -0.509, "partial_r2": 0.000723,
+            "without_momentum": {"b_icc": -0.151754, "t": -0.195, "partial_r2": 0.000196}},
+  "PRE24": {"origins": "2021-2023", "n": 997, "b_icc": 0.058472, "t": 0.178, "partial_r2": 0.0000084,
+            "without_momentum": {"b_icc": 0.180183, "t": 0.293, "partial_r2": 0.0000605}},
+  "result": "No leakage signal. All four specifications satisfy both frozen conditions simultaneously — every |t| is below 0.6 against a threshold of 2, and every partial R-squared is at least an order of magnitude below the 0.01 bound. The ICC computed at the origin carries essentially no information about returns that already happened."
+ },
+
+ "G2_C_shuffled_price_placebo": {
+  "construction": "within each origin, price permuted across firms; the ICC re-solved from the permuted price with each cell's own book, forecasts, payout, target ROE and horizon; every other regressor left at its true value",
+  "worker": {"reps": 200, "placebo_mean": -0.144626, "placebo_sd": 0.0627, "p2_5": -0.2645, "p97_5": -0.0035,
+             "observed_used": 0.819823, "reps_at_or_above_observed": "0/200", "max_non_convergence": "0.378%"},
+  "handler": {"reps": 40, "seed": "independent", "placebo_mean": -0.140887, "placebo_sd": 0.054999,
+              "p2_5": -0.226611, "p50": -0.152889, "p97_5": -0.002074,
+              "observed_recomputed_on_the_criteria_specification": 1.233385,
+              "reps_at_or_above_observed": "0/40", "max_non_convergence": "0.378%"},
+  "specification_discrepancy_recorded": {
+   "what": "The worker compared the placebo distribution against 0.819823, which is the G1 coefficient from a regression that also contains FEPS1/P and the forecast slope. The frozen G2-C regression is R ~ BP + SIZE + MOM + ICC, without those two. On that specification the observed coefficient is 1.233385.",
+   "effect_on_the_gate": "none. The placebo 97.5th percentile is -0.0035 and no rep in either run reaches even zero, so both 0.82 and 1.23 sit far outside the distribution.",
+   "handler_value_is_canonical": true
+  },
+  "reading": "The placebo distribution is centred near -0.14 rather than zero. That is structural, not noise: the shuffled ICC still carries each firm's own book and forecasts, which the true B/P in the same regression also carries, so the fake variable inherits a negative partial association. The relevant fact is that the observed coefficient lies far above the entire distribution, in the same direction, with zero reps reaching it."
+ },
+
+ "verdict": {
+  "label": "G2_PASS",
+  "conditions_met": {
+   "a_permutation": "S_bp significant at 5/5 origins and S_size at 4/5, both meeting the frozen 4-of-5 bar, in two independent implementations on different seeds",
+   "b_negative_control": "no leakage signal on either lookback, by both frozen conditions, with agreement to six decimals between worker and handler",
+   "c_placebo": "observed coefficient above the 97.5th percentile of the placebo distribution with zero reps reaching it in either run"
+  },
+  "the_finding": "The G1 result is not a leak and not an artifact of the solve. Randomising the ICC inside comparable firms destroys the return spread; the ICC does not explain returns that already happened; and feeding the solver a fake price does not manufacture the relation — it produces a distribution centred on the wrong side of zero.",
+  "evidence_class": "SUPPORTED_NOT_VALIDATED",
+  "evidence_limits": [
+   "S_size at 2019 fails at p 0.0943 and 0.0895 in the two implementations; the 4-of-5 bar is met exactly, not comfortably",
+   "the five origins remain heavily overlapping in their 36-month return windows, so these permutation p-values are within-origin statements and do not aggregate into a five-fold independent test",
+   "the placebo distribution's location is construction-dependent, as the worker itself flagged",
+   "per-origin permutation inference assumes exchangeability within stratum, which the sector stratification strains at 89-97 excluded cells per origin"
+  ]
+ },
+
+ "prohibitions_observed": [
+  "no threshold, statistic definition, stratification, rep count or seed changed after any result",
+  "no coarser grouping substituted to rescue a stratum",
+  "no selection of the best-performing stratification",
+  "no change to the GLS equation, forecast equations, fade, terminal horizon, payout policy, industry target or solver",
+  "no network acquisition",
+  "no publication or promotion; the public surface remains quarantined"
+ ],
+ "generated_at": "2026-08-08T00:55:00Z"
+}
