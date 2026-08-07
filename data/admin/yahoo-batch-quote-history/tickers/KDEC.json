@@ -25,15 +25,28 @@
       "run_id": "30406712544",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1035,
+      "natural": true,
+      "observed_at": "2026-08-07T13:26:16Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31182487397",
+      "schedule": "7 12 * * 0-5",
+      "shard": "66/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-28T23:09:12Z",
-    "history_as_of": "2026-07-28",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/KDEC.json",
-    "payload_sha256": "266484b99047ec9f1a7bcd507b2defef9cd244033c932a84c788391fb9f158bf",
-    "quote_as_of": "2026-07-28T19:01:23Z",
-    "source_as_of": "2026-07-28"
+    "fetched_at": "2026-08-07T13:27:07Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/KDEC.json",
+    "payload_sha256": "a7a36eaaa7986b302132cbfa07b54762555709232403f02fc9c98829acc6c7c3",
+    "quote_as_of": "2026-08-06T19:59:51Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 487,
+    "latency_ms": 1035,
     "natural": true,
-    "observed_at": "2026-07-28T23:07:58Z",
+    "observed_at": "2026-08-07T13:26:16Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30406712544",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "31182487397",
+    "schedule": "7 12 * * 0-5",
+    "shard": "66/72"
   },
   "lkg": {
     "fetched_at": "2026-07-28T23:09:12Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-28",
-    "observed_at": "2026-07-28T23:07:58Z",
-    "payload_sha256": "d05c91f6bb4700b44893eef383df245ca7134ab4cc9b7ba92ce1b776019408f2",
-    "quote_as_of": "2026-07-28T19:01:23Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T13:26:16Z",
+    "payload_sha256": "2974ce5f6605710ce0d484c5d49000fafda1c225211778ef96c17e726bea5a60",
+    "quote_as_of": "2026-08-06T19:59:51Z",
     "run_attempt": 1,
-    "run_id": "30406712544",
+    "run_id": "31182487397",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-28"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-07-28"
   },
   "ticker": "KDEC",
-  "updated_at": "2026-08-06T00:14:28Z"
+  "updated_at": "2026-08-07T13:26:16Z"
 }

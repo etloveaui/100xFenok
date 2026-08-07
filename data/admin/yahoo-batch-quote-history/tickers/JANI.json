@@ -25,15 +25,28 @@
       "run_id": "30406712544",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1061,
+      "natural": true,
+      "observed_at": "2026-08-07T13:26:16Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31182487397",
+      "schedule": "7 12 * * 0-5",
+      "shard": "66/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-28T23:08:41Z",
-    "history_as_of": "2026-07-28",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/JANI.json",
-    "payload_sha256": "0362975386ec8e3b84e77d8704271d71d023a3493fc39689e6263bdc03bba52e",
-    "quote_as_of": "2026-07-28T18:53:10Z",
-    "source_as_of": "2026-07-28"
+    "fetched_at": "2026-08-07T13:26:33Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/JANI.json",
+    "payload_sha256": "83b15eda31df851713a4fdf7fef3628d81a25c8b80492aaf7b2d5a3c2cb56689",
+    "quote_as_of": "2026-08-06T15:17:20Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 583,
+    "latency_ms": 1061,
     "natural": true,
-    "observed_at": "2026-07-28T23:07:58Z",
+    "observed_at": "2026-08-07T13:26:16Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30406712544",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "31182487397",
+    "schedule": "7 12 * * 0-5",
+    "shard": "66/72"
   },
   "lkg": {
     "fetched_at": "2026-07-28T23:08:41Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-28",
-    "observed_at": "2026-07-28T23:07:58Z",
-    "payload_sha256": "942a12b01b000d79c347e53e74b4d1e8a7a1230eaa1cb6114c3721e0562eba5b",
-    "quote_as_of": "2026-07-28T18:53:10Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T13:26:16Z",
+    "payload_sha256": "7e5d02fc92ed909cdf0da9fd78e04e605631f71d1679dc55bcce72a18fd9f05c",
+    "quote_as_of": "2026-08-06T15:17:20Z",
     "run_attempt": 1,
-    "run_id": "30406712544",
+    "run_id": "31182487397",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-28"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-07-28"
   },
   "ticker": "JANI",
-  "updated_at": "2026-08-06T00:14:28Z"
+  "updated_at": "2026-08-07T13:26:16Z"
 }

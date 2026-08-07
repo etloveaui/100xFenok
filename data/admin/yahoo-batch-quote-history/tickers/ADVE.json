@@ -12,15 +12,28 @@
       "run_id": "30589620986",
       "schedule": "0 22 * * 4",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1094,
+      "natural": true,
+      "observed_at": "2026-08-07T13:26:16Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31182487397",
+      "schedule": "7 12 * * 0-5",
+      "shard": "66/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-30T23:33:14Z",
-    "history_as_of": "2026-07-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ADVE.json",
-    "payload_sha256": "c360c65fe44f423dddd1cc5bfc2497ce285f477fb88b8f915eb7d44a2d7a7e24",
-    "quote_as_of": "2026-07-29T13:41:30Z",
-    "source_as_of": "2026-07-29"
+    "fetched_at": "2026-08-07T13:27:09Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/ADVE.json",
+    "payload_sha256": "3f8cc4c0bfce34a44ceb38feed878f26d813870b2cdf66f80ed62209a4bb9366",
+    "quote_as_of": "2026-08-06T19:13:13Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 605,
+    "latency_ms": 1094,
     "natural": true,
-    "observed_at": "2026-07-30T23:31:53Z",
+    "observed_at": "2026-08-07T13:26:16Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30589620986",
-    "schedule": "0 22 * * 4",
-    "shard": "4/6"
+    "run_id": "31182487397",
+    "schedule": "7 12 * * 0-5",
+    "shard": "66/72"
   },
   "lkg": {
     "fetched_at": "2026-07-30T23:33:14Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-29",
-    "observed_at": "2026-07-30T23:31:53Z",
-    "payload_sha256": "1545d318b73bce3d5137a260717fd1fa5c18e94c6404d23aa140b87211a6b1f9",
-    "quote_as_of": "2026-07-29T13:41:30Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T13:26:16Z",
+    "payload_sha256": "9bf7676064f20a61e0ad93780614b304ef72c263305c458f5b3565c5329217f3",
+    "quote_as_of": "2026-08-06T19:13:13Z",
     "run_attempt": 1,
-    "run_id": "30589620986",
+    "run_id": "31182487397",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-29"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-29"
   },
   "ticker": "ADVE",
-  "updated_at": "2026-08-07T00:12:01Z"
+  "updated_at": "2026-08-07T13:26:16Z"
 }

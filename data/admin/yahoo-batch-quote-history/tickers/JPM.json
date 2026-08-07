@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 942,
-      "natural": true,
-      "observed_at": "2026-07-22T00:59:16Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29879427185",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "StockDetailValidationError: Yahoo previous close must be a finite number",
       "event_name": "schedule",
       "failures": [],
@@ -182,6 +169,19 @@
       "run_id": "31138989349",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-07T13:26:16Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31182487397",
+      "schedule": "7 12 * * 0-5",
+      "shard": "66/72"
     }
   ],
   "current": {
@@ -197,17 +197,17 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 885,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-07T02:01:20Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-07T13:26:16Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "31138989349",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "31182487397",
+    "schedule": "7 12 * * 0-5",
+    "shard": "66/72"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "JPM",
-  "updated_at": "2026-08-07T02:01:20Z"
+  "updated_at": "2026-08-07T13:26:16Z"
 }

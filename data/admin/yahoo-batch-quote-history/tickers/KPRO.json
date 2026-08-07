@@ -25,15 +25,28 @@
       "run_id": "30589620986",
       "schedule": "0 22 * * 4",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1120,
+      "natural": true,
+      "observed_at": "2026-08-07T13:26:16Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31182487397",
+      "schedule": "7 12 * * 0-5",
+      "shard": "66/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-30T23:32:23Z",
-    "history_as_of": "2026-07-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/KPRO.json",
-    "payload_sha256": "3fe4690106f105b92460f962b05f3bffde12e858dcfcacd258cab5971a3b4cf1",
-    "quote_as_of": "2026-07-29T16:26:52Z",
-    "source_as_of": "2026-07-29"
+    "fetched_at": "2026-08-07T13:27:25Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/KPRO.json",
+    "payload_sha256": "3e017552a1a03bc1460431de3326a8ffca4d9409b27f1c2f7f8f53e887aa869d",
+    "quote_as_of": "2026-08-06T19:30:57Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 638,
+    "latency_ms": 1120,
     "natural": true,
-    "observed_at": "2026-07-30T23:31:53Z",
+    "observed_at": "2026-08-07T13:26:16Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30589620986",
-    "schedule": "0 22 * * 4",
-    "shard": "4/6"
+    "run_id": "31182487397",
+    "schedule": "7 12 * * 0-5",
+    "shard": "66/72"
   },
   "lkg": {
     "fetched_at": "2026-07-30T23:32:23Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-29",
-    "observed_at": "2026-07-30T23:31:53Z",
-    "payload_sha256": "b7f153fa0f1512ea3851658041119aafc999f01121c5914bde2043545c212473",
-    "quote_as_of": "2026-07-29T16:26:52Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T13:26:16Z",
+    "payload_sha256": "99b3fda2be8182f76f8fb27707a5bd0445a9c548f6199ba86da69929996f019b",
+    "quote_as_of": "2026-08-06T19:30:57Z",
     "run_attempt": 1,
-    "run_id": "30589620986",
+    "run_id": "31182487397",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-29"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-07-29"
   },
   "ticker": "KPRO",
-  "updated_at": "2026-08-07T00:12:01Z"
+  "updated_at": "2026-08-07T13:26:16Z"
 }

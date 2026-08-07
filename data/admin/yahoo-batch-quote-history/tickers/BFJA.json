@@ -25,12 +25,26 @@
       "run_id": "31015333400",
       "schedule": "7 12 * * 0-5",
       "shard": "42/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: source timestamp regression for BFJA: quote_as_of 2026-07-27T19:29:59Z < 2026-08-05T13:46:02Z",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 985,
+      "natural": true,
+      "observed_at": "2026-08-07T13:26:16Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31182487397",
+      "schedule": "7 12 * * 0-5",
+      "shard": "66/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-05T14:30:03Z",
     "history_as_of": "2026-08-05",
-    "path": "data/yf/finance/BFJA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BFJA.json",
     "payload_sha256": "0ae6c0cf0a8b5351bb102c490081f7d35d7f4ac191ff239395d340c618ed6bd6",
     "quote_as_of": "2026-08-05T13:46:02Z",
     "source_as_of": "2026-08-05"
@@ -40,24 +54,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: source timestamp regression for BFJA: quote_as_of 2026-07-27T19:29:59Z < 2026-08-05T13:46:02Z",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 561,
+    "latency_ms": 985,
     "natural": true,
-    "observed_at": "2026-08-05T14:29:49Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-07T13:26:16Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31015333400",
+    "run_id": "31182487397",
     "schedule": "7 12 * * 0-5",
-    "shard": "42/72"
+    "shard": "66/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: source timestamp regression for BFJA: quote_as_of 2026-07-27T19:29:59Z < 2026-08-05T13:46:02Z",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-07T13:26:16Z",
+    "run_attempt": 1,
+    "run_id": "31182487397"
   },
   "lkg": {
-    "fetched_at": "2026-07-19T23:04:07Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-08-05T14:30:03Z",
+    "history_as_of": "2026-08-05",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BFJA.json",
-    "payload_sha256": "6cdfcfa89076b4d2060fb2ac258ebdff769a48fbbd249c76a219d86feb56cfb2",
-    "quote_as_of": "2026-07-06T15:42:23Z",
-    "source_as_of": "2026-07-06T15:42:23Z"
+    "payload_sha256": "0ae6c0cf0a8b5351bb102c490081f7d35d7f4ac191ff239395d340c618ed6bd6",
+    "quote_as_of": "2026-08-05T13:46:02Z",
+    "source_as_of": "2026-08-05"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,8 +98,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-05"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
@@ -85,5 +112,5 @@
     "source_as_of": "2026-07-06T15:42:23Z"
   },
   "ticker": "BFJA",
-  "updated_at": "2026-08-05T14:29:49Z"
+  "updated_at": "2026-08-07T13:26:16Z"
 }
