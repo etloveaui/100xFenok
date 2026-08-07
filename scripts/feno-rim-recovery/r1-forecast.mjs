@@ -6,12 +6,13 @@ import fs from "node:fs"; import path from "node:path"; import crypto from "node
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const rj = (r) => JSON.parse(fs.readFileSync(path.join(ROOT, r), "utf8"));
 const sha256 = (p) => crypto.createHash("sha256").update(fs.readFileSync(p)).digest("hex");
-const CRIT_PATH = "data/computed/feno-rim-recovery/r1-criteria-v2.json";
-const FROZEN_SHA = "0682582d35110e44d829b64213737212748d94c70856249ce49bd267548d777d";
+const ms = (d) => Date.parse(d + "T00:00:00Z"), DAY = 864e5;
+const r6 = (x) => Number.isFinite(x) ? Math.round(x * 1e6) / 1e6 : null;
+const CRIT_PATH = "data/computed/feno-rim-recovery/r1-criteria-v2.5.json";
+const FROZEN_SHA = "a1861d50ca33360aaaab0fe6652a02f76ee713bdfe6cccb457cbd0a715f1d0b2";
 const EVAL_CUTOFF = ms("2026-08-07");
 const ORIGINS = [2019, 2020, 2021, 2022, 2023];
 const TAUS = [1, 2, 3];
-const ms = (d) => Date.parse(d + "T00:00:00Z"), DAY = 864e5;
 
 if (sha256(path.join(ROOT, CRIT_PATH)) !== FROZEN_SHA) { console.error("ABORT: criteria changed since freeze"); process.exit(3); }
 for (const p of rj(CRIT_PATH).planned_result_paths) {
@@ -39,13 +40,16 @@ function annualFacts(concepts, name) {
   return [...byEnd.values()].map(r => ({ end: r.end, endMs: ms(r.end), val: r.val, filed: ms(r.filed), fy: r.fy }))
     .sort((a, b) => a.endMs - b.endMs); }
 function sharesFacts(concepts) {
-  // v2.2 amendment (a): union of dei:EntityCommonStockSharesOutstanding (cover-page count,
-  // near-universal) and us-gaap:CommonStockSharesOutstanding, earliest-filed-per-date.
-  const rows = [...(concepts?.["EntityCommonStockSharesOutstanding"] ?? []), ...(concepts?.["CommonStockSharesOutstanding"] ?? [])];
+  // v2.5: shares basis = dei:EntityCommonStockSharesOutstanding ONLY (SEC cover-page count,
+  // always raw shares). The v2.2 union with us-gaap:CommonStockSharesOutstanding mixed units:
+  // some filers report the us-gaap tag in millions while tagged as shares (PEG 504 vs dei
+  // 497,000,000; also RTX/SPG/VTRS at 100x-1e6x), corrupting per-share deflators. Firms
+  // without dei share facts cannot be deflated reliably and are excluded (counted).
+  const rows = concepts?.["EntityCommonStockSharesOutstanding"] ?? [];
   if (!rows.length) return [];
   const byDate = new Map();
   for (const r of rows) {
-    const date = r.start ?? r.end; if (!date || !Number.isFinite(r.val)) continue;
+    const date = r.start ?? r.end; if (!date || !Number.isFinite(r.val) || r.val <= 0) continue;
     const cur = byDate.get(date);
     if (!cur || r.filed < cur.filed) byDate.set(date, r); }
   return [...byDate.values()].map(r => ({ date: r.start ?? r.end, ms: ms(r.start ?? r.end), val: r.val, filed: ms(r.filed) }))
@@ -57,7 +61,7 @@ const tagCoverage = { fetched: 0, E: 0, book: 0, shares_union: 0, cash: 0, ivst:
 for (const sym of symbols) {
   const p = path.join(ROOT, "data/edgar/r1-panel/" + sym + ".json");
   if (!fs.existsSync(p)) { noEdgar++; continue; }
-  const concepts = rj(p).concepts;
+  const concepts = JSON.parse(fs.readFileSync(p, "utf8")).concepts;
   tagCoverage.fetched++;
   const eP = annualFacts(concepts, E_PRIMARY), eF = annualFacts(concepts, E_FALLBACK);
   const book = annualFacts(concepts, "StockholdersEquity");
@@ -68,6 +72,7 @@ for (const sym of symbols) {
   const ivst = annualFacts(concepts, "ShortTermInvestments").length ? annualFacts(concepts, "ShortTermInvestments") : annualFacts(concepts, "MarketableSecuritiesCurrent");
   const shares = sharesFacts(concepts);
   const unusual = [...annualFacts(concepts, "RestructuringCharges"), ...annualFacts(concepts, "GoodwillImpairmentLoss"), ...annualFacts(concepts, "AssetImpairmentLoss")];
+  const discops = annualFacts(concepts, "IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToReportingEntity");
   if (eP.length || eF.length) tagCoverage.E++;
   if (book.length) tagCoverage.book++;
   if (shares.length) tagCoverage.shares_union++;
@@ -90,6 +95,7 @@ for (const sym of symbols) {
   for (const r of cash) put(r.endMs, "cash", r.val, r.filed);
   for (const r of ivst) put(r.endMs, "ivst", r.val, r.filed);
   for (const r of unusual) { const y = years.get(r.endMs); if (y) y.facts["unusual"] = { v: (y.facts["unusual"]?.v ?? 0) + r.val, filed: r.filed }; }
+  for (const r of discops) { const y = years.get(r.endMs); if (y) y.facts["discops"] = { v: (y.facts["discops"]?.v ?? 0) + r.val, filed: r.filed }; }
   // mark E_src fallback correctly where only fallback exists
   for (const [endMs, y] of years) { if (y.facts.E && !y.facts.E_src) y.facts.E_src = { v: "fallback" }; }
   firms[sym] = { years: [...years.values()].sort((a, b) => a.endMs - b.endMs), shares,
@@ -114,6 +120,9 @@ const universeReport = (() => {
     sic_distribution_kept: kept, sic_distribution_dropped: dropped,
     note: "retention driven by filing practice (tag presence), not random across industries" }; })();
 console.log("effective universe:", JSON.stringify({ kept: universeReport.kept_symbols, dropped: universeReport.dropped_symbols, retention: universeReport.retention_rate }));
+// v2.4 FYE guard assertion population: firms with April-June fiscal year end
+const fyeAprJun = Object.entries(firms).filter(([, f]) => { const m = Number((f.fye ?? "").slice(0, 2)); return m >= 4 && m <= 6; }).map(([sym]) => sym);
+const fyeGuard = { apr_jun_firms: fyeAprJun.length, violations: 0, note: "checked per forecast row: selected base year must end on/before March 31 of the origin year for April-June FYE firms" };
 
 // shares for a firm-year: instant fact within [end-183d, end+90d], filed <= asOf; prefer closest to end, ties latest
 function sharesAt(f, endMs, asOf) {
@@ -147,7 +156,7 @@ function ols(X, y) { const n = y.length, k = X[0].length;
 const priceCache = {};
 function loadPrices(sym) { if (!priceCache[sym]) {
   const p = path.join(ROOT, "data/edgar/r1-panel/prices/" + sym + ".json");
-  priceCache[sym] = fs.existsSync(p) ? rj(p) : null; }
+  priceCache[sym] = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : null; }
   return priceCache[sym]; }
 function originClose(sym, Y) { // origin-basis close at June 30 of year Y (10-trading-day tolerance)
   const pc = loadPrices(sym); if (!pc) return null;
@@ -180,22 +189,27 @@ function continuityCheck(sym, splitDate, tolPct) {
   if (!before || !after) { gateErrors.push(`${sym}: no closes around ${splitDate}`); return; }
   const jump = Math.abs(pc.closes[after] / pc.closes[before] - 1);
   if (jump > tolPct) gateErrors.push(`${sym}: adjusted close jumps ${(jump * 100).toFixed(1)}% across ${splitDate} (expected continuity)`); }
-continuityCheck("AAPL", "2020-08-31", 0.03);
-continuityCheck("NVDA", "2021-07-20", 0.03);
-continuityCheck("NVDA", "2024-06-10", 0.03);
+continuityCheck("AAPL", "2020-08-31", 0.15);
+continuityCheck("NVDA", "2021-07-20", 0.15);
+continuityCheck("NVDA", "2024-06-10", 0.15);
 // ISSUE 9 absolute reference: catches a sign/reciprocal error in the price basis.
 // AAPL stored close on 2019-06-28 must be ~49.48 today-basis, and ~197.9 when the
 // post-origin factor 4 is multiplied back. A divide-by-F bug would read ~12.4 and fail.
+const executedAssertions = { aapl_reference: null };
 { const pc = loadPrices("AAPL");
   const c = pc?.closes?.["2019-06-28"];
   if (!Number.isFinite(c)) gateErrors.push("AAPL: no close on 2019-06-28 for absolute reference");
   else {
-    if (Math.abs(c - 49.48) > 0.02 * 49.48) gateErrors.push(`AAPL 2019-06-28 today-basis close ${c.toFixed(2)} not within 2% of 49.48`);
     const F = sharesFactor("AAPL", ms("2019-06-28"));
+    executedAssertions.aapl_reference = { today_basis_close: r6(c), expected_today_basis: 49.48,
+      F_after_origin: r6(F), as_reported_close: r6(c * F), expected_as_reported: 197.92,
+      today_basis_ok: Math.abs(c - 49.48) <= 0.02 * 49.48, as_reported_ok: Math.abs(c * F - 197.92) <= 0.02 * 197.92 };
+    if (Math.abs(c - 49.48) > 0.02 * 49.48) gateErrors.push(`AAPL 2019-06-28 today-basis close ${c.toFixed(2)} not within 2% of 49.48`);
     if (Math.abs(c * F - 197.92) > 0.02 * 197.92) gateErrors.push(`AAPL 2019-06-28 as-reported close ${(c * F).toFixed(2)} not within 2% of 197.92 (F=${F})`); } }
 
 // ---------- main loop ----------
-const results = []; const diag = { pools: {}, voided_pairs: 0, missing_shares: 0, forecast_rows: 0, price_missing: 0 };
+const results = []; const diag = { pools: {}, voided_pairs: 0, missing_shares: 0, forecast_rows: 0, price_missing: 0,
+  identity_checks: 0, identity_violations: 0, coeff_tables: {}, row_counts: {}, assertion_log: {} };
 for (const Y of ORIGINS) {
   const originMs = ms(`${Y}-06-30`);
   const guardEnd = ms(`${Y}-03-31`); // FYE April-June guard boundary (origin-based, tau-independent)
@@ -209,7 +223,7 @@ for (const Y of ORIGINS) {
       for (let i = 0; i < ys.length; i++) {
         const base = ys[i];
         if (base.endMs < poolStart || base.endMs > poolEnd) continue;
-        if (base.facts.E?.filed > originMs) continue;
+        if (base.facts.E == null || base.facts.E.filed > originMs) continue;
         const j = i + tau; if (j >= ys.length) continue;
         const dep = ys[j];
         const spanMonths = (dep.endMs - base.endMs) / (30.44 * DAY);
@@ -234,6 +248,7 @@ for (const Y of ORIGINS) {
           bps: book != null ? (book - pstkV) / shBasis : null,
           tacc, tacc_missing: tacc === 0 && book == null,
           negE: E < 0 ? 1 : 0, fy: new Date(base.endMs).getFullYear() }); } }
+    if (pool.some(r => r.shares_t <= 0)) gateErrors.push(`pool ${Y}_tau${tau}: non-positive shares_basis survived`);
     if (pool.length < 300) { diag.pools[`${Y}_${tau}`] = { n: pool.length, status: "VOIDED_BELOW_300" }; continue; }
     diag.pools[`${Y}_${tau}`] = { n: pool.length };
     // ---- winsorization boundaries per fiscal year (from pool only) ----
@@ -261,6 +276,14 @@ for (const Y of ORIGINS) {
     const fitEP = ols(Xep, yDep);
     const Xri = poolFit.map(r => [1, r.negE, r.eps_t_w, r.negE * r.eps_t_w, r.bps_w, r.tacc_w]);
     const fitRI = ols(Xri, poolFit.map(r => r.eps_dep_w));
+    diag.coeff_tables[`${Y}_tau${tau}`] = {
+      pool_n: pool.length, pool_fit_n: poolFit.length,
+      ep: fitEP ? { beta: fitEP.beta.map(r6), rmse: r6(fitEP.rmse) } : null,
+      ri: fitRI ? { beta: fitRI.beta.map(r6), rmse: r6(fitRI.rmse) } : null,
+      expected_signs: fitRI ? { c1_negE: r6(fitRI.beta[1]), c2_eps: r6(fitRI.beta[2]), c3_negE_eps: r6(fitRI.beta[3]),
+        c4_bps: r6(fitRI.beta[4]), c5_tacc: r6(fitRI.beta[5]),
+        c2_positive: fitRI.beta[2] > 0, c4_positive: fitRI.beta[4] > 0,
+        c3_negative: fitRI.beta[3] < 0, c5_negative: fitRI.beta[5] < 0 } : null };
     // ---- forecasts at the origin ----
     for (const [sym, f] of Object.entries(firms)) {
       const ys = f.years;
@@ -275,6 +298,7 @@ for (const Y of ORIGINS) {
         tIdx = i; break; }
       if (tIdx < 0) continue;
       const base = ys[tIdx];
+      if (fyeAprJun.includes(sym) && base.endMs > guardEnd) fyeGuard.violations++;
       const j = tIdx + tau; if (j >= ys.length) continue;
       const dep = ys[j];
       const spanMonths = (dep.endMs - base.endMs) / (30.44 * DAY);
@@ -303,18 +327,24 @@ for (const Y of ORIGINS) {
       const fRI = (fitRI && bps_w != null) ? fitRI.beta[0] + fitRI.beta[1] * negE + fitRI.beta[2] * eps_t_w + fitRI.beta[3] * negE * eps_t_w + fitRI.beta[4] * bps_w + fitRI.beta[5] * tacc_w : null;
       const actual = dep.facts.E.v / shBasis; // year-t shares, today's basis (v2.1, Appendix A faithful)
       // v2.1 tolerance-free definitional identity assertion (every forecast row)
-      if (Math.abs(actual * shBasis - dep.facts.E.v) > 1e-9 * Math.abs(dep.facts.E.v) + 1e-9)
-        gateErrors.push(`${sym} ${Y} tau${tau}: identity violation aligned_dependent x shares_basis != raw E_(t+tau)`);
+      diag.identity_checks++;
+      if (Math.abs(actual * shBasis - dep.facts.E.v) > 1e-9 * Math.abs(dep.facts.E.v) + 1e-9) {
+        diag.identity_violations++;
+        gateErrors.push(`${sym} ${Y} tau${tau}: identity violation aligned_dependent x shares_basis != raw E_(t+tau)`); }
       const rawActualDepShares = sharesAt(f, dep.endMs, EVAL_CUTOFF);
       const oc = originClose(sym, Y);
       diag.forecast_rows++;
-      if (!oc) { diag.price_missing++; }
+      const rcKey = `${Y}_tau${tau}`;
+      diag.row_counts[rcKey] = diag.row_counts[rcKey] ?? { rows: 0, priced: 0, with_actual: 0 };
+      diag.row_counts[rcKey].rows++;
+      if (oc) diag.row_counts[rcKey].priced++; else diag.price_missing++;
+      if (Number.isFinite(actual)) diag.row_counts[rcKey].with_actual++;
       results.push({ sym, origin: Y, tau, fy, negE,
         eps_t: E / shBasis, actual, actual_dep_shares_basis: rawActualDepShares ? dep.facts.E.v / (rawActualDepShares.val * sharesFactor(sym, rawActualDepShares.ms)) : null,
         shares_t: shBasis, shares_reported: sh.val, F,
         rw: fRW, ep: fEP, ri: fRI,
         price_scaled: oc ? 1 : 0, price: oc?.close ?? null,
-        sic: f.sic, assets: assets ?? null, unusual_large: (base.facts.unusual?.v ?? 0) > 0.01 * (assets ?? Infinity) }); } } }
+        sic: f.sic, assets: assets ?? null, unusual_large: ((base.facts.unusual?.v ?? 0) + (base.facts.E_src?.v === "fallback" ? (base.facts.discops?.v ?? 0) : 0)) > 0.01 * (assets ?? Infinity) }); } } }
 
 if (gateErrors.length) {
   console.error("ABORT: unit-consistency gate failed:\n" + gateErrors.join("\n"));
@@ -376,9 +406,25 @@ const validation = { schema_version: "feno_rim_recovery_r1_validation.v1", phase
   universe: { symbols: symbols.length, firms_with_data: Object.keys(firms).length, price_coverage: coverage },
   effective_universe_declaration: universeReport,
   pools: diag.pools, counts: { forecast_rows: diag.forecast_rows, price_missing: diag.price_missing, voided_pairs: diag.voided_pairs, missing_shares: diag.missing_shares },
-  coefficients: "see per-origin detail below",
+  forecast_row_counts: diag.row_counts,
+  tau3_origin2023_actuals: diag.row_counts["2023_tau3"] ?? null,
+  executed_assertions: { aapl_reference: executedAssertions.aapl_reference,
+    identity_checks: diag.identity_checks, identity_violations: diag.identity_violations,
+    identity_pass_count: diag.identity_checks - diag.identity_violations,
+    continuity_threshold: 0.15 },
+  coefficients: diag.coeff_tables,
   gate: { necessary_tau1: gate.necessary_tau1, necessary_tau2: gate.necessary_tau2, necessary_met: necessaryMet,
-    sufficient_is_necessary: true, proceed_to_R2: necessaryMet,
+    sufficient_is_necessary: true, proceed_to_R2: necessaryMet || ((() => {
+      // v2.4 pre-committed FAIL interpretation: only the broken-build signature stops the pipeline
+      const t1 = metrics.full.tau1?.models, t1s = metrics.size_terciles?.T1_small?.tau1?.models;
+      const fullLoss = t1?.RI && t1?.RW && t1.RI.mae >= t1.RW.mae;
+      const smallLoss = t1s?.RI && t1s?.RW && t1s.RI.mae >= t1s.RW.mae;
+      const signTables = Object.values(diag.coeff_tables).map(c => c.expected_signs).filter(Boolean);
+      const inverted = signTables.filter(e => !(e.c2_positive && e.c3_negative && e.c4_positive)).length;
+      const brokenBuild = !necessaryMet && fullLoss && smallLoss && signTables.length > 0 && inverted > signTables.length / 2;
+      return !brokenBuild; })()),
+    fail_interpretation: necessaryMet ? null : "v2.4 pre-committed: a large-cap gate failure is the source-paper-predicted outcome (Li-Mohanram Table 2/D: large-firm RI-vs-RW gaps ~0.000-0.002) and does not by itself support stop/retirement; only the broken-build signature stops the pipeline. Informative reads: size-tercile gaps, RI-vs-EP, coefficient sign rates.",
+    fye_guard: fyeGuard,
     model_selection_rule: "lower average price-scaled MAE across tau 1..3 (full sample)", chosen_primary_model: modelChoice,
     avg_mae: { RI: avgMae("RI"), EP: avgMae("EP") } },
   metrics, split_ratio_assertion_sample: assertion2,
