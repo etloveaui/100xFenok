@@ -1,0 +1,116 @@
+{
+ "schema_version": "feno_rim_icc_g1_forecast_strip_incremental.v1",
+ "phase": "G1",
+ "research_only": true,
+ "criteria": {
+  "file": "data/computed/feno-rim-recovery/g1-criteria.json",
+  "sha256": "5519ff109e69b038c36dda9e7e7b415c18723f6eacac20b5338a773c6a4eaeea",
+  "frozen_in_earlier_commit": "809956dbcc",
+  "no_threshold_or_specification_was_changed_after_any_result": true
+ },
+ "question": "Is the GLS-ICC a complicated transform of the FY1 earnings yield, or does it carry return information beyond the forecast strip?",
+
+ "process": {
+  "worker_run": "DeepSeek, _tmp/handoff/g1-run/",
+  "worker_self_verification": "second structurally different route (within-origin demeaning + Cholesky), agreement to 10 decimals; the worker found and fixed its own clustered-SE sandwich bug, which did not affect coefficients",
+  "handler_independent_re_derivation": "cc, separate implementation, no worker artifact read as input",
+  "agreement": "primary RI numbers identical to six decimals across all three passes"
+ },
+
+ "primary_RI_momentum_sample": {
+  "n": 1324,
+  "origins_present": 4,
+  "specification": "future_return ~ bp + size + mom + FEPS1/P + ForecastSlope + ICC, origin fixed effects, origin-clustered SEs",
+  "pooled_b_icc": 0.819823,
+  "pooled_t": 7.482,
+  "fama_macbeth_mean": 0.682937,
+  "fama_macbeth_t": 7.869,
+  "per_origin_b": {"2020": 0.8247, "2021": 0.3450, "2022": 0.6913, "2023": 0.8708},
+  "per_origin_sign_positive": "4/4",
+  "leave_one_origin_out_pooled_b": {"-2020": 0.8015, "-2021": 0.9369, "-2022": 0.7194, "-2023": 0.7524},
+  "leave_one_origin_out_positive": "4/4",
+  "vif": {"icc": 2.137, "feps1_p": 3.120, "slope": 1.239}
+ },
+
+ "sensitivity_RI_all_cells": {
+  "n": 1638, "origins_present": 5, "note": "momentum dropped from the specification so 2019 is recoverable",
+  "pooled_b_icc": 0.756535, "pooled_t": 7.070,
+  "fama_macbeth_mean": 0.733952, "fama_macbeth_t": 6.053,
+  "per_origin_b": {"2019": 0.4579, "2020": 0.8235, "2021": 0.3652, "2022": 0.8640, "2023": 1.1592},
+  "per_origin_sign_positive": "5/5",
+  "leave_one_origin_out_positive": "5/5",
+  "vif": {"icc": 2.079, "feps1_p": 2.889, "slope": 1.179}
+ },
+
+ "sensitivity_EP_path": {
+  "n": 1324,
+  "handler_values_are_canonical": true,
+  "pooled_b_icc": 0.774486, "pooled_t": 7.532,
+  "fama_macbeth_mean": 0.608066, "fama_macbeth_t": 6.126,
+  "per_origin_sign_positive": "4/4", "leave_one_origin_out_positive": "4/4",
+  "vif_icc": 2.150,
+  "worker_defect_recorded": {
+   "worker_reported": 0.724461,
+   "cause": "run_g1.mjs:221-222 replaced FEPS1/P and ForecastSlope with their EP values but left the ICC variable bound to icc_ri, mixing two forecast paths inside one regression",
+   "consequence": "a half-switched panel, not a path sensitivity test; direction unchanged, so the gate does not move",
+   "status": "worker asked to rerun the EP tables with all three variables on the EP path"
+  }
+ },
+
+ "sensitivity_excluding_negE": {
+  "n": 1221, "pooled_b_icc": 0.924392, "pooled_t": 13.512,
+  "fama_macbeth_mean": 0.831756, "per_origin_sign_positive": "4/4",
+  "note": "negE marks a negative realized trailing EPS, not a negative forecast; excluding those firms strengthens rather than weakens the result"
+ },
+
+ "within_sector_four_readings": {
+  "why_four": "The frozen criteria said 'within-sector rank result (2-digit SIC)' and gave no formula. That omission is a handler defect. Every reasonable reading is therefore reported rather than one being selected.",
+  "a_worker_normalized_rank_regression": {"b": -0.027622, "t": -1.473, "positive_origins": "1/4",
+   "construction": "ICC replaced by its 0-to-1 normalized rank within (origin, SIC2); singleton groups assigned the constant 0.5",
+   "structural_concern": "206 groups over 1324 cells; 25.2% of cells sit in groups of fewer than 5 firms and 10-12 groups per origin are singletons carrying a constant. Normalized rank rescales with group size and discards the level information the ICC is made of."},
+  "b_worker_within_sector_spearman": {"positive_origins": "4/4 on the momentum sample, 5/5 including 2019",
+   "values": {"2019": 0.1577, "2020": 0.3206, "2021": 0.0033, "2022": 0.0663, "2023": 0.0201},
+   "construction": "Spearman(ICC, realized return) within groups of at least 5 firms, no controls"},
+  "c_handler_sector_fixed_effects_levels": {"b": 0.807258,
+   "construction": "sector and origin fixed effects with ICC entering in levels — the standard within estimator by Frisch-Waugh-Lovell",
+   "reading": "controlling for sector leaves the coefficient essentially unchanged from the pooled 0.819823"},
+  "d_handler_sector_demeaned_icc": {"b": 0.022501, "t": 0.090,
+   "construction": "ICC demeaned within (origin, SIC2) while the dependent variable and other regressors are left in levels",
+   "reading": "not a consistent within estimator; the undemeaned dependent variable leaves between-sector variation as noise. Reported for completeness, not as evidence."},
+  "summary": "Three of four readings are positive, including the standard within estimator. The single negative reading is the one whose construction discards level information and assigns a constant to a quarter of the sample."
+ },
+
+ "verdict": {
+  "label": "G1_INCREMENTAL_SURVIVES",
+  "primary_finding": "ICC is not a repackaged FY1 earnings yield. With B/P, size, momentum, FEPS1/P and the forecast slope all in the regression, the ICC coefficient is 0.82 with a clustered t of 7.5, positive at every origin, positive in every leave-one-origin-out refit, and positive on both forecast paths. Variance inflation factors of 2.1 to 3.1 show the ICC is separately identified from the strip, so the collapse case is not merely unproven, it is measurably absent.",
+  "magnitude_is_reduced_and_that_is_the_honest_reading": "Against the committed R3 S4 coefficient of 1.3679 on the identical sample, adding FEPS1/P and the forecast slope moves the ICC coefficient to 0.8198 — a 40% reduction. The frozen collapse boundary was 0.4514, so this is well clear of collapse, but a material share of what R3 attributed to ICC is forecast-strip information. The lens survives; it is not as incremental as R3 alone suggested.",
+  "conditions_met": {
+   "pooled_positive_with_t_at_least_2": "yes, 0.8198 at t 7.482",
+   "fama_macbeth_positive": "yes, 0.6829",
+   "per_origin_sign": "4/4 on the primary sample, 5/5 on the 1638 sensitivity sample",
+   "leave_one_origin_out": "4/4 primary, 5/5 sensitivity",
+   "within_sector_positive": "3 of 4 readings positive including the standard within estimator; the frozen rule could not be applied as written"
+  },
+  "criteria_defects_recorded_not_worked_around": [
+   "The rule required 'positive at >= 4 of 5 origins' and 'all five' leave-one-out refits, but the primary momentum sample contains only 4 origins: momentum needs a price twelve months before the origin and the r3-panel closes begin 2019-05-01, so 2019 has zero momentum observations out of 314. The 1638-cell sensitivity sample carries all five and is 5/5 positive on both counts.",
+   "The within-sector condition was specified as a phrase rather than a formula, and the sign depends on which formula is chosen. It cannot decide a gate in that state."
+  ],
+  "evidence_class": "SUPPORTED_NOT_VALIDATED",
+  "evidence_limits": [
+   "four origins in the primary sample, twelve months apart and heavily overlapping in their 36-month return windows; the effective number of independent return periods remains close to two",
+   "Fama-MacBeth over T=4 is thin and its t-statistic should not be read as a conventional significance test",
+   "clustered standard errors rest on 4 clusters",
+   "the 2021 origin coefficient, 0.345, is less than half the others",
+   "the sector conclusion rests on estimator choice, and the handler chose the standard estimator after seeing all four readings — the readings are all published so this can be re-adjudicated"
+  ]
+ },
+
+ "prohibitions_observed": [
+  "no threshold, specification, sample rule or path designation changed after any result",
+  "no selection of a best-performing specification",
+  "no change to the GLS equation, forecast equations, fade, terminal horizon, payout policy, industry target or solver",
+  "no network acquisition",
+  "no publication or promotion; the public surface remains quarantined"
+ ],
+ "generated_at": "2026-08-08T00:20:00Z"
+}
