@@ -53,7 +53,8 @@
    "worker_reported": 0.724461,
    "cause": "run_g1.mjs:221-222 replaced FEPS1/P and ForecastSlope with their EP values but left the ICC variable bound to icc_ri, mixing two forecast paths inside one regression",
    "consequence": "a half-switched panel, not a path sensitivity test; direction unchanged, so the gate does not move",
-   "status": "worker asked to rerun the EP tables with all three variables on the EP path"
+   "status": "RESOLVED — worker reran all four EP tables with the full EP triplet and reproduced the handler values exactly: pooled 0.774486 (t 7.532328), FM 0.608066 (t 6.126191), per-origin 4/4, leave-one-out 4/4. The mixed-path figure is marked superseded in the worker report and does not enter the record as a result.",
+   "vif_construction_note": "handler 2.150 regresses ICC on FEPS1/P and the slope only; worker 2.177 uses the full design including fixed effects. Different constructions of the same diagnostic, not a disagreement, and neither is near an identification threshold."
   }
  },
 
