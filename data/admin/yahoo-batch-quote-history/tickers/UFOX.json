@@ -26,41 +26,44 @@
       "run_id": "30711925747",
       "schedule": "",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1140,
+      "natural": true,
+      "observed_at": "2026-08-07T22:50:55Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31225112049",
+      "schedule": "7 22 * * 0-5",
+      "shard": "71/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T02:26:08Z",
-    "history_as_of": "2026-07-08",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/UFOX.json",
-    "payload_sha256": "0c8cad366758623f12e77f8d89795ea68860b4be8b8969179fd28907232c0629",
-    "quote_as_of": null,
-    "source_as_of": "2026-07-08"
+    "fetched_at": "2026-08-07T22:52:30Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/UFOX.json",
+    "payload_sha256": "7c8dd7fc262bc1baabcf8e9c6a954c86091301cee726d349895d56b24a2e457b",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_requires_schedule",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 522,
+    "latency_ms": 1140,
     "natural": true,
-    "observed_at": "2026-08-01T18:41:58Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-07T22:50:55Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711925747",
-    "schedule": "",
-    "shard": "4/6"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-01T18:41:58Z",
-    "provider_history_as_of": "2026-07-31",
-    "provider_quote_as_of": "2026-07-31T20:00:00Z",
-    "reason": "recovery_requires_schedule",
-    "run_attempt": 1,
-    "run_id": "30711925747"
+    "run_id": "31225112049",
+    "schedule": "7 22 * * 0-5",
+    "shard": "71/72"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:26:08Z",
@@ -70,8 +73,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-07-08"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-07T22:50:55Z",
+    "payload_sha256": "913a79641e30a1b3a311ecc62e0292c533b60665ea6f7e824a08d7245435b322",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "31225112049",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-07"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -84,5 +99,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "UFOX",
-  "updated_at": "2026-08-01T18:41:58Z"
+  "updated_at": "2026-08-07T22:50:55Z"
 }

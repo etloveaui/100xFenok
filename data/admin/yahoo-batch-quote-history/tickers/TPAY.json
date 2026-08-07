@@ -57,23 +57,66 @@
       "run_id": "30711925747",
       "schedule": "",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: TPAY: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: TPAY: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: TPAY: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: TPAY: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: TPAY: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: TPAY: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 1335,
+      "natural": true,
+      "observed_at": "2026-08-07T22:50:55Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31225112049",
+      "schedule": "7 22 * * 0-5",
+      "shard": "71/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-09T09:24:59Z",
-    "history_as_of": "2026-07-08",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TPAY.json",
-    "payload_sha256": "eb6007fb737bac6d4508105701fecaae16ce0a3edd1053b92ca9eeb8217f9074",
-    "quote_as_of": "2026-07-08T19:39:44Z",
-    "source_as_of": "2026-07-08"
+    "fetched_at": "2026-08-07T22:51:47Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/TPAY.json",
+    "payload_sha256": "9d361960bce55a5727ab940cd24541a6c41b89cbca02a603e873485a57f9d250",
+    "quote_as_of": "2026-08-05T15:10:25Z",
+    "source_as_of": "2026-08-05T15:10:25Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_requires_schedule",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [
       {
         "attempt": 1,
@@ -106,23 +149,14 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 619,
+    "latency_ms": 1335,
     "natural": true,
-    "observed_at": "2026-08-01T18:41:58Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-07T22:50:55Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711925747",
-    "schedule": "",
-    "shard": "4/6"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-01T18:41:58Z",
-    "provider_history_as_of": "2026-07-31",
-    "provider_quote_as_of": "2026-07-29T15:11:11Z",
-    "reason": "recovery_requires_schedule",
-    "run_attempt": 1,
-    "run_id": "30711925747"
+    "run_id": "31225112049",
+    "schedule": "7 22 * * 0-5",
+    "shard": "71/72"
   },
   "lkg": {
     "fetched_at": "2026-07-09T09:24:59Z",
@@ -132,8 +166,20 @@
     "quote_as_of": "2026-07-08T19:39:44Z",
     "source_as_of": "2026-07-08"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T22:50:55Z",
+    "payload_sha256": "34b093e4a99cad67170244587119b9cabf371c96bbf46ab0658fead44063ec76",
+    "quote_as_of": "2026-08-05T15:10:25Z",
+    "run_attempt": 1,
+    "run_id": "31225112049",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-05T15:10:25Z"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -146,5 +192,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "TPAY",
-  "updated_at": "2026-08-01T18:41:58Z"
+  "updated_at": "2026-08-07T22:50:55Z"
 }

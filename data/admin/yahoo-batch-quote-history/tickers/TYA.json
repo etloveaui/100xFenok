@@ -26,41 +26,44 @@
       "run_id": "30711925747",
       "schedule": "",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1124,
+      "natural": true,
+      "observed_at": "2026-08-07T22:50:55Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31225112049",
+      "schedule": "7 22 * * 0-5",
+      "shard": "71/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T00:35:45Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TYA.json",
-    "payload_sha256": "0eb84ebef4761f89245dd9bc27250660f4043be14b7c45eba28a801a04907e0a",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-08-07T22:52:21Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/TYA.json",
+    "payload_sha256": "e9d1e7a01d260b4f308f619ef0b07fb8f8171c3dfa153bd9f0b9c4e005a88cdf",
+    "quote_as_of": "2026-08-07T19:53:52Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_requires_schedule",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 677,
+    "latency_ms": 1124,
     "natural": true,
-    "observed_at": "2026-08-01T18:41:58Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-07T22:50:55Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711925747",
-    "schedule": "",
-    "shard": "4/6"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-01T18:41:58Z",
-    "provider_history_as_of": "2026-07-31",
-    "provider_quote_as_of": "2026-07-31T19:59:59Z",
-    "reason": "recovery_requires_schedule",
-    "run_attempt": 1,
-    "run_id": "30711925747"
+    "run_id": "31225112049",
+    "schedule": "7 22 * * 0-5",
+    "shard": "71/72"
   },
   "lkg": {
     "fetched_at": "2026-06-30T00:35:45Z",
@@ -70,8 +73,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-07T22:50:55Z",
+    "payload_sha256": "f2ba8d066de4792946bc299a1f7c52dd3c500e66c44ad6caf70afef080bb2ae8",
+    "quote_as_of": "2026-08-07T19:53:52Z",
+    "run_attempt": 1,
+    "run_id": "31225112049",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-07"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -84,5 +99,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "TYA",
-  "updated_at": "2026-08-01T18:41:58Z"
+  "updated_at": "2026-08-07T22:50:55Z"
 }
