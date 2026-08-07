@@ -12,15 +12,28 @@
       "run_id": "30312518312",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 555,
+      "natural": true,
+      "observed_at": "2026-08-07T05:49:05Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31151738848",
+      "schedule": "7 4 * * 0-5",
+      "shard": "62/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-27T23:00:15Z",
-    "history_as_of": "2026-07-27",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ASLV.json",
-    "payload_sha256": "d5697f37490a47add3ff6bf260ffea36b4802037b018a09be771073787430df5",
-    "quote_as_of": "2026-07-27T18:05:57Z",
-    "source_as_of": "2026-07-27"
+    "fetched_at": "2026-08-07T05:49:21Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/ASLV.json",
+    "payload_sha256": "faca0cde1f3136c45b12d033895a382aceefe3bfad5f9af382cc92ec1ae690a2",
+    "quote_as_of": "2026-08-05T19:59:45Z",
+    "source_as_of": "2026-08-05T19:59:45Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 559,
+    "latency_ms": 555,
     "natural": true,
-    "observed_at": "2026-07-27T22:58:21Z",
+    "observed_at": "2026-08-07T05:49:05Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30312518312",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31151738848",
+    "schedule": "7 4 * * 0-5",
+    "shard": "62/72"
   },
   "lkg": {
     "fetched_at": "2026-07-27T23:00:15Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-27",
-    "observed_at": "2026-07-27T22:58:21Z",
-    "payload_sha256": "92bf4babf3efc30eea6ffd2ea05a1bda293ad1bf40c82b966a8b6bb349732076",
-    "quote_as_of": "2026-07-27T18:05:57Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T05:49:05Z",
+    "payload_sha256": "d016f7899d5d4a4297403379a521af1c4390b67262eb9ef14da1445a4a17e279",
+    "quote_as_of": "2026-08-05T19:59:45Z",
     "run_attempt": 1,
-    "run_id": "30312518312",
+    "run_id": "31151738848",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-27"
+    "source_as_of": "2026-08-05T19:59:45Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-27"
   },
   "ticker": "ASLV",
-  "updated_at": "2026-08-05T00:18:15Z"
+  "updated_at": "2026-08-07T05:49:05Z"
 }

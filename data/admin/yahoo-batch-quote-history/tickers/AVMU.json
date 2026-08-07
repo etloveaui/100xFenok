@@ -12,15 +12,28 @@
       "run_id": "30312518312",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 627,
+      "natural": true,
+      "observed_at": "2026-08-07T05:49:05Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31151738848",
+      "schedule": "7 4 * * 0-5",
+      "shard": "62/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-27T23:00:32Z",
-    "history_as_of": "2026-07-27",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AVMU.json",
-    "payload_sha256": "4af77844170d75593ef21f17a31f4ff8f058d558ffd600505179972af539e904",
-    "quote_as_of": "2026-07-27T19:53:45Z",
-    "source_as_of": "2026-07-27"
+    "fetched_at": "2026-08-07T05:49:32Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/AVMU.json",
+    "payload_sha256": "4278df1726ff4fd1090bb0901a906c07ee16364a110fd465d2b7089cb59a8dce",
+    "quote_as_of": "2026-08-06T19:59:59Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 670,
+    "latency_ms": 627,
     "natural": true,
-    "observed_at": "2026-07-27T22:58:21Z",
+    "observed_at": "2026-08-07T05:49:05Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30312518312",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31151738848",
+    "schedule": "7 4 * * 0-5",
+    "shard": "62/72"
   },
   "lkg": {
     "fetched_at": "2026-07-27T23:00:32Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-27",
-    "observed_at": "2026-07-27T22:58:21Z",
-    "payload_sha256": "1aca6277b683729efb9acd7bd7c2b29ea18e681192d567434056b72ab9057cc8",
-    "quote_as_of": "2026-07-27T19:53:45Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T05:49:05Z",
+    "payload_sha256": "8afcd86712a234b83a3590fb1aee31e52b952dc525f41edfb0aa0003d15f2051",
+    "quote_as_of": "2026-08-06T19:59:59Z",
     "run_attempt": 1,
-    "run_id": "30312518312",
+    "run_id": "31151738848",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-27"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-27"
   },
   "ticker": "AVMU",
-  "updated_at": "2026-08-05T00:18:15Z"
+  "updated_at": "2026-08-07T05:49:05Z"
 }
