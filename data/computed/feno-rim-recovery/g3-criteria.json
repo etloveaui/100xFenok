@@ -1,0 +1,80 @@
+{
+ "schema_version": "feno_rim_recovery_g3_criteria.v1",
+ "phase": "G3",
+ "gate": "multi-horizon validation — does the ICC result hold at 12, 24 and 36 months, or only at the horizon it was found on?",
+ "research_only": true,
+ "frozen_before_any_result": true,
+ "mandate_section": "10",
+ "handler": "cc (Opus) — adjudicator. worker: DeepSeek.",
+
+ "conventions_fixed_once_and_used_everywhere": {
+  "why": "Three gates in a row lost a condition to an unnamed convention: 'as-reported shares_t' (G0), 'within-sector rank result' (G1), '33.33 and 66.67 percentiles' (G2). Every convention this gate depends on is named here. If something below is still ambiguous, STOP AND ASK.",
+  "quantile": "NEAREST-RANK. For an ascending 0-indexed array of length n, the q-quantile is the element at index max(0, ceil(q*n) - 1). Terciles use q = 1/3 and 2/3. No interpolation.",
+  "tercile_assignment": "cell x goes to bucket 1 if value <= Q(1/3), bucket 2 if value <= Q(2/3), else bucket 3, evaluated in that order",
+  "half_split": "order the stratum ascending by ICC; H = the top ceil(n/2) elements, L = the remaining floor(n/2)",
+  "ties": "ties are broken by ascending symbol string, so every ordering is deterministic and reproducible",
+  "spearman": "Pearson correlation of average ranks; average ranks assign the mean position to tied values",
+  "cluster_se": "origin-clustered sandwich, V = inv(X'X) * sum_g (X_g' e_g)(X_g' e_g)' * inv(X'X)"
+ },
+
+ "what_is_frozen_and_what_varies": {
+  "frozen": "the model. GLS equation, forecast equations, ROE fade, terminal horizon T=12, payout policy, industry target, root solver, the ICC values themselves, and the market-cap basis settled in G0.",
+  "varies": "the realized return horizon only: 12, 24 and 36 months.",
+  "all_three_are_computed_and_reported": "Selection of a best horizon after seeing results is prohibited. A verdict that names one horizon must name it as a limitation, never as the finding."
+ },
+
+ "the_overlap_structure_that_governs_this_gate": {
+  "fact": "Origins are spaced exactly one year apart at t-06-30. A 12-month realized window therefore does NOT overlap between adjacent origins; a 24-month window overlaps one year; a 36-month window overlaps two.",
+  "effective_independent_periods": "T_eff = T / h, with T = 5 origins and h the horizon in years. 12m gives 5.0, 24m gives 2.5, 36m gives 1.67.",
+  "consequence_stated_before_any_result": "The 12-month horizon is the only one of the three whose per-origin observations are statistically independent. Every prior result in this mission — R3, G1, G2 — was measured at 36 months, where the effective sample is under two periods. If the effect is real, 12 months is where it can be asserted most honestly; if it exists only at 36 months, that is a finding about overlapping windows, not about expected returns.",
+  "reporting_requirement": "Every reported statistic carries both raw n and T_eff."
+ },
+
+ "coverage_verified_before_freezing": {
+  "12m": "1,638 cells, all five origins (314/325/336/329/334)",
+  "24m": "1,638 cells, all five origins",
+  "36m": "1,638 cells, all five origins",
+  "note": "r3-panel closes extend to 2026-07-31, so the 2023 origin resolves at all three horizons. No horizon loses an origin to data availability."
+ },
+
+ "primary_specification": {
+  "regression": "R_h ~ const + BP + SIZE + FEPS1_over_P + ForecastSlope + ICC, origin fixed effects, origin-clustered SEs",
+  "momentum_is_excluded_from_the_primary_and_this_is_deliberate": "Momentum requires a close twelve months before the origin, which drops 2019 entirely and reduces the sample to four origins. G3's question is horizon stability, and the 12-month horizon's independence advantage exists only with all five origins. Including momentum would discard exactly the origin that makes the honest test possible. The momentum specification is reported as a sensitivity at all three horizons.",
+  "R_h": "((P_{t+h} + sum of dividends over (t, t+h]) / P_t)^(1/h) - 1, annualized, r3-panel split-adjusted closes and r3-panel dividends, the same <=16-day staleness rule used throughout",
+  "sample": "1,638 cells, five origins, identical across the three horizons so that horizon is the only thing that changes"
+ },
+
+ "required_reports_per_horizon": [
+  "pooled ICC coefficient, clustered t, raw n, T_eff",
+  "per-origin ICC coefficient and its sign, all five",
+  "Fama-MacBeth mean and NW lag-1 t, with T_eff stated alongside",
+  "rank IC: per-origin Spearman(ICC, R_h), the five values, their mean, and the count positive",
+  "ICC high-minus-low spread within B/P terciles, per origin, using EXCESS returns and the half-split convention above; report the count positive",
+  "sector-neutral estimate: the same regression with SIC2 fixed effects added and ICC entering in levels — the standard within estimator, which G1 established as the defensible reading",
+  "large-cap sensitivity: the same regression restricted to cells at or above the within-origin median SIZE (nearest-rank median), with n reported",
+  "momentum-specification sensitivity on the four origins where momentum exists"
+ ],
+
+ "verdict_rules": {
+  "G3_STABLE_ACROSS_HORIZONS": "ALL of: (a) the pooled ICC coefficient is positive at all three horizons; (b) at the 12-month horizon specifically, the pooled coefficient is positive with clustered |t| >= 2 and the per-origin sign is positive at >= 4 of 5; (c) rank IC mean is positive at all three horizons; (d) the B/P-stratified high-minus-low spread is positive at >= 4 of 5 origins at the 12-month horizon.",
+  "G3_HORIZON_SPECIFIC": "the pooled coefficient is positive at 36 months but condition (b) fails at 12 months, or the sign of the pooled coefficient differs across horizons while remaining positive at 36",
+  "G3_FAIL": "the pooled ICC coefficient is negative at two or more horizons, or negative with clustered |t| >= 2 at the 12-month horizon",
+  "why_12m_carries_the_weight": "It is the only horizon whose origins do not overlap. A result that survives only where windows overlap is a result about the windows. This asymmetry is stated before any number is computed and is not a post-hoc preference.",
+  "sector_neutral_and_large_cap_are_reported_but_enter_no_threshold": "They are diagnostics for the artifact; G1 showed sector constructions are specification-sensitive, and a large-cap restriction halves the sample by design."
+ },
+
+ "prohibitions": [
+  "no post-result selection of a horizon",
+  "no post-result change to any threshold, convention, specification or sample rule",
+  "no change to the GLS equation, forecast equations, ROE fade, terminal horizon, payout policy, industry target, or solver",
+  "no re-solving of the ICC — G3 varies the realized horizon only",
+  "no network acquisition",
+  "no publication or promotion; the public surface remains quarantined"
+ ],
+
+ "result_paths_blocked_until_this_file_is_committed": [
+  "data/computed/feno-rim-recovery/RIM_ICC_G3_MULTI_HORIZON.json"
+ ],
+
+ "frozen_at_utc": "2026-08-08T01:05:00Z"
+}
