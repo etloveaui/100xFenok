@@ -2,26 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for JCI despite available history",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "Timeout: Failed to perform, curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 30616,
-      "natural": true,
-      "observed_at": "2026-07-23T00:56:37Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "29968542251",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 688,
@@ -188,6 +168,19 @@
       "run_id": "31138989349",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-07T09:14:45Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31164940276",
+      "schedule": "7 8 * * 0-5",
+      "shard": "64/72"
     }
   ],
   "current": {
@@ -203,17 +196,17 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 872,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-07T01:46:07Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-07T09:14:45Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "31138989349",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "31164940276",
+    "schedule": "7 8 * * 0-5",
+    "shard": "64/72"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -262,5 +255,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "JCI",
-  "updated_at": "2026-08-07T01:46:07Z"
+  "updated_at": "2026-08-07T09:14:45Z"
 }

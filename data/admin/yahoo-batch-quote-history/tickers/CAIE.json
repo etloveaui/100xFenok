@@ -12,15 +12,28 @@
       "run_id": "30406712544",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 585,
+      "natural": true,
+      "observed_at": "2026-08-07T09:14:45Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31164940276",
+      "schedule": "7 8 * * 0-5",
+      "shard": "64/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-28T23:09:23Z",
-    "history_as_of": "2026-07-28",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CAIE.json",
-    "payload_sha256": "ea95daa2cf4fb175cb7d39686f6c13e0ec02de303cd55bf9f87903c1fd437163",
-    "quote_as_of": "2026-07-28T19:59:52Z",
-    "source_as_of": "2026-07-28"
+    "fetched_at": "2026-08-07T09:15:16Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/CAIE.json",
+    "payload_sha256": "467aef1b54819acbbf0715f64b198db8a3e622fb6dc16f5d4c377ba7171bc32e",
+    "quote_as_of": "2026-08-06T19:59:51Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 562,
+    "latency_ms": 585,
     "natural": true,
-    "observed_at": "2026-07-28T23:07:58Z",
+    "observed_at": "2026-08-07T09:14:45Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30406712544",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "31164940276",
+    "schedule": "7 8 * * 0-5",
+    "shard": "64/72"
   },
   "lkg": {
     "fetched_at": "2026-07-28T23:09:23Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-28",
-    "observed_at": "2026-07-28T23:07:58Z",
-    "payload_sha256": "6b2e8b2e44e0dfa852f052cb372d1323d3f597e924a1cd6248346c2b7a024f21",
-    "quote_as_of": "2026-07-28T19:59:52Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T09:14:45Z",
+    "payload_sha256": "c6056c086a71e3cdf1e9c3424c08a44491250adaaca48cbb860d4ae3dea447d8",
+    "quote_as_of": "2026-08-06T19:59:51Z",
     "run_attempt": 1,
-    "run_id": "30406712544",
+    "run_id": "31164940276",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-28"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-28"
   },
   "ticker": "CAIE",
-  "updated_at": "2026-08-06T00:14:28Z"
+  "updated_at": "2026-08-07T09:14:45Z"
 }

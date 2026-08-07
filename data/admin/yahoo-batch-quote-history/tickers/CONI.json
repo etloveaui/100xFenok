@@ -12,15 +12,28 @@
       "run_id": "30406712544",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 518,
+      "natural": true,
+      "observed_at": "2026-08-07T09:14:45Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31164940276",
+      "schedule": "7 8 * * 0-5",
+      "shard": "64/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-28T23:09:57Z",
-    "history_as_of": "2026-07-28",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CONI.json",
-    "payload_sha256": "1969cba8d999587b9b003853573c05aa2ff42c113d62efd20be69940ae1e9dcd",
-    "quote_as_of": "2026-07-28T20:00:00Z",
-    "source_as_of": "2026-07-28"
+    "fetched_at": "2026-08-07T09:15:49Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/CONI.json",
+    "payload_sha256": "0c37c86690991b19a24db16d4f18204488a03fc30b19a656cf1ce6a09007e1d2",
+    "quote_as_of": "2026-08-06T20:00:00Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 561,
+    "latency_ms": 518,
     "natural": true,
-    "observed_at": "2026-07-28T23:07:58Z",
+    "observed_at": "2026-08-07T09:14:45Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30406712544",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "31164940276",
+    "schedule": "7 8 * * 0-5",
+    "shard": "64/72"
   },
   "lkg": {
     "fetched_at": "2026-07-28T23:09:57Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-28",
-    "observed_at": "2026-07-28T23:07:58Z",
-    "payload_sha256": "14abf2f530a868f0c3308d1ae856c8f0ddf774d376dac507a20cb2c1cb96061b",
-    "quote_as_of": "2026-07-28T20:00:00Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T09:14:45Z",
+    "payload_sha256": "6b770d2511fa47792835d2893f355984cee37e980eaf55acb8bbccad94bf3a3a",
+    "quote_as_of": "2026-08-06T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30406712544",
+    "run_id": "31164940276",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-28"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-28"
   },
   "ticker": "CONI",
-  "updated_at": "2026-08-06T00:14:28Z"
+  "updated_at": "2026-08-07T09:14:45Z"
 }

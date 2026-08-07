@@ -12,15 +12,28 @@
       "run_id": "30406712544",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 572,
+      "natural": true,
+      "observed_at": "2026-08-07T09:14:45Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31164940276",
+      "schedule": "7 8 * * 0-5",
+      "shard": "64/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-28T23:09:55Z",
-    "history_as_of": "2026-07-28",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/COMB.json",
-    "payload_sha256": "e8a2f6330da399c2fe38e29185f3913dd4ab73a7d8fa2eba374177a9a50ebac7",
-    "quote_as_of": "2026-07-28T19:14:37Z",
-    "source_as_of": "2026-07-28"
+    "fetched_at": "2026-08-07T09:15:48Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/COMB.json",
+    "payload_sha256": "e638f373a8c2c2c47168a8c10e085788e2215ad11e1efdcb131d342fb1b176a3",
+    "quote_as_of": "2026-08-06T19:59:46Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 657,
+    "latency_ms": 572,
     "natural": true,
-    "observed_at": "2026-07-28T23:07:58Z",
+    "observed_at": "2026-08-07T09:14:45Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30406712544",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "31164940276",
+    "schedule": "7 8 * * 0-5",
+    "shard": "64/72"
   },
   "lkg": {
     "fetched_at": "2026-07-28T23:09:55Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-28",
-    "observed_at": "2026-07-28T23:07:58Z",
-    "payload_sha256": "638465ba54804546f2d8e5703ab88d57fd657ff613c3024092d171f67b968558",
-    "quote_as_of": "2026-07-28T19:14:37Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T09:14:45Z",
+    "payload_sha256": "e8302103ac66e9e8889828f32f6f59c4c37bc5f580c2258a72a3c8c1888f1065",
+    "quote_as_of": "2026-08-06T19:59:46Z",
     "run_attempt": 1,
-    "run_id": "30406712544",
+    "run_id": "31164940276",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-28"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-28"
   },
   "ticker": "COMB",
-  "updated_at": "2026-08-06T00:14:28Z"
+  "updated_at": "2026-08-07T09:14:45Z"
 }

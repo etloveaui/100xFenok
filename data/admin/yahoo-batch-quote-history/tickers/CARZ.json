@@ -12,15 +12,28 @@
       "run_id": "30406712544",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 696,
+      "natural": true,
+      "observed_at": "2026-08-07T09:14:45Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31164940276",
+      "schedule": "7 8 * * 0-5",
+      "shard": "64/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-28T23:09:31Z",
-    "history_as_of": "2026-07-28",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CARZ.json",
-    "payload_sha256": "a7f2c33a943e211a73b05536cc105b891ee34f65a5d9c0b1e91f6953a104fbb0",
-    "quote_as_of": "2026-07-28T20:00:00Z",
-    "source_as_of": "2026-07-28"
+    "fetched_at": "2026-08-07T09:15:23Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/CARZ.json",
+    "payload_sha256": "1ce0952de535f96ec81dba93031aaa9a4145227cd4e19df542e15f2bb9b367bf",
+    "quote_as_of": "2026-08-06T20:00:00Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 650,
+    "latency_ms": 696,
     "natural": true,
-    "observed_at": "2026-07-28T23:07:58Z",
+    "observed_at": "2026-08-07T09:14:45Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30406712544",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "31164940276",
+    "schedule": "7 8 * * 0-5",
+    "shard": "64/72"
   },
   "lkg": {
     "fetched_at": "2026-07-28T23:09:31Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-28",
-    "observed_at": "2026-07-28T23:07:58Z",
-    "payload_sha256": "c1eed82d8a499c9b32892288cd3fe95f6abfb9eb93c4bf0c31f45a51b1a6f4a7",
-    "quote_as_of": "2026-07-28T20:00:00Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T09:14:45Z",
+    "payload_sha256": "2186e221c01a0ce2f907941e467554ff7084be9e48cfaf136ea3a4b249f063f5",
+    "quote_as_of": "2026-08-06T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30406712544",
+    "run_id": "31164940276",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-28"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-28"
   },
   "ticker": "CARZ",
-  "updated_at": "2026-08-06T00:14:28Z"
+  "updated_at": "2026-08-07T09:14:45Z"
 }

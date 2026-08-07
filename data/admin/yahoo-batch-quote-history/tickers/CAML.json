@@ -12,15 +12,28 @@
       "run_id": "30406712544",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 557,
+      "natural": true,
+      "observed_at": "2026-08-07T09:14:45Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31164940276",
+      "schedule": "7 8 * * 0-5",
+      "shard": "64/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-28T23:09:26Z",
-    "history_as_of": "2026-07-28",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CAML.json",
-    "payload_sha256": "3b04f00e37da6dbf4ad56d08f3596c75556eac121ebc5da18a8c2394658572bc",
-    "quote_as_of": "2026-07-28T19:59:50Z",
-    "source_as_of": "2026-07-28"
+    "fetched_at": "2026-08-07T09:15:18Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/CAML.json",
+    "payload_sha256": "471dd47d94c327d57349b2554ee8c203475084586d353b3fb39bad4b466a2a0c",
+    "quote_as_of": "2026-08-06T19:59:50Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 589,
+    "latency_ms": 557,
     "natural": true,
-    "observed_at": "2026-07-28T23:07:58Z",
+    "observed_at": "2026-08-07T09:14:45Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30406712544",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "31164940276",
+    "schedule": "7 8 * * 0-5",
+    "shard": "64/72"
   },
   "lkg": {
     "fetched_at": "2026-07-28T23:09:26Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-28",
-    "observed_at": "2026-07-28T23:07:58Z",
-    "payload_sha256": "b3081c57f500e2138af4d8a11e0e838f37189db4f3d09bc3c1e84bd4f88c054f",
-    "quote_as_of": "2026-07-28T19:59:50Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T09:14:45Z",
+    "payload_sha256": "b8be9728846c9164f3b3a820571bfe650a4b19ba0aaa3b820a9e05d3066c7561",
+    "quote_as_of": "2026-08-06T19:59:50Z",
     "run_attempt": 1,
-    "run_id": "30406712544",
+    "run_id": "31164940276",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-28"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-28"
   },
   "ticker": "CAML",
-  "updated_at": "2026-08-06T00:14:28Z"
+  "updated_at": "2026-08-07T09:14:45Z"
 }

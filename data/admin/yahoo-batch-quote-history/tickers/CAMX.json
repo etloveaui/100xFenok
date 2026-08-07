@@ -12,15 +12,28 @@
       "run_id": "30406712544",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 524,
+      "natural": true,
+      "observed_at": "2026-08-07T09:14:45Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31164940276",
+      "schedule": "7 8 * * 0-5",
+      "shard": "64/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-28T23:09:28Z",
-    "history_as_of": "2026-07-27",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CAMX.json",
-    "payload_sha256": "31a33f1d02b3dd446a66c4ae4fefde67010b914860d4615b48e8c1a7b00fbb52",
-    "quote_as_of": "2026-07-27T16:02:02Z",
-    "source_as_of": "2026-07-27"
+    "fetched_at": "2026-08-07T09:15:19Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/CAMX.json",
+    "payload_sha256": "97f59f7fed770678a06392913e5aeae896fea63ce3558dbb8ff8544d277b7c1e",
+    "quote_as_of": "2026-07-31T15:13:10Z",
+    "source_as_of": "2026-07-31T15:13:10Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 558,
+    "latency_ms": 524,
     "natural": true,
-    "observed_at": "2026-07-28T23:07:58Z",
+    "observed_at": "2026-08-07T09:14:45Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30406712544",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "31164940276",
+    "schedule": "7 8 * * 0-5",
+    "shard": "64/72"
   },
   "lkg": {
     "fetched_at": "2026-07-28T23:09:28Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-27",
-    "observed_at": "2026-07-28T23:07:58Z",
-    "payload_sha256": "80fac6c5646a21861365fa0f5dda2606998f430bf4ecdcd5e519170c638dcbee",
-    "quote_as_of": "2026-07-27T16:02:02Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T09:14:45Z",
+    "payload_sha256": "016648eacbf945f6b5dae99ea05c6225ba5be4fe2b7e461e806fabc7e9e9efc2",
+    "quote_as_of": "2026-07-31T15:13:10Z",
     "run_attempt": 1,
-    "run_id": "30406712544",
+    "run_id": "31164940276",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-27"
+    "source_as_of": "2026-07-31T15:13:10Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-27"
   },
   "ticker": "CAMX",
-  "updated_at": "2026-08-05T00:18:15Z"
+  "updated_at": "2026-08-07T09:14:45Z"
 }

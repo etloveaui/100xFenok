@@ -25,15 +25,28 @@
       "run_id": "30312518312",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 578,
+      "natural": true,
+      "observed_at": "2026-08-07T09:14:45Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31164940276",
+      "schedule": "7 8 * * 0-5",
+      "shard": "64/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-27T22:59:32Z",
-    "history_as_of": "2026-07-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/IFEB.json",
-    "payload_sha256": "cfd4aad2c67e46dc6ee10b3579f059467c48be3d1e350df5771b3f2805d1617c",
-    "quote_as_of": "2026-07-24T16:30:48Z",
-    "source_as_of": "2026-07-24"
+    "fetched_at": "2026-08-07T09:15:04Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/yf/finance/IFEB.json",
+    "payload_sha256": "912b55fc7f489433e8cb6f71a92836190b3ee76b413a498021540c5e1b0b0ec0",
+    "quote_as_of": "2026-08-06T19:59:46Z",
+    "source_as_of": "2026-08-06"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 517,
+    "latency_ms": 578,
     "natural": true,
-    "observed_at": "2026-07-27T22:58:21Z",
+    "observed_at": "2026-08-07T09:14:45Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30312518312",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31164940276",
+    "schedule": "7 8 * * 0-5",
+    "shard": "64/72"
   },
   "lkg": {
     "fetched_at": "2026-07-27T22:59:32Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-24",
-    "observed_at": "2026-07-27T22:58:21Z",
-    "payload_sha256": "37113c923314626561ebbdd9017b134652ed30dc7ee6f41792f3616359cc77f9",
-    "quote_as_of": "2026-07-24T16:30:48Z",
+    "history_as_of": "2026-08-06",
+    "observed_at": "2026-08-07T09:14:45Z",
+    "payload_sha256": "e8171e12a8892a213ed571574c27350d3b0b10a9c822299e6167c487a3966b90",
+    "quote_as_of": "2026-08-06T19:59:46Z",
     "run_attempt": 1,
-    "run_id": "30312518312",
+    "run_id": "31164940276",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-06"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "IFEB",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-07T09:14:45Z"
 }
