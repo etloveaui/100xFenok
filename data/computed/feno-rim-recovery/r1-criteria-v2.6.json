@@ -1,0 +1,113 @@
+{
+  "schema_version": "feno_rim_recovery_r1_criteria.v2.6",
+  "phase": "R1",
+  "supersedes": "r1-criteria-v2.5.json (sha a1861d50ca33360aaaab0fe6652a02f76ee713bdfe6cccb457cbd0a715f1d0b2) - data-integrity guards after annual-fact corruption found",
+  "title": "Li-Mohanram (2014) mechanical earnings forecasts on a unit-consistent free EDGAR PIT panel, FY1-FY3 validation",
+  "authority": "Owner directive 2026-08-07 sections 5-6, 14. DEC-291. Public surface stays KEEP_QUARANTINED.",
+  "literature_anchor": "Unchanged from v1: Li-Mohanram 2014 RAST, local pdf/txt in data/edgar/literature/, equations (2),(3),(7), section 3.2, Appendix A.",
+  "unit_basis_precommitted": {
+    "single_split_basis": "ONE basis for the entire panel: today s. Every per-share quantity - eps_t, bps_t, tacc_t, and the dependent eps_(t+tau) - divides by shares_basis(t) = shares_reported(t) x F, where F = product of ALL entries in the symbol s fetched splits map dated strictly AFTER the period_end of the year-t share fact used for that row (the R0-CORRECTED F rule applied to shares; spinoff ratios included). This keeps Appendix A faithful (the deflator is still the year-t share count, expressed on a consistent basis) and makes per-share magnitudes comparable across years, so the pooled regression fits one scale (BLOCKER 2 fix).",
+    "price_leg": "Prices stay today-basis as fetched (Yahoo v8 chart split-adjusted closes). NO conversion is applied anywhere: error scaling divides by the today-basis close on or before June 30 of the origin year (10-trading-day tolerance). The shares leg and the price leg are on the same basis by construction.",
+    "share_fact_selection": "Year-t shares = the EDGAR share fact (us-gaap CommonStockSharesOutstanding) with date within [period_end - 183d, period_end + 90d], filed <= origin for pool rows and filed <= origin for the live forecast row, closest date to period_end, ties latest date (ISSUE 8: per base year, never an origin-wide snapshot). A firm-year without such a fact is excluded and counted.",
+    "unit_consistency_assertions_gate": [
+      "Premise checks (series IS adjusted): split-adjusted close shows no jump > 15% across AAPL 2020-08-31 and NVDA 2021-07-20 / 2024-06-10 (an unadjusted series jumps 50-90% at these events; normal daily moves are ~2% for these names), and the fetched splits maps contain those entries",
+      "ABSOLUTE reference (catches inversion): AAPL close on 2019-06-28 as stored is within 2% of 49.48 (today-basis) AND within 2% of 197.9 after multiplying by the post-origin factor 4 - a divide-by-F implementation would show ~12.4 and fail (ISSUE 9)",
+      "Definitional identity, tolerance-free and checked on EVERY forecast row: aligned_dependent(t+tau) x shares_basis(t) == raw total earnings E_(t+tau) to relative 1e-9; and shares_basis(t)/shares_reported(t) == F computed from the splits map (catches any basis error, ISSUE 9)",
+      "Coverage floor: price-covered share of the universe >= 0.95, else hard-fail the run",
+      "FYE guard execution: count of April-June-FYE firms and count of guard violations (such a firm using a base year ending after March 31 of the origin year at a June-30 origin); violations must be zero"
+    ]
+  },
+  "models_frozen": {
+    "RW": "eps_forecast(t+tau) = eps_t. Baseline 1.",
+    "EP": "eps(t+tau) = b0 + b1*NegE_t + b2*eps_t + b3*(NegE_t*eps_t) + e. Baseline 2.",
+    "RI": "eps(t+tau) = c0 + c1*NegE_t + c2*eps_t + c3*(NegE_t*eps_t) + c4*bps_t + c5*tacc_t + e. Primary.",
+    "expected_signs": "RI: c2>0, c4>0, c3<0, c5<0. Reported, not enforced.",
+    "hvz_note": "Not implemented (directive names RW+EP). Declared.",
+    "estimation": "Pooled OLS per tau in {1,2,3}, 10-year trailing pool, firm-year rows with all regressors available; forecast requires non-missing regressors at t; missing TACC -> 0 flagged (paper).",
+    "pool_definition": "ISSUES 4+10 resolved: for origin June-30 of year Y and horizon tau, base fiscal years are those with period_end between April 1 of (Y-tau-10) and March 31 of (Y-tau) inclusive - the paper s own per-horizon shift (base-year labels Y-tau-9..Y-tau (ten FYE-convention years), so every tau keeps ten years of pairs) - and a pair (t, t+tau) enters the pool only if BOTH the base and the dependent annual facts are filed <= June-30 of Y. Self-enforcing: any fact with filed > origin enters nothing in estimation. The live forecast uses base t* = latest usable fiscal year at origin (FYE guard), with the realized dependent fetched under the evaluation cutoff 2026-08-07 as an outcome only.",
+    "fye_rule": "Unchanged from v1 (paper line 454 restatement, cleared by red team).",
+    "winsorization": "All continuous variables winsorized at 1/99 within each fiscal year from the estimation pool (paper). ISSUE 6 resolved: forecast rows at fiscal year t outside the pool's year range take the boundaries of the most recent pool year (declared rule; boundaries never use data filed after the origin)."
+  },
+  "variable_definitions_edgar_mapping": {
+    "earnings_E": "Primary IncomeLossFromContinuingOperationsNetOfTaxAttributableToReportingEntity (re-fetched into all caches pre-run), fallback NetIncomeLoss, recorded per firm-year. Declared deviation: SPI not separable on EDGAR; the primary concept is earnings before extraordinary items, one step from the paper's IB-SPI; fallback rows are bottom-line and two steps - their share is reported.",
+    "spi_deviation_handling": "ISSUE 5 resolved by advance declaration: the gate is measured on a construction that includes special items (the paper footnote covers among-model rank order, not RI-vs-RW). Mitigation pre-committed: report the gate on (i) full sample, (ii) loss-firm subsample, (iii) large-unusual-items-excluded subsample, where unusual = RestructuringCharges + GoodwillImpairmentLoss + AssetImpairmentLoss (any present) exceeding 1% of total assets. RW's structural exposure to SPI (forecast = E_t carried at full weight) is stated in the artifact.",
+    "book_B": "StockholdersEquity - PreferredStockValue (preferred missing -> 0), / year-t shares.",
+    "shares": "Year-t shares = dei:EntityCommonStockSharesOutstanding facts only (SEC cover-page count, always raw shares), earliest-filed-per-date. us-gaap:CommonStockSharesOutstanding is NOT used for the deflator because some filers report it in millions while it is tagged as shares (measured PEG 504 vs dei 497,000,000; RTX/SPG/VTRS 100x-1e6x). Firms with no dei share fact are excluded from per-share rows and counted. Selection per unit_basis_precommitted.share_fact_selection.",
+    "tacc": "Telescoped Richardson accruals with the L = A - E substitution (red-team fix b): TACC_t = [ (SE - CHE + IVST - PSTK)_t - (SE - CHE + IVST - PSTK)_{t-1} ] / shares_basis(t), where SE = StockholdersEquity, CHE = CashAndCashEquivalentsAtCarryingValue, IVST = ShortTermInvestments (fallback MarketableSecuritiesCurrent, missing -> 0), PSTK = PreferredStockValue (missing -> 0). Assets and Liabilities drop out; declared approximation error = dNCI (parent-only SE vs total equity), small. Missing TACC -> 0 flagged (paper).",
+    "fact_selection": "Annual facts only: form in {10-K, 10-K/A}, fp=FY; PIT: filed <= as-of, earliest filed per period (e2 rule, red-team cleared).",
+    "NegE": "indicator E_t < 0",
+    "annual_identification": "Annual facts = DURATION-concept facts with form in (10-K,10-K/A) and duration (end-start) in [300,400] days. Form/fp alone is unreliable because SEC tags quarterly income-statement facts as form=10-K fp=FY. Balance-sheet concepts are instant and matched to annual earnings period-ends by +/-45 day proximity.",
+    "shares_outlier_rejection": "Each firm's dei share facts are split-adjusted to today's basis (shBasis = val x product(splits after the fact date)); the median shBasis across the firm's share facts is the reference. Only share facts with shBasis in [median/10, median*10] are eligible for selection (sharesAt). This rejects unit-scaling corruption (e.g. RMD 1.457e5 vs 1.457e8) while keeping genuine buyback/issuance drift and split-era facts (which are comparable once split-adjusted)."
+  },
+  "universe_precommitted": "Unchanged from v1.1: slickcharts S&P500 (2026-08-02, 503) union rim-dow 30; symbol->CIK via company_tickers.json with dot-to-dash normalization and the AEP fallback; survivorship bound stated; minimum pool 300 firm-years; all industries; SIC from SEC submissions metadata (fetch stage 2 already run). MANDATED DECLARATION (red-team fh-058): the validation artifact must report the effective universe - symbols fetched, symbols surviving each tag requirement, retention rate, and the SIC distribution of the dropped set versus the kept set. The result is a statement about the retained subset, not the S&P500.",
+  "sample_precommitted": "Unchanged origins (June 30 of 2019-2023) and taus {1,2,3}. tau=3 evaluated identically to tau 1/2: measured actuals coverage is flat 91-92% at every (origin,tau) under the 2026-08-07 cutoff, so no thin-actuals caveat applies (prior caveat deleted as contradicted by measurement). No imputation anywhere. Gate remains tau 1+2 as frozen.",
+  "price_source": {
+    "source": "Yahoo v8 chart API per r1-criteria-v1.1 (repo precedent), fetched with events=splits; the splits maps serve ONLY the shares-leg F computation. Stooq remains unusable (PoW challenge) - not retried.",
+    "scaling": "Forecast error = actual - forecast (per shares_basis(t)), scaled by the today-basis close: last close on/before June 30 of the origin year, 10-trading-day tolerance. Missing price -> symbol excluded from price-scaled metrics and counted; coverage floor 0.95 hard-fails the run."
+  },
+  "validation_design": {
+    "metrics_per_tau": [
+      "mean signed bias (price-scaled)",
+      "MAE (price-scaled)",
+      "median AE (price-scaled)",
+      "count",
+      "loss-firm share"
+    ],
+    "buckets": [
+      "loss firms",
+      "size terciles by total assets (declared proxy)",
+      "10 SIC groups"
+    ],
+    "subsamples": [
+      "full",
+      "loss-only",
+      "large-unusual-excluded (per spi_deviation_handling)"
+    ],
+    "comparisons": "RI vs RW, RI vs EP, EP vs RW on every metric/bucket/subsample",
+    "necessary_and_sufficient_declared": {
+      "necessary_to_proceed_to_R2": "RI price-scaled MAE < RW price-scaled MAE at BOTH tau=1 and tau=2 on the FULL sample",
+      "sufficient_to_proceed_to_R2": "the necessary condition alone",
+      "model_selection_for_R2_input": "whichever of RI/EP has lower average price-scaled MAE across tau=1..3 (full sample) is primary for R2; the other is sensitivity",
+      "no_veto_legs": "No additional leg can veto the gate; subsample and bucket results are diagnostics and must be reported in full regardless of direction (red-team fh-023/fh-036 asks)",
+      "if_ri_fails_rw": "Stop; do not embed these forecasts in R2; report cause. Recovery proceeds to the data decision (C) or retirement (D) on that evidence (directive section 5.3)."
+    },
+    "coefficient_diagnostics": "Per-tau pooled coefficients with OLS se and expected-sign comparison; inversions reported, not gated.",
+    "artifact_fields_mandated": [
+      "executed_assertions: AAPL reference values as computed + identity-check pass/fail counts over every forecast row",
+      "pools: per-(origin,tau) pool size with voided status",
+      "forecast_row_counts: per-(origin,tau) rows and priced share",
+      "tau3_origin2023_actuals: count of rows with realized actuals",
+      "coefficients: per-(origin,tau) EP and RI betas with expected-sign flags (c2>0, c4>0, c3<0, c5<0)",
+      "fye_guard: April-June-FYE firm count and violation count (must be 0)",
+      "loss_bucket_caveat: label-2021 loss share stated beside the loss-only subsample results"
+    ],
+    "gate_interpretation_precommitted": {
+      "source": "Pre-run decision on red-team fh-20260807-076 (urgent), option (a) adopted with refined FAIL routing. Paper basis (Li-Mohanram Table 2 Panel A, committed text): RI beats RW decisively only at t+1 (gap 0.015, t=4.10); at t+2/t+3 the gaps are 3bp/2bp with t=1.19/0.37 - insignificant. Panel D: improvement concentrated in small firms (0.056/0.153) and no-analyst-coverage firms; large-firm gaps 0.000/0.002. Our universe (current S&P500 union Dow 30) is the large-cap universally-covered extreme where the paper reports the models add essentially nothing.",
+      "rule_pass": "Gate passes (RI MAE < RW MAE at tau 1 AND 2, full sample) -> proceed to R2 with the selected primary model.",
+      "rule_fail": "Gate FAIL does NOT by itself route to stop/retirement/data-decision: a failure on this large-cap universe is the outcome the source paper predicts regardless of implementation quality, and recording it as a model verdict would repeat the split-basis error class one level up (universe artifact as model verdict).",
+      "fail_informative_reads": [
+        "per size-tercile RI-vs-RW MAE gaps (pre-committed bucket): a monotone pattern with the smallest tercile closest to zero or negative is universe-consistent",
+        "RI-vs-EP comparison (drives model selection, unaffected by the RW leg)",
+        "coefficient sign rates across pools (c2>0, c3<0, c4>0, c5<0): the sanity benchmark"
+      ],
+      "fail_stops_only_on": "broken-build signature = RI loses to RW at tau=1 on the full sample AND loses to RW at tau=1 in the smallest size tercile AND coefficient signs inverted in the majority of pools. Only that combination routes to stop-do-not-embed and a cause report (owner directive 5.3: stop when RI is CLEARLY worse). A marginal large-cap loss is the paper-predicted null, not clearly worse.",
+      "fail_proceed_path": "Any other FAIL: proceed to R2 with the forecast layer flagged 'accuracy indistinguishable from RW at large-cap scale, as the source paper predicts; embedding proceeds because the canonical question is the valuation construction, not beating RW on large caps'. The flag is carried into R2 criteria and the final decision.",
+      "scope_declaration": "Everything the gate says is a statement about S&P500-scale firms on this PIT universe; it never reads as a verdict on the mechanical-forecast approach in general."
+    },
+    "plausibility_guard": "Forecast rows with |eps_t|/price > 1 OR |actual|/price > 1 are rejected (an earnings yield above 100% is economically implausible for this universe) and counted with their symbols. This is a backstop against any residual per-share corruption after shares_outlier_rejection.",
+    "gate_reporting": "The gate is reported on BOTH mean AE (MAE, primary) and median AE beside it, per red-team fh-20260807-082: the source paper's RW-RI median comparison is 0.001/-0.001/-0.003 at t+1/t+2/t+3, so reading only the mean overstates RI's standing at longer horizons."
+  },
+  "prohibitions": [
+    "No universe, window, metric, scaling, basis rule or source change after results are observed.",
+    "No paid data, account creation, login (directive sections 3, 8).",
+    "No Oracle data in the deployable path.",
+    "No public number republication; quarantine untouched.",
+    "Criteria and receipt commit in a separate earlier commit than any result."
+  ],
+  "planned_result_paths": [
+    "data/computed/feno-rim-recovery/r1-edgar-panel.json",
+    "data/computed/feno-rim-recovery/RIM_MECHANICAL_FORECAST_VALIDATION.json"
+  ],
+  "planned_spec_doc": "data/computed/feno-rim-recovery/RIM_MECHANICAL_FORECAST_SPEC.md (deliverable 12.2, written from this criteria after the run)",
+  "amendment_reason": "Pre-results data-integrity amendment. Two corruption classes found in the panel: (1) quarterly income-statement facts were passing the form/fp annual filter because SEC tags quarterly facts form=10-K fp=FY - annual facts are now identified by DURATION (~12 months, [300,400] days) + 10-K form; (2) individual dei share facts are corrupt in units (RMD 2021-08-12 reports 1.457e5 shares vs the true 1.457e8, a 1000x thousands-scaling error), inflating per-share values ~1000x for affected rows. Red-team fh-20260807-082 proposed the guards adopted here. NO statistical choice moves; the gate thresholds, pool window, TACC substitution, and FAIL interpretation are all unchanged from v2.5."
+}
