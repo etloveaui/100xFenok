@@ -1091,7 +1091,15 @@ def main(argv=None) -> None:
     if args.tickers is not None and not target_tickers:
         raise SystemExit("--tickers requires at least one ticker")
 
-    yf_files = {p.stem: p for p in (DATA / "yf" / "finance").glob("*.json") if p.name != "_summary.json"}
+    # fetch-yf-finance.py writes a sibling {TICKER}.unadjusted.json beside {TICKER}.json for the
+    # unadjusted-history lane. Path.stem on that file is "AAPL.unadjusted", so a bare glob invents
+    # a ticker that no contract can satisfy — the payload carries the mixed-case stem while the
+    # validator demands ticker.upper(). Exclude the sibling lane rather than relaxing the contract.
+    yf_files = {
+        p.stem: p
+        for p in (DATA / "yf" / "finance").glob("*.json")
+        if p.name != "_summary.json" and not p.name.endswith(".unadjusted.json")
+    }
     sa_etf_files = {p.stem: p for p in (DATA / "stockanalysis" / "etfs").glob("*.json")}
     sa_stock_files = {p.stem: p for p in (DATA / "stockanalysis" / "stocks").glob("*.json")}
     sa_financial_files = {p.stem: p for p in (DATA / "stockanalysis" / "financials").glob("*.json")}
