@@ -1,0 +1,68 @@
+{
+  "schema_version": "feno_rim_p1_freeze_receipt.v2",
+  "phase": "P1",
+  "criteria_file": "data/computed/feno-rim-recovery/p1-criteria-v2.json",
+  "criteria_sha256": "da2b18ddb55a30e332858959d05c31ca244c7f03799ce99cf90d3a6461193490",
+  "contract_file": "data/computed/feno-rim-recovery/FENO_RIM_FORWARD_BOOK_CONTRACT.md",
+  "contract_sha256": "b55458fd1178ccc0ab4009e7e791df0b534c705d5c742d98f952554922d8ad98",
+  "supersedes": "p1-criteria.json (362c62a0...), committed 251f4bcc21",
+  "repo_head_at_freeze": "2378773885025a546ffb74a7b3f8d333e5a8e756",
+  "frozen_at_utc": "2026-08-08T05:35:00Z",
+  "research_only": true,
+
+  "pre_registration_status": "WEAKER THAN v1 — READ THIS BEFORE USING ANY v2 RESULT",
+
+  "honest_disclosure": {
+    "what_happened": "v1 was frozen at 251f4bcc21 with all four result paths asserted absent. The worker then ran the full phase against v1 and wrote all four deliverables to disk at 2026-08-08T05:24Z, and reported its numbers to me. I had begun drafting v2 before that report arrived — it was triggered by the worker's script header, not by its results — but v2 was finalised AFTER the v1 run's numbers were visible to me. I cannot claim v2 was written in ignorance of them and I do not claim it.",
+    "what_i_saw_before_finalising_v2": "core_weight 0.2696 / 0.2693 / 0.3302 / 0.3334 / 0.2345 across the five binding origins, and payout stability holding at 0.0209 / 0.0884 / 0.0414 / 0.0095.",
+    "why_this_is_disclosed_rather_than_hidden": "DEC-290's recorded procedural defect was a criteria freeze that could not be proven to precede its result. Concealing a weaker freeze would repeat it in a worse form.",
+    "why_v2_cannot_be_output_targeting": "Every v2 change tightens or exposes; none loosens. The bands 0.60 and 0.3333 and the 15-point stability bar are byte-identical to v1. v2 additionally requires book-path agreement under BOTH the RI and EP forecasts, which can only REDUCE core_weight relative to v1's single-model rule. Under the numbers quoted above, v1 already yields FORWARD_BOOK_NOT_DEFENSIBLE because 0.2696 is below the 0.3333 PARTIAL floor at the 2019 origin. v2 cannot rescue that verdict and can only make it more certain. No v2 change can produce a friendlier outcome than the one I had already seen.",
+    "residual_risk_i_will_not_argue_away": "The Path B repair described below has an unknown directional effect on core_weight. If the repaired run lands near a band, the fact that I had seen a prior run's numbers is a real weakness in the record, and the adjudication must say so rather than treat v2 as equivalent in standing to v1."
+  },
+
+  "result_paths_state_at_this_freeze": {
+    "data/computed/feno-rim-recovery/FENO_RIM_FORWARD_BOOK_PATHS.json": "ABSENT — the v1 run's copy was VOIDED and removed from the working tree; see void_run below",
+    "data/computed/feno-rim-recovery/FENO_RIM_BOOK_PATH_RECONCILIATION.json": "ABSENT — voided and removed, same reason",
+    "data/computed/feno-rim-recovery/FENO_RIM_PIT_SPX_ROSTER.json": "PRESENT and RETAINED — not affected by either defect; pending independent verification",
+    "data/computed/feno-rim-recovery/FENO_RIM_PAYOUT_NORMALIZATION.json": "PRESENT and RETAINED — not affected by either defect; handler spot-checks agree"
+  },
+
+  "void_run": {
+    "run_written_at_utc": "2026-08-08T05:17Z to 05:24Z",
+    "verdict": "VOID. Not a measurement. Does not enter the record and is not comparable to any later run.",
+    "rule_applied": "Broken statistics do not enter the record as measurements. Fix and rerun only the broken part.",
+    "preserved_at": "_tmp/handoff/p1-run/VOID-run-20260808-1424/ — uncommitted, kept so both defects stay reproducible",
+    "sha256_of_voided_files": {
+      "FENO_RIM_FORWARD_BOOK_PATHS.json": "0dbc0741dfdcc550e9e3309ace79e49f1064b9c6419185bc4d2174267e0563ea",
+      "FENO_RIM_BOOK_PATH_RECONCILIATION.json": "dcfa0fd0c82338ece0cfb77f28178e18ef53ba20aeb2280c290ab688b97219d1",
+      "FENO_RIM_PAYOUT_NORMALIZATION.json": "5cb8caa07d1f4cd56f4d639a40d294468e6caeddaac83a123f412698056790c8",
+      "FENO_RIM_PIT_SPX_ROSTER.json": "679c00bd23eb251b1831f4795b9ff071bc55d973d99492121c52913fdc20e8ac"
+    },
+
+    "defect_1_opening_book_is_quarterly": {
+      "frozen_rule_violated": "p1-criteria.json point_in_time_rules.form_rule — 'Annual facts only, from form 10-K or 10-K/A'",
+      "what_the_code_did": "_tmp/handoff/p1-run/compute_p12_p13.py defines annual_map() with a form filter and instant_map() WITHOUT one. get_book() calls instant_map(), so the opening book is simply the latest instant fact filed on or before the origin, whatever form it came from.",
+      "evidence": "MMM at the 2019-06-30 origin took StockholdersEquity 9,703,000,000 at period end 2019-03-31, accn 0001558370-19-003408. That fact is form 10-Q, fy 2019, fp Q1, filed 2019-04-26 — confirmed by reading the companyfacts entry directly.",
+      "effect": "Path A's B_A(0) and every quantity derived from it, including g_A and the cross-check state, are computed from an opening book the criteria do not admit."
+    },
+
+    "defect_2_path_b_growth_rate_is_quarterly": {
+      "frozen_rule_violated": "p1-criteria.json path_b_empirical_book_growth.g_B_definition.window — 'the most recent 6 annual book observations with filed <= t0, giving up to 5 growth rates'",
+      "what_the_code_did": "The Path B window iterates instant_map() over StockholdersEquity, which carries no form filter, and takes the 6 most recent PERIOD ENDS. For a filer reporting equity quarterly those six ends span about fifteen months, and each consecutive ratio is a QUARTERLY growth rate. The median of five quarterly rates is then applied as an ANNUAL rate in B_B(k) = B_B(k-1) * (1 + g_B) for k = 1..3.",
+      "evidence": "MMM at the 2019-06-30 origin: the six most recent instant observations are 2019-03-31, 2018-12-31, 2018-09-30, 2018-06-30, 2018-03-31 and 2017-12-31 — five of them 10-Q. The median of their consecutive growth rates is -0.044106, matching the worker's reported g_B of -0.044106 to six decimal places. The handler's independent annual-only recomputation over 2013-12-31 through 2018-12-31 gives -0.128156.",
+      "effect": "g_B is understated in magnitude by roughly a factor of three for this firm, and by an amount that varies per firm with its reporting cadence and its within-year book pattern. Every cross-check state, and therefore core_weight, single_only, disagree and unavailable at every origin, is computed from a wrong g_B.",
+      "why_this_is_not_a_criteria_ambiguity": "The criteria say 'annual'. This is an implementation defect against an unambiguous frozen rule, not a phrase I left open. It is recorded here as the worker's defect, distinct from the three defects of mine that v2 corrects."
+    }
+  },
+
+  "what_must_be_rerun": [
+    "P1.2 Path A and Path B in full, under v2",
+    "P1.3 reconciliation in full, under v2"
+  ],
+  "what_must_not_be_rerun": [
+    "P1.0 roster — unaffected by both defects; verify, do not recompute",
+    "P1.1 payout — its extraction runs through annual_map(), which carries the form filter; handler spot-checks on AAP and MMM reproduce it exactly. Verify, do not recompute."
+  ],
+
+  "handler_verification_that_found_this": "redteam-scripts/p1_handler_independent.py, committed at 2378773885 before any worker result existed. It disagreed with the worker on g_B for MMM (-0.128156 against -0.044106) and the disagreement was traced to the form filter rather than assumed to be rounding."
+}

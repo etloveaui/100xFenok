@@ -1,0 +1,281 @@
+{
+  "schema_version": "feno_rim_p1_criteria.v2",
+  "phase": "P1",
+  "gate": "Sustainable payout / forward-book contract — Dual Forward-Book Paths",
+  "research_only": true,
+  "frozen_before_any_result": true,
+  "supersedes": "p1-criteria.json (sha256 362c62a08aa2d5d1b0f2f28ca866c0858793791b405d0787465a7b0b9fec95a7, committed 251f4bcc21)",
+  "v1_preserved_unedited": true,
+  "handler": "cc (Opus) — sole owner of criteria and verdict. Worker computes; worker never edits this file.",
+  "mandate": "FENO_RIM_YOO_SUCCESSOR_NEXT_EXECUTION_OPUS_DEEPSEEK.md",
+  "mandate_sections": ["0", "2", "4", "5", "7.3", "12", "13"],
+
+  "why_v2_exists": {
+    "trigger": "The worker began P1.2 with a script header reading 'FNI = ri forecast, primary model per engine gate'. I stopped it. Reviewing the clause it was resolving, I found three defects in v1 — one of them a mandate §4 stop condition that v1 would have walked straight into.",
+    "no_result_existed": "No P1 result file existed on disk when this file was written. The four result paths are re-asserted absent in p1-freeze-receipt-v2.json.",
+    "direction_of_every_change": "Every change below makes the verdict HARDER to reach or exposes a limit v1 would have hidden. No threshold moves. The 0.60 and 0.3333 bands and the 15-point stability bar are carried over from v1 unchanged.",
+
+    "defect_1_share_basis": {
+      "what_v1_said": "Path A added FNI, described as 'the Li-Mohanram mechanical forecast', to Book_PIT taken as us-gaap:StockholdersEquity — a total-dollar quantity.",
+      "what_is_actually_true": "r1-edgar-panel-ext.json states its rows are 'forecast-level rows (per-share, year-t basis)'. v1 therefore added a per-share earnings figure to a total-dollar book.",
+      "severity": "This is the mandate §4 stop condition 'data unit / share-basis'. v1 would have produced a forward book wrong by a factor of the share count at every firm.",
+      "resolution": "See share_basis below. Everything is carried on a TOTAL-DOLLAR basis, because Path B's book series is natively total-dollar and P3 aggregates as sum of V over sum of market cap."
+    },
+
+    "defect_2_ri_ep_not_named": {
+      "what_v1_said": "'the Li-Mohanram mechanical forecast at tau k', naming neither RI nor EP.",
+      "what_the_worker_did": "Selected RI, citing the R1 engine gate. The worker was not inventing — R1 pre-registered 'whichever of RI/EP has lower average price-scaled MAE across tau 1..3 is primary; the other is sensitivity', and that rule selected RI. The defect is mine: v1 did not name the rule it was relying on.",
+      "why_naming_it_is_not_enough": "The R1 gate's own margin is RI 0.03575813 against EP 0.03589537 average price-scaled MAE — a relative difference of 0.4 percent. That is a tie, not a selection. Mandate §7.3 lists 'RI forecast / EP forecast' as an axis of the preregistered uncertainty sweep, and a 0.4 percent margin is exactly why.",
+      "resolution": "Both are computed. See forecast_input below."
+    },
+
+    "defect_3_forecast_universe_ceiling": {
+      "what_v1_assumed": "That a FEPS strip is a per-firm data availability question.",
+      "what_is_actually_true": "FENO_RIM_FORWARD_BOOK_PATH.json records that the committed engine's forecasts are 'current-universe only' and that PIT per-origin FEPS are absent from the repo. The R1 universe is the slickcharts S&P 500 snapshot of 2026-08-02 union rim-dow 30. Firms that left the index before that snapshot have no forecast at any origin.",
+      "consequence": "Path A cannot cover departed firms. Since B2-A recovered those firms specifically so the universe would stop being survivors-only, Path A is structurally survivor-biased while Path B is not. core_weight is capped from above by forecast-universe coverage, so a low core_weight may be a forecast-coverage failure rather than a book-path disagreement.",
+      "resolution": "The ceiling is measured and reported, and the verdict report must decompose the shortfall. See forecast_universe_ceiling below. The verdict thresholds do NOT move to accommodate it."
+    }
+  },
+
+  "north_star": "FENO_SUSTAINABLE_YOO_SUCCESSOR_RIM. P1 does not touch ICC, does not extend to another index, does not build UI, does not release anything public.",
+
+  "inherited_state": {
+    "B1": "KE_CORE_RANGE_ONLY (ce50b8529d). Ke is a band, median width 4.05-5.17pp. No same-date price in any input.",
+    "B2_A": "PIT rosters reconstructed for seven origins, zero unresolved (DEC-294) — as an ANALYSIS. No per-origin roster artifact is committed; see prerequisite_p1_0.",
+    "B2_B": "PAYOUT_GROWTH_NOT_DEFENSIBLE (7bb632c37f). Its admission gate excluded 311-360 firms per origin in B3. P1 removes that gate by mandate §5.2/§5.4.",
+    "B3": "YOO_SUCCESSOR_INCONCLUSIVE (a23e78d977). Dominant exclusion reason was NOT_ADMITTED_B2B.",
+    "R1_gate": "necessary_met = false. RI does NOT beat a random walk at tau 1 (RI MAE 0.03129655, RW 0.03023512). R1 pre-committed that a large-cap gate failure is the source-paper-predicted outcome and does not stop the pipeline. It is recorded here because it bears directly on how a Path A / Path B disagreement should be read: the earnings input to Path A carries little information beyond a random walk in this universe.",
+    "ICC": "KEEP_INTERNAL_SHADOW. Never a discount rate. Not re-litigated in P1.",
+    "public": "PUBLIC_ROWS = [] and PUBLIC_STATE = MODEL_REVALIDATION hold throughout P1."
+  },
+
+  "share_basis": {
+    "rule": "The entire forward book, both paths, is carried in TOTAL DOLLARS.",
+    "rationale": "Path B's input is the total-dollar book series from XBRL. P3 aggregates as sum of firm value over sum of market cap. Converting the book to a per-share basis would require a share path, and a share path is a second forecast nobody has preregistered.",
+    "S_definition": "S(i,t0) = the r1 panel's shares_basis for firm i at origin t0 — dei:EntityCommonStockSharesOutstanding facts only, split-adjusted to today's basis by the product of splits after the fact date, selected by the r1 unit_basis_precommitted share_fact_selection rule with its median/10 to median*10 eligibility band.",
+    "S_is_shared": "The SAME S(i,t0) is used for the FEPS-to-total conversion AND for the index weight denominator. They may not be computed by two different routes. Record S per firm-origin with the fact date and the split factor applied.",
+    "S_held_fixed": "S(i,t0) is held fixed across k = 1..3. Buybacks reduce book through the payout term and do NOT additionally reduce the share count. This is a declared simplification, not an estimate. Consequence: the forward book is a total-equity path, and any per-share statement derived from it in P3 must divide by S(i,t0), never by a forecast share count.",
+    "us_gaap_shares_prohibited": "us-gaap:CommonStockSharesOutstanding is NOT used for S. R1 measured filers reporting it in millions while tagging it as shares (PEG 504 against dei 497,000,000; RTX, SPG, VTRS off by 100x to 1e6x). This overrides the shares_concept_precedence list in v1, which is withdrawn.",
+    "missing_S": "A firm with no eligible dei share fact at t0 is PATH_A_UNAVAILABLE with reason NO_SHARE_BASIS and is excluded from the weight denominator D(t0). It may still have Path B, whose inputs are total-dollar and need no share count."
+  },
+
+  "forecast_input": {
+    "source": "data/computed/feno-rim-recovery/r1-edgar-panel-ext.json, columns ri and ep, rows keyed by sym, origin and tau. Per-share, year-t basis.",
+    "conversion": "FNI_m(i,k) = FEPS_m(i,k) * S(i,t0), for m in {RI, EP} and k = 1..3",
+    "both_models_computed": "Path A is computed TWICE, once with m = RI and once with m = EP. Neither is discarded.",
+    "primary": "RI, by the R1 preregistered rule 'lower average price-scaled MAE across tau 1..3'. Recorded margin: RI 0.03575813 against EP 0.03589537, a relative difference of 0.4 percent.",
+    "sensitivity": "EP.",
+    "prohibited": "P1 does not create, tune, extend, blend or re-fit any forecast. It does not use the rw column. It does not substitute Global Scouter current forward estimates for a historical forecast at any origin."
+  },
+
+  "forecast_universe_ceiling": {
+    "measured_fact": "The committed engine ran on the current-universe roster (slickcharts S&P 500 snapshot 2026-08-02, 503 symbols, union rim-dow 30). Firms absent from that snapshot have no FEPS row at any origin.",
+    "required_metric": "forecast_universe_coverage(t0) = sum of weight_i over roster members at t0 having a complete tau 1..3 strip for BOTH RI and EP, divided by the same weight denominator D(t0) used everywhere else.",
+    "hard_relation": "core_weight(t0) <= forecast_universe_coverage(t0) by construction, because BOOK_PATH_AGREES requires Path A, which requires a forecast.",
+    "mandatory_decomposition": "Wherever core_weight falls short of a verdict band, the report must state the split between the two causes: weight that had no forecast at all (ceiling), and weight that had both paths but did not agree (genuine disagreement). A shortfall reported without this split is not a P1 result.",
+    "not_a_threshold_change": "This decomposition changes what must be REPORTED. It changes no band. If the ceiling makes DEFENSIBLE unreachable, the verdict is whatever the numbers give, and the ceiling becomes a P2 finding.",
+    "reason_code": "Firms failing only for this reason carry PATH_A_UNAVAILABLE with reason NO_PIT_FORECAST_UNIVERSE, counted and weighted separately from every other Path A unavailability reason."
+  },
+
+  "prerequisite_p1_0": {
+    "defect_found_at_freeze_time": "The seven per-origin S&P 500 PIT rosters are not committed anywhere in the repository. FENO_RIM_CLEAN_SURPLUS_BRIDGE.json carries a 628-symbol UNION evaluated identically at every origin, with no per-origin membership flag. The G5 shadow shard's universe is the 334-symbol R2 ICC universe at origin 2023, not a roster. Nothing on the SSD holds one.",
+    "why_this_blocks_p1": "The index-weight denominator is defined over PIT roster members. Without the roster artifact the denominator cannot be computed and the P1 verdict cannot be evaluated.",
+    "why_this_is_not_reopening_a_closed_decision": "DEC-294's finding is not being re-decided. The reconstruction result is being persisted as a file so that it is reproducible and usable by P1 and P3. If re-materialisation contradicts DEC-294 that contradiction is reported, not silently adopted.",
+    "required_output": "data/computed/feno-rim-recovery/FENO_RIM_PIT_SPX_ROSTER.json",
+    "required_shape": "{ schema_version, method, origins: { '<YYYY-MM-DD>': { members: [ { symbol, cik, name, added_on, removed_on, evidence: { source, url_or_accn, retrieved_at } } ], count, unresolved: [] } } }",
+    "acceptance": "Every origin's count must be stated. unresolved must be an explicit list, empty or not. A roster whose count differs from the 505/505/505/503/503/503/503 recorded in FENO_RIM_SUSTAINABLE_PAYOUT_CONTRACT.md must report the difference and its cause rather than being adjusted to match."
+  },
+
+  "origins": {
+    "all": ["2019-06-30", "2020-06-30", "2021-06-30", "2022-06-30", "2023-06-30", "2024-06-30", "2025-06-30"],
+    "verdict_binding": ["2019-06-30", "2020-06-30", "2021-06-30", "2022-06-30", "2023-06-30"],
+    "verdict_binding_rationale": "Path A requires a complete tau1-3 strip. Measured at freeze time from RIM_MECHANICAL_FORECAST_VALIDATION_EXT.json: 2024_tau3 has 14 rows against 394 at tau2, and 2025_tau2 has 16 rows against 405 at tau1, with 2025_tau3 absent. Repairing that collapse is P2's job. The two late origins are COMPUTED and REPORTED in P1 but do not bind the P1 verdict. P1 never claims seven-origin coverage."
+  },
+
+  "point_in_time_rules": {
+    "filing_cutoff": "Every accounting fact used at origin t0 must come from a filing whose filed date <= t0. The fact's own period end must also be <= t0.",
+    "form_rule": "Annual facts only, from form 10-K or 10-K/A, duration 300-400 days. The fp field is never used. When several filings report the same period, the latest filed <= t0 wins.",
+    "price_rule": "Last close on or before t0, today-basis split-adjusted, matching the r1 price leg. No same-date-forward price. No price after t0 in any P1 input.",
+    "prohibited": "Global Scouter current forward estimates may never be used as a historical point-in-time forecast. Current-survivor-only rosters are prohibited. Restated figures filed after t0 are prohibited even when more accurate."
+  },
+
+  "index_weight_definition": {
+    "formula": "weight_i(t0) = ( P_i(last close <= t0) * S(i,t0) ) / sum over j in D(t0) of the same product",
+    "denominator_set_D": "D(t0) = PIT roster members at t0 for which BOTH a price and an eligible S exist under the rules above.",
+    "shares": "S(i,t0) as defined in share_basis. The v1 shares_concept_precedence list is WITHDRAWN.",
+    "float_adjustment": "None. This is a proxy, and it is declared a proxy.",
+    "mandatory_companion_metric": "roster_marketcap_coverage(t0) = |D(t0)| / |PIT roster at t0|, reported at every origin.",
+    "why_the_denominator_changed_from_b2b": "B2-B's adjudication recorded, as a handler defect, that it froze 'index weight' with no measurement, so firms with no price enlarged the denominator while unable to enter the numerator — biasing coverage DOWNWARD exactly at origins carrying more departed names. P1 restricts the denominator to firms whose weight is measurable and publishes what left.",
+    "non_comparability_notice": "P1 coverage percentages are NOT comparable to B2-B's 39.6-63.1 percent. Any report placing them side by side without this notice is wrong."
+  },
+
+  "path_a_shareholder_payout_rollforward": {
+    "identity": "B_A_m(i,k) = B_A_m(i,k-1) + FNI_m(i,k) - Payout_m(i,k) + OEA(i,k), for k = 1..3 and m in {RI, EP}, with B_A_m(i,0) = Book_PIT(i,t0)",
+    "book_concept_precedence": ["us-gaap:StockholdersEquity", "us-gaap:StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest minus us-gaap:MinorityInterest"],
+    "book_precedence_rule": "Use the first that has a qualifying fact. When the second is used, the subtraction must be from the same accn. Record which was used.",
+    "OEA": "OEA(i,k) = 0 for all i,k. Other equity adjustment is NOT forecast. Its historical magnitude enters only the accounting-quality diagnostic. Setting it to zero is a declared simplification, not an estimate.",
+    "payout_rule": {
+      "when_FNI_positive": "Payout_m(i,k) = r_payout(i,t0) * FNI_m(i,k)",
+      "when_FNI_zero_or_negative": "Payout_m(i,k) = D_level(i,t0)",
+      "when_FNI_zero_or_negative_rationale": "A ratio applied to non-positive earnings is meaningless. Dividends are sticky across loss years while repurchases are not, so the level fallback uses dividends only. Frozen before any result and not revisited if it proves unfavourable.",
+      "D_level": "D_level(i,t0) = median over the payout window of CommonDividends(i,y), in TOTAL DOLLARS. If no dividend year exists, D_level = 0."
+    },
+    "r_payout_definition": {
+      "formula": "r_payout(i,t0) = clip( median_y( NSP(i,y) ) / median_y( NI(i,y) ), -0.5, 1.5 )",
+      "basis": "Computed in TOTAL DOLLARS. A ratio is basis-invariant, and total-dollar medians avoid the share-count noise a per-share construction would inject.",
+      "ratio_of_medians_not_median_of_ratios": "Frozen. Median of ratios explodes when a single year's NI approaches zero. The denominator median must be > 0; if it is <= 0 the firm ratio is undefined and the industry fallback applies.",
+      "NSP": "NSP(i,y) = CommonDividends(i,y) + ShareRepurchases(i,y) - ShareIssuance(i,y)",
+      "concepts": {
+        "CommonDividends": ["us-gaap:PaymentsOfDividendsCommonStock", "us-gaap:PaymentsOfDividends"],
+        "ShareRepurchases": ["us-gaap:PaymentsForRepurchaseOfCommonStock"],
+        "ShareIssuance": ["us-gaap:ProceedsFromIssuanceOfCommonStock"],
+        "NI": ["us-gaap:NetIncomeLoss"]
+      },
+      "NI_concept_note": "NetIncomeLoss is used here deliberately, NOT the r1 forecast target IncomeLossFromContinuingOperations... . r_payout is a payout POLICY ratio measured against the bottom line the firm actually earned. The forecast leg keeps its own r1 concept. Record both so the difference is visible.",
+      "absent_concept_rule": "An absent CommonDividends, ShareRepurchases or ShareIssuance fact for a year that HAS a NetIncomeLoss fact is treated as zero for that component, and the firm-year is flagged partial_components with the list of absent components. An absent NetIncomeLoss makes the firm-year unusable.",
+      "absent_as_zero_is_a_known_weakness": "B2-B recorded that absent-means-zero makes a firm that tags differently indistinguishable from a firm that genuinely paid nothing. P1 does not solve this. It makes it visible: partial_components counts and weights are reported per origin.",
+      "clip_bounds_rationale": "The upper bound 1.5 admits firms returning more than they earn, which is common and real. The lower bound -0.5 admits net issuers, whose book grows faster than earnings. Both are wide enough that clipping is an outlier control, not a modelling choice. Clipped firms are counted and reported.",
+      "payout_window": "The most recent 5 available annual firm-years with filed <= t0. Minimum 3. Fewer than 3 makes the firm ratio undefined.",
+      "SBC_and_tax_withholding": "Excluded from NSP. They belong to the equity bridge diagnostic under mandate §5.2, not to shareholder payout."
+    },
+    "industry_fallback": {
+      "trigger": "r_payout(i,t0) undefined — fewer than 3 usable firm-years, or median NI <= 0.",
+      "rule": "r_payout(i,t0) = median of defined r_payout over firms sharing firm i's Damodaran industry at t0, from FENO_RIM_SIC_TO_DAMODARAN_INDUSTRY_MAP.json.",
+      "minimum_peers": 5,
+      "second_fallback": "If the industry has fewer than 5 firms with a defined r_payout at t0, use the median of all defined r_payout at t0.",
+      "flag": "Every firm using a fallback is flagged PAYOUT_INDUSTRY_ANCHOR or PAYOUT_ALL_FIRM_ANCHOR and its weight reported per origin."
+    },
+    "availability": "Path A is AVAILABLE for firm i at t0 under model m only if Book_PIT(i,t0) > 0, S(i,t0) exists, a complete FEPS_m tau1-3 strip exists, and r_payout is defined by firm rule or fallback. Otherwise PATH_A_UNAVAILABLE with one of the reason codes: NO_PIT_FORECAST_UNIVERSE, INCOMPLETE_STRIP, NO_SHARE_BASIS, NONPOSITIVE_OPENING_BOOK, NO_PAYOUT_RATIO, NEGATIVE_TERMINAL_BOOK."
+  },
+
+  "path_b_empirical_book_growth": {
+    "purpose": "Roll book forward WITHOUT closing any accounting identity and WITHOUT using forecast earnings. Path B is independent of Path A by construction; that independence is the whole point of the cross-check.",
+    "formula": "B_B(i,k) = B_B(i,k-1) * (1 + g_B(i,t0)), for k = 1..3, with B_B(i,0) = Book_PIT(i,t0)",
+    "basis": "Total dollars, same as Path A and same opening book.",
+    "independence_hard_rule": "No column of r1-edgar-panel-ext.json may appear anywhere in the Path B computation. If a forecast quantity enters Path B, the cross-check is void — STOP and report.",
+    "g_B_definition": {
+      "formula": "g_B(i,t0) = median over available annual pairs of clip( Book(i,y)/Book(i,y-1) - 1, -0.50, +0.50 )",
+      "estimator_choice": "Median of annual growth rates, NOT CAGR. Frozen. A CAGR is determined by two endpoints and one restructuring year at either end sets the whole path.",
+      "window": "The most recent 6 annual book observations with filed <= t0, giving up to 5 growth rates.",
+      "minimum_growth_rates": 4,
+      "minimum_rationale": "4 growth rates require 5 clean annual observations. Below that the median is decided by one or two firm-years and is not a growth estimate.",
+      "non_positive_book_rule": "A pair is dropped if Book at either endpoint is <= 0. If dropping leaves fewer than 4 pairs, PATH_B_UNAVAILABLE.",
+      "winsorization": "Each annual growth rate is clipped to [-0.50, +0.50] BEFORE the median is taken. Frozen.",
+      "structural_break_flag": "If more than one growth rate in the window was clipped, flag STRUCTURAL_BREAK_SUSPECT. DIAGNOSTIC only; it does NOT exclude the firm. Its weight is reported per origin.",
+      "book_concept": "Same precedence as Path A. The same concept must be used for every year in a firm's window; if the precedence changes mid-window, flag CONCEPT_SWITCH and truncate the window to the longest single-concept run.",
+      "total_book_not_per_share": "Because the basis is total dollars, buybacks appear here as slower total book growth, exactly as they appear in Path A as a larger payout deduction. The two paths are therefore measuring the same quantity and are comparable."
+    },
+    "survivorship": "The book series must be drawn for every PIT roster member at t0 including firms that later left the index. Path B has no forecast dependency and therefore no current-universe ceiling — it is the only path that can cover departed names.",
+    "availability": "Path B is AVAILABLE for firm i at t0 only if Book_PIT(i,t0) > 0 and at least 4 clean growth rates exist. Otherwise PATH_B_UNAVAILABLE with a reason code."
+  },
+
+  "cross_check": {
+    "g_A_m": "g_A_m(i,t0) = ( B_A_m(i,3) / B_A_m(i,0) ) ^ (1/3) - 1, defined only when B_A_m(i,3) > 0 and B_A_m(i,0) > 0. When B_A_m(i,3) <= 0, PATH_A_UNAVAILABLE for that model with reason NEGATIVE_TERMINAL_BOOK.",
+    "g_B": "g_B(i,t0) as defined above.",
+    "flat_band": "|g| < 0.005 counts as sign 0. Sign 0 agrees with any sign, because a flat path contradicts neither direction. Frozen.",
+    "per_model_state": "For each m in {RI, EP}: state_m = AGREES when both paths available AND sign(g_A_m) == sign(g_B) under the flat band AND |g_A_m - g_B| <= 0.05; DISAGREES when both available and not that; SINGLE_ONLY when exactly one available; UNAVAILABLE when neither.",
+    "tolerance": "|g_A_m - g_B| <= 0.05, that is 5 annualised percentage points.",
+    "tolerance_rationale": "The independent Ke band from B1 is itself 4.05-5.17pp wide. A book-path gap narrower than the discount-rate uncertainty already carried into the valuation is not a contradiction the model can resolve. Set to the lower edge of that measured band, frozen before any P1 result.",
+    "combined_state": {
+      "BOOK_PATH_AGREES": "state_RI == AGREES AND state_EP == AGREES",
+      "FORECAST_PATH_SENSITIVE": "exactly one of state_RI, state_EP is AGREES",
+      "BOOK_PATH_DISAGREES": "both models available on Path A and neither state is AGREES",
+      "BOOK_PATH_SINGLE_ONLY": "Path B available and Path A unavailable under BOTH models, or Path A available under at least one model and Path B unavailable",
+      "BOOK_PATH_UNAVAILABLE": "neither path available under any model"
+    },
+    "why_agreement_must_hold_under_both": "The R1 gate separated RI from EP by 0.4 percent of MAE. A firm whose book path agrees under one forecast and contradicts under the other has not been shown to have an identified forward book — it has been shown to depend on a coin flip. Mandate §9 lists sign reversal under book-path choice as a FAIL condition; this is the same failure one level up, and it is counted rather than absorbed.",
+    "downstream_use": {
+      "BOOK_PATH_AGREES": "primary — enters the fair-value core in P3",
+      "FORECAST_PATH_SENSITIVE": "NOT in the core. Reported with its weight as an explicit sensitivity class.",
+      "BOOK_PATH_SINGLE_ONLY": "sensitivity only — never in the core aggregate, always reported with its weight",
+      "BOOK_PATH_DISAGREES": "excluded from core and public aggregate; weight reported as a coverage deduction",
+      "BOOK_PATH_UNAVAILABLE": "excluded; reason code counted"
+    }
+  },
+
+  "clean_surplus_bridge_demotion": {
+    "mandate": "§5.4 — the exact bridge stops being an admission gate and becomes an accounting-quality diagnostic.",
+    "rule": "No firm is excluded from P1 or P3 for failing the clean-surplus bridge. The B2-B ADMITTED / BRIDGE_FAIL status is carried forward as a label only.",
+    "diagnostic": "accounting_quality(i,t0) = HIGH when median_abs_bridge_error <= 0.02, LOW when > 0.02, UNKNOWN when the bridge could not be computed.",
+    "use": "accounting_quality LOW widens the firm's reported uncertainty in P3 and is cross-tabulated against BOOK_PATH_DISAGREES in P1. It never removes a firm."
+  },
+
+  "verdict_rules": {
+    "evaluated_over": "the five verdict-binding origins 2019-06-30 through 2023-06-30",
+    "core_weight": "core_weight(t0) = sum of weight_i over firms with combined state BOOK_PATH_AGREES at t0.",
+    "payout_stability": "stability holds when |median r_payout(t0) - median r_payout(t0-1)| <= 0.15 for every adjacent pair of verdict-binding origins, the median taken over firms with a FIRM-RULE r_payout only, since an industry anchor is stable by construction.",
+    "payout_stability_rationale": "B2-B measured single-year payout moves of 4.9 / 7.6 / 16.4 / 4.9 / 18.4 / 13.1 points against this same 15-point bar and two exceeded it. Multi-year normalisation is what is supposed to remove that swing. If the normalised ratio still moves more than 15 points between adjacent origins, the normalisation did not work. The bar is carried from B2-B unchanged so the comparison means something.",
+    "FORWARD_BOOK_DEFENSIBLE": "core_weight >= 0.60 at EVERY verdict-binding origin AND payout_stability holds",
+    "FORWARD_BOOK_PARTIAL": "not DEFENSIBLE, AND core_weight >= 0.3333 at EVERY verdict-binding origin",
+    "FORWARD_BOOK_NOT_DEFENSIBLE": "otherwise",
+    "threshold_rationale": {
+      "0.60": "An index-level statement claims to describe the index. Below a simple majority of measurable weight it describes a subset and should not carry the index's name.",
+      "0.3333": "Mandate §5.5 permits PARTIAL with coverage weight published. One third is the point below which a covered set is a minority fragment rather than a disclosed partial view. A principled fraction, not a level chosen near any observed value — no P1 coverage number existed when it was set, in v1 or in v2.",
+      "unchanged_from_v1": "Both bands and the 15-point stability bar are identical to v1. v2 changes definitions and reporting, never a band.",
+      "no_movement": "These thresholds do not move after a result. If DEFENSIBLE is missed by any margin the verdict is PARTIAL. If PARTIAL is missed by any margin the verdict is NOT_DEFENSIBLE."
+    },
+    "mandatory_shortfall_decomposition": "Any origin whose core_weight falls below a band must report the shortfall split into: NO_PIT_FORECAST_UNIVERSE weight, other Path A unavailability weight, Path B unavailability weight, FORECAST_PATH_SENSITIVE weight, and genuine BOOK_PATH_DISAGREES weight. A verdict without this decomposition is incomplete and I will not adjudicate on it.",
+    "partial_does_not_block": "PARTIAL permits P2 and P3 to proceed with coverage weight published at every origin, per mandate §5.5. NOT_DEFENSIBLE permits P2/P3 to proceed only with core plus sensitivity weight reported and P3 disclosing that the core is a minority; it never permits an index-level claim."
+  },
+
+  "prohibitions": [
+    "No calibration to Yoo's published numbers.",
+    "No per-index multiplier or offset.",
+    "No selection of the payout rule, the forecast model, or the book path after seeing results.",
+    "No change to the terminal rule, the horizon, or the Ke contract.",
+    "No relaxation of any threshold in this file after a result exists.",
+    "No reuse of GLS ICC as a discount rate.",
+    "No extension to NDX, KOSPI, SOX, CCMP or RUT.",
+    "No public release, no UI, no promotion.",
+    "No substitution of a different statistic for one this file names.",
+    "No editing of this file. Supersede with p1-criteria-v3.json and a new receipt."
+  ],
+
+  "stop_conditions": {
+    "stop_and_report": [
+      "a point-in-time leak — any input dated after its origin",
+      "output targeting — any parameter chosen after seeing a result",
+      "same-date circularity — any price-derived quantity feeding the same-date valuation",
+      "a majority of index weight depending on an unverified proxy",
+      "an unresolvable data unit or share-basis problem",
+      "any forecast quantity appearing inside Path B"
+    ],
+    "otherwise": "Record as risk or TODO and continue the phase."
+  },
+
+  "deliverables": [
+    "data/computed/feno-rim-recovery/FENO_RIM_PIT_SPX_ROSTER.json",
+    "data/computed/feno-rim-recovery/FENO_RIM_FORWARD_BOOK_PATHS.json",
+    "data/computed/feno-rim-recovery/FENO_RIM_PAYOUT_NORMALIZATION.json",
+    "data/computed/feno-rim-recovery/FENO_RIM_BOOK_PATH_RECONCILIATION.json"
+  ],
+
+  "deliverable_contents": {
+    "FENO_RIM_FORWARD_BOOK_PATHS.json": "per firm-origin: cik, Book_PIT(0) with concept and accn, S(i,t0) with its fact date and split factor, B_A_RI(1..3), B_A_EP(1..3), B_B(1..3), g_A_RI, g_A_EP, g_B, r_payout with source (FIRM/INDUSTRY/ALL_FIRM), state_RI, state_EP, combined state, availability reason codes, weight_i, accounting_quality, all diagnostic flags.",
+    "FENO_RIM_PAYOUT_NORMALIZATION.json": "per firm-origin: cik, payout window years used, NSP and NI per year with concept and accn per component, median NSP, median NI, raw ratio, clipped ratio, clip indicator, partial_components list, fallback path taken. Per origin: median firm-rule r_payout, counts and weights by fallback path, clipped count and weight.",
+    "FENO_RIM_BOOK_PATH_RECONCILIATION.json": "per origin: counts and weights in each combined state, core_weight, forecast_universe_coverage, roster_marketcap_coverage, the mandatory shortfall decomposition, cross-tabulation of combined state against accounting_quality and against STRUCTURAL_BREAK_SUSPECT, adjacent-origin payout stability deltas, and the RI-versus-EP state disagreement count and weight.",
+    "FENO_RIM_FORWARD_BOOK_CONTRACT.md": "updated in the SAME commit as this file to match v2. It states the contract and contains NO results."
+  },
+
+  "result_paths_blocked_until_this_file_is_committed": [
+    "data/computed/feno-rim-recovery/FENO_RIM_PIT_SPX_ROSTER.json",
+    "data/computed/feno-rim-recovery/FENO_RIM_FORWARD_BOOK_PATHS.json",
+    "data/computed/feno-rim-recovery/FENO_RIM_PAYOUT_NORMALIZATION.json",
+    "data/computed/feno-rim-recovery/FENO_RIM_BOOK_PATH_RECONCILIATION.json"
+  ],
+
+  "storage_split": {
+    "raw_bytes": "/Volumes/M470/fenok-cold/rim-successor/p1/raw/ — any newly fetched source bytes",
+    "git": "receipts (url, sha256, bytes, fetched_at, first_knowable_at, SSD path), extracted fields, criteria, adjudications",
+    "hard_rule": "If the SSD is not mounted at fetch time, acquisition STOPS. Commit order is the only proof of pre-registration; a file on disk carries no ordering."
+  },
+
+  "verification_protocol": {
+    "worker": "computes, then switches to a verifier role and recomputes by a structurally different route, audits against the deliverable list, and states what it would not defend.",
+    "handler": "re-derives the core quantities independently from committed caches with redteam-scripts/p1_handler_independent.py, committed at 2378773885 BEFORE any worker result existed, writing nothing.",
+    "handler_minimum": "r_payout and g_B recomputed for a random sample of at least 30 firm-origins spanning all five verdict-binding origins, plus core_weight recomputed from scratch at every verdict-binding origin, plus the share-basis conversion checked on at least 10 firms against the r1 panel's own shares.",
+    "handler_script_note": "p1_handler_independent.py was written against v1 and computes r_payout and g_B, both of which are UNCHANGED in v2. It must be extended for the share basis and the RI/EP sweep before adjudication."
+  },
+
+  "frozen_at_utc": "2026-08-08T05:35:00Z"
+}

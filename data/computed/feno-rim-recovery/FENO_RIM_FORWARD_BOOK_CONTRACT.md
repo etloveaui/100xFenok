@@ -1,10 +1,34 @@
 # FENO RIM — Forward-book contract
 
-Frozen 2026-08-08 by cc (Opus), handler, in the same commit as `p1-criteria.json` and before any
-P1 result exists. Worker: DeepSeek. Mandate: `FENO_RIM_YOO_SUCCESSOR_NEXT_EXECUTION_OPUS_DEEPSEEK.md` §5.
+Frozen 2026-08-08 by cc (Opus), handler, before any P1 result exists. Worker: DeepSeek.
+Mandate: `FENO_RIM_YOO_SUCCESSOR_NEXT_EXECUTION_OPUS_DEEPSEEK.md` §5.
 
 **This document contains no results.** It states what will be computed and how the verdict will be
-read. `p1-criteria.json` is the machine-readable authority; where the two differ, the JSON governs.
+read. `p1-criteria-v2.json` is the machine-readable authority; where the two differ, the JSON
+governs. `p1-criteria.json` (v1) is preserved unedited and superseded.
+
+## What v2 corrected, before anything was computed
+
+The worker began implementing and its first script header read *FNI = ri forecast, primary model
+per engine gate*. I stopped it, and reviewing the clause it was resolving found three defects in
+my own v1 — one of them a mandate §4 stop condition v1 would have walked into.
+
+**The share basis was wrong.** v1 added the mechanical forecast to `StockholdersEquity`. The
+forecast panel states its rows are per-share; stockholders' equity is total dollars. v1 would have
+produced a forward book wrong by a factor of the share count at every firm. v2 carries everything
+in total dollars and converts the forecast with the panel's own share basis, the same one the index
+weight uses — one share count, not two.
+
+**RI versus EP was never named.** The worker chose RI by citing R1's preregistered gate, and that
+gate is real. But its margin is 0.03575813 against 0.03589537 average price-scaled MAE — four parts
+in a thousand. That is a tie, and mandate §7.3 makes the RI/EP choice an axis to sweep, not a
+selection to make. v2 computes both and requires agreement under both.
+
+**Path A cannot see departed firms.** The committed forecast engine ran on the current index
+snapshot, so firms that left before 2026-08-02 have no forecast at any origin. B2-A recovered those
+firms specifically to stop the universe being survivors-only, and the forecast leg silently puts
+them back. Path A is therefore survivor-biased where Path B is not, and coverage is capped from
+above by something that has nothing to do with whether the book paths agree.
 
 ## What changed and why
 
@@ -23,13 +47,23 @@ question moves from *does the identity close* to *do two independent constructio
 ## The two paths
 
 **Path A — shareholder-payout rollforward.** Book grows by forecast earnings and shrinks by what the
-firm returns to shareholders:
+firm returns to shareholders. Run twice, once with each mechanical forecast:
 
 ```
-B_A(k) = B_A(k-1) + FNI(k) - Payout(k),   k = 1..3
-Payout(k) = r_payout × FNI(k)             when FNI(k) > 0
-          = median dividends              when FNI(k) ≤ 0
+B_A_m(k) = B_A_m(k-1) + FNI_m(k) - Payout_m(k),   k = 1..3,  m ∈ {RI, EP}
+FNI_m(k) = FEPS_m(k) × S                          per-share forecast → total dollars
+Payout_m(k) = r_payout × FNI_m(k)                 when FNI_m(k) > 0
+            = median dividends                    when FNI_m(k) ≤ 0
 ```
+
+`S` is the origin share count from the forecast panel's own basis — cover-page `dei` shares,
+split-adjusted, with R1's eligibility band. The same `S` is used for the index weight, so the
+forecast leg and the weight leg cannot drift onto different share counts. It is held fixed across
+the three years: buybacks reduce book through the payout term and do not additionally shrink the
+share count. That is a declared simplification, not an estimate.
+
+`us-gaap:CommonStockSharesOutstanding` is not used for `S` at all. R1 measured filers reporting it
+in millions while tagging it as shares — PEG at 504 against a `dei` count of 497,000,000.
 
 `r_payout` is a ratio of medians — median net shareholder payout over median net income across up to
 five annual years ending at or before the origin. Not a single year extended forward, which the
@@ -56,14 +90,22 @@ growth estimate.
 
 ## How agreement is read
 
-The two paths are compared as annualised three-year growth rates:
+The paths are compared as annualised three-year growth rates. Path A produces two of them, one per
+forecast, so agreement is decided per forecast and then combined:
 
 | state | condition | how it is used |
 |---|---|---|
-| `BOOK_PATH_AGREES` | both available, same direction, gap ≤ 5pp | fair-value core |
-| `BOOK_PATH_SINGLE_ONLY` | exactly one available | sensitivity only |
-| `BOOK_PATH_DISAGREES` | both available, and not the above | excluded, weight disclosed |
+| `BOOK_PATH_AGREES` | agrees under **both** RI and EP | fair-value core |
+| `FORECAST_PATH_SENSITIVE` | agrees under exactly one | not core; weight disclosed |
+| `BOOK_PATH_DISAGREES` | both forecasts run, neither agrees | excluded, weight disclosed |
+| `BOOK_PATH_SINGLE_ONLY` | only one of the two paths available | sensitivity only |
 | `BOOK_PATH_UNAVAILABLE` | neither available | excluded, reason counted |
+
+Requiring agreement under both is the point, not pedantry. The gate that picked RI over EP
+separated them by four parts in a thousand. A firm that agrees under one and contradicts under the
+other has not been shown to have an identified forward book — it has been shown to depend on a coin
+flip. Mandate §9 already lists sign reversal under book-path choice as a FAIL condition; this is the
+same failure one level up, so it is counted rather than absorbed into the core.
 
 The 5-point tolerance is not arbitrary. The independent cost-of-equity band from B1 is itself
 4.05 to 5.17 points wide. A disagreement narrower than the discount-rate uncertainty already being
@@ -96,6 +138,25 @@ over roster members, so P1 cannot be evaluated until the roster is a real artifa
 
 Materialising it is not reopening DEC-294. If re-materialisation disagrees with the recorded
 505/505/505/503/503/503/503 counts, the disagreement is reported and explained, never adjusted away.
+
+## A ceiling that sits above the whole phase
+
+Because Path A needs a forecast and the forecast engine only ever ran on the current index, the
+agreeing weight can never exceed the weight that has a forecast at all. That ceiling has nothing to
+do with whether the two book paths agree, and it would be easy to misread a low number as the
+contract failing when the contract was never given the firms to work with.
+
+So every origin that falls short of a band must publish the shortfall broken into its causes: weight
+with no forecast, weight failing Path A for some other reason, weight failing Path B, weight
+sensitive to the RI/EP choice, and weight where both paths ran and genuinely disagreed. A verdict
+without that split is not a P1 result and I will not adjudicate on one.
+
+One more thing belongs on the record before any number arrives. R1's own gate reports that the RI
+forecast does **not** beat a random walk at one year — 0.03130 against 0.03024 — and R1 pre-committed
+that this is the outcome the source paper predicts for a large-cap universe and is not grounds to
+stop. It is not grounds to stop here either. But if Path A and Path B disagree, one live explanation
+is that Path A's earnings input carries little information beyond a random walk, and that
+explanation has to compete with the others rather than be discovered afterwards.
 
 ## Verdict, frozen
 
