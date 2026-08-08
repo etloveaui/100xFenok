@@ -1,0 +1,35 @@
+{
+ "schema_version": "feno_rim_e5_terminal_fragility.v1",
+ "current": {
+  "SPX": {
+   "base_g0": 6526.1083653611995,
+   "base_g1": 5785.239544785174,
+   "base_g2": 5255.144215126938,
+   "shift_100bp": 0.11352383060452298,
+   "shift_200bp": 0.19475069659893962,
+   "direction_flip_100bp": false,
+   "direction_flip_200bp": false,
+   "min_ke_minus_g": 0.0453,
+   "terminal_share_base": null
+  },
+  "NDX": {
+   "base_g0": 31451.878995215724,
+   "base_g1": 27293.250984100734,
+   "base_g2": 24317.73193774108,
+   "shift_100bp": 0.1322219258107783,
+   "shift_200bp": 0.22682737201678316,
+   "direction_flip_100bp": true,
+   "direction_flip_200bp": true,
+   "min_ke_minus_g": 0.0453,
+   "terminal_share_base": null
+  }
+ },
+ "historical_lane": "proxy only; cannot satisfy F3-F6",
+ "pole_margin": {
+  "current_min_ke_minus_g_pp": 4.53,
+  "historical_min_ke_minus_g_pp": 4.0,
+  "gate_pp": 3.0,
+  "pass": true
+ },
+ "finding": "NDX current Base flips valuation direction under the 100bp shadow: 31,452 above the price at g0, 27,293 below it at g1. F2 fails. This is a model fragility, not a data limitation."
+}

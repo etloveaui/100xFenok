@@ -1,0 +1,68 @@
+{
+ "schema_version": "feno_rim_e5_pit_ledger.v1",
+ "criteria": "feno-index-rim-e5-criteria-v2.json (27c7643d99)",
+ "classification_result": {
+  "MODEL_EQUIVALENT_PIT": {
+   "SPX": 0,
+   "NDX": 0
+  },
+  "RECONSTRUCTED_PIT_PROXY": {
+   "SPX": 7,
+   "NDX": 7
+  },
+  "RETROSPECTIVE_ONLY": {
+   "SPX": 0,
+   "NDX": 0
+  }
+ },
+ "inputs": {
+  "P0": {
+   "source": "benchmarks/us.json sections.<idx>.data[].px_last",
+   "historical": true,
+   "same_source_class_as_live": true,
+   "span": "2010-01..2026-07 monthly"
+  },
+  "price_to_book": {
+   "source": "benchmarks/us.json px_to_book_ratio",
+   "historical": true,
+   "same_source_class_as_live": true
+  },
+  "FY1_EPS": {
+   "source": "benchmarks/us.json best_eps",
+   "historical": true,
+   "same_source_class_as_live": true
+  },
+  "ROE_history": {
+   "source": "benchmarks/us.json roe",
+   "historical": true,
+   "same_source_class_as_live": true,
+   "note": "window shorter than 10y before 2020; observation counts recorded per origin, all >= 496"
+  },
+  "Rf": {
+   "source": "macro/fred-banking-daily.json series.DGS10",
+   "historical": true,
+   "same_source_class_as_live": true,
+   "span": "1999-03..2026-08"
+  },
+  "FY2_FY3_EPS": {
+   "source": "computed/stock_action_index.json",
+   "historical": false,
+   "same_source_class_as_live": false,
+   "reason": "single current file generated 2026-08-08; no archived vintages exist in the repository"
+  },
+  "payout_route_A_and_B": {
+   "source": "slickcharts yield files",
+   "historical": false,
+   "same_source_class_as_live": false,
+   "reason": "current reading only, updated 2026-08-01; no historical series"
+  },
+  "ERP": {
+   "source_live": "damodaran/erp.json countries.United States",
+   "source_historical": "damodaran/historical_erp.json years[].implied_erp_fcfe",
+   "historical": true,
+   "same_source_class_as_live": false,
+   "reason": "implied ERP series is a different construction from the country-premium file live B reads"
+  }
+ },
+ "consequence": "Three material inputs cannot be supplied at a historical origin with live semantics. No origin is MODEL_EQUIVALENT_PIT. READY gates D1 and D2 fail on data grounds, not on model grounds. The frozen criteria state that missing data alone is never a RETIRE condition."
+}
