@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-08T08:04:10.439Z",
+  "generated_at": "2026-08-08T10:28:29.729Z",
   "status": "open",
-  "open_incident_count": 4,
+  "open_incident_count": 5,
   "open_incidents": [
     {
       "workflow": "build-stocks-analyzer.yml",
@@ -16,6 +16,19 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "no_declaration"
+    },
+    {
+      "workflow": "fetch-fred-yardeni.yml",
+      "label": "Fetch FRED Yardeni Data",
+      "streak": 1,
+      "failure_streak_threshold": 1,
+      "first_failing_run_id": 31252801134,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31252801134",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
     },
     {
       "workflow": "fetch-stockanalysis.yml",
@@ -453,12 +466,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31247508780",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31247508780",
-    "observed_at": "2026-08-08T08:04:10.439Z",
-    "event": "schedule",
+    "run_id": "31252775942",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31252775942",
+    "observed_at": "2026-08-08T10:28:29.729Z",
+    "event": "workflow_run",
     "workflows": [
       "build-stocks-analyzer.yml",
+      "fetch-fred-yardeni.yml",
       "fetch-stockanalysis.yml",
       "fetch-yf-finance.yml",
       "qa-rim-v2.yml"
