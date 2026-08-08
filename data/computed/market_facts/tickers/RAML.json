@@ -2,18 +2,18 @@
   "schema_version": "market-facts/v1",
   "ticker": "RAML",
   "asset_type": "etf",
-  "generated_at": "2026-07-24T02:21:07Z",
+  "generated_at": "2026-08-08T06:39:47Z",
   "source_as_of": "2026-07-23",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
-    "name": "RAML",
-    "exchange": null,
-    "currency": null,
+    "name": "Leverage Shares 2X Long Memory Daily ETF",
+    "exchange": "BTS",
+    "currency": "USD",
     "sector": null,
     "industry": null,
-    "fund_family": null,
-    "category": null
+    "fund_family": "Themes ETF Trust",
+    "category": "Trading--Leveraged Equity"
   },
   "facts": {
     "price": {
@@ -41,10 +41,10 @@
       "candidate_count": 1
     },
     "previous_close": {
-      "value": 15.17,
-      "source": "stockanalysis.quote",
-      "as_of": "2026-07-23",
-      "fetched_at": "2026-07-24T01:20:37Z",
+      "value": 11.15,
+      "source": "yf",
+      "as_of": "2026-08-07",
+      "fetched_at": "2026-08-07T17:04:59Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -53,6 +53,13 @@
       ],
       "candidates": [
         {
+          "value": 11.15,
+          "source": "yf",
+          "as_of": "2026-08-07",
+          "fetched_at": "2026-08-07T17:04:59Z",
+          "confidence": "observed"
+        },
+        {
           "value": 15.17,
           "source": "stockanalysis.quote",
           "as_of": "2026-07-23",
@@ -60,7 +67,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change": {
       "value": 0,
@@ -81,9 +88,16 @@
           "as_of": "2026-07-23",
           "fetched_at": "2026-07-24T01:20:37Z",
           "confidence": "observed"
+        },
+        {
+          "value": -0.52999973,
+          "source": "yf",
+          "as_of": "2026-08-07",
+          "fetched_at": "2026-08-07T17:04:59Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change_pct": {
       "value": 0,
@@ -104,9 +118,122 @@
           "as_of": "2026-07-23",
           "fetched_at": "2026-07-24T01:20:37Z",
           "confidence": "observed"
+        },
+        {
+          "value": -4.753361,
+          "source": "yf",
+          "as_of": "2026-08-07",
+          "fetched_at": "2026-08-07T17:04:59Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "total_assets": {
+      "value": 433363,
+      "source": "yf",
+      "as_of": "2026-08-07",
+      "fetched_at": "2026-08-07T17:04:59Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 433363,
+          "source": "yf",
+          "as_of": "2026-08-07",
+          "fetched_at": "2026-08-07T17:04:59Z",
+          "confidence": "observed"
         }
       ],
       "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.99,
+      "source": "yf",
+      "as_of": "2026-08-07",
+      "fetched_at": "2026-08-07T17:04:59Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.99,
+          "source": "yf",
+          "as_of": "2026-08-07",
+          "fetched_at": "2026-08-07T17:04:59Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": -29.99340914865991,
+      "source": "yf.history_1y",
+      "as_of": "2026-08-07",
+      "fetched_at": "2026-08-07T17:04:59Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": -29.99340914865991,
+          "source": "yf.history_1y",
+          "as_of": "2026-08-07",
+          "fetched_at": "2026-08-07T17:04:59Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_1y": {
+      "value": -29.99340914865991,
+      "source": "yf.history_1y",
+      "as_of": "2026-08-07",
+      "fetched_at": "2026-08-07T17:04:59Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": -29.99340914865991,
+          "source": "yf.history_1y",
+          "as_of": "2026-08-07",
+          "fetched_at": "2026-08-07T17:04:59Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": -26.76335,
+          "source": "yf",
+          "as_of": "2026-08-07",
+          "fetched_at": "2026-08-07T17:04:59Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
     }
   },
   "etf": {
@@ -125,18 +252,18 @@
       "source": "stockanalysis.overview.description",
       "confidence": "high"
     },
-    "yahoo_funds_data_available": false
+    "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
-    "yf": false,
+    "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
-    "yf": null,
+    "yf": "yf/finance/RAML.json",
     "stockanalysis": "stockanalysis/etfs/RAML.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",

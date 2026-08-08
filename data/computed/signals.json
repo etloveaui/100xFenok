@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-08-06T01:54:38.968Z",
-  "as_of": "2026-08-05",
+  "generated_at": "2026-08-08T06:41:08.275Z",
+  "as_of": "2026-08-08",
   "engine": {
     "name": "macro-monitor-computed-signals",
     "version": "1.0.0",
@@ -99,14 +99,14 @@
       "overallLabel": "FALLING",
       "m2YoY": 6.28,
       "m2Total": 23155.2,
-      "netLiquidity": 5865.9,
+      "netLiquidity": 5817.8,
       "netLiquidityDelta": -131.4,
       "weeklyNetFlow": -131.4,
-      "stablecoinMcap": 305.73365068016,
+      "stablecoinMcap": 306.00504727494,
       "scM2Ratio": 1.32,
-      "walcl": 6738.2,
-      "tga": 870.1,
-      "rrp": 2.3,
+      "walcl": 6748.6,
+      "tga": 929.3,
+      "rrp": 1.4,
       "netFlow": -131.4,
       "components": {
         "m2_yoy": {
@@ -128,13 +128,13 @@
       "metrics": {
         "m2_yoy_pct": 6.28,
         "m2_total_b": 23155.2,
-        "net_liquidity_b": 5865.9,
+        "net_liquidity_b": 5817.8,
         "weekly_net_flow_b": -131.4,
-        "stablecoin_mcap_b": 305.7,
+        "stablecoin_mcap_b": 306,
         "sc_m2_ratio_pct": 1.32
       },
       "formula": "net_liquidity_b = WALCL/1000 - TGA/1000 - RRPONTSYD",
-      "as_of": "2026-08-05",
+      "as_of": "2026-08-08",
       "source_files": [
         "data/macro/fred-macro.json",
         "data/macro/tga.json",
@@ -147,7 +147,7 @@
       "overallLabel": "Caution",
       "tier1": {
         "status": "normal",
-        "value": 0,
+        "value": -1,
         "unit": "bp"
       },
       "tier2": {
@@ -156,11 +156,11 @@
         "unit": "%"
       },
       "metrics": {
-        "sofr_iorb_spread_bp": 0,
+        "sofr_iorb_spread_bp": -1,
         "reserves_gdp_pct": 9.2
       },
       "formula": "spread_bp = (SOFR - IORB) * 100; reserves_gdp_pct = (WRESBAL/1000) / GDP * 100",
-      "as_of": "2026-08-05",
+      "as_of": "2026-08-07",
       "source_files": [
         "data/macro/fred-macro.json"
       ],
@@ -207,14 +207,14 @@
       "warn_active": 0,
       "warn_near": 0,
       "values": {
-        "vix": 15.81,
-        "move": 73.58,
-        "cnn_fg": 59.7,
-        "aaii_bearish": 42.3,
-        "aaii_spread": -12.699999999999996,
-        "cftc_net": -3939,
-        "crypto_fg": 27,
-        "putcall_ratio": 0.73
+        "vix": 14.9,
+        "move": 72.03,
+        "cnn_fg": 63.7,
+        "aaii_bearish": 38,
+        "aaii_spread": -1,
+        "cftc_net": -7578,
+        "crypto_fg": 29,
+        "putcall_ratio": 0.68
       },
       "combos": [
         {
@@ -229,7 +229,7 @@
               "operator": ">=",
               "value": 40,
               "label": "VIX >= 40",
-              "current": 15.81,
+              "current": 14.9,
               "status": "unmet"
             }
           ],
@@ -249,7 +249,7 @@
               "operator": ">=",
               "value": 60,
               "label": "Bearish >= 60%",
-              "current": 42.3,
+              "current": 38,
               "status": "unmet"
             }
           ],
@@ -269,7 +269,7 @@
               "operator": "<=",
               "value": 10,
               "label": "F&G <= 10",
-              "current": 59.7,
+              "current": 63.7,
               "status": "unmet"
             }
           ],
@@ -289,7 +289,7 @@
               "operator": ">=",
               "value": 30,
               "label": "VIX >= 30",
-              "current": 15.81,
+              "current": 14.9,
               "status": "unmet"
             },
             {
@@ -297,7 +297,7 @@
               "operator": "<=",
               "value": 25,
               "label": "CNN <= 25",
-              "current": 59.7,
+              "current": 63.7,
               "status": "unmet"
             },
             {
@@ -305,7 +305,7 @@
               "operator": "<",
               "value": -150000,
               "label": "CFTC < -150K",
-              "current": -3939,
+              "current": -7578,
               "status": "unmet"
             }
           ],
@@ -325,7 +325,7 @@
               "operator": ">=",
               "value": 30,
               "label": "VIX >= 30",
-              "current": 15.81,
+              "current": 14.9,
               "status": "unmet"
             },
             {
@@ -333,7 +333,7 @@
               "operator": "<=",
               "value": 25,
               "label": "CNN <= 25",
-              "current": 59.7,
+              "current": 63.7,
               "status": "unmet"
             }
           ],
@@ -353,7 +353,7 @@
               "operator": "<=",
               "value": -30,
               "label": "Spread <= -30",
-              "current": -12.699999999999996,
+              "current": -1,
               "status": "unmet"
             }
           ],
@@ -373,7 +373,7 @@
               "operator": ">=",
               "value": 1.2,
               "label": "P/C >= 1.2",
-              "current": 0.73,
+              "current": 0.68,
               "status": "unmet"
             }
           ],
@@ -394,15 +394,15 @@
               "operator": "<",
               "value": 15,
               "label": "VIX < 15",
-              "current": 15.81,
-              "status": "near"
+              "current": 14.9,
+              "status": "met"
             },
             {
               "indicator": "cnn_fg",
               "operator": ">=",
               "value": 75,
               "label": "CNN >= 75",
-              "current": 59.7,
+              "current": 63.7,
               "status": "unmet"
             },
             {
@@ -410,7 +410,7 @@
               "operator": ">",
               "value": 150000,
               "label": "CFTC > 150K",
-              "current": -3939,
+              "current": -7578,
               "status": "unmet"
             }
           ],
@@ -429,15 +429,15 @@
               "operator": "<",
               "value": 15,
               "label": "VIX < 15",
-              "current": 15.81,
-              "status": "near"
+              "current": 14.9,
+              "status": "met"
             },
             {
               "indicator": "cnn_fg",
               "operator": ">=",
               "value": 75,
               "label": "CNN >= 75",
-              "current": 59.7,
+              "current": 63.7,
               "status": "unmet"
             }
           ],
@@ -456,7 +456,7 @@
               "operator": "<",
               "value": 0.6,
               "label": "P/C < 0.6",
-              "current": 0.73,
+              "current": 0.68,
               "status": "unmet"
             }
           ],
@@ -465,7 +465,7 @@
           "source": "Billingsley & Chance 1988"
         }
       ],
-      "as_of": "2026-08-05",
+      "as_of": "2026-08-07",
       "source_files": [
         "data/sentiment/vix.json",
         "data/sentiment/move.json",

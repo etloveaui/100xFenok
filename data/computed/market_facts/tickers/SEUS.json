@@ -2,14 +2,14 @@
   "schema_version": "market-facts/v1",
   "ticker": "SEUS",
   "asset_type": "etf",
-  "generated_at": "2026-07-25T01:38:08Z",
+  "generated_at": "2026-08-08T06:39:47Z",
   "source_as_of": "2026-07-24",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
-    "name": "SEUS",
-    "exchange": null,
-    "currency": null,
+    "name": "SEI QiM U.S. Equity Factor Allocation Active ETF",
+    "exchange": "NGM",
+    "currency": "USD",
     "sector": null,
     "industry": null,
     "fund_family": null,
@@ -41,10 +41,10 @@
       "candidate_count": 1
     },
     "previous_close": {
-      "value": 25,
-      "source": "stockanalysis.quote",
-      "as_of": "2026-07-24",
-      "fetched_at": "2026-07-25T01:22:57Z",
+      "value": 26.13,
+      "source": "yf",
+      "as_of": "2026-08-06",
+      "fetched_at": "2026-08-07T15:07:22Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -53,6 +53,13 @@
       ],
       "candidates": [
         {
+          "value": 26.13,
+          "source": "yf",
+          "as_of": "2026-08-06",
+          "fetched_at": "2026-08-07T15:07:22Z",
+          "confidence": "observed"
+        },
+        {
           "value": 25,
           "source": "stockanalysis.quote",
           "as_of": "2026-07-24",
@@ -60,7 +67,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change": {
       "value": 0.17,
@@ -81,9 +88,16 @@
           "as_of": "2026-07-24",
           "fetched_at": "2026-07-25T01:22:57Z",
           "confidence": "observed"
+        },
+        {
+          "value": 0.0,
+          "source": "yf",
+          "as_of": "2026-08-06",
+          "fetched_at": "2026-08-07T15:07:22Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change_pct": {
       "value": 0.68,
@@ -104,9 +118,97 @@
           "as_of": "2026-07-24",
           "fetched_at": "2026-07-25T01:22:57Z",
           "confidence": "observed"
+        },
+        {
+          "value": 0.0,
+          "source": "yf",
+          "as_of": "2026-08-06",
+          "fetched_at": "2026-08-07T15:07:22Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "trailing_pe": {
+      "value": 18.131525,
+      "source": "yf",
+      "as_of": "2026-08-06",
+      "fetched_at": "2026-08-07T15:07:22Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 18.131525,
+          "source": "yf",
+          "as_of": "2026-08-06",
+          "fetched_at": "2026-08-07T15:07:22Z",
+          "confidence": "observed"
         }
       ],
       "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": 2.920283214925673,
+      "source": "yf.history_1y",
+      "as_of": "2026-08-06",
+      "fetched_at": "2026-08-07T15:07:22Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 2.920283214925673,
+          "source": "yf.history_1y",
+          "as_of": "2026-08-06",
+          "fetched_at": "2026-08-07T15:07:22Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_1y": {
+      "value": 2.920283214925673,
+      "source": "yf.history_1y",
+      "as_of": "2026-08-06",
+      "fetched_at": "2026-08-07T15:07:22Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 2.920283214925673,
+          "source": "yf.history_1y",
+          "as_of": "2026-08-06",
+          "fetched_at": "2026-08-07T15:07:22Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": 1.6574621,
+          "source": "yf",
+          "as_of": "2026-08-06",
+          "fetched_at": "2026-08-07T15:07:22Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
     }
   },
   "etf": {
@@ -129,14 +231,14 @@
   },
   "financials": null,
   "sources": {
-    "yf": false,
+    "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
-    "yf": null,
+    "yf": "yf/finance/SEUS.json",
     "stockanalysis": "stockanalysis/etfs/SEUS.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",

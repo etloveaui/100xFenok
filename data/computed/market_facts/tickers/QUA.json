@@ -2,18 +2,18 @@
   "schema_version": "market-facts/v1",
   "ticker": "QUA",
   "asset_type": "etf",
-  "generated_at": "2026-07-25T01:38:08Z",
+  "generated_at": "2026-08-08T06:39:47Z",
   "source_as_of": "2026-07-24",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
-    "name": "QUA",
-    "exchange": null,
-    "currency": null,
+    "name": "Corgi QBTS 2x Daily ETF",
+    "exchange": "BTS",
+    "currency": "USD",
     "sector": null,
     "industry": null,
-    "fund_family": null,
-    "category": null
+    "fund_family": "Corgi Funds",
+    "category": "Trading--Leveraged Equity"
   },
   "facts": {
     "price": {
@@ -41,10 +41,10 @@
       "candidate_count": 1
     },
     "previous_close": {
-      "value": 14.28,
-      "source": "stockanalysis.quote",
-      "as_of": "2026-07-24",
-      "fetched_at": "2026-07-25T01:22:34Z",
+      "value": 23.912,
+      "source": "yf",
+      "as_of": "2026-08-03",
+      "fetched_at": "2026-08-06T10:52:16Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -53,6 +53,13 @@
       ],
       "candidates": [
         {
+          "value": 23.912,
+          "source": "yf",
+          "as_of": "2026-08-03",
+          "fetched_at": "2026-08-06T10:52:16Z",
+          "confidence": "observed"
+        },
+        {
           "value": 14.28,
           "source": "stockanalysis.quote",
           "as_of": "2026-07-24",
@@ -60,7 +67,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change": {
       "value": -1.62,
@@ -81,9 +88,16 @@
           "as_of": "2026-07-24",
           "fetched_at": "2026-07-25T01:22:34Z",
           "confidence": "observed"
+        },
+        {
+          "value": -0.9697,
+          "source": "yf",
+          "as_of": "2026-08-03",
+          "fetched_at": "2026-08-06T10:52:16Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change_pct": {
       "value": -10.16,
@@ -104,9 +118,100 @@
           "as_of": "2026-07-24",
           "fetched_at": "2026-07-25T01:22:34Z",
           "confidence": "observed"
+        },
+        {
+          "value": -4.05529,
+          "source": "yf",
+          "as_of": "2026-08-03",
+          "fetched_at": "2026-08-06T10:52:16Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "expense_ratio": {
+      "value": 0.45,
+      "source": "yf",
+      "as_of": "2026-08-03",
+      "fetched_at": "2026-08-06T10:52:16Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.45,
+          "source": "yf",
+          "as_of": "2026-08-03",
+          "fetched_at": "2026-08-06T10:52:16Z",
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
       "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": 2.3193597501968815,
+      "source": "yf.history_1y",
+      "as_of": "2026-08-05",
+      "fetched_at": "2026-08-06T10:52:16Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 2.3193597501968815,
+          "source": "yf.history_1y",
+          "as_of": "2026-08-05",
+          "fetched_at": "2026-08-06T10:52:16Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_1y": {
+      "value": 2.3193597501968815,
+      "source": "yf.history_1y",
+      "as_of": "2026-08-05",
+      "fetched_at": "2026-08-06T10:52:16Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 2.3193597501968815,
+          "source": "yf.history_1y",
+          "as_of": "2026-08-05",
+          "fetched_at": "2026-08-06T10:52:16Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": -9.723461,
+          "source": "yf",
+          "as_of": "2026-08-03",
+          "fetched_at": "2026-08-06T10:52:16Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
     }
   },
   "etf": {
@@ -125,18 +230,18 @@
       "source": "stockanalysis.overview.description",
       "confidence": "high"
     },
-    "yahoo_funds_data_available": false
+    "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
-    "yf": false,
+    "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
-    "yf": null,
+    "yf": "yf/finance/QUA.json",
     "stockanalysis": "stockanalysis/etfs/QUA.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
