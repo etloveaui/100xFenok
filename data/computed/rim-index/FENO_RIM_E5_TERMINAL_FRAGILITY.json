@@ -1,35 +1,247 @@
 {
- "schema_version": "feno_rim_e5_terminal_fragility.v1",
+ "schema_version": "feno_index_rim_e5_terminal_fragility.v1",
+ "proxy_lane": true,
+ "canonical": "g0 = Rf(t0)",
+ "shadows": {
+  "g1": "max(0, Rf - 0.01)",
+  "g2": "max(0, Rf - 0.02)"
+ },
  "current": {
   "SPX": {
-   "base_g0": 6526.1083653611995,
-   "base_g1": 5785.239544785174,
-   "base_g2": 5255.144215126938,
-   "shift_100bp": 0.11352383060452298,
-   "shift_200bp": 0.19475069659893962,
+   "inputs": {
+    "P0": 7489.72,
+    "B0": 1315.9252231358494,
+    "rf": 0.0463,
+    "erp_base": 0.0503,
+    "ltroe": 0.2198,
+    "payout": 0.207015,
+    "eps_path": [
+     383.3257,
+     452.9469,
+     537.4319
+    ],
+    "as_of": "2026-07-31 (benchmark) / 2026-08-05 (Rf criteria-frozen)"
+   },
+   "base_g0": 6526.11,
+   "base_g1": 5785.24,
+   "base_g2": 5255.14,
+   "shift_100bp": 0.1135,
+   "shift_200bp": 0.1948,
    "direction_flip_100bp": false,
    "direction_flip_200bp": false,
-   "min_ke_minus_g": 0.0453,
-   "terminal_share_base": null
+   "base_terminal_share": 0.6845,
+   "min_ke_minus_g": 0.0503,
+   "label": "LIVE B (validation snapshot, not proxy)"
   },
   "NDX": {
-   "base_g0": 31451.878995215724,
-   "base_g1": 27293.250984100734,
-   "base_g2": 24317.73193774108,
-   "shift_100bp": 0.1322219258107783,
-   "shift_200bp": 0.22682737201678316,
+   "inputs": {
+    "P0": 28274.2,
+    "B0": 3199.48851998959,
+    "rf": 0.0463,
+    "erp_base": 0.0503,
+    "ltroe": 0.3081,
+    "payout": 0.097071,
+    "eps_path": [
+     1324.6293,
+     1612.164,
+     2229.7107
+    ],
+    "as_of": "2026-07-31 (benchmark) / 2026-08-05 (Rf criteria-frozen)"
+   },
+   "base_g0": 31451.88,
+   "base_g1": 27293.25,
+   "base_g2": 24317.73,
+   "shift_100bp": 0.1322,
+   "shift_200bp": 0.2268,
    "direction_flip_100bp": true,
    "direction_flip_200bp": true,
-   "min_ke_minus_g": 0.0453,
-   "terminal_share_base": null
+   "base_terminal_share": 0.7973,
+   "min_ke_minus_g": 0.0503,
+   "label": "LIVE B (validation snapshot, not proxy)"
   }
  },
- "historical_lane": "proxy only; cannot satisfy F3-F6",
- "pole_margin": {
-  "current_min_ke_minus_g_pp": 4.53,
-  "historical_min_ke_minus_g_pp": 4.0,
-  "gate_pp": 3.0,
-  "pass": true
- },
- "finding": "NDX current Base flips valuation direction under the 100bp shadow: 31,452 above the price at g0, 27,293 below it at g1. F2 fails. This is a model fragility, not a data limitation."
+ "per_origin": {
+  "2019-06-30": {
+   "SPX": {
+    "base_g0": 2771.85,
+    "base_g1": 2503.57,
+    "base_g2": 2311.29,
+    "shift_100bp": 0.0968,
+    "shift_200bp": 0.1662,
+    "direction_flip_100bp": false,
+    "direction_flip_200bp": false,
+    "base_terminal_share": 0.5865,
+    "min_ke_minus_g": 0.0456,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "base_g0": 6016.57,
+    "base_g1": 5354.35,
+    "base_g2": 4879.72,
+    "shift_100bp": 0.1101,
+    "shift_200bp": 0.189,
+    "direction_flip_100bp": false,
+    "direction_flip_200bp": false,
+    "base_terminal_share": 0.667,
+    "min_ke_minus_g": 0.0456,
+    "label": "PROXY"
+   }
+  },
+  "2020-06-30": {
+   "SPX": {
+    "base_g0": 2935.74,
+    "base_g1": 2721.48,
+    "base_g2": 2721.48,
+    "shift_100bp": 0.073,
+    "shift_200bp": 0.073,
+    "direction_flip_100bp": false,
+    "direction_flip_200bp": false,
+    "base_terminal_share": 0.6192,
+    "min_ke_minus_g": 0.0444,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "base_g0": 8655.06,
+    "base_g1": 7889.24,
+    "base_g2": 7889.24,
+    "shift_100bp": 0.0885,
+    "shift_200bp": 0.0885,
+    "direction_flip_100bp": false,
+    "direction_flip_200bp": false,
+    "base_terminal_share": 0.7508,
+    "min_ke_minus_g": 0.0444,
+    "label": "PROXY"
+   }
+  },
+  "2021-06-30": {
+   "SPX": {
+    "base_g0": 3336.97,
+    "base_g1": 2989.78,
+    "base_g2": 2869.22,
+    "shift_100bp": 0.104,
+    "shift_200bp": 0.1402,
+    "direction_flip_100bp": false,
+    "direction_flip_200bp": false,
+    "base_terminal_share": 0.6139,
+    "min_ke_minus_g": 0.044,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "base_g0": 11538,
+    "base_g1": 10044.26,
+    "base_g2": 9525.57,
+    "shift_100bp": 0.1295,
+    "shift_200bp": 0.1744,
+    "direction_flip_100bp": false,
+    "direction_flip_200bp": false,
+    "base_terminal_share": 0.7638,
+    "min_ke_minus_g": 0.044,
+    "label": "PROXY"
+   }
+  },
+  "2022-06-30": {
+   "SPX": {
+    "base_g0": 3173.08,
+    "base_g1": 2879.9,
+    "base_g2": 2669.19,
+    "shift_100bp": 0.0924,
+    "shift_200bp": 0.1588,
+    "direction_flip_100bp": false,
+    "direction_flip_200bp": false,
+    "base_terminal_share": 0.5645,
+    "min_ke_minus_g": 0.0461,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "base_g0": 10650.49,
+    "base_g1": 9391.79,
+    "base_g2": 8487.15,
+    "shift_100bp": 0.1182,
+    "shift_200bp": 0.2031,
+    "direction_flip_100bp": false,
+    "direction_flip_200bp": false,
+    "base_terminal_share": 0.7221,
+    "min_ke_minus_g": 0.0461,
+    "label": "PROXY"
+   }
+  },
+  "2023-06-30": {
+   "SPX": {
+    "base_g0": 3301.73,
+    "base_g1": 2958.36,
+    "base_g2": 2719.51,
+    "shift_100bp": 0.104,
+    "shift_200bp": 0.1763,
+    "direction_flip_100bp": false,
+    "direction_flip_200bp": false,
+    "base_terminal_share": 0.5793,
+    "min_ke_minus_g": 0.0407,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "base_g0": 10895.61,
+    "base_g1": 9479.44,
+    "base_g2": 8494.38,
+    "shift_100bp": 0.13,
+    "shift_200bp": 0.2204,
+    "direction_flip_100bp": false,
+    "direction_flip_200bp": false,
+    "base_terminal_share": 0.724,
+    "min_ke_minus_g": 0.0407,
+    "label": "PROXY"
+   }
+  },
+  "2024-06-30": {
+   "SPX": {
+    "base_g0": 4509.02,
+    "base_g1": 3909.54,
+    "base_g2": 3509.88,
+    "shift_100bp": 0.133,
+    "shift_200bp": 0.2216,
+    "direction_flip_100bp": false,
+    "direction_flip_200bp": false,
+    "base_terminal_share": 0.6648,
+    "min_ke_minus_g": 0.035,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "base_g0": 21150.67,
+    "base_g1": 17666.21,
+    "base_g2": 15343.24,
+    "shift_100bp": 0.1647,
+    "shift_200bp": 0.2746,
+    "direction_flip_100bp": true,
+    "direction_flip_200bp": true,
+    "base_terminal_share": 0.8237,
+    "min_ke_minus_g": 0.035,
+    "label": "PROXY"
+   }
+  },
+  "2025-06-30": {
+   "SPX": {
+    "base_g0": 4861.15,
+    "base_g1": 4237.21,
+    "base_g2": 3815.2,
+    "shift_100bp": 0.1284,
+    "shift_200bp": 0.2152,
+    "direction_flip_100bp": false,
+    "direction_flip_200bp": false,
+    "base_terminal_share": 0.6649,
+    "min_ke_minus_g": 0.0368,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "base_g0": 18060.7,
+    "base_g1": 15386.01,
+    "base_g2": 13576.92,
+    "shift_100bp": 0.1481,
+    "shift_200bp": 0.2483,
+    "direction_flip_100bp": false,
+    "direction_flip_200bp": false,
+    "base_terminal_share": 0.7671,
+    "min_ke_minus_g": 0.0368,
+    "label": "PROXY"
+   }
+  }
+ }
 }

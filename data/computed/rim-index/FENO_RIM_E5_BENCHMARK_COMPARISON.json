@@ -1,20 +1,148 @@
 {
- "schema_version": "feno_rim_e5_benchmark_comparison.v1",
- "benchmark": "no-change, target = P0, uses no future information",
- "primary_lane": "not computable, n=0",
- "proxy_lane": {
-  "SPX": {
-   "median_base_error": 0.33706868582287897,
-   "median_no_change_error": 0.12103236128150861,
-   "ratio": 2.784946788230401,
-   "base_beats_naive": false
+ "schema_version": "feno_index_rim_e5_benchmark_comparison.v1",
+ "proxy_lane": true,
+ "naive_target": "P0 (no-change)",
+ "per_origin": {
+  "2019-06-30": {
+   "SPX": {
+    "P0": 2941.76,
+    "P12": 3009.05,
+    "naive_target": 2941.76,
+    "naive_error": 0.0224,
+    "base_error": 0.0788,
+    "base_beats_naive": false,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "P0": 7671.08,
+    "P12": 9849.36,
+    "naive_target": 7671.08,
+    "naive_error": 0.2212,
+    "base_error": 0.3891,
+    "base_beats_naive": false,
+    "label": "PROXY"
+   }
   },
-  "NDX": {
-   "median_base_error": 0.42152336236745697,
-   "median_no_change_error": 0.22115954742237065,
-   "ratio": 1.9059695467834874,
-   "base_beats_naive": false
+  "2020-06-30": {
+   "SPX": {
+    "P0": 3009.05,
+    "P12": 4280.7,
+    "naive_target": 3009.05,
+    "naive_error": 0.2971,
+    "base_error": 0.3142,
+    "base_beats_naive": false,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "P0": 9849.36,
+    "P12": 14345.18,
+    "naive_target": 9849.36,
+    "naive_error": 0.3134,
+    "base_error": 0.3967,
+    "base_beats_naive": false,
+    "label": "PROXY"
+   }
+  },
+  "2021-06-30": {
+   "SPX": {
+    "P0": 4280.7,
+    "P12": 3911.74,
+    "naive_target": 4280.7,
+    "naive_error": 0.0943,
+    "base_error": 0.1469,
+    "base_beats_naive": false,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "P0": 14345.18,
+    "P12": 12105.85,
+    "naive_target": 14345.18,
+    "naive_error": 0.185,
+    "base_error": 0.0469,
+    "base_beats_naive": true,
+    "label": "PROXY"
+   }
+  },
+  "2022-06-30": {
+   "SPX": {
+    "P0": 3911.74,
+    "P12": 4450.38,
+    "naive_target": 3911.74,
+    "naive_error": 0.121,
+    "base_error": 0.287,
+    "base_beats_naive": false,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "P0": 12105.85,
+    "P12": 15179.21,
+    "naive_target": 12105.85,
+    "naive_error": 0.2025,
+    "base_error": 0.2984,
+    "base_beats_naive": false,
+    "label": "PROXY"
+   }
+  },
+  "2023-06-30": {
+   "SPX": {
+    "P0": 4450.38,
+    "P12": 5460.48,
+    "naive_target": 4450.38,
+    "naive_error": 0.185,
+    "base_error": 0.3953,
+    "base_beats_naive": false,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "P0": 15179.21,
+    "P12": 19682.87,
+    "naive_target": 15179.21,
+    "naive_error": 0.2288,
+    "base_error": 0.4464,
+    "base_beats_naive": false,
+    "label": "PROXY"
+   }
+  },
+  "2024-06-30": {
+   "SPX": {
+    "P0": 5460.48,
+    "P12": 6173.07,
+    "naive_target": 5460.48,
+    "naive_error": 0.1154,
+    "base_error": 0.2696,
+    "base_beats_naive": false,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "P0": 19682.87,
+    "P12": 22534.2,
+    "naive_target": 19682.87,
+    "naive_error": 0.1265,
+    "base_error": 0.0614,
+    "base_beats_naive": true,
+    "label": "PROXY"
+   }
+  },
+  "2025-06-30": {
+   "SPX": {
+    "P0": 6173.07,
+    "P12": 7354.02,
+    "naive_target": 6173.07,
+    "naive_error": 0.1606,
+    "base_error": 0.339,
+    "base_beats_naive": false,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "P0": 22534.2,
+    "P12": 29118.24,
+    "naive_target": 22534.2,
+    "naive_error": 0.2261,
+    "base_error": 0.3797,
+    "base_beats_naive": false,
+    "label": "PROXY"
+   }
   }
  },
- "note": "proxy lane only; cannot satisfy P7 or P8"
+ "aggregates": {}
 }

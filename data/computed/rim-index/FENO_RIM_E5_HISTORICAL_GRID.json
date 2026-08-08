@@ -1,212 +1,1597 @@
 {
- "schema_version": "feno_rim_e5_historical_grid.v1",
- "lane": "RECONSTRUCTED_PIT_PROXY",
- "never_satisfies_a_ready_gate": true,
- "substitutions": [
-  "FY2/FY3 held flat at FY1",
-  "ERP from the historical implied series",
-  "payout derived from the PIT book series"
- ],
+ "schema_version": "feno_index_rim_e5_historical_grid.v1",
+ "proxy_lane": true,
+ "substitutions": {
+  "principle": "least invention. Every substitution uses data already in the live source files and knowable at the origin, and each is declared.",
+  "FY1": "benchmarks best_eps at the origin — identical to live",
+  "FY2_FY3": "held flat at FY1. A declared degenerate path, not a forecast. Chosen because any growth rate would be invented after learning that no vintage exists.",
+  "ERP": "historical_erp.json years[origin_year].implied_erp_fcfe — declared source-class substitution",
+  "payout": "derived from the PIT book series itself: retention_t = (B_t − B_(t−1)) / (ROE_t × B_(t−1)) with B = px_last / px_to_book, clipped to [0,1]; payout = 1 − retention. Uses only the live benchmark file and only origin-knowable values.",
+  "everything_else": "identical to candidate B — grid widths, LTROE normalization, g = Rf(t0), stable retention g/LTROE, terminal, Base cell definition",
+  "reporting": "PROXY ONLY. Never merged into a primary aggregate, never used to satisfy a READY gate, and always labelled with the three substitutions above."
+ },
  "origins": {
-  "SPX": [
-   {
-    "origin": "2019-06-30",
-    "P0": 2941.76,
-    "rf": 0.02,
-    "erp": 0.0506,
-    "lt": 0.17354999999999998,
-    "n": 496,
-    "pay": 0.872942031278302,
-    "base": 2681.4293794770765,
-    "bear": 2376.7130926843865,
-    "bull": 3055.2150053923447,
-    "P12": 3009.05,
-    "gm": 2698.8000690203653
+  "2019-06-30": {
+   "SPX": {
+    "proxy_substitutions": {
+     "FY1": "benchmarks best_eps",
+     "FY2_FY3": "flat at FY1 (declared degenerate, not a forecast)",
+     "ERP": "historical_erp 2019 implied_erp_fcfe = 0.0506",
+     "payout": "PIT book series retention=ΔB/(ROE·B_prev) clipped [0,1] -> payout 0.7641"
+    },
+    "inputs": {
+     "P0": 2941.76,
+     "P0_date": "2019-06-28",
+     "B0": 857.9561362575829,
+     "FY1": 173.2394,
+     "payout": 0.7641497306910202,
+     "rf": 0.02,
+     "rf_date": "2019-06-28",
+     "ltroe": 0.17354999999999998,
+     "ltroe_n": 496,
+     "erp_base": 0.0506
+    },
+    "grid": {
+     "low_low": {
+      "erp": 0.0456,
+      "ltroe": 0.16854999999999998,
+      "ke": 0.0656,
+      "g": 0.02,
+      "value": 2990.117309205689,
+      "terminalShare": 0.6118603838776291,
+      "stableRetention": 0.11865915158706616
+     },
+     "low_base": {
+      "erp": 0.0456,
+      "ltroe": 0.17354999999999998,
+      "ke": 0.0656,
+      "g": 0.02,
+      "value": 3078.972788790426,
+      "terminalShare": 0.6230616299107054,
+      "stableRetention": 0.11524056467876694
+     },
+     "low_high": {
+      "erp": 0.0456,
+      "ltroe": 0.17855,
+      "ke": 0.0656,
+      "g": 0.02,
+      "value": 3167.828268375163,
+      "terminalShare": 0.6336345009159107,
+      "stableRetention": 0.11201344161299356
+     },
+     "base_low": {
+      "erp": 0.0506,
+      "ltroe": 0.16854999999999998,
+      "ke": 0.0706,
+      "g": 0.02,
+      "value": 2692.8887932185603,
+      "terminalShare": 0.5744013824212398,
+      "stableRetention": 0.11865915158706616
+     },
+     "base_base": {
+      "erp": 0.0506,
+      "ltroe": 0.17354999999999998,
+      "ke": 0.0706,
+      "g": 0.02,
+      "value": 2771.847396869985,
+      "terminalShare": 0.5865249475922311,
+      "stableRetention": 0.11524056467876694
+     },
+     "base_high": {
+      "erp": 0.0506,
+      "ltroe": 0.17855,
+      "ke": 0.0706,
+      "g": 0.02,
+      "value": 2850.8060005214093,
+      "terminalShare": 0.5979769414412849,
+      "stableRetention": 0.11201344161299356
+     },
+     "high_low": {
+      "erp": 0.0556,
+      "ltroe": 0.16854999999999998,
+      "ke": 0.0756,
+      "g": 0.02,
+      "value": 2449.1520459609565,
+      "terminalShare": 0.537858657487647,
+      "stableRetention": 0.11865915158706616
+     },
+     "high_base": {
+      "erp": 0.0556,
+      "ltroe": 0.17354999999999998,
+      "ke": 0.0756,
+      "g": 0.02,
+      "value": 2520.0125963333976,
+      "terminalShare": 0.5508536678808221,
+      "stableRetention": 0.11524056467876694
+     },
+     "high_high": {
+      "erp": 0.0556,
+      "ltroe": 0.17855,
+      "ke": 0.0756,
+      "g": 0.02,
+      "value": 2590.873146705839,
+      "terminalShare": 0.5631378495020621,
+      "stableRetention": 0.11201344161299356
+     }
+    },
+    "BEAR": 2449.1520459609565,
+    "BASE": 2771.847396869985,
+    "BULL": 3167.828268375163,
+    "GRID_MEAN": 2790.277593997936,
+    "monotonicity_passed": true,
+    "min_ke_minus_g": 0.0456,
+    "base_terminal_share": 0.5865249475922311,
+    "base_stable_retention": 0.11524056467876694,
+    "label": "PROXY"
    },
-   {
-    "origin": "2020-06-30",
-    "P0": 3009.05,
-    "rf": 0.0066,
-    "erp": 0.0494,
-    "lt": 0.1741,
-    "n": 522,
-    "pay": 1.0,
-    "base": 2879.8371805557686,
-    "bear": 2548.1420661978627,
-    "bull": 3288.602718718139,
-    "P12": 4280.7,
-    "gm": 2899.7314997127205
-   },
-   {
-    "origin": "2021-06-30",
-    "P0": 4280.7,
-    "rf": 0.014499999999999999,
-    "erp": 0.049,
-    "lt": 0.1746,
-    "n": 522,
-    "pay": 0.9512961718485039,
-    "base": 3084.9276692319954,
-    "bear": 2736.870169795227,
-    "bull": 3514.399537484972,
-    "P12": 3911.74,
-    "gm": 3105.7653808342243
-   },
-   {
-    "origin": "2022-06-30",
-    "P0": 3911.74,
-    "rf": 0.0298,
-    "erp": 0.0511,
-    "lt": 0.1755,
-    "n": 521,
-    "pay": 0.9956013364562714,
-    "base": 2854.284402359344,
-    "bear": 2551.434051823305,
-    "bull": 3224.739422182465,
-    "P12": 4450.38,
-    "gm": 2871.025133173375
-   },
-   {
-    "origin": "2023-06-30",
-    "P0": 4450.38,
-    "rf": 0.0381,
-    "erp": 0.0457,
-    "lt": 0.17975000000000002,
-    "n": 522,
-    "pay": 0.9067260804263064,
-    "base": 3201.325513473132,
-    "bear": 2816.62216516622,
-    "bull": 3683.151214698758,
-    "P12": 5460.48,
-    "gm": 3225.863986078283
-   },
-   {
-    "origin": "2024-06-30",
-    "P0": 5460.48,
-    "rf": 0.0436,
-    "erp": 0.04,
-    "lt": 0.1986,
-    "n": 522,
-    "pay": 0.9556144031450192,
-    "base": 4092.3214076073605,
-    "bear": 3562.054189983349,
-    "bull": 4777.115308319618,
-    "P12": 6173.07,
-    "gm": 4133.330723985472
-   },
-   {
-    "origin": "2025-06-30",
-    "P0": 6173.07,
-    "rf": 0.0424,
-    "erp": 0.0418,
-    "lt": 0.2031,
-    "n": 522,
-    "pay": 0.9262202371173356,
-    "base": 4424.167485836203,
-    "bear": 3867.5744202392343,
-    "bull": 5135.25535063805,
-    "P12": 7354.02,
-    "gm": 4465.107734383105
+   "NDX": {
+    "proxy_substitutions": {
+     "FY1": "benchmarks best_eps",
+     "FY2_FY3": "flat at FY1 (declared degenerate, not a forecast)",
+     "ERP": "historical_erp 2019 implied_erp_fcfe = 0.0506",
+     "payout": "PIT book series retention=ΔB/(ROE·B_prev) clipped [0,1] -> payout 0.9366"
+    },
+    "inputs": {
+     "P0": 7671.08,
+     "P0_date": "2019-06-28",
+     "B0": 1236.1146024686584,
+     "FY1": 381.6327,
+     "payout": 0.9365943124264311,
+     "rf": 0.02,
+     "rf_date": "2019-06-28",
+     "ltroe": 0.261,
+     "ltroe_n": 496,
+     "erp_base": 0.0506
+    },
+    "grid": {
+     "low_low": {
+      "erp": 0.0456,
+      "ltroe": 0.256,
+      "ke": 0.0656,
+      "g": 0.02,
+      "value": 6543.28296785084,
+      "terminalShare": 0.6901864140706563,
+      "stableRetention": 0.078125
+     },
+     "low_base": {
+      "erp": 0.0456,
+      "ltroe": 0.261,
+      "ke": 0.0656,
+      "g": 0.02,
+      "value": 6661.877637174121,
+      "terminalShare": 0.6957017119755778,
+      "stableRetention": 0.07662835249042145
+     },
+     "low_high": {
+      "erp": 0.0456,
+      "ltroe": 0.266,
+      "ke": 0.0656,
+      "g": 0.02,
+      "value": 6780.472306497403,
+      "terminalShare": 0.7010240779130238,
+      "stableRetention": 0.07518796992481203
+     },
+     "base_low": {
+      "erp": 0.0506,
+      "ltroe": 0.256,
+      "ke": 0.0706,
+      "g": 0.02,
+      "value": 5911.185588751938,
+      "terminalShare": 0.6610670994597956,
+      "stableRetention": 0.078125
+     },
+     "base_base": {
+      "erp": 0.0506,
+      "ltroe": 0.261,
+      "ke": 0.0706,
+      "g": 0.02,
+      "value": 6016.5709801091325,
+      "terminalShare": 0.6670037993649982,
+      "stableRetention": 0.07662835249042145
+     },
+     "base_high": {
+      "erp": 0.0506,
+      "ltroe": 0.266,
+      "ke": 0.0706,
+      "g": 0.02,
+      "value": 6121.956371466327,
+      "terminalShare": 0.6727361066202316,
+      "stableRetention": 0.07518796992481203
+     },
+     "high_low": {
+      "erp": 0.0556,
+      "ltroe": 0.256,
+      "ke": 0.0756,
+      "g": 0.02,
+      "value": 5392.541066204654,
+      "terminalShare": 0.6327884479406802,
+      "stableRetention": 0.078125
+     },
+     "high_base": {
+      "erp": 0.0556,
+      "ltroe": 0.261,
+      "ke": 0.0756,
+      "g": 0.02,
+      "value": 5487.118053226273,
+      "terminalShare": 0.6391177745300514,
+      "stableRetention": 0.07662835249042145
+     },
+     "high_high": {
+      "erp": 0.0556,
+      "ltroe": 0.266,
+      "ke": 0.0756,
+      "g": 0.02,
+      "value": 5581.695040247893,
+      "terminalShare": 0.6452326112075293,
+      "stableRetention": 0.07518796992481203
+     }
+    },
+    "BEAR": 5392.541066204654,
+    "BASE": 6016.5709801091325,
+    "BULL": 6780.472306497403,
+    "GRID_MEAN": 6055.188890169843,
+    "monotonicity_passed": true,
+    "min_ke_minus_g": 0.0456,
+    "base_terminal_share": 0.6670037993649982,
+    "base_stable_retention": 0.07662835249042145,
+    "label": "PROXY"
    }
-  ],
-  "NDX": [
-   {
-    "origin": "2019-06-30",
-    "P0": 7671.08,
-    "rf": 0.02,
-    "erp": 0.0506,
-    "lt": 0.261,
-    "n": 496,
-    "pay": 0.9884839982017539,
-    "base": 5837.897005042466,
-    "bear": 5241.339196727131,
-    "bull": 6567.990070874213,
-    "P12": 9849.36,
-    "gm": 5874.766288677597
+  },
+  "2020-06-30": {
+   "SPX": {
+    "proxy_substitutions": {
+     "FY1": "benchmarks best_eps",
+     "FY2_FY3": "flat at FY1 (declared degenerate, not a forecast)",
+     "ERP": "historical_erp 2020 implied_erp_fcfe = 0.0494",
+     "payout": "PIT book series retention=ΔB/(ROE·B_prev) clipped [0,1] -> payout 0.9338"
+    },
+    "inputs": {
+     "P0": 3009.05,
+     "P0_date": "2020-06-26",
+     "B0": 867.2613557758821,
+     "FY1": 142.1056,
+     "payout": 0.9338267317497154,
+     "rf": 0.0066,
+     "rf_date": "2020-06-30",
+     "ltroe": 0.1741,
+     "ltroe_n": 522,
+     "erp_base": 0.0494
+    },
+    "grid": {
+     "low_low": {
+      "erp": 0.0444,
+      "ltroe": 0.1691,
+      "ke": 0.051000000000000004,
+      "g": 0.0066,
+      "value": 3183.7267767676176,
+      "terminalShare": 0.6444289822053866,
+      "stableRetention": 0.03903015966883501
+     },
+     "low_base": {
+      "erp": 0.0444,
+      "ltroe": 0.1741,
+      "ke": 0.051000000000000004,
+      "g": 0.0066,
+      "value": 3270.589003963739,
+      "terminalShare": 0.6538724465155155,
+      "stableRetention": 0.03790924755887421
+     },
+     "low_high": {
+      "erp": 0.0444,
+      "ltroe": 0.1791,
+      "ke": 0.051000000000000004,
+      "g": 0.0066,
+      "value": 3357.45123115986,
+      "terminalShare": 0.6628272780587336,
+      "stableRetention": 0.03685092127303182
+     },
+     "base_low": {
+      "erp": 0.0494,
+      "ltroe": 0.1691,
+      "ke": 0.056,
+      "g": 0.0066,
+      "value": 2858.7762953266633,
+      "terminalShare": 0.6089979120755841,
+      "stableRetention": 0.03903015966883501
+     },
+     "base_base": {
+      "erp": 0.0494,
+      "ltroe": 0.1741,
+      "ke": 0.056,
+      "g": 0.0066,
+      "value": 2935.7430855541215,
+      "terminalShare": 0.6192488689211817,
+      "stableRetention": 0.03790924755887421
+     },
+     "base_high": {
+      "erp": 0.0494,
+      "ltroe": 0.1791,
+      "ke": 0.056,
+      "g": 0.0066,
+      "value": 3012.70987578158,
+      "terminalShare": 0.6289760559530921,
+      "stableRetention": 0.03685092127303182
+     },
+     "high_low": {
+      "erp": 0.0544,
+      "ltroe": 0.1691,
+      "ke": 0.061,
+      "g": 0.0066,
+      "value": 2593.6068627783216,
+      "terminalShare": 0.5744187009292442,
+      "stableRetention": 0.03903015966883501
+     },
+     "high_base": {
+      "erp": 0.0544,
+      "ltroe": 0.1741,
+      "ke": 0.061,
+      "g": 0.0066,
+      "value": 2662.516034139945,
+      "terminalShare": 0.5854332654576574,
+      "stableRetention": 0.03790924755887421
+     },
+     "high_high": {
+      "erp": 0.0544,
+      "ltroe": 0.1791,
+      "ke": 0.061,
+      "g": 0.0066,
+      "value": 2731.4252055015686,
+      "terminalShare": 0.5958920728574965,
+      "stableRetention": 0.03685092127303182
+     }
+    },
+    "BEAR": 2593.6068627783216,
+    "BASE": 2935.7430855541215,
+    "BULL": 3357.45123115986,
+    "GRID_MEAN": 2956.2827078859355,
+    "monotonicity_passed": true,
+    "min_ke_minus_g": 0.0444,
+    "base_terminal_share": 0.6192488689211817,
+    "base_stable_retention": 0.03790924755887421,
+    "label": "PROXY"
    },
-   {
-    "origin": "2020-06-30",
-    "P0": 9849.36,
-    "rf": 0.0066,
-    "erp": 0.0494,
-    "lt": 0.26385000000000003,
-    "n": 522,
-    "pay": 1.0,
-    "base": 7076.481570644996,
-    "bear": 6327.050501292213,
-    "bull": 7998.280935599463,
-    "P12": 14345.18,
-    "gm": 7124.77723475754
-   },
-   {
-    "origin": "2021-06-30",
-    "P0": 14345.18,
-    "rf": 0.014499999999999999,
-    "erp": 0.049,
-    "lt": 0.2658,
-    "n": 522,
-    "pay": 0.9059519552380979,
-    "base": 8887.51273748073,
-    "bear": 7940.0782964279015,
-    "bull": 10054.786231784887,
-    "P12": 12105.85,
-    "gm": 8948.9550333492
-   },
-   {
-    "origin": "2022-06-30",
-    "P0": 12105.85,
-    "rf": 0.0298,
-    "erp": 0.0511,
-    "lt": 0.266,
-    "n": 521,
-    "pay": 0.9188308458537486,
-    "base": 8780.818362718273,
-    "bear": 7878.656332557679,
-    "bull": 9883.03678772021,
-    "P12": 15179.21,
-    "gm": 8835.766647410965
-   },
-   {
-    "origin": "2023-06-30",
-    "P0": 15179.21,
-    "rf": 0.0381,
-    "erp": 0.0457,
-    "lt": 0.27795000000000003,
-    "n": 522,
-    "pay": 0.9360107895987173,
-    "base": 10025.242274613123,
-    "bear": 8893.02475138134,
-    "bull": 11440.899501329903,
-    "P12": 19682.87,
-    "gm": 10104.729259138086
-   },
-   {
-    "origin": "2024-06-30",
-    "P0": 19682.87,
-    "rf": 0.0436,
-    "erp": 0.04,
-    "lt": 0.2928,
-    "n": 522,
-    "pay": 0.9551492061369214,
-    "base": 14382.989321428353,
-    "bear": 12597.496953030708,
-    "bull": 16685.86011773321,
-    "P12": 22534.2,
-    "gm": 14531.754876038323
-   },
-   {
-    "origin": "2025-06-30",
-    "P0": 22534.2,
-    "rf": 0.0424,
-    "erp": 0.0418,
-    "lt": 0.30365,
-    "n": 522,
-    "pay": 0.9149306008821546,
-    "base": 16143.721564513695,
-    "bear": 14199.40809916328,
-    "bull": 18624.515531922803,
-    "P12": 29118.24,
-    "gm": 16298.061274893545
+   "NDX": {
+    "proxy_substitutions": {
+     "FY1": "benchmarks best_eps",
+     "FY2_FY3": "flat at FY1 (declared degenerate, not a forecast)",
+     "ERP": "historical_erp 2020 implied_erp_fcfe = 0.0494",
+     "payout": "PIT book series retention=ΔB/(ROE·B_prev) clipped [0,1] -> payout 0.6039"
+    },
+    "inputs": {
+     "P0": 9849.36,
+     "P0_date": "2020-06-26",
+     "B0": 1370.7271588615963,
+     "FY1": 376.8684,
+     "payout": 0.6038569005554165,
+     "rf": 0.0066,
+     "rf_date": "2020-06-30",
+     "ltroe": 0.26385000000000003,
+     "ltroe_n": 522,
+     "erp_base": 0.0494
+    },
+    "grid": {
+     "low_low": {
+      "erp": 0.0444,
+      "ltroe": 0.25885,
+      "ke": 0.051000000000000004,
+      "g": 0.0066,
+      "value": 9518.363160790068,
+      "terminalShare": 0.7704347835950919,
+      "stableRetention": 0.02549739231214989
+     },
+     "low_base": {
+      "erp": 0.0444,
+      "ltroe": 0.26385000000000003,
+      "ke": 0.051000000000000004,
+      "g": 0.0066,
+      "value": 9694.771100697762,
+      "terminalShare": 0.7746119969072803,
+      "stableRetention": 0.025014212620807275
+     },
+     "low_high": {
+      "erp": 0.0444,
+      "ltroe": 0.26885000000000003,
+      "ke": 0.051000000000000004,
+      "g": 0.0066,
+      "value": 9871.179040605453,
+      "terminalShare": 0.7786399081772452,
+      "stableRetention": 0.024549005021387387
+     },
+     "base_low": {
+      "erp": 0.0494,
+      "ltroe": 0.25885,
+      "ke": 0.056,
+      "g": 0.0066,
+      "value": 8498.747806059859,
+      "terminalShare": 0.7461748528660541,
+      "stableRetention": 0.02549739231214989
+     },
+     "base_base": {
+      "erp": 0.0494,
+      "ltroe": 0.26385000000000003,
+      "ke": 0.056,
+      "g": 0.0066,
+      "value": 8655.059166516661,
+      "terminalShare": 0.7507589641128201,
+      "stableRetention": 0.025014212620807275
+     },
+     "base_high": {
+      "erp": 0.0494,
+      "ltroe": 0.26885000000000003,
+      "ke": 0.056,
+      "g": 0.0066,
+      "value": 8811.370526973464,
+      "terminalShare": 0.7551804335405243,
+      "stableRetention": 0.024549005021387387
+     },
+     "high_low": {
+      "erp": 0.0544,
+      "ltroe": 0.25885,
+      "ke": 0.061,
+      "g": 0.0066,
+      "value": 7667.521795539286,
+      "terminalShare": 0.7222295044253483,
+      "stableRetention": 0.02549739231214989
+     },
+     "high_base": {
+      "erp": 0.0544,
+      "ltroe": 0.26385000000000003,
+      "ke": 0.061,
+      "g": 0.0066,
+      "value": 7807.468989538854,
+      "terminalShare": 0.7272084805165282,
+      "stableRetention": 0.025014212620807275
+     },
+     "high_high": {
+      "erp": 0.0544,
+      "ltroe": 0.26885000000000003,
+      "ke": 0.061,
+      "g": 0.0066,
+      "value": 7947.416183538422,
+      "terminalShare": 0.732012105596295,
+      "stableRetention": 0.024549005021387387
+     }
+    },
+    "BEAR": 7667.521795539286,
+    "BASE": 8655.059166516661,
+    "BULL": 9871.179040605453,
+    "GRID_MEAN": 8719.099752251092,
+    "monotonicity_passed": true,
+    "min_ke_minus_g": 0.0444,
+    "base_terminal_share": 0.7507589641128201,
+    "base_stable_retention": 0.025014212620807275,
+    "label": "PROXY"
    }
-  ]
+  },
+  "2021-06-30": {
+   "SPX": {
+    "proxy_substitutions": {
+     "FY1": "benchmarks best_eps",
+     "FY2_FY3": "flat at FY1 (declared degenerate, not a forecast)",
+     "ERP": "historical_erp 2021 implied_erp_fcfe = 0.049",
+     "payout": "PIT book series retention=ΔB/(ROE·B_prev) clipped [0,1] -> payout 0.7226"
+    },
+    "inputs": {
+     "P0": 4280.7,
+     "P0_date": "2021-06-25",
+     "B0": 919.7499033131364,
+     "FY1": 200.655,
+     "payout": 0.7226297910023709,
+     "rf": 0.014499999999999999,
+     "rf_date": "2021-06-30",
+     "ltroe": 0.1746,
+     "ltroe_n": 522,
+     "erp_base": 0.049
+    },
+    "grid": {
+     "low_low": {
+      "erp": 0.044000000000000004,
+      "ltroe": 0.1696,
+      "ke": 0.0585,
+      "g": 0.014499999999999999,
+      "value": 3618.666670640994,
+      "terminalShare": 0.6393765448659444,
+      "stableRetention": 0.08549528301886791
+     },
+     "low_base": {
+      "erp": 0.044000000000000004,
+      "ltroe": 0.1746,
+      "ke": 0.0585,
+      "g": 0.014499999999999999,
+      "value": 3722.793159970246,
+      "terminalShare": 0.6494631794812274,
+      "stableRetention": 0.08304696449026346
+     },
+     "low_high": {
+      "erp": 0.044000000000000004,
+      "ltroe": 0.1796,
+      "ke": 0.0585,
+      "g": 0.014499999999999999,
+      "value": 3826.919649299499,
+      "terminalShare": 0.6590009204964953,
+      "stableRetention": 0.08073496659242761
+     },
+     "base_low": {
+      "erp": 0.049,
+      "ltroe": 0.1696,
+      "ke": 0.0635,
+      "g": 0.014499999999999999,
+      "value": 3244.78361147785,
+      "terminalShare": 0.6028892869903949,
+      "stableRetention": 0.08549528301886791
+     },
+     "base_base": {
+      "erp": 0.049,
+      "ltroe": 0.1746,
+      "ke": 0.0635,
+      "g": 0.014499999999999999,
+      "value": 3336.972361617436,
+      "terminalShare": 0.6138600522027416,
+      "stableRetention": 0.08304696449026346
+     },
+     "base_high": {
+      "erp": 0.049,
+      "ltroe": 0.1796,
+      "ke": 0.0635,
+      "g": 0.014499999999999999,
+      "value": 3429.161111757021,
+      "terminalShare": 0.6242409465399442,
+      "stableRetention": 0.08073496659242761
+     },
+     "high_low": {
+      "erp": 0.054,
+      "ltroe": 0.1696,
+      "ke": 0.0685,
+      "g": 0.014499999999999999,
+      "value": 2940.219561229754,
+      "terminalShare": 0.5672448205477626,
+      "stableRetention": 0.08549528301886791
+     },
+     "high_base": {
+      "erp": 0.054,
+      "ltroe": 0.1746,
+      "ke": 0.0685,
+      "g": 0.014499999999999999,
+      "value": 3022.7034542752926,
+      "terminalShare": 0.5790538955949208,
+      "stableRetention": 0.08304696449026346
+     },
+     "high_high": {
+      "erp": 0.054,
+      "ltroe": 0.1796,
+      "ke": 0.0685,
+      "g": 0.014499999999999999,
+      "value": 3105.1873473208316,
+      "terminalShare": 0.5902355956245962,
+      "stableRetention": 0.08073496659242761
+     }
+    },
+    "BEAR": 2940.219561229754,
+    "BASE": 3336.972361617436,
+    "BULL": 3826.919649299499,
+    "GRID_MEAN": 3360.822991954325,
+    "monotonicity_passed": true,
+    "min_ke_minus_g": 0.044000000000000004,
+    "base_terminal_share": 0.6138600522027416,
+    "base_stable_retention": 0.08304696449026346,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "proxy_substitutions": {
+     "FY1": "benchmarks best_eps",
+     "FY2_FY3": "flat at FY1 (declared degenerate, not a forecast)",
+     "ERP": "historical_erp 2021 implied_erp_fcfe = 0.049",
+     "payout": "PIT book series retention=ΔB/(ROE·B_prev) clipped [0,1] -> payout 0.4162"
+    },
+    "inputs": {
+     "P0": 14345.18,
+     "P0_date": "2021-06-25",
+     "B0": 1632.4714932744612,
+     "FY1": 533.9957,
+     "payout": 0.41622468337085483,
+     "rf": 0.014499999999999999,
+     "rf_date": "2021-06-30",
+     "ltroe": 0.2658,
+     "ltroe_n": 522,
+     "erp_base": 0.049
+    },
+    "grid": {
+     "low_low": {
+      "erp": 0.044000000000000004,
+      "ltroe": 0.2608,
+      "ke": 0.0585,
+      "g": 0.014499999999999999,
+      "value": 12715.09454530373,
+      "terminalShare": 0.7828716638378098,
+      "stableRetention": 0.05559815950920245
+     },
+     "low_base": {
+      "erp": 0.044000000000000004,
+      "ltroe": 0.2658,
+      "ke": 0.0585,
+      "g": 0.014499999999999999,
+      "value": 12961.122405475182,
+      "terminalShare": 0.7869931911451984,
+      "stableRetention": 0.0545522949586155
+     },
+     "low_high": {
+      "erp": 0.044000000000000004,
+      "ltroe": 0.2708,
+      "ke": 0.0585,
+      "g": 0.014499999999999999,
+      "value": 13207.150265646635,
+      "terminalShare": 0.7909611636699609,
+      "stableRetention": 0.053545051698670604
+     },
+     "base_low": {
+      "erp": 0.049,
+      "ltroe": 0.2608,
+      "ke": 0.0635,
+      "g": 0.014499999999999999,
+      "value": 11320.176310389546,
+      "terminalShare": 0.7592851045476378,
+      "stableRetention": 0.05559815950920245
+     },
+     "base_base": {
+      "erp": 0.049,
+      "ltroe": 0.2658,
+      "ke": 0.0635,
+      "g": 0.014499999999999999,
+      "value": 11537.997933636678,
+      "terminalShare": 0.7638294726060111,
+      "stableRetention": 0.0545522949586155
+     },
+     "base_high": {
+      "erp": 0.049,
+      "ltroe": 0.2708,
+      "ke": 0.0635,
+      "g": 0.014499999999999999,
+      "value": 11755.81955688381,
+      "terminalShare": 0.7682054369861354,
+      "stableRetention": 0.053545051698670604
+     },
+     "high_low": {
+      "erp": 0.054,
+      "ltroe": 0.2608,
+      "ke": 0.0685,
+      "g": 0.014499999999999999,
+      "value": 10185.228617630812,
+      "terminalShare": 0.7359201796472795,
+      "stableRetention": 0.05559815950920245
+     },
+     "high_base": {
+      "erp": 0.054,
+      "ltroe": 0.2658,
+      "ke": 0.0685,
+      "g": 0.014499999999999999,
+      "value": 10380.119810403448,
+      "terminalShare": 0.7408783913168732,
+      "stableRetention": 0.0545522949586155
+     },
+     "high_high": {
+      "erp": 0.054,
+      "ltroe": 0.2708,
+      "ke": 0.0685,
+      "g": 0.014499999999999999,
+      "value": 10575.011003176081,
+      "terminalShare": 0.7456538491744821,
+      "stableRetention": 0.053545051698670604
+     }
+    },
+    "BEAR": 10185.228617630812,
+    "BASE": 11537.997933636678,
+    "BULL": 13207.150265646635,
+    "GRID_MEAN": 11626.41338317177,
+    "monotonicity_passed": true,
+    "min_ke_minus_g": 0.044000000000000004,
+    "base_terminal_share": 0.7638294726060111,
+    "base_stable_retention": 0.0545522949586155,
+    "label": "PROXY"
+   }
+  },
+  "2022-06-30": {
+   "SPX": {
+    "proxy_substitutions": {
+     "FY1": "benchmarks best_eps",
+     "FY2_FY3": "flat at FY1 (declared degenerate, not a forecast)",
+     "ERP": "historical_erp 2022 implied_erp_fcfe = 0.0511",
+     "payout": "PIT book series retention=ΔB/(ROE·B_prev) clipped [0,1] -> payout 0.6766"
+    },
+    "inputs": {
+     "P0": 3911.74,
+     "P0_date": "2022-06-24",
+     "B0": 991.1419667063623,
+     "FY1": 237.9034,
+     "payout": 0.6765784592816286,
+     "rf": 0.0298,
+     "rf_date": "2022-06-30",
+     "ltroe": 0.1755,
+     "ltroe_n": 521,
+     "erp_base": 0.0511
+    },
+    "grid": {
+     "low_low": {
+      "erp": 0.0461,
+      "ltroe": 0.17049999999999998,
+      "ke": 0.0759,
+      "g": 0.0298,
+      "value": 3412.4956730960293,
+      "terminalShare": 0.5900154121858053,
+      "stableRetention": 0.17478005865102642
+     },
+     "low_base": {
+      "erp": 0.0461,
+      "ltroe": 0.1755,
+      "ke": 0.0759,
+      "g": 0.0298,
+      "value": 3518.913487109984,
+      "terminalShare": 0.6024140300473747,
+      "stableRetention": 0.16980056980056982
+     },
+     "low_high": {
+      "erp": 0.0461,
+      "ltroe": 0.1805,
+      "ke": 0.0759,
+      "g": 0.0298,
+      "value": 3625.3313011239397,
+      "terminalShare": 0.6140847509527604,
+      "stableRetention": 0.16509695290858725
+     },
+     "base_low": {
+      "erp": 0.0511,
+      "ltroe": 0.17049999999999998,
+      "ke": 0.0809,
+      "g": 0.0298,
+      "value": 3078.4038888320974,
+      "terminalShare": 0.5511450829635233,
+      "stableRetention": 0.17478005865102642
+     },
+     "base_base": {
+      "erp": 0.0511,
+      "ltroe": 0.1755,
+      "ke": 0.0809,
+      "g": 0.0298,
+      "value": 3173.082860188437,
+      "terminalShare": 0.5645380902393323,
+      "stableRetention": 0.16980056980056982
+     },
+     "base_high": {
+      "erp": 0.0511,
+      "ltroe": 0.1805,
+      "ke": 0.0809,
+      "g": 0.0298,
+      "value": 3267.7618315447758,
+      "terminalShare": 0.5771550090377005,
+      "stableRetention": 0.16509695290858725
+     },
+     "high_low": {
+      "erp": 0.0561,
+      "ltroe": 0.17049999999999998,
+      "ke": 0.0859,
+      "g": 0.0298,
+      "value": 2803.8746056197974,
+      "terminalShare": 0.5132635132138563,
+      "stableRetention": 0.17478005865102642
+     },
+     "high_base": {
+      "erp": 0.0561,
+      "ltroe": 0.1755,
+      "ke": 0.0859,
+      "g": 0.0298,
+      "value": 2888.929365116933,
+      "terminalShare": 0.5275938237164118,
+      "stableRetention": 0.16980056980056982
+     },
+     "high_high": {
+      "erp": 0.0561,
+      "ltroe": 0.1805,
+      "ke": 0.0859,
+      "g": 0.0298,
+      "value": 2973.9841246140686,
+      "terminalShare": 0.541104451892336,
+      "stableRetention": 0.16509695290858725
+     }
+    },
+    "BEAR": 2803.8746056197974,
+    "BASE": 3173.082860188437,
+    "BULL": 3625.3313011239397,
+    "GRID_MEAN": 3193.641904138451,
+    "monotonicity_passed": true,
+    "min_ke_minus_g": 0.046099999999999995,
+    "base_terminal_share": 0.5645380902393323,
+    "base_stable_retention": 0.16980056980056982,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "proxy_substitutions": {
+     "FY1": "benchmarks best_eps",
+     "FY2_FY3": "flat at FY1 (declared degenerate, not a forecast)",
+     "ERP": "historical_erp 2022 implied_erp_fcfe = 0.0511",
+     "payout": "PIT book series retention=ΔB/(ROE·B_prev) clipped [0,1] -> payout 0.5457"
+    },
+    "inputs": {
+     "P0": 12105.85,
+     "P0_date": "2022-06-24",
+     "B0": 1868.9943185326995,
+     "FY1": 595.9293,
+     "payout": 0.5456684122469957,
+     "rf": 0.0298,
+     "rf_date": "2022-06-30",
+     "ltroe": 0.266,
+     "ltroe_n": 521,
+     "erp_base": 0.0511
+    },
+    "grid": {
+     "low_low": {
+      "erp": 0.0461,
+      "ltroe": 0.261,
+      "ke": 0.0759,
+      "g": 0.0298,
+      "value": 11641.363623815496,
+      "terminalShare": 0.7425437803688938,
+      "stableRetention": 0.11417624521072797
+     },
+     "low_base": {
+      "erp": 0.0461,
+      "ltroe": 0.266,
+      "ke": 0.0759,
+      "g": 0.0298,
+      "value": 11874.865032618221,
+      "terminalShare": 0.7476062707486798,
+      "stableRetention": 0.11203007518796992
+     },
+     "low_high": {
+      "erp": 0.0461,
+      "ltroe": 0.271,
+      "ke": 0.0759,
+      "g": 0.0298,
+      "value": 12108.366441420949,
+      "terminalShare": 0.7524735079303653,
+      "stableRetention": 0.1099630996309963
+     },
+     "base_low": {
+      "erp": 0.0511,
+      "ltroe": 0.261,
+      "ke": 0.0809,
+      "g": 0.0298,
+      "value": 10442.748099052204,
+      "terminalShare": 0.7165683284242048,
+      "stableRetention": 0.11417624521072797
+     },
+     "base_base": {
+      "erp": 0.0511,
+      "ltroe": 0.266,
+      "ke": 0.0809,
+      "g": 0.0298,
+      "value": 10650.492200925964,
+      "terminalShare": 0.7220968295435215,
+      "stableRetention": 0.11203007518796992
+     },
+     "base_high": {
+      "erp": 0.0511,
+      "ltroe": 0.271,
+      "ke": 0.0809,
+      "g": 0.0298,
+      "value": 10858.236302799727,
+      "terminalShare": 0.7274137836919099,
+      "stableRetention": 0.1099630996309963
+     },
+     "high_low": {
+      "erp": 0.0561,
+      "ltroe": 0.261,
+      "ke": 0.0859,
+      "g": 0.0298,
+      "value": 9458.796826400841,
+      "terminalShare": 0.6909617988425163,
+      "stableRetention": 0.11417624521072797
+     },
+     "high_base": {
+      "erp": 0.0561,
+      "ltroe": 0.266,
+      "ke": 0.0859,
+      "g": 0.0298,
+      "value": 9645.423533141442,
+      "terminalShare": 0.6969412959108297,
+      "stableRetention": 0.11203007518796992
+     },
+     "high_high": {
+      "erp": 0.0561,
+      "ltroe": 0.271,
+      "ke": 0.0859,
+      "g": 0.0298,
+      "value": 9832.050239882043,
+      "terminalShare": 0.7026937937635984,
+      "stableRetention": 0.1099630996309963
+     }
+    },
+    "BEAR": 9458.796826400841,
+    "BASE": 10650.492200925964,
+    "BULL": 12108.366441420949,
+    "GRID_MEAN": 10723.59358889521,
+    "monotonicity_passed": true,
+    "min_ke_minus_g": 0.046099999999999995,
+    "base_terminal_share": 0.7220968295435215,
+    "base_stable_retention": 0.11203007518796992,
+    "label": "PROXY"
+   }
+  },
+  "2023-06-30": {
+   "SPX": {
+    "proxy_substitutions": {
+     "FY1": "benchmarks best_eps",
+     "FY2_FY3": "flat at FY1 (declared degenerate, not a forecast)",
+     "ERP": "historical_erp 2023 implied_erp_fcfe = 0.0457",
+     "payout": "PIT book series retention=ΔB/(ROE·B_prev) clipped [0,1] -> payout 0.8145"
+    },
+    "inputs": {
+     "P0": 4450.38,
+     "P0_date": "2023-06-30",
+     "B0": 1032.0200357118013,
+     "FY1": 229.3816,
+     "payout": 0.8144696155859356,
+     "rf": 0.0381,
+     "rf_date": "2023-06-30",
+     "ltroe": 0.17975000000000002,
+     "ltroe_n": 522,
+     "erp_base": 0.0457
+    },
+    "grid": {
+     "low_low": {
+      "erp": 0.0407,
+      "ltroe": 0.17475000000000002,
+      "ke": 0.07880000000000001,
+      "g": 0.0381,
+      "value": 3583.746182753283,
+      "terminalShare": 0.6076214564468009,
+      "stableRetention": 0.21802575107296138
+     },
+     "low_base": {
+      "erp": 0.0407,
+      "ltroe": 0.17975000000000002,
+      "ke": 0.07880000000000001,
+      "g": 0.0381,
+      "value": 3697.219922987791,
+      "terminalShare": 0.6196641971687996,
+      "stableRetention": 0.21196105702364393
+     },
+     "low_high": {
+      "erp": 0.0407,
+      "ltroe": 0.18475000000000003,
+      "ke": 0.07880000000000001,
+      "g": 0.0381,
+      "value": 3810.6936632222996,
+      "terminalShare": 0.6309897273495323,
+      "stableRetention": 0.20622462787550744
+     },
+     "base_low": {
+      "erp": 0.0457,
+      "ltroe": 0.17475000000000002,
+      "ke": 0.0838,
+      "g": 0.0381,
+      "value": 3202.066054106341,
+      "terminalShare": 0.5661758815287202,
+      "stableRetention": 0.21802575107296138
+     },
+     "base_base": {
+      "erp": 0.0457,
+      "ltroe": 0.17975000000000002,
+      "ke": 0.0838,
+      "g": 0.0381,
+      "value": 3301.7324956069924,
+      "terminalShare": 0.579271341619057,
+      "stableRetention": 0.21196105702364393
+     },
+     "base_high": {
+      "erp": 0.0457,
+      "ltroe": 0.18475000000000003,
+      "ke": 0.0838,
+      "g": 0.0381,
+      "value": 3401.398937107644,
+      "terminalShare": 0.591599365762508,
+      "stableRetention": 0.20622462787550744
+     },
+     "high_low": {
+      "erp": 0.050699999999999995,
+      "ltroe": 0.17475000000000002,
+      "ke": 0.08879999999999999,
+      "g": 0.0381,
+      "value": 2895.506859601842,
+      "terminalShare": 0.5260312864302772,
+      "stableRetention": 0.21802575107296138
+     },
+     "high_base": {
+      "erp": 0.050699999999999995,
+      "ltroe": 0.17975000000000002,
+      "ke": 0.08879999999999999,
+      "g": 0.0381,
+      "value": 2984.112281255364,
+      "terminalShare": 0.5401045496852227,
+      "stableRetention": 0.21196105702364393
+     },
+     "high_high": {
+      "erp": 0.050699999999999995,
+      "ltroe": 0.18475000000000003,
+      "ke": 0.08879999999999999,
+      "g": 0.0381,
+      "value": 3072.717702908886,
+      "terminalShare": 0.5533661748104665,
+      "stableRetention": 0.20622462787550744
+     }
+    },
+    "BEAR": 2895.506859601842,
+    "BASE": 3301.7324956069924,
+    "BULL": 3810.6936632222996,
+    "GRID_MEAN": 3327.6882332833825,
+    "monotonicity_passed": true,
+    "min_ke_minus_g": 0.04070000000000001,
+    "base_terminal_share": 0.579271341619057,
+    "base_stable_retention": 0.21196105702364393,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "proxy_substitutions": {
+     "FY1": "benchmarks best_eps",
+     "FY2_FY3": "flat at FY1 (declared degenerate, not a forecast)",
+     "ERP": "historical_erp 2023 implied_erp_fcfe = 0.0457",
+     "payout": "PIT book series retention=ΔB/(ROE·B_prev) clipped [0,1] -> payout 0.7817"
+    },
+    "inputs": {
+     "P0": 15179.21,
+     "P0_date": "2023-06-30",
+     "B0": 1987.093691500085,
+     "FY1": 575.1695,
+     "payout": 0.7817315107187899,
+     "rf": 0.0381,
+     "rf_date": "2023-06-30",
+     "ltroe": 0.27795000000000003,
+     "ltroe_n": 522,
+     "erp_base": 0.0457
+    },
+    "grid": {
+     "low_low": {
+      "erp": 0.0407,
+      "ltroe": 0.27295,
+      "ke": 0.07880000000000001,
+      "g": 0.0381,
+      "value": 12024.728924111976,
+      "terminalShare": 0.7468622485362223,
+      "stableRetention": 0.13958600476277705
+     },
+     "low_base": {
+      "erp": 0.0407,
+      "ltroe": 0.27795000000000003,
+      "ke": 0.07880000000000001,
+      "g": 0.0381,
+      "value": 12256.014427132857,
+      "terminalShare": 0.7516392576144151,
+      "stableRetention": 0.13707501349163517
+     },
+     "low_high": {
+      "erp": 0.0407,
+      "ltroe": 0.28295000000000003,
+      "ke": 0.07880000000000001,
+      "g": 0.0381,
+      "value": 12487.299930153738,
+      "terminalShare": 0.7562393104324451,
+      "stableRetention": 0.13465276550627317
+     },
+     "base_low": {
+      "erp": 0.0457,
+      "ltroe": 0.27295,
+      "ke": 0.0838,
+      "g": 0.0381,
+      "value": 10692.465561189389,
+      "terminalShare": 0.7187212336074636,
+      "stableRetention": 0.13958600476277705
+     },
+     "base_base": {
+      "erp": 0.0457,
+      "ltroe": 0.27795000000000003,
+      "ke": 0.0838,
+      "g": 0.0381,
+      "value": 10895.608623268252,
+      "terminalShare": 0.7239655326529267,
+      "stableRetention": 0.13707501349163517
+     },
+     "base_high": {
+      "erp": 0.0457,
+      "ltroe": 0.28295000000000003,
+      "ke": 0.0838,
+      "g": 0.0381,
+      "value": 11098.751685347113,
+      "terminalShare": 0.7290178564210333,
+      "stableRetention": 0.13465276550627317
+     },
+     "high_low": {
+      "erp": 0.050699999999999995,
+      "ltroe": 0.27295,
+      "ke": 0.08879999999999999,
+      "g": 0.0381,
+      "value": 9623.275692149924,
+      "terminalShare": 0.691181538661978,
+      "stableRetention": 0.13958600476277705
+     },
+     "high_base": {
+      "erp": 0.050699999999999995,
+      "ltroe": 0.27795000000000003,
+      "ke": 0.08879999999999999,
+      "g": 0.0381,
+      "value": 9803.87385940131,
+      "terminalShare": 0.6968703152548712,
+      "stableRetention": 0.13707501349163517
+     },
+     "high_high": {
+      "erp": 0.050699999999999995,
+      "ltroe": 0.28295000000000003,
+      "ke": 0.08879999999999999,
+      "g": 0.0381,
+      "value": 9984.472026652698,
+      "terminalShare": 0.7023532957628364,
+      "stableRetention": 0.13465276550627317
+     }
+    },
+    "BEAR": 9623.275692149924,
+    "BASE": 10895.608623268252,
+    "BULL": 12487.299930153738,
+    "GRID_MEAN": 10985.165636600806,
+    "monotonicity_passed": true,
+    "min_ke_minus_g": 0.04070000000000001,
+    "base_terminal_share": 0.7239655326529267,
+    "base_stable_retention": 0.13707501349163517,
+    "label": "PROXY"
+   }
+  },
+  "2024-06-30": {
+   "SPX": {
+    "proxy_substitutions": {
+     "FY1": "benchmarks best_eps",
+     "FY2_FY3": "flat at FY1 (declared degenerate, not a forecast)",
+     "ERP": "historical_erp 2024 implied_erp_fcfe = 0.04",
+     "payout": "PIT book series retention=ΔB/(ROE·B_prev) clipped [0,1] -> payout 0.71"
+    },
+    "inputs": {
+     "P0": 5460.48,
+     "P0_date": "2024-06-28",
+     "B0": 1102.0808525238663,
+     "FY1": 257.9945,
+     "payout": 0.7100082426583105,
+     "rf": 0.0436,
+     "rf_date": "2024-06-28",
+     "ltroe": 0.1986,
+     "ltroe_n": 522,
+     "erp_base": 0.04
+    },
+    "grid": {
+     "low_low": {
+      "erp": 0.035,
+      "ltroe": 0.1936,
+      "ke": 0.0786,
+      "g": 0.0436,
+      "value": 5003.896697897365,
+      "terminalShare": 0.6941561675872677,
+      "stableRetention": 0.22520661157024793
+     },
+     "low_base": {
+      "erp": 0.035,
+      "ltroe": 0.1986,
+      "ke": 0.0786,
+      "g": 0.0436,
+      "value": 5154.917817671931,
+      "terminalShare": 0.7031163255724779,
+      "stableRetention": 0.21953675730110775
+     },
+     "low_high": {
+      "erp": 0.035,
+      "ltroe": 0.2036,
+      "ke": 0.0786,
+      "g": 0.0436,
+      "value": 5305.938937446497,
+      "terminalShare": 0.7115664237517851,
+      "stableRetention": 0.21414538310412573
+     },
+     "base_low": {
+      "erp": 0.04,
+      "ltroe": 0.1936,
+      "ke": 0.08360000000000001,
+      "g": 0.0436,
+      "value": 4378.698668543609,
+      "terminalShare": 0.6547833380402263,
+      "stableRetention": 0.22520661157024793
+     },
+     "base_base": {
+      "erp": 0.04,
+      "ltroe": 0.1986,
+      "ke": 0.08360000000000001,
+      "g": 0.0436,
+      "value": 4509.021347200939,
+      "terminalShare": 0.664761015376278,
+      "stableRetention": 0.21953675730110775
+     },
+     "base_high": {
+      "erp": 0.04,
+      "ltroe": 0.2036,
+      "ke": 0.08360000000000001,
+      "g": 0.0436,
+      "value": 4639.3440258582705,
+      "terminalShare": 0.6741781317235496,
+      "stableRetention": 0.21414538310412573
+     },
+     "high_low": {
+      "erp": 0.045,
+      "ltroe": 0.1936,
+      "ke": 0.0886,
+      "g": 0.0436,
+      "value": 3892.442123777036,
+      "terminalShare": 0.6164056424479919,
+      "stableRetention": 0.22520661157024793
+     },
+     "high_base": {
+      "erp": 0.045,
+      "ltroe": 0.1986,
+      "ke": 0.0886,
+      "g": 0.0436,
+      "value": 4006.695613681722,
+      "terminalShare": 0.6273440810726796,
+      "stableRetention": 0.21953675730110775
+     },
+     "high_high": {
+      "erp": 0.045,
+      "ltroe": 0.2036,
+      "ke": 0.0886,
+      "g": 0.0436,
+      "value": 4120.9491035864085,
+      "terminalShare": 0.6376759823412561,
+      "stableRetention": 0.21414538310412573
+     }
+    },
+    "BEAR": 3892.442123777036,
+    "BASE": 4509.021347200939,
+    "BULL": 5305.938937446497,
+    "GRID_MEAN": 4556.8782595181965,
+    "monotonicity_passed": true,
+    "min_ke_minus_g": 0.035,
+    "base_terminal_share": 0.664761015376278,
+    "base_stable_retention": 0.21953675730110775,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "proxy_substitutions": {
+     "FY1": "benchmarks best_eps",
+     "FY2_FY3": "flat at FY1 (declared degenerate, not a forecast)",
+     "ERP": "historical_erp 2024 implied_erp_fcfe = 0.04",
+     "payout": "PIT book series retention=ΔB/(ROE·B_prev) clipped [0,1] -> payout 0.2078"
+    },
+    "inputs": {
+     "P0": 19682.87,
+     "P0_date": "2024-06-28",
+     "B0": 2464.0856795903806,
+     "FY1": 746.5841,
+     "payout": 0.2077721395170119,
+     "rf": 0.0436,
+     "rf_date": "2024-06-28",
+     "ltroe": 0.2928,
+     "ltroe_n": 522,
+     "erp_base": 0.04
+    },
+    "grid": {
+     "low_low": {
+      "erp": 0.035,
+      "ltroe": 0.2878,
+      "ke": 0.0786,
+      "g": 0.0436,
+      "value": 23967.888448358386,
+      "terminalShare": 0.8423503028215831,
+      "stableRetention": 0.15149409312022238
+     },
+     "low_base": {
+      "erp": 0.035,
+      "ltroe": 0.2928,
+      "ke": 0.0786,
+      "g": 0.0436,
+      "value": 24450.425687662133,
+      "terminalShare": 0.8454615717469307,
+      "stableRetention": 0.1489071038251366
+     },
+     "low_high": {
+      "erp": 0.035,
+      "ltroe": 0.2978,
+      "ke": 0.0786,
+      "g": 0.0436,
+      "value": 24932.962926965873,
+      "terminalShare": 0.8484524134994336,
+      "stableRetention": 0.14640698455339154
+     },
+     "base_low": {
+      "erp": 0.04,
+      "ltroe": 0.2878,
+      "ke": 0.08360000000000001,
+      "g": 0.0436,
+      "value": 20734.264704747315,
+      "terminalShare": 0.8201820148323792,
+      "stableRetention": 0.15149409312022238
+     },
+     "base_base": {
+      "erp": 0.04,
+      "ltroe": 0.2928,
+      "ke": 0.08360000000000001,
+      "g": 0.0436,
+      "value": 21150.66703093751,
+      "terminalShare": 0.8237221692495001,
+      "stableRetention": 0.1489071038251366
+     },
+     "base_high": {
+      "erp": 0.04,
+      "ltroe": 0.2978,
+      "ke": 0.08360000000000001,
+      "g": 0.0436,
+      "value": 21567.069357127708,
+      "terminalShare": 0.8271256218727937,
+      "stableRetention": 0.14640698455339154
+     },
+     "high_low": {
+      "erp": 0.045,
+      "ltroe": 0.2878,
+      "ke": 0.0886,
+      "g": 0.0436,
+      "value": 18223.098285218057,
+      "terminalShare": 0.7981044566087566,
+      "stableRetention": 0.15149409312022238
+     },
+     "high_base": {
+      "erp": 0.045,
+      "ltroe": 0.2928,
+      "ke": 0.0886,
+      "g": 0.0436,
+      "value": 18588.15691861796,
+      "terminalShare": 0.8020695463959057,
+      "stableRetention": 0.1489071038251366
+     },
+     "high_high": {
+      "erp": 0.045,
+      "ltroe": 0.2978,
+      "ke": 0.0886,
+      "g": 0.0436,
+      "value": 18953.215552017857,
+      "terminalShare": 0.8058818926810319,
+      "stableRetention": 0.14640698455339154
+     }
+    },
+    "BEAR": 18223.098285218057,
+    "BASE": 21150.66703093751,
+    "BULL": 24932.962926965873,
+    "GRID_MEAN": 21396.4165457392,
+    "monotonicity_passed": true,
+    "min_ke_minus_g": 0.035,
+    "base_terminal_share": 0.8237221692495001,
+    "base_stable_retention": 0.1489071038251366,
+    "label": "PROXY"
+   }
+  },
+  "2025-06-30": {
+   "SPX": {
+    "proxy_substitutions": {
+     "FY1": "benchmarks best_eps",
+     "FY2_FY3": "flat at FY1 (declared degenerate, not a forecast)",
+     "ERP": "historical_erp 2025 implied_erp_fcfe = 0.0418",
+     "payout": "PIT book series retention=ΔB/(ROE·B_prev) clipped [0,1] -> payout 0.6865"
+    },
+    "inputs": {
+     "P0": 6173.07,
+     "P0_date": "2025-06-27",
+     "B0": 1184.0094366764486,
+     "FY1": 280.7475,
+     "payout": 0.6864618159698683,
+     "rf": 0.0424,
+     "rf_date": "2025-06-30",
+     "ltroe": 0.2031,
+     "ltroe_n": 522,
+     "erp_base": 0.0418
+    },
+    "grid": {
+     "low_low": {
+      "erp": 0.0368,
+      "ltroe": 0.1981,
+      "ke": 0.07919999999999999,
+      "g": 0.0424,
+      "value": 5371.869328493743,
+      "terminalShare": 0.6929417479628188,
+      "stableRetention": 0.21403331650681473
+     },
+     "low_base": {
+      "erp": 0.0368,
+      "ltroe": 0.2031,
+      "ke": 0.07919999999999999,
+      "g": 0.0424,
+      "value": 5528.40391732109,
+      "terminalShare": 0.7016359819492486,
+      "stableRetention": 0.2087641555883801
+     },
+     "low_high": {
+      "erp": 0.0368,
+      "ltroe": 0.2081,
+      "ke": 0.07919999999999999,
+      "g": 0.0424,
+      "value": 5684.938506148436,
+      "terminalShare": 0.7098514250601877,
+      "stableRetention": 0.20374819798173954
+     },
+     "base_low": {
+      "erp": 0.0418,
+      "ltroe": 0.1981,
+      "ke": 0.0842,
+      "g": 0.0424,
+      "value": 4725.2401852867615,
+      "terminalShare": 0.6552232293738623,
+      "stableRetention": 0.21403331650681473
+     },
+     "base_base": {
+      "erp": 0.0418,
+      "ltroe": 0.2031,
+      "ke": 0.0842,
+      "g": 0.0424,
+      "value": 4861.15270213359,
+      "terminalShare": 0.6648628110775091,
+      "stableRetention": 0.2087641555883801
+     },
+     "base_high": {
+      "erp": 0.0418,
+      "ltroe": 0.2081,
+      "ke": 0.0842,
+      "g": 0.0424,
+      "value": 4997.065218980418,
+      "terminalShare": 0.67397802907835,
+      "stableRetention": 0.20374819798173954
+     },
+     "high_low": {
+      "erp": 0.046799999999999994,
+      "ltroe": 0.1981,
+      "ke": 0.0892,
+      "g": 0.0424,
+      "value": 4216.859007017016,
+      "terminalShare": 0.618392180640238,
+      "stableRetention": 0.21403331650681473
+     },
+     "high_base": {
+      "erp": 0.046799999999999994,
+      "ltroe": 0.2031,
+      "ke": 0.0892,
+      "g": 0.0424,
+      "value": 4336.586859946386,
+      "terminalShare": 0.6289279052431502,
+      "stableRetention": 0.2087641555883801
+     },
+     "high_high": {
+      "erp": 0.046799999999999994,
+      "ltroe": 0.2081,
+      "ke": 0.0892,
+      "g": 0.0424,
+      "value": 4456.314712875756,
+      "terminalShare": 0.6388975030049231,
+      "stableRetention": 0.20374819798173954
+     }
+    },
+    "BEAR": 4216.859007017016,
+    "BASE": 4861.15270213359,
+    "BULL": 5684.938506148436,
+    "GRID_MEAN": 4908.714493133689,
+    "monotonicity_passed": true,
+    "min_ke_minus_g": 0.03679999999999999,
+    "base_terminal_share": 0.6648628110775091,
+    "base_stable_retention": 0.2087641555883801,
+    "label": "PROXY"
+   },
+   "NDX": {
+    "proxy_substitutions": {
+     "FY1": "benchmarks best_eps",
+     "FY2_FY3": "flat at FY1 (declared degenerate, not a forecast)",
+     "ERP": "historical_erp 2025 implied_erp_fcfe = 0.0418",
+     "payout": "PIT book series retention=ΔB/(ROE·B_prev) clipped [0,1] -> payout 0.7276"
+    },
+    "inputs": {
+     "P0": 22534.2,
+     "P0_date": "2025-06-27",
+     "B0": 2675.3175828089757,
+     "FY1": 841.9305,
+     "payout": 0.727600087075628,
+     "rf": 0.0424,
+     "rf_date": "2025-06-30",
+     "ltroe": 0.30365,
+     "ltroe_n": 522,
+     "erp_base": 0.0418
+    },
+    "grid": {
+     "low_low": {
+      "erp": 0.0368,
+      "ltroe": 0.29864999999999997,
+      "ke": 0.07919999999999999,
+      "g": 0.0424,
+      "value": 20213.92282407327,
+      "terminalShare": 0.7894097913307693,
+      "stableRetention": 0.14197220827055082
+     },
+     "low_base": {
+      "erp": 0.0368,
+      "ltroe": 0.30365,
+      "ke": 0.07919999999999999,
+      "g": 0.0424,
+      "value": 20577.492397974573,
+      "terminalShare": 0.7931305650262656,
+      "stableRetention": 0.13963444755475055
+     },
+     "low_high": {
+      "erp": 0.0368,
+      "ltroe": 0.30865,
+      "ke": 0.07919999999999999,
+      "g": 0.0424,
+      "value": 20941.061971875864,
+      "terminalShare": 0.7967221418253607,
+      "stableRetention": 0.13737242831686378
+     },
+     "base_low": {
+      "erp": 0.0418,
+      "ltroe": 0.29864999999999997,
+      "ke": 0.0842,
+      "g": 0.0424,
+      "value": 17745.02513063199,
+      "terminalShare": 0.7629851700536406,
+      "stableRetention": 0.14197220827055082
+     },
+     "base_base": {
+      "erp": 0.0418,
+      "ltroe": 0.30365,
+      "ke": 0.0842,
+      "g": 0.0424,
+      "value": 18060.697572154524,
+      "terminalShare": 0.7671278145859077,
+      "stableRetention": 0.13963444755475055
+     },
+     "base_high": {
+      "erp": 0.0418,
+      "ltroe": 0.30865,
+      "ke": 0.0842,
+      "g": 0.0424,
+      "value": 18376.370013677057,
+      "terminalShare": 0.771128132999046,
+      "stableRetention": 0.13737242831686378
+     },
+     "high_low": {
+      "erp": 0.046799999999999994,
+      "ltroe": 0.29864999999999997,
+      "ke": 0.0892,
+      "g": 0.0424,
+      "value": 15804.543151125885,
+      "terminalShare": 0.7370565713827553,
+      "stableRetention": 0.14197220827055082
+     },
+     "high_base": {
+      "erp": 0.046799999999999994,
+      "ltroe": 0.30365,
+      "ke": 0.0892,
+      "g": 0.0424,
+      "value": 16082.624850510932,
+      "terminalShare": 0.7416030776994584,
+      "stableRetention": 0.13963444755475055
+     },
+     "high_high": {
+      "erp": 0.046799999999999994,
+      "ltroe": 0.30865,
+      "ke": 0.0892,
+      "g": 0.0424,
+      "value": 16360.70654989598,
+      "terminalShare": 0.7459950307639585,
+      "stableRetention": 0.13737242831686378
+     }
+    },
+    "BEAR": 15804.543151125885,
+    "BASE": 18060.697572154524,
+    "BULL": 20941.061971875864,
+    "GRID_MEAN": 18240.27160688001,
+    "monotonicity_passed": true,
+    "min_ke_minus_g": 0.03679999999999999,
+    "base_terminal_share": 0.7671278145859077,
+    "base_stable_retention": 0.13963444755475055,
+    "label": "PROXY"
+   }
+  }
  }
 }

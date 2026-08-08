@@ -102,5 +102,8 @@
   "source_clock_sensitivity": false
  },
  "public_surface": "KEEP_QUARANTINED",
- "owner_approval_required": true
+ "owner_approval_required": true,
+ "proxy_lane_status": "NOT_REPRODUCIBLE",
+ "proxy_lane_note": "Two independent implementations of the frozen proxy construction disagree. At the 2019-06-30 SPX origin both derive the same P0 2941.76, B0 857.96, LTROE 0.17355 over 496 observations, Rf 0.0200 and ERP 0.0506, and then diverge on the derived payout: worker 0.7641, handler 0.8716 to 0.8729 depending on the ROE lag. No lag choice reproduces the worker value, so the divergence is not a lag ambiguity alone. The frozen construction said 'retention = (B_t - B_(t-1)) / (ROE_t x B_(t-1))' without fixing the sampling interval of the monthly series or the ROE vintage, and is therefore underspecified as written. This is a handler criteria defect, the third in this phase. The proxy lane is recorded as NOT_REPRODUCIBLE rather than published as a single number.",
+ "why_this_does_not_move_the_verdict": "The verdict rests on D1/D2 and F2, and both implementations agree exactly on all three. Model-equivalent PIT origins are 0 for both indices on both inventories. F2 fails with identical numbers on both: NDX Base 31,452 at g0 and 27,293 at g0 minus 100bp, crossing a price of 28,274. SPX passes F1 on both at 6,526 and 5,785. Mechanics pass on both. The frozen criteria already forbade any proxy result from satisfying a READY gate, so a proxy that cannot be reproduced costs the verdict nothing."
 }
