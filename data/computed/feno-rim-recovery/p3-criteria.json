@@ -1,0 +1,181 @@
+{
+  "schema_version": "feno_rim_p3_criteria.v1",
+  "phase": "P3",
+  "gate": "Yoo-successor SPX fair-value rebuild over seven point-in-time origins, and its honest validation",
+  "research_only": true,
+  "frozen_before_any_result": true,
+  "handler": "cc (Opus) — sole owner of criteria and verdict. Worker computes; worker never edits this file.",
+  "mandate": "FENO_RIM_YOO_SUCCESSOR_NEXT_EXECUTION_OPUS_DEEPSEEK.md",
+  "mandate_sections": ["7", "8", "9", "12", "13"],
+
+  "read_this_first_supported_is_unreachable": {
+    "statement": "Mandate §9 makes `YOO_SUCCESSOR_SUPPORTED` conditional on P1 returning DEFENSIBLE or a sufficient PARTIAL. P1 returned FORWARD_BOOK_NOT_DEFENSIBLE (DEC-297, aa0f25f52b). SUPPORTED is therefore unreachable at P3 and no result can make it reachable.",
+    "what_p3_is_actually_deciding": "INCONCLUSIVE against FAIL. That distinction is worth the whole phase: INCONCLUSIVE says the question is open, FAIL says the relation is absent or unstable where it should have been visible. They lead to different work.",
+    "why_this_is_stated_before_any_number": "So that no one — including me — can later read a positive-looking coefficient as support the mandate's own success criteria do not permit.",
+    "what_would_change_it": "Only a re-run P1 under criteria frozen before its own result, with a forward-book that clears the bands. That is future work and it is not P3."
+  },
+
+  "inherited_state": {
+    "B1": "KE_CORE_RANGE_ONLY (ce50b8529d). Ke is a band, median width 4.05-5.17pp. No same-date price in any input.",
+    "B2_A": "PIT rosters, seven origins, zero unresolved. Materialised as FENO_RIM_PIT_SPX_ROSTER.json in P1.",
+    "P1": "FORWARD_BOOK_NOT_DEFENSIBLE (DEC-297). Core weight 0.2250-0.3603. The dominant shortfall is genuine path disagreement (0.29-0.38), not missing forecasts (0.123-0.149).",
+    "P2": "SEVEN_ORIGINS_READY (aa0f25f52b .. 2211f2cdb1). The forecast panel is r1-edgar-panel-p2a.json. P2-B is NOT adopted and its coefficients must not be used.",
+    "ICC": "KEEP_INTERNAL_SHADOW. Never a discount rate here. Not re-litigated.",
+    "public": "PUBLIC_ROWS = [] and PUBLIC_STATE = MODEL_REVALIDATION hold throughout P3 and are not lifted by any result."
+  },
+
+  "the_p1_recomputation_that_is_not_a_verdict_revision": {
+    "why_it_is_needed": "P1's forward-book paths were computed against the pre-P2 panel, so Path A is unavailable at the 2024 and 2025 origins and is missing 16 to 24 firms per cell elsewhere. P3 values seven origins and needs paths for all of them.",
+    "what_is_recomputed": "The forward-book paths and their cross-check states, under p1-criteria-v2.json UNCHANGED, with r1-edgar-panel-p2a.json substituted for the forecast input. Nothing else moves — not a formula, not a bound, not the weight denominator.",
+    "what_is_NOT_revised": "The P1 VERDICT. FORWARD_BOOK_NOT_DEFENSIBLE stands as adjudicated. A verdict is not revised on improved measurement; re-measuring after adjudication and adopting the better number is what makes a gate unfailable, and that rule was established at B2-B and is not being bent here.",
+    "if_the_recomputed_core_weight_is_higher": "Report it as P3 coverage and say plainly that it is higher than the number P1 was adjudicated on. Do not restate the P1 verdict, do not describe P1 as having been too harsh, and do not use the new number anywhere a P1 band is being evaluated.",
+    "output": "the recomputed paths go to FENO_RIM_FORWARD_BOOK_PATHS_P3.json, a NEW file. FENO_RIM_FORWARD_BOOK_PATHS.json is the P1 record and is immutable."
+  },
+
+  "universe": {
+    "rule": "FENO_RIM_PIT_SPX_ROSTER.json members at each origin. Nothing else.",
+    "origins": ["2019-06-30", "2020-06-30", "2021-06-30", "2022-06-30", "2023-06-30", "2024-06-30", "2025-06-30"],
+    "prohibited": "The current roster may never be applied to a historical origin. A firm that left after t0 is in the universe at t0.",
+    "known_floor": "Departed constituents have no price series in any reachable source, so they cannot enter a market-cap denominator even though P1 recovered their filings. P2's adjudication measured the resulting hole at 0.123-0.149 of index weight. This is a FLOOR on coverage, it is disclosed at every origin, and it is never described as noise."
+  },
+
+  "firm_level_valuation": {
+    "residual_income": "RI(i,t) = FNI(i,t) - Ke(i) * B(i,t-1), for t = 1..3",
+    "value": "V(i) = B(i,0) + sum over t=1..3 of RI(i,t) / (1+Ke(i))^t + Terminal(i)",
+    "H": 3,
+    "H_rationale": "The mechanical forecasts are defined for tau 1..3 and no further. Extending the explicit horizon would require inventing forecasts, which mandate §6 forbids.",
+    "B_path": "B(i,t) comes from the P3-recomputed forward-book path, Path A or Path B according to the sweep axis below. Never a top-down or index-level book.",
+    "FNI": "FNI(i,t) = FEPS_m(i,t) * S(i,t0) from r1-edgar-panel-p2a.json, with m on the sweep axis. S is the P1 share basis, held fixed across t, unchanged.",
+    "Ke": "the B1 independent core Ke for that firm-origin, low or high per the sweep axis. NEVER the GLS-ICC. NEVER the implied-ERP context Ke. NEVER derived from the same-date price.",
+    "eligibility": "A firm enters only if it is in the origin's PIT roster, has B(i,0) > 0, a complete tau 1-3 strip under the model on the current sweep leg, a B1 Ke, an eligible share basis and a price. Every exclusion reason is counted and its weight disclosed."
+  },
+
+  "terminal": {
+    "scenario_T1_perpetuity": "Terminal(i) = RI(i,3) / ( Ke(i) * (1+Ke(i))^2 ) — the frozen perpetuity form already used by the committed engine at B3. NOT re-tuned in P3.",
+    "scenario_T2_zero": "Terminal(i) = 0 — no value beyond the explicit horizon.",
+    "why_two_and_only_two": "T1 assumes the third-year residual income persists forever and T2 assumes it vanishes immediately. The truth is between them and the interval is the honest statement. Both are frozen forms, neither is fitted, and no third scenario may be added after a result.",
+    "prohibited": "No fade, no decay parameter, no growth term, no scenario weighting. A weighted blend would be a fitted choice wearing an interval's clothes."
+  },
+
+  "uncertainty_sweep": {
+    "axes": {
+      "Ke": ["low", "high"],
+      "forecast": ["RI", "EP"],
+      "book_path": ["A", "B"],
+      "terminal": ["T1", "T2"]
+    },
+    "combinations": 16,
+    "rule": "All 16 are computed for every eligible firm-origin. Every one is recorded with its provenance. Selecting the combination that produces a favourable result is prohibited, and so is reporting a point estimate.",
+    "reported_per_firm": "V range as min and max across the 16, FV/P range likewise, the full 16-value vector, coverage flags, and which combinations were unavailable and why.",
+    "path_b_note": "Path B carries no forecast, so under a Path B leg the FNI used for the residual income is still the sweep's forecast model — the axis controls the BOOK path, not the earnings. Both are swept independently and that is deliberate: it is the only way to see whether the sign depends on the book path, which mandate §9 makes a FAIL condition."
+  },
+
+  "index_aggregation": {
+    "rule": "SPX_FV_over_P = sum of V(i) over sum of MarketCap(i), over eligible firms at that origin, computed separately for each of the 16 combinations.",
+    "prohibited": "Top-down index book aggregation. Index-level earnings. Any per-index multiplier or offset.",
+    "market_cap": "P(i, last close <= t0) * S(i,t0), the same product used for the P1 weight, from the same inputs. One share count, not two.",
+    "price_level_fair_value": "Produced only as a SECONDARY output and only if the divisor and unit bridge is demonstrated end to end in the artifact. If it is not demonstrated, it is not produced. FV/P is the primary product and it needs no divisor.",
+    "primary_product": ["SPX_FV_over_P_range", "valuation_gap_range", "coverage_weight"],
+    "coverage_weight": "sum of eligible firms' index weight over the P1 denominator D(t0), reported at every origin beside every aggregate. An aggregate printed without its coverage weight is not a result."
+  },
+
+  "validation": {
+    "prohibited_outright": "Comparing the current fair-value band to the index price level 36 months later, in any form. That comparison is what made the retired heuristic look right.",
+    "primary": {
+      "design": "12-month non-overlapping. Origins are one year apart, so only the 12-month window is non-overlapping — this is the G3 finding and it is why 12m is primary and nothing else is.",
+      "signal": "the firm's FV/P at the origin",
+      "outcome": "the firm's subsequent 12-month excess total return, excess over the equal-weighted mean of the eligible set at that origin",
+      "required_statistics": [
+        "cross-sectional rank IC per origin, and its mean",
+        "Fama-MacBeth coefficient on FV/P controlling for B/P, with the pooled clustered t AND the per-origin coefficients reported separately",
+        "FV/P high-minus-low spread within B/P terciles",
+        "sector-neutral rank version of the IC, sectors from the committed SIC-to-industry map",
+        "permutation test, 1000 draws, seed recorded in the artifact before the run",
+        "per-origin sign consistency, stated as a count out of seven",
+        "index aggregate FV/P against subsequent SPX excess return — DIAGNOSTIC only, seven points, never a significance claim"
+      ],
+      "how_it_is_read": "Not by formal significance alone. A coefficient that is positive at six of seven origins with a t below 2 is a different object from one that is positive at four of seven with the same t, and the criteria require both to be shown.",
+      "label_prohibition": "The word VALIDATED may not be applied on 5 to 7 annual origins, whatever the statistics say. Mandate §8. Seven origins is more than five and it is still not enough."
+    },
+    "secondary": {
+      "horizons": [24, 36],
+      "status": "overlap-aware diagnostic only",
+      "prohibited": "Selecting the best horizon. Reporting a secondary horizon as if it were primary. Using a secondary horizon to rescue a primary result."
+    },
+    "which_sweep_leg_is_validated": "All 16. The primary statistics are computed on every combination and reported as a range, exactly as the valuation is. Validating only the primary leg and reporting the others as colour would reintroduce selection through the back door."
+  },
+
+  "verdict_rules": {
+    "YOO_SUCCESSOR_SUPPORTED": "UNREACHABLE — P1 did not return DEFENSIBLE or a sufficient PARTIAL. Recorded here so the impossibility is explicit rather than discovered later.",
+    "YOO_SUCCESSOR_FAIL": "any of: the B/P-controlled incremental coefficient is non-positive at the median of the 16 combinations despite coverage above the P1 core; the sign of the incremental coefficient reverses between book path A and book path B; the sign reverses across the Ke range; a placebo or leakage check fires.",
+    "YOO_SUCCESSOR_INCONCLUSIVE": "not FAIL. Coverage or origin count insufficient, RI and EP disagreeing in core direction, P1's partial forward book preventing identification, or an effect whose direction is present but inseparable from the null.",
+    "the_fail_conditions_are_the_only_movable_part": "INCONCLUSIVE is the residual. That asymmetry is deliberate: with SUPPORTED unreachable, a criteria file that could only ever return INCONCLUSIVE would test nothing. FAIL must be genuinely reachable and its conditions are stated above before any number exists.",
+    "no_movement": "No threshold or condition in this file moves after a result. If FAIL is missed by any margin the verdict is INCONCLUSIVE, and vice versa."
+  },
+
+  "prohibitions": [
+    "No calibration to Yoo's published numbers.",
+    "No per-index multiplier or offset.",
+    "No selection of a sweep combination, horizon, terminal scenario or book path after seeing results.",
+    "No change to the Ke contract, the terminal forms, the horizon, or the P1 and P2 verdicts.",
+    "No reuse of GLS ICC as a discount rate.",
+    "No use of the P2-B panel or its coefficients.",
+    "No extension to NDX, KOSPI, SOX, CCMP or RUT.",
+    "No public release, no UI, no promotion, whatever the result.",
+    "No editing of this file. Supersede with p3-criteria-v2.json and a new receipt."
+  ],
+
+  "stop_conditions": {
+    "stop_and_report": [
+      "a point-in-time leak — any input dated after its origin",
+      "output targeting — any parameter or combination chosen after seeing a result",
+      "same-date circularity — any price-derived quantity feeding the same-date valuation",
+      "a majority of index weight depending on an unverified proxy",
+      "an unresolvable data unit or share-basis problem",
+      "the price-level fair value requiring an undemonstrated divisor"
+    ],
+    "otherwise": "Record as risk or TODO and continue."
+  },
+
+  "deliverables": [
+    "data/computed/feno-rim-recovery/FENO_RIM_FORWARD_BOOK_PATHS_P3.json",
+    "data/computed/feno-rim-recovery/FENO_YOO_SUCCESSOR_SPX_VALUATION_P3.json",
+    "data/computed/feno-rim-recovery/FENO_YOO_SUCCESSOR_VALIDATION_P3.json",
+    "data/computed/feno-rim-recovery/FENO_YOO_SUCCESSOR_NEXT_FINAL_REPORT.md"
+  ],
+
+  "deliverable_naming_note": "The P3 suffix on the valuation and validation files is deliberate. FENO_YOO_SUCCESSOR_SPX_VALUATION.json and FENO_YOO_SUCCESSOR_VALIDATION.json are the B3 record at a23e78d977 and are immutable; overwriting them would erase the INCONCLUSIVE that this phase is meant to revisit.",
+
+  "final_json_contract": {
+    "path": "data/computed/feno-rim-recovery/FENO_YOO_SUCCESSOR_NEXT_FINAL_DECISION.json",
+    "shape": {
+      "north_star": "FENO_SUSTAINABLE_YOO_SUCCESSOR_RIM",
+      "forward_book": "FAILED",
+      "forecast_origins": 7,
+      "pit_membership": "RECONSTRUCTED",
+      "independent_ke": "RANGE_ONLY",
+      "spx_successor": "INCONCLUSIVE | FAIL",
+      "gls_icc": "KEEP_INTERNAL_SHADOW",
+      "public_surface": "KEEP_QUARANTINED",
+      "next_expansion": "NONE",
+      "owner_approval_required": true
+    },
+    "note": "forward_book is FAILED because P1 returned NOT_DEFENSIBLE. next_expansion is NONE because mandate §12 forbids any index extension before SPX returns, and SPX cannot return SUPPORTED."
+  },
+
+  "result_paths_blocked_until_this_file_is_committed": [
+    "data/computed/feno-rim-recovery/FENO_RIM_FORWARD_BOOK_PATHS_P3.json",
+    "data/computed/feno-rim-recovery/FENO_YOO_SUCCESSOR_SPX_VALUATION_P3.json",
+    "data/computed/feno-rim-recovery/FENO_YOO_SUCCESSOR_VALIDATION_P3.json",
+    "data/computed/feno-rim-recovery/FENO_YOO_SUCCESSOR_NEXT_FINAL_REPORT.md",
+    "data/computed/feno-rim-recovery/FENO_YOO_SUCCESSOR_NEXT_FINAL_DECISION.json"
+  ],
+
+  "verification_protocol": {
+    "worker": "computes, then switches to a verifier role, recomputes by a structurally different route, audits against the deliverable list, and states what it would not defend.",
+    "handler": "re-derives independently. Minimum: V(i) rebuilt from primary inputs for at least 30 firm-origins spanning all seven origins and at least 6 of the 16 combinations; SPX_FV/P rebuilt from scratch at every origin for at least 4 combinations; the 12m excess return recomputed for at least 30 firms; the permutation seed checked against the artifact.",
+    "the_check_that_matters_most": "That the sign of the incremental coefficient is examined across book path A versus B and across Ke low versus high BEFORE any headline number is written, because both are FAIL conditions and discovering them afterwards would mean the headline was written first."
+  },
+
+  "frozen_at_utc": "2026-08-08T06:25:00Z"
+}

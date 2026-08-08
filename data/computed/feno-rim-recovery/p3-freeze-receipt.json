@@ -1,0 +1,18 @@
+{
+ "schema_version": "feno_rim_p3_freeze_receipt.v1",
+ "phase": "P3",
+ "criteria_file": "data/computed/feno-rim-recovery/p3-criteria.json",
+ "criteria_sha256": "0001ced42b958ccc85264c3b60b2db5fd69bdfce45ed258c4790dc1c7e042536",
+ "asserts_result_paths_do_not_exist": {
+  "data/computed/feno-rim-recovery/FENO_RIM_FORWARD_BOOK_PATHS_P3.json": true,
+  "data/computed/feno-rim-recovery/FENO_YOO_SUCCESSOR_SPX_VALUATION_P3.json": true,
+  "data/computed/feno-rim-recovery/FENO_YOO_SUCCESSOR_VALIDATION_P3.json": true,
+  "data/computed/feno-rim-recovery/FENO_YOO_SUCCESSOR_NEXT_FINAL_REPORT.md": true,
+  "data/computed/feno-rim-recovery/FENO_YOO_SUCCESSOR_NEXT_FINAL_DECISION.json": true
+ },
+ "assertion_method": "checked on disk immediately before this receipt was written; all five absent",
+ "repo_head_at_freeze": "bdc8790b176221e3a3ea7e9aff4dedda30431a0f",
+ "frozen_at_utc": "2026-08-08T06:25:00Z",
+ "research_only": true,
+ "note": "YOO_SUCCESSOR_SUPPORTED is unreachable: mandate section 9 conditions it on P1 returning DEFENSIBLE or a sufficient PARTIAL, and P1 returned NOT_DEFENSIBLE (DEC-297). P3 decides INCONCLUSIVE against FAIL. The FAIL conditions are stated in the criteria before any number exists, so FAIL is genuinely reachable rather than a residual."
+}
