@@ -110,12 +110,31 @@ def instant_series(facts, concept, origin):
 
 
 def first_available(facts, names, origin, kind):
+    """Resolve concept precedence PER PERIOD END, not per firm.
+
+    The frozen criteria say 'use the first concept in the list that has a qualifying
+    fact', which reads as a firm-level choice. Measured against the real cache that is
+    wrong: 34 of 2,274 firm-origins carry a higher-precedence concept whose facts sit
+    entirely outside the payout window, so a firm-level choice wins on stale years and
+    the absent-means-zero rule then zeroes every year that matters. PLD tags
+    PaymentsOfDividendsCommonStock only for 2009-2013 and PaymentsOfDividends for
+    2016-2021; HUM tags the common variant for 2021 alone. Resolving per period end
+    keeps precedence intact where both exist and falls through where one does not.
+
+    Recorded as a declared deviation from p1-criteria-v2.json; see
+    P1_DECLARED_DEVIATIONS.md. The worker's production code already did this.
+    """
     fn = flow_series if kind == "flow" else instant_series
+    merged, used = {}, {}
     for n in names:
-        s = fn(facts, n, origin)
-        if s:
-            return n, s
-    return None, {}
+        for end, val in fn(facts, n, origin).items():
+            if end not in merged:
+                merged[end] = val
+                used[end] = n
+    if not merged:
+        return None, {}
+    primary = max(set(used.values()), key=lambda n: sum(1 for v in used.values() if v == n))
+    return primary, merged
 
 
 def clip(x, lo, hi):
