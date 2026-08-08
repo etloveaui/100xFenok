@@ -1,0 +1,121 @@
+{
+  "schema_version": "feno_rim_p2_criteria.v1",
+  "phase": "P2",
+  "gate": "2024/2025 forecast coverage and PIT universe extension",
+  "research_only": true,
+  "frozen_before_any_result": true,
+  "handler": "cc (Opus) — sole owner of criteria and verdict. Worker computes; worker never edits this file.",
+  "mandate": "FENO_RIM_YOO_SUCCESSOR_NEXT_EXECUTION_OPUS_DEEPSEEK.md",
+  "mandate_sections": ["6", "8", "12", "13"],
+
+  "the_mandate_premise_is_wrong_and_here_is_the_measurement": {
+    "what_the_mandate_says": "§6 directs P2 to find the data-path defect that stops FY3 from being generated, listing fiscal-year alignment, report timing, duration filters, fiscal-month mapping, training-window availability, training universe size, lags and delisted/IPO handling as candidates.",
+    "what_is_actually_true": "No such defect exists. FY3 is generated. It is not STORED.",
+    "evidence_1_the_gate": "scripts/feno-rim-recovery/r1-forecast-ext.mjs line 338 reads: if (dep.facts.E == null || dep.facts.E.filed > EVAL_CUTOFF) continue; — the loop skips the row entirely when the realized dependent is missing or filed after the evaluation cutoff. A forecast row is never emitted unless its own future outcome already exists.",
+    "evidence_2_every_stored_row_has_an_outcome": "In r1-edgar-panel-ext.json, rows and with_actual are identical at all 21 origin-tau cells. The panel stores only what it can score.",
+    "evidence_3_the_pools_are_healthy": "RIM_MECHANICAL_FORECAST_VALIDATION_EXT.json pools: 2024_3 n=3571, 2025_2 n=3719, 2025_3 n=3635, against a frozen minimum of 300 firm-years. The pool for 2025_tau3 exists even though the panel holds zero rows for it. The model is estimable at every origin and horizon.",
+    "evidence_4_the_pattern_matches_the_calendar": "2024_tau3 retains exactly 14 rows and 2025_tau2 exactly 16. A tau-3 forecast from a 2024 origin lands on fiscal 2027 and a tau-2 from 2025 lands on fiscal 2027; only filers whose fiscal year ends early enough have such a year on file by the 2026-08-07 evaluation cutoff. The survivors are a calendar artifact, not a data-quality survivor set.",
+    "consequence": "B3 read the absence as unavailability and dropped the 2024 and 2025 origins. P1 inherited that and made them non-binding. Both were reading a validation panel as if it were a forecast panel.",
+    "what_p2_therefore_is": "Not a repair of the forecast. A change to what gets written down, plus the universe extension P1 exposed. No formula, parameter, window or threshold in the forecast model is touched.",
+    "explicit_deviation_from_the_mandate": "§6's instruction to find the data-path defect is executed and returns NO DEFECT FOUND, with the four measurements above as its evidence. The fallback hierarchy §6 preregisters for the FY3-unavailable case is therefore not reached: FY3 is available. If any measurement above turns out wrong, P2 stops and the fallback hierarchy applies unchanged."
+  },
+
+  "p2_a_outcome_independent_forecast_emission": {
+    "objective": "Emit a forecast row whenever the FORECAST is computable, and attach the realized outcome only when it exists.",
+    "rule": "The realized dependent is an OUTCOME. It may never gate, filter, weight or otherwise influence the emission or the value of a forecast row. A row carries actual = null when the outcome does not yet exist.",
+    "point_in_time_unchanged": "Every input to a forecast row must still be filed on or before its origin. The estimation pool rule, the base-year window, the FYE guard, the winsorization, the share basis and the price basis are all unchanged. P2 removes an OUTPUT filter, not an input rule.",
+    "the_regression_test_that_makes_this_safe": {
+      "requirement": "Re-run with the outcome gate removed. Every row present in the current committed panel must reappear with BYTE-IDENTICAL eps_t, rw, ep, ri, price_scaled and actual.",
+      "pass": "All 6,880 existing rows reproduce exactly, and new rows appear only where actual is null.",
+      "fail": "Any existing row changes any value. A changed value means the outcome was influencing the forecast, which would be a point-in-time leak, and P2 STOPS and reports.",
+      "why_this_is_the_whole_safety_argument": "The only way removing an output filter can corrupt a forecast is if the filter was silently participating in estimation. This test detects exactly that and nothing else is required."
+    },
+    "expected_new_cells": "2024 tau3, 2025 tau2, 2025 tau3. No other cell should gain more than a handful of rows; a large gain anywhere else is a defect, not a win, and must be reported before it is used.",
+    "prohibited": "Do not change EVAL_CUTOFF. Do not extend, fade, blend or interpolate any forecast. Do not use Global Scouter current forward estimates for any historical origin. Do not re-fit or re-tune the model on the enlarged panel."
+  },
+
+  "p2_b_pit_universe_extension": {
+    "objective": "Produce forecasts for the point-in-time roster, not for today's index.",
+    "the_defect_p1_measured": "The committed engine ran on the slickcharts S&P 500 snapshot of 2026-08-02 union rim-dow 30. Firms that left the index before that snapshot have no forecast at any origin. P1 measured the resulting hole at 0.123 to 0.149 of measurable index weight per origin, and it falls entirely on the departed names B2-A recovered — so Path A was survivor-biased exactly where the mission had worked hardest to remove survivorship.",
+    "universe": "The union of FENO_RIM_PIT_SPX_ROSTER.json members across all seven origins, 627 symbols with a cik.",
+    "data_availability": "The 59 symbols absent from both the M470 companyfacts cache and data/edgar/r1-panel were preserved to M470:/fenok-cold/rim-successor/p1/edgar-extracts at commit 367fb6f238, with per-symbol sha256 in fetch-receipts/p1-departed-extract-receipt.json. Read them from the SSD. Do not re-fetch what is already preserved.",
+    "estimation_pool_is_not_changed_by_this": "The pool is a firm-year panel and is already far above its 300 minimum. Adding departed firms to the FORECAST universe must not change any pool coefficient for an origin-tau cell unless the pool rule itself admits them. Report, per origin-tau, whether the pool changed and by how much. If a coefficient moves, say so and quantify it — do not let a universe extension silently re-estimate the model.",
+    "delisting_rule": "A firm that leaves the index after origin t0 is IN the universe at t0. A firm that leaves before t0 is not. Membership is decided by the roster, never by whether data happens to exist.",
+    "no_backfill_of_missing_history": "If a departed firm lacks the annual facts its forecast needs at some origin, it is unavailable at that origin with a reason code. Nothing is imputed."
+  },
+
+  "origins": {
+    "all": ["2019-06-30", "2020-06-30", "2021-06-30", "2022-06-30", "2023-06-30", "2024-06-30", "2025-06-30"],
+    "under_test": ["2024-06-30", "2025-06-30"],
+    "already_usable": ["2019-06-30", "2020-06-30", "2021-06-30", "2022-06-30", "2023-06-30"]
+  },
+
+  "readiness_definition": {
+    "an_origin_is_READY_when_both_hold": [
+      "a complete tau 1-3 strip exists under BOTH the RI and the EP model for firms representing at least 0.60 of D(t0), the P1 index-weight denominator",
+      "the 12-month subsequent excess total return outcome exists for that origin, since the 12m non-overlapping test is the mandate §8 primary and an origin that cannot be validated at 12m cannot enter the primary result"
+    ],
+    "D_t0": "unchanged from p1-criteria-v2.json index_weight_definition — PIT roster members with both a price and an eligible dei share basis at t0.",
+    "threshold_0_60_rationale": "The same majority principle as P1: an origin that speaks for the index must cover most of it. DISCLOSURE: I set this bar knowing P1 measured 2019-2023 forecast coverage at 0.6314 to 0.7024, so 0.60 does not exclude the origins already in use. I am naming that rather than presenting 0.60 as chosen in ignorance. It is not chosen near either candidate origin's value, because no 2024 or 2025 coverage number exists at this freeze.",
+    "twelve_month_outcome_availability": "Origin 2024-06-30 needs the window to 2025-06-30 and origin 2025-06-30 needs the window to 2026-06-30. Both have closed as of today, 2026-08-08. This clause is expected to bind on neither, and is written so that a future eighth origin cannot slip in without its outcome."
+  },
+
+  "verdict_rules": {
+    "SEVEN_ORIGINS_READY": "both 2024-06-30 and 2025-06-30 are READY",
+    "SIX_ORIGINS_READY": "exactly one of them is READY",
+    "FIVE_ORIGINS_ONLY": "neither is READY",
+    "no_movement": "This threshold does not move after a result. An origin that misses 0.60 by any margin is not READY.",
+    "mandatory_reporting_regardless_of_verdict": [
+      "per origin and tau: forecast rows emitted, rows with a realized outcome, rows without one",
+      "per origin: eligible constituent count and the share of D(t0) they carry, before and after the P2-B universe extension",
+      "per origin-tau: whether the estimation pool changed under P2-B and, if so, the coefficient movement",
+      "the regression-test result for all 6,880 existing rows, stated as a count of exact matches and a list of any mismatches",
+      "RI and EP agreement on the newly emitted cells, in the same form R1 used"
+    ]
+  },
+
+  "what_p2_does_not_touch": [
+    "the forecast model, its coefficients, its winsorization, its base-year window and its FYE guard",
+    "the Ke contract, the terminal rule, the horizon",
+    "the P1 forward-book contract and its FORWARD_BOOK_NOT_DEFENSIBLE verdict",
+    "the ICC, which stays KEEP_INTERNAL_SHADOW",
+    "the public surface, which stays at zero rows in MODEL_REVALIDATION"
+  ],
+
+  "stop_conditions": {
+    "stop_and_report": [
+      "any existing panel row changes value when the outcome gate is removed — that is a point-in-time leak",
+      "an estimation pool coefficient moves materially under the universe extension without the pool rule admitting the new firms",
+      "any input dated after its origin",
+      "output targeting — any parameter chosen after seeing a coverage number",
+      "an unresolvable unit or share-basis problem on a departed name"
+    ],
+    "otherwise": "Record as risk or TODO and continue."
+  },
+
+  "deliverables": [
+    "data/computed/feno-rim-recovery/FENO_RIM_FORECAST_COVERAGE_2019_2025.json",
+    "data/computed/feno-rim-recovery/FENO_RIM_FY3_GAP_AUDIT.md",
+    "data/computed/feno-rim-recovery/FENO_RIM_FORECAST_ORIGIN_ELIGIBILITY.json"
+  ],
+
+  "deliverable_contents": {
+    "FENO_RIM_FY3_GAP_AUDIT.md": "The §6 audit, answering each of the eight candidate defects the mandate lists with a measurement rather than a narrative, and stating the actual cause. It must be readable by someone who believes the FY3 collapse was a data defect and must leave them able to check the claim themselves.",
+    "FENO_RIM_FORECAST_COVERAGE_2019_2025.json": "per origin-tau: rows emitted, with-outcome, without-outcome, pool n, pool coefficient set, and the regression-test verdict against the committed panel.",
+    "FENO_RIM_FORECAST_ORIGIN_ELIGIBILITY.json": "per origin: eligible constituents and their share of D(t0) before and after P2-B, READY boolean with the two clauses evaluated separately, and every exclusion reason counted and weighted."
+  },
+
+  "result_paths_blocked_until_this_file_is_committed": [
+    "data/computed/feno-rim-recovery/FENO_RIM_FORECAST_COVERAGE_2019_2025.json",
+    "data/computed/feno-rim-recovery/FENO_RIM_FY3_GAP_AUDIT.md",
+    "data/computed/feno-rim-recovery/FENO_RIM_FORECAST_ORIGIN_ELIGIBILITY.json"
+  ],
+
+  "verification_protocol": {
+    "worker": "computes, then switches to a verifier role, recomputes by a structurally different route, audits against the deliverable list, and states what it would not defend.",
+    "handler": "re-derives independently. The regression test is re-run by the handler on the full 6,880 rows, not sampled — it is the entire safety argument for P2-A and a sample cannot carry it.",
+    "handler_minimum": "full-panel regression diff; pool n and coefficients recomputed for at least the three new cells; forecast values recomputed from primary facts for at least 20 firm-origins in the new cells; D(t0) coverage recomputed at both candidate origins."
+  },
+
+  "frozen_at_utc": "2026-08-08T06:05:00Z"
+}
