@@ -1,6 +1,6 @@
 {
  "schema_version": "feno_rim_input_archive_verification.v1",
- "phase": "P2 \u2014 append-only archival verification",
+ "phase": "P2 — append-only archival verification",
  "test_command": "node scripts/test-archive-rim-inputs.mjs",
  "exit_status": 0,
  "ran_at_utc": "2026-08-08T14:11:14.623628+00:00",
@@ -14,5 +14,19 @@
   "forecast_vintages": 1,
   "payout_vintages": 1,
   "erp_vintages": 1
+ },
+ "handler_reverification_2026_08_08": {
+  "test_command": "node scripts/test-archive-rim-inputs.mjs",
+  "exit_status": 0,
+  "test_output": "PASS refresh 1 appends one vintage per lane\nPASS refresh 2 with identical observation dedupes; vintage 1 survives\nPASS refresh 3 with a new observation appends vintage 2; BOTH vintages preserved\nPASS archive records carry live-semantic fields and hashes\nPASS timestamp-only re-scrape dedupes; the payout key hashes economic content only\nPASS a genuine payout change still appends; dedup is not over-collapsing\n\n6 tests passed",
+  "ran_by": "handler, independently of the worker",
+  "covers": "the original four checks plus two regression checks added after the scoped code review",
+  "live_archive_state_after_reseed": {
+   "forecast_vintages": 1,
+   "payout_vintages": 1,
+   "erp_vintages": 1,
+   "payout_stable_key": "payout|null|a06458c55d56299d83fe1ef21823e83e82658fe5a970fa677ff78cdbf83b4133",
+   "note": "the payout key no longer carries a scrape timestamp; a second run of archive-rim-inputs.mjs deduped all three lanes"
+  }
  }
 }

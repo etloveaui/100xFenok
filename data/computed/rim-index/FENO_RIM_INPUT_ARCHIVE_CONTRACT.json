@@ -15,7 +15,7 @@
  "append_only_rules": {
   "append": true,
   "overwrite_history": "never",
-  "dedup": "stable key = kind | source_as_of | derived_aggregate_hash; identical observation re-ingested resolves to the existing vintage_id and adds nothing",
+  "dedup": "stable key = kind | source_as_of | derived_aggregate_hash, where derived_aggregate_hash covers ONLY the economic projection of the observation. Collection timestamps and whole-file hashes are recorded on the vintage as provenance and are excluded from the key.",
   "revision": "a new source_as_of or a new derived hash is a NEW vintage with its own vintage_id and collected_at; never a silent replacement",
   "vintage_id_format": "{kind}-{collected_at sanitized}-{derived_aggregate_hash[0:10]}"
  },
@@ -23,17 +23,38 @@
   "forecast": {
    "file": "data/computed/rim-index/archive/forecast_history.json",
    "what_is_archived": "index-relevant FY1/FY2/FY3 consensus path (forecast_grid_v1 earnings_proxy per period) for SPX and NDX",
-   "metadata": ["collected_at", "source_as_of", "source_class", "coverage", "raw_source_hash (stock_action_index.json sha256)", "derived_aggregate_hash"]
+   "metadata": [
+    "collected_at",
+    "source_as_of",
+    "source_class",
+    "coverage",
+    "raw_source_hash (stock_action_index.json sha256)",
+    "derived_aggregate_hash"
+   ]
   },
   "payout": {
    "file": "data/computed/rim-index/archive/payout_history.json",
    "what_is_archived": "both payout routes (derived.payout_ratio route A, derived.legacy_payout_ratio_qa route B) plus the underlying index yield observations (slickcharts sp500-yield / nasdaq100-yield)",
-   "metadata": ["collected_at", "source_as_of", "source_class", "yield observation (yield_pct, updated, source)", "raw_source_hash (both yield files)", "derived_aggregate_hash"]
+   "metadata": [
+    "collected_at",
+    "source_as_of",
+    "source_class",
+    "yield observation (yield_pct, updated, source)",
+    "raw_source_hash (both yield files)",
+    "derived_aggregate_hash"
+   ]
   },
   "erp": {
    "file": "data/computed/rim-index/archive/erp_history.json",
    "what_is_archived": "the exact live ERP source class — Damodaran country-premium file (data/damodaran/erp.json, ctrypremApr26.xlsx / ERPs by country), US equity risk premium",
-   "metadata": ["collected_at", "source_as_of", "source_class", "source_url", "raw_source_hash (erp.json sha256)", "derived_aggregate_hash"]
+   "metadata": [
+    "collected_at",
+    "source_as_of",
+    "source_class",
+    "source_url",
+    "raw_source_hash (erp.json sha256)",
+    "derived_aggregate_hash"
+   ]
   }
  },
  "reader_policy": {
@@ -53,5 +74,23 @@
   "no silent overwrite of an existing vintage",
   "no dedup by anything weaker than the stable key",
   "no changing live reader field semantics to fit the archive"
- ]
+ ],
+ "handler_correction_2026_08_08": {
+  "found_by": "scoped code review after the verdict was issued",
+  "defect": "The payout lane hashed the SlickCharts scrape timestamp (yield_observation.updated) and the whole-file yield hash into derived_aggregate_hash, and used that same scrape timestamp as source_as_of. Both feed the dedup key, so every re-scrape that changed nothing but its own timestamp minted a new 'revision' with economically identical payout routes. The archive would have appended forever and deduplicated nothing.",
+  "why_the_original_tests_missed_it": "Tests 1-3 re-ran against the same on-disk yield file, so the timestamp never varied and the key never moved. The defect was invisible to a test that cannot change the source.",
+  "repair": [
+   "derived_aggregate_hash for the payout lane now hashes only {index, payout_route_a, payout_route_b, yield_pct}",
+   "source_as_of is null with an explicit source_as_of_kind, because the provider publishes no source date for the index yield observation; naming a scrape timestamp as an economic as-of was the same error in a second place",
+   "raw_source_hash records both yield file digests in full; it previously concatenated the SPX digest with a 32-char truncation of the NDX digest, which no rule could reproduce",
+   "a partial observation (a missing payout route, or an index with no forecast_grid_v1 periods) now fails the lane instead of being archived as a legitimate vintage",
+   "appendVintage writes through a temp file and renames, so a concurrent refresh cannot tear the history array"
+  ],
+  "new_regression_tests": [
+   "test 5: two yield fixtures differing ONLY in their scrape timestamp must produce the same economic hash, the same stable key, and must dedup to a single vintage",
+   "test 6: a genuine payout move must still append, proving the dedup is not over-collapsing"
+  ],
+  "old_key_demonstrated_broken": "Reconstructing the pre-fix key material over the two fixtures gives b67fd3020fe51e3d... and 41972373b902bf4a... — different keys for the same economics.",
+  "archive_reseeded": "The three vintages seeded earlier on 2026-08-08 were discarded and re-seeded under the corrected contract, so the archive's first vintage carries a valid key. Nothing predating 2026-08-08 existed to lose; the append-only guarantee runs forward from this corrected starting point."
+ }
 }

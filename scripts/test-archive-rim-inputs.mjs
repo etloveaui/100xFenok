@@ -11,7 +11,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { buildRimIndexInputs } from "./build-rim-index.mjs";
-import { archiveAll, appendVintage } from "./archive-rim-inputs.mjs";
+import { archiveAll, appendVintage, buildPayoutVintage, stableKey } from "./archive-rim-inputs.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -89,5 +89,71 @@ assert.ok(h1.erp[0].value.us_erp != null, "ERP value present");
 assert.ok(h1.forecast[0].raw_source_hash && h1.forecast[0].derived_aggregate_hash, "forecast hashes present");
 ok("archive records carry live-semantic fields and hashes");
 
+// ---- 5. REGRESSION: a scrape that changes only its own timestamp is NOT a new vintage ----
+// The payout lane's dedup key once hashed the yield file's scrape timestamp and its whole-file
+// hash. Every re-scrape then minted a "revision" with economically identical payout routes, so
+// the archive appended forever and deduplicated nothing. Tests 1-3 could not see this because
+// they re-ran against the same on-disk file. This one varies the file.
+const yieldFixtureDir = fs.mkdtempSync(path.join(os.tmpdir(), "rim-yield-fixture-"));
+function writeYieldFixture(name, srcPath, updatedAt) {
+  const y = JSON.parse(fs.readFileSync(srcPath, "utf8"));
+  y.updated = updatedAt;
+  const p = path.join(yieldFixtureDir, name);
+  fs.writeFileSync(p, JSON.stringify(y, null, 1));
+  return p;
+}
+const liveSpx = path.join(dataRoot, "slickcharts", "sp500-yield.json");
+const liveNdx = path.join(dataRoot, "slickcharts", "nasdaq100-yield.json");
+
+const scrapeA = {
+  SPX: writeYieldFixture("spx-a.json", liveSpx, "2026-08-01T21:34:17+00:00"),
+  NDX: writeYieldFixture("ndx-a.json", liveNdx, "2026-08-01T21:34:17+00:00"),
+};
+const scrapeB = {
+  SPX: writeYieldFixture("spx-b.json", liveSpx, "2026-08-02T09:02:55+00:00"),
+  NDX: writeYieldFixture("ndx-b.json", liveNdx, "2026-08-02T09:02:55+00:00"),
+};
+
+const vA = buildPayoutVintage(payload, { yieldFiles: scrapeA });
+const vB = buildPayoutVintage(payload, { yieldFiles: scrapeB });
+
+assert.notEqual(
+  JSON.parse(fs.readFileSync(scrapeA.SPX, "utf8")).updated,
+  JSON.parse(fs.readFileSync(scrapeB.SPX, "utf8")).updated,
+  "fixture sanity: the two scrapes must differ in their timestamp",
+);
+assert.equal(vA.derived_aggregate_hash, vB.derived_aggregate_hash,
+  "a timestamp-only re-scrape must not change the economic hash");
+assert.equal(stableKey(vA), stableKey(vB),
+  "a timestamp-only re-scrape must not change the dedup key");
+
+const tmp5 = fs.mkdtempSync(path.join(os.tmpdir(), "rim-archive-dedup-"));
+const a5 = appendVintage("payout_history.json", vA, { archiveDir: tmp5 });
+const b5 = appendVintage("payout_history.json", vB, { archiveDir: tmp5 });
+assert.equal(a5.appended, true, "first scrape appends");
+assert.equal(b5.appended, false, "timestamp-only re-scrape must dedup, not append");
+assert.equal(
+  JSON.parse(fs.readFileSync(path.join(tmp5, "payout_history.json"), "utf8")).length, 1,
+  "archive must hold exactly one payout vintage after a timestamp-only re-scrape",
+);
+// and the provenance the key excludes is still recorded on the vintage
+assert.ok(vA.entries[0].yield_observation.updated, "the scrape timestamp is still recorded as provenance");
+assert.ok(vA.raw_source_hash.sp500_yield && vA.raw_source_hash.nasdaq100_yield,
+  "both raw file hashes recorded in full, neither truncated");
+ok("timestamp-only re-scrape dedupes; the payout key hashes economic content only");
+
+// ---- 6. a real payout change still appends ----
+const changed = JSON.parse(JSON.stringify(payload));
+changed.indices.SPX.derived.payout_ratio.value = payload.indices.SPX.derived.payout_ratio.value + 0.01;
+const vChanged = buildPayoutVintage(changed, { yieldFiles: scrapeA });
+assert.notEqual(vChanged.derived_aggregate_hash, vA.derived_aggregate_hash,
+  "a genuine payout move must change the economic hash");
+const c6 = appendVintage("payout_history.json", vChanged, { archiveDir: tmp5 });
+assert.equal(c6.appended, true, "a genuine payout move must append");
+assert.equal(c6.count, 2, "both vintages preserved");
+ok("a genuine payout change still appends; dedup is not over-collapsing");
+
 fs.rmSync(tmp, { recursive: true, force: true });
+fs.rmSync(tmp5, { recursive: true, force: true });
+fs.rmSync(yieldFixtureDir, { recursive: true, force: true });
 console.log(`\n${passed} tests passed`);

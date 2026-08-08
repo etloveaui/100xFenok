@@ -146,6 +146,13 @@ function bisect(f, lo, hi) {
 // ---------------------------------------------------------------------------
 // operands — committed sources, asserted against the frozen source clocks
 // ---------------------------------------------------------------------------
+// "April 1, 2026" -> "2026-04-01". Damodaran publishes a long-form date; the frozen clock is ISO.
+function isoFromLongDate(s) {
+  if (typeof s !== "string") return null;
+  const t = Date.parse(`${s} UTC`);
+  return Number.isFinite(t) ? new Date(t).toISOString().slice(0, 10) : null;
+}
+
 export function loadOperands() {
   const clocks = CANONICAL.source_clocks;
   const failures = [];
@@ -162,11 +169,17 @@ export function loadOperands() {
 
   const erpPayload = readJson("damodaran/erp.json");
   const erpLive = erpPayload.us_erp ?? erpPayload.countries?.["United States"]?.equity_risk_premium;
-  if (Math.abs(erpLive - CANONICAL.grids.erp.base) > 1e-12) {
+  // Number.isFinite first: Math.abs(undefined - x) is NaN, and NaN > 1e-12 is false, so a
+  // structurally broken erp.json would otherwise pass the drift check in silence.
+  if (!Number.isFinite(erpLive)) {
+    failures.push("Damodaran US ERP is missing or non-finite in damodaran/erp.json");
+  } else if (Math.abs(erpLive - CANONICAL.grids.erp.base) > 1e-12) {
     failures.push(`Damodaran US ERP live ${erpLive} != frozen base ${CANONICAL.grids.erp.base}`);
   }
-  if (erpPayload.metadata?.source_date !== "April 1, 2026") {
-    failures.push(`ERP source_date is ${erpPayload.metadata?.source_date}, frozen clock is ${clocks.erp.as_of}`);
+  // The frozen clock is the authority; do not restate the date as a literal here.
+  const erpSourceDate = erpPayload.metadata?.source_date;
+  if (isoFromLongDate(erpSourceDate) !== clocks.erp.as_of) {
+    failures.push(`ERP source_date is ${erpSourceDate}, frozen clock is ${clocks.erp.as_of}`);
   }
 
   const inputs = buildRimIndexInputs({ dataRootOverride: dataRoot, generatedAt: new Date().toISOString() });
@@ -183,23 +196,44 @@ export function loadOperands() {
     if (Math.abs(recomputed.base - frozenBase) > 1e-9) {
       failures.push(`${idx} LTROE recompute ${recomputed.base} != frozen base ${frozenBase}`);
     }
+    // The benchmark row the inputs builder actually used is the LATEST row, not a pinned one.
+    // If it has moved past the frozen clock, the operands no longer match the criteria and the
+    // run must be recorded as clock-failed rather than quietly stamped with the frozen date.
+    const priceAsOf = entry.observed?.price?.as_of ?? null;
+    if (priceAsOf !== clocks.benchmark_price_eps_pb_roe.as_of) {
+      failures.push(`${idx} benchmark row is ${priceAsOf}, frozen clock is ${clocks.benchmark_price_eps_pb_roe.as_of}`);
+    }
+
     per[idx] = {
       b0: entry.derived.book_value.value,
       epsPath: entry.derived.forecast_grid_v1.periods.map((p) => p.earnings_proxy.value),
       payoutA: entry.derived.payout_ratio.value,
       payoutB: entry.derived.legacy_payout_ratio_qa.value,
       price: entry.observed.price.value,
+      price_as_of: priceAsOf,
       ltroe_recomputed: { base: recomputed.base, n: recomputed.n_observations },
     };
   }
 
+  // Same-as-of discipline (canonical criteria, qqq.as_of_discipline): the QQQ leg must come from
+  // the close on the SAME date as the NDX benchmark row the ratio divides by. Selecting against
+  // the frozen clock instead would silently mix as-ofs the moment the benchmark file gains a row.
+  const ndxAsOf = per.NDX?.price_as_of ?? clocks.benchmark_price_eps_pb_roe.as_of;
   const qqqPayload = readJson("yf/finance/QQQ.json");
   const qqqRow = [...(qqqPayload?.data?.history_1y ?? [])]
     .reverse()
-    .find((r) => r?.date && r.date <= clocks.benchmark_price_eps_pb_roe.as_of && Number.isFinite(r.Close));
-  if (!qqqRow) failures.push("QQQ close at the benchmark as-of date is missing");
+    .find((r) => r?.date && r.date <= ndxAsOf && Number.isFinite(r.Close));
+  if (!qqqRow) failures.push(`QQQ close at or before the NDX benchmark as-of ${ndxAsOf} is missing`);
 
-  return { rf, erpLive, per, qqqPrice: qqqRow ? round(qqqRow.Close, 2) : null, source_clock_failures: failures };
+  return {
+    rf,
+    erpLive,
+    per,
+    qqqPrice: qqqRow ? round(qqqRow.Close, 2) : null,
+    qqqAsOf: qqqRow?.date ?? null,
+    ndxAsOf,
+    source_clock_failures: failures,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -276,13 +310,18 @@ export function computeAll() {
     };
   }
 
-  // QQQ — NDX ratio equivalent
+  // QQQ — NDX ratio equivalent. A missing close must block the leg, not produce a zero scale:
+  // null / price evaluates to 0 in JS and would emit an artifact of zeroed targets.
   const ndx = result.indices.NDX;
-  const scale = ops.qqqPrice / ndx.operands.price;
+  const scale = Number.isFinite(ops.qqqPrice) && ops.qqqPrice > 0 ? ops.qqqPrice / ndx.operands.price : null;
+  if (scale === null) result.source_clock_failures.push("QQQ scale not computable — price leg missing");
   result.qqq = {
     formula: CANONICAL.qqq.formula,
     label: CANONICAL.qqq.label,
     current: ops.qqqPrice,
+    as_of: ops.qqqAsOf,
+    ndx_as_of: ops.ndxAsOf,
+    same_as_of: ops.qqqAsOf === ops.ndxAsOf,
     scale,
     bear: ndx.grid.BEAR * scale,
     base: ndx.grid.BASE * scale,
@@ -301,7 +340,11 @@ export function computeAll() {
     gates[idx] = {
       G1_pole_margin: r.grid.min_pole_margin >= G.G1_pole_margin.threshold,
       G2_terminal_share: r.grid.base_terminal_share <= G.G2_terminal_share.threshold,
-      G3_stable_retention: r.grid.stable_retention_range.min >= 0 && r.grid.stable_retention_range.max <= 1,
+      // stable_retention_range is null whenever a cell is non-finite. A gate must then read
+      // false, not throw — a TypeError here would abort the run and hide the real diagnosis.
+      G3_stable_retention: r.grid.stable_retention_range != null
+        && r.grid.stable_retention_range.min >= 0
+        && r.grid.stable_retention_range.max <= 1,
       G4_finite: r.grid.all_finite,
       G5_monotonicity: r.grid.monotonicity_passed,
       G6_terminal_sensitivity: r.sensitivity.max_abs_rel_move <= G.G6_terminal_sensitivity.threshold,
@@ -320,6 +363,17 @@ export function computeAll() {
 // ---------------------------------------------------------------------------
 function main() {
   const r = computeAll();
+
+  // A drifted source clock means the frozen criteria no longer describe the live inputs. Writing
+  // artifacts anyway would produce output shaped exactly like a clean run, which is the failure
+  // mode the source-clock assertions exist to prevent. Refuse instead; re-freeze as -v2 to proceed.
+  if (r.source_clock_failures.length > 0) {
+    console.error("REFUSED — source clock failures, no artifact written:");
+    for (const f of r.source_clock_failures) console.error(`  - ${f}`);
+    process.exitCode = 1;
+    return;
+  }
+
   const stamp = {
     schema_version: "feno_index_rim_final.v1",
     canonical_criteria: "feno-index-rim-canonical-criteria.json",
@@ -336,7 +390,9 @@ function main() {
     writeJson(`FENO_RIM_FINAL_CURRENT_${idx}.json`, {
       ...stamp,
       asset: idx,
-      current: { price: p, as_of: CANONICAL.source_clocks.benchmark_price_eps_pb_roe.as_of },
+      // as_of comes from the row the price actually came from, asserted equal to the frozen clock
+      // in loadOperands. Stamping the frozen clock directly would let the two disagree in silence.
+      current: { price: p, as_of: x.operands.price_as_of },
       scenarios: {
         bear: round(x.grid.BEAR, 2), base: round(x.grid.BASE, 2),
         bull: round(x.grid.BULL, 2), grid_mean: round(x.grid.GRID_MEAN, 2),
