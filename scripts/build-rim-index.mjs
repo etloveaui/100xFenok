@@ -4180,3 +4180,206 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(1);
   }
 }
+
+// ============================================================================
+// E2 — canonical top-down index RIM (feno_index_rim_v1, criteria 2f660ac003)
+// FENO canonical terminal: CV3 = (LTROE − Ke) × B3 / Ke; no hidden growth knob.
+// ============================================================================
+
+export function deriveNormalizedLongTermRoe(benchmarkRows, cutoffDate, years = 10) {
+  const DAY = 86400000;
+  const cutoffMs = Date.parse(`${cutoffDate}T00:00:00Z`);
+  const startMs = cutoffMs - Math.floor(years * 365.25) * DAY;
+  const roes = (benchmarkRows ?? [])
+    .filter((row) => row && Number.isFinite(row.roe))
+    .filter((row) => {
+      const ms = Date.parse(`${row.date}T00:00:00Z`);
+      return ms >= startMs && ms <= cutoffMs;
+    })
+    .map((row) => row.roe)
+    .sort((a, b) => a - b);
+  if (roes.length === 0) return { base: null, n_observations: 0 };
+  const q = (p) => roes[Math.min(roes.length - 1, Math.floor(p * (roes.length - 1)))];
+  const startDate = new Date(startMs).toISOString().slice(0, 10);
+  const mid = roes.length / 2;
+  const base = roes.length % 2 === 1 ? roes[Math.floor(mid)] : (roes[mid - 1] + roes[mid]) / 2;
+  return {
+    base,
+    n_observations: roes.length,
+    q25: q(0.25),
+    q75: q(0.75),
+    min: roes[0],
+    max: roes.at(-1),
+    window: `${startDate} .. ${cutoffDate}`,
+    rule: `median of index ROE over trailing ${years} calendar years ending at the latest benchmark source date, after dropping non-finite values`,
+  };
+}
+
+export function computeTopDownRimValue({ bookValueBeginning, epsPath, payoutRatio, costOfEquity, ltroe }) {
+  if (![bookValueBeginning, payoutRatio, costOfEquity, ltroe].every(Number.isFinite)
+    || bookValueBeginning <= 0 || costOfEquity <= 0) {
+    return { value: null, blocker: "operand_missing_or_nonpositive" };
+  }
+  const eps = [1, 2, 3].map((i) => Number(epsPath?.[i - 1]));
+  if (!eps.every(Number.isFinite)) return { value: null, blocker: "eps_path_incomplete" };
+  const ke = costOfEquity;
+  const retention = 1 - payoutRatio;
+  const B = [bookValueBeginning];
+  for (let t = 0; t < 3; t += 1) B.push(B[t] + eps[t] * retention);
+  const B3 = B[3];
+  if (B3 <= 0) return { value: null, blocker: "terminal_book_nonpositive" };
+  const ri = [0, 1, 2].map((t) => eps[t] - ke * B[t]);
+  const cv3 = ((ltroe - ke) * B3) / ke;
+  const explicitPv = ri.reduce((sum, r, t) => sum + r / (1 + ke) ** (t + 1), 0);
+  const value = bookValueBeginning + explicitPv + cv3 / (1 + ke) ** 3;
+  if (!Number.isFinite(value)) return { value: null, blocker: "non_finite_value" };
+  return {
+    value,
+    book: { b0: B[0], b1: B[1], b2: B[2], b3: B3 },
+    ri: { ri1: ri[0], ri2: ri[1], ri3: ri[2] },
+    cv3,
+    explicit_pv: explicitPv,
+    ke,
+    ltroe,
+  };
+}
+
+export function buildRimScenarioGrid({
+  bookValueBeginning, epsPath, payoutRatio, riskFreeRate, erpBase, ltroeBase,
+  erpWidth = 0.005, ltroeWidth = 0.005,
+}) {
+  const erp = { low: erpBase - erpWidth, base: erpBase, high: erpBase + erpWidth };
+  const ltroe = { low: ltroeBase - ltroeWidth, base: ltroeBase, high: ltroeBase + ltroeWidth };
+  const cells = {};
+  const grid = [];
+  for (const [erpKey, erpV] of Object.entries(erp)) {
+    for (const [ltKey, ltV] of Object.entries(ltroe)) {
+      const ke = riskFreeRate + erpV;
+      const result = computeTopDownRimValue({ bookValueBeginning, epsPath, payoutRatio, costOfEquity: ke, ltroe: ltV });
+      const cell = {
+        erp: { key: erpKey, value: erpV }, ltroe: { key: ltKey, value: ltV },
+        ke, value: result.value, blocker: result.blocker ?? null,
+        cv3: result.cv3 ?? null,
+      };
+      cells[`${erpKey}_${ltKey}`] = cell;
+      grid.push(cell);
+    }
+  }
+  const finiteValues = grid.map((c) => c.value).filter(Number.isFinite);
+  const mean = finiteValues.length === 9 ? finiteValues.reduce((a, x) => a + x, 0) / 9 : null;
+  const bear = cells.high_low?.value ?? null;
+  const base = cells.base_base?.value ?? null;
+  const bull = cells.low_high?.value ?? null;
+  // monotonicity hard gate (criteria §monotonicity_hard_gate)
+  const monotonic = (() => {
+    if (finiteValues.length !== 9) return false;
+    for (const ltKey of ["low", "base", "high"]) {
+      const lowKe = cells[`low_${ltKey}`].value;
+      const baseKe = cells[`base_${ltKey}`].value;
+      const highKe = cells[`high_${ltKey}`].value;
+      if (lowKe < baseKe || baseKe < highKe) return false; // lower ERP must not lower value
+    }
+    for (const erpKey of ["low", "base", "high"]) {
+      const l = cells[`${erpKey}_low`].value;
+      const b = cells[`${erpKey}_base`].value;
+      const h = cells[`${erpKey}_high`].value;
+      if (h < b || b < l) return false; // higher LTROE must not lower value
+    }
+    return bull >= base && base >= bear;
+  })();
+  return {
+    cells, grid,
+    erp, ltroe,
+    BEAR: bear, BASE: base, BULL: bull, GRID_MEAN: mean,
+    monotonicity_passed: monotonic,
+  };
+}
+
+export function computeReverseImpliedLtroe({
+  price, bookValueBeginning, epsPath, payoutRatio, costOfEquity, bounds = [0.0, 1.50],
+}) {
+  const f = (lt) => computeTopDownRimValue({ bookValueBeginning, epsPath, payoutRatio, costOfEquity, ltroe: lt }).value - price;
+  let [lo, hi] = bounds;
+  const fLo = f(lo), fHi = f(hi);
+  if (!Number.isFinite(fLo) || !Number.isFinite(fHi)) {
+    return { solved: false, reason: "bound_evaluation_non_finite", bounds, converged: false };
+  }
+  if (fLo * fHi > 0) {
+    return { solved: false, reason: "price_outside_monotone_range", bounds, f_at_lo: fLo, f_at_hi: fHi, converged: false };
+  }
+  for (let i = 0; i < 200; i += 1) {
+    const mid = (lo + hi) / 2;
+    const fm = f(mid);
+    if (!Number.isFinite(fm)) return { solved: false, reason: "mid_non_finite", converged: false };
+    if (Math.abs(fm) < 1e-8 || (hi - lo) < 1e-10) {
+      return { solved: true, value: mid, bounds, iterations: i + 1, converged: true, residual: fm };
+    }
+    if (fLo * fm <= 0) hi = mid; else { lo = mid; }
+  }
+  return { solved: false, reason: "iterations_exhausted", converged: false };
+}
+
+export function computeReverseImpliedErp({
+  price, bookValueBeginning, epsPath, payoutRatio, riskFreeRate, ltroe, bounds = [-0.02, 0.30],
+}) {
+  const f = (erp) => computeTopDownRimValue({
+    bookValueBeginning, epsPath, payoutRatio, costOfEquity: riskFreeRate + erp, ltroe,
+  }).value - price;
+  let [lo, hi] = bounds;
+  const fLo = f(lo), fHi = f(hi);
+  if (!Number.isFinite(fLo) || !Number.isFinite(fHi)) {
+    return { solved: false, reason: "bound_evaluation_non_finite", bounds, converged: false };
+  }
+  if (fLo * fHi > 0) {
+    return { solved: false, reason: "price_outside_monotone_range", bounds, f_at_lo: fLo, f_at_hi: fHi, converged: false };
+  }
+  for (let i = 0; i < 200; i += 1) {
+    const mid = (lo + hi) / 2;
+    const fm = f(mid);
+    if (!Number.isFinite(fm)) return { solved: false, reason: "mid_non_finite", converged: false };
+    if (Math.abs(fm) < 1e-8 || (hi - lo) < 1e-10) {
+      return { solved: true, value: mid, bounds, iterations: i + 1, converged: true, residual: fm };
+    }
+    if (fLo * fm <= 0) hi = mid; else { lo = mid; }
+  }
+  return { solved: false, reason: "iterations_exhausted", converged: false };
+}
+
+export function measurePayoutRouteValuationImpact({ gridA, gridB }) {
+  const cell = (g, key) => g.cells[key]?.value ?? null;
+  const baseShift = Math.abs(cell(gridB, "base_base") - cell(gridA, "base_base")) / Math.abs(cell(gridA, "base_base"));
+  const meanShift = Math.abs(gridB.GRID_MEAN - gridA.GRID_MEAN) / Math.abs(gridA.GRID_MEAN);
+  const orderingA = gridA.monotonicity_passed;
+  const orderingB = gridB.monotonicity_passed;
+  const thresholds = { base_cell_shift: 0.05, grid_mean_shift: 0.05, ordering: "Bear ≤ Base ≤ Bull under both routes" };
+  const allPass = Number.isFinite(baseShift) && baseShift <= thresholds.base_cell_shift
+    && Number.isFinite(meanShift) && meanShift <= thresholds.grid_mean_shift
+    && orderingA && orderingB;
+  return {
+    payout_routes_materially_reconciled: allPass,
+    base_cell_shift: Number.isFinite(baseShift) ? round(baseShift, 6) : null,
+    grid_mean_shift: Number.isFinite(meanShift) ? round(meanShift, 6) : null,
+    ordering_a_passed: orderingA,
+    ordering_b_passed: orderingB,
+    thresholds,
+    note: "thresholds frozen in criteria before results (payout.materiality_thresholds_frozen_before_results)",
+  };
+}
+
+export function buildQqqEquivalent({ currentQqq, currentNdx, ndxScenarios }) {
+  const scale = currentNdx > 0 ? currentQqq / currentNdx : null;
+  const map = (v) => (Number.isFinite(v) && scale !== null ? v * scale : null);
+  return {
+    formula: "QQQ_s = current_QQQ × (NDX_s / current_NDX)",
+    current_qqq: currentQqq,
+    current_ndx: currentNdx,
+    scale,
+    bear: map(ndxScenarios.BEAR),
+    base: map(ndxScenarios.BASE),
+    bull: map(ndxScenarios.BULL),
+    grid_mean: map(ndxScenarios.GRID_MEAN),
+    cells: Object.fromEntries(Object.entries(ndxScenarios.cells ?? {}).map(([k, c]) => [k, { ...c, value: map(c.value) }])),
+    label: "NDX-ratio indicative equivalent — not a reconstructed ETF NAV fair value",
+    caveats: ["expense ratio and tracking difference are disclosed and do not block the number"],
+  };
+}
