@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-08T10:28:29.729Z",
+  "generated_at": "2026-08-08T11:48:31.760Z",
   "status": "open",
-  "open_incident_count": 5,
+  "open_incident_count": 6,
   "open_incidents": [
     {
       "workflow": "build-stocks-analyzer.yml",
@@ -16,6 +16,19 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "no_declaration"
+    },
+    {
+      "workflow": "fetch-damodaran-shadow.yml",
+      "label": "Fetch Damodaran Data",
+      "streak": 1,
+      "failure_streak_threshold": 1,
+      "first_failing_run_id": 31255487819,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31255487819",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
     },
     {
       "workflow": "fetch-fred-yardeni.yml",
@@ -466,12 +479,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31252775942",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31252775942",
-    "observed_at": "2026-08-08T10:28:29.729Z",
-    "event": "workflow_run",
+    "run_id": "31255739580",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31255739580",
+    "observed_at": "2026-08-08T11:48:31.760Z",
+    "event": "schedule",
     "workflows": [
       "build-stocks-analyzer.yml",
+      "fetch-damodaran-shadow.yml",
       "fetch-fred-yardeni.yml",
       "fetch-stockanalysis.yml",
       "fetch-yf-finance.yml",
