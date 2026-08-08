@@ -1,0 +1,57 @@
+{
+ "schema_version": "feno_rim_input_archive_contract.v1",
+ "phase": "P2 — make the live inputs sustainable from now on",
+ "contract": "FENO_RIM_FINAL_READY_OR_RETIRE_OPUS_DEEPSEEK_20260808.md §4",
+ "worker": "km (DeepSeek)",
+ "implemented_at_utc": "2026-08-08T23:40:00Z",
+ "existing_repo_conventions_checked": {
+  "found": [
+   "data/damodaran/archives/ — dated provider files (ctryprem{00..24}) + receipt.json with per-file sha256 (fetched 2026-08-06)",
+   "data/admin/nasdaq_giw_sox/history/constituents.json — snapshot history pattern (source_date basis, bounded persistence)",
+   "data/computed/*_history.json — append-style history arrays (e.g. fenok_flow_proxies_history.json, fenok_occ_options_volume_history.json)"
+  ],
+  "followed": "rim-index/archive/ per-lane JSON array files under data/computed/rim-index/archive/, matching the computed/*_history.json array convention with provenance fields like the damodaran receipt"
+ },
+ "append_only_rules": {
+  "append": true,
+  "overwrite_history": "never",
+  "dedup": "stable key = kind | source_as_of | derived_aggregate_hash; identical observation re-ingested resolves to the existing vintage_id and adds nothing",
+  "revision": "a new source_as_of or a new derived hash is a NEW vintage with its own vintage_id and collected_at; never a silent replacement",
+  "vintage_id_format": "{kind}-{collected_at sanitized}-{derived_aggregate_hash[0:10]}"
+ },
+ "lanes": {
+  "forecast": {
+   "file": "data/computed/rim-index/archive/forecast_history.json",
+   "what_is_archived": "index-relevant FY1/FY2/FY3 consensus path (forecast_grid_v1 earnings_proxy per period) for SPX and NDX",
+   "metadata": ["collected_at", "source_as_of", "source_class", "coverage", "raw_source_hash (stock_action_index.json sha256)", "derived_aggregate_hash"]
+  },
+  "payout": {
+   "file": "data/computed/rim-index/archive/payout_history.json",
+   "what_is_archived": "both payout routes (derived.payout_ratio route A, derived.legacy_payout_ratio_qa route B) plus the underlying index yield observations (slickcharts sp500-yield / nasdaq100-yield)",
+   "metadata": ["collected_at", "source_as_of", "source_class", "yield observation (yield_pct, updated, source)", "raw_source_hash (both yield files)", "derived_aggregate_hash"]
+  },
+  "erp": {
+   "file": "data/computed/rim-index/archive/erp_history.json",
+   "what_is_archived": "the exact live ERP source class — Damodaran country-premium file (data/damodaran/erp.json, ctrypremApr26.xlsx / ERPs by country), US equity risk premium",
+   "metadata": ["collected_at", "source_as_of", "source_class", "source_url", "raw_source_hash (erp.json sha256)", "derived_aggregate_hash"]
+  }
+ },
+ "reader_policy": {
+  "live_readers_unchanged": true,
+  "statement": "Current live readers (build-rim-index.mjs and downstream) keep resolving the latest valid vintage from the live files with unchanged field semantics. The archive is a history estate for future PIT validation; it is not the reader."
+ },
+ "deterministic_test": {
+  "file": "scripts/test-archive-rim-inputs.mjs",
+  "proves": [
+   "refresh 1 appends one vintage per lane",
+   "refresh 2 with the identical observation dedupes to the existing vintage_id (vintage 1 survives)",
+   "a genuinely new observation appends vintage 2 and BOTH vintages survive",
+   "archive records carry the live-semantic fields (fy1/fy2/fy3, payout A/B, yield observation, ERP value) and both hashes"
+  ]
+ },
+ "prohibitions": [
+  "no silent overwrite of an existing vintage",
+  "no dedup by anything weaker than the stable key",
+  "no changing live reader field semantics to fit the archive"
+ ]
+}
