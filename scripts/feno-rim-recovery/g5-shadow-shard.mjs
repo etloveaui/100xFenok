@@ -50,6 +50,8 @@ if (fs.existsSync(shardPath)) {
 const SRC = {
   r2: "data/computed/feno-rim-recovery/R2_GLS_ICC.json",
   forecast: "data/computed/feno-rim-recovery/r1-edgar-panel.json",
+  successor: "data/computed/feno-rim-recovery/FENO_YOO_SUCCESSOR_SPX_VALUATION.json",
+  successorDecision: "data/computed/feno-rim-recovery/FENO_YOO_SUCCESSOR_NEXT_FINAL_DECISION.json",
   rates: "data/macro/fred-banking-daily.json",
   r1prices: "data/edgar/r1-panel/prices",
   r3prices: "data/edgar/r3-panel/prices",
@@ -125,6 +127,29 @@ const aggregates = {
   aggregation_note: "cap-weighted mean over cells with icc_ri non-null (R2 diag construction, origin 2023)",
 };
 
+// ---- successor FV/P (mandate §10: the shard carries it once P3 produced one) ----
+// Recorded as a range per origin across the frozen 16-leg sweep, never a point. The archive's
+// purpose is a future out-of-sample test, so a collapsed point estimate would be a lie about
+// what was known on this date.
+let successor = null;
+if (!receiptMissing(SRC.successor)) {
+  const sv = rj(SRC.successor);
+  const dec = receiptMissing(SRC.successorDecision) ? null : rj(SRC.successorDecision);
+  successor = {
+    verdict: dec ? dec.spx_successor : null,
+    forward_book: dec ? dec.forward_book : null,
+    legs: sv.legs ?? null,
+    fv_over_p_by_origin: Object.fromEntries(Object.entries(sv.fv_over_p ?? {}).map(([o, v]) => [o, {
+      low: v.low, high: v.high,
+      per_leg_eligible_min: v.per_leg_eligible ? Math.min(...Object.values(v.per_leg_eligible)) : null,
+      per_leg_eligible_max: v.per_leg_eligible ? Math.max(...Object.values(v.per_leg_eligible)) : null,
+      roster: v.roster ?? null,
+    }])),
+    read_with: "P1 corroborated-forward-book weight 0.2250-0.3603. The valuation covers more weight than the forward book is corroborated on; mandate §9 hinges on the smaller number.",
+    not_a_signal: "KEEP_QUARANTINED. This block is archival evidence for a future out-of-sample test, not a published or tradable number.",
+  };
+}
+
 // ---- sources: hashes + first_knowable_at ----
 const sources = {
   "R2_GLS_ICC.json": { sha256: shaFile(path.join(ROOT, SRC.r2)), first_knowable_at: null,
@@ -133,6 +158,10 @@ const sources = {
     note: "no fetch receipt exists for the forecast panel; its inputs (dei/duration/primary-e/sic) have receipts listed below" },
   "fred-banking-daily.json": { sha256: shaFile(path.join(ROOT, SRC.rates)), first_knowable_at: null,
     note: "no receipt file exists under data/macro/ for this series" },
+  "FENO_YOO_SUCCESSOR_SPX_VALUATION.json": receiptMissing(SRC.successor)
+    ? { sha256: null, first_knowable_at: null, note: "absent at snapshot time — shards written before P3 carry no successor block" }
+    : { sha256: shaFile(path.join(ROOT, SRC.successor)), first_knowable_at: null,
+        note: "computed result; p3-freeze-receipt.json is a criteria-freeze receipt, not a fetch receipt" },
   "r1-panel/prices/": { ...dirHash(SRC.r1prices), first_knowable_at: receiptTime(SRC.rec.r1price) },
   "r3-panel/prices/": { ...dirHash(SRC.r3prices), first_knowable_at: receiptTime(SRC.rec.r3price) },
   "r3-panel/dividends/": { ...dirHash(SRC.r3divs), first_knowable_at: receiptTime(SRC.rec.r3div) },
@@ -143,7 +172,7 @@ const sources = {
 
 // ---- shard ----
 const shard = {
-  schema_version: "feno_rim_recovery_g5_shadow.v1",
+  schema_version: "feno_rim_recovery_g5_shadow.v2",
   snapshot_at: new Date().toISOString(),
   snapshot_date: SNAPSHOT_DATE,
   origin: ORIGIN,
@@ -155,6 +184,7 @@ const shard = {
   },
   firms,
   aggregates,
+  successor,
   sources,
   first_knowable_at_note: "first_knowable_at is the fetch receipt time (generated_at/fetched_at from the source's receipt file), not a file mtime. Sources without a receipt record null with the reason — no invented times.",
 };
