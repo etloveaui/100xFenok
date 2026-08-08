@@ -1,0 +1,72 @@
+{
+  "schema_version": "feno_index_rim_final.v1",
+  "canonical_criteria": "feno-index-rim-canonical-criteria.json",
+  "canonical_criteria_sha256": "9100ea6014ebfd01e53a8b3714be220780286285dc892d9372488cc490a7354d",
+  "criteria_frozen_at_commit": "79717ab76f",
+  "source_clocks": {
+    "benchmark_price_eps_pb_roe": {
+      "as_of": "2026-07-31",
+      "source": "benchmarks/us.json sections.sp500.data[-1] and sections.nasdaq100.data[-1]"
+    },
+    "risk_free_rate": {
+      "as_of": "2026-08-06",
+      "source": "macro/fred-banking-daily.json series.DGS10"
+    },
+    "erp": {
+      "as_of": "2026-04-01",
+      "source": "damodaran/erp.json metadata.source_date, ctrypremApr26.xlsx"
+    },
+    "macro_long_run": {
+      "as_of": "2026-06-17",
+      "source": "FOMC SEP June 2026 Table 1 Longer run medians"
+    },
+    "oldest_binding_input": "2026-04-01, the Damodaran ERP",
+    "disclosure_rule": "every artifact states the oldest input date beside the result"
+  },
+  "oldest_input": "2026-04-01, the Damodaran ERP",
+  "public_surface": {
+    "status": "QUARANTINED",
+    "rule": "READY does not authorize public promotion. PUBLIC_ROWS stays empty and display_ready stays false until a separate owner approval.",
+    "usage_if_ready": "OWNER_FACING_RESEARCH_VALUATION"
+  },
+  "rule": {
+    "rule": "abs(Base(g_low)/Base(g_base) - 1) <= 0.20 and abs(Base(g_high)/Base(g_base) - 1) <= 0.20, for both indices",
+    "threshold": 0.2,
+    "g_low": 0.0304,
+    "g_high": 0.0469,
+    "g_low_rule": "max(0, g_base - 0.0100)",
+    "g_high_rule": "min(Rf, g_base + 0.0100)",
+    "note": "g_high is clamped by the Rf cap and therefore sits 65 basis points above g_base rather than 100. This is the cap doing its job, not a widened gate.",
+    "replaces": "the old E5 F2 discontinuous sign-flip-around-spot gate, which could fail merely because a valuation sat near fair value. The old F2 result is preserved unaltered in the historical-validation record and is not erased."
+  },
+  "replaces": "the old E5 F2 discontinuous sign-flip-around-spot gate, which could fail merely because a valuation sat near fair value. The old F2 result is preserved unaltered in the historical-validation record and is not erased.",
+  "SPX": {
+    "g_base": 0.0404,
+    "g_low": 0.0304,
+    "g_high": 0.0469,
+    "base_at_g_base": 5985.893566225766,
+    "base_at_g_low": 5397.498656259953,
+    "base_at_g_high": 6493.80821812866,
+    "rel_move_g_low": -0.09829692149651914,
+    "rel_move_g_high": 0.08485193501747212,
+    "max_abs_rel_move": 0.09829692149651914,
+    "fair_value_overlap": false
+  },
+  "NDX": {
+    "g_base": 0.0404,
+    "g_low": 0.0304,
+    "g_high": 0.0469,
+    "base_at_g_base": 28472.64577097623,
+    "base_at_g_low": 25163.13263367385,
+    "base_at_g_high": 31329.485938405043,
+    "rel_move_g_low": -0.11623482987576628,
+    "rel_move_g_high": 0.10033630841363372,
+    "max_abs_rel_move": 0.11623482987576628,
+    "fair_value_overlap": true
+  },
+  "qqq_envelope": {
+    "base_at_g_low": 612.29,
+    "base": 692.82,
+    "base_at_g_high": 762.33
+  }
+}

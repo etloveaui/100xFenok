@@ -1,0 +1,65 @@
+{
+  "schema_version": "feno_index_rim_final.v1",
+  "canonical_criteria": "feno-index-rim-canonical-criteria.json",
+  "canonical_criteria_sha256": "9100ea6014ebfd01e53a8b3714be220780286285dc892d9372488cc490a7354d",
+  "criteria_frozen_at_commit": "79717ab76f",
+  "source_clocks": {
+    "benchmark_price_eps_pb_roe": {
+      "as_of": "2026-07-31",
+      "source": "benchmarks/us.json sections.sp500.data[-1] and sections.nasdaq100.data[-1]"
+    },
+    "risk_free_rate": {
+      "as_of": "2026-08-06",
+      "source": "macro/fred-banking-daily.json series.DGS10"
+    },
+    "erp": {
+      "as_of": "2026-04-01",
+      "source": "damodaran/erp.json metadata.source_date, ctrypremApr26.xlsx"
+    },
+    "macro_long_run": {
+      "as_of": "2026-06-17",
+      "source": "FOMC SEP June 2026 Table 1 Longer run medians"
+    },
+    "oldest_binding_input": "2026-04-01, the Damodaran ERP",
+    "disclosure_rule": "every artifact states the oldest input date beside the result"
+  },
+  "oldest_input": "2026-04-01, the Damodaran ERP",
+  "public_surface": {
+    "status": "QUARANTINED",
+    "rule": "READY does not authorize public promotion. PUBLIC_ROWS stays empty and display_ready stays false until a separate owner approval.",
+    "usage_if_ready": "OWNER_FACING_RESEARCH_VALUATION"
+  },
+  "thresholds": {
+    "base_cell_shift_max": 0.05,
+    "grid_mean_shift_max": 0.05,
+    "ordering": "Bear <= Base <= Bull must hold under both routes"
+  },
+  "SPX": {
+    "route_a": 0.207015,
+    "route_b": 0.207111,
+    "base_cell_shift": 0.00003451814763683319,
+    "grid_mean_shift": 0.00003463553718748506,
+    "ordering_a_passed": true,
+    "ordering_b_passed": true,
+    "grid_b": {
+      "BEAR": 5301.275768059756,
+      "BASE": 5985.686944267909,
+      "BULL": 6808.215233081264,
+      "GRID_MEAN": 6020.772372428233
+    }
+  },
+  "NDX": {
+    "route_a": 0.097071,
+    "route_b": 0.115263,
+    "base_cell_shift": 0.00907299128312161,
+    "grid_mean_shift": 0.009090045502854147,
+    "ordering_a_passed": true,
+    "ordering_b_passed": true,
+    "grid_b": {
+      "BEAR": 25151.68176729459,
+      "BASE": 28214.313704088752,
+      "BULL": 31890.464395512903,
+      "GRID_MEAN": 28383.43093061658
+    }
+  }
+}
