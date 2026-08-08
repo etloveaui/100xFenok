@@ -2,34 +2,36 @@
   "schema_version": "producer-lkg-key-state/v1",
   "lane_id": "slickcharts_daily_delivery",
   "key": "currency.json",
-  "updated_at": "2026-08-07T07:21:56.539Z",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "updated_at": "2026-08-08T07:00:07.111Z",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "current": {
-    "path": "data/admin/slickcharts-daily-delivery/lkg/currency.json",
-    "payload_sha256": "b5cce5fbd3d5cfc3c7e13d66ee752e220edd7662210cad28dd947de697b2d09f",
-    "source_as_of": "2026-08-05"
+    "path": "data/slickcharts/currency.json",
+    "payload_sha256": "7a67a4191f7a3ed5ebb98c28810a7bbc35157664944c77251258d82f91853d77",
+    "source_as_of": "2026-08-08"
   },
+  "canonical_ref": "data/slickcharts/currency.json",
   "lkg": {
     "path": "data/admin/slickcharts-daily-delivery/lkg/currency.json",
     "payload_sha256": "b5cce5fbd3d5cfc3c7e13d66ee752e220edd7662210cad28dd947de697b2d09f",
     "source_as_of": "2026-08-05"
   },
-  "canonical_ref": "data/slickcharts/currency.json",
-  "latest_failure": {
+  "latest_failure": null,
+  "recovered_from_run_id": "31157265204",
+  "recovery_run_id": "31245095438",
+  "recovery_run_attempt": 1,
+  "recovery_event_name": "schedule",
+  "recovered_at": "2026-08-08T07:00:07.111Z",
+  "last_run_id": "31245095438",
+  "last_run_attempt": 1,
+  "last_event_name": "schedule",
+  "promotion_contract": "legacy_source_marker/v1",
+  "last_recovered_failure": {
     "run_id": "31157265204",
     "run_attempt": 1,
     "event_name": "schedule",
     "observed_at": "2026-08-07T07:21:56.539Z",
     "failure_kind": "unexpected",
     "error": "selected scraper has no outcome after job status failure"
-  },
-  "recovered_from_run_id": "30739823043",
-  "recovery_run_id": "30803180687",
-  "recovery_run_attempt": 1,
-  "recovery_event_name": "schedule",
-  "recovered_at": "2026-08-03T10:03:31.253Z",
-  "last_run_id": "31157265204",
-  "last_run_attempt": 1,
-  "last_event_name": "schedule"
+  }
 }
