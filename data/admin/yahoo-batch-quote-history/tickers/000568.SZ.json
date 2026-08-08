@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1005,
-      "natural": true,
-      "observed_at": "2026-07-22T00:59:16Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29879427185",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "ValueError: quote_as_of is unavailable for 000568.SZ despite available history",
       "event_name": "schedule",
       "failures": [
@@ -188,14 +175,27 @@
       "run_id": "31138989349",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 410,
+      "natural": true,
+      "observed_at": "2026-08-07T23:59:02Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31228360458",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T01:56:47Z",
+    "fetched_at": "2026-08-07T23:59:17Z",
     "history_as_of": "2026-08-07",
     "path": "data/yf/finance/000568.SZ.json",
-    "payload_sha256": "cf75b807b84b5427affeb321df60f67da438fe0bb3248bdf9f0fb56dc5897a3f",
-    "quote_as_of": "2026-08-07T01:41:45Z",
+    "payload_sha256": "5ee82c4b0253138d7e9e0a6f9a1b5a081ba2dc66df8a1c68b39a41e0b5265bc1",
+    "quote_as_of": "2026-08-07T07:04:09Z",
     "source_as_of": "2026-08-07"
   },
   "discovered_from": [
@@ -206,12 +206,12 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 833,
+    "latency_ms": 410,
     "natural": true,
-    "observed_at": "2026-08-07T01:56:32Z",
+    "observed_at": "2026-08-07T23:59:02Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31138989349",
+    "run_id": "31228360458",
     "schedule": "20 23 * * 1-5",
     "shard": "2/5"
   },
@@ -245,11 +245,11 @@
   "provider_observation": {
     "event_name": "schedule",
     "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-07T01:56:32Z",
-    "payload_sha256": "eb24cbc69485dfae8362b74e07173680e30f70080aac956eaf0644dbed3ebaf4",
-    "quote_as_of": "2026-08-07T01:41:45Z",
+    "observed_at": "2026-08-07T23:59:02Z",
+    "payload_sha256": "3abbd3bd0dbcc799ec1704f3860219cc9e7a15aad77ce5d05bd733b298fbfee3",
+    "quote_as_of": "2026-08-07T07:04:09Z",
     "run_attempt": 1,
-    "run_id": "31138989349",
+    "run_id": "31228360458",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
@@ -262,5 +262,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "000568.SZ",
-  "updated_at": "2026-08-07T01:56:32Z"
+  "updated_at": "2026-08-07T23:59:02Z"
 }
