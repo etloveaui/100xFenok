@@ -1,0 +1,50 @@
+{
+  "schema_version": "feno_yoo_successor_next_final_decision.v1",
+  "north_star": "FENO_SUSTAINABLE_YOO_SUCCESSOR_RIM",
+  "forward_book": "FAILED",
+  "forecast_origins": 7,
+  "pit_membership": "RECONSTRUCTED",
+  "independent_ke": "RANGE_ONLY",
+  "spx_successor": "INCONCLUSIVE",
+  "gls_icc": "KEEP_INTERNAL_SHADOW",
+  "public_surface": "KEEP_QUARANTINED",
+  "next_expansion": "NONE",
+  "owner_approval_required": true,
+
+  "adjudicated_at_utc": "2026-08-08T06:30:00Z",
+  "handler": "cc (Opus)",
+  "worker": "DeepSeek",
+  "mandate": "FENO_RIM_YOO_SUCCESSOR_NEXT_EXECUTION_OPUS_DEEPSEEK.md",
+
+  "field_notes": {
+    "forward_book": "FAILED because P1 returned FORWARD_BOOK_NOT_DEFENSIBLE (DEC-297). Core weight 0.2250-0.3603 across five binding origins, four of five below the 0.3333 PARTIAL floor. The shortfall is genuine path disagreement (0.29-0.38), not missing forecasts (0.123-0.149).",
+    "forecast_origins": "7, from P2 SEVEN_ORIGINS_READY. The 2024 and 2025 origins were never missing — the emitter refused to store any row whose realized outcome had not happened yet (DEC-298).",
+    "spx_successor": "INCONCLUSIVE. SUPPORTED was unreachable by mandate §9 before P3 began, since it requires P1 DEFENSIBLE or sufficient PARTIAL. FAIL was reachable and not reached: coefficient positive on all 16 legs (median +0.092), no sign reversal across book path (8/8) or Ke range (8/8). Direction positive and stable, magnitude small, significance absent (permutation p 0.069-0.438, none at 0.05), per-origin consistency 4-5 of 7.",
+    "next_expansion": "NONE. Mandate §12 forbids NDX, KOSPI, SOX, CCMP and RUT before SPX returns, and SPX has not returned support."
+  },
+
+  "phase_results": {
+    "P1": {"verdict": "FORWARD_BOOK_NOT_DEFENSIBLE", "commit": "aa0f25f52b", "decision": "DEC-297"},
+    "P2": {"verdict": "SEVEN_ORIGINS_READY", "commit": "2211f2cdb1", "decision": "DEC-298"},
+    "P3": {"verdict": "YOO_SUCCESSOR_INCONCLUSIVE", "criteria": "6b7eebc773"}
+  },
+
+  "coverage_that_must_be_read_together": {
+    "p3_valuation_weight": "0.631 - 0.874 of the P1 weight denominator, by leg and origin",
+    "p1_corroborated_forward_book_weight": "0.2250 - 0.3603",
+    "why": "The valuation covers many firms whose forward book is not corroborated by a second independent construction. Mandate §9 hinges on the smaller number. Quoting the larger one alone misrepresents the result."
+  },
+
+  "known_floor_not_noise": "Departed constituents have no price series in any reachable source, so 0.123-0.149 of index weight cannot enter a market-cap denominator even though P1 recovered their filings. B2-A recovered their accounting; nobody has recovered their prices.",
+
+  "handler_defects_recorded": 6,
+  "handler_defects_note": "Five recorded in FENO_RIM_P1_ADJUDICATION.md, one in P3: the criteria named a placebo or leakage check as a FAIL condition and never defined the test, so FAIL had three testable conditions this run rather than four. No placebo was invented after the fact.",
+
+  "procedural_weakness_disclosed": "p1-criteria-v2.json was finalised after a voided run's numbers were visible to the handler. Recorded in p1-freeze-receipt-v2.json rather than argued away. Every v2 change tightened the bar, so no v2 change could reach a friendlier verdict, but the freeze is weaker than v1's and the record says so.",
+
+  "immutable_predecessors": {
+    "FENO_YOO_SUCCESSOR_SPX_VALUATION.json": "the B3 record at a23e78d977 — not overwritten",
+    "FENO_YOO_SUCCESSOR_VALIDATION.json": "the B3 record at a23e78d977 — not overwritten",
+    "FENO_RIM_FORWARD_BOOK_PATHS.json": "the P1 record — not overwritten; P3 wrote a new _P3 file"
+  }
+}
