@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-09T15:05:58.954Z",
+  "generated_at": "2026-08-09T16:37:04.187Z",
   "status": "open",
-  "open_incident_count": 7,
+  "open_incident_count": 6,
   "open_incidents": [
     {
       "workflow": "build-stocks-analyzer.yml",
@@ -11,19 +11,6 @@
       "failure_streak_threshold": 2,
       "first_failing_run_id": 30990499079,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30990499079",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
-    {
-      "workflow": "deploy-worker.yml",
-      "label": "Deploy Worker (Cloudflare)",
-      "streak": 2,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 31315285294,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31315285294",
       "alarm_reasons": [
         "failure_streak"
       ],
@@ -113,7 +100,8 @@
       "label": "Deploy Worker (Cloudflare)",
       "events": [
         "push",
-        "schedule"
+        "schedule",
+        "workflow_run"
       ],
       "event": null,
       "failure_streak_threshold": 2,
@@ -492,13 +480,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31320100455",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31320100455",
-    "observed_at": "2026-08-09T15:05:58.954Z",
+    "run_id": "31324162588",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31324162588",
+    "observed_at": "2026-08-09T16:37:04.187Z",
     "event": "workflow_run",
     "workflows": [
       "build-stocks-analyzer.yml",
-      "deploy-worker.yml",
       "fetch-damodaran-shadow.yml",
       "fetch-fred-yardeni.yml",
       "fetch-stockanalysis.yml",
