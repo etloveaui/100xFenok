@@ -398,8 +398,36 @@ jobs:
         if: steps.check.outputs.changed == 'false'
         run: echo "manifest.json already up to date — nothing to commit"
 
-      - name: Dispatch Worker deploy for generated-data commit
+      - name: Check SlickCharts recovery in flight
+        id: recovery-gate
         if: steps.commit.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          guard="$(node scripts/check-recovery-deploy-gate.mjs \
+            --mode dispatch \
+            --recovery-workflows slickcharts-history.yml,publish-stockanalysis-artifact-recovery.yml)"
+          case "$guard" in
+            skip)
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "::notice::SlickCharts recovery-family workflow nonterminal; deploy dispatch deferred to the recovery-completion requeue or the daily schedule."
+              ;;
+            proceed-uncertain)
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+              echo "::warning::Recovery dispatch gate uncertain (provider query unreadable); dispatching with strict KPI as the fail-close backstop."
+              ;;
+            proceed)
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "::error::Unexpected recovery dispatch gate output: $guard"
+              exit 1
+              ;;
+          esac
+
+      - name: Dispatch Worker deploy for generated-data commit
+        if: ${{ steps.commit.outputs.pushed == 'true' && steps.recovery-gate.outputs.skip != 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

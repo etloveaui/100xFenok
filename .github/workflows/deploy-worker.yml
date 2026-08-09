@@ -41,9 +41,59 @@ on:
   schedule:
     - cron: '30 3 * * *'  # 12:30 KST, after update-manifest data refresh
   workflow_dispatch:
+  # Requeue path: a successful recovery-family completion must eventually cause
+  # a deploy even if every data push during the recovery window was gated. The
+  # recovery-gate job still skips when a SIBLING recovery remains nonterminal.
+  # NOTE: workflow_run.workflows matches the workflows' DISPLAY names (name:),
+  # not their file names.
+  workflow_run:
+    workflows: ["SlickCharts History", "Publish StockAnalysis Artifact Recovery"]
+    types: [completed]
 
 jobs:
+  recovery-gate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.gate.outputs.skip }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Recovery deploy gate (skip data-serving deploys while SlickCharts recovery is in flight)
+        id: gate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          guard="$(node scripts/check-recovery-deploy-gate.mjs \
+            --mode push \
+            --event-name "${{ github.event_name }}" \
+            --event-json "$GITHUB_EVENT_PATH" \
+            --recovery-workflows slickcharts-history.yml,publish-stockanalysis-artifact-recovery.yml)"
+          case "$guard" in
+            skip)
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "::notice::SlickCharts recovery-family workflow nonterminal and this push/workflow_run touches data-serving state; deploy deferred to the recovery-completion requeue or the daily schedule."
+              ;;
+            proceed-uncertain)
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+              echo "::warning::Recovery deploy gate uncertain (provider query or payload unreadable); proceeding with strict KPI as the fail-close backstop."
+              ;;
+            proceed)
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "::error::Unexpected recovery deploy gate output: $guard"
+              exit 1
+              ;;
+          esac
+
   build-verify:
+    needs: [recovery-gate]
+    if: ${{ needs.recovery-gate.outputs.skip != 'true' }}
     runs-on: ubuntu-latest
     concurrency:
       group: workers-100xfenok-main-build
@@ -163,6 +213,36 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/check-deploy-supersession.mjs
+
+      - name: Re-check recovery gate (check-then-start race)
+        # A recovery may have become nonterminal after the recovery-gate job
+        # ran. Reuse the existing SUPERSEDED semantics so every downstream step
+        # already keyed on it skips without new cancellation logic. The gate is
+        # fail-open on provider uncertainty (warning), matching the job gate.
+        if: ${{ env.SUPERSEDED != 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          guard="$(node scripts/check-recovery-deploy-gate.mjs \
+            --mode push \
+            --event-name "${{ github.event_name }}" \
+            --event-json "$GITHUB_EVENT_PATH" \
+            --recovery-workflows slickcharts-history.yml,publish-stockanalysis-artifact-recovery.yml)"
+          case "$guard" in
+            skip)
+              echo "SUPERSEDED=true" >> "$GITHUB_ENV"
+              echo "::notice::Recovery became nonterminal after the gate job; deploy deferred (same semantics as supersession)."
+              ;;
+            proceed-uncertain)
+              echo "::warning::Recovery re-check uncertain; proceeding with strict KPI as the fail-close backstop."
+              ;;
+            proceed) ;;
+            *)
+              echo "::error::Unexpected recovery deploy gate output: $guard"
+              exit 1
+              ;;
+          esac
 
       - name: Verify Cloudflare token presence
         if: ${{ env.SUPERSEDED != 'true' }}
