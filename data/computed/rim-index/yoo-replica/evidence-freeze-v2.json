@@ -1,0 +1,120 @@
+{
+  "criteria_version": "yoo_rim_replica_2018.v1 / evidence-freeze.v2",
+  "namespace": "yoo_rim_replica_2018.v1",
+  "frozen_at": "2026-08-09T07:44:54Z",
+  "frozen_by": "handler (Claude Opus), sole adjudicator, under the joint closeout mandate relayed by cx",
+  "repo_head_at_freeze": "1f1939919c",
+
+  "supersedes": {
+    "path": "data/computed/rim-index/yoo-replica/evidence-freeze.json",
+    "sha256": "3db757c087688600f4d2ceba2b715785440866df9c8ad76f937ca7d8a3252aa9",
+    "status": "preserved unedited",
+    "what_v1_still_governs": "the error gates, the prohibited calibration targets, the prohibited fitting mechanics, the candidate list, the train/holdout split and the terminal-state definitions. None of those move in v2.",
+    "why_v2_exists": "cx recovered the patent worksheet figures after v1 was frozen. That converted several previously-fitted quantities into primary-sourced ones and collapsed the admissible set. v2 records the narrowed state and pre-declares the gates for the one discriminator that remains, before any such evidence is in hand."
+  },
+
+  "state_frozen_here": {
+    "verdict_unchanged": "YOO_METHOD_NOT_IDENTIFIED",
+
+    "what_is_now_primary_verified": {
+      "class": "YOO_PRIMARY_VERIFIED, for the 2016 KOSPI implementation only",
+      "source": "KR20180048140A figures 11a/11b, recovered at 300dpi by cx; the handler's own attempt returned HTTP 403 for pat00002-4.png at the path that served pat00001.png",
+      "engine_structure": {
+        "shape": "finite-horizon residual income, explicitly summed, with NO terminal-value row printed",
+        "hurdle": "cost of capital = Rf + Risk Premium (printed: 1.5% + 7.5% = 9.0%)",
+        "discount": "the risk-free rate, NOT the cost of capital",
+        "discount_evidence": "the printed discount-factor row 1.015/1.030/1.045/1.060/1.076/1.092/1.108/1.124 matches (1+Rf)^t to a maximum relative error of 0.22% and misses (1+CoC)^t by 77.3%",
+        "roe_path": "flat across every forecast column (8.5% for 2016E-2023E)",
+        "horizon_in_that_worksheet": 8,
+        "book_column": "aggregate Total SH Equity in 억원; no per-share BPS row appears anywhere in the figures"
+      },
+      "independent_corroboration": "the handler had already derived, from the 2018 grids alone and without any book value, that the Risk Premium axis is exactly linear (median curvature 0.0 across 29 matrices) and that a shared discount denominator therefore cannot be in use. The printed discount row is the same finding from the other direction.",
+      "second_refutation_of_candidate_A": "the worksheet is a finite-horizon sum with no terminal; 수학식 1 is a single-stage perpetuity. The patent's own implementation does not compute the patent's own printed equation."
+    },
+
+    "what_is_NOT_sourced_and_must_not_be_treated_as_such": {
+      "retention_b": {
+        "value": 0.8292,
+        "derivation": "median 7.05% annual growth in the printed Total SH Equity forecast against a flat printed ROE of 8.5%",
+        "class": "YOO_PRIMARY_VERIFIED for KOSPI 2016 ONLY; FENO_MAPPING when applied to the 2018 US tables",
+        "hard_rule": "b = 0.8292 may not be described as a 2018 operand. Any 2018 result that pins b to this value must carry the label 'KOSPI-2016 retention transferred as an assumption'."
+      },
+      "horizon_N": {
+        "state": "N = 8 is sourced for KOSPI 2016 and FAILS on the 2018 corpus (median 0.84% PASS, max 5.35% FAIL against the 2.5% gate)",
+        "surviving_after_pinning_b_and_discount": "TRAIN admits N in {12, 13, 14}; HOLDOUT admits {12, 13}",
+        "class": "identifiable on the 2018 grids only by fitting; therefore load-bearing and unresolved",
+        "implied_level_spread": "V/B0 at ROE 26.4% and r = Rf+9.0% is 6.0947 at N=12 and 7.1786 at N=13, a 1.178x spread"
+      },
+      "book_basis_2018": {
+        "state": "UNRESOLVED. This is now the whole of the open question.",
+        "evidence": "with the structure pinned, ZERO (N, b) pairs reproduce the seven printed levels; best maximum level error 62.6%. At the two surviving horizons with the KOSPI retention the errors are 133% (N=12) and 173% (N=13), worst on QCLN.",
+        "current_adapter": "B0 = price / printed '18E P/B, class FENO_MAPPING, explicitly not demonstrated to be the reports' own book basis"
+      }
+    },
+
+    "degeneracy_now": {
+      "before_the_figure_recovery": "7,769 (N, b, d) triples admissible, implied V/B0 spread 1.695x",
+      "after_pinning_b_and_discount_to_source": "2 horizons admissible after holdout, implied V/B0 spread 1.178x",
+      "why_the_verdict_did_not_move": "the frozen v1 definition of NOT_IDENTIFIED fires on any of: more than one materially different candidate remaining admissible; a load-bearing parameter identifiable only by fitting the target output; or holdout reproduction failing. The first two both still fire, and the level test fails outright."
+    }
+  },
+
+  "guard_against_the_specific_error_this_freeze_anticipates": {
+    "name": "AGGREGATE_EQUITY_IS_NOT_BPS",
+    "rule": "The patent's Total SH Equity row is a KOSPI aggregate in 억원 for 2012-2023E. It is not a per-share book value, it is not a per-index-point book value, and it belongs to a different market, a different index and a different vintage from every 2018 fixture. It may NEVER populate `book_value_0` or any per-share operand for a 2018 table, be converted to one by dividing by any share or divisor count not printed in the same document, or be cited as evidence that the 2018 book basis is known.",
+    "why_this_guard_exists": "the figure recovery produced the only book column anyone has seen in a primary Yoo source. The temptation to promote it into the 2018 gap is exactly the kind of cross-family blend the D1 firewall forbids, and it would be a silent class change from YOO_PRIMARY_VERIFIED(2016 KOSPI aggregate) to YOO_PRIMARY_VERIFIED(2018 per-share).",
+    "enforcement": "any artifact that assigns a 2018 per-share book value must name its source document, its as-of date and its unit, and must state whether that document is one of the two 2018 Kiwoom reports. If it is not, the value is FENO_MAPPING and cannot satisfy a reproduction gate."
+  },
+
+  "the_last_discriminator_and_its_gates": {
+    "what_would_settle_it": "one authentic per-share or per-index-point book value, for an asset that already has a complete 3x3 in the corpus, dated at or before that report's stated data date (2018-04-04 or 2018-07-10).",
+    "admissibility_of_a_candidate_book_value": [
+      "printed in one of the two primary 2018 Kiwoom reports, OR sourced from the provider the reports name (Bloomberg consensus) with a verifiable as-of at or before the report's data date",
+      "expressed per share or per index point in the same unit as the matrix cells",
+      "NOT back-solved, in whole or in part, from any cell, centre, mean or upside figure of any matrix in the corpus",
+      "NOT derived from the patent's aggregate equity row, per the guard above",
+      "NOT derived from a current-vintage P/B or any post-2018 data"
+    ],
+    "gates_declared_now_before_any_such_value_is_in_hand": {
+      "G_LEVEL": "with that book value fixed and the structure pinned, the model must reproduce that asset's printed centre cell within the frozen 2.5% maximum-cell gate",
+      "G_HORIZON": "re-score N on TRAIN with b and the discount rule pinned. Exactly one N must survive both TRAIN gates and the unchanged HOLDOUT.",
+      "G_TRANSFER": "the same (N, b, discount) must then reproduce the printed levels of at least three further assets within 2.5%, using book values obtained by the same admissible rule — not by refitting per asset"
+    },
+    "outcomes_bound_to_those_gates": {
+      "YOO_METHOD_STRONGLY_RECONSTRUCTED": "G_LEVEL and G_HORIZON and G_TRANSFER all pass",
+      "YOO_METHOD_NOT_IDENTIFIED_remains": "G_LEVEL passes but two or more horizons still survive, or G_TRANSFER fails",
+      "FAMILY_REFUTED": "G_LEVEL fails at every admissible N. Record it and stop; do not introduce a new family to rescue it.",
+      "YOO_METHOD_VERIFIED": "not reachable by this route. v1 reserves VERIFIED for the exact equation and operand semantics being directly recovered AND reproduction passing. 수학식 1 was recovered and is refuted as the reports' equation, so the reports' exact equation remains unrecovered."
+    },
+    "prohibited_while_pursuing_it": [
+      "fitting a book value per asset to close the level gap — this is the v1 prohibition that produced the current verdict and it does not relax",
+      "adopting N=12 or N=13 as 'the' horizon because one of them looks better on a level test run after the fact",
+      "treating the 1.178x spread as small enough to ignore; it is 17.8% of fair value",
+      "any use of a current market price, current P/B, or any post-2018 quantity"
+    ]
+  },
+
+  "what_may_be_stated_publicly_about_the_current_state": {
+    "allowed": [
+      "the patent equation 수학식 1 is recovered and verified as the patent's printed equation",
+      "the patent's own 2016 KOSPI worksheet uses a finite-horizon two-rate structure with no terminal, hurdle Rf+RP and discounting at Rf",
+      "the 2018 published grids are consistent with that structure and inconsistent with a single-stage perpetuity",
+      "the 2018 method is not identified, and no current Yoo fair value exists"
+    ],
+    "forbidden": [
+      "describing any reconstruction as Yoo's exact 2018 arithmetic",
+      "describing a parameterisation that reproduces a market price as evidence that the market or Yoo uses it",
+      "emitting a current SPX, NDX or QQQ Yoo number in any form",
+      "presenting the KOSPI-2016 retention or horizon as 2018 operands"
+    ]
+  },
+
+  "artifacts_cx_must_verify": [
+    { "path": "data/computed/rim-index/yoo-replica/evidence-freeze-v2.json", "what": "this file — the narrowed state and the discriminator gates" },
+    { "path": "data/computed/rim-index/yoo-replica/equation-identification.json", "sha256_at_freeze": "49198f597d99a358cd023859e36acbac35e4d13075490f86267aab340e2da86a", "what": "the verdict, the transfer test and the figure-recovery decoding" },
+    { "path": "data/computed/rim-index/yoo-replica/historical-fixtures.json", "sha256_at_freeze": "30c4bc6fcfb7502486919e31dcd369798c7502ec9c9242916ccbb4cd98a01553", "what": "the 34-matrix corpus and both transcription provenances" },
+    { "path": "data/computed/rim-index/yoo-replica/matrix-fingerprints.json", "sha256_at_freeze": "d5c0c41194e5371b923e323515b1cdac64c93e2d8ec2fda10570e520c71f2b60", "what": "the scale-free structural diagnostics, including the exactly-zero Risk Premium curvature" }
+  ],
+
+  "immutability": "This file is immutable. Any correction is a v3 pair with its own receipt, never an edit in place. Nothing here is committed; the Yoo contract forbids committing without explicit owner instruction."
+}

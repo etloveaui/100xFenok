@@ -1,0 +1,4379 @@
+{
+ "schema_version": "yoo_rim_replica_2018.historical_fixtures.v2",
+ "provenance": {
+  "handler_pass": "pdftotext -layout + regex extraction over both primary PDFs, 32 matrices (29 independent)",
+  "worker_pass": "DeepSeek independent double-entry transcription, passA/passB, 34 matrices, 34/34 cell-identical between passes",
+  "agreement": "Both passes independently read the SAME axis orientation off the page: rows = Long term ROAE ascending, columns = Equity Risk Premium descending. Both flagged 2018-04-09_JD as a printed-rounding anomaly.",
+  "handler_miss": "The handler pass missed two April matrices, IYW and FDN on page 18, because their titles use a different heading form. They are merged in from the worker pass and are counted in every number below.",
+  "handler_error_disclosed": "The handler overwrote the worker's historical-fixtures.json with a cp before reading it. The worker's per-pass transcriptions survive at _tmp/yoo-e2/transcription_2018040{9,7}18_pass{A,B}.json and were used to recover the two missed matrices. Both transcriptions are preserved; neither is discarded.",
+  "worker_working_copies": "_tmp/yoo-e2/"
+ },
+ "counts": {
+  "handler_matrices": 32,
+  "merged_independent": 31,
+  "distinct_report_dates": 2,
+  "distinct_asset_types": 3
+ },
+ "source_hashes": {
+  "kiwoom_201804": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+  "kiwoom_201807": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef"
+ },
+ "fixtures": [
+  {
+   "fixture_id": "2018-07-18_나스닥_FY2018",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 19,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": null
+   },
+   "asset": {
+    "name": "나스닥 지수",
+    "ticker": "나스닥 지수",
+    "type": "index",
+    "sector": null,
+    "currency_token": "pt"
+   },
+   "current_price_or_index": 7756.2,
+   "roe_axis": [
+    0.259,
+    0.264,
+    0.26899999999999996
+   ],
+   "risk_premium_axis": [
+    0.095,
+    0.09,
+    0.085
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     9423.0,
+     9701.0,
+     9979.0
+    ],
+    [
+     9839.0,
+     10121.0,
+     10404.0
+    ],
+    [
+     10266.0,
+     10553.0,
+     10841.0
+    ]
+   ],
+   "printed_center": 10121.0,
+   "recomputed_grid_mean": 10125.2222,
+   "printed_upside": {
+    "lo": 0.215,
+    "ctr": 0.305,
+    "hi": 0.39799999999999996,
+    "mean": 0.305
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 10121.84,
+    "center_printed_cell": 10121.0,
+    "mean_from_printed_upside": 10121.84,
+    "mean_recomputed": 10125.22,
+    "min_from_printed_upside": 9423.78,
+    "min_cell": 9423.0,
+    "max_from_printed_upside": 10843.17,
+    "max_cell": 10841.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": [
+     "grid is byte-identical to ['2018-07-18_QQQ', '2018-07-18_QLD']; not an independent observation"
+    ]
+   },
+   "independent": false
+  },
+  {
+   "fixture_id": "2018-07-18_나스닥_FY2019",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 19,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": null
+   },
+   "asset": {
+    "name": "나스닥 지수",
+    "ticker": "나스닥 지수",
+    "type": "index",
+    "sector": null,
+    "currency_token": "pt"
+   },
+   "current_price_or_index": 7756.2,
+   "roe_axis": [
+    0.28800000000000003,
+    0.293,
+    0.298
+   ],
+   "risk_premium_axis": [
+    0.095,
+    0.09,
+    0.085
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     12037.0,
+     12344.0,
+     12651.0
+    ],
+    [
+     12524.0,
+     12836.0,
+     13148.0
+    ],
+    [
+     13024.0,
+     13341.0,
+     13658.0
+    ]
+   ],
+   "printed_center": 12836.0,
+   "recomputed_grid_mean": 12840.3333,
+   "printed_upside": {
+    "lo": 0.552,
+    "ctr": 0.655,
+    "hi": 0.7609999999999999,
+    "mean": 0.6559999999999999
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 12836.51,
+    "center_printed_cell": 12836.0,
+    "mean_from_printed_upside": 12844.27,
+    "mean_recomputed": 12840.33,
+    "min_from_printed_upside": 12037.62,
+    "min_cell": 12037.0,
+    "max_from_printed_upside": 13658.67,
+    "max_cell": 13658.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_나스닥_FY2020",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 19,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": null
+   },
+   "asset": {
+    "name": "나스닥 지수",
+    "ticker": "나스닥 지수",
+    "type": "index",
+    "sector": null,
+    "currency_token": "pt"
+   },
+   "current_price_or_index": 7756.2,
+   "roe_axis": [
+    0.305,
+    0.31,
+    0.315
+   ],
+   "risk_premium_axis": [
+    0.095,
+    0.09,
+    0.085
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     13683.0,
+     14007.0,
+     14331.0
+    ],
+    [
+     14214.0,
+     14543.0,
+     14872.0
+    ],
+    [
+     14758.0,
+     15093.0,
+     15427.0
+    ]
+   ],
+   "printed_center": 14543.0,
+   "recomputed_grid_mean": 14547.5556,
+   "printed_upside": {
+    "lo": 0.764,
+    "ctr": 0.875,
+    "hi": 0.9890000000000001,
+    "mean": 0.8759999999999999
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 14542.88,
+    "center_printed_cell": 14543.0,
+    "mean_from_printed_upside": 14550.63,
+    "mean_recomputed": 14547.56,
+    "min_from_printed_upside": 13681.94,
+    "min_cell": 13683.0,
+    "max_from_printed_upside": 15427.08,
+    "max_cell": 15427.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_QQQ",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 25,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "QQQ",
+    "ticker": "QQQ US",
+    "type": "etf_or_basket",
+    "sector": "나스닥",
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 7756.2,
+   "roe_axis": [
+    0.259,
+    0.264,
+    0.26899999999999996
+   ],
+   "risk_premium_axis": [
+    0.095,
+    0.09,
+    0.085
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     9423.0,
+     9701.0,
+     9979.0
+    ],
+    [
+     9839.0,
+     10121.0,
+     10404.0
+    ],
+    [
+     10266.0,
+     10553.0,
+     10841.0
+    ]
+   ],
+   "printed_center": 10121.0,
+   "recomputed_grid_mean": 10125.2222,
+   "printed_upside": {
+    "lo": 0.215,
+    "ctr": 0.305,
+    "hi": 0.39799999999999996,
+    "mean": 0.305
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 10121.84,
+    "center_printed_cell": 10121.0,
+    "mean_from_printed_upside": 10121.84,
+    "mean_recomputed": 10125.22,
+    "min_from_printed_upside": 9423.78,
+    "min_cell": 9423.0,
+    "max_from_printed_upside": 10843.17,
+    "max_cell": 10841.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": [
+     "grid is byte-identical to ['2018-07-18_나스닥_FY2018', '2018-07-18_QLD']; not an independent observation"
+    ]
+   },
+   "independent": false
+  },
+  {
+   "fixture_id": "2018-07-18_QLD",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 25,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "QLD",
+    "ticker": "QLD US",
+    "type": "etf_or_basket",
+    "sector": "나스닥 레버리지 2x",
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 7756.2,
+   "roe_axis": [
+    0.259,
+    0.264,
+    0.26899999999999996
+   ],
+   "risk_premium_axis": [
+    0.095,
+    0.09,
+    0.085
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     9423.0,
+     9701.0,
+     9979.0
+    ],
+    [
+     9839.0,
+     10121.0,
+     10404.0
+    ],
+    [
+     10266.0,
+     10553.0,
+     10841.0
+    ]
+   ],
+   "printed_center": 10121.0,
+   "recomputed_grid_mean": 10125.2222,
+   "printed_upside": {
+    "lo": 0.215,
+    "ctr": 0.305,
+    "hi": 0.39799999999999996,
+    "mean": 0.305
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 10121.84,
+    "center_printed_cell": 10121.0,
+    "mean_from_printed_upside": 10121.84,
+    "mean_recomputed": 10125.22,
+    "min_from_printed_upside": 9423.78,
+    "min_cell": 9423.0,
+    "max_from_printed_upside": 10843.17,
+    "max_cell": 10841.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": [
+     "grid is byte-identical to ['2018-07-18_나스닥_FY2018', '2018-07-18_QQQ']; not an independent observation"
+    ]
+   },
+   "independent": false
+  },
+  {
+   "fixture_id": "2018-07-18_IYW",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 25,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "IYW",
+    "ticker": "IYW US",
+    "type": "etf_or_basket",
+    "sector": "IT 업종",
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 2375.84,
+   "roe_axis": [
+    0.294,
+    0.299,
+    0.304
+   ],
+   "risk_premium_axis": [
+    0.085,
+    0.08,
+    0.075
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     3739.0,
+     3828.0,
+     3918.0
+    ],
+    [
+     3886.0,
+     3977.0,
+     4068.0
+    ],
+    [
+     4036.0,
+     4129.0,
+     4221.0
+    ]
+   ],
+   "printed_center": 3977.0,
+   "recomputed_grid_mean": 3978.0,
+   "printed_upside": {
+    "lo": 0.574,
+    "ctr": 0.674,
+    "hi": 0.777,
+    "mean": 0.674
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 3977.16,
+    "center_printed_cell": 3977.0,
+    "mean_from_printed_upside": 3977.16,
+    "mean_recomputed": 3978.0,
+    "min_from_printed_upside": 3739.57,
+    "min_cell": 3739.0,
+    "max_from_printed_upside": 4221.87,
+    "max_cell": 4221.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_RYT",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 25,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "RYT",
+    "ticker": "RYT US",
+    "type": "etf_or_basket",
+    "sector": "IT 업종",
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 12334.87,
+   "roe_axis": [
+    0.27,
+    0.275,
+    0.28
+   ],
+   "risk_premium_axis": [
+    0.125,
+    0.12,
+    0.115
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     23101.0,
+     24066.0,
+     25032.0
+    ],
+    [
+     24550.0,
+     25537.0,
+     26524.0
+    ],
+    [
+     26052.0,
+     27060.0,
+     28069.0
+    ]
+   ],
+   "printed_center": 25537.0,
+   "recomputed_grid_mean": 25554.5556,
+   "printed_upside": {
+    "lo": 0.873,
+    "ctr": 1.07,
+    "hi": 1.276,
+    "mean": 1.072
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 25533.18,
+    "center_printed_cell": 25537.0,
+    "mean_from_printed_upside": 25557.85,
+    "mean_recomputed": 25554.56,
+    "min_from_printed_upside": 23103.21,
+    "min_cell": 23101.0,
+    "max_from_printed_upside": 28074.16,
+    "max_cell": 28069.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_VGT",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 26,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "VGT",
+    "ticker": "VGT US",
+    "type": "etf_or_basket",
+    "sector": "IT 업종",
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 1228.18,
+   "roe_axis": [
+    0.336,
+    0.341,
+    0.34600000000000003
+   ],
+   "risk_premium_axis": [
+    0.125,
+    0.12,
+    0.115
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     2169.0,
+     2225.0,
+     2280.0
+    ],
+    [
+     2265.0,
+     2321.0,
+     2378.0
+    ],
+    [
+     2363.0,
+     2421.0,
+     2479.0
+    ]
+   ],
+   "printed_center": 2321.0,
+   "recomputed_grid_mean": 2322.3333,
+   "printed_upside": {
+    "lo": 0.7659999999999999,
+    "ctr": 0.89,
+    "hi": 1.018,
+    "mean": 0.8909999999999999
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 2321.26,
+    "center_printed_cell": 2321.0,
+    "mean_from_printed_upside": 2322.49,
+    "mean_recomputed": 2322.33,
+    "min_from_printed_upside": 2168.97,
+    "min_cell": 2169.0,
+    "max_from_printed_upside": 2478.47,
+    "max_cell": 2479.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_IBB",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 26,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "IBB",
+    "ticker": "IBB US",
+    "type": "etf_or_basket",
+    "sector": "바이오/헬스케어 업종",
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 3784.09,
+   "roe_axis": [
+    0.255,
+    0.26,
+    0.265
+   ],
+   "risk_premium_axis": [
+    0.105,
+    0.1,
+    0.095
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     6421.0,
+     6650.0,
+     6879.0
+    ],
+    [
+     6780.0,
+     7013.0,
+     7247.0
+    ],
+    [
+     7151.0,
+     7390.0,
+     7629.0
+    ]
+   ],
+   "printed_center": 7013.0,
+   "recomputed_grid_mean": 7017.7778,
+   "printed_upside": {
+    "lo": 0.6970000000000001,
+    "ctr": 0.853,
+    "hi": 1.016,
+    "mean": 0.855
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 7011.92,
+    "center_printed_cell": 7013.0,
+    "mean_from_printed_upside": 7019.49,
+    "mean_recomputed": 7017.78,
+    "min_from_printed_upside": 6421.6,
+    "min_cell": 6421.0,
+    "max_from_printed_upside": 7628.73,
+    "max_cell": 7629.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_QCLN",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 26,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "QCLN",
+    "ticker": "QCLN US",
+    "type": "etf_or_basket",
+    "sector": "대체에너지 업종",
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 265.6,
+   "roe_axis": [
+    0.23600000000000002,
+    0.24100000000000002,
+    0.24600000000000002
+   ],
+   "risk_premium_axis": [
+    0.005,
+    0.0,
+    -0.005
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     359.0,
+     366.0,
+     373.0
+    ],
+    [
+     370.0,
+     378.0,
+     385.0
+    ],
+    [
+     382.0,
+     390.0,
+     397.0
+    ]
+   ],
+   "printed_center": 378.0,
+   "recomputed_grid_mean": 377.7778,
+   "printed_upside": {
+    "lo": 0.35,
+    "ctr": 0.42200000000000004,
+    "hi": 0.495,
+    "mean": 0.42200000000000004
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 377.68,
+    "center_printed_cell": 378.0,
+    "mean_from_printed_upside": 377.68,
+    "mean_recomputed": 377.78,
+    "min_from_printed_upside": 358.56,
+    "min_cell": 359.0,
+    "max_from_printed_upside": 397.07,
+    "max_cell": 397.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_TAN",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 26,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "TAN",
+    "ticker": "TAN US",
+    "type": "etf_or_basket",
+    "sector": "대체에너지 업종",
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 114.55,
+   "roe_axis": [
+    0.08199999999999999,
+    0.087,
+    0.092
+   ],
+   "risk_premium_axis": [
+    0.005,
+    0.0,
+    -0.005
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     160.0,
+     167.0,
+     174.0
+    ],
+    [
+     169.0,
+     176.0,
+     184.0
+    ],
+    [
+     178.0,
+     185.0,
+     193.0
+    ]
+   ],
+   "printed_center": 176.0,
+   "recomputed_grid_mean": 176.2222,
+   "printed_upside": {
+    "lo": 0.396,
+    "ctr": 0.5379999999999999,
+    "hi": 0.685,
+    "mean": 0.5379999999999999
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 176.18,
+    "center_printed_cell": 176.0,
+    "mean_from_printed_upside": 176.18,
+    "mean_recomputed": 176.22,
+    "min_from_printed_upside": 159.91,
+    "min_cell": 160.0,
+    "max_from_printed_upside": 193.02,
+    "max_cell": 193.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_AMZN",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 27,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "Amazon",
+    "ticker": "AMZN US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 1743.07,
+   "roe_axis": [
+    0.35200000000000004,
+    0.35700000000000004,
+    0.36200000000000004
+   ],
+   "risk_premium_axis": [
+    0.055,
+    0.05,
+    0.045
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     2151.0,
+     2189.0,
+     2227.0
+    ],
+    [
+     2239.0,
+     2278.0,
+     2317.0
+    ],
+    [
+     2330.0,
+     2370.0,
+     2410.0
+    ]
+   ],
+   "printed_center": 2278.0,
+   "recomputed_grid_mean": 2279.0,
+   "printed_upside": {
+    "lo": 0.23399999999999999,
+    "ctr": 0.307,
+    "hi": 0.382,
+    "mean": 0.308
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 2278.19,
+    "center_printed_cell": 2278.0,
+    "mean_from_printed_upside": 2279.94,
+    "mean_recomputed": 2279.0,
+    "min_from_printed_upside": 2150.95,
+    "min_cell": 2151.0,
+    "max_from_printed_upside": 2408.92,
+    "max_cell": 2410.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_GOOGL",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 27,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "Alphabet(Google)",
+    "ticker": "GOOGL US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 1167.14,
+   "roe_axis": [
+    0.205,
+    0.21,
+    0.215
+   ],
+   "risk_premium_axis": [
+    0.055,
+    0.05,
+    0.045
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     1440.0,
+     1488.0,
+     1537.0
+    ],
+    [
+     1522.0,
+     1572.0,
+     1622.0
+    ],
+    [
+     1607.0,
+     1658.0,
+     1710.0
+    ]
+   ],
+   "printed_center": 1572.0,
+   "recomputed_grid_mean": 1572.8889,
+   "printed_upside": {
+    "lo": 0.23399999999999999,
+    "ctr": 0.34700000000000003,
+    "hi": 0.465,
+    "mean": 0.348
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 1572.14,
+    "center_printed_cell": 1572.0,
+    "mean_from_printed_upside": 1573.3,
+    "mean_recomputed": 1572.89,
+    "min_from_printed_upside": 1440.25,
+    "min_cell": 1440.0,
+    "max_from_printed_upside": 1709.86,
+    "max_cell": 1710.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_CRM",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 27,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "Salesforce.com",
+    "ticker": "CRM US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 142.45,
+   "roe_axis": [
+    0.278,
+    0.28300000000000003,
+    0.28800000000000003
+   ],
+   "risk_premium_axis": [
+    0.07,
+    0.065,
+    0.06
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     190.0,
+     195.0,
+     200.0
+    ],
+    [
+     200.0,
+     205.0,
+     209.0
+    ],
+    [
+     209.0,
+     214.0,
+     219.0
+    ]
+   ],
+   "printed_center": 205.0,
+   "recomputed_grid_mean": 204.5556,
+   "printed_upside": {
+    "lo": 0.337,
+    "ctr": 0.436,
+    "hi": 0.539,
+    "mean": 0.43700000000000006
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 204.56,
+    "center_printed_cell": 205.0,
+    "mean_from_printed_upside": 204.7,
+    "mean_recomputed": 204.56,
+    "min_from_printed_upside": 190.46,
+    "min_cell": 190.0,
+    "max_from_printed_upside": 219.23,
+    "max_cell": 219.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_MSFT",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 27,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "Microsoft",
+    "ticker": "MSFT US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 102.12,
+   "roe_axis": [
+    0.365,
+    0.37,
+    0.375
+   ],
+   "risk_premium_axis": [
+    0.055,
+    0.05,
+    0.045
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     138.0,
+     140.0,
+     143.0
+    ],
+    [
+     142.0,
+     144.0,
+     147.0
+    ],
+    [
+     146.0,
+     149.0,
+     151.0
+    ]
+   ],
+   "printed_center": 144.0,
+   "recomputed_grid_mean": 144.4444,
+   "printed_upside": {
+    "lo": 0.354,
+    "ctr": 0.415,
+    "hi": 0.47700000000000004,
+    "mean": 0.415
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 144.5,
+    "center_printed_cell": 144.0,
+    "mean_from_printed_upside": 144.5,
+    "mean_recomputed": 144.44,
+    "min_from_printed_upside": 138.27,
+    "min_cell": 138.0,
+    "max_from_printed_upside": 150.83,
+    "max_cell": 151.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_FB",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 27,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "Facebook",
+    "ticker": "FB US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 203.54,
+   "roe_axis": [
+    0.27899999999999997,
+    0.284,
+    0.289
+   ],
+   "risk_premium_axis": [
+    0.105,
+    0.1,
+    0.095
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     273.0,
+     281.0,
+     289.0
+    ],
+    [
+     287.0,
+     296.0,
+     304.0
+    ],
+    [
+     302.0,
+     311.0,
+     320.0
+    ]
+   ],
+   "printed_center": 296.0,
+   "recomputed_grid_mean": 295.8889,
+   "printed_upside": {
+    "lo": 0.33899999999999997,
+    "ctr": 0.45299999999999996,
+    "hi": 0.5720000000000001,
+    "mean": 0.45399999999999996
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 295.74,
+    "center_printed_cell": 296.0,
+    "mean_from_printed_upside": 295.95,
+    "mean_recomputed": 295.89,
+    "min_from_printed_upside": 272.54,
+    "min_cell": 273.0,
+    "max_from_printed_upside": 319.96,
+    "max_cell": 320.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_600066",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 28,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "정주우통버스",
+    "ticker": "600066 SH",
+    "type": "index",
+    "sector": null,
+    "currency_token": "CNY"
+   },
+   "current_price_or_index": 17.77,
+   "roe_axis": [
+    0.201,
+    0.20600000000000002,
+    0.21100000000000002
+   ],
+   "risk_premium_axis": [
+    0.08,
+    0.075,
+    0.07
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     24.42,
+     25.35,
+     26.28
+    ],
+    [
+     25.67,
+     26.62,
+     27.57
+    ],
+    [
+     26.96,
+     27.93,
+     28.89
+    ]
+   ],
+   "printed_center": 26.62,
+   "recomputed_grid_mean": 26.6322,
+   "printed_upside": {
+    "lo": 0.374,
+    "ctr": 0.498,
+    "hi": 0.626,
+    "mean": 0.499
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 26.62,
+    "center_printed_cell": 26.62,
+    "mean_from_printed_upside": 26.64,
+    "mean_recomputed": 26.63,
+    "min_from_printed_upside": 24.42,
+    "min_cell": 24.42,
+    "max_from_printed_upside": 28.89,
+    "max_cell": 28.89
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_600884",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 28,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "녕파삼삼",
+    "ticker": "600884 SH",
+    "type": "index",
+    "sector": null,
+    "currency_token": "CNY"
+   },
+   "current_price_or_index": 19.29,
+   "roe_axis": [
+    0.10400000000000001,
+    0.109,
+    0.114
+   ],
+   "risk_premium_axis": [
+    0.005,
+    0.0,
+    -0.005
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     21.63,
+     22.46,
+     23.3
+    ],
+    [
+     22.7,
+     23.55,
+     24.4
+    ],
+    [
+     23.81,
+     24.68,
+     25.54
+    ]
+   ],
+   "printed_center": 23.55,
+   "recomputed_grid_mean": 23.5633,
+   "printed_upside": {
+    "lo": 0.121,
+    "ctr": 0.221,
+    "hi": 0.324,
+    "mean": 0.222
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 23.55,
+    "center_printed_cell": 23.55,
+    "mean_from_printed_upside": 23.57,
+    "mean_recomputed": 23.56,
+    "min_from_printed_upside": 21.62,
+    "min_cell": 21.63,
+    "max_from_printed_upside": 25.54,
+    "max_cell": 25.54
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_00175",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 28,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "길리자동차",
+    "ticker": "00175 HK",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "HKD"
+   },
+   "current_price_or_index": 20.25,
+   "roe_axis": [
+    0.315,
+    0.32,
+    0.325
+   ],
+   "risk_premium_axis": [
+    0.125,
+    0.12,
+    0.115
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     32.14,
+     32.94,
+     33.74
+    ],
+    [
+     33.34,
+     34.15,
+     34.96
+    ],
+    [
+     34.56,
+     35.38,
+     36.21
+    ]
+   ],
+   "printed_center": 34.15,
+   "recomputed_grid_mean": 34.1578,
+   "printed_upside": {
+    "lo": 0.5870000000000001,
+    "ctr": 0.6859999999999999,
+    "hi": 0.7879999999999999,
+    "mean": 0.687
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 34.14,
+    "center_printed_cell": 34.15,
+    "mean_from_printed_upside": 34.16,
+    "mean_recomputed": 34.16,
+    "min_from_printed_upside": 32.14,
+    "min_cell": 32.14,
+    "max_from_printed_upside": 36.21,
+    "max_cell": 36.21
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_9984",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 16,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "소프트뱅크",
+    "ticker": "9984 JT",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "엔"
+   },
+   "current_price_or_index": 7618.0,
+   "roe_axis": [
+    0.196,
+    0.201,
+    0.20600000000000002
+   ],
+   "risk_premium_axis": [
+    0.105,
+    0.1,
+    0.095
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     11773.0,
+     12381.0,
+     12988.0
+    ],
+    [
+     12599.0,
+     13221.0,
+     13843.0
+    ],
+    [
+     13458.0,
+     14095.0,
+     14731.0
+    ]
+   ],
+   "printed_center": 13221.0,
+   "recomputed_grid_mean": 13232.1111,
+   "printed_upside": {
+    "lo": 0.545,
+    "ctr": 0.735,
+    "hi": 0.934,
+    "mean": 0.737
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 13217.23,
+    "center_printed_cell": 13221.0,
+    "mean_from_printed_upside": 13232.47,
+    "mean_recomputed": 13232.11,
+    "min_from_printed_upside": 11769.81,
+    "min_cell": 11773.0,
+    "max_from_printed_upside": 14733.21,
+    "max_cell": 14731.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_NVDA",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 16,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "엔비디아",
+    "ticker": "NVDA US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 226.24,
+   "roe_axis": [
+    0.424,
+    0.429,
+    0.434
+   ],
+   "risk_premium_axis": [
+    0.105,
+    0.1,
+    0.095
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     351.0,
+     356.0,
+     362.0
+    ],
+    [
+     363.0,
+     369.0,
+     375.0
+    ],
+    [
+     376.0,
+     382.0,
+     388.0
+    ]
+   ],
+   "printed_center": 369.0,
+   "recomputed_grid_mean": 369.1111,
+   "printed_upside": {
+    "lo": 0.55,
+    "ctr": 0.63,
+    "hi": 0.713,
+    "mean": 0.631
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 368.77,
+    "center_printed_cell": 369.0,
+    "mean_from_printed_upside": 369.0,
+    "mean_recomputed": 369.11,
+    "min_from_printed_upside": 350.67,
+    "min_cell": 351.0,
+    "max_from_printed_upside": 387.55,
+    "max_cell": 388.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_BABA",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 16,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "알리바바",
+    "ticker": "BABA US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 172.07,
+   "roe_axis": [
+    0.28,
+    0.285,
+    0.29
+   ],
+   "risk_premium_axis": [
+    0.105,
+    0.1,
+    0.095
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     252.0,
+     260.0,
+     268.0
+    ],
+    [
+     265.0,
+     274.0,
+     282.0
+    ],
+    [
+     280.0,
+     288.0,
+     297.0
+    ]
+   ],
+   "printed_center": 274.0,
+   "recomputed_grid_mean": 274.0,
+   "printed_upside": {
+    "lo": 0.462,
+    "ctr": 0.59,
+    "hi": 0.723,
+    "mean": 0.591
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 273.59,
+    "center_printed_cell": 274.0,
+    "mean_from_printed_upside": 273.76,
+    "mean_recomputed": 274.0,
+    "min_from_printed_upside": 251.57,
+    "min_cell": 252.0,
+    "max_from_printed_upside": 296.48,
+    "max_cell": 297.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_AMZN",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 16,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "아마존",
+    "ticker": "AMZN US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 1410.57,
+   "roe_axis": [
+    0.37799999999999995,
+    0.38299999999999995,
+    0.38799999999999996
+   ],
+   "risk_premium_axis": [
+    0.06,
+    0.055,
+    0.05
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     2114.0,
+     2149.0,
+     2184.0
+    ],
+    [
+     2198.0,
+     2233.0,
+     2269.0
+    ],
+    [
+     2284.0,
+     2320.0,
+     2357.0
+    ]
+   ],
+   "printed_center": 2233.0,
+   "recomputed_grid_mean": 2234.2222,
+   "printed_upside": {
+    "lo": 0.499,
+    "ctr": 0.583,
+    "hi": 0.6709999999999999,
+    "mean": 0.584
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 2232.93,
+    "center_printed_cell": 2233.0,
+    "mean_from_printed_upside": 2234.34,
+    "mean_recomputed": 2234.22,
+    "min_from_printed_upside": 2114.44,
+    "min_cell": 2114.0,
+    "max_from_printed_upside": 2357.06,
+    "max_cell": 2357.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_CRM",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 16,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "세일즈포스",
+    "ticker": "CRM US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 119.48,
+   "roe_axis": [
+    0.28,
+    0.285,
+    0.29
+   ],
+   "risk_premium_axis": [
+    0.065,
+    0.06,
+    0.055
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     169.0,
+     173.0,
+     177.0
+    ],
+    [
+     177.0,
+     181.0,
+     185.0
+    ],
+    [
+     185.0,
+     190.0,
+     194.0
+    ]
+   ],
+   "printed_center": 181.0,
+   "recomputed_grid_mean": 181.2222,
+   "printed_upside": {
+    "lo": 0.414,
+    "ctr": 0.516,
+    "hi": 0.622,
+    "mean": 0.517
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 181.13,
+    "center_printed_cell": 181.0,
+    "mean_from_printed_upside": 181.25,
+    "mean_recomputed": 181.22,
+    "min_from_printed_upside": 168.94,
+    "min_cell": 169.0,
+    "max_from_printed_upside": 193.8,
+    "max_cell": 194.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_GOOG",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 17,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "알파벳(구글)",
+    "ticker": "GOOG US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 1029.71,
+   "roe_axis": [
+    0.203,
+    0.20800000000000002,
+    0.213
+   ],
+   "risk_premium_axis": [
+    0.055,
+    0.05,
+    0.045
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     1422.0,
+     1470.0,
+     1518.0
+    ],
+    [
+     1503.0,
+     1553.0,
+     1602.0
+    ],
+    [
+     1588.0,
+     1639.0,
+     1690.0
+    ]
+   ],
+   "printed_center": 1553.0,
+   "recomputed_grid_mean": 1553.8889,
+   "printed_upside": {
+    "lo": 0.381,
+    "ctr": 0.508,
+    "hi": 0.6409999999999999,
+    "mean": 0.509
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 1552.8,
+    "center_printed_cell": 1553.0,
+    "mean_from_printed_upside": 1553.83,
+    "mean_recomputed": 1553.89,
+    "min_from_printed_upside": 1422.03,
+    "min_cell": 1422.0,
+    "max_from_printed_upside": 1689.75,
+    "max_cell": 1690.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_FB",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 17,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "페이스북",
+    "ticker": "FB US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 155.1,
+   "roe_axis": [
+    0.276,
+    0.281,
+    0.28600000000000003
+   ],
+   "risk_premium_axis": [
+    0.105,
+    0.1,
+    0.095
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     215.0,
+     222.0,
+     229.0
+    ],
+    [
+     226.0,
+     234.0,
+     241.0
+    ],
+    [
+     239.0,
+     246.0,
+     254.0
+    ]
+   ],
+   "printed_center": 234.0,
+   "recomputed_grid_mean": 234.0,
+   "printed_upside": {
+    "lo": 0.38299999999999995,
+    "ctr": 0.507,
+    "hi": 0.636,
+    "mean": 0.508
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 233.74,
+    "center_printed_cell": 234.0,
+    "mean_from_printed_upside": 233.89,
+    "mean_recomputed": 234.0,
+    "min_from_printed_upside": 214.5,
+    "min_cell": 215.0,
+    "max_from_printed_upside": 253.74,
+    "max_cell": 254.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_AAPL",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 17,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "애플",
+    "ticker": "AAPL US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 171.61,
+   "roe_axis": [
+    0.316,
+    0.321,
+    0.326
+   ],
+   "risk_premium_axis": [
+    0.105,
+    0.1,
+    0.095
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     228.0,
+     234.0,
+     240.0
+    ],
+    [
+     238.0,
+     244.0,
+     250.0
+    ],
+    [
+     248.0,
+     254.0,
+     260.0
+    ]
+   ],
+   "printed_center": 244.0,
+   "recomputed_grid_mean": 244.0,
+   "printed_upside": {
+    "lo": 0.33,
+    "ctr": 0.42,
+    "hi": 0.513,
+    "mean": 0.42100000000000004
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 243.69,
+    "center_printed_cell": 244.0,
+    "mean_from_printed_upside": 243.86,
+    "mean_recomputed": 244.0,
+    "min_from_printed_upside": 228.24,
+    "min_cell": 228.0,
+    "max_from_printed_upside": 259.65,
+    "max_cell": 260.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_4755",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 17,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "라쿠텐",
+    "ticker": "4755 JT",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "엔"
+   },
+   "current_price_or_index": 851.7,
+   "roe_axis": [
+    0.105,
+    0.11,
+    0.115
+   ],
+   "risk_premium_axis": [
+    0.07,
+    0.065,
+    0.06
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     1035.0,
+     1106.0,
+     1176.0
+    ],
+    [
+     1122.0,
+     1194.0,
+     1267.0
+    ],
+    [
+     1213.0,
+     1287.0,
+     1361.0
+    ]
+   ],
+   "printed_center": 1194.0,
+   "recomputed_grid_mean": 1195.6667,
+   "printed_upside": {
+    "lo": 0.215,
+    "ctr": 0.402,
+    "hi": 0.598,
+    "mean": 0.40399999999999997
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 1194.08,
+    "center_printed_cell": 1194.0,
+    "mean_from_printed_upside": 1195.79,
+    "mean_recomputed": 1195.67,
+    "min_from_printed_upside": 1034.82,
+    "min_cell": 1035.0,
+    "max_from_printed_upside": 1361.02,
+    "max_cell": 1361.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_700",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 17,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "텐센트 홀딩스",
+    "ticker": "700 HK",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "HK$"
+   },
+   "current_price_or_index": 397.6,
+   "roe_axis": [
+    0.337,
+    0.342,
+    0.34700000000000003
+   ],
+   "risk_premium_axis": [
+    0.005,
+    0.0,
+    -0.005
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     531.0,
+     539.0,
+     547.0
+    ],
+    [
+     549.0,
+     557.0,
+     565.0
+    ],
+    [
+     567.0,
+     575.0,
+     583.0
+    ]
+   ],
+   "printed_center": 557.0,
+   "recomputed_grid_mean": 557.0,
+   "printed_upside": {
+    "lo": 0.336,
+    "ctr": 0.401,
+    "hi": 0.467,
+    "mean": 0.401
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 557.04,
+    "center_printed_cell": 557.0,
+    "mean_from_printed_upside": 557.04,
+    "mean_recomputed": 557.0,
+    "min_from_printed_upside": 531.19,
+    "min_cell": 531.0,
+    "max_from_printed_upside": 583.28,
+    "max_cell": 583.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_NFLX",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 18,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "넷플릭스",
+    "ticker": "NFLX US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 288.94,
+   "roe_axis": [
+    0.33299999999999996,
+    0.33799999999999997,
+    0.34299999999999997
+   ],
+   "risk_premium_axis": [
+    0.005,
+    0.0,
+    -0.005
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     314.0,
+     319.0,
+     324.0
+    ],
+    [
+     327.0,
+     332.0,
+     337.0
+    ],
+    [
+     340.0,
+     345.0,
+     350.0
+    ]
+   ],
+   "printed_center": 332.0,
+   "recomputed_grid_mean": 332.0,
+   "printed_upside": {
+    "lo": 0.08800000000000001,
+    "ctr": 0.149,
+    "hi": 0.212,
+    "mean": 0.149
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 331.99,
+    "center_printed_cell": 332.0,
+    "mean_from_printed_upside": 331.99,
+    "mean_recomputed": 332.0,
+    "min_from_printed_upside": 314.37,
+    "min_cell": 314.0,
+    "max_from_printed_upside": 350.2,
+    "max_cell": 350.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_BIDU",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 18,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "바이두",
+    "ticker": "BIDU US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 224.3,
+   "roe_axis": [
+    0.149,
+    0.154,
+    0.159
+   ],
+   "risk_premium_axis": [
+    0.055,
+    0.05,
+    0.045
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     228.0,
+     238.0,
+     247.0
+    ],
+    [
+     243.0,
+     253.0,
+     263.0
+    ],
+    [
+     259.0,
+     269.0,
+     279.0
+    ]
+   ],
+   "printed_center": 253.0,
+   "recomputed_grid_mean": 253.2222,
+   "printed_upside": {
+    "lo": 0.017,
+    "ctr": 0.128,
+    "hi": 0.24600000000000002,
+    "mean": 0.129
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 253.01,
+    "center_printed_cell": 253.0,
+    "mean_from_printed_upside": 253.23,
+    "mean_recomputed": 253.22,
+    "min_from_printed_upside": 228.11,
+    "min_cell": 228.0,
+    "max_from_printed_upside": 279.48,
+    "max_cell": 279.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_JD",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 18,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "JD닷컴",
+    "ticker": "JD US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 39.44,
+   "roe_axis": [
+    0.187,
+    0.192,
+    0.19699999999999998
+   ],
+   "risk_premium_axis": [
+    0.055,
+    0.05,
+    0.045
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     38.0,
+     39.0,
+     40.0
+    ],
+    [
+     40.0,
+     41.0,
+     43.0
+    ],
+    [
+     42.0,
+     44.0,
+     45.0
+    ]
+   ],
+   "printed_center": 41.0,
+   "recomputed_grid_mean": 41.3333,
+   "printed_upside": {
+    "lo": -0.035,
+    "ctr": 0.051,
+    "hi": 0.141,
+    "mean": 0.052000000000000005
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 41.45,
+    "center_printed_cell": 41.0,
+    "mean_from_printed_upside": 41.49,
+    "mean_recomputed": 41.33,
+    "min_from_printed_upside": 38.06,
+    "min_cell": 38.0,
+    "max_from_printed_upside": 45.0,
+    "max_cell": 45.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  }
+ ],
+ "merged_independent_set": [
+  {
+   "fixture_id": "2018-07-18_나스닥_FY2019",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 19,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": null
+   },
+   "asset": {
+    "name": "나스닥 지수",
+    "ticker": "나스닥 지수",
+    "type": "index",
+    "sector": null,
+    "currency_token": "pt"
+   },
+   "current_price_or_index": 7756.2,
+   "roe_axis": [
+    0.28800000000000003,
+    0.293,
+    0.298
+   ],
+   "risk_premium_axis": [
+    0.095,
+    0.09,
+    0.085
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     12037.0,
+     12344.0,
+     12651.0
+    ],
+    [
+     12524.0,
+     12836.0,
+     13148.0
+    ],
+    [
+     13024.0,
+     13341.0,
+     13658.0
+    ]
+   ],
+   "printed_center": 12836.0,
+   "recomputed_grid_mean": 12840.3333,
+   "printed_upside": {
+    "lo": 0.552,
+    "ctr": 0.655,
+    "hi": 0.7609999999999999,
+    "mean": 0.6559999999999999
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 12836.51,
+    "center_printed_cell": 12836.0,
+    "mean_from_printed_upside": 12844.27,
+    "mean_recomputed": 12840.33,
+    "min_from_printed_upside": 12037.62,
+    "min_cell": 12037.0,
+    "max_from_printed_upside": 13658.67,
+    "max_cell": 13658.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_나스닥_FY2020",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 19,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": null
+   },
+   "asset": {
+    "name": "나스닥 지수",
+    "ticker": "나스닥 지수",
+    "type": "index",
+    "sector": null,
+    "currency_token": "pt"
+   },
+   "current_price_or_index": 7756.2,
+   "roe_axis": [
+    0.305,
+    0.31,
+    0.315
+   ],
+   "risk_premium_axis": [
+    0.095,
+    0.09,
+    0.085
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     13683.0,
+     14007.0,
+     14331.0
+    ],
+    [
+     14214.0,
+     14543.0,
+     14872.0
+    ],
+    [
+     14758.0,
+     15093.0,
+     15427.0
+    ]
+   ],
+   "printed_center": 14543.0,
+   "recomputed_grid_mean": 14547.5556,
+   "printed_upside": {
+    "lo": 0.764,
+    "ctr": 0.875,
+    "hi": 0.9890000000000001,
+    "mean": 0.8759999999999999
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 14542.88,
+    "center_printed_cell": 14543.0,
+    "mean_from_printed_upside": 14550.63,
+    "mean_recomputed": 14547.56,
+    "min_from_printed_upside": 13681.94,
+    "min_cell": 13683.0,
+    "max_from_printed_upside": 15427.08,
+    "max_cell": 15427.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_IYW",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 25,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "IYW",
+    "ticker": "IYW US",
+    "type": "etf_or_basket",
+    "sector": "IT 업종",
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 2375.84,
+   "roe_axis": [
+    0.294,
+    0.299,
+    0.304
+   ],
+   "risk_premium_axis": [
+    0.085,
+    0.08,
+    0.075
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     3739.0,
+     3828.0,
+     3918.0
+    ],
+    [
+     3886.0,
+     3977.0,
+     4068.0
+    ],
+    [
+     4036.0,
+     4129.0,
+     4221.0
+    ]
+   ],
+   "printed_center": 3977.0,
+   "recomputed_grid_mean": 3978.0,
+   "printed_upside": {
+    "lo": 0.574,
+    "ctr": 0.674,
+    "hi": 0.777,
+    "mean": 0.674
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 3977.16,
+    "center_printed_cell": 3977.0,
+    "mean_from_printed_upside": 3977.16,
+    "mean_recomputed": 3978.0,
+    "min_from_printed_upside": 3739.57,
+    "min_cell": 3739.0,
+    "max_from_printed_upside": 4221.87,
+    "max_cell": 4221.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_RYT",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 25,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "RYT",
+    "ticker": "RYT US",
+    "type": "etf_or_basket",
+    "sector": "IT 업종",
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 12334.87,
+   "roe_axis": [
+    0.27,
+    0.275,
+    0.28
+   ],
+   "risk_premium_axis": [
+    0.125,
+    0.12,
+    0.115
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     23101.0,
+     24066.0,
+     25032.0
+    ],
+    [
+     24550.0,
+     25537.0,
+     26524.0
+    ],
+    [
+     26052.0,
+     27060.0,
+     28069.0
+    ]
+   ],
+   "printed_center": 25537.0,
+   "recomputed_grid_mean": 25554.5556,
+   "printed_upside": {
+    "lo": 0.873,
+    "ctr": 1.07,
+    "hi": 1.276,
+    "mean": 1.072
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 25533.18,
+    "center_printed_cell": 25537.0,
+    "mean_from_printed_upside": 25557.85,
+    "mean_recomputed": 25554.56,
+    "min_from_printed_upside": 23103.21,
+    "min_cell": 23101.0,
+    "max_from_printed_upside": 28074.16,
+    "max_cell": 28069.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_VGT",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 26,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "VGT",
+    "ticker": "VGT US",
+    "type": "etf_or_basket",
+    "sector": "IT 업종",
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 1228.18,
+   "roe_axis": [
+    0.336,
+    0.341,
+    0.34600000000000003
+   ],
+   "risk_premium_axis": [
+    0.125,
+    0.12,
+    0.115
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     2169.0,
+     2225.0,
+     2280.0
+    ],
+    [
+     2265.0,
+     2321.0,
+     2378.0
+    ],
+    [
+     2363.0,
+     2421.0,
+     2479.0
+    ]
+   ],
+   "printed_center": 2321.0,
+   "recomputed_grid_mean": 2322.3333,
+   "printed_upside": {
+    "lo": 0.7659999999999999,
+    "ctr": 0.89,
+    "hi": 1.018,
+    "mean": 0.8909999999999999
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 2321.26,
+    "center_printed_cell": 2321.0,
+    "mean_from_printed_upside": 2322.49,
+    "mean_recomputed": 2322.33,
+    "min_from_printed_upside": 2168.97,
+    "min_cell": 2169.0,
+    "max_from_printed_upside": 2478.47,
+    "max_cell": 2479.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_IBB",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 26,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "IBB",
+    "ticker": "IBB US",
+    "type": "etf_or_basket",
+    "sector": "바이오/헬스케어 업종",
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 3784.09,
+   "roe_axis": [
+    0.255,
+    0.26,
+    0.265
+   ],
+   "risk_premium_axis": [
+    0.105,
+    0.1,
+    0.095
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     6421.0,
+     6650.0,
+     6879.0
+    ],
+    [
+     6780.0,
+     7013.0,
+     7247.0
+    ],
+    [
+     7151.0,
+     7390.0,
+     7629.0
+    ]
+   ],
+   "printed_center": 7013.0,
+   "recomputed_grid_mean": 7017.7778,
+   "printed_upside": {
+    "lo": 0.6970000000000001,
+    "ctr": 0.853,
+    "hi": 1.016,
+    "mean": 0.855
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 7011.92,
+    "center_printed_cell": 7013.0,
+    "mean_from_printed_upside": 7019.49,
+    "mean_recomputed": 7017.78,
+    "min_from_printed_upside": 6421.6,
+    "min_cell": 6421.0,
+    "max_from_printed_upside": 7628.73,
+    "max_cell": 7629.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_QCLN",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 26,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "QCLN",
+    "ticker": "QCLN US",
+    "type": "etf_or_basket",
+    "sector": "대체에너지 업종",
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 265.6,
+   "roe_axis": [
+    0.23600000000000002,
+    0.24100000000000002,
+    0.24600000000000002
+   ],
+   "risk_premium_axis": [
+    0.005,
+    0.0,
+    -0.005
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     359.0,
+     366.0,
+     373.0
+    ],
+    [
+     370.0,
+     378.0,
+     385.0
+    ],
+    [
+     382.0,
+     390.0,
+     397.0
+    ]
+   ],
+   "printed_center": 378.0,
+   "recomputed_grid_mean": 377.7778,
+   "printed_upside": {
+    "lo": 0.35,
+    "ctr": 0.42200000000000004,
+    "hi": 0.495,
+    "mean": 0.42200000000000004
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 377.68,
+    "center_printed_cell": 378.0,
+    "mean_from_printed_upside": 377.68,
+    "mean_recomputed": 377.78,
+    "min_from_printed_upside": 358.56,
+    "min_cell": 359.0,
+    "max_from_printed_upside": 397.07,
+    "max_cell": 397.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_TAN",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 26,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "TAN",
+    "ticker": "TAN US",
+    "type": "etf_or_basket",
+    "sector": "대체에너지 업종",
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 114.55,
+   "roe_axis": [
+    0.08199999999999999,
+    0.087,
+    0.092
+   ],
+   "risk_premium_axis": [
+    0.005,
+    0.0,
+    -0.005
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     160.0,
+     167.0,
+     174.0
+    ],
+    [
+     169.0,
+     176.0,
+     184.0
+    ],
+    [
+     178.0,
+     185.0,
+     193.0
+    ]
+   ],
+   "printed_center": 176.0,
+   "recomputed_grid_mean": 176.2222,
+   "printed_upside": {
+    "lo": 0.396,
+    "ctr": 0.5379999999999999,
+    "hi": 0.685,
+    "mean": 0.5379999999999999
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 176.18,
+    "center_printed_cell": 176.0,
+    "mean_from_printed_upside": 176.18,
+    "mean_recomputed": 176.22,
+    "min_from_printed_upside": 159.91,
+    "min_cell": 160.0,
+    "max_from_printed_upside": 193.02,
+    "max_cell": 193.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_AMZN",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 27,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "Amazon",
+    "ticker": "AMZN US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 1743.07,
+   "roe_axis": [
+    0.35200000000000004,
+    0.35700000000000004,
+    0.36200000000000004
+   ],
+   "risk_premium_axis": [
+    0.055,
+    0.05,
+    0.045
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     2151.0,
+     2189.0,
+     2227.0
+    ],
+    [
+     2239.0,
+     2278.0,
+     2317.0
+    ],
+    [
+     2330.0,
+     2370.0,
+     2410.0
+    ]
+   ],
+   "printed_center": 2278.0,
+   "recomputed_grid_mean": 2279.0,
+   "printed_upside": {
+    "lo": 0.23399999999999999,
+    "ctr": 0.307,
+    "hi": 0.382,
+    "mean": 0.308
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 2278.19,
+    "center_printed_cell": 2278.0,
+    "mean_from_printed_upside": 2279.94,
+    "mean_recomputed": 2279.0,
+    "min_from_printed_upside": 2150.95,
+    "min_cell": 2151.0,
+    "max_from_printed_upside": 2408.92,
+    "max_cell": 2410.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_GOOGL",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 27,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "Alphabet(Google)",
+    "ticker": "GOOGL US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 1167.14,
+   "roe_axis": [
+    0.205,
+    0.21,
+    0.215
+   ],
+   "risk_premium_axis": [
+    0.055,
+    0.05,
+    0.045
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     1440.0,
+     1488.0,
+     1537.0
+    ],
+    [
+     1522.0,
+     1572.0,
+     1622.0
+    ],
+    [
+     1607.0,
+     1658.0,
+     1710.0
+    ]
+   ],
+   "printed_center": 1572.0,
+   "recomputed_grid_mean": 1572.8889,
+   "printed_upside": {
+    "lo": 0.23399999999999999,
+    "ctr": 0.34700000000000003,
+    "hi": 0.465,
+    "mean": 0.348
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 1572.14,
+    "center_printed_cell": 1572.0,
+    "mean_from_printed_upside": 1573.3,
+    "mean_recomputed": 1572.89,
+    "min_from_printed_upside": 1440.25,
+    "min_cell": 1440.0,
+    "max_from_printed_upside": 1709.86,
+    "max_cell": 1710.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_CRM",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 27,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "Salesforce.com",
+    "ticker": "CRM US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 142.45,
+   "roe_axis": [
+    0.278,
+    0.28300000000000003,
+    0.28800000000000003
+   ],
+   "risk_premium_axis": [
+    0.07,
+    0.065,
+    0.06
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     190.0,
+     195.0,
+     200.0
+    ],
+    [
+     200.0,
+     205.0,
+     209.0
+    ],
+    [
+     209.0,
+     214.0,
+     219.0
+    ]
+   ],
+   "printed_center": 205.0,
+   "recomputed_grid_mean": 204.5556,
+   "printed_upside": {
+    "lo": 0.337,
+    "ctr": 0.436,
+    "hi": 0.539,
+    "mean": 0.43700000000000006
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 204.56,
+    "center_printed_cell": 205.0,
+    "mean_from_printed_upside": 204.7,
+    "mean_recomputed": 204.56,
+    "min_from_printed_upside": 190.46,
+    "min_cell": 190.0,
+    "max_from_printed_upside": 219.23,
+    "max_cell": 219.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_MSFT",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 27,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "Microsoft",
+    "ticker": "MSFT US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 102.12,
+   "roe_axis": [
+    0.365,
+    0.37,
+    0.375
+   ],
+   "risk_premium_axis": [
+    0.055,
+    0.05,
+    0.045
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     138.0,
+     140.0,
+     143.0
+    ],
+    [
+     142.0,
+     144.0,
+     147.0
+    ],
+    [
+     146.0,
+     149.0,
+     151.0
+    ]
+   ],
+   "printed_center": 144.0,
+   "recomputed_grid_mean": 144.4444,
+   "printed_upside": {
+    "lo": 0.354,
+    "ctr": 0.415,
+    "hi": 0.47700000000000004,
+    "mean": 0.415
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 144.5,
+    "center_printed_cell": 144.0,
+    "mean_from_printed_upside": 144.5,
+    "mean_recomputed": 144.44,
+    "min_from_printed_upside": 138.27,
+    "min_cell": 138.0,
+    "max_from_printed_upside": 150.83,
+    "max_cell": 151.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_FB",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 27,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "Facebook",
+    "ticker": "FB US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "USD"
+   },
+   "current_price_or_index": 203.54,
+   "roe_axis": [
+    0.27899999999999997,
+    0.284,
+    0.289
+   ],
+   "risk_premium_axis": [
+    0.105,
+    0.1,
+    0.095
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     273.0,
+     281.0,
+     289.0
+    ],
+    [
+     287.0,
+     296.0,
+     304.0
+    ],
+    [
+     302.0,
+     311.0,
+     320.0
+    ]
+   ],
+   "printed_center": 296.0,
+   "recomputed_grid_mean": 295.8889,
+   "printed_upside": {
+    "lo": 0.33899999999999997,
+    "ctr": 0.45299999999999996,
+    "hi": 0.5720000000000001,
+    "mean": 0.45399999999999996
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 295.74,
+    "center_printed_cell": 296.0,
+    "mean_from_printed_upside": 295.95,
+    "mean_recomputed": 295.89,
+    "min_from_printed_upside": 272.54,
+    "min_cell": 273.0,
+    "max_from_printed_upside": 319.96,
+    "max_cell": 320.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_600066",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 28,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "정주우통버스",
+    "ticker": "600066 SH",
+    "type": "index",
+    "sector": null,
+    "currency_token": "CNY"
+   },
+   "current_price_or_index": 17.77,
+   "roe_axis": [
+    0.201,
+    0.20600000000000002,
+    0.21100000000000002
+   ],
+   "risk_premium_axis": [
+    0.08,
+    0.075,
+    0.07
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     24.42,
+     25.35,
+     26.28
+    ],
+    [
+     25.67,
+     26.62,
+     27.57
+    ],
+    [
+     26.96,
+     27.93,
+     28.89
+    ]
+   ],
+   "printed_center": 26.62,
+   "recomputed_grid_mean": 26.6322,
+   "printed_upside": {
+    "lo": 0.374,
+    "ctr": 0.498,
+    "hi": 0.626,
+    "mean": 0.499
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 26.62,
+    "center_printed_cell": 26.62,
+    "mean_from_printed_upside": 26.64,
+    "mean_recomputed": 26.63,
+    "min_from_printed_upside": 24.42,
+    "min_cell": 24.42,
+    "max_from_printed_upside": 28.89,
+    "max_cell": 28.89
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_600884",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 28,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "녕파삼삼",
+    "ticker": "600884 SH",
+    "type": "index",
+    "sector": null,
+    "currency_token": "CNY"
+   },
+   "current_price_or_index": 19.29,
+   "roe_axis": [
+    0.10400000000000001,
+    0.109,
+    0.114
+   ],
+   "risk_premium_axis": [
+    0.005,
+    0.0,
+    -0.005
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     21.63,
+     22.46,
+     23.3
+    ],
+    [
+     22.7,
+     23.55,
+     24.4
+    ],
+    [
+     23.81,
+     24.68,
+     25.54
+    ]
+   ],
+   "printed_center": 23.55,
+   "recomputed_grid_mean": 23.5633,
+   "printed_upside": {
+    "lo": 0.121,
+    "ctr": 0.221,
+    "hi": 0.324,
+    "mean": 0.222
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 23.55,
+    "center_printed_cell": 23.55,
+    "mean_from_printed_upside": 23.57,
+    "mean_recomputed": 23.56,
+    "min_from_printed_upside": 21.62,
+    "min_cell": 21.63,
+    "max_from_printed_upside": 25.54,
+    "max_cell": 25.54
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-07-18_00175",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201807/1531866623208.pdf",
+    "report_date": "2018-07-18",
+    "page": 28,
+    "sha256": "3987cdd7b5710f52412971457dde69361624f462aedbf0857ca39f1c9e4fd8ef",
+    "data_as_of": "2018-07-10"
+   },
+   "asset": {
+    "name": "길리자동차",
+    "ticker": "00175 HK",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "HKD"
+   },
+   "current_price_or_index": 20.25,
+   "roe_axis": [
+    0.315,
+    0.32,
+    0.325
+   ],
+   "risk_premium_axis": [
+    0.125,
+    0.12,
+    0.115
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     32.14,
+     32.94,
+     33.74
+    ],
+    [
+     33.34,
+     34.15,
+     34.96
+    ],
+    [
+     34.56,
+     35.38,
+     36.21
+    ]
+   ],
+   "printed_center": 34.15,
+   "recomputed_grid_mean": 34.1578,
+   "printed_upside": {
+    "lo": 0.5870000000000001,
+    "ctr": 0.6859999999999999,
+    "hi": 0.7879999999999999,
+    "mean": 0.687
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 34.14,
+    "center_printed_cell": 34.15,
+    "mean_from_printed_upside": 34.16,
+    "mean_recomputed": 34.16,
+    "min_from_printed_upside": 32.14,
+    "min_cell": 32.14,
+    "max_from_printed_upside": 36.21,
+    "max_cell": 36.21
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_9984",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 16,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "소프트뱅크",
+    "ticker": "9984 JT",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "엔"
+   },
+   "current_price_or_index": 7618.0,
+   "roe_axis": [
+    0.196,
+    0.201,
+    0.20600000000000002
+   ],
+   "risk_premium_axis": [
+    0.105,
+    0.1,
+    0.095
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     11773.0,
+     12381.0,
+     12988.0
+    ],
+    [
+     12599.0,
+     13221.0,
+     13843.0
+    ],
+    [
+     13458.0,
+     14095.0,
+     14731.0
+    ]
+   ],
+   "printed_center": 13221.0,
+   "recomputed_grid_mean": 13232.1111,
+   "printed_upside": {
+    "lo": 0.545,
+    "ctr": 0.735,
+    "hi": 0.934,
+    "mean": 0.737
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 13217.23,
+    "center_printed_cell": 13221.0,
+    "mean_from_printed_upside": 13232.47,
+    "mean_recomputed": 13232.11,
+    "min_from_printed_upside": 11769.81,
+    "min_cell": 11773.0,
+    "max_from_printed_upside": 14733.21,
+    "max_cell": 14731.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_NVDA",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 16,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "엔비디아",
+    "ticker": "NVDA US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 226.24,
+   "roe_axis": [
+    0.424,
+    0.429,
+    0.434
+   ],
+   "risk_premium_axis": [
+    0.105,
+    0.1,
+    0.095
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     351.0,
+     356.0,
+     362.0
+    ],
+    [
+     363.0,
+     369.0,
+     375.0
+    ],
+    [
+     376.0,
+     382.0,
+     388.0
+    ]
+   ],
+   "printed_center": 369.0,
+   "recomputed_grid_mean": 369.1111,
+   "printed_upside": {
+    "lo": 0.55,
+    "ctr": 0.63,
+    "hi": 0.713,
+    "mean": 0.631
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 368.77,
+    "center_printed_cell": 369.0,
+    "mean_from_printed_upside": 369.0,
+    "mean_recomputed": 369.11,
+    "min_from_printed_upside": 350.67,
+    "min_cell": 351.0,
+    "max_from_printed_upside": 387.55,
+    "max_cell": 388.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_BABA",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 16,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "알리바바",
+    "ticker": "BABA US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 172.07,
+   "roe_axis": [
+    0.28,
+    0.285,
+    0.29
+   ],
+   "risk_premium_axis": [
+    0.105,
+    0.1,
+    0.095
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     252.0,
+     260.0,
+     268.0
+    ],
+    [
+     265.0,
+     274.0,
+     282.0
+    ],
+    [
+     280.0,
+     288.0,
+     297.0
+    ]
+   ],
+   "printed_center": 274.0,
+   "recomputed_grid_mean": 274.0,
+   "printed_upside": {
+    "lo": 0.462,
+    "ctr": 0.59,
+    "hi": 0.723,
+    "mean": 0.591
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 273.59,
+    "center_printed_cell": 274.0,
+    "mean_from_printed_upside": 273.76,
+    "mean_recomputed": 274.0,
+    "min_from_printed_upside": 251.57,
+    "min_cell": 252.0,
+    "max_from_printed_upside": 296.48,
+    "max_cell": 297.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_AMZN",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 16,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "아마존",
+    "ticker": "AMZN US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 1410.57,
+   "roe_axis": [
+    0.37799999999999995,
+    0.38299999999999995,
+    0.38799999999999996
+   ],
+   "risk_premium_axis": [
+    0.06,
+    0.055,
+    0.05
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     2114.0,
+     2149.0,
+     2184.0
+    ],
+    [
+     2198.0,
+     2233.0,
+     2269.0
+    ],
+    [
+     2284.0,
+     2320.0,
+     2357.0
+    ]
+   ],
+   "printed_center": 2233.0,
+   "recomputed_grid_mean": 2234.2222,
+   "printed_upside": {
+    "lo": 0.499,
+    "ctr": 0.583,
+    "hi": 0.6709999999999999,
+    "mean": 0.584
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 2232.93,
+    "center_printed_cell": 2233.0,
+    "mean_from_printed_upside": 2234.34,
+    "mean_recomputed": 2234.22,
+    "min_from_printed_upside": 2114.44,
+    "min_cell": 2114.0,
+    "max_from_printed_upside": 2357.06,
+    "max_cell": 2357.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_CRM",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 16,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "세일즈포스",
+    "ticker": "CRM US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 119.48,
+   "roe_axis": [
+    0.28,
+    0.285,
+    0.29
+   ],
+   "risk_premium_axis": [
+    0.065,
+    0.06,
+    0.055
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     169.0,
+     173.0,
+     177.0
+    ],
+    [
+     177.0,
+     181.0,
+     185.0
+    ],
+    [
+     185.0,
+     190.0,
+     194.0
+    ]
+   ],
+   "printed_center": 181.0,
+   "recomputed_grid_mean": 181.2222,
+   "printed_upside": {
+    "lo": 0.414,
+    "ctr": 0.516,
+    "hi": 0.622,
+    "mean": 0.517
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 181.13,
+    "center_printed_cell": 181.0,
+    "mean_from_printed_upside": 181.25,
+    "mean_recomputed": 181.22,
+    "min_from_printed_upside": 168.94,
+    "min_cell": 169.0,
+    "max_from_printed_upside": 193.8,
+    "max_cell": 194.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_GOOG",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 17,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "알파벳(구글)",
+    "ticker": "GOOG US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 1029.71,
+   "roe_axis": [
+    0.203,
+    0.20800000000000002,
+    0.213
+   ],
+   "risk_premium_axis": [
+    0.055,
+    0.05,
+    0.045
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     1422.0,
+     1470.0,
+     1518.0
+    ],
+    [
+     1503.0,
+     1553.0,
+     1602.0
+    ],
+    [
+     1588.0,
+     1639.0,
+     1690.0
+    ]
+   ],
+   "printed_center": 1553.0,
+   "recomputed_grid_mean": 1553.8889,
+   "printed_upside": {
+    "lo": 0.381,
+    "ctr": 0.508,
+    "hi": 0.6409999999999999,
+    "mean": 0.509
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 1552.8,
+    "center_printed_cell": 1553.0,
+    "mean_from_printed_upside": 1553.83,
+    "mean_recomputed": 1553.89,
+    "min_from_printed_upside": 1422.03,
+    "min_cell": 1422.0,
+    "max_from_printed_upside": 1689.75,
+    "max_cell": 1690.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_FB",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 17,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "페이스북",
+    "ticker": "FB US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 155.1,
+   "roe_axis": [
+    0.276,
+    0.281,
+    0.28600000000000003
+   ],
+   "risk_premium_axis": [
+    0.105,
+    0.1,
+    0.095
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     215.0,
+     222.0,
+     229.0
+    ],
+    [
+     226.0,
+     234.0,
+     241.0
+    ],
+    [
+     239.0,
+     246.0,
+     254.0
+    ]
+   ],
+   "printed_center": 234.0,
+   "recomputed_grid_mean": 234.0,
+   "printed_upside": {
+    "lo": 0.38299999999999995,
+    "ctr": 0.507,
+    "hi": 0.636,
+    "mean": 0.508
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 233.74,
+    "center_printed_cell": 234.0,
+    "mean_from_printed_upside": 233.89,
+    "mean_recomputed": 234.0,
+    "min_from_printed_upside": 214.5,
+    "min_cell": 215.0,
+    "max_from_printed_upside": 253.74,
+    "max_cell": 254.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_AAPL",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 17,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "애플",
+    "ticker": "AAPL US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 171.61,
+   "roe_axis": [
+    0.316,
+    0.321,
+    0.326
+   ],
+   "risk_premium_axis": [
+    0.105,
+    0.1,
+    0.095
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     228.0,
+     234.0,
+     240.0
+    ],
+    [
+     238.0,
+     244.0,
+     250.0
+    ],
+    [
+     248.0,
+     254.0,
+     260.0
+    ]
+   ],
+   "printed_center": 244.0,
+   "recomputed_grid_mean": 244.0,
+   "printed_upside": {
+    "lo": 0.33,
+    "ctr": 0.42,
+    "hi": 0.513,
+    "mean": 0.42100000000000004
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 243.69,
+    "center_printed_cell": 244.0,
+    "mean_from_printed_upside": 243.86,
+    "mean_recomputed": 244.0,
+    "min_from_printed_upside": 228.24,
+    "min_cell": 228.0,
+    "max_from_printed_upside": 259.65,
+    "max_cell": 260.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_4755",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 17,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "라쿠텐",
+    "ticker": "4755 JT",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "엔"
+   },
+   "current_price_or_index": 851.7,
+   "roe_axis": [
+    0.105,
+    0.11,
+    0.115
+   ],
+   "risk_premium_axis": [
+    0.07,
+    0.065,
+    0.06
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     1035.0,
+     1106.0,
+     1176.0
+    ],
+    [
+     1122.0,
+     1194.0,
+     1267.0
+    ],
+    [
+     1213.0,
+     1287.0,
+     1361.0
+    ]
+   ],
+   "printed_center": 1194.0,
+   "recomputed_grid_mean": 1195.6667,
+   "printed_upside": {
+    "lo": 0.215,
+    "ctr": 0.402,
+    "hi": 0.598,
+    "mean": 0.40399999999999997
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 1194.08,
+    "center_printed_cell": 1194.0,
+    "mean_from_printed_upside": 1195.79,
+    "mean_recomputed": 1195.67,
+    "min_from_printed_upside": 1034.82,
+    "min_cell": 1035.0,
+    "max_from_printed_upside": 1361.02,
+    "max_cell": 1361.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_700",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 17,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "텐센트 홀딩스",
+    "ticker": "700 HK",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "HK$"
+   },
+   "current_price_or_index": 397.6,
+   "roe_axis": [
+    0.337,
+    0.342,
+    0.34700000000000003
+   ],
+   "risk_premium_axis": [
+    0.005,
+    0.0,
+    -0.005
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     531.0,
+     539.0,
+     547.0
+    ],
+    [
+     549.0,
+     557.0,
+     565.0
+    ],
+    [
+     567.0,
+     575.0,
+     583.0
+    ]
+   ],
+   "printed_center": 557.0,
+   "recomputed_grid_mean": 557.0,
+   "printed_upside": {
+    "lo": 0.336,
+    "ctr": 0.401,
+    "hi": 0.467,
+    "mean": 0.401
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 557.04,
+    "center_printed_cell": 557.0,
+    "mean_from_printed_upside": 557.04,
+    "mean_recomputed": 557.0,
+    "min_from_printed_upside": 531.19,
+    "min_cell": 531.0,
+    "max_from_printed_upside": 583.28,
+    "max_cell": 583.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_NFLX",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 18,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "넷플릭스",
+    "ticker": "NFLX US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 288.94,
+   "roe_axis": [
+    0.33299999999999996,
+    0.33799999999999997,
+    0.34299999999999997
+   ],
+   "risk_premium_axis": [
+    0.005,
+    0.0,
+    -0.005
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     314.0,
+     319.0,
+     324.0
+    ],
+    [
+     327.0,
+     332.0,
+     337.0
+    ],
+    [
+     340.0,
+     345.0,
+     350.0
+    ]
+   ],
+   "printed_center": 332.0,
+   "recomputed_grid_mean": 332.0,
+   "printed_upside": {
+    "lo": 0.08800000000000001,
+    "ctr": 0.149,
+    "hi": 0.212,
+    "mean": 0.149
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 331.99,
+    "center_printed_cell": 332.0,
+    "mean_from_printed_upside": 331.99,
+    "mean_recomputed": 332.0,
+    "min_from_printed_upside": 314.37,
+    "min_cell": 314.0,
+    "max_from_printed_upside": 350.2,
+    "max_cell": 350.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_BIDU",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 18,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "바이두",
+    "ticker": "BIDU US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 224.3,
+   "roe_axis": [
+    0.149,
+    0.154,
+    0.159
+   ],
+   "risk_premium_axis": [
+    0.055,
+    0.05,
+    0.045
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     228.0,
+     238.0,
+     247.0
+    ],
+    [
+     243.0,
+     253.0,
+     263.0
+    ],
+    [
+     259.0,
+     269.0,
+     279.0
+    ]
+   ],
+   "printed_center": 253.0,
+   "recomputed_grid_mean": 253.2222,
+   "printed_upside": {
+    "lo": 0.017,
+    "ctr": 0.128,
+    "hi": 0.24600000000000002,
+    "mean": 0.129
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 253.01,
+    "center_printed_cell": 253.0,
+    "mean_from_printed_upside": 253.23,
+    "mean_recomputed": 253.22,
+    "min_from_printed_upside": 228.11,
+    "min_cell": 228.0,
+    "max_from_printed_upside": 279.48,
+    "max_cell": 279.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_JD",
+   "source": {
+    "url": "https://bbn.kiwoom.com/bbs/jsp/upload/newres/CorpAnal/201804/1523229937191.pdf",
+    "report_date": "2018-04-09",
+    "page": 18,
+    "sha256": "6ee5c60f106fc9bdcd5b5323809510b65f9d1e6041d82ee19f3dfa6e5fd56c60",
+    "data_as_of": "2018-04-04"
+   },
+   "asset": {
+    "name": "JD닷컴",
+    "ticker": "JD US",
+    "type": "stock",
+    "sector": null,
+    "currency_token": "달러"
+   },
+   "current_price_or_index": 39.44,
+   "roe_axis": [
+    0.187,
+    0.192,
+    0.19699999999999998
+   ],
+   "risk_premium_axis": [
+    0.055,
+    0.05,
+    0.045
+   ],
+   "axis_orientation": "rows=Long term ROAE (ascending), cols=Equity Risk Premium (descending) — read from the printed header",
+   "cells": [
+    [
+     38.0,
+     39.0,
+     40.0
+    ],
+    [
+     40.0,
+     41.0,
+     43.0
+    ],
+    [
+     42.0,
+     44.0,
+     45.0
+    ]
+   ],
+   "printed_center": 41.0,
+   "recomputed_grid_mean": 41.3333,
+   "printed_upside": {
+    "lo": -0.035,
+    "ctr": 0.051,
+    "hi": 0.141,
+    "mean": 0.052000000000000005
+   },
+   "reconciliation": {
+    "center_from_printed_upside": 41.45,
+    "center_printed_cell": 41.0,
+    "mean_from_printed_upside": 41.49,
+    "mean_recomputed": 41.33,
+    "min_from_printed_upside": 38.06,
+    "min_cell": 38.0,
+    "max_from_printed_upside": 45.0,
+    "max_cell": 45.0
+   },
+   "transcription_receipt": {
+    "method": "pdftotext -layout, regex table extraction, no manual entry",
+    "double_entry_verified": null,
+    "notes": []
+   },
+   "independent": true
+  },
+  {
+   "fixture_id": "2018-04-09_IYW",
+   "independent": true,
+   "asset": {
+    "type": "etf_or_basket"
+   },
+   "source": {
+    "report_date": "2018-04-09"
+   },
+   "current_price_or_index": 2146.77,
+   "roe_axis": [
+    0.273,
+    0.278,
+    0.283
+   ],
+   "risk_premium_axis": [
+    0.093,
+    0.088,
+    0.083
+   ],
+   "cells": [
+    [
+     3236,
+     3326,
+     3415
+    ],
+    [
+     3377,
+     3468,
+     3559
+    ],
+    [
+     3522,
+     3615,
+     3707
+    ]
+   ],
+   "printed_center": 3468
+  },
+  {
+   "fixture_id": "2018-04-09_FDN",
+   "independent": true,
+   "asset": {
+    "type": "etf_or_basket"
+   },
+   "source": {
+    "report_date": "2018-04-09"
+   },
+   "current_price_or_index": 536.52,
+   "roe_axis": [
+    0.197,
+    0.202,
+    0.207
+   ],
+   "risk_premium_axis": [
+    0.005,
+    0.0,
+    -0.005
+   ],
+   "cells": [
+    [
+     650,
+     664,
+     678
+    ],
+    [
+     672,
+     687,
+     702
+    ],
+    [
+     696,
+     711,
+     726
+    ]
+   ],
+   "printed_center": 687
+  }
+ ]
+}

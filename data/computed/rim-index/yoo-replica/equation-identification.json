@@ -1,0 +1,492 @@
+{
+ "schema_version": "yoo_rim_replica_2018.equation_identification.v5",
+ "namespace": "yoo_rim_replica_2018.v1",
+ "status": "YOO_METHOD_NOT_IDENTIFIED",
+ "branch": "B — negative result, closed",
+ "decided_at": "2026-08-09T08:45:00Z",
+ "decided_by": "handler (Claude Opus), sole adjudicator",
+ "independently_verified_by": [
+  "cx (Codex, gpt-5.6-sol)",
+  "a fresh Luna critic run by cx"
+ ],
+ "governing_criteria": "evidence-freeze.json (v1, EMBEDDED receipt) and evidence-freeze-v2..v7.json (each with a PAIRED <criteria>-receipt.json file)",
+ "correction_chain": [
+  {
+   "version": "v1",
+   "sha256": "3db757c087688600f4d2ceba2b715785440866df9c8ad76f937ca7d8a3252aa9",
+   "governs": "error gates, prohibited calibration targets, prohibited fitting mechanics, candidate list, train/holdout split, terminal states",
+   "file": "evidence-freeze.json"
+  },
+  {
+   "version": "v2",
+   "sha256": "aa4b24ee5e0eeaffbb5e012706265e4315d9f6bbe94eb3d1ce265a5c981dd896",
+   "governs": "AGGREGATE_EQUITY_IS_NOT_BPS guard and the G_LEVEL / G_HORIZON / G_TRANSFER discriminator gates",
+   "added_because": "cx recovered the patent worksheet figures",
+   "file": "evidence-freeze-v2.json"
+  },
+  {
+   "version": "v3",
+   "sha256": "812c4615e8bed2f4ad05bea342e85b662c4059ecce5a0571ff1baa08ced8a57e",
+   "corrects": "v2 derived retention as g/ROE against a row printed as ROAE. The identity is b = 2g/[ROAE(2+g)] = 0.8010, not 0.8292. Retention downgraded to FENO_MAPPING for every vintage; horizon set widened.",
+   "found_by": "cx",
+   "file": "evidence-freeze-v3.json"
+  },
+  {
+   "version": "v4",
+   "sha256": "154b8d7fdc3bb6c806c885ab99d5bf092e0eb0d419677f03d782b672ddbd6a46",
+   "recorded": "km's October six-grid multi-Rf evidence; over-cleared G_LEVEL",
+   "file": "evidence-freeze-v4.json"
+  },
+  {
+   "version": "v5",
+   "sha256": "4fab9343436aca59315f551b9d20ee73fa46ae65f561e3ec497d0705b7196884",
+   "corrects": "v4 cleared G_LEVEL in violation of two rules v2 had already frozen — a book value dated one day after its grid, and a clearance obtained under per-index fitting rather than a pinned structure. The clearance is reverted.",
+   "found_by": "cx",
+   "file": "evidence-freeze-v5.json"
+  },
+  {
+   "version": "v6",
+   "sha256": "4895e6ccd3dfb946442ec14c6d045c366cbb7d1e37f49208c92e7b219502f64f",
+   "records": "the v5 discriminator was executed by km and scored: G_B_SOURCED FAIL (1 of 3 admissible), G_C_GLOBAL cannot clear on an inadmissible b-set, G_N_UNIQUE not cleared. Verdict final.",
+   "file": "evidence-freeze-v6.json"
+  },
+  {
+   "version": "v7",
+   "file": "evidence-freeze-v7.json",
+   "sha256": "48744d983f6937f0c6f31de3e014e70268598d67efb1e7b1f759937cc805507b",
+   "records": "record-integrity correction only: governing_criteria wording, prefix hashes stored inside immutable v5/v6, and test hardening. No verdict or evidence change."
+  }
+ ],
+ "what_is_established": {
+  "patent_equation": {
+   "class": "YOO_PRIMARY_VERIFIED",
+   "form": "Value = BPS_{t-1} + [(F.ROE_t - r_e) x BPS_{t-1}] / (r_e - g)",
+   "note": "recovered this session from pat00001.png; refutes the prior internal OCR claim V = BPS x (ROE - Rf)/RP, which is not the patent equation"
+  },
+  "patent_engine_structure_2016_KOSPI": {
+   "class": "YOO_PRIMARY_VERIFIED for that worksheet only",
+   "finite_horizon": 8,
+   "terminal": "no terminal-value row printed",
+   "hurdle": "Rf + Risk Premium (1.5% + 7.5% = 9.0%)",
+   "discount": "(1+Rf)^t — the printed row matches to 0.22% max error and misses (1+CoC)^t by 77.3%",
+   "roe_path": "flat across all forecast columns",
+   "consequence": "the patent's own implementation is a finite-horizon sum and therefore does not compute 수학식 1, its own printed single-stage equation"
+  },
+  "the_2018_reports_do_not_use_the_single_stage_form": {
+   "class": "REFUTED, twice and independently",
+   "fingerprint_test": "a single-stage form implies slope 200 on both axes; observed 41.0 vs ROE (R2 0.47) and -90.2 vs RP (R2 0.06, wrong sign)",
+   "curvature_test": "the Risk Premium direction has median curvature exactly 0.0 across 29 matrices; a convex 1/(r-g) denominator cannot produce that"
+  },
+  "rp_is_not_in_the_discount": {
+   "class": "REFUTED book-free",
+   "test": "centre-normalised so B0 cancels entirely, single global (b,c), 54 October scenario cells",
+   "D1_d_equals_rf_plus_rp": {
+    "median": 0.01419,
+    "max": 0.036797,
+    "gates": "FAIL"
+   },
+   "D2_d_equals_rf_plus_c": {
+    "median": 0.000628,
+    "max": 0.005546,
+    "gates": "PASS"
+   },
+   "D3_d_constant": {
+    "median": 0.00066,
+    "max": 0.006059,
+    "gates": "PASS"
+   },
+   "what_this_settles": "the Risk Premium enters only the excess-return hurdle, never the discounting",
+   "what_this_does_not_settle": "D2 versus D3 — 0.0628% against 0.0660% median is not a discrimination"
+  },
+  "rp_role": {
+   "class": "established from source",
+   "value": "add_to_Rf_for_required_return",
+   "evidence": "five 2018 matrices print a Risk Premium axis reaching 0.0% and -0.5% while returning finite positive values, and the KOSPI worksheet prints cost of capital = Rf + RP explicitly"
+  },
+  "shape_needs_only_two_global_parameters": {
+   "finding": "on the book-free test a single global (b,c) passes both gates; per-index fitting was required only for LEVELS",
+   "consequence": "the entire remaining problem is localised to B0"
+  }
+ },
+ "what_remains_open": {
+  "book_basis_2018": {
+   "status": "UNRESOLVED — the whole of the open question",
+   "same_report_pbr": {
+    "class": "HIGH-VALUE CANDIDATE, FENO_MAPPING — NOT a cleared G_LEVEL",
+    "why_not_admissible": "the six scenario grids carry data_as_of 2018-10-11 while the Bloomberg PBR table at p.35 is as-of 2018-10-12, one day later, failing the at-or-before rule frozen in v2; and P/B sits in a market-descriptor block nowhere documented as a RIM operand",
+    "why_still_high_value": "the same table's 2018E/2019E/2020E ROE columns reproduce the grids' 3-year-mean centres (23.53->23.5, 18.93->18.9, 21.77->21.7), which is real corroboration though not admissibility"
+   },
+   "withdrawn": "the handler's original 62.2% level refutation used the July report's 18E FORWARD ETF P/B while the ETF grids value the underlying index. That was the wrong adapter and is withdrawn as a refutation of the family. km's reclassification stands."
+  },
+  "horizon_N": {
+   "status": "UNRESOLVED",
+   "patent_value": 8,
+   "patent_value_on_2018_corpus": "FAILS at max 5.35% against a 2.5% gate",
+   "km_candidate": {
+    "N": 20,
+    "class": "source-supported candidate, not verified by the handler",
+    "basis": "reported as the Kiwoom official 20-year model"
+   },
+   "handler_scan": "with the discount pinned to Rf and b across its admissible 0.800 to 0.857 range, N in {11,12,13} survives TRAIN and HOLDOUT over 117 (N,b) pairs, implied V/B0 5.3248 to 7.4457, spread 1.398x"
+  },
+  "retention_b": {
+   "status": "UNRESOLVED, FENO_MAPPING for every vintage",
+   "admissible_estimators": {
+    "E1_roae_identity": 0.801,
+    "E2_printed_payout": 0.8569,
+    "E3_beginning_equity": "0.8292 REJECTED — inconsistent with the printed ROAE label"
+   },
+   "km_hypothesis": "per-index b equals index retention (0.40/0.45/0.58 tracking payout)",
+   "handler_counter_evidence": "an independent fit puts b essentially constant at 0.49/0.51/0.46 and moves the variation into c at 0.079/0.069/0.037. Two points on the same b*ROE ridge; the retention reading is a hypothesis, not a result.",
+   "sourced_result": {
+    "SPX": "ADMISSIBLE 0.6725 as-of 2018-09-28",
+    "NASDAQ_100": "INADMISSIBLE, as-of ~2018-10-18",
+    "DJIA": "INADMISSIBLE, approximated, no factsheet before 2019-08"
+   }
+  }
+ },
+ "fixture_corpus": {
+  "handler_pass": 32,
+  "worker_double_entry_pass": 34,
+  "merged_independent": 31,
+  "october_scenario_grids": {
+   "count": 6,
+   "key": "_tmp/yoo-e2/panel_grids.json -> yoo_201810_index_scenarios",
+   "design": "same index, same date, shared B0, with Rf and RP both moving between a normal leg (Rf 3.5%, RP 5.0%) and a worst leg (Rf 4.0%, RP 6.0%)",
+   "why_it_matters": "no single-date grid can separate the discount from the hurdle; this design can, and it is what refuted D1 book-free",
+   "contributed_by": "km"
+  },
+  "wider_panel": "km located 13 G.R.E.A.T. report PDFs spanning 2017-07 to 2019-02, materially beyond the two the audit knew of",
+  "distinct_report_dates": 2,
+  "distinct_asset_types": 3
+ },
+ "why_not_identified": {
+  "trigger_1": "more than one materially different candidate remains admissible — N in {11,12,13} over 117 (N,b) pairs with a 1.398x spread in implied value, and D2 versus D3 undecided",
+  "trigger_2": "load-bearing parameters are identifiable only by fitting — the horizon, the retention split on the b*ROE ridge, and the book basis",
+  "not_a_trigger": "the level failure. That was an adapter artifact and has been withdrawn."
+ },
+ "single_remaining_discriminator": {
+  "requirement_1": "an index book or P/B snapshot dated AT OR BEFORE its grid's own data date, or any 2018 report printing a book basis at or before its data date",
+  "requirement_2": "index retention sourced independently with a verifiable as-of, pinned per index, after which a single global c must fit all six October grids within 2.5%",
+  "gates": "G_LEVEL, G_C_GLOBAL, G_N_UNIQUE as frozen in v5"
+ },
+ "no_current_values": {
+  "E6_semantic_adapter": "NOT RUN",
+  "E7_current_SPX_NDX_QQQ": "NOT RUN",
+  "E8_reverse_implied": "NOT RUN",
+  "current_yoo_fair_value_emitted": false,
+  "assertion": "no artifact under yoo-replica/ contains a current market price or a current Yoo valuation"
+ },
+ "handler_errors_recorded_not_quietly_fixed": [
+  "derived retention as g/ROE against a row printed as ROAE — mathematically wrong, caught by cx",
+  "shipped v3 without its paired receipt while v3 itself required one, then edited it — caught by cx",
+  "cleared G_LEVEL in violation of two rules already frozen in v2 — caught by cx",
+  "missed two April matrices the worker's double-entry pass caught, and overwrote the worker's fixture file with a cp before reading it"
+ ],
+ "superseded_v1_record": {
+  "note": "the pre-October adjudication is preserved for audit",
+  "payload": {
+   "schema_version": "yoo_rim_replica_2018.equation_identification.v1",
+   "namespace": "yoo_rim_replica_2018.v1",
+   "decided_at": "2026-08-09T02:20:00Z",
+   "decided_by": "handler (Claude Opus), sole adjudicator",
+   "criteria": "evidence-freeze.json, frozen before any candidate was scored",
+   "status": "YOO_METHOD_NOT_IDENTIFIED",
+   "why_this_status": "More than one materially different parameterisation remains observationally admissible, and the one load-bearing quantity that would separate them — the value LEVEL — is reproducible only by fitting a book value per asset, which the freeze prohibits. Both of the frozen NOT_IDENTIFIED triggers fire independently.",
+   "e0_outcome_is_a_separate_and_positive_result": {
+    "status": "YOO_PATENT_EXACT_EQUATION = VERIFIED",
+    "equation": "Value = BPS_{t-1} + [ (F.ROE_t - r_e) x BPS_{t-1} ] / (r_e - g)",
+    "collapse": "V = BPS_{t-1} * (F.ROE_t - g) / (r_e - g)",
+    "significance": "The exact patent equation was recovered from primary source this session, closing a question the prior reset left open as a retrieval failure. It also refutes the prior internal OCR claim V = BPS x (ROE - Rf) / RP, which is NOT the patent equation and may never again be described as such.",
+    "but": "Recovering the patent equation did not identify the published reports' method. See below — the 2018 report grids refute the patent's own single-stage form."
+   },
+   "fixture_corpus": {
+    "complete_3x3_matrices": 34,
+    "independent": 31,
+    "duplicates": "QQQ and QLD print byte-identical grids (QLD is the 2x leveraged wrapper); counted once",
+    "distinct_report_dates": 2,
+    "distinct_asset_types": 3,
+    "gates_on_corpus": "matrices >= 5 PASS (29), dates >= 2 PASS, asset types >= 2 PASS (3)",
+    "transcription_quality": "printed 최저/적정/최고/평균 upside reconciles against recomputed cells within 0.35% on 31 of 32 matrices; 2018-04-09_JD is the worst at 1.10%, attributable to coarse rounding on a 39.44 price",
+    "axis_orientation_read_from_the_page": "columns = Equity Risk Premium, printed high-to-low; rows = Long term ROAE, printed low-to-high. Confirmed on the printed header of every table, not assumed.",
+    "printed_semantics_confirmed": {
+     "적정": "the centre cell",
+     "평균": "the arithmetic mean of the nine cells",
+     "최저/최고": "the minimum and maximum cells",
+     "evidence": "for the NASDAQ 2018 grid, price 7,756.2 x (1 + 30.5%) = 10,121.8 against the printed centre cell 10,121, and the nine-cell mean recomputes to 10,125.2 against the printed 평균 30.5%"
+    },
+    "note_on_corpus": "Handler pass found 32 (29 independent); the worker's independent double-entry pass found 34 and caught two April matrices the handler missed. All numbers below are on the merged 31-matrix independent set."
+   },
+   "candidate_scoring": {
+    "A_patent_exact_single_stage": {
+     "verdict": "REFUTED on structure, independently of any scale or book value",
+     "test": "V = B0 (ROE - g)/(r - g) implies 1/rho = (operand - g)/0.005 on both axes, i.e. a slope of 200 against ROE and against r",
+     "observed": "slope 41.0 against ROE with R2 0.47; slope -90.2 against Risk Premium with R2 0.06 — the wrong sign",
+     "second_refutation": "the Risk Premium direction of the printed grids has a median curvature of exactly 0.0 across 29 matrices, i.e. it is linear to within printing rounding. A 1/(r-g) denominator is convex in r and cannot produce that.",
+     "conclusion": "the 2018 published reports do not use 수학식 1 as printed. The patent equation is verified as the patent's equation and refuted as the reports' equation."
+    },
+    "B_patent_short_form_internal_claim": {
+     "verdict": "REJECTED as provenance by E0, and shares candidate A's refuted 1/RP denominator structure"
+    },
+    "C_D_one_rate_finite_horizon": {
+     "form": "V = B0 + sum_{t=1..N} (ROE - r) B_{t-1} / (1+r)^t, B_t = B_{t-1}(1 + ROE*b), r = Rf + RP",
+     "best_train_fit": {
+      "N": 9,
+      "b": 0.85,
+      "median_cell_error": 0.014193,
+      "max_cell_error": 0.059801
+     },
+     "verdict": "REJECTED — fails both frozen gates even on scale-free cells (median 1.42% against 1.0%, max 5.98% against 2.5%)"
+    },
+    "H_two_rate_hurdle_and_separate_discount": {
+     "form": "hurdle = Rf + RP, separate global discount d, V/B0 = 1 + (ROE - hurdle) * S(ROE), S = geometric sum over N years with book growing at ROE*b",
+     "best_train_fit": {
+      "N": 11,
+      "b": 0.92,
+      "d": 0.004,
+      "median_cell_error": 0.002164,
+      "max_cell_error": 0.019592
+     },
+     "holdout": {
+      "ids": [
+       "2018-07-18_나스닥_FY2020",
+       "2018-04-09_NVDA"
+      ],
+      "median_cell_error": 0.006141,
+      "max_cell_error": 0.011448
+     },
+     "shape_gates": "PASS on TRAIN and on HOLDOUT",
+     "verdict": "NOT ADMISSIBLE as an identification, for the two reasons below"
+    },
+    "role_swap_variant": {
+     "form": "hurdle = global constant, discount = Rf + RP",
+     "best_train": {
+      "N": 13,
+      "b": 1.0,
+      "d": 0.062,
+      "median": 0.008387,
+      "max": 0.072703
+     },
+     "verdict": "REJECTED — max 7.27% against a 2.5% gate"
+    },
+    "rp_only_as_required_return": {
+     "verdict": "REFUTED structurally — five matrices print a Risk Premium axis reaching 0.0% and -0.5% (QCLN, TAN, 600884, 700, NFLX) while returning finite positive values. If the printed axis were the required return itself, the discounting would be undefined or negative. A base rate must be added.",
+     "consequence": "RP_ROLE = add_to_Rf_for_required_return, established from the source rather than assumed"
+    }
+   },
+   "why_the_passing_candidate_is_still_not_an_identification": {
+    "reason_1_the_shape_is_massively_under_determined": {
+     "test": "exhaustive scan of N in 1..40, b in 0..1, d in 0.000..0.080",
+     "result": "7,769 distinct (N, b, d) triples pass BOTH frozen cell gates on TRAIN — unchanged after merging the two additional matrices",
+     "ranges": {
+      "N": "10 to 40",
+      "b": "0.22 to 1.00",
+      "d": "0.000 to 0.080"
+     },
+     "materiality": "implied V/B0 at ROE 26.4% and r = Rf + 9.0% ranges 5.116 to 8.672 across the admissible set — a 1.695x spread, the difference between a NASDAQ fair value near 7,000 and one near 12,000",
+     "reproducibility": "Count produced by an exhaustive scan over N in 1..40, b in 0..1 step 0.02, d in 0.000..0.080 step 0.001. cx flagged the exact count as [not verified] from its side; the scan script is handler-owned and shareable. The count's precision is not load-bearing — any count materially above 1 triggers the frozen condition."
+    },
+    "reason_2_the_level_cannot_be_reproduced_without_fitting_book_per_asset": {
+     "method": "B0 taken from the report's own printed '18E P/B on page 23 of the July report (QQQ 5.6, IYW 5.6, RYT 5.1, VGT 5.9, IBB 5.0, TAN 1.1, QCLN 2.3), so the book basis is sourced rather than fitted",
+     "required_v_over_b0_at_centre": {
+      "TAN": 1.69,
+      "QCLN": 3.273,
+      "QQQ": 7.307,
+      "IBB": 9.266,
+      "IYW": 9.374,
+      "RYT": 10.559,
+      "VGT": 11.15
+     },
+     "result": "ZERO (N, b, d) triples reproduce all seven levels within the 2.5% gate. The best achievable maximum level error is 62.2%.",
+     "implied_book_inconsistency": "forcing the best shape triple and solving for the book each grid demands gives implied-to-printed book ratios from 0.379 to 1.651, a 4.36x spread. No single book-basis rule can be correct.",
+     "hardest_single_fact": "the required multiple is not even monotone in the excess return. QCLN carries the largest excess return in the set at 21.24pp and needs a multiple of only 3.273, while RYT at 12.64pp excess needs 10.559. No residual-income family in which value rises with excess return at a common book basis can produce that ordering.",
+     "conditionality": "CONDITIONAL on the P/B-to-B0 adapter. The '18E P/B is printed by the report, but the mapping B0 = price / printed P/B is a FENO adapter, not a demonstrated statement of the book basis those tables used. Raised independently by cx (Codex) and accepted. The 62.2% best-case level error and the QCLN/RYT non-monotonicity therefore refute the family GIVEN that adapter; they do not refute it unconditionally.",
+     "what_survives_the_conditionality": "Reason 1 is independent of any book value. The 7,769-triple shape degeneracy and the 1.695x spread in implied V/B0 are computed on cells normalised by their own grid centre and use no book value at all. NOT_IDENTIFIED therefore stands on reason 1 alone even if the adapter is wrong."
+    },
+    "what_would_have_been_prohibited": "A per-asset B0 or a per-report scaler reproduces everything trivially. The evidence freeze forbids both by name, and this is precisely the case they were written to catch."
+   },
+   "roles_identified_and_unidentified": {
+    "RP_ROLE": "add_to_Rf_for_required_return — established from the zero and negative printed axes",
+    "REQUIRED_RETURN_ROLE": "hurdle against which ROE generates residual income; enters the numerator",
+    "DISCOUNT_ROLE": "separate_derived_input — the printed grids are exactly linear in the Risk Premium axis, which a shared discount denominator cannot produce. The separate discount is therefore structurally indicated but its VALUE is unidentified across 0.000 to 0.080.",
+    "BOOK_ROLE": "unidentified — the printed P/B basis does not reconcile, spread 4.36x",
+    "PAYOUT_ROLE": "structurally required to grow book, unidentified across a retention range of 0.22 to 1.00",
+    "TERMINAL_ROLE": "no terminal excess-return term is indicated; adding a flat perpetuity worsens the fit materially (median 2.41%, max 22.80%)"
+   },
+   "two_best_competing_candidates": [
+    {
+     "rank": 1,
+     "id": "H_two_rate",
+     "N": 13,
+     "b": 0.74,
+     "d": 0.0165,
+     "train": "0.22% / 1.99%",
+     "holdout": "0.62% / 1.11%"
+    },
+    {
+     "rank": 2,
+     "id": "H_two_rate_alternate",
+     "N": 11,
+     "b": 0.92,
+     "d": 0.005,
+     "train": "0.21% / 1.97%",
+     "note": "indistinguishable on shape, materially different in implied level"
+    }
+   ],
+   "exact_evidence_that_would_distinguish_them": [
+    "The book value per index point or per share that Kiwoom actually used for each 2018 table. One authentic printed BPS for a single matrix collapses the 7,769-triple admissible set immediately, because the level equation then has one unknown instead of three.",
+    "The patent's figures 11a-11d and 12a-12c, which per the specification show the KOSPI and S&P500 residual-value worksheets including the consensus portion and the post-consensus portion. Those would print the horizon and the ROE path directly. They were not retrievable: pat00001.png returned 200 but pat00002-4.png returned 403 at the same storage path.",
+    "Any Kiwoom report that prints the discount rate or the 영구성장률 g alongside a grid. None of the 32 transcribed tables prints either.",
+    "A Kiwoom table for the same asset on two dates where only the risk-free rate moved materially, which would separate the discount rule from the hurdle rule. The two available dates are 2018-04-04 and 2018-07-10, over which the US 10Y moved about 8bp — far too little to identify a rate rule."
+   ],
+   "consequences_enforced": {
+    "current_yoo_fair_value_emitted": false,
+    "E6_semantic_adapter": "NOT RUN — the contract gates it on VERIFIED or STRONGLY_RECONSTRUCTED",
+    "E7_current_SPX_NDX_QQQ": "NOT RUN — no current Yoo number may be manufactured from an unidentified method",
+    "E8_reverse_implied": "NOT RUN — it is gated on E7 being frozen",
+    "E9_late_family": "not started; it is explicitly non-blocking and was never a prerequisite"
+   },
+   "what_survives_as_durable_evidence": [
+    "the exact patent equation, recovered and hashed",
+    "a 32-matrix primary fixture corpus with source hashes, page numbers and reconciliation receipts, which did not exist before",
+    "RP_ROLE settled: the printed Risk Premium is not the required return, it is added to a base rate",
+    "the patent's single-stage form refuted as the reports' method, on two independent structural grounds",
+    "the one-rate finite-horizon family refuted against the frozen gates",
+    "the finding that the printed grids are exactly linear in the Risk Premium axis and convex in the ROE axis"
+   ],
+   "independent_verification": {
+    "worker_role": "independent double-entry transcription of both PDFs",
+    "worker_result": "34/34 cell-identical between its own two passes; axis orientation matches the handler's reading; JD flagged by both",
+    "handler_role": "independent transcription, fingerprinting, family competition, identifiability scan, level test and adjudication",
+    "disagreement": "none on the fixtures; the handler's corpus was 2 matrices short and was corrected from the worker's passes"
+   },
+   "independent_adjudication_cx_20260809": {
+    "reviewer": "cx (Codex, gpt-5.6-sol), pane %3",
+    "on_yoo": "agrees YOO_METHOD_NOT_IDENTIFIED; reports recovering the KR20180048140A figures and narrowing the patent engine to a finite-horizon two-rate structure, which converges with the handler's independent finding that the 2018 grids need exactly that and refuse the single-stage form; no authentic 2018 BPS found",
+    "corrections_accepted": [
+     "level results labelled conditional on the P/B-to-B0 adapter",
+     "exact triple count marked as handler-computed"
+    ],
+    "handler_position": "verdict unchanged; reason 1 is book-free and independently sufficient"
+   },
+   "patent_worksheet_recovery_20260809": {
+    "recovered_by": "cx (Codex) at 300dpi, KR20180048140A pages 18-20; the handler's own attempt returned HTTP 403 for pat00002-4.png",
+    "status": "YOO_PATENT_ENGINE_STRUCTURE = VERIFIED (2016 KOSPI implementation)",
+    "what_the_figures_print": {
+     "horizon": "2016E-2023E, discount year 1-8, N = 8",
+     "terminal": "no terminal-value row is printed",
+     "roe_path": "8.5% flat in every forecast column (8.7/8.6/9.2% for 2013-2015 actual)",
+     "rates": "Rf 1.5%, risk premium 7.5%, cost of capital 9.0%",
+     "discount_factor_row": [
+      1.015,
+      1.03,
+      1.045,
+      1.06,
+      1.076,
+      1.092,
+      1.108,
+      1.124
+     ],
+     "book_column": "aggregate Total SH Equity in 억원, no per-share BPS row anywhere"
+    },
+    "handler_decoding_of_the_discount_row": {
+     "finding": "the printed discount factors are (1 + Rf)^t, NOT (1 + cost of capital)^t",
+     "evidence": "max relative error against 1.015^t is 0.22%, against 1.09^t is 77.3%",
+     "significance": "this identifies the second rate directly from primary source. The worksheet accrues residual income against a hurdle of Rf + RP and discounts it at the risk-free rate. It independently confirms the handler's structural finding that the printed grids are exactly linear in the Risk Premium axis, which a shared discount denominator cannot produce."
+    },
+    "handler_decoding_of_the_equity_row": {
+     "finding": "forecast Total SH Equity grows at a median 7.05% per year against a flat ROE of 8.5%, implying retention b = 0.829",
+     "caveat": "this is KOSPI-specific and 2016-specific; transferring it to the 2018 US tables is an assumption, not a 2018 primary source"
+    },
+    "consequence_for_수학식_1": "The worksheet is a finite-horizon sum with no terminal. 수학식 1 is a single-stage perpetuity. The patent's own implementation therefore does not compute 수학식 1 as printed, which is a second, independent refutation of candidate A."
+   },
+   "transfer_test_of_the_patent_parameterisation": {
+    "test": "apply the patent-sourced parameterisation unchanged to the 31-matrix 2018 corpus: hurdle Rf+RP, discount Rf, N=8, b=0.8292, no terminal",
+    "result": "median 0.84% PASS, max 5.35% FAIL against the 2.5% gate",
+    "reading": "the 2018 reports do not use the 2016 worksheet's horizon",
+    "degeneracy_after_pinning": {
+     "method": "pin b and the discount rule to their primary-sourced values, leave only N free",
+     "train_survivors": [
+      12,
+      13,
+      14
+     ],
+     "after_holdout": [
+      12,
+      13
+     ],
+     "implied_v_over_b0": {
+      "N12": 6.0947,
+      "N13": 7.1786
+     },
+     "spread": "1.178x, down from 1.695x across 7,769 triples"
+    },
+    "level_test_with_structure_pinned": {
+     "result": "still ZERO (N, b) pairs reproduce the seven printed levels; best max error 62.6%. At the two surviving horizons with the patent retention the errors are 133% and 173%, worst on QCLN.",
+     "reading": "the failure is now clearly attributable to the BOOK BASIS rather than to the equation. The patent prints aggregate equity and no BPS, and the P/B-to-B0 adapter is the unproven link."
+    }
+   },
+   "status_after_the_figure_recovery": {
+    "verdict": "YOO_METHOD_NOT_IDENTIFIED — unchanged",
+    "why_it_still_holds": "two materially different horizons survive shape and holdout with a 1.178x spread in implied value, the horizon is identifiable only by fitting the 2018 grids, and no parameterisation reproduces the levels",
+    "what_materially_improved": "the STRUCTURE is now primary-verified: finite horizon, no terminal, hurdle = Rf + RP, discount = Rf, flat forecast ROE. Only the horizon and the 2018 book basis remain open.",
+    "single_discriminator_now": "one authentic per-share book or BPS figure for any 2018 table. The patent prints aggregate equity only, so it cannot supply it."
+   }
+  }
+ },
+ "discriminator_executed_and_scored": {
+  "verdict": "FAIL — 1 of 3 indices admissibly sourced",
+  "per_index": {
+   "SPX": {
+    "status": "ADMISSIBLE",
+    "b": 0.6725,
+    "source": "S&P DJI official index factsheet, indexId 340, AS OF 2018-09-28, archived 2018-10-05",
+    "derivation": "indicated dividend yield 1.89% x projected P/E 17.33 = payout 32.75%",
+    "date_rule": "2018-09-28 is at or before the 2018-10-11 grid date — PASSES"
+   },
+   "NASDAQ_100": {
+    "status": "INADMISSIBLE",
+    "b": 0.7864,
+    "source": "same 2018-10-23 report, QQQ page Bloomberg consensus table",
+    "derivation": "배당수익률 1.2% x FY18E PER 17.8 = payout 21.36%",
+    "date_rule": "the ETF pages carry a data date of about 2018-10-18, seven days AFTER the 2018-10-11 grid date — FAILS the at-or-before rule",
+    "note": "km flagged this itself"
+   },
+   "DJIA": {
+    "status": "INADMISSIBLE",
+    "b": 0.5752,
+    "source": "secondary approximation, dividend yield about 2.4% x trailing P/E about 17.7",
+    "date_rule": "no S&P DJI DJIA factsheet with an as-of at or before 2018-10-11 exists in the archives; the earliest archived file is 2019-08",
+    "note": "km marked this [not verified] itself and named it the weakest operand"
+   }
+  },
+  "estimator_selection_concern": "the outcome depends on choosing the forward-consistent payout basis. The other two admissible SPX bases fail outright — Damodaran year-end 0.6386 gives 3.23% and trailing-P/E 0.5676 gives 8.84%, both above the 2.5% gate. km's reason is principled, that a forward-consensus-ROE model wants a forward payout basis, and the handler accepts the reasoning. It is recorded because the reason was surfaced together with the result rather than before it.",
+  "g_c_global": {
+   "verdict": "CANNOT CLEAR — the b-set it was run on is inadmissible",
+   "metric_correction": {
+    "issue": "km reported rms expressed as a percentage of the index level; the frozen gate is MAXIMUM ABSOLUTE CELL ERROR",
+    "at_km_c_0_0975": {
+     "Dow": 0.0116,
+     "SPX": 0.0116,
+     "Nasdaq": 0.0336,
+     "gate": "Nasdaq FAILS at 3.36% against 2.5%"
+    },
+    "at_handler_optimal_c_0_0990": {
+     "Dow": 0.0214,
+     "SPX": 0.02,
+     "Nasdaq": 0.0214,
+     "gate": "all three PASS"
+    },
+    "reading": "a single global c CAN satisfy the max-cell gate at c about 0.099, so the fit itself is real. What blocks the clearance is the provenance of b, not the arithmetic."
+   },
+   "economic_plausibility_flag": "c about 0.099 implies a discount rate of Rf + 9.9% = 13.4% while the residual-income hurdle is Rf + RP = 8.5% to 10.0%. The model would discount at roughly 4pp above the return it requires, with nothing in any source explaining why. This is not a gate and does not decide anything, but it is recorded as a reason the parameterisation should not be trusted on fit quality alone."
+  },
+  "g_n_unique": {
+   "verdict": "NOT CLEARED",
+   "N_used": 20,
+   "basis": "reported as the Kiwoom official 20-year description; not independently verified by the handler",
+   "comparison": "N=12/13 were found strictly worse only with B0 pinned to the printed PBR, which v5 already ruled inadmissible. The horizon comparison therefore rests on an inadmissible book basis."
+  },
+  "final": "NOT_IDENTIFIED"
+ }
+}
