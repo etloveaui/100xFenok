@@ -25,13 +25,26 @@
       "run_id": "31086476783",
       "schedule": "7 6 * * 0-5",
       "shard": "51/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 956,
+      "natural": true,
+      "observed_at": "2026-08-09T05:15:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31296241377",
+      "schedule": "7 4 * * 0-5",
+      "shard": "2/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T08:51:18Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CCRP.json",
-    "payload_sha256": "3d430651a8ad5c8bf5a1e7e426db0a934359e9d57888b0eb9440496b2090033a",
+    "fetched_at": "2026-08-09T05:16:40Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/CCRP.json",
+    "payload_sha256": "431836103528e40ccb6be52015bfc763a476fd169d9efa807624769f6501d772",
     "quote_as_of": "2026-05-04T20:00:00Z",
     "source_as_of": "2026-05-04T20:00:00Z"
   },
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1025,
+    "latency_ms": 956,
     "natural": true,
-    "observed_at": "2026-08-06T08:51:05Z",
+    "observed_at": "2026-08-09T05:15:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31086476783",
-    "schedule": "7 6 * * 0-5",
-    "shard": "51/72"
+    "run_id": "31296241377",
+    "schedule": "7 4 * * 0-5",
+    "shard": "2/72"
   },
   "lkg": {
     "fetched_at": "2026-08-06T08:51:18Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-06T08:51:05Z",
-    "payload_sha256": "36192cadb8556e3925a22ee150518b0fda10d077dc980a5ba675632d527a8cea",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T05:15:44Z",
+    "payload_sha256": "66c1f203a84bb241f1025e27a9a5738fffc5e12929eef42da4d83829ad0b4c91",
     "quote_as_of": "2026-05-04T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31086476783",
+    "run_id": "31296241377",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-05-04T20:00:00Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 65,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-05-04T20:00:00Z"
   },
   "ticker": "CCRP",
-  "updated_at": "2026-08-06T10:49:28Z"
+  "updated_at": "2026-08-09T05:15:44Z"
 }

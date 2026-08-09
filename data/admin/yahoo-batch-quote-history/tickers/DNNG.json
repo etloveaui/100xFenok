@@ -25,6 +25,20 @@
       "run_id": "31031814422",
       "schedule": "7 16 * * 0-5",
       "shard": "44/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for DNNG despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 2427,
+      "natural": true,
+      "observed_at": "2026-08-09T05:15:44Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31296241377",
+      "schedule": "7 4 * * 0-5",
+      "shard": "2/72"
     }
   ],
   "current": {
@@ -40,16 +54,29 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for DNNG despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 562,
+    "latency_ms": 2427,
     "natural": true,
-    "observed_at": "2026-08-05T17:51:24Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-09T05:15:44Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31031814422",
-    "schedule": "7 16 * * 0-5",
-    "shard": "44/72"
+    "run_id": "31296241377",
+    "schedule": "7 4 * * 0-5",
+    "shard": "2/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for DNNG despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-09T05:15:44Z",
+    "run_attempt": 1,
+    "run_id": "31296241377"
   },
   "lkg": {
     "fetched_at": "2026-08-05T17:52:08Z",
@@ -85,5 +112,5 @@
     "source_as_of": "2026-07-28T20:00:00Z"
   },
   "ticker": "DNNG",
-  "updated_at": "2026-08-06T00:14:28Z"
+  "updated_at": "2026-08-09T05:15:44Z"
 }

@@ -12,13 +12,26 @@
       "run_id": "31078091927",
       "schedule": "7 4 * * 0-5",
       "shard": "50/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 927,
+      "natural": true,
+      "observed_at": "2026-08-09T05:15:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31296241377",
+      "schedule": "7 4 * * 0-5",
+      "shard": "2/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T06:44:37Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TROT.json",
-    "payload_sha256": "bac6229e016b6b43c71deb954f685d9630775e09c69fb1bf5d4ea4af578a53b8",
+    "fetched_at": "2026-08-09T05:16:36Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/TROT.json",
+    "payload_sha256": "e7b70f00d5d514f0593af9f22ef7e410550416bdbc60346d0f91ada7b1789044",
     "quote_as_of": "2026-03-24T15:56:44Z",
     "source_as_of": "2026-03-24T15:56:44Z"
   },
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 339,
+    "latency_ms": 927,
     "natural": true,
-    "observed_at": "2026-08-06T06:42:20Z",
+    "observed_at": "2026-08-09T05:15:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31078091927",
+    "run_id": "31296241377",
     "schedule": "7 4 * * 0-5",
-    "shard": "50/72"
+    "shard": "2/72"
   },
   "lkg": {
     "fetched_at": "2026-08-06T06:44:37Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-06T06:42:20Z",
-    "payload_sha256": "c1d1e418bbe7386bdb3d19763e9d0f281f7e8ec0751c1ef9870910ed018ca03b",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T05:15:44Z",
+    "payload_sha256": "5268fd9b2b1534c18fd85d2c7a98bd86fa4c57861c83076af5eef165052fd75b",
     "quote_as_of": "2026-03-24T15:56:44Z",
     "run_attempt": 1,
-    "run_id": "31078091927",
+    "run_id": "31296241377",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-03-24T15:56:44Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 93,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-03-24T15:56:44Z"
   },
   "ticker": "TROT",
-  "updated_at": "2026-08-06T08:51:05Z"
+  "updated_at": "2026-08-09T05:15:44Z"
 }

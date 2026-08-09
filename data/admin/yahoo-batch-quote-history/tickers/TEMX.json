@@ -12,13 +12,26 @@
       "run_id": "31143656628",
       "schedule": "7 0 * * 0-5",
       "shard": "60/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1176,
+      "natural": true,
+      "observed_at": "2026-08-09T05:15:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31296241377",
+      "schedule": "7 4 * * 0-5",
+      "shard": "2/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T03:17:35Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TEMX.json",
-    "payload_sha256": "9a47fed624278238a26c871c80752d857f0b9719be446e41b5a0993aff3d4746",
+    "fetched_at": "2026-08-09T05:17:17Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/TEMX.json",
+    "payload_sha256": "fc81b78693bffc79d759543196051b0cb14ddc0a455b20ab3948a150d4e1c585",
     "quote_as_of": "2026-07-29T19:12:10Z",
     "source_as_of": "2026-07-29T19:12:10Z"
   },
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 589,
+    "latency_ms": 1176,
     "natural": true,
-    "observed_at": "2026-08-07T03:14:39Z",
+    "observed_at": "2026-08-09T05:15:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31143656628",
-    "schedule": "7 0 * * 0-5",
-    "shard": "60/72"
+    "run_id": "31296241377",
+    "schedule": "7 4 * * 0-5",
+    "shard": "2/72"
   },
   "lkg": {
     "fetched_at": "2026-08-07T03:17:35Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T03:14:39Z",
-    "payload_sha256": "5ef082780961fda5a865202a9e98b766f3555ec8c0d4143c136c9b7363b4ac15",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T05:15:44Z",
+    "payload_sha256": "7434683a0d955c7c1f884b334f03970755dc210c947d4009f3fb740c412b53fc",
     "quote_as_of": "2026-07-29T19:12:10Z",
     "run_attempt": 1,
-    "run_id": "31143656628",
+    "run_id": "31296241377",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-29T19:12:10Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-29T19:12:10Z"
   },
   "ticker": "TEMX",
-  "updated_at": "2026-08-07T04:33:03Z"
+  "updated_at": "2026-08-09T05:15:44Z"
 }

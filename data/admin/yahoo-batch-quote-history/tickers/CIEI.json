@@ -38,13 +38,26 @@
       "run_id": "31078091927",
       "schedule": "7 4 * * 0-5",
       "shard": "50/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1031,
+      "natural": true,
+      "observed_at": "2026-08-09T05:15:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31296241377",
+      "schedule": "7 4 * * 0-5",
+      "shard": "2/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T06:43:15Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CIEI.json",
-    "payload_sha256": "8926564376c23cc8fa9eb8647f54b3b0a656f684074b3f24be24badd68db4896",
+    "fetched_at": "2026-08-09T05:16:27Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/CIEI.json",
+    "payload_sha256": "4c83849cc328c568d247bf341188d45cd2906920e3f8883ab55705648559fda1",
     "quote_as_of": "2026-06-29T19:00:16Z",
     "source_as_of": "2026-06-29T19:00:16Z"
   },
@@ -55,14 +68,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 392,
+    "latency_ms": 1031,
     "natural": true,
-    "observed_at": "2026-08-06T06:42:20Z",
+    "observed_at": "2026-08-09T05:15:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31078091927",
+    "run_id": "31296241377",
     "schedule": "7 4 * * 0-5",
-    "shard": "50/72"
+    "shard": "2/72"
   },
   "lkg": {
     "fetched_at": "2026-08-06T06:43:15Z",
@@ -75,17 +88,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-06T06:42:20Z",
-    "payload_sha256": "891d5776d74e9fad2ba254fcd7c60a380cdd100a0145674d27445e20ae17b5ba",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T05:15:44Z",
+    "payload_sha256": "639d7a6d51767d4a8284f0ba3b92c33d8f305a9da55f15c0ff4bd4fe9b7bacc8",
     "quote_as_of": "2026-06-29T19:00:16Z",
     "run_attempt": 1,
-    "run_id": "31078091927",
+    "run_id": "31296241377",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-06-29T19:00:16Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 27,
@@ -98,5 +111,5 @@
     "source_as_of": "2026-06-29T19:00:16Z"
   },
   "ticker": "CIEI",
-  "updated_at": "2026-08-06T08:51:05Z"
+  "updated_at": "2026-08-09T05:15:44Z"
 }

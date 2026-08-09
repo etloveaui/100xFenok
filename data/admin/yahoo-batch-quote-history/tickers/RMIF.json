@@ -12,6 +12,20 @@
       "run_id": "31133672903",
       "schedule": "7 18 * * 0-5",
       "shard": "69/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1019,
+      "natural": true,
+      "observed_at": "2026-08-09T05:15:44Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31296241377",
+      "schedule": "7 4 * * 0-5",
+      "shard": "2/72"
     }
   ],
   "current": {
@@ -27,16 +41,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 914,
+    "latency_ms": 1019,
     "natural": true,
-    "observed_at": "2026-08-07T00:12:01Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-09T05:15:44Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31133672903",
-    "schedule": "7 18 * * 0-5",
-    "shard": "69/72"
+    "run_id": "31296241377",
+    "schedule": "7 4 * * 0-5",
+    "shard": "2/72"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-09T05:15:44Z",
+    "provider_history_as_of": "2026-07-27",
+    "provider_quote_as_of": "2026-07-27T14:11:47Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "31296241377"
   },
   "lkg": {
     "fetched_at": "2026-08-07T00:15:59Z",
@@ -72,5 +96,5 @@
     "source_as_of": "2026-07-27"
   },
   "ticker": "RMIF",
-  "updated_at": "2026-08-07T00:55:33Z"
+  "updated_at": "2026-08-09T05:15:44Z"
 }

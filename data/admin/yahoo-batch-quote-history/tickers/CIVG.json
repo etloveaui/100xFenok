@@ -38,13 +38,26 @@
       "run_id": "31078091927",
       "schedule": "7 4 * * 0-5",
       "shard": "50/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1053,
+      "natural": true,
+      "observed_at": "2026-08-09T05:15:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31296241377",
+      "schedule": "7 4 * * 0-5",
+      "shard": "2/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T06:43:20Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CIVG.json",
-    "payload_sha256": "d365f46db89277e93392d4de6189440571538761408f7d70fa09460111fccf39",
+    "fetched_at": "2026-08-09T05:16:29Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/CIVG.json",
+    "payload_sha256": "307e56fe1d2be8d075f5658fd89e91d7512804c25c77f5e16d157da521fdc9d4",
     "quote_as_of": "2026-07-08T13:37:49Z",
     "source_as_of": "2026-07-08T13:37:49Z"
   },
@@ -55,14 +68,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 373,
+    "latency_ms": 1053,
     "natural": true,
-    "observed_at": "2026-08-06T06:42:20Z",
+    "observed_at": "2026-08-09T05:15:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31078091927",
+    "run_id": "31296241377",
     "schedule": "7 4 * * 0-5",
-    "shard": "50/72"
+    "shard": "2/72"
   },
   "lkg": {
     "fetched_at": "2026-08-06T06:43:20Z",
@@ -75,17 +88,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-06T06:42:20Z",
-    "payload_sha256": "56405035d5230ade946c13517d8e9c0152b03d00ecd7015237f10ca1b511c04d",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T05:15:44Z",
+    "payload_sha256": "68d421e73e63cf8d631d68bb9ad3c495d65bcef715aa9f210aec493e9e81a50b",
     "quote_as_of": "2026-07-08T13:37:49Z",
     "run_attempt": 1,
-    "run_id": "31078091927",
+    "run_id": "31296241377",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-08T13:37:49Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 21,
@@ -98,5 +111,5 @@
     "source_as_of": "2026-07-08T13:37:49Z"
   },
   "ticker": "CIVG",
-  "updated_at": "2026-08-06T08:51:05Z"
+  "updated_at": "2026-08-09T05:15:44Z"
 }

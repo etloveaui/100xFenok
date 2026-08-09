@@ -25,13 +25,26 @@
       "run_id": "31074084652",
       "schedule": "7 2 * * 0-5",
       "shard": "49/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 924,
+      "natural": true,
+      "observed_at": "2026-08-09T05:15:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31296241377",
+      "schedule": "7 4 * * 0-5",
+      "shard": "2/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T05:27:39Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BABC.json",
-    "payload_sha256": "4fbbc267437c13d473de8fac9899b9f558887e914f363ed596da5b637d8416aa",
+    "fetched_at": "2026-08-09T05:16:19Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/BABC.json",
+    "payload_sha256": "8eb204986977273a2f144161329d4f93c63d7e5286a0892a71c25421845ee68a",
     "quote_as_of": "2026-07-20T17:01:19Z",
     "source_as_of": "2026-07-20T17:01:19Z"
   },
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 638,
+    "latency_ms": 924,
     "natural": true,
-    "observed_at": "2026-08-06T05:27:19Z",
+    "observed_at": "2026-08-09T05:15:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31074084652",
-    "schedule": "7 2 * * 0-5",
-    "shard": "49/72"
+    "run_id": "31296241377",
+    "schedule": "7 4 * * 0-5",
+    "shard": "2/72"
   },
   "lkg": {
     "fetched_at": "2026-08-06T05:27:39Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-06T05:27:19Z",
-    "payload_sha256": "321dc29399192c695915d04530bb745e34f089a0dedc05fd49dd3812bad78691",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T05:15:44Z",
+    "payload_sha256": "35b5b6e3740827be86ceccae48158e7d298e582f63f7161b839cfa48c29f6f98",
     "quote_as_of": "2026-07-20T17:01:19Z",
     "run_attempt": 1,
-    "run_id": "31074084652",
+    "run_id": "31296241377",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-20T17:01:19Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 13,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-07-20T17:01:19Z"
   },
   "ticker": "BABC",
-  "updated_at": "2026-08-06T06:42:20Z"
+  "updated_at": "2026-08-09T05:15:44Z"
 }

@@ -12,13 +12,26 @@
       "run_id": "31133672903",
       "schedule": "7 18 * * 0-5",
       "shard": "69/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 998,
+      "natural": true,
+      "observed_at": "2026-08-09T05:15:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31296241377",
+      "schedule": "7 4 * * 0-5",
+      "shard": "2/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T00:16:15Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SQLT.json",
-    "payload_sha256": "d2680a26cb2c93511e41f11a5dccecc64d1f9c8c75ea8d07bd30c327e2188aad",
+    "fetched_at": "2026-08-09T05:17:09Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/SQLT.json",
+    "payload_sha256": "6dab64edb3af5615c2b16ae46236b24140b90081f49db123843d407fc67ce169",
     "quote_as_of": "2026-07-29T18:03:27Z",
     "source_as_of": "2026-07-29T18:03:27Z"
   },
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 833,
+    "latency_ms": 998,
     "natural": true,
-    "observed_at": "2026-08-07T00:12:01Z",
+    "observed_at": "2026-08-09T05:15:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31133672903",
-    "schedule": "7 18 * * 0-5",
-    "shard": "69/72"
+    "run_id": "31296241377",
+    "schedule": "7 4 * * 0-5",
+    "shard": "2/72"
   },
   "lkg": {
     "fetched_at": "2026-08-07T00:16:15Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-07T00:12:01Z",
-    "payload_sha256": "5a8e92b1c4d3a160157bb2db6af38278a60528f3ab024424531155cc6ff90271",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T05:15:44Z",
+    "payload_sha256": "48035b8bdcd4221fee8249365f830d15f785de144622cbecc4cde9804bd85ff8",
     "quote_as_of": "2026-07-29T18:03:27Z",
     "run_attempt": 1,
-    "run_id": "31133672903",
+    "run_id": "31296241377",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-29T18:03:27Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-29T18:03:27Z"
   },
   "ticker": "SQLT",
-  "updated_at": "2026-08-07T00:55:33Z"
+  "updated_at": "2026-08-09T05:15:44Z"
 }

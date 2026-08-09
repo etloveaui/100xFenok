@@ -12,13 +12,26 @@
       "run_id": "31100540842",
       "schedule": "7 10 * * 0-5",
       "shard": "53/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1017,
+      "natural": true,
+      "observed_at": "2026-08-09T05:15:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31296241377",
+      "schedule": "7 4 * * 0-5",
+      "shard": "2/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T12:18:45Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TSPX.json",
-    "payload_sha256": "20864b21568dd762e8582385ebd1925e565da18a742725bbcec67e75a9daaef6",
+    "fetched_at": "2026-08-09T05:17:03Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/TSPX.json",
+    "payload_sha256": "79c9006e876d416a519185e911e08033c7c84298fcacfc645a60c08d6a725dee",
     "quote_as_of": "2026-07-07T19:32:00Z",
     "source_as_of": "2026-07-07T19:32:00Z"
   },
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 642,
+    "latency_ms": 1017,
     "natural": true,
-    "observed_at": "2026-08-06T12:16:00Z",
+    "observed_at": "2026-08-09T05:15:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31100540842",
-    "schedule": "7 10 * * 0-5",
-    "shard": "53/72"
+    "run_id": "31296241377",
+    "schedule": "7 4 * * 0-5",
+    "shard": "2/72"
   },
   "lkg": {
     "fetched_at": "2026-08-06T12:18:45Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-06T12:16:00Z",
-    "payload_sha256": "2fa651dcd8570dc96b30f51523fda46ef16a7da75a90eabcc628046b8a765838",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T05:15:44Z",
+    "payload_sha256": "72cb7f14aea288194df9d44e2620e01e67f016035a3f6367d765ac62b32d8519",
     "quote_as_of": "2026-07-07T19:32:00Z",
     "run_attempt": 1,
-    "run_id": "31100540842",
+    "run_id": "31296241377",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-07T19:32:00Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 22,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-07T19:32:00Z"
   },
   "ticker": "TSPX",
-  "updated_at": "2026-08-06T14:33:02Z"
+  "updated_at": "2026-08-09T05:15:44Z"
 }

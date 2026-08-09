@@ -87,15 +87,59 @@
       "run_id": "31100540842",
       "schedule": "7 10 * * 0-5",
       "shard": "53/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: ABOT: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ABOT: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ABOT: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ABOT: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ABOT: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: ABOT: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 1478,
+      "natural": true,
+      "observed_at": "2026-08-09T05:15:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31296241377",
+      "schedule": "7 4 * * 0-5",
+      "shard": "2/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T12:17:21Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ABOT.json",
-    "payload_sha256": "0cc0b4623adc26fed75bfc598f9ad313c19110a53e6810ecf5b5c6052d5c7422",
-    "quote_as_of": "2026-07-28T14:42:09Z",
-    "source_as_of": "2026-07-28T14:42:09Z"
+    "fetched_at": "2026-08-09T05:16:54Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/ABOT.json",
+    "payload_sha256": "d48c8bb245446a03e0d98bb8efb80e3835bbfec38c7758fbd2ac543d508be40f",
+    "quote_as_of": "2026-08-07T13:39:57Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -135,14 +179,14 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 721,
+    "latency_ms": 1478,
     "natural": true,
-    "observed_at": "2026-08-06T12:16:00Z",
+    "observed_at": "2026-08-09T05:15:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31100540842",
-    "schedule": "7 10 * * 0-5",
-    "shard": "53/72"
+    "run_id": "31296241377",
+    "schedule": "7 4 * * 0-5",
+    "shard": "2/72"
   },
   "lkg": {
     "fetched_at": "2026-08-06T12:17:21Z",
@@ -155,17 +199,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-06T12:16:00Z",
-    "payload_sha256": "9d020d72902746c8c37c972c2627ae7b2cb9dd749b9d0e38d3f7501ae88cd70f",
-    "quote_as_of": "2026-07-28T14:42:09Z",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T05:15:44Z",
+    "payload_sha256": "18cf8851be61cad53dda852bbf210f7ca34f98ed36da56ec1f013572a1a7b253",
+    "quote_as_of": "2026-08-07T13:39:57Z",
     "run_attempt": 1,
-    "run_id": "31100540842",
+    "run_id": "31296241377",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-28T14:42:09Z"
+    "source_as_of": "2026-08-07"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -178,5 +222,5 @@
     "source_as_of": "2026-07-28T14:42:09Z"
   },
   "ticker": "ABOT",
-  "updated_at": "2026-08-06T14:33:02Z"
+  "updated_at": "2026-08-09T05:15:44Z"
 }
