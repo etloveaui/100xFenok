@@ -47,6 +47,9 @@ const FORBIDDEN_RAW_PATTERNS = [
 export const FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS = [
   "admin/data-supply-state",
   "admin/slickcharts-daily-delivery",
+  // Raw per-ticker Yahoo batch quote/history admin store (declared exception).
+  // Canonical-only; must never reach the public mirror (asset-budget gate).
+  "admin/yahoo-batch-quote-history",
   // Private derived proxies (apewisdom_attention / gdelt_news_tone lanes) must
   // never reach the public mirror.
   "computed/fenok_news_tone_proxy.json",
@@ -64,14 +67,19 @@ export const FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS = [
 
 const DETECTION_FLOOR_REPORT_RELATIVE_PATH = "admin/data-supply-detection-floor.json";
 
-const FORBIDDEN_PUBLIC_TOKENS = [
+export const FORBIDDEN_PUBLIC_TOKENS = [
   "_private/",
   "\"private_manifest_file\"",
   "\"manifest_file\"",
   "admin/data-supply-state/",
   "admin/slickcharts-daily-delivery/",
+  "admin/yahoo-batch-quote-history/",
   "data/yf/migration-evidence/",
 ];
+
+export function forbiddenPublicTokensInText(text) {
+  return FORBIDDEN_PUBLIC_TOKENS.filter((token) => text.includes(token));
+}
 
 const FORBIDDEN_INDEX_KEYS = new Set([
   "provider",
@@ -651,8 +659,8 @@ export async function checkPublicMirror({ appRoot, repoRoot }) {
   }
   for (const item of publicFiles.filter((file) => file.relativePath.endsWith(".json"))) {
     const text = item.bytes.toString("utf8");
-    for (const token of FORBIDDEN_PUBLIC_TOKENS) {
-      if (text.includes(token)) violations.push(`public/data/${item.relativePath}: unsafe token ${token}`);
+    for (const token of forbiddenPublicTokensInText(text)) {
+      violations.push(`public/data/${item.relativePath}: unsafe token ${token}`);
     }
   }
 

@@ -42,6 +42,7 @@ import {
   deriveForbiddenPrivateDataSupplyRoots,
 } from "../../scripts/lib/lane-routing.mjs";
 import { FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS } from "./check-fenok-public-mirror-guard.mjs";
+import { PRIVATE_DATA_SUPPLY_ROOTS } from "../../scripts/build-phase2-closeout-indexes.mjs";
 
 // Lane-routing parity gate (#366 item 4): directory roots are registry-derived
 // in the sync consumer; file exclusions and mirror-guard roots retain exact
@@ -70,6 +71,8 @@ import { FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS } from "./check-fenok-public-mirror
   assert.equal(setEqual(derivedGuardRoots, FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS), true,
     `registry-derived guard roots diverge from the hand list: derived=${JSON.stringify(derivedGuardRoots)} hand=${JSON.stringify(FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS)}`);
   for (const derived of [derivedRoots, derivedGuardRoots]) {
+    assert.equal(derived.includes("admin/yahoo-batch-quote-history"), true,
+      "the raw Yahoo batch quote/history admin store must stay withheld from the public mirror (Cloudflare asset-budget regression guard)");
     assert.equal(derived.includes("yf/finance"), false,
       "the shared public Yahoo finance namespace must not derive as private");
     assert.equal(derived.includes("yf/etf-details"), true,
@@ -107,17 +110,14 @@ import { FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS } from "./check-fenok-public-mirror
     const covered = materializeSource.includes(bareForm) || (dataForm !== null && materializeSource.includes(dataForm));
     assert.equal(covered, true, `materialize_data_supply_public.py does not cover private root ${root} (#21 parity)`);
   }
-  const usageBuilderSource = fs.readFileSync(
-    fileURLToPath(new URL("../../scripts/build-phase2-closeout-indexes.mjs", import.meta.url)),
-    "utf8",
+  assert.equal(
+    setEqual(
+      PRIVATE_DATA_SUPPLY_ROOTS,
+      derivedGuardRoots.map((root) => root.endsWith(".json") ? root : `${root}/`),
+    ),
+    true,
+    "data-usage manifest private roots must derive exactly from the lane registry",
   );
-  for (const root of derivedGuardRoots.filter((value) => !value.endsWith(".json"))) {
-    assert.equal(
-      usageBuilderSource.includes(`"${root}/"`),
-      true,
-      `data-usage manifest builder does not exclude private root ${root}`,
-    );
-  }
 }
 
 const DETECTION_FLOOR_REPORT = "admin/data-supply-detection-floor.json";

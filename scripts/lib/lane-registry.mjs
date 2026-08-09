@@ -1113,6 +1113,12 @@ const declared_exceptions = [
     owner: "detection-floor",
   },
   {
+    path: "data/admin/yahoo-batch-quote-history",
+    kind: "root",
+    reason: "raw per-ticker Yahoo batch quote/history admin store; canonical-only input to derived lanes with no public consumer or mirror contract - withheld to keep the Cloudflare static asset budget under its hard limit",
+    owner: "yahoo-batch-quote-history",
+  },
+  {
     path: "data/yf/migration-evidence",
     kind: "root",
     reason: "legacy Yahoo-migration evidence root, admin-private; not a lane store",

@@ -3,6 +3,7 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { deriveExcludedPublicDataRoots } from "../../scripts/lib/lane-routing.mjs";
 
 const appRoot = path.resolve(path.join(import.meta.dirname, ".."));
 const scriptPath = path.join(appRoot, "scripts", "generate-static-route-manifest.mjs");
@@ -12,6 +13,15 @@ try {
   await mkdir(path.join(tempRoot, "public", "posts-raw", "nested"), { recursive: true });
   await mkdir(path.join(tempRoot, "public", "admin", "personal", "travel"), { recursive: true });
   await mkdir(path.join(tempRoot, "public", "data", "foo"), { recursive: true });
+  const excludedAdminRoots = deriveExcludedPublicDataRoots().filter((root) => root.startsWith("admin/"));
+  assert.ok(excludedAdminRoots.length > 0, "fixture requires at least one registry-derived excluded admin root");
+  for (const root of excludedAdminRoots) {
+    await mkdir(path.join(tempRoot, "public", "data", ...root.split("/")), { recursive: true });
+    await writeFile(
+      path.join(tempRoot, "public", "data", ...root.split("/"), "must-not-publish.json"),
+      JSON.stringify({ private: true }),
+    );
+  }
 
   await writeFile(path.join(tempRoot, "public", "posts-raw", "alpha.html"), "<h1>alpha</h1>");
   await writeFile(path.join(tempRoot, "public", "posts-raw", "posts-main.html"), "<h1>main</h1>");
@@ -40,6 +50,13 @@ try {
   assert.equal(dataManifest.foo[0].name, "bar.json");
   assert.equal(dataManifest.foo[0].sizeBytes, 11);
   assert.match(dataManifest.foo[0].updatedAt, /^\d{4}-\d{2}-\d{2}T/);
+  for (const root of excludedAdminRoots) {
+    assert.equal(
+      Object.keys(dataManifest).some((directory) => directory === root || directory.startsWith(`${root}/`)),
+      false,
+      `excluded admin root leaked into Atlas input: ${root}`,
+    );
+  }
 } finally {
   await rm(tempRoot, { recursive: true, force: true });
 }

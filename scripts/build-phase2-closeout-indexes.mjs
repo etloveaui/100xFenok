@@ -19,6 +19,7 @@ import {
   qualityFlags,
   round,
 } from "./stock-action-score-core.mjs";
+import { deriveForbiddenPrivateDataSupplyRoots } from "./lib/lane-routing.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -85,12 +86,15 @@ const GENERATED_OUTPUTS = [
   "computed/stock_action_summary.json",
   "computed/market_structure_index.json",
 ];
-const PRIVATE_DATA_SUPPLY_ROOTS = [
-  "admin/data-supply-state/",
-  "admin/slickcharts-daily-delivery/",
-  "yf/etf-details/",
-  "yf/migration-evidence/",
-];
+export const PRIVATE_DATA_SUPPLY_ROOTS = Object.freeze(
+  deriveForbiddenPrivateDataSupplyRoots().map((root) =>
+    root.endsWith(".json") ? root : `${root}/`
+  ),
+);
+
+export function isPrivateDataSupplyPath(file) {
+  return PRIVATE_DATA_SUPPLY_ROOTS.some((root) => file.startsWith(root));
+}
 
 const ESTIMATE_HORIZONS = ["fy1", "fy2", "fy3"];
 
@@ -1255,7 +1259,6 @@ function buildMarketStructureIndex() {
 }
 
 function buildUsageManifest() {
-  const isPrivateDataSupplyPath = (file) => PRIVATE_DATA_SUPPLY_ROOTS.some((root) => file.startsWith(root));
   const rootFiles = collectJsonFiles(dataRoot).filter((file) => !isPrivateDataSupplyPath(file));
   const publicFiles = collectJsonFiles(publicDataRoot).filter((file) => !isPrivateDataSupplyPath(file));
   const rootSet = new Set(rootFiles);
@@ -1356,4 +1359,9 @@ function main() {
   }, null, 2));
 }
 
-main();
+if (
+  process.argv[1]
+  && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
+  main();
+}

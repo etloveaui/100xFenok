@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { deriveExcludedPublicDataRoots } from "../../scripts/lib/lane-routing.mjs";
 
 const appRoot = process.cwd();
 const routeManifestOutputPath = path.join(appRoot, "src", "generated", "static-route-manifest.ts");
@@ -9,6 +10,14 @@ const dataJsonManifestOutputPath = path.join(
   "generated",
   "data-json-files-manifest.json",
 );
+const excludedPublicDataRoots = deriveExcludedPublicDataRoots();
+
+function isExcludedPublicDataPath(relativePath) {
+  const normalized = relativePath.split(path.sep).join("/");
+  return excludedPublicDataRoots.some(
+    (root) => normalized === root || normalized.startsWith(`${root}/`),
+  );
+}
 
 function collectHtmlFiles(root, { recursive }) {
   if (!fs.existsSync(root)) return [];
@@ -77,6 +86,9 @@ function collectJsonFilesByPath(dataRoot) {
 
     for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
       const absolutePath = path.join(current, entry.name);
+      const relativePath = path.relative(dataRoot, absolutePath);
+
+      if (isExcludedPublicDataPath(relativePath)) continue;
 
       if (entry.isDirectory()) {
         stack.push(absolutePath);

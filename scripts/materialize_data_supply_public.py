@@ -47,6 +47,7 @@ FORBIDDEN_PUBLIC_TOKENS = (
     b"admin/data-supply-state/",
     b"data/admin/data-supply-state/",
     b"admin/slickcharts-daily-delivery/",
+    b"admin/yahoo-batch-quote-history/",
     b"yf/migration-evidence/",
     b"yf/etf-details/",
     b"providers/",
@@ -62,6 +63,7 @@ USAGE_MANIFEST_TOKENS = (
     b"admin/data-supply-state/",
     b"data/admin/data-supply-state/",
     b"admin/slickcharts-daily-delivery/",
+    b"admin/yahoo-batch-quote-history/",
     b"yf/migration-evidence/",
     b"yf/etf-details/",
 )
