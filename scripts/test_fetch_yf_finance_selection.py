@@ -18,6 +18,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 FETCH_PATH = ROOT / "scripts" / "fetch-yf-finance.py"
+YAHOO_BATCH_STATE_PATH = ROOT / "scripts" / "yahoo_batch_state.py"
 YF_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "fetch-yf-finance.yml"
 MANIFEST_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "update-manifest.yml"
 
@@ -32,6 +33,15 @@ def load_fetch_module():
     return module
 
 
+def load_yahoo_batch_state_module():
+    spec = importlib.util.spec_from_file_location("yahoo_batch_state", YAHOO_BATCH_STATE_PATH)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Cannot load state module from {YAHOO_BATCH_STATE_PATH}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def write_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -40,6 +50,7 @@ def write_json(path: Path, payload: dict) -> None:
 class FetchYfFinanceSelectionTest(unittest.TestCase):
     def setUp(self) -> None:
         self.fetcher = load_fetch_module()
+        self.state = load_yahoo_batch_state_module()
         self.tmp = TemporaryDirectory()
         self.root = Path(self.tmp.name)
         self.fetcher.STOCKANALYSIS_ETF_UNIVERSE = self.root / "stockanalysis" / "etf_universe.json"
@@ -327,6 +338,107 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertFalse(detail["deferred_acquisition"])
         self.assertTrue(detail["retry"])
         self.assertEqual(detail["expected_resolution"], "next_natural_yahoo_run")
+
+    def test_terminal_failed_last_attempt_stays_out_of_retry_pending_failed_count(self) -> None:
+        """counts.failed excludes terminal symbols while retryable failures still count.
+
+        Regression: a terminal classification (provider-unsupported, e.g. acquired or
+        delisted) keeps the pre-terminal last_attempt.outcome == "failed", which used
+        to inflate counts.failed beyond the strict KPI retry-capable equation
+        failed <= lkg + pending_history + unavailable. The index rebuild must stay
+        deterministic and offline: it reads only per-ticker state files plus the
+        passed active universe, so this test drives rebuild_index directly on a
+        temporary store with zero provider or network access.
+        """
+        store = self.fetcher.YahooBatchStateStore(
+            self.fetcher.YAHOO_BATCH_STATE_ROOT,
+            self.fetcher.OUT_DIR,
+        )
+        run = self._run("retry-capable-count-equation")
+        terminal_failed_attempt = {
+            "run_id": "pre-terminal-run",
+            "run_attempt": 1,
+            "observed_at": "2026-08-08T00:05:10Z",
+            "outcome": "failed",
+            "attempts_used": 1,
+            "failures": [],
+        }
+        write_json(store._state_path("TERM"), {
+            "schema_version": "yahoo-batch-quote-history-state/v1",
+            "ticker": "TERM",
+            "resolution_state": self.state.TERMINAL_RESOLUTION_STATE,
+            "retry": False,
+            "last_attempt": terminal_failed_attempt,
+            "attempts": [terminal_failed_attempt],
+            "terminal": {
+                "classified_run_id": run["run_id"],
+                "classified_at": run["observed_at"],
+            },
+        })
+        for ticker, resolution, outcome in (
+            ("LKG1", "lkg_primary", "failed"),
+            ("UNA1", "unavailable", "failed"),
+            ("PEND1", "pending_history", "pending_history"),
+            ("FRESH1", "fresh_primary", "fresh"),
+        ):
+            current_attempt = {
+                "run_id": run["run_id"],
+                "run_attempt": run["run_attempt"],
+                "observed_at": run["observed_at"],
+                "outcome": outcome,
+                "attempts_used": 1,
+                "failures": [],
+            }
+            write_json(store._state_path(ticker), {
+                "schema_version": "yahoo-batch-quote-history-state/v1",
+                "ticker": ticker,
+                "resolution_state": resolution,
+                "retry": resolution != "fresh_primary",
+                "last_attempt": current_attempt,
+                "attempts": [current_attempt],
+            })
+
+        index = store.rebuild_index({"TERM", "LKG1", "UNA1", "PEND1", "FRESH1"}, run)
+
+        counts = index["counts"]
+        retry_capable = counts["lkg"] + counts["pending_history"] + counts["unavailable"]
+        self.assertEqual(
+            {
+                "active": counts["active"],
+                "untracked": counts["untracked"],
+                "pending_acquisition": counts["pending_acquisition"],
+                "fresh": counts["fresh"],
+                "lkg": counts["lkg"],
+                "pending_history": counts["pending_history"],
+                "unavailable": counts["unavailable"],
+                "terminal": counts["terminal"],
+                "retry": counts["retry"],
+                "failed": counts["failed"],
+                "stale": counts["stale"],
+            },
+            {
+                "active": 5,
+                "untracked": 0,
+                "pending_acquisition": 0,
+                "fresh": 1,
+                "lkg": 1,
+                "pending_history": 1,
+                "unavailable": 1,
+                "terminal": 1,
+                "retry": 3,
+                "failed": 2,
+                "stale": 0,
+            },
+        )
+        # The strict KPI equation: every counted failure is retry-capable.
+        self.assertLessEqual(counts["failed"], retry_capable)
+        self.assertEqual(index["terminal_symbols"], ["TERM"])
+        self.assertEqual(index["retry_symbols"], ["LKG1", "PEND1", "UNA1"])
+        # latest_attempt accounting still reports the real current-run failures.
+        self.assertEqual(index["current_attempt"]["attempted"], 4)
+        self.assertEqual(index["current_attempt"]["successes"], 2)
+        self.assertEqual(index["current_attempt"]["failed"], 2)
+        self.assertEqual(index["current_attempt"]["skipped"], 0)
 
     def test_data_loss_unavailable_cannot_be_laundered_by_promotion_deferral(self) -> None:
         store = self.fetcher.YahooBatchStateStore(self.fetcher.YAHOO_BATCH_STATE_ROOT, self.fetcher.OUT_DIR)

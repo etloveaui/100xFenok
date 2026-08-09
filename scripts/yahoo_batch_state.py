@@ -1101,7 +1101,16 @@ class YahooBatchStateStore:
                 counts["retry"] += 1
                 retry_symbols.append(ticker)
             last_attempt = state.get("last_attempt")
-            if isinstance(last_attempt, dict) and last_attempt.get("outcome") == "failed":
+            # A failed last attempt is a retry-pending failure only while the symbol
+            # remains retry-capable. Terminal (provider-unsupported) classification is
+            # an absorbing state: its pre-terminal failed last attempt must not inflate
+            # counts.failed beyond the strict equation failed <= lkg + pending_history
+            # + unavailable. latest_attempt/last_attempt evidence stays untouched.
+            if (
+                isinstance(last_attempt, dict)
+                and last_attempt.get("outcome") == "failed"
+                and resolution != TERMINAL_RESOLUTION_STATE
+            ):
                 counts["failed"] += 1
             current = state.get("current") if isinstance(state.get("current"), dict) else {}
             source_as_of = current.get("source_as_of")
