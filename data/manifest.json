@@ -34,12 +34,12 @@
     },
     "global-scouter": {
       "version": "2.4.0",
-      "updated": "2026-07-31",
+      "updated": "2026-08-07",
       "update_frequency": "on-demand",
       "source": "Global Scouter Tool",
-      "file_count": 1085,
+      "file_count": 1084,
       "schema": true,
-      "description": "Stock screening (1,067), ETFs (22), indicators (1,070 records) from the owner's weekly Global Scouter export"
+      "description": "Stock screening (1,066), ETFs (22), indicators (1,071 records) from the owner's weekly Global Scouter export"
     },
     "indices": {
       "version": "2.0.0",
@@ -52,12 +52,12 @@
     },
     "macro": {
       "version": "1.0.0",
-      "updated": "2025-10-01",
+      "updated": "2026-07-01",
       "update_frequency": "daily/weekly/monthly/quarterly",
       "source": "FRED + FDIC + OECD + PMI workbooks",
       "file_count": 10,
       "schema": true,
-      "description": "Macro banking, liquidity, and monthly activity survey series: 930 activity records, OECD CLI through 2026-06, PMI/ISM through 2026-06"
+      "description": "Macro banking, liquidity, and monthly activity survey series: 934 activity records, OECD CLI through 2026-06, PMI/ISM through 2026-07"
     },
     "sec-13f": {
       "version": "3.4.0",
@@ -176,6 +176,18 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-08-09",
+      "folder": "global-scouter",
+      "version": "2.4.0",
+      "change": "Weekly refresh from the owner-supplied 2026-08-07 Global Scouter workbook: 1,066 stocks (-1), 22 ETFs, 1,071 indicator records; EA was absent from the new source index and removed, and stocks_analyzer, per_bands_index, slick_index and revision_movers were rebuilt."
+    },
+    {
+      "date": "2026-08-09",
+      "folder": "macro",
+      "version": "1.0.0",
+      "change": "Appended the owner-supplied 2026-07 manufacturing and services PMI workbooks: 934 total activity records, PMI and ISM datasets through 2026-07, OECD CLI preserved through 2026-06; historical revisions were reported without overwriting existing non-empty values."
+    },
     {
       "date": "2026-08-03",
       "folder": "benchmarks",
@@ -842,19 +854,19 @@
       "name": "global-scouter",
       "path": "/data/global-scouter/",
       "schemaVersion": "2.3.0",
-      "fileCount": 1085,
-      "lastUpdated": "2026-07-31",
+      "fileCount": 1084,
+      "lastUpdated": "2026-08-07",
       "lastUpdatedReason": null,
-      "notes": "Stock screening (1,067), ETFs (22), indicators (1,070 records) from the owner's weekly Global Scouter export"
+      "notes": "Stock screening (1,066), ETFs (22), indicators (1,071 records) from the owner's weekly Global Scouter export"
     },
     {
       "name": "macro",
       "path": "/data/macro/",
       "schemaVersion": "1.0.0",
       "fileCount": 10,
-      "lastUpdated": "2025-10-01",
+      "lastUpdated": "2026-07-01",
       "lastUpdatedReason": null,
-      "notes": "Macro banking, liquidity, and monthly activity survey series: 930 activity records, OECD CLI through 2026-06, PMI/ISM through 2026-06"
+      "notes": "Macro banking, liquidity, and monthly activity survey series: 934 activity records, OECD CLI through 2026-06, PMI/ISM through 2026-07"
     },
     {
       "name": "yardney",

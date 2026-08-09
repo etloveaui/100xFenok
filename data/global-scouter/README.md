@@ -2,8 +2,8 @@
 
 > **Source**: Global Scouter Tool (internal)
 > **Update**: On-demand
-> **Files**: 1,085
-> **Version**: v2.3.0
+> **Files**: 1,084
+> **Release**: v2.4.0 | **Schema**: v2.3.0
 
 ---
 
@@ -24,14 +24,14 @@ global-scouter/
 │   ├── slick_index.json     # Slick-style score index
 │   └── revision_movers.json # Weekly revision movers
 ├── stocks/
-│   └── detail/              # Individual stock profiles (1,067 files)
+│   └── detail/              # Individual stock profiles (1,066 files)
 │       ├── AAPL.json
 │       ├── MSFT.json
 │       └── ...
 ├── etfs/                    # v2.1.0
 │   └── index.json           # ETF/Index data (22 items)
 ├── indicators/              # v2.1.0
-│   └── economic.json        # Economic indicators (1,070 records)
+│   └── economic.json        # Economic indicators (1,071 records)
 └── raw/                     # v2.3.0
     ├── manifest.json        # Raw layer file catalog
     ├── companies_a_company.json
@@ -46,11 +46,11 @@ global-scouter/
 | Folder | Files |
 |--------|-------|
 | core/ | 7 |
-| stocks/detail/ | 1,067 |
+| stocks/detail/ | 1,066 |
 | etfs/ | 1 |
 | indicators/ | 1 |
 | raw/ | 9 |
-| **Total** | 1,085 |
+| **Total** | 1,084 |
 
 ## Schema
 
@@ -105,21 +105,21 @@ global-scouter/
 
 | Field | Coverage | Description |
 |-------|----------|-------------|
-| `fiscal_month` | 100% (1,067) | Fiscal year end month (Jan, Dec, etc.) |
-| `eps_consensus` | 100% (1,067) | EPS estimates FY+1/+2/+3 plus 6-week raw points |
-| `growth_consensus` | 100% (1,067) | Revenue/Operating/Earnings growth 7Y/3Y (%) |
-| `per_bands` | 98.0% (1,046) | PER/PBR bands with FY-4~FY+3 values where available |
-| `*_estimates` | 100% (1,067) | FY+1~FY+3 forward scale, income, cash flow, profitability, per-share, valuation |
-| `weekly_revision_history` | 100% (1,067) | Individual-sheet lower-block revision/price histories; empty for source-sheet-missing placeholders |
+| `fiscal_month` | 100% (1,066) | Fiscal year end month (Jan, Dec, etc.) |
+| `eps_consensus` | 100% (1,066) | EPS estimates FY+1/+2/+3 plus 6-week raw points |
+| `growth_consensus` | 100% (1,066) | Revenue/Operating/Earnings growth 7Y/3Y (%) |
+| `per_bands` | 98.0% (1,045) | PER/PBR bands with FY-4~FY+3 values where available |
+| `*_estimates` | 100% (1,066) | FY+1~FY+3 forward scale, income, cash flow, profitability, per-share, valuation |
+| `weekly_revision_history` | 100% (1,066) | Individual-sheet lower-block revision/price histories; empty for source-sheet-missing placeholders |
 
 ### raw/ (v2.3.0)
 
 | File | Count | Description |
 |------|-------|-------------|
-| `raw/companies_a_company.json` | 1,067 | A_Company 52-column raw table |
+| `raw/companies_a_company.json` | 1,066 | A_Company 52-column raw table |
 | `raw/company_master_m_company.json` | 5,790 | M_Company master universe table |
-| `raw/eps_consensus_t_eps_c.json` | 1,067 | T_EPS C weekly consensus raw table |
-| `raw/growth_consensus_t_growth_c.json` | 1,067 | T_Growth C raw table |
+| `raw/eps_consensus_t_eps_c.json` | 1,066 | T_EPS C weekly consensus raw table |
+| `raw/growth_consensus_t_growth_c.json` | 1,066 | T_Growth C raw table |
 | `raw/valuation_s_valuation.json` | 46 | S_Valuation PER/PBR/growth raw rows |
 | `raw/etfs_m_etfs.json` | 22 | M_ETFs raw table |
 | `raw/etfs_a_etfs.json` | 1,185 | A_ETFs 160-column raw table |
@@ -148,7 +148,7 @@ global-scouter/
 
 ```json
 {
-  "count": 1070,
+  "count": 1071,
   "records": [
     {
       "date": "2026-01-02",
@@ -188,8 +188,9 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 2.3.0 | 2026-08-02 | Weekly data refresh (2026-07-31 source): 1,067 stocks (+2), 1,070 indicators (+1), 22 ETFs, per_bands 98.0% (1,046), 9 raw files; added Kioxia Holdings (285A.T) and CXMT A (688825.SS), zero symbols dropped; both new names carry provider-truth null current price (Tokyo/Shanghai) and CXMT carries honest null forward data with a `market_cap_not_comparable` quality annotation; rebuilt stocks_analyzer/per_bands_index/slick_index and revision_movers (up 12/down 12). |
-| 2.3.0 | 2026-07-26 | Weekly data refresh (2026-07-24 source): 1,065 stocks (+1), 1,069 indicators (+1), 22 ETFs, per_bands 98.1% (1,045), 9 raw files. Recorded retroactively on 2026-08-02 from measured repository state — the refresh shipped but was never written to this history. |
+| 2.4.0 | 2026-08-09 | Weekly data refresh (2026-08-07 source): 1,066 stocks (-1), 1,071 indicators (+1), 22 ETFs, per_bands 98.0% (1,045), 9 raw files; removed EA because it is absent from the new source index; rebuilt stocks_analyzer/per_bands_index/slick_index and revision_movers (up 12/down 12). |
+| 2.4.0 | 2026-08-02 | Weekly data refresh (2026-07-31 source): 1,067 stocks (+2), 1,070 indicators (+1), 22 ETFs, per_bands 98.0% (1,046), 9 raw files; added Kioxia Holdings (285A.T) and CXMT A (688825.SS), zero symbols dropped; both new names carry provider-truth null current price (Tokyo/Shanghai) and CXMT carries honest null forward data with a `market_cap_not_comparable` quality annotation; rebuilt stocks_analyzer/per_bands_index/slick_index and revision_movers (up 12/down 12). |
+| 2.4.0 | 2026-07-26 | Weekly data refresh (2026-07-24 source): 1,065 stocks (+1), 1,069 indicators (+1), 22 ETFs, per_bands 98.1% (1,045), 9 raw files. Recorded retroactively on 2026-08-02 from measured repository state — the refresh shipped but was never written to this history. |
 | 2.3.0 | 2026-07-19 | Weekly data refresh (2026-07-17 source): 1,064 stocks (-1), 1,068 indicators (+1), 22 ETFs, per_bands 98.2% (1,045), 9 raw files; dropped delisted 012510.KS; rebuilt stocks_analyzer/per_bands_index/slick_index and revision_movers (up 12/down 12). |
 | 2.3.0 | 2026-07-12 | Weekly data refresh (2026-07-10 source): 1,065 stocks (+1), 1,067 indicators (+1), 22 ETFs, per_bands 98.2% (1,046), 9 raw files; rebuilt stocks_analyzer/per_bands_index/slick_index and revision_movers (up 12/down 12). |
 | 2.3.0 | 2026-07-05 | Weekly data refresh (2026-07-02 source): 1,064 stocks (-2), 1,066 indicators (+1), 22 ETFs (-1), per_bands 98.3% (1,046), 9 raw files; rebuilt stocks_analyzer/per_bands_index/slick_index and revision_movers (up 12/down 12). |
@@ -221,4 +222,4 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 ---
 
-*Last Updated: 2026-08-02*
+*Last Updated: 2026-08-09*
