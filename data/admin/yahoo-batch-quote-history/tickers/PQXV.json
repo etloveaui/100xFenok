@@ -39,12 +39,26 @@
       "run_id": "31210066712",
       "schedule": "7 18 * * 0-5",
       "shard": "69/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: source timestamp regression for PQXV: quote_as_of 2026-07-20T19:13:11Z < 2026-08-07T13:46:08Z",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1035,
+      "natural": true,
+      "observed_at": "2026-08-09T10:51:07Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31309259913",
+      "schedule": "7 10 * * 0-5",
+      "shard": "5/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-07T19:09:34Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/PQXV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PQXV.json",
     "payload_sha256": "7e811c1f199e005da369a30850ba2c7c9973db99ad5c147a79c16a3ab795bb48",
     "quote_as_of": "2026-08-07T13:46:08Z",
     "source_as_of": "2026-08-07"
@@ -54,24 +68,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: source timestamp regression for PQXV: quote_as_of 2026-07-20T19:13:11Z < 2026-08-07T13:46:08Z",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 445,
+    "latency_ms": 1035,
     "natural": true,
-    "observed_at": "2026-08-07T19:09:09Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-09T10:51:07Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31210066712",
-    "schedule": "7 18 * * 0-5",
-    "shard": "69/72"
+    "run_id": "31309259913",
+    "schedule": "7 10 * * 0-5",
+    "shard": "5/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: source timestamp regression for PQXV: quote_as_of 2026-07-20T19:13:11Z < 2026-08-07T13:46:08Z",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-09T10:51:07Z",
+    "run_attempt": 1,
+    "run_id": "31309259913"
   },
   "lkg": {
-    "fetched_at": "2026-07-09T09:23:35Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-08-07T19:09:34Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/PQXV.json",
-    "payload_sha256": "953044cdf1f7466e9bd18916a202f7efe63d365949fefc0738e77a7ec116ff33",
-    "quote_as_of": "2026-07-02T17:16:07Z",
-    "source_as_of": "2026-07-02T17:16:07Z"
+    "payload_sha256": "7e811c1f199e005da369a30850ba2c7c9973db99ad5c147a79c16a3ab795bb48",
+    "quote_as_of": "2026-08-07T13:46:08Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -85,8 +112,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -99,5 +126,5 @@
     "source_as_of": "2026-07-02T17:16:07Z"
   },
   "ticker": "PQXV",
-  "updated_at": "2026-08-07T19:09:09Z"
+  "updated_at": "2026-08-09T10:51:07Z"
 }
