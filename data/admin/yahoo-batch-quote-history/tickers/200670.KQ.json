@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 965,
-      "natural": true,
-      "observed_at": "2026-07-23T00:49:28Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29968542251",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -182,6 +169,20 @@
       "run_id": "31304762930",
       "schedule": "7 8 * * 0-5",
       "shard": "4/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1175,
+      "natural": true,
+      "observed_at": "2026-08-09T13:12:35Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31315136344",
+      "schedule": "7 12 * * 0-5",
+      "shard": "6/72"
     }
   ],
   "current": {
@@ -198,17 +199,17 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: source timestamp regression for 200670.KQ: quote_as_of 2026-08-07T06:30:24Z < 2026-08-07T06:30:25Z",
+    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 574,
+    "latency_ms": 1175,
     "natural": true,
-    "observed_at": "2026-08-09T08:59:39Z",
+    "observed_at": "2026-08-09T13:12:35Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31304762930",
-    "schedule": "7 8 * * 0-5",
-    "shard": "4/72"
+    "run_id": "31315136344",
+    "schedule": "7 12 * * 0-5",
+    "shard": "6/72"
   },
   "latest_failure": {
     "attempts_used": 1,
@@ -221,6 +222,15 @@
     "observed_at": "2026-08-09T08:59:39Z",
     "run_attempt": 1,
     "run_id": "31304762930"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-09T13:12:35Z",
+    "provider_history_as_of": "2026-08-07",
+    "provider_quote_as_of": "2026-08-07T06:30:24Z",
+    "reason": "foreign_writer_conflict",
+    "run_attempt": 1,
+    "run_id": "31315136344"
   },
   "lkg": {
     "fetched_at": "2026-08-07T23:59:56Z",
@@ -246,5 +256,5 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "200670.KQ",
-  "updated_at": "2026-08-09T08:59:39Z"
+  "updated_at": "2026-08-09T13:12:35Z"
 }

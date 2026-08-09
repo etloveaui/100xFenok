@@ -51,6 +51,20 @@
       "run_id": "31300442711",
       "schedule": "7 6 * * 0-5",
       "shard": "3/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1133,
+      "natural": true,
+      "observed_at": "2026-08-09T13:12:35Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31315136344",
+      "schedule": "7 12 * * 0-5",
+      "shard": "6/72"
     }
   ],
   "current": {
@@ -66,16 +80,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1022,
+    "latency_ms": 1133,
     "natural": true,
-    "observed_at": "2026-08-09T07:09:35Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-09T13:12:35Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31300442711",
-    "schedule": "7 6 * * 0-5",
-    "shard": "3/72"
+    "run_id": "31315136344",
+    "schedule": "7 12 * * 0-5",
+    "shard": "6/72"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-09T13:12:35Z",
+    "provider_history_as_of": "2026-08-07",
+    "provider_quote_as_of": "2026-07-07T19:38:13Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "31315136344"
   },
   "lkg": {
     "fetched_at": "2026-08-09T07:10:14Z",
@@ -111,5 +135,5 @@
     "source_as_of": "2026-07-07T19:38:13Z"
   },
   "ticker": "MAUG",
-  "updated_at": "2026-08-09T08:59:39Z"
+  "updated_at": "2026-08-09T13:12:35Z"
 }
