@@ -38,13 +38,26 @@
       "run_id": "31164940276",
       "schedule": "7 8 * * 0-5",
       "shard": "64/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1132,
+      "natural": true,
+      "observed_at": "2026-08-09T07:09:35Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31300442711",
+      "schedule": "7 6 * * 0-5",
+      "shard": "3/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T09:14:59Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/IDJN.json",
-    "payload_sha256": "9ae2067aed779704486b3b00ebadfd7073122ed776062f6ba352f4bd090b572e",
+    "fetched_at": "2026-08-09T07:10:01Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/IDJN.json",
+    "payload_sha256": "77d59de5bde3bb3a1bf1e6ccf59a83d8e26d63ff699fb8646d63cf06188d6904",
     "quote_as_of": "2026-07-17T13:52:39Z",
     "source_as_of": "2026-07-17T13:52:39Z"
   },
@@ -55,14 +68,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 591,
+    "latency_ms": 1132,
     "natural": true,
-    "observed_at": "2026-08-07T09:14:45Z",
+    "observed_at": "2026-08-09T07:09:35Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31164940276",
-    "schedule": "7 8 * * 0-5",
-    "shard": "64/72"
+    "run_id": "31300442711",
+    "schedule": "7 6 * * 0-5",
+    "shard": "3/72"
   },
   "lkg": {
     "fetched_at": "2026-08-07T09:14:59Z",
@@ -75,17 +88,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T09:14:45Z",
-    "payload_sha256": "54afff7c5015d421318411617f74d2ff1005e33b23821c0f6679b6ced756fb6b",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T07:09:35Z",
+    "payload_sha256": "718c14efce1fb62755cc7f0aeec66ec01104d7198e29cd466d758b80995223ed",
     "quote_as_of": "2026-07-17T13:52:39Z",
     "run_attempt": 1,
-    "run_id": "31164940276",
+    "run_id": "31300442711",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-17T13:52:39Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 15,
@@ -98,5 +111,5 @@
     "source_as_of": "2026-07-17T13:52:39Z"
   },
   "ticker": "IDJN",
-  "updated_at": "2026-08-07T11:06:01Z"
+  "updated_at": "2026-08-09T07:09:35Z"
 }

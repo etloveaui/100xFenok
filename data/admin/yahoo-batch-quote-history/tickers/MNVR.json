@@ -39,13 +39,26 @@
       "run_id": "31182487397",
       "schedule": "7 12 * * 0-5",
       "shard": "66/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1102,
+      "natural": true,
+      "observed_at": "2026-08-09T07:09:35Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31300442711",
+      "schedule": "7 6 * * 0-5",
+      "shard": "3/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T13:27:52Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MNVR.json",
-    "payload_sha256": "3ddb62caf634a89f294d3c77ab5a68e5f2b81be97442a0ad82613ad803eb6599",
+    "fetched_at": "2026-08-09T07:10:25Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/MNVR.json",
+    "payload_sha256": "58453385e9c05a90053d7b5a8d6a5ac3d5001ca22c5ceee48e83e1cd0184fa5e",
     "quote_as_of": "2026-07-24T19:21:51Z",
     "source_as_of": "2026-07-24T19:21:51Z"
   },
@@ -56,14 +69,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1067,
+    "latency_ms": 1102,
     "natural": true,
-    "observed_at": "2026-08-07T13:26:16Z",
+    "observed_at": "2026-08-09T07:09:35Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31182487397",
-    "schedule": "7 12 * * 0-5",
-    "shard": "66/72"
+    "run_id": "31300442711",
+    "schedule": "7 6 * * 0-5",
+    "shard": "3/72"
   },
   "lkg": {
     "fetched_at": "2026-08-07T13:27:52Z",
@@ -76,17 +89,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T13:26:16Z",
-    "payload_sha256": "34704277583bd81d7f778e70a2b0c40b81378d26ff901923f74463cf43da8303",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T07:09:35Z",
+    "payload_sha256": "f7cd00e5f1951dd0deb9edd0b6c3c8c478ccb8b357b3569e165aa8e8bda95b23",
     "quote_as_of": "2026-07-24T19:21:51Z",
     "run_attempt": 1,
-    "run_id": "31182487397",
+    "run_id": "31300442711",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-24T19:21:51Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
@@ -99,5 +112,5 @@
     "source_as_of": "2026-07-24T19:21:51Z"
   },
   "ticker": "MNVR",
-  "updated_at": "2026-08-07T15:04:20Z"
+  "updated_at": "2026-08-09T07:09:35Z"
 }

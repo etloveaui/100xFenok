@@ -25,13 +25,26 @@
       "run_id": "31164940276",
       "schedule": "7 8 * * 0-5",
       "shard": "64/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1015,
+      "natural": true,
+      "observed_at": "2026-08-09T07:09:35Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31300442711",
+      "schedule": "7 6 * * 0-5",
+      "shard": "3/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T09:15:40Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CLOO.json",
-    "payload_sha256": "c5f3a4dc164a0df05a270b03c8a795dd849d517c3a326f92102b5419466ec2f4",
+    "fetched_at": "2026-08-09T07:09:59Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/CLOO.json",
+    "payload_sha256": "c67e7718104186a54ac88e8075b5dac1f0071d6db6178319a0a58dd2a19f6cb8",
     "quote_as_of": "2026-07-23T19:46:04Z",
     "source_as_of": "2026-07-23T19:46:04Z"
   },
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 462,
+    "latency_ms": 1015,
     "natural": true,
-    "observed_at": "2026-08-07T09:14:45Z",
+    "observed_at": "2026-08-09T07:09:35Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31164940276",
-    "schedule": "7 8 * * 0-5",
-    "shard": "64/72"
+    "run_id": "31300442711",
+    "schedule": "7 6 * * 0-5",
+    "shard": "3/72"
   },
   "lkg": {
     "fetched_at": "2026-08-07T09:15:40Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T09:14:45Z",
-    "payload_sha256": "a3143a8389f1a0350036cf71492fa114762e7dd696d0b9259895b631e025529c",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T07:09:35Z",
+    "payload_sha256": "463bb98c60aa64ffbfcc4e7e69b4c260fbf9a45a0a7e7bf4979e16a74f0a78f0",
     "quote_as_of": "2026-07-23T19:46:04Z",
     "run_attempt": 1,
-    "run_id": "31164940276",
+    "run_id": "31300442711",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-23T19:46:04Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 11,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-07-23T19:46:04Z"
   },
   "ticker": "CLOO",
-  "updated_at": "2026-08-07T11:06:01Z"
+  "updated_at": "2026-08-09T07:09:35Z"
 }

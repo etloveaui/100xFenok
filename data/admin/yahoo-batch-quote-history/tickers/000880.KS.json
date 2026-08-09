@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 982,
-      "natural": true,
-      "observed_at": "2026-07-21T00:32:52Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29789662473",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 889,
       "natural": true,
       "observed_at": "2026-07-22T01:04:44Z",
@@ -181,6 +168,20 @@
       "run_id": "31228360458",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1394,
+      "natural": true,
+      "observed_at": "2026-08-09T07:09:35Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31300442711",
+      "schedule": "7 6 * * 0-5",
+      "shard": "3/72"
     }
   ],
   "current": {
@@ -197,16 +198,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 684,
+    "latency_ms": 1394,
     "natural": true,
-    "observed_at": "2026-08-07T23:52:29Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-09T07:09:35Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31228360458",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "31300442711",
+    "schedule": "7 6 * * 0-5",
+    "shard": "3/72"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-09T07:09:35Z",
+    "provider_history_as_of": "2026-08-07",
+    "provider_quote_as_of": "2026-07-29T06:30:02Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "31300442711"
   },
   "lkg": {
     "fetched_at": "2026-08-07T23:52:43Z",
@@ -242,5 +253,5 @@
     "source_as_of": "2026-07-29T06:30:02Z"
   },
   "ticker": "000880.KS",
-  "updated_at": "2026-08-07T23:55:57Z"
+  "updated_at": "2026-08-09T07:09:35Z"
 }

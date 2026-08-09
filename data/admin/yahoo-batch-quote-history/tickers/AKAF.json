@@ -51,6 +51,20 @@
       "run_id": "31293276520",
       "schedule": "7 2 * * 0-5",
       "shard": "1/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1190,
+      "natural": true,
+      "observed_at": "2026-08-09T07:09:35Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31300442711",
+      "schedule": "7 6 * * 0-5",
+      "shard": "3/72"
     }
   ],
   "current": {
@@ -66,16 +80,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 850,
+    "latency_ms": 1190,
     "natural": true,
-    "observed_at": "2026-08-09T03:52:19Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-09T07:09:35Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31293276520",
-    "schedule": "7 2 * * 0-5",
-    "shard": "1/72"
+    "run_id": "31300442711",
+    "schedule": "7 6 * * 0-5",
+    "shard": "3/72"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-09T07:09:35Z",
+    "provider_history_as_of": "2026-08-07",
+    "provider_quote_as_of": "2026-07-13T16:30:21Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "31300442711"
   },
   "lkg": {
     "fetched_at": "2026-08-09T03:53:36Z",
@@ -111,5 +135,5 @@
     "source_as_of": "2026-07-13T16:30:21Z"
   },
   "ticker": "AKAF",
-  "updated_at": "2026-08-09T05:15:44Z"
+  "updated_at": "2026-08-09T07:09:35Z"
 }

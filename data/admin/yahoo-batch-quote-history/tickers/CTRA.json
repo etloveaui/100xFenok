@@ -26,39 +26,6 @@
       ],
       "latency_ms": 0,
       "natural": true,
-      "observed_at": "2026-07-22T00:47:32Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "29879427185",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 2,
-      "error": "empty payload",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "KeyError: 'exchangeTimezoneName'",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "empty payload"
-        },
-        {
-          "attempt": 2,
-          "error": "KeyError: 'exchangeTimezoneName'",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 2,
-          "error": "empty payload"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": true,
       "observed_at": "2026-07-23T00:49:28Z",
       "outcome": "failed",
       "run_attempt": 1,
@@ -461,6 +428,49 @@
       "run_id": "31228360458",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-09T07:09:35Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31300442711",
+      "schedule": "7 6 * * 0-5",
+      "shard": "3/72"
     }
   ],
   "current": {
@@ -481,12 +491,22 @@
     "failures": [
       {
         "attempt": 1,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
         "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       },
       {
         "attempt": 1,
         "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
       },
       {
         "attempt": 2,
@@ -500,12 +520,12 @@
     ],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-07T23:52:29Z",
+    "observed_at": "2026-08-09T07:09:35Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31228360458",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "31300442711",
+    "schedule": "7 6 * * 0-5",
+    "shard": "3/72"
   },
   "latest_failure": {
     "attempts_used": 2,
@@ -516,12 +536,22 @@
     "failures": [
       {
         "attempt": 1,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
         "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       },
       {
         "attempt": 1,
         "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
       },
       {
         "attempt": 2,
@@ -534,9 +564,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-08-07T23:52:29Z",
+    "observed_at": "2026-08-09T07:09:35Z",
     "run_attempt": 1,
-    "run_id": "31228360458"
+    "run_id": "31300442711"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:49:09Z",
@@ -560,5 +590,5 @@
     "source_as_of": "2026-05-06"
   },
   "ticker": "CTRA",
-  "updated_at": "2026-08-07T23:52:29Z"
+  "updated_at": "2026-08-09T07:09:35Z"
 }

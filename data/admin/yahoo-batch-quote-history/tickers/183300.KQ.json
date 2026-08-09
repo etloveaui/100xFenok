@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 948,
-      "natural": true,
-      "observed_at": "2026-07-22T01:10:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29879427185",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 752,
       "natural": true,
       "observed_at": "2026-07-24T00:41:05Z",
@@ -182,6 +169,20 @@
       "run_id": "31228360458",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1093,
+      "natural": true,
+      "observed_at": "2026-08-09T07:09:35Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31300442711",
+      "schedule": "7 6 * * 0-5",
+      "shard": "3/72"
     }
   ],
   "current": {
@@ -198,16 +199,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 319,
+    "latency_ms": 1093,
     "natural": true,
-    "observed_at": "2026-08-07T23:52:29Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-09T07:09:35Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31228360458",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "31300442711",
+    "schedule": "7 6 * * 0-5",
+    "shard": "3/72"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-09T07:09:35Z",
+    "provider_history_as_of": "2026-08-07",
+    "provider_quote_as_of": "2026-07-28T06:30:17Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "31300442711"
   },
   "lkg": {
     "fetched_at": "2026-08-07T23:52:45Z",
@@ -243,5 +254,5 @@
     "source_as_of": "2026-07-28T06:30:17Z"
   },
   "ticker": "183300.KQ",
-  "updated_at": "2026-08-07T23:55:57Z"
+  "updated_at": "2026-08-09T07:09:35Z"
 }
