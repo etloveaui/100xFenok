@@ -38,6 +38,20 @@
       "run_id": "31300442711",
       "schedule": "7 6 * * 0-5",
       "shard": "3/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1258,
+      "natural": true,
+      "observed_at": "2026-08-09T10:51:07Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31309259913",
+      "schedule": "7 10 * * 0-5",
+      "shard": "5/72"
     }
   ],
   "current": {
@@ -53,16 +67,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1197,
+    "latency_ms": 1258,
     "natural": true,
-    "observed_at": "2026-08-09T07:09:35Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-09T10:51:07Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31300442711",
-    "schedule": "7 6 * * 0-5",
-    "shard": "3/72"
+    "run_id": "31309259913",
+    "schedule": "7 10 * * 0-5",
+    "shard": "5/72"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-09T10:51:07Z",
+    "provider_history_as_of": "2026-08-07",
+    "provider_quote_as_of": "2026-06-25T14:15:07Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "31309259913"
   },
   "lkg": {
     "fetched_at": "2026-08-09T07:10:06Z",
@@ -98,5 +122,5 @@
     "source_as_of": "2026-06-25T14:15:07Z"
   },
   "ticker": "BAY",
-  "updated_at": "2026-08-09T08:59:39Z"
+  "updated_at": "2026-08-09T10:51:07Z"
 }
