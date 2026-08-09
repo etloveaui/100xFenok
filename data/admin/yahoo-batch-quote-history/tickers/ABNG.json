@@ -25,6 +25,20 @@
       "run_id": "30998672232",
       "schedule": "7 8 * * 0-5",
       "shard": "40/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for ABNG despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 634,
+      "natural": true,
+      "observed_at": "2026-08-09T03:52:19Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31293276520",
+      "schedule": "7 2 * * 0-5",
+      "shard": "1/72"
     }
   ],
   "current": {
@@ -40,16 +54,29 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for ABNG despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 510,
+    "latency_ms": 634,
     "natural": true,
-    "observed_at": "2026-08-05T10:46:42Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-09T03:52:19Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "30998672232",
-    "schedule": "7 8 * * 0-5",
-    "shard": "40/72"
+    "run_id": "31293276520",
+    "schedule": "7 2 * * 0-5",
+    "shard": "1/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for ABNG despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-09T03:52:19Z",
+    "run_attempt": 1,
+    "run_id": "31293276520"
   },
   "lkg": {
     "fetched_at": "2026-08-05T10:47:11Z",
@@ -85,5 +112,5 @@
     "source_as_of": "2026-07-28T20:00:00Z"
   },
   "ticker": "ABNG",
-  "updated_at": "2026-08-06T00:14:28Z"
+  "updated_at": "2026-08-09T03:52:19Z"
 }

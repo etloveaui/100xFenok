@@ -12,13 +12,26 @@
       "run_id": "30771231562",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 954,
+      "natural": true,
+      "observed_at": "2026-08-09T03:52:19Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31293276520",
+      "schedule": "7 2 * * 0-5",
+      "shard": "1/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-02T23:01:58Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/HBTC.json",
-    "payload_sha256": "40b5f871713385b8cd13c680c2d61ce589e0c3326a7928f735c8b856c5436ddc",
+    "fetched_at": "2026-08-09T03:52:43Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/HBTC.json",
+    "payload_sha256": "7eea5e791e1cbd297c9bcd99818b28e7bacd855352e917ba0b16c71d61e921a9",
     "quote_as_of": "2026-07-20T19:01:38Z",
     "source_as_of": "2026-07-20T19:01:38Z"
   },
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 503,
+    "latency_ms": 954,
     "natural": true,
-    "observed_at": "2026-08-02T22:59:12Z",
+    "observed_at": "2026-08-09T03:52:19Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30771231562",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31293276520",
+    "schedule": "7 2 * * 0-5",
+    "shard": "1/72"
   },
   "lkg": {
     "fetched_at": "2026-08-02T23:01:58Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-02T22:59:12Z",
-    "payload_sha256": "dfaf6a96be28e3e5fd1d7142ccbaf815de53d51e86edcfc4b731b7e0283e69c8",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T03:52:19Z",
+    "payload_sha256": "318602f9850f8f1f7690853e80002a471c4f0114ffd0f0300d9904d3667e4db6",
     "quote_as_of": "2026-07-20T19:01:38Z",
     "run_attempt": 1,
-    "run_id": "30771231562",
+    "run_id": "31293276520",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-20T19:01:38Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-20T19:01:38Z"
   },
   "ticker": "HBTC",
-  "updated_at": "2026-08-03T22:58:08Z"
+  "updated_at": "2026-08-09T03:52:19Z"
 }

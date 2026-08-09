@@ -44,7 +44,7 @@
   "current": {
     "fetched_at": "2026-08-09T02:27:25Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/WDE.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/WDE.json",
     "payload_sha256": "e97ee27c4c559d05e90fcfb500ec06e9c758a088675e856d2ba3cfe5b52f44b5",
     "quote_as_of": "2026-05-21T14:19:45Z",
     "source_as_of": "2026-05-21T14:19:45Z"
@@ -66,12 +66,12 @@
     "shard": "0/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-02T00:01:19Z",
-    "history_as_of": "2026-06-30",
+    "fetched_at": "2026-08-09T02:27:25Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/WDE.json",
-    "payload_sha256": "50e4151d2a43f9ce50b9d54069580c9833fca8a4a85d284dce829989d4096c48",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-30"
+    "payload_sha256": "e97ee27c4c559d05e90fcfb500ec06e9c758a088675e856d2ba3cfe5b52f44b5",
+    "quote_as_of": "2026-05-21T14:19:45Z",
+    "source_as_of": "2026-05-21T14:19:45Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -85,19 +85,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-05-21T14:19:45Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 53,
+    "classified_at": "2026-08-09T03:52:19Z",
+    "classified_run_id": "31293276520",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "WDE holds LKG because Yahoo source date 2026-06-30 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "WDE holds LKG because Yahoo source date 2026-05-21T14:19:45Z is 53 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-30"
+    "source_as_of": "2026-05-21T14:19:45Z"
   },
   "ticker": "WDE",
-  "updated_at": "2026-08-09T02:25:42Z"
+  "updated_at": "2026-08-09T03:52:19Z"
 }

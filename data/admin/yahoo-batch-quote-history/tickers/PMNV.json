@@ -12,15 +12,28 @@
       "run_id": "30998672232",
       "schedule": "7 8 * * 0-5",
       "shard": "40/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 739,
+      "natural": true,
+      "observed_at": "2026-08-09T03:52:19Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31293276520",
+      "schedule": "7 2 * * 0-5",
+      "shard": "1/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-05T10:48:44Z",
-    "history_as_of": "2026-08-04",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/PMNV.json",
-    "payload_sha256": "87d286ba8f413da525ba8bb2d155a2e69f2d241b643c3da13d9c57655557f209",
-    "quote_as_of": "2026-06-29T14:28:57Z",
-    "source_as_of": "2026-06-29T14:28:57Z"
+    "fetched_at": "2026-08-09T03:53:37Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/PMNV.json",
+    "payload_sha256": "e07dd67cb847d055c85e9db8e061cfe69a5c95af90d7a7e063d356a1a83761c5",
+    "quote_as_of": "2026-08-05T15:08:35Z",
+    "source_as_of": "2026-08-05T15:08:35Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 518,
+    "latency_ms": 739,
     "natural": true,
-    "observed_at": "2026-08-05T10:46:42Z",
+    "observed_at": "2026-08-09T03:52:19Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30998672232",
-    "schedule": "7 8 * * 0-5",
-    "shard": "40/72"
+    "run_id": "31293276520",
+    "schedule": "7 2 * * 0-5",
+    "shard": "1/72"
   },
   "lkg": {
     "fetched_at": "2026-08-05T10:48:44Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-04",
-    "observed_at": "2026-08-05T10:46:42Z",
-    "payload_sha256": "a19c12997fdef3874a9f09ff910c24a9712f0ec1373a05c9b91305dc8e9ca963",
-    "quote_as_of": "2026-06-29T14:28:57Z",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T03:52:19Z",
+    "payload_sha256": "ca7882245d653731510e00c296c725db221124a90bac565bd981f758fbb2c082",
+    "quote_as_of": "2026-08-05T15:08:35Z",
     "run_attempt": 1,
-    "run_id": "30998672232",
+    "run_id": "31293276520",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-06-29T14:28:57Z"
+    "source_as_of": "2026-08-05T15:08:35Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 26,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-06-29T14:28:57Z"
   },
   "ticker": "PMNV",
-  "updated_at": "2026-08-05T12:11:49Z"
+  "updated_at": "2026-08-09T03:52:19Z"
 }

@@ -25,13 +25,26 @@
       "run_id": "30771231562",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 885,
+      "natural": true,
+      "observed_at": "2026-08-09T03:52:19Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31293276520",
+      "schedule": "7 2 * * 0-5",
+      "shard": "1/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-02T23:02:54Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FEMD.json",
-    "payload_sha256": "d9be9aee43afef57fe3f446c452da288a46955cb87ada38ab6a15728f32a319e",
+    "fetched_at": "2026-08-09T03:52:36Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/FEMD.json",
+    "payload_sha256": "69f1c4343915f0f5141863a58aa177f89505f1e44d11182c98bf1112a10686bd",
     "quote_as_of": "2026-07-27T17:56:26Z",
     "source_as_of": "2026-07-27T17:56:26Z"
   },
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 598,
+    "latency_ms": 885,
     "natural": true,
-    "observed_at": "2026-08-02T22:59:12Z",
+    "observed_at": "2026-08-09T03:52:19Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30771231562",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31293276520",
+    "schedule": "7 2 * * 0-5",
+    "shard": "1/72"
   },
   "lkg": {
     "fetched_at": "2026-08-02T23:02:54Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-02T22:59:12Z",
-    "payload_sha256": "87680771cec333aba419dc7128ff08b08b02c78ed20ebf541f91c3243d799237",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T03:52:19Z",
+    "payload_sha256": "72551e013a22b63c124a87eb9d3d9fc864274d6ad8b795de161275a5e666f90c",
     "quote_as_of": "2026-07-27T17:56:26Z",
     "run_attempt": 1,
-    "run_id": "30771231562",
+    "run_id": "31293276520",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-27T17:56:26Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-07-27T17:56:26Z"
   },
   "ticker": "FEMD",
-  "updated_at": "2026-08-05T00:18:15Z"
+  "updated_at": "2026-08-09T03:52:19Z"
 }

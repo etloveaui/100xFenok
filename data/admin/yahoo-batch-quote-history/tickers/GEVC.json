@@ -12,13 +12,26 @@
       "run_id": "30771231562",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 748,
+      "natural": true,
+      "observed_at": "2026-08-09T03:52:19Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31293276520",
+      "schedule": "7 2 * * 0-5",
+      "shard": "1/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-02T23:01:21Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GEVC.json",
-    "payload_sha256": "01fd8c834f21bd383992f9c63500f08b8b9b4397857964e0b0ecde6714afe097",
+    "fetched_at": "2026-08-09T03:52:39Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/GEVC.json",
+    "payload_sha256": "35c18e9e564836ca15c7684d5d9207e1d2c9eab3ca59a2ec6ee1c02d3a4dd638",
     "quote_as_of": "2026-07-29T16:46:45Z",
     "source_as_of": "2026-07-29T16:46:45Z"
   },
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 485,
+    "latency_ms": 748,
     "natural": true,
-    "observed_at": "2026-08-02T22:59:12Z",
+    "observed_at": "2026-08-09T03:52:19Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30771231562",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31293276520",
+    "schedule": "7 2 * * 0-5",
+    "shard": "1/72"
   },
   "lkg": {
     "fetched_at": "2026-08-02T23:01:21Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-02T22:59:12Z",
-    "payload_sha256": "fb518354e8aead077bd64bd5a785dfb6aeaa653710db71e93a51a403181ff110",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T03:52:19Z",
+    "payload_sha256": "8213fcfa7f3e1c11a90e7ffe59ade160da61dc5f4ab5e4a6796116da6e3e5ec6",
     "quote_as_of": "2026-07-29T16:46:45Z",
     "run_attempt": 1,
-    "run_id": "30771231562",
+    "run_id": "31293276520",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-29T16:46:45Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-29T16:46:45Z"
   },
   "ticker": "GEVC",
-  "updated_at": "2026-08-07T00:12:01Z"
+  "updated_at": "2026-08-09T03:52:19Z"
 }

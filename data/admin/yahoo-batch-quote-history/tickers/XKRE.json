@@ -103,13 +103,26 @@
       "run_id": "30958820437",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 730,
+      "natural": true,
+      "observed_at": "2026-08-09T03:52:19Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31293276520",
+      "schedule": "7 2 * * 0-5",
+      "shard": "1/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-04T23:08:39Z",
-    "history_as_of": "2026-08-03",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XKRE.json",
-    "payload_sha256": "8ff1f9ed1b826fe8bdcf23bc7b0a395dafa8b3cce9bd929e68d5466428d8f835",
+    "fetched_at": "2026-08-09T03:53:16Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/XKRE.json",
+    "payload_sha256": "4f848436ad07bb70293d5c786f6b7d3cc2802fc16047f12a2fffaea933ff2ac4",
     "quote_as_of": "2026-07-10T18:39:53Z",
     "source_as_of": "2026-07-10T18:39:53Z"
   },
@@ -120,14 +133,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 489,
+    "latency_ms": 730,
     "natural": true,
-    "observed_at": "2026-08-04T23:07:26Z",
+    "observed_at": "2026-08-09T03:52:19Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30958820437",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "31293276520",
+    "schedule": "7 2 * * 0-5",
+    "shard": "1/72"
   },
   "lkg": {
     "fetched_at": "2026-08-04T23:08:39Z",
@@ -140,17 +153,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-03",
-    "observed_at": "2026-08-04T23:07:26Z",
-    "payload_sha256": "c4f658e35653218f4a680e9403426ef6dc1942c10f970503a4e629b1b72d54c9",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T03:52:19Z",
+    "payload_sha256": "ad5f9d5fcdc460b380ced5bb1b7ee40593c1b0b10353cbc0ae4bdbeb02839b94",
     "quote_as_of": "2026-07-10T18:39:53Z",
     "run_attempt": 1,
-    "run_id": "30958820437",
+    "run_id": "31293276520",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-10T18:39:53Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 18,
@@ -163,5 +176,5 @@
     "source_as_of": "2026-07-10T18:39:53Z"
   },
   "ticker": "XKRE",
-  "updated_at": "2026-08-05T00:18:15Z"
+  "updated_at": "2026-08-09T03:52:19Z"
 }

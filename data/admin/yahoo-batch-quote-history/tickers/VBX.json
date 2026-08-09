@@ -77,13 +77,26 @@
       "run_id": "30860500094",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 894,
+      "natural": true,
+      "observed_at": "2026-08-09T03:52:19Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31293276520",
+      "schedule": "7 2 * * 0-5",
+      "shard": "1/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-03T22:59:19Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VBX.json",
-    "payload_sha256": "dea0c770b3d5b6dc2135a80f6448ff9f39bcaf40e2e0e1223eec3ece75f71d98",
+    "fetched_at": "2026-08-09T03:52:58Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/VBX.json",
+    "payload_sha256": "972e6b9b74b4b0fe2a74a4fdb9e107af1a9116c56a7b95f103a7fbcf8fd143a9",
     "quote_as_of": "2026-07-22T15:29:17Z",
     "source_as_of": "2026-07-22T15:29:17Z"
   },
@@ -94,14 +107,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 796,
+    "latency_ms": 894,
     "natural": true,
-    "observed_at": "2026-08-03T22:58:08Z",
+    "observed_at": "2026-08-09T03:52:19Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30860500094",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31293276520",
+    "schedule": "7 2 * * 0-5",
+    "shard": "1/72"
   },
   "lkg": {
     "fetched_at": "2026-08-03T22:59:19Z",
@@ -114,17 +127,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-03T22:58:08Z",
-    "payload_sha256": "bfd7b37c5f2ec4c6e07856a9fbd6f6fa69f213e57470269e46a5fbc76e781f30",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T03:52:19Z",
+    "payload_sha256": "30a4a0e17cb836df04138830060d5e44798d6b103f2335dcf650019f893d643c",
     "quote_as_of": "2026-07-22T15:29:17Z",
     "run_attempt": 1,
-    "run_id": "30860500094",
+    "run_id": "31293276520",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-22T15:29:17Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -137,5 +150,5 @@
     "source_as_of": "2026-07-22T15:29:17Z"
   },
   "ticker": "VBX",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-09T03:52:19Z"
 }

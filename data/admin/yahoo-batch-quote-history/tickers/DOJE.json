@@ -100,22 +100,66 @@
       "run_id": "30711922590",
       "schedule": "",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: DOJE: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: DOJE: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: DOJE: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: DOJE: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: DOJE: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: DOJE: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 988,
+      "natural": true,
+      "observed_at": "2026-08-09T03:52:19Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31293276520",
+      "schedule": "7 2 * * 0-5",
+      "shard": "1/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T18:24:51Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-09T03:54:22Z",
+    "history_as_of": "2026-08-07",
     "path": "data/yf/finance/DOJE.json",
-    "payload_sha256": "3a0d90ea4c28b0de6a97246b53e58184b6f03609b1f9220aaf5613525cbc1200",
-    "quote_as_of": "2026-07-31T19:58:02Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "2596964e783ee276edcf15e9b4870d94ab0918e8e596d511d9f40bbddc4bf6ea",
+    "quote_as_of": "2026-08-07T19:50:03Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [
       {
         "attempt": 1,
@@ -148,14 +192,14 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 614,
+    "latency_ms": 988,
     "natural": true,
-    "observed_at": "2026-08-01T18:21:41Z",
+    "observed_at": "2026-08-09T03:52:19Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711922590",
-    "schedule": "",
-    "shard": "1/6"
+    "run_id": "31293276520",
+    "schedule": "7 2 * * 0-5",
+    "shard": "1/72"
   },
   "lkg": {
     "fetched_at": "2026-07-08T23:52:10Z",
@@ -167,15 +211,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T18:21:41Z",
-    "payload_sha256": "c86832c4ecb9f2f93836b0361c2ec193836ae14f25b8b582de86b39cfae7ccdb",
-    "quote_as_of": "2026-07-31T19:58:02Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T03:52:19Z",
+    "payload_sha256": "5975f20996c4708c28968c90f440d888853b6fab1e454edb1d1981bcf7b3e78b",
+    "quote_as_of": "2026-08-07T19:50:03Z",
     "run_attempt": 1,
-    "run_id": "30711922590",
+    "run_id": "31293276520",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-07"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -191,5 +235,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "DOJE",
-  "updated_at": "2026-08-01T18:21:41Z"
+  "updated_at": "2026-08-09T03:52:19Z"
 }

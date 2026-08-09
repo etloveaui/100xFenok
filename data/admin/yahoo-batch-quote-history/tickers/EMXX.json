@@ -77,13 +77,26 @@
       "run_id": "30860500094",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 715,
+      "natural": true,
+      "observed_at": "2026-08-09T03:52:19Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31293276520",
+      "schedule": "7 2 * * 0-5",
+      "shard": "1/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-03T22:59:28Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/EMXX.json",
-    "payload_sha256": "172cd4c5e2a25fb0692b38a060766104fdee342c0cdfe7464e835f9b14bc6e17",
+    "fetched_at": "2026-08-09T03:52:54Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/EMXX.json",
+    "payload_sha256": "7a158fa71f7d1dc1b1fa5bd38c9788049d074710fc6c1a9aab2acd17138bacec",
     "quote_as_of": "2026-06-24T16:07:21Z",
     "source_as_of": "2026-06-24T16:07:21Z"
   },
@@ -94,14 +107,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 731,
+    "latency_ms": 715,
     "natural": true,
-    "observed_at": "2026-08-03T22:58:08Z",
+    "observed_at": "2026-08-09T03:52:19Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30860500094",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31293276520",
+    "schedule": "7 2 * * 0-5",
+    "shard": "1/72"
   },
   "lkg": {
     "fetched_at": "2026-08-03T22:59:28Z",
@@ -114,17 +127,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-03T22:58:08Z",
-    "payload_sha256": "49eb02f503923eb02fde7a586e61e1b9d07772ca90bf8aff37db0fb002bfad8a",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T03:52:19Z",
+    "payload_sha256": "9ebe15c9489f62859c990b3ea1eefab31ae5eb92f39e4b46b9bd206c891cd713",
     "quote_as_of": "2026-06-24T16:07:21Z",
     "run_attempt": 1,
-    "run_id": "30860500094",
+    "run_id": "31293276520",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-06-24T16:07:21Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 28,
@@ -137,5 +150,5 @@
     "source_as_of": "2026-06-24T16:07:21Z"
   },
   "ticker": "EMXX",
-  "updated_at": "2026-08-04T00:18:08Z"
+  "updated_at": "2026-08-09T03:52:19Z"
 }

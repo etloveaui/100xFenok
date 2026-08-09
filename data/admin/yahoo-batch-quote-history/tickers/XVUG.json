@@ -134,15 +134,28 @@
       "run_id": "30990520626",
       "schedule": "7 6 * * 0-5",
       "shard": "39/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1102,
+      "natural": true,
+      "observed_at": "2026-08-09T03:52:19Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31293276520",
+      "schedule": "7 2 * * 0-5",
+      "shard": "1/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-05T08:50:03Z",
-    "history_as_of": "2026-08-04",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XVUG.json",
-    "payload_sha256": "0f769600dd301ca2386550700463645979488e0f0ef122d2ac1fa6bf95b5e60a",
-    "quote_as_of": "2026-07-20T19:00:46Z",
-    "source_as_of": "2026-07-20T19:00:46Z"
+    "fetched_at": "2026-08-09T03:53:32Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/XVUG.json",
+    "payload_sha256": "8fa91d21d739fd649d5b2cdc2784c6f03a979d44b3323f76f565abe171e211a8",
+    "quote_as_of": "2026-08-07T19:20:19Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -151,14 +164,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 482,
+    "latency_ms": 1102,
     "natural": true,
-    "observed_at": "2026-08-05T08:49:49Z",
+    "observed_at": "2026-08-09T03:52:19Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30990520626",
-    "schedule": "7 6 * * 0-5",
-    "shard": "39/72"
+    "run_id": "31293276520",
+    "schedule": "7 2 * * 0-5",
+    "shard": "1/72"
   },
   "last_recovered_failure": {
     "attempts_used": 2,
@@ -213,22 +226,22 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-04",
-    "observed_at": "2026-08-05T08:49:49Z",
-    "payload_sha256": "ed1d154edc82ee9c0773bb62e866fc8326e431c792a10599aac3dfb638cbbec4",
-    "quote_as_of": "2026-07-20T19:00:46Z",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T03:52:19Z",
+    "payload_sha256": "b662e0d027e9aeb8ab96b87f096df3ab1a75b620f0b465ab67aaef7e99d8102c",
+    "quote_as_of": "2026-08-07T19:20:19Z",
     "run_attempt": 1,
-    "run_id": "30990520626",
+    "run_id": "31293276520",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20T19:00:46Z"
+    "source_as_of": "2026-08-07"
   },
   "recovered_at": "2026-07-18T00:37:10Z",
   "recovered_from_run_id": "29544227703",
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
   "recovery_run_id": "29622560422",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 12,
@@ -241,5 +254,5 @@
     "source_as_of": "2026-07-20T19:00:46Z"
   },
   "ticker": "XVUG",
-  "updated_at": "2026-08-05T10:46:42Z"
+  "updated_at": "2026-08-09T03:52:19Z"
 }

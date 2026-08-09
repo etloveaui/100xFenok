@@ -90,13 +90,26 @@
       "run_id": "30958820437",
       "schedule": "0 22 * * 2",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 698,
+      "natural": true,
+      "observed_at": "2026-08-09T03:52:19Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31293276520",
+      "schedule": "7 2 * * 0-5",
+      "shard": "1/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-04T23:08:37Z",
-    "history_as_of": "2026-08-03",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XEUR.json",
-    "payload_sha256": "bc5e8eb601b1693481e4c4f894f70446f163d30142dca185765ce31e44cb71dc",
+    "fetched_at": "2026-08-09T03:53:14Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/XEUR.json",
+    "payload_sha256": "193586084e2232425385ef38369d688e421bd5c5fb519becfb6363f338b0f781",
     "quote_as_of": "2026-06-09T17:45:38Z",
     "source_as_of": "2026-06-09T17:45:38Z"
   },
@@ -107,14 +120,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 493,
+    "latency_ms": 698,
     "natural": true,
-    "observed_at": "2026-08-04T23:07:26Z",
+    "observed_at": "2026-08-09T03:52:19Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30958820437",
-    "schedule": "0 22 * * 2",
-    "shard": "2/6"
+    "run_id": "31293276520",
+    "schedule": "7 2 * * 0-5",
+    "shard": "1/72"
   },
   "lkg": {
     "fetched_at": "2026-08-04T23:08:37Z",
@@ -127,17 +140,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-03",
-    "observed_at": "2026-08-04T23:07:26Z",
-    "payload_sha256": "f3ee24c153a7b8445f44838fb52b0579c22136a2863d1e91a0d8f9b9d7713c38",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T03:52:19Z",
+    "payload_sha256": "bd0cabb89d7118a1abe892fab837d3f72643f056ee30343793249a37c9235337",
     "quote_as_of": "2026-06-09T17:45:38Z",
     "run_attempt": 1,
-    "run_id": "30958820437",
+    "run_id": "31293276520",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-06-09T17:45:38Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 39,
@@ -150,5 +163,5 @@
     "source_as_of": "2026-06-09T17:45:38Z"
   },
   "ticker": "XEUR",
-  "updated_at": "2026-08-05T00:18:15Z"
+  "updated_at": "2026-08-09T03:52:19Z"
 }
