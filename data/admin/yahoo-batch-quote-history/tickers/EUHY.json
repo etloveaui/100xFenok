@@ -43,22 +43,66 @@
       "run_id": "30711923637",
       "schedule": "",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: EUHY: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: EUHY: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: EUHY: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: EUHY: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: EUHY: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: EUHY: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 1743,
+      "natural": true,
+      "observed_at": "2026-08-09T16:47:26Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31324627429",
+      "schedule": "7 16 * * 0-5",
+      "shard": "8/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T18:30:22Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-09T16:50:23Z",
+    "history_as_of": "2026-08-07",
     "path": "data/yf/finance/EUHY.json",
-    "payload_sha256": "680c52f00f2d513826f012ff664f36675969710856fc9e6200c01344026d215e",
-    "quote_as_of": "2026-07-31T19:07:00Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "98d0bc20c8561ee9d56b1bbd456e050cfaf3411b8d307f904591b766a127474a",
+    "quote_as_of": "2026-08-07T19:50:44Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [
       {
         "attempt": 1,
@@ -91,30 +135,30 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 716,
+    "latency_ms": 1743,
     "natural": true,
-    "observed_at": "2026-08-01T18:28:23Z",
+    "observed_at": "2026-08-09T16:47:26Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711923637",
-    "schedule": "",
-    "shard": "2/6"
+    "run_id": "31324627429",
+    "schedule": "7 16 * * 0-5",
+    "shard": "8/72"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T18:28:23Z",
-    "payload_sha256": "ae35c0bc9450aad72a0505ed8b60bbaa1c54e2ee5fad2e53c3b436745e263339",
-    "quote_as_of": "2026-07-31T19:07:00Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T16:47:26Z",
+    "payload_sha256": "0d0398ac2af4a094476011a8b10e9fed1dcbc15ce4df4dbc3020e4d04e308fa1",
+    "quote_as_of": "2026-08-07T19:50:44Z",
     "run_attempt": 1,
-    "run_id": "30711923637",
+    "run_id": "31324627429",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-07"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "EUHY",
-  "updated_at": "2026-08-01T18:28:23Z"
+  "updated_at": "2026-08-09T16:47:26Z"
 }
