@@ -26,39 +26,6 @@
       ],
       "latency_ms": 0,
       "natural": true,
-      "observed_at": "2026-07-24T00:27:41Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "30055546565",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 2,
-      "error": "empty payload",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "KeyError: 'exchangeTimezoneName'",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "empty payload"
-        },
-        {
-          "attempt": 2,
-          "error": "KeyError: 'exchangeTimezoneName'",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 2,
-          "error": "empty payload"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": true,
       "observed_at": "2026-07-25T00:24:00Z",
       "outcome": "failed",
       "run_attempt": 1,
@@ -481,6 +448,49 @@
       "run_id": "31309259913",
       "schedule": "7 10 * * 0-5",
       "shard": "5/72"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-09T14:44:24Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31319162316",
+      "schedule": "7 14 * * 0-5",
+      "shard": "7/72"
     }
   ],
   "current": {
@@ -530,12 +540,12 @@
     ],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-09T10:51:07Z",
+    "observed_at": "2026-08-09T14:44:24Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31309259913",
-    "schedule": "7 10 * * 0-5",
-    "shard": "5/72"
+    "run_id": "31319162316",
+    "schedule": "7 14 * * 0-5",
+    "shard": "7/72"
   },
   "latest_failure": {
     "attempts_used": 2,
@@ -574,9 +584,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-08-09T10:51:07Z",
+    "observed_at": "2026-08-09T14:44:24Z",
     "run_attempt": 1,
-    "run_id": "31309259913"
+    "run_id": "31319162316"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:48:55Z",
@@ -600,5 +610,5 @@
     "source_as_of": "2026-07-02"
   },
   "ticker": "BK",
-  "updated_at": "2026-08-09T10:51:07Z"
+  "updated_at": "2026-08-09T14:44:24Z"
 }

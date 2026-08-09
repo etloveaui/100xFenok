@@ -293,6 +293,49 @@
       "run_id": "31309259913",
       "schedule": "7 10 * * 0-5",
       "shard": "5/72"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-09T14:44:24Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31319162316",
+      "schedule": "7 14 * * 0-5",
+      "shard": "7/72"
     }
   ],
   "discovered_from": [
@@ -334,12 +377,12 @@
     ],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-09T10:51:07Z",
+    "observed_at": "2026-08-09T14:44:24Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31309259913",
-    "schedule": "7 10 * * 0-5",
-    "shard": "5/72"
+    "run_id": "31319162316",
+    "schedule": "7 14 * * 0-5",
+    "shard": "7/72"
   },
   "latest_failure": {
     "attempts_used": 2,
@@ -378,13 +421,13 @@
       }
     ],
     "lkg_status": "absent",
-    "observed_at": "2026-08-09T10:51:07Z",
+    "observed_at": "2026-08-09T14:44:24Z",
     "run_attempt": 1,
-    "run_id": "31309259913"
+    "run_id": "31319162316"
   },
   "resolution_state": "unavailable",
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "285A.T",
-  "updated_at": "2026-08-09T10:51:07Z"
+  "updated_at": "2026-08-09T14:44:24Z"
 }
