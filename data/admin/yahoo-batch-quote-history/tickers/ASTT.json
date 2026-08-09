@@ -38,12 +38,26 @@
       "run_id": "31015333400",
       "schedule": "7 12 * * 0-5",
       "shard": "42/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: source timestamp regression for ASTT: quote_as_of 2026-08-03T15:12:16Z < 2026-08-05T13:46:02Z",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 792,
+      "natural": true,
+      "observed_at": "2026-08-09T02:25:42Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31290251671",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-05T14:31:01Z",
     "history_as_of": "2026-08-05",
-    "path": "data/yf/finance/ASTT.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ASTT.json",
     "payload_sha256": "c0e0636dcd6f51568dae5f134dc175d509775a9e43a975ad115bd698c560e446",
     "quote_as_of": "2026-08-05T13:46:02Z",
     "source_as_of": "2026-08-05"
@@ -53,24 +67,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: source timestamp regression for ASTT: quote_as_of 2026-08-03T15:12:16Z < 2026-08-05T13:46:02Z",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 518,
+    "latency_ms": 792,
     "natural": true,
-    "observed_at": "2026-08-05T14:29:49Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-09T02:25:42Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31015333400",
-    "schedule": "7 12 * * 0-5",
-    "shard": "42/72"
+    "run_id": "31290251671",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: source timestamp regression for ASTT: quote_as_of 2026-08-03T15:12:16Z < 2026-08-05T13:46:02Z",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-09T02:25:42Z",
+    "run_attempt": 1,
+    "run_id": "31290251671"
   },
   "lkg": {
-    "fetched_at": "2026-07-20T23:03:51Z",
-    "history_as_of": "2026-07-20",
+    "fetched_at": "2026-08-05T14:31:01Z",
+    "history_as_of": "2026-08-05",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ASTT.json",
-    "payload_sha256": "5fd2ecdf04e38302ccef259cf7aba39ced9fe160786441e9dcdf1136df97b534",
-    "quote_as_of": "2026-07-20T17:42:46Z",
-    "source_as_of": "2026-07-20"
+    "payload_sha256": "c0e0636dcd6f51568dae5f134dc175d509775a9e43a975ad115bd698c560e446",
+    "quote_as_of": "2026-08-05T13:46:02Z",
+    "source_as_of": "2026-08-05"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,8 +111,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-05"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -98,5 +125,5 @@
     "source_as_of": "2026-07-20"
   },
   "ticker": "ASTT",
-  "updated_at": "2026-08-05T14:29:49Z"
+  "updated_at": "2026-08-09T02:25:42Z"
 }

@@ -26,41 +26,44 @@
       "run_id": "30711926935",
       "schedule": "",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 949,
+      "natural": true,
+      "observed_at": "2026-08-09T02:25:42Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31290251671",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-30T00:21:09Z",
-    "history_as_of": "2026-06-29",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VIXM.json",
-    "payload_sha256": "40e7f09fae529e5bfb65ccb6eed32fc2a03e3741ebd817877165a04b0846ad96",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "fetched_at": "2026-08-09T02:27:02Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/VIXM.json",
+    "payload_sha256": "d8dd595162b4c41f3df3ec2f2f3f1b0762c38033e8b6dca3193963908088a553",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_requires_schedule",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 665,
+    "latency_ms": 949,
     "natural": true,
-    "observed_at": "2026-08-01T18:48:56Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-09T02:25:42Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711926935",
-    "schedule": "",
-    "shard": "5/6"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-01T18:48:56Z",
-    "provider_history_as_of": "2026-07-31",
-    "provider_quote_as_of": "2026-07-31T20:00:00Z",
-    "reason": "recovery_requires_schedule",
-    "run_attempt": 1,
-    "run_id": "30711926935"
+    "run_id": "31290251671",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/72"
   },
   "lkg": {
     "fetched_at": "2026-06-30T00:21:09Z",
@@ -70,8 +73,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-29"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T02:25:42Z",
+    "payload_sha256": "293d0e294a9d59f0143551fb2a9a7eaab4aa9680acef4f0aa1e460f271d790b1",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "31290251671",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-07"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -84,5 +99,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "VIXM",
-  "updated_at": "2026-08-01T18:48:56Z"
+  "updated_at": "2026-08-09T02:25:42Z"
 }

@@ -26,41 +26,44 @@
       "run_id": "30711926935",
       "schedule": "",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 938,
+      "natural": true,
+      "observed_at": "2026-08-09T02:25:42Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31290251671",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-02T01:57:16Z",
-    "history_as_of": "2026-07-01",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/UMCX.json",
-    "payload_sha256": "da784a2c36f1851bd79f21ffbfe0d189ec613585d0479bb2052b2aff25d11d1e",
-    "quote_as_of": null,
-    "source_as_of": "2026-07-01"
+    "fetched_at": "2026-08-09T02:26:14Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/UMCX.json",
+    "payload_sha256": "83a60cf0ed90063686ebe381044dd70fa312a6bd7c18e7c9f8e434536789b765",
+    "quote_as_of": "2026-08-07T18:36:16Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_requires_schedule",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 530,
+    "latency_ms": 938,
     "natural": true,
-    "observed_at": "2026-08-01T18:48:56Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-09T02:25:42Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711926935",
-    "schedule": "",
-    "shard": "5/6"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-01T18:48:56Z",
-    "provider_history_as_of": "2026-07-31",
-    "provider_quote_as_of": "2026-07-31T18:23:29Z",
-    "reason": "recovery_requires_schedule",
-    "run_attempt": 1,
-    "run_id": "30711926935"
+    "run_id": "31290251671",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/72"
   },
   "lkg": {
     "fetched_at": "2026-07-02T01:57:16Z",
@@ -70,8 +73,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-07-01"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T02:25:42Z",
+    "payload_sha256": "3d2ddf739d03c9331b71d4cf0a8d843ad1d4621188cabac6a736d300decb1dda",
+    "quote_as_of": "2026-08-07T18:36:16Z",
+    "run_attempt": 1,
+    "run_id": "31290251671",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-07"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -84,5 +99,5 @@
     "source_as_of": "2026-07-01"
   },
   "ticker": "UMCX",
-  "updated_at": "2026-08-01T18:48:56Z"
+  "updated_at": "2026-08-09T02:25:42Z"
 }

@@ -26,15 +26,28 @@
       "run_id": "30711926935",
       "schedule": "",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1152,
+      "natural": true,
+      "observed_at": "2026-08-09T02:25:42Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31290251671",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-06-28T00:19:12Z",
-    "history_as_of": "2026-06-26",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/UWM.json",
-    "payload_sha256": "52f13d98c8726eae61780a60032861ff7c56d62f37cef6654762f1f5db8ff6a6",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-26"
+    "fetched_at": "2026-08-09T02:26:45Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/UWM.json",
+    "payload_sha256": "dd990e47b04e071435d2cce7c48b9bb2940979c84b4107dbdef015cd665712f8",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "focus_etf_configuration",
@@ -42,26 +55,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_requires_schedule",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 785,
+    "latency_ms": 1152,
     "natural": true,
-    "observed_at": "2026-08-01T18:48:56Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-09T02:25:42Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711926935",
-    "schedule": "",
-    "shard": "5/6"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-01T18:48:56Z",
-    "provider_history_as_of": "2026-07-31",
-    "provider_quote_as_of": "2026-07-31T20:00:00Z",
-    "reason": "recovery_requires_schedule",
-    "run_attempt": 1,
-    "run_id": "30711926935"
+    "run_id": "31290251671",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/72"
   },
   "lkg": {
     "fetched_at": "2026-06-28T00:19:12Z",
@@ -71,8 +74,20 @@
     "quote_as_of": null,
     "source_as_of": "2026-06-26"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T02:25:42Z",
+    "payload_sha256": "541d955651c15e9ab6f0d438084b55e96232337ff8d10e68d213ac0727d3d8e7",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "run_attempt": 1,
+    "run_id": "31290251671",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-07"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
@@ -85,5 +100,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "UWM",
-  "updated_at": "2026-08-01T18:48:56Z"
+  "updated_at": "2026-08-09T02:25:42Z"
 }

@@ -100,15 +100,59 @@
       "run_id": "31147671265",
       "schedule": "7 2 * * 0-5",
       "shard": "61/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: FNGU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: FNGU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: FNGU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: FNGU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: FNGU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: FNGU: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 1209,
+      "natural": true,
+      "observed_at": "2026-08-09T02:25:42Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31290251671",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T04:33:18Z",
-    "history_as_of": "2026-08-06",
+    "fetched_at": "2026-08-09T02:28:38Z",
+    "history_as_of": "2026-08-07",
     "path": "data/yf/finance/FNGU.json",
-    "payload_sha256": "8a9f3a82cb4172c331f39d4959f5985f58b0d3a58fe54e5b13aaf8ad1e28c371",
-    "quote_as_of": "2026-08-06T20:00:00Z",
-    "source_as_of": "2026-08-06"
+    "payload_sha256": "ae50f99fa1938e0c003e0932b7ec3a3164252fbeaaafac2852b5362c47468a0b",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "focus_etf_configuration",
@@ -149,14 +193,14 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 662,
+    "latency_ms": 1209,
     "natural": true,
-    "observed_at": "2026-08-07T04:33:03Z",
+    "observed_at": "2026-08-09T02:25:42Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31147671265",
-    "schedule": "7 2 * * 0-5",
-    "shard": "61/72"
+    "run_id": "31290251671",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/72"
   },
   "lkg": {
     "fetched_at": "2026-07-26T23:03:18Z",
@@ -169,14 +213,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T04:33:03Z",
-    "payload_sha256": "34a518451634cbf1bab7d93a11b4faec63a2aa142f7530b6562fad6e12d43673",
-    "quote_as_of": "2026-08-06T20:00:00Z",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-09T02:25:42Z",
+    "payload_sha256": "be8fe3ef0aa084b33338285532366670b2c2699407b765df02b135891468837b",
+    "quote_as_of": "2026-08-07T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31147671265",
+    "run_id": "31290251671",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-06"
+    "source_as_of": "2026-08-07"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -192,5 +236,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "FNGU",
-  "updated_at": "2026-08-07T04:33:03Z"
+  "updated_at": "2026-08-09T02:25:42Z"
 }
