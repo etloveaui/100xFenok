@@ -415,7 +415,7 @@ function writeWorkflow(root, file, source) {
   );
   assert.deepEqual(
     policy.watched.find((row) => row.file === "deploy-worker.yml")?.events,
-    ["push", "schedule"],
+    ["push", "schedule", "workflow_run"],
     "every declared automatic trigger must count while manual dispatch stays excluded",
   );
   assert.deepEqual(
