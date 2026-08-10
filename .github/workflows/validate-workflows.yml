@@ -75,6 +75,9 @@ jobs:
       - name: Validate lane manifest staging
         run: npm --prefix 100xfenok-next run qa:lane-manifest-staging
 
+      - name: Validate public-mirror coverage (frozen-mirror gate)
+        run: node scripts/check-public-mirror-coverage.mjs
+
       - name: Validate alarm workflow contracts
         run: npm --prefix 100xfenok-next run qa:alarm-state
 
