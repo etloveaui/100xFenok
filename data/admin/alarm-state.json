@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-10T10:35:55.994Z",
+  "generated_at": "2026-08-10T12:04:08.873Z",
   "status": "open",
-  "open_incident_count": 7,
+  "open_incident_count": 8,
   "open_incidents": [
     {
       "workflow": "build-stocks-analyzer.yml",
@@ -18,25 +18,25 @@
       "cadence_status": "no_declaration"
     },
     {
-      "workflow": "deploy-worker.yml",
-      "label": "Deploy Worker (Cloudflare)",
-      "streak": 3,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 31362252813,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31362252813",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
-    {
       "workflow": "fetch-damodaran-shadow.yml",
       "label": "Fetch Damodaran Data",
       "streak": 1,
       "failure_streak_threshold": 1,
       "first_failing_run_id": 31255487819,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31255487819",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
+    {
+      "workflow": "fetch-defillama.yml",
+      "label": "Fetch DefiLlama Stablecoins Data",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 31379729997,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31379729997",
       "alarm_reasons": [
         "failure_streak"
       ],
@@ -81,6 +81,19 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "overdue"
+    },
+    {
+      "workflow": "fetch-yahoo-ticker.yml",
+      "label": "Fetch Yahoo Finance Ticker Snapshot",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 31379621717,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31379621717",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
     },
     {
       "workflow": "fetch-yf-finance.yml",
@@ -509,17 +522,18 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31379657065",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31379657065",
-    "observed_at": "2026-08-10T10:35:55.994Z",
-    "event": "workflow_run",
+    "run_id": "31386121762",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31386121762",
+    "observed_at": "2026-08-10T12:04:08.873Z",
+    "event": "schedule",
     "workflows": [
       "build-stocks-analyzer.yml",
-      "deploy-worker.yml",
       "fetch-damodaran-shadow.yml",
+      "fetch-defillama.yml",
       "fetch-edgar-filings.yml",
       "fetch-fred-yardeni.yml",
       "fetch-stockanalysis.yml",
+      "fetch-yahoo-ticker.yml",
       "fetch-yf-finance.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
