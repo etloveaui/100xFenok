@@ -41,8 +41,10 @@ import {
   listR2ObjectsDetailed,
   recordPublishOutcome,
   resolveExpectedPointerSequence,
+  resolveSourceAsOf,
   RETENTION_PROTECTED_KEYS,
   rollbackLiveGeneration,
+  toIsoDay,
   verifyGenerationParity,
 } from "./publish-cloud-data-generation.mjs";
 import {
@@ -68,6 +70,16 @@ const POLICY = {
   validate_freshness: () => true,
   validate_public_payload: () => true,
 };
+
+// ISO-day normalization rejects calendar-impossible dates in both day and
+// date-time forms while preserving valid normalization, including leap day.
+assert.equal(toIsoDay("2026-02-31"), null);
+assert.equal(toIsoDay("2026-13-01"), null);
+assert.equal(toIsoDay("2026-02-31T12:00:00.000Z"), null);
+assert.equal(toIsoDay("2026-13-01 12:00:00Z"), null);
+assert.equal(toIsoDay("2024-02-29"), "2024-02-29");
+assert.equal(toIsoDay("2024-02-29T23:59:59.999Z"), "2024-02-29");
+console.log("source_as_of calendar validation ok (invalid day/month rejected, leap day normalized)");
 
 async function assertRejectsCode(promise, code) {
   await assert.rejects(promise, (error) => {
@@ -1029,6 +1041,258 @@ try {
 } finally {
   await new Promise((resolve) => server.close(resolve));
   await rm(fixtureRoot, { recursive: true, force: true });
+}
+
+// --- per-file source dates (fred-banking) and FDIC max-quarter extraction ---
+// New modes fail loudly on missing/malformed declarations; legacy single-file
+// payload and family-index modes keep their exact behavior.
+{
+  const asofFilesRoot = await mkdtemp(path.join(os.tmpdir(), "cloud-data-plane-asof-files-"));
+  try {
+    const macroDir = path.join(asofFilesRoot, "data/macro");
+    await mkdir(macroDir, { recursive: true });
+    const fredFiles = {
+      "fred-banking-daily.json": { updated: "2026-06-01T00:00:00.000Z", source_as_of: "2026-06-01" },
+      "fred-banking-weekly.json": { updated: "2026-07-29T00:00:00.000Z", source_as_of: "2026-07-29" },
+      "fred-banking-monthly.json": { updated: "2026-06-01T00:00:00.000Z", source_as_of: "2026-06-01" },
+      "fred-banking-quarterly.json": { updated: "2025-10-01T00:00:00.000Z", source_as_of: "2025-10-01" },
+    };
+    for (const [relative, json] of Object.entries(fredFiles)) {
+      await writeFile(path.join(macroDir, relative), JSON.stringify(json));
+    }
+    const fred = await buildFamilyManifest({
+      familyName: "fred-banking",
+      absRoot: macroDir,
+      relRoot: "public/data/macro",
+      now: () => NOW_1,
+    });
+    validateGenerationManifest(fred.manifest);
+    assert.equal(fred.manifest.assets.length, 4);
+    const datesByFile = new Map(fred.manifest.assets.map((asset) => [
+      asset.path.slice("public/data/macro/".length),
+      asset.source_as_of,
+    ]));
+    for (const [relative, json] of Object.entries(fredFiles)) {
+      assert.equal(datesByFile.get(relative), json.source_as_of);
+    }
+    // Distinct per-asset dates: weekly and quarterly differ from daily.
+    assert.notEqual(datesByFile.get("fred-banking-weekly.json"), datesByFile.get("fred-banking-daily.json"));
+    assert.notEqual(datesByFile.get("fred-banking-quarterly.json"), datesByFile.get("fred-banking-daily.json"));
+    // Summary is the conservative MINIMUM asset date, truthfully per-asset.
+    assert.equal(fred.sourceAsOf.value, "2025-10-01");
+    assert.equal(fred.sourceAsOf.origin, "per-asset");
+    assert.ok(fred.sourceAsOf.perAsset instanceof Map);
+    assert.equal(fred.sourceAsOf.perAsset.size, 4);
+    console.log("fred-banking per-file source_as_of ok (4 distinct per-asset dates, min summary, origin per-asset)");
+
+    // Configured FDIC max_date succeeds: mode detection must not treat the
+    // max_date file field as a legacy mode. Latest quarter from max
+    // data[].date, never the collection time.
+    assert.equal(FAMILIES["fdic-tier1"].source_as_of.max_date.key, "date");
+    await writeFile(
+      path.join(macroDir, "fdic-tier1.json"),
+      JSON.stringify({
+        updated: "2026-07-14T14:55:51.727Z", // collection time — must NOT be used
+        data: [
+          { date: "2025-12-31", value: 10.0 },
+          { date: "2026-03-31", value: 11.8 },
+          { date: "2026-06-30", value: 12.1 },
+        ],
+      }),
+    );
+    const fdic = await buildFamilyManifest({
+      familyName: "fdic-tier1",
+      absRoot: macroDir,
+      relRoot: "public/data/macro",
+      now: () => NOW_1,
+    });
+    validateGenerationManifest(fdic.manifest);
+    assert.equal(fdic.manifest.assets.length, 1);
+    assert.equal(fdic.manifest.assets[0].source_as_of, "2026-06-30");
+    assert.equal(fdic.sourceAsOf.value, "2026-06-30");
+    assert.equal(fdic.sourceAsOf.origin, "payload-max-date");
+    console.log("fdic-tier1 max-quarter source_as_of ok (max data[].date, not top-level updated)");
+
+    // Malformed/missing declarations fail loudly, never a silent fallback:
+    // 1. per-file value missing/invalid.
+    await writeFile(
+      path.join(macroDir, "fred-banking-weekly.json"),
+      JSON.stringify({ updated: "2026-07-29T00:00:00.000Z", source_as_of: "not a date" }),
+    );
+    await assertRejectsCode(
+      buildFamilyManifest({
+        familyName: "fred-banking",
+        absRoot: macroDir,
+        relRoot: "public/data/macro",
+        now: () => NOW_1,
+      }),
+      "FAMILY_ASOF_INVALID",
+    );
+    // 2. enrolled asset without any declared per-file date.
+    await writeFile(
+      path.join(macroDir, "fred-banking-weekly.json"),
+      JSON.stringify({ updated: "2026-07-29T00:00:00.000Z", source_as_of: "2026-07-29" }),
+    );
+    await writeFile(path.join(macroDir, "unexpected-extra.json"), "{\"a\":1}\n");
+    await assertRejectsCode(
+      buildFamilyManifest({
+        familyName: "fred-banking",
+        absRoot: macroDir,
+        relRoot: "public/data/macro",
+        now: () => NOW_1,
+        files: ["fred-banking-daily.json", "fred-banking-weekly.json", "unexpected-extra.json"],
+      }),
+      "FAMILY_ASOF_INVALID",
+    );
+    // 3. declared per-file entry for a file that is not enrolled.
+    await assertRejectsCode(
+      buildFamilyManifest({
+        familyName: "fred-banking",
+        absRoot: macroDir,
+        relRoot: "public/data/macro",
+        now: () => NOW_1,
+        files: ["fred-banking-daily.json"],
+      }),
+      "FAMILY_ASOF_INVALID",
+    );
+    // 4. per-file source file is not valid JSON.
+    await writeFile(path.join(macroDir, "fred-banking-daily.json"), "{not json");
+    await assertRejectsCode(
+      buildFamilyManifest({
+        familyName: "fred-banking",
+        absRoot: macroDir,
+        relRoot: "public/data/macro",
+        now: () => NOW_1,
+        files: ["fred-banking-daily.json"],
+      }),
+      "FAMILY_ASOF_INVALID",
+    );
+    // 5. FDIC data array missing/empty.
+    await writeFile(
+      path.join(macroDir, "fdic-tier1.json"),
+      JSON.stringify({ updated: "2026-07-14T14:55:51.727Z", data: [] }),
+    );
+    await assertRejectsCode(
+      buildFamilyManifest({
+        familyName: "fdic-tier1",
+        absRoot: macroDir,
+        relRoot: "public/data/macro",
+        now: () => NOW_1,
+      }),
+      "FAMILY_ASOF_INVALID",
+    );
+    // 6. FDIC element without a valid date.
+    await writeFile(
+      path.join(macroDir, "fdic-tier1.json"),
+      JSON.stringify({
+        updated: "2026-07-14T14:55:51.727Z",
+        data: [{ date: "2026-03-31" }, { date: "soon" }],
+      }),
+    );
+    await assertRejectsCode(
+      buildFamilyManifest({
+        familyName: "fdic-tier1",
+        absRoot: macroDir,
+        relRoot: "public/data/macro",
+        now: () => NOW_1,
+      }),
+      "FAMILY_ASOF_INVALID",
+    );
+    console.log("per-file / max-date malformed declarations fail loudly ok (6 variants)");
+
+    // Mode detection regressions (descriptor-level): mixed max_date + key,
+    // an empty per-file map, and file-without-key all fail loudly.
+    await assertRejectsCode(
+      async () => resolveSourceAsOf({
+        family: {
+          source_as_of: { file: "fdic-tier1.json", max_date: { array: "data", key: "date" }, key: "updated" },
+        },
+        payloads: new Map(),
+        createdIsoDay: "2026-08-03",
+      }),
+      "FAMILY_ASOF_INVALID",
+    );
+    await assertRejectsCode(
+      async () => resolveSourceAsOf({
+        family: { source_as_of: { files: {} } },
+        payloads: new Map(),
+        createdIsoDay: "2026-08-03",
+        relRoot: "public/data/macro",
+      }),
+      "FAMILY_ASOF_INVALID",
+    );
+    await assertRejectsCode(
+      async () => resolveSourceAsOf({
+        family: { source_as_of: { file: "index.json" } },
+        payloads: new Map(),
+        createdIsoDay: "2026-08-03",
+      }),
+      "FAMILY_ASOF_INVALID",
+    );
+    console.log("source_as_of mode detection ok (max_date+key, empty files, file-only all reject)");
+
+    // Legacy modes unchanged: { key } payload mode and { file, key }
+    // family-index mode still produce one uniform family date.
+    await writeFile(
+      path.join(macroDir, "fred-macro.json"),
+      JSON.stringify({ updated: "2026-07-01T00:00:00.000Z" }),
+    );
+    const legacyPayload = await buildFamilyManifest({
+      familyName: "fred-macro",
+      absRoot: macroDir,
+      relRoot: "public/data/macro",
+      now: () => NOW_1,
+      files: ["fred-macro.json"],
+    });
+    assert.equal(legacyPayload.sourceAsOf.origin, "payload");
+    assert.equal(legacyPayload.sourceAsOf.perAsset, undefined);
+    assert.ok(legacyPayload.manifest.assets.every((asset) => asset.source_as_of === "2026-07-01"));
+    const oecdDir = path.join(asofFilesRoot, "data/admin/oecd_cli");
+    await mkdir(oecdDir, { recursive: true });
+    await writeFile(path.join(oecdDir, "index.json"), JSON.stringify({ updated_at: "2026-08-02T10:00:00.000Z" }));
+    await writeFile(path.join(oecdDir, "obs.json"), "{\"a\":1}\n");
+    const legacyIndex = await buildFamilyManifest({
+      familyName: "oecd-cli",
+      absRoot: oecdDir,
+      relRoot: "data/admin/oecd_cli",
+      now: () => NOW_1,
+    });
+    assert.equal(legacyIndex.sourceAsOf.origin, "family-index");
+    assert.equal(legacyIndex.sourceAsOf.perAsset, undefined);
+    assert.ok(legacyIndex.manifest.assets.every((asset) => asset.source_as_of === "2026-08-02"));
+    console.log("legacy source_as_of modes unchanged ok (payload origin, family-index origin, no perAsset)");
+  } finally {
+    await rm(asofFilesRoot, { recursive: true, force: true });
+  }
+}
+
+// Real-tree configuration check (read-only): the configured fred-banking
+// per-file keys and FDIC max extraction agree with the on-disk payloads.
+{
+  const realFred = await buildFamilyManifest({
+    familyName: "fred-banking",
+    absRoot: path.join(REPO_ROOT, "data/macro"),
+    relRoot: "public/data/macro",
+    now: () => NOW_1,
+  });
+  for (const asset of realFred.manifest.assets) {
+    const file = asset.path.slice("public/data/macro/".length);
+    const json = JSON.parse(await readFile(path.join(REPO_ROOT, "data/macro", file), "utf8"));
+    assert.equal(asset.source_as_of, json.source_as_of);
+  }
+  const realFdic = await buildFamilyManifest({
+    familyName: "fdic-tier1",
+    absRoot: path.join(REPO_ROOT, "data/macro"),
+    relRoot: "public/data/macro",
+    now: () => NOW_1,
+  });
+  assert.equal(realFdic.sourceAsOf.origin, "payload-max-date");
+  const fdicJson = JSON.parse(await readFile(path.join(REPO_ROOT, "data/macro/fdic-tier1.json"), "utf8"));
+  assert.equal(
+    realFdic.manifest.assets[0].source_as_of,
+    fdicJson.data.map((row) => row.date).sort().at(-1),
+  );
+  console.log("real-tree configuration ok (fred-banking per-file keys and FDIC max quarter agree with disk)");
 }
 
 // --- retention planner: the five mandated cases (offline, fabricated state) ---

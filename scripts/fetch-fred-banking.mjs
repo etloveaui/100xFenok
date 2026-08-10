@@ -54,9 +54,6 @@ export const FRED_BANKING_GROUPS = Object.freeze([
     series: [
       { id: "DGS10", name: "10Y Treasury Yield" },
       { id: "BAMLH0A0HYM2", name: "HY Spread" },
-      // Transitional dual-write: keep Korea 10Y here until a natural run has
-      // committed the new monthly artifact, then remove it with the config flip.
-      { id: "IRLTLT01KRM156N", name: "Korea 10Y Government Bond Yield" },
       { id: "NASDAQCOM", name: "Nasdaq Composite (Price Return)", requestDays: FRED_NASDAQ_REQUEST_DAYS },
       { id: "NASDAQXCMP", name: "Nasdaq Composite Total Return", requestDays: FRED_NASDAQ_REQUEST_DAYS },
     ],

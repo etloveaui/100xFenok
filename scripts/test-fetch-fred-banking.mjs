@@ -77,16 +77,35 @@ function assertValidShard(shard) {
 
 {
   assert.deepEqual(FRED_BANKING_GROUPS.map((group) => group.id), ["daily", "weekly", "monthly", "quarterly"]);
-  assert.deepEqual(FRED_BANKING_GROUPS.find((group) => group.id === "daily").series.map((row) => row.id), [
+  const daily = FRED_BANKING_GROUPS.find((group) => group.id === "daily");
+  const monthly = FRED_BANKING_GROUPS.find((group) => group.id === "monthly");
+  const quarterly = FRED_BANKING_GROUPS.find((group) => group.id === "quarterly");
+  const dailyIds = daily.series.map((row) => row.id);
+  const monthlyIds = monthly.series.map((row) => row.id);
+  assert.deepEqual(dailyIds, [
     "DGS10",
     "BAMLH0A0HYM2",
-    "IRLTLT01KRM156N",
     "NASDAQCOM",
     "NASDAQXCMP",
   ]);
-  assert.deepEqual(FRED_BANKING_GROUPS.find((group) => group.id === "monthly").series.map((row) => row.id), [
+  assert.deepEqual(monthlyIds, [
     "IRLTLT01KRM156N",
   ]);
+  assert.deepEqual(dailyIds.filter((id) => monthlyIds.includes(id)), [], "daily and monthly memberships must be disjoint");
+  assert.deepEqual(quarterly.series.map((row) => row.id), [
+    "DRALACBN",
+    "DRCCLACBS",
+    "DRCLACBS",
+    "DRBLACBS",
+    "DRCRELEXFACBS",
+    "BOGZ1FL010000016Q",
+    "CORALACBN",
+    "CORCCACBS",
+    "CORCACBS",
+    "CORBLACBS",
+    "CORCREXFACBS",
+  ]);
+  assert.equal(quarterly.days, 9999, "quarterly request lag remains explicit");
   assert.equal(FRED_NASDAQ_REQUEST_WINDOW.lookbackDays, 365);
   assert.equal(FRED_NASDAQ_REQUEST_WINDOW.freshnessMarginDays, 10);
   assert.equal(FRED_NASDAQ_REQUEST_WINDOW.nonTradingMarginDays, 7);
@@ -116,10 +135,11 @@ function assertValidShard(shard) {
   assert.deepEqual([...expectedDays.entries()], [
     ["DGS10", 9999],
     ["BAMLH0A0HYM2", 9999],
-    ["IRLTLT01KRM156N", 9999],
     ["NASDAQCOM", FRED_NASDAQ_REQUEST_DAYS],
     ["NASDAQXCMP", FRED_NASDAQ_REQUEST_DAYS],
   ]);
+  assert.equal(requested.size, 4, "daily fetch must issue four requests");
+  assert.equal(requested.has("IRLTLT01KRM156N"), false, "daily fetch must not request the monthly Korea series");
   for (const [seriesId, days] of expectedDays) {
     const url = requested.get(seriesId);
     assert.ok(url, `${seriesId} request was captured`);
@@ -127,6 +147,36 @@ function assertValidShard(shard) {
     assert.equal(url.searchParams.get("observation_start"), addDays("2026-07-14", -days));
     assert.equal(url.searchParams.get("observation_end"), "2026-07-14");
   }
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-banking-source-as-of-test-"));
+  const paths = makePaths(root);
+  const terminalDates = new Map([
+    ["DGS10", "2026-07-14"],
+    ["BAMLH0A0HYM2", "2026-07-13"],
+    ["NASDAQCOM", "2026-07-12"],
+    ["NASDAQXCMP", "2026-07-11"],
+  ]);
+  const calls = [];
+  const result = await runFredBanking({
+    ...paths,
+    type: "daily",
+    apiKey: "test-key",
+    request: async (_url, seriesId) => {
+      calls.push(seriesId);
+      return response(200, observations(seriesId, terminalDates.get(seriesId)));
+    },
+    observedAt: OBSERVED_AT,
+    attemptId: "fred-banking-source-as-of-test",
+    sleep: async () => {},
+  });
+  assert.equal(result.ok, true);
+  assert.equal(calls.length, 4, "daily source_as_of must be based on four requests");
+  assert.deepEqual([...new Set(calls)].sort(), [...terminalDates.keys()].sort());
+  const daily = readJson(paths.canonicalPaths.daily);
+  assert.equal(daily.source_as_of, "2026-07-11", "daily source_as_of follows the oldest terminal date among its four series");
+  assert.deepEqual(Object.keys(daily.series).sort(), [...terminalDates.keys()].sort());
 }
 
 {
@@ -188,6 +238,8 @@ function assertValidShard(shard) {
   });
   assert.equal(result.ok, true);
   assert.deepEqual(calls, FRED_BANKING_GROUPS.flatMap((group) => group.series.map((row) => row.id)));
+  assert.equal(calls.length, 18, "all cadence groups must issue eighteen series requests");
+  assert.equal(calls.filter((seriesId) => seriesId === "IRLTLT01KRM156N").length, 1, "Korea series remains monthly-only");
   for (const group of FRED_BANKING_GROUPS) {
     assert.deepEqual(fs.readFileSync(paths.canonicalPaths[group.id]), fs.readFileSync(paths.publicPaths[group.id]));
     assert.equal(readJson(paths.canonicalPaths[group.id]).type, group.id);
@@ -275,19 +327,29 @@ function assertValidShard(shard) {
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-banking-chaos-test-"));
   const paths = makePaths(root);
-  await runFredBanking({
+  const baselineCalls = [];
+  const baseline = await runFredBanking({
     ...paths,
     apiKey: "test-key",
-    request: async (_url, seriesId) => response(200, observations(seriesId)),
+    request: async (_url, seriesId) => {
+      baselineCalls.push(seriesId);
+      return response(200, observations(seriesId));
+    },
     observedAt: "2026-07-14T11:00:00.000Z",
     attemptId: "fred-banking-baseline",
     runId: "baseline-run",
     sleep: async () => {},
   });
+  assert.equal(baseline.ok, true);
+  assert.equal(baselineCalls.length, 18, "recovery baseline must cover every owned series once");
+  const failedCalls = [];
   const failed = await runFredBanking({
     ...paths,
     apiKey: "test-key",
-    request: async (_url, seriesId) => response(200, observations(seriesId)),
+    request: async (_url, seriesId) => {
+      failedCalls.push(seriesId);
+      return response(200, observations(seriesId));
+    },
     controlledFailureKey: "DGS10",
     eventName: "workflow_dispatch",
     observedAt: "2026-07-14T12:00:00.000Z",
@@ -298,6 +360,8 @@ function assertValidShard(shard) {
   assert.equal(failed.ok, false);
   assert.equal(failed.degraded, true);
   assert.equal(failed.exitCode, 0);
+  assert.equal(failedCalls.length, 17, "controlled daily failure must skip only DGS10 while retaining the monthly request");
+  assert.equal(failedCalls.filter((seriesId) => seriesId === "IRLTLT01KRM156N").length, 1);
   assert.deepEqual(failed.retrySet, [
     "daily",
     "monthly",
@@ -348,12 +412,11 @@ function assertValidShard(shard) {
   assert.equal(scheduledPartial.degraded, true);
   assert.equal(scheduledPartial.updated, true);
   assert.equal(scheduledPartial.recovered, true);
-  assert.deepEqual(scheduledPartial.retrySet, ["quarterly", "weekly"]);
+  assert.deepEqual(scheduledPartial.retrySet, ["monthly", "quarterly", "weekly"]);
   const scheduledPartialState = readJson(statePath);
   assert.equal(scheduledPartialState.items.daily.resolution_state, "fresh_primary");
   assert.equal(scheduledPartialState.items.daily.recovered_from_run_id, "controlled-failure-run");
-  assert.equal(scheduledPartialState.items.monthly.resolution_state, "fresh_primary");
-  assert.equal(scheduledPartialState.items.monthly.recovered_from_run_id, "controlled-failure-run");
+  assert.equal(scheduledPartialState.items.monthly.resolution_state, "lkg_primary");
 
   const recovered = await runFredBanking({
     ...paths,
@@ -386,6 +449,43 @@ function assertValidShard(shard) {
     runId: "invalid-chaos",
     sleep: async () => {},
   }), /workflow_dispatch/);
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-banking-controlled-membership-test-"));
+  const paths = makePaths(root);
+  await assert.rejects(() => runFredBanking({
+    ...paths,
+    type: "daily",
+    apiKey: "test-key",
+    request: async () => response(200, observations("IRLTLT01KRM156N")),
+    controlledFailureKey: "IRLTLT01KRM156N",
+    eventName: "workflow_dispatch",
+    observedAt: OBSERVED_AT,
+    attemptId: "fred-banking-daily-korea-controlled-failure",
+    runId: "daily-korea-controlled-failure",
+    sleep: async () => {},
+  }), /unknown controlled FRED banking key/);
+
+  let monthlyRequests = 0;
+  const monthlyFailure = await runFredBanking({
+    ...paths,
+    type: "monthly",
+    apiKey: "test-key",
+    request: async () => {
+      monthlyRequests += 1;
+      return response(200, observations("IRLTLT01KRM156N"));
+    },
+    controlledFailureKey: "IRLTLT01KRM156N",
+    eventName: "workflow_dispatch",
+    observedAt: OBSERVED_AT,
+    attemptId: "fred-banking-monthly-korea-controlled-failure",
+    runId: "monthly-korea-controlled-failure",
+    sleep: async () => {},
+  });
+  assert.equal(monthlyFailure.ok, false);
+  assert.equal(monthlyFailure.reason, "controlled_failure", "monthly remains the valid controlled-failure owner");
+  assert.equal(monthlyRequests, 0, "controlled monthly failure is injected before the provider request");
 }
 
 {

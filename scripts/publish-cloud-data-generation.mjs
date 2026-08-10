@@ -157,13 +157,22 @@ const PUBLISH_OUTCOMES_ROOT = process.env.PUBLISH_OUTCOMES_ROOT
 //   source_as_of     where the family's SOURCE time comes from (see
 //                    resolveSourceAsOf): { file, key } reads key from the JSON
 //                    at <root>/<file>; { key } (no file) reads key from the
-//                    single enrolled payload. The value is normalized to an ISO
-//                    day (YYYY-MM-DD) and written to every asset's
-//                    source_as_of. A declared file that is absent from the
-//                    built tree falls back to the manifest created_at — marked
-//                    as "created_at-fallback" in the emitted origin so
+//                    single enrolled payload; { files: { "<rel>": { key } } }
+//                    reads key from each declared file's own JSON so EVERY
+//                    asset carries its own source date (summary reports the
+//                    conservative minimum, origin "per-asset");
+//                    { file, max_date: { array, key } } takes the maximum
+//                    normalized key over the named top-level array (e.g. the
+//                    FDIC latest reported quarter), never the collection time.
+//                    The value is normalized to an ISO day (YYYY-MM-DD) and
+//                    written to every asset's source_as_of. In the legacy
+//                    { file, key } mode a declared file that is absent from
+//                    the built tree falls back to the manifest created_at —
+//                    marked as "created_at-fallback" in the emitted origin so
 //                    acquisition time is never silently blurred into source
-//                    time. A present-but-invalid value fails loudly.
+//                    time. A present-but-invalid value fails loudly; the
+//                    per-file and max_date modes also fail loudly on any
+//                    missing or malformed declaration (they never fall back).
 // P5+ adds more families here.
 export const FAMILIES = {
   "oecd-cli": {
@@ -212,7 +221,9 @@ export const FAMILIES = {
     manifest_prefix: "public/data/macro",
     files: ["fdic-tier1.json"],
     privacy_class: "public",
-    source_as_of: { key: "updated" },
+    // Latest reported quarter from max data[].date — never the top-level
+    // "updated" collection time.
+    source_as_of: { file: "fdic-tier1.json", max_date: { array: "data", key: "date" } },
     plan: { class_a: 10, bytes: 1_100_000 },
     policy: { max_assets: 4, max_total_bytes: 25_000 },
     validate_public_payload({ bytes }) {
@@ -238,7 +249,16 @@ export const FAMILIES = {
     manifest_prefix: "public/data/macro",
     files: ["fred-banking-daily.json","fred-banking-weekly.json","fred-banking-monthly.json","fred-banking-quarterly.json"],
     privacy_class: "public",
-    source_as_of: { file: "fred-banking-daily.json", key: "updated" },
+    // Each file carries its own top-level source_as_of: every asset gets its
+    // own date instead of one family-wide date.
+    source_as_of: {
+      files: {
+        "fred-banking-daily.json": { key: "source_as_of" },
+        "fred-banking-weekly.json": { key: "source_as_of" },
+        "fred-banking-monthly.json": { key: "source_as_of" },
+        "fred-banking-quarterly.json": { key: "source_as_of" },
+      },
+    },
     plan: { class_a: 10, bytes: 1_800_000 },
     policy: { max_assets: 16, max_total_bytes: 3_600_000 },
     validate_public_payload({ bytes }) {
@@ -416,12 +436,21 @@ async function walkFiles(absDir, prefix = "") {
 // Normalize an as-of value (ISO date-time or ISO date) to the contract's
 // "ISO day" form (YYYY-MM-DD). Anything else is invalid.
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
-function toIsoDay(value) {
+function isRealIsoDay(value) {
+  if (!ISO_DAY.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year
+    && date.getUTCMonth() === month - 1
+    && date.getUTCDate() === day;
+}
+
+export function toIsoDay(value) {
   if (typeof value !== "string") return null;
-  const match = value.trim().match(ISO_DAY);
-  if (match) return match[0];
-  const dateTime = value.trim().match(/^(\d{4}-\d{2}-\d{2})[T ]/);
-  return dateTime ? dateTime[1] : null;
+  const trimmed = value.trim();
+  if (ISO_DAY.test(trimmed)) return isRealIsoDay(trimmed) ? trimmed : null;
+  const dateTime = trimmed.match(/^(\d{4}-\d{2}-\d{2})[T ]/);
+  return dateTime && isRealIsoDay(dateTime[1]) ? dateTime[1] : null;
 }
 
 // Resolve the family's SOURCE time for the manifest's source_as_of field.
@@ -429,16 +458,40 @@ function toIsoDay(value) {
 //     must be date-like (fail FAMILY_ASOF_INVALID otherwise).
 //   - { key } (no file): read key from the single enrolled payload (fail
 //     FAMILY_ASOF_AMBIGUOUS if the family enrolls more than one file).
+//   - { files: { "<rel>": { key } } }: per-file mode — each declared file's
+//     own JSON key resolves THAT asset's source date. Every enrolled asset
+//     must be declared and every declared file must be enrolled; any missing
+//     or malformed declaration fails loudly (never a created_at fallback).
+//     The summary value is the conservative MINIMUM asset date, origin
+//     "per-asset" (truthful per-asset labeling, not family-index).
+//   - { file, max_date: { array, key } }: take the MAXIMUM normalized key over
+//     the named top-level array of the JSON file at <root>/<file> (e.g. the
+//     FDIC latest reported quarter). The collection time is never used; a
+//     missing file, non-array/empty array, or any element without a valid
+//     date fails loudly.
 // A declared file ABSENT from the built tree means this family genuinely does
-// not provide a source time in this tree (e.g. synthetic offline fixtures):
-// fall back to the manifest created_at and mark the origin
-// "created_at-fallback" so acquisition time is never silently blurred into
-// source time. No source_as_of config at all also falls back.
-// Returns { value, origin } where origin is "payload" | "family-index" |
-// "created_at-fallback".
-export function resolveSourceAsOf({ family, payloads, createdIsoDay }) {
+// not provide a source time in this tree (e.g. synthetic offline fixtures) —
+// but ONLY in the legacy { file, key } mode does that fall back to the
+// manifest created_at, marked "created_at-fallback" so acquisition time is
+// never silently blurred into source time. No source_as_of config at all also
+// falls back. The per-file and max_date modes never fall back.
+// Returns { value, origin } (plus perAsset: Map<relative, isoDay> in per-file
+// mode) where origin is "payload" | "family-index" | "per-asset" |
+// "payload-max-date" | "created_at-fallback".
+export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = null }) {
   const config = family?.source_as_of;
   if (!config) return { value: createdIsoDay, origin: "created_at-fallback" };
+  const modes = [
+    config.files !== undefined,
+    config.max_date !== undefined,
+    config.key !== undefined,
+  ].filter(Boolean).length;
+  if (modes === 0) {
+    fail("FAMILY_ASOF_INVALID", "source_as_of declares no mode: need files, max_date, or key");
+  }
+  if (modes > 1) {
+    fail("FAMILY_ASOF_INVALID", "source_as_of must declare exactly one mode: files, max_date, or key");
+  }
   const decodeJson = (bytes) => {
     try {
       return JSON.parse(new TextDecoder().decode(bytes));
@@ -446,6 +499,57 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay }) {
       fail("FAMILY_ASOF_INVALID", `declared source_as_of is not JSON: ${error.message}`);
     }
   };
+  if (config.files) {
+    if (typeof config.files !== "object" || config.files === null || Array.isArray(config.files)) {
+      fail("FAMILY_ASOF_INVALID", "source_as_of.files must be an object mapping file paths to { key }");
+    }
+    if (Object.keys(config.files).length === 0) {
+      fail("FAMILY_ASOF_INVALID", "source_as_of.files must declare at least one file");
+    }
+    if (!relRoot) {
+      fail("FAMILY_ASOF_INVALID", "per-file source_as_of requires a relRoot");
+    }
+    const perAsset = new Map();
+    for (const [relative, entry] of Object.entries(config.files)) {
+      if (typeof entry !== "object" || entry === null || typeof entry.key !== "string") {
+        fail("FAMILY_ASOF_INVALID", `source_as_of.files["${relative}"] must be { key: "..." }`);
+      }
+      const bytes = payloads.get(`${relRoot}/${relative}`);
+      if (!bytes) {
+        fail("FAMILY_ASOF_INVALID", `declared source_as_of file ${relative} is not enrolled in this tree`);
+      }
+      const json = decodeJson(bytes);
+      const raw = json?.[entry.key];
+      const value = toIsoDay(raw);
+      if (value === null) {
+        fail("FAMILY_ASOF_INVALID", `${relative}.${entry.key} = ${JSON.stringify(raw)} is not an ISO date or date-time`);
+      }
+      perAsset.set(relative, value);
+    }
+    const values = [...perAsset.values()].sort();
+    return { value: values[0], origin: "per-asset", perAsset };
+  }
+  if (config.max_date) {
+    if (typeof config.file !== "string" || typeof config.max_date !== "object" || config.max_date === null
+      || typeof config.max_date.array !== "string" || typeof config.max_date.key !== "string") {
+      fail("FAMILY_ASOF_INVALID", "max_date source_as_of needs { file: string, max_date: { array: string, key: string } }");
+    }
+    const bytes = payloads.get(`${family.manifest_prefix ?? family.root}/${config.file}`);
+    if (!bytes) {
+      fail("FAMILY_ASOF_INVALID", `declared source_as_of file ${config.file} is not present in this tree`);
+    }
+    const json = decodeJson(bytes);
+    const rows = json?.[config.max_date.array];
+    if (!Array.isArray(rows) || rows.length === 0) {
+      fail("FAMILY_ASOF_INVALID", `${config.file}.${config.max_date.array} must be a non-empty array`);
+    }
+    const values = rows.map((row) => toIsoDay(row?.[config.max_date.key]));
+    const badIndex = values.findIndex((value) => value === null);
+    if (badIndex !== -1) {
+      fail("FAMILY_ASOF_INVALID", `${config.file}.${config.max_date.array}[${badIndex}].${config.max_date.key} is not an ISO date or date-time`);
+    }
+    return { value: values.sort().at(-1), origin: "payload-max-date" };
+  }
   let json;
   let origin;
   if (config.file) {
@@ -521,9 +625,22 @@ export async function buildFamilyManifest({
   assets.sort((left, right) => left.path.localeCompare(right.path));
   // The family's SOURCE time (never the acquisition time): real value where
   // the family provides one, created_at fallback otherwise — always with an
-  // explicit origin marker so the two are never blurred.
-  const sourceAsOf = resolveSourceAsOf({ family, payloads, createdIsoDay });
-  for (const asset of assets) asset.source_as_of = sourceAsOf.value;
+  // explicit origin marker so the two are never blurred. Per-file families
+  // (fred-banking) resolve EACH asset's own date from its own declared file;
+  // the summary value is then the conservative minimum asset date.
+  const sourceAsOf = resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot });
+  for (const asset of assets) {
+    if (sourceAsOf.perAsset) {
+      const relative = asset.path.slice(relRoot.length + 1);
+      const value = sourceAsOf.perAsset.get(relative);
+      if (value === undefined) {
+        fail("FAMILY_ASOF_INVALID", `asset ${asset.path} has no declared per-file source_as_of`);
+      }
+      asset.source_as_of = value;
+    } else {
+      asset.source_as_of = sourceAsOf.value;
+    }
+  }
   const sourceSha = sha256Canonical(assets.map((asset) => [asset.path, asset.sha256]));
   const manifest = {
     schema_version: GENERATION_MANIFEST_SCHEMA,
