@@ -381,7 +381,23 @@ export async function runUsIndicesDaily({
     }
   }
   const worst = foldWorstTuples(results.map((result) => result.tuple));
-  const run = runContext(attemptId, eventName, observedAt);
+  // Local re-runs (no GITHUB_EVENT_NAME) must not rewrite the committed
+  // current_attempt event of the SAME run as "unknown": inherit the stored value.
+  const effectiveEventName = (() => {
+    if (eventName !== "unknown") return eventName;
+    const runIdMatch = String(attemptId).match(/^gh-(\d+)-/u)?.[1] ?? null;
+    try {
+      const prior = JSON.parse(fs.readFileSync(path.join(stateRoot, "index.json"), "utf8"));
+      const priorAttempt = prior?.current_attempt ?? null;
+      if (priorAttempt?.event_name && String(priorAttempt.run_id) === runIdMatch) {
+        return priorAttempt.event_name;
+      }
+    } catch {
+      // no readable prior index — keep the honest "unknown" fallback
+    }
+    return eventName;
+  })();
+  const run = runContext(attemptId, effectiveEventName, observedAt);
   const store = stateStore(stateRoot);
   const keys = SERIES.map(({ key }) => `${key}.json`);
   const providerRevisions = [];
