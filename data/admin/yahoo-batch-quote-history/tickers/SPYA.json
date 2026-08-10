@@ -12,6 +12,20 @@
       "run_id": "31367988319",
       "schedule": "7 6 * * 0-5",
       "shard": "15/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 626,
+      "natural": true,
+      "observed_at": "2026-08-10T13:38:56Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31393796703",
+      "schedule": "7 12 * * 0-5",
+      "shard": "18/72"
     }
   ],
   "current": {
@@ -27,16 +41,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 800,
+    "latency_ms": 626,
     "natural": true,
-    "observed_at": "2026-08-10T07:59:31Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-10T13:38:56Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31367988319",
-    "schedule": "7 6 * * 0-5",
-    "shard": "15/72"
+    "run_id": "31393796703",
+    "schedule": "7 12 * * 0-5",
+    "shard": "18/72"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-10T13:38:56Z",
+    "provider_history_as_of": "2026-08-07",
+    "provider_quote_as_of": "2026-06-30T15:16:43Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "31393796703"
   },
   "lkg": {
     "fetched_at": "2026-08-10T08:03:18Z",
@@ -72,5 +96,5 @@
     "source_as_of": "2026-06-30T15:16:43Z"
   },
   "ticker": "SPYA",
-  "updated_at": "2026-08-10T09:46:13Z"
+  "updated_at": "2026-08-10T13:38:56Z"
 }
