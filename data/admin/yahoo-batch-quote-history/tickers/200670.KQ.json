@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 515,
-      "natural": true,
-      "observed_at": "2026-07-28T00:14:11Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30316637722",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 414,
       "natural": true,
       "observed_at": "2026-07-30T00:35:13Z",
@@ -185,15 +172,28 @@
       "run_id": "31334785949",
       "schedule": "7 20 * * 0-5",
       "shard": "10/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 702,
+      "natural": true,
+      "observed_at": "2026-08-10T05:42:10Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31359333130",
+      "schedule": "7 4 * * 0-5",
+      "shard": "14/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T23:59:56Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/200670.KQ.json",
-    "payload_sha256": "5b759c2a6d240ec45826a5a28401c37d73ab8d44227004c4f8cf6144bc262546",
-    "quote_as_of": "2026-08-07T06:30:25Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-08-10T05:42:44Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/200670.KQ.json",
+    "payload_sha256": "0bf309c24f4f3a466a794f44208c9ed58a9ed27da00848d6958100b1b652c1cd",
+    "quote_as_of": "2026-08-10T05:21:35Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -201,19 +201,18 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 761,
+    "latency_ms": 702,
     "natural": true,
-    "observed_at": "2026-08-09T20:40:44Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-10T05:42:10Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31334785949",
-    "schedule": "7 20 * * 0-5",
-    "shard": "10/72"
+    "run_id": "31359333130",
+    "schedule": "7 4 * * 0-5",
+    "shard": "14/72"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -224,15 +223,6 @@
     "observed_at": "2026-08-09T08:59:39Z",
     "run_attempt": 1,
     "run_id": "31304762930"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-09T20:40:44Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-08-07T06:30:24Z",
-    "reason": "foreign_writer_conflict",
-    "run_attempt": 1,
-    "run_id": "31334785949"
   },
   "lkg": {
     "fetched_at": "2026-08-07T23:59:56Z",
@@ -245,18 +235,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-07T23:59:02Z",
-    "payload_sha256": "5901c82341cf09fa7a65d171c6b92f80ca4220c89991fe20f18bc78b0ccf153e",
-    "quote_as_of": "2026-08-07T06:30:25Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T05:42:10Z",
+    "payload_sha256": "6c34e72671b8f89167faa2f5eea4f759c7995a54535cbefc5ad2df368d130f6d",
+    "quote_as_of": "2026-08-10T05:21:35Z",
     "run_attempt": 1,
-    "run_id": "31228360458",
+    "run_id": "31359333130",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-08-10T05:42:10Z",
+  "recovered_from_run_id": "31304762930",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "31359333130",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "200670.KQ",
-  "updated_at": "2026-08-09T20:40:44Z"
+  "updated_at": "2026-08-10T05:42:10Z"
 }

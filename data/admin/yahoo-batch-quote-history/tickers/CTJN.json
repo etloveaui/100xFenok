@@ -324,6 +324,51 @@
       "run_id": "31334785949",
       "schedule": "7 20 * * 0-5",
       "shard": "10/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJN: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJN: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJN: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJN: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJN: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJN: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 584,
+      "natural": true,
+      "observed_at": "2026-08-10T05:42:10Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31359333130",
+      "schedule": "7 4 * * 0-5",
+      "shard": "14/72"
     }
   ],
   "current": {
@@ -373,23 +418,23 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 861,
+    "latency_ms": 584,
     "natural": true,
-    "observed_at": "2026-08-09T20:40:44Z",
+    "observed_at": "2026-08-10T05:42:10Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31334785949",
-    "schedule": "7 20 * * 0-5",
-    "shard": "10/72"
+    "run_id": "31359333130",
+    "schedule": "7 4 * * 0-5",
+    "shard": "14/72"
   },
   "latest_promotion_deferral": {
     "event_name": "schedule",
-    "observed_at": "2026-08-09T20:40:44Z",
+    "observed_at": "2026-08-10T05:42:10Z",
     "provider_history_as_of": "2026-08-07",
     "provider_quote_as_of": "2026-06-09T17:11:49Z",
     "reason": "recovery_not_advanced_by_provider",
     "run_attempt": 1,
-    "run_id": "31334785949"
+    "run_id": "31359333130"
   },
   "lkg": {
     "fetched_at": "2026-08-09T05:16:42Z",
@@ -425,5 +470,5 @@
     "source_as_of": "2026-06-09T17:11:49Z"
   },
   "ticker": "CTJN",
-  "updated_at": "2026-08-09T20:40:44Z"
+  "updated_at": "2026-08-10T05:42:10Z"
 }
