@@ -41,6 +41,12 @@ on:
   schedule:
     - cron: '30 3 * * *'  # 12:30 KST, after update-manifest data refresh
   workflow_dispatch:
+    inputs:
+      remediate_unprovenanced_live:
+        description: 'One-time owner authorization to replace a live bundle with no provenance stamp'
+        required: false
+        default: false
+        type: boolean
   # Requeue path: a successful recovery-family completion must eventually cause
   # a deploy even if every data push during the recovery window was gated. The
   # recovery-gate job still skips when a SIBLING recovery remains nonterminal.
@@ -304,27 +310,98 @@ jobs:
           # Re-read main and live provenance at the last safe point before
           # upload. Main may advance during a build; the candidate may still
           # publish only when it is on main and is not older than what is live.
-          live_provenance_path="$RUNNER_TEMP/live-deploy-provenance-source-fence.json"
-          live_provenance_surface="fresh-no-store"
-          source_fence_cache_bust="source-fence-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-$(date +%s)"
-          if ! curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
-            -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
-            "$base_url/deploy-provenance.json?cb=$source_fence_cache_bust" \
-            -o "$live_provenance_path"; then
-            # Transition/rollback compatibility: bundles deployed before the
-            # no-store cutover expose the same stamp under the cached data path.
-            live_provenance_surface="legacy-cached-fallback"
-            curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
+          # HTTP 404 is nonfatal only when BOTH recognized provenance surfaces
+          # are absent and /BUILD_ID is live; every other fetch failure is fatal.
+          fetch_http_status() {
+            local url="$1"
+            local output_path="$2"
+            local status
+            rm -f "$output_path"
+            if ! status="$(curl -sS --retry 3 --retry-all-errors --retry-delay 2 \
               -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
-              "$base_url/data/admin/deploy-provenance.json?cb=$source_fence_cache_bust" \
-              -o "$live_provenance_path"
+              --output "$output_path" --write-out '%{http_code}' "$url")"; then
+              printf '%s' "transport"
+              return 0
+            fi
+            printf '%s' "$status"
+          }
+
+          source_fence_cache_bust="source-fence-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-$(date +%s)"
+          live_build_id_path="$RUNNER_TEMP/live-BUILD_ID-source-fence"
+          live_build_id_status="$(fetch_http_status \
+            "$base_url/BUILD_ID?cb=$source_fence_cache_bust" "$live_build_id_path")"
+          if [ "$live_build_id_status" != "200" ]; then
+            echo "::error::Live BUILD_ID fetch failed before the source fence: HTTP $live_build_id_status"
+            exit 1
           fi
+          live_build_id="$(tr -d '\r\n' < "$live_build_id_path")"
+          if [ -z "$live_build_id" ]; then
+            echo "::error::Live BUILD_ID is empty; remediation state cannot be established."
+            exit 1
+          fi
+          if [ "$live_build_id" = "$expected_build_id" ]; then
+            echo "::error::The new build reused the currently live BUILD_ID; deployment identity would be ambiguous."
+            exit 1
+          fi
+
+          live_provenance_path="$RUNNER_TEMP/live-deploy-provenance-source-fence.json"
+          live_provenance_fresh_path="$RUNNER_TEMP/live-deploy-provenance-source-fence-fresh.json"
+          live_provenance_legacy_path="$RUNNER_TEMP/live-deploy-provenance-source-fence-legacy.json"
+          live_provenance_surface="fresh-no-store"
+          live_provenance_state="present"
+          fresh_provenance_status="$(fetch_http_status \
+            "$base_url/deploy-provenance.json?cb=$source_fence_cache_bust" \
+            "$live_provenance_fresh_path")"
+          case "$fresh_provenance_status" in
+            200)
+              live_provenance_path="$live_provenance_fresh_path"
+              ;;
+            404)
+              # Transition/rollback compatibility: bundles deployed before the
+              # no-store cutover expose the same stamp under the cached data path.
+              live_provenance_surface="legacy-cached-fallback"
+              legacy_provenance_status="$(fetch_http_status \
+                "$base_url/data/admin/deploy-provenance.json?cb=$source_fence_cache_bust" \
+                "$live_provenance_legacy_path")"
+              case "$legacy_provenance_status" in
+                200)
+                  live_provenance_path="$live_provenance_legacy_path"
+                  ;;
+                404)
+                  live_provenance_state="legacy-unprovenanced"
+                  live_provenance_surface="legacy-unprovenanced-404"
+                  live_provenance_path="$RUNNER_TEMP/live-deploy-provenance-source-fence-absent.json"
+                  rm -f "$live_provenance_path"
+                  ;;
+                transport|*)
+                  echo "::error::Legacy deploy provenance surface fetch failed: HTTP $legacy_provenance_status"
+                  exit 1
+                  ;;
+              esac
+              ;;
+            transport|*)
+              echo "::error::Fresh deploy provenance surface fetch failed: HTTP $fresh_provenance_status"
+              exit 1
+              ;;
+          esac
           echo "::notice::Deploy source fence provenance surface: $live_provenance_surface"
+
+          source_fence_mode="strict"
+          if [ "$DEPLOY_EVENT_NAME" = "workflow_dispatch" ] \
+            && [ "$DEPLOY_REMEDIATION_INPUT" = "true" ] \
+            && [ "$live_provenance_state" = "legacy-unprovenanced" ]; then
+            source_fence_mode="remediate-unprovenanced-live"
+            echo "::warning::ONE-TIME owner remediation authorized for exact legacy live state: both provenance surfaces returned HTTP 404 with live BUILD_ID=$live_build_id"
+          fi
+          echo "::notice::Deploy source fence mode: $source_fence_mode"
           git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
           current_main_sha="$(git rev-parse --verify refs/remotes/origin/main)"
           node ../scripts/check-deploy-source-fence.mjs \
             --provenance ".open-next/assets/deploy-provenance.json" \
+            --expected-build-id "$expected_build_id" \
             --live-provenance "$live_provenance_path" \
+            --live-build-id "$live_build_id" \
+            --mode "$source_fence_mode" \
             --current-main "$current_main_sha"
 
           deploy_log="$RUNNER_TEMP/wrangler-deploy.log"
@@ -359,9 +436,12 @@ jobs:
           echo "::notice::Deployed artifact identity: wrangler_version_id=$deploy_version_id build_id=$expected_build_id kpi_sha256=$expected_kpi_sha256"
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          DEPLOY_EVENT_NAME: ${{ github.event_name }}
+          DEPLOY_REMEDIATION_INPUT: ${{ inputs.remediate_unprovenanced_live || false }}
 
       - name: Smoke data health KPI
         if: ${{ env.SUPERSEDED != 'true' }}
+        working-directory: 100xfenok-next
         run: |
           set -euo pipefail
 
@@ -423,4 +503,4 @@ jobs:
           echo "::notice::DEPLOYMENT IDENTITY MATCH: wrangler_version_id=$DEPLOY_VERSION_ID expected_build_id=$EXPECTED_BUILD_ID live_build_id=$observed_build_id expected_kpi_sha256=$EXPECTED_KPI_SHA256 live_kpi_sha256=$observed_kpi_sha256 attempts=$attempt"
           node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(0,"utf8")); const okSchema = p.schema_version === "fenok-data-health-kpi/v1" || p.schema_version === "fenok-data-health-kpi/v2"; if (!okSchema || typeof p.generated_at !== "string" || !Array.isArray(p.lanes)) { console.error(JSON.stringify({schema_version:p.schema_version,generated_at:p.generated_at,lanes:Array.isArray(p.lanes)})); process.exit(1); } const r=p.runtime||{}; if (p.status !== "ready") console.warn("::warning:: KPI data state: " + (p.status_message||p.status)); if (r.verdict && r.verdict !== "ready") console.warn("::warning:: KPI runtime state: " + (r.status_message||r.verdict)); console.log(JSON.stringify({ok:true,schema:p.schema_version,status:p.status,status_message:p.status_message,built_at:r.built_at||null,verdict:r.verdict||null,fresh:r.fresh??null,hard_age_ok:r.hard_age_ok??null},null,2));' < "$live_kpi_path"
 
-          node scripts/check-live-deploy-provenance.mjs --post
+          node ../scripts/check-live-deploy-provenance.mjs --post

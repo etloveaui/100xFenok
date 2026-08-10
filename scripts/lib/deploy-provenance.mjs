@@ -19,6 +19,11 @@
 
 export const DEPLOY_PROVENANCE_SCHEMA = "deploy-provenance/v1";
 export const DEPLOY_PROVENANCE_PUBLIC_PATH = "deploy-provenance.json";
+export const DEPLOY_SOURCE_FENCE_MODE_STRICT = "strict";
+export const DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE = "remediate-unprovenanced-live";
+export const DEPLOY_SOURCE_FENCE_LIVE_STATE_LEGACY_UNPROVENANCED = "legacy-unprovenanced";
+export const DEPLOY_SOURCE_FENCE_LIVE_STATE_PRESENT_INVALID = "present-invalid";
+export const DEPLOY_SOURCE_FENCE_LIVE_STATE_PRESENT_MISMATCH = "present-mismatched";
 
 // Conclusions that mean "this run's smokes never passed".
 const UNVERIFIED_CONCLUSIONS = new Set([
@@ -211,7 +216,9 @@ export function filterRunsByHeadBranch(runs, branch) {
 // remains on current main, and is not older than the source serving live.
 // Main may advance while a build runs; that alone must not starve publication.
 // The live-source relation is the monotonicity boundary that prevents an older
-// scheduled artifact from overwriting a newer accepted deployment.
+// scheduled artifact from overwriting a newer accepted deployment. The only
+// exception is the explicit remediation mode, where both provenance surfaces
+// are proven absent; artifact/run identity and current-main ancestry still run.
 export function evaluateDeploySourceFence({
   artifactSha,
   runSha,
@@ -228,14 +235,87 @@ export function evaluateDeploySourceFence({
   artifactIsAncestorOfCurrentMain,
   liveIsAncestorOfArtifact,
   artifactIsAncestorOfLive,
+  artifactBuildId = null,
+  expectedBuildId = null,
+  mode = DEPLOY_SOURCE_FENCE_MODE_STRICT,
+  liveProvenanceState = null,
+  liveBuildId = null,
 }) {
-  const sourceIds = { artifactSha, runSha, currentMainSha, liveSha };
   const validSha = (value) => typeof value === "string" && /^[0-9a-f]{40}$/i.test(value);
-  if (Object.values(sourceIds).some((value) => !validSha(value))) {
+  if (
+    mode !== DEPLOY_SOURCE_FENCE_MODE_STRICT
+    && mode !== DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE
+  ) {
+    return {
+      allowed: false,
+      verdict: "identity-unavailable",
+      detail: `unsupported deploy source fence mode: ${String(mode)}`,
+    };
+  }
+  const remediationLiveIdentityAbsent = mode === DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE
+    && liveProvenanceState === DEPLOY_SOURCE_FENCE_LIVE_STATE_LEGACY_UNPROVENANCED
+    && typeof liveBuildId === "string"
+    && liveBuildId.length > 0
+    && liveSha === null
+    && liveRunNumber === null
+    && liveRunAttempt === null
+    && liveIsAncestorOfArtifact === null
+    && artifactIsAncestorOfLive === null;
+  const sourceIds = { artifactSha, runSha, currentMainSha };
+  if (
+    Object.values(sourceIds).some((value) => !validSha(value))
+    || (!remediationLiveIdentityAbsent && !validSha(liveSha))
+  ) {
     return {
       allowed: false,
       verdict: "identity-unavailable",
       detail: "artifact, workflow run, current origin/main, and live deployment must each provide a full Git SHA",
+    };
+  }
+
+  const artifactBuildBindingRequested = artifactBuildId !== null || expectedBuildId !== null;
+  if (
+    artifactBuildBindingRequested
+    && (
+      typeof artifactBuildId !== "string"
+      || artifactBuildId.length === 0
+      || typeof expectedBuildId !== "string"
+      || expectedBuildId.length === 0
+      || artifactBuildId !== expectedBuildId
+    )
+  ) {
+    return {
+      allowed: false,
+      verdict: "artifact-build-mismatch",
+      detail: "artifact provenance build_id does not match the expected artifact BUILD_ID",
+    };
+  }
+  if (
+    typeof liveBuildId === "string"
+    && liveBuildId.length > 0
+    && typeof expectedBuildId === "string"
+    && expectedBuildId.length > 0
+    && liveBuildId === expectedBuildId
+  ) {
+    return {
+      allowed: false,
+      verdict: "reused-live-build-id",
+      detail: "expected artifact BUILD_ID is already live; deployment identity would be ambiguous",
+    };
+  }
+
+  if (liveProvenanceState === DEPLOY_SOURCE_FENCE_LIVE_STATE_PRESENT_INVALID) {
+    return {
+      allowed: false,
+      verdict: "identity-unavailable",
+      detail: "live deploy provenance is present but malformed or does not satisfy the provenance contract",
+    };
+  }
+  if (liveProvenanceState === DEPLOY_SOURCE_FENCE_LIVE_STATE_PRESENT_MISMATCH) {
+    return {
+      allowed: false,
+      verdict: "provenance-mismatch",
+      detail: "live deploy provenance build_id does not match the live BUILD_ID",
     };
   }
 
@@ -263,6 +343,29 @@ export function evaluateDeploySourceFence({
       detail: "artifact run id, run number, or run attempt does not match the current workflow run",
     };
   }
+  if (typeof artifactIsAncestorOfCurrentMain !== "boolean") {
+    return {
+      allowed: false,
+      verdict: "ancestry-unavailable",
+      detail: "Git ancestry required for the current-main and live-source fence is unavailable",
+    };
+  }
+  if (!artifactIsAncestorOfCurrentMain) {
+    return {
+      allowed: false,
+      verdict: "source-diverged",
+      detail: `workflow source ${run} is not an ancestor of current origin/main ${currentMainSha.toLowerCase()}`,
+    };
+  }
+  if (remediationLiveIdentityAbsent) {
+    return {
+      allowed: true,
+      verdict: DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE,
+      detail:
+        "artifact matches this workflow run and current main; exact legacy live provenance absence "
+        + "was explicitly authorized for this dispatch, so live source/run monotonicity is unavailable",
+    };
+  }
   if (
     !Number.isInteger(liveRunNumber)
     || liveRunNumber < 0
@@ -276,21 +379,13 @@ export function evaluateDeploySourceFence({
     };
   }
   if (
-    typeof artifactIsAncestorOfCurrentMain !== "boolean"
-    || typeof liveIsAncestorOfArtifact !== "boolean"
+    typeof liveIsAncestorOfArtifact !== "boolean"
     || typeof artifactIsAncestorOfLive !== "boolean"
   ) {
     return {
       allowed: false,
       verdict: "ancestry-unavailable",
       detail: "Git ancestry required for the current-main and live-source fence is unavailable",
-    };
-  }
-  if (!artifactIsAncestorOfCurrentMain) {
-    return {
-      allowed: false,
-      verdict: "source-diverged",
-      detail: `workflow source ${run} is not an ancestor of current origin/main ${currentMainSha.toLowerCase()}`,
     };
   }
   if (!liveIsAncestorOfArtifact) {

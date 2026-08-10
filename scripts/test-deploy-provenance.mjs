@@ -10,6 +10,10 @@ import { fileURLToPath } from "node:url";
 import {
   DEPLOY_PROVENANCE_PUBLIC_PATH,
   DEPLOY_PROVENANCE_SCHEMA,
+  DEPLOY_SOURCE_FENCE_LIVE_STATE_LEGACY_UNPROVENANCED,
+  DEPLOY_SOURCE_FENCE_LIVE_STATE_PRESENT_INVALID,
+  DEPLOY_SOURCE_FENCE_LIVE_STATE_PRESENT_MISMATCH,
+  DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE,
   buildDeployProvenance,
   classifyLiveProvenance,
   evaluateDeploySourceFence,
@@ -18,6 +22,11 @@ import {
   isDeployProvenance,
   selectNewerActiveRun,
 } from "./lib/deploy-provenance.mjs";
+import {
+  DEPLOY_SOURCE_FENCE_CANONICAL_LIVE_BASE_URL,
+  probeUnprovenancedLive,
+  runDeploySourceFenceCli,
+} from "./check-deploy-source-fence.mjs";
 import { writeDeployProvenance } from "./write-deploy-provenance.mjs";
 
 // --- buildDeployProvenance -----------------------------------------------
@@ -362,6 +371,97 @@ const ancestryUnavailable = evaluateDeploySourceFence({
 assert.equal(ancestryUnavailable.allowed, false);
 assert.equal(ancestryUnavailable.verdict, "ancestry-unavailable");
 
+const legacyRemediationBase = {
+  ...sourceFenceBase,
+  liveSha: null,
+  liveRunNumber: null,
+  liveRunAttempt: null,
+  liveIsAncestorOfArtifact: null,
+  artifactIsAncestorOfLive: null,
+  mode: DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE,
+  liveProvenanceState: DEPLOY_SOURCE_FENCE_LIVE_STATE_LEGACY_UNPROVENANCED,
+  liveBuildId: "legacy-live-build",
+};
+const legacyRemediation = evaluateDeploySourceFence(legacyRemediationBase);
+assert.equal(legacyRemediation.allowed, true);
+assert.equal(legacyRemediation.verdict, DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE);
+
+const legacyWithoutMode = evaluateDeploySourceFence({
+  ...legacyRemediationBase,
+  mode: "strict",
+});
+assert.equal(legacyWithoutMode.allowed, false);
+assert.equal(legacyWithoutMode.verdict, "identity-unavailable");
+
+const remediationSourceDiverged = evaluateDeploySourceFence({
+  ...legacyRemediationBase,
+  artifactIsAncestorOfCurrentMain: false,
+});
+assert.equal(remediationSourceDiverged.allowed, false);
+assert.equal(remediationSourceDiverged.verdict, "source-diverged");
+
+const remediationArtifactMismatch = evaluateDeploySourceFence({
+  ...legacyRemediationBase,
+  artifactSha: "3333333333333333333333333333333333333333",
+});
+assert.equal(remediationArtifactMismatch.allowed, false);
+assert.equal(remediationArtifactMismatch.verdict, "artifact-run-mismatch");
+
+const remediationMalformed = evaluateDeploySourceFence({
+  ...sourceFenceBase,
+  mode: DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE,
+  liveProvenanceState: DEPLOY_SOURCE_FENCE_LIVE_STATE_PRESENT_INVALID,
+});
+assert.equal(remediationMalformed.allowed, false);
+assert.equal(remediationMalformed.verdict, "identity-unavailable");
+
+const remediationPresentMismatch = evaluateDeploySourceFence({
+  ...sourceFenceBase,
+  mode: DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE,
+  liveProvenanceState: DEPLOY_SOURCE_FENCE_LIVE_STATE_PRESENT_MISMATCH,
+});
+assert.equal(remediationPresentMismatch.allowed, false);
+assert.equal(remediationPresentMismatch.verdict, "provenance-mismatch");
+
+const remediationStaleLive = evaluateDeploySourceFence({
+  ...sourceFenceBase,
+  artifactSha: "1111111111111111111111111111111111111111",
+  runSha: "1111111111111111111111111111111111111111",
+  liveSha: "2222222222222222222222222222222222222222",
+  liveIsAncestorOfArtifact: false,
+  artifactIsAncestorOfLive: true,
+  mode: DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE,
+  liveProvenanceState: "present-valid",
+  liveBuildId: "live-build",
+});
+assert.equal(remediationStaleLive.allowed, false);
+assert.equal(remediationStaleLive.verdict, "stale-live");
+
+const strictCandidateBuildMismatch = evaluateDeploySourceFence({
+  ...sourceFenceBase,
+  artifactBuildId: "artifact-build",
+  expectedBuildId: "different-build",
+});
+assert.equal(strictCandidateBuildMismatch.allowed, false);
+assert.equal(strictCandidateBuildMismatch.verdict, "artifact-build-mismatch");
+
+const remediationCandidateBuildMismatch = evaluateDeploySourceFence({
+  ...legacyRemediationBase,
+  artifactBuildId: "artifact-build",
+  expectedBuildId: "different-build",
+});
+assert.equal(remediationCandidateBuildMismatch.allowed, false);
+assert.equal(remediationCandidateBuildMismatch.verdict, "artifact-build-mismatch");
+
+const remediationReusedLiveBuild = evaluateDeploySourceFence({
+  ...legacyRemediationBase,
+  artifactBuildId: "same-build",
+  expectedBuildId: "same-build",
+  liveBuildId: "same-build",
+});
+assert.equal(remediationReusedLiveBuild.allowed, false);
+assert.equal(remediationReusedLiveBuild.verdict, "reused-live-build-id");
+
 // --- evaluatePostObservation (propagation-window poll unit) -----------------
 
 const postBase = {
@@ -421,6 +521,116 @@ assert.throws(
   () => evaluatePostObservation({ ...postBase, expectedBuildId: "", liveBuildId: "x", liveProvenance: null }),
   /expectedBuildId/,
 );
+
+// --- probeUnprovenancedLive (authoritative remediation probe) ---------------
+
+const probeResponse = (status, body = "") => ({
+  status,
+  text: async () => body,
+});
+const sequenceFetch = (steps, calls = []) => async (url, options) => {
+  calls.push({ url, options });
+  const step = steps.shift();
+  if (step instanceof Error) throw step;
+  assert.notEqual(step, undefined, "unexpected extra live probe request");
+  return step;
+};
+
+const exactProbeCalls = [];
+const exactProbe = await probeUnprovenancedLive({
+  fetchImpl: sequenceFetch([
+    probeResponse(200, "authoritative-live-build\n"),
+    probeResponse(404),
+    probeResponse(404),
+  ], exactProbeCalls),
+  cacheBust: "probe-fixture",
+});
+assert.equal(exactProbe.allowed, true);
+assert.equal(exactProbe.liveBuildId, "authoritative-live-build");
+assert.equal(exactProbeCalls.length, 3);
+assert.deepEqual(
+  exactProbeCalls.map(({ url }) => new URL(url).pathname),
+  ["/BUILD_ID", "/deploy-provenance.json", "/data/admin/deploy-provenance.json"],
+);
+for (const { url, options } of exactProbeCalls) {
+  assert.equal(new URL(url).origin, DEPLOY_SOURCE_FENCE_CANONICAL_LIVE_BASE_URL);
+  assert.equal(new URL(url).searchParams.get("cb"), "probe-fixture");
+  assert.equal(options.redirect, "manual");
+  assert.equal(options.headers["cache-control"], "no-cache, no-store");
+  assert.equal(options.headers.pragma, "no-cache");
+}
+
+const nonCanonicalProbeCalls = [];
+const nonCanonicalProbe = await probeUnprovenancedLive({
+  baseUrl: "https://example.invalid",
+  fetchImpl: sequenceFetch([], nonCanonicalProbeCalls),
+  cacheBust: "probe-fixture",
+});
+assert.equal(nonCanonicalProbe.allowed, false);
+assert.equal(nonCanonicalProbe.verdict, "live-base-not-canonical");
+assert.equal(nonCanonicalProbeCalls.length, 0);
+
+for (const [label, steps] of [
+  ["BUILD_ID transport", [new Error("transport")]],
+  ["fresh provenance transport", [probeResponse(200, "live"), new Error("transport")]],
+  ["legacy provenance transport", [probeResponse(200, "live"), probeResponse(404), new Error("transport")]],
+]) {
+  const result = await probeUnprovenancedLive({
+    fetchImpl: sequenceFetch(steps),
+    cacheBust: label.replaceAll(" ", "-"),
+  });
+  assert.equal(result.allowed, false, label);
+  assert.equal(result.verdict, "live-probe-transport", label);
+}
+
+for (const status of [204, 302, 401, 403, 500]) {
+  const result = await probeUnprovenancedLive({
+    fetchImpl: sequenceFetch([probeResponse(status, "not-a-live-build")]),
+    cacheBust: `build-status-${status}`,
+  });
+  assert.equal(result.allowed, false, `BUILD_ID HTTP ${status}`);
+  assert.equal(result.verdict, "live-build-id-http");
+}
+for (const body of ["", "\r\n", "   "]) {
+  const result = await probeUnprovenancedLive({
+    fetchImpl: sequenceFetch([probeResponse(200, body)]),
+    cacheBust: "empty-build",
+  });
+  assert.equal(result.allowed, false, `empty BUILD_ID ${JSON.stringify(body)}`);
+  assert.equal(result.verdict, "live-build-id-empty");
+}
+
+for (const [label, response] of [
+  ["fresh redirect", probeResponse(302)],
+  ["fresh unauthorized", probeResponse(401)],
+  ["fresh forbidden", probeResponse(403)],
+  ["fresh server error", probeResponse(500)],
+  ["fresh malformed present", probeResponse(200, "not-json")],
+  ["fresh valid present", probeResponse(200, JSON.stringify(provenance))],
+]) {
+  const result = await probeUnprovenancedLive({
+    fetchImpl: sequenceFetch([probeResponse(200, "live"), response]),
+    cacheBust: label.replaceAll(" ", "-"),
+  });
+  assert.equal(result.allowed, false, label);
+  assert.equal(result.verdict, "fresh-provenance-present-or-unavailable", label);
+}
+
+for (const [label, response] of [
+  ["legacy redirect", probeResponse(302)],
+  ["legacy unauthorized", probeResponse(401)],
+  ["legacy forbidden", probeResponse(403)],
+  ["legacy server error", probeResponse(500)],
+  ["legacy malformed present", probeResponse(200, "not-json")],
+  ["legacy valid present", probeResponse(200, JSON.stringify(provenance))],
+]) {
+  const result = await probeUnprovenancedLive({
+    fetchImpl: sequenceFetch([probeResponse(200, "live"), probeResponse(404), response]),
+    cacheBust: label.replaceAll(" ", "-"),
+  });
+  assert.equal(result.allowed, false, label);
+  assert.equal(result.verdict, "legacy-provenance-present-or-unavailable", label);
+}
 
 // --- writeDeployProvenance (filesystem round-trip) --------------------------
 
@@ -493,6 +703,8 @@ const cliPass = spawnSync(
     sourceFenceScript,
     "--provenance",
     candidateProvenancePath,
+    "--expected-build-id",
+    candidateRun.build_id,
     "--live-provenance",
     liveProvenancePath,
     "--current-main",
@@ -524,6 +736,8 @@ const cliStale = spawnSync(
     sourceFenceScript,
     "--provenance",
     candidateProvenancePath,
+    "--expected-build-id",
+    candidateRun.build_id,
     "--live-provenance",
     liveProvenancePath,
     "--current-main",
@@ -552,6 +766,8 @@ const cliMalformed = spawnSync(
     sourceFenceScript,
     "--provenance",
     malformedProvenancePath,
+    "--expected-build-id",
+    candidateRun.build_id,
     "--live-provenance",
     liveProvenancePath,
     "--current-main",
@@ -572,19 +788,178 @@ const cliMalformed = spawnSync(
 assert.equal(cliMalformed.status, 1);
 assert.match(cliMalformed.stdout, /identity-unavailable/);
 
-const deployWorkflowPath = path.join(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-  ".github",
-  "workflows",
-  "deploy-worker.yml",
+const cliFenceEnv = {
+  ...process.env,
+  GITHUB_SHA: candidateSource,
+  GITHUB_RUN_ID: candidateRun.run_id,
+  GITHUB_RUN_NUMBER: String(candidateRun.run_number),
+  GITHUB_RUN_ATTEMPT: String(candidateRun.run_attempt),
+};
+const absentLiveProvenancePath = path.join(sourceFenceRepo, "absent-live-provenance.json");
+fs.rmSync(absentLiveProvenancePath, { force: true });
+const malformedLiveProvenancePath = path.join(sourceFenceRepo, "malformed-live-provenance.json");
+fs.writeFileSync(malformedLiveProvenancePath, JSON.stringify({ sha: liveSource }));
+const mismatchedLiveProvenancePath = path.join(sourceFenceRepo, "mismatched-live-provenance.json");
+fs.writeFileSync(
+  mismatchedLiveProvenancePath,
+  JSON.stringify({ ...liveRun, build_id: "provenance-build", sha: liveSource }),
 );
+
+const runCliCase = async ({
+  livePath = absentLiveProvenancePath,
+  expectedBuildId = candidateRun.build_id,
+  mode = null,
+  callerState = null,
+  callerLiveBuildId = null,
+  probeSteps = [],
+  eventName = "workflow_dispatch",
+  remediationInput = "true",
+}) => {
+  const argv = [
+    process.execPath,
+    sourceFenceScript,
+    "--provenance",
+    candidateProvenancePath,
+    "--expected-build-id",
+    expectedBuildId,
+    "--live-provenance",
+    livePath,
+    "--current-main",
+    currentMainSource,
+  ];
+  if (callerState !== null) argv.push("--live-provenance-state", callerState);
+  if (callerLiveBuildId !== null) argv.push("--live-build-id", callerLiveBuildId);
+  if (mode !== null) argv.push("--mode", mode);
+  const output = [];
+  const errors = [];
+  const probeCalls = [];
+  const status = await runDeploySourceFenceCli({
+    argv,
+    env: {
+      ...cliFenceEnv,
+      DEPLOY_EVENT_NAME: eventName,
+      DEPLOY_REMEDIATION_INPUT: remediationInput,
+    },
+    fetchImpl: sequenceFetch([...probeSteps], probeCalls),
+    gitCwd: sourceFenceRepo,
+    now: () => 12345,
+    emit: (message) => output.push(message),
+    emitError: (message) => errors.push(message),
+  });
+  return { status, output: output.join("\n"), errors: errors.join("\n"), probeCalls };
+};
+
+for (const [eventName, remediationInput] of [
+  ["schedule", "true"],
+  ["push", "true"],
+  ["workflow_run", "true"],
+  ["workflow_dispatch", null],
+  ["workflow_dispatch", "false"],
+]) {
+  const result = await runCliCase({
+    mode: DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE,
+    eventName,
+    remediationInput,
+    probeSteps: [
+      probeResponse(200, "authoritative-live-build"),
+      probeResponse(404),
+      probeResponse(404),
+    ],
+  });
+  assert.equal(result.status, 1, `${eventName} input=${String(remediationInput)}`);
+  assert.match(result.errors, /explicit owner input/);
+  assert.equal(result.probeCalls.length, 0, "unauthorized remediation must not probe");
+}
+
+const spoofedRemediation = await runCliCase({
+  callerState: DEPLOY_SOURCE_FENCE_LIVE_STATE_LEGACY_UNPROVENANCED,
+  callerLiveBuildId: "spoofed-live-build",
+  mode: DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE,
+  probeSteps: [probeResponse(500)],
+});
+assert.equal(spoofedRemediation.status, 1);
+assert.match(spoofedRemediation.errors, /live-build-id-http/);
+
+const strictSpoofedLegacy = await runCliCase({
+  callerState: DEPLOY_SOURCE_FENCE_LIVE_STATE_LEGACY_UNPROVENANCED,
+  callerLiveBuildId: "spoofed-live-build",
+});
+assert.equal(strictSpoofedLegacy.status, 1);
+assert.match(strictSpoofedLegacy.output, /identity-unavailable/);
+assert.equal(strictSpoofedLegacy.probeCalls.length, 0, "strict mode must not consume remediation proof");
+
+const staleTempAuthoritativeProbe = await runCliCase({
+  livePath: mismatchedLiveProvenancePath,
+  callerState: DEPLOY_SOURCE_FENCE_LIVE_STATE_PRESENT_MISMATCH,
+  callerLiveBuildId: "spoofed-live-build",
+  mode: DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE,
+  probeSteps: [
+    probeResponse(200, "authoritative-live-build"),
+    probeResponse(404),
+    probeResponse(404),
+  ],
+});
+assert.equal(staleTempAuthoritativeProbe.status, 0, staleTempAuthoritativeProbe.errors);
+assert.match(staleTempAuthoritativeProbe.output, /remediate-unprovenanced-live/);
+assert.match(staleTempAuthoritativeProbe.output, /authoritative-live-build/);
+assert.doesNotMatch(staleTempAuthoritativeProbe.output, /spoofed-live-build|provenance-build/);
+
+const remediationArtifactBuildMismatchCli = await runCliCase({
+  expectedBuildId: "different-artifact-build",
+  mode: DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE,
+  probeSteps: [
+    probeResponse(200, "authoritative-live-build"),
+    probeResponse(404),
+    probeResponse(404),
+  ],
+});
+assert.equal(remediationArtifactBuildMismatchCli.status, 1);
+assert.match(remediationArtifactBuildMismatchCli.output, /artifact-build-mismatch/);
+
+const remediationReusedLiveBuildCli = await runCliCase({
+  mode: DEPLOY_SOURCE_FENCE_MODE_REMEDIATE_UNPROVENANCED_LIVE,
+  probeSteps: [
+    probeResponse(200, candidateRun.build_id),
+    probeResponse(404),
+    probeResponse(404),
+  ],
+});
+assert.equal(remediationReusedLiveBuildCli.status, 1);
+assert.match(remediationReusedLiveBuildCli.output, /reused-live-build-id/);
+
+const strictArtifactBuildMismatchCli = await runCliCase({
+  livePath: liveProvenancePath,
+  expectedBuildId: "different-artifact-build",
+});
+assert.equal(strictArtifactBuildMismatchCli.status, 1);
+assert.match(strictArtifactBuildMismatchCli.output, /artifact-build-mismatch/);
+
+const strictMalformedLive = await runCliCase({
+  livePath: malformedLiveProvenancePath,
+  callerState: DEPLOY_SOURCE_FENCE_LIVE_STATE_LEGACY_UNPROVENANCED,
+  callerLiveBuildId: "spoofed-live-build",
+});
+assert.equal(strictMalformedLive.status, 1);
+assert.match(strictMalformedLive.output, /identity-unavailable/);
+
+const strictPresentMismatch = await runCliCase({
+  livePath: mismatchedLiveProvenancePath,
+  callerLiveBuildId: "actual-live-build",
+});
+assert.equal(strictPresentMismatch.status, 1);
+assert.match(strictPresentMismatch.output, /provenance-mismatch/);
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const deployWorkflowPath = path.join(repoRoot, ".github", "workflows", "deploy-worker.yml");
 const deployWorkflow = fs.readFileSync(deployWorkflowPath, "utf8");
 const deployJob = deployWorkflow.slice(deployWorkflow.indexOf("\n  deploy:"));
+const dispatchInput = deployWorkflow.slice(
+  deployWorkflow.indexOf("  workflow_dispatch:"),
+  deployWorkflow.indexOf("  # Requeue path:"),
+);
 const staticHeaders = fs.readFileSync(
   path.join(
-    path.dirname(fileURLToPath(import.meta.url)),
-    "..",
+    repoRoot,
     "100xfenok-next",
     "public",
     "_headers",
@@ -605,27 +980,105 @@ assert.match(deployJob, /uses: actions\/checkout@v4\s+with:\s+fetch-depth: 0/);
 const liveProvenanceFetchPosition = deployJob.indexOf("live-deploy-provenance-source-fence.json");
 const sourceFencePosition = deployJob.indexOf("check-deploy-source-fence.mjs");
 const uploadPosition = deployJob.indexOf("npx wrangler deploy");
-assert.match(deployJob, /\$base_url\/deploy-provenance\.json\?cb=/);
+const preProvenancePosition = deployJob.indexOf("node scripts/check-live-deploy-provenance.mjs --pre");
+const postProvenancePosition = deployJob.indexOf("node ../scripts/check-live-deploy-provenance.mjs --post");
+const sourceFenceBlock = deployJob.slice(deployJob.indexOf("fetch_http_status"), uploadPosition);
+const postBlock = deployJob.slice(postProvenancePosition);
+const smokeStep = deployJob.slice(deployJob.indexOf("      - name: Smoke data health KPI"));
 assert.match(
-  deployJob,
-  /if ! curl[\s\S]+\$base_url\/deploy-provenance\.json\?cb=[\s\S]+\$base_url\/data\/admin\/deploy-provenance\.json\?cb=/,
+  dispatchInput,
+  /remediate_unprovenanced_live:\s+description:[\s\S]+required:\s+false[\s\S]+default:\s+false[\s\S]+type:\s+boolean/,
+  "remediation input must be optional, default false, and boolean",
 );
 assert.match(
   deployJob,
+  /DEPLOY_EVENT_NAME:\s+\$\{\{\s*github\.event_name\s*\}\}[\s\S]+DEPLOY_REMEDIATION_INPUT:\s+\$\{\{\s*inputs\.remediate_unprovenanced_live\s+\|\|\s+false\s*\}\}/,
+  "the deploy step must receive the current event and non-sticky input value",
+);
+assert.match(deployJob, /\$base_url\/deploy-provenance\.json\?cb=/);
+assert.match(
+  sourceFenceBlock,
+  /--write-out '%\{http_code\}'/,
+  "source-fence surface reads must inspect HTTP status without curl --fail",
+);
+assert.match(
+  sourceFenceBlock,
   /live_provenance_surface="fresh-no-store"[\s\S]+live_provenance_surface="legacy-cached-fallback"[\s\S]+Deploy source fence provenance surface: \$live_provenance_surface/,
   "the deploy log must disclose whether the source fence read the fresh or rollback-only legacy surface",
 );
+assert.match(sourceFenceBlock, /case "\$fresh_provenance_status" in[\s\S]+404\)[\s\S]+legacy_provenance_status=/);
 assert.match(
-  deployJob,
+  sourceFenceBlock,
+  /legacy_provenance_status[\s\S]+case "\$legacy_provenance_status" in[\s\S]+404\)[\s\S]+live_provenance_state="legacy-unprovenanced"/,
+  "only the exact dual-404 branch may establish legacy-unprovenanced state",
+);
+assert.match(sourceFenceBlock, /transport\|\*[\s\S]+exit 1/);
+assert.doesNotMatch(sourceFenceBlock, /curl -f/, "404-only source-fence reads must not use curl --fail");
+assert.match(
+  sourceFenceBlock,
+  /if \[ "\$DEPLOY_EVENT_NAME" = "workflow_dispatch" \][\s\S]+\[ "\$DEPLOY_REMEDIATION_INPUT" = "true" \][\s\S]+\[ "\$live_provenance_state" = "legacy-unprovenanced" \]/,
+  "remediation must require dispatch, true input, and exact legacy state",
+);
+assert.doesNotMatch(
+  sourceFenceBlock,
+  /--live-provenance-state/,
+  "caller-declared legacy state must not be passed as remediation proof",
+);
+assert.match(sourceFenceBlock, /--live-build-id "\$live_build_id"/);
+assert.match(sourceFenceBlock, /--expected-build-id "\$expected_build_id"/);
+assert.match(sourceFenceBlock, /--mode "\$source_fence_mode"/);
+assert.match(
+  sourceFenceBlock,
+  /if \[ "\$live_build_id" = "\$expected_build_id" \][\s\S]+deployment identity would be ambiguous[\s\S]+exit 1/,
+  "remediation must retain the unique BUILD_ID guard",
+);
+assert.match(
+  sourceFenceBlock,
   /--provenance "\.open-next\/assets\/deploy-provenance\.json"/,
 );
 assert.equal(
   liveProvenanceFetchPosition >= 0
+    && preProvenancePosition >= 0
+    && preProvenancePosition < liveProvenanceFetchPosition
     && sourceFencePosition > liveProvenanceFetchPosition
     && uploadPosition > sourceFencePosition,
   true,
   "live provenance and the monotonic source fence must run in order immediately before upload",
 );
+assert.equal(postProvenancePosition > uploadPosition, true, "post provenance must run after upload");
+assert.match(postBlock, /node \.\.\/scripts\/check-live-deploy-provenance\.mjs --post/);
+assert.doesNotMatch(postBlock, /remediate-unprovenanced-live/, "post mode must never inherit remediation");
+
+const smokeWorkingDirectory = smokeStep.match(/working-directory:\s*([^\s]+)/)?.[1] ?? null;
+const postScriptArgument = smokeStep.match(/node\s+(\.\.\/scripts\/check-live-deploy-provenance\.mjs)\s+--post/)?.[1] ?? null;
+assert.equal(smokeWorkingDirectory, "100xfenok-next", "post command working directory must be explicit");
+assert.equal(postScriptArgument, "../scripts/check-live-deploy-provenance.mjs");
+const resolvedPostScript = path.resolve(repoRoot, smokeWorkingDirectory, postScriptArgument);
+assert.equal(resolvedPostScript, path.join(repoRoot, "scripts", "check-live-deploy-provenance.mjs"));
+assert.equal(fs.existsSync(resolvedPostScript), true, "post checker must resolve from its declared working directory");
+const postScriptSyntax = spawnSync(process.execPath, ["--check", resolvedPostScript], { encoding: "utf8" });
+assert.equal(postScriptSyntax.status, 0, `${postScriptSyntax.stderr}\n${postScriptSyntax.stdout}`);
+
+const remediationGate = ({ eventName, input, liveState }) => (
+  eventName === "workflow_dispatch"
+  && input === "true"
+  && liveState === "legacy-unprovenanced"
+);
+for (const [eventName, input, expected] of [
+  ["schedule", "true", false],
+  ["push", "true", false],
+  ["workflow_run", "true", false],
+  ["workflow_dispatch", undefined, false],
+  ["workflow_dispatch", "false", false],
+  ["workflow_dispatch", "true", true],
+]) {
+  assert.equal(
+    remediationGate({ eventName, input, liveState: "legacy-unprovenanced" }),
+    expected,
+    `${eventName} input=${String(input)}`,
+  );
+}
+assert.equal(remediationGate({ eventName: "workflow_dispatch", input: "true", liveState: "present-invalid" }), false);
 
 // structural round-trip: what the writer stamps, the checker credits as its own run
 const roundTrip = classifyLiveProvenance({
