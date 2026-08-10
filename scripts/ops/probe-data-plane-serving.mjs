@@ -7,10 +7,11 @@
 //
 // Some enrolled families are intentionally unpublished on the data plane for
 // now (see FALLBACK_ALLOWED_FAMILIES). For exactly those families, a 200 with
-// BOTH plane headers absent is their designed static-fallback state and passes
-// as FALLBACK-ALLOWED — observable, not silent. Every other shape for those
-// families, and every shape for published families, is validated strictly, so
-// a real serving defect can never hide behind the allowlist.
+// ALL THREE plane headers absent (generation, source-as-of, published-at) is
+// their designed static-fallback state and passes as FALLBACK-ALLOWED —
+// observable, not silent. Every other shape for those families, and every
+// shape for published families, is validated strictly, so a real serving
+// defect can never hide behind the allowlist.
 //
 // The enrolled-path list is imported from the Worker read module so the probe
 // can never drift from what production actually serves.
@@ -22,6 +23,56 @@ export const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
 // families refresh on business days; 5 calendar days survives any long
 // weekend while still catching a stalled publisher within the week.
 export const DEFAULT_MAX_SOURCE_AGE_DAYS = 5;
+
+// Calendar days since the plane last published (x-data-plane-published-at)
+// tolerated before the probe alarms. This is the second, independent axis: a
+// fresh source date served from a dead publisher is still a stale serving
+// state, so the heartbeat has its own limit.
+export const DEFAULT_MAX_PUBLISHED_AGE_DAYS = 7;
+
+// ---- Axis 1: immutable source-age policy (days) ----
+// Exact path overrides family, then default. FDIC and the four FRED banking
+// cadences publish on their own calendars: the daily banking file must be
+// fresh within the week, quarterly data legitimately sits for months.
+export const PATH_SOURCE_AGE_DAYS = Object.freeze({
+  "/data/macro/fdic-tier1.json": 180,
+  "/data/macro/fred-banking-daily.json": 7,
+  "/data/macro/fred-banking-weekly.json": 14,
+  "/data/macro/fred-banking-monthly.json": 100,
+  "/data/macro/fred-banking-quarterly.json": 180,
+});
+export const FAMILY_SOURCE_AGE_DAYS = Object.freeze({
+  "fred-yardeni": 14,
+  "slickcharts-monthly": 40,
+});
+
+// ---- Axis 2: immutable publication-heartbeat policy (days) ----
+// Family override, then default. No exact-path overrides exist on this axis.
+export const FAMILY_PUBLISHED_AGE_DAYS = Object.freeze({
+  "fred-yardeni": 10,
+  "slickcharts-weekly": 10,
+  "slickcharts-monthly": 40,
+});
+
+export function resolveSourceAgeDays({ path, family }) {
+  return PATH_SOURCE_AGE_DAYS[path] ?? FAMILY_SOURCE_AGE_DAYS[family] ?? DEFAULT_MAX_SOURCE_AGE_DAYS;
+}
+
+export function resolvePublishedAgeDays({ path, family }) {
+  return FAMILY_PUBLISHED_AGE_DAYS[family] ?? DEFAULT_MAX_PUBLISHED_AGE_DAYS;
+}
+
+function tightenPolicyLimit(policyLimit, override) {
+  return Number.isFinite(override) && override > 0
+    ? Math.min(policyLimit, override)
+    : policyLimit;
+}
+
+export function parseLegacySourceAgeCap(value) {
+  if (value === undefined) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
 
 // Families that are enrolled but intentionally not yet published to the data
 // plane. Static fallback (200 with no plane headers) is their designed serving
@@ -49,32 +100,73 @@ const FALLBACK_ALLOWED_FAMILY_SET = new Set(FALLBACK_ALLOWED_FAMILIES);
       );
     }
   }
+  // Same guard for the immutable policies: an override may only name what
+  // production actually enrolls, so a typo fails at startup.
+  for (const path of Object.keys(PATH_SOURCE_AGE_DAYS)) {
+    if (!ENROLLED_PATHS.has(path)) {
+      throw new Error(`PATH_SOURCE_AGE_DAYS names "${path}", which is not in ENROLLED_PATHS`);
+    }
+  }
+  for (const family of [...Object.keys(FAMILY_SOURCE_AGE_DAYS), ...Object.keys(FAMILY_PUBLISHED_AGE_DAYS)]) {
+    if (!enrolledFamilies.has(family)) {
+      throw new Error(
+        `A freshness policy names family "${family}", which is not declared in ENROLLED_PATHS or ENROLLED_PREFIXES`,
+      );
+    }
+  }
 }
 
-export function evaluateProbeResponse({ path, family, status, generationHeader, sourceAsOfHeader, nowIso, maxAgeDays }) {
+export function evaluateProbeResponse({ path, family, status, generationHeader, sourceAsOfHeader, publishedAtHeader, nowIso, maxAgeDays, maxPublishedAgeDays }) {
   const failures = [];
   if (status !== 200) {
     failures.push(`HTTP ${status} (expected 200)`);
     return { path, family, ok: false, mode: "strict", failures };
   }
-  const fallbackAllowed = FALLBACK_ALLOWED_FAMILY_SET.has(family);
-  if (fallbackAllowed && generationHeader == null && sourceAsOfHeader == null) {
+  const nowMs = Date.parse(nowIso ?? "");
+  const nowIsValid = Number.isFinite(nowMs);
+  if (!nowIsValid) {
+    failures.push(`nowIso is unparseable (${nowIso == null ? "absent" : `"${nowIso}"`})`);
+  }
+  const allPlaneHeadersAbsent = generationHeader == null && sourceAsOfHeader == null && publishedAtHeader == null;
+  if (nowIsValid && FALLBACK_ALLOWED_FAMILY_SET.has(family) && allPlaneHeadersAbsent) {
     // Designed static fallback for an intentionally unpublished family: the
     // URL is serving the bundled copy and that is the agreed, observed state.
     return { path, family, ok: true, mode: "fallback-allowed", failures };
   }
+  // Any present-but-empty or partial header set lands here: strict mode. The
+  // heartbeat is mandatory in strict mode — a generation and source date with
+  // no publication instant cannot prove the plane is actually serving.
   if (!generationHeader || !generationHeader.startsWith(`${family}-`)) {
     failures.push(
       `x-data-plane-generation is ${generationHeader == null ? "absent — the URL is silently serving the deploy-time bundled copy" : `"${generationHeader}" (expected prefix "${family}-")`}`,
     );
   }
+  const effectiveSourceAgeDays = tightenPolicyLimit(resolveSourceAgeDays({ path, family }), maxAgeDays);
+  const effectivePublishedAgeDays = tightenPolicyLimit(resolvePublishedAgeDays({ path, family }), maxPublishedAgeDays);
   const sourceMs = Date.parse(sourceAsOfHeader ?? "");
   if (!Number.isFinite(sourceMs)) {
     failures.push(`x-data-plane-source-as-of is ${sourceAsOfHeader == null ? "absent" : `unparseable ("${sourceAsOfHeader}")`}`);
-  } else {
-    const ageDays = (Date.parse(nowIso) - sourceMs) / 86400000;
-    if (ageDays > maxAgeDays) {
-      failures.push(`source date ${sourceAsOfHeader} is ${ageDays.toFixed(1)} days old (limit ${maxAgeDays})`);
+  } else if (nowIsValid) {
+    if (sourceMs > nowMs) {
+      failures.push(`source date ${sourceAsOfHeader} is in the future relative to now ${nowIso}`);
+    } else {
+      const ageDays = (nowMs - sourceMs) / 86400000;
+      if (ageDays > effectiveSourceAgeDays) {
+        failures.push(`source date ${sourceAsOfHeader} is ${ageDays.toFixed(1)} days old (limit ${effectiveSourceAgeDays})`);
+      }
+    }
+  }
+  const publishedMs = Date.parse(publishedAtHeader ?? "");
+  if (!Number.isFinite(publishedMs)) {
+    failures.push(`x-data-plane-published-at is ${publishedAtHeader == null ? "absent" : `unparseable ("${publishedAtHeader}")`}`);
+  } else if (nowIsValid) {
+    if (publishedMs > nowMs) {
+      failures.push(`published at ${publishedAtHeader} is in the future relative to now ${nowIso}`);
+    } else {
+      const heartbeatDays = (nowMs - publishedMs) / 86400000;
+      if (heartbeatDays > effectivePublishedAgeDays) {
+        failures.push(`published at ${publishedAtHeader} is ${heartbeatDays.toFixed(1)} days old (heartbeat limit ${effectivePublishedAgeDays})`);
+      }
     }
   }
   return { path, family, ok: failures.length === 0, mode: "strict", failures };
@@ -99,6 +191,7 @@ export async function probeAll({ baseUrl, fetchFn, nowIso, maxAgeDays }) {
       status: response.status,
       generationHeader: response.headers.get("x-data-plane-generation"),
       sourceAsOfHeader: response.headers.get("x-data-plane-source-as-of"),
+      publishedAtHeader: response.headers.get("x-data-plane-published-at"),
       nowIso,
       maxAgeDays,
     }));
@@ -126,7 +219,7 @@ export function buildReport(results) {
 
 async function main() {
   const baseUrl = process.env.PROBE_BASE_URL || DEFAULT_BASE_URL;
-  const maxAgeDays = Number(process.env.PROBE_MAX_SOURCE_AGE_DAYS) || DEFAULT_MAX_SOURCE_AGE_DAYS;
+  const maxAgeDays = parseLegacySourceAgeCap(process.env.PROBE_MAX_SOURCE_AGE_DAYS);
   const results = await probeAll({
     baseUrl,
     fetchFn: fetch,

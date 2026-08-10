@@ -1,10 +1,17 @@
 import assert from "node:assert/strict";
 import {
+  DEFAULT_MAX_PUBLISHED_AGE_DAYS,
   DEFAULT_MAX_SOURCE_AGE_DAYS,
   FALLBACK_ALLOWED_FAMILIES,
+  FAMILY_PUBLISHED_AGE_DAYS,
+  FAMILY_SOURCE_AGE_DAYS,
+  PATH_SOURCE_AGE_DAYS,
   buildReport,
   evaluateProbeResponse,
+  parseLegacySourceAgeCap,
   probeAll,
+  resolvePublishedAgeDays,
+  resolveSourceAgeDays,
 } from "./probe-data-plane-serving.mjs";
 import { ENROLLED_PATHS, ENROLLED_PREFIXES } from "../lib/cloud-data-plane-worker-read.mjs";
 
@@ -15,7 +22,15 @@ const base = {
   status: 200,
   nowIso: NOW,
   maxAgeDays: DEFAULT_MAX_SOURCE_AGE_DAYS,
+  maxPublishedAgeDays: DEFAULT_MAX_PUBLISHED_AGE_DAYS,
 };
+
+const MS_PER_DAY = 86400000;
+const daysAgo = (days, dateOnly = false) => {
+  const iso = new Date(Date.parse(NOW) - days * MS_PER_DAY).toISOString();
+  return dateOnly ? iso.slice(0, 10) : iso;
+};
+const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOString();
 
 // The exported allowlist is immutable; callers cannot broaden fallback policy.
 {
@@ -23,10 +38,17 @@ const base = {
   assert.equal(FALLBACK_ALLOWED_FAMILIES.includes("slickcharts-daily"), false);
 }
 
-// Healthy: plane header with the family prefix and a fresh source date.
+// Healthy dynamic response: plane headers with the family prefix, a fresh
+// source date, and a fresh publication heartbeat.
 {
-  const r = evaluateProbeResponse({ ...base, generationHeader: "fred-macro-abc123", sourceAsOfHeader: "2026-08-03" });
+  const r = evaluateProbeResponse({
+    ...base,
+    generationHeader: "fred-macro-abc123",
+    sourceAsOfHeader: "2026-08-03",
+    publishedAtHeader: hoursAgo(1),
+  });
   assert.equal(r.ok, true, JSON.stringify(r.failures));
+  assert.equal(r.mode, "strict");
 }
 
 // The 2026-08-03 incident shape: valid 200, no generation header — the URL is
@@ -39,7 +61,12 @@ const base = {
 
 // A generation from another family is a routing defect, not health.
 {
-  const r = evaluateProbeResponse({ ...base, generationHeader: "oecd-cli-abc123", sourceAsOfHeader: "2026-08-03" });
+  const r = evaluateProbeResponse({
+    ...base,
+    generationHeader: "oecd-cli-abc123",
+    sourceAsOfHeader: "2026-08-03",
+    publishedAtHeader: hoursAgo(1),
+  });
   assert.equal(r.ok, false);
   assert.match(r.failures[0], /expected prefix "fred-macro-"/);
 }
@@ -47,10 +74,20 @@ const base = {
 // Stale source date beyond the calendar tolerance alarms; within it passes
 // (a Friday date read on Monday is 3 days — inside the 5-day tolerance).
 {
-  const stale = evaluateProbeResponse({ ...base, generationHeader: "fred-macro-abc123", sourceAsOfHeader: "2026-07-20" });
+  const stale = evaluateProbeResponse({
+    ...base,
+    generationHeader: "fred-macro-abc123",
+    sourceAsOfHeader: "2026-07-20",
+    publishedAtHeader: hoursAgo(1),
+  });
   assert.equal(stale.ok, false);
   assert.match(stale.failures[0], /days old/);
-  const weekend = evaluateProbeResponse({ ...base, generationHeader: "fred-macro-abc123", sourceAsOfHeader: "2026-07-31" });
+  const weekend = evaluateProbeResponse({
+    ...base,
+    generationHeader: "fred-macro-abc123",
+    sourceAsOfHeader: "2026-07-31",
+    publishedAtHeader: hoursAgo(1),
+  });
   assert.equal(weekend.ok, true);
 }
 
@@ -67,7 +104,6 @@ const base = {
   const results = await probeAll({
     baseUrl: "https://example.test",
     nowIso: NOW,
-    maxAgeDays: DEFAULT_MAX_SOURCE_AGE_DAYS,
     fetchFn: async (url) => {
       asked.push(url);
       throw new Error("connect timeout");
@@ -117,6 +153,7 @@ const base = {
     family: "slickcharts-history",
     generationHeader: "slickcharts-history-abc123",
     sourceAsOfHeader: "2026-08-03",
+    publishedAtHeader: hoursAgo(1),
   });
   assert.equal(r.ok, true);
   assert.equal(r.mode, "strict");
@@ -193,9 +230,403 @@ const base = {
     family: "slickcharts-history",
     generationHeader: "slickcharts-history-abc123",
     sourceAsOfHeader: "2026-07-20",
+    publishedAtHeader: hoursAgo(1),
   });
   assert.equal(r.ok, false);
   assert.match(r.failures[0], /days old/);
+}
+
+// ---- Two-axis freshness policy ----
+
+// Axis 1 source-age resolution: every exact-path override, every family
+// override, the default, and path-over-family precedence.
+{
+  assert.equal(resolveSourceAgeDays({ path: "/data/macro/fdic-tier1.json", family: "fdic-tier1" }), 180);
+  assert.equal(resolveSourceAgeDays({ path: "/data/macro/fred-banking-daily.json", family: "fred-banking" }), 7);
+  assert.equal(resolveSourceAgeDays({ path: "/data/macro/fred-banking-weekly.json", family: "fred-banking" }), 14);
+  assert.equal(resolveSourceAgeDays({ path: "/data/macro/fred-banking-monthly.json", family: "fred-banking" }), 100);
+  assert.equal(resolveSourceAgeDays({ path: "/data/macro/fred-banking-quarterly.json", family: "fred-banking" }), 180);
+  assert.equal(resolveSourceAgeDays({ path: "/data/yardney/yardney_model.json", family: "fred-yardeni" }), 14);
+  assert.equal(resolveSourceAgeDays({ path: "/data/slickcharts/sp500-returns.json", family: "slickcharts-monthly" }), 40);
+  // Exact path beats family when both have overrides.
+  assert.equal(resolveSourceAgeDays({ path: "/data/macro/fdic-tier1.json", family: "fred-yardeni" }), 180);
+  // No override on either axis falls back to the default.
+  assert.equal(resolveSourceAgeDays({ path: "/data/macro/fred-macro.json", family: "fred-macro" }), DEFAULT_MAX_SOURCE_AGE_DAYS);
+  assert.equal(resolveSourceAgeDays({ path: "/nonexistent.json", family: "nobody" }), DEFAULT_MAX_SOURCE_AGE_DAYS);
+}
+
+// Axis 2 heartbeat resolution: every family override and the default.
+{
+  assert.equal(resolvePublishedAgeDays({ path: "/data/yardney/yardney_model.json", family: "fred-yardeni" }), 10);
+  assert.equal(resolvePublishedAgeDays({ path: "/data/slickcharts/sp500.json", family: "slickcharts-weekly" }), 10);
+  assert.equal(resolvePublishedAgeDays({ path: "/data/slickcharts/sp500-returns.json", family: "slickcharts-monthly" }), 40);
+  assert.equal(resolvePublishedAgeDays({ path: "/data/macro/fred-macro.json", family: "fred-macro" }), DEFAULT_MAX_PUBLISHED_AGE_DAYS);
+  assert.equal(resolvePublishedAgeDays({ path: "/nonexistent.json", family: "nobody" }), DEFAULT_MAX_PUBLISHED_AGE_DAYS);
+}
+
+// The policy tables are immutable: callers cannot mutate them.
+{
+  for (const table of [PATH_SOURCE_AGE_DAYS, FAMILY_SOURCE_AGE_DAYS, FAMILY_PUBLISHED_AGE_DAYS]) {
+    assert.equal(Object.isFrozen(table), true);
+  }
+  assert.throws(() => { PATH_SOURCE_AGE_DAYS["/data/macro/extra.json"] = 1; }, TypeError);
+  assert.throws(() => { FAMILY_SOURCE_AGE_DAYS["nobody"] = 1; }, TypeError);
+  assert.throws(() => { FAMILY_PUBLISHED_AGE_DAYS["nobody"] = 1; }, TypeError);
+  assert.equal(PATH_SOURCE_AGE_DAYS["/data/macro/extra.json"], undefined);
+  assert.equal(FAMILY_PUBLISHED_AGE_DAYS["nobody"], undefined);
+}
+
+// Missing, empty, unparseable, and stale published-at all fail strict mode.
+{
+  for (const publishedAtHeader of [null, "", "not-a-date"]) {
+    const r = evaluateProbeResponse({
+      ...base,
+      generationHeader: "fred-macro-abc123",
+      sourceAsOfHeader: daysAgo(1, true),
+      publishedAtHeader,
+    });
+    assert.equal(r.ok, false, JSON.stringify({ publishedAtHeader, failures: r.failures }));
+    assert.equal(r.mode, "strict");
+    if (publishedAtHeader === null) {
+      assert.match(r.failures[0], /x-data-plane-published-at is absent/);
+    } else {
+      assert.match(r.failures[0], /x-data-plane-published-at is unparseable/);
+    }
+  }
+  // A fresh source date cannot hide a dead publisher: stale heartbeat fails.
+  const staleHeartbeat = evaluateProbeResponse({
+    ...base,
+    generationHeader: "fred-macro-abc123",
+    sourceAsOfHeader: daysAgo(1, true),
+    publishedAtHeader: daysAgo(30),
+  });
+  assert.equal(staleHeartbeat.ok, false);
+  assert.match(staleHeartbeat.failures[0], /published at .* days old \(heartbeat limit 7\)/);
+}
+
+// Generation and source present without the publication header is a strict
+// partial response, never fallback.
+{
+  const r = evaluateProbeResponse({
+    ...base,
+    generationHeader: "fred-macro-abc123",
+    sourceAsOfHeader: daysAgo(1, true),
+    publishedAtHeader: undefined,
+  });
+  assert.equal(r.ok, false);
+  assert.equal(r.mode, "strict");
+  assert.match(r.failures[0], /x-data-plane-published-at is absent/);
+}
+
+// The evaluator always derives immutable policy internally. Omitting limits
+// cannot skip age checks, and oversized overrides cannot loosen policy.
+{
+  const omittedLimits = evaluateProbeResponse({
+    path: "/data/macro/fred-macro.json",
+    family: "fred-macro",
+    status: 200,
+    nowIso: NOW,
+    generationHeader: "fred-macro-abc123",
+    sourceAsOfHeader: daysAgo(6, true),
+    publishedAtHeader: hoursAgo(1),
+  });
+  assert.equal(omittedLimits.ok, false);
+  assert.match(omittedLimits.failures[0], /days old \(limit 5\)/);
+
+  const cannotLoosenSource = evaluateProbeResponse({
+    ...base,
+    path: "/data/macro/fred-banking-quarterly.json",
+    family: "fred-banking",
+    generationHeader: "fred-banking-abc123",
+    sourceAsOfHeader: daysAgo(313, true),
+    publishedAtHeader: hoursAgo(1),
+    maxAgeDays: 999,
+  });
+  assert.equal(cannotLoosenSource.ok, false);
+  assert.match(cannotLoosenSource.failures[0], /days old \(limit 180\)/);
+
+  const cannotLoosenHeartbeat = evaluateProbeResponse({
+    ...base,
+    path: "/data/slickcharts/sp500-returns.json",
+    family: "slickcharts-monthly",
+    generationHeader: "slickcharts-monthly-abc123",
+    sourceAsOfHeader: daysAgo(1, true),
+    publishedAtHeader: daysAgo(41),
+    maxPublishedAgeDays: 999,
+  });
+  assert.equal(cannotLoosenHeartbeat.ok, false);
+  assert.match(cannotLoosenHeartbeat.failures[0], /heartbeat limit 40/);
+
+  const tightenSource = evaluateProbeResponse({
+    ...base,
+    path: "/data/macro/fdic-tier1.json",
+    family: "fdic-tier1",
+    generationHeader: "fdic-tier1-abc123",
+    sourceAsOfHeader: daysAgo(132, true),
+    publishedAtHeader: hoursAgo(1),
+    maxAgeDays: 100,
+  });
+  assert.equal(tightenSource.ok, false);
+  assert.match(tightenSource.failures[0], /days old \(limit 100\)/);
+
+  for (const maxAgeDays of [0, -1, NaN, Infinity, "1"]) {
+    const invalidOverride = evaluateProbeResponse({
+      ...base,
+      path: "/data/macro/fdic-tier1.json",
+      family: "fdic-tier1",
+      generationHeader: "fdic-tier1-abc123",
+      sourceAsOfHeader: daysAgo(132, true),
+      publishedAtHeader: hoursAgo(1),
+      maxAgeDays,
+    });
+    assert.equal(invalidOverride.ok, true, `invalid override ${String(maxAgeDays)} must use policy`);
+  }
+}
+
+// Invalid reference time and future source/publication timestamps fail with
+// explicit reasons. An invalid now also rejects an otherwise allowed fallback.
+{
+  const invalidNow = evaluateProbeResponse({
+    ...base,
+    nowIso: "not-a-time",
+    generationHeader: "fred-macro-abc123",
+    sourceAsOfHeader: daysAgo(1, true),
+    publishedAtHeader: hoursAgo(1),
+  });
+  assert.equal(invalidNow.ok, false);
+  assert.match(invalidNow.failures[0], /nowIso is unparseable \("not-a-time"\)/);
+
+  const invalidFallbackNow = evaluateProbeResponse({
+    path: "/data/slickcharts/stocks/AAPL.json",
+    family: "slickcharts-history",
+    status: 200,
+    nowIso: "not-a-time",
+    generationHeader: null,
+    sourceAsOfHeader: null,
+    publishedAtHeader: null,
+  });
+  assert.equal(invalidFallbackNow.ok, false);
+  assert.equal(invalidFallbackNow.mode, "strict");
+  assert.match(invalidFallbackNow.failures[0], /nowIso is unparseable/);
+
+  const futureSource = evaluateProbeResponse({
+    ...base,
+    generationHeader: "fred-macro-abc123",
+    sourceAsOfHeader: "2026-08-04T12:00:00Z",
+    publishedAtHeader: hoursAgo(1),
+  });
+  assert.equal(futureSource.ok, false);
+  assert.match(futureSource.failures[0], /source date .* is in the future relative to now/);
+
+  const futurePublished = evaluateProbeResponse({
+    ...base,
+    generationHeader: "fred-macro-abc123",
+    sourceAsOfHeader: daysAgo(1, true),
+    publishedAtHeader: "2026-08-04T12:00:00Z",
+  });
+  assert.equal(futurePublished.ok, false);
+  assert.match(futurePublished.failures[0], /published at .* is in the future relative to now/);
+}
+
+// Legacy environment parsing preserves the old input while rejecting zero or
+// invalid values; the resulting cap is still clamped against immutable policy.
+{
+  assert.equal(parseLegacySourceAgeCap(undefined), undefined);
+  assert.equal(parseLegacySourceAgeCap("3"), 3);
+  for (const value of ["0", "-1", "not-a-number", "Infinity", ""]) {
+    assert.equal(parseLegacySourceAgeCap(value), undefined);
+  }
+}
+
+// All three plane headers absent on a known fallback family passes as
+// FALLBACK-ALLOWED; any single present header escapes fallback.
+{
+  const allAbsent = evaluateProbeResponse({
+    ...base,
+    path: "/data/slickcharts/stocks/AAPL.json",
+    family: "slickcharts-history",
+    generationHeader: null,
+    sourceAsOfHeader: null,
+    publishedAtHeader: null,
+  });
+  assert.equal(allAbsent.ok, true);
+  assert.equal(allAbsent.mode, "fallback-allowed");
+
+  const publishedAtOnly = evaluateProbeResponse({
+    ...base,
+    path: "/data/slickcharts/symbols.json",
+    family: "slickcharts-symbols",
+    generationHeader: null,
+    sourceAsOfHeader: null,
+    publishedAtHeader: hoursAgo(1),
+  });
+  assert.equal(publishedAtOnly.ok, false);
+  assert.equal(publishedAtOnly.mode, "strict");
+  assert.match(publishedAtOnly.failures[0], /silently serving the deploy-time bundled copy/);
+}
+
+// Policy-backed limits: FDIC tier-1 tolerates a 132-day-old source date with a
+// fresh heartbeat (path override 180).
+{
+  const fdicPath = "/data/macro/fdic-tier1.json";
+  const r = evaluateProbeResponse({
+    ...base,
+    path: fdicPath,
+    family: "fdic-tier1",
+    generationHeader: "fdic-tier1-abc123",
+    sourceAsOfHeader: daysAgo(132, true),
+    publishedAtHeader: hoursAgo(1),
+    maxAgeDays: resolveSourceAgeDays({ path: fdicPath, family: "fdic-tier1" }),
+    maxPublishedAgeDays: resolvePublishedAgeDays({ path: fdicPath, family: "fdic-tier1" }),
+  });
+  assert.equal(r.ok, true, JSON.stringify(r.failures));
+}
+
+// Banking cadence overrides: daily 4d, weekly 12d, monthly 70d all pass;
+// quarterly 313d exceeds its 180-day limit and fails.
+{
+  const passes = [
+    { path: "/data/macro/fred-banking-daily.json", sourceDays: 4 },
+    { path: "/data/macro/fred-banking-weekly.json", sourceDays: 12 },
+    { path: "/data/macro/fred-banking-monthly.json", sourceDays: 70 },
+  ];
+  for (const { path, sourceDays } of passes) {
+    const r = evaluateProbeResponse({
+      ...base,
+      path,
+      family: "fred-banking",
+      generationHeader: "fred-banking-abc123",
+      sourceAsOfHeader: daysAgo(sourceDays, true),
+      publishedAtHeader: hoursAgo(1),
+      maxAgeDays: resolveSourceAgeDays({ path, family: "fred-banking" }),
+      maxPublishedAgeDays: resolvePublishedAgeDays({ path, family: "fred-banking" }),
+    });
+    assert.equal(r.ok, true, `${path}: ${JSON.stringify(r.failures)}`);
+  }
+  const quarterlyPath = "/data/macro/fred-banking-quarterly.json";
+  const quarterly = evaluateProbeResponse({
+    ...base,
+    path: quarterlyPath,
+    family: "fred-banking",
+    generationHeader: "fred-banking-abc123",
+    sourceAsOfHeader: daysAgo(313, true),
+    publishedAtHeader: hoursAgo(1),
+    maxAgeDays: resolveSourceAgeDays({ path: quarterlyPath, family: "fred-banking" }),
+    maxPublishedAgeDays: resolvePublishedAgeDays({ path: quarterlyPath, family: "fred-banking" }),
+  });
+  assert.equal(quarterly.ok, false);
+  assert.match(quarterly.failures[0], /days old \(limit 180\)/);
+}
+
+// Default source limit: a 6-day-old source fails the 5-day default even with
+// a fresh heartbeat.
+{
+  const r = evaluateProbeResponse({
+    ...base,
+    generationHeader: "fred-macro-abc123",
+    sourceAsOfHeader: daysAgo(6, true),
+    publishedAtHeader: hoursAgo(1),
+  });
+  assert.equal(r.ok, false);
+  assert.match(r.failures[0], /days old \(limit 5\)/);
+}
+
+// probeAll end-to-end: reads x-data-plane-published-at and applies per-path
+// policy limits — every enrolled path passes with policy-aged data and a
+// fresh heartbeat.
+{
+  const healthyHeadersFor = (path) => {
+    const family = ENROLLED_PATHS.get(path);
+    const sourceLimit = resolveSourceAgeDays({ path, family });
+    return {
+      "x-data-plane-generation": `${family}-abc123`,
+      "x-data-plane-source-as-of": daysAgo(sourceLimit - 1, true),
+      "x-data-plane-published-at": hoursAgo(1),
+    };
+  };
+  const results = await probeAll({
+    baseUrl: "https://example.test",
+    nowIso: NOW,
+    fetchFn: async (url) => new Response(null, { status: 200, headers: healthyHeadersFor(new URL(url).pathname) }),
+  });
+  assert.equal(results.length, ENROLLED_PATHS.size);
+  const failing = results.filter((r) => !r.ok);
+  assert.deepEqual(failing.map((r) => ({ path: r.path, failures: r.failures })), []);
+  assert.equal(results.every((r) => r.mode === "strict"), true);
+}
+
+// probeAll end-to-end: a stale heartbeat fails even when the source date is
+// well within its (generous) path override.
+{
+  const quarterlyPath = "/data/macro/fred-banking-quarterly.json";
+  const results = await probeAll({
+    baseUrl: "https://example.test",
+    nowIso: NOW,
+    fetchFn: async (url) => {
+      const path = new URL(url).pathname;
+      const family = ENROLLED_PATHS.get(path);
+      if (path === quarterlyPath) {
+        return new Response(null, {
+          status: 200,
+          headers: {
+            "x-data-plane-generation": `${family}-abc123`,
+            "x-data-plane-source-as-of": daysAgo(1, true),
+            "x-data-plane-published-at": daysAgo(50),
+          },
+        });
+      }
+      const sourceLimit = resolveSourceAgeDays({ path, family });
+      return new Response(null, {
+        status: 200,
+        headers: {
+          "x-data-plane-generation": `${family}-abc123`,
+          "x-data-plane-source-as-of": daysAgo(sourceLimit - 1, true),
+          "x-data-plane-published-at": hoursAgo(1),
+        },
+      });
+    },
+  });
+  const failing = results.filter((r) => !r.ok);
+  assert.equal(failing.length, 1);
+  assert.equal(failing[0].path, quarterlyPath);
+  assert.match(failing[0].failures[0], /published at .* days old \(heartbeat limit 7\)/);
+}
+
+// probeAll preserves the legacy maxAgeDays argument as a tightening cap. It
+// can tighten a generous path policy but cannot loosen the immutable default.
+{
+  const runWithLegacyCap = async (maxAgeDays, sourceDaysForPath) => probeAll({
+    baseUrl: "https://example.test",
+    nowIso: NOW,
+    maxAgeDays,
+    fetchFn: async (url) => {
+      const path = new URL(url).pathname;
+      const family = ENROLLED_PATHS.get(path);
+      const sourceDays = sourceDaysForPath(path);
+      return new Response(null, {
+        status: 200,
+        headers: {
+          "x-data-plane-generation": `${family}-abc123`,
+          "x-data-plane-source-as-of": daysAgo(sourceDays, true),
+          "x-data-plane-published-at": hoursAgo(1),
+        },
+      });
+    },
+  });
+
+  const tightened = await runWithLegacyCap(30, (path) => path === "/data/macro/fdic-tier1.json" ? 40 : 1);
+  const tightenedFdic = tightened.find((r) => r.path === "/data/macro/fdic-tier1.json");
+  assert.equal(tightenedFdic.ok, false);
+  assert.match(tightenedFdic.failures[0], /days old \(limit 30\)/);
+
+  const cannotLoosen = await runWithLegacyCap(999, (path) => path === "/data/macro/fred-macro.json" ? 6 : 1);
+  const defaultPath = cannotLoosen.find((r) => r.path === "/data/macro/fred-macro.json");
+  assert.equal(defaultPath.ok, false);
+  assert.match(defaultPath.failures[0], /days old \(limit 5\)/);
+
+  const zeroUsesPolicy = await runWithLegacyCap(0, (path) => path === "/data/macro/fdic-tier1.json" ? 132 : 1);
+  const zeroFdic = zeroUsesPolicy.find((r) => r.path === "/data/macro/fdic-tier1.json");
+  assert.equal(zeroFdic.ok, true, JSON.stringify(zeroFdic.failures));
 }
 
 // A published family is NOT allowlisted: the 2026-08-03 incident shape (200,
