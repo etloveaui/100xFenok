@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-10T03:20:28.916Z",
+  "generated_at": "2026-08-10T04:18:48.487Z",
   "status": "open",
-  "open_incident_count": 8,
+  "open_incident_count": 9,
   "open_incidents": [
     {
       "workflow": "build-stocks-analyzer.yml",
@@ -102,6 +102,19 @@
       "failure_streak_threshold": 2,
       "first_failing_run_id": 31136433451,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31136433451",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
+    {
+      "workflow": "update-manifest.yml",
+      "label": "Update Manifest",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 31350397868,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31350397868",
       "alarm_reasons": [
         "failure_streak"
       ],
@@ -522,9 +535,9 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31352235257",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31352235257",
-    "observed_at": "2026-08-10T03:20:28.916Z",
+    "run_id": "31354977125",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31354977125",
+    "observed_at": "2026-08-10T04:18:48.487Z",
     "event": "workflow_run",
     "workflows": [
       "build-stocks-analyzer.yml",
@@ -534,7 +547,8 @@
       "fetch-fred-yardeni.yml",
       "fetch-stockanalysis.yml",
       "fetch-yf-finance.yml",
-      "qa-rim-v2.yml"
+      "qa-rim-v2.yml",
+      "update-manifest.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
