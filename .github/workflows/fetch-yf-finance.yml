@@ -350,8 +350,6 @@ jobs:
         if: ${{ env.YF_PLAN_ONLY != 'true' && env.YF_LANE != 'etf' }}
         run: |
           python3 scripts/build-quarter-closes.py
-          mkdir -p 100xfenok-next/public/data/yf
-          cp data/yf/quarter_closes.json 100xfenok-next/public/data/yf/quarter_closes.json
 
       - name: Persist fetched Yahoo source data
         id: persist_yahoo_state
@@ -367,8 +365,7 @@ jobs:
           git add -- \
             data/yf/finance \
             data/yf/quarter_closes.json \
-            data/admin/yahoo-batch-quote-history \
-            100xfenok-next/public/data/yf/quarter_closes.json
+            data/admin/yahoo-batch-quote-history
           git restore --staged --worktree -- data/yf/finance/_summary.json
           if git diff --staged --quiet; then
             echo "No fetched Yahoo candidate changes to persist"

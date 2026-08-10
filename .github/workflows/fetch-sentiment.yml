@@ -47,7 +47,6 @@ jobs:
             data/admin/data-supply-state/detection-attempts
             data/admin/sentiment
             data/sentiment
-            100xfenok-next/public/data/sentiment
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -106,7 +105,7 @@ jobs:
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-sentiment.yml \
               --stage success_if_exists
-            git add -- data/sentiment/*.json 100xfenok-next/public/data/sentiment/*.json
+            git add -- data/sentiment/*.json
           fi
           if git diff --staged --quiet; then
             echo "No sentiment changes to publish"

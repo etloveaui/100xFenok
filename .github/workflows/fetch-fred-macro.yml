@@ -46,7 +46,6 @@ jobs:
             data/admin/data-supply-state/detection-attempts
             data/admin/fred_macro
             data/macro
-            100xfenok-next/public/data/macro
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -96,7 +95,7 @@ jobs:
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-fred-macro.yml \
               --stage success_if_exists
-            git add -- data/macro/fred-macro.json 100xfenok-next/public/data/macro/fred-macro.json
+            git add -- data/macro/fred-macro.json
           fi
           if git diff --staged --quiet; then
             echo "No FRED macro changes to publish"

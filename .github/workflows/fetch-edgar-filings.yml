@@ -68,7 +68,6 @@ jobs:
             data/admin/edgar_filings
             data/edgar
             data/edgar-korean-summaries
-            100xfenok-next/public/data/edgar-korean-summaries
 
       - name: Start from latest main
         run: |
@@ -145,8 +144,7 @@ jobs:
               --stage success_if_exists
             git add -- \
               data/edgar \
-              data/edgar-korean-summaries \
-              100xfenok-next/public/data/edgar-korean-summaries
+              data/edgar-korean-summaries
           fi
           if git diff --staged --quiet; then
             echo "No EDGAR filing timeline changes to publish"

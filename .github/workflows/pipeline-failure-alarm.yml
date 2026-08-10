@@ -59,7 +59,7 @@ jobs:
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/pipeline-failure-alarm.yml \
             --stage always_if_exists || exit 0
-          git add data/admin/alarm-state.json 100xfenok-next/public/data/admin/alarm-state.json || exit 0
+          git add data/admin/alarm-state.json || exit 0
           if git diff --cached --quiet; then
             echo "alarm-state unchanged; nothing to commit"
             exit 0

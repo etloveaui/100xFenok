@@ -40,7 +40,6 @@ jobs:
             data/admin/data-supply-state/detection-attempts
             data/admin/yahoo_private_options
             data/computed
-            100xfenok-next/public/data/computed
 
       - name: Start from latest main
         run: |
@@ -95,9 +94,7 @@ jobs:
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-fenok-private-options.yml \
               --stage success_if_exists
-            git add -- \
-              data/computed/fenok_yahoo_private_options_availability.json \
-              100xfenok-next/public/data/computed/fenok_yahoo_private_options_availability.json
+            git add -- data/computed/fenok_yahoo_private_options_availability.json
           fi
           if git diff --staged --quiet; then
             echo "No safe Yahoo private options changes to publish"

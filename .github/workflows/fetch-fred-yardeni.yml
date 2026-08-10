@@ -44,7 +44,6 @@ jobs:
             data/admin/fred_yardeni
             data/benchmarks
             data/yardney
-            100xfenok-next/public/data/yardney
             100xfenok-next/scripts
             100xfenok-next/src/lib
 
@@ -98,9 +97,7 @@ jobs:
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-fred-yardeni.yml \
               --stage success_if_exists
-            git add -- \
-              data/yardney/yardney_model.json \
-              100xfenok-next/public/data/yardney/yardney_model.json
+            git add -- data/yardney/yardney_model.json
           fi
           if git diff --staged --quiet; then
             echo "No Feno Yardeni changes to publish"

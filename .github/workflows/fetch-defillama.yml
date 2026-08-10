@@ -37,7 +37,6 @@ jobs:
             data/admin/data-supply-state/detection-attempts
             data/admin/defillama_stablecoins
             data/macro
-            100xfenok-next/public/data/macro
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -45,7 +44,7 @@ jobs:
           node-version: '20'
 
       - name: Create data directory
-        run: mkdir -p data data/macro 100xfenok-next/public/data/macro
+        run: mkdir -p data data/macro
 
       - name: Test DefiLlama producer contracts
         run: node scripts/test-fetch-defillama.mjs
@@ -94,7 +93,7 @@ jobs:
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-defillama.yml \
               --stage success_if_exists
-            git add -- data/macro/stablecoins.json 100xfenok-next/public/data/macro/stablecoins.json
+            git add -- data/macro/stablecoins.json
           fi
           if git diff --staged --quiet; then
             echo "No DefiLlama stablecoins changes to publish"

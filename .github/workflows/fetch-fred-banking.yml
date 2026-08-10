@@ -50,7 +50,6 @@ jobs:
             data/admin/data-supply-state/detection-attempts
             data/admin/fred_banking
             data/macro
-            100xfenok-next/public/data/macro
 
       - name: Start from latest main
         run: |
@@ -110,11 +109,7 @@ jobs:
               data/macro/fred-banking-daily.json \
               data/macro/fred-banking-weekly.json \
               data/macro/fred-banking-monthly.json \
-              data/macro/fred-banking-quarterly.json \
-              100xfenok-next/public/data/macro/fred-banking-daily.json \
-              100xfenok-next/public/data/macro/fred-banking-weekly.json \
-              100xfenok-next/public/data/macro/fred-banking-monthly.json \
-              100xfenok-next/public/data/macro/fred-banking-quarterly.json; do
+              data/macro/fred-banking-quarterly.json; do
               if [[ -f "$CANONICAL_FILE" ]]; then
                 git add -- "$CANONICAL_FILE"
               fi

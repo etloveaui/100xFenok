@@ -16,7 +16,7 @@ permissions:
   actions: write
 
 concurrency:
-  # All four canonical/public index series are lane-owned and the commit step
+  # All four canonical index series are lane-owned and the commit step
   # rebases before push. Isolate acquisition so concurrent natural schedules do
   # not replace one another in GitHub's one-pending global writer queue.
   group: fenok-data-writer-us-indices-daily-${{ github.ref }}
@@ -40,7 +40,6 @@ jobs:
             data/admin/data-supply-state/detection-attempts
             data/admin/us-indices-daily
             data/indices
-            100xfenok-next/public/data/indices
 
       - name: Setup Node.js
         uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
@@ -50,9 +49,11 @@ jobs:
       - name: Test US indices live producer
         run: npm --prefix 100xfenok-next run qa:us-indices-daily
 
-      # Yahoo becomes the live canonical/public owner in one atomic cutover.
-      # The former GAS comparator and historical report remain dormant only.
-      - name: Fetch Yahoo index closes to canonical and public mirrors atomically
+      # Yahoo is the live canonical owner (atomic cutover from GAS); the
+      # public mirror is owned by the merge boundary (sync-public-data.mjs
+      # full walk), not this lane. The former GAS comparator and historical
+      # report remain dormant only.
+      - name: Fetch Yahoo index closes to canonical data
         id: fetch_indices
         env:
           INPUT_CONTROLLED_FAILURE: ${{ github.event.inputs.controlled_failure || '' }}
@@ -91,7 +92,7 @@ jobs:
             echo "No US indices live data or attempt evidence to publish"
             exit "$RECOVERY_EXIT"
           fi
-          git commit -m "data: refresh US indices canonical and public mirrors"
+          git commit -m "data: refresh US indices canonical"
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then
               git rebase --abort >/dev/null 2>&1 || true

@@ -44,7 +44,6 @@ jobs:
             data/admin/data-supply-state/detection-attempts
             data/admin/fdic_tier1
             data/macro
-            100xfenok-next/public/data/macro
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -95,7 +94,7 @@ jobs:
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-fdic.yml \
               --stage success_if_exists
-            git add -- data/macro/fdic-tier1.json 100xfenok-next/public/data/macro/fdic-tier1.json
+            git add -- data/macro/fdic-tier1.json
           fi
           if git diff --staged --quiet; then
             echo "No FDIC Tier1 changes to publish"

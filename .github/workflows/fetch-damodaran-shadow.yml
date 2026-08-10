@@ -41,7 +41,6 @@ jobs:
             data/admin/data-supply-state/detection-attempts
             data/admin/damodaran
             data/damodaran
-            100xfenok-next/public/data/damodaran
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -74,31 +73,21 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-      - name: Mirror and verify Damodaran public data
-        id: mirror
-        run: |
-          set -euo pipefail
-          for file in industries.json historical_erp.json credit_ratings.json erp.json industry_metrics.json industry_metrics_regions.json; do
-            rsync -a --checksum "data/damodaran/$file" "100xfenok-next/public/data/damodaran/$file"
-            cmp -s "data/damodaran/$file" "100xfenok-next/public/data/damodaran/$file"
-          done
-
       - name: Commit guarded Damodaran data
         if: ${{ always() }}
         env:
           FETCH_OUTCOME: ${{ steps.fetch.outcome }}
-          MIRROR_OUTCOME: ${{ steps.mirror.outcome }}
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           RECOVERY_EXIT=0
-          if [[ "$FETCH_OUTCOME" != "success" || "$MIRROR_OUTCOME" != "success" ]]; then RECOVERY_EXIT=2; fi
+          if [[ "$FETCH_OUTCOME" != "success" ]]; then RECOVERY_EXIT=2; fi
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fetch-damodaran-shadow.yml \
             --stage always_if_exists
-          if [[ "$FETCH_OUTCOME" == "success" && "$MIRROR_OUTCOME" == "success" ]]; then
+          if [[ "$FETCH_OUTCOME" == "success" ]]; then
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-damodaran-shadow.yml \
               --stage required_on_success

@@ -37,7 +37,6 @@ jobs:
             data/admin/data-supply-state/detection-attempts
             data/admin/treasury_tga
             data/macro
-            100xfenok-next/public/data/macro
             100xfenok-next/src/app/api/data
 
       - name: Setup Node.js
@@ -91,7 +90,7 @@ jobs:
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-treasury-tga.yml \
               --stage success_if_exists
-            git add -- data/macro/tga.json 100xfenok-next/public/data/macro/tga.json
+            git add -- data/macro/tga.json
           fi
           if git diff --staged --quiet; then
             echo "No Treasury TGA changes to publish"
