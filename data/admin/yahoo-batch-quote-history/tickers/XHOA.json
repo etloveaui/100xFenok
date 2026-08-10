@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -215,6 +202,20 @@
       "run_id": "31334785949",
       "schedule": "7 20 * * 0-5",
       "shard": "10/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 703,
+      "natural": true,
+      "observed_at": "2026-08-10T07:59:31Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31367988319",
+      "schedule": "7 6 * * 0-5",
+      "shard": "15/72"
     }
   ],
   "current": {
@@ -233,14 +234,14 @@
     "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 750,
+    "latency_ms": 703,
     "natural": true,
-    "observed_at": "2026-08-09T20:40:44Z",
+    "observed_at": "2026-08-10T07:59:31Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31334785949",
-    "schedule": "7 20 * * 0-5",
-    "shard": "10/72"
+    "run_id": "31367988319",
+    "schedule": "7 6 * * 0-5",
+    "shard": "15/72"
   },
   "last_recovered_failure": {
     "attempts_used": 2,
@@ -286,12 +287,12 @@
   },
   "latest_promotion_deferral": {
     "event_name": "schedule",
-    "observed_at": "2026-08-09T20:40:44Z",
+    "observed_at": "2026-08-10T07:59:31Z",
     "provider_history_as_of": "2026-08-07",
     "provider_quote_as_of": "2026-07-27T17:03:19Z",
     "reason": "recovery_not_advanced_by_provider",
     "run_attempt": 1,
-    "run_id": "31334785949"
+    "run_id": "31367988319"
   },
   "lkg": {
     "fetched_at": "2026-08-09T03:53:25Z",
@@ -332,5 +333,5 @@
     "source_as_of": "2026-07-27T17:03:19Z"
   },
   "ticker": "XHOA",
-  "updated_at": "2026-08-09T20:40:44Z"
+  "updated_at": "2026-08-10T07:59:31Z"
 }
