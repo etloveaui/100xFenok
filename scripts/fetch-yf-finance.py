@@ -43,6 +43,10 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from lib.diagnostic_detail import bounded_diagnostic_detail
 from data_supply_state import DataSupplyStateStore
+from estimate_archive import EstimateArchive, default_archive_root
+
+# Point-in-time analyst-estimate archive (#380): non-blocking sibling write.
+_ESTIMATE_ARCHIVE = EstimateArchive(default_archive_root())
 from data_supply_stock_detail import (
     StockDetailValidationError,
     is_enrolled_stock_detail,
@@ -435,6 +439,8 @@ def write_finance_payload(ticker, payload, *, record_stock_detail_state=True):
     """Write Yahoo canonical truth; publish state only for the frozen stock cohort."""
     out_path = OUT_DIR / f"{ticker}.json"
     payload_bytes = stable_json(payload, separators=(",", ":")).encode("utf-8")
+    # Point-in-time estimate archive (#380): change-only append, never blocking.
+    _ESTIMATE_ARCHIVE.archive_if_changed(ticker, payload)
     if not is_enrolled_stock_detail(ticker):
         _atomic_write_bytes(out_path, payload_bytes)
         return None
