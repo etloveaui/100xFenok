@@ -54,6 +54,8 @@ jobs:
           node-version: '22'
 
       - name: Test Feno Yardeni builder
+        env:
+          KPI_HERMETIC_BOOTSTRAPPED: "1"
         run: |
           node scripts/test-build-feno-yardeni-model.mjs
           node scripts/test-build-feno-yardeni-lkg-recovery.mjs
