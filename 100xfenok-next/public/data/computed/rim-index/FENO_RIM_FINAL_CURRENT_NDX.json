@@ -1,0 +1,198 @@
+{
+  "schema_version": "feno_index_rim_final.v1",
+  "canonical_criteria": "feno-index-rim-canonical-criteria.json",
+  "canonical_criteria_sha256": "9100ea6014ebfd01e53a8b3714be220780286285dc892d9372488cc490a7354d",
+  "criteria_frozen_at_commit": "79717ab76f",
+  "source_clocks": {
+    "benchmark_price_eps_pb_roe": {
+      "as_of": "2026-07-31",
+      "source": "benchmarks/us.json sections.sp500.data[-1] and sections.nasdaq100.data[-1]"
+    },
+    "risk_free_rate": {
+      "as_of": "2026-08-06",
+      "source": "macro/fred-banking-daily.json series.DGS10"
+    },
+    "erp": {
+      "as_of": "2026-04-01",
+      "source": "damodaran/erp.json metadata.source_date, ctrypremApr26.xlsx"
+    },
+    "macro_long_run": {
+      "as_of": "2026-06-17",
+      "source": "FOMC SEP June 2026 Table 1 Longer run medians"
+    },
+    "oldest_binding_input": "2026-04-01, the Damodaran ERP",
+    "disclosure_rule": "every artifact states the oldest input date beside the result"
+  },
+  "oldest_input": "2026-04-01, the Damodaran ERP",
+  "public_surface": {
+    "status": "QUARANTINED",
+    "rule": "READY does not authorize public promotion. PUBLIC_ROWS stays empty and display_ready stays false until a separate owner approval.",
+    "usage_if_ready": "OWNER_FACING_RESEARCH_VALUATION"
+  },
+  "asset": "NDX",
+  "current": {
+    "price": 28274.2,
+    "as_of": "2026-07-31"
+  },
+  "scenarios": {
+    "bear": 25373.76,
+    "base": 28472.65,
+    "bull": 32192.46,
+    "grid_mean": 28643.8,
+    "bear_delta_pct": -10.3,
+    "base_delta_pct": 0.7,
+    "bull_delta_pct": 13.9,
+    "grid_mean_delta_pct": 1.3
+  },
+  "full_3x3": {
+    "low_low": {
+      "erp": 0.0453,
+      "ke": 0.0922,
+      "value": 31027.17,
+      "terminal_share": 0.792078,
+      "pole_margin": 0.0518,
+      "stable_retention": 0.133289
+    },
+    "low_base": {
+      "erp": 0.0453,
+      "ke": 0.0922,
+      "value": 31609.81,
+      "terminal_share": 0.79591,
+      "pole_margin": 0.0518,
+      "stable_retention": 0.131126
+    },
+    "low_high": {
+      "erp": 0.0453,
+      "ke": 0.0922,
+      "value": 32192.46,
+      "terminal_share": 0.799604,
+      "pole_margin": 0.0518,
+      "stable_retention": 0.129032
+    },
+    "base_low": {
+      "erp": 0.0503,
+      "ke": 0.0972,
+      "value": 27948.52,
+      "terminal_share": 0.772256,
+      "pole_margin": 0.0568,
+      "stable_retention": 0.133289
+    },
+    "base_base": {
+      "erp": 0.0503,
+      "ke": 0.0972,
+      "value": 28472.65,
+      "terminal_share": 0.776449,
+      "pole_margin": 0.0568,
+      "stable_retention": 0.131126
+    },
+    "base_high": {
+      "erp": 0.0503,
+      "ke": 0.0972,
+      "value": 28996.77,
+      "terminal_share": 0.780489,
+      "pole_margin": 0.0568,
+      "stable_retention": 0.129032
+    },
+    "high_low": {
+      "erp": 0.0553,
+      "ke": 0.1022,
+      "value": 25373.76,
+      "terminal_share": 0.75248,
+      "pole_margin": 0.0618,
+      "stable_retention": 0.133289
+    },
+    "high_base": {
+      "erp": 0.0553,
+      "ke": 0.1022,
+      "value": 25848.95,
+      "terminal_share": 0.757031,
+      "pole_margin": 0.0618,
+      "stable_retention": 0.131126
+    },
+    "high_high": {
+      "erp": 0.0553,
+      "ke": 0.1022,
+      "value": 26324.15,
+      "terminal_share": 0.761417,
+      "pole_margin": 0.0618,
+      "stable_retention": 0.129032
+    }
+  },
+  "inputs_that_define_the_number": {
+    "rf": {
+      "value": 0.0469,
+      "as_of": "2026-08-06",
+      "source": "macro/fred-banking-daily.json series.DGS10, latest finite observation at freeze time",
+      "rule": "Rf is the latest finite DGS10 observation available at freeze time. The value and its as-of date are recorded here so the choice cannot move after a result."
+    },
+    "erp": {
+      "rule": "centre is the current Damodaran US ERP reading; low and high are centre minus and plus 50 basis points",
+      "width": 0.005,
+      "width_rationale": "the spacing repeatedly used in the primary public Yoo/Kiwoom grids; the centre moves with the live reading so no historical absolute ERP level is copied",
+      "base": 0.0503,
+      "low": 0.0453,
+      "high": 0.0553,
+      "mapping": "ERP low is the bull required-return state, ERP high is the bear state"
+    },
+    "ltroe": {
+      "low": 0.3031,
+      "base": 0.3081,
+      "high": 0.3131
+    },
+    "ltroe_recomputed": {
+      "base": 0.3081,
+      "n": 522
+    },
+    "g_base": 0.0404,
+    "g_base_source": {
+      "name": "Federal Reserve FOMC Summary of Economic Projections",
+      "meeting": "June 16-17, 2026",
+      "released": "2026-06-17T18:00:00Z",
+      "url": "https://www.federalreserve.gov/monetarypolicy/files/fomcprojtabl20260617.pdf",
+      "table": "Table 1, Median, Longer run column",
+      "real_gdp_longer_run_median": 0.02,
+      "pce_inflation_longer_run_median": 0.02,
+      "fed_funds_longer_run_median": 0.031,
+      "verification": "Read directly from the released PDF by the handler on 2026-08-08, not from a secondary summary."
+    },
+    "ke_base": 0.0972,
+    "eps_path": [
+      1324.6293,
+      1612.164,
+      2229.7107
+    ],
+    "book_value_beginning": 3199.4885,
+    "payout_route_a": 0.097071
+  },
+  "terminal": {
+    "base_terminal_share": 0.776449,
+    "max_terminal_share": 0.799604,
+    "min_pole_margin": 0.0518,
+    "stable_retention_range": {
+      "min": 0.12903225806451613,
+      "max": 0.13328934345100626
+    }
+  },
+  "sensitivity_100bp": {
+    "g_base": 0.0404,
+    "g_low": 0.0304,
+    "g_high": 0.0469,
+    "base_at_g_base": 28472.64577097623,
+    "base_at_g_low": 25163.13263367385,
+    "base_at_g_high": 31329.485938405043,
+    "rel_move_g_low": -0.11623482987576628,
+    "rel_move_g_high": 0.10033630841363372,
+    "max_abs_rel_move": 0.11623482987576628,
+    "fair_value_overlap": true
+  },
+  "gates": {
+    "G1_pole_margin": true,
+    "G2_terminal_share": true,
+    "G3_stable_retention": true,
+    "G4_finite": true,
+    "G5_monotonicity": true,
+    "G6_terminal_sensitivity": true,
+    "G7_payout_materiality": true
+  },
+  "monotonicity_passed": true
+}

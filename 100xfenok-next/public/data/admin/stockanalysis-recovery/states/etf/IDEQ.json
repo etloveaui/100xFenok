@@ -1,0 +1,54 @@
+{
+  "schema_version": "stockanalysis-recovery-state/v1",
+  "artifact_kind": "etf",
+  "entity": "IDEQ",
+  "attempts": [
+    {
+      "run_id": "30500382017",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "50 22 * * 1-5",
+      "natural": true,
+      "observed_at": "2026-07-29T23:43:48Z",
+      "outcome": "failed",
+      "controlled": false,
+      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    }
+  ],
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "last_attempt": {
+    "run_id": "30500382017",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "schedule": "50 22 * * 1-5",
+    "natural": true,
+    "observed_at": "2026-07-29T23:43:48Z",
+    "outcome": "failed",
+    "controlled": false,
+    "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+  },
+  "latest_failure": {
+    "run_id": "30500382017",
+    "run_attempt": 1,
+    "observed_at": "2026-07-29T23:43:48Z",
+    "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+    "controlled": false,
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "9d54b9e0b94dd37fb0033a973907969189f57b4dca21b5ae6da3168890c894ba",
+    "data_loss": false
+  },
+  "updated_at": "2026-07-29T23:43:48Z",
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/IDEQ.json",
+    "payload_sha256": "9d54b9e0b94dd37fb0033a973907969189f57b4dca21b5ae6da3168890c894ba",
+    "source_as_of": "2025-11-01T00:00:00Z",
+    "fetched_at": "2026-07-18T20:49:58Z"
+  },
+  "current": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/IDEQ.json",
+    "payload_sha256": "9d54b9e0b94dd37fb0033a973907969189f57b4dca21b5ae6da3168890c894ba",
+    "source_as_of": "2025-11-01T00:00:00Z",
+    "fetched_at": "2026-07-18T20:49:58Z"
+  }
+}

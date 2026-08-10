@@ -1,0 +1,109 @@
+{
+ "verdict": "FENO_INDEX_RIM_RESEARCH_ONLY",
+ "candidate": "B_STABLE_GROWTH_RI",
+ "starting_commit": "ab46a51077",
+ "model_equivalent_pit_n": {
+  "SPX": 0,
+  "NDX": 0
+ },
+ "ready_gates": {
+  "D1": false,
+  "D2": false,
+  "D3": null,
+  "M1": true,
+  "M2": true,
+  "M3": true,
+  "M4": true,
+  "P1": null,
+  "P2": null,
+  "P3": null,
+  "P4": null,
+  "P5": null,
+  "P6": null,
+  "P7": null,
+  "P8": null,
+  "P9": null,
+  "P10": null,
+  "F1": true,
+  "F2": false,
+  "F3": null,
+  "F4": null,
+  "F5": null,
+  "F6": null
+ },
+ "failed_ready_gates": [
+  "D1",
+  "D2",
+  "F2"
+ ],
+ "not_evaluable_gates": [
+  "D3",
+  "P1",
+  "P2",
+  "P3",
+  "P4",
+  "P5",
+  "P6",
+  "P7",
+  "P8",
+  "P9",
+  "P10",
+  "F3",
+  "F4",
+  "F5",
+  "F6"
+ ],
+ "retire_conditions_triggered": [],
+ "why_not_retire": "RETIRE requires >=5 MODEL_EQUIVALENT_PIT origins for both indices and there are none, and the frozen criteria state missing data alone is never a RETIRE condition. No structural condition fired: min(Ke-g) is 4.53pp currently and 4.00pp at the worst historical origin against a 3.00pp gate, terminal share is 68.5 and 79.7 percent against a 95 percent structural threshold, monotonicity holds, and no target fitting was required.",
+ "current_validation_snapshot": {
+  "as_of": {
+   "benchmark": "2026-07-31",
+   "rf": "2026-08-05",
+   "erp": "2026-04-01"
+  },
+  "rf": 0.0463,
+  "SPX": {
+   "bear": 5714.839032697814,
+   "base": 6526.1083653611995,
+   "bull": 7523.269608587245,
+   "grid_mean": 6574.2657942571295
+  },
+  "NDX": {
+   "bear": 27726.780712354433,
+   "base": 31451.878995215724,
+   "bull": 36025.09638340459,
+   "grid_mean": 31689.441992378073
+  },
+  "qqq_price": 687.99
+ },
+ "current_live_rebase": {
+  "as_of": {
+   "benchmark": "2026-07-31",
+   "rf": "2026-08-06",
+   "erp": "2026-04-01"
+  },
+  "rf": 0.0469,
+  "SPX": {
+   "bear": 5686.141885964435,
+   "base": 6493.80821812866,
+   "bull": 7486.5490878494265,
+   "grid_mean": 6541.7167406556555
+  },
+  "NDX": {
+   "bear": 27617.996222733796,
+   "base": 31329.485938405043,
+   "bull": 35886.00962790035,
+   "grid_mean": 31566.097564294603
+  },
+  "delta_base": {
+   "SPX": -0.004949373412795222,
+   "NDX": -0.003891438626903554
+  },
+  "source_clock_sensitivity": false
+ },
+ "public_surface": "KEEP_QUARANTINED",
+ "owner_approval_required": true,
+ "proxy_lane_status": "NOT_REPRODUCIBLE",
+ "proxy_lane_note": "Two independent implementations of the frozen proxy construction disagree. At the 2019-06-30 SPX origin both derive the same P0 2941.76, B0 857.96, LTROE 0.17355 over 496 observations, Rf 0.0200 and ERP 0.0506, and then diverge on the derived payout: worker 0.7641, handler 0.8716 to 0.8729 depending on the ROE lag. No lag choice reproduces the worker value, so the divergence is not a lag ambiguity alone. The frozen construction said 'retention = (B_t - B_(t-1)) / (ROE_t x B_(t-1))' without fixing the sampling interval of the monthly series or the ROE vintage, and is therefore underspecified as written. This is a handler criteria defect, the third in this phase. The proxy lane is recorded as NOT_REPRODUCIBLE rather than published as a single number.",
+ "why_this_does_not_move_the_verdict": "The verdict rests on D1/D2 and F2, and both implementations agree exactly on all three. Model-equivalent PIT origins are 0 for both indices on both inventories. F2 fails with identical numbers on both: NDX Base 31,452 at g0 and 27,293 at g0 minus 100bp, crossing a price of 28,274. SPX passes F1 on both at 6,526 and 5,785. Mechanics pass on both. The frozen criteria already forbade any proxy result from satisfying a READY gate, so a proxy that cannot be reproduced costs the verdict nothing."
+}

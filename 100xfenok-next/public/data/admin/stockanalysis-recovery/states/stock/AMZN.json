@@ -1,0 +1,185 @@
+{
+  "schema_version": "stockanalysis-recovery-state/v1",
+  "artifact_kind": "stock",
+  "entity": "AMZN",
+  "attempts": [
+    {
+      "run_id": "29624561317",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "50 23 * * 1-5",
+      "natural": true,
+      "observed_at": "2026-07-18T01:18:00Z",
+      "outcome": "failed",
+      "controlled": false,
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "run_id": "29662946566",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-07-18T22:56:25Z",
+      "outcome": "recovered",
+      "controlled": false
+    },
+    {
+      "run_id": "29705709285",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-07-19T22:13:34Z",
+      "outcome": "fresh",
+      "controlled": false
+    },
+    {
+      "run_id": "29873027563",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-07-21T22:15:12Z",
+      "outcome": "fresh",
+      "controlled": false
+    },
+    {
+      "run_id": "29962904029",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-07-22T22:28:26Z",
+      "outcome": "fresh",
+      "controlled": false
+    },
+    {
+      "run_id": "30049375269",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-07-23T22:18:43Z",
+      "outcome": "fresh",
+      "controlled": false
+    },
+    {
+      "run_id": "30310917326",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-07-27T22:30:57Z",
+      "outcome": "fresh",
+      "controlled": false
+    },
+    {
+      "run_id": "30404596391",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-07-28T22:28:37Z",
+      "outcome": "fresh",
+      "controlled": false
+    },
+    {
+      "run_id": "30495499317",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-07-29T22:17:11Z",
+      "outcome": "fresh",
+      "controlled": false
+    },
+    {
+      "run_id": "30769627245",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-08-02T22:14:54Z",
+      "outcome": "fresh",
+      "controlled": false
+    },
+    {
+      "run_id": "30956702755",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-08-04T22:33:14Z",
+      "outcome": "fresh",
+      "controlled": false
+    },
+    {
+      "run_id": "31052986835",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-08-05T22:31:51Z",
+      "outcome": "fresh",
+      "controlled": false
+    },
+    {
+      "run_id": "31222117206",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-08-07T22:00:29Z",
+      "outcome": "fresh",
+      "controlled": false
+    },
+    {
+      "run_id": "31280236553",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-08-08T21:51:05Z",
+      "outcome": "fresh",
+      "controlled": false
+    }
+  ],
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "current": {
+    "path": "data/stockanalysis/stocks/AMZN.json",
+    "payload_sha256": "2b2117e4358fdb34cfda6f1aa643ba6c7374390fdf073d310bbead008ed94a0b",
+    "source_as_of": "2026-08-07T20:00:00Z",
+    "fetched_at": "2026-08-08T21:51:12Z"
+  },
+  "updated_at": "2026-08-08T21:51:05Z",
+  "last_attempt": {
+    "run_id": "31280236553",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "schedule": "20 21 * * *",
+    "natural": true,
+    "observed_at": "2026-08-08T21:51:05Z",
+    "outcome": "fresh",
+    "controlled": false
+  },
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/stock/AMZN.json",
+    "payload_sha256": "9ceedb0fb53faf696a30175ee275eb099e1a376c168856a8fb313fc8656ded40",
+    "source_as_of": "2026-07-08T00:00:00Z",
+    "fetched_at": "2026-07-08T22:45:33Z"
+  },
+  "recovered_from_run_id": "29624561317",
+  "recovered_at": "2026-07-18T22:56:25Z",
+  "last_recovered_failure": {
+    "run_id": "29624561317",
+    "run_attempt": 1,
+    "observed_at": "2026-07-18T01:18:00Z",
+    "error": "HTTPError: HTTP Error 404: Not Found",
+    "controlled": false,
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "9ceedb0fb53faf696a30175ee275eb099e1a376c168856a8fb313fc8656ded40",
+    "data_loss": false
+  }
+}

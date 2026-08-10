@@ -1,0 +1,65 @@
+{
+  "schema_version": "stockanalysis-recovery-state/v1",
+  "artifact_kind": "etf",
+  "entity": "BHYP",
+  "attempts": [
+    {
+      "run_id": "30319268781",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "50 23 * * 1-5",
+      "natural": true,
+      "observed_at": "2026-07-28T01:07:08Z",
+      "outcome": "failed",
+      "controlled": false,
+      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "run_id": "30413281647",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "50 23 * * 1-5",
+      "natural": true,
+      "observed_at": "2026-07-29T01:11:03Z",
+      "outcome": "failed",
+      "controlled": false,
+      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    }
+  ],
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "last_attempt": {
+    "run_id": "30413281647",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "schedule": "50 23 * * 1-5",
+    "natural": true,
+    "observed_at": "2026-07-29T01:11:03Z",
+    "outcome": "failed",
+    "controlled": false,
+    "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+  },
+  "latest_failure": {
+    "run_id": "30413281647",
+    "run_attempt": 1,
+    "observed_at": "2026-07-29T01:11:03Z",
+    "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+    "controlled": false,
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "398a737b2e41298f0d5b81201faa83894192e93e5d5741cafb9c2f9ad45a924a",
+    "data_loss": false
+  },
+  "updated_at": "2026-07-29T01:11:03Z",
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/BHYP.json",
+    "payload_sha256": "398a737b2e41298f0d5b81201faa83894192e93e5d5741cafb9c2f9ad45a924a",
+    "source_as_of": null,
+    "fetched_at": "2026-07-15T14:46:56Z"
+  },
+  "current": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/BHYP.json",
+    "payload_sha256": "398a737b2e41298f0d5b81201faa83894192e93e5d5741cafb9c2f9ad45a924a",
+    "source_as_of": null,
+    "fetched_at": "2026-07-15T14:46:56Z"
+  }
+}

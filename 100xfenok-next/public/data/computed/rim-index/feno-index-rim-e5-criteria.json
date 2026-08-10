@@ -1,0 +1,174 @@
+{
+  "schema_version": "feno_index_rim_e5_criteria.v1",
+  "phase": "E5 — historical QA of candidate B, and E6 closure",
+  "candidate": "B_STABLE_GROWTH_RI",
+  "starting_commit": "ab46a51077",
+  "authority": [
+    "_tmp/FENO_RIM_E5_E6_FINAL_VALIDATION_OPUS_DEEPSEEK_20260808.md",
+    "_tmp/FENO_RIM_E5_E6_FROZEN_QA_CRITERIA_20260808.md"
+  ],
+  "handler": "cc (Opus), sole adjudicator. The worker computes and never owns criteria or verdict.",
+  "frozen_at_utc": "2026-08-08T12:20:00Z",
+
+  "preregistration_scope_stated_honestly": {
+    "what_this_is": "PRE-RESULT with respect to historical outcomes only. No historical 12-month outcome was computed or read before this file was written.",
+    "what_this_is_not": "It is not a pre-current freeze. The 2026 output of candidate B is already known — SPX Base 6,526 and NDX Base 31,452 — and claiming otherwise would be false.",
+    "consequence": "Any change to a threshold or definition below, after historical outcomes are read, VOIDS the run. An unfavourable result is not a bug."
+  },
+
+  "candidate_B_frozen": {
+    "explicit_horizon": "FY1 / FY2 / FY3",
+    "book_roll": "B_t = B_(t-1) + E_t × (1 − payout)",
+    "residual_income": "RI_t = E_t − Ke × B_(t-1)",
+    "terminal": "RI_4 = (LTROE − Ke) × B3 ; CV3 = RI_4 / (Ke − g) ; discounted three years",
+    "g_rule": "g(t0) = Rf(t0), the contemporaneous risk-free rate at that origin. Never the 2026 rate at a historical origin.",
+    "stable_retention": "b = g(t0) / LTROE_scenario, reported per origin and required inside [0,1]",
+    "Ke": "Ke_s = Rf(t0) + ERP_s(t0)",
+    "grid": "ERP {base−0.005, base, base+0.005} × LTROE {base−0.005, base, base+0.005}",
+    "BASE": "the explicit base × base cell, never the statistical median of the nine",
+    "forbidden_changes": ["g rule", "ERP grid width", "LTROE grid width", "LTROE normalization method", "FY1-FY3 horizon", "payout definition", "origin dates", "terminal family"]
+  },
+
+  "origins": {
+    "fixed": ["2019-06-30", "2020-06-30", "2021-06-30", "2022-06-30", "2023-06-30", "2024-06-30", "2025-06-30"],
+    "not_movable": "An origin is never shifted for source availability or for a better outcome.",
+    "P0_convention": "last trading close on or before the origin date",
+    "P12_convention": "target_date = origin + 12 calendar months; P12 = last trading close on or before target_date",
+    "one_convention_for_all_origins": true
+  },
+
+  "ltroe_normalization_at_historical_origins": {
+    "rule": "median of the index ROE series over the trailing ten calendar years ending at the origin, after dropping non-finite values",
+    "series_start_limitation": "The benchmark ROE series begins 2010-01-01, so origins before 2020-01 cannot reach a full ten years. Where the window is short, use every observation from series start to the origin and record the actual window and observation count.",
+    "minimum_observations": 60,
+    "classification_effect": "A window shorter than ten years is DISCLOSED and does not by itself demote an origin, because the method is unchanged and only the sample is shorter. An origin with fewer than 60 monthly observations is demoted to RECONSTRUCTED_PIT_PROXY.",
+    "frozen_before_outcomes": true
+  },
+
+  "pit_classification": {
+    "MODEL_EQUIVALENT_PIT": "every required input knowable at the origin AND the same field semantics, source class and forecast methodology as live B",
+    "RECONSTRUCTED_PIT_PROXY": "every input knowable at the origin, but at least one material input uses a different source class or forecast methodology than live B",
+    "RETROSPECTIVE_ONLY": "at least one material input cannot be shown knowable at the origin",
+    "primary_qa_accepts": "MODEL_EQUIVALENT_PIT only; proxy results are reported separately and never merged into the primary aggregates",
+    "required_inputs_per_origin": ["P0", "P/B or opening-book equivalent", "FY1 EPS", "FY2 EPS", "FY3 EPS", "ROE history for LTROE", "Rf", "ERP", "payout route A", "payout route B", "source date", "publication or filed date", "first-knowable date"],
+    "the_decisive_question_named_in_advance": "Live B takes FY1 from the benchmark forward-EPS anchor and the FY2/FY3 path from the constituent consensus snapshot. If the constituent snapshot is a current-only file with no historical vintages, then no historical origin can be MODEL_EQUIVALENT on the forecast leg, and READY becomes unreachable on data grounds rather than on model grounds. That distinction is the point of this classification and is written here before the inventory is run."
+  },
+
+  "per_origin_metrics": {
+    "pred_base_return": "Base / P0 − 1",
+    "R12": "P12 / P0 − 1",
+    "band_hit": "Bear ≤ P12 ≤ Bull",
+    "band_width": "(Bull − Bear) / P0",
+    "band_miss_distance": "0 if hit, else min(|P12−Bear|, |P12−Bull|) / P0",
+    "base_abs_level_error": "|Base − P12| / P12",
+    "gridmean_abs_level_error": "|GridMean − P12| / P12",
+    "no_change_abs_level_error": "|P0 − P12| / P12",
+    "direction_deadband": "UP if return > +3%, DOWN if < −3%, FLAT otherwise",
+    "direction_hit": "class(pred_base_return) == class(R12)"
+  },
+
+  "aggregate_metrics": ["n", "band_hit_rate", "median_band_width", "median_band_miss_distance", "direction_hit_rate", "median_base_abs_level_error", "median_gridmean_abs_level_error", "median_no_change_abs_level_error", "base_to_naive_error_ratio", "spearman_pred_vs_realized"],
+  "small_sample_discipline": "With at most seven origins, no strong t-statistical claim is manufactured. Origin-level rows are reported beside every aggregate.",
+
+  "naive_benchmark": {
+    "target": "P0",
+    "error": "|P0 − P12| / P12",
+    "gate": "median Base error ≤ median no-change error, for BOTH indices",
+    "no_future_information": "A benchmark that uses anything unknowable at the origin is prohibited."
+  },
+
+  "terminal_fragility": {
+    "canonical": "g0 = Rf(t0)",
+    "shadows_only": {"g1": "max(0, Rf − 0.01)", "g2": "max(0, Rf − 0.02)"},
+    "shadows_are_not_candidates": "g1 and g2 are falsification probes. Neither may be adopted, and no new terminal family may be created if B proves fragile — B is then judged, not replaced.",
+    "record": ["Base(g0)", "Base(g1)", "Base(g2)", "shift_100bp", "shift_200bp", "direction_flip_100bp", "direction_flip_200bp", "terminal_share", "min(Ke − g) across the 3×3"],
+    "g2_status": "disclosure and falsification only; a flip at g2 is reported and does not by itself trigger RETIRE"
+  },
+
+  "terminal_share_classification": {"GREEN": "<= 0.75", "AMBER": "0.75 - 0.85", "HIGH": "0.85 - 0.90", "FAIL_FOR_READY": "> 0.90", "STRUCTURAL_RED": "> 0.95"},
+  "known_before_outcomes": "Current NDX Base terminal share is already about 79.7% and SPX about 68.5%. Recorded here rather than discovered later.",
+
+  "hard_math_assertions": ["Ke > g in every cell", "min(Ke − g) >= 0.03 in the canonical 3×3", "lower ERP => value non-decreasing", "higher LTROE => value non-decreasing", "Bull >= Base >= Bear"],
+
+  "payout_materiality_gate": {"base_shift": 0.05, "grid_mean_shift": 0.05, "ordering": "unchanged", "raw_divergence": "disclosure, not a gate, when the valuation effect is immaterial"},
+
+  "ready_gates_all_required": {
+    "D1": "SPX MODEL_EQUIVALENT_PIT n >= 5",
+    "D2": "NDX MODEL_EQUIVALENT_PIT n >= 5",
+    "D3": "zero look-ahead in primary origins",
+    "M1": "monotonicity 100%",
+    "M2": "Ke − g >= 0.03 in every canonical cell",
+    "M3": "Base terminal share <= 0.90 at every primary origin",
+    "M4": "payout valuation-impact gate passes",
+    "P1": "SPX band hit >= 0.60",
+    "P2": "NDX band hit >= 0.60",
+    "P3": "SPX direction hit >= 0.60",
+    "P4": "NDX direction hit >= 0.60",
+    "P5": "SPX Spearman > 0",
+    "P6": "NDX Spearman > 0",
+    "P7": "SPX median Base error <= median no-change error",
+    "P8": "NDX median Base error <= median no-change error",
+    "P9": "SPX median band width <= 0.40",
+    "P10": "NDX median band width <= 0.40",
+    "F1": "SPX current 100bp g shadow does not flip valuation direction",
+    "F2": "NDX current 100bp g shadow does not flip valuation direction",
+    "F3": "SPX median historical 100bp shift <= 0.20",
+    "F4": "NDX median historical 100bp shift <= 0.20",
+    "F5": "SPX historical 100bp flip rate <= 0.20",
+    "F6": "NDX historical 100bp flip rate <= 0.20"
+  },
+  "no_partial_credit": "READY requires every gate. There is no weighting and no qualitative override of a failed hard gate.",
+
+  "research_only_conditions": ["READY fails with no decisive structural or historical anti-signal", "MODEL_EQUIVALENT_PIT n < 5 for either index", "the historical test uses materially different forecast or source semantics", "terminal fragility too high for a public-grade target while current numbers stay interpretable"],
+  "research_only_is_a_closure_state": "It is not an instruction to invent another model.",
+
+  "retire_conditions": {
+    "never_for_missing_data_alone": true,
+    "requires": "MODEL_EQUIVALENT_PIT >= 5 for BOTH indices",
+    "structural": ["repeated Ke <= g or pole instability", "repeated Base terminal share > 0.95", "monotonicity still broken after a genuine bug repair", "target-fitting necessary to make output usable"],
+    "historical_anti_signal_A": "BOTH indices: median Base error > median no-change error AND direction hit < 0.50 AND Spearman <= 0",
+    "historical_anti_signal_B": "BOTH indices: band hit < 0.40 while median band width <= 0.40"
+  },
+
+  "live_rebase": {
+    "when": "after E5 and after the verdict computation, never before",
+    "allowed_to_change": ["index price level", "QQQ price", "Rf observation", "ERP if a newer officially available observation exists", "EPS/PB/ROE/payout if the same existing ingestion contract has a newer release"],
+    "forbidden_to_change": ["formula", "g rule", "grid width", "LTROE normalization method", "payout methodology", "READY criteria"],
+    "two_views_both_reported": ["VALIDATION_SNAPSHOT — the exact ab46a51077-era inputs", "LIVE_REBASE — same formula, freshest mutually aligned inputs"],
+    "source_clock_sensitivity_flag": "raised if Base moves more than 5% on a small source-date update, with the driver named",
+    "headline": "the final owner headline uses LIVE_REBASE with the validation snapshot beside it"
+  },
+
+  "prohibitions": [
+    "no parameter changed to fit current or historical price",
+    "no origin moved to improve availability or outcome",
+    "no 2026 consensus backfilled to a historical origin",
+    "no restated accounting value treated as knowable at the origin",
+    "no band widened to raise hit rate",
+    "no threshold moved after outcomes are read",
+    "no new terminal or RIM family if B proves weak — B is judged",
+    "no MORE_RESEARCH_NEEDED, NEEDS_MORE_WORK or NEXT_MODEL_VERSION verdict",
+    "no public promotion; quarantine holds until separate owner approval",
+    "no editing of this file; supersede with -v2 carrying an explicit same-meaning statement"
+  ],
+
+  "bug_repair_protocol": {
+    "allowed": "If a genuine implementation or data bug is found: preserve the prior run as VOID, leave every threshold and assumption untouched, fix only the bug, keep the same criteria hash or freeze an explicitly same-meaning v2, and recompute every affected part.",
+    "not_a_bug": "An unfavourable result."
+  },
+
+  "result_paths_blocked_until_this_file_is_committed": [
+    "data/computed/rim-index/FENO_RIM_E5_PIT_SOURCE_LEDGER.json",
+    "data/computed/rim-index/FENO_RIM_E5_HISTORICAL_GRID.json",
+    "data/computed/rim-index/FENO_RIM_E5_12M_TARGET_QA.json",
+    "data/computed/rim-index/FENO_RIM_E5_TERMINAL_FRAGILITY.json",
+    "data/computed/rim-index/FENO_RIM_E5_BENCHMARK_COMPARISON.json",
+    "data/computed/rim-index/FENO_RIM_E5_FINAL_REPORT.md",
+    "data/computed/rim-index/FENO_RIM_E6_FINAL_DECISION.json"
+  ],
+
+  "verification_protocol": {
+    "worker": "computes, then re-derives by a structurally different route and states what it would not defend",
+    "handler": "independently re-derives at least two origins end to end with separate code, and never by importing the worker's scoring or result artifact"
+  }
+}

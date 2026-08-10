@@ -1,0 +1,223 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "etf",
+  "ticker": "RAAY",
+  "source_as_of": null,
+  "fetched_at": "2026-07-18T22:45:04Z",
+  "endpoints": {
+    "holdings": "/etf/raay/holdings/__data.json",
+    "overview": "/etf/raay/__data.json",
+    "quote": null,
+    "history_periods": {}
+  },
+  "endpoint_contracts": {
+    "overview": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_overview/v1"
+    },
+    "holdings": {
+      "format": "svelte_devalue",
+      "decoder": "svelte_devalue_node/v1",
+      "contract": "etf_detail_holdings/v1"
+    },
+    "quote": {
+      "format": "rest_json",
+      "contract": "stockanalysis_quote/v1"
+    },
+    "history_periods": {
+      "format": "rest_json",
+      "contract": "stockanalysis_history/v1"
+    }
+  },
+  "normalized": {
+    "holdings": [],
+    "asset_allocation": null,
+    "sectors": null,
+    "countries": null,
+    "holding_count": 3,
+    "holdings_updated": null,
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
+    "overview": {
+      "aum": "$15.31M",
+      "expenseRatio": "0.35%",
+      "sharesOut": "150,000",
+      "inception": "Feb 11, 2026",
+      "etf_website": "https://reckoner.com/raay/"
+    },
+    "performance": {
+      "tr1m": 0.4837,
+      "trYTD": null,
+      "tr1y": null,
+      "cagr5y": null,
+      "cagr10y": null,
+      "cagrMAX": null
+    },
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          },
+          {
+            "name": "Finnhub",
+            "short": "Finnhub",
+            "url": "https://finnhub.io/"
+          }
+        ],
+        "topic": "overview",
+        "ticker": "RAAY",
+        "lastChecked": 1784333713284,
+        "summary": {
+          "text": "Historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP. Several fund data points are also provided by Finnhub."
+        }
+      },
+      "type": "etf",
+      "aum": "$15.31M",
+      "nav": null,
+      "expenseRatio": "0.35%",
+      "peRatio": null,
+      "sharesOut": "150,000",
+      "dps": null,
+      "dividendYield": null,
+      "payoutRatio": null,
+      "exDivDate": null,
+      "ch1y": null,
+      "payoutFrequency": "n/a",
+      "beta": null,
+      "holdings": 3,
+      "inception": "Feb 11, 2026",
+      "chart": {
+        "expiration": null,
+        "data": null
+      },
+      "description": "The Reckoner Yield Enhanced AAA CLO Annual ETF (RAAY) is an exchange-traded fund that mostly invests in investment grade fixed income. The fund is an actively managed fund of funds designed to make only one dividend or distribution payment per year from AAA-rated collateralized loan obligation (CLO) debt tranches. The fund seeks total return RAAY was launched on Feb 11, 2026 and is issued by Reckoner.",
+      "infoTable": [
+        [
+          "Asset Class",
+          "Fixed Income"
+        ],
+        [
+          "Stock Exchange",
+          "NYSEARCA"
+        ],
+        [
+          "Ticker Symbol",
+          "RAAY"
+        ],
+        [
+          "Provider",
+          "Reckoner"
+        ]
+      ],
+      "etf_website": "https://reckoner.com/raay/",
+      "provider_page": null,
+      "holdingsTable": null,
+      "dividendTable": null,
+      "news": {
+        "exp": "1784271339317",
+        "data": [
+          {
+            "url": "https://www.etftrends.com/fixed-income-content-hub/clo-etfs-recent-innovations/",
+            "img": "https://cdn.snapi.dev/images/v1/c/l/v/etf35-3801019.jpg",
+            "title": "CLO ETFs: Recent Innovations",
+            "text": "The once obscure CLO ETF market has officially broken out of its niche shell and entered a new phase of growth. Heading into 2026, total global assets quickly topped $35 billion and have now surged pa...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "#AAAD",
+              "#FAAA",
+              "#FCLO",
+              "#RAAA",
+              "#RAAR",
+              "#RCLR",
+              "#RCLY"
+            ],
+            "time": "Jul 14, 2026, 1:16 PM EDT",
+            "ago": "4 days ago"
+          },
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/02/11/3236179/0/en/Reckoner-Capital-Management-Expands-CLO-ETF-Suite-with-Reinvesting-and-Annual-Distribution-Options.html",
+            "img": "https://cdn.snapi.dev/images/v1/z/b/y/press13-3522893.jpg",
+            "title": "Reckoner Capital Management Expands CLO ETF Suite with Reinvesting and Annual Distribution Options",
+            "text": "NEW YORK, Feb. 11, 2026 (GLOBE NEWSWIRE) -- Reckoner Capital Management (“Reckoner”), a global asset management firm with specialized expertise in alternative credit, today announced a new suite of ac...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": [
+              "#RAAA",
+              "#RCLO",
+              "#RAAR",
+              "#RCLR",
+              "#RCLY"
+            ],
+            "time": "Feb 11, 2026, 7:30 AM EST",
+            "ago": "5 months ago"
+          }
+        ]
+      },
+      "config": {
+        "no1d": true
+      },
+      "changes": {
+        "price1w": 102.08,
+        "price1m": 101.628,
+        "price3m": 100.605,
+        "price6m": null,
+        "priceYTD": null,
+        "price1y": null,
+        "price5y": null,
+        "priceMAX": 99.92
+      },
+      "performance": {
+        "tr1m": 0.4837,
+        "trYTD": null,
+        "tr1y": null,
+        "cagr5y": null,
+        "cagr10y": null,
+        "cagrMAX": null
+      }
+    },
+    "holdings": {},
+    "quote": null,
+    "history": null,
+    "history_periods": {}
+  },
+  "detail_status": "stockanalysis_partial",
+  "partial_reason_codes": [
+    "holdings_unavailable",
+    "holdings_surface_omits_holdings",
+    "holdings_count_unavailable",
+    "holdings_date_unavailable",
+    "holdings_countries_unavailable",
+    "history_deferred_initial_reconcile",
+    "quote_deferred_initial_reconcile"
+  ],
+  "source_as_of_reason": "provider detail response carries no market or holdings observation date"
+}

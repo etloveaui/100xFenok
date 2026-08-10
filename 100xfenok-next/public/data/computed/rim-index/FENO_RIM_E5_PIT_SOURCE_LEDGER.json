@@ -1,0 +1,1191 @@
+{
+ "schema_version": "feno_index_rim_e5_pit_ledger.v1",
+ "criteria_v1": "feno_index_rim_e5_criteria.v1",
+ "criteria_v2": "feno_index_rim_e5_criteria.v2",
+ "origins": {
+  "2019-06-30": {
+   "inputs": {
+    "SPX": {
+     "P0": {
+      "value": 2941.76,
+      "source": "benchmarks/us.json",
+      "source_date": "2019-06-28",
+      "publication_date": "2019-06-28",
+      "first_knowable": "2019-06-28",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "dated series; observation at or before origin is knowable at origin"
+     },
+     "P_B": {
+      "value": 3.4288,
+      "source": "benchmarks/us.json",
+      "source_date": "2019-06-28",
+      "publication_date": "2019-06-28",
+      "first_knowable": "2019-06-28",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "FY1_EPS": {
+      "value": 173.2394,
+      "source": "benchmarks/us.json best_eps",
+      "source_date": "2019-06-28",
+      "publication_date": "2019-06-28",
+      "first_knowable": "2019-06-28",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "live B takes FY1 from benchmark best_eps; same source class"
+     },
+     "FY2_FY3_EPS": {
+      "value": null,
+      "source": "computed/stock_action_index.json (forwardEps fy2/fy3)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "ROE_history": {
+      "value": 0.17354999999999998,
+      "source": "benchmarks/us.json roe series",
+      "source_date": "2019-06-28",
+      "publication_date": "2019-06-28",
+      "first_knowable": "2019-06-28",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "trailing window 2009-06-30..2019-06-30 (n=496); window shorter than 10y disclosed"
+     },
+     "Rf": {
+      "value": 0.02,
+      "source": "macro/fred-banking-daily.json DGS10",
+      "source_date": "2019-06-28",
+      "publication_date": "2019-06-28",
+      "first_knowable": "2019-06-28",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "ERP": {
+      "value": 0.0506,
+      "source": "damodaran/historical_erp.json implied_erp_fcfe",
+      "source_date": "2019-12-31",
+      "publication_date": "~2020-01",
+      "first_knowable": "2020-01",
+      "classification": "RECONSTRUCTED_PIT_PROXY",
+      "note": "source-class substitution: live B reads country-premium erp.json; historical_erp is Damodaran implied ERP. confirmed."
+     },
+     "payout_A": {
+      "value": null,
+      "source": "computed/stock_action_index.json (weighted dividend yield)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "payout_B": {
+      "value": null,
+      "source": "slickcharts/{index}-yield.json",
+      "source_date": "2026-08-01",
+      "publication_date": "2026-08-01",
+      "first_knowable": "2026-08-01",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: yield files carry only the current reading. confirmed."
+     }
+    },
+    "NDX": {
+     "P0": {
+      "value": 7671.08,
+      "source": "benchmarks/us.json",
+      "source_date": "2019-06-28",
+      "publication_date": "2019-06-28",
+      "first_knowable": "2019-06-28",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "dated series; observation at or before origin is knowable at origin"
+     },
+     "P_B": {
+      "value": 6.2058,
+      "source": "benchmarks/us.json",
+      "source_date": "2019-06-28",
+      "publication_date": "2019-06-28",
+      "first_knowable": "2019-06-28",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "FY1_EPS": {
+      "value": 381.6327,
+      "source": "benchmarks/us.json best_eps",
+      "source_date": "2019-06-28",
+      "publication_date": "2019-06-28",
+      "first_knowable": "2019-06-28",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "live B takes FY1 from benchmark best_eps; same source class"
+     },
+     "FY2_FY3_EPS": {
+      "value": null,
+      "source": "computed/stock_action_index.json (forwardEps fy2/fy3)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "ROE_history": {
+      "value": 0.261,
+      "source": "benchmarks/us.json roe series",
+      "source_date": "2019-06-28",
+      "publication_date": "2019-06-28",
+      "first_knowable": "2019-06-28",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "trailing window 2009-06-30..2019-06-30 (n=496); window shorter than 10y disclosed"
+     },
+     "Rf": {
+      "value": 0.02,
+      "source": "macro/fred-banking-daily.json DGS10",
+      "source_date": "2019-06-28",
+      "publication_date": "2019-06-28",
+      "first_knowable": "2019-06-28",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "ERP": {
+      "value": 0.0506,
+      "source": "damodaran/historical_erp.json implied_erp_fcfe",
+      "source_date": "2019-12-31",
+      "publication_date": "~2020-01",
+      "first_knowable": "2020-01",
+      "classification": "RECONSTRUCTED_PIT_PROXY",
+      "note": "source-class substitution: live B reads country-premium erp.json; historical_erp is Damodaran implied ERP. confirmed."
+     },
+     "payout_A": {
+      "value": null,
+      "source": "computed/stock_action_index.json (weighted dividend yield)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "payout_B": {
+      "value": null,
+      "source": "slickcharts/{index}-yield.json",
+      "source_date": "2026-08-01",
+      "publication_date": "2026-08-01",
+      "first_knowable": "2026-08-01",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: yield files carry only the current reading. confirmed."
+     }
+    }
+   },
+   "classification": "RETROSPECTIVE_ONLY",
+   "proxy_lane_computable": true
+  },
+  "2020-06-30": {
+   "inputs": {
+    "SPX": {
+     "P0": {
+      "value": 3009.05,
+      "source": "benchmarks/us.json",
+      "source_date": "2020-06-26",
+      "publication_date": "2020-06-26",
+      "first_knowable": "2020-06-26",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "dated series; observation at or before origin is knowable at origin"
+     },
+     "P_B": {
+      "value": 3.4696,
+      "source": "benchmarks/us.json",
+      "source_date": "2020-06-26",
+      "publication_date": "2020-06-26",
+      "first_knowable": "2020-06-26",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "FY1_EPS": {
+      "value": 142.1056,
+      "source": "benchmarks/us.json best_eps",
+      "source_date": "2020-06-26",
+      "publication_date": "2020-06-26",
+      "first_knowable": "2020-06-26",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "live B takes FY1 from benchmark best_eps; same source class"
+     },
+     "FY2_FY3_EPS": {
+      "value": null,
+      "source": "computed/stock_action_index.json (forwardEps fy2/fy3)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "ROE_history": {
+      "value": 0.1741,
+      "source": "benchmarks/us.json roe series",
+      "source_date": "2020-06-26",
+      "publication_date": "2020-06-26",
+      "first_knowable": "2020-06-26",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "trailing window 2010-07-01..2020-06-30 (n=522); window shorter than 10y disclosed"
+     },
+     "Rf": {
+      "value": 0.0066,
+      "source": "macro/fred-banking-daily.json DGS10",
+      "source_date": "2020-06-30",
+      "publication_date": "2020-06-30",
+      "first_knowable": "2020-06-30",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "ERP": {
+      "value": 0.0494,
+      "source": "damodaran/historical_erp.json implied_erp_fcfe",
+      "source_date": "2020-12-31",
+      "publication_date": "~2021-01",
+      "first_knowable": "2021-01",
+      "classification": "RECONSTRUCTED_PIT_PROXY",
+      "note": "source-class substitution: live B reads country-premium erp.json; historical_erp is Damodaran implied ERP. confirmed."
+     },
+     "payout_A": {
+      "value": null,
+      "source": "computed/stock_action_index.json (weighted dividend yield)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "payout_B": {
+      "value": null,
+      "source": "slickcharts/{index}-yield.json",
+      "source_date": "2026-08-01",
+      "publication_date": "2026-08-01",
+      "first_knowable": "2026-08-01",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: yield files carry only the current reading. confirmed."
+     }
+    },
+    "NDX": {
+     "P0": {
+      "value": 9849.36,
+      "source": "benchmarks/us.json",
+      "source_date": "2020-06-26",
+      "publication_date": "2020-06-26",
+      "first_knowable": "2020-06-26",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "dated series; observation at or before origin is knowable at origin"
+     },
+     "P_B": {
+      "value": 7.1855,
+      "source": "benchmarks/us.json",
+      "source_date": "2020-06-26",
+      "publication_date": "2020-06-26",
+      "first_knowable": "2020-06-26",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "FY1_EPS": {
+      "value": 376.8684,
+      "source": "benchmarks/us.json best_eps",
+      "source_date": "2020-06-26",
+      "publication_date": "2020-06-26",
+      "first_knowable": "2020-06-26",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "live B takes FY1 from benchmark best_eps; same source class"
+     },
+     "FY2_FY3_EPS": {
+      "value": null,
+      "source": "computed/stock_action_index.json (forwardEps fy2/fy3)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "ROE_history": {
+      "value": 0.26385000000000003,
+      "source": "benchmarks/us.json roe series",
+      "source_date": "2020-06-26",
+      "publication_date": "2020-06-26",
+      "first_knowable": "2020-06-26",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "trailing window 2010-07-01..2020-06-30 (n=522); window shorter than 10y disclosed"
+     },
+     "Rf": {
+      "value": 0.0066,
+      "source": "macro/fred-banking-daily.json DGS10",
+      "source_date": "2020-06-30",
+      "publication_date": "2020-06-30",
+      "first_knowable": "2020-06-30",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "ERP": {
+      "value": 0.0494,
+      "source": "damodaran/historical_erp.json implied_erp_fcfe",
+      "source_date": "2020-12-31",
+      "publication_date": "~2021-01",
+      "first_knowable": "2021-01",
+      "classification": "RECONSTRUCTED_PIT_PROXY",
+      "note": "source-class substitution: live B reads country-premium erp.json; historical_erp is Damodaran implied ERP. confirmed."
+     },
+     "payout_A": {
+      "value": null,
+      "source": "computed/stock_action_index.json (weighted dividend yield)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "payout_B": {
+      "value": null,
+      "source": "slickcharts/{index}-yield.json",
+      "source_date": "2026-08-01",
+      "publication_date": "2026-08-01",
+      "first_knowable": "2026-08-01",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: yield files carry only the current reading. confirmed."
+     }
+    }
+   },
+   "classification": "RETROSPECTIVE_ONLY",
+   "proxy_lane_computable": true
+  },
+  "2021-06-30": {
+   "inputs": {
+    "SPX": {
+     "P0": {
+      "value": 4280.7,
+      "source": "benchmarks/us.json",
+      "source_date": "2021-06-25",
+      "publication_date": "2021-06-25",
+      "first_knowable": "2021-06-25",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "dated series; observation at or before origin is knowable at origin"
+     },
+     "P_B": {
+      "value": 4.6542,
+      "source": "benchmarks/us.json",
+      "source_date": "2021-06-25",
+      "publication_date": "2021-06-25",
+      "first_knowable": "2021-06-25",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "FY1_EPS": {
+      "value": 200.655,
+      "source": "benchmarks/us.json best_eps",
+      "source_date": "2021-06-25",
+      "publication_date": "2021-06-25",
+      "first_knowable": "2021-06-25",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "live B takes FY1 from benchmark best_eps; same source class"
+     },
+     "FY2_FY3_EPS": {
+      "value": null,
+      "source": "computed/stock_action_index.json (forwardEps fy2/fy3)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "ROE_history": {
+      "value": 0.1746,
+      "source": "benchmarks/us.json roe series",
+      "source_date": "2021-06-25",
+      "publication_date": "2021-06-25",
+      "first_knowable": "2021-06-25",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "trailing window 2011-07-01..2021-06-30 (n=522); window shorter than 10y disclosed"
+     },
+     "Rf": {
+      "value": 0.014499999999999999,
+      "source": "macro/fred-banking-daily.json DGS10",
+      "source_date": "2021-06-30",
+      "publication_date": "2021-06-30",
+      "first_knowable": "2021-06-30",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "ERP": {
+      "value": 0.049,
+      "source": "damodaran/historical_erp.json implied_erp_fcfe",
+      "source_date": "2021-12-31",
+      "publication_date": "~2022-01",
+      "first_knowable": "2022-01",
+      "classification": "RECONSTRUCTED_PIT_PROXY",
+      "note": "source-class substitution: live B reads country-premium erp.json; historical_erp is Damodaran implied ERP. confirmed."
+     },
+     "payout_A": {
+      "value": null,
+      "source": "computed/stock_action_index.json (weighted dividend yield)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "payout_B": {
+      "value": null,
+      "source": "slickcharts/{index}-yield.json",
+      "source_date": "2026-08-01",
+      "publication_date": "2026-08-01",
+      "first_knowable": "2026-08-01",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: yield files carry only the current reading. confirmed."
+     }
+    },
+    "NDX": {
+     "P0": {
+      "value": 14345.18,
+      "source": "benchmarks/us.json",
+      "source_date": "2021-06-25",
+      "publication_date": "2021-06-25",
+      "first_knowable": "2021-06-25",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "dated series; observation at or before origin is knowable at origin"
+     },
+     "P_B": {
+      "value": 8.7874,
+      "source": "benchmarks/us.json",
+      "source_date": "2021-06-25",
+      "publication_date": "2021-06-25",
+      "first_knowable": "2021-06-25",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "FY1_EPS": {
+      "value": 533.9957,
+      "source": "benchmarks/us.json best_eps",
+      "source_date": "2021-06-25",
+      "publication_date": "2021-06-25",
+      "first_knowable": "2021-06-25",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "live B takes FY1 from benchmark best_eps; same source class"
+     },
+     "FY2_FY3_EPS": {
+      "value": null,
+      "source": "computed/stock_action_index.json (forwardEps fy2/fy3)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "ROE_history": {
+      "value": 0.2658,
+      "source": "benchmarks/us.json roe series",
+      "source_date": "2021-06-25",
+      "publication_date": "2021-06-25",
+      "first_knowable": "2021-06-25",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "trailing window 2011-07-01..2021-06-30 (n=522); window shorter than 10y disclosed"
+     },
+     "Rf": {
+      "value": 0.014499999999999999,
+      "source": "macro/fred-banking-daily.json DGS10",
+      "source_date": "2021-06-30",
+      "publication_date": "2021-06-30",
+      "first_knowable": "2021-06-30",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "ERP": {
+      "value": 0.049,
+      "source": "damodaran/historical_erp.json implied_erp_fcfe",
+      "source_date": "2021-12-31",
+      "publication_date": "~2022-01",
+      "first_knowable": "2022-01",
+      "classification": "RECONSTRUCTED_PIT_PROXY",
+      "note": "source-class substitution: live B reads country-premium erp.json; historical_erp is Damodaran implied ERP. confirmed."
+     },
+     "payout_A": {
+      "value": null,
+      "source": "computed/stock_action_index.json (weighted dividend yield)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "payout_B": {
+      "value": null,
+      "source": "slickcharts/{index}-yield.json",
+      "source_date": "2026-08-01",
+      "publication_date": "2026-08-01",
+      "first_knowable": "2026-08-01",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: yield files carry only the current reading. confirmed."
+     }
+    }
+   },
+   "classification": "RETROSPECTIVE_ONLY",
+   "proxy_lane_computable": true
+  },
+  "2022-06-30": {
+   "inputs": {
+    "SPX": {
+     "P0": {
+      "value": 3911.74,
+      "source": "benchmarks/us.json",
+      "source_date": "2022-06-24",
+      "publication_date": "2022-06-24",
+      "first_knowable": "2022-06-24",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "dated series; observation at or before origin is knowable at origin"
+     },
+     "P_B": {
+      "value": 3.9467,
+      "source": "benchmarks/us.json",
+      "source_date": "2022-06-24",
+      "publication_date": "2022-06-24",
+      "first_knowable": "2022-06-24",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "FY1_EPS": {
+      "value": 237.9034,
+      "source": "benchmarks/us.json best_eps",
+      "source_date": "2022-06-24",
+      "publication_date": "2022-06-24",
+      "first_knowable": "2022-06-24",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "live B takes FY1 from benchmark best_eps; same source class"
+     },
+     "FY2_FY3_EPS": {
+      "value": null,
+      "source": "computed/stock_action_index.json (forwardEps fy2/fy3)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "ROE_history": {
+      "value": 0.1755,
+      "source": "benchmarks/us.json roe series",
+      "source_date": "2022-06-24",
+      "publication_date": "2022-06-24",
+      "first_knowable": "2022-06-24",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "trailing window 2012-06-30..2022-06-30 (n=521); window shorter than 10y disclosed"
+     },
+     "Rf": {
+      "value": 0.0298,
+      "source": "macro/fred-banking-daily.json DGS10",
+      "source_date": "2022-06-30",
+      "publication_date": "2022-06-30",
+      "first_knowable": "2022-06-30",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "ERP": {
+      "value": 0.0511,
+      "source": "damodaran/historical_erp.json implied_erp_fcfe",
+      "source_date": "2022-12-31",
+      "publication_date": "~2023-01",
+      "first_knowable": "2023-01",
+      "classification": "RECONSTRUCTED_PIT_PROXY",
+      "note": "source-class substitution: live B reads country-premium erp.json; historical_erp is Damodaran implied ERP. confirmed."
+     },
+     "payout_A": {
+      "value": null,
+      "source": "computed/stock_action_index.json (weighted dividend yield)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "payout_B": {
+      "value": null,
+      "source": "slickcharts/{index}-yield.json",
+      "source_date": "2026-08-01",
+      "publication_date": "2026-08-01",
+      "first_knowable": "2026-08-01",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: yield files carry only the current reading. confirmed."
+     }
+    },
+    "NDX": {
+     "P0": {
+      "value": 12105.85,
+      "source": "benchmarks/us.json",
+      "source_date": "2022-06-24",
+      "publication_date": "2022-06-24",
+      "first_knowable": "2022-06-24",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "dated series; observation at or before origin is knowable at origin"
+     },
+     "P_B": {
+      "value": 6.4772,
+      "source": "benchmarks/us.json",
+      "source_date": "2022-06-24",
+      "publication_date": "2022-06-24",
+      "first_knowable": "2022-06-24",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "FY1_EPS": {
+      "value": 595.9293,
+      "source": "benchmarks/us.json best_eps",
+      "source_date": "2022-06-24",
+      "publication_date": "2022-06-24",
+      "first_knowable": "2022-06-24",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "live B takes FY1 from benchmark best_eps; same source class"
+     },
+     "FY2_FY3_EPS": {
+      "value": null,
+      "source": "computed/stock_action_index.json (forwardEps fy2/fy3)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "ROE_history": {
+      "value": 0.266,
+      "source": "benchmarks/us.json roe series",
+      "source_date": "2022-06-24",
+      "publication_date": "2022-06-24",
+      "first_knowable": "2022-06-24",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "trailing window 2012-06-30..2022-06-30 (n=521); window shorter than 10y disclosed"
+     },
+     "Rf": {
+      "value": 0.0298,
+      "source": "macro/fred-banking-daily.json DGS10",
+      "source_date": "2022-06-30",
+      "publication_date": "2022-06-30",
+      "first_knowable": "2022-06-30",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "ERP": {
+      "value": 0.0511,
+      "source": "damodaran/historical_erp.json implied_erp_fcfe",
+      "source_date": "2022-12-31",
+      "publication_date": "~2023-01",
+      "first_knowable": "2023-01",
+      "classification": "RECONSTRUCTED_PIT_PROXY",
+      "note": "source-class substitution: live B reads country-premium erp.json; historical_erp is Damodaran implied ERP. confirmed."
+     },
+     "payout_A": {
+      "value": null,
+      "source": "computed/stock_action_index.json (weighted dividend yield)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "payout_B": {
+      "value": null,
+      "source": "slickcharts/{index}-yield.json",
+      "source_date": "2026-08-01",
+      "publication_date": "2026-08-01",
+      "first_knowable": "2026-08-01",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: yield files carry only the current reading. confirmed."
+     }
+    }
+   },
+   "classification": "RETROSPECTIVE_ONLY",
+   "proxy_lane_computable": true
+  },
+  "2023-06-30": {
+   "inputs": {
+    "SPX": {
+     "P0": {
+      "value": 4450.38,
+      "source": "benchmarks/us.json",
+      "source_date": "2023-06-30",
+      "publication_date": "2023-06-30",
+      "first_knowable": "2023-06-30",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "dated series; observation at or before origin is knowable at origin"
+     },
+     "P_B": {
+      "value": 4.3123,
+      "source": "benchmarks/us.json",
+      "source_date": "2023-06-30",
+      "publication_date": "2023-06-30",
+      "first_knowable": "2023-06-30",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "FY1_EPS": {
+      "value": 229.3816,
+      "source": "benchmarks/us.json best_eps",
+      "source_date": "2023-06-30",
+      "publication_date": "2023-06-30",
+      "first_knowable": "2023-06-30",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "live B takes FY1 from benchmark best_eps; same source class"
+     },
+     "FY2_FY3_EPS": {
+      "value": null,
+      "source": "computed/stock_action_index.json (forwardEps fy2/fy3)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "ROE_history": {
+      "value": 0.17975000000000002,
+      "source": "benchmarks/us.json roe series",
+      "source_date": "2023-06-30",
+      "publication_date": "2023-06-30",
+      "first_knowable": "2023-06-30",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "trailing window 2013-06-30..2023-06-30 (n=522); window shorter than 10y disclosed"
+     },
+     "Rf": {
+      "value": 0.0381,
+      "source": "macro/fred-banking-daily.json DGS10",
+      "source_date": "2023-06-30",
+      "publication_date": "2023-06-30",
+      "first_knowable": "2023-06-30",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "ERP": {
+      "value": 0.0457,
+      "source": "damodaran/historical_erp.json implied_erp_fcfe",
+      "source_date": "2023-12-31",
+      "publication_date": "~2024-01",
+      "first_knowable": "2024-01",
+      "classification": "RECONSTRUCTED_PIT_PROXY",
+      "note": "source-class substitution: live B reads country-premium erp.json; historical_erp is Damodaran implied ERP. confirmed."
+     },
+     "payout_A": {
+      "value": null,
+      "source": "computed/stock_action_index.json (weighted dividend yield)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "payout_B": {
+      "value": null,
+      "source": "slickcharts/{index}-yield.json",
+      "source_date": "2026-08-01",
+      "publication_date": "2026-08-01",
+      "first_knowable": "2026-08-01",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: yield files carry only the current reading. confirmed."
+     }
+    },
+    "NDX": {
+     "P0": {
+      "value": 15179.21,
+      "source": "benchmarks/us.json",
+      "source_date": "2023-06-30",
+      "publication_date": "2023-06-30",
+      "first_knowable": "2023-06-30",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "dated series; observation at or before origin is knowable at origin"
+     },
+     "P_B": {
+      "value": 7.6389,
+      "source": "benchmarks/us.json",
+      "source_date": "2023-06-30",
+      "publication_date": "2023-06-30",
+      "first_knowable": "2023-06-30",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "FY1_EPS": {
+      "value": 575.1695,
+      "source": "benchmarks/us.json best_eps",
+      "source_date": "2023-06-30",
+      "publication_date": "2023-06-30",
+      "first_knowable": "2023-06-30",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "live B takes FY1 from benchmark best_eps; same source class"
+     },
+     "FY2_FY3_EPS": {
+      "value": null,
+      "source": "computed/stock_action_index.json (forwardEps fy2/fy3)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "ROE_history": {
+      "value": 0.27795000000000003,
+      "source": "benchmarks/us.json roe series",
+      "source_date": "2023-06-30",
+      "publication_date": "2023-06-30",
+      "first_knowable": "2023-06-30",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "trailing window 2013-06-30..2023-06-30 (n=522); window shorter than 10y disclosed"
+     },
+     "Rf": {
+      "value": 0.0381,
+      "source": "macro/fred-banking-daily.json DGS10",
+      "source_date": "2023-06-30",
+      "publication_date": "2023-06-30",
+      "first_knowable": "2023-06-30",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "ERP": {
+      "value": 0.0457,
+      "source": "damodaran/historical_erp.json implied_erp_fcfe",
+      "source_date": "2023-12-31",
+      "publication_date": "~2024-01",
+      "first_knowable": "2024-01",
+      "classification": "RECONSTRUCTED_PIT_PROXY",
+      "note": "source-class substitution: live B reads country-premium erp.json; historical_erp is Damodaran implied ERP. confirmed."
+     },
+     "payout_A": {
+      "value": null,
+      "source": "computed/stock_action_index.json (weighted dividend yield)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "payout_B": {
+      "value": null,
+      "source": "slickcharts/{index}-yield.json",
+      "source_date": "2026-08-01",
+      "publication_date": "2026-08-01",
+      "first_knowable": "2026-08-01",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: yield files carry only the current reading. confirmed."
+     }
+    }
+   },
+   "classification": "RETROSPECTIVE_ONLY",
+   "proxy_lane_computable": true
+  },
+  "2024-06-30": {
+   "inputs": {
+    "SPX": {
+     "P0": {
+      "value": 5460.48,
+      "source": "benchmarks/us.json",
+      "source_date": "2024-06-28",
+      "publication_date": "2024-06-28",
+      "first_knowable": "2024-06-28",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "dated series; observation at or before origin is knowable at origin"
+     },
+     "P_B": {
+      "value": 4.9547,
+      "source": "benchmarks/us.json",
+      "source_date": "2024-06-28",
+      "publication_date": "2024-06-28",
+      "first_knowable": "2024-06-28",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "FY1_EPS": {
+      "value": 257.9945,
+      "source": "benchmarks/us.json best_eps",
+      "source_date": "2024-06-28",
+      "publication_date": "2024-06-28",
+      "first_knowable": "2024-06-28",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "live B takes FY1 from benchmark best_eps; same source class"
+     },
+     "FY2_FY3_EPS": {
+      "value": null,
+      "source": "computed/stock_action_index.json (forwardEps fy2/fy3)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "ROE_history": {
+      "value": 0.1986,
+      "source": "benchmarks/us.json roe series",
+      "source_date": "2024-06-28",
+      "publication_date": "2024-06-28",
+      "first_knowable": "2024-06-28",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "trailing window 2014-07-01..2024-06-30 (n=522); window shorter than 10y disclosed"
+     },
+     "Rf": {
+      "value": 0.0436,
+      "source": "macro/fred-banking-daily.json DGS10",
+      "source_date": "2024-06-28",
+      "publication_date": "2024-06-28",
+      "first_knowable": "2024-06-28",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "ERP": {
+      "value": 0.04,
+      "source": "damodaran/historical_erp.json implied_erp_fcfe",
+      "source_date": "2024-12-31",
+      "publication_date": "~2025-01",
+      "first_knowable": "2025-01",
+      "classification": "RECONSTRUCTED_PIT_PROXY",
+      "note": "source-class substitution: live B reads country-premium erp.json; historical_erp is Damodaran implied ERP. confirmed."
+     },
+     "payout_A": {
+      "value": null,
+      "source": "computed/stock_action_index.json (weighted dividend yield)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "payout_B": {
+      "value": null,
+      "source": "slickcharts/{index}-yield.json",
+      "source_date": "2026-08-01",
+      "publication_date": "2026-08-01",
+      "first_knowable": "2026-08-01",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: yield files carry only the current reading. confirmed."
+     }
+    },
+    "NDX": {
+     "P0": {
+      "value": 19682.87,
+      "source": "benchmarks/us.json",
+      "source_date": "2024-06-28",
+      "publication_date": "2024-06-28",
+      "first_knowable": "2024-06-28",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "dated series; observation at or before origin is knowable at origin"
+     },
+     "P_B": {
+      "value": 7.9879,
+      "source": "benchmarks/us.json",
+      "source_date": "2024-06-28",
+      "publication_date": "2024-06-28",
+      "first_knowable": "2024-06-28",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "FY1_EPS": {
+      "value": 746.5841,
+      "source": "benchmarks/us.json best_eps",
+      "source_date": "2024-06-28",
+      "publication_date": "2024-06-28",
+      "first_knowable": "2024-06-28",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "live B takes FY1 from benchmark best_eps; same source class"
+     },
+     "FY2_FY3_EPS": {
+      "value": null,
+      "source": "computed/stock_action_index.json (forwardEps fy2/fy3)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "ROE_history": {
+      "value": 0.2928,
+      "source": "benchmarks/us.json roe series",
+      "source_date": "2024-06-28",
+      "publication_date": "2024-06-28",
+      "first_knowable": "2024-06-28",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "trailing window 2014-07-01..2024-06-30 (n=522); window shorter than 10y disclosed"
+     },
+     "Rf": {
+      "value": 0.0436,
+      "source": "macro/fred-banking-daily.json DGS10",
+      "source_date": "2024-06-28",
+      "publication_date": "2024-06-28",
+      "first_knowable": "2024-06-28",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "ERP": {
+      "value": 0.04,
+      "source": "damodaran/historical_erp.json implied_erp_fcfe",
+      "source_date": "2024-12-31",
+      "publication_date": "~2025-01",
+      "first_knowable": "2025-01",
+      "classification": "RECONSTRUCTED_PIT_PROXY",
+      "note": "source-class substitution: live B reads country-premium erp.json; historical_erp is Damodaran implied ERP. confirmed."
+     },
+     "payout_A": {
+      "value": null,
+      "source": "computed/stock_action_index.json (weighted dividend yield)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "payout_B": {
+      "value": null,
+      "source": "slickcharts/{index}-yield.json",
+      "source_date": "2026-08-01",
+      "publication_date": "2026-08-01",
+      "first_knowable": "2026-08-01",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: yield files carry only the current reading. confirmed."
+     }
+    }
+   },
+   "classification": "RETROSPECTIVE_ONLY",
+   "proxy_lane_computable": true
+  },
+  "2025-06-30": {
+   "inputs": {
+    "SPX": {
+     "P0": {
+      "value": 6173.07,
+      "source": "benchmarks/us.json",
+      "source_date": "2025-06-27",
+      "publication_date": "2025-06-27",
+      "first_knowable": "2025-06-27",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "dated series; observation at or before origin is knowable at origin"
+     },
+     "P_B": {
+      "value": 5.2137,
+      "source": "benchmarks/us.json",
+      "source_date": "2025-06-27",
+      "publication_date": "2025-06-27",
+      "first_knowable": "2025-06-27",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "FY1_EPS": {
+      "value": 280.7475,
+      "source": "benchmarks/us.json best_eps",
+      "source_date": "2025-06-27",
+      "publication_date": "2025-06-27",
+      "first_knowable": "2025-06-27",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "live B takes FY1 from benchmark best_eps; same source class"
+     },
+     "FY2_FY3_EPS": {
+      "value": null,
+      "source": "computed/stock_action_index.json (forwardEps fy2/fy3)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "ROE_history": {
+      "value": 0.2031,
+      "source": "benchmarks/us.json roe series",
+      "source_date": "2025-06-27",
+      "publication_date": "2025-06-27",
+      "first_knowable": "2025-06-27",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "trailing window 2015-07-01..2025-06-30 (n=522); window shorter than 10y disclosed"
+     },
+     "Rf": {
+      "value": 0.0424,
+      "source": "macro/fred-banking-daily.json DGS10",
+      "source_date": "2025-06-30",
+      "publication_date": "2025-06-30",
+      "first_knowable": "2025-06-30",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "ERP": {
+      "value": 0.0418,
+      "source": "damodaran/historical_erp.json implied_erp_fcfe",
+      "source_date": "2025-12-31",
+      "publication_date": "~2026-01",
+      "first_knowable": "2026-01",
+      "classification": "RECONSTRUCTED_PIT_PROXY",
+      "note": "source-class substitution: live B reads country-premium erp.json; historical_erp is Damodaran implied ERP. confirmed."
+     },
+     "payout_A": {
+      "value": null,
+      "source": "computed/stock_action_index.json (weighted dividend yield)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "payout_B": {
+      "value": null,
+      "source": "slickcharts/{index}-yield.json",
+      "source_date": "2026-08-01",
+      "publication_date": "2026-08-01",
+      "first_knowable": "2026-08-01",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: yield files carry only the current reading. confirmed."
+     }
+    },
+    "NDX": {
+     "P0": {
+      "value": 22534.2,
+      "source": "benchmarks/us.json",
+      "source_date": "2025-06-27",
+      "publication_date": "2025-06-27",
+      "first_knowable": "2025-06-27",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "dated series; observation at or before origin is knowable at origin"
+     },
+     "P_B": {
+      "value": 8.423,
+      "source": "benchmarks/us.json",
+      "source_date": "2025-06-27",
+      "publication_date": "2025-06-27",
+      "first_knowable": "2025-06-27",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "FY1_EPS": {
+      "value": 841.9305,
+      "source": "benchmarks/us.json best_eps",
+      "source_date": "2025-06-27",
+      "publication_date": "2025-06-27",
+      "first_knowable": "2025-06-27",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "live B takes FY1 from benchmark best_eps; same source class"
+     },
+     "FY2_FY3_EPS": {
+      "value": null,
+      "source": "computed/stock_action_index.json (forwardEps fy2/fy3)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "ROE_history": {
+      "value": 0.30365,
+      "source": "benchmarks/us.json roe series",
+      "source_date": "2025-06-27",
+      "publication_date": "2025-06-27",
+      "first_knowable": "2025-06-27",
+      "classification": "MODEL_EQUIVALENT",
+      "note": "trailing window 2015-07-01..2025-06-30 (n=522); window shorter than 10y disclosed"
+     },
+     "Rf": {
+      "value": 0.0424,
+      "source": "macro/fred-banking-daily.json DGS10",
+      "source_date": "2025-06-30",
+      "publication_date": "2025-06-30",
+      "first_knowable": "2025-06-30",
+      "classification": "MODEL_EQUIVALENT"
+     },
+     "ERP": {
+      "value": 0.0418,
+      "source": "damodaran/historical_erp.json implied_erp_fcfe",
+      "source_date": "2025-12-31",
+      "publication_date": "~2026-01",
+      "first_knowable": "2026-01",
+      "classification": "RECONSTRUCTED_PIT_PROXY",
+      "note": "source-class substitution: live B reads country-premium erp.json; historical_erp is Damodaran implied ERP. confirmed."
+     },
+     "payout_A": {
+      "value": null,
+      "source": "computed/stock_action_index.json (weighted dividend yield)",
+      "source_date": "2026-08-08 (single current file)",
+      "publication_date": "2026-08-08",
+      "first_knowable": "2026-08-08",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: NO historical vintage. confirmed."
+     },
+     "payout_B": {
+      "value": null,
+      "source": "slickcharts/{index}-yield.json",
+      "source_date": "2026-08-01",
+      "publication_date": "2026-08-01",
+      "first_knowable": "2026-08-01",
+      "classification": "RETROSPECTIVE_ONLY",
+      "note": "handler inventory: yield files carry only the current reading. confirmed."
+     }
+    }
+   },
+   "classification": "RETROSPECTIVE_ONLY",
+   "proxy_lane_computable": true
+  }
+ },
+ "handler_inventory_confirmed": {
+  "model_equivalent_pit": {
+   "SPX": 0,
+   "NDX": 0
+  },
+  "statement": "Handler inventory confirmed: FY2/FY3 EPS and both payout routes have no historical vintage; historical ERP is implied (source-class mismatch). MODEL_EQUIVALENT_PIT = 0 for both indices. D1/D2 fail; READY unreachable on data grounds; missing data is not a RETIRE condition.",
+  "contradictions": []
+ }
+}
