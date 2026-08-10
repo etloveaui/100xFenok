@@ -12,31 +12,44 @@
       "run_id": "30711922590",
       "schedule": "",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 724,
+      "natural": true,
+      "observed_at": "2026-08-10T04:06:52Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31354396475",
+      "schedule": "7 2 * * 0-5",
+      "shard": "13/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T18:23:04Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CBXL.json",
-    "payload_sha256": "c80617a09751369cb111cd47be2d1007bc567f239f08ca8b50eff61a0b739796",
-    "quote_as_of": "2026-07-30T19:42:01Z",
-    "source_as_of": "2026-07-30T19:42:01Z"
+    "fetched_at": "2026-08-10T04:07:16Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/CBXL.json",
+    "payload_sha256": "33380849ad02087e643c696f428cbb39b066243422d0625380c265b6cb9de980",
+    "quote_as_of": "2026-08-07T19:26:48Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 586,
+    "latency_ms": 724,
     "natural": true,
-    "observed_at": "2026-08-01T18:21:41Z",
+    "observed_at": "2026-08-10T04:06:52Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711922590",
-    "schedule": "",
-    "shard": "1/6"
+    "run_id": "31354396475",
+    "schedule": "7 2 * * 0-5",
+    "shard": "13/72"
   },
   "lkg": {
     "fetched_at": "2026-08-01T18:23:04Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T18:21:41Z",
-    "payload_sha256": "012f90bc799913399c735564ff32dd81b47223e7e058d1c266824cb480bcbfc5",
-    "quote_as_of": "2026-07-30T19:42:01Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-10T04:06:52Z",
+    "payload_sha256": "8468fd82bedbb6a9133cd8439cfeef91d8160f9d70925452b581dbd61a35b98a",
+    "quote_as_of": "2026-08-07T19:26:48Z",
     "run_attempt": 1,
-    "run_id": "30711922590",
+    "run_id": "31354396475",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-30T19:42:01Z"
+    "source_as_of": "2026-08-07"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-30T19:42:01Z"
   },
   "ticker": "CBXL",
-  "updated_at": "2026-08-10T02:30:39Z"
+  "updated_at": "2026-08-10T04:06:52Z"
 }

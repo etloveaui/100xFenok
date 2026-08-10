@@ -25,13 +25,26 @@
       "run_id": "31100540842",
       "schedule": "7 10 * * 0-5",
       "shard": "53/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 908,
+      "natural": true,
+      "observed_at": "2026-08-10T04:06:52Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31354396475",
+      "schedule": "7 2 * * 0-5",
+      "shard": "13/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T12:16:39Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/EFFE.json",
-    "payload_sha256": "6afb1bab20f059889ed352be01d923fd8f59cda7253853d042c090f79b8833e2",
+    "fetched_at": "2026-08-10T04:07:47Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/EFFE.json",
+    "payload_sha256": "0d23ec2d2b3f782cc63c8fb2cdbff739dd18a892482554ea86f8bbb1d09c4ec6",
     "quote_as_of": "2026-07-30T16:41:23Z",
     "source_as_of": "2026-07-30T16:41:23Z"
   },
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 662,
+    "latency_ms": 908,
     "natural": true,
-    "observed_at": "2026-08-06T12:16:00Z",
+    "observed_at": "2026-08-10T04:06:52Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31100540842",
-    "schedule": "7 10 * * 0-5",
-    "shard": "53/72"
+    "run_id": "31354396475",
+    "schedule": "7 2 * * 0-5",
+    "shard": "13/72"
   },
   "lkg": {
     "fetched_at": "2026-08-06T12:16:39Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-06T12:16:00Z",
-    "payload_sha256": "7a70d2f0903047223eaaccdb0a74d7edc6618a499698a2dad5340290146f8ebe",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-10T04:06:52Z",
+    "payload_sha256": "ced8531f7e0782a80606dad6bf201128c8288d49a50999753b5858b4ab50d455",
     "quote_as_of": "2026-07-30T16:41:23Z",
     "run_attempt": 1,
-    "run_id": "31100540842",
+    "run_id": "31354396475",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-30T16:41:23Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-07-30T16:41:23Z"
   },
   "ticker": "EFFE",
-  "updated_at": "2026-08-10T02:30:39Z"
+  "updated_at": "2026-08-10T04:06:52Z"
 }

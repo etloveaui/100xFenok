@@ -51,15 +51,28 @@
       "run_id": "30771231562",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 871,
+      "natural": true,
+      "observed_at": "2026-08-10T04:06:52Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31354396475",
+      "schedule": "7 2 * * 0-5",
+      "shard": "13/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-02T23:03:05Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/HULL.json",
-    "payload_sha256": "b4ff957684536015bfa96b1c3a378023befd17a5fc67d1ce238586c76e18895e",
-    "quote_as_of": "2026-07-30T19:48:21Z",
-    "source_as_of": "2026-07-30T19:48:21Z"
+    "fetched_at": "2026-08-10T04:07:31Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/HULL.json",
+    "payload_sha256": "0fe8b8ce674c8f0af3f033920c463860fee82cb40652f6e6c6ec0e4ace063afe",
+    "quote_as_of": "2026-08-07T14:01:08Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -68,14 +81,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 494,
+    "latency_ms": 871,
     "natural": true,
-    "observed_at": "2026-08-02T22:59:12Z",
+    "observed_at": "2026-08-10T04:06:52Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30771231562",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31354396475",
+    "schedule": "7 2 * * 0-5",
+    "shard": "13/72"
   },
   "lkg": {
     "fetched_at": "2026-08-02T23:03:05Z",
@@ -88,17 +101,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-02T22:59:12Z",
-    "payload_sha256": "0f4234e4e5992af2f509113fe69adb10c3edf3b59d26c6be11600d85ec7c94e1",
-    "quote_as_of": "2026-07-30T19:48:21Z",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-10T04:06:52Z",
+    "payload_sha256": "8bd8ea1c059a07173c5a4d5e1569b866e46ff1c5333ddda5bf72f858b111e379",
+    "quote_as_of": "2026-08-07T14:01:08Z",
     "run_attempt": 1,
-    "run_id": "30771231562",
+    "run_id": "31354396475",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-30T19:48:21Z"
+    "source_as_of": "2026-08-07"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -111,5 +124,5 @@
     "source_as_of": "2026-07-30T19:48:21Z"
   },
   "ticker": "HULL",
-  "updated_at": "2026-08-10T02:30:39Z"
+  "updated_at": "2026-08-10T04:06:52Z"
 }

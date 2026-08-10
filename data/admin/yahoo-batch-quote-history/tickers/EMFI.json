@@ -25,13 +25,26 @@
       "run_id": "31182487397",
       "schedule": "7 12 * * 0-5",
       "shard": "66/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 699,
+      "natural": true,
+      "observed_at": "2026-08-10T04:06:52Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31354396475",
+      "schedule": "7 2 * * 0-5",
+      "shard": "13/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T13:28:26Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/EMFI.json",
-    "payload_sha256": "dae5da53f7e14ac489e62a6d1a0e17c152f722e35a4ba91cdca5186f31016453",
+    "fetched_at": "2026-08-10T04:07:53Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/EMFI.json",
+    "payload_sha256": "118996fa1a15cb99d1775bf8b14d8f36a84371dfcfb86d9178131458285dc88f",
     "quote_as_of": "2026-07-30T17:04:42Z",
     "source_as_of": "2026-07-30T17:04:42Z"
   },
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1266,
+    "latency_ms": 699,
     "natural": true,
-    "observed_at": "2026-08-07T13:26:16Z",
+    "observed_at": "2026-08-10T04:06:52Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31182487397",
-    "schedule": "7 12 * * 0-5",
-    "shard": "66/72"
+    "run_id": "31354396475",
+    "schedule": "7 2 * * 0-5",
+    "shard": "13/72"
   },
   "lkg": {
     "fetched_at": "2026-08-07T13:28:26Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T13:26:16Z",
-    "payload_sha256": "4093004bbe7f5c9d48a384f4b039ac62a17845b952be00757cde750b18ce8950",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-10T04:06:52Z",
+    "payload_sha256": "9750cee1a10b7285c6951be13fee0f6eed6a2ea0511ea89376bf4c91867d99a7",
     "quote_as_of": "2026-07-30T17:04:42Z",
     "run_attempt": 1,
-    "run_id": "31182487397",
+    "run_id": "31354396475",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-30T17:04:42Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-07-30T17:04:42Z"
   },
   "ticker": "EMFI",
-  "updated_at": "2026-08-10T02:30:39Z"
+  "updated_at": "2026-08-10T04:06:52Z"
 }

@@ -38,13 +38,26 @@
       "run_id": "30998672232",
       "schedule": "7 8 * * 0-5",
       "shard": "40/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 895,
+      "natural": true,
+      "observed_at": "2026-08-10T04:06:52Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31354396475",
+      "schedule": "7 2 * * 0-5",
+      "shard": "13/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-05T10:47:18Z",
-    "history_as_of": "2026-08-04",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ACGO.json",
-    "payload_sha256": "e8df07134161217cccb6246edc89ab95f6c7287f1276e9d8ea0b96069ec751a6",
+    "fetched_at": "2026-08-10T04:07:36Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/yf/finance/ACGO.json",
+    "payload_sha256": "c978c7c34f4b685d56655e25167578b559029e8ea625c9253c8250aa84717b34",
     "quote_as_of": "2026-07-30T17:03:25Z",
     "source_as_of": "2026-07-30T17:03:25Z"
   },
@@ -55,14 +68,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 492,
+    "latency_ms": 895,
     "natural": true,
-    "observed_at": "2026-08-05T10:46:42Z",
+    "observed_at": "2026-08-10T04:06:52Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30998672232",
-    "schedule": "7 8 * * 0-5",
-    "shard": "40/72"
+    "run_id": "31354396475",
+    "schedule": "7 2 * * 0-5",
+    "shard": "13/72"
   },
   "lkg": {
     "fetched_at": "2026-08-05T10:47:18Z",
@@ -75,17 +88,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-04",
-    "observed_at": "2026-08-05T10:46:42Z",
-    "payload_sha256": "a0bef6a28a814b05b0f81938848b7518783b0886a1555599dbc3729cce3cbd5c",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-10T04:06:52Z",
+    "payload_sha256": "9f1ada0e743e3e1c1e4917cf84ec7f3043dbbad65ca7672f1b5838337955605e",
     "quote_as_of": "2026-07-30T17:03:25Z",
     "run_attempt": 1,
-    "run_id": "30998672232",
+    "run_id": "31354396475",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-30T17:03:25Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -98,5 +111,5 @@
     "source_as_of": "2026-07-30T17:03:25Z"
   },
   "ticker": "ACGO",
-  "updated_at": "2026-08-10T02:30:39Z"
+  "updated_at": "2026-08-10T04:06:52Z"
 }
