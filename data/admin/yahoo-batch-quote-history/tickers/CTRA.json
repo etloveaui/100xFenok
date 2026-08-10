@@ -26,39 +26,6 @@
       ],
       "latency_ms": 0,
       "natural": true,
-      "observed_at": "2026-07-30T00:35:13Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "30502016705",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 2,
-      "error": "empty payload",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "empty payload"
-        },
-        {
-          "attempt": 2,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 2,
-          "error": "empty payload"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": true,
       "observed_at": "2026-07-31T00:55:40Z",
       "outcome": "failed",
       "run_attempt": 1,
@@ -511,6 +478,49 @@
       "run_id": "31359333130",
       "schedule": "7 4 * * 0-5",
       "shard": "14/72"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-10T11:19:59Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31382906749",
+      "schedule": "7 10 * * 0-5",
+      "shard": "17/72"
     }
   ],
   "current": {
@@ -560,12 +570,12 @@
     ],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-10T05:42:10Z",
+    "observed_at": "2026-08-10T11:19:59Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31359333130",
-    "schedule": "7 4 * * 0-5",
-    "shard": "14/72"
+    "run_id": "31382906749",
+    "schedule": "7 10 * * 0-5",
+    "shard": "17/72"
   },
   "latest_failure": {
     "attempts_used": 2,
@@ -604,9 +614,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-08-10T05:42:10Z",
+    "observed_at": "2026-08-10T11:19:59Z",
     "run_attempt": 1,
-    "run_id": "31359333130"
+    "run_id": "31382906749"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:49:09Z",
@@ -630,5 +640,5 @@
     "source_as_of": "2026-05-06"
   },
   "ticker": "CTRA",
-  "updated_at": "2026-08-10T05:42:10Z"
+  "updated_at": "2026-08-10T11:19:59Z"
 }

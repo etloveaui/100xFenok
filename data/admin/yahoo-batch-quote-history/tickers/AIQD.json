@@ -25,12 +25,26 @@
       "run_id": "31111230701",
       "schedule": "7 12 * * 0-5",
       "shard": "54/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: source timestamp regression for AIQD: quote_as_of 2026-08-04T13:53:01Z < 2026-08-06T13:46:02Z",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 465,
+      "natural": true,
+      "observed_at": "2026-08-10T11:19:59Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31382906749",
+      "schedule": "7 10 * * 0-5",
+      "shard": "17/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-06T14:33:31Z",
     "history_as_of": "2026-08-06",
-    "path": "data/yf/finance/AIQD.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AIQD.json",
     "payload_sha256": "34f588a345a6994a8f0a2984fbdd9879e5f49fcf9b63cef271ea21498574b900",
     "quote_as_of": "2026-08-06T13:46:02Z",
     "source_as_of": "2026-08-06"
@@ -40,24 +54,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: source timestamp regression for AIQD: quote_as_of 2026-08-04T13:53:01Z < 2026-08-06T13:46:02Z",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 532,
+    "latency_ms": 465,
     "natural": true,
-    "observed_at": "2026-08-06T14:33:02Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-10T11:19:59Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31111230701",
-    "schedule": "7 12 * * 0-5",
-    "shard": "54/72"
+    "run_id": "31382906749",
+    "schedule": "7 10 * * 0-5",
+    "shard": "17/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: source timestamp regression for AIQD: quote_as_of 2026-08-04T13:53:01Z < 2026-08-06T13:46:02Z",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-10T11:19:59Z",
+    "run_attempt": 1,
+    "run_id": "31382906749"
   },
   "lkg": {
-    "fetched_at": "2026-07-24T23:13:51Z",
-    "history_as_of": "2026-07-23",
+    "fetched_at": "2026-08-06T14:33:31Z",
+    "history_as_of": "2026-08-06",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AIQD.json",
-    "payload_sha256": "0c86bab411c2fb0fede0bfdda75b8b24a3b5ad7b37882e125d797997eb06d2b2",
-    "quote_as_of": "2026-07-21T19:56:18Z",
-    "source_as_of": "2026-07-21T19:56:18Z"
+    "payload_sha256": "34f588a345a6994a8f0a2984fbdd9879e5f49fcf9b63cef271ea21498574b900",
+    "quote_as_of": "2026-08-06T13:46:02Z",
+    "source_as_of": "2026-08-06"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,8 +98,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-06"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +112,5 @@
     "source_as_of": "2026-07-21T19:56:18Z"
   },
   "ticker": "AIQD",
-  "updated_at": "2026-08-06T14:33:02Z"
+  "updated_at": "2026-08-10T11:19:59Z"
 }
