@@ -44,6 +44,7 @@ jobs:
             100xfenok-next/scripts
             100xfenok-next/src/lib
             data/admin/data-supply-state/detection-attempts
+            data/admin/data-supply-state/publish-outcomes
             data/admin/damodaran
             data/damodaran
 
@@ -131,11 +132,15 @@ jobs:
             exit "$RECOVERY_EXIT"
           fi
       - name: Publish damodaran generation to the cloud data plane
+        id: publish_cloud_generation
         if: ${{ steps.fetch.outcome == 'success' }}
-        continue-on-error: true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: node scripts/publish-cloud-data-generation.mjs --family=damodaran --tolerate-gate-block --json
+
+      - name: Persist damodaran publish outcome
+        if: ${{ always() }}
+        run: node scripts/persist-cloud-publish-outcome.mjs --family=damodaran --workflow=.github/workflows/fetch-damodaran-shadow.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }}

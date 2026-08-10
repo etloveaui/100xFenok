@@ -47,12 +47,17 @@ import {
   resolveSourceAsOf,
   RETENTION_PROTECTED_KEYS,
   rollbackLiveGeneration,
+  runPublisherCli,
   toIsoDay,
   verifyGenerationParity,
 } from "./publish-cloud-data-generation.mjs";
 import {
   appendPublishOutcome,
   buildPublishOutcomeRecord,
+  mergePublishOutcomeShards,
+  PUBLISH_OUTCOME_MAX_ID_LENGTH,
+  PUBLISH_OUTCOME_MAX_RECORDS,
+  PUBLISH_OUTCOME_MAX_SERIALIZED_BYTES,
   PUBLISH_OUTCOME_RESULTS,
   PUBLISH_OUTCOME_SHARD_SCHEMA,
   publishOutcomeShardPath,
@@ -2454,6 +2459,213 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
     /does not match/,
   );
   console.log("publish-outcome recorder ok (no-write decision; published/failed/resumed records; merge append; non-blocking write failure; validation)");
+}
+
+// --- publish-outcome bounded retention and merge semantics -----------------
+{
+  const root = await mkdtemp(path.join(os.tmpdir(), "publish-outcome-retention-"));
+  const family = "oecd-cli";
+  const base = Date.parse("2026-08-10T00:00:00.000Z");
+  const recordAt = (index, observedAt = new Date(base + index * 1000).toISOString()) => (
+    buildPublishOutcomeRecord({
+      family,
+      result: index % 2 === 0 ? "published" : "failed",
+      generationId: `generation-${String(index).padStart(3, "0")}`,
+      receiptId: `receipt-${String(index).padStart(3, "0")}`,
+      observedAt,
+    })
+  );
+
+  for (let index = 0; index <= PUBLISH_OUTCOME_MAX_RECORDS; index += 1) {
+    await appendPublishOutcome({ outcomesRoot: root, family, record: recordAt(index) });
+  }
+  const cappedPath = publishOutcomeShardPath(root, family);
+  const capped = JSON.parse(await readFile(cappedPath, "utf8"));
+  assert.equal(capped.records.length, PUBLISH_OUTCOME_MAX_RECORDS, "101st append must retain exactly the latest 100");
+  assert.equal(capped.records[0].generation_id, "generation-001");
+  assert.equal(capped.records.at(-1).generation_id, "generation-100");
+
+  const beforeOldAppend = structuredClone(capped);
+  await appendPublishOutcome({
+    outcomesRoot: root,
+    family,
+    record: recordAt(999, "2020-01-01T00:00:00.000Z"),
+  });
+  const afterOldAppend = JSON.parse(await readFile(cappedPath, "utf8"));
+  assert.deepEqual(afterOldAppend, beforeOldAppend, "an out-of-order old append must not evict newer retained evidence");
+
+  const tieRoot = await mkdtemp(path.join(os.tmpdir(), "publish-outcome-ties-"));
+  const tiedAt = "2026-08-10T12:00:00.000Z";
+  for (let index = 0; index <= PUBLISH_OUTCOME_MAX_RECORDS; index += 1) {
+    await appendPublishOutcome({ outcomesRoot: tieRoot, family, record: recordAt(index, tiedAt) });
+  }
+  const tied = JSON.parse(await readFile(publishOutcomeShardPath(tieRoot, family), "utf8"));
+  assert.equal(tied.records[0].generation_id, "generation-001", "equal timestamps use append order as the tie-breaker");
+  assert.equal(tied.records.at(-1).generation_id, "generation-100");
+  assert.deepEqual(
+    mergePublishOutcomeShards({ family, shards: [tied, tied] }),
+    tied,
+    "merging the same bounded snapshot is idempotent",
+  );
+
+  assert.throws(
+    () => buildPublishOutcomeRecord({ family, result: "failed", generationId: "g".repeat(PUBLISH_OUTCOME_MAX_ID_LENGTH + 1) }),
+    /generation_id/,
+  );
+  assert.throws(
+    () => buildPublishOutcomeRecord({ family, result: "failed", receiptId: "r".repeat(PUBLISH_OUTCOME_MAX_ID_LENGTH + 1) }),
+    /receipt_id/,
+  );
+  const extraField = buildPublishOutcomeRecord({ family, result: "failed" });
+  extraField.detail = "unbounded";
+  assert.throws(
+    () => validatePublishOutcomeShard({ schema_version: PUBLISH_OUTCOME_SHARD_SCHEMA, family, records: [extraField] }, family),
+    /keys must be exactly/,
+  );
+  const oversized = {
+    schema_version: PUBLISH_OUTCOME_SHARD_SCHEMA,
+    family,
+    records: Array.from({ length: PUBLISH_OUTCOME_MAX_RECORDS }, (_, index) => buildPublishOutcomeRecord({
+      family,
+      result: "failed",
+      generationId: `${index}`.padEnd(PUBLISH_OUTCOME_MAX_ID_LENGTH, "g"),
+      receiptId: `${index}`.padEnd(PUBLISH_OUTCOME_MAX_ID_LENGTH, "r"),
+      observedAt: new Date(base + index * 1000).toISOString(),
+    })),
+  };
+  assert.ok(Buffer.byteLength(`${JSON.stringify(oversized, null, 2)}\n`) > PUBLISH_OUTCOME_MAX_SERIALIZED_BYTES);
+  assert.throws(() => validatePublishOutcomeShard(oversized, family), /serialized bytes/);
+  const sizeRoot = await mkdtemp(path.join(os.tmpdir(), "publish-outcome-size-cap-"));
+  for (const record of oversized.records) {
+    await appendPublishOutcome({ outcomesRoot: sizeRoot, family, record });
+  }
+  const sizeBoundedBytes = await readFile(publishOutcomeShardPath(sizeRoot, family));
+  const sizeBounded = JSON.parse(sizeBoundedBytes.toString("utf8"));
+  validatePublishOutcomeShard(sizeBounded, family);
+  assert.ok(sizeBoundedBytes.byteLength <= PUBLISH_OUTCOME_MAX_SERIALIZED_BYTES);
+  assert.equal(sizeBounded.records.at(-1).generation_id, oversized.records.at(-1).generation_id);
+  await rm(root, { recursive: true, force: true });
+  await rm(tieRoot, { recursive: true, force: true });
+  await rm(sizeRoot, { recursive: true, force: true });
+  console.log("publish-outcome retention ok (100 latest, old/tie ordering, idempotent merge, field/size ceilings)");
+}
+
+// --- injected CLI integration: published/resumed/failed and JSON stderr ----
+{
+  const okGate = async () => ({ code: 0, stdout: "", stderr: "" });
+  const liveEnv = {
+    CLOUDFLARE_API_TOKEN: "test-token",
+    DATA_PLANE_ENDPOINT: "https://example.invalid/internal/cloud-data-plane",
+    DATA_PLANE_WRITE_KEY: "test-write-key",
+  };
+  const invoke = async ({
+    outcomesRoot,
+    env = liveEnv,
+    gate = okGate,
+    createPublishPlaneImpl,
+    extraArgs = [],
+  }) => {
+    const stdout = [];
+    const stderr = [];
+    const exitCode = await runPublisherCli({
+      argv: ["--family=oecd-cli", "--json", ...extraArgs],
+      env,
+      outcomesRoot,
+      runCostGateImpl: gate,
+      createPublishPlaneImpl,
+      stdout: (line) => stdout.push(line),
+      stderr: (...parts) => stderr.push(parts.join(" ")),
+    });
+    return { exitCode, stdout, stderr };
+  };
+
+  const successRoot = await mkdtemp(path.join(os.tmpdir(), "publish-cli-success-"));
+  const memoryPlane = createMemoryCloudDataPlane();
+  const memoryFactory = () => ({ plane: memoryPlane, objectsWritten: () => 0 });
+  const published = await invoke({ outcomesRoot: successRoot, createPublishPlaneImpl: memoryFactory });
+  assert.equal(published.exitCode, 0);
+  assert.equal(published.stdout.length, 1);
+  assert.equal(JSON.parse(published.stdout[0]).result, "published");
+  const resumed = await invoke({ outcomesRoot: successRoot, createPublishPlaneImpl: memoryFactory });
+  assert.equal(resumed.exitCode, 0);
+  assert.equal(resumed.stdout.length, 1);
+  assert.equal(JSON.parse(resumed.stdout[0]).result, "resumed");
+  const successShard = JSON.parse(await readFile(publishOutcomeShardPath(successRoot, "oecd-cli"), "utf8"));
+  assert.deepEqual(successShard.records.map((record) => record.result), ["published", "resumed"]);
+
+  const missingRoot = await mkdtemp(path.join(os.tmpdir(), "publish-cli-missing-env-"));
+  const missing = await invoke({ outcomesRoot: missingRoot, env: {}, createPublishPlaneImpl: memoryFactory });
+  assert.equal(missing.exitCode, 2);
+  assert.equal(missing.stdout.length, 0);
+  assert.match(missing.stderr.join("\n"), /missing env/);
+  const missingShard = JSON.parse(await readFile(publishOutcomeShardPath(missingRoot, "oecd-cli"), "utf8"));
+  assert.equal(missingShard.records.at(-1).result, "failed");
+
+  const remoteRoot = await mkdtemp(path.join(os.tmpdir(), "publish-cli-remote-failure-"));
+  const remoteFailure = await invoke({
+    outcomesRoot: remoteRoot,
+    createPublishPlaneImpl: () => ({
+      plane: { pointerStore: { get: async () => { throw new Error("injected remote failure"); } } },
+      objectsWritten: () => 0,
+    }),
+  });
+  assert.equal(remoteFailure.exitCode, 1);
+  assert.equal(remoteFailure.stdout.length, 0);
+  assert.match(remoteFailure.stderr.join("\n"), /injected remote failure/);
+  const remoteShard = JSON.parse(await readFile(publishOutcomeShardPath(remoteRoot, "oecd-cli"), "utf8"));
+  assert.equal(remoteShard.records.at(-1).result, "failed");
+
+  const blockedParent = await mkdtemp(path.join(os.tmpdir(), "publish-cli-evidence-failure-"));
+  const blockedRoot = path.join(blockedParent, "not-a-directory");
+  await writeFile(blockedRoot, "file blocks shard directory");
+  const strictGate = await invoke({
+    outcomesRoot: blockedRoot,
+    gate: async () => ({ code: 2, stdout: "", stderr: "gate unavailable" }),
+    createPublishPlaneImpl: memoryFactory,
+  });
+  assert.equal(strictGate.exitCode, 3);
+  assert.equal(strictGate.stdout.length, 0);
+  assert.match(strictGate.stderr.join("\n"), /publish-outcome shard write failed/);
+  const toleratedGate = await invoke({
+    outcomesRoot: blockedRoot,
+    gate: async () => ({ code: 2, stdout: "", stderr: "gate unavailable" }),
+    createPublishPlaneImpl: memoryFactory,
+    extraArgs: ["--tolerate-gate-block"],
+  });
+  assert.equal(toleratedGate.exitCode, 0);
+  assert.equal(toleratedGate.stdout.length, 1);
+  assert.equal(JSON.parse(toleratedGate.stdout[0]).result, "gate_blocked");
+  assert.equal(JSON.parse(toleratedGate.stdout[0]).outcome_shard.ok, false);
+  assert.match(toleratedGate.stderr.join("\n"), /publish-outcome shard write failed/);
+  const failedEvidence = await invoke({ outcomesRoot: blockedRoot, env: {}, createPublishPlaneImpl: memoryFactory });
+  assert.equal(failedEvidence.exitCode, 2);
+  assert.equal(failedEvidence.stdout.length, 0);
+  assert.match(failedEvidence.stderr.join("\n"), /publish-outcome shard write failed/);
+  const thrownEvidence = await invoke({
+    outcomesRoot: blockedRoot,
+    createPublishPlaneImpl: () => ({
+      plane: { pointerStore: { get: async () => { throw new Error("injected remote failure"); } } },
+      objectsWritten: () => 0,
+    }),
+  });
+  assert.equal(thrownEvidence.exitCode, 1);
+  assert.equal(thrownEvidence.stdout.length, 0);
+  assert.match(thrownEvidence.stderr.join("\n"), /publish-outcome shard write failed/);
+  assert.doesNotMatch(thrownEvidence.stderr.join("\n"), /test-token|test-write-key/);
+  const publishedEvidence = await invoke({
+    outcomesRoot: blockedRoot,
+    createPublishPlaneImpl: () => ({ plane: createMemoryCloudDataPlane(), objectsWritten: () => 0 }),
+  });
+  assert.equal(publishedEvidence.exitCode, 0, "evidence failure must not turn a successful publish into failure");
+  assert.equal(publishedEvidence.stdout.length, 1);
+  assert.equal(JSON.parse(publishedEvidence.stdout[0]).result, "published");
+  assert.equal(JSON.parse(publishedEvidence.stdout[0]).outcome_shard.ok, false);
+  assert.match(publishedEvidence.stderr.join("\n"), /publish-outcome shard write failed/);
+  await rm(successRoot, { recursive: true, force: true });
+  await rm(missingRoot, { recursive: true, force: true });
+  await rm(remoteRoot, { recursive: true, force: true });
+  await rm(blockedParent, { recursive: true, force: true });
+  console.log("publisher injected CLI ok (published/resumed/missing-env/remote-failure + JSON stderr evidence failure)");
 }
 
 // --- result vocabulary: known outcomes are healthy, anything else is a bug ---

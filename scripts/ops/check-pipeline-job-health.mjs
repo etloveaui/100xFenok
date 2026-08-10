@@ -6,7 +6,10 @@ import { DATA_SUPPLY_DETECTION_CONFIG } from "../lib/data-supply-detection-confi
 import { TRACKED_CRONS } from "../lib/kpi-contract-constants.mjs";
 import { classifyRuntimeSlots } from "../lib/kpi-runtime-slots.mjs";
 import { PLANE_PUBLISH_OUTCOME_BINDINGS } from "../lib/lane-registry.mjs";
-import { PUBLISH_OUTCOME_SHARD_SCHEMA } from "../lib/publish-outcome-shard.mjs";
+import {
+  PUBLISH_OUTCOME_SHARD_SCHEMA,
+  validatePublishOutcomeShard,
+} from "../lib/publish-outcome-shard.mjs";
 
 export { PLANE_PUBLISH_OUTCOME_BINDINGS };
 
@@ -234,18 +237,6 @@ function publishOutcomeRecords(shard) {
   return null;
 }
 
-function validPublishOutcomeRecord(record, shard, family) {
-  if (!record || typeof record !== "object" || Array.isArray(record)) return false;
-  const familyValues = [shard.family, shard.lane_id, record.family, record.lane_id]
-    .filter((value) => value !== undefined && value !== null);
-  return familyValues.length > 0
-    && familyValues.every((value) => value === family)
-    && typeof record.result === "string"
-    && record.result.trim() !== ""
-    && typeof record.observed_at === "string"
-    && Number.isFinite(Date.parse(record.observed_at));
-}
-
 /**
  * Read the newest valid outcome from one per-family shard. A missing or
  * malformed shard returns null so the existing workflow alarm stays the sole
@@ -255,7 +246,11 @@ export function latestPublishOutcomeFromShard(shard, family) {
   if (typeof family !== "string" || family.length === 0) return null;
   const records = publishOutcomeRecords(shard);
   if (!records || records.length === 0) return null;
-  if (!records.every((record) => validPublishOutcomeRecord(record, shard, family))) return null;
+  try {
+    validatePublishOutcomeShard(shard, family);
+  } catch {
+    return null;
+  }
   return records.reduce((latest, record) => {
     if (!latest) return record;
     const latestAt = Date.parse(latest.observed_at);

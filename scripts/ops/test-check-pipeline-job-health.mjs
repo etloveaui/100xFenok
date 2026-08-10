@@ -4,7 +4,10 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { PUBLISH_OUTCOME_SHARD_SCHEMA } from "../lib/publish-outcome-shard.mjs";
+import {
+  buildPublishOutcomeRecord,
+  PUBLISH_OUTCOME_SHARD_SCHEMA,
+} from "../lib/publish-outcome-shard.mjs";
 import {
   NON_SCHEDULED_WORKFLOW_INCLUSIONS,
   SCHEDULED_WORKFLOW_EXCLUSIONS,
@@ -76,7 +79,11 @@ const outcomeShard = (family, records) => ({
   family,
   records,
 });
-const outcomeRecord = (family, result, observed_at) => ({ family, result, observed_at });
+const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord({
+  family,
+  result,
+  observedAt,
+});
 
 {
   const projection = derivePublishOutcomeProjection({
@@ -115,6 +122,94 @@ const outcomeRecord = (family, result, observed_at) => ({ family, result, observ
   assert.equal(published.plane_publish_outcome.result, "published");
   assert.equal(published.status, "alarm", "published must not clear canonical failure alarms");
   assert.deepEqual(published.alarm_reasons, ["failure_streak"], "published clears only plane reasons");
+}
+
+{
+  const projection = derivePublishOutcomeProjection({
+    shards: {
+      "fred-macro": outcomeShard("fred-macro", [
+        outcomeRecord("fred-macro", "gate_blocked", "2026-08-10T01:00:00Z"),
+        outcomeRecord("fred-macro", "resumed", "2026-08-10T02:00:00Z"),
+      ]),
+    },
+  });
+  const [resumed] = attachPublishOutcomeAlarms([
+    {
+      file: "fetch-fred-macro.yml",
+      status: "alarm",
+      alarming: true,
+      alarm_reasons: ["failure_streak", PLANE_PUBLISH_ALARM_REASONS.gate_blocked],
+    },
+  ], projection);
+  assert.equal(resumed.plane_publish_outcome.result, "resumed");
+  assert.equal(resumed.status, "alarm", "resumed must not clear canonical failure alarms");
+  assert.deepEqual(resumed.alarm_reasons, ["failure_streak"], "resumed clears only plane reasons");
+}
+
+{
+  for (const successResult of ["published", "resumed"]) {
+    const projection = derivePublishOutcomeProjection({
+      shards: {
+        "fred-macro": outcomeShard("fred-macro", [
+          outcomeRecord("fred-macro", "gate_blocked", "2026-08-10T01:00:00Z"),
+          outcomeRecord("fred-macro", successResult, "2026-08-10T02:00:00Z"),
+        ]),
+      },
+    });
+    const [cleared] = attachPublishOutcomeAlarms([{
+      file: "fetch-fred-macro.yml",
+      status: "ok",
+      alarming: false,
+      alarm_reasons: [PLANE_PUBLISH_ALARM_REASONS.gate_blocked],
+    }], projection);
+    assert.equal(cleared.status, "ok", `${successResult} must close a plane-only alarm`);
+    assert.equal(cleared.alarming, false);
+    assert.deepEqual(cleared.alarm_reasons, []);
+  }
+}
+
+{
+  const outOfOrder = derivePublishOutcomeProjection({
+    shards: {
+      "fred-macro": outcomeShard("fred-macro", [
+        outcomeRecord("fred-macro", "published", "2026-08-10T03:00:00Z"),
+        outcomeRecord("fred-macro", "failed", "2026-08-10T01:00:00Z"),
+      ]),
+    },
+  });
+  assert.equal(outOfOrder.get("fetch-fred-macro.yml").result, "published", "older array tail must not beat newer evidence");
+
+  const equalTimestamp = derivePublishOutcomeProjection({
+    shards: {
+      "fred-macro": outcomeShard("fred-macro", [
+        outcomeRecord("fred-macro", "failed", "2026-08-10T03:00:00Z"),
+        outcomeRecord("fred-macro", "published", "2026-08-10T03:00:00Z"),
+      ]),
+    },
+  });
+  assert.equal(equalTimestamp.get("fetch-fred-macro.yml").result, "published", "equal timestamps use later append order");
+}
+
+{
+  const projection = derivePublishOutcomeProjection({
+    shards: {
+      "fred-macro": outcomeShard("fred-macro", [
+        outcomeRecord("fred-macro", "gate_blocked", "2026-08-10T01:00:00Z"),
+      ]),
+      sentiment: outcomeShard("sentiment", [
+        outcomeRecord("sentiment", "published", "2026-08-10T02:00:00Z"),
+      ]),
+    },
+  });
+  const classified = attachPublishOutcomeAlarms([
+    { file: "fetch-fred-macro.yml", status: "ok", alarming: false, alarm_reasons: [] },
+    { file: "fetch-sentiment.yml", status: "ok", alarming: false, alarm_reasons: [] },
+  ], projection);
+  assert.equal(classified[0].status, "alarm");
+  assert.equal(classified[0].plane_publish_outcome.family, "fred-macro");
+  assert.equal(classified[1].status, "ok");
+  assert.equal(classified[1].plane_publish_outcome.family, "sentiment");
+  assert.deepEqual(classified[1].alarm_reasons, [], "one family alarm must not contaminate another workflow");
 }
 
 {

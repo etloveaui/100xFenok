@@ -147,9 +147,13 @@ const DEFAULT_ACCOUNT_ID = "aeeb5ea3affe55a2219d08ea02dad9e1";
 // data/admin/data-supply-state/publish-outcomes/<family>.json.
 // PUBLISH_OUTCOMES_ROOT overrides the root (tests redirect to a temp dir);
 // the production default is the repo state dir.
-const PUBLISH_OUTCOMES_ROOT = process.env.PUBLISH_OUTCOMES_ROOT
-  ? path.resolve(process.env.PUBLISH_OUTCOMES_ROOT)
-  : path.join(REPO_ROOT, "data", "admin", "data-supply-state", "publish-outcomes");
+const DEFAULT_PUBLISH_OUTCOMES_ROOT = path.join(
+  REPO_ROOT,
+  "data",
+  "admin",
+  "data-supply-state",
+  "publish-outcomes",
+);
 
 // Family descriptor table. Fields:
 //   root             filesystem location of the source file(s), repo-relative
@@ -1277,7 +1281,9 @@ export async function recordPublishOutcome({
   family,
   result,
   state = {},
-  outcomesRoot = PUBLISH_OUTCOMES_ROOT,
+  outcomesRoot = process.env.PUBLISH_OUTCOMES_ROOT
+    ? path.resolve(process.env.PUBLISH_OUTCOMES_ROOT)
+    : DEFAULT_PUBLISH_OUTCOMES_ROOT,
   log = () => {},
 }) {
   try {
@@ -1511,28 +1517,61 @@ async function runRetention({ tolerateGateBlock, retentionDelete, json }) {
   emit(report); // dry-run: zero deletions, always exit 0
 }
 
-async function main() {
-  const args = parseArgs(process.argv.slice(2));
-  const log = (...parts) => {
-    if (!args.json) console.error(...parts);
+function createDefaultPublishPlane({ accountId, token, endpoint, writeKey, family }) {
+  const r2Bucket = createR2RestBucket({ accountId, bucket: R2_BUCKET, token });
+  let objectsWritten = 0;
+  const countingR2Bucket = {
+    ...r2Bucket,
+    async put(key, bytes) {
+      await r2Bucket.put(key, bytes);
+      objectsWritten += 1;
+    },
   };
-  const emit = (summary) => console.log(JSON.stringify(summary));
+  const coordinatorNamespace = createRemoteCoordinatorNamespace({ endpoint, key: writeKey, family });
+  return {
+    plane: createCloudflareCloudDataPlane({
+      r2Bucket: countingR2Bucket,
+      coordinatorNamespace,
+      coordinatorName: family,
+    }),
+    objectsWritten: () => objectsWritten,
+  };
+}
+
+export async function runPublisherCli({
+  argv = process.argv.slice(2),
+  env = process.env,
+  stdout = (line) => console.log(line),
+  stderr = (...parts) => console.error(...parts),
+  runCostGateImpl = runCostGate,
+  createPublishPlaneImpl = createDefaultPublishPlane,
+  outcomesRoot = env.PUBLISH_OUTCOMES_ROOT
+    ? path.resolve(env.PUBLISH_OUTCOMES_ROOT)
+    : DEFAULT_PUBLISH_OUTCOMES_ROOT,
+} = {}) {
+  const args = parseArgs(argv);
+  const log = (...parts) => {
+    if (!args.json) stderr(...parts);
+  };
+  const emit = (summary) => stdout(JSON.stringify(summary));
+  const evidenceLog = (...parts) => stderr(...parts);
 
   // Retention is bucket-level, not family-level: it scans EVERY family and
   // deliberately accepts no --family (parseArgs rejects the combination).
   if (args.retention) {
-    return runRetention({
+    await runRetention({
       tolerateGateBlock: args.tolerateGateBlock,
       retentionDelete: args.retentionDelete,
       json: args.json,
     });
+    return 0;
   }
 
   const family = FAMILIES[args.family];
   if (!family) {
-    console.error(`publish-cloud-data-generation: unknown family ${args.family}`
+    stderr(`publish-cloud-data-generation: unknown family ${args.family}`
       + ` (known: ${Object.keys(FAMILIES).join(", ")})`);
-    process.exit(2);
+    return 2;
   }
 
   // Publish-outcome evidence (2026-08-10 contract): every REAL publish
@@ -1556,7 +1595,10 @@ async function main() {
     family: args.family,
     result,
     state: outcomeState,
-    log,
+    outcomesRoot,
+    // Evidence persistence failures are operationally material even in JSON
+    // mode. Keep stdout machine-clean and put the bounded diagnostic on stderr.
+    log: evidenceLog,
   });
   // Dry-run, rollback and the deliberate chaos-drill modes never record
   // (dry-run writes no shard; rollback is not a publish; chaos outcomes are
@@ -1609,7 +1651,7 @@ async function main() {
         planned_bytes: family.plan.bytes,
         gate: "not_run",
       });
-      return;
+      return 0;
     }
 
     // 2. Cost gate (declares >= 2x the real spend) before any write. Rollback
@@ -1617,17 +1659,17 @@ async function main() {
     // retention declares a small but still generous plan) — the gate runs first
     // in every mode.
     const gatePlan = args.rollback ? { class_a: 10, bytes: 0 } : family.plan;
-    const gateBefore = await runCostGate({
+    const gateBefore = await runCostGateImpl({
       planClassA: gatePlan.class_a,
       planBytes: gatePlan.bytes,
-      env: process.env,
+      env,
     });
     outcomeState.gateBefore = gateVerdict(gateBefore);
     if (!args.json && gateBefore.stdout.trim()) {
-      console.error(gateBefore.stdout.trim());
+      stderr(gateBefore.stdout.trim());
     }
     if (gateBefore.code !== 0 && gateBefore.code !== 1) {
-      if (gateBefore.stderr.trim()) console.error(gateBefore.stderr.trim());
+      if (gateBefore.stderr.trim()) stderr(gateBefore.stderr.trim());
       const outcomeShard = canRecordOutcome ? await recordOutcome("gate_blocked") : null;
       if (args.tolerateGateBlock) {
         emit({
@@ -1638,18 +1680,18 @@ async function main() {
           ...plan,
           ...(outcomeShard ? { outcome_shard: shardSummary(outcomeShard) } : {}),
         });
-        return;
+        return 0;
       }
-      console.error("publish-cloud-data-generation: cost gate blocked the publish"
+      stderr("publish-cloud-data-generation: cost gate blocked the publish"
         + ` (exit ${gateBefore.code}); rerun with --tolerate-gate-block to record-and-skip`);
-      process.exit(3);
+      return 3;
     }
 
     // Env for the live write, checked after the gate and before any write.
-    const token = process.env.CLOUDFLARE_API_TOKEN;
-    const endpoint = process.env.DATA_PLANE_ENDPOINT;
-    const writeKey = process.env.DATA_PLANE_WRITE_KEY;
-    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? DEFAULT_ACCOUNT_ID;
+    const token = env.CLOUDFLARE_API_TOKEN;
+    const endpoint = env.DATA_PLANE_ENDPOINT;
+    const writeKey = env.DATA_PLANE_WRITE_KEY;
+    const accountId = env.CLOUDFLARE_ACCOUNT_ID ?? DEFAULT_ACCOUNT_ID;
     const missing = [
       ["CLOUDFLARE_API_TOKEN", token],
       ["DATA_PLANE_ENDPOINT", endpoint],
@@ -1659,18 +1701,16 @@ async function main() {
       // Record the failed outcome before the direct exit so the alarm side
       // still sees it (the lane could not publish).
       if (canRecordOutcome) await recordOutcome("failed");
-      console.error(`publish-cloud-data-generation: missing env ${missing.join(", ")} — no write attempted`);
-      process.exit(2);
+      stderr(`publish-cloud-data-generation: missing env ${missing.join(", ")} — no write attempted`);
+      return 2;
     }
 
     // Rollback mode: pointer-only change through the contract's
     // rollbackGeneration; the summary records the sequence and both generation
     // ids before and after, because rollback moves the sequence FORWARD.
     if (args.rollback) {
-      const plane = createCloudflareCloudDataPlane({
-        r2Bucket: createR2RestBucket({ accountId, bucket: R2_BUCKET, token }),
-        coordinatorNamespace: createRemoteCoordinatorNamespace({ endpoint, key: writeKey, family: args.family }),
-        coordinatorName: args.family,
+      const { plane } = createPublishPlaneImpl({
+        accountId, token, endpoint, writeKey, family: args.family,
       });
       const rolled = await rollbackLiveGeneration({
         objectStore: plane.objectStore,
@@ -1678,7 +1718,7 @@ async function main() {
         pointerStore: plane.pointerStore,
       });
       const pointerAfter = await plane.pointerStore.get();
-      const gateAfter = await runCostGate({ planClassA: 0, planBytes: 0, env: process.env });
+      const gateAfter = await runCostGateImpl({ planClassA: 0, planBytes: 0, env });
       emit({
         result: "rolled_back",
         receipt_id: rolled.receipt.receipt_id,
@@ -1693,25 +1733,14 @@ async function main() {
         gate_before: gateVerdict(gateBefore),
         gate_after: gateVerdict(gateAfter),
       });
-      return;
+      return 0;
     }
 
     // 3. Publish through the REST R2 bridge + remote coordinator shim.
-    const r2Bucket = createR2RestBucket({ accountId, bucket: R2_BUCKET, token });
-    let objectsWritten = 0;
-    const countingR2Bucket = {
-      ...r2Bucket,
-      async put(key, bytes) {
-        await r2Bucket.put(key, bytes);
-        objectsWritten += 1;
-      },
-    };
-    const coordinatorNamespace = createRemoteCoordinatorNamespace({ endpoint, key: writeKey, family: args.family });
-    const plane = createCloudflareCloudDataPlane({
-      r2Bucket: countingR2Bucket,
-      coordinatorNamespace,
-      coordinatorName: args.family,
+    const publishPlane = createPublishPlaneImpl({
+      accountId, token, endpoint, writeKey, family: args.family,
     });
+    const { plane } = publishPlane;
     const livePointer = await plane.pointerStore.get();
     const pointerSequenceBefore = livePointer?.sequence ?? 0;
     outcomeState.pointerBefore = pointerSequenceBefore;
@@ -1769,7 +1798,7 @@ async function main() {
     } catch (error) {
       if (args.chaos === "stale-sequence" && error.code === "STALE_WRITER") {
         const pointerNow = await plane.pointerStore.get();
-        const gateAfter = await runCostGate({ planClassA: 0, planBytes: 0, env: process.env });
+        const gateAfter = await runCostGateImpl({ planClassA: 0, planBytes: 0, env });
         emit({
           result: "chaos_stale_writer",
           chaos: args.chaos,
@@ -1781,7 +1810,7 @@ async function main() {
           gate_before: gateVerdict(gateBefore),
           gate_after: gateVerdict(gateAfter),
         });
-        return;
+        return 0;
       }
       if (args.chaos === "abort-after-prepare" && error.code === "CHAOS_ABORT_AFTER_PREPARE") {
         const receiptId = deterministicPublishReceiptId({
@@ -1790,7 +1819,7 @@ async function main() {
         });
         const receipt = await plane.ledger.get(receiptId);
         const pointerNow = await plane.pointerStore.get();
-        const gateAfter = await runCostGate({ planClassA: 0, planBytes: 0, env: process.env });
+        const gateAfter = await runCostGateImpl({ planClassA: 0, planBytes: 0, env });
         emit({
           result: "chaos_abort_after_prepare",
           chaos: args.chaos,
@@ -1803,7 +1832,7 @@ async function main() {
           gate_before: gateVerdict(gateBefore),
           gate_after: gateVerdict(gateAfter),
         });
-        return;
+        return 0;
       }
       throw error;
     }
@@ -1831,7 +1860,7 @@ async function main() {
     log(`byte parity ok: ${parity.assets}/${parity.assets} assets, ${parity.bytes} bytes`);
 
     // 5. Gate again after the write batch, then the single JSON summary line.
-    const gateAfter = await runCostGate({ planClassA: 0, planBytes: 0, env: process.env });
+    const gateAfter = await runCostGateImpl({ planClassA: 0, planBytes: 0, env });
     outcomeState.gateAfter = gateVerdict(gateAfter);
     const outcomeShard = await recordOutcome(resolved.resume ? "resumed" : "published");
     emit({
@@ -1845,19 +1874,21 @@ async function main() {
       pointer_sequence_before: pointerSequenceBefore,
       pointer_sequence_after: published.pointer.sequence,
       ...plan,
-      objects_written: objectsWritten,
-      objects_already_present: plan.unique_object_keys - objectsWritten,
+      objects_written: publishPlane.objectsWritten(),
+      objects_already_present: plan.unique_object_keys - publishPlane.objectsWritten(),
       parity: "ok",
       gate_before: gateVerdict(gateBefore),
       gate_after: gateVerdict(gateAfter),
       outcome_shard: shardSummary(outcomeShard),
     });
+    return 0;
   } catch (error) {
     // Every failed REAL publish outcome is recorded when the family is known
     // (dry-run and rollback excluded); the canonical failure path (rethrow,
     // stderr line, exit 1) is unchanged.
     if (canRecordOutcome) await recordOutcome("failed");
-    throw error;
+    stderr(`publish-cloud-data-generation: ${error.code ?? "ERROR"}: ${error.message}`);
+    return 1;
   }
 }
 
@@ -1865,9 +1896,9 @@ const invokedDirectly = process.argv[1]
   && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (invokedDirectly) {
   try {
-    await main();
+    process.exitCode = await runPublisherCli();
   } catch (error) {
     console.error(`publish-cloud-data-generation: ${error.code ?? "ERROR"}: ${error.message}`);
-    process.exit(1);
+    process.exitCode = 1;
   }
 }
