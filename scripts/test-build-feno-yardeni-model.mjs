@@ -290,6 +290,71 @@ function makeRunPaths(root) {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fred-yardeni.yml"), "utf8");
   assert.match(workflow, /detection-attempts\/fred_yardeni\.json/);
   assert.match(workflow, /- name: Commit and push Feno Yardeni data\n\s+if: \$\{\{ always\(\) \}\}/);
+
+  // Durable checkout contract for the R2.4 public mirror guard: the Yardeni
+  // sparse cone must pair the canonical data/computed tree (which activates
+  // the guard's projection comparison) with the exact matching public
+  // projection path. Dropping either side makes "Validate public payload"
+  // fail with "public R2.4 enrollment: missing" / "public R2.4 index: missing"
+  // in CI even though a full local checkout passes the guard.
+  function parseSparseCone(yaml) {
+    const lines = yaml.split("\n");
+    const marker = lines.findIndex((line) => /^\s*sparse-checkout:\s*\|\s*$/.test(line));
+    assert.ok(marker !== -1, "fetch-fred-yardeni.yml must declare a sparse-checkout block");
+    const markerIndent = lines[marker].match(/^\s*/)[0].length;
+    const firstContentLine = lines.slice(marker + 1).find((line) => line.trim());
+    assert.ok(firstContentLine, "fetch-fred-yardeni.yml sparse-checkout block must not be empty");
+    const scalarIndent = firstContentLine.match(/^\s*/)[0].length;
+    assert.ok(scalarIndent > markerIndent, "fetch-fred-yardeni.yml sparse-checkout content must be indented");
+    const cone = [];
+    for (const line of lines.slice(marker + 1)) {
+      if (!line.trim()) continue;
+      if (line.match(/^\s*/)[0].length < scalarIndent) break;
+      cone.push(line.slice(scalarIndent).trimEnd());
+    }
+    return cone;
+  }
+
+  const publicProjection = "100xfenok-next/public/data/computed/data-supply/etf-detail";
+  function assertSparseConeContract(cone) {
+    for (const requiredPath of [
+      "data/computed",
+      publicProjection,
+      "100xfenok-next/scripts",
+    ]) {
+      assert.equal(
+        cone.filter((entry) => entry === requiredPath).length,
+        1,
+        `Yardeni sparse cone must include ${requiredPath} exactly once so the R2.4 public mirror guard sees both projection sides`,
+      );
+    }
+
+    const publicDataRoot = "100xfenok-next/public/data";
+    const publicDataEntries = cone.filter(
+      (entry) => entry === publicDataRoot
+        || entry.startsWith(`${publicDataRoot}/`)
+        || publicDataRoot.startsWith(`${entry}/`),
+    );
+    assert.deepEqual(
+      publicDataEntries,
+      [publicProjection],
+      `Yardeni sparse cone must expose only the exact public projection ${publicProjection}`,
+    );
+  }
+
+  const cone = parseSparseCone(workflow);
+  assertSparseConeContract(cone);
+  assert.deepEqual(
+    parseSparseCone("steps:\n  sparse-checkout: |\n    data/computed\n  - uses: unnamed/action@v1\n    path: unrelated"),
+    ["data/computed"],
+    "sparse cone parsing must stop before an unnamed step at the scalar indentation boundary",
+  );
+  assert.throws(() => assertSparseConeContract([...cone, publicProjection]), /exactly once/);
+  assert.throws(() => assertSparseConeContract([...cone, "100xfenok-next/public/data"]), /only the exact public projection/);
+  assert.throws(
+    () => assertSparseConeContract([...cone, "100xfenok-next/public/data/unrelated"]),
+    /only the exact public projection/,
+  );
 }
 
 console.log("build-feno-yardeni-model tests passed");
