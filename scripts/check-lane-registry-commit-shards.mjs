@@ -18,7 +18,289 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { LANE_REGISTRY, declaredExceptionPaths } from "./lib/lane-registry.mjs";
+import {
+  COMMIT_STAGE_KEYS,
+  LANE_REGISTRY,
+  declaredExceptionPaths,
+} from "./lib/lane-registry.mjs";
+
+const MANIFEST_HELPER_PATH = "scripts/stage-lane-manifest.sh";
+const MANIFEST_WRAPPER_PATH = "scripts/publish-slickcharts-attempt.sh";
+const SHELL_CONTROL_TOKENS = new Set(["#", ";", "&&", "||", "|", "&"]);
+const MANIFEST_WRAPPER_MEMBER_PATTERN = /^[A-Za-z0-9_-]+$/;
+const MANIFEST_VALUE_OPTIONS = new Set([
+  "--workflow",
+  "--stage",
+  "--repo-root",
+  "--manifest",
+  "--expected-digest",
+]);
+
+function normalizeAllowlistPath(pathValue) {
+  return pathValue.replace(/\*.*$/, "").replace(/\/+$/, "");
+}
+
+function normalizeShellContinuations(sourceText) {
+  return sourceText.replace(/\\[ \t]*\r?\n[ \t]*/g, " ");
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function tokenizeShellCommand(commandText) {
+  const tokens = [];
+  let token = "";
+  let quote = null;
+  let escaped = false;
+
+  const flushToken = () => {
+    if (token.length > 0) {
+      tokens.push(token);
+      token = "";
+    }
+  };
+
+  for (let position = 0; position < commandText.length; position += 1) {
+    const character = commandText[position];
+    if (escaped) {
+      token += character;
+      escaped = false;
+      continue;
+    }
+    if (quote === "'") {
+      if (character === "'") quote = null;
+      else token += character;
+      continue;
+    }
+    if (quote === '"') {
+      if (character === '"') quote = null;
+      else if (character === "\\") escaped = true;
+      else token += character;
+      continue;
+    }
+    if (character === "'" || character === '"') {
+      quote = character;
+      continue;
+    }
+    if (/\s/.test(character)) {
+      flushToken();
+      continue;
+    }
+    if (character === "\\") {
+      escaped = true;
+      continue;
+    }
+    // Control operators are split out whenever they appear OUTSIDE quotes and
+    // escapes, with or without surrounding whitespace. Shell treats
+    // `data/path&&echo` as two commands, not one word, so a single merged
+    // token would let a post-sentinel operator slip past the control-token
+    // checks and mint a false binding. Quoted/escaped operators stay inside
+    // the token because they are literal data there.
+    const twoCharacterOperator = commandText.slice(position, position + 2);
+    if (twoCharacterOperator === "&&" || twoCharacterOperator === "||") {
+      flushToken();
+      tokens.push(twoCharacterOperator);
+      position += 1;
+      continue;
+    }
+    if (character === "&" || character === "|" || character === ";") {
+      flushToken();
+      tokens.push(character);
+      continue;
+    }
+    token += character;
+  }
+
+  if (quote !== null || escaped) return null;
+  flushToken();
+  return tokens;
+}
+
+function isConcreteManifestValue(value) {
+  return typeof value === "string"
+    && value.length > 0
+    && !/[`$();|&<>{}[\]*?!]/.test(value);
+}
+
+function isShellCommentBoundary(token) {
+  // The tokenizer emits one token per shell word, so a token beginning with
+  // `#` starts a word and is a comment boundary in shell: everything after it
+  // on the line is ignored and the command legitimately ends there.
+  return typeof token === "string" && token.startsWith("#");
+}
+
+function isValidManifestFlagValue(value) {
+  return typeof value === "string"
+    && value.length > 0
+    && !isShellCommentBoundary(value)
+    && !SHELL_CONTROL_TOKENS.has(value)
+    && !value.startsWith("-")
+    && isConcreteManifestValue(value);
+}
+
+function parseManifestHelperTokens(tokens) {
+  if (!Array.isArray(tokens) || tokens[0] !== MANIFEST_HELPER_PATH) return null;
+  const values = { workflow: null, stage: null };
+  const seen = new Set();
+
+  for (let index = 1; index < tokens.length; index += 1) {
+    const option = tokens[index];
+    // A word beginning with `#` is a shell comment boundary; the rest of the
+    // line is ignored, so the command may validly end here.
+    if (isShellCommentBoundary(option)) break;
+    // Any other shell control operator inside the command means the helper is
+    // embedded in (or dangling from) a larger command. Truncating at it would
+    // mint a false-green proof, so reject the whole command instead.
+    if (SHELL_CONTROL_TOKENS.has(option)) return null;
+    if (!MANIFEST_VALUE_OPTIONS.has(option)) return null;
+    if (seen.has(option)) return null;
+    seen.add(option);
+    const value = tokens[index + 1];
+    if (value === undefined || isShellCommentBoundary(value)) break;
+    if (SHELL_CONTROL_TOKENS.has(value)) return null;
+    values[option.slice(2)] = value;
+    index += 1;
+  }
+
+  if (values.workflow === null || values.stage === null) return null;
+  return {
+    workflow: values.workflow,
+    stage: values.stage,
+    exact: isConcreteManifestValue(values.workflow)
+      && isConcreteManifestValue(values.stage)
+      && COMMIT_STAGE_KEYS.includes(values.stage),
+  };
+}
+
+function extractCommandTokens(sourceText, commandPath) {
+  if (typeof sourceText !== "string") return [];
+  const normalized = normalizeShellContinuations(sourceText);
+  const commandPattern = new RegExp(`^[ \\t]*(?:bash[ \\t]+)?${escapeRegExp(commandPath)}(?:[ \\t]+|$)`);
+  const commands = [];
+  for (const line of normalized.split(/\r?\n/)) {
+    if (!commandPattern.test(line)) continue;
+    const command = line.trim();
+    const tokens = tokenizeShellCommand(command);
+    if (tokens !== null) commands.push(tokens);
+  }
+  return commands;
+}
+
+function extractManifestHelperCalls(sourceText) {
+  return extractCommandTokens(sourceText, MANIFEST_HELPER_PATH)
+    .map((tokens) => parseManifestHelperTokens(tokens))
+    .filter(Boolean);
+}
+
+export function extractManifestStageInvocations(sourceText) {
+  return extractManifestHelperCalls(sourceText)
+    .filter((invocation) => invocation.exact)
+    .map(({ workflow, stage }) => ({ workflow, stage }));
+}
+
+function parseManifestWrapperTokens(tokens) {
+  if (!Array.isArray(tokens) || tokens[0] !== MANIFEST_WRAPPER_PATH) return null;
+  if (tokens.length < 4) return null;
+  const member = tokens[1];
+  const rowPath = tokens[2];
+  const commitMessage = tokens[3];
+  // The publisher requires <member> <row-json> <commit-message> before any
+  // manifest options; without them the invocation cannot be a manifest proof.
+  if (!MANIFEST_WRAPPER_MEMBER_PATTERN.test(member)) return null;
+  for (const positional of [rowPath, commitMessage]) {
+    if (isShellCommentBoundary(positional) || SHELL_CONTROL_TOKENS.has(positional)) return null;
+  }
+
+  let index = 4;
+  const next = tokens[index];
+  if (next === undefined || isShellCommentBoundary(next)) {
+    // Bare invocation (or a trailing comment): valid wrapper usage, but no
+    // manifest block was requested, so it proves no manifest coverage.
+    return null;
+  }
+  // The publisher accepts manifest options only as the exact sequence
+  // --manifest-workflow <workflow> --manifest-always <stage>
+  // [--manifest-data <stage>] -- ; anything else is a data path or a
+  // rejected option, never a manifest binding.
+  if (next !== "--manifest-workflow") return null;
+  const workflow = tokens[index + 1];
+  if (!isValidManifestFlagValue(workflow)) return null;
+  index += 2;
+  if (tokens[index] !== "--manifest-always") return null;
+  const always = tokens[index + 1];
+  if (!isValidManifestFlagValue(always) || !COMMIT_STAGE_KEYS.includes(always)) return null;
+  index += 2;
+  let data = null;
+  if (tokens[index] === "--manifest-data") {
+    const dataValue = tokens[index + 1];
+    if (!isValidManifestFlagValue(dataValue) || !COMMIT_STAGE_KEYS.includes(dataValue)) return null;
+    data = dataValue;
+    index += 2;
+  }
+  if (tokens[index] !== "--") return null;
+  index += 1;
+  // After the sentinel the publisher treats every argument as a data path for
+  // git add. Options there are never manifest options, and any control
+  // operator means the command does not end at the sentinel.
+  for (; index < tokens.length; index += 1) {
+    const tail = tokens[index];
+    if (isShellCommentBoundary(tail)) break;
+    if (SHELL_CONTROL_TOKENS.has(tail)) return null;
+    if (tail.startsWith("-")) return null;
+  }
+  // The publisher itself exits when --manifest-workflow does not match
+  // .github/workflows/slickcharts-<member>.yml; a mismatched member must not
+  // borrow another caller's policy.
+  const expectedWorkflow = `.github/workflows/slickcharts-${member}.yml`;
+  if (workflow !== expectedWorkflow) return null;
+  return { workflow, always, data };
+}
+
+export function extractManifestWrapperBindings(sourceText) {
+  return extractCommandTokens(sourceText, MANIFEST_WRAPPER_PATH)
+    .map((tokens) => parseManifestWrapperTokens(tokens))
+    .filter(Boolean);
+}
+
+function policyAdminPaths(registry, workflowRel, stage) {
+  const policy = registry.workflow_policies?.[workflowRel];
+  if (!policy || !Array.isArray(policy.stages?.[stage])) return [];
+  return policy.stages[stage]
+    .map((spec) => normalizeAllowlistPath(spec.path))
+    .filter((pathValue) => pathValue.startsWith("data/admin/"));
+}
+
+function manifestDrivenAllowlist({ workflowText, workflowRel, scriptTexts, registry }) {
+  const exactInvocations = [
+    ...extractManifestStageInvocations(workflowText),
+    ...scriptTexts.flatMap((sourceText) => extractManifestStageInvocations(sourceText)),
+  ];
+  const paths = exactInvocations
+    .filter(({ workflow }) => workflow === workflowRel)
+    .flatMap(({ stage }) => policyAdminPaths(registry, workflowRel, stage));
+
+  // SlickCharts calls the helper through a declared shell publisher. Treat
+  // that path as proven only when the publisher source passes its exact helper
+  // variables through and the caller supplies concrete workflow/stage values.
+  const helperVariables = scriptTexts
+    .flatMap((sourceText) => extractManifestHelperCalls(sourceText))
+    .filter((invocation) => invocation.workflow === "$manifest_workflow"
+      && ["$manifest_always", "$manifest_data"].includes(invocation.stage));
+  if (helperVariables.length > 0) {
+    for (const binding of extractManifestWrapperBindings(workflowText)) {
+      if (binding.workflow !== workflowRel) continue;
+      if (helperVariables.some((invocation) => invocation.stage === "$manifest_always")) {
+        paths.push(...policyAdminPaths(registry, workflowRel, binding.always));
+      }
+      if (binding.data !== null
+        && helperVariables.some((invocation) => invocation.stage === "$manifest_data")) {
+        paths.push(...policyAdminPaths(registry, workflowRel, binding.data));
+      }
+    }
+  }
+  return [...new Set(paths)].sort();
+}
 
 export function extractWorkflowShardAllowlist(workflowText, { required = true } = {}) {
   // Whole-file scan: workflows commit admin state via SHARD loops, standalone
@@ -26,7 +308,7 @@ export function extractWorkflowShardAllowlist(workflowText, { required = true } 
   // data/admin/ path literal in the file, normalized (globs collapsed to their
   // static prefix). Non-admin canonical/public paths are out of scope.
   const matches = [...workflowText.matchAll(/data\/admin\/[^\s"';\\]+/g)]
-    .map((match) => match[0].replace(/\*.*$/, "").replace(/\/+$/, ""));
+    .map((match) => normalizeAllowlistPath(match[0]));
   const unique = [...new Set(matches)].sort();
   if (required && unique.length === 0) throw new Error("no data/admin shard paths found in workflow text");
   return unique;
@@ -112,10 +394,12 @@ export function checkWorkflowCommitShardsAgainstRegistry({
   // inline YAML git-add lines (the slickcharts family). Declared script sources
   // are scanned alongside the workflow text when repoRoot is provided.
   let allowlistAll = allowlist;
+  const scriptTexts = [];
   if (scriptSources.length > 0) {
     if (repoRoot === null) throw new Error("repoRoot is required to scan declared script_sources");
     for (const sourcePath of scriptSources) {
       const sourceText = fs.readFileSync(path.join(repoRoot, sourcePath), "utf8");
+      scriptTexts.push(sourceText);
       // A declared source may build paths from constants while a sibling source
       // or the workflow carries the literal allowlist. Require coverage from the
       // combined scope below, not independently from every implementation file.
@@ -123,6 +407,10 @@ export function checkWorkflowCommitShardsAgainstRegistry({
       allowlistAll = [...new Set([...allowlistAll, ...scriptAllowlist])].sort();
     }
   }
+  allowlistAll = [...new Set([
+    ...allowlistAll,
+    ...manifestDrivenAllowlist({ workflowText, workflowRel, scriptTexts, registry }),
+  ])].sort();
 
   // Direction 1 (false-green): the scope's declared admin shards must be
   // covered by the combined allowlist.

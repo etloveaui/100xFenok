@@ -554,6 +554,11 @@ function runFixture(options = {}) {
       kind: "file",
       required: false,
     },
+    {
+      path: "data/admin/data-supply-state/publish-outcomes/damodaran.json",
+      kind: "file",
+      required: false,
+    },
     { path: "data/admin/damodaran/index.json", kind: "file", required: false },
     { path: "data/admin/damodaran/current/damodaran.json", kind: "file", required: false },
     { path: "data/admin/damodaran/lkg/damodaran.json", kind: "file", required: false },
