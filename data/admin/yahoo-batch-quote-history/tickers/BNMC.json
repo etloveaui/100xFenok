@@ -122,41 +122,44 @@
       "run_id": "31382906749",
       "schedule": "7 10 * * 0-5",
       "shard": "17/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 547,
+      "natural": true,
+      "observed_at": "2026-08-10T17:04:11Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31411954324",
+      "schedule": "7 16 * * 0-5",
+      "shard": "20/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T05:16:09Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BNMC.json",
-    "payload_sha256": "af4d6daf88f2b70baa042ccc9f240bf1836a6d1a6cf4b630aaccd4fc5468cf6a",
-    "quote_as_of": "2026-07-28T16:40:01Z",
-    "source_as_of": "2026-07-28T16:40:01Z"
+    "fetched_at": "2026-08-10T17:04:35Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/BNMC.json",
+    "payload_sha256": "b1505578f63d0eba3c46c24d4962cd1e4a175d61c7e7bc529edf95c5b22f346d",
+    "quote_as_of": "2026-08-10T13:46:02Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 448,
+    "latency_ms": 547,
     "natural": true,
-    "observed_at": "2026-08-10T11:19:59Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-10T17:04:11Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31382906749",
-    "schedule": "7 10 * * 0-5",
-    "shard": "17/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T11:19:59Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-07-28T16:40:01Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31382906749"
+    "run_id": "31411954324",
+    "schedule": "7 16 * * 0-5",
+    "shard": "20/72"
   },
   "lkg": {
     "fetched_at": "2026-08-09T05:16:09Z",
@@ -169,17 +172,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T05:15:44Z",
-    "payload_sha256": "c1e4a32573fb257cb5c86f1de919cea6a6e4c23d4f1bbc4e02479cde06cfa8ee",
-    "quote_as_of": "2026-07-28T16:40:01Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T17:04:11Z",
+    "payload_sha256": "c4a6016ccf08cc71737325fd88a3565e660f4970d26e3a05402ac692d97f127e",
+    "quote_as_of": "2026-08-10T13:46:02Z",
     "run_attempt": 1,
-    "run_id": "31296241377",
+    "run_id": "31411954324",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-28T16:40:01Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -192,5 +195,5 @@
     "source_as_of": "2026-07-28T16:40:01Z"
   },
   "ticker": "BNMC",
-  "updated_at": "2026-08-10T11:19:59Z"
+  "updated_at": "2026-08-10T17:04:11Z"
 }

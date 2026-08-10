@@ -109,41 +109,44 @@
       "run_id": "31382906749",
       "schedule": "7 10 * * 0-5",
       "shard": "17/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 650,
+      "natural": true,
+      "observed_at": "2026-08-10T17:04:11Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31411954324",
+      "schedule": "7 16 * * 0-5",
+      "shard": "20/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T03:52:43Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/HBTC.json",
-    "payload_sha256": "7eea5e791e1cbd297c9bcd99818b28e7bacd855352e917ba0b16c71d61e921a9",
-    "quote_as_of": "2026-07-20T19:01:38Z",
-    "source_as_of": "2026-07-20T19:01:38Z"
+    "fetched_at": "2026-08-10T17:05:08Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/HBTC.json",
+    "payload_sha256": "8603b46681ce9c2aa50e5063ad09265f865f5d1193cfbcfc46c65ef89195a019",
+    "quote_as_of": "2026-08-10T13:46:04Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 499,
+    "latency_ms": 650,
     "natural": true,
-    "observed_at": "2026-08-10T11:19:59Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-10T17:04:11Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31382906749",
-    "schedule": "7 10 * * 0-5",
-    "shard": "17/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T11:19:59Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-07-20T19:01:38Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31382906749"
+    "run_id": "31411954324",
+    "schedule": "7 16 * * 0-5",
+    "shard": "20/72"
   },
   "lkg": {
     "fetched_at": "2026-08-09T03:52:43Z",
@@ -156,17 +159,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T03:52:19Z",
-    "payload_sha256": "318602f9850f8f1f7690853e80002a471c4f0114ffd0f0300d9904d3667e4db6",
-    "quote_as_of": "2026-07-20T19:01:38Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T17:04:11Z",
+    "payload_sha256": "a726834968a8e74324618ac1747302af6f2f07c6a83d8481642097501d0ae7e3",
+    "quote_as_of": "2026-08-10T13:46:04Z",
     "run_attempt": 1,
-    "run_id": "31293276520",
+    "run_id": "31411954324",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20T19:01:38Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 14,
@@ -179,5 +182,5 @@
     "source_as_of": "2026-07-20T19:01:38Z"
   },
   "ticker": "HBTC",
-  "updated_at": "2026-08-10T11:19:59Z"
+  "updated_at": "2026-08-10T17:04:11Z"
 }

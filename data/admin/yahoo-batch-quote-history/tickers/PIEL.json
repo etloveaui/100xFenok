@@ -95,41 +95,44 @@
       "run_id": "31382906749",
       "schedule": "7 10 * * 0-5",
       "shard": "17/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 577,
+      "natural": true,
+      "observed_at": "2026-08-10T17:04:11Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31411954324",
+      "schedule": "7 16 * * 0-5",
+      "shard": "20/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T05:17:01Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/PIEL.json",
-    "payload_sha256": "0f63b13024ac9df6dbfc036134d2310158813557f9777c8fae0b88c1131990ad",
-    "quote_as_of": "2026-07-20T16:46:52Z",
-    "source_as_of": "2026-07-20T16:46:52Z"
+    "fetched_at": "2026-08-10T17:05:21Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/PIEL.json",
+    "payload_sha256": "2010cc52ba60439c9971f871a900f56d06d6f2078b7386173efaec528ab1e94a",
+    "quote_as_of": "2026-08-10T13:46:06Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 491,
+    "latency_ms": 577,
     "natural": true,
-    "observed_at": "2026-08-10T11:19:59Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-10T17:04:11Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31382906749",
-    "schedule": "7 10 * * 0-5",
-    "shard": "17/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T11:19:59Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-07-20T16:46:52Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31382906749"
+    "run_id": "31411954324",
+    "schedule": "7 16 * * 0-5",
+    "shard": "20/72"
   },
   "lkg": {
     "fetched_at": "2026-08-09T05:17:01Z",
@@ -142,17 +145,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T05:15:44Z",
-    "payload_sha256": "1ca1bb0a390e59515e9af18b6aad0bca00adf40c833588b374c1f609bfccb5bf",
-    "quote_as_of": "2026-07-20T16:46:52Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T17:04:11Z",
+    "payload_sha256": "199d1cb3d338e1dfd7490907ee8e8bd2b5fe2be537353fc16b960491aae9bcfb",
+    "quote_as_of": "2026-08-10T13:46:06Z",
     "run_attempt": 1,
-    "run_id": "31296241377",
+    "run_id": "31411954324",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-20T16:46:52Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 14,
@@ -165,5 +168,5 @@
     "source_as_of": "2026-07-20T16:46:52Z"
   },
   "ticker": "PIEL",
-  "updated_at": "2026-08-10T11:19:59Z"
+  "updated_at": "2026-08-10T17:04:11Z"
 }

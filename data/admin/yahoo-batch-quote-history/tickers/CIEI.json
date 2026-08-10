@@ -135,41 +135,44 @@
       "run_id": "31382906749",
       "schedule": "7 10 * * 0-5",
       "shard": "17/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 647,
+      "natural": true,
+      "observed_at": "2026-08-10T17:04:11Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31411954324",
+      "schedule": "7 16 * * 0-5",
+      "shard": "20/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T05:16:27Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CIEI.json",
-    "payload_sha256": "4c83849cc328c568d247bf341188d45cd2906920e3f8883ab55705648559fda1",
-    "quote_as_of": "2026-06-29T19:00:16Z",
-    "source_as_of": "2026-06-29T19:00:16Z"
+    "fetched_at": "2026-08-10T17:04:38Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/CIEI.json",
+    "payload_sha256": "2e13df1a8e54009ba7198d3ca78b7476357ed62e410361e8971b622a575ea514",
+    "quote_as_of": "2026-08-10T13:46:03Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 581,
+    "latency_ms": 647,
     "natural": true,
-    "observed_at": "2026-08-10T11:19:59Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-10T17:04:11Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31382906749",
-    "schedule": "7 10 * * 0-5",
-    "shard": "17/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T11:19:59Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-06-29T19:00:16Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31382906749"
+    "run_id": "31411954324",
+    "schedule": "7 16 * * 0-5",
+    "shard": "20/72"
   },
   "lkg": {
     "fetched_at": "2026-08-09T05:16:27Z",
@@ -182,17 +185,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T05:15:44Z",
-    "payload_sha256": "639d7a6d51767d4a8284f0ba3b92c33d8f305a9da55f15c0ff4bd4fe9b7bacc8",
-    "quote_as_of": "2026-06-29T19:00:16Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T17:04:11Z",
+    "payload_sha256": "ec1c2a42574fa02696f58d3b6e2533d3b41aafde85693ec3e164bba44eadf9a7",
+    "quote_as_of": "2026-08-10T13:46:03Z",
     "run_attempt": 1,
-    "run_id": "31296241377",
+    "run_id": "31411954324",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-06-29T19:00:16Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 28,
@@ -205,5 +208,5 @@
     "source_as_of": "2026-06-29T19:00:16Z"
   },
   "ticker": "CIEI",
-  "updated_at": "2026-08-10T11:19:59Z"
+  "updated_at": "2026-08-10T17:04:11Z"
 }
