@@ -1,7 +1,7 @@
 {
   "schema_version": "product-surface-coverage/v2",
   "source_stamp_version": 2,
-  "generated_at": "2026-08-10T01:14:11.964Z",
+  "generated_at": "2026-08-10T02:44:48.270Z",
   "source": "local DataPack coverage files",
   "raw_policy": {
     "public_mirror_allowed": true,
@@ -88,7 +88,7 @@
     "marketFactsTickers": 6775,
     "marketFactsEtfs": 5589,
     "marketFactsStocks": 1186,
-    "yfFinance": 5440,
+    "yfFinance": 5488,
     "globalScouterDetails": 1066,
     "stockanalysisEtfs": 5586,
     "stockanalysisStocks": 49,
@@ -96,8 +96,8 @@
     "sec13fJson": 78,
     "edgarByTicker": 204,
     "slickchartsJson": 577,
-    "dataUsageRootJson": 22950,
-    "dataUsagePublicJson": 17475
+    "dataUsageRootJson": 23011,
+    "dataUsagePublicJson": 17525
   },
   "surfaces": [
     {
@@ -128,8 +128,8 @@
           "label": "가격·재무 캐시",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "5,440개 캐시",
-          "count": 5440
+          "detail": "5,488개 캐시",
+          "count": 5488
         },
         {
           "label": "보조 재무 검산",
@@ -213,7 +213,7 @@
           "reason": "provider publishes no aggregate source date"
         }
       ],
-      "as_of": "2026-08-10T01:12:27Z",
+      "as_of": "2026-08-10T02:43:08Z",
       "source_as_of": null,
       "source_as_of_reason": "producer has not emitted a complete source-date floor",
       "stamp_evidence": {
@@ -421,7 +421,7 @@
           "collection_fresh_count": 0,
           "stale_count": 23,
           "collected_at_floor": "2026-07-30T01:04:12Z",
-          "collection_age_hours": 264.167,
+          "collection_age_hours": 265.677,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -436,7 +436,7 @@
       "owner": "Market valuation",
       "status": "unavailable",
       "status_label": "미수집",
-      "coverage_score": 45.45,
+      "coverage_score": 54.55,
       "summary": "시장 화면은 값 자체보다 기준일, 커버리지, 소스 차이를 함께 보여야 한다.",
       "checks": [
         {
@@ -449,8 +449,8 @@
           "label": "거시·심리",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "22,950개 루트 JSON",
-          "count": 22950
+          "detail": "23,011개 루트 JSON",
+          "count": 23011
         },
         {
           "label": "시장 구조",
@@ -462,25 +462,23 @@
           "label": "소스 일치성",
           "status": "partial",
           "status_label": "부분 준비",
-          "detail": "50,469개 복수 후보",
-          "count": 50469,
+          "detail": "50,819개 복수 후보",
+          "count": 50819,
           "reason": "차이·오래됨·부호 차이를 Data Lab에서 계속 노출"
         },
         {
           "label": "KOSPI RIM 입력",
-          "status": "partial",
-          "status_label": "부분 준비",
-          "detail": "943개 구성 · 매칭 90.7%",
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "943개 구성 · 매칭 90.68%",
           "index_id": "KOSPI",
           "role": "secondary_input_only",
-          "public_status": "input_only_krx_exact_weights_with_caveats",
-          "blockers": [
-            "kospi_payout_coverage_below_threshold"
-          ],
+          "public_status": "ready_inputs_and_forecast_grid",
+          "blockers": [],
           "forecast_grid_status": "input_only_krx_exact_weights_no_fair_value",
           "source_tier": "exact_index_weight_source",
           "proxy_inputs_present": false,
-          "matched_weight_ratio": 0.906987,
+          "matched_weight_ratio": 0.906776,
           "methodology_weight_rows": null,
           "cap_violation_count": null
         },
@@ -505,9 +503,9 @@
           "label": "RIM 입력 기준일",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "기준 2026-07-31 · 10일 전",
-          "as_of": "2026-07-31",
-          "age_days": 10,
+          "detail": "기준 2026-08-07 · 3일 전",
+          "as_of": "2026-08-07",
+          "age_days": 3,
           "max_age_days": 14,
           "calendar": null
         },
@@ -561,7 +559,7 @@
           "reason": "producer has not emitted a complete source-date floor"
         }
       ],
-      "as_of": "2026-08-10T01:12:27Z",
+      "as_of": "2026-08-10T02:43:08Z",
       "source_as_of": "2026-07-24",
       "source_as_of_reason": null,
       "stamp_evidence": {
@@ -570,7 +568,7 @@
           {
             "id": "rim:KOSPI_SOX",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-07-31"
+            "source_as_of": "2026-08-07"
           },
           {
             "id": "yardeni:published",
@@ -805,7 +803,7 @@
           "collection_fresh_count": 0,
           "stale_count": 16,
           "collected_at_floor": "2026-07-30T01:04:28Z",
-          "collection_age_hours": 264.162,
+          "collection_age_hours": 265.672,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -884,7 +882,7 @@
           "reason": "producer has not emitted a complete source-date floor"
         }
       ],
-      "as_of": "2026-08-10T01:12:27Z",
+      "as_of": "2026-08-10T02:43:08Z",
       "source_as_of": null,
       "source_as_of_reason": "producer has not emitted a complete source-date floor",
       "stamp_evidence": {
@@ -932,7 +930,7 @@
           "collection_fresh_count": 0,
           "stale_count": 3,
           "collected_at_floor": "2026-07-30T01:04:40Z",
-          "collection_age_hours": 264.159,
+          "collection_age_hours": 265.669,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -972,8 +970,8 @@
           "label": "기간 수익률",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "1Y 4,946개",
-          "count": 4946
+          "detail": "1Y 4,955개",
+          "count": 4955
         },
         {
           "label": "신규·전략 ETF",
@@ -4644,7 +4642,7 @@
           "collection_fresh_count": 0,
           "stale_count": 5,
           "collected_at_floor": "2026-07-30T01:04:12Z",
-          "collection_age_hours": 264.167,
+          "collection_age_hours": 265.677,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -4739,9 +4737,9 @@
           "label": "미러/사용 현황",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "22,950 / 17,475 JSON",
-          "root": 22950,
-          "public": 17475
+          "detail": "23,011 / 17,525 JSON",
+          "root": 23011,
+          "public": 17525
         },
         {
           "label": "시장 데이터 감사",
@@ -4775,7 +4773,7 @@
           "reason": "internal artifact uses generation time; no upstream source date"
         }
       ],
-      "as_of": "2026-08-10T01:14:11.964Z",
+      "as_of": "2026-08-10T02:44:48.270Z",
       "source_as_of": null,
       "source_as_of_reason": "internal artifact uses generation time; no upstream source date"
     }
