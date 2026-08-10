@@ -179,20 +179,56 @@ def test_4_receipt_time_resolution() -> None:
 
         # no explicit receipt_at -> payload["fetched_at"]
         assert archive.archive_if_changed("T1", make_payload("T1", fetched_at="2026-07-01T03:00:00Z"))["appended"]
-        # no fetched_at either -> archive's now_iso
-        assert archive.archive_if_changed("T2", make_payload("T2"))["appended"]
-        # explicit receipt_at wins over payload fetched_at
+        # no fetched_at -> FAIL-CLOSED failure (no now_iso fabrication, design contract)
+        missing = archive.archive_if_changed("T2", make_payload("T2"))
+        assert outcome_flags(missing) == (False, False, True), missing
+        assert missing["reason"] == "invalid_receipt_time", missing
+        # unparseable fetched_at -> FAIL-CLOSED failure
+        bad = archive.archive_if_changed("T3", make_payload("T3", fetched_at="not-a-date"))
+        assert outcome_flags(bad) == (False, False, True), bad
+        assert bad["reason"] == "invalid_receipt_time", bad
+        # explicit receipt_at wins over payload fetched_at (and must be parseable)
         assert archive.archive_if_changed(
-            "T3", make_payload("T3", fetched_at="2026-07-01T03:00:00Z"), receipt_at="2026-06-01T00:00:00Z"
+            "T4", make_payload("T4", fetched_at="2026-07-01T03:00:00Z"), receipt_at="2026-06-01T00:00:00Z"
         )["appended"]
+        # explicit unparseable receipt_at -> failure
+        bad2 = archive.archive_if_changed("T5", make_payload("T5"), receipt_at="nope")
+        assert outcome_flags(bad2) == (False, False, True), bad2
 
         shard = read_json(root / f"{DAY}.json")
         by_ticker = {e["ticker"]: e["receipt_at"] for e in shard}
         assert by_ticker == {
             "T1": "2026-07-01T03:00:00Z",
-            "T2": NOW_ISO,
-            "T3": "2026-06-01T00:00:00Z",
+            "T4": "2026-06-01T00:00:00Z",
         }, by_ticker
+        assert (root / "2026-08-10.json").exists() is False or len(shard) == 2
+
+
+def test_4b_malformed_shard_fails_closed_without_overwrite() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp) / "archive"
+        archive = estimate_archive.EstimateArchive(root, now_iso=NOW_ISO)
+        assert archive.archive_if_changed("OK1", make_payload("OK1", fetched_at="2026-08-10T01:00:00Z"))["appended"]
+        shard_path = root / f"{DAY}.json"
+        original = shard_path.read_text(encoding="utf-8")
+        shard_path.write_text("{corrupted", encoding="utf-8")  # malformed shard
+        out = archive.archive_if_changed("OK2", make_payload("OK2", fetched_at="2026-08-10T02:00:00Z"))
+        assert outcome_flags(out) == (False, False, True), out
+        assert out["reason"] == "malformed_shard", out
+        assert shard_path.read_text(encoding="utf-8") == "{corrupted", "malformed shard must NOT be overwritten"
+
+
+def test_4c_malformed_summary_never_blocks() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp) / "archive"
+        archive = estimate_archive.EstimateArchive(root, now_iso=NOW_ISO)
+        archive.archive_if_changed("OK1", make_payload("OK1", fetched_at="2026-08-10T01:00:00Z"))
+        root.mkdir(parents=True, exist_ok=True)
+        (root / "_summary.json").write_text("[not,a,dict", encoding="utf-8")  # malformed summary
+        out = archive.archive_if_changed("OK2", make_payload("OK2", fetched_at="2026-08-10T02:00:00Z"))
+        assert out["appended"] is True, out  # summary corruption must not block appends
+        shard = read_json(root / f"{DAY}.json")
+        assert [e["ticker"] for e in shard] == ["OK1", "OK2"]
 
 
 def test_5_no_estimate_payload_skipped_and_nothing_written() -> None:
@@ -464,7 +500,9 @@ CASES = [
     ("1 change-only append then unchanged skip", test_1_change_only_append_then_unchanged_skip),
     ("2 real change appends new entry with distinct receipts", test_2_real_change_appends_new_entry_with_distinct_receipts),
     ("3 same-day dedupe keeps exactly one new entry", test_3_same_day_dedupe_keeps_exactly_one_new_entry),
-    ("4 receipt time resolution (fetched_at / now_iso / explicit)", test_4_receipt_time_resolution),
+    ("4 receipt time resolution (fail-closed: fetched_at / explicit / invalid)", test_4_receipt_time_resolution),
+    ("4b malformed shard fails closed without overwrite", test_4b_malformed_shard_fails_closed_without_overwrite),
+    ("4c malformed summary never blocks", test_4c_malformed_summary_never_blocks),
     ("5 no-estimate payload skipped, no shard written", test_5_no_estimate_payload_skipped_and_nothing_written),
     ("6 non-blocking failure when archive root is blocked", test_6_non_blocking_failure_when_archive_root_is_blocked),
     ("7 per-day summary counters accumulate", test_7_per_day_summary_counters_accumulate),

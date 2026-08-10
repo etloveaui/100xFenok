@@ -401,12 +401,7 @@ function clone(value) {
       "data/indices/nasdaq100.json",
       "data/indices/sox.json",
     ]);
-    assert.deepEqual(indices.roots.public_mirror, [
-      "100xfenok-next/public/data/indices/sp500.json",
-      "100xfenok-next/public/data/indices/nasdaq.json",
-      "100xfenok-next/public/data/indices/nasdaq100.json",
-      "100xfenok-next/public/data/indices/sox.json",
-    ]);
+    assert.deepEqual(indices.roots.public_mirror, []);
     assert.deepEqual(indices.commit_shards, [
       "data/admin/data-supply-state/detection-attempts/us_indices_daily.json",
       "data/admin/us-indices-daily",
@@ -414,10 +409,6 @@ function clone(value) {
       "data/indices/nasdaq.json",
       "data/indices/nasdaq100.json",
       "data/indices/sox.json",
-      "100xfenok-next/public/data/indices/sp500.json",
-      "100xfenok-next/public/data/indices/nasdaq.json",
-      "100xfenok-next/public/data/indices/nasdaq100.json",
-      "100xfenok-next/public/data/indices/sox.json",
     ]);
     assert.equal(indices.declared_exception, null, "the retired shadow qualification exception must be removed");
     assert.deepEqual(indices.script_sources, ["scripts/fetch-us-indices-daily.mjs", "scripts/check-us-indices-parity.mjs"],

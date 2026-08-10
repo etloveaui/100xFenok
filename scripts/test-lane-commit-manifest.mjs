@@ -36,9 +36,8 @@ assert.deepEqual(defillama.stages.always_if_exists.map((entry) => entry.path), [
 ]);
 assert.deepEqual(defillama.stages.success_if_exists.map((entry) => entry.path), [
   "data/macro/stablecoins.json",
-  "100xfenok-next/public/data/macro/stablecoins.json",
 ]);
-assert.deepEqual(defillama.stages.success_if_exists.map((entry) => entry.required), [true, true]);
+assert.deepEqual(defillama.stages.success_if_exists.map((entry) => entry.required), [true]);
 assert.deepEqual(defillama.exclude, []);
 
 const yahooTicker = manifest.workflows[".github/workflows/fetch-yahoo-ticker.yml"];
@@ -70,7 +69,6 @@ assert.deepEqual(treasuryTga.stages.always_if_exists.map((entry) => entry.path),
 ]);
 assert.deepEqual(treasuryTga.stages.success_if_exists.map((entry) => entry.path), [
   "data/macro/tga.json",
-  "100xfenok-next/public/data/macro/tga.json",
 ]);
 assert.deepEqual(treasuryTga.exclude, []);
 
@@ -83,7 +81,6 @@ assert.deepEqual(fredMacro.stages.always_if_exists.map((entry) => entry.path), [
 ]);
 assert.deepEqual(fredMacro.stages.success_if_exists.map((entry) => entry.path), [
   "data/macro/fred-macro.json",
-  "100xfenok-next/public/data/macro/fred-macro.json",
 ]);
 assert.deepEqual(fredMacro.exclude, []);
 
@@ -102,10 +99,6 @@ assert.deepEqual(fredBanking.stages.success_if_exists.map((entry) => entry.path)
   "data/macro/fred-banking-weekly.json",
   "data/macro/fred-banking-monthly.json",
   "data/macro/fred-banking-quarterly.json",
-  "100xfenok-next/public/data/macro/fred-banking-daily.json",
-  "100xfenok-next/public/data/macro/fred-banking-weekly.json",
-  "100xfenok-next/public/data/macro/fred-banking-monthly.json",
-  "100xfenok-next/public/data/macro/fred-banking-quarterly.json",
 ]);
 assert.deepEqual(fredBanking.exclude, []);
 
@@ -138,7 +131,6 @@ assert.deepEqual(privateOptions.stages.always_if_exists, [
 ]);
 assert.deepEqual(privateOptions.stages.success_if_exists.map((entry) => entry.path), [
   "data/computed/fenok_yahoo_private_options_availability.json",
-  "100xfenok-next/public/data/computed/fenok_yahoo_private_options_availability.json",
 ]);
 assert.deepEqual(privateOptions.exclude, []);
 
@@ -165,7 +157,6 @@ assert.deepEqual(sentiment.stages.always_if_exists, [
 ]);
 assert.deepEqual(sentiment.stages.success_if_exists, [
   { kind: "glob", path: "data/sentiment/*.json", required: false },
-  { kind: "glob", path: "100xfenok-next/public/data/sentiment/*.json", required: false },
 ]);
 assert.deepEqual(sentiment.exclude, []);
 
@@ -180,10 +171,6 @@ assert.deepEqual(usIndicesDaily.stages.success_if_exists, [
   { kind: "file", path: "data/indices/nasdaq.json", required: false },
   { kind: "file", path: "data/indices/nasdaq100.json", required: false },
   { kind: "file", path: "data/indices/sox.json", required: false },
-  { kind: "file", path: "100xfenok-next/public/data/indices/sp500.json", required: false },
-  { kind: "file", path: "100xfenok-next/public/data/indices/nasdaq.json", required: false },
-  { kind: "file", path: "100xfenok-next/public/data/indices/nasdaq100.json", required: false },
-  { kind: "file", path: "100xfenok-next/public/data/indices/sox.json", required: false },
 ]);
 assert.deepEqual(usIndicesDaily.exclude, []);
 
@@ -231,7 +218,7 @@ assert.deepEqual(yfFinance.stages.always_if_exists, [
   { kind: "directory", path: "data/yf/finance", required: true },
   { kind: "file", path: "data/yf/quarter_closes.json", required: true },
   { kind: "directory", path: "data/admin/yahoo-batch-quote-history", required: true },
-  { kind: "file", path: "100xfenok-next/public/data/yf/quarter_closes.json", required: true },
+  { kind: "directory", path: "data/yf/estimates-archive", required: true },
 ]);
 assert.deepEqual(yfFinance.stages.success_if_exists, []);
 assert.deepEqual(yfFinance.exclude, [
@@ -273,7 +260,6 @@ assert.deepEqual(fredYardeni.stages.always_if_exists, [
 ]);
 assert.deepEqual(fredYardeni.stages.success_if_exists, [
   { kind: "file", path: "data/yardney/yardney_model.json", required: false },
-  { kind: "file", path: "100xfenok-next/public/data/yardney/yardney_model.json", required: false },
 ]);
 assert.deepEqual(fredYardeni.exclude, []);
 
@@ -288,7 +274,6 @@ assert.deepEqual(edgarFilings.stages.always_if_exists, [
 assert.deepEqual(edgarFilings.stages.success_if_exists, [
   { kind: "directory", path: "data/edgar", required: false },
   { kind: "directory", path: "data/edgar-korean-summaries", required: false },
-  { kind: "directory", path: "100xfenok-next/public/data/edgar-korean-summaries", required: false },
 ]);
 assert.deepEqual(edgarFilings.stages.success_verify_not_plan_if_exists, []);
 assert.deepEqual(edgarFilings.exclude, []);
@@ -302,7 +287,6 @@ assert.deepEqual(fdicTier1.stages.always_if_exists, [
 ]);
 assert.deepEqual(fdicTier1.stages.success_if_exists, [
   { kind: "file", path: "data/macro/fdic-tier1.json", required: false },
-  { kind: "file", path: "100xfenok-next/public/data/macro/fdic-tier1.json", required: false },
 ]);
 assert.deepEqual(fdicTier1.exclude, []);
 
@@ -412,35 +396,15 @@ assert.deepEqual(buildStocksAnalyzer.stages.always_if_exists.map(({ kind, path: 
   "file:data/global-scouter/core/revision_movers.json",
   "file:data/damodaran/industry_benchmarks.json",
   "file:data/calendar/prev-values.json",
-  "file:100xfenok-next/public/data/calendar/prev-values.json",
-  "file:100xfenok-next/public/data/global-scouter/core/revision_movers.json",
-  "file:100xfenok-next/public/data/damodaran/industry_benchmarks.json",
-  "file:100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json",
-  "file:100xfenok-next/public/data/global-scouter/core/per_bands_index.json",
-  "file:100xfenok-next/public/data/global-scouter/core/slick_index.json",
-  "file:100xfenok-next/public/data/global-scouter/README.md",
-  "file:100xfenok-next/public/data/global-scouter/schema.json",
-  "file:100xfenok-next/public/data/sec-13f/by_ticker.json",
-  "file:100xfenok-next/public/data/sec-13f/by_sector.json",
-  "file:100xfenok-next/public/data/sec-13f/summary.json",
-  "file:100xfenok-next/public/data/sec-13f/analytics/consensus.json",
-  "file:100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json",
-  "file:100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json",
-  "file:100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json",
-  "file:100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
-  "glob:100xfenok-next/public/data/sec-13f/investors/*.json",
 ]);
 assert.ok(buildStocksAnalyzer.stages.always_if_exists.every((entry) => entry.required === false));
 assert.deepEqual(buildStocksAnalyzer.stages.success_if_exists, []);
-assert.deepEqual(buildStocksAnalyzer.exclude, [
-  { kind: "file", path: "100xfenok-next/public/data/sec-13f/investors/griffin.json", required: false },
-]);
+assert.deepEqual(buildStocksAnalyzer.exclude, []);
 
 const pipelineFailureAlarm = manifest.workflows[".github/workflows/pipeline-failure-alarm.yml"];
 assert.deepEqual(pipelineFailureAlarm.lanes, []);
 assert.deepEqual(pipelineFailureAlarm.stages.always_if_exists, [
   { kind: "file", path: "data/admin/alarm-state.json", required: false },
-  { kind: "file", path: "100xfenok-next/public/data/admin/alarm-state.json", required: false },
 ]);
 assert.deepEqual(pipelineFailureAlarm.stages.success_if_exists, []);
 assert.deepEqual(pipelineFailureAlarm.exclude, []);

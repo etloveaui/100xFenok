@@ -333,38 +333,27 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
 }
 
 // Alarm-state publication is optional and non-primary: the manifest stages
-// only the private/public state pair while the workflow preserves its issue path.
+// only the private alarm state while the workflow preserves its issue path.
 {
   const fixture = makeFixture({ workflow: PIPELINE_FAILURE_ALARM_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], PIPELINE_FAILURE_ALARM_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
+  assert.match(always.stdout, /declared=1 stage_selected=1 staged_index_total=1/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 }
 
-// Stocks Analyzer pins 31 literal pathspecs plus the public investor JSON glob;
-// nested/non-JSON files stay out and public griffin.json remains excluded.
+// Stocks Analyzer pins 15 literal canonical pathspecs plus the canonical
+// investor JSON glob; public mirror staging is owned by the merge boundary.
 {
   const fixture = makeFixture({ workflow: BUILD_STOCKS_ANALYZER_WORKFLOW });
-  const publicInvestors = path.join(fixture.root, "100xfenok-next/public/data/sec-13f/investors");
-  const outOfScope = [
-    path.join(publicInvestors, "notes.txt"),
-    path.join(publicInvestors, "nested", "nested.json"),
-  ];
-  fs.writeFileSync(outOfScope[0], "not json\n");
-  fs.mkdirSync(path.dirname(outOfScope[1]), { recursive: true });
-  fs.writeFileSync(outOfScope[1], "{}\n");
   const always = run(fixture.root, "always_if_exists", [], BUILD_STOCKS_ANALYZER_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=32 stage_selected=35 staged_index_total=34/);
+  assert.match(always.stdout, /declared=15 stage_selected=16 staged_index_total=16/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
-  for (const excluded of fixture.materialized.exclude) {
-    assert.equal(cached(fixture.root).includes(excluded), false, `${excluded} must remain unstaged`);
-  }
 
   execFileSync("git", ["add", "-A"], { cwd: fixture.root });
   execFileSync("git", ["commit", "-qm", "fixture baseline"], { cwd: fixture.root });
-  for (const file of [...fixture.materialized.always, ...fixture.materialized.exclude, ...outOfScope.map((file) => path.relative(fixture.root, file))]) {
+  for (const file of fixture.materialized.always) {
     fs.appendFileSync(path.join(fixture.root, file), "changed\n");
   }
   const tracked = run(fixture.root, "always_if_exists", [], BUILD_STOCKS_ANALYZER_WORKFLOW);
@@ -427,7 +416,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
-// Monthly FDIC recovery state and successful canonical/public outputs remain
+// Monthly FDIC recovery state and successful canonical outputs remain
 // optional so degraded evidence can still be committed without false failure.
 {
   const fixture = makeFixture({ workflow: FDIC_WORKFLOW });
@@ -438,7 +427,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
 
   const success = run(fixture.root, "success_if_exists", [], FDIC_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=2 stage_selected=2 staged_index_total=5/);
+  assert.match(success.stdout, /declared=1 stage_selected=1 staged_index_total=4/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
@@ -453,12 +442,12 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
 
   const success = run(fixture.root, "success_if_exists", [], EDGAR_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=3 stage_selected=3 staged_index_total=7/);
+  assert.match(success.stdout, /declared=2 stage_selected=2 staged_index_total=6/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
-// Weekly Yardeni recovery state is always optional, and public/canonical
-// outputs are selected only by the workflow's successful outcome branch.
+// Weekly Yardeni recovery state is always optional, and canonical outputs are
+// selected only by the workflow's successful outcome branch.
 {
   const fixture = makeFixture({ workflow: YARDENI_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], YARDENI_WORKFLOW);
@@ -468,7 +457,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
 
   const success = run(fixture.root, "success_if_exists", [], YARDENI_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=2 stage_selected=2 staged_index_total=6/);
+  assert.match(success.stdout, /declared=1 stage_selected=1 staged_index_total=5/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
@@ -639,7 +628,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
 
   const success = run(fixture.root, "success_if_exists");
   assert.equal(success.status, 0, success.stderr);
-  assert.match(success.stdout, /stage_selected=2 staged_index_total=5/);
+  assert.match(success.stdout, /stage_selected=1 staged_index_total=4/);
   assert.deepEqual(cached(fixture.root), [...fixture.paths.always, ...fixture.paths.success].sort());
 }
 

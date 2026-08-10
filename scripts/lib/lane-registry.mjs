@@ -163,13 +163,12 @@ const lanes = [
     admin_store: "data/admin/fred_macro",
     detection_attempt: attemptShard("fred_macro"),
     canonical_outputs: ["data/macro/fred-macro.json"],
-    public_mirror: ["100xfenok-next/public/data/macro/fred-macro.json"],
+    public_mirror: [],
     commit_shards: [
       attemptShard("fred_macro"),
       "data/admin/fred_macro/index.json",
       "data/admin/fred_macro/lkg/fred_macro.json",
       "data/macro/fred-macro.json",
-      "100xfenok-next/public/data/macro/fred-macro.json",
     ],
     recovery_store: "data/admin/fred_macro/index.json",
     kpi_recovery_shape: "general",
@@ -193,12 +192,7 @@ const lanes = [
       "data/macro/fred-banking-monthly.json",
       "data/macro/fred-banking-quarterly.json",
     ],
-    public_mirror: [
-      "100xfenok-next/public/data/macro/fred-banking-daily.json",
-      "100xfenok-next/public/data/macro/fred-banking-weekly.json",
-      "100xfenok-next/public/data/macro/fred-banking-monthly.json",
-      "100xfenok-next/public/data/macro/fred-banking-quarterly.json",
-    ],
+    public_mirror: [],
     commit_shards: [
       attemptShard("fred_banking"),
       "data/admin/fred_banking/index.json",
@@ -210,10 +204,6 @@ const lanes = [
       "data/macro/fred-banking-weekly.json",
       "data/macro/fred-banking-monthly.json",
       "data/macro/fred-banking-quarterly.json",
-      "100xfenok-next/public/data/macro/fred-banking-daily.json",
-      "100xfenok-next/public/data/macro/fred-banking-weekly.json",
-      "100xfenok-next/public/data/macro/fred-banking-monthly.json",
-      "100xfenok-next/public/data/macro/fred-banking-quarterly.json",
     ],
     recovery_store: "data/admin/fred_banking/index.json",
     kpi_recovery_shape: "general",
@@ -232,14 +222,13 @@ const lanes = [
     admin_store: "data/admin/fred_yardeni",
     detection_attempt: attemptShard("fred_yardeni"),
     canonical_outputs: ["data/yardney/yardney_model.json"],
-    public_mirror: ["100xfenok-next/public/data/yardney/yardney_model.json"],
+    public_mirror: [],
     commit_shards: [
       attemptShard("fred_yardeni"),
       "data/admin/fred_yardeni/index.json",
       "data/admin/fred_yardeni/current/yardney_model.json",
       "data/admin/fred_yardeni/lkg/yardney_model.json",
       "data/yardney/yardney_model.json",
-      "100xfenok-next/public/data/yardney/yardney_model.json",
     ],
     recovery_store: "data/admin/fred_yardeni/index.json",
     kpi_recovery_shape: "general",
@@ -258,13 +247,12 @@ const lanes = [
     admin_store: "data/admin/fdic_tier1",
     detection_attempt: attemptShard("fdic_tier1"),
     canonical_outputs: ["data/macro/fdic-tier1.json"],
-    public_mirror: ["100xfenok-next/public/data/macro/fdic-tier1.json"],
+    public_mirror: [],
     commit_shards: [
       attemptShard("fdic_tier1"),
       "data/admin/fdic_tier1/index.json",
       "data/admin/fdic_tier1/lkg/fdic_tier1.json",
       "data/macro/fdic-tier1.json",
-      "100xfenok-next/public/data/macro/fdic-tier1.json",
     ],
     recovery_store: "data/admin/fdic_tier1/index.json",
     kpi_recovery_shape: "general",
@@ -283,13 +271,12 @@ const lanes = [
     admin_store: "data/admin/treasury_tga",
     detection_attempt: attemptShard("treasury_tga"),
     canonical_outputs: ["data/macro/tga.json"],
-    public_mirror: ["100xfenok-next/public/data/macro/tga.json"],
+    public_mirror: [],
     commit_shards: [
       attemptShard("treasury_tga"),
       "data/admin/treasury_tga/index.json",
       "data/admin/treasury_tga/lkg/tga.json",
       "data/macro/tga.json",
-      "100xfenok-next/public/data/macro/tga.json",
     ],
     recovery_store: "data/admin/treasury_tga/index.json",
     kpi_recovery_shape: "general",
@@ -308,13 +295,12 @@ const lanes = [
     admin_store: "data/admin/defillama_stablecoins",
     detection_attempt: attemptShard("defillama_stablecoins"),
     canonical_outputs: ["data/macro/stablecoins.json"],
-    public_mirror: ["100xfenok-next/public/data/macro/stablecoins.json"],
+    public_mirror: [],
     commit_shards: [
       attemptShard("defillama_stablecoins"),
       "data/admin/defillama_stablecoins/index.json",
       "data/admin/defillama_stablecoins/lkg/stablecoins.json",
       "data/macro/stablecoins.json",
-      "100xfenok-next/public/data/macro/stablecoins.json",
     ],
     recovery_store: "data/admin/defillama_stablecoins/index.json",
     kpi_recovery_shape: "general",
@@ -364,7 +350,7 @@ const lanes = [
     admin_store: "data/admin/stockanalysis-recovery",
     detection_attempt: attemptShard("stockanalysis_etf_universe"),
     canonical_outputs: ["data/stockanalysis/etf_universe.json"],
-    public_mirror: ["100xfenok-next/public/data/stockanalysis/etf_universe.json"],
+    public_mirror: [],
     commit_shards: [
       attemptShard("stockanalysis_etf_universe"),
       "data/stockanalysis",
@@ -388,10 +374,7 @@ const lanes = [
     admin_store: "data/admin/stockanalysis-recovery",
     detection_attempt: attemptShard("stockanalysis_stock_financial"),
     canonical_outputs: ["data/stockanalysis/stocks", "data/stockanalysis/financials"],
-    public_mirror: [
-      "100xfenok-next/public/data/stockanalysis/stocks",
-      "100xfenok-next/public/data/stockanalysis/financials",
-    ],
+    public_mirror: [],
     commit_shards: [
       attemptShard("stockanalysis_stock_financial"),
       "data/stockanalysis",
@@ -419,7 +402,7 @@ const lanes = [
     admin_store: "data/admin/stockanalysis-recovery",
     detection_attempt: attemptShard("stockanalysis_surfaces"),
     canonical_outputs: ["data/stockanalysis/surfaces/index.json"],
-    public_mirror: ["100xfenok-next/public/data/stockanalysis/surfaces/index.json"],
+    public_mirror: [],
     commit_shards: [
       attemptShard("stockanalysis_surfaces"),
       "data/stockanalysis",
@@ -477,7 +460,7 @@ const lanes = [
     admin_store: "data/admin/sentiment",
     detection_attempt: attemptShard("sentiment"),
     canonical_outputs: ["data/sentiment"],
-    public_mirror: ["100xfenok-next/public/data/sentiment"],
+    public_mirror: [],
     commit_shards: [
       attemptShard("sentiment"),
       "data/admin/sentiment/index.json",
@@ -485,7 +468,6 @@ const lanes = [
       "data/admin/sentiment/lkg",
       "data/admin/sentiment/source-observations/crypto.json",
       "data/sentiment",
-      "100xfenok-next/public/data/sentiment",
     ],
     recovery_store: "data/admin/sentiment/index.json",
     kpi_recovery_shape: "general",
@@ -534,12 +516,7 @@ const lanes = [
       "data/indices/nasdaq100.json",
       "data/indices/sox.json",
     ],
-    public_mirror: [
-      "100xfenok-next/public/data/indices/sp500.json",
-      "100xfenok-next/public/data/indices/nasdaq.json",
-      "100xfenok-next/public/data/indices/nasdaq100.json",
-      "100xfenok-next/public/data/indices/sox.json",
-    ],
+    public_mirror: [],
     commit_shards: [
       attemptShard("us_indices_daily"),
       "data/admin/us-indices-daily",
@@ -547,10 +524,6 @@ const lanes = [
       "data/indices/nasdaq.json",
       "data/indices/nasdaq100.json",
       "data/indices/sox.json",
-      "100xfenok-next/public/data/indices/sp500.json",
-      "100xfenok-next/public/data/indices/nasdaq.json",
-      "100xfenok-next/public/data/indices/nasdaq100.json",
-      "100xfenok-next/public/data/indices/sox.json",
     ],
     recovery_store: "data/admin/us-indices-daily/index.json",
     kpi_recovery_shape: "keyed_v2",
@@ -712,7 +685,7 @@ const lanes = [
       "data/edgar",
       "data/edgar-korean-summaries",
     ],
-    public_mirror: ["100xfenok-next/public/data/edgar-korean-summaries"],
+    public_mirror: [],
     commit_shards: [
       attemptShard("edgar_filings"),
       "data/admin/edgar_filings/index.json",
@@ -720,7 +693,6 @@ const lanes = [
       "data/admin/edgar_filings/lkg/edgar_filings.json",
       "data/edgar",
       "data/edgar-korean-summaries",
-      "100xfenok-next/public/data/edgar-korean-summaries",
     ],
     recovery_store: "data/admin/edgar_filings/index.json",
     kpi_recovery_shape: "general",
@@ -902,14 +874,7 @@ const lanes = [
       "data/damodaran/industry_metrics.json",
       "data/damodaran/industry_metrics_regions.json",
     ],
-    public_mirror: [
-      "100xfenok-next/public/data/damodaran/industries.json",
-      "100xfenok-next/public/data/damodaran/historical_erp.json",
-      "100xfenok-next/public/data/damodaran/credit_ratings.json",
-      "100xfenok-next/public/data/damodaran/erp.json",
-      "100xfenok-next/public/data/damodaran/industry_metrics.json",
-      "100xfenok-next/public/data/damodaran/industry_metrics_regions.json",
-    ],
+    public_mirror: [],
     commit_shards: [
       attemptShard("damodaran"),
       "data/admin/damodaran/owner-guard.json",
@@ -923,12 +888,6 @@ const lanes = [
       "data/damodaran/erp.json",
       "data/damodaran/industry_metrics.json",
       "data/damodaran/industry_metrics_regions.json",
-      "100xfenok-next/public/data/damodaran/industries.json",
-      "100xfenok-next/public/data/damodaran/historical_erp.json",
-      "100xfenok-next/public/data/damodaran/credit_ratings.json",
-      "100xfenok-next/public/data/damodaran/erp.json",
-      "100xfenok-next/public/data/damodaran/industry_metrics.json",
-      "100xfenok-next/public/data/damodaran/industry_metrics_regions.json",
     ],
     recovery_store: "data/admin/damodaran/index.json",
     kpi_recovery_shape: "general",
@@ -1028,12 +987,11 @@ const lanes = [
     admin_store: "data/admin/yahoo_private_options",
     detection_attempt: attemptShard("yahoo_private_options"),
     canonical_outputs: ["data/computed/fenok_yahoo_private_options_availability.json"],
-    public_mirror: ["100xfenok-next/public/data/computed/fenok_yahoo_private_options_availability.json"],
+    public_mirror: [],
     commit_shards: [
       attemptShard("yahoo_private_options"),
       "data/admin/yahoo_private_options",
       "data/computed/fenok_yahoo_private_options_availability.json",
-      "100xfenok-next/public/data/computed/fenok_yahoo_private_options_availability.json",
     ],
     recovery_store: "data/admin/yahoo_private_options/index.json",
     kpi_recovery_shape: "general",
@@ -1396,7 +1354,6 @@ workflow_policies[".github/workflows/fetch-defillama.yml"] = policy(["defillama_
   ],
   success_if_exists: [
     commitSpec("data/macro/stablecoins.json", "file", true),
-    commitSpec("100xfenok-next/public/data/macro/stablecoins.json", "file", true),
   ],
 });
 workflow_policies[".github/workflows/fetch-fenok-apewisdom.yml"] = policy(["apewisdom_attention"], {
@@ -1431,7 +1388,6 @@ workflow_policies[".github/workflows/fetch-sentiment.yml"] = policy(["sentiment"
   ],
   success_if_exists: [
     commitSpec("data/sentiment/*.json", "glob"),
-    commitSpec("100xfenok-next/public/data/sentiment/*.json", "glob"),
   ],
 });
 workflow_policies[".github/workflows/fetch-us-indices-daily.yml"] = policy(["us_indices_daily"], {
@@ -1444,10 +1400,6 @@ workflow_policies[".github/workflows/fetch-us-indices-daily.yml"] = policy(["us_
     commitSpec("data/indices/nasdaq.json", "file"),
     commitSpec("data/indices/nasdaq100.json", "file"),
     commitSpec("data/indices/sox.json", "file"),
-    commitSpec("100xfenok-next/public/data/indices/sp500.json", "file"),
-    commitSpec("100xfenok-next/public/data/indices/nasdaq.json", "file"),
-    commitSpec("100xfenok-next/public/data/indices/nasdaq100.json", "file"),
-    commitSpec("100xfenok-next/public/data/indices/sox.json", "file"),
   ],
 });
 workflow_policies[".github/workflows/fetch-kospi-dart-payout.yml"] = policy(["kospi_dart_payout"], {
@@ -1495,7 +1447,7 @@ workflow_policies[".github/workflows/fetch-yf-finance.yml"] = policy(["yahoo_bat
     commitSpec("data/yf/finance", "directory", true),
     commitSpec("data/yf/quarter_closes.json", "file", true),
     commitSpec("data/admin/yahoo-batch-quote-history", "directory", true),
-    commitSpec("100xfenok-next/public/data/yf/quarter_closes.json", "file", true),
+    commitSpec("data/yf/estimates-archive", "directory", true),
   ],
 }, [commitSpec("data/yf/finance/_summary.json", "file")]);
 workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_etf_fallback", "stockanalysis_etf_universe", "stockanalysis_stock_financial", "stockanalysis_surfaces"], {
@@ -1548,10 +1500,7 @@ workflow_policies[".github/workflows/fetch-damodaran-shadow.yml"] = policy(["dam
       "erp.json",
       "industry_metrics.json",
       "industry_metrics_regions.json",
-    ].flatMap((file) => [
-      commitSpec(`data/damodaran/${file}`, "file", true),
-      commitSpec(`100xfenok-next/public/data/damodaran/${file}`, "file", true),
-    ]),
+    ].map((file) => commitSpec(`data/damodaran/${file}`, "file", true)),
   ],
 });
 workflow_policies[".github/workflows/build-stocks-analyzer.yml"] = policy([], {
@@ -1572,30 +1521,12 @@ workflow_policies[".github/workflows/build-stocks-analyzer.yml"] = policy([], {
       "data/global-scouter/core/revision_movers.json",
       "data/damodaran/industry_benchmarks.json",
       "data/calendar/prev-values.json",
-      "100xfenok-next/public/data/calendar/prev-values.json",
-      "100xfenok-next/public/data/global-scouter/core/revision_movers.json",
-      "100xfenok-next/public/data/damodaran/industry_benchmarks.json",
-      "100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json",
-      "100xfenok-next/public/data/global-scouter/core/per_bands_index.json",
-      "100xfenok-next/public/data/global-scouter/core/slick_index.json",
-      "100xfenok-next/public/data/global-scouter/README.md",
-      "100xfenok-next/public/data/global-scouter/schema.json",
-      "100xfenok-next/public/data/sec-13f/by_ticker.json",
-      "100xfenok-next/public/data/sec-13f/by_sector.json",
-      "100xfenok-next/public/data/sec-13f/summary.json",
-      "100xfenok-next/public/data/sec-13f/analytics/consensus.json",
-      "100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json",
-      "100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json",
-      "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json",
-      "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
-      "100xfenok-next/public/data/sec-13f/investors/*.json",
     ].map((pathValue) => commitSpec(pathValue, pathKind(pathValue))),
   ],
-}, [commitSpec("100xfenok-next/public/data/sec-13f/investors/griffin.json", "file")]);
+});
 workflow_policies[".github/workflows/pipeline-failure-alarm.yml"] = policy([], {
   always_if_exists: [
     commitSpec("data/admin/alarm-state.json", "file"),
-    commitSpec("100xfenok-next/public/data/admin/alarm-state.json", "file"),
   ],
 });
 workflow_policies[".github/workflows/update-manifest.yml"] = policy([], {

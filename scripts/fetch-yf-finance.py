@@ -47,6 +47,20 @@ from estimate_archive import EstimateArchive, default_archive_root
 
 # Point-in-time analyst-estimate archive (#380): non-blocking sibling write.
 _ESTIMATE_ARCHIVE = EstimateArchive(default_archive_root())
+# Per-run aggregate surfaced in the fetch summary (review P1-4).
+_ARCHIVE_RUN_COUNTS = {"appended": 0, "skipped": 0, "failures": 0}
+
+
+def _archive_for(ticker, payload):
+    """Archive the estimate block after the canonical write; never raises."""
+    outcome = _ESTIMATE_ARCHIVE.archive_if_changed(ticker, payload)
+    if outcome.get("appended"):
+        _ARCHIVE_RUN_COUNTS["appended"] += 1
+    elif outcome.get("failure"):
+        _ARCHIVE_RUN_COUNTS["failures"] += 1
+    else:
+        _ARCHIVE_RUN_COUNTS["skipped"] += 1
+    return outcome
 from data_supply_stock_detail import (
     StockDetailValidationError,
     is_enrolled_stock_detail,
@@ -439,10 +453,10 @@ def write_finance_payload(ticker, payload, *, record_stock_detail_state=True):
     """Write Yahoo canonical truth; publish state only for the frozen stock cohort."""
     out_path = OUT_DIR / f"{ticker}.json"
     payload_bytes = stable_json(payload, separators=(",", ":")).encode("utf-8")
-    # Point-in-time estimate archive (#380): change-only append, never blocking.
-    _ESTIMATE_ARCHIVE.archive_if_changed(ticker, payload)
     if not is_enrolled_stock_detail(ticker):
         _atomic_write_bytes(out_path, payload_bytes)
+        # Point-in-time estimate archive (#380): after the canonical write.
+        _archive_for(ticker, payload)
         return None
     observed_at = _observed_now()
     truth_root = DATA_SUPPLY_PROVIDER_TRUTH_ROOT
@@ -474,6 +488,8 @@ def write_finance_payload(ticker, payload, *, record_stock_detail_state=True):
             )
         raise
     _atomic_write_bytes(out_path, payload_bytes)
+    # Point-in-time estimate archive (#380): after the canonical write.
+    _archive_for(ticker, payload)
     verified = validate_stock_detail_candidate(
         provider="yahoo_finance",
         entity=ticker,
@@ -2146,6 +2162,7 @@ def main():
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     results = []
+    _ARCHIVE_RUN_COUNTS.update(appended=0, skipped=0, failures=0)
     total_start = time.perf_counter()
 
     for idx, ticker in enumerate(tickers, 1):
@@ -2397,6 +2414,7 @@ def main():
         "untracked_limit": args.untracked_limit,
         "merge_existing": args.merge_existing,
         "candidate_count_before_filters": candidate_count,
+        "estimates_archive": dict(_ARCHIVE_RUN_COUNTS),
         "errors": errors,
     }
     (OUT_DIR / "_summary.json").write_text(stable_json(summary, indent=2), encoding="utf-8")

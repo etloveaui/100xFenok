@@ -1,5 +1,5 @@
 {
-  "registry_digest": "1c450dc43c983800f6c7a678ff77c0b0f813ca01afb42d64943dead5afcbcf9a",
+  "registry_digest": "830d542c1fc3c35b05a2a635c593d0a67992bd79b23174d70afaaea8b1da04c3",
   "registry_schema": "lane-registry/v3",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -195,13 +195,7 @@
   },
   "workflows": {
     ".github/workflows/build-stocks-analyzer.yml": {
-      "exclude": [
-        {
-          "kind": "file",
-          "path": "100xfenok-next/public/data/sec-13f/investors/griffin.json",
-          "required": false
-        }
-      ],
+      "exclude": [],
       "lanes": [],
       "stages": {
         "always_if_exists": [
@@ -278,91 +272,6 @@
           {
             "kind": "file",
             "path": "data/calendar/prev-values.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/calendar/prev-values.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/global-scouter/core/revision_movers.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/damodaran/industry_benchmarks.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/global-scouter/core/per_bands_index.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/global-scouter/core/slick_index.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/global-scouter/README.md",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/global-scouter/schema.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/sec-13f/by_ticker.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/sec-13f/by_sector.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/sec-13f/summary.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/sec-13f/analytics/consensus.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
-            "required": false
-          },
-          {
-            "kind": "glob",
-            "path": "100xfenok-next/public/data/sec-13f/investors/*.json",
             "required": false
           }
         ],
@@ -546,17 +455,7 @@
           },
           {
             "kind": "file",
-            "path": "100xfenok-next/public/data/damodaran/industries.json",
-            "required": true
-          },
-          {
-            "kind": "file",
             "path": "data/damodaran/historical_erp.json",
-            "required": true
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/damodaran/historical_erp.json",
             "required": true
           },
           {
@@ -566,17 +465,7 @@
           },
           {
             "kind": "file",
-            "path": "100xfenok-next/public/data/damodaran/credit_ratings.json",
-            "required": true
-          },
-          {
-            "kind": "file",
             "path": "data/damodaran/erp.json",
-            "required": true
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/damodaran/erp.json",
             "required": true
           },
           {
@@ -586,17 +475,7 @@
           },
           {
             "kind": "file",
-            "path": "100xfenok-next/public/data/damodaran/industry_metrics.json",
-            "required": true
-          },
-          {
-            "kind": "file",
             "path": "data/damodaran/industry_metrics_regions.json",
-            "required": true
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/damodaran/industry_metrics_regions.json",
             "required": true
           }
         ],
@@ -632,11 +511,6 @@
           {
             "kind": "file",
             "path": "data/macro/stablecoins.json",
-            "required": true
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/macro/stablecoins.json",
             "required": true
           }
         ],
@@ -682,11 +556,6 @@
             "kind": "directory",
             "path": "data/edgar-korean-summaries",
             "required": false
-          },
-          {
-            "kind": "directory",
-            "path": "100xfenok-next/public/data/edgar-korean-summaries",
-            "required": false
           }
         ],
         "success_verify_not_plan_if_exists": []
@@ -720,11 +589,6 @@
           {
             "kind": "file",
             "path": "data/macro/fdic-tier1.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/macro/fdic-tier1.json",
             "required": false
           }
         ],
@@ -833,11 +697,6 @@
             "kind": "file",
             "path": "data/computed/fenok_yahoo_private_options_availability.json",
             "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/computed/fenok_yahoo_private_options_availability.json",
-            "required": false
           }
         ],
         "success_verify_not_plan_if_exists": []
@@ -941,26 +800,6 @@
             "kind": "file",
             "path": "data/macro/fred-banking-quarterly.json",
             "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/macro/fred-banking-daily.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/macro/fred-banking-weekly.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/macro/fred-banking-monthly.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/macro/fred-banking-quarterly.json",
-            "required": false
           }
         ],
         "success_verify_not_plan_if_exists": []
@@ -994,11 +833,6 @@
           {
             "kind": "file",
             "path": "data/macro/fred-macro.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/macro/fred-macro.json",
             "required": false
           }
         ],
@@ -1038,11 +872,6 @@
           {
             "kind": "file",
             "path": "data/yardney/yardney_model.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/yardney/yardney_model.json",
             "required": false
           }
         ],
@@ -1189,11 +1018,6 @@
             "kind": "glob",
             "path": "data/sentiment/*.json",
             "required": false
-          },
-          {
-            "kind": "glob",
-            "path": "100xfenok-next/public/data/sentiment/*.json",
-            "required": false
           }
         ],
         "success_verify_not_plan_if_exists": []
@@ -1305,11 +1129,6 @@
             "kind": "file",
             "path": "data/macro/tga.json",
             "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/macro/tga.json",
-            "required": false
           }
         ],
         "success_verify_not_plan_if_exists": []
@@ -1353,26 +1172,6 @@
           {
             "kind": "file",
             "path": "data/indices/sox.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/indices/sp500.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/indices/nasdaq.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/indices/nasdaq100.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/indices/sox.json",
             "required": false
           }
         ],
@@ -1442,8 +1241,8 @@
             "required": true
           },
           {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/yf/quarter_closes.json",
+            "kind": "directory",
+            "path": "data/yf/estimates-archive",
             "required": true
           }
         ],
@@ -1460,11 +1259,6 @@
           {
             "kind": "file",
             "path": "data/admin/alarm-state.json",
-            "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/admin/alarm-state.json",
             "required": false
           }
         ],

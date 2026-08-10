@@ -70,6 +70,19 @@ def _read_json(path: Path):
         return None
 
 
+def _parse_iso(value) -> bool:
+    """True only for a parseable ISO-8601 UTC timestamp (design: fail-closed on receipt truth)."""
+    if not isinstance(value, str) or not value:
+        return False
+    try:
+        from datetime import datetime
+
+        datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return True
+    except ValueError:
+        return False
+
+
 class EstimateArchive:
     """Change-only, date-sharded, non-blocking estimate archive."""
 
@@ -83,9 +96,16 @@ class EstimateArchive:
     def _shard_path(self, day: str) -> Path:
         return self.archive_root / f"{day}.json"
 
-    def _read_shard(self, day: str) -> list:
-        entries = _read_json(self._shard_path(day))
-        return entries if isinstance(entries, list) else []
+    def _read_shard(self, day: str):
+        """Return (entries, ok). Malformed shard JSON is NOT silently treated as empty."""
+        path = self._shard_path(day)
+        if not path.exists():
+            return [], True
+        try:
+            entries = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return [], False
+        return (entries if isinstance(entries, list) else []), isinstance(entries, list)
 
     def _shard_days_desc(self) -> list[str]:
         if not self.archive_root.is_dir():
@@ -98,7 +118,9 @@ class EstimateArchive:
     def last_entry_for(self, ticker: str):
         """Most recent archived entry for the ticker across shards, newest first."""
         for day in self._shard_days_desc():
-            entries = self._read_shard(day)
+            entries, ok = self._read_shard(day)
+            if not ok:
+                continue
             for entry in reversed(entries):
                 if entry.get("ticker") == ticker:
                     return entry
@@ -106,18 +128,20 @@ class EstimateArchive:
 
     # -- summary -------------------------------------------------------------
     def _bump_summary(self, appended: int, skipped: int, failures: int) -> None:
-        summary = _read_json(self.summary_path) or {}
-        day_counts = summary.setdefault(self.day, {"tickers": 0, "appended": 0, "skipped": 0, "failures": 0})
-        day_counts["appended"] += appended
-        day_counts["skipped"] += skipped
-        day_counts["failures"] += failures
-        if appended:
-            day_counts["tickers"] += appended
         try:
+            summary = _read_json(self.summary_path)
+            if not isinstance(summary, dict):
+                summary = {}
+            day_counts = summary.setdefault(self.day, {"tickers": 0, "appended": 0, "skipped": 0, "failures": 0})
+            day_counts["appended"] += appended
+            day_counts["skipped"] += skipped
+            day_counts["failures"] += failures
+            if appended:
+                day_counts["tickers"] += appended
             self.archive_root.mkdir(parents=True, exist_ok=True)
             _atomic_write_bytes(self.summary_path, stable_dumps(summary).encode("utf-8"))
-        except OSError as exc:
-            print(f"estimate-archive: summary write failed: {exc}", file=sys.stderr)
+        except Exception as exc:  # summary bookkeeping must never block or raise
+            print(f"estimate-archive: summary write failed (non-blocking): {exc}", file=sys.stderr)
 
     # -- core ----------------------------------------------------------------
     def archive_if_changed(self, ticker: str, payload, *, receipt_at: str | None = None) -> dict:
@@ -138,14 +162,24 @@ class EstimateArchive:
                 self._bump_summary(appended=0, skipped=1, failures=0)
                 return outcome
             if receipt_at is None:
-                receipt_at = payload.get("fetched_at") or self.now_iso
+                receipt_at = payload.get("fetched_at")
+            if not _parse_iso(receipt_at):
+                outcome["failure"] = True
+                outcome["reason"] = "invalid_receipt_time"
+                self._bump_summary(appended=0, skipped=0, failures=1)
+                return outcome
             entry = {
                 "ticker": ticker,
                 "receipt_at": receipt_at,
                 "block_hash": entry_hash,
                 "estimates": block,
             }
-            shard = self._read_shard(self.day)
+            shard, shard_ok = self._read_shard(self.day)
+            if not shard_ok:
+                outcome["failure"] = True
+                outcome["reason"] = "malformed_shard"
+                self._bump_summary(appended=0, skipped=0, failures=1)
+                return outcome
             if any(e.get("ticker") == ticker and e.get("block_hash") == entry_hash for e in shard):
                 outcome["skipped"] = True
                 outcome["reason"] = "same_day_duplicate"
@@ -181,7 +215,7 @@ class EstimateArchive:
                 counts["no_fields"] += 1
                 continue
             receipt_at = payload.get("fetched_at")
-            if not isinstance(receipt_at, str):
+            if not _parse_iso(receipt_at):
                 counts["failures"] += 1
                 continue
             ticker = payload.get("ticker")
@@ -193,7 +227,10 @@ class EstimateArchive:
             if prior is not None and prior.get("block_hash") == entry_hash:
                 counts["skipped"] += 1
                 continue
-            shard = self._read_shard(receipt_at[:10])
+            shard, shard_ok = self._read_shard(receipt_at[:10])
+            if not shard_ok:
+                counts["failures"] += 1
+                continue
             if any(e.get("ticker") == ticker and e.get("block_hash") == entry_hash for e in shard):
                 counts["skipped"] += 1
                 continue
@@ -221,8 +258,8 @@ class EstimateArchive:
             for day in self._shard_days_desc():
                 if day in summary:
                     continue
-                shard = self._read_shard(day)
-                if not shard:
+                shard, shard_ok = self._read_shard(day)
+                if not shard_ok or not shard:
                     continue
                 tickers = {e.get("ticker") for e in shard if e.get("ticker")}
                 summary[day] = {"tickers": len(tickers), "appended": len(tickers), "skipped": 0, "failures": 0}
