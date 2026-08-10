@@ -11,6 +11,11 @@ on:
         required: false
         type: boolean
         default: false
+      owner_approved_recovery:
+        description: 'Explicit owner approval to publish the six Damodaran payloads from a manual dispatch recovery. Only set true when the owner approved this specific publication/recovery transaction; never enable for routine dispatch runs.'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -65,6 +70,7 @@ jobs:
         id: fetch
         env:
           INPUT_CONTROLLED_FAILURE: ${{ github.event.inputs.controlled_failure || 'false' }}
+          INPUT_OWNER_APPROVED_RECOVERY: ${{ github.event.inputs.owner_approved_recovery || 'false' }}
         run: node scripts/fetch-damodaran-shadow.mjs
 
       - name: Preserve Damodaran guard report

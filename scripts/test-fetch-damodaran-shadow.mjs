@@ -164,6 +164,46 @@ function runFixture(options = {}) {
   return { root, reportPath, attemptShardPath, canonicalRoot, run };
 }
 
+function activeRetryFixture(prefix) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), `${prefix}-`));
+  const common = {
+    repoRoot: root,
+    reportPath: path.join(root, "data", "admin", "damodaran", "owner-guard.json"),
+    attemptShardPath: path.join(root, "attempt.json"),
+    canonicalRoot: path.join(root, "data", "damodaran"),
+    now: () => 1_000,
+  };
+  DamodaranProducer.runDamodaranShadow({
+    ...common,
+    spawn: spawnFixture(),
+    observedAt: "2026-07-20T00:00:00Z",
+    attemptId: `${prefix}-baseline`,
+    runId: `${prefix}-baseline`,
+    eventName: "schedule",
+  });
+  DamodaranProducer.runDamodaranShadow({
+    ...common,
+    spawn: () => { throw new Error("controlled failure must bypass spawn"); },
+    observedAt: "2026-07-21T00:00:00Z",
+    attemptId: `${prefix}-failure`,
+    runId: `${prefix}-failure`,
+    eventName: "workflow_dispatch",
+    controlledFailure: true,
+  });
+  const paths = [
+    ...FILE_NAMES.map((file) => path.join(common.canonicalRoot, file)),
+    path.join(root, "data", "admin", "damodaran", "current", "damodaran.json"),
+    path.join(root, "data", "admin", "damodaran", "history.json"),
+    path.join(root, "data", "admin", "damodaran", "index.json"),
+  ];
+  return {
+    root,
+    common,
+    paths,
+    before: new Map(paths.map((filePath) => [filePath, fs.readFileSync(filePath)])),
+  };
+}
+
 {
   assert.equal(typeof DamodaranProducer.guardProducedFiles, "function", "owner guard must be exported");
   assert.equal(typeof DamodaranProducer.promoteProducedFiles, "function", "guarded promotion must be exported");
@@ -513,6 +553,29 @@ function runFixture(options = {}) {
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /controlled_failure:/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE:/);
+  const ownerApprovedIndex = workflow.indexOf("owner_approved_recovery:");
+  assert.ok(ownerApprovedIndex >= 0, "workflow must declare owner_approved_recovery input");
+  assert.ok(
+    workflow.indexOf("controlled_failure:") < ownerApprovedIndex,
+    "owner_approved_recovery must follow controlled_failure",
+  );
+  const ownerApprovedInputBlock = workflow.slice(ownerApprovedIndex, workflow.indexOf("permissions:"));
+  assert.match(ownerApprovedInputBlock, /description:/);
+  assert.match(ownerApprovedInputBlock, /owner/i);
+  assert.match(ownerApprovedInputBlock, /approval/i);
+  assert.match(ownerApprovedInputBlock, /required:\s*false/);
+  assert.match(ownerApprovedInputBlock, /type:\s*boolean/);
+  assert.match(ownerApprovedInputBlock, /default:\s*false/, "owner approval must default to false");
+  assert.match(
+    workflow,
+    /INPUT_OWNER_APPROVED_RECOVERY:\s*\$\{\{\s*github\.event\.inputs\.owner_approved_recovery\s*\|\|\s*'false'\s*\}\}/,
+    "workflow must wire the exact owner-approval env expression",
+  );
+  assert.ok(
+    workflow.indexOf("INPUT_CONTROLLED_FAILURE:") < workflow.indexOf("INPUT_OWNER_APPROVED_RECOVERY:")
+      && workflow.indexOf("INPUT_OWNER_APPROVED_RECOVERY:") < workflow.indexOf("node scripts/fetch-damodaran-shadow.mjs"),
+    "owner-approval env wiring must sit in the fetch step before the fetch command",
+  );
   assert.match(workflow, /node scripts\/test-fetch-damodaran-shadow\.mjs/);
   assert.match(
     workflow,
@@ -680,6 +743,18 @@ function runFixture(options = {}) {
     eventName: "workflow_dispatch",
   });
   assert.equal(manual.recovery.reason, "recovery_requires_schedule");
+  assert.equal(manual.recovery.ok, false);
+  assert.equal(manual.recovery.degraded, true);
+  assert.deepStrictEqual(manual.recovery.retrySet, ["damodaran"]);
+  assert.deepStrictEqual(
+    fs.readFileSync(path.join(root, "data", "admin", "damodaran", "current", "damodaran.json")),
+    retainedBytes,
+    "unapproved manual dispatch must leave retained LKG bytes intact",
+  );
+  const manualState = JSON.parse(fs.readFileSync(path.join(root, "data", "admin", "damodaran", "index.json"), "utf8"));
+  assert.equal(manualState.items.damodaran.retry, true);
+  assert.equal(manualState.items.damodaran.resolution_state, "lkg_primary");
+  assert.deepStrictEqual(manualState.retry_set, ["damodaran"]);
 
   const recovered = DamodaranProducer.runDamodaranShadow({
     ...common,
@@ -696,6 +771,329 @@ function runFixture(options = {}) {
   assert.equal(state.items.damodaran.recovered_from_run_id, "701");
   assert.equal(state.items.damodaran.recovery_event_name, "schedule");
   fs.rmSync(root, { recursive: true, force: true });
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "damodaran-approved-manual-recovery-"));
+  const common = {
+    repoRoot: root,
+    reportPath: path.join(root, "data", "admin", "damodaran", "owner-guard.json"),
+    attemptShardPath: path.join(root, "attempt.json"),
+    canonicalRoot: path.join(root, "data", "damodaran"),
+    now: () => 1_000,
+  };
+  DamodaranProducer.runDamodaranShadow({
+    ...common,
+    spawn: spawnFixture(),
+    observedAt: "2026-07-20T00:00:00Z",
+    attemptId: "gh-740-1-damodaran",
+    runId: "740",
+    eventName: "schedule",
+  });
+  DamodaranProducer.runDamodaranShadow({
+    ...common,
+    spawn: () => { throw new Error("controlled failure must bypass spawn"); },
+    observedAt: "2026-07-21T00:00:00Z",
+    attemptId: "gh-741-1-damodaran",
+    runId: "741",
+    eventName: "workflow_dispatch",
+    controlledFailure: true,
+  });
+  const retainedApproved = fs.readFileSync(
+    path.join(root, "data", "admin", "damodaran", "current", "damodaran.json"),
+  );
+  // The option must default from the workflow env wiring, so exercise the env
+  // variable rather than passing the option explicitly.
+  process.env.INPUT_OWNER_APPROVED_RECOVERY = "true";
+  let approved;
+  try {
+    approved = DamodaranProducer.runDamodaranShadow({
+      ...common,
+      spawn: spawnFixture({ sourceDate: "February 2026" }),
+      observedAt: "2026-07-21T02:00:00Z",
+      attemptId: "gh-742-1-damodaran",
+      runId: "742",
+      eventName: "workflow_dispatch",
+    });
+  } finally {
+    delete process.env.INPUT_OWNER_APPROVED_RECOVERY;
+  }
+  assert.equal(approved.exitCode, 0);
+  assert.equal(approved.recovery.ok, true);
+  assert.equal(approved.recovery.degraded, false);
+  assert.equal(approved.recovery.recovered, true);
+  assert.equal(approved.recovery.reason, "ok");
+  assert.deepStrictEqual(approved.recovery.retrySet, []);
+  assert.notDeepEqual(
+    fs.readFileSync(path.join(root, "data", "admin", "damodaran", "current", "damodaran.json")),
+    retainedApproved,
+    "owner-approved manual recovery with advanced provider dates must promote",
+  );
+  const approvedState = JSON.parse(fs.readFileSync(path.join(root, "data", "admin", "damodaran", "index.json"), "utf8"));
+  assert.equal(approvedState.items.damodaran.retry, false);
+  assert.equal(approvedState.items.damodaran.resolution_state, "fresh_primary");
+  assert.equal(approvedState.items.damodaran.current.source_as_of, "2026-02-01");
+  assert.equal(approvedState.items.damodaran.recovered_from_run_id, "741");
+  assert.equal(approvedState.items.damodaran.recovered_at, "2026-07-21T02:00:00Z");
+  assert.equal(approvedState.items.damodaran.recovery_run_id, "742");
+  assert.equal(approvedState.items.damodaran.recovery_event_name, "workflow_dispatch");
+  assert.deepStrictEqual(approvedState.retry_set, []);
+  assert.equal(
+    JSON.parse(fs.readFileSync(path.join(root, "data", "admin", "damodaran", "current", "damodaran.json"), "utf8")).source_as_of,
+    "2026-02-01",
+  );
+  fs.rmSync(root, { recursive: true, force: true });
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "damodaran-approved-manual-deferrals-"));
+  const common = {
+    repoRoot: root,
+    reportPath: path.join(root, "data", "admin", "damodaran", "owner-guard.json"),
+    attemptShardPath: path.join(root, "attempt.json"),
+    canonicalRoot: path.join(root, "data", "damodaran"),
+    now: () => 1_000,
+  };
+  DamodaranProducer.runDamodaranShadow({
+    ...common,
+    spawn: spawnFixture(),
+    observedAt: "2026-07-20T00:00:00Z",
+    attemptId: "gh-750-1-damodaran",
+    runId: "750",
+    eventName: "schedule",
+  });
+  DamodaranProducer.runDamodaranShadow({
+    ...common,
+    spawn: () => { throw new Error("controlled failure must bypass spawn"); },
+    observedAt: "2026-07-21T00:00:00Z",
+    attemptId: "gh-751-1-damodaran",
+    runId: "751",
+    eventName: "workflow_dispatch",
+    controlledFailure: true,
+  });
+  const retainedDeferred = fs.readFileSync(
+    path.join(root, "data", "admin", "damodaran", "current", "damodaran.json"),
+  );
+
+  const notAdvanced = DamodaranProducer.runDamodaranShadow({
+    ...common,
+    spawn: spawnFixture(),
+    observedAt: "2026-07-21T03:00:00Z",
+    attemptId: "gh-752-1-damodaran",
+    runId: "752",
+    eventName: "workflow_dispatch",
+    ownerApprovedRecovery: true,
+  });
+  assert.equal(notAdvanced.exitCode, 0);
+  assert.equal(notAdvanced.recovery.ok, false);
+  assert.equal(notAdvanced.recovery.degraded, true);
+  assert.equal(notAdvanced.recovery.reason, "recovery_not_advanced_by_provider");
+  assert.deepStrictEqual(notAdvanced.recovery.retrySet, ["damodaran"]);
+  assert.deepStrictEqual(
+    fs.readFileSync(path.join(root, "data", "admin", "damodaran", "current", "damodaran.json")),
+    retainedDeferred,
+    "owner approval must not promote without genuine provider advancement",
+  );
+
+  const regressing = DamodaranProducer.runDamodaranShadow({
+    ...common,
+    spawn: spawnFixture({
+      sourceDatesByFile: {
+        [FILE_NAMES[0]]: "February 2026",
+        [FILE_NAMES[1]]: "December 2025",
+      },
+    }),
+    observedAt: "2026-07-21T04:00:00Z",
+    attemptId: "gh-753-1-damodaran",
+    runId: "753",
+    eventName: "workflow_dispatch",
+    ownerApprovedRecovery: true,
+  });
+  assert.equal(regressing.exitCode, 0);
+  assert.equal(regressing.recovery.ok, false);
+  assert.equal(regressing.recovery.degraded, true);
+  assert.equal(regressing.recovery.reason, "recovery_provider_regression");
+  assert.deepStrictEqual(regressing.recovery.retrySet, ["damodaran"]);
+  assert.deepStrictEqual(
+    fs.readFileSync(path.join(root, "data", "admin", "damodaran", "current", "damodaran.json")),
+    retainedDeferred,
+    "owner approval must not mask a provider regression",
+  );
+  const deferredState = JSON.parse(fs.readFileSync(path.join(root, "data", "admin", "damodaran", "index.json"), "utf8"));
+  assert.equal(deferredState.items.damodaran.retry, true);
+  assert.equal(deferredState.items.damodaran.resolution_state, "lkg_primary");
+  assert.equal(deferredState.items.damodaran.latest_promotion_deferral.reason, "recovery_not_advanced_by_provider");
+  assert.deepStrictEqual(deferredState.retry_set, ["damodaran"]);
+  fs.rmSync(root, { recursive: true, force: true });
+}
+
+{
+  const fixtureRun = activeRetryFixture("damodaran-schedule-ignores-approval");
+  let loadStateAssignments = 0;
+  const recovered = DamodaranProducer.runDamodaranShadow({
+    ...fixtureRun.common,
+    spawn: spawnFixture({ sourceDate: "February 2026" }),
+    observedAt: "2026-07-25T11:17:00Z",
+    attemptId: "schedule-with-approval",
+    runId: "schedule-with-approval",
+    eventName: "schedule",
+    ownerApprovedRecovery: true,
+    lkgStoreFactory: ({ repoRoot, laneId }) => {
+      const store = new LaneLkgStore({ repoRoot, laneId });
+      const loadState = store._loadState;
+      Object.defineProperty(store, "_loadState", {
+        configurable: true,
+        get: () => loadState,
+        set: () => { loadStateAssignments += 1; },
+      });
+      return store;
+    },
+  });
+  assert.equal(recovered.exitCode, 0);
+  assert.equal(recovered.recovery.recovered, true);
+  assert.deepStrictEqual(recovered.recovery.retrySet, []);
+  assert.equal(
+    loadStateAssignments,
+    0,
+    "natural schedule recovery must not exercise the owner-approved _loadState override",
+  );
+  const state = JSON.parse(fs.readFileSync(
+    path.join(fixtureRun.root, "data", "admin", "damodaran", "index.json"),
+    "utf8",
+  ));
+  assert.equal(state.items.damodaran.recovery_event_name, "schedule");
+  assert.equal(state.items.damodaran.recovery_run_id, "schedule-with-approval");
+  fs.rmSync(fixtureRun.root, { recursive: true, force: true });
+}
+
+{
+  const fixtureRun = activeRetryFixture("damodaran-nondispatch-approval-blocked");
+  const blocked = DamodaranProducer.runDamodaranShadow({
+    ...fixtureRun.common,
+    spawn: spawnFixture({ sourceDate: "February 2026" }),
+    observedAt: "2026-07-21T05:00:00Z",
+    attemptId: "push-with-approval",
+    runId: "push-with-approval",
+    eventName: "push",
+    ownerApprovedRecovery: true,
+  });
+  assert.equal(blocked.exitCode, 0);
+  assert.equal(blocked.recovery.ok, false);
+  assert.equal(blocked.recovery.degraded, true);
+  assert.equal(blocked.recovery.reason, "recovery_requires_schedule");
+  assert.deepStrictEqual(blocked.recovery.retrySet, ["damodaran"]);
+  for (const filePath of fixtureRun.paths) {
+    assert.deepStrictEqual(
+      fs.readFileSync(filePath),
+      fixtureRun.before.get(filePath),
+      `${path.relative(fixtureRun.root, filePath)} must not change for non-dispatch approval`,
+    );
+  }
+  fs.rmSync(fixtureRun.root, { recursive: true, force: true });
+}
+
+{
+  const fixtureRun = activeRetryFixture("damodaran-explicit-false-blocked");
+  process.env.INPUT_OWNER_APPROVED_RECOVERY = "false";
+  let blocked;
+  try {
+    blocked = DamodaranProducer.runDamodaranShadow({
+      ...fixtureRun.common,
+      spawn: spawnFixture({ sourceDate: "February 2026" }),
+      observedAt: "2026-07-21T06:00:00Z",
+      attemptId: "dispatch-explicit-false",
+      runId: "dispatch-explicit-false",
+      eventName: "workflow_dispatch",
+    });
+  } finally {
+    delete process.env.INPUT_OWNER_APPROVED_RECOVERY;
+  }
+  assert.equal(blocked.exitCode, 0);
+  assert.equal(blocked.recovery.ok, false);
+  assert.equal(blocked.recovery.degraded, true);
+  assert.equal(blocked.recovery.reason, "recovery_requires_schedule");
+  assert.deepStrictEqual(blocked.recovery.retrySet, ["damodaran"]);
+  for (const filePath of fixtureRun.paths) {
+    assert.deepStrictEqual(
+      fs.readFileSync(filePath),
+      fixtureRun.before.get(filePath),
+      `${path.relative(fixtureRun.root, filePath)} must not change for explicit false approval`,
+    );
+  }
+  fs.rmSync(fixtureRun.root, { recursive: true, force: true });
+}
+
+{
+  const fixtureRun = activeRetryFixture("damodaran-approved-record-success-rollback");
+  let rollbackObserved = false;
+  let methodsRestoredBeforeFailureRecord = false;
+  let storeUnderTest;
+  const failed = DamodaranProducer.runDamodaranShadow({
+    ...fixtureRun.common,
+    spawn: spawnFixture({ sourceDate: "February 2026" }),
+    observedAt: "2026-07-21T07:00:00Z",
+    attemptId: "approved-record-success-throws",
+    runId: "approved-record-success-throws",
+    eventName: "workflow_dispatch",
+    ownerApprovedRecovery: true,
+    lkgStoreFactory: ({ repoRoot, laneId }) => {
+      const store = new LaneLkgStore({ repoRoot, laneId });
+      storeUnderTest = store;
+      const loadState = store._loadState;
+      const evaluatePromotionCandidates = store.evaluatePromotionCandidates;
+      const recordSuccess = store.recordSuccess.bind(store);
+      const recordFailure = store.recordFailure.bind(store);
+      store.recordSuccess = (input) => {
+        recordSuccess(input);
+        throw new Error("injected approved recordSuccess failure");
+      };
+      store.recordFailure = (input) => {
+        rollbackObserved = fixtureRun.paths.every((filePath) => (
+          fs.readFileSync(filePath).equals(fixtureRun.before.get(filePath))
+        ));
+        methodsRestoredBeforeFailureRecord = store._loadState === loadState
+          && store.evaluatePromotionCandidates === evaluatePromotionCandidates;
+        return recordFailure(input);
+      };
+      return store;
+    },
+  });
+  assert.equal(failed.exitCode, 2);
+  assert.equal(failed.recovery.ok, false);
+  assert.equal(failed.recovery.degraded, false);
+  assert.equal(failed.recovery.corrupt, true);
+  assert.equal(failed.recovery.reason, "unexpected_error");
+  assert.equal(rollbackObserved, true, "approved recovery transaction must restore all snapshotted files");
+  assert.equal(
+    methodsRestoredBeforeFailureRecord,
+    true,
+    "approved recovery must restore temporary store methods before failure bookkeeping",
+  );
+  assert.equal(
+    storeUnderTest._loadState,
+    LaneLkgStore.prototype._loadState,
+    "approved recovery must leave _loadState restored after the run",
+  );
+  assert.equal(
+    storeUnderTest.evaluatePromotionCandidates,
+    LaneLkgStore.prototype.evaluatePromotionCandidates,
+    "approved recovery must leave evaluatePromotionCandidates restored after the run",
+  );
+  for (const filePath of fixtureRun.paths.slice(0, -1)) {
+    assert.deepStrictEqual(
+      fs.readFileSync(filePath),
+      fixtureRun.before.get(filePath),
+      `${path.relative(fixtureRun.root, filePath)} must remain byte-identical after rollback`,
+    );
+  }
+  const beforeState = JSON.parse(fixtureRun.before.get(fixtureRun.paths.at(-1)).toString("utf8"));
+  const failedState = JSON.parse(fs.readFileSync(fixtureRun.paths.at(-1), "utf8"));
+  assert.equal(failedState.items.damodaran.retry, true);
+  assert.equal(failedState.items.damodaran.resolution_state, "lkg_primary");
+  assert.deepStrictEqual(failedState.items.damodaran.lkg, beforeState.items.damodaran.lkg);
+  assert.deepStrictEqual(failedState.items.damodaran.current, beforeState.items.damodaran.current);
+  assert.deepStrictEqual(failedState.retry_set, ["damodaran"]);
+  fs.rmSync(fixtureRun.root, { recursive: true, force: true });
 }
 
 {

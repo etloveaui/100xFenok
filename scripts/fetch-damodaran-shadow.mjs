@@ -276,7 +276,7 @@ function retainedDamodaranBundle(repoRoot, store, item) {
   return bundle;
 }
 
-function recordSuccessWithVectorDecision(store, input, vectorDecision) {
+function recordSuccessWithVectorDecision(store, input, vectorDecision, approvedManualRecovery) {
   if (vectorDecision?.eligible !== true) return store.recordSuccess(input);
   const evaluatePromotionCandidates = store.evaluatePromotionCandidates;
   store.evaluatePromotionCandidates = (artifacts) => artifacts.map((artifact) => ({
@@ -285,10 +285,29 @@ function recordSuccessWithVectorDecision(store, input, vectorDecision) {
     reason: "ok",
     artifact,
   }));
+  // An owner-approved manual dispatch is an explicit exception to the store's
+  // natural-schedule-only recovery guard. The state write itself stays the
+  // stock recordSuccess path (with the true workflow_dispatch event recorded),
+  // so the approved run is indistinguishable in shape from a schedule recovery
+  // except for recovery_event_name. The on-disk retry flag is cleared only
+  // inside this call; it is restored on any failure by the transaction
+  // snapshot taken by the caller.
+  const loadState = store._loadState;
+  if (approvedManualRecovery === true) {
+    store._loadState = function loadStateForApprovedRecovery() {
+      const state = loadState.call(this);
+      for (const artifact of input.artifacts) {
+        const item = state.items?.[artifact.key];
+        if (item) state.items[artifact.key] = { ...item, retry: false };
+      }
+      return state;
+    };
+  }
   try {
     return store.recordSuccess(input);
   } finally {
     store.evaluatePromotionCandidates = evaluatePromotionCandidates;
+    if (approvedManualRecovery === true) store._loadState = loadState;
   }
 }
 
@@ -569,6 +588,7 @@ export function runDamodaranShadow({
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || "local",
   controlledFailure = process.env.INPUT_CONTROLLED_FAILURE === "true",
+  ownerApprovedRecovery = process.env.INPUT_OWNER_APPROVED_RECOVERY === "true",
   lkgStoreFactory = ({ repoRoot: storeRoot, laneId }) => new LaneLkgStore({
     repoRoot: storeRoot,
     laneId,
@@ -710,8 +730,11 @@ export function runDamodaranShadow({
       }),
     };
     const before = store.stateSnapshot().items.damodaran;
+    const approvedManualRecovery = before?.retry === true
+      && ownerApprovedRecovery === true
+      && run.eventName === "workflow_dispatch";
     let vectorDecision = null;
-    if (before?.retry === true && !isNaturalScheduleRun(run)) {
+    if (before?.retry === true && !isNaturalScheduleRun(run) && !approvedManualRecovery) {
       recoveryResult = {
         ok: false,
         degraded: true,
@@ -774,6 +797,7 @@ export function runDamodaranShadow({
               store,
               { artifacts: [candidate], run },
               vectorDecision,
+              approvedManualRecovery,
             );
           } catch (error) {
             restoreFiles(transactionSnapshot);
