@@ -65,13 +65,9 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..');
 
-// Canonical SSOT + the build-consumed mirror. The Next.js app serves
-// `/data/sentiment/*` from public/data (see useDashboardData.ts / data-loader.ts),
-// while data/sentiment/ is the source of truth the GAS scripts historically
-// wrote. fetch-fred-banking.yml established the dual-write pattern; we follow it.
+// Canonical SSOT; the public mirror is boundary-owned (#377 slice 2).
 const DEFAULT_OUTPUT_DIRS = [
   path.join(REPO_ROOT, 'data', 'sentiment'),
-  path.join(REPO_ROOT, '100xfenok-next', 'public', 'data', 'sentiment'),
 ];
 
 export const SENTIMENT_LKG_SOURCE_FILES = Object.freeze({

@@ -208,7 +208,9 @@ export function alarmStateResolved(prior, next) {
 
 export function writeAlarmStateMirrors({ state, outPath, publicOutPath }) {
   const json = `${JSON.stringify(state, null, 2)}\n`;
-  for (const target of [outPath, publicOutPath]) {
+  // Public mirror is boundary-owned (#377 slice 2); write canonical only.
+  const targets = [outPath, publicOutPath].filter(Boolean);
+  for (const target of targets) {
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, json);
   }
@@ -220,7 +222,6 @@ function main() {
   const repoRoot = path.resolve(__dirname, "..", "..");
   const healthPath = process.env.PIPELINE_JOB_HEALTH_RESULT || "pipeline-job-health-result.json";
   const outPath = path.join(repoRoot, "data", "admin", "alarm-state.json");
-  const publicOutPath = path.join(repoRoot, "100xfenok-next", "public", "data", "admin", "alarm-state.json");
 
   const health = readJson(healthPath) ?? { status: "unknown", workflows: [] };
   const prior = readJson(outPath);
@@ -228,7 +229,7 @@ function main() {
 
   const unchanged = alarmStateUnchanged(prior, state);
   const emitted = unchanged ? prior : state;
-  writeAlarmStateMirrors({ state: emitted, outPath, publicOutPath });
+  writeAlarmStateMirrors({ state: emitted, outPath });
   // Published so the workflow can gate the OPS issue comment on it. Suppressing
   // the redundant commit without suppressing the comment would have left the
   // louder half of the churn in place: 9 comments on issue #88 between 04:53 and
