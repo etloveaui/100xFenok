@@ -105,9 +105,11 @@ assert.match(
   "manifest publication failure must remain non-primary",
 );
 const manifestCall = commitStep.indexOf("scripts/stage-lane-manifest.sh");
-const legacyAdd = commitStep.indexOf("git add data/admin/alarm-state.json");
-assert.ok(manifestCall >= 0 && manifestCall < legacyAdd, "manifest staging must precede the retained literal add");
-assert.match(commitStep, /git add data\/admin\/alarm-state\.json 100xfenok-next\/public\/data\/admin\/alarm-state\.json \|\| exit 0/);
+assert.ok(manifestCall >= 0, "manifest staging must be present");
+// Post-slice-2 contract (#377): the lane stages canonical only; the public
+// mirror is boundary-owned.
+assert.match(commitStep, /git add data\/admin\/alarm-state\.json \|\| exit 0/);
+assert.doesNotMatch(commitStep, /100xfenok-next\/public\/data\/admin\/alarm-state/);
 assertIncidentTransitionGuards(workflow);
 
 assert.throws(
