@@ -548,7 +548,7 @@ jobs:
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-stockanalysis.yml \
               --stage always_if_exists
-            git add -- data/computed/data-supply/etf-detail
+            git add -- data/computed/data-supply/etf-detail 100xfenok-next/public/data
             if git diff --staged --quiet; then
               COMMIT_ARGS=(--allow-empty)
               COMMIT_SUBJECT="chore: record stockanalysis no-change run"

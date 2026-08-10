@@ -243,6 +243,7 @@ assert.deepEqual(stockanalysis.stages.always_if_exists, [
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_stock_financial.json", required: false },
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_surfaces.json", required: false },
   { kind: "dynamic_set", path: "data/yf/finance", required: false },
+  { kind: "directory", path: "100xfenok-next/public/data", required: false },
 ]);
 assert.deepEqual(stockanalysis.stages.success_if_exists, []);
 assert.deepEqual(stockanalysis.exclude, [

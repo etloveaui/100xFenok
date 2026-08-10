@@ -1462,6 +1462,7 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_
     commitSpec("data/admin/data-supply-state/detection-attempts/stockanalysis_stock_financial.json", "file"),
     commitSpec("data/admin/data-supply-state/detection-attempts/stockanalysis_surfaces.json", "file"),
     commitSpec("data/yf/finance", "dynamic_set"),
+    commitSpec("100xfenok-next/public/data", "directory", false),
   ],
 }, [
   commitSpec("data/stockanalysis/backfill/history_gap_report_latest.json", "file"),

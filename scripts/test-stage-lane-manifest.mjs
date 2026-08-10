@@ -476,7 +476,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   fixture.materialized.always.push(etfRecoveryState);
   const always = run(fixture.root, "always_if_exists", [], STOCKANALYSIS_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=10 stage_selected=11 staged_index_total=11/);
+  assert.match(always.stdout, /declared=11 stage_selected=12 staged_index_total=12/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
   assert.equal(cached(fixture.root).includes(etfRecoveryState), true);
   for (const excluded of fixture.materialized.exclude) {
@@ -491,7 +491,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   }
   const trackedAlways = run(tracked.root, "always_if_exists", [], STOCKANALYSIS_WORKFLOW);
   assert.equal(trackedAlways.status, 0, `${trackedAlways.stderr}\n${trackedAlways.stdout}`);
-  assert.match(trackedAlways.stdout, /declared=10 stage_selected=11 staged_index_total=10/);
+  assert.match(trackedAlways.stdout, /declared=11 stage_selected=12 staged_index_total=11/);
   assert.deepEqual(cached(tracked.root), tracked.materialized.always.sort());
 }
 
