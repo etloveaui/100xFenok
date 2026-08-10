@@ -22,8 +22,11 @@ const tracker = loadTracker("SPY");
 assert.equal(tracker.file_exists, true, "SPY canonical file exists");
 assert.equal(tracker.identity_ok, true, "SPY identity passes");
 assert.equal(tracker.prices.length, 260, "history_1y still carries its 260-bar cap");
-assert.equal(tracker.price_start, "2025-07-24", "history_1y start date untouched");
-assert.equal(tracker.price_end, "2026-08-05", "history_1y end date untouched");
+// The 260-bar window slides with every refresh — derive the expected edges
+// from the loaded rows instead of pinning literals that go stale (broke
+// qa-rim-v2 on 08-07 and 08-10 refreshes).
+assert.equal(tracker.price_start, tracker.prices[0].date, "history_1y start = first row");
+assert.equal(tracker.price_end, tracker.prices[tracker.prices.length - 1].date, "history_1y end = last row");
 assert.equal(tracker.div_start, "2016-09-16", "dividend leg untouched");
 assert.equal(tracker.dividends.length, 40, "dividend count untouched");
 // The unadjusted sibling now EXISTS (approved fetch ran): full history,
