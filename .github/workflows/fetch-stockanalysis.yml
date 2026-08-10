@@ -442,8 +442,9 @@ jobs:
     runs-on: ubuntu-latest
     # Semantic validation must follow fresh-main apply while the writer lock is
     # held; cap the fail-closed critical section instead of validating a stale
-    # pre-lock checkout.
-    timeout-minutes: 20
+    # pre-lock checkout. 45m: the Sunday full-universe publish measured 20m+ with
+    # the #377 broad mirror commit (ab50c4c24e) and previously timed out at 20m.
+    timeout-minutes: 45
     permissions:
       contents: write
       actions: write
