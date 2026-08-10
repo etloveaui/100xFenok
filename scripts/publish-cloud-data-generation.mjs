@@ -24,8 +24,17 @@
 // PUBLISH_OUTCOMES_ROOT overrides the evidence root (tests redirect to a
 // temp dir).
 //
-// Idempotent republish: generation_id derives from source_sha (the canonical
-// (path, sha256) list), so unchanged content yields the same generation_id.
+// Idempotent republish: generation_id derives from a SEMANTIC fingerprint of
+// source_sha plus the sorted persisted asset metadata (path, sha256, bytes,
+// content_type, source_as_of, privacy_class), so unchanged content AND
+// unchanged metadata yield the same generation_id, while a metadata-only
+// correction (identical payload bytes, different source_as_of — e.g. FRED
+// Banking's uniform source date -> per-asset dates) yields a NEW immutable
+// generation that reuses the content-addressed payload objects. source_sha
+// itself stays payload-only for dedupe/parity. created_at and other run
+// timestamps never enter identity; created_at-fallback families normalize
+// their dynamic acquisition-day source_as_of out of the fingerprint so
+// unchanged fallback content stays idempotent across runs.
 // When the live pointer already targets that generation we re-read the STORED
 // manifest and pass expectedPointerSequence = pointer.sequence - 1, which is
 // the only calling shape under which the contract's finalizeOrResumePromotion
@@ -582,9 +591,45 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = n
 // Build the generation manifest for a family from the files under absRoot,
 // recording asset paths relRoot-relative (they must satisfy the contract's
 // privacy prefixes, e.g. "data/" for private, "public/data/" for public).
-// Deterministic in content: identical file bytes always yield the same
-// generation_id. Enrollment is the explicit files argument, else the family
-// descriptor's files list, else a recursive walk of absRoot.
+// Deterministic in content AND persisted metadata: identical file bytes with
+// identical metadata always yield the same generation_id, and a metadata-only
+// change yields a NEW one (see generationSemanticFingerprint). Enrollment is
+// the explicit files argument, else the family descriptor's files list, else
+// a recursive walk of absRoot.
+//
+// Deterministic SEMANTIC generation identity: generation_id must identify the
+// PERSISTED manifest semantics, not just the payload bytes. The fingerprint
+// covers source_sha (payload-only, the dedupe/parity key) plus every persisted
+// per-asset metadata field — path, sha256, bytes, content_type, source_as_of,
+// privacy_class — so identical bytes with different metadata (the FRED
+// Banking uniform-date -> per-asset-date correction) produce different
+// generation ids and therefore a new immutable manifest key. Assets are
+// sorted by path inside the fingerprint so the id never depends on caller
+// ordering. created_at and other run timestamps are deliberately absent.
+// normalizeFallbackSourceAsOf: created_at-fallback families write the run's
+// acquisition day into every asset's source_as_of; that dynamic date must not
+// churn identity, so it is normalized to null (a contract-legal value) when
+// the origin is created_at-fallback. Unchanged fallback content then keeps a
+// stable, legacy-equivalent identity across days. All other origins are
+// content/config-determined and enter identity as-is.
+export function generationSemanticFingerprint({
+  sourceSha,
+  assets,
+  normalizeFallbackSourceAsOf = false,
+}) {
+  const rows = assets
+    .map((asset) => [
+      asset.path,
+      asset.sha256,
+      asset.bytes,
+      asset.content_type,
+      normalizeFallbackSourceAsOf ? null : asset.source_as_of,
+      asset.privacy_class,
+    ])
+    .sort((left, right) => left[0].localeCompare(right[0]));
+  return sha256Canonical([sourceSha, rows]);
+}
+
 export async function buildFamilyManifest({
   familyName,
   absRoot,
@@ -645,9 +690,14 @@ export async function buildFamilyManifest({
     }
   }
   const sourceSha = sha256Canonical(assets.map((asset) => [asset.path, asset.sha256]));
+  const fingerprint = generationSemanticFingerprint({
+    sourceSha,
+    assets,
+    normalizeFallbackSourceAsOf: sourceAsOf.origin === "created_at-fallback",
+  });
   const manifest = {
     schema_version: GENERATION_MANIFEST_SCHEMA,
-    generation_id: `${familyName}-${sourceSha.slice(0, 16)}`,
+    generation_id: `${familyName}-${fingerprint.slice(0, 16)}`,
     source_sha: sourceSha,
     created_at: createdAt,
     assets,
@@ -681,6 +731,49 @@ export function assertPublishReceiptId({ manifest, expectedPointerSequence, rece
     );
   }
   return computed;
+}
+
+// The source_as_of a persisted manifest actually carries: the conservative
+// minimum across its assets (uniform families -> that one value; per-asset
+// families -> the min; created_at-fallback -> the stored acquisition day).
+// Resume/report output MUST read the EFFECTIVE manifest (the one actually
+// published or resumed), never the locally rebuilt one: a resumed
+// created_at-fallback generation was stored on an earlier day, and claiming
+// the local build's newer date would be untruthful.
+export function effectiveSourceAsOf(manifest) {
+  const values = manifest.assets.map((asset) => asset.source_as_of).sort();
+  return values[0];
+}
+
+// Fail-closed guard between the locally built manifest and the effective one
+// (stored adoption or pointer resume). generation_id equality already implies
+// the truncated fingerprint matches; comparing the FULL fingerprint catches an
+// impossible divergence — a stale or foreign stored manifest whose id
+// collided — before any write or any summary claim. Only created_at and (for
+// fallback families) the stored acquisition day may differ; anything else is
+// EFFECTIVE_MANIFEST_SEMANTIC_MISMATCH.
+export function assertEffectiveManifestSemantics({
+  localManifest,
+  effectiveManifest,
+  normalizeFallbackSourceAsOf = false,
+}) {
+  const localFingerprint = generationSemanticFingerprint({
+    sourceSha: localManifest.source_sha,
+    assets: localManifest.assets,
+    normalizeFallbackSourceAsOf,
+  });
+  const effectiveFingerprint = generationSemanticFingerprint({
+    sourceSha: effectiveManifest.source_sha,
+    assets: effectiveManifest.assets,
+    normalizeFallbackSourceAsOf,
+  });
+  if (localFingerprint !== effectiveFingerprint) {
+    fail(
+      "EFFECTIVE_MANIFEST_SEMANTIC_MISMATCH",
+      `effective manifest ${effectiveManifest.generation_id} diverges from the locally built manifest`,
+    );
+  }
+  return effectiveFingerprint;
 }
 
 // Decide the expectedPointerSequence for publishGeneration from the live
@@ -1628,6 +1721,19 @@ async function main() {
       objectStore: plane.objectStore,
       ledger: plane.ledger,
     });
+    // Semantic identity guard + truthful metadata: the effective manifest
+    // (stored adoption / pointer resume) must carry the SAME persisted
+    // metadata the local build fingerprints — an impossible divergence fails
+    // closed before any write or summary claim. The reported source_as_of is
+    // read from the EFFECTIVE manifest, never the local rebuild (a resumed
+    // created_at-fallback generation was stored on an earlier day).
+    assertEffectiveManifestSemantics({
+      localManifest: manifest,
+      effectiveManifest: resolved.manifest,
+      normalizeFallbackSourceAsOf: sourceAsOf.origin === "created_at-fallback",
+    });
+    const effectiveAsOf = effectiveSourceAsOf(resolved.manifest);
+    outcomeState.sourceAsOf = effectiveAsOf;
     if (args.chaos === "stale-sequence" && resolved.resume) {
       fail("CHAOS_PRECONDITION", "stale-sequence needs a generation the pointer does not already target");
     }
@@ -1732,7 +1838,7 @@ async function main() {
       result: resolved.resume ? "resumed" : "published",
       generation_id: manifest.generation_id,
       source_sha: manifest.source_sha,
-      source_as_of: sourceAsOf.value,
+      source_as_of: effectiveAsOf,
       source_as_of_origin: sourceAsOf.origin,
       receipt_id: published.receipt.receipt_id,
       receipt_state: published.receipt.state,

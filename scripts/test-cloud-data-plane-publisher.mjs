@@ -26,6 +26,7 @@ import { createCloudflareCloudDataPlane } from "./lib/cloud-data-plane-cloudflar
 import { createR2RestBucket } from "./lib/cloud-data-plane-r2-rest.mjs";
 import { createRemoteCoordinatorNamespace } from "./lib/cloud-data-plane-remote-coordinator.mjs";
 import {
+  assertEffectiveManifestSemantics,
   assertPublishReceiptId,
   buildFamilyManifest,
   canRecordPublishOutcome,
@@ -36,8 +37,10 @@ import {
   computeRetentionPlan,
   deleteR2Object,
   deterministicPublishReceiptId,
+  effectiveSourceAsOf,
   executeRetentionPlan,
   FAMILIES,
+  generationSemanticFingerprint,
   listR2ObjectsDetailed,
   recordPublishOutcome,
   resolveExpectedPointerSequence,
@@ -188,7 +191,20 @@ const build = await buildFamilyManifest({
 const { manifest, payloads } = build;
 validateGenerationManifest(manifest);
 assert.match(manifest.generation_id, /^oecd-cli-[0-9a-f]{16}$/);
-assert.equal(manifest.generation_id, `oecd-cli-${manifest.source_sha.slice(0, 16)}`);
+assert.equal(
+  manifest.generation_id,
+  `oecd-cli-${generationSemanticFingerprint({
+    sourceSha: manifest.source_sha,
+    assets: manifest.assets,
+    // The fixture tree's index.json is not enrolled at the declared family
+    // path, so the build resolves created_at-fallback and the fingerprint
+    // normalizes the acquisition day out of identity.
+    normalizeFallbackSourceAsOf: true,
+  }).slice(0, 16)}`,
+);
+// Identity is SEMANTIC, not payload-only: the id no longer equals the
+// source_sha prefix (persisted metadata now participates).
+assert.notEqual(manifest.generation_id, `oecd-cli-${manifest.source_sha.slice(0, 16)}`);
 assert.equal(
   manifest.source_sha,
   sha256Canonical(manifest.assets.map((asset) => [asset.path, asset.sha256])),
@@ -813,7 +829,11 @@ try {
   assert.match(fredBuild.manifest.generation_id, /^fred-macro-[0-9a-f]{16}$/);
   assert.equal(
     fredBuild.manifest.generation_id,
-    `fred-macro-${fredBuild.manifest.source_sha.slice(0, 16)}`,
+    `fred-macro-${generationSemanticFingerprint({
+      sourceSha: fredBuild.manifest.source_sha,
+      assets: fredBuild.manifest.assets,
+      normalizeFallbackSourceAsOf: false,
+    }).slice(0, 16)}`,
   );
 
   // Publish through the plane: the contract must accept the public class and
@@ -1314,6 +1334,338 @@ try {
     "real-tree configuration ok (fred-banking per-file keys, FDIC max quarter, "
     + "and fred-yardeni max payload date agree with disk)",
   );
+}
+
+// --- semantic generation identity ------------------------------------------
+// generation_id must identify the PERSISTED manifest semantics: a metadata-only
+// correction (identical payload bytes, different source_as_of — the FRED
+// Banking uniform-date -> per-asset-date defect, run 31404108258) must publish
+// a NEW immutable generation instead of resuming the old receipt. source_sha
+// stays payload-only; created_at-fallback families must not churn; resumed
+// reports must read the effective manifest.
+{
+  const semanticRoot = await mkdtemp(path.join(os.tmpdir(), "cloud-data-plane-semantic-"));
+  try {
+    const macroDir = path.join(semanticRoot, "data/macro");
+    await mkdir(macroDir, { recursive: true });
+    // Payload bytes are FIXED across the whole scenario: the correction is
+    // metadata-only (source_as_of), exactly the confirmed defect.
+    const fredBytes = {
+      "fred-banking-daily.json": JSON.stringify({ updated: "2026-06-01T00:00:00.000Z", source_as_of: "2026-06-01" }),
+      "fred-banking-weekly.json": JSON.stringify({ updated: "2026-07-29T00:00:00.000Z", source_as_of: "2026-07-29" }),
+      "fred-banking-monthly.json": JSON.stringify({ updated: "2026-06-01T00:00:00.000Z", source_as_of: "2026-06-01" }),
+      "fred-banking-quarterly.json": JSON.stringify({ updated: "2025-10-01T00:00:00.000Z", source_as_of: "2025-10-01" }),
+    };
+    for (const [relative, text] of Object.entries(fredBytes)) {
+      await writeFile(path.join(macroDir, relative), text);
+    }
+    const corrected = await buildFamilyManifest({
+      familyName: "fred-banking",
+      absRoot: macroDir,
+      relRoot: "public/data/macro",
+      now: () => NOW_1,
+    });
+    const correctedId = corrected.manifest.generation_id;
+    assert.match(correctedId, /^fred-banking-[0-9a-f]{16}$/);
+    assert.equal(corrected.sourceAsOf.origin, "per-asset");
+
+    // The pre-fix live state: the same bytes with ONE uniform source date (the
+    // legacy descriptor read fred-banking-daily's "updated" for every asset)
+    // and the legacy payload-only id. Built as a valid manifest clone.
+    const uniform = {
+      ...corrected.manifest,
+      assets: corrected.manifest.assets.map((asset) => ({ ...asset, source_as_of: "2026-06-01" })),
+      generation_id: `fred-banking-${corrected.manifest.source_sha.slice(0, 16)}`,
+    };
+    validateGenerationManifest(uniform);
+
+    // source_sha is payload-only: identical bytes -> identical source_sha and
+    // identical content-addressed object keys (dedupe/parity preserved).
+    assert.equal(uniform.source_sha, corrected.manifest.source_sha);
+    assert.equal(
+      sha256Canonical(corrected.manifest.assets.map((asset) => [asset.path, asset.sha256])),
+      corrected.manifest.source_sha,
+    );
+    assert.deepEqual(
+      uniform.assets.map((asset) => asset.object_key).sort(),
+      corrected.manifest.assets.map((asset) => asset.object_key).sort(),
+    );
+    // The old payload-only identity COLLIDES on the correction (the defect);
+    // the new semantic identity separates the two metadata states.
+    assert.equal(uniform.generation_id, `fred-banking-${corrected.manifest.source_sha.slice(0, 16)}`);
+    assert.notEqual(correctedId, uniform.generation_id);
+    assert.notEqual(
+      generationSemanticFingerprint({ sourceSha: corrected.manifest.source_sha, assets: corrected.manifest.assets }),
+      generationSemanticFingerprint({ sourceSha: uniform.source_sha, assets: uniform.assets }),
+    );
+    // The same exact semantic manifest is deterministic across rebuilds:
+    // only created_at differs, the fingerprint and id do not.
+    const correctedRebuild = await buildFamilyManifest({
+      familyName: "fred-banking",
+      absRoot: macroDir,
+      relRoot: "public/data/macro",
+      now: () => NOW_2,
+    });
+    assert.notEqual(correctedRebuild.manifest.created_at, corrected.manifest.created_at);
+    assert.equal(correctedRebuild.manifest.generation_id, correctedId);
+
+    // Fresh plane with a counting object store (putIfAbsent semantics: only
+    // keys NOT already present count as writes, mirroring the R2 adapter).
+    const semanticPlane = createMemoryCloudDataPlane();
+    const writeCount = { puts: 0 };
+    const countingStore = {
+      async get(key) {
+        return semanticPlane.objectStore.get(key);
+      },
+      async putIfAbsent(key, bytes) {
+        const prior = await semanticPlane.objectStore.get(key);
+        if (prior !== null) return;
+        writeCount.puts += 1;
+        await semanticPlane.objectStore.putIfAbsent(key, bytes);
+      },
+    };
+    const semanticPolicy = {
+      max_assets: 16,
+      max_total_bytes: 3_600_000,
+      validate_freshness: () => true,
+      validate_public_payload: () => true,
+    };
+
+    // Step 1: the pre-fix live state is the active generation (pointer 1).
+    const legacyResolved = await resolveExpectedPointerSequence({
+      pointer: await semanticPlane.pointerStore.get(),
+      manifest: uniform,
+      objectStore: countingStore,
+    });
+    assert.equal(legacyResolved.resume, false);
+    assert.equal(legacyResolved.expectedPointerSequence, 0);
+    await publishGeneration({
+      manifest: legacyResolved.manifest,
+      payloads: corrected.payloads,
+      expectedPointerSequence: legacyResolved.expectedPointerSequence,
+      objectStore: countingStore,
+      ledger: semanticPlane.ledger,
+      pointerStore: semanticPlane.pointerStore,
+      policy: semanticPolicy,
+      now: () => NOW_1,
+    });
+    assert.equal((await semanticPlane.pointerStore.get()).sequence, 1);
+    // daily/monthly bytes are identical -> 3 unique payload objects + manifest.
+    assert.equal(writeCount.puts, 4);
+
+    // Step 2: the metadata-only correction PUBLISHES pointer 1 -> 2, writing
+    // only the new manifest object (payload objects reused).
+    const correctionResolved = await resolveExpectedPointerSequence({
+      pointer: await semanticPlane.pointerStore.get(),
+      manifest: corrected.manifest,
+      objectStore: countingStore,
+      ledger: semanticPlane.ledger,
+    });
+    assert.equal(correctionResolved.resume, false);
+    assert.equal(correctionResolved.expectedPointerSequence, 1);
+    const putsBeforeCorrection = writeCount.puts;
+    const correction = await publishGeneration({
+      manifest: correctionResolved.manifest,
+      payloads: corrected.payloads,
+      expectedPointerSequence: correctionResolved.expectedPointerSequence,
+      objectStore: countingStore,
+      ledger: semanticPlane.ledger,
+      pointerStore: semanticPlane.pointerStore,
+      policy: semanticPolicy,
+      now: () => NOW_2,
+    });
+    assert.equal(correction.pointer.sequence, 2);
+    assert.equal(correction.pointer.active.generation_id, correctedId);
+    assert.equal(correction.pointer.previous.generation_id, uniform.generation_id);
+    assert.equal(writeCount.puts - putsBeforeCorrection, 1); // manifest only
+    assertPublishReceiptId({
+      manifest: correctionResolved.manifest,
+      expectedPointerSequence: correctionResolved.expectedPointerSequence,
+      receipt: correction.receipt,
+    });
+
+    // Step 3: exact retry of the corrected generation (rebuilt manifest with a
+    // later created_at) RESUMES: pointer stays 2, zero writes, same receipt.
+    const retryResolved = await resolveExpectedPointerSequence({
+      pointer: await semanticPlane.pointerStore.get(),
+      manifest: correctedRebuild.manifest,
+      objectStore: countingStore,
+      ledger: semanticPlane.ledger,
+    });
+    assert.equal(retryResolved.resume, true);
+    assert.equal(retryResolved.expectedPointerSequence, 1);
+    assert.equal(retryResolved.manifest.generation_id, correctedId);
+    assert.equal(retryResolved.manifest.created_at, NOW_1); // stored manifest adopted
+    const putsBeforeRetry = writeCount.puts;
+    const retried = await publishGeneration({
+      manifest: retryResolved.manifest,
+      payloads: correctedRebuild.payloads,
+      expectedPointerSequence: retryResolved.expectedPointerSequence,
+      objectStore: countingStore,
+      ledger: semanticPlane.ledger,
+      pointerStore: semanticPlane.pointerStore,
+      policy: semanticPolicy,
+    });
+    assert.equal(retried.pointer.sequence, 2); // no advance
+    assert.equal(retried.receipt.receipt_id, correction.receipt.receipt_id); // same receipt resumed
+    assert.equal(writeCount.puts, putsBeforeRetry); // zero writes
+
+    // Old manifest is retained and rollback-capable: pointer.previous binds it
+    // and rollback restores it byte-exactly.
+    const oldManifestBytes = await semanticPlane.objectStore.get(`manifests/${uniform.generation_id}.json`);
+    assert.ok(oldManifestBytes instanceof Uint8Array);
+    assert.equal(
+      JSON.parse(new TextDecoder().decode(oldManifestBytes)).generation_id,
+      uniform.generation_id,
+    );
+    const rolledBack = await rollbackLiveGeneration({
+      objectStore: semanticPlane.objectStore,
+      ledger: semanticPlane.ledger,
+      pointerStore: semanticPlane.pointerStore,
+      now: () => NOW_3,
+    });
+    assert.equal(rolledBack.pointer.active.generation_id, uniform.generation_id);
+    assert.equal(rolledBack.pointer.previous.generation_id, correctedId);
+
+    // Truthful reporting: the effective (stored) manifest's metadata is what
+    // the summary must claim, and the semantic guard passes when the ONLY
+    // allowed differences are created_at / the fallback acquisition day.
+    assert.equal(effectiveSourceAsOf(corrected.manifest), corrected.sourceAsOf.value);
+    assert.deepEqual(
+      assertEffectiveManifestSemantics({
+        localManifest: correctedRebuild.manifest,
+        effectiveManifest: corrected.manifest,
+      }),
+      generationSemanticFingerprint({
+        sourceSha: corrected.manifest.source_sha,
+        assets: corrected.manifest.assets,
+      }),
+    );
+    // A stored manifest that diverges in ANY persisted metadata field with a
+    // colliding id fails closed (impossible semantic mismatch).
+    const foreign = {
+      ...corrected.manifest,
+      assets: corrected.manifest.assets.map((asset) => ({ ...asset, bytes: asset.bytes + 1 })),
+    };
+    assert.throws(
+      () => assertEffectiveManifestSemantics({
+        localManifest: corrected.manifest,
+        effectiveManifest: foreign,
+      }),
+      (error) => {
+        assert.equal(error.code, "EFFECTIVE_MANIFEST_SEMANTIC_MISMATCH");
+        return true;
+      },
+    );
+
+    // created_at-fallback families: the dynamic acquisition day must NOT enter
+    // semantic identity — unchanged fallback content stays idempotent across
+    // days, while the persisted manifests still carry their truthful days.
+    const fallbackDir = path.join(semanticRoot, "data/admin/oecd_cli");
+    await mkdir(fallbackDir, { recursive: true });
+    await writeFile(path.join(fallbackDir, "obs.json"), "{\"a\":1}\n");
+    const fallbackDay1 = await buildFamilyManifest({
+      familyName: "oecd-cli",
+      absRoot: fallbackDir,
+      relRoot: "data/admin/oecd_cli",
+      now: () => "2026-08-03T00:00:00.000Z",
+    });
+    const fallbackDay2 = await buildFamilyManifest({
+      familyName: "oecd-cli",
+      absRoot: fallbackDir,
+      relRoot: "data/admin/oecd_cli",
+      now: () => "2026-08-04T00:00:00.000Z",
+    });
+    assert.equal(fallbackDay1.sourceAsOf.origin, "created_at-fallback");
+    assert.equal(fallbackDay2.sourceAsOf.origin, "created_at-fallback");
+    assert.equal(fallbackDay1.manifest.assets[0].source_as_of, "2026-08-03");
+    assert.equal(fallbackDay2.manifest.assets[0].source_as_of, "2026-08-04");
+    assert.equal(fallbackDay1.manifest.generation_id, fallbackDay2.manifest.generation_id);
+    // Without the normalization the day WOULD churn (proves the normalization
+    // is what keeps fallback identity stable).
+    assert.notEqual(
+      generationSemanticFingerprint({
+        sourceSha: fallbackDay1.manifest.source_sha,
+        assets: fallbackDay1.manifest.assets,
+      }),
+      generationSemanticFingerprint({
+        sourceSha: fallbackDay2.manifest.source_sha,
+        assets: fallbackDay2.manifest.assets,
+      }),
+    );
+
+    // Publish on day 1; the day-2 rebuild (same content) must RESUME with zero
+    // writes, and the reported source_as_of must be the STORED day-1 date, not
+    // the local day-2 date.
+    const fallbackPlane = createMemoryCloudDataPlane();
+    const fallbackCount = { puts: 0 };
+    const fallbackCountingStore = {
+      async get(key) {
+        return fallbackPlane.objectStore.get(key);
+      },
+      async putIfAbsent(key, bytes) {
+        const prior = await fallbackPlane.objectStore.get(key);
+        if (prior !== null) return;
+        fallbackCount.puts += 1;
+        await fallbackPlane.objectStore.putIfAbsent(key, bytes);
+      },
+    };
+    const fallbackResolved1 = await resolveExpectedPointerSequence({
+      pointer: await fallbackPlane.pointerStore.get(),
+      manifest: fallbackDay1.manifest,
+      objectStore: fallbackCountingStore,
+    });
+    assert.equal(fallbackResolved1.resume, false);
+    await publishGeneration({
+      manifest: fallbackResolved1.manifest,
+      payloads: fallbackDay1.payloads,
+      expectedPointerSequence: fallbackResolved1.expectedPointerSequence,
+      objectStore: fallbackCountingStore,
+      ledger: fallbackPlane.ledger,
+      pointerStore: fallbackPlane.pointerStore,
+      policy: POLICY,
+      now: () => "2026-08-03T00:00:00.000Z",
+    });
+    assert.equal((await fallbackPlane.pointerStore.get()).sequence, 1);
+    assert.equal(fallbackCount.puts, 2); // 1 payload + 1 manifest
+
+    const fallbackResolved2 = await resolveExpectedPointerSequence({
+      pointer: await fallbackPlane.pointerStore.get(),
+      manifest: fallbackDay2.manifest,
+      objectStore: fallbackCountingStore,
+      ledger: fallbackPlane.ledger,
+    });
+    assert.equal(fallbackResolved2.resume, true);
+    assert.equal(fallbackResolved2.expectedPointerSequence, 0);
+    assertEffectiveManifestSemantics({
+      localManifest: fallbackDay2.manifest,
+      effectiveManifest: fallbackResolved2.manifest,
+      normalizeFallbackSourceAsOf: true,
+    });
+    assert.equal(effectiveSourceAsOf(fallbackResolved2.manifest), "2026-08-03");
+    assert.notEqual(
+      effectiveSourceAsOf(fallbackResolved2.manifest),
+      fallbackDay2.manifest.assets[0].source_as_of,
+    );
+    await publishGeneration({
+      manifest: fallbackResolved2.manifest,
+      payloads: fallbackDay2.payloads,
+      expectedPointerSequence: fallbackResolved2.expectedPointerSequence,
+      objectStore: fallbackCountingStore,
+      ledger: fallbackPlane.ledger,
+      pointerStore: fallbackPlane.pointerStore,
+      policy: POLICY,
+    });
+    assert.equal((await fallbackPlane.pointerStore.get()).sequence, 1); // resumed, no advance
+    assert.equal(fallbackCount.puts, 2); // zero writes
+    console.log(
+      "semantic generation identity ok (same bytes -> same source_sha, different ids; "
+      + "correction publishes pointer advance reusing payloads; exact retry resumes with zero writes; "
+      + "fallback stable across days; reports read the effective manifest)",
+    );
+  } finally {
+    await rm(semanticRoot, { recursive: true, force: true });
+  }
 }
 
 // --- retention planner: the five mandated cases (offline, fabricated state) ---
