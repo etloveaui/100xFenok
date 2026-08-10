@@ -119,3 +119,12 @@ jobs:
           done
           echo "git push failed after retrying concurrent main updates"
           exit 1
+      - name: Publish yahoo-ticker-macro generation to the cloud data plane
+        if: ${{ steps.fetch_yahoo.outcome == 'success' }}
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: node scripts/publish-cloud-data-generation.mjs --family=yahoo-ticker-macro --tolerate-gate-block --json

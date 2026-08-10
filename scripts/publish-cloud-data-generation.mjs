@@ -170,6 +170,197 @@ export const FAMILIES = {
       return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
     },
   },
+  "defillama-stablecoins": {
+    root: "data/macro",
+    manifest_prefix: "public/data/macro",
+    files: ["stablecoins.json"],
+    privacy_class: "public",
+    source_as_of: { key: "updated" },
+    plan: { class_a: 10, bytes: 2_200_000 },
+    policy: { max_assets: 4, max_total_bytes: 4_400_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
+  "fdic-tier1": {
+    root: "data/macro",
+    manifest_prefix: "public/data/macro",
+    files: ["fdic-tier1.json"],
+    privacy_class: "public",
+    source_as_of: { key: "updated" },
+    plan: { class_a: 10, bytes: 1_100_000 },
+    policy: { max_assets: 4, max_total_bytes: 25_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
+  "treasury-tga": {
+    root: "data/macro",
+    manifest_prefix: "public/data/macro",
+    files: ["tga.json"],
+    privacy_class: "public",
+    source_as_of: { key: "updated" },
+    plan: { class_a: 10, bytes: 1_600_000 },
+    policy: { max_assets: 4, max_total_bytes: 3_200_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
+  "fred-banking": {
+    root: "data/macro",
+    manifest_prefix: "public/data/macro",
+    files: ["fred-banking-daily.json","fred-banking-weekly.json","fred-banking-monthly.json","fred-banking-quarterly.json"],
+    privacy_class: "public",
+    source_as_of: { file: "fred-banking-daily.json", key: "updated" },
+    plan: { class_a: 10, bytes: 1_800_000 },
+    policy: { max_assets: 16, max_total_bytes: 3_600_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
+  "fred-yardeni": {
+    root: "data/yardney",
+    manifest_prefix: "public/data/yardney",
+    files: ["yardney_model.json"],
+    privacy_class: "public",
+    plan: { class_a: 10, bytes: 1_100_000 },
+    policy: { max_assets: 4, max_total_bytes: 1_300_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
+  "damodaran": {
+    root: "data/damodaran",
+    manifest_prefix: "public/data/damodaran",
+    files: ["industries.json","historical_erp.json","credit_ratings.json","erp.json","industry_metrics.json","industry_metrics_regions.json"],
+    privacy_class: "public",
+    plan: { class_a: 12, bytes: 9_800_000 },
+    policy: { max_assets: 24, max_total_bytes: 19_500_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
+  "sentiment": {
+    root: "data/sentiment",
+    manifest_prefix: "public/data/sentiment",
+    files: ["aaii.json","cftc-sp500.json","cnn-breadth.json","cnn-components.json","cnn-fear-greed.json","cnn-junk-bond.json","cnn-momentum.json","cnn-put-call.json","cnn-safe-haven.json","cnn-strength.json","crypto-fear-greed.json","move.json","schema.json","vix.json"],
+    privacy_class: "public",
+    plan: { class_a: 28, bytes: 3_500_000 },
+    policy: { max_assets: 56, max_total_bytes: 7_000_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
+  "edgar-korean-summaries": {
+    root: "data/edgar-korean-summaries",
+    manifest_prefix: "public/data/edgar-korean-summaries",
+    privacy_class: "public",
+    source_as_of: { file: "index.json", key: "updated" },
+    plan: { class_a: 3690, bytes: 29_900_000 },
+    policy: { max_assets: 7380, max_total_bytes: 59_800_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
+  "yahoo-ticker-macro": {
+    root: "data/macro",
+    manifest_prefix: "public/data/macro",
+    files: ["yahoo-ticker.json"],
+    privacy_class: "public",
+    source_as_of: { key: "updated" },
+    plan: { class_a: 10, bytes: 1_100_000 },
+    policy: { max_assets: 4, max_total_bytes: 3_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
+  "nasdaq-giw-sox": {
+    root: "data/indices",
+    manifest_prefix: "public/data/indices",
+    files: ["nasdaq-giw-sox-constituents.json"],
+    privacy_class: "public",
+    source_as_of: { key: "as_of" },
+    plan: { class_a: 10, bytes: 1_100_000 },
+    policy: { max_assets: 4, max_total_bytes: 16_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
+  "slickcharts-daily": {
+    root: "data/slickcharts",
+    manifest_prefix: "public/data/slickcharts",
+    files: ["gainers.json","losers.json","treasury.json","currency.json","mortgage.json"],
+    privacy_class: "public",
+    source_as_of: { file: "gainers.json", key: "updated" },
+    plan: { class_a: 10, bytes: 15_900_000 },
+    policy: { max_assets: 20, max_total_bytes: 31_800_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
+  "slickcharts-weekly": {
+    root: "data/slickcharts",
+    manifest_prefix: "public/data/slickcharts",
+    files: ["sp500.json","magnificent7.json","etf.json","berkshire.json"],
+    privacy_class: "public",
+    source_as_of: { file: "sp500.json", key: "updated" },
+    plan: { class_a: 10, bytes: 1_100_000 },
+    policy: { max_assets: 16, max_total_bytes: 450_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
+  "slickcharts-monthly": {
+    root: "data/slickcharts",
+    manifest_prefix: "public/data/slickcharts",
+    files: ["sp500-returns.json","sp500-returns-details.json","nasdaq100-returns.json","dowjones-returns.json","sp500-drawdown.json","btc-returns.json","eth-returns.json","sp500-performance.json","nasdaq100-performance.json","dowjones-performance.json","sp500-yield.json","nasdaq100-yield.json","dowjones-yield.json","sp500-analysis.json","nasdaq100-analysis.json","dowjones-analysis.json","sp500-marketcap.json","nasdaq100-ratio.json","nasdaq100.json","dowjones.json","inflation.json"],
+    privacy_class: "public",
+    source_as_of: { file: "sp500-returns.json", key: "updated" },
+    plan: { class_a: 42, bytes: 1_600_000 },
+    policy: { max_assets: 84, max_total_bytes: 3_200_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
+  "slickcharts-history": {
+    root: "data/slickcharts",
+    manifest_prefix: "public/data/slickcharts",
+    files: ["stocks-returns.json","stocks-dividends.json","stocks-dividends-recent.json","stocks-dividends-historical.json","stocks/A.json","stocks/AAPL.json","stocks/ABBV.json","stocks/ABNB.json","stocks/ABT.json","stocks/ACGL.json","stocks/ACN.json","stocks/ADBE.json","stocks/ADI.json","stocks/ADM.json","stocks/ADP.json","stocks/ADSK.json","stocks/AEE.json","stocks/AEP.json","stocks/AES.json","stocks/AFL.json","stocks/AIG.json","stocks/AIZ.json","stocks/AJG.json","stocks/AKAM.json","stocks/ALAB.json","stocks/ALB.json","stocks/ALGN.json","stocks/ALL.json","stocks/ALLE.json","stocks/ALNY.json","stocks/AMAT.json","stocks/AMCR.json","stocks/AMD.json","stocks/AME.json","stocks/AMGN.json","stocks/AMP.json","stocks/AMT.json","stocks/AMZN.json","stocks/ANET.json","stocks/AON.json","stocks/AOS.json","stocks/APA.json","stocks/APD.json","stocks/APH.json","stocks/APO.json","stocks/APP.json","stocks/APTV.json","stocks/ARE.json","stocks/ARES.json","stocks/ARM.json","stocks/ASML.json","stocks/ATO.json","stocks/AVB.json","stocks/AVGO.json","stocks/AVY.json","stocks/AWK.json","stocks/AXON.json","stocks/AXP.json","stocks/AZN.json","stocks/AZO.json","stocks/BA.json","stocks/BAC.json","stocks/BALL.json","stocks/BAX.json","stocks/BBY.json","stocks/BDX.json","stocks/BEN.json","stocks/BF.B.json","stocks/BG.json","stocks/BIIB.json","stocks/BK.json","stocks/BKNG.json","stocks/BKR.json","stocks/BLDR.json","stocks/BLK.json","stocks/BMY.json","stocks/BNY.json","stocks/BR.json","stocks/BRK.B.json","stocks/BRO.json","stocks/BSX.json","stocks/BX.json","stocks/BXP.json","stocks/C.json","stocks/CAG.json","stocks/CAH.json","stocks/CARR.json","stocks/CASY.json","stocks/CAT.json","stocks/CB.json","stocks/CBOE.json","stocks/CBRE.json","stocks/CCEP.json","stocks/CCI.json","stocks/CCL.json","stocks/CDNS.json","stocks/CDW.json","stocks/CEG.json","stocks/CF.json","stocks/CFG.json","stocks/CHD.json","stocks/CHRW.json","stocks/CHTR.json","stocks/CI.json","stocks/CIEN.json","stocks/CINF.json","stocks/CL.json","stocks/CLX.json","stocks/CMCSA.json","stocks/CME.json","stocks/CMG.json","stocks/CMI.json","stocks/CMS.json","stocks/CNC.json","stocks/CNP.json","stocks/COF.json","stocks/COHR.json","stocks/COIN.json","stocks/COO.json","stocks/COP.json","stocks/COR.json","stocks/COST.json","stocks/CPAY.json","stocks/CPB.json","stocks/CPRT.json","stocks/CPT.json","stocks/CRH.json","stocks/CRL.json","stocks/CRM.json","stocks/CRWD.json","stocks/CRWV.json","stocks/CSCO.json","stocks/CSGP.json","stocks/CSX.json","stocks/CTAS.json","stocks/CTRA.json","stocks/CTSH.json","stocks/CTVA.json","stocks/CVNA.json","stocks/CVS.json","stocks/CVX.json","stocks/D.json","stocks/DAL.json","stocks/DASH.json","stocks/DAY.json","stocks/DD.json","stocks/DDOG.json","stocks/DE.json","stocks/DECK.json","stocks/DELL.json","stocks/DG.json","stocks/DGX.json","stocks/DHI.json","stocks/DHR.json","stocks/DIS.json","stocks/DLR.json","stocks/DLTR.json","stocks/DOC.json","stocks/DOV.json","stocks/DOW.json","stocks/DPZ.json","stocks/DRI.json","stocks/DTE.json","stocks/DUK.json","stocks/DVA.json","stocks/DVN.json","stocks/DXCM.json","stocks/EA.json","stocks/EBAY.json","stocks/ECHO.json","stocks/ECL.json","stocks/ED.json","stocks/EFX.json","stocks/EG.json","stocks/EIX.json","stocks/EL.json","stocks/ELV.json","stocks/EME.json","stocks/EMR.json","stocks/EOG.json","stocks/EPAM.json","stocks/EQIX.json","stocks/EQR.json","stocks/EQT.json","stocks/ERIE.json","stocks/ES.json","stocks/ESS.json","stocks/ETN.json","stocks/ETR.json","stocks/EVRG.json","stocks/EW.json","stocks/EXC.json","stocks/EXE.json","stocks/EXPD.json","stocks/EXPE.json","stocks/EXR.json","stocks/F.json","stocks/FANG.json","stocks/FAST.json","stocks/FCX.json","stocks/FDS.json","stocks/FDX.json","stocks/FDXF.json","stocks/FE.json","stocks/FER.json","stocks/FERG.json","stocks/FFIV.json","stocks/FICO.json","stocks/FIS.json","stocks/FISV.json","stocks/FITB.json","stocks/FIX.json","stocks/FLEX.json","stocks/FOX.json","stocks/FOXA.json","stocks/FRT.json","stocks/FSLR.json","stocks/FTNT.json","stocks/FTV.json","stocks/GD.json","stocks/GDDY.json","stocks/GE.json","stocks/GEHC.json","stocks/GEN.json","stocks/GEV.json","stocks/GFS.json","stocks/GILD.json","stocks/GIS.json","stocks/GL.json","stocks/GLW.json","stocks/GM.json","stocks/GNRC.json","stocks/GOOG.json","stocks/GOOGL.json","stocks/GPC.json","stocks/GPN.json","stocks/GRMN.json","stocks/GS.json","stocks/GWW.json","stocks/HAL.json","stocks/HAS.json","stocks/HBAN.json","stocks/HCA.json","stocks/HD.json","stocks/HIG.json","stocks/HII.json","stocks/HLT.json","stocks/HOLX.json","stocks/HON.json","stocks/HONA.json","stocks/HOOD.json","stocks/HPE.json","stocks/HPQ.json","stocks/HRL.json","stocks/HSIC.json","stocks/HST.json","stocks/HSY.json","stocks/HUBB.json","stocks/HUM.json","stocks/HWM.json","stocks/IBKR.json","stocks/IBM.json","stocks/ICE.json","stocks/IDXX.json","stocks/IEX.json","stocks/IFF.json","stocks/INCY.json","stocks/INSM.json","stocks/INTC.json","stocks/INTU.json","stocks/INVH.json","stocks/IP.json","stocks/IQV.json","stocks/IR.json","stocks/IRM.json","stocks/ISRG.json","stocks/IT.json","stocks/ITW.json","stocks/IVZ.json","stocks/J.json","stocks/JBHT.json","stocks/JBL.json","stocks/JCI.json","stocks/JKHY.json","stocks/JNJ.json","stocks/JPM.json","stocks/KDP.json","stocks/KEY.json","stocks/KEYS.json","stocks/KHC.json","stocks/KIM.json","stocks/KKR.json","stocks/KLAC.json","stocks/KMB.json","stocks/KMI.json","stocks/KO.json","stocks/KR.json","stocks/KVUE.json","stocks/L.json","stocks/LDOS.json","stocks/LEN.json","stocks/LH.json","stocks/LHX.json","stocks/LII.json","stocks/LIN.json","stocks/LITE.json","stocks/LLY.json","stocks/LMT.json","stocks/LNT.json","stocks/LOW.json","stocks/LRCX.json","stocks/LULU.json","stocks/LUV.json","stocks/LVS.json","stocks/LW.json","stocks/LYB.json","stocks/LYV.json","stocks/MA.json","stocks/MAA.json","stocks/MAR.json","stocks/MAS.json","stocks/MCD.json","stocks/MCHP.json","stocks/MCK.json","stocks/MCO.json","stocks/MDLZ.json","stocks/MDT.json","stocks/MELI.json","stocks/MET.json","stocks/META.json","stocks/MGM.json","stocks/MKC.json","stocks/MLM.json","stocks/MMC.json","stocks/MMM.json","stocks/MNST.json","stocks/MO.json","stocks/MOH.json","stocks/MOS.json","stocks/MPC.json","stocks/MPWR.json","stocks/MRK.json","stocks/MRNA.json","stocks/MRSH.json","stocks/MRVL.json","stocks/MS.json","stocks/MSCI.json","stocks/MSFT.json","stocks/MSI.json","stocks/MSTR.json","stocks/MTB.json","stocks/MTCH.json","stocks/MTD.json","stocks/MU.json","stocks/NBIS.json","stocks/NCLH.json","stocks/NDAQ.json","stocks/NDSN.json","stocks/NEE.json","stocks/NEM.json","stocks/NFLX.json","stocks/NI.json","stocks/NKE.json","stocks/NOC.json","stocks/NOW.json","stocks/NRG.json","stocks/NSC.json","stocks/NTAP.json","stocks/NTRS.json","stocks/NUE.json","stocks/NVDA.json","stocks/NVR.json","stocks/NWS.json","stocks/NWSA.json","stocks/NXPI.json","stocks/O.json","stocks/ODFL.json","stocks/OKE.json","stocks/OMC.json","stocks/ON.json","stocks/ORCL.json","stocks/ORLY.json","stocks/OTIS.json","stocks/OXY.json","stocks/PANW.json","stocks/PAYC.json","stocks/PAYX.json","stocks/PCAR.json","stocks/PCG.json","stocks/PDD.json","stocks/PEG.json","stocks/PEP.json","stocks/PFE.json","stocks/PFG.json","stocks/PG.json","stocks/PGR.json","stocks/PH.json","stocks/PHM.json","stocks/PKG.json","stocks/PLD.json","stocks/PLTR.json","stocks/PM.json","stocks/PNC.json","stocks/PNR.json","stocks/PNW.json","stocks/PODD.json","stocks/POOL.json","stocks/PPG.json","stocks/PPL.json","stocks/PRU.json","stocks/PSA.json","stocks/PSKY.json","stocks/PSX.json","stocks/PTC.json","stocks/PWR.json","stocks/PYPL.json","stocks/Q.json","stocks/QCOM.json","stocks/RCL.json","stocks/REG.json","stocks/REGN.json","stocks/RF.json","stocks/RJF.json","stocks/RKLB.json","stocks/RL.json","stocks/RMD.json","stocks/ROK.json","stocks/ROL.json","stocks/ROP.json","stocks/ROST.json","stocks/RSG.json","stocks/RTX.json","stocks/RVTY.json","stocks/SATS.json","stocks/SBAC.json","stocks/SBUX.json","stocks/SCHW.json","stocks/SHOP.json","stocks/SHW.json","stocks/SJM.json","stocks/SLB.json","stocks/SMCI.json","stocks/SNA.json","stocks/SNDK.json","stocks/SNPS.json","stocks/SO.json","stocks/SOLV.json","stocks/SPCX.json","stocks/SPG.json","stocks/SPGI.json","stocks/SRE.json","stocks/STE.json","stocks/STLD.json","stocks/STT.json","stocks/STX.json","stocks/STZ.json","stocks/SW.json","stocks/SWK.json","stocks/SWKS.json","stocks/SYF.json","stocks/SYK.json","stocks/SYY.json","stocks/T.json","stocks/TAP.json","stocks/TDG.json","stocks/TDY.json","stocks/TEAM.json","stocks/TECH.json","stocks/TEL.json","stocks/TER.json","stocks/TFC.json","stocks/TGT.json","stocks/TJX.json","stocks/TKO.json","stocks/TMO.json","stocks/TMUS.json","stocks/TPL.json","stocks/TPR.json","stocks/TRGP.json","stocks/TRI.json","stocks/TRMB.json","stocks/TROW.json","stocks/TRV.json","stocks/TSCO.json","stocks/TSLA.json","stocks/TSN.json","stocks/TT.json","stocks/TTD.json","stocks/TTWO.json","stocks/TXN.json","stocks/TXT.json","stocks/TYL.json","stocks/UAL.json","stocks/UBER.json","stocks/UDR.json","stocks/UHS.json","stocks/ULTA.json","stocks/UNH.json","stocks/UNP.json","stocks/UPS.json","stocks/URI.json","stocks/USB.json","stocks/V.json","stocks/VEEV.json","stocks/VICI.json","stocks/VLO.json","stocks/VLTO.json","stocks/VMC.json","stocks/VRSK.json","stocks/VRSN.json","stocks/VRT.json","stocks/VRTX.json","stocks/VST.json","stocks/VTR.json","stocks/VTRS.json","stocks/VZ.json","stocks/WAB.json","stocks/WAT.json","stocks/WBD.json","stocks/WDAY.json","stocks/WDC.json","stocks/WEC.json","stocks/WELL.json","stocks/WFC.json","stocks/WM.json","stocks/WMB.json","stocks/WMT.json","stocks/WRB.json","stocks/WSM.json","stocks/WST.json","stocks/WTW.json","stocks/WY.json","stocks/WYNN.json","stocks/XEL.json","stocks/XOM.json","stocks/XYL.json","stocks/XYZ.json","stocks/YUM.json","stocks/ZBH.json","stocks/ZBRA.json","stocks/ZS.json","stocks/ZTS.json"],
+    privacy_class: "public",
+    source_as_of: { file: "stocks-returns.json", key: "updated" },
+    plan: { class_a: 1084, bytes: 17_300_000 },
+    policy: { max_assets: 2168, max_total_bytes: 34_500_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
+  "slickcharts-symbols": {
+    root: "data/slickcharts",
+    manifest_prefix: "public/data/slickcharts",
+    files: ["symbols.json","symbols-all.json"],
+    privacy_class: "public",
+    source_as_of: { file: "symbols.json", key: "updated" },
+    plan: { class_a: 10, bytes: 10_900_000 },
+    policy: { max_assets: 8, max_total_bytes: 21_700_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
 };
 
 const CONTENT_TYPES = {
