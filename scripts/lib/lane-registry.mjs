@@ -374,7 +374,7 @@ const lanes = [
     admin_store: "data/admin/stockanalysis-recovery",
     detection_attempt: attemptShard("stockanalysis_stock_financial"),
     canonical_outputs: ["data/stockanalysis/stocks", "data/stockanalysis/financials"],
-    public_mirror: [],
+    public_mirror: ["100xfenok-next/public/data/stockanalysis/stocks", "100xfenok-next/public/data/stockanalysis/financials"],
     commit_shards: [
       attemptShard("stockanalysis_stock_financial"),
       "data/stockanalysis",
@@ -460,7 +460,7 @@ const lanes = [
     admin_store: "data/admin/sentiment",
     detection_attempt: attemptShard("sentiment"),
     canonical_outputs: ["data/sentiment"],
-    public_mirror: [],
+    public_mirror: ["100xfenok-next/public/data/sentiment"],
     commit_shards: [
       attemptShard("sentiment"),
       "data/admin/sentiment/index.json",
@@ -685,7 +685,7 @@ const lanes = [
       "data/edgar",
       "data/edgar-korean-summaries",
     ],
-    public_mirror: [],
+    public_mirror: ["100xfenok-next/public/data/edgar-korean-summaries"],
     commit_shards: [
       attemptShard("edgar_filings"),
       "data/admin/edgar_filings/index.json",
