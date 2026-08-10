@@ -122,41 +122,44 @@
       "run_id": "31393796703",
       "schedule": "7 12 * * 0-5",
       "shard": "18/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 808,
+      "natural": true,
+      "observed_at": "2026-08-10T19:09:16Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31422533403",
+      "schedule": "7 18 * * 0-5",
+      "shard": "21/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T07:09:53Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AMHI.json",
-    "payload_sha256": "1c078422cefe921d56e90cda5fd606481b67e07327251812ab624d4a3a58ade1",
-    "quote_as_of": "2026-07-01T13:38:54Z",
-    "source_as_of": "2026-07-01T13:38:54Z"
+    "fetched_at": "2026-08-10T19:10:01Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/AMHI.json",
+    "payload_sha256": "db4f3a0120404448f01042c39b4c8b7d0bec0aa91a946b2a51f82a77aa9461ca",
+    "quote_as_of": "2026-08-10T13:46:01Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 453,
+    "latency_ms": 808,
     "natural": true,
-    "observed_at": "2026-08-10T13:38:56Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-10T19:09:16Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31393796703",
-    "schedule": "7 12 * * 0-5",
-    "shard": "18/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T13:38:56Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-07-01T13:38:54Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31393796703"
+    "run_id": "31422533403",
+    "schedule": "7 18 * * 0-5",
+    "shard": "21/72"
   },
   "lkg": {
     "fetched_at": "2026-08-09T07:09:53Z",
@@ -169,17 +172,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T07:09:35Z",
-    "payload_sha256": "1288fec65fa4b6c8a8427885e339035cb4b24775a2c399bb349fc644ad3ba086",
-    "quote_as_of": "2026-07-01T13:38:54Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T19:09:16Z",
+    "payload_sha256": "abe0e6482649dd44957bd4cffae8f7d3c6824fef920fe10a94fd92afebb9a682",
+    "quote_as_of": "2026-08-10T13:46:01Z",
     "run_attempt": 1,
-    "run_id": "31300442711",
+    "run_id": "31422533403",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-01T13:38:54Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 26,
@@ -192,5 +195,5 @@
     "source_as_of": "2026-07-01T13:38:54Z"
   },
   "ticker": "AMHI",
-  "updated_at": "2026-08-10T13:38:56Z"
+  "updated_at": "2026-08-10T19:09:16Z"
 }

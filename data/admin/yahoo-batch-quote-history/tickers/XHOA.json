@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 483,
-      "natural": true,
-      "observed_at": "2026-07-15T00:10:40Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29378156187",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 734,
       "natural": true,
       "observed_at": "2026-07-16T00:13:37Z",
@@ -217,32 +204,44 @@
       "run_id": "31393796703",
       "schedule": "7 12 * * 0-5",
       "shard": "18/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 827,
+      "natural": true,
+      "observed_at": "2026-08-10T19:09:16Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31422533403",
+      "schedule": "7 18 * * 0-5",
+      "shard": "21/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T03:53:25Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XHOA.json",
-    "payload_sha256": "37ec6fddaab93b2381a4be9ac1a3c03390d8b7c9bdc73de68fc62ee1e3af9daf",
-    "quote_as_of": "2026-07-27T17:03:19Z",
-    "source_as_of": "2026-07-27T17:03:19Z"
+    "fetched_at": "2026-08-10T19:11:01Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/XHOA.json",
+    "payload_sha256": "74d6e52faaa6cff28fb0b22012b4b28e73ea2173a08e8129b8c73528b5ee8207",
+    "quote_as_of": "2026-08-10T13:46:08Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 459,
+    "latency_ms": 827,
     "natural": true,
-    "observed_at": "2026-08-10T13:38:56Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-10T19:09:16Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31393796703",
-    "schedule": "7 12 * * 0-5",
-    "shard": "18/72"
+    "run_id": "31422533403",
+    "schedule": "7 18 * * 0-5",
+    "shard": "21/72"
   },
   "last_recovered_failure": {
     "attempts_used": 2,
@@ -286,15 +285,6 @@
     "run_attempt": 1,
     "run_id": "29544227703"
   },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T13:38:56Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-07-27T17:03:19Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31393796703"
-  },
   "lkg": {
     "fetched_at": "2026-08-09T03:53:25Z",
     "history_as_of": "2026-08-07",
@@ -306,22 +296,22 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T03:52:19Z",
-    "payload_sha256": "f5036f5c4ca0a293ffc4c42da0a3a61fadf958a69e982f697b76ccb22c887c0e",
-    "quote_as_of": "2026-07-27T17:03:19Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T19:09:16Z",
+    "payload_sha256": "c2397986fefe97afdaa040490472a855ff2246b22f355c3b8aaa81373cf57507",
+    "quote_as_of": "2026-08-10T13:46:08Z",
     "run_attempt": 1,
-    "run_id": "31293276520",
+    "run_id": "31422533403",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-27T17:03:19Z"
+    "source_as_of": "2026-08-10"
   },
   "recovered_at": "2026-07-18T00:37:10Z",
   "recovered_from_run_id": "29544227703",
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
   "recovery_run_id": "29622560422",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -334,5 +324,5 @@
     "source_as_of": "2026-07-27T17:03:19Z"
   },
   "ticker": "XHOA",
-  "updated_at": "2026-08-10T13:38:56Z"
+  "updated_at": "2026-08-10T19:09:16Z"
 }

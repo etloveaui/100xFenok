@@ -173,41 +173,44 @@
       "run_id": "31393796703",
       "schedule": "7 12 * * 0-5",
       "shard": "18/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 767,
+      "natural": true,
+      "observed_at": "2026-08-10T19:09:16Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31422533403",
+      "schedule": "7 18 * * 0-5",
+      "shard": "21/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T03:53:11Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TAJX.json",
-    "payload_sha256": "9f6216f51a4e6821f599cd4e5a5187e89f273632643cff5a9a68edf251e6b2c9",
-    "quote_as_of": "2026-06-29T19:00:29Z",
-    "source_as_of": "2026-06-29T19:00:29Z"
+    "fetched_at": "2026-08-10T19:10:52Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/TAJX.json",
+    "payload_sha256": "7f74e9c5f020f6ad09c1389324048c1c4b71815790ed3fcf5096ca461c9cb761",
+    "quote_as_of": "2026-08-10T13:46:07Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 595,
+    "latency_ms": 767,
     "natural": true,
-    "observed_at": "2026-08-10T13:38:56Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-10T19:09:16Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31393796703",
-    "schedule": "7 12 * * 0-5",
-    "shard": "18/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T13:38:56Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-06-29T19:00:29Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31393796703"
+    "run_id": "31422533403",
+    "schedule": "7 18 * * 0-5",
+    "shard": "21/72"
   },
   "lkg": {
     "fetched_at": "2026-08-09T03:53:11Z",
@@ -220,17 +223,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T03:52:19Z",
-    "payload_sha256": "1c900a931c5ed256ee11654d9e727b0f0d44850b8056f3fc4a0b862ffd7e292a",
-    "quote_as_of": "2026-06-29T19:00:29Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T19:09:16Z",
+    "payload_sha256": "f15dbc9065c2d1864caffe378e9984582e52c1659542bd32d0458ba07f85ab32",
+    "quote_as_of": "2026-08-10T13:46:07Z",
     "run_attempt": 1,
-    "run_id": "31293276520",
+    "run_id": "31422533403",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-06-29T19:00:29Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 28,
@@ -243,5 +246,5 @@
     "source_as_of": "2026-06-29T19:00:29Z"
   },
   "ticker": "TAJX",
-  "updated_at": "2026-08-10T13:38:56Z"
+  "updated_at": "2026-08-10T19:09:16Z"
 }

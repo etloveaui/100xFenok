@@ -122,41 +122,44 @@
       "run_id": "31393796703",
       "schedule": "7 12 * * 0-5",
       "shard": "18/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 880,
+      "natural": true,
+      "observed_at": "2026-08-10T19:09:16Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31422533403",
+      "schedule": "7 18 * * 0-5",
+      "shard": "21/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T07:09:59Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CLOO.json",
-    "payload_sha256": "c67e7718104186a54ac88e8075b5dac1f0071d6db6178319a0a58dd2a19f6cb8",
-    "quote_as_of": "2026-07-23T19:46:04Z",
-    "source_as_of": "2026-07-23T19:46:04Z"
+    "fetched_at": "2026-08-10T19:10:21Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/CLOO.json",
+    "payload_sha256": "20f3563aa31d91f3645e11d1e4f8c83dddb38ed549246739f3df2d2ae94e8a97",
+    "quote_as_of": "2026-08-10T17:48:16Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 421,
+    "latency_ms": 880,
     "natural": true,
-    "observed_at": "2026-08-10T13:38:56Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-10T19:09:16Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31393796703",
-    "schedule": "7 12 * * 0-5",
-    "shard": "18/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T13:38:56Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-07-23T19:46:04Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31393796703"
+    "run_id": "31422533403",
+    "schedule": "7 18 * * 0-5",
+    "shard": "21/72"
   },
   "lkg": {
     "fetched_at": "2026-08-09T07:09:59Z",
@@ -169,17 +172,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T07:09:35Z",
-    "payload_sha256": "463bb98c60aa64ffbfcc4e7e69b4c260fbf9a45a0a7e7bf4979e16a74f0a78f0",
-    "quote_as_of": "2026-07-23T19:46:04Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T19:09:16Z",
+    "payload_sha256": "b0a3c0090bd932c3b09d47475ba53b96566ac250d1a501e83acac0ff04f72d61",
+    "quote_as_of": "2026-08-10T17:48:16Z",
     "run_attempt": 1,
-    "run_id": "31300442711",
+    "run_id": "31422533403",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-23T19:46:04Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 11,
@@ -192,5 +195,5 @@
     "source_as_of": "2026-07-23T19:46:04Z"
   },
   "ticker": "CLOO",
-  "updated_at": "2026-08-10T13:38:56Z"
+  "updated_at": "2026-08-10T19:09:16Z"
 }

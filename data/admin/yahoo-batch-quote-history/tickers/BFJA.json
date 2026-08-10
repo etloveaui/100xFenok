@@ -137,34 +137,46 @@
       "run_id": "31393796703",
       "schedule": "7 12 * * 0-5",
       "shard": "18/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 933,
+      "natural": true,
+      "observed_at": "2026-08-10T19:09:16Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31422533403",
+      "schedule": "7 18 * * 0-5",
+      "shard": "21/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-05T14:30:03Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BFJA.json",
-    "payload_sha256": "0ae6c0cf0a8b5351bb102c490081f7d35d7f4ac191ff239395d340c618ed6bd6",
-    "quote_as_of": "2026-08-05T13:46:02Z",
-    "source_as_of": "2026-08-05"
+    "fetched_at": "2026-08-10T19:10:07Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/BFJA.json",
+    "payload_sha256": "8603a0d33f0b9da7bc4ff875d40cb0dd11bd4571b5b38060f8c0e14fded564b5",
+    "quote_as_of": "2026-08-10T13:46:02Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 601,
+    "latency_ms": 933,
     "natural": true,
-    "observed_at": "2026-08-10T13:38:56Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-10T19:09:16Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31393796703",
-    "schedule": "7 12 * * 0-5",
-    "shard": "18/72"
+    "run_id": "31422533403",
+    "schedule": "7 18 * * 0-5",
+    "shard": "21/72"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -175,15 +187,6 @@
     "observed_at": "2026-08-07T13:26:16Z",
     "run_attempt": 1,
     "run_id": "31182487397"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T13:38:56Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-07-27T19:29:59Z",
-    "reason": "foreign_writer_conflict",
-    "run_attempt": 1,
-    "run_id": "31393796703"
   },
   "lkg": {
     "fetched_at": "2026-08-05T14:30:03Z",
@@ -196,17 +199,22 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-05T14:29:49Z",
-    "payload_sha256": "a5e0a9631ea6292da223d5b178e64c6186923108c3c54f2fceb51de3a21aec67",
-    "quote_as_of": "2026-08-05T13:46:02Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T19:09:16Z",
+    "payload_sha256": "e0ffdc99171e3ad06b7d756cb3ecff996f3754190fb635eeea3049fc6467e2d8",
+    "quote_as_of": "2026-08-10T13:46:02Z",
     "run_attempt": 1,
-    "run_id": "31015333400",
+    "run_id": "31422533403",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-05"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-08-10T19:09:16Z",
+  "recovered_from_run_id": "31182487397",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "31422533403",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
@@ -219,5 +227,5 @@
     "source_as_of": "2026-07-06T15:42:23Z"
   },
   "ticker": "BFJA",
-  "updated_at": "2026-08-10T13:38:56Z"
+  "updated_at": "2026-08-10T19:09:16Z"
 }

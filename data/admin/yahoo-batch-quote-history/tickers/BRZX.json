@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -188,6 +175,20 @@
       "run_id": "31393796703",
       "schedule": "7 12 * * 0-5",
       "shard": "18/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 762,
+      "natural": true,
+      "observed_at": "2026-08-10T19:09:16Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31422533403",
+      "schedule": "7 18 * * 0-5",
+      "shard": "21/72"
     }
   ],
   "current": {
@@ -206,23 +207,23 @@
     "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 505,
+    "latency_ms": 762,
     "natural": true,
-    "observed_at": "2026-08-10T13:38:56Z",
+    "observed_at": "2026-08-10T19:09:16Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31393796703",
-    "schedule": "7 12 * * 0-5",
-    "shard": "18/72"
+    "run_id": "31422533403",
+    "schedule": "7 18 * * 0-5",
+    "shard": "21/72"
   },
   "latest_promotion_deferral": {
     "event_name": "schedule",
-    "observed_at": "2026-08-10T13:38:56Z",
+    "observed_at": "2026-08-10T19:09:16Z",
     "provider_history_as_of": "2026-08-07",
     "provider_quote_as_of": "2026-06-15T14:35:42Z",
     "reason": "recovery_not_advanced_by_provider",
     "run_attempt": 1,
-    "run_id": "31393796703"
+    "run_id": "31422533403"
   },
   "lkg": {
     "fetched_at": "2026-08-09T03:52:49Z",
@@ -258,5 +259,5 @@
     "source_as_of": "2026-06-15T14:35:42Z"
   },
   "ticker": "BRZX",
-  "updated_at": "2026-08-10T13:38:56Z"
+  "updated_at": "2026-08-10T19:09:16Z"
 }

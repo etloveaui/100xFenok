@@ -109,41 +109,44 @@
       "run_id": "31393796703",
       "schedule": "7 12 * * 0-5",
       "shard": "18/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 862,
+      "natural": true,
+      "observed_at": "2026-08-10T19:09:16Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31422533403",
+      "schedule": "7 18 * * 0-5",
+      "shard": "21/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T05:16:44Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/IQSZ.json",
-    "payload_sha256": "3070654454ecc0c4088b7a87d4ecf27e1b753643ae4bb0b286302e586a211203",
-    "quote_as_of": "2026-07-09T13:45:34Z",
-    "source_as_of": "2026-07-09T13:45:34Z"
+    "fetched_at": "2026-08-10T19:10:29Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/IQSZ.json",
+    "payload_sha256": "5e9c0f1bdfad0698360d2171e033371bd92ee507bc1887871765436b67a11687",
+    "quote_as_of": "2026-08-10T13:46:05Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 446,
+    "latency_ms": 862,
     "natural": true,
-    "observed_at": "2026-08-10T13:38:56Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-10T19:09:16Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31393796703",
-    "schedule": "7 12 * * 0-5",
-    "shard": "18/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T13:38:56Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-07-09T13:45:34Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31393796703"
+    "run_id": "31422533403",
+    "schedule": "7 18 * * 0-5",
+    "shard": "21/72"
   },
   "lkg": {
     "fetched_at": "2026-08-09T05:16:44Z",
@@ -156,17 +159,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T05:15:44Z",
-    "payload_sha256": "2933d3b90376c029d6a1c3785e2f765c03276ba3980099ab63f2f9dd4c5f6156",
-    "quote_as_of": "2026-07-09T13:45:34Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T19:09:16Z",
+    "payload_sha256": "2a4312c76a2c3f701f34effbdf1e717d8b858e49b8220ea4289ca3feba3c6131",
+    "quote_as_of": "2026-08-10T13:46:05Z",
     "run_attempt": 1,
-    "run_id": "31296241377",
+    "run_id": "31422533403",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-09T13:45:34Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 21,
@@ -179,5 +182,5 @@
     "source_as_of": "2026-07-09T13:45:34Z"
   },
   "ticker": "IQSZ",
-  "updated_at": "2026-08-10T13:38:56Z"
+  "updated_at": "2026-08-10T19:09:16Z"
 }
