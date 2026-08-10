@@ -347,16 +347,19 @@ try {
   const unresolved = await readGet("/data/yardney/yardney_model.json");
   assert.equal(unresolved.status, 200);
   assert.equal(await unresolved.text(), "assets fallback");
+  assert.equal(unresolved.headers.get("x-data-plane-published-at"), null, "fallback gains no plane heartbeat");
 
   // Enrolled tree path whose family has nothing published: same fallback.
   const emptyTree = await readGet("/data/edgar-korean-summaries/index.json");
   assert.equal(emptyTree.status, 200);
   assert.equal(await emptyTree.text(), "assets fallback");
+  assert.equal(emptyTree.headers.get("x-data-plane-published-at"), null, "fallback gains no plane heartbeat");
 
   // Never enrolled: the application handler owns it.
   const unenrolled = await readGet("/data/macro/other.json");
   assert.equal(unenrolled.status, 200);
   assert.equal(await unenrolled.text(), "application handler");
+  assert.equal(unenrolled.headers.get("x-data-plane-published-at"), null, "application response gains no plane heartbeat");
 
   // Siblings of enrolled trees must not match the bounded prefixes.
   const nearMiss = await readGet("/data/edgar-korean-summaries-evil/index.json");
@@ -408,12 +411,14 @@ try {
   const served = await readGet("/data/macro/fred-macro.json");
   assert.equal(served.status, 200);
   assert.equal(served.headers.get("x-data-plane-generation"), "read-proof-1");
+  assert.equal(served.headers.get("x-data-plane-published-at"), NOW);
   assert.equal(await served.text(), "{\"series\":{\"DGS10\":[1,2,3]}}\n");
 
   const servedHead = await worker.dispatchFetch("https://worker.test/data/macro/fred-macro.json", {
     method: "HEAD",
   });
   assert.equal(servedHead.status, 200);
+  assert.equal(servedHead.headers.get("x-data-plane-published-at"), NOW);
   assert.equal(await servedHead.text(), "");
 
   // Tree family through the mounted worker: one EDGAR asset publishes and
@@ -441,11 +446,13 @@ try {
   const edgarServed = await readGet("/data/edgar-korean-summaries/index.json");
   assert.equal(edgarServed.status, 200);
   assert.equal(edgarServed.headers.get("x-data-plane-generation"), "edgar-read-1");
+  assert.equal(edgarServed.headers.get("x-data-plane-published-at"), NOW);
   assert.equal(await edgarServed.text(), "{\"updated\":\"2026-08-10\"}\n");
 
   const edgarMissing = await readGet("/data/edgar-korean-summaries/not-published.json");
   assert.equal(edgarMissing.status, 200);
   assert.equal(await edgarMissing.text(), "assets fallback");
+  assert.equal(edgarMissing.headers.get("x-data-plane-published-at"), null, "fallback gains no plane heartbeat");
 
   console.log("test-cloud-data-plane-worker-route: ok"
     + " (refusal, publish, error transit, per-family pointer isolation,"

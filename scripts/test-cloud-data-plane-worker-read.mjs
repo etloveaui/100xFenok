@@ -255,6 +255,7 @@ try {
   assert.equal(served.headers.get("content-type"), "application/json");
   assert.equal(served.headers.get("x-data-plane-generation"), "fred-macro-read-1");
   assert.equal(served.headers.get("x-data-plane-source-as-of"), "2026-08-02");
+  assert.equal(served.headers.get("x-data-plane-published-at"), NOW);
   assert.match(served.headers.get("cache-control") ?? "", /max-age=/);
   assert.equal(await served.text(), payloadText);
 
@@ -266,9 +267,11 @@ try {
     env,
   );
   assert.equal(notModified.status, 304, "matching etag is 304");
+  assert.equal(notModified.headers.get("x-data-plane-published-at"), NOW);
 
   const head = await handleCloudDataPlaneAsset(get(ENROLLED_URL, { method: "HEAD" }), env);
   assert.equal(head.status, 200);
+  assert.equal(head.headers.get("x-data-plane-published-at"), NOW);
   assert.equal(await head.text(), "", "HEAD carries no body");
 
   // --- a second exact family resolves through its own pointer ----------------

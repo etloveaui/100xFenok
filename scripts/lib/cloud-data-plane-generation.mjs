@@ -648,6 +648,7 @@ export async function resolvePublicAsset({
       content_type: asset.content_type,
       source_as_of: asset.source_as_of,
       generation_id: manifest.generation_id,
+      published_at: manifest.created_at,
     };
   } catch {
     return { kind: "unavailable", reason: "DATA_PLANE_INTEGRITY_UNAVAILABLE" };

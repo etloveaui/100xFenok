@@ -727,6 +727,7 @@ export async function handleCloudDataPlaneAsset(request, env) {
     etag,
     "x-data-plane-generation": resolved.generation_id,
     "x-data-plane-source-as-of": resolved.source_as_of ?? "unknown",
+    "x-data-plane-published-at": resolved.published_at,
   };
 
   if (request.headers.get("if-none-match") === etag) {

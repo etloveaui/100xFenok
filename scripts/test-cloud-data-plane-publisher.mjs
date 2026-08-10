@@ -862,6 +862,7 @@ try {
   assert.deepEqual(served.bytes, fredBuild.payloads.get("public/data/macro/fred-macro.json"));
   assert.equal(served.content_type, "application/json");
   assert.equal(served.generation_id, fredBuild.manifest.generation_id);
+  assert.equal(served.published_at, fredBuild.manifest.created_at);
   console.log("fred-macro family ok (single file, split root/prefix, public class served)");
 
   // --- per-family coordinators: two families publish and resolve ----------
