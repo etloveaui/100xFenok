@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-10T06:40:59.678Z",
+  "generated_at": "2026-08-10T06:55:43.895Z",
   "status": "open",
-  "open_incident_count": 9,
+  "open_incident_count": 10,
   "open_incidents": [
     {
       "workflow": "build-stocks-analyzer.yml",
@@ -11,6 +11,19 @@
       "failure_streak_threshold": 2,
       "first_failing_run_id": 30990499079,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30990499079",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
+    {
+      "workflow": "deploy-worker.yml",
+      "label": "Deploy Worker (Cloudflare)",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 31362252813,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31362252813",
       "alarm_reasons": [
         "failure_streak"
       ],
@@ -85,7 +98,7 @@
     {
       "workflow": "qa-rim-v2.yml",
       "label": "QA RIM v2",
-      "streak": 9,
+      "streak": 10,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 31136433451,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31136433451",
@@ -98,7 +111,7 @@
     {
       "workflow": "update-manifest.yml",
       "label": "Update Manifest",
-      "streak": 4,
+      "streak": 5,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 31350397868,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31350397868",
@@ -111,7 +124,7 @@
     {
       "workflow": "validate-workflows.yml",
       "label": "Validate GitHub Workflows",
-      "streak": 4,
+      "streak": 5,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 31350397885,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31350397885",
@@ -535,12 +548,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31362767052",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31362767052",
-    "observed_at": "2026-08-10T06:40:59.678Z",
+    "run_id": "31363673517",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31363673517",
+    "observed_at": "2026-08-10T06:55:43.895Z",
     "event": "workflow_run",
     "workflows": [
       "build-stocks-analyzer.yml",
+      "deploy-worker.yml",
       "fetch-damodaran-shadow.yml",
       "fetch-edgar-filings.yml",
       "fetch-fred-yardeni.yml",
