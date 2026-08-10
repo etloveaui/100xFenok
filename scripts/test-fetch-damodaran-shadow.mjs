@@ -70,6 +70,31 @@ function fixture() {
   );
 }
 
+{
+  // Source-date contract (run 31404207078 regression): the producer must emit
+  // a provider date the owner guard accepts, and the guard must keep rejecting
+  // the raw filename token ("Apr26") rather than being weakened.
+  const rawTokenPayloads = Object.fromEntries(FILE_NAMES.map((file) => [file, {
+    metadata: { generated_at: "2026-07-20T00:00:00Z", source_date: "Apr26" },
+    file,
+    value: 1,
+  }]));
+  assert.throws(
+    () => buildDamodaranBundle(rawTokenPayloads),
+    /source dates/,
+    "raw filename tokens must stay rejected by the owner guard",
+  );
+
+  const canonicalPayloads = Object.fromEntries(FILE_NAMES.map((file) => [file, {
+    metadata: { generated_at: "2026-07-20T00:00:00Z", source_date: "April 1, 2026" },
+    file,
+    value: 1,
+  }]));
+  const canonicalBundle = buildDamodaranBundle(canonicalPayloads);
+  assert.equal(canonicalBundle.source_as_of, "2026-04-01");
+  assert.equal(validDamodaranBundle(canonicalBundle), true);
+}
+
 function ownerBundle(sourceDate = "January 2026", sourceDatesByFile = {}) {
   return {
     fetched_at: "2026-07-20T00:00:00Z",
@@ -489,6 +514,24 @@ function runFixture(options = {}) {
   assert.match(workflow, /controlled_failure:/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE:/);
   assert.match(workflow, /node scripts\/test-fetch-damodaran-shadow\.mjs/);
+  assert.match(
+    workflow,
+    /^\s*run:\s*python scripts\/lib\/damodaran_shadow_converter\/test_erp_source_date\.py\s*$/mu,
+    "workflow must run the focused ERP source-date regression test with the exact command",
+  );
+  const dependencyInstallIndex = workflow.indexOf(
+    "python -m pip install -r scripts/lib/damodaran_shadow_converter/requirements.txt",
+  );
+  const erpSourceDateTestIndex = workflow.indexOf(
+    "python scripts/lib/damodaran_shadow_converter/test_erp_source_date.py",
+  );
+  const fetchIndex = workflow.indexOf("node scripts/fetch-damodaran-shadow.mjs");
+  assert.ok(
+    dependencyInstallIndex >= 0
+      && dependencyInstallIndex < erpSourceDateTestIndex
+      && erpSourceDateTestIndex < fetchIndex,
+    "focused ERP source-date test must run after dependency installation and before fetch",
+  );
   assert.match(workflow, /node scripts\/fetch-damodaran-shadow\.mjs/);
   assert.match(workflow, /uses:\s*actions\/upload-artifact@v4/);
   assert.match(workflow, /if:\s*\$\{\{ always\(\) \}\}[\s\S]+damodaran-owner-guard/);

@@ -58,6 +58,9 @@ jobs:
       - name: Install converter dependencies
         run: python -m pip install -r scripts/lib/damodaran_shadow_converter/requirements.txt
 
+      - name: Test ERP source-date canonicalization
+        run: python scripts/lib/damodaran_shadow_converter/test_erp_source_date.py
+
       - name: Fetch and guard Damodaran payloads
         id: fetch
         env:
