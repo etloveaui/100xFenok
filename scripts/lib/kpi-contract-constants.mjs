@@ -22,6 +22,37 @@ export const ETF_CORE_MAX_QUOTE_AGE_DAYS = 7;
 // Required RIM indices (OLDEST-of aggregation basis for rim_index_inputs SLA).
 export const REQUIRED_RIM_INDICES = Object.freeze(["SPX", "NDX", "KOSPI", "SOX"]);
 
+// The private five-index canonical line is a child diagnostic of rim_inputs,
+// not a new KPI lane. Keep its identity/shape vocabulary here so the builder
+// and its independent KPI checker agree without importing the canonical
+// producer or validator.
+export const RIM_FIVE_CANONICAL_INDICES = Object.freeze(["SPX", "CCMP", "NDX", "SOX", "KOSPI"]);
+export const RIM_FIVE_CANONICAL_IDENTITIES = Object.freeze({
+  SPX: Object.freeze({ id: "SPX", name: "S&P 500" }),
+  CCMP: Object.freeze({ id: "CCMP", name: "Nasdaq Composite" }),
+  NDX: Object.freeze({ id: "NDX", name: "Nasdaq-100" }),
+  SOX: Object.freeze({ id: "SOX", name: "Philadelphia Semiconductor Index" }),
+  KOSPI: Object.freeze({ id: "KOSPI", name: "KOSPI" }),
+});
+export const RIM_FIVE_CANONICAL_ARTIFACT_REL = "data/computed/rim-index/FENO_RIM_FIVE_CANONICAL_CURRENT.json";
+export const RIM_FIVE_CANONICAL_DATA_REL = "computed/rim-index/FENO_RIM_FIVE_CANONICAL_CURRENT.json";
+export const RIM_FIVE_CANONICAL_SCHEMA_VERSION = "feno_rim_five_canonical_current.v1";
+export const RIM_FIVE_CANONICAL_PUBLIC_STATUS = "QUARANTINED";
+export const RIM_FIVE_CANONICAL_YOO_STATUS = "NOT_IDENTIFIED";
+export const RIM_FIVE_CANONICAL_BLOCKER_KEYS = Object.freeze(["direct_input", "freshness", "identity"]);
+export const RIM_FIVE_CANONICAL_SOURCE_CLOCK_KEYS = Object.freeze([
+  "price_as_of",
+  "benchmark_as_of",
+  "payout_availability",
+  "forecast_availability",
+  "rf_as_of",
+  "erp_as_of",
+]);
+export const RIM_FIVE_CANONICAL_PUBLIC_MIRROR_RELS = Object.freeze([
+  "100xfenok-next/public/data/computed/rim-index/FENO_RIM_FIVE_CANONICAL_CURRENT.json",
+  "100xfenok-next/public/data/rim-index/FENO_RIM_FIVE_CANONICAL_CURRENT.json",
+]);
+
 // Required product surfaces (definitional; used once product_surface_coverage gets
 // its true per-surface source stamp — kept here where definitions live).
 export const REQUIRED_SURFACE_IDS = Object.freeze([
@@ -78,6 +109,7 @@ export const PLATFORM_BLOCKING_CHECK_KEYS = Object.freeze([
   "public_mirror_safety/rim_public_private_paths_redacted",
   "public_mirror_safety/coverage_public_private_paths_absent",
   "public_mirror_safety/forbidden_tokens_absent",
+  "rim_inputs/canonical_integrity",
   "slickcharts_delivery_freshness/json_integrity",
   "slickcharts_delivery_freshness/universe_identity",
 ]);

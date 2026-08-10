@@ -28,6 +28,11 @@ export const FORBIDDEN_PATTERNS = [
   /^computed\/fenok-rim\/membership-sensitivity-2026\.json$/,
   /^computed\/fenok-rim\/russell2000-official-fundamentals\.json$/,
   /^computed\/fenok-rim\/russell2000-history\//,
+  // The RIM index directory is canonical-only except for the exact public
+  // inputs projection. This catch-all keeps newly added criteria, canonical
+  // current, historical, or arbitrary siblings from becoming public by
+  // omission.
+  /^computed\/rim-index\/(?!inputs\.json$).+/,
   /^computed\/fenok_signals\.json$/,
   /^computed\/fenok_etf_signals\.json$/,
   /^computed\/etf_action_index\.json$/,
@@ -52,6 +57,7 @@ export const FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS = [
   "admin/yahoo-batch-quote-history",
   // Private derived proxies (apewisdom_attention / gdelt_news_tone lanes) must
   // never reach the public mirror.
+  "computed/fenok-rim/kospi-dart-payout",
   "computed/fenok_news_tone_proxy.json",
   "computed/fenok_news_tone_proxy_history.json",
   "computed/fenok_social_attention_proxy.json",

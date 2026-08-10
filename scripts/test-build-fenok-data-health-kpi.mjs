@@ -55,6 +55,8 @@ const {
   buildDetectionFloorLanes,
   mapDetectionFloorRow,
   buildRimLane,
+  assessRimFiveCanonicalArtifact,
+  readRimFiveCanonicalHealth,
   buildRuntime,
   buildPayload,
   enumerateDueSlots,
@@ -63,7 +65,14 @@ const {
   validateProducerRecoveryAttempt,
   RECOVERY_STATE_SOURCES,
 } = await import("./build-fenok-data-health-kpi.mjs");
-const { SOURCE_SLA_DEF, REQUIRED_SURFACE_IDS, SLICKCHARTS_DELIVERY_GROUPS, TRACKED_CRONS, CADENCE } = await import("./lib/kpi-contract-constants.mjs");
+const {
+  SOURCE_SLA_DEF,
+  REQUIRED_SURFACE_IDS,
+  SLICKCHARTS_DELIVERY_GROUPS,
+  TRACKED_CRONS,
+  CADENCE,
+  RIM_FIVE_CANONICAL_DATA_REL,
+} = await import("./lib/kpi-contract-constants.mjs");
 const { ETF_CORE_DAILY_BASKET_CONFIG } = await import("./build-fenok-etf-core-daily-basket.mjs");
 const {
   checkV2Runtime,
@@ -73,6 +82,7 @@ const {
   checkRecoveryStateSources,
   checkSourceStatusProjections,
 } = await import("../100xfenok-next/scripts/check-fenok-data-health-kpi.mjs");
+const { checkRimInputsCanonicalHealth } = await import("./check-fenok-data-health-kpi.mjs");
 const { projectFenokDataHealthKpiPublicMirror } = await import("../100xfenok-next/sync-static-overrides.mjs");
 const { DATA_SUPPLY_DETECTION_CONFIG } = await import("./lib/data-supply-detection-config.mjs");
 const { buildFetchCronAttemptCoverage } = await import("./build-data-supply-detection-floor.mjs");
@@ -93,6 +103,11 @@ const DETECTION_CALENDAR_FIXTURE = JSON.parse(fs.readFileSync(DETECTION_CALENDAR
 const REPO_ROOT = path.resolve(__dirname, "..");
 const HERMETIC_FIXTURE_ROOT = registerKpiFixtureRoot(process.env.KPI_HERMETIC_FIXTURE_ROOT);
 const TEMP_ROOTS = new Set();
+let passed = 0;
+function ok(label) {
+  passed += 1;
+  console.log(`  ok - ${label}`);
+}
 
 for (const livePath of [
   path.join(REPO_ROOT, "data", "slickcharts", "gainers.json"),
@@ -182,6 +197,91 @@ function fixtureFetchCronCoverage(evaluatedAt) {
     report: fixtureDetectionReport(evaluatedAt),
     calendars: DETECTION_CALENDAR_FIXTURE,
   });
+}
+
+const RIM_FIVE_FIXTURE_NAMES = {
+  SPX: "S&P 500",
+  CCMP: "Nasdaq Composite",
+  NDX: "Nasdaq-100",
+  SOX: "Philadelphia Semiconductor Index",
+  KOSPI: "KOSPI",
+};
+
+function rimFiveFixture({
+  statuses = ["READY", "NULL", "READY", "NULL", "NULL"],
+  upsides = [-0.2, null, -0.05, null, null],
+  blockers = {},
+  valuesShifted = false,
+} = {}) {
+  const assets = ["SPX", "CCMP", "NDX", "SOX", "KOSPI"];
+  const rows = assets.map((asset, index) => {
+    const asOf = "2026-08-07";
+    const sourceClock = Object.fromEntries([
+      ["price_as_of", asOf],
+      ["benchmark_as_of", "2026-07-31"],
+      ["payout_availability", asOf],
+      ["forecast_availability", asOf],
+      ["rf_as_of", "2026-08-06"],
+      ["erp_as_of", "2026-04-01"],
+    ]);
+    const row = {
+      asset,
+      identity: { id: asset, name: RIM_FIVE_FIXTURE_NAMES[asset] },
+      status: statuses[index],
+      as_of: asOf,
+      blockers: structuredClone(blockers[asset] ?? { direct_input: [], freshness: [], identity: [] }),
+      source_clock: sourceClock,
+    };
+    if (row.status === "READY") {
+      row.spot = 100;
+      row.fair_value = 100 * (1 + upsides[index]);
+      row.eps_path = [1, 2, 3];
+      row.fair_value_as_of = asOf;
+      row.fair_value_upside = upsides[index];
+    } else {
+      row.spot = 100;
+      row.fair_value = null;
+      row.eps_path = null;
+      row.fair_value_as_of = null;
+      row.fair_value_upside = null;
+    }
+    return row;
+  });
+  const finiteRows = rows.filter((row) => Number.isFinite(row.fair_value_upside));
+  const violations = [];
+  for (let index = 0; index < rows.length - 1; index += 1) {
+    const left = rows[index];
+    const right = rows[index + 1];
+    if (Number.isFinite(left.fair_value_upside) && Number.isFinite(right.fair_value_upside)
+      && !(right.fair_value_upside > left.fair_value_upside)) {
+      violations.push({
+        asset_a: left.asset,
+        asset_b: right.asset,
+        value_a: left.fair_value_upside,
+        value_b: right.fair_value_upside,
+      });
+    }
+  }
+  return {
+    schema_version: "feno_rim_five_canonical_current.v1",
+    criteria: "data/computed/rim-index/feno-index-rim-five-canonical-criteria.json",
+    generated_at: "2026-08-08T00:00:00.000Z",
+    primary_scalar: "fair_value_upside",
+    horizon: "same_as_of",
+    exact_yoo: false,
+    yoo_status: "NOT_IDENTIFIED",
+    public_surface: { status: "QUARANTINED", rule: "private fixture" },
+    rows,
+    source_clocks: Object.fromEntries(rows.map((row) => [row.asset, row.source_clock])),
+    order_diagnostic: {
+      desired_order: assets,
+      desired_order_met: finiteRows.length === assets.length
+        && finiteRows.every((row, index) => index === 0 || row.fair_value_upside > finiteRows[index - 1].fair_value_upside),
+      violations,
+      non_finite_rows: rows.filter((row) => !Number.isFinite(row.fair_value_upside)).map((row) => row.asset),
+      values_shifted: valuesShifted,
+    },
+  };
 }
 const PRODUCT_SURFACE_SLA = SOURCE_SLA_DEF.find((row) => row.source_id === "product_surface_coverage");
 assert.equal(PRODUCT_SURFACE_SLA?.unit, "business_days");
@@ -315,6 +415,139 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   const degradedLane = buildRimLane(staleRim);
   assert.equal(degradedLane.status, "degraded", "RIM readiness lag degrades its lane; RIM integrity remains a separate global gate");
   assert.equal(degradedLane.checks.find((row) => row.id === "rim_kospi_ready")?.status, "blocked");
+}
+
+// Private five-index canonical health is a diagnostic child of rim_inputs:
+// expected NULL/PIT/quarantine/order warnings remain visible without becoming
+// platform corruption, while malformed/private-boundary states do block.
+{
+  const laneInput = { indices: {} };
+  const mixed = rimFiveFixture({
+    blockers: {
+      CCMP: { direct_input: ["CCMP: direct operand unavailable"], freshness: ["CCMP: forecast availability missing"], identity: [] },
+      SOX: { direct_input: [], freshness: ["SOX: PIT forecast availability is after price as-of"], identity: ["SOX: direct identity unavailable"] },
+      KOSPI: { direct_input: ["KOSPI: payout is unverified"], freshness: ["KOSPI: stale input"], identity: [] },
+    },
+  });
+  const mixedHealth = assessRimFiveCanonicalArtifact(mixed);
+  assert.equal(mixedHealth.canonical_integrity, true);
+  assert.equal(mixedHealth.canonical_present, true);
+  assert.equal(mixedHealth.canonical_public_status, "QUARANTINED");
+  assert.equal(mixedHealth.ready_count, 2);
+  assert.equal(mixedHealth.null_count, 3);
+  assert.equal(mixedHealth.total_count, 5);
+  assert.equal(mixedHealth.stale_or_freshness_blocker_count, 2);
+  assert.equal(mixedHealth.pit_blocker_count, 1);
+  assert.equal(mixedHealth.direct_or_identity_blocker_count, 3);
+  assert.equal(mixedHealth.order_diagnostic_state, "not_comparable");
+  assert.equal(mixedHealth.values_shifted, false);
+  assert.equal(mixedHealth.private_only, true);
+  assert.equal(mixedHealth.public_leak, false);
+  const mixedLane = buildRimLane(laneInput, null, mixedHealth);
+  assert.equal(mixedLane.checks.find((row) => row.id === "canonical_integrity")?.status, "ready");
+  assert.equal(mixedLane.checks.find((row) => row.id === "canonical_quarantine")?.status, "warning");
+  assert.equal(mixedLane.checks.find((row) => row.id === "canonical_row_warnings")?.status, "warning");
+  assert.equal(mixedLane.deployment_blocking, false, "NULL/PIT/quarantine remain lane diagnostics");
+
+  const allReady = rimFiveFixture({
+    statuses: ["READY", "READY", "READY", "READY", "READY"],
+    upsides: [-0.4, -0.2, 0, 0.2, 0.4],
+  });
+  const metHealth = assessRimFiveCanonicalArtifact(allReady);
+  assert.equal(metHealth.order_diagnostic_state, "met");
+  assert.equal(metHealth.canonical_integrity, true);
+  assert.equal(buildRimLane(laneInput, null, metHealth).deployment_blocking, false);
+
+  const notMet = rimFiveFixture({
+    statuses: ["READY", "READY", "READY", "READY", "READY"],
+    upsides: [0.4, 0.1, 0.2, 0.05, 0.3],
+  });
+  const notMetHealth = assessRimFiveCanonicalArtifact(notMet);
+  assert.equal(notMetHealth.order_diagnostic_state, "not_met");
+  assert.equal(notMetHealth.canonical_integrity, true, "natural order mismatch is warning-only");
+  const notMetLane = buildRimLane(laneInput, null, notMetHealth);
+  assert.equal(notMetLane.checks.find((row) => row.id === "canonical_order_diagnostic")?.status, "warning");
+  assert.equal(notMetLane.deployment_blocking, false);
+
+  const missing = assessRimFiveCanonicalArtifact(null, { canonicalPresent: false, readFailure: "missing" });
+  assert.equal(missing.canonical_present, false);
+  assert.equal(missing.canonical_integrity, false);
+  assert.match(missing.blocking_reasons.join(" "), /missing/);
+  const missingLane = buildRimLane(laneInput, null, missing);
+  assert.equal(missingLane.checks.find((row) => row.id === "canonical_integrity")?.status, "blocked");
+  assert.equal(missingLane.checks.find((row) => row.id === "canonical_integrity")?.platform_blocking, true);
+  assert.equal(missingLane.deployment_blocking, true);
+
+  const corrupt = assessRimFiveCanonicalArtifact(null, { canonicalPresent: true, readFailure: "unparseable" });
+  assert.equal(corrupt.canonical_present, false);
+  assert.equal(corrupt.canonical_file_present, true);
+  assert.equal(corrupt.canonical_integrity, false);
+  assert.match(corrupt.blocking_reasons.join(" "), /unparseable/);
+
+  const canonicalFs = mkTmp("rim-five-canonical-health");
+  const canonicalDataRoot = path.join(canonicalFs, "data");
+  const canonicalPublicDataRoot = path.join(canonicalFs, "public", "data");
+  const missingRead = readRimFiveCanonicalHealth({ dataRoot: canonicalDataRoot, publicDataRoot: canonicalPublicDataRoot });
+  assert.equal(missingRead.canonical_present, false);
+  fs.writeFileSync(
+    path.join(canonicalDataRoot, "computed", "rim-index", "FENO_RIM_FIVE_CANONICAL_CURRENT.json"),
+    "not-json\n",
+    "utf8",
+  );
+  const corruptRead = readRimFiveCanonicalHealth({ dataRoot: canonicalDataRoot, publicDataRoot: canonicalPublicDataRoot });
+  assert.equal(corruptRead.canonical_present, false);
+  assert.equal(corruptRead.canonical_file_present, true);
+  assert.equal(corruptRead.canonical_parseable, false);
+  fs.mkdirSync(path.join(canonicalPublicDataRoot, "computed", "rim-index"), { recursive: true });
+  fs.copyFileSync(
+    path.join(canonicalDataRoot, "computed", "rim-index", "FENO_RIM_FIVE_CANONICAL_CURRENT.json"),
+    path.join(canonicalPublicDataRoot, "computed", "rim-index", "FENO_RIM_FIVE_CANONICAL_CURRENT.json"),
+  );
+  const leakedRead = readRimFiveCanonicalHealth({ dataRoot: canonicalDataRoot, publicDataRoot: canonicalPublicDataRoot });
+  assert.equal(leakedRead.public_leak, true);
+  assert.equal(leakedRead.canonical_integrity, false);
+
+  for (const [label, mutate, pattern] of [
+    ["malformed counts/order/status", (candidate) => {
+      candidate.rows[1].status = "BROKEN";
+      candidate.rows.reverse();
+      candidate.order_diagnostic.desired_order = ["NDX"];
+    }, /status|ordered|desired_order/],
+    ["values_shifted", (candidate) => { candidate.order_diagnostic.values_shifted = true; }, /values_shifted/],
+    ["false promotion", (candidate) => { candidate.rows[0].display_ready = true; }, /promotion|display/],
+    ["renamed identity", (candidate) => { candidate.rows[0].identity.name = "S&P proxy"; }, /exact index contract/],
+  ]) {
+    const candidate = structuredClone(allReady);
+    mutate(candidate);
+    const health = assessRimFiveCanonicalArtifact(candidate);
+    assert.equal(health.canonical_integrity, false, `${label} must block canonical integrity`);
+    assert.match(health.blocking_reasons.join(" "), pattern, `${label} reason must be explicit`);
+  }
+
+  const leakHealth = assessRimFiveCanonicalArtifact(allReady, { publicLeak: true });
+  assert.equal(leakHealth.private_only, false);
+  assert.equal(leakHealth.public_leak, true);
+  assert.equal(leakHealth.canonical_integrity, false);
+  assert.match(leakHealth.blocking_reasons.join(" "), /public mirror/);
+
+  const checkerRoot = { lanes: [buildRimLane(laneInput, null, mixedHealth)] };
+  assert.equal(checkRimInputsCanonicalHealth(checkerRoot, { artifact: mixed, canonicalPresent: true, publicLeak: false }).valid, true);
+  const renamedArtifact = structuredClone(mixed);
+  renamedArtifact.rows[0].identity.name = "S&P proxy";
+  const renamedHealth = assessRimFiveCanonicalArtifact(renamedArtifact);
+  const renamedRoot = { lanes: [buildRimLane(laneInput, null, renamedHealth)] };
+  const renamedCheck = checkRimInputsCanonicalHealth(renamedRoot, {
+    artifact: renamedArtifact,
+    canonicalPresent: true,
+    publicLeak: false,
+  });
+  assert.equal(renamedCheck.valid, false);
+  assert.match(renamedCheck.errors.join(" "), /exact index contract/);
+  checkerRoot.lanes[0].details.ready_count = 99;
+  const malformedCounts = checkRimInputsCanonicalHealth(checkerRoot, { artifact: mixed, canonicalPresent: true, publicLeak: false });
+  assert.equal(malformedCounts.valid, false);
+  assert.match(malformedCounts.errors.join(" "), /ready_count/);
+  ok("private five-index canonical health is projected under rim_inputs with warning-only NULL/quarantine/order states and blocking corruption");
 }
 
 {
@@ -552,7 +785,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     },
   };
   const yahooBatchState = {
-    counts: { active: 12, untracked: 1, fresh: 6, lkg: 3, pending_history: 0, unavailable: 2, retry: 5 },
+    counts: { active: 12, untracked: 1, pending_acquisition: 0, fresh: 6, lkg: 3, pending_history: 0, unavailable: 2, terminal: 0, retry: 5 },
     retry_symbols: ["A", "B", "C", "TERM", "OTHER"],
   };
   const stockPromotionDryRun = {
@@ -1391,8 +1624,8 @@ function readyCoreV2(now) {
       as_of: "2026-07-09T00:00:00Z",
       deployment_blocking: false,
       counts: {
-        active: 1, untracked: 0, fresh: 1, lkg: 0, pending_history: 0,
-        unavailable: 0, retry: 0, failed: 0, oldest_source_date: "2026-07-09",
+        active: 1, untracked: 0, pending_acquisition: 0, fresh: 1, lkg: 0, pending_history: 0,
+        unavailable: 0, terminal: 0, retry: 0, failed: 0, oldest_source_date: "2026-07-09",
         stale: 0,
         oldest_source_symbol: "AAPL", oldest_source_age_business_days: 1,
         max_source_age_business_days: 6,
@@ -1562,12 +1795,6 @@ function readySla(now, overrides = {}) {
   return list;
 }
 
-let passed = 0;
-function ok(label) {
-  passed += 1;
-  console.log(`  ok - ${label}`);
-}
-
 function baseEnv() {
   const env = {};
   for (const [k, v] of Object.entries(process.env)) {
@@ -1576,6 +1803,7 @@ function baseEnv() {
   }
   const guardOption = `--import=${HERMETIC_GUARD}`;
   env.NODE_OPTIONS = [env.NODE_OPTIONS, guardOption].filter(Boolean).join(" ");
+  env.KPI_HERMETIC_BOOTSTRAPPED = "1";
   env.KPI_HERMETIC_FIXTURE_ROOTS = [HERMETIC_FIXTURE_ROOT, ...TEMP_ROOTS].join(path.delimiter);
   return env;
 }
@@ -1713,7 +1941,15 @@ function runBuilder(tmp, env, nowIso, {
   expectExit = 0,
   slickchartsRepoRoot = HERMETIC_FIXTURE_ROOT,
 } = {}) {
+  const canonicalPath = path.join(tmp, "data", RIM_FIVE_CANONICAL_DATA_REL);
+  if (!fs.existsSync(canonicalPath)) {
+    writeJson(canonicalPath, rimFiveFixture({
+      statuses: ["READY", "READY", "READY", "READY", "READY"],
+      upsides: [-0.4, -0.2, 0, 0.2, 0.4],
+    }));
+  }
   let status = 0;
+  let failureOutput = "";
   try {
     execFileSync("node", [
       BUILDER,
@@ -1727,8 +1963,9 @@ function runBuilder(tmp, env, nowIso, {
     });
   } catch (error) {
     status = error.status ?? 1;
+    failureOutput = `${error.stderr?.toString?.() ?? ""}\n${error.stdout?.toString?.() ?? ""}`.trim();
   }
-  assert.equal(status, expectExit, `builder exit ${status} != ${expectExit}`);
+  assert.equal(status, expectExit, `builder exit ${status} != ${expectExit}${failureOutput ? `\n${failureOutput}` : ""}`);
   if (expectExit !== 0) return { exit: status }; // build hard-failed: no output to read
   return {
     root: JSON.parse(fs.readFileSync(path.join(tmp, "data", KPI_REL), "utf8")),

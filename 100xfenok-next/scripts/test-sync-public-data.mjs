@@ -80,15 +80,32 @@ import { PRIVATE_DATA_SUPPLY_ROOTS } from "../../scripts/build-phase2-closeout-i
   }
   assert.deepEqual(
     deriveRestrictedDerivedPublicDataRoots(),
-    [{
-      assetId: "fenok_rim",
-      relativeRoot: "computed/fenok-rim",
-      allowedFiles: [
-        "computed/fenok-rim/fair-values.json",
-        "computed/fenok-rim/payout-history.json",
-        "computed/fenok-rim/sustainable-index-ranges.public.json",
-      ],
-    }],
+    [
+      {
+        assetId: "feno_rim_recovery_research",
+        relativeRoot: "computed/feno-rim-recovery",
+        allowedFiles: [],
+      },
+      {
+        assetId: "feno_rim_v2_research",
+        relativeRoot: "computed/feno-rim-v2",
+        allowedFiles: [],
+      },
+      {
+        assetId: "fenok_rim",
+        relativeRoot: "computed/fenok-rim",
+        allowedFiles: [
+          "computed/fenok-rim/fair-values.json",
+          "computed/fenok-rim/payout-history.json",
+          "computed/fenok-rim/sustainable-index-ranges.public.json",
+        ],
+      },
+      {
+        assetId: "rim_index",
+        relativeRoot: "computed/rim-index",
+        allowedFiles: ["computed/rim-index/inputs.json"],
+      },
+    ],
     "derived directory allowlists must come from the derived-asset registry",
   );
   assert.deepEqual(
@@ -386,6 +403,69 @@ function assertFenokRimRestrictedProjection(parentRoot) {
   );
   for (const [relativePath, body] of publicBeforeDrift) {
     assert.equal(fs.readFileSync(path.join(destinationRoot, relativePath), "utf8"), body);
+  }
+}
+
+async function assertRimIndexRestrictedProjection(parentRoot) {
+  const root = fs.mkdtempSync(path.join(parentRoot, "rim-index-restricted-"));
+  const sourceRoot = path.join(root, "data");
+  const destinationRoot = path.join(root, "100xfenok-next", "public", "data");
+  const allowedPath = "computed/rim-index/inputs.json";
+  const deniedPaths = [
+    "computed/rim-index/FENO_RIM_FIVE_CANONICAL_CURRENT.json",
+    "computed/rim-index/feno-index-rim-five-canonical-criteria.json",
+    "computed/rim-index/arbitrary-sibling.json",
+  ];
+
+  write(sourceRoot, allowedPath, '{"public":"inputs"}\n');
+  write(destinationRoot, allowedPath, '{"stale":"inputs"}\n');
+  for (const relativePath of deniedPaths) {
+    write(sourceRoot, relativePath, '{"private":true}\n');
+    write(destinationRoot, relativePath, '{"stale-private":true}\n');
+  }
+
+  const sourceBefore = snapshotNode(sourceRoot);
+  const destinationBefore = snapshotNode(destinationRoot);
+  const rehearsal = syncPublicData({ sourceRoot, destinationRoot, dryRun: true, logger: () => {} });
+  assert.equal(rehearsal.filesCopied, 1, "RIM index sync may copy only exact inputs.json");
+  assert.deepEqual([...rehearsal.restrictedSourceFilePaths].sort(), [...deniedPaths].sort());
+  assert.equal(rehearsal.restrictedSourceFiles, deniedPaths.length);
+  assert.equal(rehearsal.removedRestrictedDestinationExactFiles, deniedPaths.length);
+  assert.deepEqual(
+    [...rehearsal.removedRestrictedDestinationPaths].sort(),
+    [...deniedPaths].sort(),
+    "pre-existing RIM index siblings must be planned for removal",
+  );
+  assert.deepEqual(snapshotNode(sourceRoot), sourceBefore, "RIM index dry-run must not mutate canonical data");
+  assert.deepEqual(snapshotNode(destinationRoot), destinationBefore, "RIM index dry-run must not mutate public data");
+
+  const result = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
+  assert.equal(result.filesCopied, 1);
+  assert.equal(fs.readFileSync(path.join(destinationRoot, allowedPath), "utf8"), '{"public":"inputs"}\n');
+  for (const relativePath of deniedPaths) {
+    assert.equal(
+      fs.existsSync(path.join(destinationRoot, relativePath)),
+      false,
+      `quarantined RIM index sibling survived public sync: ${relativePath}`,
+    );
+    assert.equal(fs.existsSync(path.join(sourceRoot, relativePath)), true, "sync must not delete canonical inputs");
+  }
+
+  const appRoot = path.dirname(path.dirname(destinationRoot));
+  const cleanGuard = await checkPublicMirror({ appRoot, repoRoot: root });
+  assert.equal(cleanGuard.ok, true, cleanGuard.violations.join("\n"));
+  for (const relativePath of deniedPaths) {
+    write(destinationRoot, relativePath, '{"leaked":true}\n');
+    const leakedGuard = await checkPublicMirror({ appRoot, repoRoot: root });
+    assert.equal(leakedGuard.ok, false, `mirror guard must reject pre-existing public leak: ${relativePath}`);
+    assert.equal(
+      leakedGuard.violations.some((violation) => (
+        violation === `public/data/${relativePath}: forbidden public file`
+      )),
+      true,
+      `mirror guard must identify the leaked RIM index sibling: ${relativePath}`,
+    );
+    fs.rmSync(path.join(destinationRoot, relativePath));
   }
 }
 
@@ -983,11 +1063,18 @@ try {
   // Exact-file exclusion set (order-insensitive contract; membership + count
   // are the pins, traversal order is not).
   const expectedExcludedExactFiles = [DETECTION_FLOOR_REPORT, ...EXPECTED_PRIVATE_PROXY_FILES].sort();
+  const expectedDirectExcludedRoots = EXCLUDED_PUBLIC_DATA_ROOTS.filter((root) =>
+    !RESTRICTED_DERIVED_PUBLIC_DATA_ROOTS.some((policy) => root.startsWith(`${policy.relativeRoot}/`))
+  );
   assert.equal(rehearsal.excludedSourceFiles, 5);
   assert.equal(rehearsal.removedDestinationExactFiles, 5);
   assert.deepEqual([...rehearsal.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...rehearsal.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
-  assert.equal(rehearsal.excludedSourceRoots, EXCLUDED_PUBLIC_DATA_ROOTS.length);
+  assert.equal(rehearsal.excludedSourceRoots, expectedDirectExcludedRoots.length);
+  assert.ok(
+    rehearsal.restrictedSourceRootPaths.includes("computed/fenok-rim/kospi-dart-payout"),
+    "the nested private DART root must be rejected by the stricter fenok-rim allowlist before generic exclusion",
+  );
   assert.equal(rehearsal.removedDestinationRoots, EXCLUDED_PUBLIC_DATA_ROOTS.length);
   assert.equal(rehearsal.removedDestinationFiles, EXCLUDED_PUBLIC_DATA_ROOTS.length);
   assert.deepEqual(snapshotNode(sourceRoot), sourceBeforeDryRun, "dry-run must not mutate source bytes");
@@ -999,7 +1086,7 @@ try {
 
   const result = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(result.filesCopied, 4);
-  assert.equal(result.excludedSourceRoots, EXCLUDED_PUBLIC_DATA_ROOTS.length);
+  assert.equal(result.excludedSourceRoots, expectedDirectExcludedRoots.length);
   assert.equal(result.excludedSourceFiles, 5);
   assert.equal(result.removedDestinationRoots, EXCLUDED_PUBLIC_DATA_ROOTS.length);
   assert.equal(result.removedDestinationFiles, EXCLUDED_PUBLIC_DATA_ROOTS.length);
@@ -1028,6 +1115,7 @@ try {
   assert.equal(fs.existsSync(path.join(destinationRoot, "admin/oecd_cli")), false);
   assert.equal(fs.existsSync(path.join(destinationRoot, "yf/etf-details")), false);
   assert.equal(fs.existsSync(path.join(destinationRoot, "yf/migration-evidence")), false);
+  assert.equal(fs.existsSync(path.join(destinationRoot, "computed/fenok-rim/kospi-dart-payout")), false);
   assert.equal(lstatIfPresent(destinationReportPath), null);
   assert.equal(fs.readFileSync(sourceReportPath, "utf8"), '{"schema_version":"data-supply-detection-floor/v1"}\n');
   assert.equal(fs.readFileSync(safeAdminSiblingPath, "utf8"), '{"sibling":true}\n');
@@ -1036,7 +1124,7 @@ try {
   const destinationBeforeRerun = snapshotNode(destinationRoot);
   const rerun = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(rerun.filesCopied, 4);
-  assert.equal(rerun.excludedSourceRoots, EXCLUDED_PUBLIC_DATA_ROOTS.length);
+  assert.equal(rerun.excludedSourceRoots, expectedDirectExcludedRoots.length);
   assert.equal(rerun.excludedSourceFiles, 5);
   assert.equal(rerun.removedDestinationRoots, 0);
   assert.equal(rerun.removedDestinationFiles, 0);
@@ -1080,6 +1168,7 @@ try {
   assertOrphanedDestinationProjectionFailsClosed(fixtureRoot);
   assertMarketFactsSourceDriftFailsBeforeMutation(fixtureRoot);
   assertFenokRimRestrictedProjection(fixtureRoot);
+  await assertRimIndexRestrictedProjection(fixtureRoot);
   await assertMarketFactsShardProjection(fixtureRoot);
   assertStockanalysisEtfShardProjection(fixtureRoot);
   await assertStockanalysisEtfShardPublicGuard(fixtureRoot);

@@ -26,7 +26,7 @@ export const PROVIDER_ROLES = Object.freeze(["source", "transport", "runtime", "
 export const KPI_RECOVERY_SHAPES = Object.freeze(["general", "keyed_v2", "composite_v1", "direct"]);
 export const ENFORCEMENTS = Object.freeze(["live", "shadow"]);
 export const PRIVACY_CLASSES = Object.freeze(["private", "public_mirror", "public_safe_aggregate"]);
-export const CADENCE_KINDS = Object.freeze(["hourly", "daily", "weekly", "monthly", "quarterly", "mixed", "unknown"]);
+export const CADENCE_KINDS = Object.freeze(["hourly", "daily", "weekly", "monthly", "quarterly", "annual", "mixed", "unknown"]);
 export const CADENCE_PROVENANCE_KINDS = Object.freeze(["github_workflow", "owner_contract", "payload_field"]);
 export const WORKFLOW_CLASSES = Object.freeze(["platform_no_lane", "platform_central_reconciler", "platform_publisher"]);
 export const COMMIT_PATH_KINDS = Object.freeze(["file", "directory", "glob", "dynamic_set"]);
@@ -129,6 +129,7 @@ const providers = [
   { id: "nasdaq_indexes", label: "Nasdaq Indexes", class: "external_data" },
   { id: "oecd", label: "OECD", class: "external_data" },
   { id: "krx", label: "KRX", class: "external_data" },
+  { id: "open_dart", label: "OpenDART", class: "external_data" },
   { id: "slickcharts", label: "Slickcharts", class: "external_data" },
   { id: "sec_edgar", label: "SEC EDGAR", class: "external_data" },
   { id: "bloomberg_terminal", label: "Bloomberg Terminal", class: "external_data" },
@@ -516,7 +517,7 @@ const lanes = [
   }),
   record({
     id: "us_indices_daily",
-    label: "US index daily close (S&P 500 / NASDAQ)",
+    label: "US index daily close (S&P 500 / NASDAQ Composite / Nasdaq 100 / SOX)",
     owner_workflow: ".github/workflows/fetch-us-indices-daily.yml",
     provider_members: null,
     provider_refs: [{ provider_id: "yahoo_finance", role: "source", members: null }],
@@ -530,18 +531,26 @@ const lanes = [
     canonical_outputs: [
       "data/indices/sp500.json",
       "data/indices/nasdaq.json",
+      "data/indices/nasdaq100.json",
+      "data/indices/sox.json",
     ],
     public_mirror: [
       "100xfenok-next/public/data/indices/sp500.json",
       "100xfenok-next/public/data/indices/nasdaq.json",
+      "100xfenok-next/public/data/indices/nasdaq100.json",
+      "100xfenok-next/public/data/indices/sox.json",
     ],
     commit_shards: [
       attemptShard("us_indices_daily"),
       "data/admin/us-indices-daily",
       "data/indices/sp500.json",
       "data/indices/nasdaq.json",
+      "data/indices/nasdaq100.json",
+      "data/indices/sox.json",
       "100xfenok-next/public/data/indices/sp500.json",
       "100xfenok-next/public/data/indices/nasdaq.json",
+      "100xfenok-next/public/data/indices/nasdaq100.json",
+      "100xfenok-next/public/data/indices/sox.json",
     ],
     recovery_store: "data/admin/us-indices-daily/index.json",
     kpi_recovery_shape: "keyed_v2",
@@ -615,6 +624,34 @@ const lanes = [
     recovery_store: "data/admin/krx/index.json",
     kpi_recovery_shape: "general",
     script_sources: ["scripts/fetch-fenok-krx-daily-private.mjs", "scripts/emit-fenok-krx-attempt.mjs"],
+  }),
+  record({
+    id: "kospi_dart_payout",
+    label: "KOSPI OpenDART annual payout aggregate",
+    owner_workflow: ".github/workflows/fetch-kospi-dart-payout.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "open_dart", role: "source", members: null }],
+    store_kind: "payload",
+    lane_class: "auxiliary",
+    cadence: {
+      kind: "annual",
+      provenance: { kind: "github_workflow", evidence: ".github/workflows/fetch-kospi-dart-payout.yml" },
+    },
+    enforcement: "shadow",
+    privacy_class: "private",
+    public_mirror_allowed: false,
+    admin_store: "_private/admin/fenok-edge-korea/dart",
+    detection_attempt: null,
+    canonical_outputs: ["data/computed/fenok-rim/kospi-dart-payout"],
+    public_mirror: [],
+    commit_shards: [
+      "data/computed/fenok-rim/kospi-dart-payout/current.json",
+      "data/computed/fenok-rim/kospi-dart-payout/fy*.json",
+    ],
+    recovery_store: null,
+    declared_exception:
+      "OpenDART corpCode and issuer response cache is Git-ignored under the private admin root; this auxiliary shadow lane commits only the validated index-level FY/current aggregate and has no public mirror",
+    script_sources: ["scripts/fetch-kospi-dart-payout.mjs", "scripts/lib/kospi-dart-payout.mjs"],
   }),
   record({
     id: "slickcharts",
@@ -1405,8 +1442,18 @@ workflow_policies[".github/workflows/fetch-us-indices-daily.yml"] = policy(["us_
   success_if_exists: [
     commitSpec("data/indices/sp500.json", "file"),
     commitSpec("data/indices/nasdaq.json", "file"),
+    commitSpec("data/indices/nasdaq100.json", "file"),
+    commitSpec("data/indices/sox.json", "file"),
     commitSpec("100xfenok-next/public/data/indices/sp500.json", "file"),
     commitSpec("100xfenok-next/public/data/indices/nasdaq.json", "file"),
+    commitSpec("100xfenok-next/public/data/indices/nasdaq100.json", "file"),
+    commitSpec("100xfenok-next/public/data/indices/sox.json", "file"),
+  ],
+});
+workflow_policies[".github/workflows/fetch-kospi-dart-payout.yml"] = policy(["kospi_dart_payout"], {
+  success_if_exists: [
+    commitSpec("data/computed/fenok-rim/kospi-dart-payout/current.json", "file", true),
+    commitSpec("data/computed/fenok-rim/kospi-dart-payout/fy*.json", "glob", true),
   ],
 });
 workflow_policies[".github/workflows/fetch-oecd-cli.yml"] = policy(["oecd_cli"], {

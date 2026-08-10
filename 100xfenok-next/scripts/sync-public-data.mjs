@@ -189,6 +189,11 @@ function isExcludedRoot(relativePath) {
   return EXCLUDED_PUBLIC_DATA_ROOTS.includes(normalizedRelative(relativePath));
 }
 
+function isCoveredByExcludedRoot(relativePath) {
+  const normalized = normalizedRelative(relativePath);
+  return EXCLUDED_PUBLIC_DATA_ROOTS.some((root) => normalized === root || normalized.startsWith(`${root}/`));
+}
+
 function isExcludedFile(relativePath) {
   return EXCLUDED_PUBLIC_DATA_FILES.includes(normalizedRelative(relativePath));
 }
@@ -680,6 +685,11 @@ function collectDestinationRemovalPlan(destinationRoot, transformedRelativeRoots
         visitRestrictedDirectory(entryPath, relativePath);
       } else if (disposition === "allow") {
         if (!stat.isFile()) throw new Error(`destination allowlisted derived output is not a regular file: ${entryPath}`);
+      } else if (isCoveredByExcludedRoot(relativePath)) {
+        // The exact private root is already in the generic removal plan. Do
+        // not schedule the same node again through a broader derived-asset
+        // allowlist, or mutation-time identity checks will see a double delete.
+        continue;
       } else if (stat.isDirectory()) {
         const files = [];
         const directories = [];

@@ -178,10 +178,30 @@ assert.deepEqual(usIndicesDaily.stages.always_if_exists, [
 assert.deepEqual(usIndicesDaily.stages.success_if_exists, [
   { kind: "file", path: "data/indices/sp500.json", required: false },
   { kind: "file", path: "data/indices/nasdaq.json", required: false },
+  { kind: "file", path: "data/indices/nasdaq100.json", required: false },
+  { kind: "file", path: "data/indices/sox.json", required: false },
   { kind: "file", path: "100xfenok-next/public/data/indices/sp500.json", required: false },
   { kind: "file", path: "100xfenok-next/public/data/indices/nasdaq.json", required: false },
+  { kind: "file", path: "100xfenok-next/public/data/indices/nasdaq100.json", required: false },
+  { kind: "file", path: "100xfenok-next/public/data/indices/sox.json", required: false },
 ]);
 assert.deepEqual(usIndicesDaily.exclude, []);
+
+const kospiDartPayout = manifest.workflows[".github/workflows/fetch-kospi-dart-payout.yml"];
+assert.deepEqual(kospiDartPayout.lanes, ["kospi_dart_payout"]);
+assert.deepEqual(kospiDartPayout.stages.always_if_exists, []);
+assert.deepEqual(kospiDartPayout.stages.success_if_exists, [
+  { kind: "file", path: "data/computed/fenok-rim/kospi-dart-payout/current.json", required: true },
+  { kind: "glob", path: "data/computed/fenok-rim/kospi-dart-payout/fy*.json", required: true },
+]);
+assert.deepEqual(kospiDartPayout.stages.success_verify_not_plan_if_exists, []);
+assert.deepEqual(kospiDartPayout.stages.required_on_success, []);
+assert.deepEqual(kospiDartPayout.exclude, []);
+assert.equal(
+  kospiDartPayout.stages.success_if_exists.some((entry) => entry.path.includes("100xfenok-next/public/")),
+  false,
+  "KOSPI DART payout staging must remain private",
+);
 
 const fenokEdgeDaily = manifest.workflows[".github/workflows/fenok-edge-daily.yml"];
 assert.deepEqual(fenokEdgeDaily.lanes, ["finra_short_volume", "occ_options_volume"]);

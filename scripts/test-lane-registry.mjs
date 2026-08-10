@@ -168,6 +168,12 @@ function clone(value) {
     ],
     "Yahoo blast radius must be queryable without cadence free-text parsing",
   );
+  assert.equal(registryProviderById("open_dart")?.label, "OpenDART");
+  assert.deepEqual(
+    providerBlastRadius("open_dart"),
+    [{ lane_id: "kospi_dart_payout", role: "source", members: null }],
+    "OpenDART must have one bounded annual payout consumer",
+  );
   assert.deepEqual(
     registryLaneById("sentiment").provider_members,
     ["cnn", "cftc", "vix", "move", "crypto"],
@@ -247,7 +253,7 @@ function clone(value) {
       acc[lane.lane_class] = (acc[lane.lane_class] ?? 0) + 1;
       return acc;
     }, {});
-    assert.deepEqual(byClass, { detection_floor: 29, auxiliary: 3 }, "lane_class partition drifted");
+    assert.deepEqual(byClass, { detection_floor: 29, auxiliary: 4 }, "lane_class partition drifted");
     assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "detection_floor",
       "yahoo_batch_quote_history is a standard detection-floor producer");
     assert.equal(
@@ -388,13 +394,30 @@ function clone(value) {
     }
     const indices = registryLaneById("us_indices_daily");
     assert.equal(indices.enforcement, "live", "Yahoo owns US indices after the atomic GAS cutover");
+    assert.equal(indices.label, "US index daily close (S&P 500 / NASDAQ Composite / Nasdaq 100 / SOX)");
     assert.deepEqual(indices.roots.canonical_outputs, [
       "data/indices/sp500.json",
       "data/indices/nasdaq.json",
+      "data/indices/nasdaq100.json",
+      "data/indices/sox.json",
     ]);
     assert.deepEqual(indices.roots.public_mirror, [
       "100xfenok-next/public/data/indices/sp500.json",
       "100xfenok-next/public/data/indices/nasdaq.json",
+      "100xfenok-next/public/data/indices/nasdaq100.json",
+      "100xfenok-next/public/data/indices/sox.json",
+    ]);
+    assert.deepEqual(indices.commit_shards, [
+      "data/admin/data-supply-state/detection-attempts/us_indices_daily.json",
+      "data/admin/us-indices-daily",
+      "data/indices/sp500.json",
+      "data/indices/nasdaq.json",
+      "data/indices/nasdaq100.json",
+      "data/indices/sox.json",
+      "100xfenok-next/public/data/indices/sp500.json",
+      "100xfenok-next/public/data/indices/nasdaq.json",
+      "100xfenok-next/public/data/indices/nasdaq100.json",
+      "100xfenok-next/public/data/indices/sox.json",
     ]);
     assert.equal(indices.declared_exception, null, "the retired shadow qualification exception must be removed");
     assert.deepEqual(indices.script_sources, ["scripts/fetch-us-indices-daily.mjs", "scripts/check-us-indices-parity.mjs"],
@@ -409,6 +432,48 @@ function clone(value) {
       "the live workflow must stage canonical/public outputs only after producer success");
     assert.match(workflowSource, /atomic (?:cutover|GAS ownership cutover)/,
       "the workflow must document the atomic GAS-to-Yahoo ownership cutover");
+    const dart = registryLaneById("kospi_dart_payout");
+    assert.deepEqual(
+      {
+        owner_workflow: dart.owner_workflow,
+        provider_refs: dart.provider_refs,
+        store_kind: dart.store_kind,
+        lane_class: dart.lane_class,
+        cadence: dart.cadence,
+        enforcement: dart.enforcement,
+        privacy_class: dart.privacy_class,
+        public_mirror_allowed: dart.public_mirror_allowed,
+        roots: dart.roots,
+        commit_shards: dart.commit_shards,
+        recovery_store: dart.recovery_store,
+      },
+      {
+        owner_workflow: ".github/workflows/fetch-kospi-dart-payout.yml",
+        provider_refs: [{ provider_id: "open_dart", role: "source", members: null }],
+        store_kind: "payload",
+        lane_class: "auxiliary",
+        cadence: {
+          kind: "annual",
+          provenance: { kind: "github_workflow", evidence: ".github/workflows/fetch-kospi-dart-payout.yml" },
+        },
+        enforcement: "shadow",
+        privacy_class: "private",
+        public_mirror_allowed: false,
+        roots: {
+          admin_store: "_private/admin/fenok-edge-korea/dart",
+          detection_attempt: null,
+          canonical_outputs: ["data/computed/fenok-rim/kospi-dart-payout"],
+          public_mirror: [],
+        },
+        commit_shards: [
+          "data/computed/fenok-rim/kospi-dart-payout/current.json",
+          "data/computed/fenok-rim/kospi-dart-payout/fy*.json",
+        ],
+        recovery_store: null,
+      },
+      "KOSPI DART must remain an annual private auxiliary shadow lane with no public mirror",
+    );
+    assert.ok(dart.declared_exception.includes("Git-ignored"), "DART private cache boundary must be documented");
     const oecd = registryLaneById("oecd_cli");
     assert.equal(oecd.enforcement, "live",
       "OECD is live after its complete bounded private attempt was committed");

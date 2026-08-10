@@ -47,8 +47,48 @@ assert.deepEqual(
 
 // --- Emitter unit: shape + counts ---
 assert.equal(projection.schema_version, PROJECTION_SCHEMA);
-assert.equal(projection.lanes.length, 32, "projection must carry all 32 registry lanes");
-assert.equal(projection.lane_count, 32);
+const EXPECTED_LANE_IDS = [
+  "fred_macro",
+  "fred_banking",
+  "fred_yardeni",
+  "fdic_tier1",
+  "treasury_tga",
+  "defillama_stablecoins",
+  "yahoo_etf_fallback",
+  "stockanalysis_etf_universe",
+  "stockanalysis_stock_financial",
+  "stockanalysis_surfaces",
+  "yahoo_ticker_macro",
+  "sentiment",
+  "nasdaq_giw_sox",
+  "us_indices_daily",
+  "oecd_cli",
+  "krx",
+  "kospi_dart_payout",
+  "slickcharts",
+  "edgar_filings",
+  "sec_13f",
+  "admin_live_voice_logs",
+  "mona_production_study_state",
+  "mona_vnext_kv",
+  "benchmarks",
+  "global_scouter",
+  "damodaran",
+  "finra_short_volume",
+  "finra_ats_weekly",
+  "occ_options_volume",
+  "yahoo_private_options",
+  "apewisdom_attention",
+  "gdelt_news_tone",
+  "yahoo_batch_quote_history",
+];
+assert.equal(projection.lanes.length, 33, "projection must carry all 33 registry lanes");
+assert.equal(projection.lane_count, 33);
+assert.deepEqual(
+  projection.lanes.map(({ id }) => id),
+  EXPECTED_LANE_IDS,
+  "projection lane IDs must stay aligned with the registry order",
+);
 
 const ALLOWED_KEYS = ["cadence", "enforcement", "id", "label", "owner_workflow", "privacy_class", "store_kind"];
 for (const lane of projection.lanes) {

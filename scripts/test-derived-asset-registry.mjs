@@ -41,11 +41,11 @@ function clone(value) {
 
 {
   assert.equal(validateDerivedAssetRegistry(DERIVED_ASSET_REGISTRY), true);
-  assert.equal(DERIVED_ASSET_REGISTRY.assets.length, 32, "32 logical derived assets are declared");
+  assert.equal(DERIVED_ASSET_REGISTRY.assets.length, 34, "34 logical derived assets are declared");
   assert.equal(
     DERIVED_ASSET_REGISTRY.assets.flatMap((asset) => asset.outputs).length,
-    36,
-    "all 32 top-level files and four recursive directories are declared exactly once",
+    38,
+    "all 34 top-level files and four recursive directories are declared exactly once",
   );
   const fenokRim = derivedAssetById("fenok_rim");
   assert.deepEqual(
@@ -64,6 +64,20 @@ function clone(value) {
       { path: "100xfenok-next/public/data/computed/fenok-rim/sustainable-index-ranges.public.json", kind: "file" },
     ],
     "only the three reviewed Fenok RIM files are public",
+  );
+  const rimIndex = derivedAssetById("rim_index");
+  assert.deepEqual(
+    rimIndex.outputs,
+    [{ path: "data/computed/rim-index", kind: "directory" }],
+    "the RIM index input directory must have one registry owner",
+  );
+  assert.equal(rimIndex.privacy_class, "public_mirror");
+  assert.equal(rimIndex.public_serving_status, "active");
+  assert.equal(rimIndex.recovery, "rebuild_from_inputs");
+  assert.deepEqual(
+    rimIndex.public_outputs,
+    [{ path: "100xfenok-next/public/data/computed/rim-index/inputs.json", kind: "file" }],
+    "only the exact RIM index inputs surface is public",
   );
   for (const rawName of [
     "sustainable-index-ranges.json",

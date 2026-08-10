@@ -1,5 +1,5 @@
 {
-  "registry_digest": "592396052adb07314db4a0e950f494af0bd0dc71ce4bad50461a7f8a3b9b5943",
+  "registry_digest": "1c450dc43c983800f6c7a678ff77c0b0f813ca01afb42d64943dead5afcbcf9a",
   "registry_schema": "lane-registry/v3",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -21,6 +21,7 @@
       "data/computed/entity_graph_stock_services.json",
       "data/computed/market_structure_index.json",
       "data/computed/rim-index/inputs.json",
+      "data/computed/rim-index/FENO_RIM_FIVE_CANONICAL_CURRENT.json",
       "data/yf/finance/_summary.json",
       "data/stockanalysis/backfill/history_gap_report_latest.json",
       "data/slickcharts/discovery-summary.json",
@@ -1048,6 +1049,29 @@
         "success_verify_not_plan_if_exists": []
       }
     },
+    ".github/workflows/fetch-kospi-dart-payout.yml": {
+      "exclude": [],
+      "lanes": [
+        "kospi_dart_payout"
+      ],
+      "stages": {
+        "always_if_exists": [],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/computed/fenok-rim/kospi-dart-payout/current.json",
+            "required": true
+          },
+          {
+            "kind": "glob",
+            "path": "data/computed/fenok-rim/kospi-dart-payout/fy*.json",
+            "required": true
+          }
+        ],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
     ".github/workflows/fetch-nasdaq-giw-sox.yml": {
       "exclude": [],
       "lanes": [
@@ -1323,12 +1347,32 @@
           },
           {
             "kind": "file",
+            "path": "data/indices/nasdaq100.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/indices/sox.json",
+            "required": false
+          },
+          {
+            "kind": "file",
             "path": "100xfenok-next/public/data/indices/sp500.json",
             "required": false
           },
           {
             "kind": "file",
             "path": "100xfenok-next/public/data/indices/nasdaq.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/indices/nasdaq100.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/indices/sox.json",
             "required": false
           }
         ],
@@ -1832,6 +1876,11 @@
           {
             "kind": "file",
             "path": "data/computed/rim-index/inputs.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/rim-index/FENO_RIM_FIVE_CANONICAL_CURRENT.json",
             "required": false
           },
           {

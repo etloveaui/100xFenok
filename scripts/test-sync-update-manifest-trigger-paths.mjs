@@ -7,7 +7,12 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { replaceTriggerPathsBlock, renderTriggerPathsBlock } from "./sync-update-manifest-trigger-paths.mjs";
+import {
+  projectUpdateManifestTriggerPaths,
+  replaceTriggerPathsBlock,
+  renderTriggerPathsBlock,
+  RIM_FIVE_CANONICAL_TRIGGER_PATHS,
+} from "./sync-update-manifest-trigger-paths.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const workflowPath = path.join(root, ".github/workflows/update-manifest.yml");
@@ -16,10 +21,15 @@ const scriptPath = path.join(root, "scripts/sync-update-manifest-trigger-paths.m
 const startMarker = "      # BEGIN GENERATED lane-commit-manifest trigger_paths";
 const endMarker = "      # END GENERATED lane-commit-manifest trigger_paths";
 const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-const triggerPaths = manifest.update_manifest.trigger_paths;
+const baseTriggerPaths = manifest.update_manifest.trigger_paths;
+const triggerPaths = projectUpdateManifestTriggerPaths(baseTriggerPaths);
 const workflow = fs.readFileSync(workflowPath, "utf8");
 
-assert.equal(triggerPaths.length, 47);
+assert.ok(baseTriggerPaths.length > 0);
+const projectedExtras = RIM_FIVE_CANONICAL_TRIGGER_PATHS.filter((entry) => !baseTriggerPaths.includes(entry));
+assert.equal(triggerPaths.length, baseTriggerPaths.length + projectedExtras.length);
+for (const entry of RIM_FIVE_CANONICAL_TRIGGER_PATHS) assert.ok(triggerPaths.includes(entry), `${entry} must be projected`);
+assert.equal(triggerPaths.includes("data/computed/**"), false, "generic computed data must remain excluded");
 const expectedBlock = [
   startMarker,
   ...triggerPaths.map((entry) => `      - '${entry.replaceAll("'", "''")}'`),

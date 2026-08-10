@@ -1,9 +1,9 @@
 {
   "schema_version": "lane-registry-projection/v2",
-  "generated_at": "2026-08-10T01:14:24.574Z",
+  "generated_at": "2026-08-10T02:36:58.874Z",
   "source_schema_version": "lane-registry/v3",
   "purpose": "Admin-safe lane metadata and derived control-room projection for the owner data dashboard. No store roots, attempt/recovery paths, run identities, or repository directory structure.",
-  "lane_count": 32,
+  "lane_count": 33,
   "lanes": [
     {
       "id": "fred_macro",
@@ -145,8 +145,8 @@
             "unit": "hours",
             "value": 6
           },
-          "latest_expected_slot": "2026-08-10T01:05:00.000Z",
-          "next_expected_slot": "2026-08-10T02:05:00.000Z",
+          "latest_expected_slot": "2026-08-10T02:05:00.000Z",
+          "next_expected_slot": "2026-08-10T03:05:00.000Z",
           "status": "overdue"
         },
         "latest_attempt": {
@@ -161,10 +161,10 @@
           "sla": null
         },
         "recovery": {
-          "state": "retained_lkg",
-          "retry_count": 0,
-          "recovered_at": "2026-07-15T14:04:52.506Z",
-          "lkg_source_date": "2026-08-07T20:00:00.000Z"
+          "state": "unavailable",
+          "retry_count": null,
+          "recovered_at": null,
+          "lkg_source_date": null
         },
         "incident": {
           "status": "unknown",
@@ -214,10 +214,10 @@
           "sla": null
         },
         "recovery": {
-          "state": "fresh_primary",
-          "retry_count": 0,
-          "recovered_at": "2026-07-28T22:50:53.386Z",
-          "lkg_source_date": "2026-07-27"
+          "state": "unavailable",
+          "retry_count": null,
+          "recovered_at": null,
+          "lkg_source_date": null
         },
         "incident": {
           "status": "unknown",
@@ -245,7 +245,7 @@
     },
     {
       "id": "us_indices_daily",
-      "label": "US index daily close (S&P 500 / NASDAQ)",
+      "label": "US index daily close (S&P 500 / NASDAQ Composite / Nasdaq 100 / SOX)",
       "store_kind": "payload",
       "cadence": {
         "kind": "daily",
@@ -278,6 +278,18 @@
       "enforcement": "live",
       "privacy_class": "public_safe_aggregate",
       "owner_workflow": "fenok-edge-krx-daily.yml"
+    },
+    {
+      "id": "kospi_dart_payout",
+      "label": "KOSPI OpenDART annual payout aggregate",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "annual",
+        "provider": "OpenDART"
+      },
+      "enforcement": "shadow",
+      "privacy_class": "private",
+      "owner_workflow": "fetch-kospi-dart-payout.yml"
     },
     {
       "id": "slickcharts",

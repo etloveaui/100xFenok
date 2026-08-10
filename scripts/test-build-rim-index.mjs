@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -32,26 +33,174 @@ function writeJson(absPath, payload) {
   fs.writeFileSync(absPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 }
 
-function makeKr10yFixture() {
-  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "rim-index-"));
-  for (const dir of ["benchmarks", "computed", "damodaran", "slickcharts", "stockanalysis", "yf"]) {
+const KOSPI_DART_POINTER_REL = "computed/fenok-rim/kospi-dart-payout/current.json";
+const KOSPI_DART_ARTIFACT_REL = "computed/fenok-rim/kospi-dart-payout/fy2025.json";
+
+function makeKospiDartArtifact(overrides = {}) {
+  return {
+    schema_version: "kospi_dart_payout.v1",
+    ok: true,
+    fy: 2025,
+    asOf: "2026-08-07",
+    status: "ready",
+    coverage: {
+      covered_weight: 0.9,
+      gate: 0.75,
+      pass: true,
+      valid_issuers: 3,
+      universe_issuers: 4,
+    },
+    diagnostics: { parse_failure_count: 0, parse_failure_by_code: {} },
+    index_dividend_yield: 0.02,
+    payout_ratio: 0.1,
+    earnings_yield: 0.2,
+    first_knowable_at: "2026-08-06T00:00:00Z",
+    per_issuer_rows: 3,
+    metadata: {
+      tier: "trailing_realised_fy_index_level",
+      per_issuer_redistribution: "never included in the public artifact; retained only in the private raw cache",
+    },
+    provenance: {
+      bridge: {
+        source: "data/admin/fenok-edge-korea-krx-daily-index.json",
+        source_field: "OutBlock_1[MKT_NM=KOSPI].MKTCAP / sum(OutBlock_1[MKT_NM=KOSPI].MKTCAP)",
+        as_of: "2026-08-07",
+        row_count: 4,
+      },
+      benchmark: {
+        source: "data/benchmarks/emerging.json",
+        as_of: "2026-08-02",
+      },
+    },
+    ...overrides,
+  };
+}
+
+function installKospiDartFixture(
+  tempRoot,
+  {
+    artifact = makeKospiDartArtifact(),
+    pointer = null,
+    includePointer = true,
+    rawArtifact = null,
+    rawPointer = null,
+  } = {},
+) {
+  const dartRoot = path.join(tempRoot, "computed/fenok-rim/kospi-dart-payout");
+  fs.rmSync(path.join(tempRoot, "computed/fenok-rim"), { recursive: true, force: true });
+  fs.mkdirSync(dartRoot, { recursive: true });
+  const artifactPath = path.join(tempRoot, KOSPI_DART_ARTIFACT_REL);
+  if (rawArtifact !== null) {
+    fs.writeFileSync(artifactPath, rawArtifact, "utf8");
+  } else {
+    writeJson(artifactPath, artifact);
+  }
+  if (!includePointer) return;
+  const artifactBytes = fs.readFileSync(artifactPath);
+  let parsedArtifact = artifact;
+  if (rawArtifact !== null) {
+    try {
+      parsedArtifact = JSON.parse(artifactBytes.toString("utf8"));
+    } catch {
+      parsedArtifact = artifact;
+    }
+  }
+  const current = {
+    schema_version: "kospi_dart_payout_pointer.v1",
+    selected_artifact: "data/computed/fenok-rim/kospi-dart-payout/fy2025.json",
+    fy: parsedArtifact.fy,
+    sha256: crypto.createHash("sha256").update(artifactBytes).digest("hex"),
+    as_of: parsedArtifact.asOf,
+    first_knowable_at: parsedArtifact.first_knowable_at,
+    coverage: {
+      covered_weight: parsedArtifact.coverage.covered_weight,
+      gate: parsedArtifact.coverage.gate,
+      pass: parsedArtifact.coverage.pass,
+    },
+    ...pointer,
+  };
+  if (rawPointer !== null) fs.writeFileSync(path.join(tempRoot, KOSPI_DART_POINTER_REL), rawPointer, "utf8");
+  else writeJson(path.join(tempRoot, KOSPI_DART_POINTER_REL), current);
+}
+
+const DEFAULT_EXACT_SPOT_ROWS = Object.freeze({
+  sp500: [{ date: "2026-08-07", value: 7777.7 }],
+  nasdaq: [{ date: "2026-08-07", value: 26666.6 }],
+  nasdaq100: [{ date: "2026-08-07", value: 29999.9 }],
+  sox: [{ date: "2026-08-07", value: 12000.1 }],
+});
+
+function makeExactSpotFixture({ includeAdmin = true, spotRows = {}, mutateKospi = null } = {}) {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "rim-index-exact-spot-"));
+  for (const dir of ["benchmarks", "damodaran", "macro", "slickcharts", "stockanalysis", "yf"]) {
     fs.symlinkSync(path.join(dataRoot, dir), path.join(tempRoot, dir), "dir");
   }
+  if (includeAdmin) fs.symlinkSync(path.join(dataRoot, "admin"), path.join(tempRoot, "admin"), "dir");
+
+  fs.mkdirSync(path.join(tempRoot, "indices"), { recursive: true });
+  for (const file of ["nasdaq-giw-sox-constituents.json"]) {
+    fs.symlinkSync(path.join(dataRoot, "indices", file), path.join(tempRoot, "indices", file), "file");
+  }
+  const mergedSpotRows = { ...DEFAULT_EXACT_SPOT_ROWS, ...spotRows };
+  for (const [key, rows] of Object.entries(mergedSpotRows)) {
+    writeJson(path.join(tempRoot, "indices", `${key}.json`), rows);
+  }
+
+  fs.mkdirSync(path.join(tempRoot, "computed"), { recursive: true });
+  const computedSource = path.join(dataRoot, "computed");
+  for (const entry of fs.readdirSync(computedSource, { withFileTypes: true })) {
+    if (entry.name === "fenok-edge-korea-krx-index-daily.json" || entry.name === "fenok-rim") continue;
+    fs.symlinkSync(
+      path.join(computedSource, entry.name),
+      path.join(tempRoot, "computed", entry.name),
+      entry.isDirectory() ? "dir" : "file",
+    );
+  }
+  let kospiPayload = readJson(path.join(computedSource, "fenok-edge-korea-krx-index-daily.json"));
+  if (typeof mutateKospi === "function") kospiPayload = mutateKospi(kospiPayload);
+  writeJson(path.join(tempRoot, "computed", "fenok-edge-korea-krx-index-daily.json"), kospiPayload);
+  return tempRoot;
+}
+
+function makeKr10yFixture() {
+  const tempRoot = makeExactSpotFixture({ includeAdmin: false });
   const macroPayload = readJson(path.join(dataRoot, "macro/fred-banking-daily.json"));
   macroPayload.series.IRLTLT01KRM156N = [
     { date: "2026-05-01", value: 3.25 },
     { date: "2026-06-01", value: 3.33 },
   ];
+  fs.rmSync(path.join(tempRoot, "macro"), { recursive: true, force: true });
+  fs.mkdirSync(path.join(tempRoot, "macro"), { recursive: true });
   writeJson(path.join(tempRoot, "macro/fred-banking-daily.json"), macroPayload);
+  return tempRoot;
+}
+
+function makeCcmpFixture({ spotRows = {}, mutateBenchmark = null, mutateMacro = null } = {}) {
+  const tempRoot = makeExactSpotFixture({ includeAdmin: false, spotRows });
+  if (typeof mutateBenchmark === "function") {
+    const benchmarkRoot = path.join(tempRoot, "benchmarks");
+    fs.rmSync(benchmarkRoot, { recursive: true, force: true });
+    fs.mkdirSync(benchmarkRoot, { recursive: true });
+    fs.symlinkSync(path.join(dataRoot, "benchmarks", "emerging.json"), path.join(benchmarkRoot, "emerging.json"), "file");
+    fs.symlinkSync(path.join(dataRoot, "benchmarks", "micro_sectors.json"), path.join(benchmarkRoot, "micro_sectors.json"), "file");
+    const benchmarkPayload = readJson(path.join(dataRoot, "benchmarks/us.json"));
+    mutateBenchmark(benchmarkPayload);
+    writeJson(path.join(benchmarkRoot, "us.json"), benchmarkPayload);
+  }
+  if (typeof mutateMacro === "function") {
+    const macroRoot = path.join(tempRoot, "macro");
+    fs.rmSync(macroRoot, { recursive: true, force: true });
+    fs.mkdirSync(macroRoot, { recursive: true });
+    const macroPayload = readJson(path.join(dataRoot, "macro/fred-banking-daily.json"));
+    mutateMacro(macroPayload);
+    writeJson(path.join(macroRoot, "fred-banking-daily.json"), macroPayload);
+  }
   return tempRoot;
 }
 
 function makeKrxBridgeFixture(asOf) {
   assert.match(asOf, /^\d{4}-\d{2}-\d{2}$/, "KRX bridge fixture source date");
-  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "rim-index-krx-bridge-"));
-  for (const dir of ["benchmarks", "computed", "damodaran", "macro", "slickcharts", "stockanalysis", "yf"]) {
-    fs.symlinkSync(path.join(dataRoot, dir), path.join(tempRoot, dir), "dir");
-  }
+  const tempRoot = makeExactSpotFixture({ includeAdmin: false });
   const stockActionPayload = readJson(path.join(dataRoot, "computed/stock_action_index.json"));
   const rows = (stockActionPayload.rows ?? [])
     .filter((row) =>
@@ -130,12 +279,11 @@ function makeKrxBridgeFixture(asOf) {
 }
 
 function makeBenchmarkAvailabilityFixture({ missing = false, stale = false } = {}) {
-  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "rim-index-availability-"));
-  for (const dir of ["computed", "damodaran", "indices", "macro", "slickcharts", "stockanalysis", "yf"]) {
-    fs.symlinkSync(path.join(dataRoot, dir), path.join(tempRoot, dir), "dir");
-  }
+  const tempRoot = makeExactSpotFixture({ includeAdmin: false });
+  const benchmarkRoot = path.join(tempRoot, "benchmarks");
+  fs.rmSync(benchmarkRoot, { recursive: true, force: true });
   if (!missing) {
-    fs.mkdirSync(path.join(tempRoot, "benchmarks"), { recursive: true });
+    fs.mkdirSync(benchmarkRoot, { recursive: true });
     for (const file of ["us.json", "emerging.json", "micro_sectors.json"]) {
       const payload = readJson(path.join(dataRoot, "benchmarks", file));
       if (stale) {
@@ -143,7 +291,7 @@ function makeBenchmarkAvailabilityFixture({ missing = false, stale = false } = {
           for (const row of Array.isArray(section?.data) ? section.data : []) row.date = "2026-05-01";
         }
       }
-      writeJson(path.join(tempRoot, "benchmarks", file), payload);
+      writeJson(path.join(benchmarkRoot, file), payload);
     }
   }
   return tempRoot;
@@ -223,6 +371,7 @@ assert.equal(invalidSoxFreshness.status, "refresh_recommended");
 
 const currentSoxFixtureAsOf = readJson(path.join(dataRoot, "indices/nasdaq-giw-sox-constituents.json")).as_of;
 assert.match(currentSoxFixtureAsOf, /^\d{4}-\d{2}-\d{2}$/, "SOX fixture source date");
+const exactSpotRoot = makeExactSpotFixture({ includeAdmin: true });
 // This builder reads the LIVE data tree, so pinning the clock to one file's date
 // makes the test fail the moment any other source publishes past it - a weekly
 // benchmark refresh moved KOSPI to 2026-07-26 while this pin sat at the SOX file's
@@ -238,12 +387,14 @@ const newestObservedSourceAsOf = (built) => Object.values(built.indices)
 // Building is separate from validating, so this probe cannot trip the assertion
 // it exists to prevent.
 const soxProbeAsOf = newestObservedSourceAsOf(buildRimIndexInputs({
+  dataRootOverride: exactSpotRoot,
   generatedAt: `${currentSoxFixtureAsOf}T23:59:59.000Z`,
 }));
 const payloadPinAsOf = soxProbeAsOf && soxProbeAsOf > currentSoxFixtureAsOf
   ? soxProbeAsOf
   : currentSoxFixtureAsOf;
 const payload = buildRimIndexInputs({
+  dataRootOverride: exactSpotRoot,
   generatedAt: `${payloadPinAsOf}T23:59:59.000Z`,
 });
 const validation = validateRimIndexInputs(payload);
@@ -315,6 +466,170 @@ for (const id of ["SPX", "NDX"]) {
   }
 }
 
+const officialKospiSpotPayload = readJson(path.join(dataRoot, "computed/fenok-edge-korea-krx-index-daily.json"));
+const officialKospiSpotRows = (officialKospiSpotPayload.indices ?? []).filter((row) => (
+  row?.market === "KOSPI"
+  && row?.index_class === "KOSPI"
+  && row?.index_name === "코스피"
+));
+assert.equal(officialKospiSpotRows.length, 1, "real-root official KOSPI row identity remains unique");
+const officialKospiSpotRow = officialKospiSpotRows[0];
+const expectedExactSpots = {
+  SPX: {
+    source: "indices/sp500.json",
+    as_of: "2026-08-07",
+    value: 7777.7,
+    identity: { provider_symbol: "^GSPC", canonical_index: "SPX" },
+  },
+  CCMP: {
+    source: "indices/nasdaq.json",
+    as_of: "2026-08-07",
+    value: 26666.6,
+    identity: { provider_symbol: "^IXIC", canonical_index: "CCMP" },
+  },
+  NDX: {
+    source: "indices/nasdaq100.json",
+    as_of: "2026-08-07",
+    value: 29999.9,
+    identity: { provider_symbol: "^NDX", canonical_index: "NDX" },
+  },
+  SOX: {
+    source: "indices/sox.json",
+    as_of: "2026-08-07",
+    value: 12000.1,
+    identity: { provider_symbol: "^SOX", canonical_index: "SOX" },
+  },
+  KOSPI: {
+    source: "computed/fenok-edge-korea-krx-index-daily.json",
+    source_field: "indices[market=KOSPI,index_class=KOSPI,index_name=코스피].close",
+    as_of: officialKospiSpotPayload.as_of,
+    value: officialKospiSpotRow.close,
+    identity: { market: "KOSPI", index_class: "KOSPI", index_name: "코스피" },
+  },
+};
+for (const [id, expected] of Object.entries(expectedExactSpots)) {
+  const item = payload.indices[id];
+  assert.equal(item.observed.price.source, expected.source, `${id}: exact spot source`);
+  assert.equal(item.observed.price.source_field, expected.source_field ?? "rows[-1].value", `${id}: exact spot field`);
+  assert.equal(item.observed.price.as_of, expected.as_of, `${id}: exact spot as_of`);
+  assert.equal(item.observed.price.value, expected.value, `${id}: exact spot value`);
+  assert.deepEqual(item.observed.price.identity, expected.identity, `${id}: exact named-index identity`);
+  assert.equal(item.observed.price.freshness.generated_at_date, payloadPinAsOf, `${id}: processing date stays freshness metadata`);
+  assert.equal(item.observed.benchmark_price.source, item.observed.forward_eps.source, `${id}: benchmark source is shared`);
+  assert.equal(item.observed.benchmark_price.as_of, item.observed.forward_eps.as_of, `${id}: benchmark fundamentals share their own clock`);
+  assert.equal(item.observed.benchmark_price.freshness.status, item.observed.forward_eps.freshness.status, `${id}: benchmark freshness is shared`);
+  assert.notEqual(item.observed.price.as_of, item.observed.benchmark_price.as_of, `${id}: spot and benchmark clocks stay distinct`);
+  assert.doesNotMatch(
+    JSON.stringify(item.observed.price),
+    /QQQ|SOXX|EWY|ETF|Global Scouter|Investing/i,
+    `${id}: exact spot must not use an ETF or legacy price fallback`,
+  );
+  assert.equal(item.derived.book_value.formula, "current_price / price_to_book", `${id}: book uses current spot`);
+  assert.ok(
+    Math.abs(item.derived.book_value.value - (expected.value / item.observed.price_to_book.value)) < 0.01,
+    `${id}: book value uses exact spot with benchmark P/B`,
+  );
+  if (item.derived.forecast_grid_v1?.periods?.length) {
+    assert.equal(
+      item.derived.forecast_grid_v1.periods[0].book_value_beginning.formula,
+      "current_price / benchmark_px_to_book_ratio",
+      `${id}: forecast book formula uses exact spot with benchmark P/B`,
+    );
+  }
+}
+assert.equal(payload.indices.KOSPI.observed.price.source_generated_at, officialKospiSpotPayload.generated_at);
+for (const id of ["SPX", "CCMP", "NDX", "SOX"]) {
+  assert.equal(payload.indices[id].observed.price.freshness.freshness_calendar, "us_market", `${id}: US spot clock`);
+}
+assert.equal(payload.indices.KOSPI.observed.price.freshness.freshness_calendar, "krx_market", "KOSPI spot clock");
+assert.equal(payload.indices.KOSPI.observed.price.freshness.freshness_unit, "business_days", "KOSPI spot freshness unit");
+
+const processingSnapshotPayload = buildRimIndexInputs({
+  dataRootOverride: exactSpotRoot,
+  generatedAt: "2026-08-10T23:59:59.000Z",
+});
+assert.equal(processingSnapshotPayload.indices.SPX.observed.price.as_of, "2026-08-07");
+assert.equal(processingSnapshotPayload.indices.SPX.observed.price.freshness.generated_at_date, "2026-08-10");
+assert.notEqual(
+  processingSnapshotPayload.indices.SPX.observed.price.as_of,
+  processingSnapshotPayload.indices.SPX.observed.price.freshness.generated_at_date,
+  "generated_at_date must not become the economic spot observation date",
+);
+
+const staleSpotRoot = makeExactSpotFixture({
+  includeAdmin: true,
+  spotRows: { sp500: [{ date: "2026-07-01", value: 7000 }] },
+});
+try {
+  const staleSpotPayload = buildRimIndexInputs({
+    dataRootOverride: staleSpotRoot,
+    generatedAt: "2026-08-10T23:59:59.000Z",
+  });
+  const staleSpot = staleSpotPayload.indices.SPX;
+  assert.equal(staleSpot.observed.price.value, 7000);
+  assert.equal(staleSpot.observed.price.freshness.status, "refresh_recommended");
+  assert.ok(staleSpot.blockers.some((row) => row.code === "spot_source_refresh_recommended"));
+  assert.equal(staleSpot.public_status, "input_only_primary_with_caveats");
+  assert.equal(validateRimIndexInputs(staleSpotPayload).ok, true);
+} finally {
+  fs.rmSync(staleSpotRoot, { recursive: true, force: true });
+}
+
+const missingSpotRoot = makeExactSpotFixture({ includeAdmin: true });
+try {
+  fs.rmSync(path.join(missingSpotRoot, "indices", "nasdaq100.json"), { force: true });
+  const missingSpotPayload = buildRimIndexInputs({
+    dataRootOverride: missingSpotRoot,
+    generatedAt: "2026-08-10T23:59:59.000Z",
+  });
+  const missingSpot = missingSpotPayload.indices.NDX;
+  assert.ok(missingSpot.blockers.some((row) => row.code === "source_unavailable"));
+  assert.equal(missingSpot.observed.price.value, null);
+  assert.equal(missingSpot.observed.price.source_tier, "blocked_missing_source");
+  assert.equal(missingSpot.observed.benchmark_price.value, null);
+  assert.equal(validateRimIndexInputs(missingSpotPayload).ok, true);
+} finally {
+  fs.rmSync(missingSpotRoot, { recursive: true, force: true });
+}
+
+const identityMismatchRoot = makeExactSpotFixture({
+  includeAdmin: true,
+  mutateKospi: (source) => ({
+    ...source,
+    indices: source.indices.map((row) => row.index_name === "코스피" ? { ...row, index_name: "코스피 200" } : row),
+  }),
+});
+try {
+  const identityMismatchPayload = buildRimIndexInputs({
+    dataRootOverride: identityMismatchRoot,
+    generatedAt: "2026-08-10T23:59:59.000Z",
+  });
+  const mismatchedKospi = identityMismatchPayload.indices.KOSPI;
+  assert.ok(mismatchedKospi.blockers.some((row) => row.code === "source_unavailable"));
+  assert.match(mismatchedKospi.blockers.find((row) => row.code === "source_unavailable").reason, /identity mismatch/);
+  assert.equal(mismatchedKospi.observed.price.value, null);
+  assert.equal(mismatchedKospi.observed.benchmark_price.value, null);
+  assert.equal(validateRimIndexInputs(identityMismatchPayload).ok, true);
+} finally {
+  fs.rmSync(identityMismatchRoot, { recursive: true, force: true });
+}
+
+const missingOfficialKospiRoot = makeExactSpotFixture({ includeAdmin: true });
+try {
+  fs.rmSync(path.join(missingOfficialKospiRoot, "computed", "fenok-edge-korea-krx-index-daily.json"), { force: true });
+  const missingOfficialKospiPayload = buildRimIndexInputs({
+    dataRootOverride: missingOfficialKospiRoot,
+    generatedAt: "2026-08-10T23:59:59.000Z",
+  });
+  const missingOfficialKospi = missingOfficialKospiPayload.indices.KOSPI;
+  assert.ok(missingOfficialKospi.blockers.some((row) => row.code === "source_unavailable"));
+  assert.equal(missingOfficialKospi.observed.price.value, null);
+  assert.equal(missingOfficialKospi.observed.price.source_tier, "blocked_missing_source");
+  assert.equal(validateRimIndexInputs(missingOfficialKospiPayload).ok, true);
+} finally {
+  fs.rmSync(missingOfficialKospiRoot, { recursive: true, force: true });
+}
+
 // Coverage loss is honest lane degradation, not platform corruption. A stricter
 // fixture floor forces the real builder down that path without fabricating inputs.
 // Availability fixtures symlink shared sources from the live data tree. Pin their
@@ -374,8 +689,9 @@ try {
   assert.equal(missingBenchmarkValidation.ok, true, missingBenchmarkValidation.errors.join("\n"));
   for (const id of ["SPX", "NDX", "KOSPI", "SOX"]) {
     assert.ok(missingBenchmarkPayload.indices[id].blockers.some((row) => row.code === "source_unavailable"));
-    assert.equal(missingBenchmarkPayload.indices[id].observed.price.value, null);
-    assert.match(missingBenchmarkPayload.indices[id].observed.price.reason, /unavailable/);
+    assert.ok(missingBenchmarkPayload.indices[id].observed.price.value > 0, `${id}: exact spot survives benchmark unavailability`);
+    assert.equal(missingBenchmarkPayload.indices[id].observed.benchmark_price.value, null);
+    assert.equal(missingBenchmarkPayload.indices[id].observed.benchmark_price.source_tier, "blocked_missing_source");
   }
 } finally {
   fs.rmSync(missingBenchmarkRoot, { recursive: true, force: true });
@@ -402,10 +718,173 @@ try {
 }
 
 assert.equal(payload.indices.CCMP.role, "secondary_input_only");
-assert.ok(payload.indices.CCMP.blockers.some((blocker) => blocker.code === "missing_named_constituent_weight_path"));
+assert.equal(payload.indices.CCMP.public_status, "input_only_ccmp_direct_with_caveats");
+assert.ok(payload.indices.CCMP.blockers.some((blocker) => blocker.code === "ccmp_direct_forecast_fields_missing"));
+assert.equal(payload.indices.CCMP.observed.price.value, 26666.6);
+assert.ok(payload.indices.CCMP.derived.payout_ratio.value > 0);
+assert.equal(payload.indices.CCMP.derived.payout_ratio.coverage.dividend_yield_as_of, "2026-08-07");
+assert.deepEqual(payload.indices.CCMP.derived.payout_ratio.coverage.source_clocks, {
+  total_return_last_observation: "2026-08-07",
+  price_return_last_observation: "2026-08-07",
+  aligned_last_observation: "2026-08-07",
+  requested_as_of: "2026-08-07",
+  used_observation: "2026-08-07",
+  anchor_observation: "2025-08-07",
+  first_knowable_at: "2026-08-07",
+  all_used_inputs_at_or_before: "2026-08-07",
+});
+assert.equal(payload.indices.CCMP.observed.risk_free_rate.source_field, "series.DGS10[-1].value / 100");
+assert.equal(payload.indices.CCMP.observed.equity_risk_premium.source_field, "us_erp");
+assert.equal(payload.indices.CCMP.observed.risk_free_rate.availability_status, "available");
+assert.equal(payload.indices.CCMP.observed.equity_risk_premium.availability_status, "available");
+assert.equal(payload.indices.CCMP.derived.forecast_grid_v1.source_tier, "blocked_missing_source");
+assert.deepEqual(payload.indices.CCMP.derived.forecast_grid_v1.periods, []);
+assert.equal(payload.indices.CCMP.derived.valuation_range_v1, undefined);
+assert.equal(payload.indices.CCMP.derived.proxy_inputs_v1, undefined);
+assert.doesNotMatch(JSON.stringify(payload.indices.CCMP.derived), /QQQ|ONEQ|proxy_diagnostic|methodology_derived_index_weight_source/i);
 assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.CCMP.proxy_ticker, "ONEQ");
 assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.CCMP.exact_index_substitute, false);
 assert.ok(payload.coverage_diagnostics.proxy_constituent_candidates.CCMP.resolved_weight_ratio < 0.75);
+
+const ccmpMeasuredRoot = makeCcmpFixture({
+  spotRows: { nasdaq: [{ date: "2026-08-07", value: 26690.615234375 }] },
+});
+try {
+  const measuredPayload = buildRimIndexInputs({
+    dataRootOverride: ccmpMeasuredRoot,
+    generatedAt: currentLiveFixtureGeneratedAt,
+  });
+  const measuredCcmp = measuredPayload.indices.CCMP;
+  assert.ok(Math.abs(measuredCcmp.derived.payout_ratio.value - 0.14964115744352866) < 1e-12, "CCMP measured payout");
+  assert.ok(Math.abs(measuredCcmp.derived.payout_ratio.coverage.dividend_yield - 0.006060379880316491) < 1e-15, "CCMP measured yield");
+  assert.equal(measuredCcmp.derived.payout_ratio.coverage.exact_spot_value, 26690.615234375);
+  assert.equal(measuredCcmp.derived.payout_ratio.coverage.exact_spot_as_of, "2026-08-07");
+  assert.equal(measuredCcmp.observed.risk_free_rate.value, 0.0469);
+  assert.equal(measuredCcmp.observed.equity_risk_premium.value, 0.0503);
+  assert.equal(measuredCcmp.derived.cost_of_equity.value, 0.0972);
+  assert.equal(measuredCcmp.derived.forecast_grid_v1.source_tier, "blocked_missing_source");
+  assert.equal(validateRimIndexInputs(measuredPayload).ok, true);
+} finally {
+  fs.rmSync(ccmpMeasuredRoot, { recursive: true, force: true });
+}
+
+const ccmpDirectRoot = makeCcmpFixture({
+  mutateBenchmark: (source) => {
+    const row = source.sections.nasdaq_composite.data.at(-1);
+    row.best_eps_fy2 = 1234.5;
+    row.best_eps_fy3 = 1450.25;
+    row.best_eps_asof = row.date;
+  },
+});
+try {
+  const directPayload = buildRimIndexInputs({
+    dataRootOverride: ccmpDirectRoot,
+    generatedAt: currentLiveFixtureGeneratedAt,
+  });
+  const directCcmp = directPayload.indices.CCMP;
+  assert.equal(directCcmp.public_status, "ready_inputs_and_forecast_grid");
+  assert.equal(directCcmp.blockers.length, 0);
+  assert.equal(directCcmp.derived.forecast_grid_v1.source_tier, "direct_index_source");
+  assert.deepEqual(
+    directCcmp.derived.forecast_grid_v1.periods.map((row) => row.earnings_proxy.value),
+    [1080.9544, 1234.5, 1450.25],
+  );
+  assert.deepEqual(
+    directCcmp.derived.forecast_grid_v1.periods.map((row) => row.earnings_proxy.source_tier),
+    ["observed_source", "observed_source", "observed_source"],
+  );
+  assert.equal(directCcmp.derived.forecast_grid_v1.coverage.best_eps_asof, "2026-07-31");
+  assert.equal(directCcmp.derived.forecast_grid_v1.periods[0].book_value_beginning.formula, "current_price / benchmark_px_to_book_ratio");
+  assert.equal(directCcmp.derived.forecast_grid_v1.periods[0].payout_ratio.formula, "derived.payout_ratio");
+  assert.equal(directCcmp.derived.forecast_grid_v1.periods[0].residual_income_proxy.formula, "(roe_on_beginning_book - cost_of_equity) * book_value_beginning");
+  assert.doesNotMatch(JSON.stringify(directCcmp.derived.forecast_grid_v1), /proxy_diagnostic|proxy_inputs_v1|methodology_derived_index_weight_source|QQQ|ONEQ/i);
+  assert.equal(validateRimIndexInputs(directPayload).ok, true);
+} finally {
+  fs.rmSync(ccmpDirectRoot, { recursive: true, force: true });
+}
+
+for (const [label, mutateBenchmark, expected] of [
+  [
+    "N-A FY2",
+    (source) => {
+      const row = source.sections.nasdaq_composite.data.at(-1);
+      row.best_eps_fy2 = "N-A";
+      row.best_eps_fy3 = 1450.25;
+      row.best_eps_asof = row.date;
+    },
+    /positive finite numeric|N-A/i,
+  ],
+  [
+    "invalid FY3",
+    (source) => {
+      const row = source.sections.nasdaq_composite.data.at(-1);
+      row.best_eps_fy2 = 1234.5;
+      row.best_eps_fy3 = 0;
+      row.best_eps_asof = row.date;
+    },
+    /positive finite numeric|non-positive/i,
+  ],
+  [
+    "out-of-gate FY2",
+    (source) => {
+      const row = source.sections.nasdaq_composite.data.at(-1);
+      row.best_eps_fy2 = row.best_eps * 4;
+      row.best_eps_fy3 = row.best_eps * 4.5;
+      row.best_eps_asof = row.date;
+    },
+    /outside/i,
+  ],
+  [
+    "future best_eps_asof",
+    (source) => {
+      const row = source.sections.nasdaq_composite.data.at(-1);
+      row.best_eps_fy2 = 1234.5;
+      row.best_eps_fy3 = 1450.25;
+      row.best_eps_asof = "2026-08-08";
+    },
+    /best_eps_asof.*must be no later|calendar date/i,
+  ],
+]) {
+  const invalidRoot = makeCcmpFixture({ mutateBenchmark });
+  try {
+    const invalidPayload = buildRimIndexInputs({
+      dataRootOverride: invalidRoot,
+      generatedAt: currentLiveFixtureGeneratedAt,
+    });
+    const invalidCcmp = invalidPayload.indices.CCMP;
+    assert.equal(invalidCcmp.derived.forecast_grid_v1.source_tier, "blocked_missing_source", `${label}: blocked grid`);
+    assert.deepEqual(invalidCcmp.derived.forecast_grid_v1.periods, [], `${label}: no partial grid`);
+    assert.ok(invalidCcmp.blockers.some((row) => /ccmp_direct_forecast/.test(row.code)), `${label}: named blocker`);
+    assert.match(invalidCcmp.derived.forecast_grid_v1.reason, expected, `${label}: reason`);
+    assert.equal(validateRimIndexInputs(invalidPayload).ok, true, `${label}: fail-closed payload validates`);
+  } finally {
+    fs.rmSync(invalidRoot, { recursive: true, force: true });
+  }
+}
+
+const missingCcmpFredRoot = makeCcmpFixture({
+  mutateMacro: (source) => {
+    delete source.series.NASDAQCOM;
+  },
+});
+try {
+  const missingFredPayload = buildRimIndexInputs({
+    dataRootOverride: missingCcmpFredRoot,
+    generatedAt: currentLiveFixtureGeneratedAt,
+  });
+  const missingFredCcmp = missingFredPayload.indices.CCMP;
+  assert.equal(missingFredCcmp.observed.price.value, 26666.6);
+  assert.ok(missingFredCcmp.derived.book_value.value > 0);
+  assert.equal(missingFredCcmp.derived.payout_ratio.value, null);
+  assert.equal(missingFredCcmp.observed.risk_free_rate.value, 0.0469);
+  assert.equal(missingFredCcmp.observed.equity_risk_premium.value, 0.0503);
+  assert.equal(missingFredCcmp.derived.forecast_grid_v1.value, undefined);
+  assert.equal(missingFredCcmp.derived.forecast_grid_v1.source_tier, "blocked_missing_source");
+  assert.ok(missingFredCcmp.blockers.some((row) => row.code === "ccmp_measured_index_yield_unavailable"));
+  assert.equal(validateRimIndexInputs(missingFredPayload).ok, true);
+} finally {
+  fs.rmSync(missingCcmpFredRoot, { recursive: true, force: true });
+}
 
 const kospi = payload.indices.KOSPI;
 assert.doesNotMatch(String(kospi.observed.risk_free_rate.source_field ?? ""), /DGS10/);
@@ -415,48 +894,35 @@ if (kospi.role === "secondary_input_only") {
     ["fresh_enough_for_input_slice", "refresh_recommended"].includes(liveKrxFreshness.status),
     `unexpected live KRX freshness status: ${liveKrxFreshness.status}`,
   );
-  if (liveKrxFreshness.status === "refresh_recommended") {
-    assert.equal(kospi.public_status, "input_only_krx_exact_weights_with_caveats");
-    assert.ok(
-      kospi.blockers.some((blocker) => blocker.code === "krx_kospi_daily_refresh_recommended"),
-      "stale KRX weights stay named",
-    );
-  } else {
-    // KOSPI used to read READY here. It no longer can, and the reason is a
-    // measurement rather than a regression: the KRX rows inside
-    // stock_action_index.json carry no price and no trailing dividend, so their
-    // dividendYield unit cannot be measured, and unmeasurable rows are dropped
-    // instead of averaged at an assumed unit. Payout coverage collapses to a few
-    // percent and the lane degrades honestly. KOSPI is input-only by policy in
-    // either state, so no public surface loses a number it was entitled to.
-    assert.equal(kospi.public_status, "input_only_krx_exact_weights_with_caveats");
-    assert.ok(
-      kospi.blockers.some((blocker) => blocker.code === "kospi_payout_coverage_below_threshold"),
-      `KOSPI must name the coverage gap it degraded on: ${JSON.stringify(kospi.blockers)}`,
-    );
-    const kospiMix = kospi.derived.payout_ratio.coverage.dividend_yield_unit_mix;
-    assert.ok(
-      kospiMix.unresolved > kospiMix.percent + kospiMix.fraction,
-      "the KOSPI degradation must be driven by unresolvable units, not by a thin index",
-    );
-  }
+  assert.equal(kospi.public_status, "input_only_krx_exact_weights_with_caveats");
+  assert.ok(
+    kospi.blockers.some((blocker) => blocker.code === "kospi_dart_payout_pointer_unavailable"),
+    `missing DART pointer must block top-level payout: ${JSON.stringify(kospi.blockers)}`,
+  );
+  assert.equal(kospi.derived.payout_ratio.value, null);
+  assert.equal(kospi.derived.payout_ratio.source_tier, "blocked_missing_source");
+  assert.equal(kospi.derived.payout_ratio.formula, "kospi_dart_payout_artifact.payout_ratio");
+  assert.equal(kospi.derived.legacy_payout_ratio_qa.source_tier, "derived_formula");
+  assert.equal(kospi.derived.legacy_payout_ratio_qa.value, 0);
+  assert.ok(
+    kospi.derived.legacy_payout_ratio_qa.coverage.dividend_yield_unit_mix.unresolved
+      > kospi.derived.legacy_payout_ratio_qa.coverage.dividend_yield_unit_mix.percent,
+    "the old stock_action payout remains diagnostics-only",
+  );
   assert.equal(kospi.observed.risk_free_rate.source_tier, "observed_source");
   assert.match(kospi.observed.risk_free_rate.source, /(kts_bydd_trd\/\d{8}\.json|derived_rim_inputs\.korea_10y)/);
   assert.ok(kospi.observed.risk_free_rate.value > 0.01);
   assert.ok(kospi.observed.risk_free_rate.value < 0.1);
   assert.ok(!kospi.blockers.some((blocker) => blocker.code === "missing_kospi_constituent_weight_path"));
   assert.ok(!kospi.blockers.some((blocker) => blocker.code === "country_risk_free_source_solved_not_wired"));
-  assert.equal(kospi.derived.payout_ratio.source_tier, "derived_formula");
+  assert.equal(kospi.derived.payout_ratio.coverage.availability_status, "blocked");
   assert.equal(kospi.derived.explicit_eps_growth_3y.source_tier, "derived_formula");
   assert.equal(kospi.derived.cost_of_equity.source_tier, "derived_formula");
-  // Not a lowered threshold: either the coverage clears the bar, or the lane
-  // names the gap in its blockers. Written as an invariant so it re-tightens by
-  // itself the day the KRX rows carry a price and a trailing dividend.
-  assert.ok(
-    kospi.derived.payout_ratio.coverage.covered_weight_ratio >= 0.75
-      || kospi.blockers.some((blocker) => blocker.code === "kospi_payout_coverage_below_threshold"),
-    `KOSPI payout coverage ${kospi.derived.payout_ratio.coverage.covered_weight_ratio} must clear the bar or be named`,
-  );
+  assert.equal(kospi.derived.forecast_grid_v1.periods[0].payout_ratio.value, null);
+  assert.equal(kospi.derived.forecast_grid_v1.periods[0].payout_ratio.formula, "derived.payout_ratio");
+  assert.equal(kospi.derived.forecast_grid_v1.coverage.exact_spot_as_of, payload.indices.KOSPI.observed.price.as_of);
+  assert.equal(kospi.derived.payout_ratio.coverage.availability_as_of, null);
+  assert.equal(kospi.derived.forecast_grid_v1.coverage.availability_as_of, payload.indices.KOSPI.observed.price.as_of);
   assert.ok(kospi.derived.explicit_eps_growth_3y.coverage.covered_weight_ratio >= 0.75);
   assert.equal(kospi.derived.forecast_grid_v1.schema_version, "forecast_grid_v1");
   assert.equal(kospi.derived.forecast_grid_v1.public_status, "input_only_krx_exact_weights_no_fair_value");
@@ -473,7 +939,6 @@ if (kospi.role === "secondary_input_only") {
 } else {
   assert.equal(kospi.role, "backlog_blocked");
   assert.equal(kospi.public_status, "blocked_or_input_only");
-  assert.ok(kospi.blockers.some((blocker) => blocker.code === "missing_kospi_constituent_weight_path"));
   assert.equal(payload.coverage_diagnostics.stock_action.KOSPI.public_status, "blocked_missing_kospi_index_weights");
   assert.equal(payload.coverage_diagnostics.stock_action.KOSPI.krx_kospi_weights, null);
 }
@@ -498,7 +963,7 @@ try {
   assert.equal(kospiRiskFree.value, 0.0333);
   assert.equal(validateRimIndexInputs(payloadWithKr10y).ok, true);
   assert.ok(!payloadWithKr10y.indices.KOSPI.blockers.some((blocker) => blocker.code === "country_risk_free_source_solved_not_wired"));
-  assert.ok(payloadWithKr10y.indices.KOSPI.blockers.some((blocker) => blocker.code === "missing_kospi_constituent_weight_path"));
+  assert.ok(payloadWithKr10y.indices.KOSPI.blockers.some((blocker) => blocker.code === "kospi_dart_payout_pointer_unavailable"));
 } finally {
   fs.rmSync(fixtureRoot, { recursive: true, force: true });
 }
@@ -512,16 +977,14 @@ try {
   assert.equal(validateRimIndexInputs(payloadWithBridgeOnlyKrx).ok, true);
   const kospiBridge = payloadWithBridgeOnlyKrx.indices.KOSPI;
   assert.equal(kospiBridge.role, "secondary_input_only");
-  // Same cause as the live KOSPI row above: the bridge supplies exact KRX index
-  // WEIGHTS, which is what this fixture exists to prove, but it cannot supply
-  // the per-row price and trailing dividend that the payout unit is measured
-  // against. Exact weights and a measurable payout are separate problems.
+  // The bridge supplies exact KRX weights and KR10Y, but the exact DART payout
+  // pointer is a separate required input and must fail closed when absent.
   assert.equal(kospiBridge.public_status, "input_only_krx_exact_weights_with_caveats");
   assert.match(kospiBridge.observed.risk_free_rate.source, /derived_rim_inputs\.korea_10y/);
   assert.deepEqual(
     kospiBridge.blockers.map((blocker) => blocker.code),
-    ["kospi_payout_coverage_below_threshold"],
-    "the bridge path degrades only on payout coverage, not on weights",
+    ["kospi_dart_payout_pointer_unavailable"],
+    "the bridge path blocks only on the missing exact DART payout pointer",
   );
   assert.equal(payloadWithBridgeOnlyKrx.coverage_diagnostics.stock_action.KOSPI.public_status, "krx_exact_weights_available");
   assert.match(payloadWithBridgeOnlyKrx.coverage_diagnostics.stock_action.KOSPI.krx_kospi_weights.source, /derived_rim_inputs\.kospi_weights/);
@@ -541,10 +1004,110 @@ try {
   fs.rmSync(bridgeFixtureRoot, { recursive: true, force: true });
 }
 
+function runKospiDartFixture({ artifact = makeKospiDartArtifact(), pointer = null, includePointer = true, rawArtifact = null, rawPointer = null } = {}) {
+  const root = makeKrxBridgeFixture(currentLiveFixtureAsOf);
+  installKospiDartFixture(root, { artifact, pointer, includePointer, rawArtifact, rawPointer });
+  try {
+    return buildRimIndexInputs({
+      dataRootOverride: root,
+      generatedAt: currentLiveFixtureGeneratedAt,
+    });
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
+const dartReadyPayload = runKospiDartFixture();
+const dartReadyKospi = dartReadyPayload.indices.KOSPI;
+assert.equal(dartReadyKospi.public_status, "ready_inputs_and_forecast_grid");
+assert.deepEqual(dartReadyKospi.blockers, []);
+assert.equal(dartReadyKospi.derived.payout_ratio.value, 0.1);
+assert.equal(dartReadyKospi.derived.payout_ratio.source_tier, "derived_formula");
+assert.equal(dartReadyKospi.derived.payout_ratio.direct_source_tier, "direct_official_derived");
+assert.equal(dartReadyKospi.derived.payout_ratio.formula, "kospi_dart_payout_artifact.payout_ratio");
+assert.equal(dartReadyKospi.derived.payout_ratio.coverage.source_tier, "direct_official_derived");
+assert.equal(dartReadyKospi.derived.payout_ratio.coverage.covered_weight_ratio, 0.9);
+assert.equal(dartReadyKospi.derived.payout_ratio.coverage.availability_as_of, "2026-08-07");
+assert.deepEqual(dartReadyKospi.derived.payout_ratio.coverage.source_clocks, {
+  pointer_first_knowable_at: "2026-08-06",
+  bridge_as_of: "2026-08-07",
+  benchmark_as_of: "2026-08-02",
+  availability_as_of: "2026-08-07",
+  all_used_inputs_at_or_before: "2026-08-07",
+});
+assert.equal(dartReadyKospi.derived.payout_ratio.coverage.selected_artifact, "data/computed/fenok-rim/kospi-dart-payout/fy2025.json");
+assert.match(dartReadyKospi.derived.payout_ratio.coverage.pointer_sha256, /^[a-f0-9]{64}$/);
+assert.equal(dartReadyKospi.derived.payout_ratio.coverage.provenance.bridge.as_of, "2026-08-07");
+assert.equal(dartReadyKospi.derived.payout_ratio.coverage.provenance.benchmark.as_of, "2026-08-02");
+assert.ok(
+  dartReadyKospi.derived.legacy_payout_ratio_qa.value === null
+    || dartReadyKospi.derived.legacy_payout_ratio_qa.value === 0,
+  "legacy stock_action payout remains diagnostic-only and may be unavailable",
+);
+assert.equal(dartReadyKospi.derived.forecast_grid_v1.periods[0].payout_ratio.value, 0.1);
+assert.equal(dartReadyKospi.derived.forecast_grid_v1.periods[0].payout_ratio.formula, "derived.payout_ratio");
+assert.equal(dartReadyKospi.derived.forecast_grid_v1.coverage.availability_as_of, "2026-08-07");
+assert.equal(dartReadyKospi.derived.forecast_grid_v1.coverage.exact_spot_as_of, "2026-08-07");
+assert.equal(validateRimIndexInputs(dartReadyPayload).ok, true);
+
+for (const [label, options] of [
+  ["missing pointer", { includePointer: false }],
+  ["invalid pointer JSON", { rawPointer: "{broken" }],
+  ["pointer schema mismatch", { pointer: { schema_version: "wrong.v1" } }],
+  ["exact artifact path mismatch", { pointer: { selected_artifact: "data/computed/fenok-rim/kospi-dart-payout/fy2024.json" } }],
+  ["artifact hash mismatch", { pointer: { sha256: "0".repeat(64) } }],
+  ["artifact JSON corruption", { rawArtifact: "{broken" }],
+  ["artifact schema mismatch", { artifact: { ...makeKospiDartArtifact(), schema_version: "wrong.v1" } }],
+  ["artifact FY mismatch", { artifact: { ...makeKospiDartArtifact(), fy: 2024 } }],
+  ["artifact date mismatch", { artifact: { ...makeKospiDartArtifact(), asOf: "not-a-date" } }],
+  ["artifact first-knowable date corruption", { artifact: { ...makeKospiDartArtifact(), first_knowable_at: "not-a-timestamp" } }],
+  ["coverage gate failure", { artifact: { ...makeKospiDartArtifact(), coverage: { covered_weight: 0.74, gate: 0.75, pass: false } } }],
+  ["per-issuer leak", { artifact: { ...makeKospiDartArtifact(), per_issuer: [{ code: "005930", payout: 0.1 }] } }],
+  ["bridge provenance corruption", { artifact: { ...makeKospiDartArtifact(), provenance: { ...makeKospiDartArtifact().provenance, bridge: null } } }],
+  ["benchmark provenance corruption", { artifact: { ...makeKospiDartArtifact(), provenance: { ...makeKospiDartArtifact().provenance, benchmark: null } } }],
+]) {
+  const invalidPayload = runKospiDartFixture(options);
+  const invalidKospi = invalidPayload.indices.KOSPI;
+  assert.equal(invalidKospi.derived.payout_ratio.value, null, `${label}: no top-level payout`);
+  assert.equal(invalidKospi.derived.payout_ratio.source_tier, "blocked_missing_source", `${label}: blocked tier`);
+  assert.ok(
+    invalidKospi.blockers.some((row) => row.code === "kospi_dart_payout_pointer_unavailable"),
+    `${label}: named pointer blocker`,
+  );
+  assert.equal(validateRimIndexInputs(invalidPayload).ok, true, `${label}: fail-closed payload validates`);
+}
+
+// An alternate FY artifact is deliberately present, but a missing current
+// pointer must not scan or select it as a fallback.
+{
+  const root = makeKrxBridgeFixture(currentLiveFixtureAsOf);
+  installKospiDartFixture(root, { includePointer: false });
+  writeJson(path.join(root, "computed/fenok-rim/kospi-dart-payout/fy2024.json"), makeKospiDartArtifact({ fy: 2024 }));
+  try {
+    const noScanPayload = buildRimIndexInputs({ dataRootOverride: root, generatedAt: currentLiveFixtureGeneratedAt });
+    assert.equal(noScanPayload.indices.KOSPI.derived.payout_ratio.value, null, "missing pointer must not scan alternate FY files");
+    assert.ok(
+      noScanPayload.indices.KOSPI.derived.legacy_payout_ratio_qa.value === null
+        || noScanPayload.indices.KOSPI.derived.legacy_payout_ratio_qa.value === 0,
+      "legacy diagnostics do not become fallback payout",
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
 const sox = payload.indices.SOX;
 assert.equal(sox.role, "secondary_input_only");
 assert.equal(sox.public_status, "ready_inputs_and_forecast_grid");
 assert.equal(sox.blockers.length, 0);
+assert.equal(sox.observed.price.identity.provider_symbol, "^SOX");
+assert.equal(sox.observed.price.identity.canonical_index, "SOX");
+assert.doesNotMatch(JSON.stringify(sox.observed.price), /SOXX/, "SOX observed identity must never name the SOXX ETF");
+const wrongSoxIdentityPayload = structuredClone(payload);
+wrongSoxIdentityPayload.indices.SOX.observed.price.identity.provider_symbol = "SOXX";
+const wrongSoxIdentityValidation = validateRimIndexInputs(wrongSoxIdentityPayload);
+assert.equal(wrongSoxIdentityValidation.ok, false, "SOXX must be rejected as the SOX provider identity");
+assert.match(wrongSoxIdentityValidation.errors.join("\n"), /SOXX|provider_symbol/i);
 assert.equal(sox.observed.risk_free_rate.source_tier, "observed_source");
 assert.equal(sox.observed.risk_free_rate.source, "macro/fred-banking-daily.json");
 assert.equal(sox.observed.equity_risk_premium.source_tier, "observed_source");
@@ -558,8 +1121,10 @@ assert.equal(sox.derived.forecast_grid_v1.schema_version, "forecast_grid_v1");
 assert.equal(sox.derived.forecast_grid_v1.public_status, "input_only_sox_methodology_weights_no_fair_value");
 assert.equal(sox.derived.forecast_grid_v1.periods.length, 3);
 assert.equal(sox.derived.forecast_grid_v1.coverage.index_key, "sox_nasdaq_giw_methodology_mktcap");
+assert.equal(sox.derived.forecast_grid_v1.coverage.index_diagnostics.index_id, "SOX");
 assert.equal(sox.derived.proxy_inputs_v1, undefined);
 const soxDiagnostic = payload.coverage_diagnostics.stock_action.SOX;
+assert.equal(soxDiagnostic.index_id, "SOX");
 assert.equal(soxDiagnostic.source_tier, "methodology_derived_index_weight_source");
 assert.equal(soxDiagnostic.source, "indices/nasdaq-giw-sox-constituents.json");
 assert.equal(soxDiagnostic.official_weight_columns_available, false);
@@ -574,6 +1139,12 @@ assert.ok(soxDiagnostic.forward_eps_fy1_fy3_weight_ratio >= 0.75);
 assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.SOX.proxy_ticker, "SOXX");
 assert.equal(payload.coverage_diagnostics.proxy_constituent_candidates.SOX.exact_index_substitute, false);
 assert.ok(payload.coverage_diagnostics.proxy_constituent_candidates.SOX.resolved_weight_ratio >= 0.75);
+
+const wrongSoxDiagnosticPayload = structuredClone(payload);
+wrongSoxDiagnosticPayload.indices.SOX.derived.forecast_grid_v1.coverage.index_diagnostics.index_id = "SOXX";
+const wrongSoxDiagnosticValidation = validateRimIndexInputs(wrongSoxDiagnosticPayload);
+assert.equal(wrongSoxDiagnosticValidation.ok, false, "SOXX must be rejected as the SOX forecast diagnostic identity");
+assert.match(wrongSoxDiagnosticValidation.errors.join("\n"), /forecast_grid_v1\.coverage\.index_diagnostics\.index_id|SOX/i);
 
 const badProxyPayload = JSON.parse(JSON.stringify(payload));
 badProxyPayload.indices.SOX.derived.proxy_inputs_v1 = {

@@ -669,7 +669,7 @@ const assets = [
     ],
     cadence: TWICE_DAILY,
     privacy_class: "public_mirror",
-    public_outputs: [output("100xfenok-next/public/data/computed/rim-index", "directory")],
+    public_outputs: [output("100xfenok-next/public/data/computed/rim-index/inputs.json")],
     retention: SNAPSHOT,
     recovery: "rebuild_from_inputs",
   }),
@@ -794,7 +794,14 @@ function reachableLaneIds(assetId, assetById, memo = new Map(), visiting = new S
 
 export function validateDerivedAssetRegistry(
   registry,
-  { repoRoot = DEFAULT_REPO_ROOT, laneRegistry = LANE_REGISTRY, checkFilesystem = true } = {},
+  {
+    repoRoot = DEFAULT_REPO_ROOT,
+    laneRegistry = LANE_REGISTRY,
+    // KPI fixture mode installs a hard filesystem guard and supplies a
+    // synthetic data root. Keep structural registry validation active there,
+    // but do not probe the live repository's generated data at module import.
+    checkFilesystem = process.env.KPI_HERMETIC_BOOTSTRAPPED !== "1",
+  } = {},
 ) {
   exactKeys(registry, ["schema_version", "assets"], "registry");
   if (registry.schema_version !== DERIVED_ASSET_REGISTRY_SCHEMA) fail("schema_version is invalid");

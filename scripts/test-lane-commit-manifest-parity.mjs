@@ -31,6 +31,7 @@ const UPDATE_MANIFEST_CENTRAL_DIRECTORIES = [
 ];
 
 const ATTEMPT_SHARD_ROOT = "data/admin/data-supply-state/detection-attempts";
+const KOSPI_DART_FY_GLOB = "data/computed/fenok-rim/kospi-dart-payout/fy*.json";
 
 function sourceRepresentsDynamicAttemptShard(sourceText, spec) {
   if (spec.kind !== "file" || !spec.path.startsWith(`${ATTEMPT_SHARD_ROOT}/`) || !spec.path.endsWith(".json")) return false;
@@ -43,6 +44,14 @@ function sourceRepresentsDynamicAttemptShard(sourceText, spec) {
 function sourceRepresentsSpec(sourceTexts, spec) {
   if (sourceTexts.some((sourceText) => sourceText.includes(spec.path))) return true;
   if (sourceTexts.some((sourceText) => sourceRepresentsDynamicAttemptShard(sourceText, spec))) return true;
+  if (spec.kind === "glob" && spec.path === KOSPI_DART_FY_GLOB) {
+    // The producer validates one resolved FY path from the current pointer and
+    // then git-adds that exact path; the registry glob covers the retained FY
+    // family without widening the workflow's validated publication contract.
+    return sourceTexts.some((sourceText) => sourceText.includes("FY_ARTIFACT=\"data/computed/fenok-rim/kospi-dart-payout/fy${RESOLVED_FY}.json\"")
+      && sourceText.includes('git add -- "$FY_ARTIFACT" "$CURRENT_POINTER"')
+      && sourceText.includes("pointer.selected_artifact"));
+  }
   if (spec.kind !== "glob") return false;
   const directory = path.posix.dirname(spec.path);
   const pattern = path.posix.basename(spec.path);
@@ -81,7 +90,7 @@ for (const workflowRel of enumerateCommitCapableWorkflows()) {
     if (workflowRel === UPDATE_MANIFEST_WORKFLOW && stage === "always_if_exists") {
       assert.deepEqual(specs.map((spec) => spec.path), manifest.update_manifest.central_commit_paths);
       assert.deepEqual(specs.filter((spec) => spec.kind === "directory").map((spec) => spec.path), UPDATE_MANIFEST_CENTRAL_DIRECTORIES);
-      assert.equal(specs.filter((spec) => spec.kind === "file").length, 57);
+      assert.equal(specs.filter((spec) => spec.kind === "file").length, 58);
       assert.equal(specs.every((spec) => spec.required === false), true);
       assert.match(workflowText, /node scripts\/stage-update-manifest-central\.mjs --(?:check|stage)/);
       continue;
@@ -109,7 +118,7 @@ for (const triggerPath of manifest.update_manifest.trigger_paths) {
 const centralHelperText = fs.readFileSync(path.join(REPO_ROOT, UPDATE_MANIFEST_CENTRAL_HELPER), "utf8");
 assert.match(centralHelperText, /manifest\.update_manifest\.central_commit_paths/);
 assert.match(centralHelperText, /buildLaneCommitManifest\(\)\.update_manifest\.central_commit_paths/);
-assert.match(centralHelperText, /central_commit_paths must contain exactly 61 unique paths/);
+assert.match(centralHelperText, /central_commit_paths must contain exactly 62 unique paths/);
 assert.match(updateManifestText, /stage-update-manifest-central\.mjs --check/);
 assert.match(updateManifestText, /stage-update-manifest-central\.mjs --stage/);
 

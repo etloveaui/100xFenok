@@ -50,6 +50,7 @@ FORBIDDEN_PUBLIC_TOKENS = (
     b"admin/yahoo-batch-quote-history/",
     b"yf/migration-evidence/",
     b"yf/etf-details/",
+    b"computed/fenok-rim/kospi-dart-payout/",
     b"providers/",
     # Private derived proxies (apewisdom_attention / gdelt_news_tone lanes,
     # public_mirror:[]). File-granular private canonical outputs registered here
@@ -66,6 +67,7 @@ USAGE_MANIFEST_TOKENS = (
     b"admin/yahoo-batch-quote-history/",
     b"yf/migration-evidence/",
     b"yf/etf-details/",
+    b"computed/fenok-rim/kospi-dart-payout/",
 )
 FORBIDDEN_METADATA_TOKENS = FORBIDDEN_PUBLIC_TOKENS + (b"http://", b"https://")
 SELECTED_ENTRY_KEYS = {

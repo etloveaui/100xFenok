@@ -17,7 +17,7 @@ const EXPECTED_PATHS = [
   "data/computed/fenok_etf_signals_summary.json", "data/computed/etf_action_index.json", "data/computed/fenok_etf_core_daily_basket_summary.json",
   "data/computed/market_facts", "data/computed/market_source_parity.json", "data/computed/market_data_audit.json",
   "data/computed/entity_graph.json", "data/computed/entity_graph_stock_index.json", "data/computed/entity_graph_stock_services.json",
-  "data/computed/market_structure_index.json", "data/computed/rim-index/inputs.json", "data/yf/finance/_summary.json",
+  "data/computed/market_structure_index.json", "data/computed/rim-index/inputs.json", "data/computed/rim-index/FENO_RIM_FIVE_CANONICAL_CURRENT.json", "data/yf/finance/_summary.json",
   "data/stockanalysis/backfill/history_gap_report_latest.json", "data/slickcharts/discovery-summary.json", "data/slickcharts/membership-changes.json",
   "data/slickcharts/universe.json", "data/admin/fenok-s1-stock-public-promotion-dry-run.json", "data/admin/fenok-edge-coverage-index.json",
   "data/admin/fenok-s0-finra-occ-mapping-ledger.json", "data/admin/fenok-edge-etf-daily1y-readiness.json", "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
@@ -40,7 +40,7 @@ const EXPECTED_PATHS = [
   "100xfenok-next/src/generated/static-route-manifest.ts",
 ];
 
-assert.equal(EXPECTED_PATHS.length, 61);
+assert.equal(EXPECTED_PATHS.length, 62);
 assert.deepEqual(manifest.update_manifest.central_commit_paths, EXPECTED_PATHS);
 const centralSpecs = manifest.workflows[".github/workflows/update-manifest.yml"].stages.always_if_exists;
 assert.deepEqual(centralSpecs.map((spec) => spec.path), EXPECTED_PATHS);
@@ -50,14 +50,14 @@ assert.deepEqual(centralSpecs.filter((spec) => spec.kind === "directory").map((s
   "100xfenok-next/public/data/stockanalysis",
   "100xfenok-next/public/data/slickcharts",
 ]);
-assert.equal(centralSpecs.filter((spec) => spec.kind === "file").length, 57);
+assert.equal(centralSpecs.filter((spec) => spec.kind === "file").length, 58);
 assert.equal(centralSpecs.every((spec) => spec.required === false), true);
 assert.equal(fs.existsSync(helperPath), true);
 assert.equal((workflow.match(/node scripts\/stage-update-manifest-central\.mjs/g) ?? []).length, 5);
-assert.equal((workflow.match(/node scripts\/test-update-manifest-central-staging\.mjs/g) ?? []).length, 2);
+assert.equal((workflow.match(/node scripts\/test-update-manifest-central-staging\.mjs/g) ?? []).length, 0);
 assert.match(workflow, /- name: Check if manifest changed[\s\S]*?stage-update-manifest-central\.mjs --check[\s\S]*?3\) echo "changed=false"/);
 const retry = workflow.slice(workflow.indexOf("for attempt in 1 2 3; do"));
-assert.match(retry, /git reset --hard origin\/main[\s\S]*?test-update-manifest-central-staging\.mjs[\s\S]*?stage-update-manifest-central\.mjs --clean-untracked-after-reset[\s\S]*?stage-update-manifest-central\.mjs --assert-clean-after-reset/);
+assert.match(retry, /git reset --hard origin\/main[\s\S]*?stage-update-manifest-central\.mjs --clean-untracked-after-reset[\s\S]*?stage-update-manifest-central\.mjs --assert-clean-after-reset/);
 assert.match(retry, /stage-update-manifest-central\.mjs --check[\s\S]*?central_status[\s\S]*?stage-update-manifest-central\.mjs --stage[\s\S]*?git commit/);
 assert.doesNotMatch(workflow, /git diff --quiet \\/);
 assert.doesNotMatch(workflow, /git add -- \\/);
@@ -115,7 +115,7 @@ function runHelper(fixture, mode) {
   const fixture = makeFixture();
   const result = runHelper(fixture, "--check");
   assert.equal(result.status, 3, `${result.stderr}\n${result.stdout}`);
-  assert.match(result.stdout, /declared=61 changed=0 staged=0/);
+  assert.match(result.stdout, /declared=62 changed=0 staged=0/);
   assert.notEqual(runHelper(fixture, "--stage").status, 0);
 }
 

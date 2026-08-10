@@ -1,0 +1,208 @@
+{
+  "schema_version": "feno_index_rim_five_canonical_criteria.v1",
+  "formula_version": "feno_index_rim_five_canonical.v1",
+  "phase": "PROSPECTIVE",
+  "authority_statement": "Rules and gate limits only — no frozen result values. This file defines the floor-free five-index canonical line (SPX, CCMP, NDX, SOX, KOSPI): one single stable-growth terminal, direct per-index operands only, and fail-closed row statuses. It contains no published floor/headline evidence, no per-index target value, no order coefficient, and no alternate terminal family. Changing a rule or a gate limit requires an explicit criteria revision; changing a result never does because no result lives here.",
+  "identity": {
+    "SPX": "S&P 500",
+    "CCMP": "Nasdaq Composite",
+    "NDX": "Nasdaq-100",
+    "SOX": "Philadelphia Semiconductor Index",
+    "KOSPI": "KOSPI"
+  },
+  "units": {
+    "fair_value_upside": "fraction of spot (fair_value / spot - 1); percentage points = fraction * 100",
+    "price_fair_value": "index points",
+    "ke": "fraction per year",
+    "g": "fraction per year",
+    "ltroe": "fraction per year",
+    "payout_ratio": "fraction of earnings"
+  },
+  "primary_scalar": "fair_value_upside = fair_value / spot - 1",
+  "horizon": "same_as_of",
+  "no_12m_conversion": true,
+  "exact_yoo": false,
+  "public_surface": {
+    "status": "QUARANTINED",
+    "rule": "the five-index canonical line is quarantined from public promotion until a separate owner approval; rows never set display_ready"
+  },
+  "order": {
+    "owner_mandate": ["SPX", "CCMP", "NDX", "SOX", "KOSPI"],
+    "role": "boolean diagnostic only. The builder never reorders rows, never shifts values, never floors values and never throws because the desired order differs. The diagnostic reports non-increasing adjacent pairs and non-finite rows.",
+    "min_adjacent_gap_pp_note": "gaps are reported inside violations; no gap threshold is enforced"
+  },
+  "equations": {
+    "notation": {
+      "B0": "index-level book value per index point at the price as-of (inputs.json indices.<IDX>.derived.book_value)",
+      "eps[t]": "FY1..FY3 consensus index earnings per index point (inputs.json indices.<IDX>.derived.forecast_grid_v1.periods[].earnings_proxy)",
+      "payout": "index payout ratio (inputs.json indices.<IDX>.derived.payout_ratio)",
+      "retention": "1 - payout",
+      "ke": "cost of equity for the cell = per-index observed Rf + per-index observed ERP",
+      "LTROE": "trailing-10y median of the index benchmark ROE series (see ltroe)",
+      "g": "stable perpetual growth = min(g_macro, Rf_market)"
+    },
+    "book_roll_forward": "B[t] = B[t-1] + eps[t] * retention, for t = 1..3, starting from B0",
+    "explicit_residual_income": "RI[t] = eps[t] - ke * B[t-1], for t = 1..3",
+    "terminal_residual_income": "RI4 = (LTROE - ke) * B3",
+    "terminal_value_at_year_3": "CV3 = RI4 / (ke - g)",
+    "value": "V0 = B0 + sum_{t=1..3} RI[t] / (1 + ke)^t + CV3 / (1 + ke)^3",
+    "terminal_share": "terminal_share = (CV3 / (1 + ke)^3) / V0",
+    "stable_retention": "stable_retention = g / LTROE",
+    "explicit_periods": 3,
+    "discounting": "end-of-period, annual, no mid-year convention",
+    "no_alternate_terminal_family": true
+  },
+  "base_cell_rule": "BASE is the base-ERP x base-LTROE cell of the 3x3 grid: ke = Rf + ERP_base and ltroe = LTROE_base. fair_value = BASE; fair_value_upside = BASE / spot - 1, same-as-of with the price.",
+  "stable_growth": {
+    "rule": "g = min(g_macro, Rf_market)",
+    "g_macro_policy": "fixed documented policy parameter, not a market input and not a result: g_macro = (1 + real_GDP_longer_run) * (1 + PCE_inflation_longer_run) - 1 with the FOMC Summary of Economic Projections longer-run medians (June 2026 SEP Table 1: real GDP 2.0%, PCE inflation 2.0%). Changing it requires an explicit criteria revision. There is no fallback: a missing or non-finite g_macro_value emits a NULL row with an explicit blocker; it is never silently defaulted.",
+    "g_macro_value": 0.0404,
+    "g_macro_derivation": "1.02 * 1.02 - 1 = 0.0404 exactly"
+  },
+  "ltroe": {
+    "rule": "median of the index benchmark ROE series over the trailing 10 calendar years ending at the latest benchmark row date at or before the price as-of, after dropping non-finite values. Never hardcoded per index; never taken from a frozen result.",
+    "years": 10,
+    "index_benchmark_sections": {
+      "SPX": "data/benchmarks/us.json -> sections.sp500",
+      "NDX": "data/benchmarks/us.json -> sections.nasdaq100",
+      "CCMP": "data/benchmarks/us.json -> sections.nasdaq_composite",
+      "SOX": "data/benchmarks/micro_sectors.json -> sections.philadelphia_semi",
+      "KOSPI": "data/benchmarks/emerging.json -> sections.kospi"
+    }
+  },
+  "grid": {
+    "rule": "3x3 cells: ERP low/base/high = per-index observed ERP -/+ half width; LTROE low/base/high = derived LTROE -/+ half width (low floored at 0)",
+    "erp_half_width_pp": 0.5,
+    "ltroe_half_width_pp": 0.5
+  },
+  "source_clocks": {
+    "rule": "point-in-time: every required operand's availability date must be <= the row valuation price as-of. A later operand emits NULL with a freshness/PIT blocker. Availability dates are the declared as_of/coverage dates carried by each operand in inputs.json.",
+    "date_key_whitelist": "only the explicit economic observation/availability keys in economic_date_key_allowlist count as an operand clock, and their values must be exact valid YYYY-MM-DD dates. Processing timestamps (generated_at_date, *_generated_at, *_collected_at, *_fetched_at, *_created_at) are never treated as an economic observation date.",
+    "economic_date_key_allowlist": [
+      "as_of",
+      "date",
+      "availability_date",
+      "availability_as_of",
+      "benchmark_as_of",
+      "coverage_date",
+      "coverage_as_of",
+      "effective_date",
+      "erp_as_of",
+      "forecast_as_of",
+      "index_as_of",
+      "observation_date",
+      "observation_as_of",
+      "payout_as_of",
+      "period_date",
+      "price_as_of",
+      "rf_as_of",
+      "source_date",
+      "source_as_of",
+      "stock_action_source_date",
+      "sox_constituents_as_of",
+      "krx_weight_as_of"
+    ],
+    "excluded_processing_timestamp_markers": ["generated", "collected", "fetched", "processed", "created", "written"],
+    "per_operand": {
+      "price": "observed.price.as_of (the row valuation as-of)",
+      "book_value": "price row date (derived from observed.price + observed.price_to_book, both benchmark-row fields)",
+      "payout_ratio": "latest declared date inside derived.payout_ratio (coverage.*_date / coverage.*_as_of)",
+      "forecast_grid_v1": "latest declared date inside the grid, else max(payout availability, observed.forward_eps.as_of) because the grid embeds payout and forward-EPS growth",
+      "risk_free_rate": "observed.risk_free_rate.as_of",
+      "equity_risk_premium": "observed.equity_risk_premium.as_of",
+      "ltroe_benchmark": "latest benchmark section row date"
+    }
+  },
+  "freshness": {
+    "rule": "the price freshness block must carry the required status and stay inside the max calendar age; every source-clock rule above must hold. Violations emit NULL with a freshness blocker.",
+    "required_price_status": "fresh_enough_for_input_slice",
+    "max_input_freshness_days": 10,
+    "required_price_metadata": [
+      "status",
+      "calendar_age_days",
+      "freshness_unit",
+      "freshness_calendar",
+      "max_input_freshness_days",
+      "future_date_anomaly"
+    ]
+  },
+  "directness": {
+    "rule": "required operands must be direct exact-index inputs. Blocked, house-assumption, proxy-marked or methodology-derived inputs emit NULL with a direct-input blocker, except for the single SOX methodology reconstruction contract below when every gate passes.",
+    "required_operands": [
+      "observed.price",
+      "observed.price_to_book",
+      "observed.forward_eps",
+      "derived.book_value",
+      "derived.payout_ratio",
+      "derived.forecast_grid_v1.periods[*].earnings_proxy",
+      "derived.forecast_grid_v1.coverage.index_diagnostics",
+      "observed.risk_free_rate",
+      "observed.equity_risk_premium"
+    ],
+    "allowed_source_tiers": ["observed_source", "derived_formula", "exact_index_weight_source"],
+    "prohibited_source_tiers": ["blocked_missing_source", "house_assumption", "assumption_labelled_scenario", "proxy_diagnostic", "methodology_derived_index_weight_source"],
+    "forecast_public_status_ban": ["proxy", "methodology"],
+    "sox_methodology_exception": {
+      "scope": "SOX only; methodology_derived_index_weight_source remains prohibited everywhere else",
+      "rule": "Admit a dynamically reproducible SOX reconstruction only when official Nasdaq GIW membership for index_id SOX is combined with stock_action market caps and the published Nasdaq SOX modified-market-cap methodology. Official weight columns remain unavailable and must be disclosed as false. Any missing, stale, proxy/ETF-mixed, incomplete, promoted, or structurally different evidence emits NULL.",
+      "admissible_source_tier": "methodology_derived_index_weight_source",
+      "required_index_key": "sox_nasdaq_giw_methodology_mktcap",
+      "required_index_id": "SOX",
+      "required_constituent_source": "indices/nasdaq-giw-sox-constituents.json",
+      "required_giw_source_url": "https://indexes.nasdaqomx.com/Index/Weighting/SOX",
+      "required_source_field": "rows[].symbol + computed/stock_action_index.marketCap -> SOX methodology capped weights",
+      "required_access_scope": "public_free_constituent_view_no_official_weight_columns",
+      "required_denominator_method": "stock_action_market_cap_sum_for_official_giw_constituents",
+      "required_methodology_url": "https://indexes.nasdaqomx.com/docs/methodology_SOX.pdf",
+      "required_weighting_scheme": "modified_market_capitalization_weighted",
+      "required_cap_schedule": {
+        "largest_market_cap": 0.12,
+        "second_largest_market_cap": 0.1,
+        "third_largest_market_cap": 0.08,
+        "other_constituents": 0.04
+      },
+      "required_redistribution": "excess_weight_proportionally_redistributed_to_lower_weighted_index_securities_iteratively",
+      "required_official_weight_columns_available": false,
+      "required_constituent_rows": 30,
+      "required_weight_rows": 30,
+      "required_weight_total": 100,
+      "required_cap_violation_count": 0,
+      "required_matched_weight_ratio": 1,
+      "min_financial_coverage_ratio": 0.75,
+      "required_freshness_unit": "business_days",
+      "required_freshness_calendar": "us_market",
+      "max_freshness_days": 7,
+      "required_diagnostic_public_status": "sox_methodology_weights_financials_coverage_ready",
+      "required_forecast_status_markers": ["input_only", "sox", "methodology", "no_fair_value"],
+      "forbidden_forecast_status_markers": ["display_ready", "publication_ready", "public_promotion", "fair_value_ready"],
+      "forbidden_source_tokens": ["SOXX", "SOXQ", "ETF", "proxy"],
+      "public_surface_status": "QUARANTINED"
+    },
+    "sox_methodology_note": "The exception validates official Nasdaq GIW SOX membership plus a transparent 12/10/8/4 iterative-cap reconstruction. It does not claim official weight columns and does not authorize SOXX/SOXQ, non-SOX methodology grids, output fitting, or public fair-value promotion."
+  },
+  "sox_identity": {
+    "target": "Philadelphia Semiconductor Index",
+    "price_source_rule": "the SOX headline price must come from an exact direct Philadelphia Semiconductor Index source: the philadelphia_semi benchmark section (source_field), or a direct ^SOX daily index observation (source/source_field naming the ^SOX index symbol). SOXX or any other ETF/proxy identity emits NULL with an identity blocker.",
+    "accepted_direct_source_markers": ["philadelphia_semi", "^SOX"],
+    "prohibited_price_source_markers": ["SOXX", "SOXQ", "SOXL", "SOXS", "ETF", "MSCI"]
+  },
+  "payout_policy": {
+    "ccmp": "forecast_grid_v1 and a non-null payout are required; until inputs.json provides them, CCMP emits a NULL row with direct-input blockers",
+    "kospi": "payout_ratio == 0 or unverified emits NULL, never value-plus-warning"
+  },
+  "hard_gates": {
+    "G1_pole_margin": { "rule": "ke - g >= limit in every cell", "limit": 0.03 },
+    "G2_terminal_share": { "rule": "terminal share of V0 at the base cell <= limit", "limit": 0.9 },
+    "G3_stable_retention": { "rule": "0 <= g / LTROE <= 1 in every cell" },
+    "G4_finite": { "rule": "all nine cells finite" },
+    "G5_monotonicity": { "rule": "value non-increasing in ERP at fixed LTROE, non-decreasing in LTROE at fixed ERP, and BULL >= BASE >= BEAR" }
+  },
+  "prohibitions": [
+    "no published floor/headline evidence of any kind is read",
+    "no per-index target value or order coefficient",
+    "no 12-month upside conversion",
+    "SOXX must never define the SOX headline",
+    "no alternate terminal family and no dependency on any other terminal authority",
+    "no silent NULL: a blocked row must state its blockers"
+  ]
+}

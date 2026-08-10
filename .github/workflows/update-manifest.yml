@@ -66,6 +66,12 @@ on:
       - 'scripts/lib/kpi-runtime-slots.mjs'
       - 'scripts/lib/kpi-contract-constants.mjs'
       - 'tools/macro-monitor/shared/signals-core.mjs'
+      - 'scripts/build-rim-index-five-canonical.mjs'
+      - 'scripts/check-rim-index-five-canonical.mjs'
+      - 'scripts/test-check-rim-index-five-canonical.mjs'
+      - 'scripts/test-build-feno-rim-five-index-canonical.mjs'
+      - '100xfenok-next/package.json'
+      - 'data/computed/rim-index/feno-index-rim-five-canonical-criteria.json'
       # END GENERATED lane-commit-manifest trigger_paths
   schedule:
     # UTC 02:30 = KST 11:30. Morning reconciliation.
@@ -186,6 +192,8 @@ jobs:
       - name: Build RIM and ETF projections
         run: |
           node scripts/build-rim-index.mjs
+          node scripts/build-rim-index-five-canonical.mjs
+          node scripts/check-rim-index-five-canonical.mjs
           node scripts/build-fenok-etf-signals.mjs
           npm --prefix 100xfenok-next run build:history-gap-daily1y
           node scripts/build-fenok-etf-action-index.mjs
@@ -217,6 +225,8 @@ jobs:
       - name: Rebuild RIM index inputs after manifest refresh
         run: |
           node scripts/build-rim-index.mjs
+          node scripts/build-rim-index-five-canonical.mjs
+          node scripts/check-rim-index-five-canonical.mjs
           npm --prefix 100xfenok-next run build:data-entity-graph
 
       - name: Build product surface coverage
@@ -318,6 +328,8 @@ jobs:
             node scripts/build-phase2-closeout-indexes.mjs
             node scripts/build-fenok-signals.mjs
             node scripts/build-rim-index.mjs
+            node scripts/build-rim-index-five-canonical.mjs
+            node scripts/check-rim-index-five-canonical.mjs
             node scripts/build-fenok-etf-signals.mjs
             npm --prefix 100xfenok-next run build:history-gap-daily1y
             node scripts/build-fenok-etf-action-index.mjs
@@ -334,6 +346,8 @@ jobs:
               exit "$status"
             fi
             node scripts/build-rim-index.mjs
+            node scripts/build-rim-index-five-canonical.mjs
+            node scripts/check-rim-index-five-canonical.mjs
             npm --prefix 100xfenok-next run build:data-entity-graph
             node scripts/generate-product-surface-coverage.mjs
             (cd 100xfenok-next && node sync-static-overrides.mjs)

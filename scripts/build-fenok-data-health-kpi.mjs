@@ -41,6 +41,15 @@ import {
   PRODUCT_SURFACE_STAMP_VERSION,
   PRODUCT_SURFACE_LEGACY_CLASSIFICATION,
   PRODUCT_SURFACE_LEGACY_DISPOSITION,
+  RIM_FIVE_CANONICAL_INDICES,
+  RIM_FIVE_CANONICAL_IDENTITIES,
+  RIM_FIVE_CANONICAL_DATA_REL,
+  RIM_FIVE_CANONICAL_SCHEMA_VERSION,
+  RIM_FIVE_CANONICAL_PUBLIC_STATUS,
+  RIM_FIVE_CANONICAL_YOO_STATUS,
+  RIM_FIVE_CANONICAL_BLOCKER_KEYS,
+  RIM_FIVE_CANONICAL_SOURCE_CLOCK_KEYS,
+  RIM_FIVE_CANONICAL_PUBLIC_MIRROR_RELS,
 } from "./lib/kpi-contract-constants.mjs";
 import { classifyProductSurfaceV2, nextProductSurfaceLineageV2 } from "./lib/product-surface-stamp-v2.mjs";
 
@@ -2307,7 +2316,484 @@ export function buildSlickChartsDeliveryLane(nowIso, { dataRoot = DATA_ROOT, ass
   });
 }
 
-export function buildRimLane(rimInputs, soxRecoveryState = null) {
+// ── Private quarantined five-index canonical health ────────────────────────
+// This is deliberately a compact KPI projection, not a second canonical
+// producer. The canonical artifact remains private and its producer/validator
+// stay independent; this layer only proves that the bytes it consumes are
+// structurally safe and classifies expected NULL/PIT/directness states.
+const RIM_FIVE_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const RIM_FIVE_TIMESTAMP_RE = /(?:Z|[+-]\d{2}:\d{2})$/;
+const RIM_FIVE_PROMOTION_KEYS = new Set([
+  "display_ready",
+  "public_promotion",
+  "public_promoted",
+  "promoted",
+  "mirrored",
+]);
+
+function rimFiveObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function rimFiveHasOwn(value, key) {
+  return rimFiveObject(value) && Object.prototype.hasOwnProperty.call(value, key);
+}
+
+function rimFiveValidDate(value) {
+  if (typeof value !== "string" || !RIM_FIVE_DATE_RE.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const candidate = new Date(Date.UTC(year, month - 1, day));
+  return candidate.getUTCFullYear() === year
+    && candidate.getUTCMonth() === month - 1
+    && candidate.getUTCDate() === day;
+}
+
+function rimFiveValidTimestamp(value) {
+  return typeof value === "string"
+    && RIM_FIVE_TIMESTAMP_RE.test(value)
+    && Number.isFinite(Date.parse(value));
+}
+
+function rimFiveFinite(value) {
+  return Number.isFinite(value);
+}
+
+function rimFivePushUnique(list, message) {
+  if (!list.includes(message)) list.push(message);
+}
+
+function rimFiveCollectPromotionErrors(value, trail, reasons) {
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => rimFiveCollectPromotionErrors(item, `${trail}[${index}]`, reasons));
+    return;
+  }
+  if (!rimFiveObject(value)) return;
+  for (const [key, child] of Object.entries(value)) {
+    const normalized = key.toLowerCase();
+    if (RIM_FIVE_PROMOTION_KEYS.has(normalized) && child !== false) {
+      rimFivePushUnique(reasons, "canonical artifact carries a true or non-false promotion/display flag");
+    }
+    if (normalized === "public" && child === true) {
+      rimFivePushUnique(reasons, "canonical artifact carries a public=true promotion flag");
+    }
+    rimFiveCollectPromotionErrors(child, `${trail}.${key}`, reasons);
+  }
+}
+
+function rimFiveCanonicalBlockers(row, rowLabel, reasons) {
+  const counts = { freshness: 0, pit: 0, direct_identity: 0 };
+  const blockers = row?.blockers;
+  if (!rimFiveObject(blockers)) {
+    rimFivePushUnique(reasons, `${rowLabel}.blockers must be an object with direct_input/freshness/identity arrays`);
+    return counts;
+  }
+  const actualKeys = Object.keys(blockers).sort();
+  const expectedKeys = [...RIM_FIVE_CANONICAL_BLOCKER_KEYS].sort();
+  if (JSON.stringify(actualKeys) !== JSON.stringify(expectedKeys)) {
+    rimFivePushUnique(reasons, `${rowLabel}.blockers keys are malformed`);
+  }
+  for (const key of RIM_FIVE_CANONICAL_BLOCKER_KEYS) {
+    const group = blockers[key];
+    if (!Array.isArray(group)) {
+      rimFivePushUnique(reasons, `${rowLabel}.blockers.${key} must be an array`);
+      continue;
+    }
+    for (const [index, blocker] of group.entries()) {
+      if (typeof blocker !== "string" || blocker.trim() === "") {
+        rimFivePushUnique(reasons, `${rowLabel}.blockers.${key}[${index}] must be a non-empty string`);
+        continue;
+      }
+      if (key === "freshness") {
+        if (/\bPIT\b|point[- ]in[- ]time/i.test(blocker)) counts.pit += 1;
+        else counts.freshness += 1;
+      } else if (key === "direct_input" || key === "identity") {
+        counts.direct_identity += 1;
+      }
+    }
+  }
+  return counts;
+}
+
+function rimFiveValidateSourceClock(row, rowLabel, status, reasons) {
+  const clock = row?.source_clock;
+  if (!rimFiveObject(clock)) {
+    rimFivePushUnique(reasons, `${rowLabel}.source_clock must be an object`);
+    return null;
+  }
+  const actualKeys = Object.keys(clock).sort();
+  const expectedKeys = [...RIM_FIVE_CANONICAL_SOURCE_CLOCK_KEYS].sort();
+  if (JSON.stringify(actualKeys) !== JSON.stringify(expectedKeys)) {
+    rimFivePushUnique(reasons, `${rowLabel}.source_clock keys are malformed`);
+  }
+  for (const key of RIM_FIVE_CANONICAL_SOURCE_CLOCK_KEYS) {
+    if (clock[key] !== null && !rimFiveValidDate(clock[key])) {
+      rimFivePushUnique(reasons, `${rowLabel}.source_clock.${key} must be null or YYYY-MM-DD`);
+    }
+  }
+  if (status !== "READY") return clock;
+  if (!rimFiveValidDate(row?.as_of)) return clock;
+  if (clock.price_as_of !== row.as_of) {
+    rimFivePushUnique(reasons, `${rowLabel}.source_clock.price_as_of must equal row.as_of`);
+  }
+  for (const key of RIM_FIVE_CANONICAL_SOURCE_CLOCK_KEYS) {
+    if (!rimFiveValidDate(clock[key]) || clock[key] > row.as_of) {
+      rimFivePushUnique(reasons, `${rowLabel}.source_clock.${key} must be present and PIT-safe`);
+    }
+  }
+  return clock;
+}
+
+function rimFiveOrderViolations(rows) {
+  const violations = [];
+  for (let index = 0; index < RIM_FIVE_CANONICAL_INDICES.length - 1; index += 1) {
+    const left = rows[index];
+    const right = rows[index + 1];
+    if (!rimFiveFinite(left?.fair_value_upside)
+      || !rimFiveFinite(right?.fair_value_upside)
+      || !(right.fair_value_upside > left.fair_value_upside)) {
+      if (rimFiveFinite(left?.fair_value_upside) && rimFiveFinite(right?.fair_value_upside)) {
+        violations.push({
+          asset_a: left.asset,
+          asset_b: right.asset,
+          value_a: left.fair_value_upside,
+          value_b: right.fair_value_upside,
+        });
+      }
+    }
+  }
+  return violations;
+}
+
+function rimFiveExpectedOrderMet(rows) {
+  return rows.length === RIM_FIVE_CANONICAL_INDICES.length
+    && rows.every((row) => rimFiveFinite(row?.fair_value_upside))
+    && rows.every((row, index) => index === 0 || row.fair_value_upside > rows[index - 1].fair_value_upside);
+}
+
+function rimFiveCanonicalHealthDefaults({ canonicalPresent = false, publicLeak = false } = {}) {
+  return {
+    canonical_present: canonicalPresent,
+    canonical_file_present: canonicalPresent,
+    canonical_parseable: false,
+    canonical_public_status: null,
+    ready_count: 0,
+    null_count: 0,
+    total_count: 0,
+    stale_or_freshness_blocker_count: 0,
+    freshness_blocker_count: 0,
+    pit_blocker_count: 0,
+    direct_or_identity_blocker_count: 0,
+    order_diagnostic_state: "not_comparable",
+    values_shifted: null,
+    exact_yoo: null,
+    yoo_status: null,
+    private_only: canonicalPresent && !publicLeak,
+    private_only_status: canonicalPresent ? (publicLeak ? "blocked" : "ok") : "not_comparable",
+    public_leak: publicLeak,
+    public_leak_status: publicLeak ? "blocked" : canonicalPresent ? "clear" : "not_comparable",
+    warnings: [],
+    blocking_reasons: [],
+  };
+}
+
+export function assessRimFiveCanonicalArtifact(
+  artifact,
+  { canonicalPresent = artifact != null, publicLeak = false, readFailure = null } = {},
+) {
+  const health = rimFiveCanonicalHealthDefaults({
+    canonicalPresent: canonicalPresent && artifact != null && readFailure == null,
+    publicLeak,
+  });
+  health.canonical_file_present = canonicalPresent;
+  const reasons = health.blocking_reasons;
+  const warnings = health.warnings;
+  if (readFailure === "missing") rimFivePushUnique(reasons, "private five-index canonical artifact is missing");
+  if (readFailure === "unparseable") rimFivePushUnique(reasons, "private five-index canonical artifact is unparseable JSON");
+  if (!rimFiveObject(artifact)) {
+    if (!readFailure) rimFivePushUnique(reasons, "private five-index canonical artifact is not a JSON object");
+    if (publicLeak) rimFivePushUnique(reasons, "private five-index canonical artifact is present on a public mirror");
+    health.canonical_integrity = reasons.length === 0;
+    if (publicLeak) warnings.push("private-only policy is violated by a public canonical mirror");
+    return health;
+  }
+  health.canonical_parseable = true;
+  health.canonical_public_status = rimFiveObject(artifact.public_surface)
+    ? artifact.public_surface.status ?? null
+    : null;
+  health.exact_yoo = rimFiveHasOwn(artifact, "exact_yoo") ? artifact.exact_yoo : null;
+  health.yoo_status = rimFiveHasOwn(artifact, "yoo_status") ? artifact.yoo_status : null;
+
+  if (artifact.schema_version !== RIM_FIVE_CANONICAL_SCHEMA_VERSION) {
+    rimFivePushUnique(reasons, "canonical artifact schema_version is malformed");
+  }
+  if (!rimFiveValidTimestamp(artifact.generated_at)) {
+    rimFivePushUnique(reasons, "canonical artifact generated_at is malformed");
+  }
+  if (health.canonical_public_status !== RIM_FIVE_CANONICAL_PUBLIC_STATUS) {
+    rimFivePushUnique(reasons, "canonical artifact public_surface.status must remain QUARANTINED");
+  }
+  if (health.exact_yoo !== false) rimFivePushUnique(reasons, "canonical artifact exact_yoo must remain false");
+  if (health.yoo_status !== RIM_FIVE_CANONICAL_YOO_STATUS) {
+    rimFivePushUnique(reasons, "canonical artifact yoo_status must remain NOT_IDENTIFIED");
+  }
+  rimFiveCollectPromotionErrors(artifact, "artifact", reasons);
+  if (publicLeak) rimFivePushUnique(reasons, "private five-index canonical artifact is present on a public mirror");
+
+  const rows = Array.isArray(artifact.rows) ? artifact.rows : [];
+  health.total_count = rows.length;
+  if (!Array.isArray(artifact.rows)) {
+    rimFivePushUnique(reasons, "canonical artifact rows must be an array");
+  }
+  if (rows.length !== RIM_FIVE_CANONICAL_INDICES.length) {
+    rimFivePushUnique(reasons, "canonical artifact rows must contain exactly five rows");
+  }
+  if (JSON.stringify(rows.map((row) => row?.asset)) !== JSON.stringify(RIM_FIVE_CANONICAL_INDICES)) {
+    rimFivePushUnique(reasons, "canonical artifact rows must use the exact ordered five-index assets");
+  }
+
+  const rowClocks = new Map();
+  for (const [index, row] of rows.entries()) {
+    const expectedAsset = RIM_FIVE_CANONICAL_INDICES[index];
+    const rowLabel = `canonical row ${index}${expectedAsset ? ` (${expectedAsset})` : ""}`;
+    if (!rimFiveObject(row)) {
+      rimFivePushUnique(reasons, `${rowLabel} must be an object`);
+      continue;
+    }
+    if (row.asset !== expectedAsset) rimFivePushUnique(reasons, `${rowLabel}.asset is out of order`);
+    if (JSON.stringify(row.identity) !== JSON.stringify(RIM_FIVE_CANONICAL_IDENTITIES[expectedAsset])) {
+      rimFivePushUnique(reasons, `${rowLabel}.identity does not match the exact index contract`);
+    }
+    if (!["READY", "NULL"].includes(row.status)) {
+      rimFivePushUnique(reasons, `${rowLabel}.status must be READY or NULL`);
+      continue;
+    }
+    const counts = rimFiveCanonicalBlockers(row, rowLabel, reasons);
+    health.freshness_blocker_count += counts.freshness + counts.pit;
+    health.stale_or_freshness_blocker_count += counts.freshness;
+    health.pit_blocker_count += counts.pit;
+    health.direct_or_identity_blocker_count += counts.direct_identity;
+    const clock = rimFiveValidateSourceClock(row, rowLabel, row.status, reasons);
+    if (clock) rowClocks.set(row.asset, clock);
+    if (row.status === "READY") {
+      health.ready_count += 1;
+      if (!rimFiveFinite(row.spot) || row.spot <= 0) rimFivePushUnique(reasons, `${rowLabel}.spot is malformed`);
+      if (!rimFiveFinite(row.fair_value) || !rimFiveFinite(row.fair_value_upside)) {
+        rimFivePushUnique(reasons, `${rowLabel} READY values must be finite`);
+      }
+      if (!rimFiveValidDate(row.as_of) || row.fair_value_as_of !== row.as_of) {
+        rimFivePushUnique(reasons, `${rowLabel} READY as-of values are malformed`);
+      }
+      if (rimFiveFinite(row.spot) && row.spot > 0 && rimFiveFinite(row.fair_value) && rimFiveFinite(row.fair_value_upside)) {
+        const expectedUpside = row.fair_value / row.spot - 1;
+        const tolerance = 1e-9 * Math.max(1, Math.abs(expectedUpside));
+        if (Math.abs(row.fair_value_upside - expectedUpside) > tolerance) {
+          rimFivePushUnique(reasons, `${rowLabel}.fair_value_upside arithmetic is malformed`);
+        }
+      }
+      for (const key of RIM_FIVE_CANONICAL_BLOCKER_KEYS) {
+        if (Array.isArray(row.blockers?.[key]) && row.blockers[key].length > 0) {
+          rimFivePushUnique(reasons, `${rowLabel} READY rows cannot carry blockers`);
+        }
+      }
+    } else {
+      health.null_count += 1;
+      for (const key of ["fair_value", "fair_value_as_of", "fair_value_upside"]) {
+        if (!rimFiveHasOwn(row, key) || row[key] !== null) {
+          rimFivePushUnique(reasons, `${rowLabel} NULL ${key} must be null`);
+        }
+      }
+      const blockerTotal = RIM_FIVE_CANONICAL_BLOCKER_KEYS.reduce(
+        (sum, key) => sum + (Array.isArray(row.blockers?.[key]) ? row.blockers[key].length : 0),
+        0,
+      );
+      if (blockerTotal === 0) rimFivePushUnique(reasons, `${rowLabel} NULL rows require an explicit blocker`);
+    }
+    rimFiveCollectPromotionErrors(row, rowLabel, reasons);
+  }
+
+  const sourceClocks = artifact.source_clocks;
+  if (!rimFiveObject(sourceClocks)) {
+    rimFivePushUnique(reasons, "canonical artifact source_clocks must be an object");
+  } else {
+    const sourceKeys = Object.keys(sourceClocks).sort();
+    if (JSON.stringify(sourceKeys) !== JSON.stringify([...RIM_FIVE_CANONICAL_INDICES].sort())) {
+      rimFivePushUnique(reasons, "canonical artifact source_clocks keys are malformed");
+    }
+    for (const asset of RIM_FIVE_CANONICAL_INDICES) {
+      if (!rimFiveHasOwn(sourceClocks, asset) || JSON.stringify(sourceClocks[asset]) !== JSON.stringify(rowClocks.get(asset))) {
+        rimFivePushUnique(reasons, `canonical artifact source_clocks.${asset} does not match its row`);
+      }
+    }
+  }
+
+  const diagnostic = artifact.order_diagnostic;
+  const nonFiniteRows = rows.filter((row) => !rimFiveFinite(row?.fair_value_upside)).map((row) => row?.asset ?? null);
+  if (!rimFiveObject(diagnostic)) {
+    rimFivePushUnique(reasons, "canonical artifact order_diagnostic must be an object");
+  } else {
+    if (JSON.stringify(diagnostic.desired_order) !== JSON.stringify(RIM_FIVE_CANONICAL_INDICES)) {
+      rimFivePushUnique(reasons, "canonical artifact order_diagnostic.desired_order is malformed");
+    }
+    if (diagnostic.values_shifted !== false) {
+      rimFivePushUnique(reasons, "canonical artifact values_shifted must remain false");
+    }
+    health.values_shifted = diagnostic.values_shifted;
+    if (!Array.isArray(diagnostic.non_finite_rows)
+      || JSON.stringify(diagnostic.non_finite_rows) !== JSON.stringify(nonFiniteRows)) {
+      rimFivePushUnique(reasons, "canonical artifact order_diagnostic.non_finite_rows is malformed");
+    }
+    if (!Array.isArray(diagnostic.violations)) {
+      rimFivePushUnique(reasons, "canonical artifact order_diagnostic.violations must be an array");
+    } else {
+      for (const violation of diagnostic.violations) {
+        if (!rimFiveObject(violation)
+          || !RIM_FIVE_CANONICAL_INDICES.includes(violation.asset_a)
+          || !RIM_FIVE_CANONICAL_INDICES.includes(violation.asset_b)
+          || !rimFiveFinite(violation.value_a)
+          || !rimFiveFinite(violation.value_b)) {
+          rimFivePushUnique(reasons, "canonical artifact order_diagnostic.violations is malformed");
+          break;
+        }
+      }
+      if (nonFiniteRows.length === 0 && rows.length === RIM_FIVE_CANONICAL_INDICES.length) {
+        const expectedMet = rimFiveExpectedOrderMet(rows);
+        const expectedViolations = rimFiveOrderViolations(rows);
+        if (diagnostic.desired_order_met !== expectedMet) {
+          rimFivePushUnique(reasons, "canonical artifact order_diagnostic.desired_order_met is dishonest");
+        }
+        if (JSON.stringify(diagnostic.violations) !== JSON.stringify(expectedViolations)) {
+          rimFivePushUnique(reasons, "canonical artifact order_diagnostic.violations are dishonest");
+        }
+      }
+    }
+    if (typeof diagnostic.desired_order_met !== "boolean") {
+      rimFivePushUnique(reasons, "canonical artifact order_diagnostic.desired_order_met must be boolean");
+    }
+    health.order_diagnostic_state = nonFiniteRows.length > 0
+      ? "not_comparable"
+      : diagnostic.desired_order_met === true ? "met" : "not_met";
+  }
+  if (artifact.values_shifted === true) {
+    health.values_shifted = true;
+    rimFivePushUnique(reasons, "canonical artifact values_shifted must remain false");
+  }
+
+  if (health.null_count > 0) {
+    warnings.push(`canonical five-index line has ${health.null_count} NULL row(s): ${rows.filter((row) => row?.status === "NULL").map((row) => row.asset).join(", ")}`);
+  }
+  if (health.canonical_public_status === RIM_FIVE_CANONICAL_PUBLIC_STATUS) {
+    warnings.push("canonical five-index line remains quarantined and is not public-ready");
+  }
+  if (health.order_diagnostic_state === "not_comparable") {
+    warnings.push("canonical five-index natural order is not comparable while one or more rows are non-finite");
+  } else if (health.order_diagnostic_state === "not_met") {
+    warnings.push("canonical five-index natural order is not met; values were not shifted");
+  }
+  if (health.stale_or_freshness_blocker_count > 0 || health.pit_blocker_count > 0 || health.direct_or_identity_blocker_count > 0) {
+    warnings.push(`canonical row blockers: stale_or_freshness=${health.stale_or_freshness_blocker_count}, pit=${health.pit_blocker_count}, direct_or_identity=${health.direct_or_identity_blocker_count}`);
+  }
+  health.canonical_integrity = reasons.length === 0;
+  return health;
+}
+
+function rimFivePublicMirrorPaths(publicDataRoot) {
+  const publicDataMarker = "100xfenok-next/public/data/";
+  return RIM_FIVE_CANONICAL_PUBLIC_MIRROR_RELS.map((relative) => path.join(
+    publicDataRoot,
+    relative.startsWith(publicDataMarker) ? relative.slice(publicDataMarker.length) : relative,
+  ));
+}
+
+export function readRimFiveCanonicalHealth({ dataRoot = DATA_ROOT, publicDataRoot = PUBLIC_DATA_ROOT } = {}) {
+  const artifactPath = path.join(dataRoot, RIM_FIVE_CANONICAL_DATA_REL);
+  let artifact = null;
+  let canonicalPresent = false;
+  let readFailure = null;
+  try {
+    const stat = fs.lstatSync(artifactPath);
+    canonicalPresent = true;
+    if (stat.isSymbolicLink() || !stat.isFile()) {
+      readFailure = "unparseable";
+    } else {
+      try {
+        artifact = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
+      } catch {
+        readFailure = "unparseable";
+      }
+    }
+  } catch (error) {
+    if (error?.code === "ENOENT") readFailure = "missing";
+    else {
+      canonicalPresent = true;
+      readFailure = "unparseable";
+    }
+  }
+  const publicLeak = rimFivePublicMirrorPaths(publicDataRoot).some((candidate) => {
+    try {
+      fs.lstatSync(candidate);
+      return true;
+    } catch {
+      return false;
+    }
+  });
+  const health = assessRimFiveCanonicalArtifact(artifact, {
+    canonicalPresent: canonicalPresent && artifact != null,
+    publicLeak,
+    readFailure,
+  });
+  health.canonical_file_present = canonicalPresent;
+  return health;
+}
+
+function rimFiveCanonicalLaneChecks(health) {
+  const checks = [
+    check(
+      "canonical_integrity",
+      "private five-index canonical integrity",
+      health?.canonical_integrity === true,
+      health?.blocking_reasons?.join("; ") || "private canonical artifact is structurally valid and remains quarantined",
+      { platform_blocking: true },
+    ),
+    warningCheck(
+      "canonical_quarantine",
+      "five-index canonical quarantine",
+      health?.canonical_public_status === RIM_FIVE_CANONICAL_PUBLIC_STATUS
+        ? "canonical five-index line remains private/quarantined; no public promotion is expected"
+        : "canonical five-index public status is unavailable or malformed",
+      { required: false },
+    ),
+  ];
+  if ((health?.null_count ?? 0) > 0 || health?.order_diagnostic_state === "not_comparable") {
+    checks.push(warningCheck(
+      "canonical_row_warnings",
+      "five-index canonical row health",
+      health?.warnings?.filter((message) => !message.includes("quarantined")).join("; ")
+        || "canonical NULL rows are expected diagnostic state",
+      { required: false },
+    ));
+  } else if (health?.order_diagnostic_state === "not_met") {
+    checks.push(warningCheck(
+      "canonical_order_diagnostic",
+      "five-index natural order",
+      "canonical natural order is not met; this is a warning and no values were shifted",
+      { required: false },
+    ));
+  }
+  if ((health?.stale_or_freshness_blocker_count ?? 0) > 0
+    || (health?.pit_blocker_count ?? 0) > 0
+    || (health?.direct_or_identity_blocker_count ?? 0) > 0) {
+    checks.push(warningCheck(
+      "canonical_blocker_classification",
+      "five-index canonical blocker classification",
+      health.warnings?.find((message) => message.startsWith("canonical row blockers:"))
+        || "canonical row blockers are diagnostic and do not promote NULL rows",
+      { required: false },
+    ));
+  }
+  return checks;
+}
+
+export function buildRimLane(rimInputs, soxRecoveryState = null, rimFiveCanonicalHealth = null) {
   const soxRecoveryStatePresent = soxRecoveryState?.schema_version === "data-supply-lkg-state/v1"
     && soxRecoveryState?.lane_id === "nasdaq_giw_sox";
   const recoveryRetrySet = projectRecoveryRetrySet(soxRecoveryState, "nasdaq_giw_sox");
@@ -2360,9 +2846,12 @@ export function buildRimLane(rimInputs, soxRecoveryState = null) {
       { service_gate: false },
     ),
   );
+  if (rimFiveCanonicalHealth) {
+    checks.push(...rimFiveCanonicalLaneChecks(rimFiveCanonicalHealth));
+  }
   return lane("rim_inputs", "RIM inputs", checks, {
     counts: {
-      required_ready: checks.filter((item) => item.required !== false && item.status === "ready").length,
+      required_ready: checks.filter((item) => item.id.startsWith("rim_") && item.required !== false && item.status === "ready").length,
       required_total: REQUIRED_RIM_INDICES.length,
       indices: indexRows,
     },
@@ -2372,6 +2861,27 @@ export function buildRimLane(rimInputs, soxRecoveryState = null) {
       public_mirror_policy: rimInputs?.public_mirror_policy ?? null,
       recovery_retry_set: recoveryRetrySet,
       recovery_recovered: recoveryRecovered,
+      ...(rimFiveCanonicalHealth ? {
+        canonical_present: rimFiveCanonicalHealth.canonical_present,
+        canonical_public_status: rimFiveCanonicalHealth.canonical_public_status,
+        ready_count: rimFiveCanonicalHealth.ready_count,
+        null_count: rimFiveCanonicalHealth.null_count,
+        total_count: rimFiveCanonicalHealth.total_count,
+        stale_or_freshness_blocker_count: rimFiveCanonicalHealth.stale_or_freshness_blocker_count,
+        freshness_blocker_count: rimFiveCanonicalHealth.freshness_blocker_count,
+        pit_blocker_count: rimFiveCanonicalHealth.pit_blocker_count,
+        direct_or_identity_blocker_count: rimFiveCanonicalHealth.direct_or_identity_blocker_count,
+        order_diagnostic_state: rimFiveCanonicalHealth.order_diagnostic_state,
+        values_shifted: rimFiveCanonicalHealth.values_shifted,
+        exact_yoo: rimFiveCanonicalHealth.exact_yoo,
+        yoo_status: rimFiveCanonicalHealth.yoo_status,
+        private_only: rimFiveCanonicalHealth.private_only,
+        private_only_status: rimFiveCanonicalHealth.private_only_status,
+        public_leak: rimFiveCanonicalHealth.public_leak,
+        public_leak_status: rimFiveCanonicalHealth.public_leak_status,
+        warnings: rimFiveCanonicalHealth.warnings,
+        blocking_reasons: rimFiveCanonicalHealth.blocking_reasons,
+      } : {}),
     },
     asOf: rimInputs?.generated_at ?? null,
   });
@@ -2891,6 +3401,7 @@ export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, r
   const coverageIndex = readJson("admin/fenok-edge-coverage-index.json");
   const stockPromotionDryRun = readJson("admin/fenok-s1-stock-public-promotion-dry-run.json");
   const rimInputs = readJson("computed/rim-index/inputs.json") || readJson("computed/rim-index/inputs.json", PUBLIC_DATA_ROOT);
+  const rimFiveCanonicalHealth = readRimFiveCanonicalHealth();
   const productCoverage = readJson("admin/product-surface-coverage.json");
   const finraOccLedger = readJson("admin/fenok-s0-finra-occ-mapping-ledger.json");
   const etfDaily1y = readJson("admin/fenok-edge-etf-daily1y-readiness.json");
@@ -2942,7 +3453,7 @@ export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, r
     buildEtfLane(coverageIndex, etfDaily1y, etfFetchablePlan, etfCoreBasket, stockanalysisRecovery),
     buildYahooBatchLane(yahooBatchState, nowIso),
     buildSlickChartsDeliveryLane(nowIso, { assessment: slickchartsDelivery }),
-    buildRimLane(rimInputs, nasdaqGiwSoxRecovery),
+    buildRimLane(rimInputs, nasdaqGiwSoxRecovery, rimFiveCanonicalHealth),
     buildProductSurfaceLane(productCoverage, stockanalysisRecovery),
     buildFinraOccLane(finraOccLedger, occAvailability),
     buildAutomationLane(),
