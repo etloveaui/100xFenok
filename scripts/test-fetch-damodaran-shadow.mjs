@@ -492,10 +492,11 @@ function runFixture(options = {}) {
   assert.match(workflow, /node scripts\/fetch-damodaran-shadow\.mjs/);
   assert.match(workflow, /uses:\s*actions\/upload-artifact@v4/);
   assert.match(workflow, /if:\s*\$\{\{ always\(\) \}\}[\s\S]+damodaran-owner-guard/);
-  assert.match(workflow, /for file in industries\.json historical_erp\.json credit_ratings\.json erp\.json industry_metrics\.json industry_metrics_regions\.json/);
-  assert.match(workflow, /rsync -a --checksum "data\/damodaran\/\$file" "100xfenok-next\/public\/data\/damodaran\/\$file"/);
-  assert.match(workflow, /cmp -s "data\/damodaran\/\$file" "100xfenok-next\/public\/data\/damodaran\/\$file"/);
-  assert.doesNotMatch(workflow, /rsync[^\n]+--delete[^\n]+data\/damodaran\//);
+  // Post-slice-2 contract (#377): the lane no longer mirrors to the public
+  // mirror — canonical staging + plane publish only.
+  assert.doesNotMatch(workflow, /rsync[^\n]*100xfenok-next\/public\/data/);
+  assert.doesNotMatch(workflow, /cmp -s "data\/damodaran\/\$file" "100xfenok-next\/public\/data\/damodaran\/\$file"/);
+  assert.match(workflow, /publish-cloud-data-generation\.mjs --family=damodaran/);
   assert.match(
     workflow,
     /scripts\/stage-lane-manifest\.sh[\s\\]+--workflow \.github\/workflows\/fetch-damodaran-shadow\.yml[\s\\]+--stage always_if_exists/,
@@ -505,15 +506,17 @@ function runFixture(options = {}) {
     /scripts\/stage-lane-manifest\.sh[\s\\]+--workflow \.github\/workflows\/fetch-damodaran-shadow\.yml[\s\\]+--stage required_on_success/,
   );
   assert.match(workflow, /id:\s*fetch/);
-  assert.match(workflow, /id:\s*mirror/);
+  assert.doesNotMatch(workflow, /id:\s*mirror/);
   assert.match(workflow, /FETCH_OUTCOME:\s*\$\{\{ steps\.fetch\.outcome \}\}/);
-  assert.match(workflow, /MIRROR_OUTCOME:\s*\$\{\{ steps\.mirror\.outcome \}\}/);
   assert.match(
     workflow,
-    /if \[\[ "\$FETCH_OUTCOME" == "success" && "\$MIRROR_OUTCOME" == "success" \]\]; then[\s\S]+--stage required_on_success/,
+    /if \[\[ "\$FETCH_OUTCOME" == "success" \]\]; then[\s\S]+--stage required_on_success/,
   );
   assert.match(workflow, /if:\s*\$\{\{ always\(\) \}\}[\s\S]+--stage always_if_exists/);
-  assert.doesNotMatch(workflow, /continue-on-error:/);
+  // continue-on-error is allowed ONLY on the plane publish step (non-blocking
+  // by design, matching the pilot pattern); nowhere else.
+  assert.equal((workflow.match(/continue-on-error:/g) ?? []).length, 1);
+  assert.match(workflow, /- name: Publish damodaran generation[\s\S]+continue-on-error: true/);
   assert.doesNotMatch(workflow, /git add/);
   assert.match(workflow, /PUBLISHED=false/);
   assert.match(workflow, /PUBLISHED=true/);
@@ -532,7 +535,10 @@ function runFixture(options = {}) {
     evidence: ".github/workflows/fetch-damodaran-shadow.yml",
   });
   assert.deepStrictEqual(lane.roots.canonical_outputs, DamodaranProducer.CANONICAL_RELATIVE_PATHS);
-  assert.deepStrictEqual(lane.roots.public_mirror, DamodaranProducer.PUBLIC_MIRROR_RELATIVE_PATHS);
+  // Post-slice-2 contract (#377): the public mirror is boundary-owned (full sync),
+  // not lane-owned — public_mirror is empty; sync coverage is guaranteed by the
+  // standing coverage gate (check-public-mirror-coverage.mjs).
+  assert.deepStrictEqual(lane.roots.public_mirror, []);
   assert.equal(
     lane.roots.detection_attempt,
     "data/admin/data-supply-state/detection-attempts/damodaran.json",
@@ -556,10 +562,7 @@ function runFixture(options = {}) {
   assert.deepStrictEqual(policy.stages.success_if_exists, []);
   assert.deepStrictEqual(policy.stages.required_on_success, [
     { path: "data/admin/damodaran/owner-guard.json", kind: "file", required: true },
-    ...FILE_NAMES.flatMap((file) => [
-      { path: `data/damodaran/${file}`, kind: "file", required: true },
-      { path: `100xfenok-next/public/data/damodaran/${file}`, kind: "file", required: true },
-    ]),
+    ...FILE_NAMES.map((file) => ({ path: `data/damodaran/${file}`, kind: "file", required: true })),
   ]);
 }
 

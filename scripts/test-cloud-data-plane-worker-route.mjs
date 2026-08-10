@@ -33,14 +33,22 @@ const encoder = new TextEncoder();
 
 const moduleSource = async (name) => readFile(new URL(`./lib/${name}`, import.meta.url), "utf8");
 
-// The same wiring worker.ts uses: route first, application afterwards.
+// The same wiring worker.ts uses: route first, enrolled assets second (plane,
+// then ASSETS fallback), application afterwards.
 const ENTRY_SOURCE = [
   'import { handleCloudDataPlaneRequest } from "./cloud-data-plane-worker-route.mjs";',
+  'import { handleCloudDataPlaneAsset, isEnrolledPath } from "./cloud-data-plane-worker-read.mjs";',
   'export { CloudDataPlaneCoordinator } from "./cloud-data-plane-coordinator.mjs";',
   "export default {",
   "  async fetch(request, env) {",
   "    const routed = await handleCloudDataPlaneRequest(request, env);",
   "    if (routed) return routed;",
+  "    if (isEnrolledPath(new URL(request.url).pathname)) {",
+  "      const served = await handleCloudDataPlaneAsset(request, env);",
+  "      if (served) return served;",
+  "      const assets = env.ASSETS;",
+  "      if (assets) return assets.fetch(request);",
+  "    }",
   '    return new Response("application handler", { status: 200 });',
   "  },",
   "};",
@@ -49,34 +57,57 @@ const ENTRY_SOURCE = [
 
 async function createWorker(bindings) {
   return new Miniflare({
-    compatibilityDate: "2026-05-16",
-    compatibilityFlags: ["nodejs_compat"],
-    modules: [
-      { type: "ESModule", path: "entry.mjs", contents: ENTRY_SOURCE },
-      {
+    workers: [{
+      compatibilityDate: "2026-05-16",
+      compatibilityFlags: ["nodejs_compat"],
+      bindings,
+      serviceBindings: { ASSETS: { name: "assets" } },
+      r2Buckets: ["DATA_PLANE_BUCKET"],
+      durableObjects: { CLOUD_DATA_PLANE_COORDINATOR: "CloudDataPlaneCoordinator" },
+      modules: [
+        { type: "ESModule", path: "entry.mjs", contents: ENTRY_SOURCE },
+        {
+          type: "ESModule",
+          path: "cloud-data-plane-worker-route.mjs",
+          contents: await moduleSource("cloud-data-plane-worker-route.mjs"),
+        },
+        {
+          type: "ESModule",
+          path: "cloud-data-plane-worker-read.mjs",
+          contents: await moduleSource("cloud-data-plane-worker-read.mjs"),
+        },
+        {
+          type: "ESModule",
+          path: "cloud-data-plane-cloudflare-adapter.mjs",
+          contents: await moduleSource("cloud-data-plane-cloudflare-adapter.mjs"),
+        },
+        {
+          type: "ESModule",
+          path: "cloud-data-plane-coordinator.mjs",
+          contents: await moduleSource("cloud-data-plane-coordinator.mjs"),
+        },
+        {
+          type: "ESModule",
+          path: "cloud-data-plane-generation.mjs",
+          contents: await moduleSource("cloud-data-plane-generation.mjs"),
+        },
+        {
+          type: "ESModule",
+          path: "json-canonical.mjs",
+          contents: await moduleSource("json-canonical.mjs"),
+        },
+      ],
+    }, {
+      // The bundled-copy stand-in: whatever the plane declines, ASSETS serves.
+      name: "assets",
+      compatibilityDate: "2026-05-16",
+      compatibilityFlags: ["nodejs_compat"],
+      modules: [{
         type: "ESModule",
-        path: "cloud-data-plane-worker-route.mjs",
-        contents: await moduleSource("cloud-data-plane-worker-route.mjs"),
-      },
-      {
-        type: "ESModule",
-        path: "cloud-data-plane-coordinator.mjs",
-        contents: await moduleSource("cloud-data-plane-coordinator.mjs"),
-      },
-      {
-        type: "ESModule",
-        path: "cloud-data-plane-generation.mjs",
-        contents: await moduleSource("cloud-data-plane-generation.mjs"),
-      },
-      {
-        type: "ESModule",
-        path: "json-canonical.mjs",
-        contents: await moduleSource("json-canonical.mjs"),
-      },
-    ],
-    bindings,
-    r2Buckets: ["DATA_PLANE_BUCKET"],
-    durableObjects: { CLOUD_DATA_PLANE_COORDINATOR: "CloudDataPlaneCoordinator" },
+        path: "entry.mjs",
+        contents: 'export default { fetch() { return new Response("assets fallback"); } };',
+      }],
+    }],
   });
 }
 
@@ -308,8 +339,118 @@ try {
     "publishing another family must not displace this one",
   );
 
+  // --- the read side mounted like worker.ts: enrolled serves, else ASSETS ---
+  const readGet = (pathname) => worker.dispatchFetch(`https://worker.test${pathname}`);
+
+  // Enrolled but its family has no pointer: the plane declines and ASSETS
+  // serves the bundled copy.
+  const unresolved = await readGet("/data/yardney/yardney_model.json");
+  assert.equal(unresolved.status, 200);
+  assert.equal(await unresolved.text(), "assets fallback");
+
+  // Enrolled tree path whose family has nothing published: same fallback.
+  const emptyTree = await readGet("/data/edgar-korean-summaries/index.json");
+  assert.equal(emptyTree.status, 200);
+  assert.equal(await emptyTree.text(), "assets fallback");
+
+  // Never enrolled: the application handler owns it.
+  const unenrolled = await readGet("/data/macro/other.json");
+  assert.equal(unenrolled.status, 200);
+  assert.equal(await unenrolled.text(), "application handler");
+
+  // Siblings of enrolled trees must not match the bounded prefixes.
+  const nearMiss = await readGet("/data/edgar-korean-summaries-evil/index.json");
+  assert.equal(nearMiss.status, 200);
+  assert.equal(await nearMiss.text(), "application handler");
+
+  const stocksNearMiss = await readGet("/data/slickcharts/stocks-evil/AAPL.json");
+  assert.equal(stocksNearMiss.status, 200);
+  assert.equal(await stocksNearMiss.text(), "application handler");
+
+  // Malformed tree remainders stay on the application handler, never ASSETS.
+  const bareTree = await readGet("/data/edgar-korean-summaries/");
+  assert.equal(bareTree.status, 200);
+  assert.equal(await bareTree.text(), "application handler");
+
+  const emptySegment = await readGet("/data/edgar-korean-summaries//index.json");
+  assert.equal(emptySegment.status, 200);
+  assert.equal(await emptySegment.text(), "application handler");
+
+  const trailingSlash = await readGet("/data/edgar-korean-summaries/index.json/");
+  assert.equal(trailingSlash.status, 200);
+  assert.equal(await trailingSlash.text(), "application handler");
+
+  // URL parsing normalizes a "../" segment before the worker sees it; it
+  // arrives as a different, unenrolled path and stays on the application
+  // handler. The segment-level rejection itself is proven at unit level.
+  const dotDotSegment = await readGet("/data/edgar-korean-summaries/../index.json");
+  assert.equal(dotDotSegment.status, 200);
+  assert.equal(await dotDotSegment.text(), "application handler");
+
+  // Enrolled and bound: served from the plane with generation attribution.
+  const readValues = { "public/data/macro/fred-macro.json": "{\"series\":{\"DGS10\":[1,2,3]}}\n" };
+  const readManifest = buildManifest(
+    "read-proof-1",
+    Object.entries(readValues).map(([path, text]) => ({ path, text })),
+  );
+  const fredSequence = (await familyPlane.pointerStore.get()).sequence;
+  const readPublished = await publishGeneration({
+    manifest: readManifest,
+    payloads: new Map(Object.entries(readValues).map(([p, t]) => [p, encoder.encode(t)])),
+    expectedPointerSequence: fredSequence,
+    objectStore: familyPlane.objectStore,
+    ledger: familyPlane.ledger,
+    pointerStore: familyPlane.pointerStore,
+    policy: POLICY,
+  });
+  assert.equal(readPublished.pointer.sequence, fredSequence + 1);
+
+  const served = await readGet("/data/macro/fred-macro.json");
+  assert.equal(served.status, 200);
+  assert.equal(served.headers.get("x-data-plane-generation"), "read-proof-1");
+  assert.equal(await served.text(), "{\"series\":{\"DGS10\":[1,2,3]}}\n");
+
+  const servedHead = await worker.dispatchFetch("https://worker.test/data/macro/fred-macro.json", {
+    method: "HEAD",
+  });
+  assert.equal(servedHead.status, 200);
+  assert.equal(await servedHead.text(), "");
+
+  // Tree family through the mounted worker: one EDGAR asset publishes and
+  // serves, and an enrolled tree path without a binding falls back to ASSETS.
+  const edgarPlane = createCloudflareCloudDataPlane({
+    r2Bucket,
+    coordinatorNamespace: createRouteCoordinatorNamespace(worker, WRITE_KEY, "edgar-korean-summaries"),
+  });
+  const edgarValues = { "public/data/edgar-korean-summaries/index.json": "{\"updated\":\"2026-08-10\"}\n" };
+  const edgarManifest = buildManifest(
+    "edgar-read-1",
+    Object.entries(edgarValues).map(([path, text]) => ({ path, text })),
+  );
+  const edgarPublished = await publishGeneration({
+    manifest: edgarManifest,
+    payloads: new Map(Object.entries(edgarValues).map(([p, t]) => [p, encoder.encode(t)])),
+    expectedPointerSequence: 0,
+    objectStore: edgarPlane.objectStore,
+    ledger: edgarPlane.ledger,
+    pointerStore: edgarPlane.pointerStore,
+    policy: POLICY,
+  });
+  assert.equal(edgarPublished.pointer.sequence, 1);
+
+  const edgarServed = await readGet("/data/edgar-korean-summaries/index.json");
+  assert.equal(edgarServed.status, 200);
+  assert.equal(edgarServed.headers.get("x-data-plane-generation"), "edgar-read-1");
+  assert.equal(await edgarServed.text(), "{\"updated\":\"2026-08-10\"}\n");
+
+  const edgarMissing = await readGet("/data/edgar-korean-summaries/not-published.json");
+  assert.equal(edgarMissing.status, 200);
+  assert.equal(await edgarMissing.text(), "assets fallback");
+
   console.log("test-cloud-data-plane-worker-route: ok"
-    + " (refusal, publish, error transit, and per-family pointer isolation)");
+    + " (refusal, publish, error transit, per-family pointer isolation,"
+    + " and read-side enrolled serving with ASSETS fallback for unresolved,"
+    + " unenrolled, and tree-near-miss paths)");
 } finally {
   await worker.dispose();
   await unconfigured.dispose();
