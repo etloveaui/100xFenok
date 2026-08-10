@@ -1268,7 +1268,8 @@ try {
 }
 
 // Real-tree configuration check (read-only): the configured fred-banking
-// per-file keys and FDIC max extraction agree with the on-disk payloads.
+// per-file keys, FDIC max extraction, and fred-yardeni max extraction agree
+// with the on-disk payloads.
 {
   const realFred = await buildFamilyManifest({
     familyName: "fred-banking",
@@ -1293,7 +1294,26 @@ try {
     realFdic.manifest.assets[0].source_as_of,
     fdicJson.data.map((row) => row.date).sort().at(-1),
   );
-  console.log("real-tree configuration ok (fred-banking per-file keys and FDIC max quarter agree with disk)");
+  const realYardeni = await buildFamilyManifest({
+    familyName: "fred-yardeni",
+    absRoot: path.join(REPO_ROOT, "data/yardney"),
+    relRoot: "public/data/yardney",
+    now: () => NOW_1,
+  });
+  assert.equal(realYardeni.sourceAsOf.origin, "payload-max-date");
+  const yardeniJson = JSON.parse(
+    await readFile(path.join(REPO_ROOT, "data/yardney/yardney_model.json"), "utf8"),
+  );
+  // Refresh-safe: the asset date follows the payload's own max data[].date,
+  // never the collection time.
+  assert.equal(
+    realYardeni.manifest.assets[0].source_as_of,
+    yardeniJson.data.map((row) => row.date).sort().at(-1),
+  );
+  console.log(
+    "real-tree configuration ok (fred-banking per-file keys, FDIC max quarter, "
+    + "and fred-yardeni max payload date agree with disk)",
+  );
 }
 
 // --- retention planner: the five mandated cases (offline, fabricated state) ---
