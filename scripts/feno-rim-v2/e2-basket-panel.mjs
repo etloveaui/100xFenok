@@ -231,8 +231,10 @@ export function buildE2Panel({ generatedAt = new Date().toISOString() } = {}) {
   const constituents = new Map(symbols.map((s) => [s, loadConstituent(s)]));
 
   const origins = e1Sp500Origins();
-  if (origins.length !== 34) {
-    throw new Error(`e2-basket-panel: expected the 34 E1 sp500 origins, got ${origins.length}`);
+  // Origin count is data-derived (benchmark panel rows); refreshed 34 -> 35 by
+  // the 2026-08-07 benchmark update (58fffc8c32). Keep in sync with the data.
+  if (origins.length !== 35) {
+    throw new Error(`e2-basket-panel: expected the 35 E1 sp500 origins, got ${origins.length}`);
   }
   const firstOriginMs = parseMs(origins[0]);
   const lastOriginMs = parseMs(origins[origins.length - 1]);

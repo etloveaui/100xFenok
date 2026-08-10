@@ -41,8 +41,8 @@ assert.equal(loadFrozenE2Criteria().criteria_sha256, savedCriteria.criteria_sha2
 // --- panel structure ----------------------------------------------------------
 
 const panel = buildE2Panel();
-assert.equal(panel.origins.length, 34, "same 34 origins as E1 sp500");
-assert.equal(panel.origins_scored, 34, "all 34 origins scored");
+assert.equal(panel.origins.length, 35, "same 35 origins as E1 sp500 (data-derived; see e2-basket-panel.mjs)");
+assert.equal(panel.origins_scored, 35, "all 35 origins scored (data-derived; see e2-basket-panel.mjs)");
 assert.ok(panel.basket_weekly_rows.length > 500, "basket weekly series present");
 assert.ok(panel.origin_rows.every((o) => o.n_ok_members >= 20), "every origin keeps >= 20 of 30 constituents");
 assert.ok(panel.point_in_time.book_concept_per_symbol, "book concept recorded per symbol");
@@ -61,12 +61,12 @@ assert.equal(s1.research_only, true, "research_only flag true");
 assert.equal(s1.promotion, null, "promotion null");
 assert.equal(s1.frozen_criteria.criteria_sha256, savedCriteria.criteria_sha256, "artifact cites frozen criteria sha");
 assert.ok(s1.basket.survivorship_caveat, "survivorship caveat carried into the artifact");
-assert.equal(s1.origins_scored, 34, "34 origins scored");
+assert.equal(s1.origins_scored, 35, "35 origins scored (data-derived)");
 
 const c = s1.comparison;
-assert.equal(c.bottom_up.n, 34, "bottom-up on all origins");
-assert.equal(c.baseline.n, 34, "baseline on all origins");
-assert.equal(c.identical_origins_bu_vs_baseline, 34, "identical origins for bu vs baseline");
+assert.equal(c.bottom_up.n, 35, "bottom-up on all origins");
+assert.equal(c.baseline.n, 35, "baseline on all origins");
+assert.equal(c.identical_origins_bu_vs_baseline, 35, "identical origins for bu vs baseline");
 for (const key of ["top_down", "bottom_up", "baseline"]) {
   assert.ok(c[key].spearman_rho >= -1 && c[key].spearman_rho <= 1, `${key} rho in [-1,1]`);
   assert.ok(c[key].directional_rate >= 0 && c[key].directional_rate <= 1, `${key} directional in [0,1]`);
