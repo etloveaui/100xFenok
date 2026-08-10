@@ -55,38 +55,11 @@ jobs:
           node scripts/build-revision-movers.mjs
           node scripts/build-industry-benchmarks.mjs
 
-      # Fenok RIM refreshes daily so the fair-value table tracks the observed
-      # risk-free rate between weekly benchmark conversions.
-      # The payout band comes first: it is the sanity check the RIM engine's
-      # retention input is measured against, and it reads the same constituent
-      # statements the analyzer has just refreshed.
-      - name: Build index payout history
-        run: node scripts/build-index-payout-history.mjs
-
-      - name: Verify index payout history contract
-        run: node scripts/test-build-index-payout-history.mjs
-
-      - name: Build Fenok RIM fair values
-        run: node scripts/build-fenok-rim-index.mjs
-
-      - name: Build Fenok RIM identification receipt
-        run: node scripts/build-fenok-rim-identification-receipt.mjs
-
-      - name: Build Fenok RIM input diagnostics
-        run: |
-          node scripts/build-fenok-rim-input-diagnostics.mjs
-          node scripts/build-fenok-rim-membership-sensitivity.mjs
-          node scripts/build-fenok-rim-index-residual-roe-diagnostic.mjs
-
-      - name: Verify Fenok RIM evidence and publication gates
-        run: |
-          node scripts/test-build-fenok-rim-index.mjs
-          node scripts/test-fenok-rim-publication-policy.mjs
-          node scripts/test-analyze-fenok-rim-identifiability.mjs
-          node scripts/test-fenok-rim-identification-protocol.mjs
-          node scripts/test-build-fenok-rim-input-diagnostics.mjs
-          node scripts/test-build-fenok-rim-membership-sensitivity.mjs
-          node scripts/test-build-fenok-rim-index-residual-roe-diagnostic.mjs
+      # Fenok RIM was retired under DEC-302. Its build and verification steps
+      # are removed from this active pipeline so a retired gate can no longer
+      # block the stocks-analyzer publication. Research artifacts under
+      # data/computed/fenok-rim/ and the public quarantine are preserved; the
+      # scripts remain runnable on demand for archived research.
 
       - name: Build calendar previous-release values (FRED)
         env:
