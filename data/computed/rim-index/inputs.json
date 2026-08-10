@@ -1,6 +1,6 @@
 {
   "schema_version": "rim_index_inputs.v2",
-  "generated_at": "2026-08-10T02:56:01.608Z",
+  "generated_at": "2026-08-09T14:00:38.772Z",
   "generated_by": "scripts/build-rim-index.mjs",
   "product": "Fenok Index RIM Workbench",
   "output_scope": "inputs_and_assumption_labelled_range_no_single_target",
@@ -10,15 +10,8 @@
     "valuation_range_scope": "SPX_NDX_only_assumption_labelled_range_no_single_target",
     "valuation_range_shape": "two labelled endpoint scenarios and no middle case; a collapsed or single-valued range is rejected",
     "no_kospi_dgs10_fallback": true,
-    "exact_spot_source_policy": {
-      "us": "SPX/CCMP/NDX/SOX use the latest positive close from their named data/indices series",
-      "kospi": "computed/fenok-edge-korea-krx-index-daily.json exact row market=KOSPI,index_class=KOSPI,index_name=코스피 only",
-      "fallback": "no ETF, Global Scouter, Investing, or legacy bridge price fallback"
-    },
     "source_tier_required": true,
-    "forecast_grid_v1_scope": "SPX_NDX_plus_direct_CCMP_when_converter_FY2_FY3_PIT_fields_pass_plus_KOSPI_when_krx_exact_weights_available; proxy grids stay nested under proxy_inputs_v1",
-    "ccmp_payout_source_policy": "FRED NASDAQXCMP/NASDAQCOM exact-date aligned trailing measured yield at the exact ^IXIC spot as_of; no ETF, proxy, or fallback",
-    "ccmp_direct_forecast_policy": "best_eps_fy2/best_eps_fy3/best_eps_asof are optional direct converter fields; missing, invalid, implausible, or future fields block the grid without extrapolation",
+    "forecast_grid_v1_scope": "SPX_NDX_plus_KOSPI_when_krx_exact_weights_available_inputs_only; proxy grids stay nested under proxy_inputs_v1",
     "primary_indices": [
       "SPX",
       "NDX"
@@ -41,34 +34,14 @@
       "public_status": "ready_inputs_and_forecast_grid",
       "observed": {
         "price": {
-          "value": 7757.6401,
-          "source": "indices/sp500.json",
-          "source_field": "rows[-1].value",
-          "source_tier": "observed_source",
-          "as_of": "2026-08-07",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 3,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          },
-          "identity": {
-            "provider_symbol": "^GSPC",
-            "canonical_index": "SPX"
-          }
-        },
-        "benchmark_price": {
           "value": 7489.72,
           "source": "benchmarks/us.json",
           "source_field": "sections.sp500.data[-1].px_last",
           "source_tier": "observed_source",
           "as_of": "2026-07-31",
           "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
+            "generated_at_date": "2026-08-09",
+            "calendar_age_days": 9,
             "freshness_unit": "calendar_days",
             "freshness_calendar": "us_market",
             "max_input_freshness_days": 10,
@@ -81,64 +54,28 @@
           "source": "benchmarks/us.json",
           "source_field": "sections.sp500.data[-1].best_eps",
           "source_tier": "observed_source",
-          "as_of": "2026-07-31",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-07-31"
         },
         "forward_pe": {
           "value": 19.5388,
           "source": "benchmarks/us.json",
           "source_field": "sections.sp500.data[-1].best_pe_ratio",
           "source_tier": "observed_source",
-          "as_of": "2026-07-31",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-07-31"
         },
         "price_to_book": {
           "value": 5.6916,
           "source": "benchmarks/us.json",
           "source_field": "sections.sp500.data[-1].px_to_book_ratio",
           "source_tier": "observed_source",
-          "as_of": "2026-07-31",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-07-31"
         },
         "roe": {
           "value": 0.2913,
           "source": "benchmarks/us.json",
           "source_field": "sections.sp500.data[-1].roe",
           "source_tier": "observed_source",
-          "as_of": "2026-07-31",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-07-31"
         },
         "risk_free_rate": {
           "value": 0.0469,
@@ -159,8 +96,8 @@
       },
       "derived": {
         "book_value": {
-          "value": 1362.9981,
-          "formula": "current_price / price_to_book",
+          "value": 1315.9252,
+          "formula": "price / price_to_book",
           "sources": [
             "observed.price",
             "observed.price_to_book"
@@ -168,7 +105,7 @@
           "source_tier": "derived_formula"
         },
         "payout_ratio": {
-          "value": 0.204047,
+          "value": 0.207012,
           "formula": "stock_action_index_weighted_dividend_yield / (benchmark_best_eps / benchmark_px_last)",
           "sources": [
             "computed/stock_action_index.json",
@@ -176,27 +113,26 @@
           ],
           "source_tier": "derived_formula",
           "coverage": {
-            "stock_action_source_date": "2026-08-07",
+            "stock_action_source_date": "2026-07-31",
             "index_key": "sp500",
-            "weighted_dividend_yield": 0.01044316,
+            "weighted_dividend_yield": 0.01059492,
             "benchmark_as_of": "2026-07-31",
             "benchmark_earnings_yield": 0.05118024,
-            "value": 0.01044316,
-            "covered_rows": 500,
+            "value": 0.010594919,
+            "covered_rows": 501,
             "total_rows": 503,
             "total_weight": 100.15,
-            "covered_weight": 99.81,
-            "covered_weight_ratio": 0.996605,
+            "covered_weight": 99.82,
+            "covered_weight_ratio": 0.996705,
             "missing_sample": [
               "PFE",
-              "TTD",
               "GM"
             ],
             "dividend_yield_unit_mix": {
               "percent": 2,
               "fraction": 403,
-              "zero": 95,
-              "unresolved": 3
+              "zero": 96,
+              "unresolved": 2
             }
           },
           "notes": [
@@ -250,7 +186,7 @@
           ]
         },
         "explicit_eps_growth_3y": {
-          "value": 0.168639,
+          "value": 0.171756,
           "formula": "weighted_average(((forward_eps_fy3 / forward_eps_fy1)^(1/2)) - 1)",
           "sources": [
             "computed/stock_action_index.json",
@@ -315,19 +251,19 @@
                 ]
               },
               "eps_growth": {
-                "value": 1.061177,
+                "value": 1.037678,
                 "formula": "weighted_average(stock_action.estimateSnapshot.epsGrowth.fy1) / 100",
                 "sources": [
                   "computed/stock_action_index.json"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 1.061177068,
-                  "covered_rows": 403,
+                  "value": 1.03767837,
+                  "covered_rows": 404,
                   "total_rows": 503,
                   "total_weight": 100.15,
-                  "covered_weight": 95.85,
-                  "covered_weight_ratio": 0.957064,
+                  "covered_weight": 95.93,
+                  "covered_weight_ratio": 0.957863,
                   "missing_sample": [
                     "PFE",
                     "BEN",
@@ -346,16 +282,16 @@
                 ]
               },
               "book_value_beginning": {
-                "value": 1362.9981,
-                "formula": "current_price / benchmark_px_to_book_ratio",
+                "value": 1315.9252,
+                "formula": "benchmark_px_last / benchmark_px_to_book_ratio",
                 "sources": [
-                  "observed.price",
-                  "observed.price_to_book"
+                  "benchmarks/us.json",
+                  "prior_period"
                 ],
                 "source_tier": "derived_formula"
               },
               "book_value_ending": {
-                "value": 1668.1074,
+                "value": 1619.8979,
                 "formula": "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -364,7 +300,7 @@
                 "source_tier": "derived_formula"
               },
               "roe_on_beginning_book": {
-                "value": 0.281237,
+                "value": 0.291297,
                 "formula": "earnings_proxy / book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -373,19 +309,19 @@
                 "source_tier": "derived_formula"
               },
               "stock_action_weighted_roe": {
-                "value": 0.482874,
+                "value": 0.476395,
                 "formula": "weighted_average(stock_action.profitabilitySnapshot.roe.fy1) / 100",
                 "sources": [
                   "computed/stock_action_index.json"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.482874011,
-                  "covered_rows": 403,
+                  "value": 0.476394611,
+                  "covered_rows": 404,
                   "total_rows": 503,
                   "total_weight": 100.15,
-                  "covered_weight": 95.85,
-                  "covered_weight_ratio": 0.957064,
+                  "covered_weight": 95.93,
+                  "covered_weight_ratio": 0.957863,
                   "missing_sample": [
                     "PFE",
                     "BEN",
@@ -401,7 +337,7 @@
                 }
               },
               "payout_ratio": {
-                "value": 0.204047,
+                "value": 0.207012,
                 "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
@@ -409,7 +345,7 @@
                 "source_tier": "derived_formula"
               },
               "retention_ratio": {
-                "value": 0.795953,
+                "value": 0.792988,
                 "formula": "1 - payout_ratio",
                 "sources": [
                   "forecast_grid_v1.payout_ratio"
@@ -417,7 +353,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.01008251,
+                "value": 0.01059492,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -427,7 +363,7 @@
                 "source_tier": "derived_formula"
               },
               "pe_ratio": {
-                "value": 20.2377,
+                "value": 19.5388,
                 "formula": "current_price / earnings_proxy",
                 "sources": [
                   "observed.price",
@@ -436,7 +372,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 1.2001,
+                "value": 1.1376,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -448,7 +384,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 250.8423,
+                "value": 255.4178,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -469,7 +405,7 @@
               "growth_basis": "forward_eps_ratio",
               "growth_usage": "earnings_path_roll_forward",
               "earnings_proxy": {
-                "value": 450.9562,
+                "value": 452.9469,
                 "formula": "prior_period_earnings_proxy * (1 + weighted_forward_eps_growth)",
                 "sources": [
                   "benchmarks/us.json",
@@ -481,19 +417,19 @@
                 ]
               },
               "eps_growth": {
-                "value": 0.176431,
+                "value": 0.181624,
                 "formula": "weighted_average((forward_eps_fy2 / forward_eps_fy1) - 1)",
                 "sources": [
                   "computed/stock_action_index.json"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.176430788,
-                  "covered_rows": 397,
+                  "value": 0.181624133,
+                  "covered_rows": 398,
                   "total_rows": 503,
                   "total_weight": 100.15,
-                  "covered_weight": 95.11,
-                  "covered_weight_ratio": 0.949675,
+                  "covered_weight": 95.19,
+                  "covered_weight_ratio": 0.950474,
                   "missing_sample": [
                     "GILD",
                     "LYV",
@@ -512,15 +448,16 @@
                 ]
               },
               "book_value_beginning": {
-                "value": 1668.1074,
+                "value": 1619.8979,
                 "formula": "prior_period_book_value_ending",
                 "sources": [
+                  "benchmarks/us.json",
                   "prior_period"
                 ],
                 "source_tier": "derived_formula"
               },
               "book_value_ending": {
-                "value": 2027.0473,
+                "value": 1979.0794,
                 "formula": "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -529,7 +466,7 @@
                 "source_tier": "derived_formula"
               },
               "roe_on_beginning_book": {
-                "value": 0.27034,
+                "value": 0.279614,
                 "formula": "earnings_proxy / book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -538,19 +475,19 @@
                 "source_tier": "derived_formula"
               },
               "stock_action_weighted_roe": {
-                "value": 0.385541,
+                "value": 0.393295,
                 "formula": "weighted_average(stock_action.profitabilitySnapshot.roe.fy2) / 100",
                 "sources": [
                   "computed/stock_action_index.json"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.38554072,
-                  "covered_rows": 403,
+                  "value": 0.393294798,
+                  "covered_rows": 404,
                   "total_rows": 503,
                   "total_weight": 100.15,
-                  "covered_weight": 95.85,
-                  "covered_weight_ratio": 0.957064,
+                  "covered_weight": 95.93,
+                  "covered_weight_ratio": 0.957863,
                   "missing_sample": [
                     "PFE",
                     "BEN",
@@ -566,7 +503,7 @@
                 }
               },
               "payout_ratio": {
-                "value": 0.204047,
+                "value": 0.207012,
                 "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
@@ -574,7 +511,7 @@
                 "source_tier": "derived_formula"
               },
               "retention_ratio": {
-                "value": 0.795953,
+                "value": 0.792988,
                 "formula": "1 - payout_ratio",
                 "sources": [
                   "forecast_grid_v1.payout_ratio"
@@ -582,7 +519,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.01186137,
+                "value": 0.01251922,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -592,7 +529,7 @@
                 "source_tier": "derived_formula"
               },
               "pe_ratio": {
-                "value": 17.2026,
+                "value": 16.5355,
                 "formula": "current_price / earnings_proxy",
                 "sources": [
                   "observed.price",
@@ -601,7 +538,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 1.0201,
+                "value": 0.9627,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -613,7 +550,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 288.8161,
+                "value": 295.4928,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -634,7 +571,7 @@
               "growth_basis": "forward_eps_ratio",
               "growth_usage": "earnings_path_roll_forward",
               "earnings_proxy": {
-                "value": 529.9214,
+                "value": 537.4319,
                 "formula": "prior_period_earnings_proxy * (1 + weighted_forward_eps_growth)",
                 "sources": [
                   "benchmarks/us.json",
@@ -646,19 +583,19 @@
                 ]
               },
               "eps_growth": {
-                "value": 0.175106,
+                "value": 0.186523,
                 "formula": "weighted_average((forward_eps_fy3 / forward_eps_fy2) - 1)",
                 "sources": [
                   "computed/stock_action_index.json"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.175106229,
-                  "covered_rows": 401,
+                  "value": 0.186522942,
+                  "covered_rows": 402,
                   "total_rows": 503,
                   "total_weight": 100.15,
-                  "covered_weight": 95.78,
-                  "covered_weight_ratio": 0.956365,
+                  "covered_weight": 95.86,
+                  "covered_weight_ratio": 0.957164,
                   "missing_sample": [
                     "PFE",
                     "MRNA",
@@ -677,15 +614,16 @@
                 ]
               },
               "book_value_beginning": {
-                "value": 2027.0473,
+                "value": 1979.0794,
                 "formula": "prior_period_book_value_ending",
                 "sources": [
+                  "benchmarks/us.json",
                   "prior_period"
                 ],
                 "source_tier": "derived_formula"
               },
               "book_value_ending": {
-                "value": 2448.8398,
+                "value": 2405.2564,
                 "formula": "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -694,7 +632,7 @@
                 "source_tier": "derived_formula"
               },
               "roe_on_beginning_book": {
-                "value": 0.261425,
+                "value": 0.271557,
                 "formula": "earnings_proxy / book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -703,19 +641,19 @@
                 "source_tier": "derived_formula"
               },
               "stock_action_weighted_roe": {
-                "value": 0.386356,
+                "value": 0.392196,
                 "formula": "weighted_average(stock_action.profitabilitySnapshot.roe.fy3) / 100",
                 "sources": [
                   "computed/stock_action_index.json"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.386355649,
-                  "covered_rows": 403,
+                  "value": 0.39219558,
+                  "covered_rows": 404,
                   "total_rows": 503,
                   "total_weight": 100.15,
-                  "covered_weight": 95.85,
-                  "covered_weight_ratio": 0.957064,
+                  "covered_weight": 95.93,
+                  "covered_weight_ratio": 0.957863,
                   "missing_sample": [
                     "PFE",
                     "BEN",
@@ -731,7 +669,7 @@
                 }
               },
               "payout_ratio": {
-                "value": 0.204047,
+                "value": 0.207012,
                 "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
@@ -739,7 +677,7 @@
                 "source_tier": "derived_formula"
               },
               "retention_ratio": {
-                "value": 0.795953,
+                "value": 0.792988,
                 "formula": "1 - payout_ratio",
                 "sources": [
                   "forecast_grid_v1.payout_ratio"
@@ -747,7 +685,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.01393837,
+                "value": 0.01485434,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -757,7 +695,7 @@
                 "source_tier": "derived_formula"
               },
               "pe_ratio": {
-                "value": 14.6392,
+                "value": 13.9361,
                 "formula": "current_price / earnings_proxy",
                 "sources": [
                   "observed.price",
@@ -766,7 +704,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 0.8681,
+                "value": 0.8114,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -778,7 +716,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 332.8924,
+                "value": 345.0654,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -794,16 +732,15 @@
             }
           ],
           "coverage": {
-            "stock_action_source_date": "2026-08-07",
-            "stock_action_generated_at": "2026-08-10T02:43:32.279Z",
+            "stock_action_source_date": "2026-07-31",
+            "stock_action_generated_at": "2026-08-09T07:18:01.710Z",
             "index_key": "sp500",
             "index_diagnostics": {
               "index_key": "sp500",
-              "source_tier": "exact_index_weight_source",
               "index_weight_rows": 503,
               "index_weight_total": 100.15,
-              "forward_eps_fy1_fy3_rows": 396,
-              "forward_eps_fy1_fy3_weight": 95.07
+              "forward_eps_fy1_fy3_rows": 397,
+              "forward_eps_fy1_fy3_weight": 95.15
             }
           },
           "notes": [
@@ -828,10 +765,10 @@
               "2026-07-31",
               "2026-07-31",
               "2026-07-31",
+              "2026-07-31",
+              "2026-07-31",
               "2026-08-01",
-              "2026-08-06",
-              "2026-08-07",
-              "2026-08-07"
+              "2026-08-06"
             ],
             "contributing_sources": [
               {
@@ -847,7 +784,19 @@
                 "as_of": "2026-07-31"
               },
               {
+                "source": "computed/stock_action_index.json",
+                "route": "main",
+                "kind": "source_as_of",
+                "as_of": "2026-07-31"
+              },
+              {
                 "source": "observed.forward_eps",
+                "route": "main",
+                "kind": "source_as_of",
+                "as_of": "2026-07-31"
+              },
+              {
+                "source": "observed.price",
                 "route": "main",
                 "kind": "source_as_of",
                 "as_of": "2026-07-31"
@@ -864,7 +813,7 @@
                 "kind": "collected_at",
                 "as_of": "2026-08-01",
                 "reason": "provider publishes no source date for the index yield observation",
-                "collection_age_hours": 197.36,
+                "collection_age_hours": 184.44,
                 "collection_sla_hours": 750,
                 "clock_policy_failures": []
               },
@@ -873,18 +822,6 @@
                 "route": "main",
                 "kind": "source_as_of",
                 "as_of": "2026-08-06"
-              },
-              {
-                "source": "computed/stock_action_index.json",
-                "route": "main",
-                "kind": "source_as_of",
-                "as_of": "2026-08-07"
-              },
-              {
-                "source": "observed.price",
-                "route": "main",
-                "kind": "source_as_of",
-                "as_of": "2026-08-07"
               }
             ],
             "oldest_source": "observed.equity_risk_premium"
@@ -954,23 +891,23 @@
           },
           "operands": {
             "book_value_beginning": {
-              "value": 1362.9981,
+              "value": 1315.9252,
               "source": "derived.forecast_grid_v1.periods[0].book_value_beginning"
             },
             "residual_income_by_period": [
               {
                 "period": "fy1",
-                "value": 250.8423,
+                "value": 255.4178,
                 "source": "derived.forecast_grid_v1.residual_income_proxy"
               },
               {
                 "period": "fy2",
-                "value": 288.8161,
+                "value": 295.4928,
                 "source": "derived.forecast_grid_v1.residual_income_proxy"
               },
               {
                 "period": "fy3",
-                "value": 332.8924,
+                "value": 345.0654,
                 "source": "derived.forecast_grid_v1.residual_income_proxy"
               }
             ],
@@ -979,53 +916,53 @@
               "source": "derived.cost_of_equity"
             },
             "payout_cross_check": {
-              "index_weighted_route": 0.204047,
+              "index_weighted_route": 0.207012,
               "index_level_route": 0.207111,
-              "payout_divergence": 0.014794,
+              "payout_divergence": 0.000478,
               "payout_divergence_limit": 0.05,
-              "retention_divergence": 0.003849,
+              "retention_divergence": 0.000125,
               "retention_divergence_limit": 0.05,
-              "weighted_dividend_yield": 0.01044316,
+              "weighted_dividend_yield": 0.01059492,
               "dividend_yield_unit_mix": {
                 "percent": 2,
                 "fraction": 403,
-                "zero": 95,
-                "unresolved": 3
+                "zero": 96,
+                "unresolved": 2
               },
-              "unresolved_unit_share": 0.005964
+              "unresolved_unit_share": 0.003976
             }
           },
           "range": {
-            "low": 2907.13,
-            "high": 5661.5,
-            "width_ratio": 1.9475
+            "low": 2909.11,
+            "high": 5764.19,
+            "width_ratio": 1.9814
           },
           "scenarios": [
             {
               "id": "conservative",
-              "value": 2907.13,
+              "value": 2909.11,
               "source_tier": "assumption_labelled_scenario",
               "assumption_version": "rim-assumptions-20260708",
               "reviewed_at": "2026-07-08",
               "terminal_growth": 0,
               "terminal_treatment": "residual income fades linearly to zero over 10 years; no perpetuity",
-              "continuing_value_at_fy3": 1087.83,
+              "continuing_value_at_fy3": 1127.61,
               "formula": "book_value_beginning + sum(residual_income_proxy_t / (1 + discount_rate)^t for t in fy1..fy3) + continuing_value / (1 + discount_rate)^3"
             },
             {
               "id": "optimistic",
-              "value": 5661.5,
+              "value": 5764.19,
               "source_tier": "assumption_labelled_scenario",
               "assumption_version": "rim-assumptions-20260708",
               "reviewed_at": "2026-07-08",
               "terminal_growth": 0.025,
               "terminal_treatment": "residual income persists and grows at 0.025 in perpetuity",
-              "continuing_value_at_fy3": 4725.97,
+              "continuing_value_at_fy3": 4898.78,
               "formula": "book_value_beginning + sum(residual_income_proxy_t / (1 + discount_rate)^t for t in fy1..fy3) + continuing_value / (1 + discount_rate)^3"
             }
           ],
           "price_context": {
-            "observed_price": 7757.6401,
+            "observed_price": 7489.72,
             "position": "above_range"
           },
           "notes": [
@@ -1061,34 +998,14 @@
       "public_status": "ready_inputs_and_forecast_grid",
       "observed": {
         "price": {
-          "value": 29722.3008,
-          "source": "indices/nasdaq100.json",
-          "source_field": "rows[-1].value",
-          "source_tier": "observed_source",
-          "as_of": "2026-08-07",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 3,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          },
-          "identity": {
-            "provider_symbol": "^NDX",
-            "canonical_index": "NDX"
-          }
-        },
-        "benchmark_price": {
           "value": 28274.2,
           "source": "benchmarks/us.json",
           "source_field": "sections.nasdaq100.data[-1].px_last",
           "source_tier": "observed_source",
           "as_of": "2026-07-31",
           "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
+            "generated_at_date": "2026-08-09",
+            "calendar_age_days": 9,
             "freshness_unit": "calendar_days",
             "freshness_calendar": "us_market",
             "max_input_freshness_days": 10,
@@ -1101,64 +1018,28 @@
           "source": "benchmarks/us.json",
           "source_field": "sections.nasdaq100.data[-1].best_eps",
           "source_tier": "observed_source",
-          "as_of": "2026-07-31",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-07-31"
         },
         "forward_pe": {
           "value": 21.345,
           "source": "benchmarks/us.json",
           "source_field": "sections.nasdaq100.data[-1].best_pe_ratio",
           "source_tier": "observed_source",
-          "as_of": "2026-07-31",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-07-31"
         },
         "price_to_book": {
           "value": 8.8371,
           "source": "benchmarks/us.json",
           "source_field": "sections.nasdaq100.data[-1].px_to_book_ratio",
           "source_tier": "observed_source",
-          "as_of": "2026-07-31",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-07-31"
         },
         "roe": {
           "value": 0.414,
           "source": "benchmarks/us.json",
           "source_field": "sections.nasdaq100.data[-1].roe",
           "source_tier": "observed_source",
-          "as_of": "2026-07-31",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-07-31"
         },
         "risk_free_rate": {
           "value": 0.0469,
@@ -1179,8 +1060,8 @@
       },
       "derived": {
         "book_value": {
-          "value": 3363.3546,
-          "formula": "current_price / price_to_book",
+          "value": 3199.4885,
+          "formula": "price / price_to_book",
           "sources": [
             "observed.price",
             "observed.price_to_book"
@@ -1188,7 +1069,7 @@
           "source_tier": "derived_formula"
         },
         "payout_ratio": {
-          "value": 0.093473,
+          "value": 0.097071,
           "formula": "stock_action_index_weighted_dividend_yield / (benchmark_best_eps / benchmark_px_last)",
           "sources": [
             "computed/stock_action_index.json",
@@ -1196,12 +1077,12 @@
           ],
           "source_tier": "derived_formula",
           "coverage": {
-            "stock_action_source_date": "2026-08-07",
+            "stock_action_source_date": "2026-07-31",
             "index_key": "nasdaq100",
-            "weighted_dividend_yield": 0.00437914,
+            "weighted_dividend_yield": 0.00454772,
             "benchmark_as_of": "2026-07-31",
             "benchmark_earnings_yield": 0.0468494,
-            "value": 0.004379139,
+            "value": 0.004547723,
             "covered_rows": 98,
             "total_rows": 103,
             "total_weight": 100.02,
@@ -1263,7 +1144,7 @@
           ]
         },
         "explicit_eps_growth_3y": {
-          "value": 0.202316,
+          "value": 0.20608,
           "formula": "weighted_average(((forward_eps_fy3 / forward_eps_fy1)^(1/2)) - 1)",
           "sources": [
             "computed/stock_action_index.json",
@@ -1272,9 +1153,9 @@
           "source_tier": "derived_formula",
           "coverage": {
             "total_weight": 100.02,
-            "covered_weight": 94.4,
-            "covered_weight_ratio": 0.943811,
-            "covered_rows": 90,
+            "covered_weight": 94.53,
+            "covered_weight_ratio": 0.945111,
+            "covered_rows": 91,
             "min_covered_weight_ratio": 0.75,
             "missing_sample": [
               "SPCX",
@@ -1283,10 +1164,10 @@
               "CTAS",
               "WBD",
               "HONA",
-              "EA",
               "NBIS",
               "CCEP",
-              "AXON"
+              "AXON",
+              "RKLB"
             ]
           },
           "notes": [
@@ -1328,23 +1209,22 @@
                 ]
               },
               "eps_growth": {
-                "value": 1.242946,
+                "value": 1.185011,
                 "formula": "weighted_average(stock_action.estimateSnapshot.epsGrowth.fy1) / 100",
                 "sources": [
                   "computed/stock_action_index.json"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 1.242946185,
-                  "covered_rows": 93,
+                  "value": 1.185010548,
+                  "covered_rows": 94,
                   "total_rows": 103,
                   "total_weight": 100.02,
-                  "covered_weight": 98.56,
-                  "covered_weight_ratio": 0.985403,
+                  "covered_weight": 98.69,
+                  "covered_weight_ratio": 0.986703,
                   "missing_sample": [
                     "PDD",
                     "CCEP",
-                    "EA",
                     "CRWV",
                     "HONA",
                     "MSTR",
@@ -1359,16 +1239,16 @@
                 ]
               },
               "book_value_beginning": {
-                "value": 3363.3546,
-                "formula": "current_price / benchmark_px_to_book_ratio",
+                "value": 3199.4885,
+                "formula": "benchmark_px_last / benchmark_px_to_book_ratio",
                 "sources": [
-                  "observed.price",
-                  "observed.price_to_book"
+                  "benchmarks/us.json",
+                  "prior_period"
                 ],
                 "source_tier": "derived_formula"
               },
               "book_value_ending": {
-                "value": 4564.1668,
+                "value": 4395.5347,
                 "formula": "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -1377,7 +1257,7 @@
                 "source_tier": "derived_formula"
               },
               "roe_on_beginning_book": {
-                "value": 0.393842,
+                "value": 0.414013,
                 "formula": "earnings_proxy / book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -1386,23 +1266,22 @@
                 "source_tier": "derived_formula"
               },
               "stock_action_weighted_roe": {
-                "value": 0.506147,
+                "value": 0.503224,
                 "formula": "weighted_average(stock_action.profitabilitySnapshot.roe.fy1) / 100",
                 "sources": [
                   "computed/stock_action_index.json"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.506147342,
-                  "covered_rows": 93,
+                  "value": 0.50322446,
+                  "covered_rows": 94,
                   "total_rows": 103,
                   "total_weight": 100.02,
-                  "covered_weight": 98.56,
-                  "covered_weight_ratio": 0.985403,
+                  "covered_weight": 98.69,
+                  "covered_weight_ratio": 0.986703,
                   "missing_sample": [
                     "PDD",
                     "CCEP",
-                    "EA",
                     "CRWV",
                     "HONA",
                     "MSTR",
@@ -1414,7 +1293,7 @@
                 }
               },
               "payout_ratio": {
-                "value": 0.093473,
+                "value": 0.097071,
                 "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
@@ -1422,7 +1301,7 @@
                 "source_tier": "derived_formula"
               },
               "retention_ratio": {
-                "value": 0.906527,
+                "value": 0.902929,
                 "formula": "1 - payout_ratio",
                 "sources": [
                   "forecast_grid_v1.payout_ratio"
@@ -1430,7 +1309,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.0041658,
+                "value": 0.00454772,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -1440,7 +1319,7 @@
                 "source_tier": "derived_formula"
               },
               "pe_ratio": {
-                "value": 22.4382,
+                "value": 21.345,
                 "formula": "current_price / earnings_proxy",
                 "sources": [
                   "observed.price",
@@ -1449,7 +1328,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 1.1091,
+                "value": 1.0358,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -1461,7 +1340,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 997.7112,
+                "value": 1013.639,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -1482,7 +1361,7 @@
               "growth_basis": "forward_eps_ratio",
               "growth_usage": "earnings_path_roll_forward",
               "earnings_proxy": {
-                "value": 1603.9614,
+                "value": 1612.164,
                 "formula": "prior_period_earnings_proxy * (1 + weighted_forward_eps_growth)",
                 "sources": [
                   "benchmarks/us.json",
@@ -1494,30 +1373,30 @@
                 ]
               },
               "eps_growth": {
-                "value": 0.210876,
+                "value": 0.217068,
                 "formula": "weighted_average((forward_eps_fy2 / forward_eps_fy1) - 1)",
                 "sources": [
                   "computed/stock_action_index.json"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.210875679,
-                  "covered_rows": 90,
+                  "value": 0.217068029,
+                  "covered_rows": 91,
                   "total_rows": 103,
                   "total_weight": 100.02,
-                  "covered_weight": 94.4,
-                  "covered_weight_ratio": 0.943811,
+                  "covered_weight": 94.53,
+                  "covered_weight_ratio": 0.945111,
                   "missing_sample": [
                     "GILD",
                     "PDD",
                     "CCEP",
-                    "EA",
                     "WBD",
                     "CRWV",
                     "HONA",
                     "MSTR",
                     "SPCX",
-                    "AXON"
+                    "AXON",
+                    "CTAS"
                   ]
                 },
                 "notes": [
@@ -1525,15 +1404,16 @@
                 ]
               },
               "book_value_beginning": {
-                "value": 4564.1668,
+                "value": 4395.5347,
                 "formula": "prior_period_book_value_ending",
                 "sources": [
+                  "benchmarks/us.json",
                   "prior_period"
                 ],
                 "source_tier": "derived_formula"
               },
               "book_value_ending": {
-                "value": 6018.2011,
+                "value": 5851.2043,
                 "formula": "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -1542,7 +1422,7 @@
                 "source_tier": "derived_formula"
               },
               "roe_on_beginning_book": {
-                "value": 0.351425,
+                "value": 0.366773,
                 "formula": "earnings_proxy / book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -1551,23 +1431,22 @@
                 "source_tier": "derived_formula"
               },
               "stock_action_weighted_roe": {
-                "value": 0.434446,
+                "value": 0.437317,
                 "formula": "weighted_average(stock_action.profitabilitySnapshot.roe.fy2) / 100",
                 "sources": [
                   "computed/stock_action_index.json"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.43444582,
-                  "covered_rows": 93,
+                  "value": 0.437317165,
+                  "covered_rows": 94,
                   "total_rows": 103,
                   "total_weight": 100.02,
-                  "covered_weight": 98.56,
-                  "covered_weight_ratio": 0.985403,
+                  "covered_weight": 98.69,
+                  "covered_weight_ratio": 0.986703,
                   "missing_sample": [
                     "PDD",
                     "CCEP",
-                    "EA",
                     "CRWV",
                     "HONA",
                     "MSTR",
@@ -1579,7 +1458,7 @@
                 }
               },
               "payout_ratio": {
-                "value": 0.093473,
+                "value": 0.097071,
                 "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
@@ -1587,7 +1466,7 @@
                 "source_tier": "derived_formula"
               },
               "retention_ratio": {
-                "value": 0.906527,
+                "value": 0.902929,
                 "formula": "1 - payout_ratio",
                 "sources": [
                   "forecast_grid_v1.payout_ratio"
@@ -1595,7 +1474,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.00504426,
+                "value": 0.00553488,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -1605,7 +1484,7 @@
                 "source_tier": "derived_formula"
               },
               "pe_ratio": {
-                "value": 18.5306,
+                "value": 17.538,
                 "formula": "current_price / earnings_proxy",
                 "sources": [
                   "observed.price",
@@ -1614,7 +1493,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 0.9159,
+                "value": 0.851,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -1626,7 +1505,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 1160.3244,
+                "value": 1184.918,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -1647,7 +1526,7 @@
               "growth_basis": "forward_eps_ratio",
               "growth_usage": "earnings_path_roll_forward",
               "earnings_proxy": {
-                "value": 2062.3033,
+                "value": 2229.7107,
                 "formula": "prior_period_earnings_proxy * (1 + weighted_forward_eps_growth)",
                 "sources": [
                   "benchmarks/us.json",
@@ -1659,23 +1538,22 @@
                 ]
               },
               "eps_growth": {
-                "value": 0.285756,
+                "value": 0.383055,
                 "formula": "weighted_average((forward_eps_fy3 / forward_eps_fy2) - 1)",
                 "sources": [
                   "computed/stock_action_index.json"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.285756172,
-                  "covered_rows": 93,
+                  "value": 0.383054563,
+                  "covered_rows": 94,
                   "total_rows": 103,
                   "total_weight": 100.02,
-                  "covered_weight": 98.56,
-                  "covered_weight_ratio": 0.985403,
+                  "covered_weight": 98.69,
+                  "covered_weight_ratio": 0.986703,
                   "missing_sample": [
                     "PDD",
                     "CCEP",
-                    "EA",
                     "CRWV",
                     "HONA",
                     "MSTR",
@@ -1690,15 +1568,16 @@
                 ]
               },
               "book_value_beginning": {
-                "value": 6018.2011,
+                "value": 5851.2043,
                 "formula": "prior_period_book_value_ending",
                 "sources": [
+                  "benchmarks/us.json",
                   "prior_period"
                 ],
                 "source_tier": "derived_formula"
               },
               "book_value_ending": {
-                "value": 7887.7347,
+                "value": 7864.4748,
                 "formula": "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -1707,7 +1586,7 @@
                 "source_tier": "derived_formula"
               },
               "roe_on_beginning_book": {
-                "value": 0.342678,
+                "value": 0.381069,
                 "formula": "earnings_proxy / book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -1716,23 +1595,22 @@
                 "source_tier": "derived_formula"
               },
               "stock_action_weighted_roe": {
-                "value": 0.379262,
+                "value": 0.403374,
                 "formula": "weighted_average(stock_action.profitabilitySnapshot.roe.fy3) / 100",
                 "sources": [
                   "computed/stock_action_index.json"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.379261648,
-                  "covered_rows": 93,
+                  "value": 0.403373736,
+                  "covered_rows": 94,
                   "total_rows": 103,
                   "total_weight": 100.02,
-                  "covered_weight": 98.56,
-                  "covered_weight_ratio": 0.985403,
+                  "covered_weight": 98.69,
+                  "covered_weight_ratio": 0.986703,
                   "missing_sample": [
                     "PDD",
                     "CCEP",
-                    "EA",
                     "CRWV",
                     "HONA",
                     "MSTR",
@@ -1744,7 +1622,7 @@
                 }
               },
               "payout_ratio": {
-                "value": 0.093473,
+                "value": 0.097071,
                 "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
@@ -1752,7 +1630,7 @@
                 "source_tier": "derived_formula"
               },
               "retention_ratio": {
-                "value": 0.906527,
+                "value": 0.902929,
                 "formula": "1 - payout_ratio",
                 "sources": [
                   "forecast_grid_v1.payout_ratio"
@@ -1760,7 +1638,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.00648569,
+                "value": 0.00765504,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -1770,7 +1648,7 @@
                 "source_tier": "derived_formula"
               },
               "pe_ratio": {
-                "value": 14.4122,
+                "value": 12.6807,
                 "formula": "current_price / earnings_proxy",
                 "sources": [
                   "observed.price",
@@ -1779,7 +1657,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 0.7124,
+                "value": 0.6153,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -1791,7 +1669,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 1477.3341,
+                "value": 1660.9737,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -1807,16 +1685,15 @@
             }
           ],
           "coverage": {
-            "stock_action_source_date": "2026-08-07",
-            "stock_action_generated_at": "2026-08-10T02:43:32.279Z",
+            "stock_action_source_date": "2026-07-31",
+            "stock_action_generated_at": "2026-08-09T07:18:01.710Z",
             "index_key": "nasdaq100",
             "index_diagnostics": {
               "index_key": "nasdaq100",
-              "source_tier": "exact_index_weight_source",
               "index_weight_rows": 103,
               "index_weight_total": 100.02,
-              "forward_eps_fy1_fy3_rows": 90,
-              "forward_eps_fy1_fy3_weight": 94.4
+              "forward_eps_fy1_fy3_rows": 91,
+              "forward_eps_fy1_fy3_weight": 94.53
             }
           },
           "notes": [
@@ -1841,10 +1718,10 @@
               "2026-07-31",
               "2026-07-31",
               "2026-07-31",
+              "2026-07-31",
+              "2026-07-31",
               "2026-08-01",
-              "2026-08-06",
-              "2026-08-07",
-              "2026-08-07"
+              "2026-08-06"
             ],
             "contributing_sources": [
               {
@@ -1860,7 +1737,19 @@
                 "as_of": "2026-07-31"
               },
               {
+                "source": "computed/stock_action_index.json",
+                "route": "main",
+                "kind": "source_as_of",
+                "as_of": "2026-07-31"
+              },
+              {
                 "source": "observed.forward_eps",
+                "route": "main",
+                "kind": "source_as_of",
+                "as_of": "2026-07-31"
+              },
+              {
+                "source": "observed.price",
                 "route": "main",
                 "kind": "source_as_of",
                 "as_of": "2026-07-31"
@@ -1877,7 +1766,7 @@
                 "kind": "collected_at",
                 "as_of": "2026-08-01",
                 "reason": "provider publishes no source date for the index yield observation",
-                "collection_age_hours": 197.36,
+                "collection_age_hours": 184.44,
                 "collection_sla_hours": 750,
                 "clock_policy_failures": []
               },
@@ -1886,18 +1775,6 @@
                 "route": "main",
                 "kind": "source_as_of",
                 "as_of": "2026-08-06"
-              },
-              {
-                "source": "computed/stock_action_index.json",
-                "route": "main",
-                "kind": "source_as_of",
-                "as_of": "2026-08-07"
-              },
-              {
-                "source": "observed.price",
-                "route": "main",
-                "kind": "source_as_of",
-                "as_of": "2026-08-07"
               }
             ],
             "oldest_source": "observed.equity_risk_premium"
@@ -1925,7 +1802,7 @@
             },
             "payout_routes_reconciled": {
               "passed": false,
-              "reason": "the two payout routes differ by 18.9%, above the 5% limit"
+              "reason": "the two payout routes differ by 15.78%, above the 5% limit"
             },
             "model_sensitivity_bounded": {
               "passed": true,
@@ -1967,23 +1844,23 @@
           },
           "operands": {
             "book_value_beginning": {
-              "value": 3363.3546,
+              "value": 3199.4885,
               "source": "derived.forecast_grid_v1.periods[0].book_value_beginning"
             },
             "residual_income_by_period": [
               {
                 "period": "fy1",
-                "value": 997.7112,
+                "value": 1013.639,
                 "source": "derived.forecast_grid_v1.residual_income_proxy"
               },
               {
                 "period": "fy2",
-                "value": 1160.3244,
+                "value": 1184.918,
                 "source": "derived.forecast_grid_v1.residual_income_proxy"
               },
               {
                 "period": "fy3",
-                "value": 1477.3341,
+                "value": 1660.9737,
                 "source": "derived.forecast_grid_v1.residual_income_proxy"
               }
             ],
@@ -1992,13 +1869,13 @@
               "source": "derived.cost_of_equity"
             },
             "payout_cross_check": {
-              "index_weighted_route": 0.093473,
+              "index_weighted_route": 0.097071,
               "index_level_route": 0.115263,
-              "payout_divergence": 0.189046,
+              "payout_divergence": 0.15783,
               "payout_divergence_limit": 0.05,
-              "retention_divergence": 0.024037,
+              "retention_divergence": 0.020148,
               "retention_divergence_limit": 0.05,
-              "weighted_dividend_yield": 0.00437914,
+              "weighted_dividend_yield": 0.00454772,
               "dividend_yield_unit_mix": {
                 "percent": 0,
                 "fraction": 61,
@@ -2014,7 +1891,7 @@
           },
           "scenarios": [],
           "price_context": {
-            "observed_price": 29722.3008,
+            "observed_price": 28274.2,
             "position": null
           },
           "notes": [
@@ -2045,37 +1922,17 @@
       "id": "CCMP",
       "label": "Nasdaq Composite",
       "role": "secondary_input_only",
-      "public_status": "input_only_ccmp_direct_with_caveats",
+      "public_status": "blocked_or_input_only",
       "observed": {
         "price": {
-          "value": 26690.6152,
-          "source": "indices/nasdaq.json",
-          "source_field": "rows[-1].value",
-          "source_tier": "observed_source",
-          "as_of": "2026-08-07",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 3,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          },
-          "identity": {
-            "provider_symbol": "^IXIC",
-            "canonical_index": "CCMP"
-          }
-        },
-        "benchmark_price": {
           "value": 25373.85,
           "source": "benchmarks/us.json",
           "source_field": "sections.nasdaq_composite.data[-1].px_last",
           "source_tier": "observed_source",
           "as_of": "2026-07-31",
           "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
+            "generated_at_date": "2026-08-09",
+            "calendar_age_days": 9,
             "freshness_unit": "calendar_days",
             "freshness_calendar": "us_market",
             "max_input_freshness_days": 10,
@@ -2088,90 +1945,34 @@
           "source": "benchmarks/us.json",
           "source_field": "sections.nasdaq_composite.data[-1].best_eps",
           "source_tier": "observed_source",
-          "as_of": "2026-07-31",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-07-31"
         },
         "forward_pe": {
           "value": 23.4736,
           "source": "benchmarks/us.json",
           "source_field": "sections.nasdaq_composite.data[-1].best_pe_ratio",
           "source_tier": "observed_source",
-          "as_of": "2026-07-31",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-07-31"
         },
         "price_to_book": {
           "value": 7.5935,
           "source": "benchmarks/us.json",
           "source_field": "sections.nasdaq_composite.data[-1].px_to_book_ratio",
           "source_tier": "observed_source",
-          "as_of": "2026-07-31",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-07-31"
         },
         "roe": {
           "value": 0.3235,
           "source": "benchmarks/us.json",
           "source_field": "sections.nasdaq_composite.data[-1].roe",
           "source_tier": "observed_source",
-          "as_of": "2026-07-31",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
-        },
-        "risk_free_rate": {
-          "value": 0.0469,
-          "source": "macro/fred-banking-daily.json",
-          "source_field": "series.DGS10[-1].value / 100",
-          "source_tier": "observed_source",
-          "as_of": "2026-08-06",
-          "label": "US 10Y Treasury",
-          "availability_status": "available",
-          "availability_as_of": "2026-08-06"
-        },
-        "equity_risk_premium": {
-          "value": 0.0503,
-          "source": "damodaran/erp.json",
-          "source_field": "us_erp",
-          "source_tier": "observed_source",
-          "as_of": "2026-04-01",
-          "label": "Damodaran US ERP",
-          "availability_status": "available",
-          "availability_as_of": "2026-04-01"
+          "as_of": "2026-07-31"
         }
       },
       "derived": {
         "book_value": {
-          "value": 3514.9292,
-          "formula": "current_price / price_to_book",
+          "value": 3341.5224,
+          "formula": "price / price_to_book",
           "sources": [
             "observed.price",
             "observed.price_to_book"
@@ -2179,92 +1980,29 @@
           "source_tier": "derived_formula"
         },
         "payout_ratio": {
-          "value": 0.14964115744352866,
-          "formula": "trailing_measured_index_dividend_yield * exact_spot / benchmark_best_eps",
-          "sources": [
-            "macro/fred-banking-daily.json:series.NASDAQXCMP",
-            "macro/fred-banking-daily.json:series.NASDAQCOM",
-            "observed.price",
-            "observed.forward_eps"
-          ],
-          "source_tier": "derived_formula",
-          "coverage": {
-            "availability_status": "available",
-            "availability_as_of": "2026-08-07",
-            "dividend_yield": 0.006060379880316491,
-            "dividend_yield_unit": "fraction",
-            "dividend_yield_as_of": "2026-08-07",
-            "dividend_yield_source": "FRED (Nasdaq, Inc.): NASDAQXCMP/NASDAQCOM",
-            "dividend_yield_formula": "(T_t * P_s) / (T_s * P_t) - 1",
-            "dividend_yield_tier": "trailing_measured_index_yield",
-            "dividend_yield_first_knowable_at": "2026-08-07",
-            "source_clocks": {
-              "total_return_last_observation": "2026-08-07",
-              "price_return_last_observation": "2026-08-07",
-              "aligned_last_observation": "2026-08-07",
-              "requested_as_of": "2026-08-07",
-              "used_observation": "2026-08-07",
-              "anchor_observation": "2025-08-07",
-              "first_knowable_at": "2026-08-07",
-              "all_used_inputs_at_or_before": "2026-08-07"
-            },
-            "exact_spot_as_of": "2026-08-07",
-            "exact_spot_value": 26690.615234375,
-            "benchmark_as_of": "2026-07-31",
-            "benchmark_eps_fy1": 1080.9544,
-            "benchmark_earnings_yield_on_exact_spot": 0.040499418634900274,
-            "payout_formula": "dividend_yield * price / eps_fy1",
-            "payout_basis": "trailing_measured_index_dividends_over_forward_fy1_earnings"
-          },
-          "notes": [
-            "Measured trailing Nasdaq Composite yield is derived from exact-date aligned FRED price-return and total-return series.",
-            "Payout uses the exact ^IXIC→CCMP spot as_of and benchmark FY1 EPS; no ETF, proxy, or constituent fallback is used."
-          ],
-          "availability_status": "available",
-          "availability_as_of": "2026-08-07"
+          "value": null,
+          "source_tier": "blocked_missing_source",
+          "reason": "Exact index payout derivation requires named constituent weights and/or index yield coverage."
         },
         "explicit_eps_growth_3y": {
           "value": null,
           "source_tier": "blocked_missing_source",
-          "reason": "CCMP direct forecast requires best_eps_fy2, best_eps_fy3, and best_eps_asof together; missing best_eps_fy2, best_eps_fy3, best_eps_asof"
-        },
-        "cost_of_equity": {
-          "value": 0.0972,
-          "formula": "risk_free_rate + equity_risk_premium",
-          "sources": [
-            "observed.risk_free_rate",
-            "observed.equity_risk_premium"
-          ],
-          "source_tier": "derived_formula",
-          "notes": [
-            "CCMP uses the same US DGS10 plus Damodaran US ERP policy as US indices; no house premium adjustment is included."
-          ]
-        },
-        "forecast_grid_v1": {
-          "schema_version": "forecast_grid_v1",
-          "public_status": "blocked_missing_direct_forecast",
-          "source_tier": "blocked_missing_source",
-          "periods": [],
-          "coverage": {
-            "source": "benchmarks/us.json",
-            "source_tier": "blocked_missing_source",
-            "availability_status": "blocked",
-            "exact_spot_as_of": "2026-08-07"
-          },
-          "reason": "CCMP direct forecast requires best_eps_fy2, best_eps_fy3, and best_eps_asof together; missing best_eps_fy2, best_eps_fy3, best_eps_asof",
-          "notes": [
-            "CCMP forecast output is fail-closed until direct converter FY2/FY3 EPS levels and best_eps_asof pass the builder gates.",
-            "No EPS extrapolation, interpolation, proxy, or constituent methodology is used."
-          ]
+          "reason": "Exact index growth derivation requires named constituent weights with sufficient forward EPS coverage."
         }
       },
       "assumptions": {},
       "blockers": [
         {
-          "code": "ccmp_direct_forecast_fields_missing",
-          "severity": "lane_degraded",
-          "source": "benchmarks/us.json:sections.nasdaq_composite",
-          "reason": "CCMP direct forecast requires best_eps_fy2, best_eps_fy3, and best_eps_asof together; missing best_eps_fy2, best_eps_fy3, best_eps_asof"
+          "code": "missing_named_constituent_weight_path",
+          "severity": "lane_degraded"
+        },
+        {
+          "code": "missing_named_index_yield_path",
+          "severity": "lane_degraded"
+        },
+        {
+          "code": "payout_and_growth_not_public_card_ready",
+          "severity": "lane_degraded"
         }
       ]
     },
@@ -2272,40 +2010,17 @@
       "id": "KOSPI",
       "label": "KOSPI",
       "role": "secondary_input_only",
-      "public_status": "ready_inputs_and_forecast_grid",
+      "public_status": "input_only_krx_exact_weights_with_caveats",
       "observed": {
         "price": {
-          "value": 6258.77,
-          "source": "computed/fenok-edge-korea-krx-index-daily.json",
-          "source_field": "indices[market=KOSPI,index_class=KOSPI,index_name=코스피].close",
-          "source_tier": "observed_source",
-          "as_of": "2026-08-07",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 3,
-            "business_age_days": 1,
-            "freshness_unit": "business_days",
-            "freshness_calendar": "krx_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          },
-          "source_generated_at": "2026-08-10T01:07:23.467Z",
-          "identity": {
-            "market": "KOSPI",
-            "index_class": "KOSPI",
-            "index_name": "코스피"
-          }
-        },
-        "benchmark_price": {
           "value": 6595.45,
           "source": "benchmarks/emerging.json",
           "source_field": "sections.kospi.data[-1].px_last",
           "source_tier": "observed_source",
           "as_of": "2026-08-02",
           "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 8,
+            "generated_at_date": "2026-08-09",
+            "calendar_age_days": 7,
             "freshness_unit": "calendar_days",
             "freshness_calendar": "us_market",
             "max_input_freshness_days": 10,
@@ -2318,71 +2033,35 @@
           "source": "benchmarks/emerging.json",
           "source_field": "sections.kospi.data[-1].best_eps",
           "source_tier": "observed_source",
-          "as_of": "2026-08-02",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 8,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-08-02"
         },
         "forward_pe": {
           "value": 5.5095,
           "source": "benchmarks/emerging.json",
           "source_field": "sections.kospi.data[-1].best_pe_ratio",
           "source_tier": "observed_source",
-          "as_of": "2026-08-02",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 8,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-08-02"
         },
         "price_to_book": {
           "value": 1.8853,
           "source": "benchmarks/emerging.json",
           "source_field": "sections.kospi.data[-1].px_to_book_ratio",
           "source_tier": "observed_source",
-          "as_of": "2026-08-02",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 8,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-08-02"
         },
         "roe": {
           "value": 0.3422,
           "source": "benchmarks/emerging.json",
           "source_field": "sections.kospi.data[-1].roe",
           "source_tier": "observed_source",
-          "as_of": "2026-08-02",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 8,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-08-02"
         },
         "risk_free_rate": {
-          "value": 0.04204,
-          "source": "_private/admin/fenok-edge-korea/daily/krx_daily_20260807/raw/bond_commodity_esg/kts_bydd_trd/20260807.json",
+          "value": 0.04194,
+          "source": "_private/admin/fenok-edge-korea/daily/krx_daily_20260806/raw/bond_commodity_esg/kts_bydd_trd/20260806.json",
           "source_field": "OutBlock_1[ISU_NM=국고04250-3606(26-6),BND_EXP_TP_NM=10,GOVBND_ISU_TP_NM=지표].CLSPRC_YD / 100",
           "source_tier": "observed_source",
-          "as_of": "2026-08-07",
+          "as_of": "2026-08-06",
           "label": "KRX KTS 10Y benchmark government bond yield",
           "raw_public": false,
           "license_or_terms_note": "KRX usage permission granted by owner 2026-07-19; public serving of derived/aggregate surfaces authorized; raw per-issuer row redistribution still governed per-slice."
@@ -2398,8 +2077,8 @@
       },
       "derived": {
         "book_value": {
-          "value": 3319.774,
-          "formula": "current_price / price_to_book",
+          "value": 3498.3557,
+          "formula": "price / price_to_book",
           "sources": [
             "observed.price",
             "observed.price_to_book"
@@ -2407,79 +2086,19 @@
           "source_tier": "derived_formula"
         },
         "payout_ratio": {
-          "value": 0.06527801132942394,
-          "formula": "kospi_dart_payout_artifact.payout_ratio",
-          "sources": [
-            "computed/fenok-rim/kospi-dart-payout/current.json",
-            "data/computed/fenok-rim/kospi-dart-payout/fy2025.json",
-            "data/admin/fenok-edge-korea-krx-daily-index.json",
-            "data/benchmarks/emerging.json"
-          ],
-          "source_tier": "derived_formula",
-          "coverage": {
-            "source_tier": "direct_official_derived",
-            "availability_status": "available",
-            "availability_as_of": "2026-08-07",
-            "covered_weight": 0.8542205585514179,
-            "covered_weight_ratio": 0.8542205585514179,
-            "gate": 0.75,
-            "pass": true,
-            "selected_fy": 2025,
-            "index_dividend_yield": 0.011848194862584167,
-            "earnings_yield": 0.18150361233880932,
-            "pointer_path": "computed/fenok-rim/kospi-dart-payout/current.json",
-            "pointer_schema_version": "kospi_dart_payout_pointer.v1",
-            "pointer_sha256": "856a37dc64198c007b647d394235a0a27a0b66ed3e9df9fa9ec62723a4e81f75",
-            "pointer_batch_date": "2026-08-10",
-            "selected_artifact": "data/computed/fenok-rim/kospi-dart-payout/fy2025.json",
-            "artifact_schema_version": "kospi_dart_payout.v1",
-            "artifact_batch_date": "2026-08-10",
-            "first_knowable_at": "2026-08-06T00:00:00Z",
-            "source_clocks": {
-              "pointer_first_knowable_at": "2026-08-06",
-              "bridge_as_of": "2026-08-07",
-              "benchmark_as_of": "2026-08-02",
-              "availability_as_of": "2026-08-07",
-              "all_used_inputs_at_or_before": "2026-08-07"
-            },
-            "provenance": {
-              "bridge": {
-                "source": "data/admin/fenok-edge-korea-krx-daily-index.json",
-                "source_field": "OutBlock_1[MKT_NM=KOSPI].MKTCAP / sum(OutBlock_1[MKT_NM=KOSPI].MKTCAP)",
-                "as_of": "2026-08-07",
-                "row_count": 943
-              },
-              "benchmark": {
-                "source": "data/benchmarks/emerging.json",
-                "as_of": "2026-08-02"
-              }
-            }
-          },
-          "notes": [
-            "Top-level KOSPI payout is read from the exact OpenDART current pointer's selected FY index-level artifact.",
-            "The pointer and artifact are independently path-, byte-hash-, schema-, date-, coverage-, and provenance-validated before this value is available.",
-            "The legacy stock_action dividend-yield route remains diagnostics-only and is never a payout fallback."
-          ],
-          "direct_source_tier": "direct_official_derived",
-          "source": "computed/fenok-rim/kospi-dart-payout/current.json",
-          "source_field": "selected_artifact.payout_ratio",
-          "availability_status": "available",
-          "availability_as_of": "2026-08-07"
-        },
-        "legacy_payout_ratio_qa": {
           "value": 0,
           "formula": "krx_kospi_mktcap_weighted_dividend_yield / (benchmark_best_eps / benchmark_px_last)",
           "sources": [
             "computed/stock_action_index.json",
-            "_private/admin/fenok-edge-korea/daily/krx_daily_20260807/raw/core_stock_index/stk_bydd_trd/20260807.json",
+            "_private/admin/fenok-edge-korea/daily/krx_daily_20260806/raw/core_stock_index/stk_bydd_trd/20260806.json",
             "benchmarks/emerging.json"
           ],
           "source_tier": "derived_formula",
           "coverage": {
-            "stock_action_source_date": "2026-08-07",
+            "stock_action_source_date": "2026-07-31",
             "index_key": "kospi_krx_mktcap",
-            "krx_weight_as_of": "2026-08-07",
-            "krx_weight_source": "_private/admin/fenok-edge-korea/daily/krx_daily_20260807/raw/core_stock_index/stk_bydd_trd/20260807.json",
+            "krx_weight_as_of": "2026-08-06",
+            "krx_weight_source": "_private/admin/fenok-edge-korea/daily/krx_daily_20260806/raw/core_stock_index/stk_bydd_trd/20260806.json",
             "raw_public": false,
             "weighted_dividend_yield": 0,
             "benchmark_as_of": "2026-08-02",
@@ -2500,8 +2119,8 @@
             "covered_rows": 1,
             "total_rows": 943,
             "total_weight": 100,
-            "covered_weight": 0.0047,
-            "covered_weight_ratio": 0.000047,
+            "covered_weight": 0.0046,
+            "covered_weight_ratio": 0.000046,
             "missing_sample": [
               "095570.KS",
               "282330.KS",
@@ -2527,18 +2146,18 @@
           ]
         },
         "explicit_eps_growth_3y": {
-          "value": 0.205223,
+          "value": 0.205541,
           "formula": "krx_kospi_mktcap_weighted_average(((forward_eps_fy3 / forward_eps_fy1)^(1/2)) - 1)",
           "sources": [
             "computed/stock_action_index.json",
-            "_private/admin/fenok-edge-korea/daily/krx_daily_20260807/raw/core_stock_index/stk_bydd_trd/20260807.json"
+            "_private/admin/fenok-edge-korea/daily/krx_daily_20260806/raw/core_stock_index/stk_bydd_trd/20260806.json"
           ],
           "source_tier": "derived_formula",
           "coverage": {
-            "stock_action_source_date": "2026-08-07",
+            "stock_action_source_date": "2026-07-31",
             "index_key": "kospi_krx_mktcap",
-            "krx_weight_as_of": "2026-08-07",
-            "krx_weight_source": "_private/admin/fenok-edge-korea/daily/krx_daily_20260807/raw/core_stock_index/stk_bydd_trd/20260807.json",
+            "krx_weight_as_of": "2026-08-06",
+            "krx_weight_source": "_private/admin/fenok-edge-korea/daily/krx_daily_20260806/raw/core_stock_index/stk_bydd_trd/20260806.json",
             "raw_public": false,
             "min_covered_weight_ratio": 0.75,
             "unmatched_krx_sample": [
@@ -2553,12 +2172,12 @@
               "097955:CJ제일제당 우",
               "000480:CR홀딩스"
             ],
-            "value": 0.205223092,
+            "value": 0.205540949,
             "covered_rows": 212,
             "total_rows": 943,
             "total_weight": 100,
-            "covered_weight": 87.8472,
-            "covered_weight_ratio": 0.878472,
+            "covered_weight": 87.9737,
+            "covered_weight_ratio": 0.879737,
             "missing_sample": [
               "079160.KS",
               "093050.KS",
@@ -2578,7 +2197,7 @@
           ]
         },
         "cost_of_equity": {
-          "value": 0.0969477,
+          "value": 0.0968477,
           "formula": "risk_free_rate + equity_risk_premium",
           "sources": [
             "observed.risk_free_rate",
@@ -2605,7 +2224,7 @@
                 "sources": [
                   "benchmarks/emerging.json",
                   "computed/stock_action_index.json",
-                  "_private/admin/fenok-edge-korea/daily/krx_daily_20260807/raw/core_stock_index/stk_bydd_trd/20260807.json"
+                  "_private/admin/fenok-edge-korea/daily/krx_daily_20260806/raw/core_stock_index/stk_bydd_trd/20260806.json"
                 ],
                 "source_tier": "derived_formula",
                 "notes": [
@@ -2613,20 +2232,20 @@
                 ]
               },
               "eps_growth": {
-                "value": 3.476396,
+                "value": 3.470851,
                 "formula": "weighted_average(stock_action.estimateSnapshot.epsGrowth.fy1) / 100",
                 "sources": [
                   "computed/stock_action_index.json",
-                  "_private/admin/fenok-edge-korea/daily/krx_daily_20260807/raw/core_stock_index/stk_bydd_trd/20260807.json"
+                  "_private/admin/fenok-edge-korea/daily/krx_daily_20260806/raw/core_stock_index/stk_bydd_trd/20260806.json"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 3.476396475,
+                  "value": 3.470851327,
                   "covered_rows": 226,
                   "total_rows": 943,
                   "total_weight": 100,
-                  "covered_weight": 90.1797,
-                  "covered_weight_ratio": 0.901797,
+                  "covered_weight": 90.196,
+                  "covered_weight_ratio": 0.90196,
                   "missing_sample": [
                     "093050.KS",
                     "001820.KS",
@@ -2645,16 +2264,16 @@
                 ]
               },
               "book_value_beginning": {
-                "value": 3319.774,
-                "formula": "current_price / benchmark_px_to_book_ratio",
+                "value": 3498.3557,
+                "formula": "benchmark_px_last / benchmark_px_to_book_ratio",
                 "sources": [
-                  "observed.price",
-                  "observed.price_to_book"
+                  "benchmarks/emerging.json",
+                  "prior_period"
                 ],
                 "source_tier": "derived_formula"
               },
               "book_value_ending": {
-                "value": 4438.7279,
+                "value": 4695.4537,
                 "formula": "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -2663,7 +2282,7 @@
                 "source_tier": "derived_formula"
               },
               "roe_on_beginning_book": {
-                "value": 0.360596,
+                "value": 0.342189,
                 "formula": "earnings_proxy / book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -2672,20 +2291,20 @@
                 "source_tier": "derived_formula"
               },
               "stock_action_weighted_roe": {
-                "value": 0.474396,
+                "value": 0.480862,
                 "formula": "weighted_average(stock_action.profitabilitySnapshot.roe.fy1) / 100",
                 "sources": [
                   "computed/stock_action_index.json",
-                  "_private/admin/fenok-edge-korea/daily/krx_daily_20260807/raw/core_stock_index/stk_bydd_trd/20260807.json"
+                  "_private/admin/fenok-edge-korea/daily/krx_daily_20260806/raw/core_stock_index/stk_bydd_trd/20260806.json"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.474395867,
+                  "value": 0.480861893,
                   "covered_rows": 226,
                   "total_rows": 943,
                   "total_weight": 100,
-                  "covered_weight": 90.1797,
-                  "covered_weight_ratio": 0.901797,
+                  "covered_weight": 90.196,
+                  "covered_weight_ratio": 0.90196,
                   "missing_sample": [
                     "093050.KS",
                     "001820.KS",
@@ -2701,15 +2320,15 @@
                 }
               },
               "payout_ratio": {
-                "value": 0.065278,
-                "formula": "derived.payout_ratio",
+                "value": 0,
+                "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
                 ],
                 "source_tier": "derived_formula"
               },
               "retention_ratio": {
-                "value": 0.934722,
+                "value": 1,
                 "formula": "1 - payout_ratio",
                 "sources": [
                   "forecast_grid_v1.payout_ratio"
@@ -2717,7 +2336,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.01248555,
+                "value": 0,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -2727,7 +2346,7 @@
                 "source_tier": "derived_formula"
               },
               "pe_ratio": {
-                "value": 5.2283,
+                "value": 5.5095,
                 "formula": "current_price / earnings_proxy",
                 "sources": [
                   "observed.price",
@@ -2736,7 +2355,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 0.2548,
+                "value": 0.2681,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -2748,7 +2367,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 875.2535,
+                "value": 858.2903,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -2769,12 +2388,12 @@
               "growth_basis": "forward_eps_ratio",
               "growth_usage": "earnings_path_roll_forward",
               "earnings_proxy": {
-                "value": 1638.0796,
+                "value": 1639.5314,
                 "formula": "prior_period_earnings_proxy * (1 + weighted_forward_eps_growth)",
                 "sources": [
                   "benchmarks/emerging.json",
                   "computed/stock_action_index.json",
-                  "_private/admin/fenok-edge-korea/daily/krx_daily_20260807/raw/core_stock_index/stk_bydd_trd/20260807.json"
+                  "_private/admin/fenok-edge-korea/daily/krx_daily_20260806/raw/core_stock_index/stk_bydd_trd/20260806.json"
                 ],
                 "source_tier": "derived_formula",
                 "notes": [
@@ -2782,20 +2401,20 @@
                 ]
               },
               "eps_growth": {
-                "value": 0.368376,
+                "value": 0.369588,
                 "formula": "weighted_average((forward_eps_fy2 / forward_eps_fy1) - 1)",
                 "sources": [
                   "computed/stock_action_index.json",
-                  "_private/admin/fenok-edge-korea/daily/krx_daily_20260807/raw/core_stock_index/stk_bydd_trd/20260807.json"
+                  "_private/admin/fenok-edge-korea/daily/krx_daily_20260806/raw/core_stock_index/stk_bydd_trd/20260806.json"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.368375535,
+                  "value": 0.369588316,
                   "covered_rows": 215,
                   "total_rows": 943,
                   "total_weight": 100,
-                  "covered_weight": 87.8636,
-                  "covered_weight_ratio": 0.878636,
+                  "covered_weight": 87.9898,
+                  "covered_weight_ratio": 0.879898,
                   "missing_sample": [
                     "079160.KS",
                     "093050.KS",
@@ -2814,15 +2433,16 @@
                 ]
               },
               "book_value_beginning": {
-                "value": 4438.7279,
+                "value": 4695.4537,
                 "formula": "prior_period_book_value_ending",
                 "sources": [
+                  "benchmarks/emerging.json",
                   "prior_period"
                 ],
                 "source_tier": "derived_formula"
               },
               "book_value_ending": {
-                "value": 5969.8769,
+                "value": 6334.9851,
                 "formula": "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -2831,7 +2451,7 @@
                 "source_tier": "derived_formula"
               },
               "roe_on_beginning_book": {
-                "value": 0.369043,
+                "value": 0.349174,
                 "formula": "earnings_proxy / book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -2840,20 +2460,20 @@
                 "source_tier": "derived_formula"
               },
               "stock_action_weighted_roe": {
-                "value": 0.359749,
+                "value": 0.363565,
                 "formula": "weighted_average(stock_action.profitabilitySnapshot.roe.fy2) / 100",
                 "sources": [
                   "computed/stock_action_index.json",
-                  "_private/admin/fenok-edge-korea/daily/krx_daily_20260807/raw/core_stock_index/stk_bydd_trd/20260807.json"
+                  "_private/admin/fenok-edge-korea/daily/krx_daily_20260806/raw/core_stock_index/stk_bydd_trd/20260806.json"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.359748517,
+                  "value": 0.363565098,
                   "covered_rows": 226,
                   "total_rows": 943,
                   "total_weight": 100,
-                  "covered_weight": 90.1797,
-                  "covered_weight_ratio": 0.901797,
+                  "covered_weight": 90.196,
+                  "covered_weight_ratio": 0.90196,
                   "missing_sample": [
                     "093050.KS",
                     "001820.KS",
@@ -2869,15 +2489,15 @@
                 }
               },
               "payout_ratio": {
-                "value": 0.065278,
-                "formula": "derived.payout_ratio",
+                "value": 0,
+                "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
                 ],
                 "source_tier": "derived_formula"
               },
               "retention_ratio": {
-                "value": 0.934722,
+                "value": 1,
                 "formula": "1 - payout_ratio",
                 "sources": [
                   "forecast_grid_v1.payout_ratio"
@@ -2885,7 +2505,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.01708492,
+                "value": 0,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -2895,7 +2515,7 @@
                 "source_tier": "derived_formula"
               },
               "pe_ratio": {
-                "value": 3.8208,
+                "value": 4.0228,
                 "formula": "current_price / earnings_proxy",
                 "sources": [
                   "observed.price",
@@ -2904,7 +2524,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 0.1862,
+                "value": 0.1957,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -2916,7 +2536,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 1207.7552,
+                "value": 1184.7875,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -2937,12 +2557,12 @@
               "growth_basis": "forward_eps_ratio",
               "growth_usage": "earnings_path_roll_forward",
               "earnings_proxy": {
-                "value": 1820.7879,
+                "value": 1832.7066,
                 "formula": "prior_period_earnings_proxy * (1 + weighted_forward_eps_growth)",
                 "sources": [
                   "benchmarks/emerging.json",
                   "computed/stock_action_index.json",
-                  "_private/admin/fenok-edge-korea/daily/krx_daily_20260807/raw/core_stock_index/stk_bydd_trd/20260807.json"
+                  "_private/admin/fenok-edge-korea/daily/krx_daily_20260806/raw/core_stock_index/stk_bydd_trd/20260806.json"
                 ],
                 "source_tier": "derived_formula",
                 "notes": [
@@ -2950,20 +2570,20 @@
                 ]
               },
               "eps_growth": {
-                "value": 0.111538,
+                "value": 0.117823,
                 "formula": "weighted_average((forward_eps_fy3 / forward_eps_fy2) - 1)",
                 "sources": [
                   "computed/stock_action_index.json",
-                  "_private/admin/fenok-edge-korea/daily/krx_daily_20260807/raw/core_stock_index/stk_bydd_trd/20260807.json"
+                  "_private/admin/fenok-edge-korea/daily/krx_daily_20260806/raw/core_stock_index/stk_bydd_trd/20260806.json"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.111538094,
+                  "value": 0.117823369,
                   "covered_rows": 221,
                   "total_rows": 943,
                   "total_weight": 100,
-                  "covered_weight": 90.0347,
-                  "covered_weight_ratio": 0.900347,
+                  "covered_weight": 90.0549,
+                  "covered_weight_ratio": 0.900549,
                   "missing_sample": [
                     "093050.KS",
                     "011790.KS",
@@ -2982,15 +2602,16 @@
                 ]
               },
               "book_value_beginning": {
-                "value": 5969.8769,
+                "value": 6334.9851,
                 "formula": "prior_period_book_value_ending",
                 "sources": [
+                  "benchmarks/emerging.json",
                   "prior_period"
                 ],
                 "source_tier": "derived_formula"
               },
               "book_value_ending": {
-                "value": 7671.8074,
+                "value": 8167.6917,
                 "formula": "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -2999,7 +2620,7 @@
                 "source_tier": "derived_formula"
               },
               "roe_on_beginning_book": {
-                "value": 0.304996,
+                "value": 0.289299,
                 "formula": "earnings_proxy / book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -3008,20 +2629,20 @@
                 "source_tier": "derived_formula"
               },
               "stock_action_weighted_roe": {
-                "value": 0.268443,
+                "value": 0.270278,
                 "formula": "weighted_average(stock_action.profitabilitySnapshot.roe.fy3) / 100",
                 "sources": [
                   "computed/stock_action_index.json",
-                  "_private/admin/fenok-edge-korea/daily/krx_daily_20260807/raw/core_stock_index/stk_bydd_trd/20260807.json"
+                  "_private/admin/fenok-edge-korea/daily/krx_daily_20260806/raw/core_stock_index/stk_bydd_trd/20260806.json"
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.268443067,
+                  "value": 0.270277577,
                   "covered_rows": 226,
                   "total_rows": 943,
                   "total_weight": 100,
-                  "covered_weight": 90.1797,
-                  "covered_weight_ratio": 0.901797,
+                  "covered_weight": 90.196,
+                  "covered_weight_ratio": 0.90196,
                   "missing_sample": [
                     "093050.KS",
                     "001820.KS",
@@ -3037,15 +2658,15 @@
                 }
               },
               "payout_ratio": {
-                "value": 0.065278,
-                "formula": "derived.payout_ratio",
+                "value": 0,
+                "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
                 ],
                 "source_tier": "derived_formula"
               },
               "retention_ratio": {
-                "value": 0.934722,
+                "value": 1,
                 "formula": "1 - payout_ratio",
                 "sources": [
                   "forecast_grid_v1.payout_ratio"
@@ -3053,7 +2674,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.01899054,
+                "value": 0,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -3063,7 +2684,7 @@
                 "source_tier": "derived_formula"
               },
               "pe_ratio": {
-                "value": 3.4374,
+                "value": 3.5987,
                 "formula": "current_price / earnings_proxy",
                 "sources": [
                   "observed.price",
@@ -3072,7 +2693,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 0.1675,
+                "value": 0.1751,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -3084,7 +2705,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 1242.0221,
+                "value": 1219.1778,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -3100,30 +2721,28 @@
             }
           ],
           "coverage": {
-            "stock_action_source_date": "2026-08-07",
-            "stock_action_generated_at": "2026-08-10T02:43:32.279Z",
-            "availability_as_of": "2026-08-07",
-            "exact_spot_as_of": "2026-08-07",
+            "stock_action_source_date": "2026-07-31",
+            "stock_action_generated_at": "2026-08-09T07:18:01.710Z",
             "index_key": "kospi_krx_mktcap",
             "index_diagnostics": {
               "index_key": "kospi_krx_mktcap",
               "source_tier": "exact_index_weight_source",
-              "source": "_private/admin/fenok-edge-korea/daily/krx_daily_20260807/raw/core_stock_index/stk_bydd_trd/20260807.json",
+              "source": "_private/admin/fenok-edge-korea/daily/krx_daily_20260806/raw/core_stock_index/stk_bydd_trd/20260806.json",
               "bridge_source": "admin/fenok-edge-korea-krx-daily-index.json",
               "source_field": "OutBlock_1[MKT_NM=KOSPI].MKTCAP / sum(OutBlock_1[MKT_NM=KOSPI].MKTCAP)",
-              "as_of": "2026-08-07",
+              "as_of": "2026-08-06",
               "raw_public": false,
               "license_or_terms_note": "KRX usage permission granted by owner 2026-07-19; public serving of derived/aggregate surfaces authorized; raw per-issuer row redistribution still governed per-slice.",
               "krx_rows": 943,
-              "total_market_cap": 5159998610306228,
+              "total_market_cap": 5191831798615970,
               "denominator": {
                 "method": "issuer_level_market_cap_sum",
                 "label": "KRX KOSPI stock-daily issuer MKTCAP sum; matches KOSPI including foreign shares aggregate in kospi_dd_trd",
                 "unit": "KRW",
-                "value": 5159998610306228
+                "value": 5191831798615970
               },
               "freshness": {
-                "generated_at_date": "2026-08-10",
+                "generated_at_date": "2026-08-09",
                 "calendar_age_days": 3,
                 "business_age_days": 1,
                 "freshness_unit": "business_days",
@@ -3133,13 +2752,13 @@
                 "status": "fresh_enough_for_input_slice"
               },
               "matched_stock_action_rows": 237,
-              "matched_weight_ratio": 0.906776,
+              "matched_weight_ratio": 0.906987,
               "dividend_yield_rows": 1,
-              "dividend_yield_weight_ratio": 0.000047,
+              "dividend_yield_weight_ratio": 0.000046,
               "weighted_dividend_yield": 0,
               "forward_eps_fy1_fy3_rows": 212,
-              "forward_eps_fy1_fy3_weight_ratio": 0.878472,
-              "weighted_forward_eps_3y_cagr": 0.205223,
+              "forward_eps_fy1_fy3_weight_ratio": 0.879737,
+              "weighted_forward_eps_3y_cagr": 0.205541,
               "min_public_card_weight_ratio": 0.75,
               "public_status": "krx_exact_weights_financials_coverage_ready",
               "missing_sample": [
@@ -3167,13 +2786,17 @@
             "PEG uses derived.explicit_eps_growth_3y as the canonical growth denominator.",
             "FY1 eps_growth is a source-reported context snapshot and is not used to roll earnings_proxy; FY2/FY3 eps_growth values are forward-EPS roll-forward ratios.",
             "KOSPI forecast grid uses KRX MKTCAP weights and stock_action financial snapshots.",
-            "KOSPI forecast availability is the stock_action/weights clock; it remains separate from the exact KRX spot clock and the OpenDART payout availability clock.",
             "Raw KRX rows stay private/admin; generated RIM inputs are safe for this public payload."
           ]
         }
       },
       "assumptions": {},
-      "blockers": []
+      "blockers": [
+        {
+          "code": "kospi_payout_coverage_below_threshold",
+          "severity": "lane_degraded"
+        }
+      ]
     },
     "SOX": {
       "id": "SOX",
@@ -3182,34 +2805,14 @@
       "public_status": "ready_inputs_and_forecast_grid",
       "observed": {
         "price": {
-          "value": 12356.79,
-          "source": "indices/sox.json",
-          "source_field": "rows[-1].value",
-          "source_tier": "observed_source",
-          "as_of": "2026-08-07",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 3,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          },
-          "identity": {
-            "provider_symbol": "^SOX",
-            "canonical_index": "SOX"
-          }
-        },
-        "benchmark_price": {
           "value": 11311.08,
           "source": "benchmarks/micro_sectors.json",
           "source_field": "sections.philadelphia_semi.data[-1].px_last",
           "source_tier": "observed_source",
           "as_of": "2026-07-31",
           "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
+            "generated_at_date": "2026-08-09",
+            "calendar_age_days": 9,
             "freshness_unit": "calendar_days",
             "freshness_calendar": "us_market",
             "max_input_freshness_days": 10,
@@ -3222,64 +2825,28 @@
           "source": "benchmarks/micro_sectors.json",
           "source_field": "sections.philadelphia_semi.data[-1].best_eps",
           "source_tier": "observed_source",
-          "as_of": "2026-07-31",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-07-31"
         },
         "forward_pe": {
           "value": 20.2727,
           "source": "benchmarks/micro_sectors.json",
           "source_field": "sections.philadelphia_semi.data[-1].best_pe_ratio",
           "source_tier": "observed_source",
-          "as_of": "2026-07-31",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-07-31"
         },
         "price_to_book": {
           "value": 10.4136,
           "source": "benchmarks/micro_sectors.json",
           "source_field": "sections.philadelphia_semi.data[-1].px_to_book_ratio",
           "source_tier": "observed_source",
-          "as_of": "2026-07-31",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-07-31"
         },
         "roe": {
           "value": 0.5137,
           "source": "benchmarks/micro_sectors.json",
           "source_field": "sections.philadelphia_semi.data[-1].roe",
           "source_tier": "observed_source",
-          "as_of": "2026-07-31",
-          "freshness": {
-            "generated_at_date": "2026-08-10",
-            "calendar_age_days": 10,
-            "freshness_unit": "calendar_days",
-            "freshness_calendar": "us_market",
-            "max_input_freshness_days": 10,
-            "future_date_anomaly": false,
-            "status": "fresh_enough_for_input_slice"
-          }
+          "as_of": "2026-07-31"
         },
         "risk_free_rate": {
           "value": 0.0469,
@@ -3300,8 +2867,8 @@
       },
       "derived": {
         "book_value": {
-          "value": 1186.6012,
-          "formula": "current_price / price_to_book",
+          "value": 1086.1835,
+          "formula": "price / price_to_book",
           "sources": [
             "observed.price",
             "observed.price_to_book"
@@ -3309,7 +2876,7 @@
           "source_tier": "derived_formula"
         },
         "payout_ratio": {
-          "value": 0.104792,
+          "value": 0.112985,
           "formula": "sox_methodology_weighted_dividend_yield / (benchmark_best_eps / benchmark_px_last)",
           "sources": [
             "computed/stock_action_index.json",
@@ -3318,33 +2885,32 @@
           ],
           "source_tier": "derived_formula",
           "coverage": {
-            "stock_action_source_date": "2026-08-07",
+            "stock_action_source_date": "2026-07-31",
             "index_key": "sox_nasdaq_giw_methodology_mktcap",
             "sox_constituents_as_of": "2026-08-07",
             "sox_constituent_source": "indices/nasdaq-giw-sox-constituents.json",
             "official_weight_columns_available": false,
             "methodology_source": "https://indexes.nasdaqomx.com/docs/methodology_SOX.pdf",
-            "weighted_dividend_yield": 0.00516911,
+            "weighted_dividend_yield": 0.00557327,
             "benchmark_as_of": "2026-07-31",
             "benchmark_earnings_yield": 0.04932746,
             "unmatched_sox_sample": [],
-            "value": 0.005169105,
-            "covered_rows": 26,
+            "value": 0.005573269,
+            "covered_rows": 27,
             "total_rows": 30,
             "total_weight": 100,
-            "covered_weight": 87.5115,
-            "covered_weight_ratio": 0.875115,
+            "covered_weight": 88.7796,
+            "covered_weight_ratio": 0.887796,
             "missing_sample": [
               "ENTG",
-              "GFS",
               "RMBS",
               "TSM"
             ],
             "dividend_yield_unit_mix": {
               "percent": 0,
               "fraction": 16,
-              "zero": 10,
-              "unresolved": 4
+              "zero": 11,
+              "unresolved": 3
             }
           },
           "notes": [
@@ -3354,7 +2920,7 @@
           ]
         },
         "explicit_eps_growth_3y": {
-          "value": 0.329543,
+          "value": 0.323731,
           "formula": "sox_methodology_weighted_average(((forward_eps_fy3 / forward_eps_fy1)^(1/2)) - 1)",
           "sources": [
             "computed/stock_action_index.json",
@@ -3362,7 +2928,7 @@
           ],
           "source_tier": "derived_formula",
           "coverage": {
-            "stock_action_source_date": "2026-08-07",
+            "stock_action_source_date": "2026-07-31",
             "index_key": "sox_nasdaq_giw_methodology_mktcap",
             "sox_constituents_as_of": "2026-08-07",
             "sox_constituent_source": "indices/nasdaq-giw-sox-constituents.json",
@@ -3370,7 +2936,7 @@
             "methodology_source": "https://indexes.nasdaqomx.com/docs/methodology_SOX.pdf",
             "min_covered_weight_ratio": 0.75,
             "unmatched_sox_sample": [],
-            "value": 0.329543196,
+            "value": 0.323730925,
             "covered_rows": 30,
             "total_rows": 30,
             "total_weight": 100,
@@ -3419,7 +2985,7 @@
                 ]
               },
               "eps_growth": {
-                "value": 3.628578,
+                "value": 3.504621,
                 "formula": "weighted_average(stock_action.estimateSnapshot.epsGrowth.fy1) / 100",
                 "sources": [
                   "computed/stock_action_index.json",
@@ -3427,7 +2993,7 @@
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 3.628577552,
+                  "value": 3.504620672,
                   "covered_rows": 30,
                   "total_rows": 30,
                   "total_weight": 100,
@@ -3440,16 +3006,16 @@
                 ]
               },
               "book_value_beginning": {
-                "value": 1186.6012,
-                "formula": "current_price / benchmark_px_to_book_ratio",
+                "value": 1086.1835,
+                "formula": "benchmark_px_last / benchmark_px_to_book_ratio",
                 "sources": [
-                  "observed.price",
-                  "observed.price_to_book"
+                  "benchmarks/micro_sectors.json",
+                  "prior_period"
                 ],
                 "source_tier": "derived_formula"
               },
               "book_value_ending": {
-                "value": 1686.0797,
+                "value": 1581.0907,
                 "formula": "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -3458,7 +3024,7 @@
                 "source_tier": "derived_formula"
               },
               "roe_on_beginning_book": {
-                "value": 0.470206,
+                "value": 0.513676,
                 "formula": "earnings_proxy / book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -3467,7 +3033,7 @@
                 "source_tier": "derived_formula"
               },
               "stock_action_weighted_roe": {
-                "value": 0.443592,
+                "value": 0.442392,
                 "formula": "weighted_average(stock_action.profitabilitySnapshot.roe.fy1) / 100",
                 "sources": [
                   "computed/stock_action_index.json",
@@ -3475,7 +3041,7 @@
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.443591609,
+                  "value": 0.442391729,
                   "covered_rows": 30,
                   "total_rows": 30,
                   "total_weight": 100,
@@ -3485,7 +3051,7 @@
                 }
               },
               "payout_ratio": {
-                "value": 0.104792,
+                "value": 0.112985,
                 "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
@@ -3493,7 +3059,7 @@
                 "source_tier": "derived_formula"
               },
               "retention_ratio": {
-                "value": 0.895208,
+                "value": 0.887015,
                 "formula": "1 - payout_ratio",
                 "sources": [
                   "forecast_grid_v1.payout_ratio"
@@ -3501,7 +3067,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.00473168,
+                "value": 0.00557326,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -3511,7 +3077,7 @@
                 "source_tier": "derived_formula"
               },
               "pe_ratio": {
-                "value": 22.1469,
+                "value": 20.2727,
                 "formula": "current_price / earnings_proxy",
                 "sources": [
                   "observed.price",
@@ -3520,7 +3086,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 0.672,
+                "value": 0.6262,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -3532,7 +3098,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 442.6093,
+                "value": 452.3699,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -3553,7 +3119,7 @@
               "growth_basis": "forward_eps_ratio",
               "growth_usage": "earnings_path_roll_forward",
               "earnings_proxy": {
-                "value": 788.3654,
+                "value": 782.5778,
                 "formula": "prior_period_earnings_proxy * (1 + weighted_forward_eps_growth)",
                 "sources": [
                   "benchmarks/micro_sectors.json",
@@ -3566,7 +3132,7 @@
                 ]
               },
               "eps_growth": {
-                "value": 0.412976,
+                "value": 0.402603,
                 "formula": "weighted_average((forward_eps_fy2 / forward_eps_fy1) - 1)",
                 "sources": [
                   "computed/stock_action_index.json",
@@ -3574,7 +3140,7 @@
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.412975602,
+                  "value": 0.4026026,
                   "covered_rows": 30,
                   "total_rows": 30,
                   "total_weight": 100,
@@ -3587,15 +3153,16 @@
                 ]
               },
               "book_value_beginning": {
-                "value": 1686.0797,
+                "value": 1581.0907,
                 "formula": "prior_period_book_value_ending",
                 "sources": [
+                  "benchmarks/micro_sectors.json",
                   "prior_period"
                 ],
                 "source_tier": "derived_formula"
               },
               "book_value_ending": {
-                "value": 2391.8307,
+                "value": 2275.2489,
                 "formula": "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -3604,7 +3171,7 @@
                 "source_tier": "derived_formula"
               },
               "roe_on_beginning_book": {
-                "value": 0.467573,
+                "value": 0.494961,
                 "formula": "earnings_proxy / book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -3613,7 +3180,7 @@
                 "source_tier": "derived_formula"
               },
               "stock_action_weighted_roe": {
-                "value": 0.431758,
+                "value": 0.429017,
                 "formula": "weighted_average(stock_action.profitabilitySnapshot.roe.fy2) / 100",
                 "sources": [
                   "computed/stock_action_index.json",
@@ -3621,7 +3188,7 @@
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.43175836,
+                  "value": 0.429017008,
                   "covered_rows": 30,
                   "total_rows": 30,
                   "total_weight": 100,
@@ -3631,7 +3198,7 @@
                 }
               },
               "payout_ratio": {
-                "value": 0.104792,
+                "value": 0.112985,
                 "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
@@ -3639,7 +3206,7 @@
                 "source_tier": "derived_formula"
               },
               "retention_ratio": {
-                "value": 0.895208,
+                "value": 0.887015,
                 "formula": "1 - payout_ratio",
                 "sources": [
                   "forecast_grid_v1.payout_ratio"
@@ -3647,7 +3214,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.00668575,
+                "value": 0.00781707,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -3657,7 +3224,7 @@
                 "source_tier": "derived_formula"
               },
               "pe_ratio": {
-                "value": 15.6739,
+                "value": 14.4536,
                 "formula": "current_price / earnings_proxy",
                 "sources": [
                   "observed.price",
@@ -3666,7 +3233,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 0.4756,
+                "value": 0.4465,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -3678,7 +3245,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 624.4784,
+                "value": 628.8958,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -3699,7 +3266,7 @@
               "growth_basis": "forward_eps_ratio",
               "growth_usage": "earnings_path_roll_forward",
               "earnings_proxy": {
-                "value": 993.2701,
+                "value": 983.9608,
                 "formula": "prior_period_earnings_proxy * (1 + weighted_forward_eps_growth)",
                 "sources": [
                   "benchmarks/micro_sectors.json",
@@ -3712,7 +3279,7 @@
                 ]
               },
               "eps_growth": {
-                "value": 0.259911,
+                "value": 0.257333,
                 "formula": "weighted_average((forward_eps_fy3 / forward_eps_fy2) - 1)",
                 "sources": [
                   "computed/stock_action_index.json",
@@ -3720,7 +3287,7 @@
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.259910913,
+                  "value": 0.257332891,
                   "covered_rows": 30,
                   "total_rows": 30,
                   "total_weight": 100,
@@ -3733,15 +3300,16 @@
                 ]
               },
               "book_value_beginning": {
-                "value": 2391.8307,
+                "value": 2275.2489,
                 "formula": "prior_period_book_value_ending",
                 "sources": [
+                  "benchmarks/micro_sectors.json",
                   "prior_period"
                 ],
                 "source_tier": "derived_formula"
               },
               "book_value_ending": {
-                "value": 3281.014,
+                "value": 3148.0369,
                 "formula": "book_value_beginning + earnings_proxy * (1 - payout_ratio)",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -3750,7 +3318,7 @@
                 "source_tier": "derived_formula"
               },
               "roe_on_beginning_book": {
-                "value": 0.415276,
+                "value": 0.432463,
                 "formula": "earnings_proxy / book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.earnings_proxy",
@@ -3759,7 +3327,7 @@
                 "source_tier": "derived_formula"
               },
               "stock_action_weighted_roe": {
-                "value": 0.396354,
+                "value": 0.39376,
                 "formula": "weighted_average(stock_action.profitabilitySnapshot.roe.fy3) / 100",
                 "sources": [
                   "computed/stock_action_index.json",
@@ -3767,7 +3335,7 @@
                 ],
                 "source_tier": "derived_formula",
                 "coverage": {
-                  "value": 0.396353929,
+                  "value": 0.393760303,
                   "covered_rows": 30,
                   "total_rows": 30,
                   "total_weight": 100,
@@ -3777,7 +3345,7 @@
                 }
               },
               "payout_ratio": {
-                "value": 0.104792,
+                "value": 0.112985,
                 "formula": "stock_action_index_weighted_dividend_yield / benchmark_earnings_yield",
                 "sources": [
                   "derived.payout_ratio"
@@ -3785,7 +3353,7 @@
                 "source_tier": "derived_formula"
               },
               "retention_ratio": {
-                "value": 0.895208,
+                "value": 0.887015,
                 "formula": "1 - payout_ratio",
                 "sources": [
                   "forecast_grid_v1.payout_ratio"
@@ -3793,7 +3361,7 @@
                 "source_tier": "derived_formula"
               },
               "dividend_yield_implied": {
-                "value": 0.00842345,
+                "value": 0.00982866,
                 "formula": "payout_ratio * (earnings_proxy / current_price)",
                 "sources": [
                   "forecast_grid_v1.payout_ratio",
@@ -3803,7 +3371,7 @@
                 "source_tier": "derived_formula"
               },
               "pe_ratio": {
-                "value": 12.4405,
+                "value": 11.4955,
                 "formula": "current_price / earnings_proxy",
                 "sources": [
                   "observed.price",
@@ -3812,7 +3380,7 @@
                 "source_tier": "derived_formula"
               },
               "peg_ratio": {
-                "value": 0.3775,
+                "value": 0.3551,
                 "formula": "pe_ratio / (derived.explicit_eps_growth_3y * 100)",
                 "sources": [
                   "forecast_grid_v1.pe_ratio",
@@ -3824,7 +3392,7 @@
                 ]
               },
               "residual_income_proxy": {
-                "value": 760.7842,
+                "value": 762.8066,
                 "formula": "(roe_on_beginning_book - cost_of_equity) * book_value_beginning",
                 "sources": [
                   "forecast_grid_v1.roe_on_beginning_book",
@@ -3840,11 +3408,10 @@
             }
           ],
           "coverage": {
-            "stock_action_source_date": "2026-08-07",
-            "stock_action_generated_at": "2026-08-10T02:43:32.279Z",
+            "stock_action_source_date": "2026-07-31",
+            "stock_action_generated_at": "2026-08-09T07:18:01.710Z",
             "index_key": "sox_nasdaq_giw_methodology_mktcap",
             "index_diagnostics": {
-              "index_id": "SOX",
               "index_key": "sox_nasdaq_giw_methodology_mktcap",
               "source_tier": "methodology_derived_index_weight_source",
               "source": "indices/nasdaq-giw-sox-constituents.json",
@@ -3874,7 +3441,7 @@
                   "symbol": "NVDA",
                   "name": "NVIDIA CORPORATION",
                   "market_cap_rank": 1,
-                  "initial_weight_pct": 35.49362428,
+                  "initial_weight_pct": 34.40659293,
                   "cap_pct": 12,
                   "weight_pct": 12,
                   "capped": true
@@ -3883,7 +3450,7 @@
                   "symbol": "TSM",
                   "name": "TAIWAN SEMICOND ADS",
                   "market_cap_rank": 2,
-                  "initial_weight_pct": 14.26682644,
+                  "initial_weight_pct": 14.84885557,
                   "cap_pct": 10,
                   "weight_pct": 10,
                   "capped": true
@@ -3892,7 +3459,7 @@
                   "symbol": "AVGO",
                   "name": "BROADCOM INC.",
                   "market_cap_rank": 3,
-                  "initial_weight_pct": 13.32756511,
+                  "initial_weight_pct": 13.11653006,
                   "cap_pct": 8,
                   "weight_pct": 8,
                   "capped": true
@@ -3900,8 +3467,8 @@
                 {
                   "symbol": "ADI",
                   "name": "ANALOG DEVICES CMN",
-                  "market_cap_rank": 14,
-                  "initial_weight_pct": 1.24382061,
+                  "market_cap_rank": 13,
+                  "initial_weight_pct": 1.26744259,
                   "cap_pct": 4,
                   "weight_pct": 4,
                   "capped": true
@@ -3910,7 +3477,7 @@
                   "symbol": "AMAT",
                   "name": "APPLIED MATERIALS",
                   "market_cap_rank": 8,
-                  "initial_weight_pct": 2.80326653,
+                  "initial_weight_pct": 2.85463481,
                   "cap_pct": 4,
                   "weight_pct": 4,
                   "capped": true
@@ -3919,7 +3486,7 @@
                   "symbol": "AMD",
                   "name": "ADV MICRO DEVICES",
                   "market_cap_rank": 5,
-                  "initial_weight_pct": 5.16751544,
+                  "initial_weight_pct": 5.49872681,
                   "cap_pct": 4,
                   "weight_pct": 4,
                   "capped": true
@@ -3928,7 +3495,7 @@
                   "symbol": "ARM",
                   "name": "ARM HOLDINGS PLC ADS",
                   "market_cap_rank": 10,
-                  "initial_weight_pct": 1.97634076,
+                  "initial_weight_pct": 1.81297543,
                   "cap_pct": 4,
                   "weight_pct": 4,
                   "capped": true
@@ -3937,7 +3504,7 @@
                   "symbol": "ASML",
                   "name": "ASML HLDG NY REG",
                   "market_cap_rank": 6,
-                  "initial_weight_pct": 3.8103351,
+                  "initial_weight_pct": 4.4780491,
                   "cap_pct": 4,
                   "weight_pct": 4,
                   "capped": true
@@ -3946,7 +3513,7 @@
                   "symbol": "INTC",
                   "name": "INTEL CORP",
                   "market_cap_rank": 7,
-                  "initial_weight_pct": 3.35773938,
+                  "initial_weight_pct": 3.22219905,
                   "cap_pct": 4,
                   "weight_pct": 4,
                   "capped": true
@@ -3955,23 +3522,23 @@
                   "symbol": "KLAC",
                   "name": "KLA CP CMN STK",
                   "market_cap_rank": 12,
-                  "initial_weight_pct": 1.69510217,
+                  "initial_weight_pct": 1.69133304,
                   "cap_pct": 4,
                   "weight_pct": 4,
                   "capped": true
                 }
               ],
-              "total_market_cap": 15269874.828960001,
+              "total_market_cap": 14119822.937799998,
               "denominator": {
                 "method": "stock_action_market_cap_sum_for_official_giw_constituents",
                 "label": "SOX official Nasdaq GIW constituents weighted by stock_action market cap and SOX methodology caps",
                 "unit": "USD",
-                "value": 15269874.828960001
+                "value": 14119822.937799998
               },
               "freshness": {
-                "generated_at_date": "2026-08-10",
-                "calendar_age_days": 3,
-                "business_age_days": 1,
+                "generated_at_date": "2026-08-09",
+                "calendar_age_days": 2,
+                "business_age_days": 0,
                 "freshness_unit": "business_days",
                 "freshness_calendar": "us_market",
                 "max_input_freshness_days": 7,
@@ -3980,12 +3547,12 @@
               },
               "matched_stock_action_rows": 30,
               "matched_weight_ratio": 1,
-              "dividend_yield_rows": 26,
-              "dividend_yield_weight_ratio": 0.875115,
-              "weighted_dividend_yield": 0.00516911,
+              "dividend_yield_rows": 27,
+              "dividend_yield_weight_ratio": 0.887796,
+              "weighted_dividend_yield": 0.00557327,
               "forward_eps_fy1_fy3_rows": 30,
               "forward_eps_fy1_fy3_weight_ratio": 1,
-              "weighted_forward_eps_3y_cagr": 0.329543,
+              "weighted_forward_eps_3y_cagr": 0.323731,
               "min_public_card_weight_ratio": 0.75,
               "public_status": "sox_methodology_weights_financials_coverage_ready",
               "missing_sample": [],
@@ -4015,45 +3582,43 @@
     "stock_action": {
       "SPX": {
         "index_key": "sp500",
-        "source_tier": "exact_index_weight_source",
         "index_weight_rows": 503,
         "index_weight_total": 100.15,
-        "forward_eps_fy1_fy3_rows": 396,
-        "forward_eps_fy1_fy3_weight": 95.07
+        "forward_eps_fy1_fy3_rows": 397,
+        "forward_eps_fy1_fy3_weight": 95.15
       },
       "NDX": {
         "index_key": "nasdaq100",
-        "source_tier": "exact_index_weight_source",
         "index_weight_rows": 103,
         "index_weight_total": 100.02,
-        "forward_eps_fy1_fy3_rows": 90,
-        "forward_eps_fy1_fy3_weight": 94.4
+        "forward_eps_fy1_fy3_rows": 91,
+        "forward_eps_fy1_fy3_weight": 94.53
       },
       "KOSPI": {
         "market_scope": "korea",
         "korea_rows": 337,
-        "forward_eps_fy1_fy3_rows": 293,
-        "market_cap_forward_rows": 293,
+        "forward_eps_fy1_fy3_rows": 292,
+        "market_cap_forward_rows": 292,
         "kospi_index_weight_rows": 0,
         "krx_kospi_weights": {
           "index_key": "kospi_krx_mktcap",
           "source_tier": "exact_index_weight_source",
-          "source": "_private/admin/fenok-edge-korea/daily/krx_daily_20260807/raw/core_stock_index/stk_bydd_trd/20260807.json",
+          "source": "_private/admin/fenok-edge-korea/daily/krx_daily_20260806/raw/core_stock_index/stk_bydd_trd/20260806.json",
           "bridge_source": "admin/fenok-edge-korea-krx-daily-index.json",
           "source_field": "OutBlock_1[MKT_NM=KOSPI].MKTCAP / sum(OutBlock_1[MKT_NM=KOSPI].MKTCAP)",
-          "as_of": "2026-08-07",
+          "as_of": "2026-08-06",
           "raw_public": false,
           "license_or_terms_note": "KRX usage permission granted by owner 2026-07-19; public serving of derived/aggregate surfaces authorized; raw per-issuer row redistribution still governed per-slice.",
           "krx_rows": 943,
-          "total_market_cap": 5159998610306228,
+          "total_market_cap": 5191831798615970,
           "denominator": {
             "method": "issuer_level_market_cap_sum",
             "label": "KRX KOSPI stock-daily issuer MKTCAP sum; matches KOSPI including foreign shares aggregate in kospi_dd_trd",
             "unit": "KRW",
-            "value": 5159998610306228
+            "value": 5191831798615970
           },
           "freshness": {
-            "generated_at_date": "2026-08-10",
+            "generated_at_date": "2026-08-09",
             "calendar_age_days": 3,
             "business_age_days": 1,
             "freshness_unit": "business_days",
@@ -4063,13 +3628,13 @@
             "status": "fresh_enough_for_input_slice"
           },
           "matched_stock_action_rows": 237,
-          "matched_weight_ratio": 0.906776,
+          "matched_weight_ratio": 0.906987,
           "dividend_yield_rows": 1,
-          "dividend_yield_weight_ratio": 0.000047,
+          "dividend_yield_weight_ratio": 0.000046,
           "weighted_dividend_yield": 0,
           "forward_eps_fy1_fy3_rows": 212,
-          "forward_eps_fy1_fy3_weight_ratio": 0.878472,
-          "weighted_forward_eps_3y_cagr": 0.205223,
+          "forward_eps_fy1_fy3_weight_ratio": 0.879737,
+          "weighted_forward_eps_3y_cagr": 0.205541,
           "min_public_card_weight_ratio": 0.75,
           "public_status": "krx_exact_weights_financials_coverage_ready",
           "missing_sample": [
@@ -4097,7 +3662,6 @@
         ]
       },
       "SOX": {
-        "index_id": "SOX",
         "index_key": "sox_nasdaq_giw_methodology_mktcap",
         "source_tier": "methodology_derived_index_weight_source",
         "source": "indices/nasdaq-giw-sox-constituents.json",
@@ -4127,7 +3691,7 @@
             "symbol": "NVDA",
             "name": "NVIDIA CORPORATION",
             "market_cap_rank": 1,
-            "initial_weight_pct": 35.49362428,
+            "initial_weight_pct": 34.40659293,
             "cap_pct": 12,
             "weight_pct": 12,
             "capped": true
@@ -4136,7 +3700,7 @@
             "symbol": "TSM",
             "name": "TAIWAN SEMICOND ADS",
             "market_cap_rank": 2,
-            "initial_weight_pct": 14.26682644,
+            "initial_weight_pct": 14.84885557,
             "cap_pct": 10,
             "weight_pct": 10,
             "capped": true
@@ -4145,7 +3709,7 @@
             "symbol": "AVGO",
             "name": "BROADCOM INC.",
             "market_cap_rank": 3,
-            "initial_weight_pct": 13.32756511,
+            "initial_weight_pct": 13.11653006,
             "cap_pct": 8,
             "weight_pct": 8,
             "capped": true
@@ -4153,8 +3717,8 @@
           {
             "symbol": "ADI",
             "name": "ANALOG DEVICES CMN",
-            "market_cap_rank": 14,
-            "initial_weight_pct": 1.24382061,
+            "market_cap_rank": 13,
+            "initial_weight_pct": 1.26744259,
             "cap_pct": 4,
             "weight_pct": 4,
             "capped": true
@@ -4163,7 +3727,7 @@
             "symbol": "AMAT",
             "name": "APPLIED MATERIALS",
             "market_cap_rank": 8,
-            "initial_weight_pct": 2.80326653,
+            "initial_weight_pct": 2.85463481,
             "cap_pct": 4,
             "weight_pct": 4,
             "capped": true
@@ -4172,7 +3736,7 @@
             "symbol": "AMD",
             "name": "ADV MICRO DEVICES",
             "market_cap_rank": 5,
-            "initial_weight_pct": 5.16751544,
+            "initial_weight_pct": 5.49872681,
             "cap_pct": 4,
             "weight_pct": 4,
             "capped": true
@@ -4181,7 +3745,7 @@
             "symbol": "ARM",
             "name": "ARM HOLDINGS PLC ADS",
             "market_cap_rank": 10,
-            "initial_weight_pct": 1.97634076,
+            "initial_weight_pct": 1.81297543,
             "cap_pct": 4,
             "weight_pct": 4,
             "capped": true
@@ -4190,7 +3754,7 @@
             "symbol": "ASML",
             "name": "ASML HLDG NY REG",
             "market_cap_rank": 6,
-            "initial_weight_pct": 3.8103351,
+            "initial_weight_pct": 4.4780491,
             "cap_pct": 4,
             "weight_pct": 4,
             "capped": true
@@ -4199,7 +3763,7 @@
             "symbol": "INTC",
             "name": "INTEL CORP",
             "market_cap_rank": 7,
-            "initial_weight_pct": 3.35773938,
+            "initial_weight_pct": 3.22219905,
             "cap_pct": 4,
             "weight_pct": 4,
             "capped": true
@@ -4208,23 +3772,23 @@
             "symbol": "KLAC",
             "name": "KLA CP CMN STK",
             "market_cap_rank": 12,
-            "initial_weight_pct": 1.69510217,
+            "initial_weight_pct": 1.69133304,
             "cap_pct": 4,
             "weight_pct": 4,
             "capped": true
           }
         ],
-        "total_market_cap": 15269874.828960001,
+        "total_market_cap": 14119822.937799998,
         "denominator": {
           "method": "stock_action_market_cap_sum_for_official_giw_constituents",
           "label": "SOX official Nasdaq GIW constituents weighted by stock_action market cap and SOX methodology caps",
           "unit": "USD",
-          "value": 15269874.828960001
+          "value": 14119822.937799998
         },
         "freshness": {
-          "generated_at_date": "2026-08-10",
-          "calendar_age_days": 3,
-          "business_age_days": 1,
+          "generated_at_date": "2026-08-09",
+          "calendar_age_days": 2,
+          "business_age_days": 0,
           "freshness_unit": "business_days",
           "freshness_calendar": "us_market",
           "max_input_freshness_days": 7,
@@ -4233,12 +3797,12 @@
         },
         "matched_stock_action_rows": 30,
         "matched_weight_ratio": 1,
-        "dividend_yield_rows": 26,
-        "dividend_yield_weight_ratio": 0.875115,
-        "weighted_dividend_yield": 0.00516911,
+        "dividend_yield_rows": 27,
+        "dividend_yield_weight_ratio": 0.887796,
+        "weighted_dividend_yield": 0.00557327,
         "forward_eps_fy1_fy3_rows": 30,
         "forward_eps_fy1_fy3_weight_ratio": 1,
-        "weighted_forward_eps_3y_cagr": 0.329543,
+        "weighted_forward_eps_3y_cagr": 0.323731,
         "min_public_card_weight_ratio": 0.75,
         "public_status": "sox_methodology_weights_financials_coverage_ready",
         "missing_sample": [],
@@ -4336,13 +3900,12 @@
     }
   },
   "source_tier_counts": {
-    "observed_source": 40,
-    "derived_formula": 168,
-    "exact_index_weight_source": 6,
+    "observed_source": 33,
+    "derived_formula": 165,
     "house_assumption": 8,
     "assumption_labelled_scenario": 2,
-    "blocked_missing_source": 3,
-    "direct_official_derived": 1,
+    "blocked_missing_source": 2,
+    "exact_index_weight_source": 2,
     "methodology_derived_index_weight_source": 2,
     "proxy_diagnostic": 3
   }
