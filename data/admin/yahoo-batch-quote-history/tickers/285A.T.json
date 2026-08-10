@@ -26,39 +26,6 @@
       ],
       "latency_ms": 0,
       "natural": true,
-      "observed_at": "2026-08-04T00:18:08Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "30865042195",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 2,
-      "error": "empty payload",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "empty payload"
-        },
-        {
-          "attempt": 2,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 2,
-          "error": "empty payload"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": true,
       "observed_at": "2026-08-05T00:18:15Z",
       "outcome": "failed",
       "run_attempt": 1,
@@ -551,6 +518,49 @@
       "run_id": "31430923656",
       "schedule": "7 20 * * 0-5",
       "shard": "22/72"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-10T22:52:08Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31439945275",
+      "schedule": "7 22 * * 0-5",
+      "shard": "23/72"
     }
   ],
   "discovered_from": [
@@ -592,12 +602,12 @@
     ],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-10T20:51:42Z",
+    "observed_at": "2026-08-10T22:52:08Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31430923656",
-    "schedule": "7 20 * * 0-5",
-    "shard": "22/72"
+    "run_id": "31439945275",
+    "schedule": "7 22 * * 0-5",
+    "shard": "23/72"
   },
   "latest_failure": {
     "attempts_used": 2,
@@ -636,13 +646,13 @@
       }
     ],
     "lkg_status": "absent",
-    "observed_at": "2026-08-10T20:51:42Z",
+    "observed_at": "2026-08-10T22:52:08Z",
     "run_attempt": 1,
-    "run_id": "31430923656"
+    "run_id": "31439945275"
   },
   "resolution_state": "unavailable",
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "285A.T",
-  "updated_at": "2026-08-10T20:51:42Z"
+  "updated_at": "2026-08-10T22:52:08Z"
 }
