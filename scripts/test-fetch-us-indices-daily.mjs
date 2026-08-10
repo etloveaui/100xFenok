@@ -27,6 +27,13 @@ import {
 
 const OBSERVED_AT = "2026-07-20T22:00:00Z";
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const US_SERIES_KEYS = ["sp500", "nasdaq", "nasdaq100", "sox"];
+const US_SYMBOL_BY_KEY = Object.freeze({
+  sp500: "^GSPC",
+  nasdaq: "^IXIC",
+  nasdaq100: "^NDX",
+  sox: "^SOX",
+});
 
 function yahooPayload(symbol, rows) {
   return {
@@ -54,6 +61,10 @@ function pathsFor(root) {
     persistencePath: path.join(stateRoot, "persistence.json"),
     attemptShardPath: path.join(root, "attempts", "us_indices_daily.json"),
   };
+}
+
+function yahooResponseForKey(key, rowsByKey) {
+  return response(200, yahooPayload(US_SYMBOL_BY_KEY[key], rowsByKey[key]));
 }
 
 const parsed = parseYahooChart(yahooPayload("^GSPC", [
@@ -260,15 +271,20 @@ assert.deepEqual(
   const paths = pathsFor(root);
   fs.mkdirSync(paths.canonicalRoot, { recursive: true });
   fs.mkdirSync(paths.publicRoot, { recursive: true });
-  fs.writeFileSync(path.join(paths.canonicalRoot, "sp500.json"), `${JSON.stringify([{ date: "2026-07-16", value: 6200.1 }])}\n`);
-  fs.writeFileSync(path.join(paths.canonicalRoot, "nasdaq.json"), `${JSON.stringify([{ date: "2026-07-16", value: 20200.1 }])}\n`);
+  const initialRows = {
+    sp500: [["2026-07-16", 6200.1], ["2026-07-17", 6210.2]],
+    nasdaq: [["2026-07-16", 20200.1], ["2026-07-17", 20250.2]],
+    nasdaq100: [["2026-07-16", 28200.1], ["2026-07-17", 28300.2]],
+    sox: [["2026-07-16", 11300.1], ["2026-07-17", 11400.2]],
+  };
+  for (const key of US_SERIES_KEYS) {
+    fs.writeFileSync(
+      path.join(paths.canonicalRoot, `${key}.json`),
+      `${JSON.stringify([{ date: initialRows[key][0][0], value: initialRows[key][0][1] }])}\n`,
+    );
+  }
   fs.cpSync(paths.canonicalRoot, paths.publicRoot, { recursive: true });
-  const request = async (_url, key) => response(200, yahooPayload(
-    key === "sp500" ? "^GSPC" : "^IXIC",
-    key === "sp500"
-      ? [["2026-07-16", 6200.1], ["2026-07-17", 6210.2]]
-      : [["2026-07-16", 20200.1], ["2026-07-17", 20250.2]],
-  ));
+  const request = async (_url, key) => yahooResponseForKey(key, initialRows);
   const first = await runUsIndicesDaily({
     ...paths,
     request,
@@ -278,7 +294,7 @@ assert.deepEqual(
   });
   assert.equal(first.exitCode, 0);
   assert.equal(first.updated, true);
-  for (const key of ["sp500", "nasdaq"]) {
+  for (const key of US_SERIES_KEYS) {
     const canonical = fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`));
     const publicMirror = fs.readFileSync(path.join(paths.publicRoot, `${key}.json`));
     assert.deepEqual(publicMirror, canonical, `${key} public mirror must be byte-identical`);
@@ -286,9 +302,11 @@ assert.deepEqual(
   }
   const persistence = JSON.parse(fs.readFileSync(paths.persistencePath, "utf8"));
   assert.deepEqual(persistence.persistence_policy, US_INDICES_PERSISTENCE_POLICY);
-  assert.deepEqual(Object.keys(persistence.series), ["sp500", "nasdaq"]);
+  assert.deepEqual(Object.keys(persistence.series), US_SERIES_KEYS);
   assert.equal(persistence.series.sp500.retained_distinct_provider_dates, 2);
   assert.equal(persistence.series.sp500.pruned_distinct_provider_dates, 0);
+  assert.equal(persistence.series.nasdaq100.retained_distinct_provider_dates, 2);
+  assert.equal(persistence.series.sox.retained_distinct_provider_dates, 2);
   assert.equal(fs.existsSync(path.join(paths.stateRoot, "shadow")), false, "live producer must not write shadow paths");
   assert.equal(fs.existsSync(path.join(paths.stateRoot, "parity-report.json")), false, "retired parity must not be emitted live");
 
@@ -311,6 +329,8 @@ assert.deepEqual(
   const initial = {
     sp500: [{ date: "2026-07-20", value: 7443.27978515625 }],
     nasdaq: [{ date: "2026-07-20", value: 25508.072265625 }],
+    nasdaq100: [{ date: "2026-07-20", value: 28274.2 }],
+    sox: [{ date: "2026-07-20", value: 11311.08 }],
   };
   for (const [key, rows] of Object.entries(initial)) {
     for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
@@ -319,12 +339,12 @@ assert.deepEqual(
   }
   const result = await runUsIndicesDaily({
     ...paths,
-    request: async (_url, key) => response(200, yahooPayload(
-      key === "sp500" ? "^GSPC" : "^IXIC",
-      key === "sp500"
-        ? [["2026-07-20", 7443.27978515625], ["2026-07-21", 7509.2001953125]]
-        : [["2026-07-20", 25508.0703125], ["2026-07-21", 25837.2109375]],
-    )),
+    request: async (_url, key) => yahooResponseForKey(key, {
+      sp500: [["2026-07-20", 7443.27978515625], ["2026-07-21", 7509.2001953125]],
+      nasdaq: [["2026-07-20", 25508.0703125], ["2026-07-21", 25837.2109375]],
+      nasdaq100: [["2026-07-20", 28274.2], ["2026-07-21", 28350.1]],
+      sox: [["2026-07-20", 11311.08], ["2026-07-21", 11400.2]],
+    }),
     observedAt: "2026-07-21T22:47:00Z",
     attemptId: "gh-403-1-us-indices",
     eventName: "schedule",
@@ -350,6 +370,8 @@ assert.deepEqual(
   const rows = {
     sp500: [["2026-07-20", 6200], ["2026-07-21", 6210], ["2026-07-22", 6220]],
     nasdaq: [["2026-07-20", 20200], ["2026-07-21", 20210], ["2026-07-22", 20220]],
+    nasdaq100: [["2026-07-20", 28200], ["2026-07-21", 28210], ["2026-07-22", 28220]],
+    sox: [["2026-07-20", 11300], ["2026-07-21", 11310], ["2026-07-22", 11320]],
   };
   for (const [key, values] of Object.entries(rows)) {
     const initial = [{ date: values[0][0], value: values[0][1] }];
@@ -359,16 +381,13 @@ assert.deepEqual(
   }
   const result = await runUsIndicesDaily({
     ...paths,
-    request: async (_url, key) => response(200, yahooPayload(
-      key === "sp500" ? "^GSPC" : "^IXIC",
-      rows[key],
-    )),
+    request: async (_url, key) => yahooResponseForKey(key, rows),
     observedAt: "2026-07-22T22:05:00Z",
     attemptId: "gh-405-1-us-indices",
     eventName: "schedule",
   });
   assert.equal(result.exitCode, 0);
-  for (const key of ["sp500", "nasdaq"]) {
+  for (const key of US_SERIES_KEYS) {
     assert.equal(JSON.parse(fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`), "utf8")).length, 3,
       "range=5d must keep natural multi-date recovery after the clock is retired");
   }
@@ -382,6 +401,8 @@ assert.deepEqual(
   const initial = {
     sp500: [{ date: "2026-07-23", value: 6400 }],
     nasdaq: [{ date: "2026-07-23", value: 25137.69 }],
+    nasdaq100: [{ date: "2026-07-23", value: 28274.2 }],
+    sox: [{ date: "2026-07-23", value: 11311.08 }],
   };
   for (const [key, rows] of Object.entries(initial)) {
     for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
@@ -390,12 +411,12 @@ assert.deepEqual(
   }
   const result = await runUsIndicesDaily({
     ...paths,
-    request: async (_url, key) => response(200, yahooPayload(
-      key === "sp500" ? "^GSPC" : "^IXIC",
-      key === "sp500"
-        ? [["2026-07-23", 6400], ["2026-07-24", 6410]]
-        : [["2026-07-23", 25137.693359375], ["2026-07-24", 25200.125]],
-    )),
+    request: async (_url, key) => yahooResponseForKey(key, {
+      sp500: [["2026-07-23", 6400], ["2026-07-24", 6410]],
+      nasdaq: [["2026-07-23", 25137.693359375], ["2026-07-24", 25200.125]],
+      nasdaq100: [["2026-07-23", 28274.2], ["2026-07-24", 28350.125]],
+      sox: [["2026-07-23", 11311.08], ["2026-07-24", 11400.125]],
+    }),
     observedAt: "2026-07-24T22:48:00Z",
     attemptId: "gh-407-1-us-indices",
     eventName: "schedule",
@@ -421,21 +442,21 @@ assert.deepEqual(
   const paths = pathsFor(root);
   fs.mkdirSync(paths.canonicalRoot, { recursive: true });
   fs.mkdirSync(paths.publicRoot, { recursive: true });
-  for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200 })) {
+  for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200, nasdaq100: 28200, sox: 11300 })) {
     for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
       fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify([{ date: "2026-07-20", value }])}\n`);
     }
   }
   const before = [paths.canonicalRoot, paths.publicRoot].flatMap((rootPath) =>
-    ["sp500", "nasdaq"].map((key) => fs.readFileSync(path.join(rootPath, `${key}.json`))));
+    US_SERIES_KEYS.map((key) => fs.readFileSync(path.join(rootPath, `${key}.json`))));
   const result = await runUsIndicesDaily({
     ...paths,
-    request: async (_url, key) => response(200, yahooPayload(
-      key === "sp500" ? "^GSPC" : "^IXIC",
-      key === "sp500"
-        ? [["2026-07-20", 6100], ["2026-07-21", 6210]]
-        : [["2026-07-20", 20200], ["2026-07-21", 20210]],
-    )),
+    request: async (_url, key) => yahooResponseForKey(key, {
+      sp500: [["2026-07-20", 6100], ["2026-07-21", 6210]],
+      nasdaq: [["2026-07-20", 20200], ["2026-07-21", 20210]],
+      nasdaq100: [["2026-07-20", 28200], ["2026-07-21", 28210]],
+      sox: [["2026-07-20", 11300], ["2026-07-21", 11310]],
+    }),
     observedAt: "2026-07-21T22:05:00Z",
     attemptId: "gh-406-1-us-indices",
     eventName: "schedule",
@@ -443,7 +464,7 @@ assert.deepEqual(
   assert.equal(result.exitCode, 2, "out-of-tolerance settled-date changes must remain fail-closed after parity retirement");
   assert.equal(result.providerRevisions.some((row) => row.within_tolerance === false), true);
   const after = [paths.canonicalRoot, paths.publicRoot].flatMap((rootPath) =>
-    ["sp500", "nasdaq"].map((key) => fs.readFileSync(path.join(rootPath, `${key}.json`))));
+    US_SERIES_KEYS.map((key) => fs.readFileSync(path.join(rootPath, `${key}.json`))));
   after.forEach((bytes, index) => assert.deepEqual(bytes, before[index]));
   const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
   assert.equal(shard.attempts[0].assertions.some((assertion) => assertion.passed === false), true);
@@ -453,7 +474,7 @@ assert.deepEqual(
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-live-atomic-"));
   const paths = pathsFor(root);
   const protectedPaths = [paths.canonicalRoot, paths.publicRoot].flatMap((rootPath) =>
-    ["sp500", "nasdaq"].map((key) => path.join(rootPath, `${key}.json`)));
+    US_SERIES_KEYS.map((key) => path.join(rootPath, `${key}.json`)));
   for (const [index, filePath] of protectedPaths.entries()) {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, `sentinel-${index}\n`);
@@ -463,7 +484,11 @@ assert.deepEqual(
     ...paths,
     request: async (_url, key) => {
       if (key === "nasdaq") throw Object.assign(new Error("reset"), { code: "ECONNRESET" });
-      return response(200, yahooPayload("^GSPC", [["2026-07-17", 6210.2]]));
+      return yahooResponseForKey(key, {
+        sp500: [["2026-07-17", 6210.2]],
+        nasdaq100: [["2026-07-17", 28300.2]],
+        sox: [["2026-07-17", 11400.2]],
+      });
     },
     observedAt: OBSERVED_AT,
     attemptId: "gh-402-1-us-indices",
@@ -482,17 +507,17 @@ assert.deepEqual(
   const paths = pathsFor(root);
   fs.mkdirSync(paths.canonicalRoot, { recursive: true });
   fs.mkdirSync(paths.publicRoot, { recursive: true });
-  for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200 })) {
+  for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200, nasdaq100: 28200, sox: 11300 })) {
     for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
       fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify([{ date: "2026-07-16", value }])}\n`);
     }
   }
-  const request = async (_url, key) => response(200, yahooPayload(
-    key === "sp500" ? "^GSPC" : "^IXIC",
-    key === "sp500"
-      ? [["2026-07-16", 6200], ["2026-07-17", 6210]]
-      : [["2026-07-16", 20200], ["2026-07-17", 20210]],
-  ));
+  const request = async (_url, key) => yahooResponseForKey(key, {
+    sp500: [["2026-07-16", 6200], ["2026-07-17", 6210]],
+    nasdaq: [["2026-07-16", 20200], ["2026-07-17", 20210]],
+    nasdaq100: [["2026-07-16", 28200], ["2026-07-17", 28210]],
+    sox: [["2026-07-16", 11300], ["2026-07-17", 11310]],
+  });
   await runUsIndicesDaily({
     ...paths,
     request,
@@ -502,7 +527,7 @@ assert.deepEqual(
   });
   const payloadPaths = [
     ...[paths.canonicalRoot, paths.publicRoot].flatMap((rootPath) =>
-      ["sp500", "nasdaq"].map((key) => path.join(rootPath, `${key}.json`))),
+      US_SERIES_KEYS.map((key) => path.join(rootPath, `${key}.json`))),
     paths.persistencePath,
   ];
   const before = payloadPaths.map((filePath) => fs.readFileSync(filePath));
@@ -511,12 +536,12 @@ assert.deepEqual(
   let commitCalls = 0;
   const failed = await runUsIndicesDaily({
     ...paths,
-    request: async (_url, key) => response(200, yahooPayload(
-      key === "sp500" ? "^GSPC" : "^IXIC",
-      key === "sp500"
-        ? [["2026-07-17", 6210], ["2026-07-18", 6220]]
-        : [["2026-07-17", 20210], ["2026-07-18", 20220]],
-    )),
+    request: async (_url, key) => yahooResponseForKey(key, {
+      sp500: [["2026-07-17", 6210], ["2026-07-18", 6220]],
+      nasdaq: [["2026-07-17", 20210], ["2026-07-18", 20220]],
+      nasdaq100: [["2026-07-17", 28210], ["2026-07-18", 28220]],
+      sox: [["2026-07-17", 11310], ["2026-07-18", 11320]],
+    }),
     observedAt: "2026-07-18T22:00:00Z",
     attemptId: "gh-411-1-us-indices",
     eventName: "schedule",
@@ -530,9 +555,9 @@ assert.deepEqual(
   assert.equal(failed.ok, false);
   assert.equal(failed.degraded, true);
   assert.equal(failed.exitCode, 0);
-  assert.equal(failed.index.counts.lkg, 2);
-  assert.equal(failed.index.counts.retry, 2);
-  assert.deepEqual(failed.index.retry_keys, ["sp500.json", "nasdaq.json"]);
+  assert.equal(failed.index.counts.lkg, 4);
+  assert.equal(failed.index.counts.retry, 4);
+  assert.deepEqual(failed.index.retry_keys, US_SERIES_KEYS.map((key) => `${key}.json`));
   payloadPaths.forEach((filePath, index) => {
     assert.deepEqual(fs.readFileSync(filePath), before[index], `${filePath} payload bytes must roll back`);
   });
@@ -544,7 +569,7 @@ assert.deepEqual(
   const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
   assert.equal(shard.attempts[0].execution, "threw");
   assert.equal(shard.attempts[0].exception_kind, "unexpected");
-  for (const key of ["sp500", "nasdaq"]) {
+  for (const key of US_SERIES_KEYS) {
     const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8"));
     assert.equal(state.resolution_state, "lkg_primary");
     assert.equal(state.retry, true);
@@ -571,19 +596,19 @@ assert.deepEqual(
   const paths = pathsFor(root);
   fs.mkdirSync(paths.canonicalRoot, { recursive: true });
   fs.mkdirSync(paths.publicRoot, { recursive: true });
-  for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200 })) {
+  for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200, nasdaq100: 28200, sox: 11300 })) {
     for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
       fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify([{ date: "2026-07-16", value }])}\n`);
     }
   }
   const result = await runUsIndicesDaily({
     ...paths,
-    request: async (_url, key) => response(200, yahooPayload(
-      key === "sp500" ? "^GSPC" : "^IXIC",
-      key === "sp500"
-        ? [["2026-07-16", 6200], ["2026-07-17", 6210]]
-        : [["2026-07-16", 20200], ["2026-07-17", 20210]],
-    )),
+    request: async (_url, key) => yahooResponseForKey(key, {
+      sp500: [["2026-07-16", 6200], ["2026-07-17", 6210]],
+      nasdaq: [["2026-07-16", 20200], ["2026-07-17", 20210]],
+      nasdaq100: [["2026-07-16", 28200], ["2026-07-17", 28210]],
+      sox: [["2026-07-16", 11300], ["2026-07-17", 11310]],
+    }),
     observedAt: "2026-07-17T22:00:00Z",
     attemptId: "gh-412-1-us-indices",
     eventName: "schedule",
@@ -619,24 +644,24 @@ assert.deepEqual(
   );
   const result = await runUsIndicesDaily({
     ...paths,
-    request: async (_url, key) => response(200, yahooPayload(
-      key === "sp500" ? "^GSPC" : "^IXIC",
-      key === "sp500"
-        ? [["2026-07-17", 6210]]
-        : [["2026-07-17", 20210]],
-    )),
+    request: async (_url, key) => yahooResponseForKey(key, {
+      sp500: [["2026-07-17", 6210]],
+      nasdaq: [["2026-07-17", 20210]],
+      nasdaq100: [["2026-07-17", 28210]],
+      sox: [["2026-07-17", 11310]],
+    }),
     observedAt: "2026-07-17T22:00:00Z",
     attemptId: "gh-413-1-us-indices",
     eventName: "schedule",
   });
   assert.equal(result.exitCode, 2);
   assert.equal(result.corrupt, true);
-  assert.equal(result.index.counts.retry, 2);
-  assert.equal(result.index.counts.unavailable, 1);
+  assert.equal(result.index.counts.retry, 4);
+  assert.equal(result.index.counts.unavailable, 3);
   assert.equal(result.index.counts.lkg, 1);
   const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
   assert.equal(shard.attempts[0].execution, "threw");
-  for (const key of ["sp500", "nasdaq"]) {
+  for (const key of US_SERIES_KEYS) {
     assert.equal(fs.existsSync(path.join(paths.stateRoot, "keys", `${key}.json`)), true);
   }
 }
@@ -646,19 +671,19 @@ assert.deepEqual(
   const paths = pathsFor(root);
   fs.mkdirSync(paths.canonicalRoot, { recursive: true });
   fs.mkdirSync(paths.publicRoot, { recursive: true });
-  for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200 })) {
+  for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200, nasdaq100: 28200, sox: 11300 })) {
     for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
       fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify([{ date: "2026-07-16", value }])}\n`);
     }
   }
   const seeded = await runUsIndicesDaily({
     ...paths,
-    request: async (_url, key) => response(200, yahooPayload(
-      key === "sp500" ? "^GSPC" : "^IXIC",
-      key === "sp500"
-        ? [["2026-07-16", 6200], ["2026-07-17", 6210]]
-        : [["2026-07-16", 20200], ["2026-07-17", 20210]],
-    )),
+    request: async (_url, key) => yahooResponseForKey(key, {
+      sp500: [["2026-07-16", 6200], ["2026-07-17", 6210]],
+      nasdaq: [["2026-07-16", 20200], ["2026-07-17", 20210]],
+      nasdaq100: [["2026-07-16", 28200], ["2026-07-17", 28210]],
+      sox: [["2026-07-16", 11300], ["2026-07-17", 11310]],
+    }),
     observedAt: "2026-07-17T22:00:00Z",
     attemptId: "gh-430-1-us-indices",
     eventName: "schedule",
@@ -671,7 +696,11 @@ assert.deepEqual(
     ...paths,
     request: async (_url, key) => {
       if (key === "nasdaq") throw new Error("isolated transport failure");
-      return response(200, yahooPayload("^GSPC", [["2026-07-18", 6220]]));
+      return yahooResponseForKey(key, {
+        sp500: [["2026-07-18", 6220]],
+        nasdaq100: [["2026-07-18", 28220]],
+        sox: [["2026-07-18", 11320]],
+      });
     },
     observedAt: "2026-07-18T12:00:00Z",
     attemptId: "gh-431-1-us-indices",
@@ -679,27 +708,29 @@ assert.deepEqual(
   });
   assert.equal(oneFailed.index.retry_keys.includes("nasdaq.json"), true);
   assert.equal(oneFailed.index.retry_keys.includes("sp500.json"), false);
-  const canonicalBeforeMixed = ["sp500", "nasdaq"].map((key) =>
+  assert.equal(oneFailed.index.retry_keys.includes("nasdaq100.json"), false);
+  assert.equal(oneFailed.index.retry_keys.includes("sox.json"), false);
+  const canonicalBeforeMixed = US_SERIES_KEYS.map((key) =>
     fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`)));
-  const publicBeforeMixed = ["sp500", "nasdaq"].map((key) =>
+  const publicBeforeMixed = US_SERIES_KEYS.map((key) =>
     fs.readFileSync(path.join(paths.publicRoot, `${key}.json`)));
   const mixed = await runUsIndicesDaily({
     ...paths,
-    request: async (_url, key) => response(200, yahooPayload(
-      key === "sp500" ? "^GSPC" : "^IXIC",
-      key === "sp500"
-        ? [["2026-07-17", 6210], ["2026-07-18", 6220]]
-        : [["2026-07-17", 20210]],
-    )),
+    request: async (_url, key) => yahooResponseForKey(key, {
+      sp500: [["2026-07-17", 6210], ["2026-07-18", 6220]],
+      nasdaq: [["2026-07-17", 20210]],
+      nasdaq100: [["2026-07-17", 28210]],
+      sox: [["2026-07-17", 11310]],
+    }),
     observedAt: "2026-07-18T22:00:00Z",
     attemptId: "gh-432-1-us-indices",
     eventName: "schedule",
   });
   assert.equal(mixed.exitCode, 0);
   assert.equal(mixed.updated, false);
-  assert.equal(mixed.index.current_attempt.attempted, 2);
+  assert.equal(mixed.index.current_attempt.attempted, 4);
   assert.equal(mixed.index.current_attempt.successes, 0);
-  assert.equal(mixed.index.current_attempt.promotion_deferrals, 2);
+  assert.equal(mixed.index.current_attempt.promotion_deferrals, 4);
   const deferredSp500 = JSON.parse(
     fs.readFileSync(path.join(paths.stateRoot, "keys", "sp500.json"), "utf8"),
   );
@@ -711,7 +742,7 @@ assert.deepEqual(
     );
   }
   assert.equal(deferredSp500.latest_promotion_deferral.reason, "atomic_peer_deferral");
-  for (const [index, key] of ["sp500", "nasdaq"].entries()) {
+  for (const [index, key] of US_SERIES_KEYS.entries()) {
     assert.deepEqual(
       fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`)),
       canonicalBeforeMixed[index],
@@ -725,12 +756,12 @@ assert.deepEqual(
   }
   const recovered = await runUsIndicesDaily({
     ...paths,
-    request: async (_url, key) => response(200, yahooPayload(
-      key === "sp500" ? "^GSPC" : "^IXIC",
-      key === "sp500"
-        ? [["2026-07-17", 6210], ["2026-07-18", 6220]]
-        : [["2026-07-17", 20210], ["2026-07-18", 20220]],
-    )),
+    request: async (_url, key) => yahooResponseForKey(key, {
+      sp500: [["2026-07-17", 6210], ["2026-07-18", 6220]],
+      nasdaq: [["2026-07-17", 20210], ["2026-07-18", 20220]],
+      nasdaq100: [["2026-07-17", 28210], ["2026-07-18", 28220]],
+      sox: [["2026-07-17", 11310], ["2026-07-18", 11320]],
+    }),
     observedAt: "2026-07-21T22:00:00Z",
     attemptId: "gh-433-1-us-indices",
     eventName: "schedule",
@@ -745,26 +776,26 @@ assert.deepEqual(
   const paths = pathsFor(root);
   fs.mkdirSync(paths.canonicalRoot, { recursive: true });
   fs.mkdirSync(paths.publicRoot, { recursive: true });
-  for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200 })) {
+  for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200, nasdaq100: 28200, sox: 11300 })) {
     for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
       fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify([{ date: "2026-07-16", value }])}\n`);
     }
   }
   await runUsIndicesDaily({
     ...paths,
-    request: async (_url, key) => response(200, yahooPayload(
-      key === "sp500" ? "^GSPC" : "^IXIC",
-      key === "sp500"
-        ? [["2026-07-16", 6200], ["2026-07-17", 6210]]
-        : [["2026-07-16", 20200], ["2026-07-17", 20210]],
-    )),
+    request: async (_url, key) => yahooResponseForKey(key, {
+      sp500: [["2026-07-16", 6200], ["2026-07-17", 6210]],
+      nasdaq: [["2026-07-16", 20200], ["2026-07-17", 20210]],
+      nasdaq100: [["2026-07-16", 28200], ["2026-07-17", 28210]],
+      sox: [["2026-07-16", 11300], ["2026-07-17", 11310]],
+    }),
     observedAt: "2026-07-17T22:00:00Z",
     attemptId: "gh-420-1-us-indices",
     eventName: "schedule",
   });
-  const canonicalBefore = ["sp500", "nasdaq"].map((key) =>
+  const canonicalBefore = US_SERIES_KEYS.map((key) =>
     fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`)));
-  const publicBefore = ["sp500", "nasdaq"].map((key) =>
+  const publicBefore = US_SERIES_KEYS.map((key) =>
     fs.readFileSync(path.join(paths.publicRoot, `${key}.json`)));
   const failed = await runUsIndicesDaily({
     ...paths,
@@ -780,27 +811,27 @@ assert.deepEqual(
   assert.equal(failed.degraded, true);
   assert.equal(failed.corrupt, false);
   assert.equal(failed.exitCode, 0);
-  assert.equal(failed.index.counts.lkg, 2);
-  assert.equal(failed.index.counts.retry, 2);
+  assert.equal(failed.index.counts.lkg, 4);
+  assert.equal(failed.index.counts.retry, 4);
   canonicalBefore.forEach((bytes, index) => {
     assert.deepEqual(
-      fs.readFileSync(path.join(paths.canonicalRoot, `${["sp500", "nasdaq"][index]}.json`)),
+      fs.readFileSync(path.join(paths.canonicalRoot, `${US_SERIES_KEYS[index]}.json`)),
       bytes,
       "controlled failure must retain canonical bytes",
     );
   });
-  const recoveryStateBeforeMixed = Object.fromEntries(["sp500", "nasdaq"].map((key) => [
+  const recoveryStateBeforeMixed = Object.fromEntries(US_SERIES_KEYS.map((key) => [
     key,
     JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8")),
   ]));
   const mixedSource = await runUsIndicesDaily({
     ...paths,
-    request: async (_url, key) => response(200, yahooPayload(
-      key === "sp500" ? "^GSPC" : "^IXIC",
-      key === "sp500"
-        ? [["2026-07-17", 6210], ["2026-07-18", 6220]]
-        : [["2026-07-17", 20210]],
-    )),
+    request: async (_url, key) => yahooResponseForKey(key, {
+      sp500: [["2026-07-17", 6210], ["2026-07-18", 6220]],
+      nasdaq: [["2026-07-17", 20210]],
+      nasdaq100: [["2026-07-17", 28210]],
+      sox: [["2026-07-17", 11310]],
+    }),
     observedAt: "2026-07-18T19:30:00Z",
     attemptId: "gh-4211-1-us-indices",
     eventName: "schedule",
@@ -808,11 +839,14 @@ assert.deepEqual(
   assert.equal(mixedSource.exitCode, 0);
   assert.equal(mixedSource.degraded, true);
   assert.equal(mixedSource.updated, false);
-  assert.equal(mixedSource.index.current_attempt.attempted, 2);
+  assert.equal(mixedSource.index.current_attempt.attempted, 4);
   assert.equal(mixedSource.index.current_attempt.successes, 0);
   assert.equal(mixedSource.index.current_attempt.failed, 0);
-  assert.equal(mixedSource.index.current_attempt.promotion_deferrals, 2);
-  assert.deepEqual(mixedSource.index.current_attempt.promotion_deferral_keys, ["sp500.json", "nasdaq.json"]);
+  assert.equal(mixedSource.index.current_attempt.promotion_deferrals, 4);
+  assert.deepEqual(
+    mixedSource.index.current_attempt.promotion_deferral_keys,
+    US_SERIES_KEYS.map((key) => `${key}.json`),
+  );
   assert.deepEqual(
     mixedSource.index.promotion_deferral_details.map(({ key, reason, blocked_by_keys: blockedByKeys }) => ({
       key,
@@ -820,11 +854,17 @@ assert.deepEqual(
       blocked_by_keys: blockedByKeys,
     })),
     [
-      { key: "sp500.json", reason: "atomic_peer_deferral", blocked_by_keys: ["nasdaq.json"] },
+      {
+        key: "sp500.json",
+        reason: "atomic_peer_deferral",
+        blocked_by_keys: ["nasdaq.json", "nasdaq100.json", "sox.json"],
+      },
       { key: "nasdaq.json", reason: "recovery_not_advanced_by_provider", blocked_by_keys: undefined },
+      { key: "nasdaq100.json", reason: "recovery_not_advanced_by_provider", blocked_by_keys: undefined },
+      { key: "sox.json", reason: "recovery_not_advanced_by_provider", blocked_by_keys: undefined },
     ],
   );
-  for (const [index, key] of ["sp500", "nasdaq"].entries()) {
+  for (const [index, key] of US_SERIES_KEYS.entries()) {
     assert.deepEqual(
       fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`)),
       canonicalBefore[index],
@@ -841,10 +881,12 @@ assert.deepEqual(
   }
   const sameSource = await runUsIndicesDaily({
     ...paths,
-    request: async (_url, key) => response(200, yahooPayload(
-      key === "sp500" ? "^GSPC" : "^IXIC",
-      key === "sp500" ? [["2026-07-17", 6210]] : [["2026-07-17", 20210]],
-    )),
+    request: async (_url, key) => yahooResponseForKey(key, {
+      sp500: [["2026-07-17", 6210]],
+      nasdaq: [["2026-07-17", 20210]],
+      nasdaq100: [["2026-07-17", 28210]],
+      sox: [["2026-07-17", 11310]],
+    }),
     observedAt: "2026-07-18T20:00:00Z",
     attemptId: "gh-422-1-us-indices",
     eventName: "schedule",
@@ -854,16 +896,16 @@ assert.deepEqual(
   assert.equal(sameSource.updated, false);
   assert.equal(sameSource.reason, "recovery_not_advanced_by_provider");
   assert.equal(sameSource.index.current_attempt.failed, 0);
-  assert.equal(sameSource.index.current_attempt.promotion_deferrals, 2);
-  assert.equal(sameSource.index.counts.retry, 2);
-  for (const key of ["sp500", "nasdaq"]) {
+  assert.equal(sameSource.index.current_attempt.promotion_deferrals, 4);
+  assert.equal(sameSource.index.counts.retry, 4);
+  for (const key of US_SERIES_KEYS) {
     const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8"));
     assert.equal(state.latest_failure.run_id, "421", "same-source deferral preserves the controlled failure");
     assert.equal(state.latest_failure.failure_kind, "controlled_failure");
     assert.equal(state.latest_promotion_deferral.reason, "recovery_not_advanced_by_provider");
   }
   canonicalBefore.forEach((bytes, index) => assert.deepEqual(
-    fs.readFileSync(path.join(paths.canonicalRoot, `${["sp500", "nasdaq"][index]}.json`)),
+    fs.readFileSync(path.join(paths.canonicalRoot, `${US_SERIES_KEYS[index]}.json`)),
     bytes,
     "same-source deferral cannot publish canonical bytes",
   ));
@@ -874,12 +916,12 @@ assert.deepEqual(
   ]) {
     const nonNatural = await runUsIndicesDaily({
       ...paths,
-      request: async (_url, key) => response(200, yahooPayload(
-        key === "sp500" ? "^GSPC" : "^IXIC",
-        key === "sp500"
-          ? [["2026-07-17", 6210], ["2026-07-18", 6220]]
-          : [["2026-07-17", 20210], ["2026-07-18", 20220]],
-      )),
+      request: async (_url, key) => yahooResponseForKey(key, {
+        sp500: [["2026-07-17", 6210], ["2026-07-18", 6220]],
+        nasdaq: [["2026-07-17", 20210], ["2026-07-18", 20220]],
+        nasdaq100: [["2026-07-17", 28210], ["2026-07-18", 28220]],
+        sox: [["2026-07-17", 11310], ["2026-07-18", 11320]],
+      }),
       observedAt,
       attemptId,
       eventName,
@@ -887,8 +929,8 @@ assert.deepEqual(
     assert.equal(nonNatural.exitCode, 0);
     assert.equal(nonNatural.updated, false);
     assert.equal(nonNatural.reason, "recovery_requires_schedule");
-    assert.equal(nonNatural.index.current_attempt.promotion_deferrals, 2);
-    for (const key of ["sp500", "nasdaq"]) {
+    assert.equal(nonNatural.index.current_attempt.promotion_deferrals, 4);
+    for (const key of US_SERIES_KEYS) {
       const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8"));
       assert.equal(state.latest_failure.run_id, "421", "dispatch/attempt 2 cannot replace the controlled failure");
     }
@@ -897,6 +939,8 @@ assert.deepEqual(
   for (const [key, values] of Object.entries({
     sp500: [6200, 6210, 6220, 6230],
     nasdaq: [20200, 20210, 20220, 20230],
+    nasdaq100: [28200, 28210, 28220, 28230],
+    sox: [11300, 11310, 11320, 11330],
   })) {
     fs.writeFileSync(path.join(paths.canonicalRoot, `${key}.json`), `${JSON.stringify(
       values.map((value, index) => ({ date: `2026-07-${String(16 + index).padStart(2, "0")}`, value })),
@@ -906,12 +950,12 @@ assert.deepEqual(
   }
   const foreignWriter = await runUsIndicesDaily({
     ...paths,
-    request: async (_url, key) => response(200, yahooPayload(
-      key === "sp500" ? "^GSPC" : "^IXIC",
-      key === "sp500"
-        ? [["2026-07-17", 6210], ["2026-07-18", 6220]]
-        : [["2026-07-17", 20210], ["2026-07-18", 20220]],
-    )),
+    request: async (_url, key) => yahooResponseForKey(key, {
+      sp500: [["2026-07-17", 6210], ["2026-07-18", 6220]],
+      nasdaq: [["2026-07-17", 20210], ["2026-07-18", 20220]],
+      nasdaq100: [["2026-07-17", 28210], ["2026-07-18", 28220]],
+      sox: [["2026-07-17", 11310], ["2026-07-18", 11320]],
+    }),
     observedAt: "2026-07-18T21:30:00Z",
     attemptId: "gh-425-1-us-indices",
     eventName: "schedule",
@@ -919,31 +963,31 @@ assert.deepEqual(
   assert.equal(foreignWriter.exitCode, 0);
   assert.equal(foreignWriter.reason, "foreign_writer_conflict");
   assert.equal(foreignWriter.index.current_attempt.failed, 0);
-  for (const key of ["sp500", "nasdaq"]) {
+  for (const key of US_SERIES_KEYS) {
     const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8"));
     assert.equal(state.latest_failure.run_id, "421");
     assert.equal(state.latest_promotion_deferral.reason, "foreign_writer_conflict");
   }
   canonicalBefore.forEach((bytes, index) => fs.writeFileSync(
-    path.join(paths.canonicalRoot, `${["sp500", "nasdaq"][index]}.json`),
+    path.join(paths.canonicalRoot, `${US_SERIES_KEYS[index]}.json`),
     bytes,
   ));
   const recovered = await runUsIndicesDaily({
     ...paths,
-    request: async (_url, key) => response(200, yahooPayload(
-      key === "sp500" ? "^GSPC" : "^IXIC",
-      key === "sp500"
-        ? [["2026-07-17", 6210], ["2026-07-18", 6220]]
-        : [["2026-07-17", 20210], ["2026-07-18", 20220]],
-    )),
+    request: async (_url, key) => yahooResponseForKey(key, {
+      sp500: [["2026-07-17", 6210], ["2026-07-18", 6220]],
+      nasdaq: [["2026-07-17", 20210], ["2026-07-18", 20220]],
+      nasdaq100: [["2026-07-17", 28210], ["2026-07-18", 28220]],
+      sox: [["2026-07-17", 11310], ["2026-07-18", 11320]],
+    }),
     observedAt: "2026-07-18T22:00:00Z",
     attemptId: "gh-426-1-us-indices",
     eventName: "schedule",
   });
   assert.equal(recovered.exitCode, 0);
-  assert.equal(recovered.index.counts.recovered, 2);
+  assert.equal(recovered.index.counts.recovered, 4);
   assert.deepEqual(recovered.index.retry_keys, []);
-  for (const key of ["sp500", "nasdaq"]) {
+  for (const key of US_SERIES_KEYS) {
     const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8"));
     assert.notEqual(
       state.provider_observation.payload_sha256,
@@ -970,7 +1014,11 @@ assert.deepEqual(
     ...paths,
     request: async (_url, key) => key === "nasdaq"
       ? { statusCode: 200, body: "provider-secret-body" }
-      : response(200, yahooPayload("^GSPC", [["2026-07-17", 6210.2]])),
+      : yahooResponseForKey(key, {
+        sp500: [["2026-07-17", 6210.2]],
+        nasdaq100: [["2026-07-17", 28300.2]],
+        sox: [["2026-07-17", 11400.2]],
+      }),
     observedAt: OBSERVED_AT,
     attemptId: "gh-403-1-us-indices",
     eventName: "schedule",

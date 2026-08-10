@@ -29,6 +29,8 @@ const LANE_ID = "us_indices_daily";
 const SERIES = Object.freeze([
   { key: "sp500", symbol: "^GSPC", encoded: "%5EGSPC" },
   { key: "nasdaq", symbol: "^IXIC", encoded: "%5EIXIC" },
+  { key: "nasdaq100", symbol: "^NDX", encoded: "%5ENDX" },
+  { key: "sox", symbol: "^SOX", encoded: "%5ESOX" },
 ]);
 const ENDPOINT = "https://query1.finance.yahoo.com/v8/finance/chart";
 const ATTEMPT_SHARD_RELATIVE_PATH = "data/admin/data-supply-state/detection-attempts/us_indices_daily.json";

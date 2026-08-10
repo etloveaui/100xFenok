@@ -25,10 +25,27 @@ import {
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
 import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
+import { INDEX_DIVIDEND_YIELD_DEFAULTS } from "./lib/index-dividend-yield.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, "..");
+const FRED_NASDAQ_NON_TRADING_MARGIN_DAYS = 7;
+
+// The current Nasdaq yield uses t=max(observation<=asOf), then s=max(observation<=t-365),
+// and rejects t older than 10 days. Request 365 days for the exact anchor, 10 days
+// for the freshness lag, and one full calendar week for a weekend/holiday/non-trading gap:
+// 365 + 10 + 7 = 382 calendar days. This is derived from the calculation contract,
+// not from the size or values of any generated output.
+export const FRED_NASDAQ_REQUEST_WINDOW = Object.freeze({
+  lookbackDays: INDEX_DIVIDEND_YIELD_DEFAULTS.lookbackDays,
+  freshnessMarginDays: INDEX_DIVIDEND_YIELD_DEFAULTS.maxObservationAgeDays,
+  nonTradingMarginDays: FRED_NASDAQ_NON_TRADING_MARGIN_DAYS,
+  requestDays: INDEX_DIVIDEND_YIELD_DEFAULTS.lookbackDays
+    + INDEX_DIVIDEND_YIELD_DEFAULTS.maxObservationAgeDays
+    + FRED_NASDAQ_NON_TRADING_MARGIN_DAYS,
+});
+export const FRED_NASDAQ_REQUEST_DAYS = FRED_NASDAQ_REQUEST_WINDOW.requestDays;
 
 export const FRED_BANKING_GROUPS = Object.freeze([
   {
@@ -40,6 +57,8 @@ export const FRED_BANKING_GROUPS = Object.freeze([
       // Transitional dual-write: keep Korea 10Y here until a natural run has
       // committed the new monthly artifact, then remove it with the config flip.
       { id: "IRLTLT01KRM156N", name: "Korea 10Y Government Bond Yield" },
+      { id: "NASDAQCOM", name: "Nasdaq Composite (Price Return)", requestDays: FRED_NASDAQ_REQUEST_DAYS },
+      { id: "NASDAQXCMP", name: "Nasdaq Composite Total Return", requestDays: FRED_NASDAQ_REQUEST_DAYS },
     ],
   },
   {
@@ -124,7 +143,7 @@ async function evaluateSeries({ request, apiKey, group, series, observedAt, slee
   if (series.id === controlledFailureKey) {
     return { ...attemptResult("transport_error", threwTuple("transport")), groupId: group.id, seriesId: series.id };
   }
-  const url = buildUrl(series.id, group.days, observedAt, apiKey);
+  const url = buildUrl(series.id, series.requestDays ?? group.days, observedAt, apiKey);
   let last = null;
   for (let retry = 0; retry <= MAX_RETRIES; retry += 1) {
     if (retry > 0) await sleep(BACKOFFS_MS[Math.min(retry - 1, BACKOFFS_MS.length - 1)]);

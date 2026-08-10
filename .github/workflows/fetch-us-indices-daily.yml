@@ -16,8 +16,8 @@ permissions:
   actions: write
 
 concurrency:
-  # Canonical/public index paths are lane-owned and the commit step rebases
-  # before push. Isolate acquisition so the three 22:00 natural schedules do
+  # All four canonical/public index series are lane-owned and the commit step
+  # rebases before push. Isolate acquisition so concurrent natural schedules do
   # not replace one another in GitHub's one-pending global writer queue.
   group: fenok-data-writer-us-indices-daily-${{ github.ref }}
   cancel-in-progress: false

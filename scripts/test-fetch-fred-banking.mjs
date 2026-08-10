@@ -9,7 +9,12 @@ import { fileURLToPath } from "node:url";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { validateAttemptEvidence, validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import {
+  deriveTrailingIndexDividendYield,
+} from "./lib/index-dividend-yield.mjs";
+import {
   FRED_BANKING_GROUPS,
+  FRED_NASDAQ_REQUEST_DAYS,
+  FRED_NASDAQ_REQUEST_WINDOW,
   runFredBanking,
 } from "./fetch-fred-banking.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
@@ -50,6 +55,18 @@ function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
+const DAY_MS = 86_400_000;
+
+function addDays(date, delta) {
+  return new Date(Date.parse(`${date}T00:00:00Z`) + delta * DAY_MS).toISOString().slice(0, 10);
+}
+
+function requestedDays(url) {
+  const start = url.searchParams.get("observation_start");
+  const end = url.searchParams.get("observation_end");
+  return (Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / DAY_MS;
+}
+
 function assertValidShard(shard) {
   assert.equal(validateAttemptShard(shard, shard.lane_id), true);
   assert.equal(validateAttemptEvidence({
@@ -64,10 +81,94 @@ function assertValidShard(shard) {
     "DGS10",
     "BAMLH0A0HYM2",
     "IRLTLT01KRM156N",
+    "NASDAQCOM",
+    "NASDAQXCMP",
   ]);
   assert.deepEqual(FRED_BANKING_GROUPS.find((group) => group.id === "monthly").series.map((row) => row.id), [
     "IRLTLT01KRM156N",
   ]);
+  assert.equal(FRED_NASDAQ_REQUEST_WINDOW.lookbackDays, 365);
+  assert.equal(FRED_NASDAQ_REQUEST_WINDOW.freshnessMarginDays, 10);
+  assert.equal(FRED_NASDAQ_REQUEST_WINDOW.nonTradingMarginDays, 7);
+  assert.equal(FRED_NASDAQ_REQUEST_DAYS, 382);
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-banking-window-test-"));
+  const paths = makePaths(root);
+  const requested = new Map();
+  const result = await runFredBanking({
+    ...paths,
+    type: "daily",
+    apiKey: "test-key",
+    request: async (url, seriesId) => {
+      requested.set(seriesId, new URL(url));
+      return response(200, observations(seriesId));
+    },
+    observedAt: OBSERVED_AT,
+    attemptId: "fred-banking-window-test",
+    sleep: async () => {},
+  });
+  assert.equal(result.ok, true);
+
+  const daily = FRED_BANKING_GROUPS.find((group) => group.id === "daily");
+  const expectedDays = new Map(daily.series.map((series) => [series.id, series.requestDays ?? daily.days]));
+  assert.deepEqual([...expectedDays.entries()], [
+    ["DGS10", 9999],
+    ["BAMLH0A0HYM2", 9999],
+    ["IRLTLT01KRM156N", 9999],
+    ["NASDAQCOM", FRED_NASDAQ_REQUEST_DAYS],
+    ["NASDAQXCMP", FRED_NASDAQ_REQUEST_DAYS],
+  ]);
+  for (const [seriesId, days] of expectedDays) {
+    const url = requested.get(seriesId);
+    assert.ok(url, `${seriesId} request was captured`);
+    assert.equal(requestedDays(url), days, `${seriesId} request span`);
+    assert.equal(url.searchParams.get("observation_start"), addDays("2026-07-14", -days));
+    assert.equal(url.searchParams.get("observation_end"), "2026-07-14");
+  }
+}
+
+{
+  // The bounded request must retain the exact anchor even when t-365 is a
+  // weekend or an exchange holiday; this tests dates, not fitted output values.
+  const scenarios = [
+    {
+      name: "Sunday target",
+      observedAt: "2026-08-03",
+      asOf: "2026-08-03",
+      terminalDate: "2026-08-03",
+      anchorDate: "2025-08-01",
+    },
+    {
+      name: "Thanksgiving target",
+      observedAt: "2026-11-30",
+      asOf: "2026-11-30",
+      terminalDate: "2026-11-27",
+      anchorDate: "2025-11-26",
+    },
+  ];
+  for (const scenario of scenarios) {
+    assert.ok(
+      addDays(scenario.observedAt, -FRED_NASDAQ_REQUEST_DAYS) <= scenario.anchorDate,
+      `${scenario.name}: bounded start must include the prior trading-day anchor`,
+    );
+    const derived = deriveTrailingIndexDividendYield({
+      totalReturnRows: [
+        { date: scenario.anchorDate, value: 1000 },
+        { date: scenario.terminalDate, value: 1100 },
+      ],
+      priceReturnRows: [
+        { date: scenario.anchorDate, value: 100 },
+        { date: scenario.terminalDate, value: 100 },
+      ],
+      asOf: scenario.asOf,
+    });
+    assert.equal(derived.ok, true, `${scenario.name}: exact one-year yield remains computable`);
+    assert.equal(derived.date, scenario.terminalDate);
+    assert.equal(derived.anchor_date, scenario.anchorDate);
+    assert.ok(Math.abs(derived.value - 0.1) <= 1e-12, `${scenario.name}: yield formula result`);
+  }
 }
 
 {

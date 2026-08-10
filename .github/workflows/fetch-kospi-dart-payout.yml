@@ -1,0 +1,194 @@
+# Annual KOSPI realized dividend-yield / payout collector.
+# The KRX admin bridge is refreshed by fenok-edge-krx-daily.yml. This lane
+# consumes only its public-safe derived weights; OpenDART raw bodies and
+# receipts remain under _private/admin and are never staged or mirrored.
+
+name: Fetch KOSPI OpenDART Payout
+
+on:
+  schedule:
+    # After the KOSPI annual-report season closes (May 15), UTC 02:17 = KST
+    # 11:17. The collector targets the previous calendar fiscal year.
+    - cron: '17 2 16 5 *'
+  workflow_dispatch:
+    inputs:
+      fy:
+        description: 'Fiscal year (YYYY); empty uses the previous calendar year'
+        required: false
+        default: ''
+        type: string
+      refresh_corpcode:
+        description: 'Refresh the private OpenDART corpCode.xml cache'
+        required: false
+        default: false
+        type: boolean
+      min_coverage:
+        description: 'Minimum weighted issuer coverage (0.75 through 1; cannot lower the production floor)'
+        required: false
+        default: '0.75'
+        type: string
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: fenok-data-writer-kospi-dart-payout-${{ github.ref }}
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  fetch-kospi-dart-payout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout collector inputs
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            .github/workflows
+            data/admin/fenok-edge-korea-krx-daily-index.json
+            data/benchmarks/emerging.json
+            data/computed/fenok-rim
+
+      - name: Start from latest main
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin +main:refs/remotes/origin/main
+          git checkout -B main origin/main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Resolve fiscal year and coverage contract
+        id: contract
+        env:
+          INPUT_FY: ${{ github.event.inputs.fy || '' }}
+          INPUT_MIN_COVERAGE: ${{ github.event.inputs.min_coverage || '0.75' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "${INPUT_FY:-}" ]]; then
+            FY="$INPUT_FY"
+          else
+            FY=$(( $(date -u +%Y) - 1 ))
+          fi
+          if [[ ! "$FY" =~ ^[0-9]{4}$ ]]; then
+            echo "Invalid resolved fiscal year" >&2
+            exit 2
+          fi
+          node --input-type=module <<'NODE'
+          import { MIN_COVERAGE, isValidCoverageGate } from "./scripts/lib/kospi-dart-payout.mjs";
+          const requested = Number(process.env.INPUT_MIN_COVERAGE || String(MIN_COVERAGE));
+          if (!isValidCoverageGate(requested)) {
+            console.error(`min_coverage must be between ${MIN_COVERAGE} and 1`);
+            process.exit(2);
+          }
+          NODE
+          echo "fy=$FY" >> "$GITHUB_OUTPUT"
+
+      # A run-specific primary key plus FY/schema restore prefix restores the
+      # newest compatible private state and persists the newly updated state.
+      # Raw issuer bodies remain Git-ignored and are never uploaded as artifacts.
+      - name: Restore private DART cache and receipts
+        id: restore_dart
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: _private/admin/fenok-edge-korea/dart
+          key: kospi-dart-private-${{ runner.os }}-corpcode-v1-receipts-v1-fy${{ steps.contract.outputs.fy }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            kospi-dart-private-${{ runner.os }}-corpcode-v1-receipts-v1-fy${{ steps.contract.outputs.fy }}-
+
+      - name: Verify KOSPI DART collector contracts
+        env:
+          NODE_OPTIONS: --unhandled-rejections=strict
+        run: |
+          set -euo pipefail
+          node --check scripts/lib/kospi-dart-payout.mjs
+          node --check scripts/fetch-kospi-dart-payout.mjs
+          node --check scripts/test-kospi-dart-payout.mjs
+          node scripts/test-kospi-dart-payout.mjs
+
+      - name: Fetch OpenDART KOSPI payout
+        id: fetch_payout
+        env:
+          # Step-scoped secret: the key is consumed by the collector only and
+          # is never interpolated into a command, log line, or artifact path.
+          OPEN_DART_API_KEY: ${{ secrets.OPEN_DART_API_KEY }}
+          INPUT_FY: ${{ steps.contract.outputs.fy }}
+          INPUT_REFRESH_CORPCODE: ${{ github.event.inputs.refresh_corpcode || 'false' }}
+          INPUT_MIN_COVERAGE: ${{ github.event.inputs.min_coverage || '0.75' }}
+        run: |
+          set -euo pipefail
+          ARGS=(--fy "$INPUT_FY" --min-coverage "${INPUT_MIN_COVERAGE:-0.75}")
+          if [[ "${INPUT_REFRESH_CORPCODE:-false}" == "true" ]]; then ARGS+=(--refresh-corpcode); fi
+          node scripts/fetch-kospi-dart-payout.mjs "${ARGS[@]}"
+
+      - name: Persist private DART cache and receipts
+        if: ${{ always() && steps.fetch_payout.outcome != 'skipped' && hashFiles('_private/admin/fenok-edge-korea/dart/**') != '' }}
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: _private/admin/fenok-edge-korea/dart
+          key: kospi-dart-private-${{ runner.os }}-corpcode-v1-receipts-v1-fy${{ steps.contract.outputs.fy }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Publish index-level aggregate
+        if: ${{ steps.fetch_payout.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESOLVED_FY: ${{ steps.contract.outputs.fy }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          FY_ARTIFACT="data/computed/fenok-rim/kospi-dart-payout/fy${RESOLVED_FY}.json"
+          CURRENT_POINTER="data/computed/fenok-rim/kospi-dart-payout/current.json"
+          test -s "$FY_ARTIFACT"
+          test -s "$CURRENT_POINTER"
+          FY_ARTIFACT="$FY_ARTIFACT" CURRENT_POINTER="$CURRENT_POINTER" node --input-type=module <<'NODE'
+          import crypto from "node:crypto";
+          import fs from "node:fs";
+          const artifactBytes = fs.readFileSync(process.env.FY_ARTIFACT);
+          const artifact = JSON.parse(artifactBytes);
+          const pointer = JSON.parse(fs.readFileSync(process.env.CURRENT_POINTER, "utf8"));
+          const digest = crypto.createHash("sha256").update(artifactBytes).digest("hex");
+          if (pointer.selected_artifact !== process.env.FY_ARTIFACT
+              || pointer.fy !== artifact.fy
+              || pointer.sha256 !== digest
+              || pointer.coverage?.pass !== true
+              || Number(pointer.coverage?.gate) < 0.75
+              || "per_issuer" in artifact) {
+            throw new Error("KOSPI DART current pointer contract mismatch");
+          }
+          NODE
+          git add -- "$FY_ARTIFACT" "$CURRENT_POINTER"
+          while IFS= read -r staged; do
+            case "$staged" in
+              "$FY_ARTIFACT"|"$CURRENT_POINTER") ;;
+              *) echo "Unexpected path staged: $staged" >&2; exit 2 ;;
+            esac
+          done < <(git diff --cached --name-only)
+          git diff --cached --check
+          if git diff --cached --quiet; then
+            echo "No KOSPI DART aggregate changes to publish"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: update KOSPI DART payout aggregate"
+          for attempt in $(seq 1 5); do
+            if ! git pull --rebase --autostash origin main; then
+              git rebase --abort >/dev/null 2>&1 || true
+              sleep 3
+              continue
+            fi
+            if git push; then
+              gh workflow run update-manifest.yml --ref main
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "KOSPI DART aggregate push failed after retrying concurrent main updates" >&2
+          exit 1
