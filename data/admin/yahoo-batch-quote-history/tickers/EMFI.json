@@ -52,41 +52,44 @@
       "run_id": "31376005252",
       "schedule": "7 8 * * 0-5",
       "shard": "16/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 363,
+      "natural": true,
+      "observed_at": "2026-08-10T15:10:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31401948552",
+      "schedule": "7 14 * * 0-5",
+      "shard": "19/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T04:07:53Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/EMFI.json",
-    "payload_sha256": "118996fa1a15cb99d1775bf8b14d8f36a84371dfcfb86d9178131458285dc88f",
-    "quote_as_of": "2026-07-30T17:04:42Z",
-    "source_as_of": "2026-07-30T17:04:42Z"
+    "fetched_at": "2026-08-10T15:10:51Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/EMFI.json",
+    "payload_sha256": "9f2d1adf7822f03917c45c73247bbf2875e89eec98c75b9db9e5f5e43eff1ab6",
+    "quote_as_of": "2026-08-10T13:46:03Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 731,
+    "latency_ms": 363,
     "natural": true,
-    "observed_at": "2026-08-10T09:46:13Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-10T15:10:15Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31376005252",
-    "schedule": "7 8 * * 0-5",
-    "shard": "16/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T09:46:13Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-07-30T17:04:42Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31376005252"
+    "run_id": "31401948552",
+    "schedule": "7 14 * * 0-5",
+    "shard": "19/72"
   },
   "lkg": {
     "fetched_at": "2026-08-10T04:07:53Z",
@@ -99,17 +102,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-10T04:06:52Z",
-    "payload_sha256": "9750cee1a10b7285c6951be13fee0f6eed6a2ea0511ea89376bf4c91867d99a7",
-    "quote_as_of": "2026-07-30T17:04:42Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T15:10:15Z",
+    "payload_sha256": "732ea83802ee11c031bf0d2d2d78f1362f4abe17ccc5464fb36659e1b96eb5ab",
+    "quote_as_of": "2026-08-10T13:46:03Z",
     "run_attempt": 1,
-    "run_id": "31354396475",
+    "run_id": "31401948552",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-30T17:04:42Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -122,5 +125,5 @@
     "source_as_of": "2026-07-30T17:04:42Z"
   },
   "ticker": "EMFI",
-  "updated_at": "2026-08-10T09:46:13Z"
+  "updated_at": "2026-08-10T15:10:15Z"
 }

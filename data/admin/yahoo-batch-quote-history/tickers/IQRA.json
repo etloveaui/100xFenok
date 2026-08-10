@@ -39,41 +39,44 @@
       "run_id": "31376005252",
       "schedule": "7 8 * * 0-5",
       "shard": "16/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 471,
+      "natural": true,
+      "observed_at": "2026-08-10T15:10:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31401948552",
+      "schedule": "7 14 * * 0-5",
+      "shard": "19/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T04:07:49Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/IQRA.json",
-    "payload_sha256": "37d59a4433f0a833dc2f02e98a3a886017403c1f80f8b1322ff74e846e7bd0e8",
-    "quote_as_of": "2026-07-30T20:00:00Z",
-    "source_as_of": "2026-07-30T20:00:00Z"
+    "fetched_at": "2026-08-10T15:10:54Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/IQRA.json",
+    "payload_sha256": "6a9694e381dc2be8fdf25c92abebb6f488149c98f04f815225c55cf8cfd3a873",
+    "quote_as_of": "2026-08-10T13:46:05Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 653,
+    "latency_ms": 471,
     "natural": true,
-    "observed_at": "2026-08-10T09:46:13Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-10T15:10:15Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31376005252",
-    "schedule": "7 8 * * 0-5",
-    "shard": "16/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T09:46:13Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-07-30T20:00:00Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31376005252"
+    "run_id": "31401948552",
+    "schedule": "7 14 * * 0-5",
+    "shard": "19/72"
   },
   "lkg": {
     "fetched_at": "2026-08-10T04:07:49Z",
@@ -86,17 +89,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-10T04:06:52Z",
-    "payload_sha256": "04b5674a6b90aa126b090c290d14b81813311eb6a5eeba62efa01dc8297b1e4c",
-    "quote_as_of": "2026-07-30T20:00:00Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T15:10:15Z",
+    "payload_sha256": "5ea77a37eb76cba90e38c6b9e2e7429f5b87a330003a8a76331df0ef8745ea66",
+    "quote_as_of": "2026-08-10T13:46:05Z",
     "run_attempt": 1,
-    "run_id": "31354396475",
+    "run_id": "31401948552",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-30T20:00:00Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -109,5 +112,5 @@
     "source_as_of": "2026-07-30T20:00:00Z"
   },
   "ticker": "IQRA",
-  "updated_at": "2026-08-10T09:46:13Z"
+  "updated_at": "2026-08-10T15:10:15Z"
 }

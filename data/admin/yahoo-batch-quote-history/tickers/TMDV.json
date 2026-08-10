@@ -81,41 +81,44 @@
       "run_id": "31376005252",
       "schedule": "7 8 * * 0-5",
       "shard": "16/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 513,
+      "natural": true,
+      "observed_at": "2026-08-10T15:10:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31401948552",
+      "schedule": "7 14 * * 0-5",
+      "shard": "19/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T05:17:13Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TMDV.json",
-    "payload_sha256": "9dfc3eccaa7c3b8402aa1791f3a36c8d3661cbc46bcffaf3fe8fb14c10e620bd",
-    "quote_as_of": "2026-07-15T19:39:23Z",
-    "source_as_of": "2026-07-15T19:39:23Z"
+    "fetched_at": "2026-08-10T15:11:25Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/TMDV.json",
+    "payload_sha256": "9a11005754b8532a1623166ca4e0833ec984180c25a75659785940ac7e79f50b",
+    "quote_as_of": "2026-08-10T13:46:08Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 895,
+    "latency_ms": 513,
     "natural": true,
-    "observed_at": "2026-08-10T09:46:13Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-10T15:10:15Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31376005252",
-    "schedule": "7 8 * * 0-5",
-    "shard": "16/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T09:46:13Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-07-15T19:39:23Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31376005252"
+    "run_id": "31401948552",
+    "schedule": "7 14 * * 0-5",
+    "shard": "19/72"
   },
   "lkg": {
     "fetched_at": "2026-08-09T05:17:13Z",
@@ -128,17 +131,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T05:15:44Z",
-    "payload_sha256": "d3f936b802620fab1b03cac6d510ce7df0c6e32e0337d738335ad5f4bf3ae131",
-    "quote_as_of": "2026-07-15T19:39:23Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T15:10:15Z",
+    "payload_sha256": "6b0e13c611d13b8ec0ac94f11b38b3ec9e34a5bf644e971a54a86ab9e0cd2cfb",
+    "quote_as_of": "2026-08-10T13:46:08Z",
     "run_attempt": 1,
-    "run_id": "31296241377",
+    "run_id": "31401948552",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-15T19:39:23Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 17,
@@ -151,5 +154,5 @@
     "source_as_of": "2026-07-15T19:39:23Z"
   },
   "ticker": "TMDV",
-  "updated_at": "2026-08-10T09:46:13Z"
+  "updated_at": "2026-08-10T15:10:15Z"
 }

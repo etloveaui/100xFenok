@@ -81,41 +81,44 @@
       "run_id": "31376005252",
       "schedule": "7 8 * * 0-5",
       "shard": "16/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 493,
+      "natural": true,
+      "observed_at": "2026-08-10T15:10:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31401948552",
+      "schedule": "7 14 * * 0-5",
+      "shard": "19/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T05:17:17Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TEMX.json",
-    "payload_sha256": "fc81b78693bffc79d759543196051b0cb14ddc0a455b20ab3948a150d4e1c585",
-    "quote_as_of": "2026-07-29T19:12:10Z",
-    "source_as_of": "2026-07-29T19:12:10Z"
+    "fetched_at": "2026-08-10T15:11:20Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/TEMX.json",
+    "payload_sha256": "8c834f229b499fa3cb8f89f533fc878d91b972c145811c156ecfcb7789c73b51",
+    "quote_as_of": "2026-08-10T13:46:07Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 554,
+    "latency_ms": 493,
     "natural": true,
-    "observed_at": "2026-08-10T09:46:13Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-10T15:10:15Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31376005252",
-    "schedule": "7 8 * * 0-5",
-    "shard": "16/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T09:46:13Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-07-29T19:12:10Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31376005252"
+    "run_id": "31401948552",
+    "schedule": "7 14 * * 0-5",
+    "shard": "19/72"
   },
   "lkg": {
     "fetched_at": "2026-08-09T05:17:17Z",
@@ -128,17 +131,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T05:15:44Z",
-    "payload_sha256": "7434683a0d955c7c1f884b334f03970755dc210c947d4009f3fb740c412b53fc",
-    "quote_as_of": "2026-07-29T19:12:10Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T15:10:15Z",
+    "payload_sha256": "7ac130af4f02a369b62d16ee4320bdecdec6aa4a3480b004168420be819fccef",
+    "quote_as_of": "2026-08-10T13:46:07Z",
     "run_attempt": 1,
-    "run_id": "31296241377",
+    "run_id": "31401948552",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-29T19:12:10Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -151,5 +154,5 @@
     "source_as_of": "2026-07-29T19:12:10Z"
   },
   "ticker": "TEMX",
-  "updated_at": "2026-08-10T09:46:13Z"
+  "updated_at": "2026-08-10T15:10:15Z"
 }

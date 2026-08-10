@@ -52,41 +52,44 @@
       "run_id": "31376005252",
       "schedule": "7 8 * * 0-5",
       "shard": "16/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 459,
+      "natural": true,
+      "observed_at": "2026-08-10T15:10:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31401948552",
+      "schedule": "7 14 * * 0-5",
+      "shard": "19/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T04:07:47Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/EFFE.json",
-    "payload_sha256": "0d23ec2d2b3f782cc63c8fb2cdbff739dd18a892482554ea86f8bbb1d09c4ec6",
-    "quote_as_of": "2026-07-30T16:41:23Z",
-    "source_as_of": "2026-07-30T16:41:23Z"
+    "fetched_at": "2026-08-10T15:10:49Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/EFFE.json",
+    "payload_sha256": "530398ba508c47bd18b971e7f24c9310461b19c86482981230d311e3c380656d",
+    "quote_as_of": "2026-08-10T13:46:03Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 742,
+    "latency_ms": 459,
     "natural": true,
-    "observed_at": "2026-08-10T09:46:13Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-10T15:10:15Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31376005252",
-    "schedule": "7 8 * * 0-5",
-    "shard": "16/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T09:46:13Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-07-30T16:41:23Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31376005252"
+    "run_id": "31401948552",
+    "schedule": "7 14 * * 0-5",
+    "shard": "19/72"
   },
   "lkg": {
     "fetched_at": "2026-08-10T04:07:47Z",
@@ -99,17 +102,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-10T04:06:52Z",
-    "payload_sha256": "ced8531f7e0782a80606dad6bf201128c8288d49a50999753b5858b4ab50d455",
-    "quote_as_of": "2026-07-30T16:41:23Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T15:10:15Z",
+    "payload_sha256": "0f22da798aeae22267761e5eba71a23e1770f75a545a739194053b369e18e8c1",
+    "quote_as_of": "2026-08-10T13:46:03Z",
     "run_attempt": 1,
-    "run_id": "31354396475",
+    "run_id": "31401948552",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-30T16:41:23Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -122,5 +125,5 @@
     "source_as_of": "2026-07-30T16:41:23Z"
   },
   "ticker": "EFFE",
-  "updated_at": "2026-08-10T09:46:13Z"
+  "updated_at": "2026-08-10T15:10:15Z"
 }

@@ -26,41 +26,44 @@
       "run_id": "31376005252",
       "schedule": "7 8 * * 0-5",
       "shard": "16/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 372,
+      "natural": true,
+      "observed_at": "2026-08-10T15:10:15Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31401948552",
+      "schedule": "7 14 * * 0-5",
+      "shard": "19/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T02:34:35Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TINS.json",
-    "payload_sha256": "feb03e2806bca3934d289582c6c3118a920d00d74d7027c0d53c1509148dc2d6",
-    "quote_as_of": "2026-07-28T18:07:25Z",
-    "source_as_of": "2026-07-28T18:07:25Z"
+    "fetched_at": "2026-08-10T15:11:22Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/TINS.json",
+    "payload_sha256": "e6265975cc80b8a23f63ba3178a2c3069e468fdf6c877ad3ed291944934be3b4",
+    "quote_as_of": "2026-08-10T13:46:08Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 607,
+    "latency_ms": 372,
     "natural": true,
-    "observed_at": "2026-08-10T09:46:13Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-10T15:10:15Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31376005252",
-    "schedule": "7 8 * * 0-5",
-    "shard": "16/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T09:46:13Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-07-28T18:07:25Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31376005252"
+    "run_id": "31401948552",
+    "schedule": "7 14 * * 0-5",
+    "shard": "19/72"
   },
   "lkg": {
     "fetched_at": "2026-08-10T02:34:35Z",
@@ -73,17 +76,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-10T02:30:39Z",
-    "payload_sha256": "97d588a4473fee9d5161d7f0a1bc4136c4dbc981cf33c36088bf9525d2415c5f",
-    "quote_as_of": "2026-07-28T18:07:25Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T15:10:15Z",
+    "payload_sha256": "1b0108a5edbf93661778658f541e7c0c51f40f316b308c27d53cfb016a706694",
+    "quote_as_of": "2026-08-10T13:46:08Z",
     "run_attempt": 1,
-    "run_id": "31349898588",
+    "run_id": "31401948552",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-28T18:07:25Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -96,5 +99,5 @@
     "source_as_of": "2026-07-28T18:07:25Z"
   },
   "ticker": "TINS",
-  "updated_at": "2026-08-10T09:46:13Z"
+  "updated_at": "2026-08-10T15:10:15Z"
 }
