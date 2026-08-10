@@ -14,7 +14,12 @@
 // 4. determinism — identical inputs, identical output.
 
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { addMonthsMs, dividendAdjustment, isoDate, loadTracker, parseDateMs } from "./h2-harness.mjs";
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
 // --- 1. existing-consumer regression on real repo data ----------------------
 
@@ -23,10 +28,14 @@ assert.equal(tracker.file_exists, true, "SPY canonical file exists");
 assert.equal(tracker.identity_ok, true, "SPY identity passes");
 assert.equal(tracker.prices.length, 260, "history_1y still carries its 260-bar cap");
 // The 260-bar window slides with every refresh — derive the expected edges
-// from the loaded rows instead of pinning literals that go stale (broke
-// qa-rim-v2 on 08-07 and 08-10 refreshes).
-assert.equal(tracker.price_start, tracker.prices[0].date, "history_1y start = first row");
-assert.equal(tracker.price_end, tracker.prices[tracker.prices.length - 1].date, "history_1y end = last row");
+// from the canonical file's own rows instead of pinning literals that go
+// stale (broke qa-rim-v2 on 08-07 and 08-10 refreshes).
+{
+  const raw = JSON.parse(readFileSync(path.join(REPO_ROOT, "data", "yf", "finance", "SPY.json"), "utf8"));
+  const rows = raw.data.history_1y;
+  assert.equal(tracker.price_start, rows[0].date, "history_1y start = canonical first row");
+  assert.equal(tracker.price_end, rows[rows.length - 1].date, "history_1y end = canonical last row");
+}
 assert.equal(tracker.div_start, "2016-09-16", "dividend leg untouched");
 assert.equal(tracker.dividends.length, 40, "dividend count untouched");
 // The unadjusted sibling now EXISTS (approved fetch ran): full history,
