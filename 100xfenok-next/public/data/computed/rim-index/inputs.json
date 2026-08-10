@@ -1,6 +1,6 @@
 {
   "schema_version": "rim_index_inputs.v2",
-  "generated_at": "2026-08-10T06:39:54.624Z",
+  "generated_at": "2026-08-10T10:17:42.906Z",
   "generated_by": "scripts/build-rim-index.mjs",
   "product": "Fenok Index RIM Workbench",
   "output_scope": "inputs_and_assumption_labelled_range_no_single_target",
@@ -178,10 +178,10 @@
           "coverage": {
             "stock_action_source_date": "2026-08-07",
             "index_key": "sp500",
-            "weighted_dividend_yield": 0.01044316,
+            "weighted_dividend_yield": 0.01044318,
             "benchmark_as_of": "2026-08-07",
             "benchmark_earnings_yield": 0.04977583,
-            "value": 0.01044316,
+            "value": 0.010443179,
             "covered_rows": 500,
             "total_rows": 503,
             "total_weight": 100.15,
@@ -228,7 +228,7 @@
           },
           "qa": {
             "formula": "index-weighted YF payoutRatio cross-check",
-            "value": 0.255071,
+            "value": 0.255066,
             "total_weight": 100.06,
             "covered_weight": 98.62,
             "covered_weight_ratio": 0.985609,
@@ -332,12 +332,12 @@
                     "PFE",
                     "BEN",
                     "AMCR",
-                    "HAS",
                     "KEY",
                     "IVZ",
                     "MTB",
                     "CF",
                     "DOC",
+                    "HAS",
                     "CFG"
                   ]
                 },
@@ -390,12 +390,12 @@
                     "PFE",
                     "BEN",
                     "AMCR",
-                    "HAS",
                     "KEY",
                     "IVZ",
                     "MTB",
                     "CF",
                     "DOC",
+                    "HAS",
                     "CFG"
                   ]
                 }
@@ -501,10 +501,10 @@
                     "MRNA",
                     "BEN",
                     "AMCR",
-                    "HAS",
                     "KEY",
                     "IVZ",
-                    "MTB"
+                    "MTB",
+                    "CF"
                   ]
                 },
                 "notes": [
@@ -555,12 +555,12 @@
                     "PFE",
                     "BEN",
                     "AMCR",
-                    "HAS",
                     "KEY",
                     "IVZ",
                     "MTB",
                     "CF",
                     "DOC",
+                    "HAS",
                     "CFG"
                   ]
                 }
@@ -664,12 +664,12 @@
                     "MRNA",
                     "BEN",
                     "AMCR",
-                    "HAS",
                     "KEY",
                     "IVZ",
                     "MTB",
                     "CF",
-                    "DOC"
+                    "DOC",
+                    "HAS"
                   ]
                 },
                 "notes": [
@@ -720,12 +720,12 @@
                     "PFE",
                     "BEN",
                     "AMCR",
-                    "HAS",
                     "KEY",
                     "IVZ",
                     "MTB",
                     "CF",
                     "DOC",
+                    "HAS",
                     "CFG"
                   ]
                 }
@@ -795,7 +795,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-08-07",
-            "stock_action_generated_at": "2026-08-10T02:43:32.279Z",
+            "stock_action_generated_at": "2026-08-10T10:16:27.716Z",
             "index_key": "sp500",
             "index_diagnostics": {
               "index_key": "sp500",
@@ -846,7 +846,7 @@
                 "kind": "collected_at",
                 "as_of": "2026-08-01",
                 "reason": "provider publishes no source date for the index yield observation",
-                "collection_age_hours": 201.09,
+                "collection_age_hours": 204.72,
                 "collection_sla_hours": 750,
                 "clock_policy_failures": []
               },
@@ -985,7 +985,7 @@
               "payout_divergence_limit": 0.05,
               "retention_divergence": 0.003988,
               "retention_divergence_limit": 0.05,
-              "weighted_dividend_yield": 0.01044316,
+              "weighted_dividend_yield": 0.01044318,
               "dividend_yield_unit_mix": {
                 "percent": 2,
                 "fraction": 403,
@@ -1808,7 +1808,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-08-07",
-            "stock_action_generated_at": "2026-08-10T02:43:32.279Z",
+            "stock_action_generated_at": "2026-08-10T10:16:27.716Z",
             "index_key": "nasdaq100",
             "index_diagnostics": {
               "index_key": "nasdaq100",
@@ -1859,7 +1859,7 @@
                 "kind": "collected_at",
                 "as_of": "2026-08-01",
                 "reason": "provider publishes no source date for the index yield observation",
-                "collection_age_hours": 201.09,
+                "collection_age_hours": 204.72,
                 "collection_sla_hours": 750,
                 "clock_policy_failures": []
               },
@@ -2179,49 +2179,9 @@
           "source_tier": "derived_formula"
         },
         "payout_ratio": {
-          "value": 0.15112220353351452,
-          "formula": "trailing_measured_index_dividend_yield * exact_spot / benchmark_best_eps",
-          "sources": [
-            "macro/fred-banking-daily.json:series.NASDAQXCMP",
-            "macro/fred-banking-daily.json:series.NASDAQCOM",
-            "observed.price",
-            "observed.forward_eps"
-          ],
-          "source_tier": "derived_formula",
-          "coverage": {
-            "availability_status": "available",
-            "availability_as_of": "2026-08-07",
-            "dividend_yield": 0.006060379880316491,
-            "dividend_yield_unit": "fraction",
-            "dividend_yield_as_of": "2026-08-07",
-            "dividend_yield_source": "FRED (Nasdaq, Inc.): NASDAQXCMP/NASDAQCOM",
-            "dividend_yield_formula": "(T_t * P_s) / (T_s * P_t) - 1",
-            "dividend_yield_tier": "trailing_measured_index_yield",
-            "dividend_yield_first_knowable_at": "2026-08-07",
-            "source_clocks": {
-              "total_return_last_observation": "2026-08-07",
-              "price_return_last_observation": "2026-08-07",
-              "aligned_last_observation": "2026-08-07",
-              "requested_as_of": "2026-08-07",
-              "used_observation": "2026-08-07",
-              "anchor_observation": "2025-08-07",
-              "first_knowable_at": "2026-08-07",
-              "all_used_inputs_at_or_before": "2026-08-07"
-            },
-            "exact_spot_as_of": "2026-08-07",
-            "exact_spot_value": 26690.615234375,
-            "benchmark_as_of": "2026-08-07",
-            "benchmark_eps_fy1": 1070.3607,
-            "benchmark_earnings_yield_on_exact_spot": 0.04010251133594988,
-            "payout_formula": "dividend_yield * price / eps_fy1",
-            "payout_basis": "trailing_measured_index_dividends_over_forward_fy1_earnings"
-          },
-          "notes": [
-            "Measured trailing Nasdaq Composite yield is derived from exact-date aligned FRED price-return and total-return series.",
-            "Payout uses the exact ^IXIC→CCMP spot as_of and benchmark FY1 EPS; no ETF, proxy, or constituent fallback is used."
-          ],
-          "availability_status": "available",
-          "availability_as_of": "2026-08-07"
+          "value": null,
+          "source_tier": "blocked_missing_source",
+          "reason": "CCMP FRED measured index yield unavailable: NASDAQXCMP: observations missing or empty"
         },
         "explicit_eps_growth_3y": {
           "value": null,
@@ -2260,6 +2220,12 @@
       },
       "assumptions": {},
       "blockers": [
+        {
+          "code": "ccmp_measured_index_yield_unavailable",
+          "severity": "lane_degraded",
+          "source": "macro/fred-banking-daily.json:series.NASDAQXCMP/NASDAQCOM",
+          "reason": "NASDAQXCMP: observations missing or empty"
+        },
         {
           "code": "ccmp_direct_forecast_fields_missing",
           "severity": "lane_degraded",
@@ -3101,7 +3067,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-08-07",
-            "stock_action_generated_at": "2026-08-10T02:43:32.279Z",
+            "stock_action_generated_at": "2026-08-10T10:16:27.716Z",
             "availability_as_of": "2026-08-07",
             "exact_spot_as_of": "2026-08-07",
             "index_key": "kospi_krx_mktcap",
@@ -3320,7 +3286,7 @@
           "coverage": {
             "stock_action_source_date": "2026-08-07",
             "index_key": "sox_nasdaq_giw_methodology_mktcap",
-            "sox_constituents_as_of": "2026-08-07",
+            "sox_constituents_as_of": "2026-08-10",
             "sox_constituent_source": "indices/nasdaq-giw-sox-constituents.json",
             "official_weight_columns_available": false,
             "methodology_source": "https://indexes.nasdaqomx.com/docs/methodology_SOX.pdf",
@@ -3364,7 +3330,7 @@
           "coverage": {
             "stock_action_source_date": "2026-08-07",
             "index_key": "sox_nasdaq_giw_methodology_mktcap",
-            "sox_constituents_as_of": "2026-08-07",
+            "sox_constituents_as_of": "2026-08-10",
             "sox_constituent_source": "indices/nasdaq-giw-sox-constituents.json",
             "official_weight_columns_available": false,
             "methodology_source": "https://indexes.nasdaqomx.com/docs/methodology_SOX.pdf",
@@ -3841,7 +3807,7 @@
           ],
           "coverage": {
             "stock_action_source_date": "2026-08-07",
-            "stock_action_generated_at": "2026-08-10T02:43:32.279Z",
+            "stock_action_generated_at": "2026-08-10T10:16:27.716Z",
             "index_key": "sox_nasdaq_giw_methodology_mktcap",
             "index_diagnostics": {
               "index_id": "SOX",
@@ -3851,7 +3817,7 @@
               "source_url": "https://indexes.nasdaqomx.com/Index/Weighting/SOX",
               "source_field": "rows[].symbol + computed/stock_action_index.marketCap -> SOX methodology capped weights",
               "access_scope": "public_free_constituent_view_no_official_weight_columns",
-              "as_of": "2026-08-07",
+              "as_of": "2026-08-10",
               "official_weight_columns_available": false,
               "methodology": {
                 "source": "Nasdaq SOX methodology",
@@ -3970,8 +3936,8 @@
               },
               "freshness": {
                 "generated_at_date": "2026-08-10",
-                "calendar_age_days": 3,
-                "business_age_days": 1,
+                "calendar_age_days": 0,
+                "business_age_days": 0,
                 "freshness_unit": "business_days",
                 "freshness_calendar": "us_market",
                 "max_input_freshness_days": 7,
@@ -4104,7 +4070,7 @@
         "source_url": "https://indexes.nasdaqomx.com/Index/Weighting/SOX",
         "source_field": "rows[].symbol + computed/stock_action_index.marketCap -> SOX methodology capped weights",
         "access_scope": "public_free_constituent_view_no_official_weight_columns",
-        "as_of": "2026-08-07",
+        "as_of": "2026-08-10",
         "official_weight_columns_available": false,
         "methodology": {
           "source": "Nasdaq SOX methodology",
@@ -4223,8 +4189,8 @@
         },
         "freshness": {
           "generated_at_date": "2026-08-10",
-          "calendar_age_days": 3,
-          "business_age_days": 1,
+          "calendar_age_days": 0,
+          "business_age_days": 0,
           "freshness_unit": "business_days",
           "freshness_calendar": "us_market",
           "max_input_freshness_days": 7,
@@ -4337,11 +4303,11 @@
   },
   "source_tier_counts": {
     "observed_source": 40,
-    "derived_formula": 168,
+    "derived_formula": 167,
     "exact_index_weight_source": 6,
     "house_assumption": 8,
     "assumption_labelled_scenario": 2,
-    "blocked_missing_source": 3,
+    "blocked_missing_source": 4,
     "direct_official_derived": 1,
     "methodology_derived_index_weight_source": 2,
     "proxy_diagnostic": 3

@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-08-10T02:43:32.279Z",
+  "generated_at": "2026-08-10T10:16:27.716Z",
   "totals": {
-    "rootJsonCount": 23011,
-    "publicJsonCount": 17525,
-    "mirroredRootJsonCount": 16446,
-    "missingPublicMirrorCount": 6565,
-    "publicOnlyJsonCount": 1079,
-    "directDataFetchCount": 128,
+    "rootJsonCount": 23247,
+    "publicJsonCount": 15787,
+    "mirroredRootJsonCount": 10580,
+    "missingPublicMirrorCount": 12667,
+    "publicOnlyJsonCount": 5207,
+    "directDataFetchCount": 109,
     "dynamicPatternCount": 10
   },
   "mirror_sync_status": "partial",
@@ -117,8 +117,8 @@
   "categories": [
     {
       "category": "admin",
-      "rootJsonCount": 582,
-      "publicJsonCount": 11,
+      "rootJsonCount": 584,
+      "publicJsonCount": 528,
       "directFetchCount": 4,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 0,
@@ -157,8 +157,8 @@
     },
     {
       "category": "computed",
-      "rootJsonCount": 7539,
-      "publicJsonCount": 7164,
+      "rootJsonCount": 7544,
+      "publicJsonCount": 1560,
       "directFetchCount": 9,
       "dynamicPatternCount": 1,
       "generatedSourceCount": 1,
@@ -167,9 +167,9 @@
     },
     {
       "category": "damodaran",
-      "rootJsonCount": 9,
-      "publicJsonCount": 8,
-      "directFetchCount": 7,
+      "rootJsonCount": 3,
+      "publicJsonCount": 3,
+      "directFetchCount": 1,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 1,
       "status": "active",
@@ -178,7 +178,7 @@
     {
       "category": "edgar",
       "rootJsonCount": 31,
-      "publicJsonCount": 1,
+      "publicJsonCount": 3189,
       "directFetchCount": 0,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 0,
@@ -196,6 +196,16 @@
       "usage": "manifest/catalog coverage"
     },
     {
+      "category": "factset-earnings-insight",
+      "rootJsonCount": 1,
+      "publicJsonCount": 1,
+      "directFetchCount": 0,
+      "dynamicPatternCount": 0,
+      "generatedSourceCount": 0,
+      "status": "catalog_only",
+      "usage": "manifest/catalog coverage"
+    },
+    {
       "category": "global-scouter",
       "rootJsonCount": 1085,
       "publicJsonCount": 1085,
@@ -207,12 +217,12 @@
     },
     {
       "category": "indices",
-      "rootJsonCount": 6,
-      "publicJsonCount": 6,
-      "directFetchCount": 3,
+      "rootJsonCount": 2,
+      "publicJsonCount": 2,
+      "directFetchCount": 0,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 0,
-      "status": "active",
+      "status": "catalog_only",
       "usage": "market trend and drawdown context"
     },
     {
@@ -227,17 +237,27 @@
     },
     {
       "category": "macro",
-      "rootJsonCount": 11,
-      "publicJsonCount": 11,
-      "directFetchCount": 9,
+      "rootJsonCount": 3,
+      "publicJsonCount": 3,
+      "directFetchCount": 2,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 2,
       "status": "active",
       "usage": "PMI/ISM/OECD, liquidity, banking, TGA/stablecoin depth"
     },
     {
+      "category": "metadata",
+      "rootJsonCount": 52,
+      "publicJsonCount": 52,
+      "directFetchCount": 0,
+      "dynamicPatternCount": 0,
+      "generatedSourceCount": 0,
+      "status": "catalog_only",
+      "usage": "manifest/catalog coverage"
+    },
+    {
       "category": "root",
-      "rootJsonCount": 1,
+      "rootJsonCount": 2,
       "publicJsonCount": 2,
       "directFetchCount": 1,
       "dynamicPatternCount": 0,
@@ -277,28 +297,38 @@
     },
     {
       "category": "stockanalysis",
-      "rootJsonCount": 5730,
-      "publicJsonCount": 1169,
-      "directFetchCount": 9,
+      "rootJsonCount": 5728,
+      "publicJsonCount": 1167,
+      "directFetchCount": 7,
       "dynamicPatternCount": 5,
       "generatedSourceCount": 0,
       "status": "active",
       "usage": "ETF workspace, market event route, ticker fallback APIs, Admin Data Lab collection visibility"
     },
     {
-      "category": "yardney",
+      "category": "winddown",
       "rootJsonCount": 1,
       "publicJsonCount": 1,
-      "directFetchCount": 1,
+      "directFetchCount": 2,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 0,
       "status": "active",
+      "usage": "manifest/catalog coverage"
+    },
+    {
+      "category": "yardney",
+      "rootJsonCount": 0,
+      "publicJsonCount": 0,
+      "directFetchCount": 0,
+      "dynamicPatternCount": 0,
+      "generatedSourceCount": 0,
+      "status": "catalog_only",
       "usage": "bond-yield valuation card"
     },
     {
       "category": "yf",
-      "rootJsonCount": 5489,
-      "publicJsonCount": 5489,
+      "rootJsonCount": 5684,
+      "publicJsonCount": 5669,
       "directFetchCount": 1,
       "dynamicPatternCount": 1,
       "generatedSourceCount": 1,
@@ -496,57 +526,10 @@
       ]
     },
     {
-      "dataPath": "damodaran/credit_ratings.json",
-      "category": "damodaran",
-      "consumers": [
-        "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js"
-      ]
-    },
-    {
-      "dataPath": "damodaran/erp.json",
-      "category": "damodaran",
-      "consumers": [
-        "100xfenok-next/public/admin/data-lab/shared/data-lab-config.js",
-        "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js",
-        "100xfenok-next/src/hooks/useMarketValuation.ts"
-      ]
-    },
-    {
-      "dataPath": "damodaran/historical_erp.json",
-      "category": "damodaran",
-      "consumers": [
-        "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js",
-        "100xfenok-next/src/hooks/useMarketValuation.ts"
-      ]
-    },
-    {
-      "dataPath": "damodaran/industries.json",
-      "category": "damodaran",
-      "consumers": [
-        "100xfenok-next/public/admin/valuation-lab/DEV.md",
-        "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js"
-      ]
-    },
-    {
       "dataPath": "damodaran/industry_benchmarks.json",
       "category": "damodaran",
       "consumers": [
         "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx"
-      ]
-    },
-    {
-      "dataPath": "damodaran/industry_metrics_regions.json",
-      "category": "damodaran",
-      "consumers": [
-        "100xfenok-next/public/admin/valuation-lab/DEV.md",
-        "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js"
-      ]
-    },
-    {
-      "dataPath": "damodaran/industry_metrics.json",
-      "category": "damodaran",
-      "consumers": [
-        "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js"
       ]
     },
     {
@@ -644,92 +627,11 @@
       ]
     },
     {
-      "dataPath": "indices/nasdaq.json",
-      "category": "indices",
-      "consumers": [
-        "100xfenok-next/public/admin/valuation-lab/expansion/indices-nasdaq.html",
-        "100xfenok-next/src/hooks/useMarketValuation.ts",
-        "100xfenok-next/src/lib/macro-chart/catalog.ts"
-      ]
-    },
-    {
-      "dataPath": "indices/nasdaq100.json",
-      "category": "indices",
-      "consumers": [
-        "100xfenok-next/public/admin/data-lab/shared/data-lab-config.js",
-        "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js"
-      ]
-    },
-    {
-      "dataPath": "indices/sp500.json",
-      "category": "indices",
-      "consumers": [
-        "100xfenok-next/public/admin/data-lab/shared/data-lab-config.js",
-        "100xfenok-next/public/admin/valuation-lab/expansion/indices-sp500.html",
-        "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js",
-        "100xfenok-next/src/hooks/useMarketValuation.ts",
-        "100xfenok-next/src/lib/macro-chart/catalog.ts"
-      ]
-    },
-    {
       "dataPath": "macro/activity-surveys.json",
       "category": "macro",
       "consumers": [
         "100xfenok-next/public/admin/data-lab/app/ops-console.js",
         "100xfenok-next/src/hooks/useMarketValuation.ts",
-        "100xfenok-next/src/lib/macro-chart/catalog.ts"
-      ]
-    },
-    {
-      "dataPath": "macro/fdic-tier1.json",
-      "category": "macro",
-      "consumers": [
-        "100xfenok-next/src/lib/macro-chart/catalog.ts"
-      ]
-    },
-    {
-      "dataPath": "macro/fred-banking-daily.json",
-      "category": "macro",
-      "consumers": [
-        "100xfenok-next/src/hooks/useDashboardData.ts",
-        "100xfenok-next/src/lib/macro-chart/catalog.ts"
-      ]
-    },
-    {
-      "dataPath": "macro/fred-banking-quarterly.json",
-      "category": "macro",
-      "consumers": [
-        "100xfenok-next/public/admin/data-lab/app/ops-console.js",
-        "100xfenok-next/src/hooks/useDashboardData.ts"
-      ]
-    },
-    {
-      "dataPath": "macro/fred-banking-weekly.json",
-      "category": "macro",
-      "consumers": [
-        "100xfenok-next/src/hooks/useDashboardData.ts",
-        "100xfenok-next/src/lib/macro-chart/catalog.ts"
-      ]
-    },
-    {
-      "dataPath": "macro/fred-macro.json",
-      "category": "macro",
-      "consumers": [
-        "100xfenok-next/src/lib/macro-chart/catalog.ts"
-      ]
-    },
-    {
-      "dataPath": "macro/stablecoins.json",
-      "category": "macro",
-      "consumers": [
-        "100xfenok-next/src/lib/macro-chart/catalog.ts"
-      ]
-    },
-    {
-      "dataPath": "macro/tga.json",
-      "category": "macro",
-      "consumers": [
-        "100xfenok-next/src/app/api/data/route.ts",
         "100xfenok-next/src/lib/macro-chart/catalog.ts"
       ]
     },
@@ -1263,14 +1165,6 @@
       ]
     },
     {
-      "dataPath": "stockanalysis/etf_universe.json",
-      "category": "stockanalysis",
-      "consumers": [
-        "100xfenok-next/public/admin/data-lab/app/ops-console.js",
-        "100xfenok-next/src/lib/server/data-loader.ts"
-      ]
-    },
-    {
       "dataPath": "stockanalysis/index.json",
       "category": "stockanalysis",
       "consumers": [
@@ -1293,14 +1187,6 @@
       ]
     },
     {
-      "dataPath": "stockanalysis/surfaces/index.json",
-      "category": "stockanalysis",
-      "consumers": [
-        "100xfenok-next/public/admin/data-lab/app/ops-console.js",
-        "100xfenok-next/src/lib/server/data-loader.ts"
-      ]
-    },
-    {
       "dataPath": "stockanalysis/surfaces/new_etfs.json",
       "category": "stockanalysis",
       "consumers": [
@@ -1319,14 +1205,6 @@
       "category": "winddown",
       "consumers": [
         "100xfenok-next/src/generated/winddown-published-lkg.ts"
-      ]
-    },
-    {
-      "dataPath": "yardney/yardney_model.json",
-      "category": "yardney",
-      "consumers": [
-        "100xfenok-next/src/app/market-valuation/YardeniCard.tsx",
-        "100xfenok-next/src/app/market-valuation/yardeniReading.ts"
       ]
     },
     {
@@ -1403,12 +1281,12 @@
       },
       {
         "id": "liquidity_stress",
-        "asOf": "2026-08-09",
+        "asOf": "2026-08-10",
         "status": "caution"
       },
       {
         "id": "sentiment_signal",
-        "asOf": "2026-08-07",
+        "asOf": "2026-08-10",
         "status": "neutral"
       }
     ]
@@ -1418,18 +1296,9 @@
       "admin/apewisdom_attention/index.json",
       "admin/apewisdom_attention/lkg/social_attention_proxy.json",
       "admin/damodaran-shadow-parity.json",
-      "admin/damodaran/current/damodaran.json",
-      "admin/damodaran/history.json",
-      "admin/damodaran/index.json",
-      "admin/damodaran/lkg/damodaran.json",
-      "admin/damodaran/owner-guard.json",
       "admin/data-supply-detection-floor.json",
-      "admin/defillama_stablecoins/index.json",
-      "admin/defillama_stablecoins/lkg/stablecoins.json",
       "admin/edgar_filings/current/edgar_filings.json",
       "admin/edgar_filings/index.json",
-      "admin/fdic_tier1/index.json",
-      "admin/fdic_tier1/lkg/fdic_tier1.json",
       "admin/fenok-edge-etf-daily1y-fetchable-plan.json",
       "admin/fenok-edge-etf-daily1y-readiness.json",
       "admin/fenok-etf-core-daily-basket.json",
@@ -1447,76 +1316,85 @@
       "admin/finra_short_volume/history/regsho_daily.json",
       "admin/finra_short_volume/index.json",
       "admin/finra_short_volume/lkg/regsho_daily.json",
-      "admin/fred_banking/index.json",
-      "admin/fred_banking/lkg/daily.json",
-      "admin/fred_banking/lkg/quarterly.json",
-      "admin/fred_banking/lkg/weekly.json",
-      "admin/fred_macro/index.json",
-      "admin/fred_macro/lkg/fred_macro.json",
       "admin/fred_yardeni/current/yardney_model.json",
       "admin/fred_yardeni/index.json",
       "admin/fred_yardeni/lkg/yardney_model.json",
       "admin/gdelt_news_tone/index.json",
       "admin/gdelt_news_tone/lkg/news_tone_proxy.json",
-      "admin/krx/index.json",
-      "admin/krx/lkg/bridge.json",
       "admin/lane-commit-manifest.json",
       "admin/nasdaq_giw_sox/history/constituents.json",
       "admin/nasdaq_giw_sox/index.json",
       "admin/nasdaq_giw_sox/lkg/constituents.json",
-      "admin/occ_options_volume/current/occ_options_volume.json"
+      "admin/occ_options_volume/current/occ_options_volume.json",
+      "admin/occ_options_volume/index.json",
+      "admin/occ_options_volume/lkg/occ_options_volume.json",
+      "admin/oecd_cli/index.json",
+      "admin/oecd_cli/lkg/oecd_cli.json",
+      "admin/oecd_cli/parity-report.json",
+      "admin/oecd_cli/shadow/oecd-cli.json",
+      "admin/sec-13f-shadow-parity.json",
+      "admin/slickcharts-composite-recovery/index.json",
+      "admin/us-indices-daily/keys/nasdaq100.json",
+      "admin/us-indices-daily/keys/sox.json",
+      "admin/us-indices-daily/lkg/nasdaq100.json",
+      "admin/us-indices-daily/lkg/sox.json",
+      "admin/us-indices-daily/promotion-contracts/nasdaq100.json",
+      "admin/us-indices-daily/promotion-contracts/sox.json",
+      "admin/us-indices-daily/provider-observations/008e1520291891899255a892b50da86860de5d55e0640eb938c9519c87a44652.json",
+      "admin/us-indices-daily/provider-observations/3c91cadade757510a9156bef0f64ea5b51e070acf61ca0fc6dae36dc33435938.json",
+      "admin/us-indices-daily/provider-observations/ecdba5febe4c55fef76616e044e299a072277b35f96b0cea4b21ecc6bb9e20d0.json"
     ],
     "publicOnly": [
-      "metadata/2025-06-21.json",
-      "metadata/2025-06-24.json",
-      "metadata/2025-06-25.json",
-      "metadata/2025-06-26.json",
-      "metadata/2025-06-27.json",
-      "metadata/2025-06-28.json",
-      "metadata/2025-07-01.json",
-      "metadata/2025-07-02.json",
-      "metadata/2025-07-09.json",
-      "metadata/2025-07-10.json",
-      "metadata/2025-07-11.json",
-      "metadata/2025-07-12.json",
-      "metadata/2025-07-14_data.json",
-      "metadata/2025-07-15.json",
-      "metadata/2025-07-16.json",
-      "metadata/2025-07-17.json",
-      "metadata/2025-07-18.json",
-      "metadata/2025-07-19.json",
-      "metadata/2025-07-20_data.json",
-      "metadata/2025-07-22.json",
-      "metadata/2025-07-23.json",
-      "metadata/2025-07-24.json",
-      "metadata/2025-07-25.json",
-      "metadata/2025-07-26.json",
-      "metadata/2025-07-28.json",
-      "metadata/2025-07-29.json",
-      "metadata/2025-07-30.json",
-      "metadata/2025-07-31.json",
-      "metadata/2025-08-01.json",
-      "metadata/2025-08-02.json",
-      "metadata/2025-08-05.json",
-      "metadata/2025-08-06.json",
-      "metadata/2025-08-07.json",
-      "metadata/2025-08-08.json",
-      "metadata/2025-08-09.json",
-      "metadata/2025-08-12.json",
-      "metadata/2025-08-13.json",
-      "metadata/2025-08-14.json",
-      "metadata/2025-08-15.json",
-      "metadata/2025-08-16.json",
-      "metadata/2025-08-19.json",
-      "metadata/2025-08-20.json",
-      "metadata/2025-08-21.json",
-      "metadata/2025-08-22.json",
-      "metadata/2025-08-23.json",
-      "metadata/2025-08-24_data.json",
-      "metadata/2025-08-26.json",
-      "metadata/2025-08-27.json",
-      "metadata/2025-08-28.json",
-      "metadata/2025-08-29.json"
+      "computed/market_facts/shards/0000.json",
+      "computed/market_facts/shards/0001.json",
+      "computed/market_facts/shards/0002.json",
+      "computed/market_facts/shards/0003.json",
+      "computed/market_facts/shards/0004.json",
+      "computed/market_facts/shards/0005.json",
+      "computed/market_facts/shards/0006.json",
+      "computed/market_facts/shards/0007.json",
+      "computed/market_facts/shards/0008.json",
+      "computed/market_facts/shards/0009.json",
+      "computed/market_facts/shards/0010.json",
+      "computed/market_facts/shards/0011.json",
+      "computed/market_facts/shards/0012.json",
+      "computed/market_facts/shards/0013.json",
+      "computed/market_facts/shards/0014.json",
+      "computed/market_facts/shards/0015.json",
+      "computed/market_facts/shards/0016.json",
+      "computed/market_facts/shards/0017.json",
+      "computed/market_facts/shards/0018.json",
+      "computed/market_facts/shards/0019.json",
+      "computed/market_facts/shards/0020.json",
+      "computed/market_facts/shards/0021.json",
+      "computed/market_facts/shards/0022.json",
+      "computed/market_facts/shards/0023.json",
+      "computed/market_facts/shards/0024.json",
+      "computed/market_facts/shards/0025.json",
+      "computed/market_facts/shards/0026.json",
+      "computed/market_facts/shards/0027.json",
+      "computed/market_facts/shards/0028.json",
+      "computed/market_facts/shards/0029.json",
+      "computed/market_facts/shards/0030.json",
+      "computed/market_facts/shards/0031.json",
+      "computed/market_facts/shards/0032.json",
+      "computed/market_facts/shards/0033.json",
+      "computed/market_facts/shards/0034.json",
+      "computed/market_facts/shards/0035.json",
+      "computed/market_facts/shards/0036.json",
+      "computed/market_facts/shards/0037.json",
+      "computed/market_facts/shards/0038.json",
+      "computed/market_facts/shards/0039.json",
+      "computed/market_facts/shards/0040.json",
+      "computed/market_facts/shards/0041.json",
+      "computed/market_facts/shards/0042.json",
+      "computed/market_facts/shards/0043.json",
+      "computed/market_facts/shards/0044.json",
+      "computed/market_facts/shards/0045.json",
+      "computed/market_facts/shards/0046.json",
+      "computed/market_facts/shards/0047.json",
+      "computed/market_facts/shards/0048.json",
+      "computed/market_facts/shards/0049.json"
     ]
   }
 }

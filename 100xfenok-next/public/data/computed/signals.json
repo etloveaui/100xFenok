@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-08-10T02:43:32.229Z",
+  "generated_at": "2026-08-10T10:16:27.666Z",
   "as_of": "2026-08-10",
   "engine": {
     "name": "macro-monitor-computed-signals",
@@ -160,7 +160,7 @@
         "reserves_gdp_pct": 9.2
       },
       "formula": "spread_bp = (SOFR - IORB) * 100; reserves_gdp_pct = (WRESBAL/1000) / GDP * 100",
-      "as_of": "2026-08-09",
+      "as_of": "2026-08-10",
       "source_files": [
         "data/macro/fred-macro.json"
       ],
@@ -207,13 +207,13 @@
       "warn_active": 0,
       "warn_near": 0,
       "values": {
-        "vix": 14.9,
+        "vix": 15.48,
         "move": 72.03,
         "cnn_fg": 63.7,
         "aaii_bearish": 38,
         "aaii_spread": -1,
         "cftc_net": -7578,
-        "crypto_fg": 29,
+        "crypto_fg": 30,
         "putcall_ratio": 0.68
       },
       "combos": [
@@ -229,7 +229,7 @@
               "operator": ">=",
               "value": 40,
               "label": "VIX >= 40",
-              "current": 14.9,
+              "current": 15.48,
               "status": "unmet"
             }
           ],
@@ -289,7 +289,7 @@
               "operator": ">=",
               "value": 30,
               "label": "VIX >= 30",
-              "current": 14.9,
+              "current": 15.48,
               "status": "unmet"
             },
             {
@@ -325,7 +325,7 @@
               "operator": ">=",
               "value": 30,
               "label": "VIX >= 30",
-              "current": 14.9,
+              "current": 15.48,
               "status": "unmet"
             },
             {
@@ -394,8 +394,8 @@
               "operator": "<",
               "value": 15,
               "label": "VIX < 15",
-              "current": 14.9,
-              "status": "met"
+              "current": 15.48,
+              "status": "near"
             },
             {
               "indicator": "cnn_fg",
@@ -429,8 +429,8 @@
               "operator": "<",
               "value": 15,
               "label": "VIX < 15",
-              "current": 14.9,
-              "status": "met"
+              "current": 15.48,
+              "status": "near"
             },
             {
               "indicator": "cnn_fg",
@@ -465,7 +465,7 @@
           "source": "Billingsley & Chance 1988"
         }
       ],
-      "as_of": "2026-08-07",
+      "as_of": "2026-08-10",
       "source_files": [
         "data/sentiment/vix.json",
         "data/sentiment/move.json",
