@@ -11,12 +11,14 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS",
     "html_handling": "none",
-    // One enrolled data asset reaches the Worker instead of the asset worker,
-    // so it can be served from the published generation. Every unhealthy
+    // Enrolled data assets reach the Worker instead of the asset worker, so
+    // they can be served from the published generation. Every unhealthy
     // outcome falls back to this same asset directory, which is why enrolling a
-    // path cannot make it less available than it was.
+    // path cannot make it less available than it was. The `*` is a deep glob,
+    // so every enrolled path (605 exact + the EDGAR tree) plus any future
+    // family lands in the Worker first without a per-path edit.
     "run_worker_first": [
-      "/data/macro/fred-macro.json"
+      "/data/*"
     ]
   },
   "observability": {
