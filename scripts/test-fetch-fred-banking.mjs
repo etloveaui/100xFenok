@@ -474,7 +474,7 @@ function assertValidShard(shard) {
   assert.match(workflow, /data\/admin\/fred_banking\/lkg\/monthly\.json/);
   assert.match(workflow, /data\/admin\/fred_banking\/lkg\/quarterly\.json/);
   assert.match(workflow, /data\/macro\/fred-banking-monthly\.json/);
-  assert.match(workflow, /100xfenok-next\/public\/data\/macro\/fred-banking-monthly\.json/);
+  assert.doesNotMatch(workflow, /100xfenok-next\/public\/data\/macro\/fred-banking/);
   assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
   assert.match(workflow, /--stage always_if_exists/);
   assert.match(workflow, /--stage success_if_exists/);
