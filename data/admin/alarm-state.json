@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-09T21:52:28.999Z",
+  "generated_at": "2026-08-10T02:49:42.535Z",
   "status": "open",
-  "open_incident_count": 6,
+  "open_incident_count": 7,
   "open_incidents": [
     {
       "workflow": "build-stocks-analyzer.yml",
@@ -11,6 +11,19 @@
       "failure_streak_threshold": 2,
       "first_failing_run_id": 30990499079,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30990499079",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
+    {
+      "workflow": "deploy-worker.yml",
+      "label": "Deploy Worker (Cloudflare)",
+      "streak": 3,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 31315285294,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31315285294",
       "alarm_reasons": [
         "failure_streak"
       ],
@@ -72,7 +85,7 @@
     {
       "workflow": "qa-rim-v2.yml",
       "label": "QA RIM v2",
-      "streak": 6,
+      "streak": 7,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 31136433451,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31136433451",
@@ -249,6 +262,17 @@
       "event": "schedule",
       "failure_streak_threshold": 1,
       "cadence_status": "not_due",
+      "cadence_evidence": []
+    },
+    {
+      "file": "fetch-kospi-dart-payout.yml",
+      "label": "Fetch KOSPI OpenDART Payout",
+      "events": [
+        "schedule"
+      ],
+      "event": "schedule",
+      "failure_streak_threshold": 2,
+      "cadence_status": "no_declaration",
       "cadence_evidence": []
     },
     {
@@ -461,7 +485,7 @@
     "not_due": 24,
     "overdue": 2,
     "recovered": 0,
-    "no_declaration": 7,
+    "no_declaration": 8,
     "unknown": 0
   },
   "excluded_workflows": [
@@ -476,16 +500,22 @@
       "reason": "self-monitoring would create a recursive alarm loop"
     }
   ],
-  "unknown_workflows": [],
+  "unknown_workflows": [
+    {
+      "workflow": "fetch-kospi-dart-payout.yml",
+      "status": "unknown"
+    }
+  ],
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31337868151",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31337868151",
-    "observed_at": "2026-08-09T21:52:28.999Z",
-    "event": "schedule",
+    "run_id": "31350750125",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31350750125",
+    "observed_at": "2026-08-10T02:49:42.535Z",
+    "event": "workflow_run",
     "workflows": [
       "build-stocks-analyzer.yml",
+      "deploy-worker.yml",
       "fetch-damodaran-shadow.yml",
       "fetch-fred-yardeni.yml",
       "fetch-stockanalysis.yml",
