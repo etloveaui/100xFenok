@@ -51,35 +51,60 @@ function escapeRegExp(value) {
 function tokenizeShellCommand(commandText) {
   const tokens = [];
   let token = "";
+  // Provenance of the current token: whether its FIRST character came from a
+  // quote/escape construct (so a later unquoted `#` is mid-word, not a comment
+  // start), and whether ANY character did (so a quoted/escaped operator copy
+  // is literal data, never a real control operator).
+  let tokenStartQuotedOrEscaped = false;
+  let tokenSawQuoteOrEscape = false;
   let quote = null;
   let escaped = false;
 
   const flushToken = () => {
     if (token.length > 0) {
-      tokens.push(token);
+      tokens.push({
+        text: token,
+        startQuotedOrEscaped: tokenStartQuotedOrEscaped,
+        sawQuoteOrEscape: tokenSawQuoteOrEscape,
+      });
       token = "";
+      tokenStartQuotedOrEscaped = false;
+      tokenSawQuoteOrEscape = false;
     }
   };
 
   for (let position = 0; position < commandText.length; position += 1) {
     const character = commandText[position];
     if (escaped) {
+      if (token.length === 0) tokenStartQuotedOrEscaped = true;
       token += character;
+      tokenSawQuoteOrEscape = true;
       escaped = false;
       continue;
     }
     if (quote === "'") {
       if (character === "'") quote = null;
-      else token += character;
+      else {
+        if (token.length === 0) tokenStartQuotedOrEscaped = true;
+        token += character;
+        tokenSawQuoteOrEscape = true;
+      }
       continue;
     }
     if (quote === '"') {
       if (character === '"') quote = null;
       else if (character === "\\") escaped = true;
-      else token += character;
+      else {
+        if (token.length === 0) tokenStartQuotedOrEscaped = true;
+        token += character;
+        tokenSawQuoteOrEscape = true;
+      }
       continue;
     }
     if (character === "'" || character === '"') {
+      // A word may begin with a quoted segment, even an empty one; a `#` after
+      // it (""#comment) is still mid-word, so it must not become a comment.
+      if (token.length === 0) tokenStartQuotedOrEscaped = true;
       quote = character;
       continue;
     }
@@ -96,17 +121,18 @@ function tokenizeShellCommand(commandText) {
     // `data/path&&echo` as two commands, not one word, so a single merged
     // token would let a post-sentinel operator slip past the control-token
     // checks and mint a false binding. Quoted/escaped operators stay inside
-    // the token because they are literal data there.
+    // the token because they are literal data there; the provenance flags
+    // keep that distinction after the token text is unquoted.
     const twoCharacterOperator = commandText.slice(position, position + 2);
     if (twoCharacterOperator === "&&" || twoCharacterOperator === "||") {
       flushToken();
-      tokens.push(twoCharacterOperator);
+      tokens.push({ text: twoCharacterOperator, startQuotedOrEscaped: false, sawQuoteOrEscape: false });
       position += 1;
       continue;
     }
     if (character === "&" || character === "|" || character === ";") {
       flushToken();
-      tokens.push(character);
+      tokens.push({ text: character, startQuotedOrEscaped: false, sawQuoteOrEscape: false });
       continue;
     }
     token += character;
@@ -124,42 +150,59 @@ function isConcreteManifestValue(value) {
 }
 
 function isShellCommentBoundary(token) {
-  // The tokenizer emits one token per shell word, so a token beginning with
-  // `#` starts a word and is a comment boundary in shell: everything after it
-  // on the line is ignored and the command legitimately ends there.
-  return typeof token === "string" && token.startsWith("#");
+  // A real shell comment begins only when an unquoted/unescaped `#` starts a
+  // word: everything after it on the line is ignored and the command
+  // legitimately ends there. Quoted ('#comment'), escaped (\#comment), and
+  // mid-word (foo#bar) hashes are ordinary argument characters.
+  return typeof token === "object"
+    && token !== null
+    && typeof token.text === "string"
+    && token.text.startsWith("#")
+    && token.startQuotedOrEscaped === false;
+}
+
+function isControlOperator(token) {
+  // Only an operator that reached the tokenizer unquoted and unescaped is a
+  // shell control operator; quoted or escaped copies are literal data.
+  return typeof token === "object"
+    && token !== null
+    && SHELL_CONTROL_TOKENS.has(token.text)
+    && token.sawQuoteOrEscape === false;
 }
 
 function isValidManifestFlagValue(value) {
-  return typeof value === "string"
-    && value.length > 0
+  return typeof value === "object"
+    && value !== null
+    && typeof value.text === "string"
+    && value.text.length > 0
     && !isShellCommentBoundary(value)
-    && !SHELL_CONTROL_TOKENS.has(value)
-    && !value.startsWith("-")
-    && isConcreteManifestValue(value);
+    && !isControlOperator(value)
+    && !value.text.startsWith("-")
+    && isConcreteManifestValue(value.text);
 }
 
 function parseManifestHelperTokens(tokens) {
-  if (!Array.isArray(tokens) || tokens[0] !== MANIFEST_HELPER_PATH) return null;
+  if (!Array.isArray(tokens) || tokens[0]?.text !== MANIFEST_HELPER_PATH) return null;
   const values = { workflow: null, stage: null };
   const seen = new Set();
 
   for (let index = 1; index < tokens.length; index += 1) {
     const option = tokens[index];
-    // A word beginning with `#` is a shell comment boundary; the rest of the
-    // line is ignored, so the command may validly end here.
+    // An unquoted word-initial `#` is a shell comment boundary; the rest of
+    // the line is ignored, so the command may validly end here. Quoted or
+    // escaped `#` words are ordinary arguments and are handled below.
     if (isShellCommentBoundary(option)) break;
     // Any other shell control operator inside the command means the helper is
     // embedded in (or dangling from) a larger command. Truncating at it would
     // mint a false-green proof, so reject the whole command instead.
-    if (SHELL_CONTROL_TOKENS.has(option)) return null;
-    if (!MANIFEST_VALUE_OPTIONS.has(option)) return null;
-    if (seen.has(option)) return null;
-    seen.add(option);
+    if (isControlOperator(option)) return null;
+    if (!MANIFEST_VALUE_OPTIONS.has(option.text)) return null;
+    if (seen.has(option.text)) return null;
+    seen.add(option.text);
     const value = tokens[index + 1];
     if (value === undefined || isShellCommentBoundary(value)) break;
-    if (SHELL_CONTROL_TOKENS.has(value)) return null;
-    values[option.slice(2)] = value;
+    if (isControlOperator(value)) return null;
+    values[option.text.slice(2)] = value.text;
     index += 1;
   }
 
@@ -200,16 +243,16 @@ export function extractManifestStageInvocations(sourceText) {
 }
 
 function parseManifestWrapperTokens(tokens) {
-  if (!Array.isArray(tokens) || tokens[0] !== MANIFEST_WRAPPER_PATH) return null;
+  if (!Array.isArray(tokens) || tokens[0]?.text !== MANIFEST_WRAPPER_PATH) return null;
   if (tokens.length < 4) return null;
   const member = tokens[1];
   const rowPath = tokens[2];
   const commitMessage = tokens[3];
   // The publisher requires <member> <row-json> <commit-message> before any
   // manifest options; without them the invocation cannot be a manifest proof.
-  if (!MANIFEST_WRAPPER_MEMBER_PATTERN.test(member)) return null;
+  if (!MANIFEST_WRAPPER_MEMBER_PATTERN.test(member.text)) return null;
   for (const positional of [rowPath, commitMessage]) {
-    if (isShellCommentBoundary(positional) || SHELL_CONTROL_TOKENS.has(positional)) return null;
+    if (isShellCommentBoundary(positional) || isControlOperator(positional)) return null;
   }
 
   let index = 4;
@@ -223,38 +266,39 @@ function parseManifestWrapperTokens(tokens) {
   // --manifest-workflow <workflow> --manifest-always <stage>
   // [--manifest-data <stage>] -- ; anything else is a data path or a
   // rejected option, never a manifest binding.
-  if (next !== "--manifest-workflow") return null;
+  if (next.text !== "--manifest-workflow") return null;
   const workflow = tokens[index + 1];
   if (!isValidManifestFlagValue(workflow)) return null;
   index += 2;
-  if (tokens[index] !== "--manifest-always") return null;
+  if (tokens[index]?.text !== "--manifest-always") return null;
   const always = tokens[index + 1];
-  if (!isValidManifestFlagValue(always) || !COMMIT_STAGE_KEYS.includes(always)) return null;
+  if (!isValidManifestFlagValue(always) || !COMMIT_STAGE_KEYS.includes(always.text)) return null;
   index += 2;
   let data = null;
-  if (tokens[index] === "--manifest-data") {
+  if (tokens[index]?.text === "--manifest-data") {
     const dataValue = tokens[index + 1];
-    if (!isValidManifestFlagValue(dataValue) || !COMMIT_STAGE_KEYS.includes(dataValue)) return null;
-    data = dataValue;
+    if (!isValidManifestFlagValue(dataValue) || !COMMIT_STAGE_KEYS.includes(dataValue.text)) return null;
+    data = dataValue.text;
     index += 2;
   }
-  if (tokens[index] !== "--") return null;
+  if (tokens[index]?.text !== "--") return null;
   index += 1;
   // After the sentinel the publisher treats every argument as a data path for
   // git add. Options there are never manifest options, and any control
-  // operator means the command does not end at the sentinel.
+  // operator that is genuinely unquoted means the command does not end at the
+  // sentinel. Quoted or escaped operator copies stay ordinary data arguments.
   for (; index < tokens.length; index += 1) {
     const tail = tokens[index];
     if (isShellCommentBoundary(tail)) break;
-    if (SHELL_CONTROL_TOKENS.has(tail)) return null;
-    if (tail.startsWith("-")) return null;
+    if (isControlOperator(tail)) return null;
+    if (tail.text.startsWith("-")) return null;
   }
   // The publisher itself exits when --manifest-workflow does not match
   // .github/workflows/slickcharts-<member>.yml; a mismatched member must not
   // borrow another caller's policy.
-  const expectedWorkflow = `.github/workflows/slickcharts-${member}.yml`;
-  if (workflow !== expectedWorkflow) return null;
-  return { workflow, always, data };
+  const expectedWorkflow = `.github/workflows/slickcharts-${member.text}.yml`;
+  if (workflow.text !== expectedWorkflow) return null;
+  return { workflow: workflow.text, always: always.text, data };
 }
 
 export function extractManifestWrapperBindings(sourceText) {

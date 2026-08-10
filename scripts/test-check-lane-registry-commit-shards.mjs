@@ -266,6 +266,69 @@ scripts/publish-slickcharts-attempt.sh \
   assert.deepEqual(extractManifestWrapperBindings(partiallyEscaped), []);
 }
 
+// Wrapper: quoted or fully escaped STANDALONE control literals after the
+// sentinel are ordinary data arguments — never operators and never comments —
+// so the binding is still minted.
+{
+  const base = `scripts/publish-slickcharts-attempt.sh weekly "$RUNNER_TEMP/w.json" "msg" --manifest-workflow .github/workflows/slickcharts-weekly.yml --manifest-always always_if_exists --`;
+  const expected = {
+    workflow: ".github/workflows/slickcharts-weekly.yml",
+    always: "always_if_exists",
+    data: null,
+  };
+  const literalTails = [
+    ["double-quoted &&", `${base} "&&"`],
+    ["single-quoted ||", `${base} '||'`],
+    ["escaped &", `${base} \\&`],
+    ["single-quoted ;", `${base} ';'`],
+    ["double-quoted |", `${base} "|"`],
+    ["double-quoted #", `${base} "#"`],
+    ["single-quoted #comment", `${base} '#comment'`],
+    ["double-quoted #comment", `${base} "#comment"`],
+    ["escaped #comment", `${base} \\#comment`],
+    ["mid-word hash", `${base} data/foo#bar.json`],
+    ["empty-quote-prefixed hash", `${base} ""#comment`],
+  ];
+  for (const [label, text] of literalTails) {
+    assert.deepEqual(extractManifestWrapperBindings(text), [expected], `${label} must stay an ordinary data argument`);
+  }
+  // The same literals must not hide a real operator: parsing continues past
+  // them, so a genuine control token after a quoted/escaped `#` still rejects
+  // the binding instead of truncating into a proof.
+  for (const fakeComment of ["'#comment'", "\\#comment", '"#comment"']) {
+    const text = `${base} ${fakeComment} && echo hi`;
+    assert.deepEqual(extractManifestWrapperBindings(text), [], `operator after ${fakeComment} must reject the binding`);
+  }
+}
+
+// Wrapper: a genuine unquoted word-initial `#` after the sentinel is still a
+// real trailing comment boundary, with or without a space after the `#`.
+{
+  const base = `scripts/publish-slickcharts-attempt.sh weekly "$RUNNER_TEMP/w.json" "msg" --manifest-workflow .github/workflows/slickcharts-weekly.yml --manifest-always always_if_exists --`;
+  const expected = {
+    workflow: ".github/workflows/slickcharts-weekly.yml",
+    always: "always_if_exists",
+    data: null,
+  };
+  for (const commented of [`${base} # done`, `${base} #done-without-space`, `${base} #`]) {
+    assert.deepEqual(extractManifestWrapperBindings(commented), [expected], `trailing comment must keep the binding: ${commented}`);
+  }
+}
+
+// Helper: quoted or escaped '#comment' (and foo#bar) after a COMPLETE option
+// stream is an extra argument, not a shell comment — the invocation must fail
+// closed instead of being truncated into a false-green proof. The same holds
+// for quoted standalone controls.
+{
+  for (const extra of ["'#comment'", '"#comment"', String.raw`\#comment`, "foo#bar", "'#'", '"&&"', "'||'", '"&"', "''#comment"]) {
+    const text = `${exactInvocation.trim()} ${extra}`;
+    assert.deepEqual(extractManifestStageInvocations(text), [], `${extra} must not mint an invocation`);
+    const result = gate(text);
+    assert.equal(result.ok, false, `${extra} must fail closed`);
+    assert.ok(result.missing_in_workflow.some(({ shard }) => shard === PUBLISH_OUTCOME));
+  }
+}
+
 // Helper: the shared tokenizer applies the same rule to option values, so an
 // adjacent operator on the stage value is a chained command, never a proof.
 {
