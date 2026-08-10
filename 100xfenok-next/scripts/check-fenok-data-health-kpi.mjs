@@ -1057,7 +1057,7 @@ function canonicalCadenceSubset() {
   };
 }
 
-export function checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context = "deploy" } = {}) {
+export function checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context = "deploy", strict = false } = {}) {
   const runtime = rootDoc?.runtime;
   push(errors, runtime && typeof runtime === "object", "runtime block is required in v2");
   if (!runtime || typeof runtime !== "object") return;
@@ -1186,7 +1186,9 @@ export function checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context 
     const age = ageHoursBetween(producer.built_at, nowIso);
     const ceilingWithBand = CADENCE.hard_max_age_hours + FRESHNESS_TOLERANCE_MINUTES / 60;
     if (age != null && age > ceilingWithBand) {
-      warnings.push(`producer_context.built_at over hard ceiling vs checker clock: ${age.toFixed(2)}h > ${CADENCE.hard_max_age_hours}h (+${FRESHNESS_TOLERANCE_MINUTES}m band)`);
+      const message = `producer_context.built_at over hard ceiling vs checker clock: ${age.toFixed(2)}h > ${CADENCE.hard_max_age_hours}h (+${FRESHNESS_TOLERANCE_MINUTES}m band)`;
+      if (strict) errors.push(message);
+      else warnings.push(message);
     }
   }
 }
@@ -1461,14 +1463,14 @@ export function freshnessReport(rootDoc, nowIso) {
   };
 }
 
-function validateV2({ rootDoc, publicDoc, rootKpiPath, publicKpiPath, nowIso, context }) {
+function validateV2({ rootDoc, publicDoc, rootKpiPath, publicKpiPath, nowIso, context, strict = false }) {
   const errors = [];
   const warnings = [];
   validateCoreShape(rootDoc, errors, SCHEMA_VERSION_V2, warnings);
   // Public mirror keeps the same schema_version + lanes; only runtime is projected.
   validateCoreShape(publicDoc, errors, SCHEMA_VERSION_V2, warnings);
   scanForbiddenTokens(publicKpiPath, errors);
-  checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context });
+  checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context, strict });
   checkFetchCronSourceParity(rootDoc, rootKpiPath, { errors, warnings });
   checkSourceSla(rootDoc, { errors, warnings }, nowIso);
   checkRecoveryStateSources(rootDoc, rootKpiPath, errors);
@@ -1483,10 +1485,11 @@ function main() {
   const rootDoc = readJson(rootKpiPath);
   const publicDoc = readJson(publicKpiPath);
   const context = getArg("--context") ?? "deploy";
+  const strict = process.argv.includes("--strict");
 
   const version = rootDoc?.schema_version;
   const result = version === SCHEMA_VERSION_V2
-    ? validateV2({ rootDoc, publicDoc, rootKpiPath, publicKpiPath, nowIso, context })
+    ? validateV2({ rootDoc, publicDoc, rootKpiPath, publicKpiPath, nowIso, context, strict })
     : validateV1({ rootDoc, publicDoc, publicKpiPath });
 
   for (const warning of result.warnings) console.warn(`::warning:: fenok KPI [warn-only] ${warning}`);

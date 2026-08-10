@@ -5,6 +5,7 @@
 // identity while keeping event_name/observed_at.
 
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -94,9 +95,25 @@ assert.deepEqual(publicGdelt.lanes[0].details.last_attempt, gdelt.last_attempt,
 const shardLanes = ["gdelt_news_tone", "yahoo_batch_quote_history"]
   .map((id) => LANE_REGISTRY.lanes.find((lane) => lane.id === id));
 const committed = loadCommittedDetectionAttemptDetails(shardLanes, { dataRoot: path.join(REPO_ROOT, "data") });
-assert.equal(committed.gdelt_news_tone.last_attempt.outcome, "failed",
-  "committed GDELT shard must produce a failed public attempt outcome");
-assert.equal(committed.gdelt_news_tone.last_attempt.observed_at, "2026-07-31T16:24:24.940Z",
+
+// Expected last attempt is derived from the committed raw shard (no dated
+// literals): fail closed on a missing shard or zero attempts, then mirror the
+// loader's latest-observed_at selection.
+const gdeltShardPath = path.join(
+  REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", "gdelt_news_tone.json");
+const gdeltShard = JSON.parse(fs.readFileSync(gdeltShardPath, "utf8"));
+assert.ok(Array.isArray(gdeltShard?.attempts) && gdeltShard.attempts.length > 0,
+  "committed GDELT shard must exist with at least one attempt (fail closed, not skipped)");
+const expectedGdeltAttempt = [...gdeltShard.attempts]
+  .filter((row) => row && Number.isFinite(Date.parse(row.observed_at)))
+  .sort((a, b) => Date.parse(b.observed_at) - Date.parse(a.observed_at))[0];
+assert.ok(expectedGdeltAttempt,
+  "committed GDELT shard must contain an observed attempt (fail closed, not skipped)");
+const expectedGdeltOutcome =
+  (expectedGdeltAttempt.assertions ?? []).every((a) => a?.passed === true) ? "success" : "failed";
+assert.equal(committed.gdelt_news_tone.last_attempt.outcome, expectedGdeltOutcome,
+  "committed GDELT shard must produce the assertion-derived public attempt outcome");
+assert.equal(committed.gdelt_news_tone.last_attempt.observed_at, expectedGdeltAttempt.observed_at,
   "committed GDELT shard must provide its latest observed_at");
 assert.deepEqual(committed.yahoo_batch_quote_history, missingYahoo,
   "missing Yahoo shard must not fall back to the private recovery index clock");

@@ -4617,18 +4617,21 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   assert.equal(blocked.runtime.fresh, false);
   assert.equal(blocked.runtime.unrecovered_missed_slot_count, 1);
   const blockedErrors = [];
-  checkV2Runtime(v2Doc(runtime), { errors: blockedErrors, warnings: [] }, "2026-07-12T13:00:00.000Z");
-  assert.ok(blockedErrors.some((message) => /lack a later authoritative ready/.test(message)),
-    "unrecovered miss hard-fails the checker");
+  const blockedWarnings = [];
+  checkV2Runtime(v2Doc(runtime), { errors: blockedErrors, warnings: blockedWarnings }, "2026-07-12T13:00:00.000Z");
+  assert.deepEqual(blockedErrors, [], "unrecovered full-snapshot miss is warn-only under 526af4a");
+  assert.ok(blockedWarnings.some((message) => /lack a later authoritative ready/.test(message)
+    && message.includes("deployment_blocking:false")),
+    "the honest degraded warning names the miss and deployment_blocking:false");
   const reconcileErrors = [];
   const reconcileWarnings = [];
   checkV2Runtime(v2Doc(runtime), { errors: reconcileErrors, warnings: reconcileWarnings },
     "2026-07-12T13:00:00.000Z", { context: "reconcile" });
   assert.deepEqual(reconcileErrors, [], "reconcile downgrades only the unrecovered full-snapshot publication block");
   assert.ok(reconcileWarnings.some((message) => message.includes(miss)
-    && message.includes("Publication halted")
-    && message.includes("deployment_blocking:true")),
-    "reconcile warning names the miss and the honestly halted publication state");
+    && message.includes("deployment_blocking:false")
+    && message.includes("lack a later authoritative ready")),
+    "reconcile warning names the miss and the honest degraded publication state");
   const blockedTmp = mkTmp("reconcile-blocked-publication");
   const blockedNow = "2026-07-12T10:51:19.151Z";
   seedReadyV2(blockedTmp, {
@@ -4636,8 +4639,8 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     runtime: structuredClone(runtime),
     sla: readySla(blockedNow),
   });
-  assert.equal(runChecker(blockedTmp, "2026-07-12T13:00:00.000Z", { strict: true, context: "deploy" }).exit, 1,
-    "deploy CLI still refuses the blocked full-snapshot miss");
+  assert.equal(runChecker(blockedTmp, "2026-07-12T13:00:00.000Z", { strict: true, context: "deploy" }).exit, 0,
+    "deploy CLI stays warn-only for the unrecovered full-snapshot miss (526af4a)");
   assert.equal(runChecker(blockedTmp, "2026-07-12T13:00:00.000Z", { strict: true, context: "reconcile" }).exit, 0,
     "reconcile CLI permits committing the honestly blocked KPI");
   ok("satisfied key without a later ready snapshot remains BLOCKED");
@@ -4763,17 +4766,17 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   ok("canonical-looking future satisfied/history evidence cannot launder a missed slot");
 
   const workflow = fs.readFileSync(UPDATE_MANIFEST_WORKFLOW, "utf8");
-  assert.equal((workflow.match(/--context=reconcile/g) ?? []).length, 2,
-    "both initial and retry reconcile checks use the explicit checker context");
-  assert.match(workflow, /publication_gate\.publication_halted/,
-    "workflow reads the committed KPI publication gate before dispatch");
-  assert.match(workflow, /Worker deploy skipped: Publication halted/,
-    "workflow emits a plain skip reason while publication is halted");
-  assert.match(workflow, /steps\.publication\.outputs\.halted == 'false'/,
-    "Worker dispatch requires an open publication gate");
+  assert.equal((workflow.match(/--context=reconcile/g) ?? []).length, 0,
+    "workflow intentionally runs no reconcile-context checker after 526af4a");
+  assert.match(workflow, /check-recovery-deploy-gate\.mjs/,
+    "workflow checks the current recovery-deploy gate before dispatch");
+  assert.match(workflow, /deploy dispatch deferred to the recovery-completion requeue/,
+    "workflow emits the recovery-completion deferral notice while recovery is in flight");
+  assert.match(workflow, /steps\.recovery-gate\.outputs\.skip != 'true'/,
+    "Worker dispatch requires the recovery-deploy gate to remain open");
   assert.match(workflow, /steps\.commit\.outputs\.pushed == 'true'/,
     "Worker dispatch requires a generated-data push from the final retry state");
-  ok("Update Manifest commits honest blocked KPI but skips Worker dispatch while publication is halted");
+  ok("Update Manifest commits honest data and defers Worker dispatch through the recovery-deploy gate");
 
   let retainedRecoveryRuntime = makeProducerRuntime({ builtAt: "2026-07-12T10:51:19.151Z", slotKey: recovery, runId: "retained-recovery" });
   retainedRecoveryRuntime.cadence.v2_activated_at = "2026-07-12T00:00:00.000Z";
