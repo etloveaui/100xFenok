@@ -4,15 +4,20 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { PUBLISH_OUTCOME_SHARD_SCHEMA } from "../lib/publish-outcome-shard.mjs";
 import {
   NON_SCHEDULED_WORKFLOW_INCLUSIONS,
   SCHEDULED_WORKFLOW_EXCLUSIONS,
   CADENCE_STATES,
+  PLANE_PUBLISH_ALARM_REASONS,
+  PLANE_PUBLISH_OUTCOME_BINDINGS,
   assertDeclaredScheduleGraceContracts,
+  attachPublishOutcomeAlarms,
   attachWorkflowCadence,
   buildWorkflowRunsUrl,
   computeFailureStreak,
   deriveFailureStreakThreshold,
+  derivePublishOutcomeProjection,
   deriveWorkflowCadenceProjection,
   deriveWorkflowWatchPolicy,
   QUEUE_EVICTION_INSPECTION_LIMIT,
@@ -39,6 +44,127 @@ const R = (id, event, createdAt) => ({ id, event, conclusion: "success", created
 function writeWorkflow(root, file, source) {
   fs.mkdirSync(root, { recursive: true });
   fs.writeFileSync(path.join(root, file), source);
+}
+
+// Plane publication family names deliberately differ from registry lane ids;
+// SlickCharts has five family shards and EDGAR publishes through edgar_filings.
+assert.deepEqual(
+  Object.entries(PLANE_PUBLISH_OUTCOME_BINDINGS).map(([family, binding]) => [family, binding.lane_id, binding.workflow]),
+  [
+    ["oecd-cli", "oecd_cli", ".github/workflows/fetch-oecd-cli.yml"],
+    ["fred-macro", "fred_macro", ".github/workflows/fetch-fred-macro.yml"],
+    ["defillama-stablecoins", "defillama_stablecoins", ".github/workflows/fetch-defillama.yml"],
+    ["fdic-tier1", "fdic_tier1", ".github/workflows/fetch-fdic.yml"],
+    ["treasury-tga", "treasury_tga", ".github/workflows/fetch-treasury-tga.yml"],
+    ["fred-banking", "fred_banking", ".github/workflows/fetch-fred-banking.yml"],
+    ["fred-yardeni", "fred_yardeni", ".github/workflows/fetch-fred-yardeni.yml"],
+    ["damodaran", "damodaran", ".github/workflows/fetch-damodaran-shadow.yml"],
+    ["sentiment", "sentiment", ".github/workflows/fetch-sentiment.yml"],
+    ["yahoo-ticker-macro", "yahoo_ticker_macro", ".github/workflows/fetch-yahoo-ticker.yml"],
+    ["nasdaq-giw-sox", "nasdaq_giw_sox", ".github/workflows/fetch-nasdaq-giw-sox.yml"],
+    ["slickcharts-daily", "slickcharts", ".github/workflows/slickcharts-daily.yml"],
+    ["slickcharts-weekly", "slickcharts", ".github/workflows/slickcharts-weekly.yml"],
+    ["slickcharts-monthly", "slickcharts", ".github/workflows/slickcharts-monthly.yml"],
+    ["slickcharts-history", "slickcharts", ".github/workflows/slickcharts-history.yml"],
+    ["slickcharts-symbols", "slickcharts", ".github/workflows/slickcharts-symbols.yml"],
+    ["edgar-korean-summaries", "edgar_filings", ".github/workflows/fetch-edgar-filings.yml"],
+  ],
+);
+
+const outcomeShard = (family, records) => ({
+  schema_version: PUBLISH_OUTCOME_SHARD_SCHEMA,
+  family,
+  records,
+});
+const outcomeRecord = (family, result, observed_at) => ({ family, result, observed_at });
+
+{
+  const projection = derivePublishOutcomeProjection({
+    shards: {
+      "fred-macro": outcomeShard("fred-macro", [
+        outcomeRecord("fred-macro", "gate_blocked", "2026-08-10T01:00:00Z"),
+      ]),
+    },
+  });
+  const [gated] = attachPublishOutcomeAlarms([
+    { file: "fetch-fred-macro.yml", status: "ok", alarming: false, alarm_reasons: [] },
+  ], projection);
+  assert.equal(gated.status, "alarm", "latest gate_blocked outcome must page");
+  assert.equal(gated.alarming, true);
+  assert.deepEqual(gated.alarm_reasons, [PLANE_PUBLISH_ALARM_REASONS.gate_blocked]);
+  assert.equal(gated.plane_publish_outcome.result, "gate_blocked");
+}
+
+{
+  const projection = derivePublishOutcomeProjection({
+    shards: {
+      "fred-macro": outcomeShard("fred-macro", [
+        outcomeRecord("fred-macro", "gate_blocked", "2026-08-10T01:00:00Z"),
+        outcomeRecord("fred-macro", "published", "2026-08-10T02:00:00Z"),
+      ]),
+    },
+  });
+  const [published] = attachPublishOutcomeAlarms([
+    {
+      file: "fetch-fred-macro.yml",
+      status: "alarm",
+      alarming: true,
+      alarm_reasons: ["failure_streak", PLANE_PUBLISH_ALARM_REASONS.gate_blocked],
+    },
+  ], projection);
+  assert.equal(published.plane_publish_outcome.result, "published");
+  assert.equal(published.status, "alarm", "published must not clear canonical failure alarms");
+  assert.deepEqual(published.alarm_reasons, ["failure_streak"], "published clears only plane reasons");
+}
+
+{
+  const projection = derivePublishOutcomeProjection({
+    shards: {
+      sentiment: outcomeShard("sentiment", [
+        outcomeRecord("sentiment", "failed", "2026-08-10T03:00:00Z"),
+      ]),
+    },
+  });
+  const [failed] = attachPublishOutcomeAlarms([
+    { file: "fetch-sentiment.yml", status: "ok", alarming: false, alarm_reasons: [] },
+  ], projection);
+  assert.equal(failed.status, "alarm");
+  assert.deepEqual(failed.alarm_reasons, [PLANE_PUBLISH_ALARM_REASONS.failed]);
+}
+
+{
+  const malformed = derivePublishOutcomeProjection({
+    shards: {
+      "fred-macro": outcomeShard("fred-macro", [
+        { family: "fred-macro", result: "gate_blocked" },
+      ]),
+    },
+  });
+  const [unchanged] = attachPublishOutcomeAlarms([
+    { file: "fetch-fred-macro.yml", status: "ok", alarming: false, alarm_reasons: [] },
+  ], malformed);
+  assert.equal(unchanged.status, "ok", "malformed shard must not invent an alarm");
+  assert.deepEqual(unchanged.alarm_reasons, []);
+}
+
+{
+  // A shard carrying any other schema_version (or a legacy shape) is not a
+  // publish-outcome shard: no projection, no invented alarm.
+  const wrongSchema = derivePublishOutcomeProjection({
+    shards: {
+      "fred-macro": {
+        schema_version: "data-supply-publish-outcome-shard/v1",
+        family: "fred-macro",
+        records: [outcomeRecord("fred-macro", "gate_blocked", "2026-08-10T01:00:00Z")],
+      },
+    },
+  });
+  assert.equal(wrongSchema.size, 0, "wrong schema_version must yield no projection");
+  const [unchanged] = attachPublishOutcomeAlarms([
+    { file: "fetch-fred-macro.yml", status: "ok", alarming: false, alarm_reasons: [] },
+  ], wrongSchema);
+  assert.equal(unchanged.status, "ok", "wrong schema_version must not invent an alarm");
+  assert.deepEqual(unchanged.alarm_reasons, []);
 }
 
 // Runs from pull requests must not enter the production streak for the
@@ -856,7 +982,7 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
   const result = JSON.parse(fs.readFileSync(resultPath, "utf8"));
   assert.equal(result.status, "unknown", "missing repository reports unknown status");
   assert.ok(!("issueBody" in result), "unknown status must not produce an alarm issue body");
-  assert.equal(result.watched.length, 33, "the first cadence dry run covers the current 33 watched workflows");
+  assert.equal(result.watched.length, 34, "the first cadence dry run covers the current 34 watched workflows");
   assert.equal(result.workflows.length, result.watched.length, "the first cadence dry run emits one classified row per watched workflow");
   assert.deepEqual(Object.keys(result.cadence_state_counts), CADENCE_STATES);
   assert.equal(

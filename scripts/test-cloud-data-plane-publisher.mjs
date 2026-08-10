@@ -9,7 +9,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { mkdtemp, mkdir, rm, writeFile, readFile } from "node:fs/promises";
-import { statSync } from "node:fs";
+import { mkdtempSync, statSync } from "node:fs";
 import http from "node:http";
 import os from "node:os";
 import path from "node:path";
@@ -28,6 +28,7 @@ import { createRemoteCoordinatorNamespace } from "./lib/cloud-data-plane-remote-
 import {
   assertPublishReceiptId,
   buildFamilyManifest,
+  canRecordPublishOutcome,
   chaosExpectedPointerSequence,
   chaosPointerStore,
   classifyResultLine,
@@ -38,11 +39,20 @@ import {
   executeRetentionPlan,
   FAMILIES,
   listR2ObjectsDetailed,
+  recordPublishOutcome,
   resolveExpectedPointerSequence,
   RETENTION_PROTECTED_KEYS,
   rollbackLiveGeneration,
   verifyGenerationParity,
 } from "./publish-cloud-data-generation.mjs";
+import {
+  appendPublishOutcome,
+  buildPublishOutcomeRecord,
+  PUBLISH_OUTCOME_RESULTS,
+  PUBLISH_OUTCOME_SHARD_SCHEMA,
+  publishOutcomeShardPath,
+  validatePublishOutcomeShard,
+} from "./lib/publish-outcome-shard.mjs";
 
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const PUBLISH_SCRIPT = path.join(REPO_ROOT, "scripts", "publish-cloud-data-generation.mjs");
@@ -1505,11 +1515,17 @@ await rm(retentionRoot, { recursive: true, force: true });
 
 // --- gate-blocked behaviour through the real CLI (offline) -------------------
 
-function runCli(extraArgs, includeFamily = true) {
+function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   const env = { ...process.env };
   delete env.CLOUDFLARE_API_TOKEN; // the gate fails closed without a token — offline by design
   delete env.DATA_PLANE_ENDPOINT;
   delete env.DATA_PLANE_WRITE_KEY;
+  // Every CLI run redirects publish-outcome evidence into its own throwaway
+  // root so tests never touch the repo's real data/admin/data-supply-state
+  // directory (the contract's evidence is written only by real publishes).
+  const outcomesRoot = mkdtempSync(path.join(os.tmpdir(), "publish-outcomes-cli-"));
+  env.PUBLISH_OUTCOMES_ROOT = outcomesRoot;
+  Object.assign(env, extraEnv);
   const argv = [PUBLISH_SCRIPT, ...(includeFamily ? ["--family=oecd-cli"] : []), ...extraArgs];
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, argv, {
@@ -1526,6 +1542,7 @@ function runCli(extraArgs, includeFamily = true) {
       code,
       stdout: Buffer.concat(stdoutChunks).toString("utf8"),
       stderr: Buffer.concat(stderrChunks).toString("utf8"),
+      outcomesRoot,
     }));
   });
 }
@@ -1603,6 +1620,203 @@ function runCli(extraArgs, includeFamily = true) {
   assert.match(retentionChaos.stderr, /ARGS_INVALID/);
   console.log("retention CLI flags ok (bucket-level, gate-first offline, dry-run default, ARGS_INVALID validation)");
   console.log("gate-blocked behaviour ok (tolerate -> typed line exit 0; strict -> exit 3)");
+}
+
+// --- publish-outcome evidence shard via the real CLI (offline) --------------
+// The publisher appends one record per REAL publish outcome to
+// data/admin/data-supply-state/publish-outcomes/<family>.json; dry-run,
+// rollback and bucket-level retention write nothing. Each runCli invocation
+// redirects PUBLISH_OUTCOMES_ROOT to a fresh temp dir (see runCli).
+{
+  // dry-run: exit 0, typed summary, and NO shard is written.
+  const dry = await runCli(["--dry-run"]);
+  assert.equal(dry.code, 0, dry.stderr);
+  assert.equal(JSON.parse(dry.stdout.trim()).result, "dry_run");
+  await assert.rejects(
+    readFile(publishOutcomeShardPath(dry.outcomesRoot, "oecd-cli"), "utf8"),
+    { code: "ENOENT" },
+  );
+
+  // gate_blocked with --tolerate-gate-block: exit 0, the summary carries the
+  // shard status, and exactly one gate_blocked record lands in the shard.
+  const tolerated = await runCli(["--tolerate-gate-block"]);
+  assert.equal(tolerated.code, 0, tolerated.stderr);
+  const toleratedSummary = JSON.parse(tolerated.stdout.trim());
+  assert.equal(toleratedSummary.result, "gate_blocked");
+  assert.deepEqual(toleratedSummary.outcome_shard, { ok: true });
+  const toleratedPath = publishOutcomeShardPath(tolerated.outcomesRoot, "oecd-cli");
+  const toleratedShard = JSON.parse(await readFile(toleratedPath, "utf8"));
+  assert.equal(toleratedShard.schema_version, PUBLISH_OUTCOME_SHARD_SCHEMA);
+  assert.equal(toleratedShard.family, "oecd-cli");
+  assert.equal(toleratedShard.records.length, 1);
+  const toleratedRecord = toleratedShard.records[0];
+  assert.equal(toleratedRecord.result, "gate_blocked");
+  assert.equal(toleratedRecord.family, "oecd-cli");
+  assert.match(toleratedRecord.generation_id, /^oecd-cli-[0-9a-f]{16}$/);
+  assert.equal(toleratedRecord.receipt_id, null);
+  assert.equal(toleratedRecord.pointer_before, null);
+  assert.equal(toleratedRecord.pointer_after, null);
+  assert.equal(toleratedRecord.gate_before, "blocked");
+  assert.equal(toleratedRecord.gate_after, null);
+  assert.match(toleratedRecord.observed_at, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+  assert.match(toleratedRecord.source_as_of, /^\d{4}-\d{2}-\d{2}$/);
+  validatePublishOutcomeShard(toleratedShard, "oecd-cli");
+
+  // strict gate block: exit 3 AND the failed outcome is still recorded, so
+  // the alarm side can see it even though the lane run itself failed.
+  const refused = await runCli([]);
+  assert.equal(refused.code, 3);
+  const refusedShard = JSON.parse(await readFile(publishOutcomeShardPath(refused.outcomesRoot, "oecd-cli"), "utf8"));
+  assert.equal(refusedShard.records.length, 1);
+  assert.equal(refusedShard.records[0].result, "gate_blocked");
+  assert.equal(refusedShard.records[0].gate_before, "blocked");
+
+  // rollback is not a publish outcome: no family shard is created.
+  const rollback = await runCli(["--rollback", "--tolerate-gate-block"]);
+  assert.equal(rollback.code, 0, rollback.stderr);
+  assert.equal(JSON.parse(rollback.stdout.trim()).result, "gate_blocked");
+  await assert.rejects(
+    readFile(publishOutcomeShardPath(rollback.outcomesRoot, "oecd-cli"), "utf8"),
+    { code: "ENOENT" },
+  );
+
+  // retention is bucket-level (no family): it must not create a family shard.
+  const retention = await runCli(["--retention", "--tolerate-gate-block"], false);
+  assert.equal(retention.code, 0, retention.stderr);
+  await assert.rejects(
+    readFile(publishOutcomeShardPath(retention.outcomesRoot, "oecd-cli"), "utf8"),
+    { code: "ENOENT" },
+  );
+
+  // Chaos-drill modes are never publish outcomes: a chaos run that hits the
+  // gate must not write a shard on ANY path — tolerated (exit 0, summary
+  // emitted) or strict (exit 3) alike.
+  const chaosTolerated = await runCli(["--chaos=stale-sequence", "--tolerate-gate-block"]);
+  assert.equal(chaosTolerated.code, 0, chaosTolerated.stderr);
+  assert.equal(JSON.parse(chaosTolerated.stdout.trim()).result, "gate_blocked");
+  await assert.rejects(
+    readFile(publishOutcomeShardPath(chaosTolerated.outcomesRoot, "oecd-cli"), "utf8"),
+    { code: "ENOENT" },
+  );
+  const chaosStrict = await runCli(["--chaos=stale-sequence"]);
+  assert.equal(chaosStrict.code, 3);
+  assert.equal(chaosStrict.stdout.trim(), "");
+  await assert.rejects(
+    readFile(publishOutcomeShardPath(chaosStrict.outcomesRoot, "oecd-cli"), "utf8"),
+    { code: "ENOENT" },
+  );
+  console.log("publish-outcome shard via CLI ok (dry-run/rollback/retention/chaos no-write; gate_blocked tolerate/strict recorded for real publishes)");
+}
+
+// --- publish-outcome record writer (unit: success/failure/resume coverage) --
+{
+  assert.deepEqual([...PUBLISH_OUTCOME_RESULTS], ["published", "resumed", "gate_blocked", "failed"]);
+
+  // The no-write decision is a pure function: only real publish runs record.
+  // Both chaos-drill modes are excluded on every path — gate-blocked and
+  // thrown-failure paths share this same guard.
+  assert.equal(canRecordPublishOutcome({ dryRun: false, rollback: false, chaos: null }), true);
+  assert.equal(canRecordPublishOutcome({ dryRun: true, rollback: false, chaos: null }), false);
+  assert.equal(canRecordPublishOutcome({ dryRun: false, rollback: true, chaos: null }), false);
+  assert.equal(canRecordPublishOutcome({ dryRun: false, rollback: false, chaos: "stale-sequence" }), false);
+  assert.equal(canRecordPublishOutcome({ dryRun: false, rollback: false, chaos: "abort-after-prepare" }), false);
+  assert.equal(canRecordPublishOutcome({ dryRun: true, rollback: true, chaos: "stale-sequence" }), false);
+
+  const root = mkdtempSync(path.join(os.tmpdir(), "publish-outcome-unit-"));
+
+  // A successful publish records published with the full run context.
+  const successState = {
+    generationId: "oecd-cli-0123456789abcdef",
+    receiptId: "publish-0-0123456789abcdef0123456789abcdef",
+    pointerBefore: 0,
+    pointerAfter: 1,
+    gateBefore: "ok",
+    gateAfter: "ok",
+    sourceAsOf: "2026-08-09",
+  };
+  const recorded = await recordPublishOutcome({
+    family: "oecd-cli",
+    result: "published",
+    state: successState,
+    outcomesRoot: root,
+  });
+  assert.equal(recorded.ok, true);
+  const shardPath = publishOutcomeShardPath(root, "oecd-cli");
+  const shard = JSON.parse(await readFile(shardPath, "utf8"));
+  validatePublishOutcomeShard(shard, "oecd-cli");
+  assert.equal(shard.records.length, 1);
+  assert.deepEqual(shard.records[0], buildPublishOutcomeRecord({
+    family: "oecd-cli",
+    result: "published",
+    ...successState,
+    observedAt: shard.records[0].observed_at,
+  }));
+
+  // A failed attempt records failed with whatever context exists (nulls).
+  const failed = await recordPublishOutcome({ family: "oecd-cli", result: "failed", state: {}, outcomesRoot: root });
+  assert.equal(failed.ok, true);
+  const merged = JSON.parse(await readFile(shardPath, "utf8"));
+  assert.equal(merged.records.length, 2);
+  assert.equal(merged.records[0].result, "published");
+  assert.equal(merged.records[1].result, "failed");
+  assert.equal(merged.records[1].generation_id, null);
+  assert.equal(merged.records[1].receipt_id, null);
+  assert.equal(merged.records[1].pointer_before, null);
+  assert.equal(merged.records[1].gate_before, null);
+  assert.equal(merged.records[1].source_as_of, null);
+  assert.ok(merged.records[1].observed_at >= merged.records[0].observed_at);
+
+  // resumed (idempotent republish) is a publish outcome too.
+  const resumed = await recordPublishOutcome({
+    family: "oecd-cli",
+    result: "resumed",
+    state: { ...successState, pointerAfter: 1 },
+    outcomesRoot: root,
+  });
+  assert.equal(resumed.ok, true);
+  const resumedShard = JSON.parse(await readFile(shardPath, "utf8"));
+  assert.equal(resumedShard.records.at(-1).result, "resumed");
+
+  // A failing shard write is non-blocking: {ok:false}, never throws.
+  const blockedRoot = mkdtempSync(path.join(os.tmpdir(), "publish-outcome-blocked-"));
+  const rootAsFile = path.join(blockedRoot, "shard-root");
+  await writeFile(rootAsFile, "not a directory");
+  const blocked = await recordPublishOutcome({
+    family: "oecd-cli",
+    result: "failed",
+    state: {},
+    outcomesRoot: rootAsFile,
+  });
+  assert.equal(blocked.ok, false);
+  assert.ok(blocked.error instanceof Error);
+
+  // Record validation: bad family/result/observed_at/pointer/gate are
+  // rejected loudly rather than silently persisted.
+  assert.throws(() => buildPublishOutcomeRecord({ family: "Bad Family", result: "published" }), /invalid publish-outcome family/);
+  assert.throws(() => buildPublishOutcomeRecord({ family: "oecd-cli", result: "bogus" }), /invalid publish-outcome result/);
+  assert.throws(() => buildPublishOutcomeRecord({ family: "oecd-cli", result: "failed", observedAt: "not-a-date" }), /observed_at/);
+  assert.throws(() => buildPublishOutcomeRecord({ family: "oecd-cli", result: "published", pointerBefore: -1 }), /pointer_before/);
+  assert.throws(() => buildPublishOutcomeRecord({ family: "oecd-cli", result: "published", gateBefore: "maybe" }), /gate_before/);
+
+  // Merging refuses a corrupt or mismatched existing shard (evidence is
+  // never overwritten) — the publisher turns this into {ok:false}.
+  const corruptPath = publishOutcomeShardPath(root, "fred-macro");
+  await writeFile(corruptPath, "{not json");
+  await assert.rejects(
+    appendPublishOutcome({ outcomesRoot: root, family: "fred-macro", record: buildPublishOutcomeRecord({ family: "fred-macro", result: "failed" }) }),
+    SyntaxError,
+  );
+  const wrongFamilyPath = publishOutcomeShardPath(root, "sentiment");
+  await writeFile(wrongFamilyPath, JSON.stringify({
+    schema_version: PUBLISH_OUTCOME_SHARD_SCHEMA,
+    family: "oecd-cli",
+    records: [],
+  }));
+  await assert.rejects(
+    appendPublishOutcome({ outcomesRoot: root, family: "sentiment", record: buildPublishOutcomeRecord({ family: "sentiment", result: "failed" }) }),
+    /does not match/,
+  );
+  console.log("publish-outcome recorder ok (no-write decision; published/failed/resumed records; merge append; non-blocking write failure; validation)");
 }
 
 // --- result vocabulary: known outcomes are healthy, anything else is a bug ---

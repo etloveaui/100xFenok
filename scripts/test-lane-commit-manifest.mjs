@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   LANE_REGISTRY,
+  PLANE_PUBLISH_OUTCOME_BINDINGS,
   registryDigest,
   validateLaneRegistry,
 } from "./lib/lane-registry.mjs";
@@ -27,10 +28,22 @@ assert.equal(manifest.registry_schema, LANE_REGISTRY.schema_version);
 assert.equal(manifest.registry_digest, registryDigest());
 assert.equal(validateLaneCommitManifest(manifest, { registry: LANE_REGISTRY }), true);
 
+for (const [family, binding] of Object.entries(PLANE_PUBLISH_OUTCOME_BINDINGS)) {
+  const workflow = manifest.workflows[binding.workflow];
+  assert.ok(workflow, `${family} publish outcome owner workflow must be declared`);
+  assert.ok(
+    workflow.stages.always_if_exists.some(
+      (entry) => entry.path === `data/admin/data-supply-state/publish-outcomes/${family}.json`,
+    ),
+    `${family} publish outcome shard must be staged by ${binding.workflow}`,
+  );
+}
+
 const defillama = manifest.workflows[".github/workflows/fetch-defillama.yml"];
 assert.deepEqual(defillama.lanes, ["defillama_stablecoins"]);
 assert.deepEqual(defillama.stages.always_if_exists.map((entry) => entry.path), [
   "data/admin/data-supply-state/detection-attempts/defillama_stablecoins.json",
+  "data/admin/data-supply-state/publish-outcomes/defillama-stablecoins.json",
   "data/admin/defillama_stablecoins/index.json",
   "data/admin/defillama_stablecoins/lkg/stablecoins.json",
 ]);
@@ -49,6 +62,11 @@ assert.deepEqual(yahooTicker.stages.always_if_exists, [
     required: false,
   },
   {
+    kind: "file",
+    path: "data/admin/data-supply-state/publish-outcomes/yahoo-ticker-macro.json",
+    required: false,
+  },
+  {
     kind: "directory",
     path: "data/admin/yahoo-hourly-ticker",
     required: false,
@@ -64,6 +82,7 @@ const treasuryTga = manifest.workflows[".github/workflows/fetch-treasury-tga.yml
 assert.deepEqual(treasuryTga.lanes, ["treasury_tga"]);
 assert.deepEqual(treasuryTga.stages.always_if_exists.map((entry) => entry.path), [
   "data/admin/data-supply-state/detection-attempts/treasury_tga.json",
+  "data/admin/data-supply-state/publish-outcomes/treasury-tga.json",
   "data/admin/treasury_tga/index.json",
   "data/admin/treasury_tga/lkg/tga.json",
 ]);
@@ -76,6 +95,7 @@ const fredMacro = manifest.workflows[".github/workflows/fetch-fred-macro.yml"];
 assert.deepEqual(fredMacro.lanes, ["fred_macro"]);
 assert.deepEqual(fredMacro.stages.always_if_exists.map((entry) => entry.path), [
   "data/admin/data-supply-state/detection-attempts/fred_macro.json",
+  "data/admin/data-supply-state/publish-outcomes/fred-macro.json",
   "data/admin/fred_macro/index.json",
   "data/admin/fred_macro/lkg/fred_macro.json",
 ]);
@@ -88,6 +108,7 @@ const fredBanking = manifest.workflows[".github/workflows/fetch-fred-banking.yml
 assert.deepEqual(fredBanking.lanes, ["fred_banking"]);
 assert.deepEqual(fredBanking.stages.always_if_exists.map((entry) => entry.path), [
   "data/admin/data-supply-state/detection-attempts/fred_banking.json",
+  "data/admin/data-supply-state/publish-outcomes/fred-banking.json",
   "data/admin/fred_banking/index.json",
   "data/admin/fred_banking/lkg/daily.json",
   "data/admin/fred_banking/lkg/weekly.json",
@@ -106,6 +127,7 @@ const nasdaqGiwSox = manifest.workflows[".github/workflows/fetch-nasdaq-giw-sox.
 assert.deepEqual(nasdaqGiwSox.lanes, ["nasdaq_giw_sox"]);
 assert.deepEqual(nasdaqGiwSox.stages.always_if_exists.map((entry) => entry.path), [
   "data/admin/data-supply-state/detection-attempts/nasdaq_giw_sox.json",
+  "data/admin/data-supply-state/publish-outcomes/nasdaq-giw-sox.json",
   "data/admin/nasdaq_giw_sox/index.json",
   "data/admin/nasdaq_giw_sox/lkg/constituents.json",
   "data/admin/nasdaq_giw_sox/history/constituents.json",
@@ -140,6 +162,11 @@ assert.deepEqual(sentiment.stages.always_if_exists, [
   {
     kind: "file",
     path: "data/admin/data-supply-state/detection-attempts/sentiment.json",
+    required: false,
+  },
+  {
+    kind: "file",
+    path: "data/admin/data-supply-state/publish-outcomes/sentiment.json",
     required: false,
   },
   {
@@ -255,6 +282,7 @@ const fredYardeni = manifest.workflows[".github/workflows/fetch-fred-yardeni.yml
 assert.deepEqual(fredYardeni.lanes, ["fred_yardeni"]);
 assert.deepEqual(fredYardeni.stages.always_if_exists, [
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/fred_yardeni.json", required: false },
+  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/fred-yardeni.json", required: false },
   { kind: "file", path: "data/admin/fred_yardeni/index.json", required: false },
   { kind: "file", path: "data/admin/fred_yardeni/current/yardney_model.json", required: false },
   { kind: "file", path: "data/admin/fred_yardeni/lkg/yardney_model.json", required: false },
@@ -268,6 +296,7 @@ const edgarFilings = manifest.workflows[".github/workflows/fetch-edgar-filings.y
 assert.deepEqual(edgarFilings.lanes, ["edgar_filings"]);
 assert.deepEqual(edgarFilings.stages.always_if_exists, [
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/edgar_filings.json", required: false },
+  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/edgar-korean-summaries.json", required: false },
   { kind: "file", path: "data/admin/edgar_filings/index.json", required: false },
   { kind: "file", path: "data/admin/edgar_filings/current/edgar_filings.json", required: false },
   { kind: "file", path: "data/admin/edgar_filings/lkg/edgar_filings.json", required: false },
@@ -283,6 +312,7 @@ const fdicTier1 = manifest.workflows[".github/workflows/fetch-fdic.yml"];
 assert.deepEqual(fdicTier1.lanes, ["fdic_tier1"]);
 assert.deepEqual(fdicTier1.stages.always_if_exists, [
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/fdic_tier1.json", required: false },
+  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/fdic-tier1.json", required: false },
   { kind: "file", path: "data/admin/fdic_tier1/index.json", required: false },
   { kind: "file", path: "data/admin/fdic_tier1/lkg/fdic_tier1.json", required: false },
 ]);
@@ -295,6 +325,7 @@ const slickchartsDaily = manifest.workflows[".github/workflows/slickcharts-daily
 assert.deepEqual(slickchartsDaily.lanes, ["slickcharts"]);
 assert.deepEqual(slickchartsDaily.stages.always_if_exists, [
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/slickcharts.json", required: false },
+  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/slickcharts-daily.json", required: false },
   { kind: "directory", path: "data/admin/slickcharts-daily-delivery", required: false },
   { kind: "directory", path: "data/admin/slickcharts-composite-recovery", required: false },
 ]);
@@ -311,6 +342,7 @@ const slickchartsWeekly = manifest.workflows[".github/workflows/slickcharts-week
 assert.deepEqual(slickchartsWeekly.lanes, ["slickcharts"]);
 assert.deepEqual(slickchartsWeekly.stages.always_if_exists, [
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/slickcharts.json", required: false },
+  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/slickcharts-weekly.json", required: false },
   { kind: "directory", path: "data/admin/slickcharts-composite-recovery", required: false },
 ]);
 assert.deepEqual(slickchartsWeekly.stages.success_if_exists, [
@@ -325,6 +357,7 @@ const slickchartsSymbols = manifest.workflows[".github/workflows/slickcharts-sym
 assert.deepEqual(slickchartsSymbols.lanes, ["slickcharts"]);
 assert.deepEqual(slickchartsSymbols.stages.always_if_exists, [
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/slickcharts.json", required: false },
+  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/slickcharts-symbols.json", required: false },
   { kind: "directory", path: "data/admin/slickcharts-composite-recovery", required: false },
 ]);
 assert.deepEqual(slickchartsSymbols.stages.success_if_exists, [
@@ -336,6 +369,7 @@ const slickchartsMonthly = manifest.workflows[".github/workflows/slickcharts-mon
 assert.deepEqual(slickchartsMonthly.lanes, ["slickcharts"]);
 assert.deepEqual(slickchartsMonthly.stages.always_if_exists, [
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/slickcharts.json", required: false },
+  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/slickcharts-monthly.json", required: false },
   { kind: "directory", path: "data/admin/slickcharts-composite-recovery", required: false },
 ]);
 assert.deepEqual(slickchartsMonthly.stages.success_if_exists, [
@@ -368,6 +402,7 @@ const slickchartsHistory = manifest.workflows[".github/workflows/slickcharts-his
 assert.deepEqual(slickchartsHistory.lanes, ["slickcharts"]);
 assert.deepEqual(slickchartsHistory.stages.always_if_exists, [
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/slickcharts.json", required: false },
+  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/slickcharts-history.json", required: false },
   { kind: "directory", path: "data/admin/slickcharts-composite-recovery", required: false },
 ]);
 assert.deepEqual(slickchartsHistory.stages.success_if_exists, [

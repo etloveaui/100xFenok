@@ -5,6 +5,10 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "../lib/data-supply-detection-config.mjs";
 import { TRACKED_CRONS } from "../lib/kpi-contract-constants.mjs";
 import { classifyRuntimeSlots } from "../lib/kpi-runtime-slots.mjs";
+import { PLANE_PUBLISH_OUTCOME_BINDINGS } from "../lib/lane-registry.mjs";
+import { PUBLISH_OUTCOME_SHARD_SCHEMA } from "../lib/publish-outcome-shard.mjs";
+
+export { PLANE_PUBLISH_OUTCOME_BINDINGS };
 
 const GITHUB_API = "https://api.github.com";
 const RUNS_PER_PAGE = 15;
@@ -19,7 +23,13 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 const WORKFLOWS_DIR = path.join(REPO_ROOT, ".github", "workflows");
 const DETECTION_CALENDARS_PATH = path.join(REPO_ROOT, "scripts", "lib", "data-supply-detection-calendars.json");
 const KPI_PATH = path.join(REPO_ROOT, "data", "admin", "fenok-data-health-kpi.json");
+export const PUBLISH_OUTCOME_ROOT = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "publish-outcomes");
 export const CADENCE_STATES = Object.freeze(["not_due", "overdue", "recovered", "no_declaration", "unknown"]);
+export const PLANE_PUBLISH_ALARM_REASONS = Object.freeze({
+  gate_blocked: "plane_publish_gate_blocked",
+  failed: "plane_publish_failed",
+});
+const PLANE_PUBLISH_SUCCESS_RESULTS = new Set(["published", "resumed"]);
 
 // Every exception is a declared policy entry, not an invisible parser escape.
 // Validation below fails closed if an exclusion stops being scheduled or if an
@@ -212,6 +222,128 @@ function readJsonOrNull(filePath) {
   } catch {
     return null;
   }
+}
+
+function publishOutcomeRecords(shard) {
+  if (!shard || typeof shard !== "object" || Array.isArray(shard)) return null;
+  // Only the writer's canonical schema is readable. A different, missing or
+  // legacy schema_version must yield no projection: the alarm must never
+  // reason about shapes the writer does not produce (no invented alarms).
+  if (shard.schema_version !== PUBLISH_OUTCOME_SHARD_SCHEMA) return null;
+  if (Array.isArray(shard.records)) return shard.records;
+  return null;
+}
+
+function validPublishOutcomeRecord(record, shard, family) {
+  if (!record || typeof record !== "object" || Array.isArray(record)) return false;
+  const familyValues = [shard.family, shard.lane_id, record.family, record.lane_id]
+    .filter((value) => value !== undefined && value !== null);
+  return familyValues.length > 0
+    && familyValues.every((value) => value === family)
+    && typeof record.result === "string"
+    && record.result.trim() !== ""
+    && typeof record.observed_at === "string"
+    && Number.isFinite(Date.parse(record.observed_at));
+}
+
+/**
+ * Read the newest valid outcome from one per-family shard. A missing or
+ * malformed shard returns null so the existing workflow alarm stays the sole
+ * source of truth for that evaluation.
+ */
+export function latestPublishOutcomeFromShard(shard, family) {
+  if (typeof family !== "string" || family.length === 0) return null;
+  const records = publishOutcomeRecords(shard);
+  if (!records || records.length === 0) return null;
+  if (!records.every((record) => validPublishOutcomeRecord(record, shard, family))) return null;
+  return records.reduce((latest, record) => {
+    if (!latest) return record;
+    const latestAt = Date.parse(latest.observed_at);
+    const recordAt = Date.parse(record.observed_at);
+    return recordAt >= latestAt ? record : latest;
+  }, null);
+}
+
+function shardForFamily(shards, family) {
+  if (shards instanceof Map) return shards.get(family) ?? null;
+  return shards && typeof shards === "object" ? shards[family] ?? null : null;
+}
+
+/**
+ * Join family-named outcome shards to the workflow files that own their
+ * publication. The returned Map is intentionally pure/testable and contains
+ * only valid latest records.
+ */
+export function derivePublishOutcomeProjection({
+  shards = {},
+  bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
+} = {}) {
+  const projection = new Map();
+  for (const [family, binding] of Object.entries(bindings ?? {})) {
+    const latest = latestPublishOutcomeFromShard(shardForFamily(shards, family), family);
+    if (!latest || !binding || typeof binding.workflow !== "string") continue;
+    projection.set(path.basename(binding.workflow), {
+      ...latest,
+      family,
+      lane_id: binding.lane_id,
+      workflow: binding.workflow,
+    });
+  }
+  return projection;
+}
+
+export function readPublishOutcomeProjection({
+  root = PUBLISH_OUTCOME_ROOT,
+  bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
+} = {}) {
+  const shards = {};
+  for (const family of Object.keys(bindings ?? {})) {
+    shards[family] = readJsonOrNull(path.join(root, `${family}.json`));
+  }
+  return derivePublishOutcomeProjection({ shards, bindings });
+}
+
+function projectedOutcomeForWorkflow(projection, workflowFile) {
+  if (projection instanceof Map) return projection.get(workflowFile) ?? null;
+  return projection && typeof projection === "object" ? projection[workflowFile] ?? null : null;
+}
+
+/**
+ * Add the latest plane publication assertion to the existing workflow alarm
+ * result. A successful publish removes only the two additive plane reasons;
+ * all canonical failure, schedule, and cadence reasons remain untouched.
+ */
+export function attachPublishOutcomeAlarms(workflows, projection) {
+  if (!Array.isArray(workflows)) return workflows;
+  return workflows.map((workflow) => {
+    const outcome = projectedOutcomeForWorkflow(projection, workflow?.file);
+    const alarmReasons = Array.isArray(workflow?.alarm_reasons)
+      ? [...new Set(workflow.alarm_reasons)]
+      : [];
+    const planeReasons = new Set(Object.values(PLANE_PUBLISH_ALARM_REASONS));
+    if (outcome?.result === "gate_blocked") {
+      alarmReasons.splice(0, alarmReasons.length, ...alarmReasons.filter((reason) => reason !== PLANE_PUBLISH_ALARM_REASONS.failed));
+      if (!alarmReasons.includes(PLANE_PUBLISH_ALARM_REASONS.gate_blocked)) {
+        alarmReasons.push(PLANE_PUBLISH_ALARM_REASONS.gate_blocked);
+      }
+    } else if (outcome?.result === "failed") {
+      alarmReasons.splice(0, alarmReasons.length, ...alarmReasons.filter((reason) => reason !== PLANE_PUBLISH_ALARM_REASONS.gate_blocked));
+      if (!alarmReasons.includes(PLANE_PUBLISH_ALARM_REASONS.failed)) {
+        alarmReasons.push(PLANE_PUBLISH_ALARM_REASONS.failed);
+      }
+    } else if (PLANE_PUBLISH_SUCCESS_RESULTS.has(outcome?.result)) {
+      alarmReasons.splice(0, alarmReasons.length, ...alarmReasons.filter((reason) => !planeReasons.has(reason)));
+    }
+    const planeAlarm = outcome?.result === "gate_blocked" || outcome?.result === "failed";
+    const alarming = workflow?.alarming === true || planeAlarm;
+    return {
+      ...workflow,
+      ...(outcome ? { plane_publish_outcome: outcome } : {}),
+      status: alarming ? "alarm" : workflow.status,
+      alarming,
+      alarm_reasons: alarmReasons,
+    };
+  });
 }
 
 function workflowFileFromDeclaration(workflow) {
@@ -707,6 +839,12 @@ function buildIssueBody(alarms) {
     if (reasons.includes("unrecovered_overdue")) {
       lines.push("- Declared cadence remains overdue after its documented grace.");
     }
+    if (reasons.includes(PLANE_PUBLISH_ALARM_REASONS.gate_blocked)) {
+      lines.push("- Plane publication was blocked by the cost gate.");
+    }
+    if (reasons.includes(PLANE_PUBLISH_ALARM_REASONS.failed)) {
+      lines.push("- Plane publication failed after the workflow completed.");
+    }
     if (reasons.includes("failure_streak")) {
       lines.push(`- Consecutive failures: ${alarm.streak}`);
       lines.push(`- Paging threshold: ${alarm.failure_streak_threshold}`);
@@ -816,6 +954,7 @@ export async function main() {
   const policy = deriveWorkflowWatchPolicy();
   const calendars = readJsonOrNull(DETECTION_CALENDARS_PATH);
   const kpi = readJsonOrNull(KPI_PATH);
+  const publishOutcomeProjection = readPublishOutcomeProjection();
   const cadenceProjection = deriveWorkflowCadenceProjection({
     watched: policy.watched,
     coverage: kpi?.runtime?.fetch_cron_skip_detection ?? null,
@@ -842,15 +981,18 @@ export async function main() {
       ...base,
       status: "unknown",
       message: "GITHUB_REPOSITORY is not set (expected owner/repo).",
-      workflows: attachWorkflowCadence(
-        policy.watched.map((workflow) => ({
-          file: workflow.file,
-          label: workflow.label,
-          events: workflow.events,
-          status: "unknown",
-          message: "GitHub workflow runs were not evaluated because GITHUB_REPOSITORY is not set.",
-        })),
-        cadenceProjection,
+      workflows: attachPublishOutcomeAlarms(
+        attachWorkflowCadence(
+          policy.watched.map((workflow) => ({
+            file: workflow.file,
+            label: workflow.label,
+            events: workflow.events,
+            status: "unknown",
+            message: "GitHub workflow runs were not evaluated because GITHUB_REPOSITORY is not set.",
+          })),
+          cadenceProjection,
+        ),
+        publishOutcomeProjection,
       ),
     };
     writeJson(resultPath, result);
@@ -896,7 +1038,10 @@ export async function main() {
     }
   }
 
-  const classifiedWorkflows = attachWorkflowCadence(workflows, cadenceProjection);
+  const classifiedWorkflows = attachPublishOutcomeAlarms(
+    attachWorkflowCadence(workflows, cadenceProjection),
+    publishOutcomeProjection,
+  );
   const alarms = classifiedWorkflows.filter((w) => w.status === "alarm");
   const unknowns = classifiedWorkflows.filter((w) => w.status === "unknown");
   const status = alarms.length > 0 ? "alarm" : unknowns.length > 0 ? "unknown" : "ok";

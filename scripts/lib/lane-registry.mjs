@@ -115,6 +115,31 @@ function record({
 
 const ATTEMPT_ROOT = "data/admin/data-supply-state/detection-attempts";
 const attemptShard = (laneId) => `${ATTEMPT_ROOT}/${laneId}.json`;
+const PUBLISH_OUTCOME_ROOT = "data/admin/data-supply-state/publish-outcomes";
+const publishOutcomeShard = (family) => `${PUBLISH_OUTCOME_ROOT}/${family}.json`;
+
+// Plane publisher family names are intentionally kept separate from lane ids:
+// the publisher CLI uses hyphenated family names while the registry uses
+// underscore ids, and SlickCharts has one composite lane with five callers.
+export const PLANE_PUBLISH_OUTCOME_BINDINGS = Object.freeze({
+  "oecd-cli": { lane_id: "oecd_cli", workflow: ".github/workflows/fetch-oecd-cli.yml" },
+  "fred-macro": { lane_id: "fred_macro", workflow: ".github/workflows/fetch-fred-macro.yml" },
+  "defillama-stablecoins": { lane_id: "defillama_stablecoins", workflow: ".github/workflows/fetch-defillama.yml" },
+  "fdic-tier1": { lane_id: "fdic_tier1", workflow: ".github/workflows/fetch-fdic.yml" },
+  "treasury-tga": { lane_id: "treasury_tga", workflow: ".github/workflows/fetch-treasury-tga.yml" },
+  "fred-banking": { lane_id: "fred_banking", workflow: ".github/workflows/fetch-fred-banking.yml" },
+  "fred-yardeni": { lane_id: "fred_yardeni", workflow: ".github/workflows/fetch-fred-yardeni.yml" },
+  damodaran: { lane_id: "damodaran", workflow: ".github/workflows/fetch-damodaran-shadow.yml" },
+  sentiment: { lane_id: "sentiment", workflow: ".github/workflows/fetch-sentiment.yml" },
+  "yahoo-ticker-macro": { lane_id: "yahoo_ticker_macro", workflow: ".github/workflows/fetch-yahoo-ticker.yml" },
+  "nasdaq-giw-sox": { lane_id: "nasdaq_giw_sox", workflow: ".github/workflows/fetch-nasdaq-giw-sox.yml" },
+  "slickcharts-daily": { lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-daily.yml" },
+  "slickcharts-weekly": { lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-weekly.yml" },
+  "slickcharts-monthly": { lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-monthly.yml" },
+  "slickcharts-history": { lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-history.yml" },
+  "slickcharts-symbols": { lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-symbols.yml" },
+  "edgar-korean-summaries": { lane_id: "edgar_filings", workflow: ".github/workflows/fetch-edgar-filings.yml" },
+});
 
 const providers = [
   { id: "fred", label: "FRED", class: "external_data" },
@@ -166,6 +191,7 @@ const lanes = [
     public_mirror: [],
     commit_shards: [
       attemptShard("fred_macro"),
+      publishOutcomeShard("fred-macro"),
       "data/admin/fred_macro/index.json",
       "data/admin/fred_macro/lkg/fred_macro.json",
       "data/macro/fred-macro.json",
@@ -195,6 +221,7 @@ const lanes = [
     public_mirror: [],
     commit_shards: [
       attemptShard("fred_banking"),
+      publishOutcomeShard("fred-banking"),
       "data/admin/fred_banking/index.json",
       "data/admin/fred_banking/lkg/daily.json",
       "data/admin/fred_banking/lkg/weekly.json",
@@ -225,6 +252,7 @@ const lanes = [
     public_mirror: [],
     commit_shards: [
       attemptShard("fred_yardeni"),
+      publishOutcomeShard("fred-yardeni"),
       "data/admin/fred_yardeni/index.json",
       "data/admin/fred_yardeni/current/yardney_model.json",
       "data/admin/fred_yardeni/lkg/yardney_model.json",
@@ -250,6 +278,7 @@ const lanes = [
     public_mirror: [],
     commit_shards: [
       attemptShard("fdic_tier1"),
+      publishOutcomeShard("fdic-tier1"),
       "data/admin/fdic_tier1/index.json",
       "data/admin/fdic_tier1/lkg/fdic_tier1.json",
       "data/macro/fdic-tier1.json",
@@ -274,6 +303,7 @@ const lanes = [
     public_mirror: [],
     commit_shards: [
       attemptShard("treasury_tga"),
+      publishOutcomeShard("treasury-tga"),
       "data/admin/treasury_tga/index.json",
       "data/admin/treasury_tga/lkg/tga.json",
       "data/macro/tga.json",
@@ -298,6 +328,7 @@ const lanes = [
     public_mirror: [],
     commit_shards: [
       attemptShard("defillama_stablecoins"),
+      publishOutcomeShard("defillama-stablecoins"),
       "data/admin/defillama_stablecoins/index.json",
       "data/admin/defillama_stablecoins/lkg/stablecoins.json",
       "data/macro/stablecoins.json",
@@ -432,6 +463,7 @@ const lanes = [
     public_mirror: ["100xfenok-next/public/data/macro/yahoo-ticker.json"],
     commit_shards: [
       attemptShard("yahoo_ticker_macro"),
+      publishOutcomeShard("yahoo-ticker-macro"),
       "data/admin/yahoo-hourly-ticker",
       "data/macro/yahoo-ticker.json",
       "100xfenok-next/public/data/macro/yahoo-ticker.json",
@@ -463,6 +495,7 @@ const lanes = [
     public_mirror: ["100xfenok-next/public/data/sentiment"],
     commit_shards: [
       attemptShard("sentiment"),
+      publishOutcomeShard("sentiment"),
       "data/admin/sentiment/index.json",
       "data/admin/sentiment/current",
       "data/admin/sentiment/lkg",
@@ -489,6 +522,7 @@ const lanes = [
     public_mirror: ["100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json"],
     commit_shards: [
       attemptShard("nasdaq_giw_sox"),
+      publishOutcomeShard("nasdaq-giw-sox"),
       "data/admin/nasdaq_giw_sox/index.json",
       "data/admin/nasdaq_giw_sox/lkg/constituents.json",
       "data/admin/nasdaq_giw_sox/history/constituents.json",
@@ -550,6 +584,7 @@ const lanes = [
     public_mirror: [],
     commit_shards: [
       attemptShard("oecd_cli"),
+      publishOutcomeShard("oecd-cli"),
       "data/admin/oecd_cli/index.json",
       "data/admin/oecd_cli/lkg/oecd_cli.json",
       "data/admin/oecd_cli/shadow/oecd-cli.json",
@@ -643,6 +678,7 @@ const lanes = [
     public_mirror: ["100xfenok-next/public/data/slickcharts"],
     commit_shards: [
       attemptShard("slickcharts"),
+      publishOutcomeShard("slickcharts-daily"),
       "data/admin/slickcharts-daily-delivery",
       "data/admin/slickcharts-composite-recovery",
       ...SLICKCHARTS_MEMBER_PATHS.daily.map((spec) => spec.path),
@@ -661,6 +697,7 @@ const lanes = [
         {
           commit_shards: [
             "data/admin/data-supply-state/detection-attempts/slickcharts.json",
+            publishOutcomeShard(`slickcharts-${member}`),
             "data/admin/slickcharts-composite-recovery",
           ],
           script_sources: ["scripts/publish-slickcharts-attempt.sh"],
@@ -688,6 +725,7 @@ const lanes = [
     public_mirror: ["100xfenok-next/public/data/edgar-korean-summaries"],
     commit_shards: [
       attemptShard("edgar_filings"),
+      publishOutcomeShard("edgar-korean-summaries"),
       "data/admin/edgar_filings/index.json",
       "data/admin/edgar_filings/current/edgar_filings.json",
       "data/admin/edgar_filings/lkg/edgar_filings.json",
@@ -877,6 +915,7 @@ const lanes = [
     public_mirror: [],
     commit_shards: [
       attemptShard("damodaran"),
+      publishOutcomeShard("damodaran"),
       "data/admin/damodaran/owner-guard.json",
       "data/admin/damodaran/index.json",
       "data/admin/damodaran/current/damodaran.json",
@@ -1278,6 +1317,7 @@ Object.assign(workflow_policies, {
   ".github/workflows/slickcharts-weekly.yml": policy(["slickcharts"], {
     always_if_exists: [
       commitSpec("data/admin/data-supply-state/detection-attempts/slickcharts.json", "file"),
+      commitSpec(publishOutcomeShard("slickcharts-weekly"), "file"),
       commitSpec("data/admin/slickcharts-composite-recovery", "directory"),
     ],
     success_if_exists: [
@@ -1290,6 +1330,7 @@ Object.assign(workflow_policies, {
   ".github/workflows/slickcharts-symbols.yml": policy(["slickcharts"], {
     always_if_exists: [
       commitSpec("data/admin/data-supply-state/detection-attempts/slickcharts.json", "file"),
+      commitSpec(publishOutcomeShard("slickcharts-symbols"), "file"),
       commitSpec("data/admin/slickcharts-composite-recovery", "directory"),
     ],
     success_if_exists: [
@@ -1300,6 +1341,7 @@ Object.assign(workflow_policies, {
   ".github/workflows/slickcharts-history.yml": policy(["slickcharts"], {
     always_if_exists: [
       commitSpec("data/admin/data-supply-state/detection-attempts/slickcharts.json", "file"),
+      commitSpec(publishOutcomeShard("slickcharts-history"), "file"),
       commitSpec("data/admin/slickcharts-composite-recovery", "directory"),
     ],
     success_if_exists: [
@@ -1313,6 +1355,7 @@ Object.assign(workflow_policies, {
   ".github/workflows/slickcharts-monthly.yml": policy(["slickcharts"], {
     always_if_exists: [
       commitSpec("data/admin/data-supply-state/detection-attempts/slickcharts.json", "file"),
+      commitSpec(publishOutcomeShard("slickcharts-monthly"), "file"),
       commitSpec("data/admin/slickcharts-composite-recovery", "directory"),
     ],
     success_if_exists: [
@@ -1349,6 +1392,7 @@ Object.assign(workflow_policies, {
 workflow_policies[".github/workflows/fetch-defillama.yml"] = policy(["defillama_stablecoins"], {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/defillama_stablecoins.json", "file"),
+    commitSpec(publishOutcomeShard("defillama-stablecoins"), "file"),
     commitSpec("data/admin/defillama_stablecoins/index.json", "file"),
     commitSpec("data/admin/defillama_stablecoins/lkg/stablecoins.json", "file"),
   ],
@@ -1381,6 +1425,7 @@ workflow_policies[".github/workflows/fetch-fenok-news-tone.yml"] = policy(["gdel
 workflow_policies[".github/workflows/fetch-sentiment.yml"] = policy(["sentiment"], {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/sentiment.json", "file"),
+    commitSpec(publishOutcomeShard("sentiment"), "file"),
     commitSpec("data/admin/sentiment/index.json", "file"),
     commitSpec("data/admin/sentiment/current/*.json", "glob"),
     commitSpec("data/admin/sentiment/lkg/*.json", "glob"),
@@ -1411,6 +1456,7 @@ workflow_policies[".github/workflows/fetch-kospi-dart-payout.yml"] = policy(["ko
 workflow_policies[".github/workflows/fetch-oecd-cli.yml"] = policy(["oecd_cli"], {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/oecd_cli.json", "file"),
+    commitSpec(publishOutcomeShard("oecd-cli"), "file"),
     commitSpec("data/admin/oecd_cli/index.json", "file"),
     commitSpec("data/admin/oecd_cli/lkg/oecd_cli.json", "file"),
   ],
@@ -1487,6 +1533,7 @@ workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = policy(["krx"]
 workflow_policies[".github/workflows/fetch-damodaran-shadow.yml"] = policy(["damodaran"], {
   always_if_exists: [
     commitSpec(attemptShard("damodaran"), "file", false),
+    commitSpec(publishOutcomeShard("damodaran"), "file", false),
     commitSpec("data/admin/damodaran/index.json", "file", false),
     commitSpec("data/admin/damodaran/current/damodaran.json", "file", false),
     commitSpec("data/admin/damodaran/lkg/damodaran.json", "file", false),

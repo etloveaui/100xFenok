@@ -13,6 +13,17 @@
 //      (resolvePublicAsset is unusable here: these assets are private).
 //   5. One JSON summary line on stdout.
 //
+// Publish-outcome evidence (2026-08-10 contract): after every REAL per-family
+// publish outcome the script appends one record to
+// data/admin/data-supply-state/publish-outcomes/<family>.json — published,
+// resumed, gate_blocked and failed runs alike. Dry-run, retention
+// (bucket-level, no family) and the deliberate rollback/chaos-drill modes
+// write nothing. The shard write is atomic and non-blocking: a shard write
+// failure is logged and surfaced as outcome_shard in the summary, but never
+// changes the publish's exit code, summary line or result vocabulary.
+// PUBLISH_OUTCOMES_ROOT overrides the evidence root (tests redirect to a
+// temp dir).
+//
 // Idempotent republish: generation_id derives from source_sha (the canonical
 // (path, sha256) list), so unchanged content yields the same generation_id.
 // When the live pointer already targets that generation we re-read the STORED
@@ -112,11 +123,24 @@ import {
 import { createCloudflareCloudDataPlane } from "./lib/cloud-data-plane-cloudflare-adapter.mjs";
 import { createR2RestBucket } from "./lib/cloud-data-plane-r2-rest.mjs";
 import { createRemoteCoordinatorNamespace } from "./lib/cloud-data-plane-remote-coordinator.mjs";
+import {
+  appendPublishOutcome,
+  buildPublishOutcomeRecord,
+} from "./lib/publish-outcome-shard.mjs";
 
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const GATE_SCRIPT = path.join(REPO_ROOT, "scripts", "check-r2-free-tier-usage.mjs");
 const R2_BUCKET = "fenok-data-plane";
 const DEFAULT_ACCOUNT_ID = "aeeb5ea3affe55a2219d08ea02dad9e1";
+
+// Publish-outcome evidence root (2026-08-10 contract): every real per-family
+// publish outcome appends a record to
+// data/admin/data-supply-state/publish-outcomes/<family>.json.
+// PUBLISH_OUTCOMES_ROOT overrides the root (tests redirect to a temp dir);
+// the production default is the repo state dir.
+const PUBLISH_OUTCOMES_ROOT = process.env.PUBLISH_OUTCOMES_ROOT
+  ? path.resolve(process.env.PUBLISH_OUTCOMES_ROOT)
+  : path.join(REPO_ROOT, "data", "admin", "data-supply-state", "publish-outcomes");
 
 // Family descriptor table. Fields:
 //   root             filesystem location of the source file(s), repo-relative
@@ -1017,6 +1041,52 @@ function gateVerdict(gate) {
   return "blocked";
 }
 
+// --- publish-outcome evidence (writer side of the 2026-08-10 contract) ------
+//
+// Non-blocking per-family outcome recorder: appends one record to
+// data/admin/data-supply-state/publish-outcomes/<family>.json for every REAL
+// publish outcome (published, resumed, gate_blocked, failed). Dry-run,
+// retention (bucket-level, no family) and rollback/chaos-drill modes are not
+// publish outcomes and never call this. The write is atomic and additive; a
+// shard write failure is logged and returned as {ok:false} WITHOUT changing
+// canonical publish behavior (exit code, summary line or result vocabulary).
+// `state` carries the run context gathered so far: {generationId, receiptId,
+// pointerBefore, pointerAfter, gateBefore, gateAfter, sourceAsOf}.
+// The no-write decision is a pure function so the contract is unit-testable:
+// only REAL per-family publish runs (no dry-run, no rollback, no chaos drill)
+// may record, on every path — gate-blocked, thrown failure or completed
+// publish alike.
+export function canRecordPublishOutcome({ dryRun, rollback, chaos } = {}) {
+  return !dryRun && !rollback && !chaos;
+}
+
+export async function recordPublishOutcome({
+  family,
+  result,
+  state = {},
+  outcomesRoot = PUBLISH_OUTCOMES_ROOT,
+  log = () => {},
+}) {
+  try {
+    const record = buildPublishOutcomeRecord({
+      family,
+      result,
+      generationId: state.generationId ?? null,
+      receiptId: state.receiptId ?? null,
+      pointerBefore: state.pointerBefore ?? null,
+      pointerAfter: state.pointerAfter ?? null,
+      gateBefore: state.gateBefore ?? null,
+      gateAfter: state.gateAfter ?? null,
+      sourceAsOf: state.sourceAsOf ?? null,
+    });
+    const outcome = await appendPublishOutcome({ outcomesRoot, family, record });
+    return { ok: true, count: outcome.count, shardPath: outcome.shardPath, record };
+  } catch (error) {
+    log(`publish-outcome shard write failed for ${family}: ${error.code ?? "ERROR"}: ${error.message}`);
+    return { ok: false, error };
+  }
+}
+
 // --- retention REST helpers ---------------------------------------------------
 // createR2RestBucket (byte-locked lib) maps list() to keys only and has no
 // delete; retention needs key+size and DeleteObject, so these two helpers talk
@@ -1252,263 +1322,317 @@ async function main() {
     process.exit(2);
   }
 
-  // 1. Manifest from disk.
-  const { manifest, payloads, summary, sourceAsOf } = await buildFamilyManifest({
-    familyName: args.family,
-    absRoot: path.join(REPO_ROOT, family.root),
-    relRoot: family.manifest_prefix ?? family.root,
-  });
-  const uniqueAssetKeys = new Set(manifest.assets.map((asset) => asset.object_key)).size;
-  const plan = {
-    assets: summary.asset_count,
-    total_bytes: summary.total_bytes,
-    unique_object_keys: uniqueAssetKeys + 1, // + manifest object
-    objects_deduped: summary.asset_count - uniqueAssetKeys,
+  // Publish-outcome evidence (2026-08-10 contract): every REAL publish
+  // outcome — published, resumed, gate_blocked, failed — appends one record
+  // to data/admin/data-supply-state/publish-outcomes/<family>.json. Dry-run
+  // writes no shard; rollback and the known chaos-drill outcomes are not
+  // publish outcomes and write nothing. The shard write is non-blocking: a
+  // failure is logged and reported (outcome_shard in the summary) but never
+  // changes the publish's exit code, summary line or result vocabulary.
+  const outcomeState = {
+    family: args.family,
+    generationId: null,
+    receiptId: null,
+    pointerBefore: null,
+    pointerAfter: null,
+    gateBefore: null,
+    gateAfter: null,
+    sourceAsOf: null,
   };
-  log(`family ${args.family}: ${plan.assets} assets, ${plan.total_bytes} bytes,`
-    + ` ${plan.unique_object_keys} unique objects (${plan.objects_deduped} deduped)`
-    + ` -> generation ${manifest.generation_id}`);
-
-  if (args.dryRun && !args.retention) {
-    emit({
-      result: "dry_run",
-      generation_id: manifest.generation_id,
-      source_as_of: sourceAsOf.value,
-      source_as_of_origin: sourceAsOf.origin,
-      ...plan,
-      // Explicit-enrollment families also list each enrolled asset; tree
-      // families (oecd-cli) keep the original summary shape byte-identical.
-      ...(family.files
-        ? {
-          enrolled: manifest.assets.map((asset) => ({
-            path: asset.path,
-            bytes: asset.bytes,
-            privacy_class: asset.privacy_class,
-          })),
-        }
-        : {}),
-      planned_class_a: family.plan.class_a,
-      planned_bytes: family.plan.bytes,
-      gate: "not_run",
-    });
-    return;
-  }
-
-  // 2. Cost gate (declares >= 2x the real spend) before any write. Rollback
-  // touches only the coordinator (DeleteObject is free on the free tier, so
-  // retention declares a small but still generous plan) — the gate runs first
-  // in every mode.
-  const gatePlan = args.rollback ? { class_a: 10, bytes: 0 } : family.plan;
-  const gateBefore = await runCostGate({
-    planClassA: gatePlan.class_a,
-    planBytes: gatePlan.bytes,
-    env: process.env,
+  const recordOutcome = (result) => recordPublishOutcome({
+    family: args.family,
+    result,
+    state: outcomeState,
+    log,
   });
-  if (!args.json && gateBefore.stdout.trim()) {
-    console.error(gateBefore.stdout.trim());
-  }
-  if (gateBefore.code !== 0 && gateBefore.code !== 1) {
-    if (gateBefore.stderr.trim()) console.error(gateBefore.stderr.trim());
-    if (args.tolerateGateBlock) {
+  // Dry-run, rollback and the deliberate chaos-drill modes never record
+  // (dry-run writes no shard; rollback is not a publish; chaos outcomes are
+  // injected drills, not real publishes — including their gate-blocked and
+  // thrown-failure paths). Retention already returned above.
+  const canRecordOutcome = canRecordPublishOutcome(args);
+  const shardSummary = (outcome) => outcome.ok
+    ? { ok: true }
+    : { ok: false, error: outcome.error?.message ?? String(outcome.error) };
+
+  try {
+    // 1. Manifest from disk.
+    const { manifest, payloads, summary, sourceAsOf } = await buildFamilyManifest({
+      familyName: args.family,
+      absRoot: path.join(REPO_ROOT, family.root),
+      relRoot: family.manifest_prefix ?? family.root,
+    });
+    outcomeState.generationId = manifest.generation_id;
+    outcomeState.sourceAsOf = sourceAsOf.value;
+    const uniqueAssetKeys = new Set(manifest.assets.map((asset) => asset.object_key)).size;
+    const plan = {
+      assets: summary.asset_count,
+      total_bytes: summary.total_bytes,
+      unique_object_keys: uniqueAssetKeys + 1, // + manifest object
+      objects_deduped: summary.asset_count - uniqueAssetKeys,
+    };
+    log(`family ${args.family}: ${plan.assets} assets, ${plan.total_bytes} bytes,`
+      + ` ${plan.unique_object_keys} unique objects (${plan.objects_deduped} deduped)`
+      + ` -> generation ${manifest.generation_id}`);
+
+    if (args.dryRun && !args.retention) {
       emit({
-        result: "gate_blocked",
-        mode: args.rollback ? "rollback" : (args.retention ? "retention" : "publish"),
+        result: "dry_run",
         generation_id: manifest.generation_id,
-        gate_exit: gateBefore.code,
+        source_as_of: sourceAsOf.value,
+        source_as_of_origin: sourceAsOf.origin,
         ...plan,
+        // Explicit-enrollment families also list each enrolled asset; tree
+        // families (oecd-cli) keep the original summary shape byte-identical.
+        ...(family.files
+          ? {
+            enrolled: manifest.assets.map((asset) => ({
+              path: asset.path,
+              bytes: asset.bytes,
+              privacy_class: asset.privacy_class,
+            })),
+          }
+          : {}),
+        planned_class_a: family.plan.class_a,
+        planned_bytes: family.plan.bytes,
+        gate: "not_run",
       });
       return;
     }
-    console.error("publish-cloud-data-generation: cost gate blocked the publish"
-      + ` (exit ${gateBefore.code}); rerun with --tolerate-gate-block to record-and-skip`);
-    process.exit(3);
-  }
 
-  // Env for the live write, checked after the gate and before any write.
-  const token = process.env.CLOUDFLARE_API_TOKEN;
-  const endpoint = process.env.DATA_PLANE_ENDPOINT;
-  const writeKey = process.env.DATA_PLANE_WRITE_KEY;
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? DEFAULT_ACCOUNT_ID;
-  const missing = [
-    ["CLOUDFLARE_API_TOKEN", token],
-    ["DATA_PLANE_ENDPOINT", endpoint],
-    ["DATA_PLANE_WRITE_KEY", writeKey],
-  ].filter(([, value]) => !value).map(([name]) => name);
-  if (missing.length) {
-    console.error(`publish-cloud-data-generation: missing env ${missing.join(", ")} — no write attempted`);
-    process.exit(2);
-  }
+    // 2. Cost gate (declares >= 2x the real spend) before any write. Rollback
+    // touches only the coordinator (DeleteObject is free on the free tier, so
+    // retention declares a small but still generous plan) — the gate runs first
+    // in every mode.
+    const gatePlan = args.rollback ? { class_a: 10, bytes: 0 } : family.plan;
+    const gateBefore = await runCostGate({
+      planClassA: gatePlan.class_a,
+      planBytes: gatePlan.bytes,
+      env: process.env,
+    });
+    outcomeState.gateBefore = gateVerdict(gateBefore);
+    if (!args.json && gateBefore.stdout.trim()) {
+      console.error(gateBefore.stdout.trim());
+    }
+    if (gateBefore.code !== 0 && gateBefore.code !== 1) {
+      if (gateBefore.stderr.trim()) console.error(gateBefore.stderr.trim());
+      const outcomeShard = canRecordOutcome ? await recordOutcome("gate_blocked") : null;
+      if (args.tolerateGateBlock) {
+        emit({
+          result: "gate_blocked",
+          mode: args.rollback ? "rollback" : (args.retention ? "retention" : "publish"),
+          generation_id: manifest.generation_id,
+          gate_exit: gateBefore.code,
+          ...plan,
+          ...(outcomeShard ? { outcome_shard: shardSummary(outcomeShard) } : {}),
+        });
+        return;
+      }
+      console.error("publish-cloud-data-generation: cost gate blocked the publish"
+        + ` (exit ${gateBefore.code}); rerun with --tolerate-gate-block to record-and-skip`);
+      process.exit(3);
+    }
 
-  // Rollback mode: pointer-only change through the contract's
-  // rollbackGeneration; the summary records the sequence and both generation
-  // ids before and after, because rollback moves the sequence FORWARD.
-  if (args.rollback) {
+    // Env for the live write, checked after the gate and before any write.
+    const token = process.env.CLOUDFLARE_API_TOKEN;
+    const endpoint = process.env.DATA_PLANE_ENDPOINT;
+    const writeKey = process.env.DATA_PLANE_WRITE_KEY;
+    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? DEFAULT_ACCOUNT_ID;
+    const missing = [
+      ["CLOUDFLARE_API_TOKEN", token],
+      ["DATA_PLANE_ENDPOINT", endpoint],
+      ["DATA_PLANE_WRITE_KEY", writeKey],
+    ].filter(([, value]) => !value).map(([name]) => name);
+    if (missing.length) {
+      // Record the failed outcome before the direct exit so the alarm side
+      // still sees it (the lane could not publish).
+      if (canRecordOutcome) await recordOutcome("failed");
+      console.error(`publish-cloud-data-generation: missing env ${missing.join(", ")} — no write attempted`);
+      process.exit(2);
+    }
+
+    // Rollback mode: pointer-only change through the contract's
+    // rollbackGeneration; the summary records the sequence and both generation
+    // ids before and after, because rollback moves the sequence FORWARD.
+    if (args.rollback) {
+      const plane = createCloudflareCloudDataPlane({
+        r2Bucket: createR2RestBucket({ accountId, bucket: R2_BUCKET, token }),
+        coordinatorNamespace: createRemoteCoordinatorNamespace({ endpoint, key: writeKey, family: args.family }),
+        coordinatorName: args.family,
+      });
+      const rolled = await rollbackLiveGeneration({
+        objectStore: plane.objectStore,
+        ledger: plane.ledger,
+        pointerStore: plane.pointerStore,
+      });
+      const pointerAfter = await plane.pointerStore.get();
+      const gateAfter = await runCostGate({ planClassA: 0, planBytes: 0, env: process.env });
+      emit({
+        result: "rolled_back",
+        receipt_id: rolled.receipt.receipt_id,
+        receipt_state: rolled.receipt.state,
+        pointer_sequence_before: rolled.pointerBefore.sequence,
+        pointer_sequence_after: pointerAfter?.sequence ?? null,
+        active_generation_before: rolled.pointerBefore.active.generation_id,
+        previous_generation_before: rolled.pointerBefore.previous?.generation_id ?? null,
+        active_generation_after: pointerAfter?.active.generation_id ?? null,
+        previous_generation_after: pointerAfter?.previous?.generation_id ?? null,
+        objects_written: 0,
+        gate_before: gateVerdict(gateBefore),
+        gate_after: gateVerdict(gateAfter),
+      });
+      return;
+    }
+
+    // 3. Publish through the REST R2 bridge + remote coordinator shim.
+    const r2Bucket = createR2RestBucket({ accountId, bucket: R2_BUCKET, token });
+    let objectsWritten = 0;
+    const countingR2Bucket = {
+      ...r2Bucket,
+      async put(key, bytes) {
+        await r2Bucket.put(key, bytes);
+        objectsWritten += 1;
+      },
+    };
+    const coordinatorNamespace = createRemoteCoordinatorNamespace({ endpoint, key: writeKey, family: args.family });
     const plane = createCloudflareCloudDataPlane({
-      r2Bucket: createR2RestBucket({ accountId, bucket: R2_BUCKET, token }),
-      coordinatorNamespace: createRemoteCoordinatorNamespace({ endpoint, key: writeKey, family: args.family }),
+      r2Bucket: countingR2Bucket,
+      coordinatorNamespace,
       coordinatorName: args.family,
     });
-    const rolled = await rollbackLiveGeneration({
+    const livePointer = await plane.pointerStore.get();
+    const pointerSequenceBefore = livePointer?.sequence ?? 0;
+    outcomeState.pointerBefore = pointerSequenceBefore;
+    const resolved = await resolveExpectedPointerSequence({
+      pointer: livePointer,
+      manifest,
       objectStore: plane.objectStore,
       ledger: plane.ledger,
+    });
+    if (args.chaos === "stale-sequence" && resolved.resume) {
+      fail("CHAOS_PRECONDITION", "stale-sequence needs a generation the pointer does not already target");
+    }
+    const expectedForPublish = chaosExpectedPointerSequence({
+      chaos: args.chaos,
+      pointerSequence: pointerSequenceBefore,
+      resolved: resolved.expectedPointerSequence,
+    });
+    const publishPointerStore = chaosPointerStore({
+      chaos: args.chaos,
       pointerStore: plane.pointerStore,
     });
-    const pointerAfter = await plane.pointerStore.get();
+    const policy = {
+      max_assets: family.policy.max_assets,
+      max_total_bytes: family.policy.max_total_bytes,
+      validate_freshness: () => true,
+      // The contract invokes this on every public asset before writing;
+      // public families must provide a real validator in the descriptor.
+      validate_public_payload: family.validate_public_payload ?? (() => true),
+    };
+    let published;
+    try {
+      published = await publishGeneration({
+        manifest: resolved.manifest,
+        payloads,
+        expectedPointerSequence: expectedForPublish,
+        objectStore: plane.objectStore,
+        ledger: plane.ledger,
+        pointerStore: publishPointerStore,
+        policy,
+        now: resolved.resumeCreatedAt ? () => resolved.resumeCreatedAt : undefined,
+      });
+    } catch (error) {
+      if (args.chaos === "stale-sequence" && error.code === "STALE_WRITER") {
+        const pointerNow = await plane.pointerStore.get();
+        const gateAfter = await runCostGate({ planClassA: 0, planBytes: 0, env: process.env });
+        emit({
+          result: "chaos_stale_writer",
+          chaos: args.chaos,
+          error_code: error.code,
+          generation_id: manifest.generation_id,
+          attempted_expected_sequence: expectedForPublish,
+          pointer_sequence_before: pointerSequenceBefore,
+          pointer_sequence_after: pointerNow?.sequence ?? 0,
+          gate_before: gateVerdict(gateBefore),
+          gate_after: gateVerdict(gateAfter),
+        });
+        return;
+      }
+      if (args.chaos === "abort-after-prepare" && error.code === "CHAOS_ABORT_AFTER_PREPARE") {
+        const receiptId = deterministicPublishReceiptId({
+          manifest: resolved.manifest,
+          expectedPointerSequence: resolved.expectedPointerSequence,
+        });
+        const receipt = await plane.ledger.get(receiptId);
+        const pointerNow = await plane.pointerStore.get();
+        const gateAfter = await runCostGate({ planClassA: 0, planBytes: 0, env: process.env });
+        emit({
+          result: "chaos_abort_after_prepare",
+          chaos: args.chaos,
+          error_code: error.code,
+          generation_id: manifest.generation_id,
+          receipt_id: receiptId,
+          receipt_state: receipt?.state ?? null,
+          pointer_sequence_before: pointerSequenceBefore,
+          pointer_sequence_after: pointerNow?.sequence ?? 0,
+          gate_before: gateVerdict(gateBefore),
+          gate_after: gateVerdict(gateAfter),
+        });
+        return;
+      }
+      throw error;
+    }
+    // Drift guard (only reached on a successful publish): the receipt id the
+    // contract actually returned must equal our deterministic mirror of its
+    // format. A mismatch means the contract's format changed and crash-retry
+    // would silently miss — fail loudly before any summary claims success.
+    assertPublishReceiptId({
+      manifest: resolved.manifest,
+      expectedPointerSequence: expectedForPublish,
+      receipt: published.receipt,
+    });
+    outcomeState.receiptId = published.receipt.receipt_id;
+    outcomeState.pointerAfter = published.pointer.sequence;
+    log(`${resolved.resume ? "resumed" : "published"} generation ${manifest.generation_id}:`
+      + ` pointer ${pointerSequenceBefore} -> ${published.pointer.sequence},`
+      + ` receipt ${published.receipt.receipt_id} (${published.receipt.state})`);
+
+    // 4. Parity verification, resolved through the pointer ourselves.
+    const parity = await verifyGenerationParity({
+      pointerStore: plane.pointerStore,
+      objectStore: plane.objectStore,
+      payloads,
+    });
+    log(`byte parity ok: ${parity.assets}/${parity.assets} assets, ${parity.bytes} bytes`);
+
+    // 5. Gate again after the write batch, then the single JSON summary line.
     const gateAfter = await runCostGate({ planClassA: 0, planBytes: 0, env: process.env });
+    outcomeState.gateAfter = gateVerdict(gateAfter);
+    const outcomeShard = await recordOutcome(resolved.resume ? "resumed" : "published");
     emit({
-      result: "rolled_back",
-      receipt_id: rolled.receipt.receipt_id,
-      receipt_state: rolled.receipt.state,
-      pointer_sequence_before: rolled.pointerBefore.sequence,
-      pointer_sequence_after: pointerAfter?.sequence ?? null,
-      active_generation_before: rolled.pointerBefore.active.generation_id,
-      previous_generation_before: rolled.pointerBefore.previous?.generation_id ?? null,
-      active_generation_after: pointerAfter?.active.generation_id ?? null,
-      previous_generation_after: pointerAfter?.previous?.generation_id ?? null,
-      objects_written: 0,
+      result: resolved.resume ? "resumed" : "published",
+      generation_id: manifest.generation_id,
+      source_sha: manifest.source_sha,
+      source_as_of: sourceAsOf.value,
+      source_as_of_origin: sourceAsOf.origin,
+      receipt_id: published.receipt.receipt_id,
+      receipt_state: published.receipt.state,
+      pointer_sequence_before: pointerSequenceBefore,
+      pointer_sequence_after: published.pointer.sequence,
+      ...plan,
+      objects_written: objectsWritten,
+      objects_already_present: plan.unique_object_keys - objectsWritten,
+      parity: "ok",
       gate_before: gateVerdict(gateBefore),
       gate_after: gateVerdict(gateAfter),
-    });
-    return;
-  }
-
-  // 3. Publish through the REST R2 bridge + remote coordinator shim.
-  const r2Bucket = createR2RestBucket({ accountId, bucket: R2_BUCKET, token });
-  let objectsWritten = 0;
-  const countingR2Bucket = {
-    ...r2Bucket,
-    async put(key, bytes) {
-      await r2Bucket.put(key, bytes);
-      objectsWritten += 1;
-    },
-  };
-  const coordinatorNamespace = createRemoteCoordinatorNamespace({ endpoint, key: writeKey, family: args.family });
-  const plane = createCloudflareCloudDataPlane({
-    r2Bucket: countingR2Bucket,
-    coordinatorNamespace,
-    coordinatorName: args.family,
-  });
-  const livePointer = await plane.pointerStore.get();
-  const pointerSequenceBefore = livePointer?.sequence ?? 0;
-  const resolved = await resolveExpectedPointerSequence({
-    pointer: livePointer,
-    manifest,
-    objectStore: plane.objectStore,
-    ledger: plane.ledger,
-  });
-  if (args.chaos === "stale-sequence" && resolved.resume) {
-    fail("CHAOS_PRECONDITION", "stale-sequence needs a generation the pointer does not already target");
-  }
-  const expectedForPublish = chaosExpectedPointerSequence({
-    chaos: args.chaos,
-    pointerSequence: pointerSequenceBefore,
-    resolved: resolved.expectedPointerSequence,
-  });
-  const publishPointerStore = chaosPointerStore({
-    chaos: args.chaos,
-    pointerStore: plane.pointerStore,
-  });
-  const policy = {
-    max_assets: family.policy.max_assets,
-    max_total_bytes: family.policy.max_total_bytes,
-    validate_freshness: () => true,
-    // The contract invokes this on every public asset before writing;
-    // public families must provide a real validator in the descriptor.
-    validate_public_payload: family.validate_public_payload ?? (() => true),
-  };
-  let published;
-  try {
-    published = await publishGeneration({
-      manifest: resolved.manifest,
-      payloads,
-      expectedPointerSequence: expectedForPublish,
-      objectStore: plane.objectStore,
-      ledger: plane.ledger,
-      pointerStore: publishPointerStore,
-      policy,
-      now: resolved.resumeCreatedAt ? () => resolved.resumeCreatedAt : undefined,
+      outcome_shard: shardSummary(outcomeShard),
     });
   } catch (error) {
-    if (args.chaos === "stale-sequence" && error.code === "STALE_WRITER") {
-      const pointerNow = await plane.pointerStore.get();
-      const gateAfter = await runCostGate({ planClassA: 0, planBytes: 0, env: process.env });
-      emit({
-        result: "chaos_stale_writer",
-        chaos: args.chaos,
-        error_code: error.code,
-        generation_id: manifest.generation_id,
-        attempted_expected_sequence: expectedForPublish,
-        pointer_sequence_before: pointerSequenceBefore,
-        pointer_sequence_after: pointerNow?.sequence ?? 0,
-        gate_before: gateVerdict(gateBefore),
-        gate_after: gateVerdict(gateAfter),
-      });
-      return;
-    }
-    if (args.chaos === "abort-after-prepare" && error.code === "CHAOS_ABORT_AFTER_PREPARE") {
-      const receiptId = deterministicPublishReceiptId({
-        manifest: resolved.manifest,
-        expectedPointerSequence: resolved.expectedPointerSequence,
-      });
-      const receipt = await plane.ledger.get(receiptId);
-      const pointerNow = await plane.pointerStore.get();
-      const gateAfter = await runCostGate({ planClassA: 0, planBytes: 0, env: process.env });
-      emit({
-        result: "chaos_abort_after_prepare",
-        chaos: args.chaos,
-        error_code: error.code,
-        generation_id: manifest.generation_id,
-        receipt_id: receiptId,
-        receipt_state: receipt?.state ?? null,
-        pointer_sequence_before: pointerSequenceBefore,
-        pointer_sequence_after: pointerNow?.sequence ?? 0,
-        gate_before: gateVerdict(gateBefore),
-        gate_after: gateVerdict(gateAfter),
-      });
-      return;
-    }
+    // Every failed REAL publish outcome is recorded when the family is known
+    // (dry-run and rollback excluded); the canonical failure path (rethrow,
+    // stderr line, exit 1) is unchanged.
+    if (canRecordOutcome) await recordOutcome("failed");
     throw error;
   }
-  // Drift guard (only reached on a successful publish): the receipt id the
-  // contract actually returned must equal our deterministic mirror of its
-  // format. A mismatch means the contract's format changed and crash-retry
-  // would silently miss — fail loudly before any summary claims success.
-  assertPublishReceiptId({
-    manifest: resolved.manifest,
-    expectedPointerSequence: expectedForPublish,
-    receipt: published.receipt,
-  });
-  log(`${resolved.resume ? "resumed" : "published"} generation ${manifest.generation_id}:`
-    + ` pointer ${pointerSequenceBefore} -> ${published.pointer.sequence},`
-    + ` receipt ${published.receipt.receipt_id} (${published.receipt.state})`);
-
-  // 4. Parity verification, resolved through the pointer ourselves.
-  const parity = await verifyGenerationParity({
-    pointerStore: plane.pointerStore,
-    objectStore: plane.objectStore,
-    payloads,
-  });
-  log(`byte parity ok: ${parity.assets}/${parity.assets} assets, ${parity.bytes} bytes`);
-
-  // 5. Gate again after the write batch, then the single JSON summary line.
-  const gateAfter = await runCostGate({ planClassA: 0, planBytes: 0, env: process.env });
-  emit({
-    result: resolved.resume ? "resumed" : "published",
-    generation_id: manifest.generation_id,
-    source_sha: manifest.source_sha,
-    source_as_of: sourceAsOf.value,
-    source_as_of_origin: sourceAsOf.origin,
-    receipt_id: published.receipt.receipt_id,
-    receipt_state: published.receipt.state,
-    pointer_sequence_before: pointerSequenceBefore,
-    pointer_sequence_after: published.pointer.sequence,
-    ...plan,
-    objects_written: objectsWritten,
-    objects_already_present: plan.unique_object_keys - objectsWritten,
-    parity: "ok",
-    gate_before: gateVerdict(gateBefore),
-    gate_after: gateVerdict(gateAfter),
-  });
 }
 
 const invokedDirectly = process.argv[1]

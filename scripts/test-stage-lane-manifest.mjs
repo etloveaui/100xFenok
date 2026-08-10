@@ -328,7 +328,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: SLICKCHARTS_SYMBOLS_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_SYMBOLS_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
+  assert.match(always.stdout, /declared=3 stage_selected=3 staged_index_total=3/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 }
 
@@ -367,11 +367,11 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: SLICKCHARTS_HISTORY_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_HISTORY_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
+  assert.match(always.stdout, /declared=3 stage_selected=3 staged_index_total=3/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
   const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_HISTORY_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=5 stage_selected=5 staged_index_total=7/);
+  assert.match(success.stdout, /declared=5 stage_selected=5 staged_index_total=8/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
@@ -380,11 +380,11 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: SLICKCHARTS_MONTHLY_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_MONTHLY_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
+  assert.match(always.stdout, /declared=3 stage_selected=3 staged_index_total=3/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
   const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_MONTHLY_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=22 stage_selected=22 staged_index_total=24/);
+  assert.match(success.stdout, /declared=22 stage_selected=22 staged_index_total=25/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
@@ -393,11 +393,11 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: SLICKCHARTS_WEEKLY_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_WEEKLY_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=2 stage_selected=2 staged_index_total=2/);
+  assert.match(always.stdout, /declared=3 stage_selected=3 staged_index_total=3/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
   const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_WEEKLY_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=4 stage_selected=4 staged_index_total=6/);
+  assert.match(success.stdout, /declared=4 stage_selected=4 staged_index_total=7/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
@@ -407,12 +407,12 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: SLICKCHARTS_DAILY_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], SLICKCHARTS_DAILY_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=3 stage_selected=3 staged_index_total=3/);
+  assert.match(always.stdout, /declared=4 stage_selected=4 staged_index_total=4/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   const success = run(fixture.root, "success_if_exists", [], SLICKCHARTS_DAILY_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=5 stage_selected=5 staged_index_total=8/);
+  assert.match(success.stdout, /declared=5 stage_selected=5 staged_index_total=9/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
@@ -422,12 +422,12 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: FDIC_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], FDIC_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=3 stage_selected=3 staged_index_total=3/);
+  assert.match(always.stdout, /declared=4 stage_selected=4 staged_index_total=4/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   const success = run(fixture.root, "success_if_exists", [], FDIC_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=1 stage_selected=1 staged_index_total=4/);
+  assert.match(success.stdout, /declared=1 stage_selected=1 staged_index_total=5/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
@@ -437,12 +437,12 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: EDGAR_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], EDGAR_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=4 stage_selected=4 staged_index_total=4/);
+  assert.match(always.stdout, /declared=5 stage_selected=5 staged_index_total=5/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   const success = run(fixture.root, "success_if_exists", [], EDGAR_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=2 stage_selected=2 staged_index_total=6/);
+  assert.match(success.stdout, /declared=2 stage_selected=2 staged_index_total=7/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
@@ -452,12 +452,12 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: YARDENI_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], YARDENI_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=4 stage_selected=4 staged_index_total=4/);
+  assert.match(always.stdout, /declared=5 stage_selected=5 staged_index_total=5/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   const success = run(fixture.root, "success_if_exists", [], YARDENI_WORKFLOW);
   assert.equal(success.status, 0, `${success.stderr}\n${success.stdout}`);
-  assert.match(success.stdout, /declared=1 stage_selected=1 staged_index_total=5/);
+  assert.match(success.stdout, /declared=1 stage_selected=1 staged_index_total=6/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
@@ -526,20 +526,13 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: YAHOO_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], YAHOO_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /stage_selected=2 staged_index_total=2/);
-  assert.deepEqual(cached(fixture.root), [
-    fixture.paths.always[0],
-    `${fixture.paths.always[1]}/fixture.json`,
-  ].sort());
+  assert.match(always.stdout, /stage_selected=3 staged_index_total=3/);
+  assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   const success = run(fixture.root, "success_if_exists", [], YAHOO_WORKFLOW);
   assert.equal(success.status, 0, success.stderr);
-  assert.match(success.stdout, /stage_selected=2 staged_index_total=4/);
-  assert.deepEqual(cached(fixture.root), [
-    fixture.paths.always[0],
-    `${fixture.paths.always[1]}/fixture.json`,
-    ...fixture.paths.success,
-  ].sort());
+  assert.match(success.stdout, /stage_selected=2 staged_index_total=5/);
+  assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 
 // Multi-lane policy combines file recovery shards with computed globs and only
@@ -623,12 +616,12 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
   assert.match(always.stdout, /workflow=.github\/workflows\/fetch-defillama\.yml/);
   assert.match(always.stdout, /stage=always_if_exists/);
-  assert.match(always.stdout, /stage_selected=3 staged_index_total=3/);
+  assert.match(always.stdout, /stage_selected=4 staged_index_total=4/);
   assert.deepEqual(cached(fixture.root), fixture.paths.always.sort());
 
   const success = run(fixture.root, "success_if_exists");
   assert.equal(success.status, 0, success.stderr);
-  assert.match(success.stdout, /stage_selected=1 staged_index_total=4/);
+  assert.match(success.stdout, /stage_selected=1 staged_index_total=5/);
   assert.deepEqual(cached(fixture.root), [...fixture.paths.always, ...fixture.paths.success].sort());
 }
 
