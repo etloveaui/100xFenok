@@ -4,9 +4,9 @@
     "model_version": "feno_yardeni_fred_v1",
     "description": "Feno Yardeni Bond PER to S&P 500 Fair Value",
     "frequency": "weekly",
-    "date_range": "1990-02-02 ~ 2026-07-24",
-    "total_records": 1891,
-    "generated_at": "2026-08-03T07:28:21.573Z",
+    "date_range": "1990-02-02 ~ 2026-07-31",
+    "total_records": 1892,
+    "generated_at": "2026-08-10T06:40:46.742Z",
     "generated_by": "build-feno-yardeni-model.mjs",
     "calculation_source": "FRED series/observations API corporate bond yields plus 100x benchmark S&P 500 price/EPS; benchmark EPS/SPX currently comes from the existing Bloomberg-sourced benchmarks pipeline; pre-benchmark history preserved from verified seed.",
     "source_components": {
@@ -14,12 +14,12 @@
         {
           "series_id": "WAAA",
           "label": "Moody's Seasoned Aaa Corporate Bond Yield",
-          "latest_date": "2026-07-24"
+          "latest_date": "2026-07-31"
         },
         {
           "series_id": "WBAA",
           "label": "Moody's Seasoned Baa Corporate Bond Yield",
-          "latest_date": "2026-07-24"
+          "latest_date": "2026-07-31"
         }
       ],
       "spx_eps_input": {
@@ -30,8 +30,8 @@
           "best_eps"
         ],
         "source": "Bloomberg Terminal",
-        "version": "2026-07-31",
-        "generated": "2026-08-03T16:24:01.441524"
+        "version": "2026-08-07",
+        "generated": "2026-08-10T15:38:13.924326"
       },
       "preserved_seed_input": {
         "file": "data/yardney/yardney_model.json",
@@ -47,14 +47,14 @@
     "last_update": {
       "mode": "feno_yardeni_rebuild",
       "seed_preserved_records": 1026,
-      "computed_records": 865,
+      "computed_records": 866,
       "skipped_benchmark_records": 1,
       "skipped_benchmark_dates_sample": [
-        "2026-07-31"
+        "2026-08-07"
       ],
       "first_computed_date": "2010-01-01",
-      "last_computed_date": "2026-07-24",
-      "last_public_date": "2026-07-24"
+      "last_computed_date": "2026-07-31",
+      "last_public_date": "2026-07-31"
     },
     "columns": {
       "date": "Weekly Friday date",
@@ -15144,58 +15144,66 @@
     {
       "date": "2026-06-12",
       "spx": 7431.46,
-      "eps": 363.891,
+      "eps": 363.644,
       "bond_per": 17.26,
-      "fair_value": 6280.76,
-      "premium_pct": 18.32
+      "fair_value": 6276.5,
+      "premium_pct": 18.4
     },
     {
       "date": "2026-06-19",
       "spx": 7500.58,
-      "eps": 365.296,
+      "eps": 365.0434,
       "bond_per": 17.39,
-      "fair_value": 6352.5,
-      "premium_pct": 18.07
+      "fair_value": 6348.1,
+      "premium_pct": 18.15
     },
     {
       "date": "2026-06-26",
       "spx": 7354.02,
-      "eps": 368.9406,
+      "eps": 368.7193,
       "bond_per": 17.42,
-      "fair_value": 6426.95,
-      "premium_pct": 14.42
+      "fair_value": 6423.09,
+      "premium_pct": 14.49
     },
     {
       "date": "2026-07-03",
       "spx": 7483.24,
-      "eps": 370.886,
+      "eps": 370.6841,
       "bond_per": 17.32,
-      "fair_value": 6423.75,
-      "premium_pct": 16.49
+      "fair_value": 6420.25,
+      "premium_pct": 16.56
     },
     {
       "date": "2026-07-10",
       "spx": 7575.39,
-      "eps": 371.3908,
+      "eps": 371.1782,
       "bond_per": 16.99,
-      "fair_value": 6309.93,
-      "premium_pct": 20.06
+      "fair_value": 6306.32,
+      "premium_pct": 20.12
     },
     {
       "date": "2026-07-17",
       "spx": 7457.69,
-      "eps": 374.5983,
+      "eps": 374.4098,
       "bond_per": 16.81,
-      "fair_value": 6297,
-      "premium_pct": 18.43
+      "fair_value": 6293.83,
+      "premium_pct": 18.49
     },
     {
       "date": "2026-07-24",
       "spx": 7411.98,
-      "eps": 378.9685,
+      "eps": 378.9182,
       "bond_per": 16.56,
-      "fair_value": 6275.72,
-      "premium_pct": 18.11
+      "fair_value": 6274.89,
+      "premium_pct": 18.12
+    },
+    {
+      "date": "2026-07-31",
+      "spx": 7489.72,
+      "eps": 383.6803,
+      "bond_per": 16.43,
+      "fair_value": 6303.87,
+      "premium_pct": 18.81
     }
   ]
 }
