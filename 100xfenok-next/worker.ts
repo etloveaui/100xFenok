@@ -18,16 +18,24 @@ const worker = {
     const routed = await handleCloudDataPlaneRequest(request, env);
     if (routed) return routed;
 
-    // Enrolled data assets are served from the published generation when it
-    // resolves cleanly, and from the bundled copy otherwise. Declining is the
-    // whole safety story: the bundled copy is the last known good, so a broken
-    // data plane degrades to today's behaviour instead of to an error or, worse,
-    // a 200 carrying a shape consumers do not expect.
-    if (isEnrolledPath(new URL(request.url).pathname)) {
-      const served = await handleCloudDataPlaneAsset(request, env);
-      if (served) return served;
-      const assets = (env as { ASSETS?: { fetch: (request: Request) => Promise<Response> } })?.ASSETS;
-      if (assets) return assets.fetch(request);
+    const url = new URL(request.url);
+    const assets = (env as { ASSETS?: { fetch: (request: Request) => Promise<Response> } })?.ASSETS;
+
+    // run_worker_first routes every /data/* request to this Worker before the
+    // asset worker. Enrolled assets are served from the published generation
+    // when it resolves cleanly; every other data path (and every unhealthy
+    // plane outcome) must still fall back to the bundled copy, exactly as the
+    // asset worker would have served it before run_worker_first. Only a true
+    // asset miss (404 from ASSETS) falls through to the application handler.
+    if (url.pathname.startsWith("/data/")) {
+      if (isEnrolledPath(url.pathname)) {
+        const served = await handleCloudDataPlaneAsset(request, env);
+        if (served) return served;
+      }
+      if (assets) {
+        const bundled = await assets.fetch(request);
+        if (bundled.status !== 404) return bundled;
+      }
     }
 
     return handler.fetch(request, env, ctx);
