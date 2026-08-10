@@ -25,15 +25,28 @@
       "run_id": "30589620986",
       "schedule": "0 22 * * 4",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 553,
+      "natural": true,
+      "observed_at": "2026-08-10T02:30:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31349898588",
+      "schedule": "7 0 * * 0-5",
+      "shard": "12/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-30T23:32:12Z",
-    "history_as_of": "2026-07-30",
+    "fetched_at": "2026-08-10T02:31:54Z",
+    "history_as_of": "2026-08-07",
     "path": "data/yf/finance/KJUN.json",
-    "payload_sha256": "204c23dfe9303faa94a8f1f7cea0dab0056890c02f9d5fb82e36abcf0adca51f",
-    "quote_as_of": "2026-07-30T19:41:49Z",
-    "source_as_of": "2026-07-30"
+    "payload_sha256": "c538bdb9cfefe6dad52193efd3127f7ca6f407d8ae09e2e96754635e39486e50",
+    "quote_as_of": "2026-08-07T17:57:58Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -42,48 +55,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 546,
+    "latency_ms": 553,
     "natural": true,
-    "observed_at": "2026-07-30T23:31:53Z",
+    "observed_at": "2026-08-10T02:30:39Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30589620986",
-    "schedule": "0 22 * * 4",
-    "shard": "4/6"
+    "run_id": "31349898588",
+    "schedule": "7 0 * * 0-5",
+    "shard": "12/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-30T00:01:57Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-07-30T23:32:12Z",
+    "history_as_of": "2026-07-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/KJUN.json",
-    "payload_sha256": "ec59c2a3e13b248be72a9b18badcf67d862022c629003c3e6cb7557dd637448b",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "204c23dfe9303faa94a8f1f7cea0dab0056890c02f9d5fb82e36abcf0adca51f",
+    "quote_as_of": "2026-07-30T19:41:49Z",
+    "source_as_of": "2026-07-30"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-30",
-    "observed_at": "2026-07-30T23:31:53Z",
-    "payload_sha256": "cfceb75cf9d3b782ffe124667ba10b2ec6030199ca3a85b07d638bbfb4ad4bf2",
-    "quote_as_of": "2026-07-30T19:41:49Z",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-10T02:30:39Z",
+    "payload_sha256": "770f99cbe2639b2291150d1390e2df191a34107dcd9d0b251ec2af962ae3dc2f",
+    "quote_as_of": "2026-08-07T17:57:58Z",
     "run_attempt": 1,
-    "run_id": "30589620986",
+    "run_id": "31349898588",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-30"
+    "source_as_of": "2026-08-07"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-10T02:30:39Z",
+    "classified_run_id": "31349898588",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "KJUN holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "KJUN holds LKG because Yahoo source date 2026-07-30 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-07-30"
   },
   "ticker": "KJUN",
-  "updated_at": "2026-07-30T23:31:53Z"
+  "updated_at": "2026-08-10T02:30:39Z"
 }

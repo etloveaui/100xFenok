@@ -25,15 +25,28 @@
       "run_id": "30589620986",
       "schedule": "0 22 * * 4",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 458,
+      "natural": true,
+      "observed_at": "2026-08-10T02:30:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31349898588",
+      "schedule": "7 0 * * 0-5",
+      "shard": "12/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-30T23:35:24Z",
-    "history_as_of": "2026-07-30",
+    "fetched_at": "2026-08-10T02:31:46Z",
+    "history_as_of": "2026-08-07",
     "path": "data/yf/finance/ESIM.json",
-    "payload_sha256": "3ab412f7154d1aee97230f1ca5a924994e3c6bd8875e86aca302e9c4d68b9643",
-    "quote_as_of": "2026-07-30T19:59:59Z",
-    "source_as_of": "2026-07-30"
+    "payload_sha256": "e700177c85a4a45e18b12090c39f9684470c5c77d8077509697b482eba8addd1",
+    "quote_as_of": "2026-08-07T19:59:45Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -42,30 +55,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 459,
+    "latency_ms": 458,
     "natural": true,
-    "observed_at": "2026-07-30T23:31:53Z",
+    "observed_at": "2026-08-10T02:30:39Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30589620986",
-    "schedule": "0 22 * * 4",
-    "shard": "4/6"
+    "run_id": "31349898588",
+    "schedule": "7 0 * * 0-5",
+    "shard": "12/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-30T23:35:24Z",
+    "history_as_of": "2026-07-30",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ESIM.json",
+    "payload_sha256": "3ab412f7154d1aee97230f1ca5a924994e3c6bd8875e86aca302e9c4d68b9643",
+    "quote_as_of": "2026-07-30T19:59:59Z",
+    "source_as_of": "2026-07-30"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-30",
-    "observed_at": "2026-07-30T23:31:53Z",
-    "payload_sha256": "3bd067407664dfb87b3ca100f4b77caad72e57cea5a390f2326b27b2aaca76f7",
-    "quote_as_of": "2026-07-30T19:59:59Z",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-10T02:30:39Z",
+    "payload_sha256": "497ef348ea592e06826a793c712d9be29df01af49e693aa835c2c41807f0423a",
+    "quote_as_of": "2026-08-07T19:59:45Z",
     "run_attempt": 1,
-    "run_id": "30589620986",
+    "run_id": "31349898588",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-30"
+    "source_as_of": "2026-08-07"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-10T02:30:39Z",
+    "classified_run_id": "31349898588",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "ESIM holds LKG because Yahoo source date 2026-07-30 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-30"
+  },
   "ticker": "ESIM",
-  "updated_at": "2026-07-30T23:31:53Z"
+  "updated_at": "2026-08-10T02:30:39Z"
 }

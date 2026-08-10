@@ -12,15 +12,28 @@
       "run_id": "30589620986",
       "schedule": "0 22 * * 4",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 612,
+      "natural": true,
+      "observed_at": "2026-08-10T02:30:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31349898588",
+      "schedule": "7 0 * * 0-5",
+      "shard": "12/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-30T23:35:00Z",
-    "history_as_of": "2026-07-30",
+    "fetched_at": "2026-08-10T02:31:35Z",
+    "history_as_of": "2026-08-07",
     "path": "data/yf/finance/BRHY.json",
-    "payload_sha256": "4290ea8f42f73bf0b6957939e11867b4f7b744b26f330880e6471c5e7523c0a7",
-    "quote_as_of": "2026-07-30T20:00:00Z",
-    "source_as_of": "2026-07-30"
+    "payload_sha256": "79e2033320324c08420b67b2307ecfe4e72cfd83d78fd1cfe457c23dc5370af2",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,30 +42,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 555,
+    "latency_ms": 612,
     "natural": true,
-    "observed_at": "2026-07-30T23:31:53Z",
+    "observed_at": "2026-08-10T02:30:39Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30589620986",
-    "schedule": "0 22 * * 4",
-    "shard": "4/6"
+    "run_id": "31349898588",
+    "schedule": "7 0 * * 0-5",
+    "shard": "12/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-30T23:35:00Z",
+    "history_as_of": "2026-07-30",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BRHY.json",
+    "payload_sha256": "4290ea8f42f73bf0b6957939e11867b4f7b744b26f330880e6471c5e7523c0a7",
+    "quote_as_of": "2026-07-30T20:00:00Z",
+    "source_as_of": "2026-07-30"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-30",
-    "observed_at": "2026-07-30T23:31:53Z",
-    "payload_sha256": "6d2d09061c9952f17bda6102cd7639a1ec5d09cbe61d63d25f5efddcb3294d6e",
-    "quote_as_of": "2026-07-30T20:00:00Z",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-10T02:30:39Z",
+    "payload_sha256": "d20ff2a6c89ce9f57f3b8fb91925032f1e9f042f9575d3c9eca37691e75ba4a2",
+    "quote_as_of": "2026-08-07T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30589620986",
+    "run_id": "31349898588",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-30"
+    "source_as_of": "2026-08-07"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-10T02:30:39Z",
+    "classified_run_id": "31349898588",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "BRHY holds LKG because Yahoo source date 2026-07-30 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-30"
+  },
   "ticker": "BRHY",
-  "updated_at": "2026-07-30T23:31:53Z"
+  "updated_at": "2026-08-10T02:30:39Z"
 }

@@ -12,15 +12,28 @@
       "run_id": "30589620986",
       "schedule": "0 22 * * 4",
       "shard": "4/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 557,
+      "natural": true,
+      "observed_at": "2026-08-10T02:30:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31349898588",
+      "schedule": "7 0 * * 0-5",
+      "shard": "12/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-07-30T23:33:58Z",
-    "history_as_of": "2026-07-30",
+    "fetched_at": "2026-08-10T02:31:12Z",
+    "history_as_of": "2026-08-07",
     "path": "data/yf/finance/AUMI.json",
-    "payload_sha256": "0e3fa4fe3acd9a734456f65b3a9a5bfe982b7355928310d82c575082fd9167a1",
-    "quote_as_of": "2026-07-30T20:00:00Z",
-    "source_as_of": "2026-07-30"
+    "payload_sha256": "19893725568ce8e351fbb73181afb5161b435574331fbfcd5b170ea0b31fe018",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,30 +42,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 682,
+    "latency_ms": 557,
     "natural": true,
-    "observed_at": "2026-07-30T23:31:53Z",
+    "observed_at": "2026-08-10T02:30:39Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30589620986",
-    "schedule": "0 22 * * 4",
-    "shard": "4/6"
+    "run_id": "31349898588",
+    "schedule": "7 0 * * 0-5",
+    "shard": "12/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-07-30T23:33:58Z",
+    "history_as_of": "2026-07-30",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AUMI.json",
+    "payload_sha256": "0e3fa4fe3acd9a734456f65b3a9a5bfe982b7355928310d82c575082fd9167a1",
+    "quote_as_of": "2026-07-30T20:00:00Z",
+    "source_as_of": "2026-07-30"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-30",
-    "observed_at": "2026-07-30T23:31:53Z",
-    "payload_sha256": "ea8023d27f5d834bc3b7e66e98a1896f1632e458a1c68a908d93f767872f9480",
-    "quote_as_of": "2026-07-30T20:00:00Z",
+    "history_as_of": "2026-08-07",
+    "observed_at": "2026-08-10T02:30:39Z",
+    "payload_sha256": "c6435074ecdc004f2e7cd7e58c617607cab1419f52599afb9600849f8b53cc8d",
+    "quote_as_of": "2026-08-07T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30589620986",
+    "run_id": "31349898588",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-30"
+    "source_as_of": "2026-08-07"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-10T02:30:39Z",
+    "classified_run_id": "31349898588",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "AUMI holds LKG because Yahoo source date 2026-07-30 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-30"
+  },
   "ticker": "AUMI",
-  "updated_at": "2026-07-30T23:31:53Z"
+  "updated_at": "2026-08-10T02:30:39Z"
 }

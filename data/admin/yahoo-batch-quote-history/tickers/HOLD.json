@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-04T23:10:54Z",
     "history_as_of": "2026-08-03",
-    "path": "data/yf/finance/HOLD.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/HOLD.json",
     "payload_sha256": "615a647f6c882d85aa7ad0fd748cdb42e5a75b9064e7cff100cbb572587d9ccd",
     "quote_as_of": "2026-07-30T18:37:01Z",
     "source_as_of": "2026-07-30T18:37:01Z"
@@ -38,6 +38,14 @@
     "schedule": "0 22 * * 2",
     "shard": "2/6"
   },
+  "lkg": {
+    "fetched_at": "2026-08-04T23:10:54Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/HOLD.json",
+    "payload_sha256": "615a647f6c882d85aa7ad0fd748cdb42e5a75b9064e7cff100cbb572587d9ccd",
+    "quote_as_of": "2026-07-30T18:37:01Z",
+    "source_as_of": "2026-07-30T18:37:01Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-30T18:37:01Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-10T02:30:39Z",
+    "classified_run_id": "31349898588",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "HOLD holds LKG because Yahoo source date 2026-07-30T18:37:01Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-30T18:37:01Z"
+  },
   "ticker": "HOLD",
-  "updated_at": "2026-08-04T23:07:26Z"
+  "updated_at": "2026-08-10T02:30:39Z"
 }

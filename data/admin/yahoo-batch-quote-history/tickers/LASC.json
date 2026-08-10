@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-30T23:32:31Z",
     "history_as_of": "2026-07-30",
-    "path": "data/yf/finance/LASC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/LASC.json",
     "payload_sha256": "1623d9d68a60a53b9bea2e9f4bbf0744a4d6e1420a5db9fdae9265832710f5de",
     "quote_as_of": "2026-07-30T18:48:42Z",
     "source_as_of": "2026-07-30"
@@ -52,12 +52,12 @@
     "shard": "4/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-30T14:35:34Z",
-    "history_as_of": "2026-06-30",
+    "fetched_at": "2026-07-30T23:32:31Z",
+    "history_as_of": "2026-07-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/LASC.json",
-    "payload_sha256": "772b609f659606e97455502bd8a1ff3504d0679db55dd87bcfb7518b7df857e4",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-30"
+    "payload_sha256": "1623d9d68a60a53b9bea2e9f4bbf0744a4d6e1420a5db9fdae9265832710f5de",
+    "quote_as_of": "2026-07-30T18:48:42Z",
+    "source_as_of": "2026-07-30"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-10T02:30:39Z",
+    "classified_run_id": "31349898588",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "LASC holds LKG because Yahoo source date 2026-06-30 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "LASC holds LKG because Yahoo source date 2026-07-30 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-30"
+    "source_as_of": "2026-07-30"
   },
   "ticker": "LASC",
-  "updated_at": "2026-07-30T23:31:53Z"
+  "updated_at": "2026-08-10T02:30:39Z"
 }

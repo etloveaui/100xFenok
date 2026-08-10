@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-07-30T23:33:03Z",
     "history_as_of": "2026-07-30",
-    "path": "data/yf/finance/METW.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/METW.json",
     "payload_sha256": "0d1c0dcf45a677e98d669c26a195a960bb3766b8dc7a60225f2014e5b54e2348",
     "quote_as_of": "2026-07-30T20:00:00Z",
     "source_as_of": "2026-07-30"
@@ -52,12 +52,12 @@
     "shard": "4/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-30T00:03:07Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-07-30T23:33:03Z",
+    "history_as_of": "2026-07-30",
     "path": "data/admin/yahoo-batch-quote-history/lkg/METW.json",
-    "payload_sha256": "914c64cca2c7c2a3d0020f73715dc6579648c2b06f5128800cbe019fb9954fa8",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "0d1c0dcf45a677e98d669c26a195a960bb3766b8dc7a60225f2014e5b54e2348",
+    "quote_as_of": "2026-07-30T20:00:00Z",
+    "source_as_of": "2026-07-30"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-30"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-10T02:30:39Z",
+    "classified_run_id": "31349898588",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "METW holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "METW holds LKG because Yahoo source date 2026-07-30 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-07-30"
   },
   "ticker": "METW",
-  "updated_at": "2026-07-30T23:31:53Z"
+  "updated_at": "2026-08-10T02:30:39Z"
 }

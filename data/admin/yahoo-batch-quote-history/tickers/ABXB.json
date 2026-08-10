@@ -149,7 +149,7 @@
   "current": {
     "fetched_at": "2026-08-06T10:51:06Z",
     "history_as_of": "2026-08-05",
-    "path": "data/yf/finance/ABXB.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ABXB.json",
     "payload_sha256": "2814d3ef5e9e654253d2aafb09b37b496f5616cf0bb92e4e4384b3f0e2e613ed",
     "quote_as_of": "2026-07-30T13:30:00Z",
     "source_as_of": "2026-07-30T13:30:00Z"
@@ -202,12 +202,12 @@
     "shard": "52/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-19T23:00:20Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-08-06T10:51:06Z",
+    "history_as_of": "2026-08-05",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ABXB.json",
-    "payload_sha256": "ad3abfbba9b08b12b190db3383601d63aa2093fa6760a1ee0649a72e9fada55c",
-    "quote_as_of": "2026-07-08T16:34:51Z",
-    "source_as_of": "2026-07-08T16:34:51Z"
+    "payload_sha256": "2814d3ef5e9e654253d2aafb09b37b496f5616cf0bb92e4e4384b3f0e2e613ed",
+    "quote_as_of": "2026-07-30T13:30:00Z",
+    "source_as_of": "2026-07-30T13:30:00Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -221,19 +221,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-30T13:30:00Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-07-20T23:03:20Z",
-    "classified_run_id": "29785605821",
+    "age_business_days": 7,
+    "classified_at": "2026-08-10T02:30:39Z",
+    "classified_run_id": "31349898588",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "ABXB holds LKG because Yahoo source date 2026-07-08T16:34:51Z is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ABXB holds LKG because Yahoo source date 2026-07-30T13:30:00Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-08T16:34:51Z"
+    "source_as_of": "2026-07-30T13:30:00Z"
   },
   "ticker": "ABXB",
-  "updated_at": "2026-08-06T10:49:28Z"
+  "updated_at": "2026-08-10T02:30:39Z"
 }
