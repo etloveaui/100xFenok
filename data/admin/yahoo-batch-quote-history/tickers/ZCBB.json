@@ -12,6 +12,20 @@
       "run_id": "31411954324",
       "schedule": "7 16 * * 0-5",
       "shard": "20/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 582,
+      "natural": true,
+      "observed_at": "2026-08-10T20:51:42Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31430923656",
+      "schedule": "7 20 * * 0-5",
+      "shard": "22/72"
     }
   ],
   "current": {
@@ -27,16 +41,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 556,
+    "latency_ms": 582,
     "natural": true,
-    "observed_at": "2026-08-10T17:04:11Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-10T20:51:42Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31411954324",
-    "schedule": "7 16 * * 0-5",
-    "shard": "20/72"
+    "run_id": "31430923656",
+    "schedule": "7 20 * * 0-5",
+    "shard": "22/72"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-10T20:51:42Z",
+    "provider_history_as_of": "2026-08-07",
+    "provider_quote_as_of": "2026-06-09T13:34:35Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "31430923656"
   },
   "lkg": {
     "fetched_at": "2026-08-10T17:08:16Z",
@@ -72,5 +96,5 @@
     "source_as_of": "2026-06-09T13:34:35Z"
   },
   "ticker": "ZCBB",
-  "updated_at": "2026-08-10T19:09:16Z"
+  "updated_at": "2026-08-10T20:51:42Z"
 }

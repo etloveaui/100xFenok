@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 935,
-      "natural": true,
-      "observed_at": "2026-07-22T00:53:53Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29879427185",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "ValueError: quote_as_of is unavailable for SHOP despite available history",
       "event_name": "schedule",
       "failures": [
@@ -188,15 +175,28 @@
       "run_id": "31228360458",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 632,
+      "natural": true,
+      "observed_at": "2026-08-10T20:51:42Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31430923656",
+      "schedule": "7 20 * * 0-5",
+      "shard": "22/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-08T00:01:42Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-10T20:55:17Z",
+    "history_as_of": "2026-08-10",
     "path": "data/yf/finance/SHOP.json",
-    "payload_sha256": "e4b410d784a27848d5717398370333274ead084dd4976b92a9b2cf252ba5311d",
-    "quote_as_of": "2026-08-07T20:00:00Z",
-    "source_as_of": "2026-08-07"
+    "payload_sha256": "bc3fed97ec8ea2e4ef2658c02837e08cab47c904fe16287d8e786a5eb19acd93",
+    "quote_as_of": "2026-08-10T20:00:00Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -206,14 +206,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 351,
+    "latency_ms": 632,
     "natural": true,
-    "observed_at": "2026-08-07T23:59:02Z",
+    "observed_at": "2026-08-10T20:51:42Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31228360458",
-    "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "run_id": "31430923656",
+    "schedule": "7 20 * * 0-5",
+    "shard": "22/72"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -244,14 +244,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-07T23:59:02Z",
-    "payload_sha256": "880da2f9083c8cf8c170a08ddd177d401f2ab80e298ccccf85d2dabcae309638",
-    "quote_as_of": "2026-08-07T20:00:00Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T20:51:42Z",
+    "payload_sha256": "7ce929258dbeab92525758ca00442387ce3b1695291ffec8c2fb42ac2c3133d4",
+    "quote_as_of": "2026-08-10T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31228360458",
+    "run_id": "31430923656",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-08-10"
   },
   "recovered_at": "2026-07-24T00:27:41Z",
   "recovered_from_run_id": "29968542251",
@@ -262,5 +262,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "SHOP",
-  "updated_at": "2026-08-07T23:59:02Z"
+  "updated_at": "2026-08-10T20:51:42Z"
 }
