@@ -12,31 +12,44 @@
       "run_id": "30711924670",
       "schedule": "",
       "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 694,
+      "natural": true,
+      "observed_at": "2026-08-11T03:59:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31456720047",
+      "schedule": "7 2 * * 0-5",
+      "shard": "25/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T18:36:19Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CHIQ.json",
-    "payload_sha256": "55c1f4104ec96ee62007bc0068e0efea754febf7450b7f8cc4167de790b34d73",
-    "quote_as_of": "2026-07-31T20:00:00Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-11T04:00:43Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/CHIQ.json",
+    "payload_sha256": "efd75c9f048d3bf7d996859bb222abe2cb249292976659764210263e66ef2bc6",
+    "quote_as_of": "2026-08-10T19:59:50Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 661,
+    "latency_ms": 694,
     "natural": true,
-    "observed_at": "2026-08-01T18:35:05Z",
+    "observed_at": "2026-08-11T03:59:23Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711924670",
-    "schedule": "",
-    "shard": "3/6"
+    "run_id": "31456720047",
+    "schedule": "7 2 * * 0-5",
+    "shard": "25/72"
   },
   "lkg": {
     "fetched_at": "2026-08-01T18:36:19Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T18:35:05Z",
-    "payload_sha256": "f98ae6fb35f5b206507f9a9f3b9e8c7838e3e446446a56d675092a8f5c3aa4bf",
-    "quote_as_of": "2026-07-31T20:00:00Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T03:59:23Z",
+    "payload_sha256": "b2a458aae935a614615b822a9109d4bf1d7da47f25cd707a2b37f950155d7d40",
+    "quote_as_of": "2026-08-10T19:59:50Z",
     "run_attempt": 1,
-    "run_id": "30711924670",
+    "run_id": "31456720047",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "CHIQ",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T03:59:23Z"
 }

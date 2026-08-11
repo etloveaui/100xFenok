@@ -12,31 +12,44 @@
       "run_id": "30711923637",
       "schedule": "",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 530,
+      "natural": true,
+      "observed_at": "2026-08-11T03:59:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31456720047",
+      "schedule": "7 2 * * 0-5",
+      "shard": "25/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T18:30:01Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ELM.json",
-    "payload_sha256": "c9f3170bac71f758b39a52454609f3131f0d5db33229ca7d82629b3771f4de41",
-    "quote_as_of": "2026-07-31T19:40:31Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-11T04:00:08Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/ELM.json",
+    "payload_sha256": "86cbdd0a66463c6d1ead094ef322ffb0610e76d5898c98525c273a920f4c05da",
+    "quote_as_of": "2026-08-10T19:48:00Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 511,
+    "latency_ms": 530,
     "natural": true,
-    "observed_at": "2026-08-01T18:28:23Z",
+    "observed_at": "2026-08-11T03:59:23Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711923637",
-    "schedule": "",
-    "shard": "2/6"
+    "run_id": "31456720047",
+    "schedule": "7 2 * * 0-5",
+    "shard": "25/72"
   },
   "lkg": {
     "fetched_at": "2026-08-01T18:30:01Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T18:28:23Z",
-    "payload_sha256": "5620de726c3b6bf7869c12f2ded4ae0dfe1692fcb2ce22a7b24a85bdae6f645c",
-    "quote_as_of": "2026-07-31T19:40:31Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T03:59:23Z",
+    "payload_sha256": "9c19ab015262eef8fee606cf92be7a959a805a6e4903126820ec4357c2755348",
+    "quote_as_of": "2026-08-10T19:48:00Z",
     "run_attempt": 1,
-    "run_id": "30711923637",
+    "run_id": "31456720047",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "ELM",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T03:59:23Z"
 }

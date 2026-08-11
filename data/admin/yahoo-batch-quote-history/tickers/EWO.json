@@ -12,31 +12,44 @@
       "run_id": "30711923637",
       "schedule": "",
       "shard": "2/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 819,
+      "natural": true,
+      "observed_at": "2026-08-11T03:59:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31456720047",
+      "schedule": "7 2 * * 0-5",
+      "shard": "25/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T18:30:33Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/EWO.json",
-    "payload_sha256": "561a8adc64e80b1bc1459939940715bd6151eb574b94e404ea6b362538ed4d48",
-    "quote_as_of": "2026-07-31T19:59:31Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-11T04:00:13Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/EWO.json",
+    "payload_sha256": "cd91ab208bc86fe7cac16b75b80c63b41c7771e7938d896fa3ff64dd0a08623f",
+    "quote_as_of": "2026-08-10T20:00:00Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 826,
+    "latency_ms": 819,
     "natural": true,
-    "observed_at": "2026-08-01T18:28:23Z",
+    "observed_at": "2026-08-11T03:59:23Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711923637",
-    "schedule": "",
-    "shard": "2/6"
+    "run_id": "31456720047",
+    "schedule": "7 2 * * 0-5",
+    "shard": "25/72"
   },
   "lkg": {
     "fetched_at": "2026-08-01T18:30:33Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T18:28:23Z",
-    "payload_sha256": "018fc1084efa003ff10a5745b36b0b721d5bcfd24d4cfdaa74f784aaa9916751",
-    "quote_as_of": "2026-07-31T19:59:31Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T03:59:23Z",
+    "payload_sha256": "680240b58cdbfd81eab383a0781683ddad8bacb06b7664ee827739bc1ad06982",
+    "quote_as_of": "2026-08-10T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30711923637",
+    "run_id": "31456720047",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "EWO",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T03:59:23Z"
 }

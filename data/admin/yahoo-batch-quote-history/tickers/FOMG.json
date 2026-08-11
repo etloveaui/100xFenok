@@ -51,31 +51,44 @@
       "run_id": "30711922590",
       "schedule": "",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 469,
+      "natural": true,
+      "observed_at": "2026-08-11T03:59:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31456720047",
+      "schedule": "7 2 * * 0-5",
+      "shard": "25/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T18:25:19Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FOMG.json",
-    "payload_sha256": "d92af326b75161bf51ebb5ca6feae98bf8613dc03727be8b99df47026c38f5be",
-    "quote_as_of": "2026-07-31T19:55:00Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-11T03:59:43Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/FOMG.json",
+    "payload_sha256": "a287d4cfbef023e499a681b06301add78bf1dcba7a7347385b69a66313549b83",
+    "quote_as_of": "2026-08-10T19:59:50Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 546,
+    "latency_ms": 469,
     "natural": true,
-    "observed_at": "2026-08-01T18:21:41Z",
+    "observed_at": "2026-08-11T03:59:23Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711922590",
-    "schedule": "",
-    "shard": "1/6"
+    "run_id": "31456720047",
+    "schedule": "7 2 * * 0-5",
+    "shard": "25/72"
   },
   "lkg": {
     "fetched_at": "2026-08-01T18:25:19Z",
@@ -87,18 +100,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T18:21:41Z",
-    "payload_sha256": "bd877cb484ba34525ce63f2803296df7f9253689f92f1af9783cc81c548e6478",
-    "quote_as_of": "2026-07-31T19:55:00Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T03:59:23Z",
+    "payload_sha256": "0ef310d80abbcdf5a3ee4de505f2dc71392fe86da1f809d5a87cebc650ec4307",
+    "quote_as_of": "2026-08-10T19:59:50Z",
     "run_attempt": 1,
-    "run_id": "30711922590",
+    "run_id": "31456720047",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -111,5 +124,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "FOMG",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T03:59:23Z"
 }
