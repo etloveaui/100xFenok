@@ -1,9 +1,22 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-11T06:48:13.249Z",
+  "generated_at": "2026-08-11T07:42:33.131Z",
   "status": "open",
-  "open_incident_count": 4,
+  "open_incident_count": 6,
   "open_incidents": [
+    {
+      "workflow": "data-plane-serving-probe.yml",
+      "label": "Data Plane Serving Probe",
+      "streak": 15,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 31388326014,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31388326014",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
     {
       "workflow": "fenok-edge-daily.yml",
       "label": "Fenok Edge Daily Data",
@@ -45,6 +58,19 @@
       "cadence_status": "overdue"
     },
     {
+      "workflow": "fetch-yahoo-ticker.yml",
+      "label": "Fetch Yahoo Finance Ticker Snapshot",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 31463525518,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31463525518",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
+    {
       "workflow": "fetch-yf-finance.yml",
       "label": "Fetch YF Finance Data",
       "streak": 0,
@@ -62,6 +88,17 @@
     {
       "file": "build-stocks-analyzer.yml",
       "label": "Build Stocks Analyzer",
+      "events": [
+        "schedule"
+      ],
+      "event": "schedule",
+      "failure_streak_threshold": 2,
+      "cadence_status": "no_declaration",
+      "cadence_evidence": []
+    },
+    {
+      "file": "data-plane-serving-probe.yml",
+      "label": "Data Plane Serving Probe",
       "events": [
         "schedule"
       ],
@@ -425,15 +462,10 @@
     "not_due": 23,
     "overdue": 3,
     "recovered": 0,
-    "no_declaration": 6,
+    "no_declaration": 7,
     "unknown": 0
   },
   "excluded_workflows": [
-    {
-      "file": "data-plane-serving-probe.yml",
-      "label": "Data Plane Serving Probe",
-      "reason": "observer that fails its own run on alarm; watching it would page twice for one incident"
-    },
     {
       "file": "pipeline-failure-alarm.yml",
       "label": "Pipeline Failure Alarm",
@@ -444,14 +476,16 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31466310570",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31466310570",
-    "observed_at": "2026-08-11T06:48:13.249Z",
-    "event": "workflow_run",
+    "run_id": "31469927374",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31469927374",
+    "observed_at": "2026-08-11T07:42:33.131Z",
+    "event": "schedule",
     "workflows": [
+      "data-plane-serving-probe.yml",
       "fenok-edge-daily.yml",
       "fetch-edgar-filings.yml",
       "fetch-stockanalysis.yml",
+      "fetch-yahoo-ticker.yml",
       "fetch-yf-finance.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
