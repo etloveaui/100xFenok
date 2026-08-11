@@ -66,41 +66,44 @@
       "run_id": "31496919771",
       "schedule": "7 12 * * 0-5",
       "shard": "30/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 711,
+      "natural": true,
+      "observed_at": "2026-08-11T17:08:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31515819191",
+      "schedule": "7 16 * * 0-5",
+      "shard": "32/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T09:13:53Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VUS.json",
-    "payload_sha256": "b6f8e88161c63ade6c8f0d13e0e0b79f18b97b0b38db5dd3db1752aa3075cd2c",
-    "quote_as_of": "2026-07-31T20:00:00Z",
-    "source_as_of": "2026-07-31T20:00:00Z"
+    "fetched_at": "2026-08-11T17:08:42Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/VUS.json",
+    "payload_sha256": "51034b079e5d8ce1cb150cd1f5f96ec6f18d9ca91711e260d0151459a1901409",
+    "quote_as_of": "2026-08-11T13:46:09Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1069,
+    "latency_ms": 711,
     "natural": true,
-    "observed_at": "2026-08-11T13:36:55Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-11T17:08:04Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31496919771",
-    "schedule": "7 12 * * 0-5",
-    "shard": "30/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-11T13:36:55Z",
-    "provider_history_as_of": "2026-08-10",
-    "provider_quote_as_of": "2026-07-31T20:00:00Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31496919771"
+    "run_id": "31515819191",
+    "schedule": "7 16 * * 0-5",
+    "shard": "32/72"
   },
   "lkg": {
     "fetched_at": "2026-08-11T09:13:53Z",
@@ -113,17 +116,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-11T09:13:07Z",
-    "payload_sha256": "a7a76294725695b3efd6ff4cc035f7e4e5425673743d5cdf3bdc5d5cb39a995c",
-    "quote_as_of": "2026-07-31T20:00:00Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-11T17:08:04Z",
+    "payload_sha256": "17408a0b0102391cdfac06de207c83e74af251581aaf8e0d1bafb2e809c762c6",
+    "quote_as_of": "2026-08-11T13:46:09Z",
     "run_attempt": 1,
-    "run_id": "31476569032",
+    "run_id": "31515819191",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31T20:00:00Z"
+    "source_as_of": "2026-08-11"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -136,5 +139,5 @@
     "source_as_of": "2026-07-31T20:00:00Z"
   },
   "ticker": "VUS",
-  "updated_at": "2026-08-11T13:36:55Z"
+  "updated_at": "2026-08-11T17:08:04Z"
 }

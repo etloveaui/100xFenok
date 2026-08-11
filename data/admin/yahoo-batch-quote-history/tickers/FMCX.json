@@ -52,41 +52,44 @@
       "run_id": "31496919771",
       "schedule": "7 12 * * 0-5",
       "shard": "30/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 654,
+      "natural": true,
+      "observed_at": "2026-08-11T17:08:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31515819191",
+      "schedule": "7 16 * * 0-5",
+      "shard": "32/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T09:13:40Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FMCX.json",
-    "payload_sha256": "49e92272d9ff26cf99bc9e42ea8e26682b07fdf184c057199874656c1c16d6cd",
-    "quote_as_of": "2026-07-31T15:53:49Z",
-    "source_as_of": "2026-07-31T15:53:49Z"
+    "fetched_at": "2026-08-11T17:08:31Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/FMCX.json",
+    "payload_sha256": "e58dd00a6a2b4abf3cd11a41e9954aa934afb0be822994e5fba050b8e5aa4f77",
+    "quote_as_of": "2026-08-11T13:46:04Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 891,
+    "latency_ms": 654,
     "natural": true,
-    "observed_at": "2026-08-11T13:36:55Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-11T17:08:04Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31496919771",
-    "schedule": "7 12 * * 0-5",
-    "shard": "30/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-11T13:36:55Z",
-    "provider_history_as_of": "2026-08-10",
-    "provider_quote_as_of": "2026-07-31T15:53:49Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31496919771"
+    "run_id": "31515819191",
+    "schedule": "7 16 * * 0-5",
+    "shard": "32/72"
   },
   "lkg": {
     "fetched_at": "2026-08-11T09:13:40Z",
@@ -99,17 +102,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-11T09:13:07Z",
-    "payload_sha256": "fdb5e6a555ef7dfaa485d08cf350c5e6ad7d9158d704eb003ceb0381df4a2be1",
-    "quote_as_of": "2026-07-31T15:53:49Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-11T17:08:04Z",
+    "payload_sha256": "534efc410bd10a78067b3f9f6005b1204b5efdb4a5fa8049833a415117fa2475",
+    "quote_as_of": "2026-08-11T13:46:04Z",
     "run_attempt": 1,
-    "run_id": "31476569032",
+    "run_id": "31515819191",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31T15:53:49Z"
+    "source_as_of": "2026-08-11"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -122,5 +125,5 @@
     "source_as_of": "2026-07-31T15:53:49Z"
   },
   "ticker": "FMCX",
-  "updated_at": "2026-08-11T13:36:55Z"
+  "updated_at": "2026-08-11T17:08:04Z"
 }

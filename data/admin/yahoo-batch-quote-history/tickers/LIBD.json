@@ -26,41 +26,44 @@
       "run_id": "31496919771",
       "schedule": "7 12 * * 0-5",
       "shard": "30/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 595,
+      "natural": true,
+      "observed_at": "2026-08-11T17:08:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31515819191",
+      "schedule": "7 16 * * 0-5",
+      "shard": "32/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T09:15:47Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/LIBD.json",
-    "payload_sha256": "d45052f13b8267c0f8af777715a05b0eacf3d7ec9cedd802bc46e61b1b4fc21f",
-    "quote_as_of": "2026-07-24T16:30:56Z",
-    "source_as_of": "2026-07-24T16:30:56Z"
+    "fetched_at": "2026-08-11T17:08:34Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/LIBD.json",
+    "payload_sha256": "029bbfcf0d0c1d89773d2e181b269be9088c9f12288a7cda412d2d0c4d254b6c",
+    "quote_as_of": "2026-08-11T13:46:06Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 773,
+    "latency_ms": 595,
     "natural": true,
-    "observed_at": "2026-08-11T13:36:55Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-11T17:08:04Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31496919771",
-    "schedule": "7 12 * * 0-5",
-    "shard": "30/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-11T13:36:55Z",
-    "provider_history_as_of": "2026-08-10",
-    "provider_quote_as_of": "2026-07-24T16:30:56Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31496919771"
+    "run_id": "31515819191",
+    "schedule": "7 16 * * 0-5",
+    "shard": "32/72"
   },
   "lkg": {
     "fetched_at": "2026-08-11T09:15:47Z",
@@ -73,17 +76,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-11T09:13:07Z",
-    "payload_sha256": "071bf1ecb420696565fbf95fbf3628870aee93bcb18a8477f47c5e13b3a24dd2",
-    "quote_as_of": "2026-07-24T16:30:56Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-11T17:08:04Z",
+    "payload_sha256": "0c5a29ea80f193485eb39e6deb4a7fe3eb57e8c8d07bedb56d0e9152166c1648",
+    "quote_as_of": "2026-08-11T13:46:06Z",
     "run_attempt": 1,
-    "run_id": "31476569032",
+    "run_id": "31515819191",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-24T16:30:56Z"
+    "source_as_of": "2026-08-11"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 12,
@@ -96,5 +99,5 @@
     "source_as_of": "2026-07-24T16:30:56Z"
   },
   "ticker": "LIBD",
-  "updated_at": "2026-08-11T13:36:55Z"
+  "updated_at": "2026-08-11T17:08:04Z"
 }
