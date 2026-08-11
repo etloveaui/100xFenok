@@ -71,6 +71,10 @@ assert.deepEqual(
     ["slickcharts-history", "slickcharts", ".github/workflows/slickcharts-history.yml"],
     ["slickcharts-symbols", "slickcharts", ".github/workflows/slickcharts-symbols.yml"],
     ["edgar-korean-summaries", "edgar_filings", ".github/workflows/fetch-edgar-filings.yml"],
+    ["us-indices-daily", "us_indices_daily", ".github/workflows/fetch-us-indices-daily.yml"],
+    ["finra-short-volume", "finra_short_volume", ".github/workflows/fenok-edge-daily.yml"],
+    ["finra-ats-weekly", "finra_ats_weekly", ".github/workflows/fetch-finra-ats-weekly.yml"],
+    ["gdelt-news-tone", "gdelt_news_tone", ".github/workflows/fetch-fenok-news-tone.yml"],
   ],
 );
 
