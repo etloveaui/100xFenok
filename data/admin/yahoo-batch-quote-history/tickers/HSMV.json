@@ -12,15 +12,28 @@
       "run_id": "30771231562",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 620,
+      "natural": true,
+      "observed_at": "2026-08-11T07:21:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31468517777",
+      "schedule": "7 6 * * 0-5",
+      "shard": "27/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-02T23:02:16Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/HSMV.json",
-    "payload_sha256": "07be3c4e08d9ef82787d7816561ffc438f680e92cfcf6b8f8c9a694625a6048f",
-    "quote_as_of": "2026-07-31T20:00:00Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-11T07:22:34Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/HSMV.json",
+    "payload_sha256": "c193df824857e2ca21ae7d128faacbabac9664e5b3bce7dc8a25f2117fc3e34c",
+    "quote_as_of": "2026-08-10T19:12:51Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 588,
+    "latency_ms": 620,
     "natural": true,
-    "observed_at": "2026-08-02T22:59:12Z",
+    "observed_at": "2026-08-11T07:21:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30771231562",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31468517777",
+    "schedule": "7 6 * * 0-5",
+    "shard": "27/72"
   },
   "lkg": {
     "fetched_at": "2026-08-02T23:02:16Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-02T22:59:12Z",
-    "payload_sha256": "e3553b4680c88356c32243275f2d7910820ce76f25b2bfe22535b1cab96f729a",
-    "quote_as_of": "2026-07-31T20:00:00Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T07:21:44Z",
+    "payload_sha256": "36d9116d04f2a6a396fd0ccb41750a8ca17d28cc2b8228428b97f34dca5eaa64",
+    "quote_as_of": "2026-08-10T19:12:51Z",
     "run_attempt": 1,
-    "run_id": "30771231562",
+    "run_id": "31468517777",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "HSMV",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T07:21:44Z"
 }

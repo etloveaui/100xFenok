@@ -12,15 +12,28 @@
       "run_id": "31004461242",
       "schedule": "7 10 * * 0-5",
       "shard": "41/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 668,
+      "natural": true,
+      "observed_at": "2026-08-11T07:21:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31468517777",
+      "schedule": "7 6 * * 0-5",
+      "shard": "27/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-05T12:14:38Z",
-    "history_as_of": "2026-08-04",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SIFI.json",
-    "payload_sha256": "8eddb53a678f77c621944ddf4858f84a1844a5afd267a5c1df88c193a29ca334",
-    "quote_as_of": "2026-07-31T13:41:28Z",
-    "source_as_of": "2026-07-31T13:41:28Z"
+    "fetched_at": "2026-08-11T07:23:06Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/SIFI.json",
+    "payload_sha256": "9dbf415f258c04600bc95c25b7da4ddd7b3a37a5788a78045e2ca88e47df5950",
+    "quote_as_of": "2026-08-06T17:22:21Z",
+    "source_as_of": "2026-08-06T17:22:21Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 604,
+    "latency_ms": 668,
     "natural": true,
-    "observed_at": "2026-08-05T12:11:49Z",
+    "observed_at": "2026-08-11T07:21:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31004461242",
-    "schedule": "7 10 * * 0-5",
-    "shard": "41/72"
+    "run_id": "31468517777",
+    "schedule": "7 6 * * 0-5",
+    "shard": "27/72"
   },
   "lkg": {
     "fetched_at": "2026-08-05T12:14:38Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-04",
-    "observed_at": "2026-08-05T12:11:49Z",
-    "payload_sha256": "883c72072322796fd9419f7dfe99971c03dd6129dd3b99e8287da638a67a4e1c",
-    "quote_as_of": "2026-07-31T13:41:28Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T07:21:44Z",
+    "payload_sha256": "633a4c2ea8997ad7fdb54b6b61dd79626c883b61af956a884b4eaf6c52835311",
+    "quote_as_of": "2026-08-06T17:22:21Z",
     "run_attempt": 1,
-    "run_id": "31004461242",
+    "run_id": "31468517777",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31T13:41:28Z"
+    "source_as_of": "2026-08-06T17:22:21Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-31T13:41:28Z"
   },
   "ticker": "SIFI",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T07:21:44Z"
 }
