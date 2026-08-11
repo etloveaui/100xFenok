@@ -64,6 +64,8 @@ from typing import Any, Dict, List, Optional
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from scraper_utils import preserve_updated
+
 # Constants
 DEFAULT_RETENTION_DAYS = 365  # 52 weeks
 DIVIDEND_SPLIT_YEARS = 5  # Split threshold for dividend files
@@ -305,7 +307,7 @@ def aggregate_stock(
     existing_dividends = existing.get("dividends", [])
     merged_dividends = merge_dividends(existing_dividends, dividends)
 
-    return {
+    payload = {
         "symbol": symbol,
         "company": metrics.get("company"),
         "updated": get_utc_timestamp(),
@@ -314,6 +316,8 @@ def aggregate_stock(
         "returns": merged_returns,
         "dividends": merged_dividends,
     }
+    preserve_updated(payload, existing)
+    return payload
 
 
 def get_all_symbols(
@@ -390,6 +394,11 @@ def export_split_dividends(
 
     indent = 2 if pretty else None
     timestamp = get_utc_timestamp()
+    recent_file = output_dir / "stocks-dividends-recent.json"
+    historical_file = output_dir / "stocks-dividends-historical.json"
+
+    existing_recent = load_json_file(recent_file)
+    existing_historical = load_json_file(historical_file)
 
     # Count total dividends
     recent_count = sum(len(divs) for divs in recent.values())
@@ -416,10 +425,10 @@ def export_split_dividends(
         ]
     }
 
-    # Write files
-    recent_file = output_dir / "stocks-dividends-recent.json"
-    historical_file = output_dir / "stocks-dividends-historical.json"
+    preserve_updated(recent_output, existing_recent)
+    preserve_updated(historical_output, existing_historical)
 
+    # Write files
     recent_file.write_text(
         json.dumps(recent_output, indent=indent, ensure_ascii=False, allow_nan=False),
         encoding="utf-8"

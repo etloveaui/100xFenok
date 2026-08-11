@@ -31,6 +31,7 @@ from scraper_utils import (
     find_table,
     extract_table_rows,
     build_standard_payload,
+    preserve_updated,
     write_output,
     get_utc_timestamp,
     RATE_LIMIT_SECONDS,
@@ -154,6 +155,12 @@ def main():
             sys.exit(1)
         
         payload = build_standard_payload(all_stocks, data_key="stocks")
+        if args.output:
+            try:
+                existing = json.loads(args.output.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                existing = {}
+            preserve_updated(payload, existing)
         write_output(payload, args.output, pretty=args.pretty)
         return
 
