@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 
+// Producer QA validates the canonical artifact and its serving contract.
+// Canonical/public byte parity is enforced after sync by the boundary-owned
+// sync-public-data mirror tests and public-mirror guards.
+
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 const ROOT = process.cwd();
 const ROUTE_PATH = "src/app/api/data/route.ts";
-const SOURCE_MIRROR = path.join("..", "data", "macro", "tga.json");
-const PUBLIC_MIRROR = path.join("public", "data", "macro", "tga.json");
+const CANONICAL_SOURCE = path.join("..", "data", "macro", "tga.json");
 
 function read(relativePath) {
   const absolutePath = path.join(ROOT, relativePath);
@@ -42,16 +45,14 @@ for (const needle of [
   assert(route.includes(needle), `${ROUTE_PATH}: missing '${needle}'`, errors);
 }
 
-const source = readJson(SOURCE_MIRROR);
-const mirror = readJson(PUBLIC_MIRROR);
+const source = readJson(CANONICAL_SOURCE);
 
-assert(JSON.stringify(source) === JSON.stringify(mirror), "Treasury TGA source/public mirror mismatch", errors);
-assert(typeof source.updated === "string" && source.updated.length > 0, "Treasury TGA mirror missing updated timestamp", errors);
-assert(Array.isArray(source.series) && source.series.length > 0, "Treasury TGA mirror has no series rows", errors);
+assert(typeof source.updated === "string" && source.updated.length > 0, "Treasury TGA canonical source missing updated timestamp", errors);
+assert(Array.isArray(source.series) && source.series.length > 0, "Treasury TGA canonical source has no series rows", errors);
 
 const last = source.series?.at(-1);
-assert(typeof last?.date === "string" && last.date.length > 0, "Treasury TGA mirror last row missing date", errors);
-assert(last?.val !== null && last?.val !== undefined, "Treasury TGA mirror last row missing value", errors);
+assert(typeof last?.date === "string" && last.date.length > 0, "Treasury TGA canonical source last row missing date", errors);
+assert(last?.val !== null && last?.val !== undefined, "Treasury TGA canonical source last row missing value", errors);
 
 if (errors.length > 0) {
   console.error("treasury data contract check failed");

@@ -18,11 +18,24 @@ on:
       - 'scripts/ops/emit-alarm-state.mjs'
       - 'scripts/ops/test-check-pipeline-job-health.mjs'
       - 'scripts/ops/test-emit-alarm-state.mjs'
+      - 'scripts/fetch-sentiment.mjs'
+      - 'scripts/fetch-fred-banking.mjs'
+      - 'scripts/fetch-treasury-tga.mjs'
+      - 'scripts/fetch-yahoo-ticker.mjs'
+      - 'scripts/test-fetch-producers-public-write-fence.mjs'
       - 'scripts/stage-lane-manifest.sh'
       - 'scripts/test-pipeline-failure-alarm-manifest.mjs'
       - 'scripts/test-global-writer-queue-manifest.mjs'
       - 'scripts/test-stage-lane-manifest.mjs'
       - 'scripts/test-update-manifest-*.mjs'
+      - 'scripts/update-manifest-projections.sh'
+      - 'scripts/publish-cloud-data-generation.mjs'
+      - 'scripts/lib/cloud-data-plane-worker-read.mjs'
+      - 'scripts/ops/probe-data-plane-serving.mjs'
+      - 'scripts/test-cloud-data-plane-publisher.mjs'
+      - 'scripts/test-cloud-data-plane-worker-read.mjs'
+      - 'scripts/test-cloud-data-plane-worker-route.mjs'
+      - 'scripts/ops/test-probe-data-plane-serving.mjs'
       - 'scripts/test-sync-update-manifest-trigger-paths.mjs'
       - '100xfenok-next/package.json'
   pull_request:
@@ -36,11 +49,24 @@ on:
       - 'scripts/ops/emit-alarm-state.mjs'
       - 'scripts/ops/test-check-pipeline-job-health.mjs'
       - 'scripts/ops/test-emit-alarm-state.mjs'
+      - 'scripts/fetch-sentiment.mjs'
+      - 'scripts/fetch-fred-banking.mjs'
+      - 'scripts/fetch-treasury-tga.mjs'
+      - 'scripts/fetch-yahoo-ticker.mjs'
+      - 'scripts/test-fetch-producers-public-write-fence.mjs'
       - 'scripts/stage-lane-manifest.sh'
       - 'scripts/test-pipeline-failure-alarm-manifest.mjs'
       - 'scripts/test-global-writer-queue-manifest.mjs'
       - 'scripts/test-stage-lane-manifest.mjs'
       - 'scripts/test-update-manifest-*.mjs'
+      - 'scripts/update-manifest-projections.sh'
+      - 'scripts/publish-cloud-data-generation.mjs'
+      - 'scripts/lib/cloud-data-plane-worker-read.mjs'
+      - 'scripts/ops/probe-data-plane-serving.mjs'
+      - 'scripts/test-cloud-data-plane-publisher.mjs'
+      - 'scripts/test-cloud-data-plane-worker-read.mjs'
+      - 'scripts/test-cloud-data-plane-worker-route.mjs'
+      - 'scripts/ops/test-probe-data-plane-serving.mjs'
       - 'scripts/test-sync-update-manifest-trigger-paths.mjs'
       - '100xfenok-next/package.json'
   workflow_dispatch:
@@ -82,14 +108,34 @@ jobs:
       - name: Validate public-mirror coverage (frozen-mirror gate)
         run: node scripts/check-public-mirror-coverage.mjs
 
+      - name: Validate producer public-write fence (canonical-only batch)
+        run: node scripts/test-fetch-producers-public-write-fence.mjs
+
       - name: Validate alarm workflow contracts
         run: npm --prefix 100xfenok-next run qa:alarm-state
 
       - name: Validate Update Manifest policy
         run: |
+          node scripts/test-update-manifest-runner.mjs
+          node scripts/test-update-manifest-workflow.mjs
+          node scripts/test-update-manifest-materializations.mjs
+          node scripts/test-build-data-supply-detection-floor.mjs
           node scripts/test-update-manifest-rebuild-policy.mjs
           node scripts/test-update-manifest-dispatch-decoupling.mjs
           node scripts/test-sync-update-manifest-trigger-paths.mjs
+
+      - name: Validate cloud data-plane enrollment and freshness contracts
+        run: |
+          node scripts/test-cloud-data-plane-publisher.mjs
+          node scripts/ops/test-probe-data-plane-serving.mjs
+          node --check scripts/lib/cloud-data-plane-worker-read.mjs
+          node --input-type=module - <<'NODE'
+          import assert from "node:assert/strict";
+          import { ENROLLED_PATHS, ENROLLED_PREFIXES } from "./scripts/lib/cloud-data-plane-worker-read.mjs";
+          assert.equal(ENROLLED_PATHS.get("/data/computed/signals.json"), "computed-signals");
+          assert.equal(ENROLLED_PATHS.has("/data/computed/other.json"), false);
+          assert.equal(ENROLLED_PREFIXES.some(({ prefix }) => prefix.startsWith("/data/computed/")), false);
+          NODE
 
       - name: Install pinned actionlint
         env:

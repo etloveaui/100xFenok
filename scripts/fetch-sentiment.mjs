@@ -9,8 +9,8 @@
  * Each file retains the latest 10,000 distinct provider dates; older dates are
  * evicted deterministically without truncating the existing long-range charts.
  *
- * Targets (array of { date, ... } objects, written to BOTH the repo-root SSOT
- * `data/sentiment/` and the Next.js build mirror `100xfenok-next/public/data/sentiment/`):
+ * Targets (array of { date, ... } objects, written to the repo-root SSOT
+ * `data/sentiment/`; the public mirror is boundary-owned (#377 slice 2)):
  *   - cnn-fear-greed.json   {date, score}                (CNN proxy)
  *   - cnn-components.json    {date, market_momentum,...}  (CNN proxy, 7 components)
  *   - cnn-put-call.json      {date, value, rating}        (CNN proxy put/call data tail)
@@ -66,9 +66,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..');
 
 // Canonical SSOT; the public mirror is boundary-owned (#377 slice 2).
-const DEFAULT_OUTPUT_DIRS = [
-  path.join(REPO_ROOT, 'data', 'sentiment'),
-];
+const DEFAULT_OUTPUT_DIR = path.join(REPO_ROOT, 'data', 'sentiment');
 
 export const SENTIMENT_LKG_SOURCE_FILES = Object.freeze({
   cnn: Object.freeze([
@@ -181,11 +179,11 @@ function providerDate(value, label) {
 }
 
 /**
- * Read the existing array from the FIRST output dir (the SSOT). Both mirrors
- * are kept identical, so the SSOT copy is authoritative for the merge base.
+ * Read the existing array from the canonical output directory, which is
+ * authoritative for the merge base.
  */
-function readExisting(fileName, outputDirs = DEFAULT_OUTPUT_DIRS) {
-  const ssotPath = path.join(outputDirs[0], fileName);
+function readExisting(fileName, outputDir = DEFAULT_OUTPUT_DIR) {
+  const ssotPath = path.join(outputDir, fileName);
   try {
     const parsed = JSON.parse(fs.readFileSync(ssotPath, 'utf-8'));
     return Array.isArray(parsed) ? parsed : [];
@@ -261,12 +259,10 @@ function applyBoundedPersistence(results) {
   });
 }
 
-function writeAll(fileName, array, outputDirs = DEFAULT_OUTPUT_DIRS) {
+function writeAll(fileName, array, outputDir = DEFAULT_OUTPUT_DIR) {
   const json = JSON.stringify(array, null, 2) + '\n';
-  for (const dir of outputDirs) {
-    fs.mkdirSync(dir, { recursive: true });
-    atomicWrite(path.join(dir, fileName), json);
-  }
+  fs.mkdirSync(outputDir, { recursive: true });
+  atomicWrite(path.join(outputDir, fileName), json);
 }
 
 function snapshotFiles(filePaths) {
@@ -749,12 +745,12 @@ function bundleCandidate(source, bundle, serialized, providerBundle, providerSer
   };
 }
 
-function publishSourceResults(results, outputDirs) {
-  for (const result of results) writeAll(result.file, result.array, outputDirs);
+function publishSourceResults(results, outputDir) {
+  for (const result of results) writeAll(result.file, result.array, outputDir);
 }
 
-function sourcePublicationPaths({ repoRoot, outputDirs, source, results, lkgStore }) {
-  const paths = results.flatMap((result) => outputDirs.map((dir) => path.join(dir, result.file)));
+function sourcePublicationPaths({ repoRoot, outputDir, source, results, lkgStore }) {
+  const paths = results.map((result) => path.join(outputDir, result.file));
   if (source.lkg === true) {
     paths.push(currentBundlePath(repoRoot, source.key), lkgStore.statePath);
   }
@@ -762,10 +758,10 @@ function sourcePublicationPaths({ repoRoot, outputDirs, source, results, lkgStor
   return paths;
 }
 
-function bootstrapCurrentBundle(repoRoot, source, outputDirs) {
+function bootstrapCurrentBundle(repoRoot, source, outputDir) {
   const retainedByFile = Object.fromEntries(source.fileNames.map((fileName) => [
     fileName,
-    retainLatestDistinctSourceDates(readExisting(fileName, outputDirs)),
+    retainLatestDistinctSourceDates(readExisting(fileName, outputDir)),
   ]));
   const files = Object.fromEntries(source.fileNames.map((fileName) => [fileName, retainedByFile[fileName].rows]));
   if (source.fileNames.some((fileName) => !validSeriesArray(files[fileName]))) return false;
@@ -789,10 +785,7 @@ function bootstrapCurrentBundle(repoRoot, source, outputDirs) {
 
 export async function runSentiment({
   repoRoot = REPO_ROOT,
-  outputDirs = [
-    path.join(repoRoot, 'data', 'sentiment'),
-    path.join(repoRoot, '100xfenok-next', 'public', 'data', 'sentiment'),
-  ],
+  outputDir = path.join(repoRoot, 'data', 'sentiment'),
   sources = defaultSources(),
   attemptShardPath = path.join(repoRoot, 'data', 'admin', 'data-supply-state', 'detection-attempts', 'sentiment.json'),
   observedAt = new Date().toISOString(),
@@ -813,7 +806,7 @@ export async function runSentiment({
     console.log('='.repeat(60));
     console.log('fetch-sentiment.mjs');
     console.log(`  date    : ${today}`);
-    console.log(`  outputs : ${outputDirs.map((d) => path.relative(repoRoot, d)).join(', ')}`);
+    console.log(`  output  : ${path.relative(repoRoot, outputDir)}`);
     console.log('='.repeat(60));
   }
 
@@ -832,7 +825,7 @@ export async function runSentiment({
         recordSentimentAttemptTuple(threwTuple('transport'));
         throw new Error('controlled failure');
       }
-      const readExistingFn = (fileName) => readExisting(fileName, outputDirs);
+      const readExistingFn = (fileName) => readExisting(fileName, outputDir);
       const results = applyBoundedPersistence(await source.run(readExistingFn));
       const sourceTuples = sentimentAttemptTuples.slice(tupleCountBefore);
       if (sourceTuples.length === 0) throw new Error('source returned without current-attempt evidence');
@@ -877,7 +870,7 @@ export async function runSentiment({
           continue;
         }
         const success = withFileRollback(
-          sourcePublicationPaths({ repoRoot, outputDirs, source, results, lkgStore }),
+          sourcePublicationPaths({ repoRoot, outputDir, source, results, lkgStore }),
           () => {
             if (source.key === 'crypto') {
               writeCryptoSourceObservation(repoRoot, {
@@ -886,7 +879,7 @@ export async function runSentiment({
                 run,
               });
             }
-            publishSourceResults(results, outputDirs);
+            publishSourceResults(results, outputDir);
             atomicWrite(currentBundlePath(repoRoot, source.key), serialized);
             return recordSuccessFn({ store: lkgStore, artifacts: [candidate], run });
           },
@@ -894,7 +887,7 @@ export async function runSentiment({
         if (success.state.items[source.key]?.recovered_at === observedAt) recoveredSources.push(source.key);
       } else {
         withFileRollback(
-          sourcePublicationPaths({ repoRoot, outputDirs, source, results, lkgStore }),
+          sourcePublicationPaths({ repoRoot, outputDir, source, results, lkgStore }),
           () => {
             if (source.key === 'crypto') {
               writeCryptoSourceObservation(repoRoot, {
@@ -903,7 +896,7 @@ export async function runSentiment({
                 run,
               });
             }
-            publishSourceResults(results, outputDirs);
+            publishSourceResults(results, outputDir);
           },
         );
       }
@@ -943,7 +936,7 @@ export async function runSentiment({
         } : {}),
       });
       if (source.lkg === true) {
-        bootstrapCurrentBundle(repoRoot, source, outputDirs);
+        bootstrapCurrentBundle(repoRoot, source, outputDir);
         const failure = lkgStore.recordFailure({ artifacts: [bundleArtifact(repoRoot, source)], run, reason });
         const classification = classifyLkgFailure({ reason, hasCompleteLkg: failure.hasCompleteLkg });
         failedTracked.push({ source, reason, requestFailed: source.key !== injectedSource });

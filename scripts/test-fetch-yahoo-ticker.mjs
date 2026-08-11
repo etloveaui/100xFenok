@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 import { validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import {
-  publishYahooOutputPairAtomic,
+  publishYahooOutputAtomic,
   runYahooTicker,
   validateYahooControlledFailureTickers,
 } from "./fetch-yahoo-ticker.mjs";
@@ -30,10 +30,13 @@ function fileBytes(filePath) {
 function pathsFor(root) {
   return {
     canonicalPath: path.join(root, "data", "macro", "yahoo-ticker.json"),
-    publicPath: path.join(root, "public", "data", "macro", "yahoo-ticker.json"),
     attemptShardPath: path.join(root, "attempts", "yahoo_ticker_macro.json"),
     stateRoot: path.join(root, "data", "admin", "yahoo-hourly-ticker"),
   };
+}
+
+function publicPathFor(root) {
+  return path.join(root, "public", "data", "macro", "yahoo-ticker.json");
 }
 
 function quote(symbol, price, regularMarketTime = 1784000000) {
@@ -65,9 +68,7 @@ function seedOutput(paths, sourceTime = 1783990000) {
     },
   };
   fs.mkdirSync(path.dirname(paths.canonicalPath), { recursive: true });
-  fs.mkdirSync(path.dirname(paths.publicPath), { recursive: true });
   fs.writeFileSync(paths.canonicalPath, `${JSON.stringify(output, null, 2)}\n`);
-  fs.writeFileSync(paths.publicPath, `${JSON.stringify(output, null, 2)}\n`);
   return output;
 }
 
@@ -88,7 +89,7 @@ async function runCase(request, { seed = false, ...options } = {}) {
   const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
   assert.equal(validateAttemptShard(shard, "yahoo_ticker_macro"), true);
   assert.equal(shard.attempts[0].member_id, null);
-  return { result, shard, paths };
+  return { root, result, shard, paths };
 }
 
 assert.deepEqual(validateYahooControlledFailureTickers("TQQQ", "workflow_dispatch"), ["TQQQ"]);
@@ -96,7 +97,7 @@ assert.throws(() => validateYahooControlledFailureTickers("TQQQ", "schedule"), /
 assert.throws(() => validateYahooControlledFailureTickers("AAPL", "workflow_dispatch"), /unknown/);
 
 {
-  const { result, shard, paths } = await runCase(async (_url, symbol) => response(200, quote(symbol, symbol === "TQQQ" ? 50 : 40)));
+  const { root, result, shard, paths } = await runCase(async (_url, symbol) => response(200, quote(symbol, symbol === "TQQQ" ? 50 : 40)));
   assert.equal(result.ok, true);
   assert.equal(result.exitCode, 0);
   assert.equal(result.reason, "ready", "the measured flat Worker payload satisfies its endpoint contract");
@@ -104,7 +105,7 @@ assert.throws(() => validateYahooControlledFailureTickers("AAPL", "workflow_disp
   assert.equal(shard.attempts[0].assertions[0].passed, true);
   const output = JSON.parse(fs.readFileSync(paths.canonicalPath, "utf8"));
   assert.deepEqual(Object.keys(output.tickers), ["TQQQ", "SOXL"]);
-  assert.deepEqual(JSON.parse(fs.readFileSync(paths.publicPath, "utf8")), output);
+  assert.equal(fs.existsSync(publicPathFor(root)), false, "a successful run must not create the public mirror file");
 }
 
 for (const missingField of ["symbol", "price", "regularMarketTime"]) {
@@ -240,7 +241,6 @@ for (const mutate of [
     sleep: async () => {}, maxRetries: 0, observedAt: OBSERVED_AT, attemptId: ATTEMPT_ID, eventName: "workflow_dispatch",
   });
   const beforeCanonical = fileBytes(paths.canonicalPath);
-  const beforePublic = fileBytes(paths.publicPath);
   const statePath = path.join(paths.stateRoot, "keys", "TQQQ.json");
   const lkgPath = path.join(paths.stateRoot, "lkg", "TQQQ.json");
   const beforeState = fileBytes(statePath);
@@ -254,7 +254,7 @@ for (const mutate of [
   });
   assert.equal(fatal.exitCode, 2);
   assert.deepEqual(fileBytes(paths.canonicalPath), beforeCanonical, "fatal sibling leaves canonical byte-identical");
-  assert.deepEqual(fileBytes(paths.publicPath), beforePublic, "fatal sibling leaves public byte-identical");
+  assert.equal(fs.existsSync(publicPathFor(root)), false, "fatal sibling never creates a public mirror file");
   assert.deepEqual(fileBytes(statePath), beforeState, "unpublished successful-key state cannot advance");
   assert.deepEqual(fileBytes(lkgPath), beforeLkg, "unpublished successful-key LKG cannot advance");
 }
@@ -268,7 +268,6 @@ for (const mutate of [
     sleep: async () => {}, maxRetries: 0, observedAt: OBSERVED_AT, attemptId: ATTEMPT_ID, eventName: "workflow_dispatch",
   });
   const beforeCanonical = fileBytes(paths.canonicalPath);
-  const beforePublic = fileBytes(paths.publicPath);
   const statePath = path.join(paths.stateRoot, "keys", "TQQQ.json");
   const lkgPath = path.join(paths.stateRoot, "lkg", "TQQQ.json");
   const beforeState = fileBytes(statePath);
@@ -278,11 +277,11 @@ for (const mutate of [
     ...paths,
     request: async (_url, symbol) => response(200, quote(symbol, symbol === "TQQQ" ? 51 : 41, 1784001000)),
     sleep: async () => {}, maxRetries: 0, observedAt: "2026-07-14T05:20:00Z", attemptId: "gh-304-1-yahoo", eventName: "schedule",
-    publishOutputPair: (args) => publishYahooOutputPairAtomic({
+    publishOutputPair: (args) => publishYahooOutputAtomic({
       ...args,
       replaceFile(source, target) {
         replacements += 1;
-        if (replacements === 2) throw new Error("injected public publish failure");
+        if (replacements === 1) throw new Error("injected publish failure");
         fs.renameSync(source, target);
       },
     }),
@@ -290,7 +289,7 @@ for (const mutate of [
   assert.equal(failedPublish.exitCode, 2);
   assert.match(failedPublish.reasons.join("; "), /publish/i);
   assert.deepEqual(fileBytes(paths.canonicalPath), beforeCanonical);
-  assert.deepEqual(fileBytes(paths.publicPath), beforePublic);
+  assert.equal(fs.existsSync(publicPathFor(root)), false, "rollback must not leave a public mirror file behind");
   assert.deepEqual(fileBytes(statePath), beforeState);
   assert.deepEqual(fileBytes(lkgPath), beforeLkg);
 }
@@ -305,7 +304,6 @@ for (const mutate of [
   });
   const guardedPaths = [
     paths.canonicalPath,
-    paths.publicPath,
     path.join(paths.stateRoot, "index.json"),
     ...["TQQQ.json", "SOXL.json"].flatMap((key) => [path.join(paths.stateRoot, "keys", key), path.join(paths.stateRoot, "lkg", key)]),
   ];
@@ -315,7 +313,7 @@ for (const mutate of [
     request: async (_url, symbol) => response(200, quote(symbol, symbol === "TQQQ" ? 51 : 41, 1784001000)),
     sleep: async () => {}, maxRetries: 0, observedAt: "2026-07-14T05:22:00Z", attemptId: "gh-3042-1-yahoo", eventName: "schedule",
     publishOutputPair(args) {
-      publishYahooOutputPairAtomic(args);
+      publishYahooOutputAtomic(args);
       const output = JSON.parse(fs.readFileSync(args.canonicalPath, "utf8"));
       output.tickers.TQQQ.price = 999;
       fs.writeFileSync(args.canonicalPath, `${JSON.stringify(output, null, 2)}\n`);
@@ -336,7 +334,6 @@ for (const mutate of [
   });
   const guardedPaths = [
     paths.canonicalPath,
-    paths.publicPath,
     path.join(paths.stateRoot, "index.json"),
     ...["TQQQ.json", "SOXL.json"].flatMap((key) => [path.join(paths.stateRoot, "keys", key), path.join(paths.stateRoot, "lkg", key)]),
   ];
@@ -354,7 +351,6 @@ for (const mutate of [
         output.updated = "2099-01-01T00:00:00Z";
         const bytes = `${JSON.stringify(output, null, 2)}\n`;
         fs.writeFileSync(paths.canonicalPath, bytes);
-        fs.writeFileSync(paths.publicPath, bytes);
       }
       return committed;
     },
@@ -374,7 +370,6 @@ for (const mutate of [
   });
   const guardedPaths = [
     paths.canonicalPath,
-    paths.publicPath,
     path.join(paths.stateRoot, "index.json"),
     ...["TQQQ.json", "SOXL.json"].flatMap((key) => [
       path.join(paths.stateRoot, "keys", key),
@@ -415,7 +410,6 @@ for (const mutate of [
   });
   const guardedPaths = [
     paths.canonicalPath,
-    paths.publicPath,
     path.join(paths.stateRoot, "index.json"),
     ...["TQQQ.json", "SOXL.json"].flatMap((key) => [
       path.join(paths.stateRoot, "keys", key),
@@ -456,7 +450,6 @@ for (const mutate of [
   });
   const guardedPaths = [
     paths.canonicalPath,
-    paths.publicPath,
     path.join(paths.stateRoot, "index.json"),
     ...["TQQQ.json", "SOXL.json"].flatMap((key) => [
       path.join(paths.stateRoot, "keys", key),
@@ -498,7 +491,6 @@ for (const mutate of [
   });
   const guardedPaths = [
     paths.canonicalPath,
-    paths.publicPath,
     path.join(paths.stateRoot, "index.json"),
     ...["TQQQ.json", "SOXL.json"].flatMap((key) => [
       path.join(paths.stateRoot, "keys", key),
@@ -527,6 +519,7 @@ for (const mutate of [
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-yahoo-foreign-writer-"));
   const paths = pathsFor(root);
+  const publicPath = publicPathFor(root);
   await runYahooTicker({
     ...paths,
     request: async (_url, symbol) => response(200, quote(symbol, symbol === "TQQQ" ? 50 : 40, 1784000000)),
@@ -542,9 +535,10 @@ for (const mutate of [
   const { symbol: _symbol, ...foreignTqqq } = quote("TQQQ", 99, 1784003000);
   foreign.tickers.TQQQ = foreignTqqq;
   fs.writeFileSync(paths.canonicalPath, `${JSON.stringify(foreign, null, 2)}\n`);
-  fs.writeFileSync(paths.publicPath, `${JSON.stringify(foreign, null, 2)}\n`);
+  fs.mkdirSync(path.dirname(publicPath), { recursive: true });
+  fs.writeFileSync(publicPath, `${JSON.stringify(foreign, null, 2)}\n`);
   const beforeCanonical = fileBytes(paths.canonicalPath);
-  const beforePublic = fileBytes(paths.publicPath);
+  const beforePublic = fileBytes(publicPath);
   const soxlStatePath = path.join(paths.stateRoot, "keys", "SOXL.json");
   const beforeSoxlState = fileBytes(soxlStatePath);
 
@@ -557,7 +551,7 @@ for (const mutate of [
   assert.equal(conflict.updated, false);
   assert.match(conflict.reasons.join("; "), /foreign_writer_conflict/);
   assert.deepEqual(fileBytes(paths.canonicalPath), beforeCanonical, "foreign canonical is never overwritten");
-  assert.deepEqual(fileBytes(paths.publicPath), beforePublic);
+  assert.deepEqual(fileBytes(publicPath), beforePublic);
   assert.deepEqual(fileBytes(soxlStatePath), beforeSoxlState, "unpublished sibling candidate state remains unchanged");
   const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", "TQQQ.json"), "utf8"));
   assert.equal(state.resolution_state, "lkg_primary");

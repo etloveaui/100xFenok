@@ -11,6 +11,7 @@ import { orderMaterializations, validateMaterializationRoutes } from "./material
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const workflow = fs.readFileSync(path.join(root, ".github/workflows/update-manifest.yml"), "utf8");
+const runner = fs.readFileSync(path.join(root, "scripts/update-manifest-projections.sh"), "utf8");
 const manifest = JSON.parse(fs.readFileSync(path.join(root, "data/admin/lane-commit-manifest.json"), "utf8"));
 const helperCall = "node scripts/materialize-update-manifest-routes.mjs";
 const EXPECTED_ROUTES = [
@@ -25,23 +26,37 @@ const EXPECTED_ROUTES = [
 ];
 
 assert.deepEqual(manifest.update_manifest.materializations, EXPECTED_ROUTES);
-assert.equal((workflow.match(/node scripts\/materialize-update-manifest-routes\.mjs/g) ?? []).length, 3);
-const initialProjection = workflow.slice(
-  workflow.indexOf("- name: Project manifest-owned public mirrors"),
-  workflow.indexOf("- name: Export computed signals"),
-);
-assert.match(initialProjection, /materialize-update-manifest-routes\.mjs --all[\s\S]*?sync-public-data\.mjs --write --etf-shards-only[\s\S]*?validate-slickcharts-integrity\.py[\s\S]*?diff -qr data\/slickcharts/);
-assert.ok(workflow.indexOf("- name: Build shared market and stock promotion state") < workflow.indexOf("- name: Project manifest-owned public mirrors"));
-assert.ok(workflow.indexOf("- name: Project manifest-owned public mirrors") < workflow.indexOf("- name: Build phase2 closeout indexes"));
+// Projection materialization is owned by the shared runner; the workflow keeps
+// only the retry-hygiene invocation. The initial path reaches the SAME runner.
+assert.equal((workflow.match(/node scripts\/materialize-update-manifest-routes\.mjs/g) ?? []).length, 1,
+  "workflow must keep only the retry-hygiene materialize invocation");
+assert.equal((runner.match(/node scripts\/materialize-update-manifest-routes\.mjs/g) ?? []).length, 1,
+  "runner must own the projection materialize invocation");
+assert.ok(workflow.indexOf("run: bash scripts/update-manifest-projections.sh") < workflow.indexOf("- name: Check if manifest changed"),
+  "initial path must run the shared runner before the change probe");
+// Mirror projection order, once, in the shared runner (initial and retry alike).
+assert.match(runner, /materialize-update-manifest-routes\.mjs --all[\s\S]*?sync-public-data\.mjs --write --etf-shards-only[\s\S]*?validate-slickcharts-integrity\.py[\s\S]*?diff -qr data\/slickcharts/);
 const retry = workflow.slice(workflow.indexOf("for attempt in 1 2 3; do"));
 assert.match(retry, /git reset --hard origin\/main[\s\S]*?materialize-update-manifest-routes\.mjs --all --validate-only --assert-no-untracked/);
-assert.match(retry, /write-fenok-s1-stock-public-promotion-dry-run\.mjs --check[\s\S]*?materialize-update-manifest-routes\.mjs --all[\s\S]*?sync-public-data\.mjs --write --etf-shards-only[\s\S]*?validate-slickcharts-integrity\.py[\s\S]*?diff -qr data\/slickcharts[\s\S]*?export-computed-signals\.mjs[\s\S]*?build-phase2-closeout-indexes\.mjs/);
-assert.match(retry, /git reset --hard origin\/main[\s\S]*?node scripts\/test-update-manifest-materializations\.mjs[\s\S]*?materialize-update-manifest-routes\.mjs --all --validate-only/);
-assert.equal((workflow.match(/materialize-update-manifest-routes\.mjs --all(?! --validate-only)/g) ?? []).length, 2);
-assert.equal((workflow.match(/sync-public-data\.mjs --write --etf-shards-only/g) ?? []).length, 2);
-assert.doesNotMatch(workflow, /--route-source/);
-assert.doesNotMatch(workflow, /rsync -a --checksum --delete (?:data\/slickcharts|data\/yf\/finance|data\/stockanalysis)/);
-assert.doesNotMatch(workflow, /cp data\/(?:indices\/nasdaq-giw-sox-constituents|admin\/fenok-edge-korea-krx-daily-index|computed\/fenok_occ_options_availability|computed\/market_facts\/index)\.json/);
+// Current retry contract: reset hygiene, then the shared runner, then the
+// change probe / stage / commit / push. The workflow does not re-run the
+// projection stack inline and does not invoke this test suite itself.
+assert.match(retry, /materialize-update-manifest-routes\.mjs --all --validate-only --assert-no-untracked[\s\S]*?update-manifest-projections\.sh[\s\S]*?stage-update-manifest-central\.mjs --check/);
+assert.equal((workflow.match(/node scripts\/test-update-manifest-materializations\.mjs/g) ?? []).length, 0,
+  "workflow must not re-run the materializations suite inside the retry loop");
+assert.equal((workflow.match(/materialize-update-manifest-routes\.mjs --all(?! --validate-only)/g) ?? []).length, 0,
+  "workflow must not carry the projection --all invocation (runner owns it)");
+assert.equal((runner.match(/materialize-update-manifest-routes\.mjs --all(?! --validate-only)/g) ?? []).length, 1,
+  "runner must carry the projection --all invocation exactly once");
+assert.equal((workflow.match(/sync-public-data\.mjs --write --etf-shards-only/g) ?? []).length, 0,
+  "workflow must not embed the public mirror sync (runner owns it)");
+assert.equal((runner.match(/sync-public-data\.mjs --write --etf-shards-only/g) ?? []).length, 1,
+  "runner must carry the public mirror sync exactly once");
+for (const source of [workflow, runner]) {
+  assert.doesNotMatch(source, /--route-source/);
+  assert.doesNotMatch(source, /rsync -a --checksum --delete (?:data\/slickcharts|data\/yf\/finance|data\/stockanalysis)/);
+  assert.doesNotMatch(source, /cp data\/(?:indices\/nasdaq-giw-sox-constituents|admin\/fenok-edge-korea-krx-daily-index|computed\/fenok_occ_options_availability|computed\/market_facts\/index)\.json/);
+}
 assert.equal(fs.existsSync(path.join(root, "scripts/materialize-update-manifest-routes.mjs")), true, `${helperCall} must exist`);
 
 const helperPath = path.join(root, "scripts/materialize-update-manifest-routes.mjs");

@@ -212,17 +212,9 @@ function defaultCanonicalPaths() {
   ]));
 }
 
-function defaultPublicPaths() {
-  return Object.fromEntries(FRED_BANKING_GROUPS.map((group) => [
-    group.id,
-    path.join(REPO_ROOT, "100xfenok-next", "public", "data", "macro", `fred-banking-${group.id}.json`),
-  ]));
-}
-
 export async function runFredBanking({
   repoRoot = REPO_ROOT,
   canonicalPaths = defaultCanonicalPaths(),
-  publicPaths = defaultPublicPaths(),
   attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", "fred_banking.json"),
   type = "all",
   apiKey = process.env.FRED_API_KEY,
@@ -371,7 +363,6 @@ export async function runFredBanking({
   }
   for (const candidate of promotable) {
     atomicWrite(canonicalPaths[candidate.key], candidate.serialized);
-    atomicWrite(publicPaths[candidate.key], candidate.serialized);
   }
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
   const recovered = promotable.some((candidate) => success.state.items[candidate.key]?.recovered_at === observedAt);

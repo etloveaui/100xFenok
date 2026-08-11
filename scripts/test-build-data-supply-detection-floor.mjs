@@ -52,6 +52,7 @@ const EXPECTED_PATH = path.join(FIXTURE_DIR, "cases.expected.json");
 const ADMIN_REPORT = path.join(REPO_ROOT, "data", "admin", REPORT_BASENAME);
 const DEPLOY_WORKFLOW = path.join(REPO_ROOT, ".github", "workflows", "deploy-worker.yml");
 const UPDATE_MANIFEST_WORKFLOW = path.join(REPO_ROOT, ".github", "workflows", "update-manifest.yml");
+const UPDATE_MANIFEST_RUNNER = path.join(REPO_ROOT, "scripts", "update-manifest-projections.sh");
 const APP_PACKAGE = path.join(REPO_ROOT, "100xfenok-next", "package.json");
 const TEST_PREFIX = "fenok-dfloor-test-";
 const PROTECTED_RELATIVE_PATHS = [
@@ -2123,6 +2124,7 @@ function runPrivacyAndProtectedChecks(report, adminReportBefore) {
 function runWorkflowBridgeChecks() {
   const workflow = fs.readFileSync(DEPLOY_WORKFLOW, "utf8");
   const updateWorkflow = fs.readFileSync(UPDATE_MANIFEST_WORKFLOW, "utf8");
+  const runner = fs.readFileSync(UPDATE_MANIFEST_RUNNER, "utf8");
   const packageScripts = JSON.parse(fs.readFileSync(APP_PACKAGE, "utf8")).scripts;
   const stepName = "      - name: Build data supply detection floor\n";
   const stepStart = workflow.indexOf(stepName);
@@ -2140,10 +2142,10 @@ function runWorkflowBridgeChecks() {
   ];
   for (const required of requiredTokens) {
     assert.ok(step.includes(required), `deploy bridge includes ${required}`);
-    assert.equal(updateWorkflow.split(required).length - 1, 2, `update-manifest initial and retry bridges include ${required}`);
+    assert.equal(runner.split(required).length - 1, 1, `shared runner bridge includes ${required}`);
   }
   assert.equal(step.includes("--output-root \"$repo_root/data"), false, "builder never writes under repo data");
-  assert.equal(updateWorkflow.split("--output-root \"$repo_root/data").length - 1, 0, "update-manifest builder never writes under repo data");
+  assert.equal(runner.split("--output-root \"$repo_root/data").length - 1, 0, "shared runner builder never writes under repo data");
 
   assert.equal(
     workflow.includes("      - name: Reconcile derived data\n"),
@@ -2216,15 +2218,17 @@ function runWorkflowBridgeChecks() {
     "cf:build reconciles derived data and runs the strict KPI checker before bundling",
   );
 
-  const initialBridgeStart = updateWorkflow.indexOf(stepName);
-  const initialKpiStart = updateWorkflow.indexOf("      - name: Build data health KPI\n");
-  assert.ok(initialBridgeStart >= 0, "update-manifest initial path runs the detection floor");
-  assert.ok(initialKpiStart > initialBridgeStart, "update-manifest initial path installs the floor before KPI build");
+  // The S13 detection-floor bridge and the S14 KPI build live in the shared
+  // runner, so the install-before-KPI contract is asserted there once.
+  const runnerBridgeStart = runner.indexOf("repo_root=\"$(pwd -P)\"");
+  const runnerKpiStart = runner.indexOf("npm --prefix 100xfenok-next run build:fenok-data-health-kpi");
+  assert.ok(runnerBridgeStart >= 0, "shared runner rebuilds the detection floor");
+  assert.ok(runnerKpiStart > runnerBridgeStart, "shared runner installs the floor before KPI build");
+  const initialRunnerCall = updateWorkflow.indexOf("run: bash scripts/update-manifest-projections.sh");
   const retryReset = updateWorkflow.indexOf("git reset --hard origin/main");
-  const retryBridgeStart = updateWorkflow.indexOf("repo_root=\"$(pwd -P)\"", retryReset);
-  const retryKpiStart = updateWorkflow.indexOf("npm --prefix 100xfenok-next run build:fenok-data-health-kpi", retryReset);
-  assert.ok(retryReset >= 0 && retryBridgeStart > retryReset, "update-manifest retry rebuilds the floor after resetting to latest main");
-  assert.ok(retryKpiStart > retryBridgeStart, "update-manifest retry installs the floor before KPI rebuild");
+  const retryRunnerCall = updateWorkflow.indexOf("bash scripts/update-manifest-projections.sh", retryReset);
+  assert.ok(initialRunnerCall >= 0, "update-manifest initial path runs the shared runner");
+  assert.ok(retryReset >= 0 && retryRunnerCall > retryReset, "update-manifest retry rebuilds the floor via the shared runner after resetting to latest main");
   assert.equal(updateWorkflow.includes("data/admin/data-supply-detection-floor.json \\\n"), false, "ephemeral report is not added to the manifest commit pathspec");
 }
 

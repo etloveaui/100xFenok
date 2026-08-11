@@ -38,17 +38,18 @@ function observations(seriesId, date = "2026-07-11") {
 
 function makePaths(root) {
   const canonical = {};
-  const publicPaths = {};
   for (const group of FRED_BANKING_GROUPS) {
     canonical[group.id] = path.join(root, "data", "macro", `fred-banking-${group.id}.json`);
-    publicPaths[group.id] = path.join(root, "public", "data", "macro", `fred-banking-${group.id}.json`);
   }
   return {
     repoRoot: root,
     canonicalPaths: canonical,
-    publicPaths,
     attemptShardPath: path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "fred_banking.json"),
   };
+}
+
+function publicPathFor(root, groupId) {
+  return path.join(root, "public", "data", "macro", `fred-banking-${groupId}.json`);
 }
 
 function readJson(filePath) {
@@ -241,7 +242,7 @@ function assertValidShard(shard) {
   assert.equal(calls.length, 18, "all cadence groups must issue eighteen series requests");
   assert.equal(calls.filter((seriesId) => seriesId === "IRLTLT01KRM156N").length, 1, "Korea series remains monthly-only");
   for (const group of FRED_BANKING_GROUPS) {
-    assert.deepEqual(fs.readFileSync(paths.canonicalPaths[group.id]), fs.readFileSync(paths.publicPaths[group.id]));
+    assert.equal(fs.existsSync(publicPathFor(root, group.id)), false, "a successful run must not create the public mirror file");
     assert.equal(readJson(paths.canonicalPaths[group.id]).type, group.id);
   }
   const shard = readJson(paths.attemptShardPath);
@@ -261,10 +262,11 @@ function assertValidShard(shard) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fred-banking-worst-test-"));
   const paths = makePaths(root);
   for (const group of FRED_BANKING_GROUPS) {
+    const publicPath = publicPathFor(root, group.id);
     fs.mkdirSync(path.dirname(paths.canonicalPaths[group.id]), { recursive: true });
-    fs.mkdirSync(path.dirname(paths.publicPaths[group.id]), { recursive: true });
+    fs.mkdirSync(path.dirname(publicPath), { recursive: true });
     fs.writeFileSync(paths.canonicalPaths[group.id], `${JSON.stringify({ marker: `lkg-${group.id}` })}\n`);
-    fs.writeFileSync(paths.publicPaths[group.id], `${JSON.stringify({ marker: `lkg-${group.id}` })}\n`);
+    fs.writeFileSync(publicPath, `${JSON.stringify({ marker: `lkg-${group.id}` })}\n`);
   }
   const result = await runFredBanking({
     ...paths,
@@ -288,7 +290,7 @@ function assertValidShard(shard) {
   assert.equal(row.rate_limited, true);
   for (const group of FRED_BANKING_GROUPS) {
     assert.equal(readJson(paths.canonicalPaths[group.id]).marker, `lkg-${group.id}`);
-    assert.equal(readJson(paths.publicPaths[group.id]).marker, `lkg-${group.id}`);
+    assert.equal(readJson(publicPathFor(root, group.id)).marker, `lkg-${group.id}`);
   }
 }
 

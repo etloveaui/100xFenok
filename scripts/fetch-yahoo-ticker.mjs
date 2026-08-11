@@ -123,27 +123,21 @@ function restoreSnapshots(snapshots) {
   for (const snapshot of snapshots) restoreBytes(snapshot.filePath, snapshot.bytes, token);
 }
 
-export function publishYahooOutputPairAtomic({
+export function publishYahooOutputAtomic({
   canonicalPath,
-  publicPath,
   output,
   replaceFile = fs.renameSync,
 }) {
   const bytes = Buffer.from(`${JSON.stringify(output, null, 2)}\n`);
   const token = `${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}`;
   const priorCanonical = fs.existsSync(canonicalPath) ? fs.readFileSync(canonicalPath) : null;
-  const priorPublic = fs.existsSync(publicPath) ? fs.readFileSync(publicPath) : null;
   const stagedCanonical = stageBytes(canonicalPath, bytes, `${token}.canonical`);
-  const stagedPublic = stageBytes(publicPath, bytes, `${token}.public`);
   try {
     replaceFile(stagedCanonical, canonicalPath);
-    replaceFile(stagedPublic, publicPath);
   } catch (error) {
     fs.rmSync(stagedCanonical, { force: true });
-    fs.rmSync(stagedPublic, { force: true });
     try {
       restoreBytes(canonicalPath, priorCanonical, token);
-      restoreBytes(publicPath, priorPublic, token);
     } catch (rollbackError) {
       throw new Error(`Yahoo output publish failed (${error.message}) and rollback failed (${rollbackError.message})`);
     }
@@ -152,11 +146,10 @@ export function publishYahooOutputPairAtomic({
   return bytes;
 }
 
-function verifyPublishedYahooOutputs({ canonicalPath, publicPath, expectedBytes, plannedCandidates, store }) {
+function verifyPublishedYahooOutputs({ canonicalPath, expectedBytes, plannedCandidates, store }) {
   const canonicalBytes = fs.readFileSync(canonicalPath);
-  const publicBytes = fs.readFileSync(publicPath);
-  if (!canonicalBytes.equals(expectedBytes) || !publicBytes.equals(expectedBytes)) {
-    throw new Error("Yahoo canonical/public output bytes diverged from the accepted publication");
+  if (!canonicalBytes.equals(expectedBytes)) {
+    throw new Error("Yahoo canonical output bytes diverged from the accepted publication");
   }
   let output;
   try {
@@ -301,7 +294,6 @@ async function evaluateTicker({ symbol, request, sleep, maxRetries }) {
 
 export async function runYahooTicker({
   canonicalPath = path.join(REPO_ROOT, "data", "macro", "yahoo-ticker.json"),
-  publicPath = path.join(REPO_ROOT, "100xfenok-next", "public", "data", "macro", "yahoo-ticker.json"),
   attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", "yahoo_ticker_macro.json"),
   stateRoot = path.join(REPO_ROOT, "data", "admin", "yahoo-hourly-ticker"),
   request = requestBytes,
@@ -311,7 +303,7 @@ export async function runYahooTicker({
   attemptId = `gh-${process.env.GITHUB_RUN_ID ?? Date.now()}-${process.env.GITHUB_RUN_ATTEMPT ?? 1}-yahoo`,
   eventName = process.env.GITHUB_EVENT_NAME ?? null,
   controlledFailureTickers = [],
-  publishOutputPair = publishYahooOutputPairAtomic,
+  publishOutputPair = publishYahooOutputAtomic,
   commitPlannedCandidate = (store, candidate) => store.commitCandidate(candidate),
 } = {}) {
   const results = [];
@@ -340,7 +332,6 @@ export async function runYahooTicker({
   const prior = readCanonical(canonicalPath);
   const preRunRecoverySnapshots = snapshotFiles([
     canonicalPath,
-    publicPath,
     path.join(stateRoot, "index.json"),
     ...TICKERS.flatMap((symbol) => {
       const key = `${symbol}.json`;
@@ -437,8 +428,8 @@ export async function runYahooTicker({
     };
     const expectedBytes = Buffer.from(`${JSON.stringify(output, null, 2)}\n`);
     try {
-      publishOutputPair({ canonicalPath, publicPath, output });
-      verifyPublishedYahooOutputs({ canonicalPath, publicPath, expectedBytes, plannedCandidates, store });
+      publishOutputPair({ canonicalPath, output });
+      verifyPublishedYahooOutputs({ canonicalPath, expectedBytes, plannedCandidates, store });
       for (const candidate of plannedCandidates) commitPlannedCandidate(store, candidate);
       verifyCommittedYahooStates({
         store,
@@ -446,7 +437,7 @@ export async function runYahooTicker({
         plannedCandidates,
       });
       index = store.buildIndex({ keys: TICKERS.map((symbol) => `${symbol}.json`), run });
-      verifyPublishedYahooOutputs({ canonicalPath, publicPath, expectedBytes, plannedCandidates, store });
+      verifyPublishedYahooOutputs({ canonicalPath, expectedBytes, plannedCandidates, store });
       updated = true;
     } catch (error) {
       try {
