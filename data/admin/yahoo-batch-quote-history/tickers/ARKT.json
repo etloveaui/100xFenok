@@ -25,12 +25,26 @@
       "run_id": "31111230701",
       "schedule": "7 12 * * 0-5",
       "shard": "54/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: source timestamp regression for ARKT: quote_as_of 2026-08-04T19:12:00Z < 2026-08-06T13:46:02Z",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 415,
+      "natural": true,
+      "observed_at": "2026-08-11T23:29:49Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31544436443",
+      "schedule": "7 22 * * 0-5",
+      "shard": "35/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-06T14:33:52Z",
     "history_as_of": "2026-08-05",
-    "path": "data/yf/finance/ARKT.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ARKT.json",
     "payload_sha256": "951d754d4eea6a674d1e0a56bccd304c1f5a7846114270c6cd66f668d29d6622",
     "quote_as_of": "2026-08-06T13:46:02Z",
     "source_as_of": "2026-08-05"
@@ -40,24 +54,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: source timestamp regression for ARKT: quote_as_of 2026-08-04T19:12:00Z < 2026-08-06T13:46:02Z",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 766,
+    "latency_ms": 415,
     "natural": true,
-    "observed_at": "2026-08-06T14:33:02Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-11T23:29:49Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31111230701",
-    "schedule": "7 12 * * 0-5",
-    "shard": "54/72"
+    "run_id": "31544436443",
+    "schedule": "7 22 * * 0-5",
+    "shard": "35/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: source timestamp regression for ARKT: quote_as_of 2026-08-04T19:12:00Z < 2026-08-06T13:46:02Z",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-11T23:29:49Z",
+    "run_attempt": 1,
+    "run_id": "31544436443"
   },
   "lkg": {
-    "fetched_at": "2026-07-24T23:14:10Z",
-    "history_as_of": "2026-07-24",
+    "fetched_at": "2026-08-06T14:33:52Z",
+    "history_as_of": "2026-08-05",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ARKT.json",
-    "payload_sha256": "327b6ebba93c2e6a4f6201a1922ac285a3b3129d3e16389e57dcc958b9179e65",
-    "quote_as_of": "2026-07-24T19:27:20Z",
-    "source_as_of": "2026-07-24"
+    "payload_sha256": "951d754d4eea6a674d1e0a56bccd304c1f5a7846114270c6cd66f668d29d6622",
+    "quote_as_of": "2026-08-06T13:46:02Z",
+    "source_as_of": "2026-08-05"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,8 +98,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-05"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +112,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "ARKT",
-  "updated_at": "2026-08-06T14:33:02Z"
+  "updated_at": "2026-08-11T23:29:49Z"
 }
