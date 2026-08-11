@@ -123,13 +123,26 @@
       "run_id": "31439945275",
       "schedule": "7 22 * * 0-5",
       "shard": "23/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 466,
+      "natural": true,
+      "observed_at": "2026-08-11T11:03:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31484759300",
+      "schedule": "7 10 * * 0-5",
+      "shard": "29/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T05:16:47Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/REFA.json",
-    "payload_sha256": "3697629e20ff716cd8eb611ce690ced18757c7b811fc8847f35e891aeb9f2816",
+    "fetched_at": "2026-08-11T11:03:39Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/REFA.json",
+    "payload_sha256": "2aadc726b5915a31fc015942c216dfac2fcd3a66331464c05b60c44662610abe",
     "quote_as_of": "2026-05-06T14:34:26Z",
     "source_as_of": "2026-05-06T14:34:26Z"
   },
@@ -138,26 +151,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 628,
+    "latency_ms": 466,
     "natural": true,
-    "observed_at": "2026-08-10T22:52:08Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-11T11:03:07Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31439945275",
-    "schedule": "7 22 * * 0-5",
-    "shard": "23/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T22:52:08Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-05-06T14:34:26Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31439945275"
+    "run_id": "31484759300",
+    "schedule": "7 10 * * 0-5",
+    "shard": "29/72"
   },
   "lkg": {
     "fetched_at": "2026-08-09T05:16:47Z",
@@ -170,17 +173,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T05:15:44Z",
-    "payload_sha256": "481b2e08661b8ecadc8b1716cbad474a56fbd7e2490ae7076e35ba154f3a9ae9",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T11:03:07Z",
+    "payload_sha256": "af5490e5cd2b2936b6c4e71a1c179048bb42fad45d14765c5083e2c7eef636fb",
     "quote_as_of": "2026-05-06T14:34:26Z",
     "run_attempt": 1,
-    "run_id": "31296241377",
+    "run_id": "31484759300",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-05-06T14:34:26Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 64,
@@ -193,5 +196,5 @@
     "source_as_of": "2026-05-06T14:34:26Z"
   },
   "ticker": "REFA",
-  "updated_at": "2026-08-10T22:52:08Z"
+  "updated_at": "2026-08-11T11:03:07Z"
 }

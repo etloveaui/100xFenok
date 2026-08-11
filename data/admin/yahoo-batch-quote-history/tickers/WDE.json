@@ -137,13 +137,26 @@
       "run_id": "31439945275",
       "schedule": "7 22 * * 0-5",
       "shard": "23/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 507,
+      "natural": true,
+      "observed_at": "2026-08-11T11:03:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31484759300",
+      "schedule": "7 10 * * 0-5",
+      "shard": "29/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T02:27:25Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/WDE.json",
-    "payload_sha256": "e97ee27c4c559d05e90fcfb500ec06e9c758a088675e856d2ba3cfe5b52f44b5",
+    "fetched_at": "2026-08-11T11:03:51Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/WDE.json",
+    "payload_sha256": "95ee548fac84084664a69ff6413649fbcc53b053fe3c006b03dfdabf13416e5f",
     "quote_as_of": "2026-05-21T14:19:45Z",
     "source_as_of": "2026-05-21T14:19:45Z"
   },
@@ -152,26 +165,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 832,
+    "latency_ms": 507,
     "natural": true,
-    "observed_at": "2026-08-10T22:52:08Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-11T11:03:07Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31439945275",
-    "schedule": "7 22 * * 0-5",
-    "shard": "23/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T22:52:08Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-05-21T14:19:45Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31439945275"
+    "run_id": "31484759300",
+    "schedule": "7 10 * * 0-5",
+    "shard": "29/72"
   },
   "lkg": {
     "fetched_at": "2026-08-09T02:27:25Z",
@@ -184,17 +187,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T02:25:42Z",
-    "payload_sha256": "7a8484496c3e1f9a537cd543184358c324eb2eb4a3d6b0ee80d027370b129b44",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T11:03:07Z",
+    "payload_sha256": "b631bc2f1dbe28e31b182cdff64ae36b05014d3a039b53219d8da4b83de104f3",
     "quote_as_of": "2026-05-21T14:19:45Z",
     "run_attempt": 1,
-    "run_id": "31290251671",
+    "run_id": "31484759300",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-05-21T14:19:45Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 53,
@@ -207,5 +210,5 @@
     "source_as_of": "2026-05-21T14:19:45Z"
   },
   "ticker": "WDE",
-  "updated_at": "2026-08-10T22:52:08Z"
+  "updated_at": "2026-08-11T11:03:07Z"
 }
