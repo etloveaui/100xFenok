@@ -3,72 +3,83 @@
   "source": "stockanalysis",
   "asset_type": "stock",
   "ticker": "LRCX",
-  "fetched_at": "2026-07-08T22:46:28Z",
+  "source_as_of": "2026-08-11T14:38:27Z",
+  "fetched_at": "2026-08-11T14:38:46Z",
   "endpoints": {
-    "overview": "/api/symbol/s/LRCX/overview",
+    "overview": "/stocks/lrcx/__data.json",
     "history": "/api/symbol/s/LRCX/history?range=1Y&period=Monthly",
     "quote": "/api/quotes/s/LRCX"
   },
   "normalized": {
     "overview": {
-      "marketCap": "417.31B",
-      "revenue": "21.68B",
+      "marketCap": "394.25B",
+      "revenue": "23.23B",
       "revenue_type": "ttm",
-      "netIncome": "6.71B",
+      "netIncome": "7.27B",
       "sharesOut": "1.25B",
-      "eps": "5.29",
-      "peRatio": "61.60",
-      "forwardPE": "43.23",
-      "dividend": "$1.04 (0.31%)",
-      "beta": "1.80",
-      "analysts": "Buy",
-      "target": "353.90 (+6.06%)",
+      "eps": "5.76",
+      "peRatio": "53.19",
+      "forwardPE": "32.39",
+      "dividend": "$1.04 (0.33%)",
+      "beta": "1.86",
+      "analysts": "Strong Buy",
+      "target": "368.13 (+16.84%)",
       "earningsDate": "Jul 29, 2026"
     },
     "quote": {
-      "p": 333.695,
-      "pd": 333.7,
-      "c": 7.56,
-      "cp": 2.32,
-      "cl": 326.13,
+      "p": 314.47,
+      "pd": 314.47,
+      "c": 8.07,
+      "cp": 2.63,
+      "cl": 306.4,
       "cdr": 1,
-      "o": 325.47,
-      "h": 337.5,
-      "l": 322.72,
-      "v": 3878364,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
+      "o": 315.03,
+      "h": 316.86,
+      "l": 309.47,
+      "v": 1737778,
+      "ts": 1786459107635.8828,
+      "u": "Aug 11, 2026, 10:38 AM EDT",
+      "td": "2026-08-11",
       "h52": 438.5,
-      "l52": 90.935,
+      "l52": 94.11,
       "ex": "NASDAQ",
-      "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 332.3,
-      "epd": 332.3,
-      "ec": -1.39,
-      "ecp": -0.42,
-      "eu": "Jul 8, 2026, 6:45 PM EDT",
-      "es": "After-hours",
-      "ets": 1783550724305.5989,
-      "etd": "2026-07-08",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1786459107635.8828,
+      "etd": null,
       "epv": null,
       "days": 0,
-      "exp": 1783550792762,
+      "exp": 1786459130896,
       "symbol": "LRCX",
       "uid": "LRCX"
     },
     "history": [
       {
+        "t": "2026-08-03",
+        "o": 283.34,
+        "h": 323.64,
+        "l": 276.845,
+        "c": 306.4,
+        "a": 306.4,
+        "v": 54873944,
+        "ch": 4.57
+      },
+      {
         "t": "2026-07-01",
         "o": 404.97,
         "h": 415.49,
-        "l": 313.1,
-        "c": 333.15,
-        "a": 333.15,
-        "v": 71950475,
-        "ch": -23.12
+        "l": 250.5,
+        "c": 293.02,
+        "a": 293.02,
+        "v": 272705157,
+        "ch": -32.38
       },
       {
         "t": "2026-06-01",
@@ -159,73 +170,53 @@
         "a": 156.902552,
         "v": 270705505,
         "ch": 17.6
-      },
-      {
-        "t": "2025-09-02",
-        "o": 95.765,
-        "h": 134.21,
-        "l": 94.11,
-        "c": 133.9,
-        "a": 133.42596,
-        "v": 247916539,
-        "ch": 33.96
-      },
-      {
-        "t": "2025-08-01",
-        "o": 92.71,
-        "h": 108.02,
-        "l": 92.47,
-        "c": 100.15,
-        "a": 99.598772,
-        "v": 241928692,
-        "ch": 5.6
       }
     ],
     "financials": {
       "path": "financials/LRCX.json",
-      "fetched_at": "2026-07-08T22:46:28Z",
+      "fetched_at": "2026-08-11T14:38:46Z",
       "role": "financial statement cross-check candidate; not valuation SSOT",
       "summary": {
         "annual": {
           "income": {
-            "field_count": 35,
+            "field_count": 29,
             "period_count": 6,
             "period": "annual"
           },
           "balance_sheet": {
-            "field_count": 38,
+            "field_count": 35,
             "period_count": 6,
             "period": "annual"
           },
           "cash_flow": {
-            "field_count": 34,
+            "field_count": 32,
             "period_count": 6,
             "period": "annual"
           },
           "ratios": {
-            "field_count": 36,
+            "field_count": 35,
             "period_count": 6,
             "period": "annual"
           }
         },
         "quarterly": {
           "income": {
-            "field_count": 35,
-            "period_count": 20,
-            "period": "quarterly"
-          },
-          "balance_sheet": {
-            "field_count": 38,
-            "period_count": 20,
-            "period": "quarterly"
-          },
-          "cash_flow": {
             "field_count": 29,
             "period_count": 20,
             "period": "quarterly"
           },
-          "ratios": {
+          "balance_sheet": {
             "field_count": 36,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "cash_flow": {
+            "field_count": 27,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "ratios": {
+            "field_count": 35,
             "period_count": 20,
             "period": "quarterly"
           }
@@ -236,19 +227,49 @@
   "financials_path": "financials/LRCX.json",
   "raw": {
     "overview": {
-      "marketCap": "417.31B",
-      "revenue": "21.68B",
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          }
+        ],
+        "topic": "overview",
+        "ticker": "LRCX",
+        "lastChecked": 1786459093176,
+        "summary": {
+          "text": "Fundamental and historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP."
+        }
+      },
+      "marketCap": "394.25B",
+      "marketCapGrowth": 221.2613661376515,
+      "revenue": "23.23B",
       "revenue_type": "ttm",
-      "netIncome": "6.71B",
+      "revenueGrowth": 26.021,
+      "netIncome": "7.27B",
+      "netIncomeGrowth": 35.594,
       "sharesOut": "1.25B",
-      "eps": "5.29",
-      "peRatio": "61.60",
-      "forwardPE": "43.23",
-      "dividend": "$1.04 (0.31%)",
+      "eps": "5.76",
+      "epsGrowth": 38.795,
+      "peRatio": "53.19",
+      "forwardPE": "32.39",
+      "dividend": "$1.04 (0.33%)",
       "exDividendDate": "Jun 17, 2026",
-      "beta": "1.80",
-      "analysts": "Buy",
-      "target": "353.90 (+6.06%)",
+      "beta": "1.86",
+      "analysts": "Strong Buy",
+      "target": "368.13 (+16.84%)",
       "earningsDate": "Jul 29, 2026",
       "description": "Lam Research Corporation designs, manufactures, markets, refurbishes, and services semiconductor processing equipment used in the fabrication of integrated circuits in the United States, China, Korea, Taiwan, Japan, Southeast Asia, and Europe. The company offers ALTUS systems to deposit conformal or selective films for tungsten or molybdenum metallization applications; SABRE electrochemical deposition products for copper interconnect transition that offers copper damascene manufacturing; SPEED gapfill high-density plasma chemical vapor depositi...",
       "infoTable": [
@@ -268,7 +289,7 @@
         },
         {
           "t": "Employees",
-          "v": "17,200",
+          "v": "23,300",
           "u": "stocks/lrcx/employees"
         },
         {
@@ -285,15 +306,8 @@
           "eu": "https://www.lamresearch.com"
         }
       ],
-      "financialIntro": "In fiscal year 2025, Lam Research's revenue was $18.44 billion, an increase of 23.68% compared to the previous year's $14.91 billion. Earnings were $5.36 billion, an increase of 39.98%.",
+      "financialIntro": "In fiscal year 2026, Lam Research's revenue was $23.23 billion, an increase of 26.02% compared to the previous year's $18.44 billion. Earnings were $7.27 billion, an increase of 35.59%.",
       "financialChart": [
-        {
-          "year": "2021",
-          "revenue": 14626150000,
-          "earnings": 3908458000,
-          "revenueGrowth": 45.61,
-          "earningsGrowth": 73.574
-        },
         {
           "year": "2022",
           "revenue": 17227039000,
@@ -321,338 +335,70 @@
           "earnings": 5358217000,
           "revenueGrowth": 23.684,
           "earningsGrowth": 39.983
+        },
+        {
+          "year": "2026",
+          "revenue": 23232690000,
+          "earnings": 7265396000,
+          "revenueGrowth": 26.021,
+          "earningsGrowth": 35.594
         }
       ],
-      "analystIntro": "According to 35 analysts, the average rating for LRCX stock is \"Buy.\" The 12-month stock price target is $353.9, which is an increase of 6.06% from the latest price.",
+      "analystIntro": "According to 35 analysts, the average rating for LRCX stock is \"Strong Buy.\" The 12-month stock price target is $368.13, which is an increase of 16.84% from the latest price.",
       "analystTarget": {
-        "target": "$353.9",
-        "change": "6.06%",
+        "target": "$368.13",
+        "change": "16.84%",
         "changeWord": "upside"
       },
       "analystChart": {
         "strongBuy": 25,
         "buy": 4,
-        "hold": 5,
+        "hold": 6,
         "sell": 0,
-        "strongSell": 1
+        "strongSell": 0
       },
       "news": {
-        "exp": "1783553662846",
+        "exp": "1786461877015",
         "data": [
           {
-            "url": "https://www.tipranks.com/news/the-fly/lam-research-price-target-raised-to-400-from-380-at-mizuho-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_112821256-750x406.jpg",
-            "title": "Lam Research price target raised to $400 from $380 at Mizuho",
-            "text": "Mizuho raised the firm’s price target on Lam Research (LRCX) to $400 from $380 and keeps an Outperform rating on the shares. The firm sees wafer fab equipment estimates in…",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-07-08T20:40:18.000Z",
-            "ago": "2 hours ago"
-          },
-          {
-            "url": "https://www.prnewswire.com/news-releases/lam-research-corporation-announces-june-quarter-financial-conference-call-302821029.html",
-            "img": "https://cdn.snapi.dev/images/v1/z/c/l/conf1-3792138.jpg",
-            "title": "Lam Research Corporation Announces June Quarter Financial Conference Call",
-            "text": "FREMONT, Calif., July 8, 2026 /PRNewswire/ -- Lam Research Corp. (NASDAQ: LRCX) today announced that the company will host its quarterly financial conference call and webcast on Wednesday, July 29, 20...",
-            "source": "PRNewsWire",
-            "type": "Article",
-            "time": "Jul 8, 2026, 4:05 PM EDT",
-            "ago": "2 hours ago"
-          },
-          {
-            "url": "https://www.marketwatch.com/story/elon-musks-terafab-could-give-a-major-boost-to-this-corner-of-the-chip-sector-27ad6099",
-            "img": "https://cdn.snapi.dev/images/v1/s/r/w/22effdre-3211100-3789774.jpg",
-            "title": "Elon Musk's Terafab could give a major boost to this corner of the chip sector",
-            "text": "SpaceX could spend about $135 billion on wafer-fab equipment over the next five years, UBS said.",
-            "source": "Market Watch",
-            "type": "Article",
-            "tickers": [
-              "$AMAT",
-              "$KLAC",
-              "$SPCX",
-              "$TER",
-              "$TSM"
-            ],
-            "time": "Jul 7, 2026, 3:05 PM EDT",
-            "ago": "1 day ago"
-          },
-          {
-            "url": "https://www.cnbc.com/2026/07/07/chip-stocks-ai-selloff-samsung.html",
-            "img": "https://cdn.snapi.dev/images/v1/4/o/l/computer-electronic15-3789565.jpg",
-            "title": "Chip stocks sell off after Samsung earnings fall short of high AI bar",
-            "text": "Semiconductor stocks dropped as investors overlooked Samsung's upbeat results. It's the latest sign that beating results isn't enough to please investors in the AI revolution",
+            "url": "https://www.cnbc.com/2026/08/09/top-analysts-like-these-3-stocks-for-their-solid-growth-potential.html",
+            "img": "https://cdn.snapi.dev/images/v1/b/x/e/catalog-mail5-3859031.jpg",
+            "title": "Top Wall Street analysts like these 3 stocks for their solid growth potential",
+            "text": "Investors are closely monitoring earnings releases of AI companies amid concerns about the durability of high spending and demand.",
             "source": "CNBC",
             "type": "Article",
             "tickers": [
-              "$AMAT",
-              "$AMD",
-              "$INTC",
-              "$SNDK"
+              "$AMZN",
+              "$PLTR"
             ],
-            "time": "Jul 7, 2026, 1:16 PM EDT",
-            "ago": "1 day ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/morning-movers-lam-research-and-micron-dip-after-samsung-quarterly-results-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_1279492897-750x406.jpg",
-            "title": "Morning Movers: Lam Research and Micron dip after Samsung quarterly results",
-            "text": "Markets are taking a breather this morning after Monday’s rally, with investors rotating out of semiconductor stocks despite blockbuster earnings from Samsung Electronics. Dow futures are modestly hig...",
-            "source": "TheFly",
-            "type": "Article",
-            "tickers": [
-              "$CRNX",
-              "$FISV",
-              "$FSLR",
-              "$MU",
-              "$RIVN",
-              "$VRTX"
-            ],
-            "time": "2026-07-07T13:06:06.000Z",
-            "ago": "1 day ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/lam-research-price-target-raised-to-404-from-331-at-morgan-stanley-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_1814418305-750x406.jpg",
-            "title": "Lam Research price target raised to $404 from $331 at Morgan Stanley",
-            "text": "Morgan Stanley analyst Shane Brett raised the firm’s price target on Lam Research (LRCX) to $404 from $331 and keeps an Overweight rating on the shares.",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-07-06T12:15:37.000Z",
+            "time": "Aug 9, 2026, 8:01 AM EDT",
             "ago": "2 days ago"
           },
           {
-            "url": "kKmSIiV9OnE",
-            "img": "https://cdn.snapi.dev/images/v1/i/e/p/gen30-2833396-3781501.jpg",
-            "title": "3 ‘Bubbly' Stocks to Avoid",
-            "text": "We think these stocks have gotten ahead of themselves.",
-            "source": "Morningstar",
-            "type": "Video",
-            "tickers": [
-              "$NBIS",
-              "$WDC"
-            ],
-            "time": "Jul 1, 2026, 11:10 AM EDT",
-            "ago": "7 days ago"
-          },
-          {
-            "url": "https://www.marketwatch.com/story/the-20-best-performing-stocks-in-the-s-p-500-for-the-first-half-of-2026-d916d182",
-            "img": "https://cdn.snapi.dev/images/v1/m/9/m/etf47-3778421.jpg",
-            "title": "The 20 best-performing stocks in the S&P 500 for the first half of 2026",
-            "text": "All of these stocks have soared by triple digits during the first half of 2026.",
-            "source": "Market Watch",
-            "type": "Article",
-            "tickers": [
-              "$AMD",
-              "$CIEN",
-              "$COHR",
-              "$DELL",
-              "$FIX",
-              "$FLEX",
-              "$GLW"
-            ],
-            "time": "Jun 30, 2026, 7:34 AM EDT",
-            "ago": "8 days ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/lam-research-price-target-raised-to-475-from-385-at-susquehanna-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_137090738-750x406.jpg",
-            "title": "Lam Research price target raised to $475 from $385 at Susquehanna",
-            "text": "Susquehanna analyst Mehdi Hosseini raised the firm’s price target on Lam Research (LRCX) to $475 from $385 and keeps a Positive rating on the shares. The firm updated its model…",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-06-30T11:20:32.000Z",
-            "ago": "8 days ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-chip-rally-is-far-from-over-says-cantor-here-are-its-top-semiconductor-picks",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2025/08/shutterstock_2242167987-750x406.jpg",
-            "title": "The Chip Rally Is Far From Over, Says Cantor. Here Are Its Top Semiconductor Picks",
-            "text": "Artificial intelligence has already fueled a huge rally in semiconductor stocks. But Cantor Fitzgerald’s C.J. Muse believes companies like ASML ($ASML), Lam Research ($LRCX), Applied Materials ($AMAT)...",
-            "source": "TipRanks",
-            "type": "Article",
-            "tickers": [
-              "$ADI",
-              "$AMAT",
-              "$AMD",
-              "$ASML",
-              "$AVGO",
-              "$INTC",
-              "$MRVL"
-            ],
-            "time": "2026-06-29T12:28:39.000Z",
-            "ago": "9 days ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/lam-research-price-target-raised-to-500-from-425-at-cantor-fitzgerald-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_1939250359-750x406.jpg",
-            "title": "Lam Research price target raised to $500 from $425 at Cantor Fitzgerald",
-            "text": "Cantor Fitzgerald raised the firm’s price target on Lam Research (LRCX) to $500 from $425 and keeps an Overweight rating on the shares. The AI infrastructure buildout is viewed as…",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-06-29T11:45:49.000Z",
-            "ago": "9 days ago"
-          },
-          {
-            "url": "https://invezz.com/news/2026/06/24/forget-nvidia-philippe-laffont-reveals-his-preferred-way-to-gain-ai-exposure/",
-            "img": "https://cdn.snapi.dev/images/v1/w/7/f/semi8-3768639.jpg",
-            "title": "Forget Nvidia: Philippe Laffont reveals his preferred way to gain AI exposure",
-            "text": "The likes of Nvidia (NVDA) and Micron (MU) remain the front and center of all AI-related debates in 2026, but billionaire investor Philippe Laffont is approaching the boom from a different angle. Spea...",
-            "source": "Invezz",
-            "type": "Article",
-            "tickers": [
-              "$AMAT",
-              "$TSM"
-            ],
-            "time": "Jun 24, 2026, 12:06 AM EDT",
-            "ago": "14 days ago"
-          },
-          {
-            "url": "https://www.marketwatch.com/story/these-stocks-are-falling-the-most-on-tuesday-as-the-tech-sector-comes-under-pressure-33558ade",
-            "img": "https://cdn.snapi.dev/images/v1/e/y/r/v2edf2-2521075-3767361.jpg",
-            "title": "These stocks are falling the most on Tuesday as the tech sector comes under pressure",
-            "text": "Most of the day's biggest losers are still up tremendously for 2026.",
-            "source": "Market Watch",
-            "type": "Article",
-            "tickers": [
-              "$ADI",
-              "$AMAT",
-              "$ANET",
-              "$CCL",
-              "$COHR",
-              "$FIX",
-              "$GLW"
-            ],
-            "time": "Jun 23, 2026, 11:21 AM EDT",
-            "ago": "15 days ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/lam-research-price-target-raised-to-480-from-330-at-bofa-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_1415353979-750x406.jpg",
-            "title": "Lam Research price target raised to $480 from $330 at BofA",
-            "text": "BofA raised the firm’s price target on Lam Research (LRCX) to $480 from $330 and keeps a Buy rating on the shares. The firm updated its semis industry models and…",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-06-23T11:51:23.000Z",
-            "ago": "15 days ago"
-          },
-          {
-            "url": "3mzYHucTzNQ",
-            "img": "https://cdn.snapi.dev/images/v1/e/w/6/semi29-3765277.jpg",
-            "title": "ASML, AMAT, KLAC & LRCX Get PT Hikes as Analysts Turn Bullish on AI Manufacturers",
-            "text": "The pick and shovels behind the AI trade are getting more favorable coverage from analysts, seen in Wells Fargo's price target hikes in ASML (ASML), Applied Materials (AMAT), KLA Corp. (KLAC), and Lam...",
-            "source": "Schwab Network",
-            "type": "Video",
-            "tickers": [
-              "$AMAT",
-              "$ASML",
-              "$KLAC"
-            ],
-            "time": "Jun 22, 2026, 11:30 AM EDT",
-            "ago": "16 days ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/lam-research-price-target-raised-to-450-from-365-at-wells-fargo-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_264965759-750x406.jpg",
-            "title": "Lam Research price target raised to $450 from $365 at Wells Fargo",
-            "text": "Wells Fargo analyst Joe Quatrochi raised the firm’s price target on Lam Research (LRCX) to $450 from $365 and keeps an Overweight rating on the shares. The firm expects continued…",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-06-22T10:35:01.000Z",
-            "ago": "16 days ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/lam-research-lrcx-is-proof-that-ai-has-real-winners-im-staying-patient",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/06/shutterstock_2263306381-750x406.jpg",
-            "title": "Lam Research (LRCX) Is Proof That AI Has Real Winners. I’m Staying Patient",
-            "text": "Lam Research Corporation ($LRCX) is proof that the artificial intelligence (AI) buildout has rewarded companies that supply chipmaking equipment. LRCX stock ran up roughly 320% over the past year, hit...",
-            "source": "TipRanks",
-            "type": "Article",
-            "tickers": [
-              "$AAPL",
-              "#COWG",
-              "$GOOGL",
-              "$MSFT",
-              "#PSI",
-              "#QLTY"
-            ],
-            "time": "2026-06-19T14:21:34.000Z",
-            "ago": "19 days ago"
-          },
-          {
-            "url": "https://www.fxempire.com/forecasts/article/ai-push-sends-lam-research-shares-to-all-time-highs-1605509",
-            "img": "https://cdn.snapi.dev/images/v1/y/w/k/semi5-3762773.jpg",
-            "title": "AI Push Sends Lam Research Shares to All-Time Highs",
-            "text": "Lam Research Corporation (LRCX) is up over 321% in a year as institutions buy big.",
-            "source": "FXEmpire",
-            "type": "Article",
-            "time": "Jun 19, 2026, 8:44 AM EDT",
-            "ago": "19 days ago"
-          },
-          {
-            "url": "-rDgJ4kIVx8",
-            "img": "https://cdn.snapi.dev/images/v1/k/e/c/general4-3413815-3759082.jpg",
-            "title": "Wednesday's Morning Movers: AI Manufacturer PT Hikes, JBL & LZB Beat Earnings",
-            "text": "At the opening bell, Diane King Hall discusses this morning's top moving stocks in companies like Applied Materials (AMAT), Lam Research (LRCX), and KLA Corp. (KLAC) receiving price targets hikes from...",
-            "source": "Schwab Network",
-            "type": "Video",
-            "tickers": [
-              "$AMAT",
-              "$JBL",
-              "$KLAC",
-              "$LZB"
-            ],
-            "time": "Jun 17, 2026, 10:30 AM EDT",
-            "ago": "21 days ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/lam-research-price-target-raised-to-450-from-315-at-citi-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_1939250359-750x406.jpg",
-            "title": "Lam Research price target raised to $450 from $315 at Citi",
-            "text": "Citi raised the firm’s price target on Lam Research (LRCX) to $450 from $315 and keeps a Buy rating on the shares. The firm increased price targets in the semiconductor…",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-06-17T10:10:23.000Z",
-            "ago": "21 days ago"
-          },
-          {
-            "url": "fxTvHn05fCY",
-            "img": "https://cdn.snapi.dev/images/v1/g/8/i/software23-3754341.jpg",
-            "title": "Monday's Morning Movers: DDOG Upgrade, TXN & LRCX PT Hikes",
-            "text": "Diane King Hall discusses Monday's morning movers throughout the tech sector. She highlights Truist's upgrade to buy on Datadog's (DDOG), Citigroup raising its price target on Texas Instruments (TXN),...",
-            "source": "Schwab Network",
-            "type": "Video",
-            "tickers": [
-              "$DDOG",
-              "$TXN"
-            ],
-            "time": "Jun 15, 2026, 10:30 AM EDT",
-            "ago": "23 days ago"
-          },
-          {
-            "url": "https://www.cnbc.com/2026/06/09/semiconductor-shorts-pile-on-as-winning-trade-reverses.html",
-            "img": "https://cdn.snapi.dev/images/v1/u/r/3/semi27-3745025.jpg",
-            "title": "Semiconductor shorts pile on as winning trade reverses",
-            "text": "Investors' favorite trade is suddenly the one they can't stop betting against.",
+            "url": "https://www.cnbc.com/2026/08/06/jim-cramer-5-investing-themes-stocks-to-buy.html",
+            "img": "https://cdn.snapi.dev/images/v1/d/u/r/asset-management31-3821293-3855010.jpg",
+            "title": "Jim Cramer highlights 5 investing themes — and the stocks to buy for each",
+            "text": "CNBC's Jim Cramer said earnings season reinforced five investing themes he thinks will produce the market's best buying opportunities. He highlighted stocks to buy for each theme, including Capital On...",
             "source": "CNBC",
             "type": "Article",
             "tickers": [
-              "$ADI",
               "$AMAT",
-              "$AMD",
-              "$ASML",
-              "$AVGO",
-              "$CDNS",
-              "$INTC"
+              "$AXP",
+              "$COF",
+              "$CRWD",
+              "$GS",
+              "$JNJ",
+              "$KLAC"
             ],
-            "time": "Jun 9, 2026, 2:26 PM EDT",
-            "ago": "4 weeks ago"
+            "time": "Aug 6, 2026, 6:23 PM EDT",
+            "ago": "4 days ago"
           },
           {
-            "url": "https://www.fxempire.com/forecasts/article/semiconductor-index-outlook-upside-target-reached-correction-underway-1603467",
-            "img": "https://cdn.snapi.dev/images/v1/v/j/u/semi25-3744992.jpg",
-            "title": "Semiconductor Index Outlook: Upside Target Reached, Correction Underway",
-            "text": "The semiconductor index hit its upside target near 14,000, then dropped sharply. We expect a corrective fourth wave to around $10,000 before a rally toward 15,000.",
-            "source": "FXEmpire",
+            "url": "https://www.etftrends.com/equity-etf-content-hub/semiconductor-etfs-draw-cash-chip-stocks-rally/",
+            "img": "https://cdn.snapi.dev/images/v1/v/m/5/semi5-3839612.jpg",
+            "title": "Semiconductor ETFs Draw Cash This Week as Chip Stocks Rally",
+            "text": "Chip stocks rallied this week on a wave of strong tech earnings, and investors rewarded semiconductor ETFs with a rush of new cash. Three funds tracking the chip sector ranked among those pulling in t...",
+            "source": "ETF Trends",
             "type": "Article",
             "tickers": [
               "$ADI",
@@ -663,1630 +409,1557 @@
               "$CDNS",
               "$INTC"
             ],
-            "time": "Jun 9, 2026, 2:01 PM EDT",
-            "ago": "4 weeks ago"
+            "time": "Jul 31, 2026, 3:23 PM EDT",
+            "ago": "10 days ago"
           },
           {
-            "url": "https://www.marketwatch.com/story/these-stocks-fell-the-most-friday-as-big-tech-took-a-dive-bf692616",
-            "img": "https://cdn.snapi.dev/images/v1/m/j/e/gen17-2482676-3739907.jpg",
-            "title": "These stocks fell the most Friday as Big Tech took a dive",
-            "text": "Chip makers dominated the list of the day's biggest losers among the S&P 500.",
-            "source": "Market Watch",
-            "type": "Article",
+            "url": "Holb4mkTWxs",
+            "img": "https://cdn.snapi.dev/images/v1/e/z/l/semi26-3837723.jpg",
+            "title": "Semiconductor stocks SOAR as strong Microsoft outlook revives AI trade",
+            "text": "Key Advisors Wealth Management co-founder and CEO Eddie Ghabour discusses the surge in semiconductor stocks, including NVIDIA, and Microsoft's strong cloud-driven earnings outlook on ‘The Claman Count...",
+            "source": "Fox Business",
+            "type": "Video",
             "tickers": [
+              "$ADI",
               "$AMAT",
               "$AMD",
+              "$ASML",
+              "$AVGO",
               "$CDNS",
-              "$CIEN",
-              "$COHR",
-              "$FCX",
-              "$FSLR"
+              "$INTC"
             ],
-            "time": "Jun 5, 2026, 5:10 PM EDT",
-            "ago": "4 weeks ago"
+            "time": "Jul 31, 2026, 3:15 AM EDT",
+            "ago": "11 days ago"
           },
           {
-            "url": "/stocks/lrcx/transcripts/671100-bank-of-america-2026-global-technology-conference/",
+            "url": "https://www.barrons.com/articles/asml-lam-research-sandisk-microsoft-stock-buy-fd120464",
+            "img": "https://cdn.snapi.dev/images/v1/t/b/2/semi2-3836302.jpg",
+            "title": "ASML, Lam Research, and a Ton of Other Stocks to Buy Right Now",
+            "text": "It's a vibes market and it doesn't matter how good earnings or guidance is for many companies, writes Mizuho analyst Jordan Klein.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": [
+              "$ASML",
+              "$BE",
+              "$SNDK"
+            ],
+            "time": "Jul 30, 2026, 2:45 PM EDT",
+            "ago": "11 days ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/07/30/lam-research-stock-jumps-17-as-ai-demand-fuels-earnings-beat-outlook/",
+            "img": "https://cdn.snapi.dev/images/v1/y/f/3/semi16-3836163.jpg",
+            "title": "Lam Research stock jumps 17% as AI demand fuels earnings beat, outlook",
+            "text": "Lam Research shares LRCX soared on Thursday after the semiconductor equipment maker delivered better-than-expected fiscal fourth-quarter results and issued stronger guidance, reinforcing investor conf...",
+            "source": "Invezz",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 30, 2026, 1:55 PM EDT",
+            "ago": "11 days ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/lam-research-earnings-stock-price-8b30e6e8",
+            "img": "https://cdn.snapi.dev/images/v1/3/w/9/semi29-3835716.jpg",
+            "title": "Why Lam Research Stock Is Having Its Best Day Since 1999",
+            "text": "The maker of semiconductor equipment posts stronger-than-expected fiscal fourth-quarter earnings.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 30, 2026, 11:57 AM EDT",
+            "ago": "11 days ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/07/30/chip-stock-rally-lam-research-micron-amd.html",
+            "img": "https://cdn.snapi.dev/images/v1/g/l/i/semi22-3835603.jpg",
+            "title": "Chip stocks rip higher, with Lam Research up 20% and Micron, AMD booming",
+            "text": "Battered chip stocks rebounded on Thursday following strong earnings from Microsoft and Lam Research. Memory stocks Micron and Sandisk jumped as Samsung warned of a memory crunch into 2028.",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": [
+              "$AMD",
+              "$MU"
+            ],
+            "time": "Jul 30, 2026, 11:19 AM EDT",
+            "ago": "11 days ago"
+          },
+          {
+            "url": "7Fy7sd-jEc4",
+            "img": "https://cdn.snapi.dev/images/v1/g/w/1/software24-3835294.jpg",
+            "title": "Thursday Morning's Movers: MA, FTNT, LRCX Rally",
+            "text": "Diane King Hall reports from a risk-on open at the New York Stock Exchange. Shares of Mastercard (MA) is higher after posting beats on earnings and revenue while boosting its full-year outlook as core...",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": [
+              "$FTNT",
+              "$MA"
+            ],
+            "time": "Jul 30, 2026, 10:30 AM EDT",
+            "ago": "12 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/lam-research-price-target-lowered-to-350-from-385-at-b-riley-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_264965759-750x406.jpg",
+            "title": "Lam Research price target lowered to $350 from $385 at B. Riley",
+            "text": "B. Riley lowered the firm’s price target on Lam Research (LRCX) to $350 from $385 and keeps a Buy rating on the shares. The print reinforces a bullish WFE outlook,…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-30T12:42:30.000Z",
+            "ago": "12 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/lam-research-price-target-lowered-to-320-from-385-at-deutsche-bank-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_1820093804-750x406.jpg",
+            "title": "Lam Research price target lowered to $320 from $385 at Deutsche Bank",
+            "text": "Deutsche Bank analyst Melissa Weathers lowered the firm’s price target on Lam Research (LRCX) to $320 from $385 and keeps a Buy rating on the shares.",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-30T12:39:02.000Z",
+            "ago": "12 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/lam-research-price-target-lowered-to-367-from-404-at-morgan-stanley-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_1975936445-750x406.jpg",
+            "title": "Lam Research price target lowered to $367 from $404 at Morgan Stanley",
+            "text": "Morgan Stanley lowered the firm’s price target on Lam Research (LRCX) to $367 from $404 and keeps an Overweight rating on the shares. The firm, which now models shipment growth…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-30T12:36:53.000Z",
+            "ago": "12 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/lam-research-price-target-raised-to-340-from-315-at-jpmorgan-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_2096992069-750x406.jpg",
+            "title": "Lam Research price target raised to $340 from $315 at JPMorgan",
+            "text": "JPMorgan analyst Harlan Sur raised the firm’s price target on Lam Research (LRCX) to $340 from $315 and keeps an Overweight rating on the shares. The company reported a “clean…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-30T11:18:26.000Z",
+            "ago": "12 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/lam-research-price-target-raised-to-360-from-340-at-bernstein-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_112821256-750x406.jpg",
+            "title": "Lam Research price target raised to $360 from $340 at Bernstein",
+            "text": "Bernstein raised the firm’s price target on Lam Research (LRCX) to $360 from $340 and keeps an Outperform rating on the shares. The firm says the company’s Q4 results were…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-30T11:17:08.000Z",
+            "ago": "12 days ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/microsoft-meta-lam-research-shell-and-more-stocks-that-explain-todays-market-3c39d6c7",
+            "img": "https://cdn.snapi.dev/images/v1/8/a/r/semi26-3834266.jpg",
+            "title": "Microsoft, Meta, Lam Research, Shell, and More Stocks That Explain Today's Market",
+            "text": "Investors are weighing up a batch of Big Tech earnings reports, which could help power a market rebound.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": [
+              "$META",
+              "$MSFT",
+              "$SHEL"
+            ],
+            "time": "Jul 30, 2026, 7:13 AM EDT",
+            "ago": "12 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/lam-research-price-target-lowered-to-350-from-450-at-wells-fargo-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_1199235616-750x406.jpg",
+            "title": "Lam Research price target lowered to $350 from $450 at Wells Fargo",
+            "text": "Wells Fargo analyst Joe Quatrochi lowered the firm’s price target on Lam Research (LRCX) to $350 from $450 and keeps an Overweight rating on the shares. The firm expects Lam…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-30T10:36:22.000Z",
+            "ago": "12 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/lam-research-price-target-raised-to-335-from-315-at-jefferies-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_1938746143-750x406.jpg",
+            "title": "Lam Research price target raised to $335 from $315 at Jefferies",
+            "text": "Jefferies raised the firm’s price target on Lam Research (LRCX) to $335 from $315 and keeps a Buy rating on the shares. The company reported a clean beat and raise…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-30T00:45:18.000Z",
+            "ago": "12 days ago"
+          },
+          {
+            "url": "https://www.reuters.com/technology/chip-equipment-maker-lam-research-forecasts-strong-revenue-ai-boom-2026-07-29/",
+            "img": "https://cdn.snapi.dev/images/v1/z/5/v/semi25-3833013.jpg",
+            "title": "Chip equipment maker Lam Research forecasts strong revenue on AI boom",
+            "text": "Lam Research forecast first-quarter revenue above Wall Street estimates and beat expectations for quarterly ​revenue on Wednesday, as rising spending ‌on AI infrastructure drove demand for its chipmak...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 29, 2026, 5:04 PM EDT",
+            "ago": "12 days ago"
+          },
+          {
+            "url": "/stocks/lrcx/transcripts/653168-q4-2026/",
             "img": "",
-            "title": "Lam Research Transcript: Bank of America 2026 Global Technology Conference",
-            "text": "WFE market expectations have increased due to incremental clean room availability and strong AI-driven demand, with robust customer visibility extending into 2027. The company is outperforming peers through advanced 3D process investments, recurring service revenue, and disciplined capital allocation.",
+            "title": "Lam Research Earnings Call Transcript: Q4 2026",
+            "text": "Record quarterly and annual results were driven by strong NAND and CSBG growth, with gross and operating margins reaching multi-year highs. AI-fueled demand is accelerating technology transitions and capacity investments, supporting robust guidance for the next quarter and a positive multi-year outlook.",
             "source": "Transcripts",
             "type": "Article",
-            "time": "Jun 2, 2026, 12:20 PM EDT",
-            "ago": "5 weeks ago"
+            "tickers": null,
+            "time": "Jul 29, 2026, 5:00 PM EDT",
+            "ago": "12 days ago"
+          },
+          {
+            "url": "/stocks/lrcx/filings/3458524/",
+            "img": "",
+            "title": "Lam Research Earnings release: Q4 2026",
+            "text": "Lam Research released its Q4 2026 earnings on July 29, 2026, summarizing the period's financial results.",
+            "source": "Filings",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 29, 2026, 5:00 PM EDT",
+            "ago": "12 days ago"
+          },
+          {
+            "url": "/stocks/lrcx/filings/3513590/",
+            "img": "",
+            "title": "Lam Research Annual report: Q4 2026",
+            "text": "Lam Research has published its Q4 2026 annual report on July 29, 2026.",
+            "source": "Filings",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 29, 2026, 5:00 PM EDT",
+            "ago": "12 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/lam-research-sees-q3-adjusted-gross-margin-52-1-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_1820093804-750x406.jpg",
+            "title": "Lam Research sees Q3 adjusted gross margin 52% +/- 1%",
+            "text": "Sees Q3 adjusted operating margin 39.5% +/- 1%",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-29T20:37:41.000Z",
+            "ago": "12 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/lam-research-reports-q2-non-gaap-gross-margin-as-a-percent-of-revenue-of-52-0-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_410606110-750x406.jpg",
+            "title": "Lam Research reports Q2 non-GAAP gross margin as a percent of revenue of 52.0%",
+            "text": "Reports non-GAAP operating margin as a percent of revenue of 38.4%.",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-29T20:30:47.000Z",
+            "ago": "12 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/lam-research-reports-q2-adjusted-eps-1-82-consensus-1-68-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_155454977-750x406.jpg",
+            "title": "Lam Research reports Q2 adjusted EPS $1.82, consensus $1.68",
+            "text": "Reports Q2 revenue $6.72B, consensus $6.67B. “Lam delivered record revenue, operating margin and earnings per share in the June quarter as AI-driven demand continues to reshape the semiconductor indus...",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-29T20:13:56.000Z",
+            "ago": "12 days ago"
+          },
+          {
+            "url": "https://www.prnewswire.com/news-releases/lam-research-corporation-reports-financial-results-for-the-quarter-ended-june-28-2026-302838154.html",
+            "img": "https://cdn.snapi.dev/images/v1/3/e/e/press4-3832619.jpg",
+            "title": "Lam Research Corporation Reports Financial Results for the Quarter Ended June 28, 2026",
+            "text": "FREMONT, Calif., July 29, 2026 /PRNewswire/ -- Lam Research Corporation (the \"Company,\" \"Lam,\" \"Lam Research\") today announced financial results for the quarter ended June 28, 2026 (the \"June 2026 qua...",
+            "source": "PRNewsWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 29, 2026, 4:05 PM EDT",
+            "ago": "12 days ago"
           }
         ]
       },
       "chart": {
-        "expiration": 1783553727707,
+        "expiration": 1786459127371,
         "data": [
           {
-            "c": 325.28,
-            "o": 324.55,
-            "t": 1783503000
+            "c": 310.93,
+            "o": 315.03,
+            "t": 1786440600
           },
           {
-            "c": 328.64,
-            "t": 1783503060
+            "c": 311.12,
+            "t": 1786440660
           },
           {
-            "c": 329.63,
-            "t": 1783503120
+            "c": 311.48,
+            "t": 1786440720
           },
           {
-            "c": 329.14,
-            "t": 1783503180
+            "c": 310.83,
+            "t": 1786440780
           },
           {
-            "c": 331.35,
-            "t": 1783503240
+            "c": 310.69,
+            "t": 1786440840
           },
           {
-            "c": 333.07,
-            "t": 1783503300
+            "c": 310.53,
+            "t": 1786440900
           },
           {
-            "c": 331.71,
-            "t": 1783503360
+            "c": 311.23,
+            "t": 1786440960
           },
           {
-            "c": 331.22,
-            "t": 1783503420
+            "c": 312.63,
+            "t": 1786441020
           },
           {
-            "c": 330.68,
-            "t": 1783503480
+            "c": 312.075,
+            "t": 1786441080
           },
           {
-            "c": 332.96,
-            "t": 1783503540
+            "c": 311.69,
+            "t": 1786441140
           },
           {
-            "c": 333.87,
-            "t": 1783503600
+            "c": 313.72,
+            "t": 1786441200
           },
           {
-            "c": 334.28,
-            "t": 1783503660
+            "c": 314.12,
+            "t": 1786441260
           },
           {
-            "c": 334.32,
-            "t": 1783503720
+            "c": 314.42,
+            "t": 1786441320
           },
           {
-            "c": 334.53,
-            "t": 1783503780
+            "c": 315.72,
+            "t": 1786441380
           },
           {
-            "c": 334.27,
-            "t": 1783503840
+            "c": 315.75,
+            "t": 1786441440
           },
           {
-            "c": 336.13,
-            "t": 1783503900
+            "c": 315.52,
+            "t": 1786441500
           },
           {
-            "c": 336.77,
-            "t": 1783503960
+            "c": 313.36,
+            "t": 1786441560
           },
           {
-            "c": 336.01,
-            "t": 1783504020
+            "c": 313.72,
+            "t": 1786441620
           },
           {
-            "c": 334.51,
-            "t": 1783504080
+            "c": 313.71,
+            "t": 1786441680
           },
           {
-            "c": 333.45,
-            "t": 1783504140
+            "c": 312.37,
+            "t": 1786441740
           },
           {
-            "c": 333.32,
-            "t": 1783504200
+            "c": 312.12,
+            "t": 1786441800
           },
           {
-            "c": 334.62,
-            "t": 1783504260
+            "c": 311.995,
+            "t": 1786441860
           },
           {
-            "c": 335.37,
-            "t": 1783504320
+            "c": 311.93,
+            "t": 1786441920
           },
           {
-            "c": 335.67,
-            "t": 1783504380
+            "c": 312.305,
+            "t": 1786441980
           },
           {
-            "c": 335.66,
-            "t": 1783504440
+            "c": 311.54,
+            "t": 1786442040
           },
           {
-            "c": 334.28,
-            "t": 1783504500
+            "c": 312.3,
+            "t": 1786442100
           },
           {
-            "c": 333.97,
-            "t": 1783504560
+            "c": 312.62,
+            "t": 1786442160
           },
           {
-            "c": 335.18,
-            "t": 1783504620
+            "c": 311.86,
+            "t": 1786442220
           },
           {
-            "c": 336.6,
-            "t": 1783504680
+            "c": 312.18,
+            "t": 1786442280
           },
           {
-            "c": 336.49,
-            "t": 1783504740
+            "c": 312.44,
+            "t": 1786442340
           },
           {
-            "c": 336.9,
-            "t": 1783504800
+            "c": 312.485,
+            "t": 1786442400
           },
           {
-            "c": 335.03,
-            "t": 1783504860
+            "c": 313.55,
+            "t": 1786442460
           },
           {
-            "c": 334.37,
-            "t": 1783504920
+            "c": 313.13,
+            "t": 1786442520
           },
           {
-            "c": 333.55,
-            "t": 1783504980
+            "c": 313.68,
+            "t": 1786442580
           },
           {
-            "c": 333.37,
-            "t": 1783505040
+            "c": 313.365,
+            "t": 1786442640
           },
           {
-            "c": 333.29,
-            "t": 1783505100
+            "c": 313.8,
+            "t": 1786442700
           },
           {
-            "c": 332.97,
-            "t": 1783505160
+            "c": 314.555,
+            "t": 1786442760
           },
           {
-            "c": 332.65,
-            "t": 1783505220
+            "c": 315.69,
+            "t": 1786442820
           },
           {
-            "c": 332.43,
-            "t": 1783505280
+            "c": 315.67,
+            "t": 1786442880
           },
           {
-            "c": 333.73,
-            "t": 1783505340
+            "c": 315.55,
+            "t": 1786442940
           },
           {
-            "c": 333.4,
-            "t": 1783505400
+            "c": 316.08,
+            "t": 1786443000
           },
           {
-            "c": 332.11,
-            "t": 1783505460
+            "c": 316.06,
+            "t": 1786443060
           },
           {
-            "c": 331.59,
-            "t": 1783505520
+            "c": 316.47,
+            "t": 1786443120
           },
           {
-            "c": 332.02,
-            "t": 1783505580
+            "c": 316.235,
+            "t": 1786443180
           },
           {
-            "c": 332.03,
-            "t": 1783505640
+            "c": 315.52,
+            "t": 1786443240
           },
           {
-            "c": 331.17,
-            "t": 1783505700
+            "c": 316.01,
+            "t": 1786443300
           },
           {
-            "c": 331.16,
-            "t": 1783505760
+            "c": 316.39,
+            "t": 1786443360
           },
           {
-            "c": 332.45,
-            "t": 1783505820
+            "c": 315.915,
+            "t": 1786443420
           },
           {
-            "c": 332.5,
-            "t": 1783505880
+            "c": 315.605,
+            "t": 1786443480
           },
           {
-            "c": 332.95,
-            "t": 1783505940
+            "c": 315.16,
+            "t": 1786443540
           },
           {
-            "c": 332.79,
-            "t": 1783506000
+            "c": 315.45,
+            "t": 1786443600
           },
           {
-            "c": 334.9,
-            "t": 1783506060
+            "c": 314.63,
+            "t": 1786443660
           },
           {
-            "c": 334.24,
-            "t": 1783506120
+            "c": 314.51,
+            "t": 1786443720
           },
           {
-            "c": 333.72,
-            "t": 1783506180
+            "c": 315,
+            "t": 1786443780
           },
           {
-            "c": 332.93,
-            "t": 1783506240
+            "c": 314.3,
+            "t": 1786443840
           },
           {
-            "c": 333.61,
-            "t": 1783506300
+            "c": 314.83,
+            "t": 1786443900
           },
           {
-            "c": 333.15,
-            "t": 1783506360
+            "c": 315.035,
+            "t": 1786443960
           },
           {
-            "c": 333.39,
-            "t": 1783506420
+            "c": 315.24,
+            "t": 1786444020
           },
           {
-            "c": 333.26,
-            "t": 1783506480
+            "c": 315.14,
+            "t": 1786444080
           },
           {
-            "c": 333.28,
-            "t": 1783506540
+            "c": 315.61,
+            "t": 1786444140
           },
           {
-            "c": 333.6,
-            "t": 1783506600
+            "c": 314.5,
+            "t": 1786444200
           },
           {
-            "c": 333.41,
-            "t": 1783506660
+            "c": 314.38,
+            "t": 1786444260
           },
           {
-            "c": 332.62,
-            "t": 1783506720
+            "c": 314.955,
+            "t": 1786444320
           },
           {
-            "c": 333.08,
-            "t": 1783506780
+            "c": 315.49,
+            "t": 1786444380
           },
           {
-            "c": 332.8,
-            "t": 1783506840
+            "c": 315.1,
+            "t": 1786444440
           },
           {
-            "c": 332.03,
-            "t": 1783506900
+            "c": 315.425,
+            "t": 1786444500
           },
           {
-            "c": 331.27,
-            "t": 1783506960
+            "c": 315.38,
+            "t": 1786444560
           },
           {
-            "c": 332.65,
-            "t": 1783507020
+            "c": 314.41,
+            "t": 1786444620
           },
           {
-            "c": 331.03,
-            "t": 1783507080
+            "t": 1786444679
           },
           {
-            "c": 330.54,
-            "t": 1783507140
+            "t": 1786444739
           },
           {
-            "c": 331.05,
-            "t": 1783507200
+            "t": 1786444799
           },
           {
-            "c": 330.99,
-            "t": 1783507260
+            "t": 1786444859
           },
           {
-            "c": 330.11,
-            "t": 1783507320
+            "t": 1786444919
           },
           {
-            "c": 329.78,
-            "t": 1783507380
+            "t": 1786444979
           },
           {
-            "c": 330.38,
-            "t": 1783507440
+            "t": 1786445039
           },
           {
-            "c": 330.09,
-            "t": 1783507500
+            "t": 1786445099
           },
           {
-            "c": 329.46,
-            "t": 1783507560
+            "t": 1786445159
           },
           {
-            "c": 327.93,
-            "t": 1783507620
+            "t": 1786445219
           },
           {
-            "c": 328.34,
-            "t": 1783507680
+            "t": 1786445279
           },
           {
-            "c": 327.87,
-            "t": 1783507740
+            "t": 1786445339
           },
           {
-            "c": 328.55,
-            "t": 1783507800
+            "t": 1786445399
           },
           {
-            "c": 329.31,
-            "t": 1783507860
+            "t": 1786445459
           },
           {
-            "c": 330.68,
-            "t": 1783507920
+            "t": 1786445519
           },
           {
-            "c": 331.21,
-            "t": 1783507980
+            "t": 1786445579
           },
           {
-            "c": 330.5,
-            "t": 1783508040
+            "t": 1786445639
           },
           {
-            "c": 330.91,
-            "t": 1783508100
+            "t": 1786445699
           },
           {
-            "c": 331.25,
-            "t": 1783508160
+            "t": 1786445759
           },
           {
-            "c": 330.65,
-            "t": 1783508220
+            "t": 1786445819
           },
           {
-            "c": 330.25,
-            "t": 1783508280
+            "t": 1786445879
           },
           {
-            "c": 330.47,
-            "t": 1783508340
+            "t": 1786445939
           },
           {
-            "c": 330.47,
-            "t": 1783508400
+            "t": 1786445999
           },
           {
-            "c": 329.72,
-            "t": 1783508460
+            "t": 1786446059
           },
           {
-            "c": 329.55,
-            "t": 1783508520
+            "t": 1786446119
           },
           {
-            "c": 329.5,
-            "t": 1783508580
+            "t": 1786446179
           },
           {
-            "c": 328.78,
-            "t": 1783508640
+            "t": 1786446239
           },
           {
-            "c": 329.99,
-            "t": 1783508700
+            "t": 1786446299
           },
           {
-            "c": 329.03,
-            "t": 1783508760
+            "t": 1786446359
           },
           {
-            "c": 329.31,
-            "t": 1783508820
+            "t": 1786446419
           },
           {
-            "c": 329.65,
-            "t": 1783508880
+            "t": 1786446479
           },
           {
-            "c": 329.89,
-            "t": 1783508940
+            "t": 1786446539
           },
           {
-            "c": 329.97,
-            "t": 1783509000
+            "t": 1786446599
           },
           {
-            "c": 329.15,
-            "t": 1783509060
+            "t": 1786446659
           },
           {
-            "c": 328.34,
-            "t": 1783509120
+            "t": 1786446719
           },
           {
-            "c": 327.58,
-            "t": 1783509180
+            "t": 1786446779
           },
           {
-            "c": 326.8,
-            "t": 1783509240
+            "t": 1786446839
           },
           {
-            "c": 327.21,
-            "t": 1783509300
+            "t": 1786446899
           },
           {
-            "c": 326.52,
-            "t": 1783509360
+            "t": 1786446959
           },
           {
-            "c": 325.98,
-            "t": 1783509420
+            "t": 1786447019
           },
           {
-            "c": 325.91,
-            "t": 1783509480
+            "t": 1786447079
           },
           {
-            "c": 326.85,
-            "t": 1783509540
+            "t": 1786447139
           },
           {
-            "c": 326.25,
-            "t": 1783509600
+            "t": 1786447199
           },
           {
-            "c": 326.35,
-            "t": 1783509660
+            "t": 1786447259
           },
           {
-            "c": 324.87,
-            "t": 1783509720
+            "t": 1786447319
           },
           {
-            "c": 324.4,
-            "t": 1783509780
+            "t": 1786447379
           },
           {
-            "c": 324.46,
-            "t": 1783509840
+            "t": 1786447439
           },
           {
-            "c": 324.13,
-            "t": 1783509900
+            "t": 1786447499
           },
           {
-            "c": 324.28,
-            "t": 1783509960
+            "t": 1786447559
           },
           {
-            "c": 324.33,
-            "t": 1783510020
+            "t": 1786447619
           },
           {
-            "c": 324.66,
-            "t": 1783510080
+            "t": 1786447679
           },
           {
-            "c": 324.89,
-            "t": 1783510140
+            "t": 1786447739
           },
           {
-            "c": 325.3,
-            "t": 1783510200
+            "t": 1786447799
           },
           {
-            "c": 325.29,
-            "t": 1783510260
+            "t": 1786447859
           },
           {
-            "c": 325.76,
-            "t": 1783510320
+            "t": 1786447919
           },
           {
-            "c": 325.71,
-            "t": 1783510380
+            "t": 1786447979
           },
           {
-            "c": 325.94,
-            "t": 1783510440
+            "t": 1786448039
           },
           {
-            "c": 326.7,
-            "t": 1783510500
+            "t": 1786448099
           },
           {
-            "c": 327.36,
-            "t": 1783510560
+            "t": 1786448159
           },
           {
-            "c": 327.42,
-            "t": 1783510620
+            "t": 1786448219
           },
           {
-            "c": 327.01,
-            "t": 1783510680
+            "t": 1786448279
           },
           {
-            "c": 326.42,
-            "t": 1783510740
+            "t": 1786448339
           },
           {
-            "c": 327.48,
-            "t": 1783510800
+            "t": 1786448399
           },
           {
-            "c": 327.68,
-            "t": 1783510860
+            "t": 1786448459
           },
           {
-            "c": 327.15,
-            "t": 1783510920
+            "t": 1786448519
           },
           {
-            "c": 327.05,
-            "t": 1783510980
+            "t": 1786448579
           },
           {
-            "c": 327.26,
-            "t": 1783511040
+            "t": 1786448639
           },
           {
-            "c": 326.9,
-            "t": 1783511100
+            "t": 1786448699
           },
           {
-            "c": 326.85,
-            "t": 1783511160
+            "t": 1786448759
           },
           {
-            "c": 326.22,
-            "t": 1783511220
+            "t": 1786448819
           },
           {
-            "c": 326.26,
-            "t": 1783511280
+            "t": 1786448879
           },
           {
-            "c": 326.59,
-            "t": 1783511340
+            "t": 1786448939
           },
           {
-            "c": 326.44,
-            "t": 1783511400
+            "t": 1786448999
           },
           {
-            "c": 326.01,
-            "t": 1783511460
+            "t": 1786449059
           },
           {
-            "c": 325.9,
-            "t": 1783511520
+            "t": 1786449119
           },
           {
-            "c": 326.15,
-            "t": 1783511580
+            "t": 1786449179
           },
           {
-            "c": 326.16,
-            "t": 1783511640
+            "t": 1786449239
           },
           {
-            "c": 326.46,
-            "t": 1783511700
+            "t": 1786449299
           },
           {
-            "c": 325.87,
-            "t": 1783511760
+            "t": 1786449359
           },
           {
-            "c": 326.3,
-            "t": 1783511820
+            "t": 1786449419
           },
           {
-            "c": 326.3,
-            "t": 1783511880
+            "t": 1786449479
           },
           {
-            "c": 326.93,
-            "t": 1783511940
+            "t": 1786449539
           },
           {
-            "c": 327.81,
-            "t": 1783512000
+            "t": 1786449599
           },
           {
-            "c": 327.63,
-            "t": 1783512060
+            "t": 1786449659
           },
           {
-            "c": 327.64,
-            "t": 1783512120
+            "t": 1786449719
           },
           {
-            "c": 328.2,
-            "t": 1783512180
+            "t": 1786449779
           },
           {
-            "c": 328.05,
-            "t": 1783512240
+            "t": 1786449839
           },
           {
-            "c": 328.65,
-            "t": 1783512300
+            "t": 1786449899
           },
           {
-            "c": 328.7,
-            "t": 1783512360
+            "t": 1786449959
           },
           {
-            "c": 328.73,
-            "t": 1783512420
+            "t": 1786450019
           },
           {
-            "c": 328.42,
-            "t": 1783512480
+            "t": 1786450079
           },
           {
-            "c": 329.65,
-            "t": 1783512540
+            "t": 1786450139
           },
           {
-            "c": 330.33,
-            "t": 1783512600
+            "t": 1786450199
           },
           {
-            "c": 330.52,
-            "t": 1783512660
+            "t": 1786450259
           },
           {
-            "c": 331.22,
-            "t": 1783512720
+            "t": 1786450319
           },
           {
-            "c": 331.28,
-            "t": 1783512780
+            "t": 1786450379
           },
           {
-            "c": 331.46,
-            "t": 1783512840
+            "t": 1786450439
           },
           {
-            "c": 330.51,
-            "t": 1783512900
+            "t": 1786450499
           },
           {
-            "c": 331.14,
-            "t": 1783512960
+            "t": 1786450559
           },
           {
-            "c": 331.32,
-            "t": 1783513020
+            "t": 1786450619
           },
           {
-            "c": 331.25,
-            "t": 1783513080
+            "t": 1786450679
           },
           {
-            "c": 331.53,
-            "t": 1783513140
+            "t": 1786450739
           },
           {
-            "c": 331.67,
-            "t": 1783513200
+            "t": 1786450799
           },
           {
-            "c": 333,
-            "t": 1783513260
+            "t": 1786450859
           },
           {
-            "c": 332.71,
-            "t": 1783513320
+            "t": 1786450919
           },
           {
-            "c": 332.28,
-            "t": 1783513380
+            "t": 1786450979
           },
           {
-            "c": 331.68,
-            "t": 1783513440
+            "t": 1786451039
           },
           {
-            "c": 332.15,
-            "t": 1783513500
+            "t": 1786451099
           },
           {
-            "c": 332.6,
-            "t": 1783513560
+            "t": 1786451159
           },
           {
-            "c": 332.85,
-            "t": 1783513620
+            "t": 1786451219
           },
           {
-            "c": 332.41,
-            "t": 1783513680
+            "t": 1786451279
           },
           {
-            "c": 332.21,
-            "t": 1783513740
+            "t": 1786451339
           },
           {
-            "c": 332.9,
-            "t": 1783513800
+            "t": 1786451399
           },
           {
-            "c": 333,
-            "t": 1783513860
+            "t": 1786451459
           },
           {
-            "c": 332.68,
-            "t": 1783513920
+            "t": 1786451519
           },
           {
-            "c": 332.47,
-            "t": 1783513980
+            "t": 1786451579
           },
           {
-            "c": 331.91,
-            "t": 1783514040
+            "t": 1786451639
           },
           {
-            "c": 332.42,
-            "t": 1783514100
+            "t": 1786451699
           },
           {
-            "c": 331.52,
-            "t": 1783514160
+            "t": 1786451759
           },
           {
-            "c": 331.67,
-            "t": 1783514220
+            "t": 1786451819
           },
           {
-            "c": 331.65,
-            "t": 1783514280
+            "t": 1786451879
           },
           {
-            "c": 332.28,
-            "t": 1783514340
+            "t": 1786451939
           },
           {
-            "c": 332.85,
-            "t": 1783514400
+            "t": 1786451999
           },
           {
-            "c": 333.09,
-            "t": 1783514460
+            "t": 1786452059
           },
           {
-            "c": 332.9,
-            "t": 1783514520
+            "t": 1786452119
           },
           {
-            "c": 333.25,
-            "t": 1783514580
+            "t": 1786452179
           },
           {
-            "c": 333.18,
-            "t": 1783514640
+            "t": 1786452239
           },
           {
-            "c": 332.65,
-            "t": 1783514700
+            "t": 1786452299
           },
           {
-            "c": 333.2,
-            "t": 1783514760
+            "t": 1786452359
           },
           {
-            "c": 333.39,
-            "t": 1783514820
+            "t": 1786452419
           },
           {
-            "c": 333.34,
-            "t": 1783514880
+            "t": 1786452479
           },
           {
-            "c": 333.94,
-            "t": 1783514940
+            "t": 1786452539
           },
           {
-            "c": 334.17,
-            "t": 1783515000
+            "t": 1786452599
           },
           {
-            "c": 333.65,
-            "t": 1783515060
+            "t": 1786452659
           },
           {
-            "c": 334.87,
-            "t": 1783515120
+            "t": 1786452719
           },
           {
-            "c": 334.43,
-            "t": 1783515180
+            "t": 1786452779
           },
           {
-            "c": 334.6,
-            "t": 1783515240
+            "t": 1786452839
           },
           {
-            "c": 333.96,
-            "t": 1783515300
+            "t": 1786452899
           },
           {
-            "c": 334.43,
-            "t": 1783515360
+            "t": 1786452959
           },
           {
-            "c": 334.58,
-            "t": 1783515420
+            "t": 1786453019
           },
           {
-            "c": 334.68,
-            "t": 1783515480
+            "t": 1786453079
           },
           {
-            "c": 334.93,
-            "t": 1783515540
+            "t": 1786453139
           },
           {
-            "c": 334.44,
-            "t": 1783515600
+            "t": 1786453199
           },
           {
-            "c": 334.31,
-            "t": 1783515660
+            "t": 1786453259
           },
           {
-            "c": 334.1,
-            "t": 1783515720
+            "t": 1786453319
           },
           {
-            "c": 334.05,
-            "t": 1783515780
+            "t": 1786453379
           },
           {
-            "c": 334.36,
-            "t": 1783515840
+            "t": 1786453439
           },
           {
-            "c": 333.83,
-            "t": 1783515900
+            "t": 1786453499
           },
           {
-            "c": 334.6,
-            "t": 1783515960
+            "t": 1786453559
           },
           {
-            "c": 335.07,
-            "t": 1783516020
+            "t": 1786453619
           },
           {
-            "c": 334.46,
-            "t": 1783516080
+            "t": 1786453679
           },
           {
-            "c": 333.92,
-            "t": 1783516140
+            "t": 1786453739
           },
           {
-            "c": 333.82,
-            "t": 1783516200
+            "t": 1786453799
           },
           {
-            "c": 333.85,
-            "t": 1783516260
+            "t": 1786453859
           },
           {
-            "c": 333.62,
-            "t": 1783516320
+            "t": 1786453919
           },
           {
-            "c": 333.47,
-            "t": 1783516380
+            "t": 1786453979
           },
           {
-            "c": 332.85,
-            "t": 1783516440
+            "t": 1786454039
           },
           {
-            "c": 333.02,
-            "t": 1783516500
+            "t": 1786454099
           },
           {
-            "c": 333.48,
-            "t": 1783516560
+            "t": 1786454159
           },
           {
-            "c": 333.48,
-            "t": 1783516620
+            "t": 1786454219
           },
           {
-            "c": 333,
-            "t": 1783516680
+            "t": 1786454279
           },
           {
-            "c": 333.52,
-            "t": 1783516740
+            "t": 1786454339
           },
           {
-            "c": 333.5,
-            "t": 1783516800
+            "t": 1786454399
           },
           {
-            "c": 334.21,
-            "t": 1783516860
+            "t": 1786454459
           },
           {
-            "c": 334.23,
-            "t": 1783516920
+            "t": 1786454519
           },
           {
-            "c": 334.47,
-            "t": 1783516980
+            "t": 1786454579
           },
           {
-            "c": 334.53,
-            "t": 1783517040
+            "t": 1786454639
           },
           {
-            "c": 334.83,
-            "t": 1783517100
+            "t": 1786454699
           },
           {
-            "c": 334.92,
-            "t": 1783517160
+            "t": 1786454759
           },
           {
-            "c": 334.95,
-            "t": 1783517220
+            "t": 1786454819
           },
           {
-            "c": 334.87,
-            "t": 1783517280
+            "t": 1786454879
           },
           {
-            "c": 335.18,
-            "t": 1783517340
+            "t": 1786454939
           },
           {
-            "c": 335.34,
-            "t": 1783517400
+            "t": 1786454999
           },
           {
-            "c": 335.32,
-            "t": 1783517460
+            "t": 1786455059
           },
           {
-            "c": 335.65,
-            "t": 1783517520
+            "t": 1786455119
           },
           {
-            "c": 335.46,
-            "t": 1783517580
+            "t": 1786455179
           },
           {
-            "c": 335.84,
-            "t": 1783517640
+            "t": 1786455239
           },
           {
-            "c": 335.79,
-            "t": 1783517700
+            "t": 1786455299
           },
           {
-            "c": 335.57,
-            "t": 1783517760
+            "t": 1786455359
           },
           {
-            "c": 335.8,
-            "t": 1783517820
+            "t": 1786455419
           },
           {
-            "c": 335.34,
-            "t": 1783517880
+            "t": 1786455479
           },
           {
-            "c": 334.92,
-            "t": 1783517940
+            "t": 1786455539
           },
           {
-            "c": 334.9,
-            "t": 1783518000
+            "t": 1786455599
           },
           {
-            "c": 334.3,
-            "t": 1783518060
+            "t": 1786455659
           },
           {
-            "c": 334.53,
-            "t": 1783518120
+            "t": 1786455719
           },
           {
-            "c": 334,
-            "t": 1783518180
+            "t": 1786455779
           },
           {
-            "c": 333.9,
-            "t": 1783518240
+            "t": 1786455839
           },
           {
-            "c": 333.08,
-            "t": 1783518300
+            "t": 1786455899
           },
           {
-            "c": 333.48,
-            "t": 1783518360
+            "t": 1786455959
           },
           {
-            "c": 333.32,
-            "t": 1783518420
+            "t": 1786456019
           },
           {
-            "c": 333.05,
-            "t": 1783518480
+            "t": 1786456079
           },
           {
-            "c": 332.76,
-            "t": 1783518540
+            "t": 1786456139
           },
           {
-            "c": 333.44,
-            "t": 1783518600
+            "t": 1786456199
           },
           {
-            "c": 333.54,
-            "t": 1783518660
+            "t": 1786456259
           },
           {
-            "c": 333.92,
-            "t": 1783518720
+            "t": 1786456319
           },
           {
-            "c": 333.32,
-            "t": 1783518780
+            "t": 1786456379
           },
           {
-            "c": 333.48,
-            "t": 1783518840
+            "t": 1786456439
           },
           {
-            "c": 332.97,
-            "t": 1783518900
+            "t": 1786456499
           },
           {
-            "c": 332.87,
-            "t": 1783518960
+            "t": 1786456559
           },
           {
-            "c": 333.22,
-            "t": 1783519020
+            "t": 1786456619
           },
           {
-            "c": 333.58,
-            "t": 1783519080
+            "t": 1786456679
           },
           {
-            "c": 333.47,
-            "t": 1783519140
+            "t": 1786456739
           },
           {
-            "c": 334.28,
-            "t": 1783519200
+            "t": 1786456799
           },
           {
-            "c": 335,
-            "t": 1783519260
+            "t": 1786456859
           },
           {
-            "c": 334.52,
-            "t": 1783519320
+            "t": 1786456919
           },
           {
-            "c": 335.15,
-            "t": 1783519380
+            "t": 1786456979
           },
           {
-            "c": 335.08,
-            "t": 1783519440
+            "t": 1786457039
           },
           {
-            "c": 334.59,
-            "t": 1783519500
+            "t": 1786457099
           },
           {
-            "c": 334.89,
-            "t": 1783519560
+            "t": 1786457159
           },
           {
-            "c": 334.74,
-            "t": 1783519620
+            "t": 1786457219
           },
           {
-            "c": 335.44,
-            "t": 1783519680
+            "t": 1786457279
           },
           {
-            "c": 335.51,
-            "t": 1783519740
+            "t": 1786457339
           },
           {
-            "c": 335.84,
-            "t": 1783519800
+            "t": 1786457399
           },
           {
-            "c": 335.54,
-            "t": 1783519860
+            "t": 1786457459
           },
           {
-            "c": 335.09,
-            "t": 1783519920
+            "t": 1786457519
           },
           {
-            "c": 335.3,
-            "t": 1783519980
+            "t": 1786457579
           },
           {
-            "c": 335.31,
-            "t": 1783520040
+            "t": 1786457639
           },
           {
-            "c": 335.38,
-            "t": 1783520100
+            "t": 1786457699
           },
           {
-            "c": 335.18,
-            "t": 1783520160
+            "t": 1786457759
           },
           {
-            "c": 335.34,
-            "t": 1783520220
+            "t": 1786457819
           },
           {
-            "c": 335.43,
-            "t": 1783520280
+            "t": 1786457879
           },
           {
-            "c": 335.95,
-            "t": 1783520340
+            "t": 1786457939
           },
           {
-            "c": 335.45,
-            "t": 1783520400
+            "t": 1786457999
           },
           {
-            "c": 335.4,
-            "t": 1783520460
+            "t": 1786458059
           },
           {
-            "c": 335.63,
-            "t": 1783520520
+            "t": 1786458119
           },
           {
-            "c": 335.23,
-            "t": 1783520580
+            "t": 1786458179
           },
           {
-            "c": 335.18,
-            "t": 1783520640
+            "t": 1786458239
           },
           {
-            "c": 335.36,
-            "t": 1783520700
+            "t": 1786458299
           },
           {
-            "c": 335.41,
-            "t": 1783520760
+            "t": 1786458359
           },
           {
-            "c": 335.57,
-            "t": 1783520820
+            "t": 1786458419
           },
           {
-            "c": 335.06,
-            "t": 1783520880
+            "t": 1786458479
           },
           {
-            "c": 334.84,
-            "t": 1783520940
+            "t": 1786458539
           },
           {
-            "c": 334.5,
-            "t": 1783521000
+            "t": 1786458599
           },
           {
-            "c": 334.82,
-            "t": 1783521060
+            "t": 1786458659
           },
           {
-            "c": 334.48,
-            "t": 1783521120
+            "t": 1786458719
           },
           {
-            "c": 334.73,
-            "t": 1783521180
+            "t": 1786458779
           },
           {
-            "c": 334.63,
-            "t": 1783521240
+            "t": 1786458839
           },
           {
-            "c": 334.91,
-            "t": 1783521300
+            "t": 1786458899
           },
           {
-            "c": 335.22,
-            "t": 1783521360
+            "t": 1786458959
           },
           {
-            "c": 335.49,
-            "t": 1783521420
+            "t": 1786459019
           },
           {
-            "c": 335.57,
-            "t": 1783521480
+            "t": 1786459079
           },
           {
-            "c": 335.59,
-            "t": 1783521540
+            "t": 1786459139
           },
           {
-            "c": 335.14,
-            "t": 1783521600
+            "t": 1786459199
           },
           {
-            "c": 334.85,
-            "t": 1783521660
+            "t": 1786459259
           },
           {
-            "c": 334.57,
-            "t": 1783521720
+            "t": 1786459319
           },
           {
-            "c": 334.75,
-            "t": 1783521780
+            "t": 1786459379
           },
           {
-            "c": 334.88,
-            "t": 1783521840
+            "t": 1786459439
           },
           {
-            "c": 334.64,
-            "t": 1783521900
+            "t": 1786459499
           },
           {
-            "c": 334.61,
-            "t": 1783521960
+            "t": 1786459559
           },
           {
-            "c": 334.45,
-            "t": 1783522020
+            "t": 1786459619
           },
           {
-            "c": 334.74,
-            "t": 1783522080
+            "t": 1786459679
           },
           {
-            "c": 334.87,
-            "t": 1783522140
+            "t": 1786459739
           },
           {
-            "c": 335.11,
-            "t": 1783522200
+            "t": 1786459799
           },
           {
-            "c": 335.29,
-            "t": 1783522260
+            "t": 1786459859
           },
           {
-            "c": 334.68,
-            "t": 1783522320
+            "t": 1786459919
           },
           {
-            "c": 334.69,
-            "t": 1783522380
+            "t": 1786459979
           },
           {
-            "c": 334.59,
-            "t": 1783522440
+            "t": 1786460039
           },
           {
-            "c": 334.48,
-            "t": 1783522500
+            "t": 1786460099
           },
           {
-            "c": 334.29,
-            "t": 1783522560
+            "t": 1786460159
           },
           {
-            "c": 334.29,
-            "t": 1783522620
+            "t": 1786460219
           },
           {
-            "c": 333.79,
-            "t": 1783522680
+            "t": 1786460279
           },
           {
-            "c": 334.45,
-            "t": 1783522740
+            "t": 1786460339
           },
           {
-            "c": 334.83,
-            "t": 1783522800
+            "t": 1786460399
           },
           {
-            "c": 334.22,
-            "t": 1783522860
+            "t": 1786460459
           },
           {
-            "c": 333.87,
-            "t": 1783522920
+            "t": 1786460519
           },
           {
-            "c": 333.51,
-            "t": 1783522980
+            "t": 1786460579
           },
           {
-            "c": 333.56,
-            "t": 1783523040
+            "t": 1786460639
           },
           {
-            "c": 333.62,
-            "t": 1783523100
+            "t": 1786460699
           },
           {
-            "c": 333.62,
-            "t": 1783523160
+            "t": 1786460759
           },
           {
-            "c": 334.25,
-            "t": 1783523220
+            "t": 1786460819
           },
           {
-            "c": 334.17,
-            "t": 1783523280
+            "t": 1786460879
           },
           {
-            "c": 334.03,
-            "t": 1783523340
+            "t": 1786460939
           },
           {
-            "c": 334.05,
-            "t": 1783523400
+            "t": 1786460999
           },
           {
-            "c": 333.88,
-            "t": 1783523460
+            "t": 1786461059
           },
           {
-            "c": 334.04,
-            "t": 1783523520
+            "t": 1786461119
           },
           {
-            "c": 333.41,
-            "t": 1783523580
+            "t": 1786461179
           },
           {
-            "c": 333.78,
-            "t": 1783523640
+            "t": 1786461239
           },
           {
-            "c": 333.53,
-            "t": 1783523700
+            "t": 1786461299
           },
           {
-            "c": 333.72,
-            "t": 1783523760
+            "t": 1786461359
           },
           {
-            "c": 333.54,
-            "t": 1783523820
+            "t": 1786461419
           },
           {
-            "c": 333.27,
-            "t": 1783523880
+            "t": 1786461479
           },
           {
-            "c": 333.04,
-            "t": 1783523940
+            "t": 1786461539
           },
           {
-            "c": 333.61,
-            "t": 1783524000
+            "t": 1786461599
           },
           {
-            "c": 333.74,
-            "t": 1783524060
+            "t": 1786461659
           },
           {
-            "c": 333.33,
-            "t": 1783524120
+            "t": 1786461719
           },
           {
-            "c": 333.22,
-            "t": 1783524180
+            "t": 1786461779
           },
           {
-            "c": 333.11,
-            "t": 1783524240
+            "t": 1786461839
           },
           {
-            "c": 333.31,
-            "t": 1783524300
+            "t": 1786461899
           },
           {
-            "c": 333.39,
-            "t": 1783524360
+            "t": 1786461959
           },
           {
-            "c": 333.94,
-            "t": 1783524420
+            "t": 1786462019
           },
           {
-            "c": 334.02,
-            "t": 1783524480
+            "t": 1786462079
           },
           {
-            "c": 334.46,
-            "t": 1783524540
+            "t": 1786462139
           },
           {
-            "c": 332.66,
-            "t": 1783524600
+            "t": 1786462199
           },
           {
-            "c": 332.6,
-            "t": 1783524660
+            "t": 1786462259
           },
           {
-            "c": 332.94,
-            "t": 1783524720
+            "t": 1786462319
           },
           {
-            "c": 332.75,
-            "t": 1783524780
+            "t": 1786462379
           },
           {
-            "c": 333.126,
-            "t": 1783524840
+            "t": 1786462439
           },
           {
-            "c": 332.815,
-            "t": 1783524900
+            "t": 1786462499
           },
           {
-            "c": 333,
-            "t": 1783524960
+            "t": 1786462559
           },
           {
-            "c": 333.44,
-            "t": 1783525020
+            "t": 1786462619
           },
           {
-            "c": 332.9,
-            "t": 1783525080
+            "t": 1786462679
           },
           {
-            "c": 332.76,
-            "t": 1783525140
+            "t": 1786462739
           },
           {
-            "c": 332.57,
-            "t": 1783525200
+            "t": 1786462799
           },
           {
-            "c": 332.676,
-            "t": 1783525260
+            "t": 1786462859
           },
           {
-            "c": 332.235,
-            "t": 1783525320
+            "t": 1786462919
           },
           {
-            "c": 332.18,
-            "t": 1783525380
+            "t": 1786462979
           },
           {
-            "c": 332.175,
-            "t": 1783525440
+            "t": 1786463039
           },
           {
-            "c": 332.08,
-            "t": 1783525500
+            "t": 1786463099
           },
           {
-            "c": 332.115,
-            "t": 1783525560
+            "t": 1786463159
           },
           {
-            "c": 332.026,
-            "t": 1783525620
+            "t": 1786463219
           },
           {
-            "c": 331.34,
-            "t": 1783525680
+            "t": 1786463279
           },
           {
-            "c": 331.429,
-            "t": 1783525740
+            "t": 1786463339
           },
           {
-            "c": 331.565,
-            "t": 1783525800
+            "t": 1786463399
           },
           {
-            "c": 331.6,
-            "t": 1783525860
+            "t": 1786463459
           },
           {
-            "c": 331.991,
-            "t": 1783525920
+            "t": 1786463519
           },
           {
-            "c": 331.73,
-            "t": 1783525980
+            "t": 1786463579
           },
           {
-            "c": 333.275,
-            "t": 1783526040
+            "t": 1786463639
           },
           {
-            "c": 332.54,
-            "t": 1783526100
+            "t": 1786463699
           },
           {
-            "c": 331.77,
-            "t": 1783526160
+            "t": 1786463759
           },
           {
-            "c": 333.31,
-            "t": 1783526220
+            "t": 1786463819
           },
           {
-            "c": 333.07,
-            "t": 1783526280
+            "t": 1786463879
           },
           {
-            "c": 333.06,
-            "t": 1783526340
+            "t": 1786463939
           },
           {
-            "c": 333.695,
-            "t": 1783526400
+            "t": 1786463999
+          },
+          {
+            "t": 1786464000
           }
         ]
       },
       "changes": {
-        "price1w": 391.26,
-        "price1m": 303.28,
+        "price1w": 294.61,
+        "price1m": 350.33,
+        "price3m": 294.05,
+        "price6m": 226.61,
         "priceYTD": 171.18,
-        "price1y": 98.14,
-        "price5y": 61.359,
+        "price1y": 101.75,
+        "price5y": 61.717,
         "priceMAX": 0.2611
       },
       "source": "polygon"
     },
     "history": [
       {
+        "t": "2026-08-03",
+        "o": 283.34,
+        "h": 323.64,
+        "l": 276.845,
+        "c": 306.4,
+        "a": 306.4,
+        "v": 54873944,
+        "ch": 4.57
+      },
+      {
         "t": "2026-07-01",
         "o": 404.97,
         "h": 415.49,
-        "l": 313.1,
-        "c": 333.15,
-        "a": 333.15,
-        "v": 71950475,
-        "ch": -23.12
+        "l": 250.5,
+        "c": 293.02,
+        "a": 293.02,
+        "v": 272705157,
+        "ch": -32.38
       },
       {
         "t": "2026-06-01",
@@ -2377,59 +2050,39 @@
         "a": 156.902552,
         "v": 270705505,
         "ch": 17.6
-      },
-      {
-        "t": "2025-09-02",
-        "o": 95.765,
-        "h": 134.21,
-        "l": 94.11,
-        "c": 133.9,
-        "a": 133.42596,
-        "v": 247916539,
-        "ch": 33.96
-      },
-      {
-        "t": "2025-08-01",
-        "o": 92.71,
-        "h": 108.02,
-        "l": 92.47,
-        "c": 100.15,
-        "a": 99.598772,
-        "v": 241928692,
-        "ch": 5.6
       }
     ],
     "quote": {
-      "p": 333.695,
-      "pd": 333.7,
-      "c": 7.56,
-      "cp": 2.32,
-      "cl": 326.13,
+      "p": 314.47,
+      "pd": 314.47,
+      "c": 8.07,
+      "cp": 2.63,
+      "cl": 306.4,
       "cdr": 1,
-      "o": 325.47,
-      "h": 337.5,
-      "l": 322.72,
-      "v": 3878364,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
+      "o": 315.03,
+      "h": 316.86,
+      "l": 309.47,
+      "v": 1737778,
+      "ts": 1786459107635.8828,
+      "u": "Aug 11, 2026, 10:38 AM EDT",
+      "td": "2026-08-11",
       "h52": 438.5,
-      "l52": 90.935,
+      "l52": 94.11,
       "ex": "NASDAQ",
-      "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 332.3,
-      "epd": 332.3,
-      "ec": -1.39,
-      "ecp": -0.42,
-      "eu": "Jul 8, 2026, 6:45 PM EDT",
-      "es": "After-hours",
-      "ets": 1783550724305.5989,
-      "etd": "2026-07-08",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1786459107635.8828,
+      "etd": null,
       "epv": null,
       "days": 0,
-      "exp": 1783550792762,
+      "exp": 1786459130896,
       "symbol": "LRCX",
       "uid": "LRCX"
     }

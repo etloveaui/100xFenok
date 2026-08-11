@@ -35,42 +35,53 @@
       "outcome": "failed",
       "controlled": false,
       "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "run_id": "31501591748",
+      "run_attempt": 1,
+      "event_name": "workflow_dispatch",
+      "schedule": "",
+      "natural": false,
+      "observed_at": "2026-08-11T14:28:54Z",
+      "outcome": "failed",
+      "controlled": false,
+      "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:GOOG"
     }
   ],
   "resolution_state": "lkg_primary",
   "retry": true,
   "current": {
     "path": "data/admin/stockanalysis-recovery/lkg/stock/GOOG.json",
-    "payload_sha256": "3ed1d91b1c873a0580b67e60d69601af7ecc08f54c6c230b3055efc94a3fcb5e",
-    "source_as_of": "2026-07-08T00:00:00Z",
-    "fetched_at": "2026-07-08T22:46:00Z"
+    "payload_sha256": "12766fea3e2a8ee0ba5a447a9d3a2d7d360d51993f972384ff357ca1fd5bf3e7",
+    "source_as_of": "2026-08-11T14:38:14Z",
+    "fetched_at": "2026-08-11T14:38:25Z"
   },
-  "updated_at": "2026-07-18T01:18:00Z",
+  "updated_at": "2026-08-11T14:28:54Z",
   "last_attempt": {
-    "run_id": "29624561317",
+    "run_id": "31501591748",
     "run_attempt": 1,
-    "event_name": "schedule",
-    "schedule": "50 23 * * 1-5",
-    "natural": true,
-    "observed_at": "2026-07-18T01:18:00Z",
+    "event_name": "workflow_dispatch",
+    "schedule": "",
+    "natural": false,
+    "observed_at": "2026-08-11T14:28:54Z",
     "outcome": "failed",
     "controlled": false,
-    "error": "HTTPError: HTTP Error 404: Not Found"
+    "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:GOOG"
   },
   "latest_failure": {
-    "run_id": "29624561317",
+    "run_id": "31501591748",
     "run_attempt": 1,
-    "observed_at": "2026-07-18T01:18:00Z",
-    "error": "HTTPError: HTTP Error 404: Not Found",
+    "observed_at": "2026-08-11T14:28:54Z",
+    "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:GOOG",
     "controlled": false,
     "had_canonical_before_failure": true,
-    "expected_payload_sha256": "3ed1d91b1c873a0580b67e60d69601af7ecc08f54c6c230b3055efc94a3fcb5e",
+    "expected_payload_sha256": "12766fea3e2a8ee0ba5a447a9d3a2d7d360d51993f972384ff357ca1fd5bf3e7",
     "data_loss": false
   },
   "lkg": {
     "path": "data/admin/stockanalysis-recovery/lkg/stock/GOOG.json",
-    "payload_sha256": "3ed1d91b1c873a0580b67e60d69601af7ecc08f54c6c230b3055efc94a3fcb5e",
-    "source_as_of": "2026-07-08T00:00:00Z",
-    "fetched_at": "2026-07-08T22:46:00Z"
+    "payload_sha256": "12766fea3e2a8ee0ba5a447a9d3a2d7d360d51993f972384ff357ca1fd5bf3e7",
+    "source_as_of": "2026-08-11T14:38:14Z",
+    "fetched_at": "2026-08-11T14:38:25Z"
   }
 }
