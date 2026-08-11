@@ -91,28 +91,6 @@ assert.equal(changedSetIncluded(["data/macro/fred-macro.json"]), true, "eligible
 assert.equal(changedSetIncluded(negatives.map(representative)), false, "excluded-only push must not trigger");
 assert.equal(changedSetIncluded([representative(negatives[0]), "scripts/update-manifest.py"]), true, "mixed push with one eligible path must trigger");
 
-const directDispatchWorkflows = [
-  "build-stocks-analyzer.yml",
-  "fenok-edge-daily.yml",
-  "fenok-edge-krx-daily.yml",
-  "fetch-defillama.yml",
-  "fetch-fdic.yml",
-  "fetch-fenok-private-options.yml",
-  "fetch-fred-banking.yml",
-  "fetch-fred-macro.yml",
-  "fetch-fred-yardeni.yml",
-  "fetch-sentiment.yml",
-  "fetch-stockanalysis.yml",
-  "fetch-treasury-tga.yml",
-  "fetch-yahoo-ticker.yml",
-  "fetch-yf-finance.yml",
-  "slickcharts-history.yml",
-];
-for (const workflowFile of directDispatchWorkflows) {
-  const text = fs.readFileSync(path.join(root, ".github/workflows", workflowFile), "utf8");
-  assert.match(text, /gh workflow run update-manifest\.yml/, `${workflowFile} must retain its direct dispatch`);
-}
-
 const liveCheck = spawnSync(process.execPath, [scriptPath, "--check"], { cwd: root, encoding: "utf8" });
 assert.equal(liveCheck.status, 0, `${liveCheck.stderr}\n${liveCheck.stdout}`);
 

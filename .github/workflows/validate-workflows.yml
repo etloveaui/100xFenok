@@ -22,6 +22,8 @@ on:
       - 'scripts/test-pipeline-failure-alarm-manifest.mjs'
       - 'scripts/test-global-writer-queue-manifest.mjs'
       - 'scripts/test-stage-lane-manifest.mjs'
+      - 'scripts/test-update-manifest-*.mjs'
+      - 'scripts/test-sync-update-manifest-trigger-paths.mjs'
       - '100xfenok-next/package.json'
   pull_request:
     paths:
@@ -38,6 +40,8 @@ on:
       - 'scripts/test-pipeline-failure-alarm-manifest.mjs'
       - 'scripts/test-global-writer-queue-manifest.mjs'
       - 'scripts/test-stage-lane-manifest.mjs'
+      - 'scripts/test-update-manifest-*.mjs'
+      - 'scripts/test-sync-update-manifest-trigger-paths.mjs'
       - '100xfenok-next/package.json'
   workflow_dispatch:
 
@@ -80,6 +84,12 @@ jobs:
 
       - name: Validate alarm workflow contracts
         run: npm --prefix 100xfenok-next run qa:alarm-state
+
+      - name: Validate Update Manifest policy
+        run: |
+          node scripts/test-update-manifest-rebuild-policy.mjs
+          node scripts/test-update-manifest-dispatch-decoupling.mjs
+          node scripts/test-sync-update-manifest-trigger-paths.mjs
 
       - name: Install pinned actionlint
         env:

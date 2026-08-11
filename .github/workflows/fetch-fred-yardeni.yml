@@ -117,7 +117,10 @@ jobs:
               continue
             fi
             if git push; then
-              gh workflow run update-manifest.yml --ref main
+              # No Update Manifest dispatch: the Feno Yardeni generation is
+              # plane-served via this workflow's own cloud-data-plane publish
+              # step; scheduled update-manifest.yml reconciliation (daily
+              # 02:30/09:30 UTC) remains the fallback.
               exit 0
             fi
             echo "git push race on attempt ${attempt}; retrying after rebase"

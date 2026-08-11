@@ -78,7 +78,10 @@ jobs:
           git commit -m "data: refresh OECD CLI shadow"
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then git rebase --abort >/dev/null 2>&1 || true; sleep 3; continue; fi
-            if git push; then gh workflow run update-manifest.yml --ref main; exit "$RECOVERY_EXIT"; fi
+            # No Update Manifest dispatch: OECD CLI is a private, non-servable
+            # family with no manifest consumer; scheduled update-manifest.yml
+            # reconciliation (daily 02:30/09:30 UTC) remains the fallback.
+            if git push; then exit "$RECOVERY_EXIT"; fi
             sleep 3
           done
           exit 1
