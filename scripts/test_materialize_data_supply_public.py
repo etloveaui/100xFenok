@@ -93,8 +93,6 @@ class MaterializerFixture:
         materializer = PublicDataSupplyMaterializer(
             repo_root=self.repo,
             state_reader=reader,
-            expected_enrollment_count=len(self.tickers),
-            expected_membership_sha256=self.membership_sha,
             failpoint=failpoint,
             require_git_tracking=require_git_tracking,
         )
@@ -293,19 +291,38 @@ class PublicDataSupplyMaterializerTests(unittest.TestCase):
         self.assertEqual(fallback_projection.index["entries"]["LKG"]["provider_role"], "fallback")
         self.assertEqual(promoted_projection.index["entries"]["LKG"]["provider_role"], "primary")
 
-    def test_bootstrap_digest_and_existing_membership_fail_closed(self):
-        wrong = PublicDataSupplyMaterializer(
-            repo_root=self.fixture.repo,
-            state_reader=CountingStateReader(self.fixture.active),
-            expected_enrollment_count=3,
-            expected_membership_sha256="f" * 64,
+    def test_growth_enrolls_new_ticker_with_dynamic_count_and_digest_cross_links(self):
+        self.fixture.materializer()[0].write_canonical(generated_at="2026-07-11T01:00:00Z", bootstrap_enrollment=True)
+        self.fixture._seed_selection("NEW1", "fresh_fallback", "provider_object", "2026-07-12T00:00:00Z")
+        new_object = self.fixture.state_root / self.fixture.current["NEW1"]["payload_ref"]["path"]
+        subprocess.run(["git", "add", str(new_object.relative_to(self.fixture.repo))], cwd=self.fixture.repo, check=True)
+        grown, _ = self.fixture.materializer()
+        result = grown.write_canonical(generated_at="2026-07-12T01:00:00Z")
+        enrollment = json.loads((self.fixture.canonical_root / "enrollment.json").read_text())
+        index = json.loads((self.fixture.canonical_root / "index.json").read_text())
+        self.assertEqual(result["counts"], {"enrolled": 4, "selected": 3, "unavailable": 1, "payloads": 3})
+        self.assertEqual(enrollment["tickers"], self.fixture.tickers)
+        self.assertEqual(enrollment["membership_sha256"], self.fixture.membership_sha)
+        self.assertEqual(index["membership_sha256"], enrollment["membership_sha256"])
+        self.assertEqual(enrollment["enrolled_count"], index["enrolled_count"])
+        self.assertEqual(enrollment["enrolled_count"], len(self.fixture.tickers))
+        self.assertEqual(enrollment["index_sha256"], index_content_sha256(index))
+        self.assertEqual(
+            (self.fixture.canonical_root / "payloads/NEW1.json").read_bytes(),
+            self.fixture.payloads["NEW1"],
         )
-        with self.assertRaisesRegex(MaterializationError, "membership digest"):
-            wrong.write_canonical(generated_at="2026-07-11T01:00:00Z", bootstrap_enrollment=True)
-        self.assertFalse(self.fixture.canonical_root.exists())
 
+    def test_membership_removal_and_enrollment_tamper_fail_closed(self):
         good, _ = self.fixture.materializer()
         good.write_canonical(generated_at="2026-07-11T01:00:00Z", bootstrap_enrollment=True)
+        shrunken = self.fixture.active
+        shrunken["recovery"].pop("UNAV")
+        with self.assertRaisesRegex(MaterializationError, "not preserved"):
+            PublicDataSupplyMaterializer(
+                repo_root=self.fixture.repo,
+                state_reader=CountingStateReader(shrunken),
+            ).write_canonical(generated_at="2026-07-11T02:00:00Z")
+
         enrollment_path = self.fixture.canonical_root / "enrollment.json"
         enrollment = json.loads(enrollment_path.read_text())
         enrollment["tickers"] = ["DRIFT"]
@@ -359,8 +376,6 @@ class PublicDataSupplyMaterializerTests(unittest.TestCase):
             PublicDataSupplyMaterializer(
                 repo_root=self.fixture.repo,
                 state_reader=CountingStateReader(escaping),
-                expected_enrollment_count=len(self.fixture.tickers),
-                expected_membership_sha256=self.fixture.membership_sha,
             ).write_canonical(generated_at="2026-07-11T02:00:00Z")
         self.assertEqual((self.fixture.canonical_root / "index.json").read_bytes(), baseline)
 
@@ -442,6 +457,7 @@ class PublicDataSupplyMaterializerTests(unittest.TestCase):
             "data/admin/data-supply-state/v1/domains/etf_detail/active.json",
             *(f"{generation_root}/{name}.json" for name in ("manifest", "current", "lkg", "recovery", "decision")),
             provider_object,
+            "100xfenok-next/public/data/admin/data-usage-manifest.json",
             str(observation_history.relative_to(self.fixture.repo)),
             str(resolution_history.relative_to(self.fixture.repo)),
         }
@@ -551,17 +567,12 @@ def run_real_baseline_reconcile_fixture(root: Path) -> None:
         check=True,
     )
     materializer = PublicDataSupplyMaterializer(repo_root=root)
-    result = materializer.reconcile_public()
-    expected = {
-        "public_stockanalysis_true_primary": 4731,
-        "public_stockanalysis_yahoo": 0,
-        "public_projection_payloads": 506,
-        "public_status_rows": 718,
-    }
-    if result["postcondition"] != expected:
-        raise AssertionError(f"real baseline postcondition mismatch: {result['postcondition']!r}")
+    first = materializer.reconcile_public()
+    postcondition = first["postcondition"]
+    if postcondition["public_stockanalysis_direct"] != 0 or postcondition["public_stockanalysis_shards"] != 1024:
+        raise AssertionError(f"real baseline shard-only contract mismatch: {postcondition!r}")
     second = materializer.reconcile_public()
-    if second["stale_deleted"] != 0:
+    if second["postcondition"] != postcondition or second["stale_deleted"] != 0:
         raise AssertionError(f"real baseline reconciliation is not idempotent: {second!r}")
 
 

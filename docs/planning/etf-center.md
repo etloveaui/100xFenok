@@ -108,7 +108,7 @@ Implementation pointers:
 | `data/stockanalysis/etf_universe.json` | Full ETF list: ticker, name, category, AUM | `fetch-stockanalysis.py --discover-etf-universe` |
 | `data/stockanalysis/surfaces/etf_screener.json` | Price, change, volume, holdings, assetClass | `fetch-stockanalysis.py --fetch-surfaces` |
 | `data/stockanalysis/surfaces/new_etfs.json` | Recently listed ETFs | `fetch-stockanalysis.py --fetch-surfaces` |
-| `data/computed/data-supply/etf-detail/enrollment.json` | Fixed 718-ticker R2 enrollment guard | `materialize_data_supply_public.py` |
+| `data/computed/data-supply/etf-detail/enrollment.json` | Monotonic R2 enrollment over authoritative resolver state; count and membership digest computed per generation | `materialize_data_supply_public.py` |
 | `data/computed/data-supply/etf-detail/index.json` | Public-safe committed resolution state and payload binding | `materialize_data_supply_public.py` |
 | `data/computed/data-supply/etf-detail/payloads/{TICKER}.json` | Exact immutable bytes for a selected enrolled ticker | `materialize_data_supply_public.py` |
 | `data/stockanalysis/etfs/{TICKER}.json` | Strict StockAnalysis detail for an unenrolled ticker only | `fetch-stockanalysis.py --incremental-etf-backfill` / `--universe-backfill` |
