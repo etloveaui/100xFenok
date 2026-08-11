@@ -55,6 +55,7 @@ jobs:
       # observer's own last comment, so it must target a DEDICATED state issue —
       # pointing it at the failure-alarm issue would overwrite that alarm's alerts.
       - name: Upsert queue state comment
+        id: report
         if: always()
         continue-on-error: true
         env:
@@ -69,7 +70,7 @@ jobs:
             # path segment is the number.
             created_url="$(gh issue create --title "$QUEUE_STATE_TITLE" \
               --body 'Rolling state of the global-writer candidate queue. One comment, upserted every observation; see the comment below for the current reading.' \
-              2>/dev/null || true)"
+              )"
             existing="${created_url##*/}"
           fi
           case "$existing" in
@@ -77,11 +78,11 @@ jobs:
           esac
           if [ -z "$existing" ]; then
             echo "could not resolve the queue state issue; state not published"
-            exit 0
+            exit 1
           fi
           {
             printf '%s\n\n' "[queue-state] observer outcome: \`$QUEUE_OUTCOME\`"
-            printf '%s\n' 'Thresholds and the watched workflow set are declared in `scripts/ops/global-writer-queue-policy.v1.json`.'
+            printf '%s\n' 'The watched workflow set is derived from actual writer commands; thresholds use the observer defaults or workflow environment overrides.'
             printf '\n%s\n' "Observed by: $RUN_URL"
             printf '\n```json\n'
             head -c 4000 queue-state.json 2>/dev/null || echo '{}'
@@ -89,6 +90,13 @@ jobs:
           } > queue-state-comment.md
           gh issue comment "$existing" --edit-last --create-if-none --body-file queue-state-comment.md
 
-      - name: Fail on queue alarm
-        if: steps.queue.outcome != 'success'
-        run: exit 1
+      - name: Fail on queue or report alarm
+        if: always()
+        env:
+          QUEUE_OUTCOME: ${{ steps.queue.outcome }}
+          REPORT_OUTCOME: ${{ steps.report.outcome }}
+        run: |
+          if [ "$QUEUE_OUTCOME" != "success" ] || [ "$REPORT_OUTCOME" != "success" ]; then
+            echo "global-writer queue observation failed: queue=$QUEUE_OUTCOME report=$REPORT_OUTCOME"
+            exit 1
+          fi

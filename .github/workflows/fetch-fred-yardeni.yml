@@ -24,7 +24,7 @@ env:
   FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
 
 concurrency:
-  group: fenok-data-writer-fred-yardeni-${{ github.ref }}
+  group: fenok-data-writer-refs/heads/main
   cancel-in-progress: false
   queue: max
 

@@ -19,7 +19,7 @@ concurrency:
   # All four canonical index series are lane-owned and the commit step
   # rebases before push. Isolate acquisition so concurrent natural schedules do
   # not replace one another in GitHub's one-pending global writer queue.
-  group: fenok-data-writer-us-indices-daily-${{ github.ref }}
+  group: fenok-data-writer-refs/heads/main
   cancel-in-progress: false
   queue: max
 

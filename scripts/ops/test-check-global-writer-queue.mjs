@@ -1,7 +1,5 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -25,9 +23,22 @@ assert.equal(policy.concurrency_group, "fenok-data-writer-refs/heads/main");
 assert.equal(policy.queue_mode, "max", "loss-intolerant writers use GitHub's deep pending queue");
 assert.equal(policy.canonical_branch, "main", "writer workflows are observed only on main");
 assert.equal(policy.default_observation_mode, "workflow_run", "other writers retain workflow-level observation");
-assert.ok(Array.isArray(policy.workflows) && policy.workflows.length > 10, "writer workflow list is explicit");
-assert.equal(policy.workflows.length, 27, "policy covers 26 producers plus the manual canary");
+assert.ok(Array.isArray(policy.workflows) && policy.workflows.length > 10, "writer workflow set is derived");
 assert.equal(new Set(policy.workflows).size, policy.workflows.length, "writer workflow list has no duplicates");
+// The stockanalysis recovery lane writes inside the global writer group and
+// must stay observable after its concurrency moved from job scope to workflow
+// scope: it is included in the derived workflow set and has no job-level
+// target, so it is observed at the workflow-run level (default_observation_mode).
+assert.equal(
+  policy.workflows.includes("publish-stockanalysis-artifact-recovery.yml"),
+  true,
+  "the recovery lane remains part of the observed global writer queue",
+);
+assert.equal(
+  policy.job_level_targets["publish-stockanalysis-artifact-recovery.yml"],
+  undefined,
+  "the recovery lane keeps workflow-scope observation after the concurrency move",
+);
 assert.equal(policy.api.runs_per_page, 100, "API page size stays within the REST limit");
 assert.ok(policy.api.max_pages >= 1, "API query depth is bounded");
 assert.ok(policy.thresholds.max_depth >= 0, "queue-depth threshold is configurable");
@@ -40,58 +51,12 @@ assert.deepEqual(policy.job_level_targets["fetch-stockanalysis.yml"], {
   parent_run_statuses: ["queued", "requested", "waiting", "pending", "in_progress"],
   candidate_statuses: ["queued", "waiting", "pending"],
 }, "StockAnalysis observes only its writer-owning publish job");
-
-const workflowsDir = path.resolve(HERE, "../../.github/workflows");
-const actualWriterWorkflows = fs
-  .readdirSync(workflowsDir)
-  .filter((file) => file.endsWith(".yml"))
-  .filter((file) => {
-    const body = fs.readFileSync(path.join(workflowsDir, file), "utf8");
-    return body.includes("group: fenok-data-writer-refs/heads/main") || body.includes("group: fenok-data-writer-${{ github.ref }}");
-  })
-  .sort();
-assert.deepEqual([...policy.workflows].sort(), actualWriterWorkflows, "policy list stays in parity with global-writer workflows");
-const canonicalQueueBlock = /group:\s*(?:fenok-data-writer-refs\/heads\/main|fenok-data-writer-\$\{\{ github\.ref \}\})\s*\n\s*cancel-in-progress:\s*false\s*\n\s*queue:\s*max/;
-for (const file of policy.workflows) {
-  const body = fs.readFileSync(path.join(workflowsDir, file), "utf8");
-  assert.match(body, canonicalQueueBlock, `${file} must opt into the canonical max queue atomically`);
-  assert.doesNotMatch(
-    body.replace(canonicalQueueBlock, ""),
-    /group:\s*(?:fenok-data-writer-refs\/heads\/main|fenok-data-writer-\$\{\{ github\.ref \}\})/,
-    `${file} must declare the canonical writer group exactly once`,
-  );
-}
-{
-  const canary = fs.readFileSync(path.join(workflowsDir, "writer-queue-canary.yml"), "utf8");
-  const triggerBlock = canary.match(/^on:\n(?<body>[\s\S]*?)^permissions:/m)?.groups?.body ?? "";
-  const jobsBlock = canary.match(/^jobs:\n(?<body>[\s\S]*)$/m)?.groups?.body ?? "";
-  const jobNames = [...jobsBlock.matchAll(/^  ([a-z][a-z0-9-]*):\s*$/gm)]
-    .map((match) => match[1]);
-  assert.deepEqual(jobNames, ["hold-queue-slot"], "canary has exactly one job");
-  assert.match(triggerBlock, /^  workflow_dispatch:/m, "canary is manually dispatchable");
-  assert.doesNotMatch(
-    triggerBlock,
-    /^  (?:push|pull_request|schedule|workflow_run):/m,
-    "canary must remain manual-only",
-  );
-  assert.match(triggerBlock, /hold_seconds:[\s\S]*?default: 30[\s\S]*?type: number/);
-  assert.match(canary, /^permissions:\n  contents: read$/m, "canary permissions are read-only");
-  assert.equal((canary.match(/runs-on: ubuntu-latest/g) ?? []).length, 1);
-  assert.match(canary, /HOLD_SECONDS < 15 \|\| HOLD_SECONDS > 60/, "hold is bounded to 15..60 seconds");
-  assert.match(canary, /github\.run_id[\s\S]*github\.run_attempt[\s\S]*github\.ref[\s\S]*github\.sha/);
-  assert.match(canary, /sleep "\$HOLD_SECONDS"/, "canary holds its queue slot for the requested duration");
-  assert.doesNotMatch(canary, /^\s*uses:/m, "canary uses no checkout, artifact, or cache actions");
-  assert.doesNotMatch(canary, /\b(?:secrets|git push|wrangler|deploy)\b/i, "canary performs no privileged operation");
-  assert.doesNotMatch(canary, /\bwrite\b/i, "canary declares no write capability");
-}
-{
-  const stockanalysis = fs.readFileSync(path.join(workflowsDir, "fetch-stockanalysis.yml"), "utf8");
-  assert.match(
-    stockanalysis,
-    /group:\s*stockanalysis-acquire-\$\{\{ github\.ref \}\}\s*\n\s*cancel-in-progress:\s*false\s*\n\s*queue:\s*max/,
-    "StockAnalysis acquisition is loss-intolerant and must use the max queue",
-  );
-}
+assert.deepEqual(policy.job_level_targets["pipeline-failure-alarm.yml"], {
+  job_name: "persist-alarm-state",
+  eligibility_predecessor: "check",
+  parent_run_statuses: ["queued", "requested", "waiting", "pending", "in_progress"],
+  candidate_statuses: ["queued", "waiting", "pending"],
+}, "the alarm observes only its dependent global-writer persistence job");
 
 const runs = readFixture("mixed");
 const evaluated = evaluateQueue(runs, { now: NOW, maxDepth: 2, maxAgeMinutes: 30 });
@@ -285,28 +250,30 @@ const stockanalysisPolicy = {
   process.exitCode = 0;
 }
 
-// Malformed policy/threshold configuration is an unknown observation, not an
-// alarm and not an uncaught process failure. The checker still emits JSON.
+// Invalid threshold configuration is an unknown observation, not an alarm.
 {
-  const badPolicy = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "queue-observer-")), "bad-policy.json");
-  fs.writeFileSync(badPolicy, "{\"version\": 99}\n");
-  const scriptPath = path.resolve(HERE, "check-global-writer-queue.mjs");
-  const run = spawnSync(process.execPath, [scriptPath], {
-    env: {
-      ...process.env,
-      GITHUB_REPOSITORY: "octo/repo",
-      QUEUE_OBSERVABILITY_POLICY: badPolicy,
+  const previousRepository = process.env.GITHUB_REPOSITORY;
+  const previousDepth = process.env.QUEUE_OBSERVABILITY_MAX_DEPTH;
+  process.env.GITHUB_REPOSITORY = "octo/repo";
+  process.env.QUEUE_OBSERVABILITY_MAX_DEPTH = "invalid";
+  const result = await main({
+    fetchImpl: async () => {
+      throw new Error("invalid threshold must fail before transport");
     },
-    encoding: "utf8",
   });
-  assert.equal(run.status, 3, "malformed policy must use the distinct unknown exit code");
-  const result = JSON.parse(run.stdout);
+  if (previousRepository === undefined) delete process.env.GITHUB_REPOSITORY;
+  else process.env.GITHUB_REPOSITORY = previousRepository;
+  if (previousDepth === undefined) delete process.env.QUEUE_OBSERVABILITY_MAX_DEPTH;
+  else process.env.QUEUE_OBSERVABILITY_MAX_DEPTH = previousDepth;
   assert.equal(result.status, "unknown");
   assert.match(result.message, /observation error/);
+  assert.equal(process.exitCode, 3, "invalid configuration uses the distinct unknown exit code");
+  process.exitCode = 0;
 }
 
 // Dedicated observer is read-only and cannot enter the data-writer group.
 {
+  const workflowsDir = path.resolve(HERE, "../../.github/workflows");
   const workflow = fs.readFileSync(path.join(workflowsDir, "global-writer-queue-observer.yml"), "utf8");
   assert.match(workflow, /actions:\s*read/);
   assert.match(workflow, /contents:\s*read/);

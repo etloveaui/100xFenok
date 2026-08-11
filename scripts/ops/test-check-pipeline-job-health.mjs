@@ -8,6 +8,7 @@ import {
   buildPublishOutcomeRecord,
   PUBLISH_OUTCOME_SHARD_SCHEMA,
 } from "../lib/publish-outcome-shard.mjs";
+import { LANE_REGISTRY } from "../lib/lane-registry.mjs";
 import {
   NON_SCHEDULED_WORKFLOW_INCLUSIONS,
   SCHEDULED_WORKFLOW_EXCLUSIONS,
@@ -49,34 +50,32 @@ function writeWorkflow(root, file, source) {
   fs.writeFileSync(path.join(root, file), source);
 }
 
-// Plane publication family names deliberately differ from registry lane ids;
-// SlickCharts has five family shards and EDGAR publishes through edgar_filings.
-assert.deepEqual(
-  Object.entries(PLANE_PUBLISH_OUTCOME_BINDINGS).map(([family, binding]) => [family, binding.lane_id, binding.workflow]),
-  [
-    ["oecd-cli", "oecd_cli", ".github/workflows/fetch-oecd-cli.yml"],
-    ["fred-macro", "fred_macro", ".github/workflows/fetch-fred-macro.yml"],
-    ["defillama-stablecoins", "defillama_stablecoins", ".github/workflows/fetch-defillama.yml"],
-    ["fdic-tier1", "fdic_tier1", ".github/workflows/fetch-fdic.yml"],
-    ["treasury-tga", "treasury_tga", ".github/workflows/fetch-treasury-tga.yml"],
-    ["fred-banking", "fred_banking", ".github/workflows/fetch-fred-banking.yml"],
-    ["fred-yardeni", "fred_yardeni", ".github/workflows/fetch-fred-yardeni.yml"],
-    ["damodaran", "damodaran", ".github/workflows/fetch-damodaran-shadow.yml"],
-    ["sentiment", "sentiment", ".github/workflows/fetch-sentiment.yml"],
-    ["yahoo-ticker-macro", "yahoo_ticker_macro", ".github/workflows/fetch-yahoo-ticker.yml"],
-    ["nasdaq-giw-sox", "nasdaq_giw_sox", ".github/workflows/fetch-nasdaq-giw-sox.yml"],
-    ["slickcharts-daily", "slickcharts", ".github/workflows/slickcharts-daily.yml"],
-    ["slickcharts-weekly", "slickcharts", ".github/workflows/slickcharts-weekly.yml"],
-    ["slickcharts-monthly", "slickcharts", ".github/workflows/slickcharts-monthly.yml"],
-    ["slickcharts-history", "slickcharts", ".github/workflows/slickcharts-history.yml"],
-    ["slickcharts-symbols", "slickcharts", ".github/workflows/slickcharts-symbols.yml"],
-    ["edgar-korean-summaries", "edgar_filings", ".github/workflows/fetch-edgar-filings.yml"],
-    ["us-indices-daily", "us_indices_daily", ".github/workflows/fetch-us-indices-daily.yml"],
-    ["finra-short-volume", "finra_short_volume", ".github/workflows/fenok-edge-daily.yml"],
-    ["finra-ats-weekly", "finra_ats_weekly", ".github/workflows/fetch-finra-ats-weekly.yml"],
-    ["gdelt-news-tone", "gdelt_news_tone", ".github/workflows/fetch-fenok-news-tone.yml"],
-  ],
-);
+// The registry binding map is authoritative; alarm QA validates each binding
+// against the same registry workflow policy instead of maintaining a second
+// 20+ row copy that can omit a new publisher. Lane-owned publishers must name
+// a real lane. A lane-less publisher must be explicitly declared as a platform
+// publisher (the computed-signals coordinator case).
+assert.equal(Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length, 22);
+for (const [family, binding] of Object.entries(PLANE_PUBLISH_OUTCOME_BINDINGS)) {
+  assert.ok(LANE_REGISTRY.workflow_policies[binding.workflow], `${family} workflow policy must be declared`);
+  assert.ok(
+    LANE_REGISTRY.workflow_policies[binding.workflow].stages.always_if_exists.some(
+      (spec) => spec.path === `data/admin/data-supply-state/publish-outcomes/${family}.json`,
+    ),
+    `${family} workflow must authorize its exact outcome shard`,
+  );
+  const lane = LANE_REGISTRY.lanes.find((candidate) => candidate.id === binding.lane_id);
+  if (lane) continue;
+  assert.equal(
+    LANE_REGISTRY.workflow_classes[binding.workflow]?.class,
+    "platform_publisher",
+    `${family} binding without a lane must be an explicit platform publisher`,
+  );
+}
+assert.deepEqual(PLANE_PUBLISH_OUTCOME_BINDINGS["computed-signals"], {
+  lane_id: "computed_signals",
+  workflow: ".github/workflows/coordinate-computed-signals.yml",
+});
 
 const outcomeShard = (family, records) => ({
   schema_version: PUBLISH_OUTCOME_SHARD_SCHEMA,

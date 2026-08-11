@@ -13,16 +13,32 @@ permissions:
   issues: write
   actions: read
 
-concurrency:
-  group: pipeline-failure-alarm
-  cancel-in-progress: false
-
 jobs:
   check:
     runs-on: ubuntu-latest
+    # Serialize only the short detector/reporting critical section. The state
+    # persistence job below has its own global writer lock, so a long writer
+    # queue cannot delay the next alarm check.
+    concurrency:
+      group: pipeline-failure-alarm
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+      actions: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Record alarm-state base fingerprint
+        run: |
+          set -euo pipefail
+          mkdir -p pipeline-alarm-state-transfer
+          if [ -f data/admin/alarm-state.json ]; then
+            sha256sum data/admin/alarm-state.json | awk '{print $1}' > pipeline-alarm-state-transfer/base.sha256
+          else
+            printf '%s\n' missing > pipeline-alarm-state-transfer/base.sha256
+          fi
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -113,38 +129,105 @@ jobs:
           gh issue close "$existing" --reason completed --comment "Closed by all-clear; the next incident opens a new issue."
 
       # Persist only after incident/recovery reporting has succeeded. The
-      # default success gate means a failed emitter or issue create/comment/close
-      # leaves the prior canonical state intact, so the next run retries the same
-      # transition. Git persistence itself remains best-effort and can never mask
-      # the issue channel.
+      # artifact carries both the newly emitted public-safe state and the exact
+      # canonical state fingerprint that detection started from.
+      - name: Prepare alarm state for persistence
+        run: |
+          set -euo pipefail
+          test -f pipeline-alarm-state-transfer/base.sha256
+          test -f data/admin/alarm-state.json
+          cp data/admin/alarm-state.json pipeline-alarm-state-transfer/alarm-state.json
+
+      - name: Upload alarm state for persistence
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-alarm-state-${{ github.run_id }}-${{ github.run_attempt }}
+          path: pipeline-alarm-state-transfer
+          if-no-files-found: error
+
+  persist-alarm-state:
+    # Issue alert/all-clear failure, emitter failure, or state-artifact failure
+    # must block persistence. A successful report is already durable in the OPS
+    # issue even if this bounded writer job later waits or fails.
+    needs: check
+    if: ${{ needs.check.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    concurrency:
+      group: fenok-data-writer-refs/heads/main
+      cancel-in-progress: false
+      queue: max
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Download alarm state
+        uses: actions/download-artifact@v4
+        with:
+          name: pipeline-alarm-state-${{ github.run_id }}-${{ github.run_attempt }}
+          path: pipeline-alarm-state
+
       - name: Commit alarm state
+        id: persist
         continue-on-error: true
         run: |
           # [skip ci] keeps this ops-metadata commit from re-triggering the
           # pipeline it is reporting on.
+          set -euo pipefail
+          test -f pipeline-alarm-state/base.sha256
+          test -f pipeline-alarm-state/alarm-state.json
+
+          base_fingerprint="$(tr -d '\r\n' < pipeline-alarm-state/base.sha256)"
+          if [ "$base_fingerprint" != missing ] \
+            && ! printf '%s\n' "$base_fingerprint" | grep -Eq '^[0-9a-f]{64}$'; then
+            echo "invalid alarm-state base fingerprint artifact" >&2
+            exit 1
+          fi
+
+          # Refresh after acquiring the global writer lock. A stale detector
+          # artifact must never overwrite a newer alarm transition on main.
+          git fetch --depth=1 origin main
+          git checkout -B main origin/main
+          if [ -f data/admin/alarm-state.json ]; then
+            current_fingerprint="$(sha256sum data/admin/alarm-state.json | awk '{print $1}')"
+          else
+            current_fingerprint=missing
+          fi
+          if [ "$base_fingerprint" != "$current_fingerprint" ]; then
+            echo "alarm-state base changed before persistence; refusing stale overwrite" >&2
+            exit 1
+          fi
+
+          cp pipeline-alarm-state/alarm-state.json data/admin/alarm-state.json
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/pipeline-failure-alarm.yml \
-            --stage always_if_exists || exit 0
-          git add data/admin/alarm-state.json || exit 0
+            --stage always_if_exists
+          git add data/admin/alarm-state.json
           if git diff --cached --quiet; then
             echo "alarm-state unchanged; nothing to commit"
             exit 0
           fi
-          branch="${GITHUB_REF_NAME:-main}"
           git commit -m "ops: refresh alarm-state.json [skip ci]"
           for attempt in 1 2 3; do
-            if git pull --rebase --autostash origin "$branch" && git push origin "HEAD:$branch"; then
+            if git push origin HEAD:main; then
               exit 0
             fi
             sleep $((attempt * 3))
           done
+          echo "alarm-state persistence push failed after bounded retries" >&2
+          exit 1
 
-      # The run's conclusion is alarm-machinery health, not incident state: an
-      # open incident is reported through the OPS issue and the alarm-state
-      # commit above, and this run stays green as long as that reporting and
-      # alarm-state emission succeeded. Red is reserved for emitter/output or
-      # non-best-effort issue preparation/API failure.
-      # The alarm-state Git commit stays best-effort (continue-on-error) and can
-      # never mask the issue channel. No incident-conditioned exit 1 exists.
+      # The commit is best-effort with respect to the already-reported issue,
+      # but its failure remains a visible job error for operators and retries.
+      - name: Surface alarm-state persistence failure
+        if: steps.persist.outcome == 'failure'
+        run: |
+          echo "::error::alarm-state Git persistence failed after incident reporting; the OPS issue remains the primary incident record"
+          exit 1
