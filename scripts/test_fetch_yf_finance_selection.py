@@ -2848,7 +2848,12 @@ assert callable(namespace["load_universe"])
         self.assertIn("      - '!data/admin/yahoo-batch-quote-history/**'", manifest_workflow)
         self.assertIn("python3 scripts/rebuild-yf-finance-summary.py", manifest_workflow)
         self.assertIn("python3 scripts/build-market-facts.py --no-public-mirror", manifest_workflow)
-        self.assertIn("node scripts/build-rim-index.mjs", manifest_workflow)
+        for command in (
+            "node scripts/build-rim-index.mjs",
+            "node scripts/build-rim-index-five-canonical.mjs",
+            "node scripts/check-rim-index-five-canonical.mjs",
+        ):
+            self.assertNotIn(command, manifest_workflow)
         self.assertNotIn("python3 scripts/build-quarter-closes.py", manifest_workflow)
 
     def test_ticker_names_containing_key_are_not_dropped_as_secret_files(self) -> None:

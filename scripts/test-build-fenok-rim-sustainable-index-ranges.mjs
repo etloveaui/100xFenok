@@ -276,9 +276,10 @@ assert.ok(["partial_six_index_coverage", "research_diagnostic_not_promoted"].inc
 assert.ok(stale.promotion.blockers.length >= 0);
 
 const packageJson = JSON.parse(fs.readFileSync(new URL("../100xfenok-next/package.json", import.meta.url), "utf8"));
-const derived = packageJson.scripts["reconcile:derived"];
-assert.ok(derived.indexOf("npm run build:rim-sustainable-research") > derived.indexOf("npm run build:rim-index"),
-  "RIM inputs must precede the residual-value ranges");
+for (const scriptName of ["cf:build:steps", "sync-static", "reconcile:derived"]) {
+  assert.doesNotMatch(packageJson.scripts[scriptName], /\b(?:build|qa):rim\S*/,
+    `${scriptName} must not invoke retired RIM build or QA commands`);
+}
 assert.match(packageJson.scripts["qa:rim-sustainable-research"], /test-fenok-rim-yoo-panel-engine\.mjs/,
   "the panel engine suite must gate the artifact");
 assert.match(packageJson.scripts["qa:rim-sustainable-research"], /test-fenok-rim-calibration-receipt\.mjs/,

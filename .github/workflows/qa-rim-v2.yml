@@ -10,10 +10,8 @@
 # must not block a production deploy today. Owner ruling 2026-08-06: promote
 # this to a required check only before RIM publication resumes.
 #
-# Data-only bot commits DO trigger this on purpose. The suites read committed
-# data - panels, trackers, payout history, rates, ERP snapshots - so a fetch
-# lane changing that data can break them, and that is exactly the signal this
-# workflow exists to deliver.
+# DEC-302 closed automatic RIM work. Keep this historical/audit lane
+# workflow_dispatch-only; never wire it to automatic events again.
 #
 # The pre-quarantine engine's suites (yoo-panel-engine, rule-calibration,
 # calibration-receipt, identification-protocol, sustainable-index-ranges) are
@@ -22,40 +20,6 @@
 name: QA RIM v2
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'scripts/feno-rim-v2/**'
-      - 'scripts/test-feno-rim-v2-*.mjs'
-      - 'scripts/fetch-yf-finance.py'
-      - 'data/computed/feno-rim-v2/**'
-      - 'data/computed/fenok-rim/payout-history.json'
-      - 'data/yf/finance/*.unadjusted.json'
-      - 'data/damodaran/**'
-      - 'data/benchmarks/**'
-      - 'data/macro/fred-banking-daily.json'
-      - 'docs/planning/CONTRACT_fenok_rim_core_erp_*.md'
-      - '100xfenok-next/package.json'
-      - '.github/workflows/qa-rim-v2.yml'
-  pull_request:
-    paths:
-      - 'scripts/feno-rim-v2/**'
-      - 'scripts/test-feno-rim-v2-*.mjs'
-      - 'scripts/fetch-yf-finance.py'
-      - 'data/computed/feno-rim-v2/**'
-      - 'data/computed/fenok-rim/payout-history.json'
-      - 'data/yf/finance/*.unadjusted.json'
-      - 'data/damodaran/**'
-      - 'data/benchmarks/**'
-      - 'data/macro/fred-banking-daily.json'
-      - 'docs/planning/CONTRACT_fenok_rim_core_erp_*.md'
-      - '100xfenok-next/package.json'
-      - '.github/workflows/qa-rim-v2.yml'
-  # Fallback so a week of bot commits that never touch the paths above still
-  # proves the suites run against current data.
-  schedule:
-    # UTC 20:40 = KST 05:40, after the overnight fetch lanes settle.
-    - cron: '40 20 * * *'
   workflow_dispatch:
 
 permissions:

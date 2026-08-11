@@ -13,20 +13,8 @@ import {
 
 export const START_MARKER = "      # BEGIN GENERATED lane-commit-manifest trigger_paths";
 export const END_MARKER = "      # END GENERATED lane-commit-manifest trigger_paths";
-// The lane manifest intentionally excludes data/computed/** to keep the
-// central writer from retriggering on its own generated commit. These six
-// explicit paths are the private five-index lane's source/QA projection and
-// are appended after that exclusion so changes to the builder, checker, tests,
-// package, or criteria still reach the writer.
-export const RIM_FIVE_CANONICAL_TRIGGER_PATHS = Object.freeze([
-  "scripts/build-rim-index-five-canonical.mjs",
-  "scripts/check-rim-index-five-canonical.mjs",
-  "scripts/test-check-rim-index-five-canonical.mjs",
-  "scripts/test-build-feno-rim-five-index-canonical.mjs",
-  "100xfenok-next/package.json",
-  "data/computed/rim-index/feno-index-rim-five-canonical-criteria.json",
-]);
 const DEFAULT_WORKFLOW = path.join(REPO_ROOT, ".github/workflows/update-manifest.yml");
+const RIM_TRIGGER_PATH_PATTERN = /(?:^|[\/._:-])rim(?:$|[\/._:-])/i;
 
 function fail(message) {
   throw new Error(`update-manifest trigger paths: ${message}`);
@@ -39,9 +27,8 @@ function yamlSingleQuote(value) {
 export function projectUpdateManifestTriggerPaths(triggerPaths) {
   if (!Array.isArray(triggerPaths) || triggerPaths.length === 0) fail("trigger_paths must be non-empty");
   const projected = [...triggerPaths];
-  for (const entry of RIM_FIVE_CANONICAL_TRIGGER_PATHS) {
-    if (!projected.includes(entry)) projected.push(entry);
-  }
+  const forbidden = projected.find((entry) => typeof entry === "string" && RIM_TRIGGER_PATH_PATTERN.test(entry));
+  if (forbidden) fail(`RIM path token is forbidden in trigger_paths: ${forbidden}`);
   if (projected.some((entry) => entry === "data/computed/**")) {
     fail("generic data/computed/** must remain excluded from update-manifest triggers");
   }

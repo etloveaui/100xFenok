@@ -11,7 +11,6 @@ import {
   projectUpdateManifestTriggerPaths,
   replaceTriggerPathsBlock,
   renderTriggerPathsBlock,
-  RIM_FIVE_CANONICAL_TRIGGER_PATHS,
 } from "./sync-update-manifest-trigger-paths.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -26,9 +25,24 @@ const triggerPaths = projectUpdateManifestTriggerPaths(baseTriggerPaths);
 const workflow = fs.readFileSync(workflowPath, "utf8");
 
 assert.ok(baseTriggerPaths.length > 0);
-const projectedExtras = RIM_FIVE_CANONICAL_TRIGGER_PATHS.filter((entry) => !baseTriggerPaths.includes(entry));
-assert.equal(triggerPaths.length, baseTriggerPaths.length + projectedExtras.length);
-for (const entry of RIM_FIVE_CANONICAL_TRIGGER_PATHS) assert.ok(triggerPaths.includes(entry), `${entry} must be projected`);
+assert.deepEqual(triggerPaths, baseTriggerPaths, "generated trigger paths must be exactly the canonical manifest paths");
+assert.throws(
+  () => projectUpdateManifestTriggerPaths([...baseTriggerPaths, "scripts/archive/RIM-five-audit.mjs"]),
+  /RIM path token is forbidden/,
+  "RIM path tokens must fail closed before workflow projection",
+);
+for (const entry of [
+  "scripts/build-rim-index.mjs",
+  "scripts/test-build-rim-index.mjs",
+  "scripts/build-rim-index-five-canonical.mjs",
+  "scripts/check-rim-index-five-canonical.mjs",
+  "scripts/test-check-rim-index-five-canonical.mjs",
+  "scripts/test-build-feno-rim-five-index-canonical.mjs",
+  "100xfenok-next/package.json",
+  "data/computed/rim-index/feno-index-rim-five-canonical-criteria.json",
+]) {
+  assert.equal(triggerPaths.includes(entry), false, `retired RIM-only trigger path must stay absent: ${entry}`);
+}
 assert.equal(triggerPaths.includes("data/computed/**"), false, "generic computed data must remain excluded");
 const expectedBlock = [
   startMarker,

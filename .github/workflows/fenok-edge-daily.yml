@@ -277,7 +277,7 @@ jobs:
           echo "git push failed after retrying concurrent main updates"
           exit 1
 
-      - name: Dispatch manifest and RIM rebuild
+      - name: Dispatch manifest reconciliation
         if: ${{ env.FENOK_EDGE_PLAN_ONLY != 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}

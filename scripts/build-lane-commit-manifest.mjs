@@ -61,8 +61,6 @@ const UPDATE_MANIFEST_TRIGGER_PATHS = [
   "scripts/write-fenok-etf-daily1y-readiness.mjs",
   "scripts/audit-fenok-stock-promotion-candidates.mjs",
   "scripts/stock-action-score-core.mjs",
-  "scripts/build-rim-index.mjs",
-  "scripts/test-build-rim-index.mjs",
   "scripts/fetch-nasdaq-giw-sox-constituents.mjs",
   "scripts/generate-product-surface-coverage.mjs",
   "scripts/build-fenok-data-health-kpi.mjs",

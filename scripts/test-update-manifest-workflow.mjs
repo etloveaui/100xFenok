@@ -26,25 +26,37 @@ const exactLines = (needle) => workflowLines
   .map((line, index) => ({ line: line.trim(), index }))
   .filter((item) => item.line === needle)
   .map((item) => item.index);
-const rimBuilds = exactLines("node scripts/build-rim-index.mjs");
-const fiveBuilds = exactLines("node scripts/build-rim-index-five-canonical.mjs");
-const fiveChecks = exactLines("node scripts/check-rim-index-five-canonical.mjs");
-assert.ok(rimBuilds.length >= 2, "normal and retry paths must each retain a build-rim-index invocation");
-assert.equal(fiveBuilds.length, rimBuilds.length, "each build-rim-index call needs a five-index builder");
-assert.equal(fiveChecks.length, rimBuilds.length, "each build-rim-index call needs the five-index validator");
-for (const buildIndex of rimBuilds) {
-  assert.equal(workflowLines[buildIndex + 1]?.trim(), "node scripts/build-rim-index-five-canonical.mjs",
-    `five-index builder must immediately follow build-rim-index at line ${buildIndex + 1}`);
-  assert.equal(workflowLines[buildIndex + 2]?.trim(), "node scripts/check-rim-index-five-canonical.mjs",
-    `five-index validator must immediately follow builder at line ${buildIndex + 1}`);
+for (const command of [
+  "node scripts/build-rim-index.mjs",
+  "node scripts/build-rim-index-five-canonical.mjs",
+  "node scripts/check-rim-index-five-canonical.mjs",
+]) {
+  assert.equal(exactLines(command).length, 0, `retired RIM command must stay absent: ${command}`);
+}
+
+const etfBuilds = exactLines("node scripts/build-fenok-etf-signals.mjs");
+const actionBuilds = exactLines("node scripts/build-fenok-etf-action-index.mjs");
+const coreChecks = exactLines("node scripts/build-fenok-etf-core-daily-basket.mjs --check");
+assert.equal(etfBuilds.length, 2, "normal and retry paths must retain ETF signal generation");
+assert.equal(actionBuilds.length, 2, "normal and retry paths must retain ETF action-index generation");
+assert.equal(coreChecks.length, 2, "normal and retry paths must retain ETF core-basket validation");
+for (const etfIndex of etfBuilds) {
+  assert.equal(workflowLines[etfIndex + 1]?.trim(), "npm --prefix 100xfenok-next run build:history-gap-daily1y",
+    `history-gap refresh must immediately follow ETF signal generation at line ${etfIndex + 1}`);
+  assert.equal(workflowLines[etfIndex + 2]?.trim(), "node scripts/build-fenok-etf-action-index.mjs",
+    `ETF action-index generation must immediately follow history-gap refresh at line ${etfIndex + 2}`);
+}
+for (const actionIndex of actionBuilds) {
+  assert.equal(workflowLines[actionIndex + 1]?.trim(), "node scripts/build-fenok-etf-core-daily-basket.mjs --check",
+    `ETF core-basket validation must immediately follow ETF action-index generation at line ${actionIndex + 1}`);
 }
 
 const kpiBuilds = exactLines("npm --prefix 100xfenok-next run build:fenok-data-health-kpi");
 assert.equal(kpiBuilds.length, 2, "normal and retry paths must each build KPI once");
 for (const kpiIndex of kpiBuilds) {
-  const precedingCheck = fiveChecks.filter((index) => index < kpiIndex).at(-1);
-  assert.ok(precedingCheck !== undefined, `KPI at line ${kpiIndex + 1} must have a preceding five-index validator`);
-  assert.ok(precedingCheck < kpiIndex, `five-index validator must run before KPI at line ${kpiIndex + 1}`);
+  const precedingCoreCheck = coreChecks.filter((index) => index < kpiIndex).at(-1);
+  assert.ok(precedingCoreCheck !== undefined, `KPI at line ${kpiIndex + 1} must have a preceding ETF core-basket validation`);
+  assert.ok(precedingCoreCheck < kpiIndex, `ETF core-basket validation must run before KPI at line ${kpiIndex + 1}`);
 }
 
 const packageJson = JSON.parse(fs.readFileSync(new URL("../100xfenok-next/package.json", import.meta.url), "utf8"));

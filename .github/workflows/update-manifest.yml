@@ -1,7 +1,7 @@
 # Update Manifest — single writer for shared derived/public projections
 #
 # Source workflows commit only their owned acquisition artifacts. This workflow
-# rebuilds shared market/ETF/edge/RIM/KPI projections from committed source data,
+# rebuilds shared market/ETF/edge/KPI projections from committed source data,
 # then publishes one conflict-free generated-data commit.
 #
 # Infinite loop prevention:
@@ -56,8 +56,6 @@ on:
       - 'scripts/write-fenok-etf-daily1y-readiness.mjs'
       - 'scripts/audit-fenok-stock-promotion-candidates.mjs'
       - 'scripts/stock-action-score-core.mjs'
-      - 'scripts/build-rim-index.mjs'
-      - 'scripts/test-build-rim-index.mjs'
       - 'scripts/fetch-nasdaq-giw-sox-constituents.mjs'
       - 'scripts/generate-product-surface-coverage.mjs'
       - 'scripts/build-fenok-data-health-kpi.mjs'
@@ -66,12 +64,6 @@ on:
       - 'scripts/lib/kpi-runtime-slots.mjs'
       - 'scripts/lib/kpi-contract-constants.mjs'
       - 'tools/macro-monitor/shared/signals-core.mjs'
-      - 'scripts/build-rim-index-five-canonical.mjs'
-      - 'scripts/check-rim-index-five-canonical.mjs'
-      - 'scripts/test-check-rim-index-five-canonical.mjs'
-      - 'scripts/test-build-feno-rim-five-index-canonical.mjs'
-      - '100xfenok-next/package.json'
-      - 'data/computed/rim-index/feno-index-rim-five-canonical-criteria.json'
       # END GENERATED lane-commit-manifest trigger_paths
   schedule:
     # UTC 02:30 = KST 11:30. Morning reconciliation.
@@ -189,11 +181,8 @@ jobs:
       - name: Build Fenok stock signals
         run: node scripts/build-fenok-signals.mjs
 
-      - name: Build RIM and ETF projections
+      - name: Build ETF projections
         run: |
-          node scripts/build-rim-index.mjs
-          node scripts/build-rim-index-five-canonical.mjs
-          node scripts/check-rim-index-five-canonical.mjs
           node scripts/build-fenok-etf-signals.mjs
           npm --prefix 100xfenok-next run build:history-gap-daily1y
           node scripts/build-fenok-etf-action-index.mjs
@@ -222,12 +211,8 @@ jobs:
           fi
           exit "$status"
 
-      - name: Rebuild RIM index inputs after manifest refresh
-        run: |
-          node scripts/build-rim-index.mjs
-          node scripts/build-rim-index-five-canonical.mjs
-          node scripts/check-rim-index-five-canonical.mjs
-          npm --prefix 100xfenok-next run build:data-entity-graph
+      - name: Build data entity graph after manifest refresh
+        run: npm --prefix 100xfenok-next run build:data-entity-graph
 
       - name: Build product surface coverage
         run: node scripts/generate-product-surface-coverage.mjs
@@ -327,9 +312,6 @@ jobs:
             node scripts/export-computed-signals.mjs
             node scripts/build-phase2-closeout-indexes.mjs
             node scripts/build-fenok-signals.mjs
-            node scripts/build-rim-index.mjs
-            node scripts/build-rim-index-five-canonical.mjs
-            node scripts/check-rim-index-five-canonical.mjs
             node scripts/build-fenok-etf-signals.mjs
             npm --prefix 100xfenok-next run build:history-gap-daily1y
             node scripts/build-fenok-etf-action-index.mjs
@@ -345,9 +327,6 @@ jobs:
               echo "update-manifest.py exited with $status on attempt $attempt"
               exit "$status"
             fi
-            node scripts/build-rim-index.mjs
-            node scripts/build-rim-index-five-canonical.mjs
-            node scripts/check-rim-index-five-canonical.mjs
             npm --prefix 100xfenok-next run build:data-entity-graph
             node scripts/generate-product-surface-coverage.mjs
             (cd 100xfenok-next && node sync-static-overrides.mjs)
