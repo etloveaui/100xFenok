@@ -451,11 +451,19 @@ export async function publishGeneration({
       sha256: summary.manifest_sha256,
     },
   ].map((object) => [object.key, object]));
+  // putIfAbsent result contract: { written, alreadyPresent }. When the
+  // content-addressed object already exists byte-identically, the existence
+  // path itself proved immutability, so the caller's immediate readback would
+  // be a redundant GET and is skipped. A newly written object (or an adapter
+  // that returns no result) still gets the immediate readback, and the final
+  // post-promotion parity GET below stays mandatory for every asset.
   for (const object of immutableObjectsByKey.values()) {
-    await objectStore.putIfAbsent(object.key, object.bytes);
-    const stored = await objectStore.get(object.key);
-    if (!(stored instanceof Uint8Array) || sha256Bytes(stored) !== object.sha256) {
-      fail("OBJECT_READBACK_INVALID", object.key);
+    const outcome = await objectStore.putIfAbsent(object.key, object.bytes);
+    if (outcome?.alreadyPresent !== true) {
+      const stored = await objectStore.get(object.key);
+      if (!(stored instanceof Uint8Array) || sha256Bytes(stored) !== object.sha256) {
+        fail("OBJECT_READBACK_INVALID", object.key);
+      }
     }
   }
 
@@ -664,7 +672,11 @@ export function createMemoryCloudDataPlane() {
       async putIfAbsent(key, bytes) {
         const prior = objects.get(key);
         if (prior && !bytesEqual(prior, bytes)) fail("IMMUTABILITY_VIOLATION", key);
-        if (!prior) objects.set(key, new Uint8Array(bytes));
+        if (!prior) {
+          objects.set(key, new Uint8Array(bytes));
+          return { written: true, alreadyPresent: false };
+        }
+        return { written: false, alreadyPresent: true };
       },
       async get(key) {
         const value = objects.get(key);

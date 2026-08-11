@@ -7,6 +7,11 @@
 // protection is a measurement that runs before we write at scale and refuses
 // to go on when the projection approaches the free ceiling.
 //
+// Every measurement fetch carries a bounded deadline (default 60s; override
+// with R2_MEASURE_FETCH_TIMEOUT_MS). A timed-out measurement throws and fails
+// closed (exit 2) exactly like any other unreadable API; only the billing
+// cycle-anchor probe keeps its existing fallback-to-configuration behavior.
+//
 // Usage:
 //   CLOUDFLARE_API_TOKEN=... node scripts/check-r2-free-tier-usage.mjs [--json]
 //
@@ -15,6 +20,12 @@
 
 const ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID ?? "aeeb5ea3affe55a2219d08ea02dad9e1";
 const TOKEN = process.env.CLOUDFLARE_API_TOKEN;
+
+const DEFAULT_FETCH_TIMEOUT_MS = 60_000;
+const FETCH_TIMEOUT_MS = (() => {
+  const raw = Number(process.env.R2_MEASURE_FETCH_TIMEOUT_MS);
+  return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_FETCH_TIMEOUT_MS;
+})();
 
 // Cloudflare R2 free allowance, per calendar month.
 const FREE = {
@@ -56,12 +67,27 @@ const TRAILING_DAYS = 31;
 const iso = (d) => d.toISOString().slice(0, 10);
 const addDays = (d, n) => new Date(d.getTime() + n * 86_400_000);
 
+async function fetchWithTimeout(url, init = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error(`measurement fetch timed out after ${FETCH_TIMEOUT_MS}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // Ask the billing API for the R2 subscription's period end and derive the
 // anchor day from it. Returns null when the token lacks billing read or the
 // shape is unfamiliar — the caller then falls back to configuration and says so.
 async function fetchCycleAnchor() {
   try {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/subscriptions`,
       { headers: { Authorization: `Bearer ${TOKEN}` } },
     );
@@ -113,7 +139,7 @@ const QUERY = `query($acc:String!,$start:Date!,$end:Date!){
 }`;
 
 async function fetchUsage(bounds) {
-  const response = await fetch("https://api.cloudflare.com/client/v4/graphql", {
+  const response = await fetchWithTimeout("https://api.cloudflare.com/client/v4/graphql", {
     method: "POST",
     headers: { Authorization: `Bearer ${TOKEN}`, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -138,7 +164,7 @@ const INVENTORY_PAGE_SIZE = 1000;
 const INVENTORY_MAX_PAGES = 100; // 100k objects; the current estate is ~31.7k
 
 async function cf(path) {
-  const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}${path}`, {
+  const response = await fetchWithTimeout(`https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}${path}`, {
     headers: { Authorization: `Bearer ${TOKEN}` },
   });
   if (!response.ok) throw new Error(`cf ${path} http ${response.status}`);
