@@ -549,13 +549,57 @@
       "run_id": "31439945275",
       "schedule": "7 22 * * 0-5",
       "shard": "23/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJN: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJN: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJN: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJN: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJN: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJN: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 619,
+      "natural": true,
+      "observed_at": "2026-08-11T09:13:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31476569032",
+      "schedule": "7 8 * * 0-5",
+      "shard": "28/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T05:16:42Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CTJN.json",
-    "payload_sha256": "7384d03f54144e81a64275373ef801786b659e23cac7a5eedb645c971d6b4c61",
+    "fetched_at": "2026-08-11T09:14:38Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/CTJN.json",
+    "payload_sha256": "c2597efac5d9b53dc41e16b7b8bf2c862d2237f87675d84fd7efdee93ff81d67",
     "quote_as_of": "2026-06-09T17:11:49Z",
     "source_as_of": "2026-06-09T17:11:49Z"
   },
@@ -564,7 +608,6 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [
       {
@@ -598,23 +641,14 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 987,
+    "latency_ms": 619,
     "natural": true,
-    "observed_at": "2026-08-10T22:52:08Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-11T09:13:07Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31439945275",
-    "schedule": "7 22 * * 0-5",
-    "shard": "23/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T22:52:08Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-06-09T17:11:49Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31439945275"
+    "run_id": "31476569032",
+    "schedule": "7 8 * * 0-5",
+    "shard": "28/72"
   },
   "lkg": {
     "fetched_at": "2026-08-09T05:16:42Z",
@@ -627,17 +661,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T05:15:44Z",
-    "payload_sha256": "380213b752b6659738b6ba6eda739e176c6ac8599ef3d2188b7422bd2c9f08df",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T09:13:07Z",
+    "payload_sha256": "4961cd4ee0ecf4650134fa2882a86afa20687c8f51338b1072e76e7ca139853d",
     "quote_as_of": "2026-06-09T17:11:49Z",
     "run_attempt": 1,
-    "run_id": "31296241377",
+    "run_id": "31476569032",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-06-09T17:11:49Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 41,
@@ -650,5 +684,5 @@
     "source_as_of": "2026-06-09T17:11:49Z"
   },
   "ticker": "CTJN",
-  "updated_at": "2026-08-10T22:52:08Z"
+  "updated_at": "2026-08-11T09:13:07Z"
 }

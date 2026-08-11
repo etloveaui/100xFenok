@@ -12,13 +12,26 @@
       "run_id": "31143656628",
       "schedule": "7 0 * * 0-5",
       "shard": "60/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 938,
+      "natural": true,
+      "observed_at": "2026-08-11T09:13:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31476569032",
+      "schedule": "7 8 * * 0-5",
+      "shard": "28/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T03:17:45Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VNSE.json",
-    "payload_sha256": "4a40f81f8bbb44ed90d38abdc7631f1547fb49746d5ffcd1ec98148642b2f8fc",
+    "fetched_at": "2026-08-11T09:13:47Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/VNSE.json",
+    "payload_sha256": "88f5404caded235b8d062fac458cf108ffaa4f5d220cba6cf42f616537db572a",
     "quote_as_of": "2026-07-31T20:00:00Z",
     "source_as_of": "2026-07-31T20:00:00Z"
   },
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 626,
+    "latency_ms": 938,
     "natural": true,
-    "observed_at": "2026-08-07T03:14:39Z",
+    "observed_at": "2026-08-11T09:13:07Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31143656628",
-    "schedule": "7 0 * * 0-5",
-    "shard": "60/72"
+    "run_id": "31476569032",
+    "schedule": "7 8 * * 0-5",
+    "shard": "28/72"
   },
   "lkg": {
     "fetched_at": "2026-08-07T03:17:45Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T03:14:39Z",
-    "payload_sha256": "2bb3d384999c4761d2b1e3265a8c4226d1e228e343a903d07a11dc11ad566467",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T09:13:07Z",
+    "payload_sha256": "7724b912ee2b4cecc54e1a31b7ae2ec7f15b43ddb9ab2620e6b0cb8c9ca3d461",
     "quote_as_of": "2026-07-31T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31143656628",
+    "run_id": "31476569032",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31T20:00:00Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-31T20:00:00Z"
   },
   "ticker": "VNSE",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T09:13:07Z"
 }

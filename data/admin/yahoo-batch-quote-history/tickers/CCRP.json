@@ -164,13 +164,26 @@
       "run_id": "31439945275",
       "schedule": "7 22 * * 0-5",
       "shard": "23/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 844,
+      "natural": true,
+      "observed_at": "2026-08-11T09:13:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31476569032",
+      "schedule": "7 8 * * 0-5",
+      "shard": "28/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T05:16:40Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CCRP.json",
-    "payload_sha256": "431836103528e40ccb6be52015bfc763a476fd169d9efa807624769f6501d772",
+    "fetched_at": "2026-08-11T09:14:31Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/CCRP.json",
+    "payload_sha256": "0727b7b1719867dea609b18262cb28d703f8d402e88dc9b44b8d909711d86a9b",
     "quote_as_of": "2026-05-04T20:00:00Z",
     "source_as_of": "2026-05-04T20:00:00Z"
   },
@@ -179,26 +192,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 763,
+    "latency_ms": 844,
     "natural": true,
-    "observed_at": "2026-08-10T22:52:08Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-11T09:13:07Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31439945275",
-    "schedule": "7 22 * * 0-5",
-    "shard": "23/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-10T22:52:08Z",
-    "provider_history_as_of": "2026-08-07",
-    "provider_quote_as_of": "2026-05-04T20:00:00Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31439945275"
+    "run_id": "31476569032",
+    "schedule": "7 8 * * 0-5",
+    "shard": "28/72"
   },
   "lkg": {
     "fetched_at": "2026-08-09T05:16:40Z",
@@ -211,17 +214,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T05:15:44Z",
-    "payload_sha256": "66c1f203a84bb241f1025e27a9a5738fffc5e12929eef42da4d83829ad0b4c91",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T09:13:07Z",
+    "payload_sha256": "38c9644f3a6e6e47fc7b3d6907b736e2a43329b9ca523585e4be45631c1c6157",
     "quote_as_of": "2026-05-04T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31296241377",
+    "run_id": "31476569032",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-05-04T20:00:00Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 66,
@@ -234,5 +237,5 @@
     "source_as_of": "2026-05-04T20:00:00Z"
   },
   "ticker": "CCRP",
-  "updated_at": "2026-08-10T22:52:08Z"
+  "updated_at": "2026-08-11T09:13:07Z"
 }

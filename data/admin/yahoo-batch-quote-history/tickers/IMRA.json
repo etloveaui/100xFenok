@@ -12,13 +12,26 @@
       "run_id": "31359333130",
       "schedule": "7 4 * * 0-5",
       "shard": "14/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 876,
+      "natural": true,
+      "observed_at": "2026-08-11T09:13:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31476569032",
+      "schedule": "7 8 * * 0-5",
+      "shard": "28/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T05:44:43Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/IMRA.json",
-    "payload_sha256": "285b803f991f644e8dd9930470f2e8172533bb08cc909af663a61dfd4c5e2a5d",
+    "fetched_at": "2026-08-11T09:14:04Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/IMRA.json",
+    "payload_sha256": "2fa8138a503c455393f6ef78412e12e84914534e27f18f8c6f80bc216f7d612d",
     "quote_as_of": "2026-07-31T19:59:48Z",
     "source_as_of": "2026-07-31T19:59:48Z"
   },
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 514,
+    "latency_ms": 876,
     "natural": true,
-    "observed_at": "2026-08-10T05:42:10Z",
+    "observed_at": "2026-08-11T09:13:07Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31359333130",
-    "schedule": "7 4 * * 0-5",
-    "shard": "14/72"
+    "run_id": "31476569032",
+    "schedule": "7 8 * * 0-5",
+    "shard": "28/72"
   },
   "lkg": {
     "fetched_at": "2026-08-10T05:44:43Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-10T05:42:10Z",
-    "payload_sha256": "edb665c78cbeccfb0762295b337b3c3e57f96d4b830692f333875a73701e6ff0",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T09:13:07Z",
+    "payload_sha256": "c231e56a210281a274dcad77a3d65b8156bcd81e037c81504404b690e55d6bbd",
     "quote_as_of": "2026-07-31T19:59:48Z",
     "run_attempt": 1,
-    "run_id": "31359333130",
+    "run_id": "31476569032",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31T19:59:48Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-31T19:59:48Z"
   },
   "ticker": "IMRA",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T09:13:07Z"
 }

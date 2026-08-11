@@ -39,13 +39,26 @@
       "run_id": "31290251671",
       "schedule": "7 0 * * 0-5",
       "shard": "0/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 958,
+      "natural": true,
+      "observed_at": "2026-08-11T09:13:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31476569032",
+      "schedule": "7 8 * * 0-5",
+      "shard": "28/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T02:27:20Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VUS.json",
-    "payload_sha256": "93f7213002856c376870eb2978d9c29c62c7f098247b7537f90b75fd10f4654c",
+    "fetched_at": "2026-08-11T09:13:53Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/VUS.json",
+    "payload_sha256": "b6f8e88161c63ade6c8f0d13e0e0b79f18b97b0b38db5dd3db1752aa3075cd2c",
     "quote_as_of": "2026-07-31T20:00:00Z",
     "source_as_of": "2026-07-31T20:00:00Z"
   },
@@ -56,14 +69,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 890,
+    "latency_ms": 958,
     "natural": true,
-    "observed_at": "2026-08-09T02:25:42Z",
+    "observed_at": "2026-08-11T09:13:07Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31290251671",
-    "schedule": "7 0 * * 0-5",
-    "shard": "0/72"
+    "run_id": "31476569032",
+    "schedule": "7 8 * * 0-5",
+    "shard": "28/72"
   },
   "lkg": {
     "fetched_at": "2026-08-09T02:27:20Z",
@@ -76,17 +89,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T02:25:42Z",
-    "payload_sha256": "2d2f7426c8a3acc0a471405f3ae1da413147ff44c74f4ff113fba2982b1c451b",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T09:13:07Z",
+    "payload_sha256": "a7a76294725695b3efd6ff4cc035f7e4e5425673743d5cdf3bdc5d5cb39a995c",
     "quote_as_of": "2026-07-31T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31290251671",
+    "run_id": "31476569032",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31T20:00:00Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -99,5 +112,5 @@
     "source_as_of": "2026-07-31T20:00:00Z"
   },
   "ticker": "VUS",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T09:13:07Z"
 }

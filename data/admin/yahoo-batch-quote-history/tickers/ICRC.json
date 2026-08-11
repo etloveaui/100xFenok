@@ -12,13 +12,26 @@
       "run_id": "31143656628",
       "schedule": "7 0 * * 0-5",
       "shard": "60/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 757,
+      "natural": true,
+      "observed_at": "2026-08-11T09:13:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31476569032",
+      "schedule": "7 8 * * 0-5",
+      "shard": "28/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T03:16:38Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ICRC.json",
-    "payload_sha256": "ac4d9ade490ed50e696cf0461717b27f68303a68f6d0c5ba9c36400ee51c5e20",
+    "fetched_at": "2026-08-11T09:13:45Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/ICRC.json",
+    "payload_sha256": "6475d60f05366be0e1aecbe7293015cd9d07a4b5b9e907997c132c6906c85f76",
     "quote_as_of": "2026-07-31T19:59:58Z",
     "source_as_of": "2026-07-31T19:59:58Z"
   },
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 476,
+    "latency_ms": 757,
     "natural": true,
-    "observed_at": "2026-08-07T03:14:39Z",
+    "observed_at": "2026-08-11T09:13:07Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31143656628",
-    "schedule": "7 0 * * 0-5",
-    "shard": "60/72"
+    "run_id": "31476569032",
+    "schedule": "7 8 * * 0-5",
+    "shard": "28/72"
   },
   "lkg": {
     "fetched_at": "2026-08-07T03:16:38Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-07T03:14:39Z",
-    "payload_sha256": "58cba5692132f0a4e14595ee9e081dc3703382f744931a3be52e39e1fcadd5de",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T09:13:07Z",
+    "payload_sha256": "258654c71ef8b9f0e55aaa24514fde9b5c1ed74c2242c2f466a570148292cc83",
     "quote_as_of": "2026-07-31T19:59:58Z",
     "run_attempt": 1,
-    "run_id": "31143656628",
+    "run_id": "31476569032",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31T19:59:58Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-31T19:59:58Z"
   },
   "ticker": "ICRC",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T09:13:07Z"
 }
