@@ -257,6 +257,49 @@ class StockAnalysisArtifactTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "runtime lock"):
             self.apply()
 
+    def test_public_mirror_tree_is_ignored_by_construction_and_fails_closed_on_extraction(self) -> None:
+        public_dir = self.root / "100xfenok-next/public/data"
+        public_dir.mkdir(parents=True)
+        (public_dir / ".gitkeep").write_text("placeholder\n")
+        computed_dir = public_dir / "computed"
+        computed_dir.mkdir()
+        (computed_dir / "signals.json").write_text('{"mirror":true}\n')
+        manifest_path = self.root / "data/admin/lane-commit-manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        manifest["workflows"][WORKFLOW]["stages"]["always_if_exists"].append(
+            {"kind": "directory", "path": "100xfenok-next/public/data", "required": False}
+        )
+        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+        run(
+            "git", "add", "--",
+            "100xfenok-next/public/data", "data/admin/lane-commit-manifest.json",
+            cwd=self.root,
+        )
+        run("git", "commit", "-qm", "add public mirror tree", cwd=self.root)
+        self.base = run("git", "rev-parse", "HEAD", cwd=self.root)
+
+        self.helper.seed_candidate(self.root, self.candidate, WORKFLOW, replace=True)
+        (self.candidate / "data/stockanalysis/a.json").write_text('{"value":2}\n')
+        packed = self.pack()
+
+        self.assertEqual(packed["paths"], ["data/stockanalysis/a.json"])
+        self.assertFalse((self.candidate / "100xfenok-next/public").exists())
+        self.assertFalse((self.artifact / "files/100xfenok-next/public/data/.gitkeep").exists())
+        self.assertFalse((self.artifact / "files/100xfenok-next/public/data/computed/signals.json").exists())
+        self.assertEqual(self.apply()["status"], "applied")
+
+        artifact_manifest = json.loads((self.artifact / "manifest.json").read_text())
+        injected = "100xfenok-next/public/data/.gitkeep"
+        artifact_manifest["paths"].append(injected)
+        artifact_manifest["files"].append({"path": injected, "sha256": "0" * 64, "size": 0})
+        artifact_manifest["file_count"] += 1
+        (self.artifact / "manifest.json").write_text(json.dumps(artifact_manifest))
+        payload = self.artifact / "files" / injected
+        payload.parent.mkdir(parents=True)
+        payload.write_text("x")
+        with self.assertRaisesRegex(ValueError, "public path is forbidden"):
+            self.apply()
+
     def test_stage_audit_rejects_same_path_with_different_staged_bytes(self) -> None:
         target = self.candidate / "data/stockanalysis/a.json"
         target.write_text('{"value":2}\n')

@@ -94,10 +94,14 @@ on:
         description: 'Origin canonical slot_key (§2)'
         required: false
         default: ''
+      # Legacy compatibility input, intentionally IGNORED by the rebuild policy
+      # below: legacy callers still pass -f rebuild_slickcharts=true and the
+      # supplied value must never gate the rebuild. Every workflow_dispatch
+      # rebuilds current SlickCharts membership regardless of this value.
       rebuild_slickcharts:
-        description: 'Rebuild SlickCharts membership, discovery, and public mirror from committed canonical data'
+        description: 'Legacy compatibility flag (ignored): every workflow_dispatch rebuilds SlickCharts membership unconditionally'
         required: false
-        default: false
+        default: true
         type: boolean
 
 concurrency:
@@ -141,7 +145,7 @@ jobs:
 
       - name: Rebuild and verify SlickCharts canonical source
         env:
-          REBUILD_SLICKCHARTS: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event.inputs.rebuild_slickcharts == 'true' }}
+          REBUILD_SLICKCHARTS: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
         run: |
           if [ "$REBUILD_SLICKCHARTS" = "true" ]; then
             python scripts/scrapers/membership-tracker.py --quiet
@@ -270,7 +274,7 @@ jobs:
         if: steps.check.outputs.changed == 'true'
         env:
           BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || 'AUTO' }}
-          REBUILD_SLICKCHARTS: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event.inputs.rebuild_slickcharts == 'true' }}
+          REBUILD_SLICKCHARTS: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

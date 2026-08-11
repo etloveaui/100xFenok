@@ -66,9 +66,13 @@ function paths(root) {
   return {
     repoRoot: root,
     canonicalPath: path.join(root, "data", "macro", "stablecoins.json"),
-    publicPath: path.join(root, "public", "data", "macro", "stablecoins.json"),
     attemptShardPath: path.join(root, "data", "admin", "data-supply-state", "detection-attempts", `${DEFILLAMA_LANE_ID}.json`),
   };
+}
+
+function publicMirrorPath(root) {
+  // Producer default the fetch script used before the mirror write was removed.
+  return path.join(root, "100xfenok-next", "public", "data", "macro", "stablecoins.json");
 }
 
 function readJson(filePath) {
@@ -260,7 +264,11 @@ async function runCase(root, {
   const result = await runCase(root);
   assert.equal(result.ok, true);
   assert.equal(result.exitCode, 0);
-  assert.deepEqual(fs.readFileSync(paths(root).canonicalPath), fs.readFileSync(paths(root).publicPath));
+  assert.equal(
+    fs.existsSync(publicMirrorPath(root)),
+    false,
+    "a successful producer run must not create the public mirror (sync-public-data/Update Manifest owns the fallback)",
+  );
   const output = readJson(paths(root).canonicalPath);
   assert.equal(output.source, "DefiLlama");
   assert.equal(output.series.at(-1).date, "2026-07-16");
@@ -277,6 +285,21 @@ async function runCase(root, {
   assert.deepEqual(state.retry_set, []);
   assert.equal(state.items.stablecoins.resolution_state, "fresh_primary");
   assert.equal(state.items.stablecoins.promotion_contract, "provider_observation/v2");
+}
+
+{
+  // A pre-existing public mirror must survive a successful run untouched:
+  // the producer no longer materializes or updates the fallback copy.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-defillama-public-mirror-sentinel-"));
+  const mirror = publicMirrorPath(root);
+  fs.mkdirSync(path.dirname(mirror), { recursive: true });
+  fs.writeFileSync(mirror, "sentinel-stale-mirror\n");
+  const result = await runCase(root, { runId: "public-mirror-sentinel-run" });
+  assert.equal(result.ok, true);
+  assert.equal(fs.readFileSync(mirror, "utf8"), "sentinel-stale-mirror\n",
+    "a successful producer run must not modify a pre-existing public mirror");
+  assert.equal(fs.existsSync(paths(root).canonicalPath), true,
+    "canonical write must still happen when the mirror already exists");
 }
 
 for (const failure of [

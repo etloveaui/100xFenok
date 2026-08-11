@@ -23,7 +23,11 @@ DEFAULT_WORKFLOW = ".github/workflows/fetch-stockanalysis.yml"
 DEFAULT_LANE_MANIFEST = "data/admin/lane-commit-manifest.json"
 MAX_FILE_COUNT = 20_000
 MAX_TOTAL_BYTES = 750 * 1024 * 1024
-PUBLIC_PREFIX = "100xfenok-next/public/"
+# The Next.js public mirror tree is materialized by the shared projection
+# workflow, never by this source lane. The whole tree is structurally outside
+# the artifact boundary: creation ignores it before validation, extraction
+# still fails closed if it is injected into a manifest.
+PUBLIC_MIRROR_ROOT = "100xfenok-next/public"
 TRAILER_NUMBER = "StockAnalysis-Run-Number:"
 TRAILER_ATTEMPT = "StockAnalysis-Run-Attempt:"
 TRAILER_ID = "StockAnalysis-Run-ID:"
@@ -174,11 +178,16 @@ def is_runtime_lock_path(path: str) -> bool:
     return ".locks" in parts or (name.startswith(".") and name.endswith(".lock"))
 
 
+def is_public_mirror_path(path: str) -> bool:
+    normalized = normalize_rel(path)
+    return normalized == PUBLIC_MIRROR_ROOT or normalized.startswith(PUBLIC_MIRROR_ROOT + "/")
+
+
 def validate_allowed_path(path: str, specs: list[dict], excludes: list[dict]) -> None:
     path = normalize_rel(path)
     if is_runtime_lock_path(path):
         fail(f"runtime lock path is forbidden in StockAnalysis artifact: {path}")
-    if path.startswith(PUBLIC_PREFIX):
+    if is_public_mirror_path(path):
         fail(f"public path is forbidden in StockAnalysis artifact: {path}")
     if any(spec_matches(path, spec) for spec in excludes):
         fail(f"excluded path is forbidden in StockAnalysis artifact: {path}")
@@ -259,6 +268,8 @@ def seed_candidate(
             rel = source.relative_to(repo).as_posix()
             if rel in copied:
                 continue
+            if is_public_mirror_path(rel):
+                continue
             copy_source(source, candidate / rel)
             copied.add(rel)
     assert_regular_tree(candidate)
@@ -290,6 +301,8 @@ def repository_owned_files(repo: Path, specs: list[dict], excludes: list[dict]) 
             for leaf in leaves:
                 rel = normalize_rel(leaf.relative_to(repo).as_posix())
                 if is_runtime_lock_path(rel):
+                    continue
+                if is_public_mirror_path(rel):
                     continue
                 if any(spec_matches(rel, excluded) for excluded in excludes):
                     continue
@@ -323,6 +336,8 @@ def pack_artifact(
     leaves: dict[str, Path] = {}
     for rel, path in all_leaves.items():
         if is_runtime_lock_path(rel):
+            continue
+        if is_public_mirror_path(rel):
             continue
         if any(spec_matches(rel, excluded) for excluded in excludes):
             source = repo / rel

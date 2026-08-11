@@ -220,7 +220,6 @@ function validStablecoinsDocument(document) {
 export async function runDefillama({
   repoRoot = REPO_ROOT,
   canonicalPath = path.join(REPO_ROOT, "data", "macro", "stablecoins.json"),
-  publicPath = path.join(REPO_ROOT, "100xfenok-next", "public", "data", "macro", "stablecoins.json"),
   attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", `${DEFILLAMA_LANE_ID}.json`),
   request = requestBytes,
   observedAt = new Date().toISOString(),
@@ -348,7 +347,8 @@ export async function runDefillama({
   }
 
   atomicWrite(canonicalPath, serialized);
-  atomicWrite(publicPath, serialized);
+  // Producer writes canonical/admin only. The 100xfenok-next/public mirror is
+  // fallback materialization owned by sync-public-data / the Update Manifest.
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
   const recovered = success.state.items.stablecoins?.recovered_at === observedAt;
   return { ok: true, reason: "ok", updated: true, attempt, recovered, exitCode: 0 };

@@ -9,6 +9,17 @@ Checks the failure mode that previously hid stale/empty outputs:
   - aggregate stock history files are non-empty and count-consistent
   - critical files match the Next.js public mirror
   - obsolete source/100xFenok scraper paths are gone
+
+Current membership artifacts (universe.json and membership-changes.json index
+states) must exactly match canonical holdings: any mismatch — including stale
+former members that the membership rebuild would deterministically drop — is a
+hard failure. Historical stock-history aggregates (stocks-returns.json,
+stocks-dividends.json) may legitimately lag canonical holdings: rows for
+symbols removed from every current index are retained until the history rebuild
+regenerates them, so an aggregate that is a strict superset of the current
+universe degrades to a warning instead of blocking. Symbols missing from a
+derived artifact, membership disagreements, and corrupt holdings
+(count/identity/duplicate violations) are always hard failures.
 """
 from __future__ import annotations
 
@@ -155,6 +166,11 @@ def assert_membership_history(
     if not indices:
         warnings.append("membership-changes.json indices is empty")
         return
+    unexpected_indices = sorted(set(indices) - set(INDEX_FILES))
+    if unexpected_indices:
+        raise RuntimeError(
+            f"membership state contains unknown indices: {unexpected_indices[:10]}"
+        )
 
     expected_by_index: dict[str, list[str]] = {name: [] for name in INDEX_FILES}
     for symbol, memberships in current.items():
@@ -258,7 +274,12 @@ def assert_aggregate(
         if sorted_actual != symbols:
             missing = sorted(set(symbols) - set(sorted_actual))
             extra = sorted(set(sorted_actual) - set(symbols))
-            raise RuntimeError(f"{filename} symbols mismatch: missing={missing[:10]}, extra={extra[:10]}")
+            if missing:
+                raise RuntimeError(f"{filename} symbols mismatch: missing={missing[:10]}, extra={extra[:10]}")
+            warnings.append(
+                f"{filename} is a stale superset of the current universe "
+                f"(extra={extra[:10]}); the history rebuild deterministically regenerates it"
+            )
     elif exact_symbols:
         warnings.append(f"{filename} universe reconciliation skipped because index membership is partial")
 
