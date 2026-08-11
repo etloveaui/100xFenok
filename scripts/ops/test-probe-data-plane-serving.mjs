@@ -9,6 +9,7 @@ import {
   FAMILY_PUBLISHED_AGE_DAYS,
   FAMILY_SOURCE_AGE_DAYS,
   PATH_SOURCE_AGE_DAYS,
+  SOURCE_AGE_UNBOUNDED_FAMILIES,
   buildReport,
   evaluateProbeResponse,
   parseLegacySourceAgeCap,
@@ -36,6 +37,10 @@ const daysAgo = (days, dateOnly = false) => {
   return dateOnly ? iso.slice(0, 10) : iso;
 };
 const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOString();
+const sourceDateForPolicy = ({ path, family }) => {
+  const sourceLimit = resolveSourceAgeDays({ path, family });
+  return daysAgo(sourceLimit === null ? 365 : sourceLimit - 1, true);
+};
 
 // The exported allowlist is immutable; callers cannot broaden fallback policy.
 {
@@ -153,13 +158,12 @@ const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOStr
         });
       }
       const family = ENROLLED_PATHS.get(path);
-      const sourceLimit = resolveSourceAgeDays({ path, family });
       inFlight -= 1;
       return new Response(null, {
         status: 200,
         headers: {
           "x-data-plane-generation": `${family}-abc123`,
-          "x-data-plane-source-as-of": daysAgo(sourceLimit - 1, true),
+          "x-data-plane-source-as-of": sourceDateForPolicy({ path, family }),
           "x-data-plane-published-at": hoursAgo(1),
         },
       });
@@ -198,12 +202,11 @@ const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOStr
         });
       }
       const family = ENROLLED_PATHS.get(path);
-      const sourceLimit = resolveSourceAgeDays({ path, family });
       return new Response(null, {
         status: 200,
         headers: {
           "x-data-plane-generation": `${family}-abc123`,
-          "x-data-plane-source-as-of": daysAgo(sourceLimit - 1, true),
+          "x-data-plane-source-as-of": sourceDateForPolicy({ path, family }),
           "x-data-plane-published-at": hoursAgo(1),
         },
       });
@@ -228,12 +231,11 @@ const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOStr
       seenSignal = init?.signal;
       const path = new URL(url).pathname;
       const family = ENROLLED_PATHS.get(path);
-      const sourceLimit = resolveSourceAgeDays({ path, family });
       return new Response(null, {
         status: 200,
         headers: {
           "x-data-plane-generation": `${family}-abc123`,
-          "x-data-plane-source-as-of": daysAgo(sourceLimit - 1, true),
+          "x-data-plane-source-as-of": sourceDateForPolicy({ path, family }),
           "x-data-plane-published-at": hoursAgo(1),
         },
       });
@@ -260,12 +262,11 @@ const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOStr
       const path = new URL(url).pathname;
       if (path === "/data/macro/fred-macro.json") return new Promise(() => {});
       const family = ENROLLED_PATHS.get(path);
-      const sourceLimit = resolveSourceAgeDays({ path, family });
       return new Response(null, {
         status: 200,
         headers: {
           "x-data-plane-generation": `${family}-abc123`,
-          "x-data-plane-source-as-of": daysAgo(sourceLimit - 1, true),
+          "x-data-plane-source-as-of": sourceDateForPolicy({ path, family }),
           "x-data-plane-published-at": hoursAgo(1),
         },
       });
@@ -297,7 +298,7 @@ const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOStr
     },
   });
   assert.equal(asked.length, 1, "cleanup reaching the total deadline must prevent another request");
-  assert.equal(results.length, 609);
+  assert.equal(results.length, 610);
   assert.deepEqual(results[0].failures, [`fetch timed out after ${requestTimeoutMs} ms (no response within bound)`]);
   assert.equal(results[0].mode, "strict");
   for (const result of results.slice(1)) {
@@ -367,7 +368,7 @@ const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOStr
   assert.deepEqual(requestStarts.map(({ startedAtMs }) => startedAtMs), [0, 10, 20]);
   assert.equal(inFlight, 0);
   assert.equal(results.length, ENROLLED_PATHS.size);
-  assert.equal(results.length, 609);
+  assert.equal(results.length, 610);
   assert.equal(results.every((r) => !r.ok && r.mode === "strict"), true);
   for (const result of results.slice(requestStarts.length)) {
     assert.deepEqual(result.failures, [`total probe deadline reached after ${totalDeadlineMs} ms; request not attempted`]);
@@ -447,7 +448,7 @@ const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOStr
   assert.equal(bothEmpty.ok, false);
   assert.equal(bothEmpty.mode, "strict");
   assert.match(bothEmpty.failures[0], /is "" \(expected prefix/);
-  assert.match(bothEmpty.failures[1], /unparseable \(""\)/);
+  assert.match(bothEmpty.failures[1], /invalid \(""; expected a real YYYY-MM-DD calendar day\)/);
 
   const generationEmpty = evaluateProbeResponse({
     ...base,
@@ -500,7 +501,8 @@ const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOStr
 // ---- Two-axis freshness policy ----
 
 // Axis 1 source-age resolution: every exact-path override, every family
-// override, the default, and path-over-family precedence.
+// override, the unbounded computed-signals family, the default, and
+// path-over-family precedence.
 {
   assert.equal(resolveSourceAgeDays({ path: "/data/macro/fdic-tier1.json", family: "fdic-tier1" }), 180);
   assert.equal(resolveSourceAgeDays({ path: "/data/macro/fred-banking-daily.json", family: "fred-banking" }), 7);
@@ -508,6 +510,8 @@ const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOStr
   assert.equal(resolveSourceAgeDays({ path: "/data/macro/fred-banking-monthly.json", family: "fred-banking" }), 100);
   assert.equal(resolveSourceAgeDays({ path: "/data/macro/fred-banking-quarterly.json", family: "fred-banking" }), 180);
   assert.equal(resolveSourceAgeDays({ path: "/data/yardney/yardney_model.json", family: "fred-yardeni" }), 14);
+  assert.deepEqual(SOURCE_AGE_UNBOUNDED_FAMILIES, ["computed-signals"]);
+  assert.equal(resolveSourceAgeDays({ path: "/data/computed/signals.json", family: "computed-signals" }), null);
   assert.equal(resolveSourceAgeDays({ path: "/data/slickcharts/sp500-returns.json", family: "slickcharts-monthly" }), 40);
   // Exact path beats family when both have overrides.
   assert.equal(resolveSourceAgeDays({ path: "/data/macro/fdic-tier1.json", family: "fred-yardeni" }), 180);
@@ -516,8 +520,73 @@ const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOStr
   assert.equal(resolveSourceAgeDays({ path: "/nonexistent.json", family: "nobody" }), DEFAULT_MAX_SOURCE_AGE_DAYS);
 }
 
+// The computed-signals aggregate carries the minimum component source date.
+// A quarterly floor older than 120 days must still serve when publication is
+// recent: source-age authority remains in the producer-family gates, not this
+// aggregate serving probe. Presence, validity, future-date checks, and the
+// independent seven-day publication heartbeat remain strict.
+{
+  const sourceAsOfHeader = "2025-10-01";
+  const computedBase = {
+    path: "/data/computed/signals.json",
+    family: "computed-signals",
+    status: 200,
+    generationHeader: "computed-signals-abc123",
+    sourceAsOfHeader,
+  };
+  const normal = evaluateProbeResponse({
+    ...computedBase,
+    nowIso: NOW,
+    publishedAtHeader: hoursAgo(1),
+  });
+  assert.equal(normal.ok, true, JSON.stringify(normal.failures));
+
+  const validLeapDay = evaluateProbeResponse({
+    ...computedBase,
+    sourceAsOfHeader: "2024-02-29",
+    nowIso: NOW,
+    publishedAtHeader: hoursAgo(1),
+  });
+  assert.equal(validLeapDay.ok, true, JSON.stringify(validLeapDay.failures));
+
+  for (const sourceAsOfHeader of ["2025-02-30", "2025-10-01T00:00:00Z", "10/01/2025"]) {
+    const invalidSource = evaluateProbeResponse({
+      ...computedBase,
+      sourceAsOfHeader,
+      nowIso: NOW,
+      publishedAtHeader: hoursAgo(1),
+    });
+    assert.equal(invalidSource.ok, false, sourceAsOfHeader);
+    assert.match(
+      invalidSource.failures[0],
+      /x-data-plane-source-as-of is invalid .*expected a real YYYY-MM-DD calendar day/,
+    );
+  }
+
+  const staleHeartbeat = evaluateProbeResponse({
+    ...computedBase,
+    nowIso: NOW,
+    publishedAtHeader: daysAgo(8),
+  });
+  assert.equal(staleHeartbeat.ok, false);
+  assert.match(staleHeartbeat.failures[0], /published at .* days old \(heartbeat limit 7\)/);
+
+  const missingSource = evaluateProbeResponse({
+    ...computedBase,
+    sourceAsOfHeader: null,
+    nowIso: NOW,
+    publishedAtHeader: hoursAgo(1),
+  });
+  assert.equal(missingSource.ok, false);
+  assert.match(missingSource.failures[0], /x-data-plane-source-as-of is absent/);
+}
+
 // Axis 2 heartbeat resolution: every family override and the default.
 {
+  assert.equal(
+    resolvePublishedAgeDays({ path: "/data/computed/signals.json", family: "computed-signals" }),
+    DEFAULT_MAX_PUBLISHED_AGE_DAYS,
+  );
   assert.equal(resolvePublishedAgeDays({ path: "/data/yardney/yardney_model.json", family: "fred-yardeni" }), 10);
   assert.equal(resolvePublishedAgeDays({ path: "/data/slickcharts/sp500.json", family: "slickcharts-weekly" }), 10);
   assert.equal(resolvePublishedAgeDays({ path: "/data/slickcharts/sp500-returns.json", family: "slickcharts-monthly" }), 40);
@@ -527,12 +596,13 @@ const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOStr
 
 // The policy tables are immutable: callers cannot mutate them.
 {
-  for (const table of [PATH_SOURCE_AGE_DAYS, FAMILY_SOURCE_AGE_DAYS, FAMILY_PUBLISHED_AGE_DAYS]) {
+  for (const table of [PATH_SOURCE_AGE_DAYS, FAMILY_SOURCE_AGE_DAYS, FAMILY_PUBLISHED_AGE_DAYS, SOURCE_AGE_UNBOUNDED_FAMILIES]) {
     assert.equal(Object.isFrozen(table), true);
   }
   assert.throws(() => { PATH_SOURCE_AGE_DAYS["/data/macro/extra.json"] = 1; }, TypeError);
   assert.throws(() => { FAMILY_SOURCE_AGE_DAYS["nobody"] = 1; }, TypeError);
   assert.throws(() => { FAMILY_PUBLISHED_AGE_DAYS["nobody"] = 1; }, TypeError);
+  assert.throws(() => { SOURCE_AGE_UNBOUNDED_FAMILIES.push("nobody"); }, TypeError);
   assert.equal(PATH_SOURCE_AGE_DAYS["/data/macro/extra.json"], undefined);
   assert.equal(FAMILY_PUBLISHED_AGE_DAYS["nobody"], undefined);
 }
@@ -673,7 +743,7 @@ const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOStr
   const futureSource = evaluateProbeResponse({
     ...base,
     generationHeader: "fred-macro-abc123",
-    sourceAsOfHeader: "2026-08-04T12:00:00Z",
+    sourceAsOfHeader: "2026-08-04",
     publishedAtHeader: hoursAgo(1),
   });
   assert.equal(futureSource.ok, false);
@@ -798,10 +868,9 @@ const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOStr
 {
   const healthyHeadersFor = (path) => {
     const family = ENROLLED_PATHS.get(path);
-    const sourceLimit = resolveSourceAgeDays({ path, family });
     return {
       "x-data-plane-generation": `${family}-abc123`,
-      "x-data-plane-source-as-of": daysAgo(sourceLimit - 1, true),
+      "x-data-plane-source-as-of": sourceDateForPolicy({ path, family }),
       "x-data-plane-published-at": hoursAgo(1),
     };
   };
@@ -836,12 +905,11 @@ const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOStr
           },
         });
       }
-      const sourceLimit = resolveSourceAgeDays({ path, family });
       return new Response(null, {
         status: 200,
         headers: {
           "x-data-plane-generation": `${family}-abc123`,
-          "x-data-plane-source-as-of": daysAgo(sourceLimit - 1, true),
+          "x-data-plane-source-as-of": sourceDateForPolicy({ path, family }),
           "x-data-plane-published-at": hoursAgo(1),
         },
       });

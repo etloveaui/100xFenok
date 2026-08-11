@@ -61,6 +61,13 @@ export const PATH_SOURCE_AGE_DAYS = Object.freeze({
   "/data/macro/fred-banking-monthly.json": 100,
   "/data/macro/fred-banking-quarterly.json": 180,
 });
+// The computed-signals source_as_of is the minimum of heterogeneous raw
+// contributor dates. Its source-age authority remains in the producer-family
+// gates, so the serving probe validates presence, parseability, and chronology
+// but applies no aggregate source-age ceiling. Null is an explicit policy
+// value, not a claim that the source is fresh.
+export const SOURCE_AGE_UNBOUNDED_FAMILIES = Object.freeze(["computed-signals"]);
+const SOURCE_AGE_UNBOUNDED_FAMILY_SET = new Set(SOURCE_AGE_UNBOUNDED_FAMILIES);
 export const FAMILY_SOURCE_AGE_DAYS = Object.freeze({
   "fred-yardeni": 14,
   "slickcharts-monthly": 40,
@@ -75,6 +82,7 @@ export const FAMILY_PUBLISHED_AGE_DAYS = Object.freeze({
 });
 
 export function resolveSourceAgeDays({ path, family }) {
+  if (SOURCE_AGE_UNBOUNDED_FAMILY_SET.has(family)) return null;
   return PATH_SOURCE_AGE_DAYS[path] ?? FAMILY_SOURCE_AGE_DAYS[family] ?? DEFAULT_MAX_SOURCE_AGE_DAYS;
 }
 
@@ -83,9 +91,18 @@ export function resolvePublishedAgeDays({ path, family }) {
 }
 
 function tightenPolicyLimit(policyLimit, override) {
+  if (policyLimit === null) return null;
   return Number.isFinite(override) && override > 0
     ? Math.min(policyLimit, override)
     : policyLimit;
+}
+
+function parseRealIsoDay(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value
+    ? parsed.getTime()
+    : null;
 }
 
 export function parseLegacySourceAgeCap(value) {
@@ -150,6 +167,13 @@ const FALLBACK_ALLOWED_FAMILY_SET = new Set(FALLBACK_ALLOWED_FAMILIES);
       );
     }
   }
+  for (const family of SOURCE_AGE_UNBOUNDED_FAMILIES) {
+    if (!enrolledFamilies.has(family)) {
+      throw new Error(
+        `A freshness policy names family "${family}", which is not declared in ENROLLED_PATHS or ENROLLED_PREFIXES`,
+      );
+    }
+  }
 }
 
 export function evaluateProbeResponse({ path, family, status, generationHeader, sourceAsOfHeader, publishedAtHeader, nowIso, maxAgeDays, maxPublishedAgeDays }) {
@@ -179,15 +203,19 @@ export function evaluateProbeResponse({ path, family, status, generationHeader, 
   }
   const effectiveSourceAgeDays = tightenPolicyLimit(resolveSourceAgeDays({ path, family }), maxAgeDays);
   const effectivePublishedAgeDays = tightenPolicyLimit(resolvePublishedAgeDays({ path, family }), maxPublishedAgeDays);
-  const sourceMs = Date.parse(sourceAsOfHeader ?? "");
-  if (!Number.isFinite(sourceMs)) {
-    failures.push(`x-data-plane-source-as-of is ${sourceAsOfHeader == null ? "absent" : `unparseable ("${sourceAsOfHeader}")`}`);
+  const sourceMs = parseRealIsoDay(sourceAsOfHeader);
+  if (sourceMs === null) {
+    failures.push(
+      `x-data-plane-source-as-of is ${sourceAsOfHeader == null
+        ? "absent"
+        : `invalid ("${sourceAsOfHeader}"; expected a real YYYY-MM-DD calendar day)`}`,
+    );
   } else if (nowIsValid) {
     if (sourceMs > nowMs) {
       failures.push(`source date ${sourceAsOfHeader} is in the future relative to now ${nowIso}`);
     } else {
       const ageDays = (nowMs - sourceMs) / 86400000;
-      if (ageDays > effectiveSourceAgeDays) {
+      if (effectiveSourceAgeDays !== null && ageDays > effectiveSourceAgeDays) {
         failures.push(`source date ${sourceAsOfHeader} is ${ageDays.toFixed(1)} days old (limit ${effectiveSourceAgeDays})`);
       }
     }

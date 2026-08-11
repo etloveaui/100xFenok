@@ -890,6 +890,78 @@ try {
   assert.equal(served.published_at, fredBuild.manifest.created_at);
   console.log("fred-macro family ok (single file, split root/prefix, public class served)");
 
+  // --- computed-signals pilot: one canonical file, exact public path --------
+  // The exporter lane owns the source_as_of field. Keep this publisher test
+  // independent of its uncommitted mirror by adding that field to a temporary
+  // copy of the current payload, then prove the family resolver consumes it.
+  {
+    const computedFamily = FAMILIES["computed-signals"];
+    assert.equal(computedFamily.root, "data/computed");
+    assert.equal(computedFamily.manifest_prefix, "public/data/computed");
+    assert.deepEqual(computedFamily.files, ["signals.json"]);
+    assert.equal(computedFamily.source_as_of.key, "source_as_of");
+    assert.equal(computedFamily.policy.max_assets, 4);
+    assert.equal(computedFamily.policy.max_total_bytes, 30_000);
+    const currentSignalsPath = path.join(REPO_ROOT, "data/computed/signals.json");
+    const currentSignalsBytes = statSync(currentSignalsPath).size;
+    assert.ok(currentSignalsBytes > 0, "current pilot payload is non-empty (measured baseline: 12,680 bytes)");
+    assert.ok(currentSignalsBytes <= computedFamily.policy.max_total_bytes);
+
+    const computedFixtureRoot = await mkdtemp(path.join(os.tmpdir(), "cloud-data-plane-computed-signals-"));
+    try {
+      const computedPayload = {
+        ...JSON.parse(await readFile(currentSignalsPath, "utf8")),
+        source_as_of: "2026-07-29",
+      };
+      const fixturePath = path.join(computedFixtureRoot, "signals.json");
+      await writeFile(fixturePath, JSON.stringify(computedPayload));
+      const computedBuild = await buildFamilyManifest({
+        familyName: "computed-signals",
+        absRoot: computedFixtureRoot,
+        relRoot: "public/data/computed",
+        now: () => NOW_1,
+      });
+      validateGenerationManifest(computedBuild.manifest);
+      assert.equal(computedBuild.manifest.assets.length, 1);
+      const computedAsset = computedBuild.manifest.assets[0];
+      assert.equal(computedAsset.path, "public/data/computed/signals.json");
+      assert.equal(computedAsset.source_as_of, "2026-07-29");
+      assert.equal(computedBuild.sourceAsOf.origin, "payload");
+      assert.ok(computedAsset.bytes <= computedFamily.policy.max_total_bytes);
+      assert.equal(computedAsset.content_type, "application/json");
+      assert.equal(computedAsset.privacy_class, "public");
+      assert.equal(computedFamily.validate_public_payload({ bytes: computedBuild.payloads.get(computedAsset.path) }), true);
+
+      const computedPlane = createMemoryCloudDataPlane();
+      const computedPublished = await publishGeneration({
+        manifest: computedBuild.manifest,
+        payloads: computedBuild.payloads,
+        expectedPointerSequence: 0,
+        objectStore: computedPlane.objectStore,
+        ledger: computedPlane.ledger,
+        pointerStore: computedPlane.pointerStore,
+        policy: {
+          ...POLICY,
+          max_assets: computedFamily.policy.max_assets,
+          max_total_bytes: computedFamily.policy.max_total_bytes,
+          validate_public_payload: computedFamily.validate_public_payload,
+        },
+        now: () => NOW_1,
+      });
+      assert.equal(computedPublished.pointer.active.generation_id, computedBuild.manifest.generation_id);
+      const computedServed = await resolvePublicAsset({
+        publicPath: "public/data/computed/signals.json",
+        pointerStore: computedPlane.pointerStore,
+        objectStore: computedPlane.objectStore,
+      });
+      assert.equal(computedServed.kind, "ok");
+      assert.deepEqual(computedServed.bytes, computedBuild.payloads.get(computedAsset.path));
+      console.log("computed-signals family ok (one asset, exact public path, payload source_as_of, 30,000-byte bound)");
+    } finally {
+      await rm(computedFixtureRoot, { recursive: true, force: true });
+    }
+  }
+
   // --- per-family coordinators: two families publish and resolve ----------
   // independently, each against its OWN coordinator instance over the SHARED
   // object store. Acceptance gate for the per-family pointer fix: publishing

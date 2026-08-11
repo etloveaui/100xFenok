@@ -1,0 +1,117 @@
+# Coordinate Computed Signals — one serialized rebuild/publish lane.
+#
+# Successful completion of ANY of the six source workflows on main enters
+# exactly one concurrency-serialized coordinator (workflow_run is fail-closed:
+# failed/skipped/cancelled completions never enter). The coordinator resets to
+# the LATEST origin/main (never the triggering source SHA), runs the computed
+# signals exporter only, publishes the one-asset computed-signals plane
+# generation, restores the generated canonical/public signal files to HEAD in
+# ephemeral checkout, and persists only the authorized publish-outcome shard.
+#
+# No Deploy Worker and no signals Git commit: the git copies of
+# data/computed/signals.json + the public mirror stay owned by the scheduled
+# Update Manifest reconciliation; this lane only publishes the plane generation
+# and commits its outcome evidence. The outcome shard lives under
+# data/admin/data-supply-state/** which is excluded from Update Manifest push
+# triggers, and this workflow listens only to the six source workflows, so
+# persistence cannot recursively restart Update Manifest or this coordinator.
+
+name: Coordinate Computed Signals
+
+on:
+  workflow_run:
+    workflows:
+      - Fetch FRED Macro Data
+      - Fetch Treasury TGA Data
+      - Fetch DefiLlama Stablecoins Data
+      - Fetch FRED Banking Data
+      - Fetch FDIC Tier1 Data
+      - Fetch Sentiment Data
+    types:
+      - completed
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+concurrency:
+  # Deliberately share Update Manifest's global writer queue with all six
+  # sources. Acquisition commits, this outcome commit, and UM's expensive
+  # projection commit therefore cannot advance main underneath one another.
+  group: fenok-data-writer-refs/heads/main
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  coordinate-computed-signals:
+    # Fail closed: only successful completions of the six source workflows on
+    # main may enter. The branch gate mirrors the workflow_run branches filter
+    # so a non-main completion can never slip through.
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-latest
+    # The cloud data plane's credentials live in the production environment
+    # (same secret surface as the source publishers).
+    environment: production
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            .github/workflows
+            tools/macro-monitor/shared
+            100xfenok-next/scripts
+            100xfenok-next/src/lib
+            data/macro
+            data/sentiment
+            data/computed
+            100xfenok-next/public/data/computed
+            data/admin/data-supply-state/publish-outcomes
+            data/admin/lane-commit-manifest.json
+
+      - name: Start from latest main
+        # The triggering run's SHA may be older than the tip; the exporter
+        # must rebuild from the newest committed sources on origin/main.
+        run: |
+          git fetch --depth=1 origin +main:refs/remotes/origin/main
+          git checkout -B main origin/main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Export computed signals from committed sources
+        id: export_signals
+        run: node scripts/export-computed-signals.mjs
+
+      - name: Publish computed-signals generation to the cloud data plane
+        id: publish_cloud_generation
+        if: ${{ steps.export_signals.outcome == 'success' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: node scripts/publish-cloud-data-generation.mjs --family=computed-signals --tolerate-gate-block --json
+
+      - name: Restore generated signal files to HEAD
+        # The publisher owns the plane generation; the git copies belong to
+        # scheduled Update Manifest reconciliation. Clean both canonical and
+        # public mirror files BEFORE persistence so the outcome commit can
+        # carry only the authorized outcome shard (the persistence helper
+        # refuses any other dirty path). Restore, rather than delete: both files
+        # are tracked and must remain present at their checked-out HEAD bytes.
+        if: ${{ always() }}
+        run: |
+          set -euo pipefail
+          git restore --source=HEAD --worktree -- \
+            data/computed/signals.json \
+            100xfenok-next/public/data/computed/signals.json
+
+      - name: Persist computed-signals publish outcome
+        if: ${{ always() }}
+        run: node scripts/persist-cloud-publish-outcome.mjs --family=computed-signals --workflow=.github/workflows/coordinate-computed-signals.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }}

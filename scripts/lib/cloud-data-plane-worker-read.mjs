@@ -73,6 +73,8 @@ export const ENROLLED_PATHS = new Map([
   ["/data/indices/nasdaq.json", "us-indices-daily"],
   ["/data/indices/nasdaq100.json", "us-indices-daily"],
   ["/data/indices/sox.json", "us-indices-daily"],
+  // computed signals pilot: one exact public asset only
+  ["/data/computed/signals.json", "computed-signals"],
   // slickcharts per-lane single files (daily / weekly / monthly / symbols)
   ["/data/slickcharts/gainers.json", "slickcharts-daily"],
   ["/data/slickcharts/losers.json", "slickcharts-daily"],
