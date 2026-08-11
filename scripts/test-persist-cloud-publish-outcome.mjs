@@ -45,12 +45,19 @@ function run(command, args, cwd) {
     assert.equal(workflowText.split(publishCommand).length - 1, 1, `${family} must have exactly one publisher`);
     const publishIndex = workflowText.indexOf(publishCommand);
     const publishStepStart = workflowText.lastIndexOf("\n      - name:", publishIndex);
+    const publishStepEnd = workflowText.indexOf("\n      - name:", publishIndex);
     const isCoordinator = binding.workflow === COORDINATOR_WORKFLOW;
-    const persistenceStepStart = isCoordinator
-      ? workflowText.lastIndexOf("\n      - name:", workflowText.indexOf(`persist-cloud-publish-outcome.mjs --family=${family} --workflow=${binding.workflow}`))
+    const persistenceStepStart = isCoordinator || family === "slickcharts-history"
+      ? workflowText.lastIndexOf(
+        "\n      - name:",
+        workflowText.indexOf(`persist-cloud-publish-outcome.mjs --family=${family} --workflow=${binding.workflow}`),
+      )
       : workflowText.indexOf("\n      - name:", publishIndex);
-    assert.ok(publishStepStart >= 0 && persistenceStepStart > publishIndex, `${family} step boundaries are missing`);
-    const publishStep = workflowText.slice(publishStepStart, persistenceStepStart);
+    assert.ok(
+      publishStepStart >= 0 && publishStepEnd > publishIndex && persistenceStepStart >= publishStepEnd,
+      `${family} step boundaries are missing`,
+    );
+    const publishStep = workflowText.slice(publishStepStart, publishStepEnd);
     const nextStepEnd = workflowText.indexOf("\n      - name:", persistenceStepStart + 1);
     const persistenceStep = workflowText.slice(
       persistenceStepStart,
@@ -90,6 +97,23 @@ function run(command, args, cwd) {
       assert.match(workflowText, /data\/admin\/data-supply-state\/publish-outcomes/);
     }
   }
+
+  const slickchartsHistory = fs.readFileSync(path.join(REPO_ROOT, ".github/workflows/slickcharts-history.yml"), "utf8");
+  const finalizeStart = slickchartsHistory.indexOf("- name: Finalize SlickCharts composite recovery");
+  const returnsTarget = slickchartsHistory.indexOf("artifacts/attempt-returns-*");
+  const cleanupStart = slickchartsHistory.lastIndexOf("\n      - name:", returnsTarget);
+  const cleanupEnd = slickchartsHistory.indexOf("\n      - name:", cleanupStart + 1);
+  const persistStart = slickchartsHistory.indexOf("- name: Persist slickcharts-history publish outcome");
+  assert.ok(finalizeStart >= 0 && finalizeStart < cleanupStart && cleanupStart < persistStart,
+    "slickcharts-history cleanup must run after finalize and before outcome persistence");
+  const cleanupStep = slickchartsHistory.slice(cleanupStart, cleanupEnd);
+  assert.match(cleanupStep, /artifacts\/attempt-returns-\*/);
+  assert.match(cleanupStep, /artifacts\/attempt-dividends-\*/);
+  assert.deepEqual(
+    [...cleanupStep.matchAll(/^\s*rm\s+(.+)$/gmu)].map((match) => match[1]).sort(),
+    ["-rf artifacts/attempt-dividends-*", "-rf artifacts/attempt-returns-*"],
+    "slickcharts-history cleanup must not remove broader runner paths",
+  );
   console.log("publish-outcome workflow contract: 22/22 ordered, always-persisted, exact-owned");
 }
 

@@ -453,6 +453,12 @@ jobs:
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: node scripts/publish-cloud-data-generation.mjs --family=slickcharts-history --tolerate-gate-block --json
 
+      - name: Clean up downloaded attempt artifacts
+        if: ${{ always() }}
+        run: |
+          rm -rf artifacts/attempt-returns-*
+          rm -rf artifacts/attempt-dividends-*
+
       - name: Persist slickcharts-history publish outcome
         if: ${{ always() }}
         run: node scripts/persist-cloud-publish-outcome.mjs --family=slickcharts-history --workflow=.github/workflows/slickcharts-history.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }}
