@@ -112,6 +112,8 @@ node scripts/build-fenok-etf-signals.mjs
 npm --prefix 100xfenok-next run build:history-gap-daily1y
 node scripts/build-fenok-etf-action-index.mjs
 node scripts/build-fenok-etf-core-daily-basket.mjs --check
+node scripts/materialize-update-manifest-routes.mjs \
+  --route-source data/computed/fenok_etf_core_daily_basket_summary.json
 
 # --- S8: Build Fenok edge projections ---------------------------------------
 node scripts/build-fenok-edge-coverage-index.mjs

@@ -21,7 +21,6 @@ const PATHS = {
   analyzer: path.join(ROOT, "data/global-scouter/core/stocks_analyzer.json"),
   slickIndex: path.join(ROOT, "data/global-scouter/core/slick_index.json"),
   output: path.join(ROOT, "data/slickcharts/discovery-summary.json"),
-  publicOutput: path.join(ROOT, "100xfenok-next/public/data/slickcharts/discovery-summary.json"),
 };
 
 function loadJson(filePath) {
@@ -202,9 +201,7 @@ function main() {
   };
 
   writeJson(PATHS.output, payload);
-  writeJson(PATHS.publicOutput, payload);
   console.log(`[build-slickcharts-discovery] wrote ${PATHS.output}`);
-  console.log(`[build-slickcharts-discovery] wrote ${PATHS.publicOutput}`);
 }
 
 try {

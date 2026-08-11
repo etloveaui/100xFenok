@@ -431,6 +431,29 @@ await assert.rejects(() => runNasdaqGiwSox({
   assert.doesNotMatch(workflow, /public\/data\/indices\/nasdaq-giw-sox-constituents\.json/);
 }
 
+// Canonical-only default (batch 3): no public mirror write path remains in the
+// producer, a default run writes canonical only, and --no-public-mirror stays
+// accepted for CI command compatibility.
+{
+  const producer = fs.readFileSync(new URL("./fetch-nasdaq-giw-sox-constituents.mjs", import.meta.url), "utf8");
+  assert.doesNotMatch(producer, /publicMirror|PUBLIC_DATA_ROOT|publicPath/, "no public mirror write path may remain in the producer");
+  assert.match(producer, /"--no-public-mirror"/, "--no-public-mirror must stay accepted for CI compatibility");
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sox-canonical-only-"));
+  const paths = makePaths(root);
+  const result = await runNasdaqGiwSox({
+    ...paths,
+    dates: DATES,
+    request: async () => response(200, weightingPayload("CANON")),
+    observedAt: OBSERVED_AT,
+    attemptId: "canonical-only-attempt",
+    runId: "canonical-only-run",
+    eventName: "schedule",
+  });
+  assert.equal(result.ok, true);
+  assert.equal(fs.existsSync(paths.canonicalPath), true, "default run must write the canonical snapshot");
+  assert.equal(fs.existsSync(paths.publicPath), false, "default run must never create the public mirror");
+}
+
 
 // Lane Registry ⇄ commit-shard completeness gate (#366 step 4).
 {

@@ -7,50 +7,49 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  CENTRAL_COMMIT_PATHS,
+  UPDATE_MANIFEST_MATERIALIZATIONS,
+  buildLaneCommitManifest,
+  centralCommitPathKind,
+} from "./build-lane-commit-manifest.mjs";
+
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const helperPath = path.join(root, "scripts/stage-update-manifest-central.mjs");
 const workflow = fs.readFileSync(path.join(root, ".github/workflows/update-manifest.yml"), "utf8");
-const manifest = JSON.parse(fs.readFileSync(path.join(root, "data/admin/lane-commit-manifest.json"), "utf8"));
-const EXPECTED_PATHS = [
-  "data/computed/signals.json", "data/computed/stock_action_index.json", "data/computed/stock_action_summary.json",
-  "data/computed/fenok_signals.json", "data/computed/fenok_signals_summary.json", "data/computed/fenok_etf_signals.json",
-  "data/computed/fenok_etf_signals_summary.json", "data/computed/etf_action_index.json", "data/computed/fenok_etf_core_daily_basket_summary.json",
-  "data/computed/market_facts", "data/computed/market_source_parity.json", "data/computed/market_data_audit.json",
-  "data/computed/entity_graph.json", "data/computed/entity_graph_stock_index.json", "data/computed/entity_graph_stock_services.json",
-  "data/computed/market_structure_index.json", "data/computed/rim-index/inputs.json", "data/computed/rim-index/FENO_RIM_FIVE_CANONICAL_CURRENT.json", "data/yf/finance/_summary.json",
-  "data/stockanalysis/backfill/history_gap_report_latest.json", "data/slickcharts/discovery-summary.json", "data/slickcharts/membership-changes.json",
-  "data/slickcharts/universe.json", "data/admin/fenok-s1-stock-public-promotion-dry-run.json", "data/admin/fenok-edge-coverage-index.json",
-  "data/admin/fenok-s0-finra-occ-mapping-ledger.json", "data/admin/fenok-edge-etf-daily1y-readiness.json", "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json",
-  "data/admin/fenok-etf-core-daily-basket.json", "data/admin/data-usage-manifest.json", "data/admin/product-surface-coverage.json",
-  "data/admin/fenok-data-health-kpi.json", "data/admin/lane-registry-projection.json", "data/manifest.json",
-  "100xfenok-next/public/data/computed/signals.json", "100xfenok-next/public/data/computed/stock_action_index.json",
-  "100xfenok-next/public/data/computed/stock_action_summary.json", "100xfenok-next/public/data/computed/fenok_signals_summary.json",
-  "100xfenok-next/public/data/computed/fenok_etf_signals_summary.json", "100xfenok-next/public/data/computed/fenok_etf_core_daily_basket_summary.json",
-  "100xfenok-next/public/data/computed/fenok_occ_options_availability.json", "100xfenok-next/public/data/computed/market_facts/index.json",
-  "100xfenok-next/public/data/computed/market_source_parity.json", "100xfenok-next/public/data/computed/market_data_audit.json",
-  "100xfenok-next/public/data/computed/entity_graph.json", "100xfenok-next/public/data/computed/entity_graph_stock_index.json",
-  "100xfenok-next/public/data/computed/entity_graph_stock_services.json", "100xfenok-next/public/data/computed/market_structure_index.json",
-  "100xfenok-next/public/data/computed/rim-index/inputs.json", "100xfenok-next/public/data/yf/finance",
-  "100xfenok-next/public/data/stockanalysis", "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json",
-  "100xfenok-next/public/data/slickcharts", "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json",
-  "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json",
-  "100xfenok-next/public/data/admin/fenok-edge-coverage-index.json", "100xfenok-next/public/data/admin/data-usage-manifest.json",
-  "100xfenok-next/public/data/admin/product-surface-coverage.json", "100xfenok-next/public/data/admin/fenok-data-health-kpi.json",
-  "100xfenok-next/public/data/admin/lane-registry-projection.json", "100xfenok-next/public/data/manifest.json",
-  "100xfenok-next/src/generated/static-route-manifest.ts",
-];
-
-assert.equal(EXPECTED_PATHS.length, 62);
-assert.deepEqual(manifest.update_manifest.central_commit_paths, EXPECTED_PATHS);
+// The staging contract is generated, not hand-copied: expected central policy
+// comes from the builder, so adding a materialization route flows into this
+// test without any list edit. No committed-artifact golden is read here.
+const manifest = buildLaneCommitManifest();
+const centralPaths = manifest.update_manifest.central_commit_paths;
 const centralSpecs = manifest.workflows[".github/workflows/update-manifest.yml"].stages.always_if_exists;
-assert.deepEqual(centralSpecs.map((spec) => spec.path), EXPECTED_PATHS);
-assert.deepEqual(centralSpecs.filter((spec) => spec.kind === "directory").map((spec) => spec.path), [
-  "data/computed/market_facts",
-  "100xfenok-next/public/data/yf/finance",
-  "100xfenok-next/public/data/stockanalysis",
-  "100xfenok-next/public/data/slickcharts",
-]);
-assert.equal(centralSpecs.filter((spec) => spec.kind === "file").length, 58);
+
+// Contract: declared central paths are exactly the hand-maintained base plus
+// one destination per materialization route, unique, and mirrored by the
+// workflow stage with the builder's file/directory kind rule.
+const baseSet = new Set(CENTRAL_COMMIT_PATHS);
+const destinationSet = new Set(UPDATE_MANIFEST_MATERIALIZATIONS.map((route) => route.destination));
+assert.equal(
+  centralPaths.length,
+  CENTRAL_COMMIT_PATHS.length + UPDATE_MANIFEST_MATERIALIZATIONS.length,
+  "declared central paths must equal base paths plus one destination per route",
+);
+assert.equal(new Set(centralPaths).size, centralPaths.length, "declared central paths must be unique");
+assert.ok(
+  centralPaths.every((pathValue) => baseSet.has(pathValue) || destinationSet.has(pathValue)),
+  "declared central paths must be base paths or materialization destinations",
+);
+for (const route of UPDATE_MANIFEST_MATERIALIZATIONS) {
+  assert.ok(centralPaths.includes(route.destination), `declared central paths must include route destination: ${route.destination}`);
+}
+const isDirectoryPath = (pathValue) => centralCommitPathKind(pathValue) === "directory";
+const expectedDirectories = centralPaths.filter(isDirectoryPath);
+assert.deepEqual(centralSpecs.map((spec) => spec.path), centralPaths);
+assert.deepEqual(centralSpecs.filter((spec) => spec.kind === "directory").map((spec) => spec.path), expectedDirectories);
+assert.equal(
+  centralSpecs.filter((spec) => spec.kind === "file").length,
+  centralPaths.length - expectedDirectories.length,
+);
 assert.equal(centralSpecs.every((spec) => spec.required === false), true);
 assert.equal(fs.existsSync(helperPath), true);
 assert.equal((workflow.match(/node scripts\/stage-update-manifest-central\.mjs/g) ?? []).length, 5);
@@ -61,9 +60,14 @@ assert.match(retry, /git reset --hard origin\/main[\s\S]*?stage-update-manifest-
 assert.match(retry, /stage-update-manifest-central\.mjs --check[\s\S]*?central_status[\s\S]*?stage-update-manifest-central\.mjs --stage[\s\S]*?git commit/);
 assert.doesNotMatch(workflow, /git diff --quiet \\/);
 assert.doesNotMatch(workflow, /git add -- \\/);
-for (const pathValue of EXPECTED_PATHS) {
+for (const pathValue of centralPaths) {
   assert.equal(workflow.includes(`${pathValue} \\`), false, `legacy central hand-list remains: ${pathValue}`);
 }
+
+// Behavior samples derived from the declared contract (no second list).
+const fileSample = centralPaths.find((pathValue) => !isDirectoryPath(pathValue));
+const directorySample = centralPaths.find(isDirectoryPath);
+const treeDestination = UPDATE_MANIFEST_MATERIALIZATIONS.find((route) => route.mode === "rsync_tree").destination;
 
 function write(target, contents) {
   fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -85,9 +89,9 @@ function makeFixture() {
   git(repoRoot, ["config", "user.name", "central-staging-test"]);
   const manifestPath = path.join(repoRoot, "data/admin/lane-commit-manifest.json");
   write(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-  write(path.join(repoRoot, "data/computed/signals.json"), "baseline signals\n");
-  write(path.join(repoRoot, "data/computed/market_facts/index.json"), "baseline facts\n");
-  write(path.join(repoRoot, "100xfenok-next/public/data/slickcharts/base.json"), "baseline slick\n");
+  write(path.join(repoRoot, fileSample), "baseline signals\n");
+  write(path.join(repoRoot, directorySample, "index.json"), "baseline facts\n");
+  write(path.join(repoRoot, treeDestination, "base.json"), "baseline slick\n");
   write(path.join(repoRoot, "unrelated.txt"), "unrelated baseline\n");
   git(repoRoot, ["add", "-A"]);
   git(repoRoot, ["commit", "-qm", "fixture baseline"]);
@@ -115,22 +119,22 @@ function runHelper(fixture, mode) {
   const fixture = makeFixture();
   const result = runHelper(fixture, "--check");
   assert.equal(result.status, 3, `${result.stderr}\n${result.stdout}`);
-  assert.match(result.stdout, /declared=62 changed=0 staged=0/);
+  assert.match(result.stdout, new RegExp(`declared=${centralPaths.length} changed=0 staged=0`));
   assert.notEqual(runHelper(fixture, "--stage").status, 0);
 }
 
 {
   const fixture = makeFixture();
-  write(path.join(fixture.repoRoot, "data/computed/signals.json"), "changed signals\n");
+  write(path.join(fixture.repoRoot, fileSample), "changed signals\n");
   write(path.join(fixture.repoRoot, "unrelated.txt"), "unrelated unstaged\n");
   assert.equal(runHelper(fixture, "--check").status, 0);
   const staged = runHelper(fixture, "--stage");
   assert.equal(staged.status, 0, `${staged.stderr}\n${staged.stdout}`);
-  assert.deepEqual(cached(fixture.repoRoot), ["data/computed/signals.json"]);
+  assert.deepEqual(cached(fixture.repoRoot), [fileSample]);
   assert.match(git(fixture.repoRoot, ["diff", "--name-only"]), /unrelated\.txt/);
 }
 
-for (const relative of ["data/computed/signals.json", "data/computed/market_facts"]) {
+for (const relative of [fileSample, directorySample]) {
   const fixture = makeFixture();
   fs.rmSync(path.join(fixture.repoRoot, relative), { recursive: true });
   assert.equal(runHelper(fixture, "--check").status, 0);
@@ -140,9 +144,9 @@ for (const relative of ["data/computed/signals.json", "data/computed/market_fact
 
 {
   const fixture = makeFixture();
-  write(path.join(fixture.repoRoot, "100xfenok-next/public/data/slickcharts/new.json"), "new\n");
+  write(path.join(fixture.repoRoot, treeDestination, "new.json"), "new\n");
   assert.equal(runHelper(fixture, "--stage").status, 0);
-  assert.deepEqual(cached(fixture.repoRoot), ["100xfenok-next/public/data/slickcharts/new.json"]);
+  assert.deepEqual(cached(fixture.repoRoot), [path.posix.join(treeDestination, "new.json")]);
 }
 
 // Reject unrelated pre-staged work before touching central paths.
@@ -150,7 +154,7 @@ for (const relative of ["data/computed/signals.json", "data/computed/market_fact
   const fixture = makeFixture();
   write(path.join(fixture.repoRoot, "unrelated.txt"), "pre-staged unrelated\n");
   git(fixture.repoRoot, ["add", "unrelated.txt"]);
-  write(path.join(fixture.repoRoot, "data/computed/signals.json"), "central unstaged\n");
+  write(path.join(fixture.repoRoot, fileSample), "central unstaged\n");
   const result = runHelper(fixture, "--stage");
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /out-of-policy staged paths: unrelated\.txt/);
@@ -161,11 +165,11 @@ for (const relative of ["data/computed/signals.json", "data/computed/market_fact
 // policy-scoped cleanup removes only that residue before the clean assertion.
 {
   const fixture = makeFixture();
-  const tracked = path.join(fixture.repoRoot, "data/computed/signals.json");
+  const tracked = path.join(fixture.repoRoot, fileSample);
   write(tracked, "tracked mutation\n");
   const residue = Array.from({ length: 100 }, (_, index) => path.join(
     fixture.repoRoot,
-    "100xfenok-next/public/data/slickcharts",
+    treeDestination,
     `pre-reset-${String(index).padStart(3, "0")}.json`,
   ));
   for (const target of residue) write(target, "untracked residue\n");
@@ -183,34 +187,34 @@ for (const relative of ["data/computed/signals.json", "data/computed/market_fact
   assert.equal(fs.existsSync(unrelated), true);
   assert.equal(runHelper(fixture, "--assert-clean-after-reset").status, 0);
   write(tracked, "retry rebuild\n");
-  write(path.join(fixture.repoRoot, "100xfenok-next/public/data/slickcharts/rebuilt.json"), "retry public rebuild\n");
+  write(path.join(fixture.repoRoot, treeDestination, "rebuilt.json"), "retry public rebuild\n");
   assert.equal(runHelper(fixture, "--check").status, 0);
   assert.equal(runHelper(fixture, "--stage").status, 0);
   assert.deepEqual(cached(fixture.repoRoot), [
-    "100xfenok-next/public/data/slickcharts/rebuilt.json",
-    "data/computed/signals.json",
+    path.posix.join(treeDestination, "rebuilt.json"),
+    fileSample,
   ]);
 }
 
 {
   const fixture = makeFixture();
-  write(path.join(fixture.repoRoot, ".gitignore"), "100xfenok-next/public/data/slickcharts/ignored.json\n");
+  write(path.join(fixture.repoRoot, ".gitignore"), `${treeDestination}/ignored.json\n`);
   git(fixture.repoRoot, ["add", ".gitignore"]);
   git(fixture.repoRoot, ["commit", "-qm", "ignore fixture"]);
-  write(path.join(fixture.repoRoot, "100xfenok-next/public/data/slickcharts/ignored.json"), "ignored residue\n");
+  write(path.join(fixture.repoRoot, treeDestination, "ignored.json"), "ignored residue\n");
   git(fixture.repoRoot, ["reset", "--hard", "HEAD"]);
   assert.notEqual(runHelper(fixture, "--assert-clean-after-reset").status, 0);
   const cleanup = runHelper(fixture, "--clean-untracked-after-reset");
   assert.notEqual(cleanup.status, 0);
   assert.match(cleanup.stderr, /reset left central state: cached=0 changed=0 ignored=1/);
-  assert.equal(fs.existsSync(path.join(fixture.repoRoot, "100xfenok-next/public/data/slickcharts/ignored.json")), true);
+  assert.equal(fs.existsSync(path.join(fixture.repoRoot, treeDestination, "ignored.json")), true);
 }
 
 // Cleanup is permitted only after reset has restored every tracked central path.
 {
   const fixture = makeFixture();
-  const tracked = path.join(fixture.repoRoot, "data/computed/signals.json");
-  const untracked = path.join(fixture.repoRoot, "100xfenok-next/public/data/slickcharts/residue.json");
+  const tracked = path.join(fixture.repoRoot, fileSample);
+  const untracked = path.join(fixture.repoRoot, treeDestination, "residue.json");
   write(tracked, "tracked mutation\n");
   write(untracked, "untracked residue\n");
   const cleanup = runHelper(fixture, "--clean-untracked-after-reset");

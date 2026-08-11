@@ -68,6 +68,23 @@ for (const [stage, anchor] of STAGE_ANCHORS) {
   previousAnchor = position;
 }
 
+const allMaterialization = "node scripts/materialize-update-manifest-routes.mjs --all";
+const basketProducer = "node scripts/build-fenok-etf-core-daily-basket.mjs --check";
+const basketRouteArgument = "--route-source data/computed/fenok_etf_core_daily_basket_summary.json";
+const allMaterializationIndex = runnerLines.indexOf(allMaterialization);
+const basketProducerIndex = runnerLines.indexOf(basketProducer);
+const basketRouteIndex = runnerLines.indexOf(basketRouteArgument);
+assert.equal(runnerLines.filter((line) => line === allMaterialization).length, 1,
+  "runner must materialize all routes exactly once at S3");
+assert.equal(runnerLines.filter((line) => line === basketRouteArgument).length, 1,
+  "runner must materialize the exact basket route exactly once");
+assert.ok(allMaterializationIndex < basketProducerIndex,
+  "S3 full materialization must precede the S7 basket producer");
+assert.ok(basketProducerIndex < basketRouteIndex,
+  "bounded basket materialization must follow its S7 producer");
+assert.ok(basketRouteIndex < runnerLines.indexOf("# --- S8: Build Fenok edge projections ---------------------------------------"),
+  "bounded basket materialization must finish before S8");
+
 // Both call sites explicitly provide the complete fail-closed environment.
 for (const line of [
   "VALIDATE_SLICKCHARTS_SKIP_PUBLIC: 'true'",

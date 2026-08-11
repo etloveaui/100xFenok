@@ -101,17 +101,22 @@ export function validateMaterializationRoutes({ repoRoot, routes }) {
     if (route.mode === "cp_file") {
       if (route.delete !== false || route.trailing_slash !== false) fail(`routes[${index}] cp_file flags are invalid`);
     } else if (route.mode === "rsync_tree") {
-      if (route.delete !== true || route.trailing_slash !== true) fail(`routes[${index}] rsync_tree flags are invalid`);
+      // delete:false rsync routes are the non-destructive directory form: the
+      // boundary may refresh source-owned files but must never remove
+      // destination-only content (public-only/admin/private/archive bytes).
+      // delete is validated as boolean above; only trailing-slash semantics
+      // are mandatory here.
+      if (route.trailing_slash !== true) fail(`routes[${index}] rsync_tree flags are invalid`);
     } else fail(`routes[${index}] mode is invalid`);
     if (!Array.isArray(route.excludes)) fail(`routes[${index}] excludes must be an array`);
     for (const [excludeIndex, exclude] of route.excludes.entries()) {
       assertSafeRelative(exclude, `routes[${index}].excludes[${excludeIndex}]`);
       if (exclude.endsWith("/") || exclude.includes("*")) {
-        fail(`routes[${index}].excludes[${excludeIndex}] must be an exact relative subtree`);
+        fail(`routes[${index}].excludes[${excludeIndex}] must be an exact relative path`);
       }
     }
     if (route.mode === "cp_file" && route.excludes.length > 0) {
-      fail(`routes[${index}] cp_file cannot exclude subtrees`);
+      fail(`routes[${index}] cp_file cannot exclude paths`);
     }
     const sourceAbs = path.resolve(resolvedRepo, route.source);
     const destinationAbs = path.resolve(resolvedRepo, route.destination);
@@ -185,6 +190,23 @@ function assertTreeParity(source, destination, excludes = []) {
   }
 }
 
+// delete:false semantics: every source entry must exist in the destination
+// with identical bytes (canonical/public equality for covered outputs), while
+// extra destination entries are deliberately ignored because the boundary
+// must never delete destination-only content.
+function assertTreeSubsetParity(source, destination, excludes = []) {
+  const right = listTree(destination, excludes);
+  const rightByPath = new Map(right.map(([relativePath, contents]) => [relativePath, contents]));
+  for (const [leftPath, leftContents] of listTree(source, excludes)) {
+    const rightContents = rightByPath.get(leftPath);
+    if (rightContents === undefined) fail(`rsync subset parity missing destination entry: ${leftPath}`);
+    const contentsDiffer = leftContents === null
+      ? rightContents !== null
+      : rightContents === null || !leftContents.equals(rightContents);
+    if (contentsDiffer) fail(`rsync subset parity differs: ${leftPath}`);
+  }
+}
+
 function assertNoUntracked(repoRoot, routes) {
   for (const route of routes) {
     const untracked = run("git", ["ls-files", "--others", "--exclude-standard", "--", route.source], { cwd: repoRoot });
@@ -242,7 +264,7 @@ export function materializeUpdateManifestRoutes(options) {
   let materialized = 0;
   for (const route of orderMaterializations(selected)) {
     if (route.skip) {
-      if (route.removeStaleDestination) {
+      if (route.removeStaleDestination && (route.mode === "cp_file" || route.delete === true)) {
         if (route.mode === "cp_file") fs.unlinkSync(route.destinationAbs);
         else fs.rmSync(route.destinationAbs, { recursive: true });
         materialized += 1;
@@ -255,13 +277,17 @@ export function materializeUpdateManifestRoutes(options) {
       if (!fs.readFileSync(route.sourceAbs).equals(fs.readFileSync(route.destinationAbs))) fail("cp_file parity differs");
     } else {
       fs.mkdirSync(route.destinationAbs, { recursive: true });
-      const excludeArgs = route.excludes.flatMap((exclude) => ["--exclude", `/${exclude}/`]);
+      // Anchored exact-path rules work for both files (griffin.json) and
+      // directory entries (etfs) without broad glob matching.
+      const excludeArgs = route.excludes.flatMap((exclude) => ["--exclude", `/${exclude}`]);
+      const syncArgs = ["-a", "--checksum", ...(route.delete ? ["--delete"] : []), ...excludeArgs, `${route.sourceAbs}/`, `${route.destinationAbs}/`];
       run(
         "rsync",
-        ["-a", "--checksum", "--delete", ...excludeArgs, `${route.sourceAbs}/`, `${route.destinationAbs}/`],
+        syncArgs,
         { cwd: validation.repoRoot },
       );
-      assertTreeParity(route.sourceAbs, route.destinationAbs, route.excludes);
+      if (route.delete) assertTreeParity(route.sourceAbs, route.destinationAbs, route.excludes);
+      else assertTreeSubsetParity(route.sourceAbs, route.destinationAbs, route.excludes);
     }
     materialized += 1;
   }

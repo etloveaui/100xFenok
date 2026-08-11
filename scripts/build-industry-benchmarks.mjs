@@ -7,7 +7,7 @@
  * the yf->damodaran industry map with the handful of fields the UI compares.
  *
  * Run: node scripts/build-industry-benchmarks.mjs
- * Output: data/damodaran/industry_benchmarks.json (+ public mirror)
+ * Output: data/damodaran/industry_benchmarks.json
  */
 
 import fs from "node:fs";
@@ -21,7 +21,6 @@ const METRICS = path.join(ROOT, "data/damodaran/industry_metrics.json");
 const INDUSTRIES = path.join(ROOT, "data/damodaran/industries.json");
 const MAP = path.join(ROOT, "100xfenok-next/src/lib/design/yf-damodaran-industry-map.json");
 const OUT = path.join(ROOT, "data/damodaran/industry_benchmarks.json");
-const PUBLIC_OUT = path.join(ROOT, "100xfenok-next/public/data/damodaran/industry_benchmarks.json");
 
 const load = (p) => JSON.parse(fs.readFileSync(p, "utf8"));
 const round2 = (x) => (typeof x === "number" ? Math.round(x * 100) / 100 : null);
@@ -66,7 +65,5 @@ const payload = {
 };
 
 fs.writeFileSync(OUT, JSON.stringify(payload));
-fs.mkdirSync(path.dirname(PUBLIC_OUT), { recursive: true });
-fs.writeFileSync(PUBLIC_OUT, JSON.stringify(payload));
 const kb = Math.round(fs.statSync(OUT).size / 1024);
 console.log(`industry_benchmarks: industries=${Object.keys(out).length} mapped=${Object.keys(cleanMap).length} size=${kb}KB`);

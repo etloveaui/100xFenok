@@ -6668,7 +6668,11 @@ def _main() -> None:
         except ValueError as exc:
             raise SystemExit(str(exc)) from exc
 
-    mirror_public = not args.no_public_mirror
+    # Canonical-only default (batch 3): the public mirror is boundary-owned.
+    # The explicit mirror_public unit interface stays only for the fixture
+    # tests (retired etfs/ guard, incremental-plan mirror); --no-public-mirror
+    # remains accepted for CI command compatibility.
+    mirror_public = False
     explicit_stocks = parse_symbols(args.stocks)
     explicit_etfs = parse_symbols(args.etfs)
     stocks = explicit_stocks[:]

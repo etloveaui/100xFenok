@@ -6,7 +6,7 @@
  * unused field that exists only inside 1,066 detail files.
  *
  * Run: node scripts/build-revision-movers.mjs
- * Output: data/global-scouter/core/revision_movers.json (+ public mirror)
+ * Output: data/global-scouter/core/revision_movers.json
  */
 
 import fs from "node:fs";
@@ -19,10 +19,6 @@ const ROOT = path.resolve(__dirname, "..");
 const DETAIL_DIR = path.join(ROOT, "data/global-scouter/stocks/detail");
 const ANALYZER = path.join(ROOT, "data/global-scouter/core/stocks_analyzer.json");
 const OUT = path.join(ROOT, "data/global-scouter/core/revision_movers.json");
-const PUBLIC_OUT = path.join(
-  ROOT,
-  "100xfenok-next/public/data/global-scouter/core/revision_movers.json",
-);
 
 const TOP_N = 12;
 // weekly noise guard: sub-0.5% revisions are not "movers"
@@ -77,8 +73,6 @@ const payload = {
 };
 
 fs.writeFileSync(OUT, JSON.stringify(payload));
-fs.mkdirSync(path.dirname(PUBLIC_OUT), { recursive: true });
-fs.writeFileSync(PUBLIC_OUT, JSON.stringify(payload));
 console.log(
   `revision_movers: scanned=${scanned} qualified=${rows.length} up=${up.length} down=${down.length} -> ${OUT}`,
 );

@@ -5,7 +5,7 @@
  * Consumer: screener "구루픽 밸류" preset (joined client-side by ticker).
  *
  * Run: node scripts/build-guru-holders-index.mjs
- * Output: data/sec-13f/analytics/guru_holders_index.json (+ public mirror)
+ * Output: data/sec-13f/analytics/guru_holders_index.json
  */
 
 import fs from "node:fs";
@@ -20,10 +20,6 @@ import {
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = path.join(ROOT, "data/sec-13f/analytics/consensus.json");
 const OUT = path.join(ROOT, "data/sec-13f/analytics/guru_holders_index.json");
-const MIRROR = path.join(
-  ROOT,
-  "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
-);
 
 function guardConsensus(data, filePath) {
   requireKeys(data, filePath, ["consensus"]);
@@ -46,10 +42,8 @@ const output = {
   holders,
 };
 
-for (const p of [OUT, MIRROR]) {
-  fs.mkdirSync(path.dirname(p), { recursive: true });
-  fs.writeFileSync(p, JSON.stringify(output));
-}
+fs.mkdirSync(path.dirname(OUT), { recursive: true });
+fs.writeFileSync(OUT, JSON.stringify(output));
 console.log(
   `guru_holders_index: quarter=${output.metadata.quarter} tickers=${output.metadata.tickers}`,
 );

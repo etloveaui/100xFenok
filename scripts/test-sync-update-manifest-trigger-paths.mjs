@@ -87,9 +87,35 @@ for (const entry of positives) assert.equal(pathIncluded(representative(entry)),
 for (const entry of negatives) assert.equal(pathIncluded(representative(entry)), false, `${entry} must not self-trigger`);
 
 const changedSetIncluded = (changedPaths) => changedPaths.some((candidate) => pathIncluded(candidate));
-assert.equal(changedSetIncluded(["data/macro/fred-macro.json"]), true, "eligible-only push must trigger");
+// The six coordinator-source families' owned canonical/admin paths are
+// excluded (their completions drive coordinate-computed-signals instead);
+// unrelated macro data stays eligible.
+assert.equal(changedSetIncluded(["data/macro/yahoo-ticker.json"]), true, "eligible-only push must trigger");
 assert.equal(changedSetIncluded(negatives.map(representative)), false, "excluded-only push must not trigger");
 assert.equal(changedSetIncluded([representative(negatives[0]), "scripts/update-manifest.py"]), true, "mixed push with one eligible path must trigger");
+
+// Exact owned commit paths of the six decoupled families must never implicitly
+// trigger the full Update Manifest reconciliation.
+for (const ownedPath of [
+  "data/macro/fred-macro.json",
+  "data/macro/tga.json",
+  "data/macro/stablecoins.json",
+  "data/macro/fred-banking-daily.json",
+  "data/macro/fred-banking-weekly.json",
+  "data/macro/fred-banking-monthly.json",
+  "data/macro/fred-banking-quarterly.json",
+  "data/macro/fdic-tier1.json",
+  "data/sentiment/vix.json",
+  "data/admin/fred_macro/index.json",
+  "data/admin/treasury_tga/lkg/tga.json",
+  "data/admin/defillama_stablecoins/index.json",
+  "data/admin/fred_banking/lkg/daily.json",
+  "data/admin/fdic_tier1/lkg/fdic_tier1.json",
+  "data/admin/sentiment/current/cnn-fear-greed.json",
+  "data/admin/sentiment/source-observations/crypto.json",
+]) {
+  assert.equal(pathIncluded(ownedPath), false, `${ownedPath} must not implicitly trigger Update Manifest`);
+}
 
 const liveCheck = spawnSync(process.execPath, [scriptPath, "--check"], { cwd: root, encoding: "utf8" });
 assert.equal(liveCheck.status, 0, `${liveCheck.stderr}\n${liveCheck.stdout}`);
