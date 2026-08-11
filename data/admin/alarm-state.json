@@ -1,9 +1,22 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-11T02:32:42.945Z",
+  "generated_at": "2026-08-11T04:44:39.014Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 4,
   "open_incidents": [
+    {
+      "workflow": "fetch-defillama.yml",
+      "label": "Fetch DefiLlama Stablecoins Data",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 31452280144,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31452280144",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
     {
       "workflow": "fetch-edgar-filings.yml",
       "label": "Fetch EDGAR Filing Timeline",
@@ -445,11 +458,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31452579353",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31452579353",
-    "observed_at": "2026-08-11T02:32:42.945Z",
+    "run_id": "31459322006",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31459322006",
+    "observed_at": "2026-08-11T04:44:39.014Z",
     "event": "schedule",
     "workflows": [
+      "fetch-defillama.yml",
       "fetch-edgar-filings.yml",
       "fetch-stockanalysis.yml",
       "fetch-yf-finance.yml"
