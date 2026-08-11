@@ -439,7 +439,7 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         resolve_call = "python3 scripts/resolve_etf_detail_candidates.py"
         stage_call = "scripts/stage-lane-manifest.sh"
         build_call = "npm run build:data-supply-public"
-        reconcile_call = "npm run reconcile:data-supply-public-mirror"
+        reconcile_call = "node scripts/sync-public-data.mjs --write"
         self.assertNotIn(resolve_call, workflow.split("  publish-stockanalysis:\n", 1)[0])
         self.assertIn("group: fenok-data-writer-refs/heads/main", publish)
         self.assertLess(publish.index("audit-stage"), publish.index(resolve_call))
