@@ -184,6 +184,7 @@ def resolve_with_single_retry(
     entity: str,
     decided_at: str,
     latest_rows: dict[str, list[dict[str, Any]]],
+    reconcile_pending_on_noop: bool = True,
 ) -> tuple[dict[str, Any], bool]:
     """Re-read and recompute exactly once after a compare-and-swap loss."""
 
@@ -193,7 +194,10 @@ def resolve_with_single_retry(
                 store.root, [entity]
             ).get(entity, [])
         observations = _canonical_latest_observations(store, latest_rows, entity)
-        resolver = DataSupplyResolver(store)
+        resolver = DataSupplyResolver(
+            store,
+            reconcile_pending_on_noop=reconcile_pending_on_noop,
+        )
         try:
             return resolver.resolve_etf_detail_with_outcome(
                 entity=entity,
@@ -211,6 +215,7 @@ def resolve_entities(
     *,
     entities: Iterable[str],
     decided_at: str,
+    reconcile_pending_on_noop: bool = True,
 ) -> dict[str, Any]:
     requested = sorted(set(entities))
     if not requested:
@@ -223,6 +228,7 @@ def resolve_entities(
             entity=entity,
             decided_at=decided_at,
             latest_rows=latest_rows,
+            reconcile_pending_on_noop=reconcile_pending_on_noop,
         )
         selected = active["current"].get(entity)
         if selected is None:
@@ -247,11 +253,31 @@ def main() -> None:
     parser.add_argument("--decided-at", default=None)
     args = parser.parse_args()
     entities = artifact_entities(args.artifact_manifest)
+    decided_at = args.decided_at or utc_now()
+    if not entities:
+        print(
+            json.dumps(
+                {"domain": DOMAIN, "decided_at": decided_at, "results": []},
+                ensure_ascii=False,
+                sort_keys=True,
+            )
+        )
+        return
+    store = DataSupplyStateStore(args.state_root, defer_maintenance=True)
+    # Deferred-maintenance contract: reconcile before and after the entity loop,
+    # then prune exactly once after a fully successful run.
+    store.recover_domain(DOMAIN)
+    store.reconcile_committed_pending(DOMAIN)
     result = resolve_entities(
-        DataSupplyStateStore(args.state_root),
+        store,
         entities=entities,
-        decided_at=args.decided_at or utc_now(),
+        decided_at=decided_at,
+        reconcile_pending_on_noop=False,
     )
+    store.reconcile_committed_pending(DOMAIN)
+    maintenance = store.prune_domain(DOMAIN)
+    if maintenance["skipped"] is not None:
+        raise IntegrityError("ETF resolver maintenance did not complete")
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
 
 

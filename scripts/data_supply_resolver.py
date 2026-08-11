@@ -94,8 +94,14 @@ def _semantically_same_selection(
 
 
 class DataSupplyResolver:
-    def __init__(self, store: DataSupplyStateStore):
+    def __init__(
+        self,
+        store: DataSupplyStateStore,
+        *,
+        reconcile_pending_on_noop: bool = True,
+    ):
         self.store = store
+        self.reconcile_pending_on_noop = reconcile_pending_on_noop
         self._committed_transaction_id: str | None = None
 
     def _commit_prepared(self, domain: str, transaction_id: str) -> dict[str, Any]:
@@ -289,7 +295,8 @@ class DataSupplyResolver:
             and recovery_count == next_recovery_count
             and last_primary_event_id == next_primary_event_id
         ):
-            self.store.reconcile_committed_pending(domain)
+            if self.reconcile_pending_on_noop:
+                self.store.reconcile_committed_pending(domain)
             return active
 
         if (
@@ -304,7 +311,8 @@ class DataSupplyResolver:
             if selected_source < prior_source or (
                 selected_source == prior_source and selected_observed <= prior_observed
             ):
-                self.store.reconcile_committed_pending(domain)
+                if self.reconcile_pending_on_noop:
+                    self.store.reconcile_committed_pending(domain)
                 return active
 
         next_current = dict(active["current"])
