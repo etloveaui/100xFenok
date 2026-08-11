@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph-stock-services/v1",
-  "generated_at": "2026-08-11T15:52:28.552Z",
+  "generated_at": "2026-08-11T16:27:09.926Z",
   "source_as_of": {
     "stocks_analyzer": "2026-08-07",
     "stock_action_index": "2026-08-07",
@@ -27,8 +27,8 @@
   },
   "totals": {
     "stocks": 1066,
-    "with_single_stock_etfs": 88,
-    "single_stock_etfs": 182
+    "with_single_stock_etfs": 86,
+    "single_stock_etfs": 180
   },
   "stocks": {
     "AAL": {
@@ -235,43 +235,6 @@
         "market_facts": "2026-08-10"
       }
     },
-    "ABNB": {
-      "target_key": "ticker:ABNB",
-      "ticker": "ABNB",
-      "route": "/stock/ABNB",
-      "single_stock_etfs": [
-        {
-          "etf_key": "etf:ABNG",
-          "target_key": "ticker:ABNB",
-          "ticker": "ABNG",
-          "label": "Leverage Shares 2x Long ABNB Daily ETF",
-          "route": "/etfs/ABNG",
-          "category": "Equity",
-          "confidence": "high",
-          "classification_source": "stockanalysis.overview.description",
-          "raw_underlying": "ABNB",
-          "canonical_underlying_ticker": "ABNB",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "ABNB",
-          "resolution_note": null,
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": null,
-            "market_facts": "2026-07-28"
-          }
-        }
-      ],
-      "as_of": {
-        "etf_universe": null,
-        "market_facts": "2026-08-10"
-      }
-    },
     "ADBE": {
       "target_key": "ticker:ADBE",
       "ticker": "ADBE",
@@ -364,6 +327,43 @@
           "as_of": {
             "etf_universe": null,
             "market_facts": "2026-07-01"
+          }
+        }
+      ],
+      "as_of": {
+        "etf_universe": null,
+        "market_facts": "2026-08-10"
+      }
+    },
+    "AKAM": {
+      "target_key": "ticker:AKAM",
+      "ticker": "AKAM",
+      "route": "/stock/AKAM",
+      "single_stock_etfs": [
+        {
+          "etf_key": "etf:AKAL",
+          "target_key": "ticker:AKAM",
+          "ticker": "AKAL",
+          "label": "ETF Opportunities Trust - T-REX 2X Long AKAM Daily Target ETF",
+          "route": "/etfs/AKAL",
+          "category": "-",
+          "confidence": "medium",
+          "classification_source": "stockanalysis.etf_list.name",
+          "raw_underlying": "AKAM",
+          "canonical_underlying_ticker": "AKAM",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "AKAM",
+          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol",
+          "market_facts": false,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": null
           }
         }
       ],
@@ -575,9 +575,9 @@
           "etf_key": "etf:SKHL",
           "target_key": "ticker:AMD",
           "ticker": "SKHL",
-          "label": "Direxion Daily SK Hynix Bull 2x ETF",
+          "label": "Direxion Daily SK Hynix Bull 2X ETF",
           "route": "/etfs/SKHL",
-          "category": "-",
+          "category": "Equity",
           "confidence": "high",
           "classification_source": "stockanalysis.overview.description",
           "raw_underlying": "AMD",
@@ -1438,43 +1438,6 @@
         "market_facts": "2026-08-10"
       }
     },
-    "CNC": {
-      "target_key": "ticker:CNC",
-      "ticker": "CNC",
-      "route": "/stock/CNC",
-      "single_stock_etfs": [
-        {
-          "etf_key": "etf:CNCG",
-          "target_key": "ticker:CNC",
-          "ticker": "CNCG",
-          "label": "Leverage Shares 2X Long CNC Daily ETF",
-          "route": "/etfs/CNCG",
-          "category": "Equity",
-          "confidence": "high",
-          "classification_source": "stockanalysis.overview.description",
-          "raw_underlying": "CNC",
-          "canonical_underlying_ticker": "CNC",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "CNC",
-          "resolution_note": null,
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": null,
-            "market_facts": "2026-07-28"
-          }
-        }
-      ],
-      "as_of": {
-        "etf_universe": null,
-        "market_facts": "2026-08-10"
-      }
-    },
     "COHR": {
       "target_key": "ticker:COHR",
       "ticker": "COHR",
@@ -1826,9 +1789,9 @@
           "etf_key": "etf:CRWC",
           "target_key": "ticker:CRWD",
           "ticker": "CRWC",
-          "label": "Corgi ETF Trust I - Corgi CRWD 2x Daily ETF",
+          "label": "Corgi CRWD 2x Daily ETF",
           "route": "/etfs/CRWC",
-          "category": "-",
+          "category": "Equity",
           "confidence": "high",
           "classification_source": "stockanalysis.overview.description",
           "raw_underlying": "CRWD",
@@ -2657,7 +2620,7 @@
           "etf_key": "etf:HYNX",
           "target_key": "ticker:SKHY",
           "ticker": "HYNX",
-          "label": "ETF Opportunities Trust - T-REX 2X Long SK Hynix Daily Target ETF",
+          "label": "T-REX 2X Long SKHY Daily Target ETF",
           "route": "/etfs/HYNX",
           "category": "Equity",
           "confidence": "high",
@@ -4084,9 +4047,9 @@
           "etf_key": "etf:ORCZ",
           "target_key": "ticker:ORCL",
           "ticker": "ORCZ",
-          "label": "Investment Managers Series Trust II - Tradr 2X Short ORCL Daily ETF",
+          "label": "Tradr 2X Short ORCL Daily ETF",
           "route": "/etfs/ORCZ",
-          "category": "-",
+          "category": "Equity",
           "confidence": "high",
           "classification_source": "stockanalysis.overview.description",
           "raw_underlying": "ORCL",
@@ -5590,43 +5553,6 @@
           "as_of": {
             "etf_universe": null,
             "market_facts": "2026-07-08"
-          }
-        }
-      ],
-      "as_of": {
-        "etf_universe": null,
-        "market_facts": "2026-08-10"
-      }
-    },
-    "UPS": {
-      "target_key": "ticker:UPS",
-      "ticker": "UPS",
-      "route": "/stock/UPS",
-      "single_stock_etfs": [
-        {
-          "etf_key": "etf:UPSG",
-          "target_key": "ticker:UPS",
-          "ticker": "UPSG",
-          "label": "Leverage Shares 2X Long UPS Daily ETF",
-          "route": "/etfs/UPSG",
-          "category": "Equity",
-          "confidence": "high",
-          "classification_source": "stockanalysis.overview.description",
-          "raw_underlying": "UPS",
-          "canonical_underlying_ticker": "UPS",
-          "resolution_method": "direct",
-          "resolution_source": "raw_underlying.symbol",
-          "matched_alias": "UPS",
-          "resolution_note": null,
-          "market_facts": true,
-          "service_flags": [
-            "etf_center",
-            "leveraged",
-            "single_stock"
-          ],
-          "as_of": {
-            "etf_universe": null,
-            "market_facts": "2026-07-28"
           }
         }
       ],
