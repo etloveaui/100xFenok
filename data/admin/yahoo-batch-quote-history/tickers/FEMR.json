@@ -12,31 +12,44 @@
       "run_id": "30711922590",
       "schedule": "",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1249,
+      "natural": true,
+      "observed_at": "2026-08-11T02:24:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31452163623",
+      "schedule": "7 0 * * 0-5",
+      "shard": "24/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T18:24:02Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FEMR.json",
-    "payload_sha256": "1a116c65323c91aaec3fc210daf3b997a1fabde549d89a6325b52a3495290946",
-    "quote_as_of": "2026-07-31T19:59:50Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-11T02:25:32Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/FEMR.json",
+    "payload_sha256": "845fb11a5a86506f509d79c2be2f0437e4870274b4cd0ab235438063125754bd",
+    "quote_as_of": "2026-08-10T19:57:59Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1116,
+    "latency_ms": 1249,
     "natural": true,
-    "observed_at": "2026-08-01T18:21:41Z",
+    "observed_at": "2026-08-11T02:24:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711922590",
-    "schedule": "",
-    "shard": "1/6"
+    "run_id": "31452163623",
+    "schedule": "7 0 * * 0-5",
+    "shard": "24/72"
   },
   "lkg": {
     "fetched_at": "2026-08-01T18:24:02Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T18:21:41Z",
-    "payload_sha256": "6f703935dc1b1208f6791f03abc721e27ad8d71b9006ab828b0804be24c8aa95",
-    "quote_as_of": "2026-07-31T19:59:50Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T02:24:04Z",
+    "payload_sha256": "05083a67911902b19759585368285a032cdf206209c7baef3b74edd6dd61c253",
+    "quote_as_of": "2026-08-10T19:57:59Z",
     "run_attempt": 1,
-    "run_id": "30711922590",
+    "run_id": "31452163623",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "FEMR",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T02:24:04Z"
 }

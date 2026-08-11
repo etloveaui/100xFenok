@@ -12,31 +12,44 @@
       "run_id": "30707126488",
       "schedule": "",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1678,
+      "natural": true,
+      "observed_at": "2026-08-11T02:24:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31452163623",
+      "schedule": "7 0 * * 0-5",
+      "shard": "24/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T17:33:50Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BGFI.json",
-    "payload_sha256": "041f5439816744d17fdad94414cf20d783482f36972cc804ef04dc4ee10cc0d2",
-    "quote_as_of": "2026-07-31T19:46:29Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-11T02:24:23Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/BGFI.json",
+    "payload_sha256": "338c9df05091ec70e80391dc8546524ce27bee620235c3067cf9ebf0447d648a",
+    "quote_as_of": "2026-08-05T18:26:00Z",
+    "source_as_of": "2026-08-05T18:26:00Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 458,
+    "latency_ms": 1678,
     "natural": true,
-    "observed_at": "2026-08-01T17:32:35Z",
+    "observed_at": "2026-08-11T02:24:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30707126488",
-    "schedule": "",
-    "shard": "0/6"
+    "run_id": "31452163623",
+    "schedule": "7 0 * * 0-5",
+    "shard": "24/72"
   },
   "lkg": {
     "fetched_at": "2026-08-01T17:33:50Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T17:32:35Z",
-    "payload_sha256": "1d7f58455c4c13b76e8ead59f3c53eee315775b6f2977d3f711f09f4afd447cb",
-    "quote_as_of": "2026-07-31T19:46:29Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T02:24:04Z",
+    "payload_sha256": "7a503faabf4d7949dd9fd2e15a902417d3f92e9e8183a2e75df8543929e01c7d",
+    "quote_as_of": "2026-08-05T18:26:00Z",
     "run_attempt": 1,
-    "run_id": "30707126488",
+    "run_id": "31452163623",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-05T18:26:00Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "BGFI",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T02:24:04Z"
 }

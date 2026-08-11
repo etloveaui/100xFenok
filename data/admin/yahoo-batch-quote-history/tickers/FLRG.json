@@ -12,31 +12,44 @@
       "run_id": "30711922590",
       "schedule": "",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1301,
+      "natural": true,
+      "observed_at": "2026-08-11T02:24:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31452163623",
+      "schedule": "7 0 * * 0-5",
+      "shard": "24/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T18:24:33Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FLRG.json",
-    "payload_sha256": "b7c2f5cd3a15a04395b5e2ffa2b0a968dcfa0aabb37b63a129e5148c386920df",
-    "quote_as_of": "2026-07-31T19:35:34Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-11T02:25:56Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/FLRG.json",
+    "payload_sha256": "05b6ef9635e32d2eaf4c00a6fc2e5a79ba3c7c6f2b02ad35d70e1305c758debb",
+    "quote_as_of": "2026-08-10T19:46:50Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 606,
+    "latency_ms": 1301,
     "natural": true,
-    "observed_at": "2026-08-01T18:21:41Z",
+    "observed_at": "2026-08-11T02:24:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711922590",
-    "schedule": "",
-    "shard": "1/6"
+    "run_id": "31452163623",
+    "schedule": "7 0 * * 0-5",
+    "shard": "24/72"
   },
   "lkg": {
     "fetched_at": "2026-08-01T18:24:33Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T18:21:41Z",
-    "payload_sha256": "30b1f20fb643423c92e71b25d98c4558006aa0ff6e661318a6e572a94ea0d2e1",
-    "quote_as_of": "2026-07-31T19:35:34Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T02:24:04Z",
+    "payload_sha256": "e2849e1b69496835f38aff77cbdf1e15f6cb769aed3b5fe225d23380b026471a",
+    "quote_as_of": "2026-08-10T19:46:50Z",
     "run_attempt": 1,
-    "run_id": "30711922590",
+    "run_id": "31452163623",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "FLRG",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T02:24:04Z"
 }
