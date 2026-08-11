@@ -1,24 +1,32 @@
-// Lane routing derivation (#366 item 4): private directory roots now feed the
-// public-data sync directly from the lane registry. File-shaped exclusions
-// retain their explicit consumer list and parity gate. This keeps a newly
-// registered private admin root fail-closed against the 07-18 FINRA leak class.
+// Lane routing derivation (#366 item 4): private directory roots and exact
+// file-shaped exclusions now feed the public-data sync directly from the lane
+// registry — a single fail-closed SSOT with no consumer hand lists. Only
+// GENUINELY PRIVATE mirrorless lanes derive exclusions: public/public_mirror
+// plane families must never be deleted from the public mirror merely because
+// their public_mirror list is temporarily empty (mirror ownership moved to
+// the merge boundary — sync full walk + update-manifest materialize). This
+// keeps a newly registered private admin root or file-shaped private
+// canonical fail-closed against the 07-18 FINRA leak class without deleting
+// tracked LKG mirror fallbacks.
 //
 // Derivation rules (all paths returned data/-stripped, matching the consumers):
 //   - excluded public data ROOTS (sync-public-data): declared exception roots
 //     + admin_store of every privacy_class:"private" lane + directory-shaped
-//     non-admin canonical_outputs of private lanes whose public_mirror is
-//     empty, excluding explicitly declared public_canonical_outputs;
+//     non-admin canonical_outputs of privacy_class:"private" lanes whose
+//     public_mirror is empty, excluding explicitly declared
+//     public_canonical_outputs;
 //   - excluded public data FILES (sync-public-data): declared exception files
 //     explicitly flagged public_sync:"exclude" (may_be_absent remains a
 //     compatibility shorthand for the historical detection-floor report)
-//     + file-shaped (.json) non-admin canonical_outputs of mirrorless private
-//     lanes, excluding explicitly declared public_canonical_outputs — the sync
-//     consumer requires roots to be directories on disk;
+//     + file-shaped (.json) non-admin canonical_outputs of
+//     privacy_class:"private" lanes whose public_mirror is empty, excluding
+//     explicitly declared public_canonical_outputs — the sync consumer
+//     requires roots to be directories on disk;
 //   - forbidden private data-supply roots (mirror guard): declared exception
-//     roots + non-admin canonical_outputs of private lanes whose public_mirror
-//     is empty, excluding explicitly declared public_canonical_outputs (lane
-//     admin stores are NOT here by design — they never reach the mirror
-//     because the sync list above withholds them).
+//     roots + non-admin canonical_outputs of privacy_class:"private" lanes
+//     whose public_mirror is empty, excluding explicitly declared
+//     public_canonical_outputs (lane admin stores are NOT here by design —
+//     they never reach the mirror because the sync list above withholds them).
 
 import { LANE_REGISTRY, declaredExceptionPaths } from "./lane-registry.mjs";
 
@@ -41,11 +49,17 @@ function laneAdminRoots(registry) {
 }
 
 function laneCanonicalPrivateRoots(registry) {
-  // Canonical outputs are withheld from the mirror when the lane mirrors
-  // NOTHING — independent of the admin-store privacy axis (a lane can have a
-  // publicly-synced admin store yet a withheld canonical, or a mixed canonical
-  // like OCC where availability mirrors but volume/history stay private).
+  // Canonical outputs are withheld from the mirror only for genuinely
+  // PRIVATE lanes that mirror NOTHING. Public/public_mirror plane families
+  // must never derive into exact-file deletion merely because public_mirror
+  // is temporarily empty (mirror ownership moved to the merge boundary); a
+  // lane with a declared public_mirror (plane-enrolled) is also never
+  // withheld. The admin-store axis stays independent: a lane can have a
+  // publicly-synced admin store yet a withheld canonical, or a mixed
+  // canonical like OCC where availability mirrors but volume/history stay
+  // private.
   return registry.lanes
+    .filter((lane) => lane.privacy_class === "private")
     .filter((lane) => lane.roots.public_mirror.length === 0)
     .flatMap((lane) => lane.roots.canonical_outputs
       .filter((candidate) => !(lane.public_canonical_outputs ?? []).includes(candidate)))

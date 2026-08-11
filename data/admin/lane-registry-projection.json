@@ -3,7 +3,7 @@
   "generated_at": "2026-08-10T15:27:41.820Z",
   "source_schema_version": "lane-registry/v3",
   "purpose": "Admin-safe lane metadata and derived control-room projection for the owner data dashboard. No store roots, attempt/recovery paths, run identities, or repository directory structure.",
-  "lane_count": 33,
+  "lane_count": 32,
   "lanes": [
     {
       "id": "fred_macro",
@@ -278,18 +278,6 @@
       "enforcement": "live",
       "privacy_class": "public_safe_aggregate",
       "owner_workflow": "fenok-edge-krx-daily.yml"
-    },
-    {
-      "id": "kospi_dart_payout",
-      "label": "KOSPI OpenDART annual payout aggregate",
-      "store_kind": "payload",
-      "cadence": {
-        "kind": "annual",
-        "provider": "OpenDART"
-      },
-      "enforcement": "shadow",
-      "privacy_class": "private",
-      "owner_workflow": "fetch-kospi-dart-payout.yml"
     },
     {
       "id": "slickcharts",

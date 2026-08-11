@@ -57,7 +57,6 @@ export const FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS = [
   "admin/yahoo-batch-quote-history",
   // Private derived proxies (apewisdom_attention / gdelt_news_tone lanes) must
   // never reach the public mirror.
-  "computed/fenok-rim/kospi-dart-payout",
   "computed/fenok_news_tone_proxy.json",
   "computed/fenok_news_tone_proxy_history.json",
   "computed/fenok_social_attention_proxy.json",

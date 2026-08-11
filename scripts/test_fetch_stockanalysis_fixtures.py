@@ -105,6 +105,58 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             args(require_stock_financial_pair=False), basket
         ))
 
+    def test_etf_universe_detection_requires_exact_natural_weekly_schedule(self) -> None:
+        def args(**overrides):
+            values = {
+                "discover_etf_universe": True,
+                "natural_run": True,
+                "event_name": "schedule",
+                "event_schedule": self.fetcher.STOCKANALYSIS_ETF_UNIVERSE_DETECTION_SCHEDULE,
+            }
+            values.update(overrides)
+            return Namespace(**values)
+
+        self.assertTrue(self.fetcher.should_emit_stockanalysis_etf_universe_detection(args()))
+        for overrides in (
+            {"discover_etf_universe": False},
+            {"natural_run": False},
+            {"event_name": "workflow_dispatch"},
+            {"event_schedule": "50 23 * * 1-5"},
+        ):
+            with self.subTest(overrides=overrides):
+                self.assertFalse(self.fetcher.should_emit_stockanalysis_etf_universe_detection(args(**overrides)))
+
+    def test_etf_universe_payload_keeps_provider_date_unstamped(self) -> None:
+        original_fetch = self.fetcher.fetch_text_response
+        original_parse = self.fetcher.parse_etf_universe_page
+        original_enrich = self.fetcher.enrich_etf_records
+        original_now = self.fetcher.now_iso
+        original_tracker = self.fetcher.ATTEMPT_TRACKER
+        tracker = self.fetcher.StockAnalysisAttemptTracker()
+        tracker.configure(active=False, yahoo_enabled=False, run_id="fixture", run_attempt=1)
+        self.fetcher.ATTEMPT_TRACKER = tracker
+        self.fetcher.fetch_text_response = lambda _path, _timeout: ("<html></html>", 200)
+        self.fetcher.parse_etf_universe_page = lambda _html, page: [
+            {"ticker": "SPY", "name": "SPY ETF", "source_page": page}
+        ]
+        self.fetcher.enrich_etf_records = lambda rows: rows
+        self.fetcher.now_iso = lambda: "2026-08-09T00:15:00Z"
+        try:
+            payload = self.fetcher.fetch_etf_universe(max_pages=1, timeout=1, sleep=0)
+        finally:
+            self.fetcher.fetch_text_response = original_fetch
+            self.fetcher.parse_etf_universe_page = original_parse
+            self.fetcher.enrich_etf_records = original_enrich
+            self.fetcher.now_iso = original_now
+            self.fetcher.ATTEMPT_TRACKER = original_tracker
+
+        self.assertIsNone(payload["source_as_of"])
+        self.assertEqual(
+            payload["source_as_of_reason"],
+            self.fetcher.STOCKANALYSIS_ETF_UNIVERSE_SOURCE_AS_OF_REASON,
+        )
+        self.assertEqual(payload["generated_at"], payload["fetched_at"])
+
     def test_manual_etf_preflight_closes_every_unbounded_network_path(self) -> None:
         def args(**overrides):
             values = {

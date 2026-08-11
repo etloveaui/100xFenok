@@ -1374,29 +1374,14 @@ test("artifact contract: collector-written artifact holds no per-issuer row and 
   assert.equal(pointerText.includes(apiKey), false);
 });
 
-test("workflow contract: floor, exact publication paths, private resume cache, and dispatch are structural", () => {
-  const workflow = fs.readFileSync(
-    path.join(TEST_REPO_ROOT, ".github", "workflows", "fetch-kospi-dart-payout.yml"),
-    "utf8",
+test("automatic workflow is retired while the standalone collector remains available", () => {
+  assert.equal(
+    fs.existsSync(path.join(TEST_REPO_ROOT, ".github", "workflows", "fetch-kospi-dart-payout.yml")),
+    false,
+    "DEC-302 must remove the automatic KOSPI DART workflow",
   );
-  assert.match(workflow, /permissions:\n  contents: write\n  actions: write/);
-  assert.match(workflow, /concurrency:[\s\S]*?cancel-in-progress: false\n  queue: max/);
-  assert.match(workflow, /isValidCoverageGate\(requested\)/);
-  assert.match(workflow, /actions\/cache\/restore@[a-f0-9]{40}/);
-  assert.match(workflow, /actions\/cache\/save@[a-f0-9]{40}/);
-  assert.match(workflow, /corpcode-v1-receipts-v1-fy\$\{\{ steps\.contract\.outputs\.fy \}\}/);
-  assert.match(workflow, /path: _private\/admin\/fenok-edge-korea\/dart/);
-  assert.doesNotMatch(workflow, /actions\/(?:upload|download)-artifact@/);
-  const actionUses = [...workflow.matchAll(/^\s*uses:\s*[^\s@]+@([^\s#]+)/gm)].map((match) => match[1]);
-  assert.ok(actionUses.length >= 4);
-  assert.ok(actionUses.every((revision) => /^[a-f0-9]{40}$/.test(revision)), "every action must use an immutable SHA");
-  assert.match(workflow, /FY_ARTIFACT="data\/computed\/fenok-rim\/kospi-dart-payout\/fy\$\{RESOLVED_FY\}\.json"/);
-  assert.match(workflow, /CURRENT_POINTER="data\/computed\/fenok-rim\/kospi-dart-payout\/current\.json"/);
-  assert.match(workflow, /git add -- "\$FY_ARTIFACT" "\$CURRENT_POINTER"/);
-  assert.doesNotMatch(workflow, /git add[^\n]*_private/);
-  assert.doesNotMatch(workflow, /(?:find|readdir|glob)[^\n]*fy/i);
-  assert.match(workflow, /if git push; then\n\s+gh workflow run update-manifest\.yml --ref main/);
-  assert.equal((workflow.match(/^\s+OPEN_DART_API_KEY:\s*/gm) ?? []).length, 1, "API key must remain step-scoped");
+  assert.equal(fs.existsSync(path.join(TEST_REPO_ROOT, "scripts", "fetch-kospi-dart-payout.mjs")), true);
+  assert.equal(fs.existsSync(path.join(TEST_REPO_ROOT, "scripts", "test-kospi-dart-payout.mjs")), true);
 });
 
 test("defaultFiscalYear: previous calendar year", () => {

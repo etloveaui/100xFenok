@@ -103,25 +103,27 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
 }
 
 {
-  const projection = derivePublishOutcomeProjection({
-    shards: {
-      "fred-macro": outcomeShard("fred-macro", [
-        outcomeRecord("fred-macro", "gate_blocked", "2026-08-10T01:00:00Z"),
-        outcomeRecord("fred-macro", "published", "2026-08-10T02:00:00Z"),
-      ]),
-    },
-  });
-  const [published] = attachPublishOutcomeAlarms([
-    {
-      file: "fetch-fred-macro.yml",
-      status: "alarm",
-      alarming: true,
-      alarm_reasons: ["failure_streak", PLANE_PUBLISH_ALARM_REASONS.gate_blocked],
-    },
-  ], projection);
-  assert.equal(published.plane_publish_outcome.result, "published");
-  assert.equal(published.status, "alarm", "published must not clear canonical failure alarms");
-  assert.deepEqual(published.alarm_reasons, ["failure_streak"], "published clears only plane reasons");
+  for (const failureResult of ["gate_blocked", "failed"]) {
+    const projection = derivePublishOutcomeProjection({
+      shards: {
+        "fred-macro": outcomeShard("fred-macro", [
+          outcomeRecord("fred-macro", failureResult, "2026-08-10T01:00:00Z"),
+          outcomeRecord("fred-macro", "published", "2026-08-10T02:00:00Z"),
+        ]),
+      },
+    });
+    const [published] = attachPublishOutcomeAlarms([
+      {
+        file: "fetch-fred-macro.yml",
+        status: "alarm",
+        alarming: true,
+        alarm_reasons: ["failure_streak", PLANE_PUBLISH_ALARM_REASONS[failureResult]],
+      },
+    ], projection);
+    assert.equal(published.plane_publish_outcome.result, "published");
+    assert.equal(published.status, "alarm", "published must not clear canonical failure alarms");
+    assert.deepEqual(published.alarm_reasons, ["failure_streak"], `${failureResult} must clear only its plane reason`);
+  }
 }
 
 {
@@ -1077,7 +1079,11 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
   const result = JSON.parse(fs.readFileSync(resultPath, "utf8"));
   assert.equal(result.status, "unknown", "missing repository reports unknown status");
   assert.ok(!("issueBody" in result), "unknown status must not produce an alarm issue body");
-  assert.equal(result.watched.length, 34, "the first cadence dry run covers the current 34 watched workflows");
+  assert.equal(
+    result.watched.length,
+    deriveWorkflowWatchPolicy().watched.length,
+    "the first cadence dry run covers every current watched workflow",
+  );
   assert.equal(result.workflows.length, result.watched.length, "the first cadence dry run emits one classified row per watched workflow");
   assert.deepEqual(Object.keys(result.cadence_state_counts), CADENCE_STATES);
   assert.equal(

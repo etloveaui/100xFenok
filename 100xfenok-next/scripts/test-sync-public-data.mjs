@@ -44,9 +44,9 @@ import {
 import { FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS } from "./check-fenok-public-mirror-guard.mjs";
 import { PRIVATE_DATA_SUPPLY_ROOTS } from "../../scripts/build-phase2-closeout-indexes.mjs";
 
-// Lane-routing parity gate (#366 item 4): directory roots are registry-derived
-// in the sync consumer; file exclusions and mirror-guard roots retain exact
-// parity checks.
+// Lane-routing parity gate (#366 item 4): directory roots AND exact-file
+// exclusions are registry-derived in the sync consumer (one fail-closed
+// SSOT); mirror-guard roots retain exact parity checks.
 // Equality is TRUE SET equality (both sides deduped, then compared order-free).
 {
   const setEqual = (a, b) => JSON.stringify([...new Set(a)].sort()) === JSON.stringify([...new Set(b)].sort());
@@ -65,11 +65,27 @@ import { PRIVATE_DATA_SUPPLY_ROOTS } from "../../scripts/build-phase2-closeout-i
   assert.equal(deriveForbiddenPrivateDataSupplyRoots(withoutExceptions).includes("yf/migration-evidence"), false,
     "deriveForbiddenPrivateDataSupplyRoots must honor the injected registry's declared_exceptions");
   assert.equal(setEqual(derivedRoots, EXCLUDED_PUBLIC_DATA_ROOTS), true,
-    `registry-derived sync roots diverge from the hand list: derived=${JSON.stringify(derivedRoots)} hand=${JSON.stringify(EXCLUDED_PUBLIC_DATA_ROOTS)}`);
+    `registry-derived sync roots diverge from the consumer exclusion set: derived=${JSON.stringify(derivedRoots)} consumer=${JSON.stringify(EXCLUDED_PUBLIC_DATA_ROOTS)}`);
   assert.equal(setEqual(derivedFiles, EXCLUDED_PUBLIC_DATA_FILES), true,
-    `registry-derived sync files diverge from the hand list: derived=${JSON.stringify(derivedFiles)} hand=${JSON.stringify(EXCLUDED_PUBLIC_DATA_FILES)}`);
+    `registry-derived sync files diverge from the consumer exclusion set: derived=${JSON.stringify(derivedFiles)} consumer=${JSON.stringify(EXCLUDED_PUBLIC_DATA_FILES)}`);
   assert.equal(setEqual(derivedGuardRoots, FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS), true,
     `registry-derived guard roots diverge from the hand list: derived=${JSON.stringify(derivedGuardRoots)} hand=${JSON.stringify(FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS)}`);
+  // Semantic invariant (no tautology): a canonical of a public/public_mirror
+  // plane lane or of a plane-enrolled lane (declared public_mirror) must never
+  // land in the exact-file deletion set — a temporarily empty public_mirror
+  // list (mirror ownership moved to the merge boundary) is not a privacy
+  // declaration, so tracked LKG mirror fallbacks stay copyable.
+  for (const lane of LANE_REGISTRY.lanes) {
+    const planeEnrolled = lane.privacy_class !== "private" || lane.roots.public_mirror.length > 0;
+    if (!planeEnrolled) continue;
+    for (const canonical of lane.roots.canonical_outputs) {
+      assert.equal(
+        derivedFiles.includes(canonical.replace(/^data\//, "")),
+        false,
+        `public or plane-enrolled canonical must never derive into exact-file deletion: ${canonical} (lane ${lane.id})`,
+      );
+    }
+  }
   for (const derived of [derivedRoots, derivedGuardRoots]) {
     assert.equal(derived.includes("admin/yahoo-batch-quote-history"), true,
       "the raw Yahoo batch quote/history admin store must stay withheld from the public mirror (Cloudflare asset-budget regression guard)");
@@ -175,8 +191,8 @@ const EXPECTED_PRIVATE_PROXY_FILES = Object.freeze([
 // first successful run commits the artifact, then every build crashes
 // ("excluded source root must be a directory" — the apewisdom
 // fenok_social_attention_proxy.json firing). File-shaped private canonicals
-// must therefore live in the FILES list, on both the hand lists and the
-// registry derivations.
+// must therefore live in the FILES list, on the registry derivation (and
+// therefore the consumer constant).
 {
   for (const [label, list] of [
     ["EXCLUDED_PUBLIC_DATA_ROOTS", EXCLUDED_PUBLIC_DATA_ROOTS],
@@ -214,6 +230,51 @@ const EXPECTED_PRIVATE_PROXY_FILES = Object.freeze([
   // canonicals stay in its forbidden list unchanged.
   assert.equal(deriveForbiddenPrivateDataSupplyRoots(probeRegistry).includes("computed/zz_shape_split_probe.json"), true,
     "mirror-guard derivation must keep forbidding file-shaped private canonicals");
+
+  // public_canonical_outputs stay copyable: a lane that explicitly names a
+  // file-shaped canonical as public must not derive it into the exact-file
+  // exclusion, so the boundary may still copy it.
+  const publicCanonicalProbe = JSON.parse(JSON.stringify(probe));
+  publicCanonicalProbe.id = "zz_public_canonical_probe";
+  publicCanonicalProbe.roots.canonical_outputs = [
+    "data/computed/zz_public_canonical_probe_private.json",
+    "data/computed/zz_public_canonical_probe_public.json",
+  ];
+  // public_canonical_outputs is a top-level lane field (record() shape), and
+  // the derivation reads it from there — the probe must mirror that shape.
+  publicCanonicalProbe.public_canonical_outputs = ["data/computed/zz_public_canonical_probe_public.json"];
+  const publicCanonicalRegistry = { ...LANE_REGISTRY, lanes: [...LANE_REGISTRY.lanes, publicCanonicalProbe] };
+  assert.equal(deriveExcludedPublicDataFiles(publicCanonicalRegistry).includes("computed/zz_public_canonical_probe_private.json"), true,
+    "unnamed file-shaped canonical must derive into the sync files list");
+  assert.equal(deriveExcludedPublicDataFiles(publicCanonicalRegistry).includes("computed/zz_public_canonical_probe_public.json"), false,
+    "explicit public_canonical_outputs must stay copyable (not derived into the sync files list)");
+  assert.equal(deriveExcludedPublicDataRoots(publicCanonicalRegistry).includes("computed/zz_public_canonical_probe_public.json"), false,
+    "explicit public_canonical_outputs must not derive into the sync roots list either");
+
+  // Plane-enrolled probe: declaring public_mirror (mirror ownership moved to
+  // the merge boundary) must keep the canonical out of the exact-file
+  // deletion, even for a private-class lane.
+  const planeEnrolledProbe = JSON.parse(JSON.stringify(probe));
+  planeEnrolledProbe.id = "zz_plane_enrolled_probe";
+  planeEnrolledProbe.roots.public_mirror = ["100xfenok-next/public/data/computed/zz_plane_enrolled_probe.json"];
+  const planeEnrolledRegistry = { ...LANE_REGISTRY, lanes: [...LANE_REGISTRY.lanes, planeEnrolledProbe] };
+  assert.equal(deriveExcludedPublicDataFiles(planeEnrolledRegistry).includes("computed/zz_shape_split_probe.json"), false,
+    "plane-enrolled canonical must not derive into the exact-file exclusion");
+  assert.equal(deriveExcludedPublicDataRoots(planeEnrolledRegistry).includes("computed/zz_shape_split_probe_store"), false,
+    "plane-enrolled canonical must not derive into the sync roots list either");
+
+  // Public-plane probe: a public_mirror-class lane with a temporarily empty
+  // public_mirror list must never derive into exact-file deletion — the
+  // privacy_class gate, not the mirror list, decides withholding.
+  const publicPlaneProbe = JSON.parse(JSON.stringify(probe));
+  publicPlaneProbe.id = "zz_public_plane_probe";
+  publicPlaneProbe.privacy_class = "public_mirror";
+  publicPlaneProbe.roots.public_mirror = [];
+  const publicPlaneRegistry = { ...LANE_REGISTRY, lanes: [...LANE_REGISTRY.lanes, publicPlaneProbe] };
+  assert.equal(deriveExcludedPublicDataFiles(publicPlaneRegistry).includes("computed/zz_shape_split_probe.json"), false,
+    "public_mirror-plane canonical must never derive into exact-file deletion merely because public_mirror is temporarily empty");
+  assert.equal(deriveExcludedPublicDataRoots(publicPlaneRegistry).includes("computed/zz_shape_split_probe_store"), false,
+    "public_mirror-plane canonical must never derive into the sync roots list either");
 }
 
 function realBaselineRootArg() {
@@ -1023,15 +1084,46 @@ try {
   );
   assert.deepEqual(
     EXCLUDED_PUBLIC_DATA_FILES,
-    [
-      DETECTION_FLOOR_REPORT,
-      "admin/damodaran-shadow-parity.json",
-      "admin/sec-13f-shadow-parity.json",
-      "admin/lane-commit-manifest.json",
-      ...EXPECTED_PRIVATE_PROXY_FILES,
-    ],
-    "the exact-file exclusion allowlist must include all private flat admin reports and file-shaped private proxies",
+    deriveExcludedPublicDataFiles(),
+    "the exact-file exclusion set must equal the registry derivation exactly (single fail-closed SSOT; no consumer hand list)",
   );
+  assert.equal(
+    EXCLUDED_PUBLIC_DATA_FILES.length,
+    8,
+    `the exact-file exclusion set must be exactly the eight genuine private files (declared exceptions + private proxies), got ${EXCLUDED_PUBLIC_DATA_FILES.length}: ${JSON.stringify(EXCLUDED_PUBLIC_DATA_FILES)}`,
+  );
+  const expectedDerivedExactFiles = [
+    DETECTION_FLOOR_REPORT,
+    "admin/damodaran-shadow-parity.json",
+    "admin/sec-13f-shadow-parity.json",
+    "admin/lane-commit-manifest.json",
+    ...EXPECTED_PRIVATE_PROXY_FILES,
+  ];
+  for (const expectedFile of expectedDerivedExactFiles) {
+    assert.equal(
+      EXCLUDED_PUBLIC_DATA_FILES.includes(expectedFile),
+      true,
+      `derived exact-file exclusion missing: ${expectedFile}`,
+    );
+  }
+  for (const copyableFile of [
+    "macro/yahoo-ticker.json",
+    "macro/fred-macro.json",
+    "macro/fdic-tier1.json",
+    "indices/sp500.json",
+    "damodaran/industries.json",
+    "stockanalysis/etf_universe.json",
+    "stockanalysis/surfaces/index.json",
+    "computed/fenok_occ_options_availability.json",
+    "computed/market_facts/index.json",
+    "computed/fenok_signals.json",
+  ]) {
+    assert.equal(
+      EXCLUDED_PUBLIC_DATA_FILES.includes(copyableFile),
+      false,
+      `public-copyable file must not derive into the exact-file exclusion: ${copyableFile}`,
+    );
+  }
   const sourceRoot = path.join(fixtureRoot, "data");
   const destinationRoot = path.join(fixtureRoot, "100xfenok-next", "public", "data");
   write(sourceRoot, "safe/keep.json", '{"safe":true}\n');
@@ -1071,10 +1163,6 @@ try {
   assert.deepEqual([...rehearsal.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...rehearsal.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
   assert.equal(rehearsal.excludedSourceRoots, expectedDirectExcludedRoots.length);
-  assert.ok(
-    rehearsal.restrictedSourceRootPaths.includes("computed/fenok-rim/kospi-dart-payout"),
-    "the nested private DART root must be rejected by the stricter fenok-rim allowlist before generic exclusion",
-  );
   assert.equal(rehearsal.removedDestinationRoots, EXCLUDED_PUBLIC_DATA_ROOTS.length);
   assert.equal(rehearsal.removedDestinationFiles, EXCLUDED_PUBLIC_DATA_ROOTS.length);
   assert.deepEqual(snapshotNode(sourceRoot), sourceBeforeDryRun, "dry-run must not mutate source bytes");
@@ -1115,7 +1203,6 @@ try {
   assert.equal(fs.existsSync(path.join(destinationRoot, "admin/oecd_cli")), false);
   assert.equal(fs.existsSync(path.join(destinationRoot, "yf/etf-details")), false);
   assert.equal(fs.existsSync(path.join(destinationRoot, "yf/migration-evidence")), false);
-  assert.equal(fs.existsSync(path.join(destinationRoot, "computed/fenok-rim/kospi-dart-payout")), false);
   assert.equal(lstatIfPresent(destinationReportPath), null);
   assert.equal(fs.readFileSync(sourceReportPath, "utf8"), '{"schema_version":"data-supply-detection-floor/v1"}\n');
   assert.equal(fs.readFileSync(safeAdminSiblingPath, "utf8"), '{"sibling":true}\n');

@@ -1,5 +1,5 @@
 {
-  "registry_digest": "ce818c894587676cd82661ebd34b828f821d440ac7d30f49b057eace7d121d07",
+  "registry_digest": "a6bb2a406a71bf9515f0100c760a010a98966ea9ab5dff433436cdc0dbf9a89c",
   "registry_schema": "lane-registry/v3",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -289,6 +289,11 @@
           {
             "kind": "file",
             "path": "data/admin/data-supply-state/detection-attempts/finra_short_volume.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/publish-outcomes/finra-short-volume.json",
             "required": false
           },
           {
@@ -666,6 +671,11 @@
           },
           {
             "kind": "file",
+            "path": "data/admin/data-supply-state/publish-outcomes/gdelt-news-tone.json",
+            "required": false
+          },
+          {
+            "kind": "file",
             "path": "data/admin/gdelt_news_tone/index.json",
             "required": false
           },
@@ -730,6 +740,11 @@
           {
             "kind": "file",
             "path": "data/admin/data-supply-state/detection-attempts/finra_ats.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/publish-outcomes/finra-ats-weekly.json",
             "required": false
           },
           {
@@ -906,29 +921,6 @@
             "kind": "file",
             "path": "data/yardney/yardney_model.json",
             "required": false
-          }
-        ],
-        "success_verify_not_plan_if_exists": []
-      }
-    },
-    ".github/workflows/fetch-kospi-dart-payout.yml": {
-      "exclude": [],
-      "lanes": [
-        "kospi_dart_payout"
-      ],
-      "stages": {
-        "always_if_exists": [],
-        "required_on_success": [],
-        "success_if_exists": [
-          {
-            "kind": "file",
-            "path": "data/computed/fenok-rim/kospi-dart-payout/current.json",
-            "required": true
-          },
-          {
-            "kind": "glob",
-            "path": "data/computed/fenok-rim/kospi-dart-payout/fy*.json",
-            "required": true
           }
         ],
         "success_verify_not_plan_if_exists": []
@@ -1205,6 +1197,11 @@
             "required": false
           },
           {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/publish-outcomes/us-indices-daily.json",
+            "required": false
+          },
+          {
             "kind": "directory",
             "path": "data/admin/us-indices-daily",
             "required": false
@@ -1265,11 +1262,6 @@
             "kind": "file",
             "path": "data/macro/yahoo-ticker.json",
             "required": false
-          },
-          {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/macro/yahoo-ticker.json",
-            "required": false
           }
         ],
         "success_verify_not_plan_if_exists": []
@@ -1322,6 +1314,52 @@
           {
             "kind": "file",
             "path": "data/admin/alarm-state.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/publish-stockanalysis-artifact-recovery.yml": {
+      "exclude": [],
+      "lanes": [
+        "yahoo_etf_fallback",
+        "stockanalysis_etf_universe",
+        "stockanalysis_stock_financial",
+        "stockanalysis_surfaces"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "directory",
+            "path": "data/stockanalysis",
+            "required": true
+          },
+          {
+            "kind": "directory",
+            "path": "data/yf/etf-details",
+            "required": true
+          },
+          {
+            "kind": "directory",
+            "path": "data/admin/stockanalysis-recovery",
+            "required": true
+          },
+          {
+            "kind": "directory",
+            "path": "data/admin/yahoo_etf_fallback",
+            "required": false
+          },
+          {
+            "kind": "dynamic_set",
+            "path": "data/yf/finance",
+            "required": false
+          },
+          {
+            "kind": "directory",
+            "path": "data/computed/data-supply/etf-detail",
             "required": false
           }
         ],

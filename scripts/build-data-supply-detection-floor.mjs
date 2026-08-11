@@ -1325,11 +1325,30 @@ function evaluateMember(lane, member, attemptsByKey, artifactRootInfo, claimedPa
   const artifactWorst = worstResult(artifacts);
   const sourceAsOf = foldSourceTimes(artifacts, lane.freshness);
   const hasSourceContract = artifacts.some((artifact) => artifact.source_required !== false);
+  const providerDatelessAttemptContract = (
+    artifactWorst.status === "ready"
+    && !hasSourceContract
+    && lane.freshness.observation_basis === "attempt_observed_at"
+    && lane.freshness.source_basis.length === 0
+    && member.cadence_declaration?.kind === "github_workflow"
+    && lane.id === "stockanalysis_etf_universe"
+  );
+  // StockAnalysis ETF membership has no provider source date. Preserve
+  // source_as_of=null and use the successful scheduled attempt as its only
+  // freshness authority. A collection clock is never promoted into source time.
   const freshness = artifactWorst.status === "ready" && hasSourceContract
     ? evaluateFreshness(sourceAsOf, lane.freshness, now, calendars)
-    : artifactWorst.status === "ready"
-      ? reasonResult("ok", { source_as_of: null, age: null, unit: lane.freshness.unit })
-      : { ...artifactWorst, source_as_of: sourceAsOf, age: null, unit: lane.freshness.unit };
+    : providerDatelessAttemptContract
+      ? {
+          status: endpoint.status,
+          reason: endpoint.reason,
+          source_as_of: null,
+          age: null,
+          unit: lane.freshness.unit,
+        }
+      : artifactWorst.status === "ready"
+        ? reasonResult("ok", { source_as_of: null, age: null, unit: lane.freshness.unit })
+        : { ...artifactWorst, source_as_of: sourceAsOf, age: null, unit: lane.freshness.unit };
   const artifact = worstResult([artifactWorst, freshness]);
   const combined = worstResult([endpoint, artifact]);
   return {

@@ -26,6 +26,10 @@ concurrency:
 jobs:
   fetch-us-indices-daily:
     runs-on: ubuntu-latest
+    # The cloud data plane's credentials live in the production environment.
+    # This lane publishes a generation after its git write; git stays
+    # authoritative either way.
+    environment: production
     timeout-minutes: 15
     steps:
       - name: Checkout repository
@@ -38,6 +42,7 @@ jobs:
             100xfenok-next/scripts
             100xfenok-next/src/lib
             data/admin/data-supply-state/detection-attempts
+            data/admin/data-supply-state/publish-outcomes
             data/admin/us-indices-daily
             data/indices
 
@@ -107,3 +112,20 @@ jobs:
           done
           echo "git push failed after retrying concurrent main updates"
           exit 1
+      # Publish the same public payload this run just committed. The family is
+      # served through the Worker (ENROLLED_PATHS), which falls back to the
+      # bundled git copy whenever the generation does not resolve cleanly, so
+      # git stays authoritative here too.
+      - name: Publish US indices generation to the cloud data plane
+        id: publish_cloud_generation
+        if: ${{ steps.fetch_indices.outcome == 'success' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: node scripts/publish-cloud-data-generation.mjs --family=us-indices-daily --tolerate-gate-block --json
+
+      - name: Persist US indices publish outcome
+        if: ${{ always() }}
+        run: node scripts/persist-cloud-publish-outcome.mjs --family=us-indices-daily --workflow=.github/workflows/fetch-us-indices-daily.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }}

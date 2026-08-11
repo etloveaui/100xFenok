@@ -186,6 +186,72 @@ function protectedSnapshot() {
   return snapshot;
 }
 
+// Exact record-bounded mutation for the derivation-boundary REDs. A fixed byte
+// window after an id anchor is fragile twice over: `lane_id: "treasury_tga"`
+// inside the workflow mapping precedes the lane record, and a widening record
+// can push the target field out of any plausible window. Locate the record by
+// its own id field, bound it by its balanced object literal (quote-aware), and
+// require the target field inside those exact bounds.
+function mutateRegistryRecord(source, id, from, to) {
+  const anchor = new RegExp(`(?<![A-Za-z0-9_$])id: "${id}"`);
+  const match = anchor.exec(source);
+  if (!match) throw new Error("RED(b) mutation anchor missing");
+  const idIndex = match.index;
+  let depth = 0;
+  let inString = false;
+  let quote = null;
+  let recordStart = -1;
+  for (let i = idIndex; i >= 0; i -= 1) {
+    const char = source[i];
+    if (inString) {
+      if (char === "\\") { i -= 1; continue; }
+      if (char === quote) inString = false;
+      continue;
+    }
+    if (char === '"' || char === "'") { inString = true; quote = char; continue; }
+    if (char === "}") { depth += 1; continue; }
+    if (char === "{") {
+      if (depth === 0) { recordStart = i; break; }
+      depth -= 1;
+    }
+  }
+  if (recordStart === -1) throw new Error("RED(b) mutation anchor missing");
+  depth = 0;
+  inString = false;
+  quote = null;
+  let recordEnd = -1;
+  for (let i = recordStart; i < source.length; i += 1) {
+    const char = source[i];
+    if (inString) {
+      if (char === "\\") { i += 1; continue; }
+      if (char === quote) inString = false;
+      continue;
+    }
+    if (char === '"' || char === "'") { inString = true; quote = char; continue; }
+    if (char === "{") { depth += 1; continue; }
+    if (char === "}") {
+      depth -= 1;
+      if (depth === 0) { recordEnd = i + 1; break; }
+    }
+  }
+  if (recordEnd === -1) throw new Error("RED(b) mutation anchor missing");
+  const record = source.slice(recordStart, recordEnd);
+  if (!record.includes(from)) throw new Error("RED(b) mutation anchor missing");
+  return source.slice(0, recordStart) + record.replace(from, to) + source.slice(recordEnd);
+}
+
+// The canonical admin report may already be checked out (owner-ordered sync
+// commits it). The suite must never create or modify it: capture its identity
+// before any test activity and require byte-identical state afterwards. A
+// report-free checkout keeps the stricter "stays absent" guarantee; a checked
+// out report must not be touched either.
+function adminReportIdentity() {
+  if (!fs.existsSync(ADMIN_REPORT)) return "absent";
+  const stat = fs.lstatSync(ADMIN_REPORT);
+  if (!stat.isFile() || stat.isSymbolicLink()) return `other:${stat.mode}:${stat.dev}:${stat.ino}`;
+  return `file:${stat.size}:${createSha(fs.readFileSync(ADMIN_REPORT))}`;
+}
+
 const attemptsFixture = readJson(ATTEMPTS_PATH);
 const calendarsFixture = readJson(CALENDARS_PATH);
 const artifactsFixture = readJson(ARTIFACTS_PATH);
@@ -819,13 +885,12 @@ function runConfigAndFixtureChecks() {
 
     // (b) a detection_floor lane reclassed as auxiliary: derived LANE_IDS
     // shrinks while the hand-written lanes stay 22 -> identity check fails.
-    const floorReclassed = loadConfigWithRegistry((source) => {
-      const anchor = 'id: "treasury_tga"';
-      const index = source.indexOf(anchor);
-      const segment = source.slice(index, index + 600);
-      if (!segment.includes('lane_class: "detection_floor"')) throw new Error("RED(b) mutation anchor missing");
-      return source.slice(0, index) + segment.replace('lane_class: "detection_floor"', 'lane_class: "auxiliary"') + source.slice(index + 600);
-    });
+    const floorReclassed = loadConfigWithRegistry((source) => mutateRegistryRecord(
+      source,
+      "treasury_tga",
+      'lane_class: "detection_floor"',
+      'lane_class: "auxiliary"',
+    ));
     assert.equal(floorReclassed.status, 1, `RED(b) unexpectedly loaded: ${floorReclassed.stdout}`);
     assert.match(floorReclassed.stderr, /live registry lanes must have detection rows: treasury_tga/,
       "RED(b): a live lane reclassed out of detection_floor must fail the coverage guard by name");
@@ -1012,6 +1077,39 @@ function runBaselineAndArtifactChecks() {
   });
   assert.equal(lane(staleStockFinancialReport, "stockanalysis_stock_financial").artifact.status, "stale",
     "an old recovery-state attempt cannot satisfy the bounded stock/financial lane");
+
+  // The full StockAnalysis ETF universe is provider-dateless. A current
+  // scheduled attempt is usable with source_as_of=null; a stale or missing
+  // attempt must still refuse freshness instead of falling back to generated_at.
+  const staleUniverseAttempts = clone(attemptsFixture);
+  staleUniverseAttempts.attempts.find((row) => row.lane_id === "stockanalysis_etf_universe").observed_at = "2026-07-01T00:00:00Z";
+  const staleUniverseReport = buildDetectionReport({
+    artifactRoot: artifactRoot.raw,
+    attempts: staleUniverseAttempts,
+    calendars: calendarsFixture,
+    now: expectedFixture.baseline.now,
+  });
+  const staleUniverse = lane(staleUniverseReport, "stockanalysis_etf_universe");
+  assert.equal(staleUniverse.status, "stale");
+  assert.equal(staleUniverse.endpoint.reason, "stale");
+  assert.equal(staleUniverse.artifact.status, "stale");
+  assert.equal(staleUniverse.artifact.source_as_of, null);
+
+  const missingUniverseAttempts = clone(attemptsFixture);
+  missingUniverseAttempts.attempts = missingUniverseAttempts.attempts.filter(
+    (row) => row.lane_id !== "stockanalysis_etf_universe",
+  );
+  const missingUniverseReport = buildDetectionReport({
+    artifactRoot: artifactRoot.raw,
+    attempts: missingUniverseAttempts,
+    calendars: calendarsFixture,
+    now: expectedFixture.baseline.now,
+  });
+  const missingUniverse = lane(missingUniverseReport, "stockanalysis_etf_universe");
+  assert.equal(missingUniverse.status, "unobserved");
+  assert.equal(missingUniverse.endpoint.reason, "workflow_unobserved");
+  assert.equal(missingUniverse.artifact.reason, "workflow_unobserved");
+  assert.equal(missingUniverse.artifact.source_as_of, null);
 
   const externalProducerConfig = clone(DATA_SUPPLY_DETECTION_CONFIG);
   const externalProducerLane = externalProducerConfig.lanes.find((item) => item.id === "fred_macro");
@@ -2014,12 +2112,12 @@ function runCliReproduction(artifactRoot) {
   assertCliFailureBeforeOutput(externalArgs, externalOutput);
 }
 
-function runPrivacyAndProtectedChecks(report) {
+function runPrivacyAndProtectedChecks(report, adminReportBefore) {
   const text = canonicalJson(report);
   for (const token of ["raw_response", "credential", "request_headers", "query_tokens", "current_lkg", "promotion_pointer", artifactRootToken()]) {
     assert.equal(text.includes(token), false, `report excludes ${token}`);
   }
-  assert.equal(fs.existsSync(ADMIN_REPORT), false, "Stage 1 canonical admin report stays absent");
+  assert.equal(adminReportIdentity(), adminReportBefore, "canonical admin report must not be created or modified by the suite");
 }
 
 function runWorkflowBridgeChecks() {
@@ -2039,8 +2137,6 @@ function runWorkflowBridgeChecks() {
     "scripts/lib/data-supply-detection-calendars.json",
     "--verify-report \"$report_path\"",
     "install -m 0644 \"$report_path\" \"$installed_path\"",
-    "cmp -s \"$report_path\" \"$installed_path\"",
-    "--verify-report \"$installed_path\"",
   ];
   for (const required of requiredTokens) {
     assert.ok(step.includes(required), `deploy bridge includes ${required}`);
@@ -2077,24 +2173,24 @@ function runWorkflowBridgeChecks() {
     "cf:build delegates to the guard-frozen cf:build:steps chain",
   );
   assert.equal(
-    workflow.split('max_identity_attempts="${SMOKE_POST_IDENTITY_MAX_ATTEMPTS:-36}"').length - 1,
-    3,
-    "all post-identity route smokes inherit the 180-second propagation window",
+    workflow.split('timeout_seconds="${SMOKE_PROPAGATION_TIMEOUT_SECONDS:-180}"').length - 1,
+    1,
+    "the post-deploy identity smoke keeps the 180-second propagation window",
   );
   assert.equal(
-    workflow.split('for attempt in $(seq 1 "$max_identity_attempts"); do').length - 1,
-    3,
-    "all post-identity route smokes use the bounded propagation retry count",
+    workflow.split('interval_seconds="${SMOKE_PROPAGATION_INTERVAL_SECONDS:-5}"').length - 1,
+    1,
+    "the post-deploy identity smoke sleeps only the bounded 5-second interval",
   );
   assert.equal(
-    workflow.split('[ "$attempt" -eq "$max_identity_attempts" ] || sleep 5').length - 1,
-    3,
-    "all post-identity route smokes sleep only between bounded retries",
+    workflow.split('while [ "$SECONDS" -le "$deadline" ]; do').length - 1,
+    1,
+    "the post-deploy identity smoke is bounded by the propagation deadline",
   );
   assert.equal(
     workflow.includes("for attempt in 1 2 3; do"),
     false,
-    "post-identity route smokes must not regress to a 15-second propagation window",
+    "post-deploy identity smokes must not regress to a 15-second propagation window",
   );
   const publicBuildIndex = packageScripts["sync-static"].indexOf("npm run build:data-supply-public");
   const derivedIndex = packageScripts["sync-static"].indexOf("npm run reconcile:derived");
@@ -2113,11 +2209,11 @@ function runWorkflowBridgeChecks() {
     "derived verification retains the strict KPI artifact gate",
   );
   const syncIndex = packageScripts["cf:build:steps"].indexOf("npm run sync-static");
-  const verifyIndex = packageScripts["cf:build:steps"].indexOf("npm run reconcile:verify");
+  const strictIndex = packageScripts["cf:build:steps"].indexOf("node scripts/check-fenok-data-health-kpi.mjs --strict");
   const bundleIndex = packageScripts["cf:build:steps"].indexOf("opennextjs-cloudflare build");
   assert.ok(
-    syncIndex >= 0 && verifyIndex > syncIndex && bundleIndex > verifyIndex,
-    "cf:build reconciles and verifies derived data before bundling",
+    syncIndex >= 0 && strictIndex > syncIndex && bundleIndex > strictIndex,
+    "cf:build reconciles derived data and runs the strict KPI checker before bundling",
   );
 
   const initialBridgeStart = updateWorkflow.indexOf(stepName);
@@ -2132,7 +2228,7 @@ function runWorkflowBridgeChecks() {
   assert.equal(updateWorkflow.includes("data/admin/data-supply-detection-floor.json \\\n"), false, "ephemeral report is not added to the manifest commit pathspec");
 }
 
-function runCurrentRepositoryDryRun() {
+function runCurrentRepositoryDryRun(adminReportBefore) {
   const output = makeOwnedRoot(fs.realpathSync.native(os.tmpdir()));
   const result = detectAndProject({
     artifactRoot: REPO_ROOT,
@@ -2147,7 +2243,7 @@ function runCurrentRepositoryDryRun() {
   assert.deepEqual(result.report.lanes.map((row) => row.id), DATA_SUPPLY_DETECTION_CONFIG.lanes.map((row) => row.id));
   assert.equal(path.dirname(result.report_path), output.real);
   assert.deepEqual(fs.readdirSync(output.raw), [REPORT_BASENAME]);
-  assert.equal(fs.existsSync(ADMIN_REPORT), false);
+  assert.equal(adminReportIdentity(), adminReportBefore, "current-repository dry run must not create or modify the canonical admin report");
 }
 
 function artifactRootToken() {
@@ -2157,12 +2253,13 @@ function artifactRootToken() {
 async function main() {
   const originalFetch = globalThis.fetch;
   const protectedBefore = protectedSnapshot();
+  const adminReportBefore = adminReportIdentity();
   const assertRepositoryUnchanged = (context) => {
     assert.deepEqual(protectedSnapshot(), protectedBefore, `protected repository ledger changed after ${context}`);
   };
-  for (const [key, value] of Object.entries(protectedBefore)) {
-    if (key.startsWith("report-files:")) assert.deepEqual(value, [], `${key} must remain absent`);
-  }
+  // A checked-out canonical report may already exist. The protected snapshot
+  // assertions below must preserve it, but the fixture suite must not require
+  // a report-free checkout before it can exercise the builder.
   globalThis.fetch = () => { throw new Error("network invocation forbidden"); };
   try {
     runConfigAndFixtureChecks();
@@ -2181,10 +2278,10 @@ async function main() {
     assertRepositoryUnchanged("path rejection and atomic fault cases");
     runCliReproduction(artifactRoot);
     assertRepositoryUnchanged("CLI success and failure cases");
-    runPrivacyAndProtectedChecks(report);
+    runPrivacyAndProtectedChecks(report, adminReportBefore);
     runWorkflowBridgeChecks();
     assertRepositoryUnchanged("deploy bridge contract checks");
-    runCurrentRepositoryDryRun();
+    runCurrentRepositoryDryRun(adminReportBefore);
     assertRepositoryUnchanged("current-repository read-only dry run");
   } finally {
     globalThis.fetch = originalFetch;

@@ -297,7 +297,7 @@ const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOStr
     },
   });
   assert.equal(asked.length, 1, "cleanup reaching the total deadline must prevent another request");
-  assert.equal(results.length, 605);
+  assert.equal(results.length, 609);
   assert.deepEqual(results[0].failures, [`fetch timed out after ${requestTimeoutMs} ms (no response within bound)`]);
   assert.equal(results[0].mode, "strict");
   for (const result of results.slice(1)) {
@@ -367,7 +367,7 @@ const hoursAgo = (hours) => new Date(Date.parse(NOW) - hours * 3600000).toISOStr
   assert.deepEqual(requestStarts.map(({ startedAtMs }) => startedAtMs), [0, 10, 20]);
   assert.equal(inFlight, 0);
   assert.equal(results.length, ENROLLED_PATHS.size);
-  assert.equal(results.length, 605);
+  assert.equal(results.length, 609);
   assert.equal(results.every((r) => !r.ok && r.mode === "strict"), true);
   for (const result of results.slice(requestStarts.length)) {
     assert.deepEqual(result.failures, [`total probe deadline reached after ${totalDeadlineMs} ms; request not attempted`]);

@@ -74,7 +74,6 @@ assert.deepEqual(yahooTicker.stages.always_if_exists, [
 ]);
 assert.deepEqual(yahooTicker.stages.success_if_exists.map((entry) => entry.path), [
   "data/macro/yahoo-ticker.json",
-  "100xfenok-next/public/data/macro/yahoo-ticker.json",
 ]);
 assert.deepEqual(yahooTicker.exclude, []);
 
@@ -191,6 +190,7 @@ const usIndicesDaily = manifest.workflows[".github/workflows/fetch-us-indices-da
 assert.deepEqual(usIndicesDaily.lanes, ["us_indices_daily"]);
 assert.deepEqual(usIndicesDaily.stages.always_if_exists, [
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/us_indices_daily.json", required: false },
+  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/us-indices-daily.json", required: false },
   { kind: "directory", path: "data/admin/us-indices-daily", required: false },
 ]);
 assert.deepEqual(usIndicesDaily.stages.success_if_exists, [
@@ -201,26 +201,17 @@ assert.deepEqual(usIndicesDaily.stages.success_if_exists, [
 ]);
 assert.deepEqual(usIndicesDaily.exclude, []);
 
-const kospiDartPayout = manifest.workflows[".github/workflows/fetch-kospi-dart-payout.yml"];
-assert.deepEqual(kospiDartPayout.lanes, ["kospi_dart_payout"]);
-assert.deepEqual(kospiDartPayout.stages.always_if_exists, []);
-assert.deepEqual(kospiDartPayout.stages.success_if_exists, [
-  { kind: "file", path: "data/computed/fenok-rim/kospi-dart-payout/current.json", required: true },
-  { kind: "glob", path: "data/computed/fenok-rim/kospi-dart-payout/fy*.json", required: true },
-]);
-assert.deepEqual(kospiDartPayout.stages.success_verify_not_plan_if_exists, []);
-assert.deepEqual(kospiDartPayout.stages.required_on_success, []);
-assert.deepEqual(kospiDartPayout.exclude, []);
 assert.equal(
-  kospiDartPayout.stages.success_if_exists.some((entry) => entry.path.includes("100xfenok-next/public/")),
+  Object.keys(manifest.workflows).some((workflow) => workflow.endsWith("fetch-kospi-dart-payout.yml")),
   false,
-  "KOSPI DART payout staging must remain private",
+  "retired KOSPI DART must not remain in the automatic commit manifest",
 );
 
 const fenokEdgeDaily = manifest.workflows[".github/workflows/fenok-edge-daily.yml"];
 assert.deepEqual(fenokEdgeDaily.lanes, ["finra_short_volume", "occ_options_volume"]);
 assert.deepEqual(fenokEdgeDaily.stages.always_if_exists, [
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/finra_short_volume.json", required: false },
+  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/finra-short-volume.json", required: false },
   { kind: "file", path: "data/admin/finra_short_volume/index.json", required: false },
   { kind: "file", path: "data/admin/finra_short_volume/current/regsho_daily.json", required: false },
   { kind: "file", path: "data/admin/finra_short_volume/lkg/regsho_daily.json", required: false },

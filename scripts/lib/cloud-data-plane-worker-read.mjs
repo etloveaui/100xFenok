@@ -69,6 +69,10 @@ export const ENROLLED_PATHS = new Map([
   ["/data/sentiment/vix.json", "sentiment"],
   // indices
   ["/data/indices/nasdaq-giw-sox-constituents.json", "nasdaq-giw-sox"],
+  ["/data/indices/sp500.json", "us-indices-daily"],
+  ["/data/indices/nasdaq.json", "us-indices-daily"],
+  ["/data/indices/nasdaq100.json", "us-indices-daily"],
+  ["/data/indices/sox.json", "us-indices-daily"],
   // slickcharts per-lane single files (daily / weekly / monthly / symbols)
   ["/data/slickcharts/gainers.json", "slickcharts-daily"],
   ["/data/slickcharts/losers.json", "slickcharts-daily"],

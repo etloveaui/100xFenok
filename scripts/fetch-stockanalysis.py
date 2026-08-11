@@ -213,6 +213,11 @@ class StockAnalysisAttemptTracker:
         self.yahoo_enabled = False
         self.run_id = "local"
         self.run_attempt = 1
+        # A provider-dateless universe must not let a manual dispatch impersonate
+        # the scheduled freshness observation. The default keeps direct tracker
+        # fixture tests backwards-compatible; production configures the exact
+        # natural Sunday slot explicitly.
+        self.universe_detection_enabled = True
         self.yahoo_candidates = 0
         self.yahoo_observations: list[dict] = []
         self.yahoo_producer_failure: dict | None = None
@@ -224,11 +229,20 @@ class StockAnalysisAttemptTracker:
         self.surfaces_started = False
         self.surface_observations: list[dict] = []
 
-    def configure(self, *, active: bool, yahoo_enabled: bool, run_id: str, run_attempt: int) -> None:
+    def configure(
+        self,
+        *,
+        active: bool,
+        yahoo_enabled: bool,
+        run_id: str,
+        run_attempt: int,
+        universe_detection_enabled: bool = True,
+    ) -> None:
         self.active = active
         self.yahoo_enabled = yahoo_enabled
         self.run_id = str(run_id)
         self.run_attempt = int(run_attempt)
+        self.universe_detection_enabled = bool(universe_detection_enabled)
 
     def record_yahoo_candidate(self) -> None:
         if self.active:
@@ -290,18 +304,18 @@ class StockAnalysisAttemptTracker:
             }
 
     def start_universe(self) -> None:
-        if self.active:
+        if self.active and self.universe_detection_enabled:
             self.universe_started = True
 
     def record_universe_http(self, status_code: int, rows: list[dict] | None = None) -> None:
-        if self.active:
+        if self.active and self.universe_started:
             self.universe_observations.append({
                 "status_code": int(status_code),
                 "document": {"rows": rows or []},
             })
 
     def record_universe_error(self, exception_kind: str) -> None:
-        if self.active:
+        if self.active and self.universe_started:
             self.universe_observations.append({
                 "execution": "threw",
                 "exception_kind": exception_kind,
@@ -535,6 +549,8 @@ DEFAULT_STOCKS = [
     "CAT", "ARM", "ABBV", "BAC", "CVX", "GE", "NFLX", "MS",
 ]
 STOCK_FINANCIAL_DETECTION_SCHEDULE = "20 21 * * *"
+STOCKANALYSIS_ETF_UNIVERSE_DETECTION_SCHEDULE = "20 23 * * 0"
+STOCKANALYSIS_ETF_UNIVERSE_SOURCE_AS_OF_REASON = "provider publishes no aggregate source date"
 STOCK_FINANCIAL_DETECTION_TICKERS = (
     "AAPL", "NVDA", "MSFT", "AMZN", "GOOGL", "META", "TSLA", "JPM",
 )
@@ -1316,6 +1332,23 @@ def should_emit_stock_financial_detection(args: argparse.Namespace, stocks: list
         and args.event_name == "schedule"
         and args.event_schedule == STOCK_FINANCIAL_DETECTION_SCHEDULE
         and tuple(stocks) == STOCK_FINANCIAL_DETECTION_TICKERS
+    )
+
+
+def should_emit_stockanalysis_etf_universe_detection(args: argparse.Namespace) -> bool:
+    """Only the exact natural weekly producer run satisfies universe freshness.
+
+    StockAnalysis publishes membership without a provider observation date. The
+    detection floor therefore uses the successful attempt timestamp, but only a
+    scheduled run can prove that cadence; manual dispatches may refresh the
+    payload while leaving the natural-attempt shard unchanged.
+    """
+
+    return bool(
+        getattr(args, "discover_etf_universe", False)
+        and getattr(args, "natural_run", False)
+        and getattr(args, "event_name", None) == "schedule"
+        and getattr(args, "event_schedule", None) == STOCKANALYSIS_ETF_UNIVERSE_DETECTION_SCHEDULE
     )
 
 
@@ -2701,6 +2734,8 @@ def next_etf_page_path(html: str) -> str | None:
 
 
 def fetch_etf_universe(max_pages: int, timeout: int, sleep: float) -> dict:
+    """Fetch the full membership list; freshness is the scheduled attempt, not a source date."""
+
     if max_pages < 1:
         raise ValueError("max_pages must be at least 1")
     records = []
@@ -2773,7 +2808,7 @@ def fetch_etf_universe(max_pages: int, timeout: int, sleep: float) -> dict:
         "asset_type": "etf",
         "generated_at": collected_at,
         "source_as_of": None,
-        "source_as_of_reason": "provider publishes no aggregate source date",
+        "source_as_of_reason": STOCKANALYSIS_ETF_UNIVERSE_SOURCE_AS_OF_REASON,
         "fetched_at": collected_at,
         "endpoint": "/etf/",
         "counts": {
@@ -6701,6 +6736,7 @@ def _main() -> None:
         yahoo_enabled=args.yf_etf_fallback,
         run_id=args.run_id,
         run_attempt=args.run_attempt,
+        universe_detection_enabled=should_emit_stockanalysis_etf_universe_detection(args),
     )
     if controlled_failure_yahoo_etfs:
         controlled_ticker = next(iter(controlled_failure_yahoo_etfs))

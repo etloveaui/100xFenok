@@ -83,6 +83,11 @@ function assertAllClearGuards(source) {
     /git (?:add|commit|push)/,
     "the all-clear is a notification only and must make no repo write",
   );
+  assert.match(
+    block,
+    /gh issue close "\$existing" --reason completed --comment/,
+    "the all-clear must close the bounded OPS issue so a resolved incident cannot remain permanently open",
+  );
 }
 
 function replaceStepCondition(source, name, condition) {

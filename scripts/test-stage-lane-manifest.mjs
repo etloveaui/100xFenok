@@ -531,7 +531,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
 
   const success = run(fixture.root, "success_if_exists", [], YAHOO_WORKFLOW);
   assert.equal(success.status, 0, success.stderr);
-  assert.match(success.stdout, /stage_selected=2 staged_index_total=5/);
+  assert.match(success.stdout, /stage_selected=1 staged_index_total=4/);
   assert.deepEqual(cached(fixture.root), [...fixture.materialized.always, ...fixture.materialized.success].sort());
 }
 

@@ -1103,6 +1103,40 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   );
   assert.deepEqual(declaredDatelessErrors, [], "declared provider-dateless null passes builder and checker");
 
+  const universeReady = readyLanes.find((item) => item.id === "stockanalysis_etf_universe");
+  assert.equal(universeReady.status, "ready");
+  assert.equal(universeReady.as_of, null);
+  assert.equal(universeReady.artifact.source_as_of, null);
+  assert.equal(universeReady.artifact.source_as_of_reason, "dateless_by_provider");
+  const universeReadyErrors = [];
+  checkDetectionFloorLane(
+    universeReady,
+    universeReadyErrors,
+    liveConfigs.find((item) => item.id === "stockanalysis_etf_universe"),
+  );
+  assert.deepEqual(universeReadyErrors, [], "current provider-dateless universe attempt is usable without a source date");
+
+  const universeStale = mapDetectionFloorRow(row("stockanalysis_etf_universe", {
+    status: "stale",
+    reason: "stale",
+    endpoint: { status: "stale", reason: "stale", observed_at: "2026-07-01T00:00:00Z" },
+    artifact: { status: "stale", reason: "stale", source_as_of: null },
+  }));
+  assert.equal(universeStale.status, "degraded");
+  assert.equal(universeStale.reason, "stale");
+  assert.equal(universeStale.as_of, null);
+  assert.equal(universeStale.artifact.source_as_of_reason, "dateless_by_provider");
+
+  const universeMissingAttempt = mapDetectionFloorRow(row("stockanalysis_etf_universe", {
+    status: "unobserved",
+    reason: "workflow_unobserved",
+    endpoint: { status: "unobserved", reason: "workflow_unobserved", observed_at: null },
+    artifact: { status: "unobserved", reason: "workflow_unobserved", source_as_of: null },
+  }));
+  assert.equal(universeMissingAttempt.status, "degraded");
+  assert.equal(universeMissingAttempt.reason, "workflow_unobserved");
+  assert.equal(universeMissingAttempt.as_of, null);
+
   assert.throws(() => mapDetectionFloorRow(row("defillama_stablecoins", {
     artifact: { status: "ready", reason: "ok", source_as_of: null },
   })), /contradicts null source_as_of/);

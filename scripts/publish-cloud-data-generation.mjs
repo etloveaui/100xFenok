@@ -171,12 +171,17 @@ const DEFAULT_PUBLISH_OUTCOMES_ROOT = path.join(
 //                    resolveSourceAsOf): { file, key } reads key from the JSON
 //                    at <root>/<file>; { key } (no file) reads key from the
 //                    single enrolled payload; { files: { "<rel>": { key } } }
-//                    reads key from each declared file's own JSON so EVERY
-//                    asset carries its own source date (summary reports the
-//                    conservative minimum, origin "per-asset");
+//                    reads key from each declared file's own JSON, while a
+//                    per-file { max_date: { array, key } } (array may be null
+//                    for a top-level row array) takes that file's maximum row
+//                    date. EVERY asset carries its own source date (summary
+//                    reports the conservative minimum, origin "per-asset");
 //                    { file, max_date: { array, key } } takes the maximum
 //                    normalized key over the named top-level array (e.g. the
 //                    FDIC latest reported quarter), never the collection time.
+//                    { file, max_date: { array: null, key } } is the same mode
+//                    for payloads whose top-level JSON IS the row array (e.g.
+//                    the US index series files, plain [{date, value}, ...]).
 //                    The value is normalized to an ISO day (YYYY-MM-DD) and
 //                    written to every asset's source_as_of. In the legacy
 //                    { file, key } mode a declared file that is absent from
@@ -356,6 +361,31 @@ export const FAMILIES = {
       return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
     },
   },
+  "us-indices-daily": {
+    root: "data/indices",
+    manifest_prefix: "public/data/indices",
+    files: ["sp500.json","nasdaq.json","nasdaq100.json","sox.json"],
+    privacy_class: "public",
+    // Each independent series is a plain top-level array of { date, value }
+    // rows. Resolve every asset from ITS OWN latest row date; the producer's
+    // parity gate is per-series and does not promise cross-series date
+    // equality. Never stamp one series' date onto another asset.
+    source_as_of: {
+      files: {
+        "sp500.json": { max_date: { array: null, key: "date" } },
+        "nasdaq.json": { max_date: { array: null, key: "date" } },
+        "nasdaq100.json": { max_date: { array: null, key: "date" } },
+        "sox.json": { max_date: { array: null, key: "date" } },
+      },
+    },
+    // Gate declaration: >= 2x the measured 4 PutObject / 1,304,515 bytes.
+    plan: { class_a: 10, bytes: 2_700_000 },
+    policy: { max_assets: 20, max_total_bytes: 5_400_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
   "slickcharts-daily": {
     root: "data/slickcharts",
     manifest_prefix: "public/data/slickcharts",
@@ -421,6 +451,42 @@ export const FAMILIES = {
       return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
     },
   },
+  "finra-short-volume": {
+    root: "data/admin/finra_short_volume",
+    files: ["current/regsho_daily.json"],
+    privacy_class: "private",
+    // The public-safe freshness marker carries the FINRA trade date of the
+    // source payload as its top-level source_as_of (never the acquisition
+    // time). Non-servable: private family, no ENROLLED_PATHS entry.
+    source_as_of: { key: "source_as_of" },
+    // Gate declaration: >= 2x the measured 1 PutObject / 398 bytes.
+    plan: { class_a: 10, bytes: 1_000 },
+    policy: { max_assets: 4, max_total_bytes: 2_000 },
+  },
+  "finra-ats-weekly": {
+    root: "data/admin/finra-ats",
+    files: ["current/weekly-summary.json"],
+    privacy_class: "private",
+    // The weekly marker's top-level source_as_of is the reported week start
+    // from the FINRA ATS source payloads themselves. Non-servable: private
+    // family, no ENROLLED_PATHS entry.
+    source_as_of: { key: "source_as_of" },
+    // Gate declaration: >= 2x the measured 1 PutObject / 1,146 bytes.
+    plan: { class_a: 10, bytes: 3_000 },
+    policy: { max_assets: 4, max_total_bytes: 6_000 },
+  },
+  "gdelt-news-tone": {
+    root: "data/computed",
+    files: ["fenok_news_tone_proxy.json"],
+    privacy_class: "private",
+    // The proxy document's top-level source_as_of is the aggregate floor over
+    // GDELT article seendates (min rows[].as_of), never generated_at.
+    // Non-servable: private family, no ENROLLED_PATHS entry.
+    source_as_of: { key: "source_as_of" },
+    // Gate declaration: >= 2x the measured 1 PutObject / 7,068 bytes.
+    plan: { class_a: 10, bytes: 15_000 },
+    policy: { max_assets: 4, max_total_bytes: 30_000 },
+  },
 };
 
 const CONTENT_TYPES = {
@@ -474,10 +540,13 @@ export function toIsoDay(value) {
 //     must be date-like (fail FAMILY_ASOF_INVALID otherwise).
 //   - { key } (no file): read key from the single enrolled payload (fail
 //     FAMILY_ASOF_AMBIGUOUS if the family enrolls more than one file).
-//   - { files: { "<rel>": { key } } }: per-file mode — each declared file's
-//     own JSON key resolves THAT asset's source date. Every enrolled asset
-//     must be declared and every declared file must be enrolled; any missing
-//     or malformed declaration fails loudly (never a created_at fallback).
+//   - { files: { "<rel>": { key } | { max_date: { array, key } } } }:
+//     per-file mode — each declared file resolves THAT asset's source date
+//     from its own JSON key or maximum row date (array may be null for a
+//     top-level row array). Every entry declares exactly one mode; every
+//     enrolled asset must be declared and every declared file must be
+//     enrolled. Missing or malformed declarations fail loudly (never a
+//     created_at fallback).
 //     The summary value is the conservative MINIMUM asset date, origin
 //     "per-asset" (truthful per-asset labeling, not family-index).
 //   - { file, max_date: { array, key } }: take the MAXIMUM normalized key over
@@ -485,6 +554,8 @@ export function toIsoDay(value) {
 //     FDIC latest reported quarter). The collection time is never used; a
 //     missing file, non-array/empty array, or any element without a valid
 //     date fails loudly.
+//   - { file, max_date: { array: null, key } }: same as above for a file whose
+//     top-level JSON is itself the row array (no named envelope key).
 // A declared file ABSENT from the built tree means this family genuinely does
 // not provide a source time in this tree (e.g. synthetic offline fixtures) —
 // but ONLY in the legacy { file, key } mode does that fall back to the
@@ -515,6 +586,36 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = n
       fail("FAMILY_ASOF_INVALID", `declared source_as_of is not JSON: ${error.message}`);
     }
   };
+  const resolveMaxDate = ({ json, maxDate, label }) => {
+    const topLevelArray = maxDate?.array === null;
+    if (typeof maxDate !== "object" || maxDate === null
+      || (typeof maxDate.array !== "string" && !topLevelArray)
+      || typeof maxDate.key !== "string") {
+      fail(
+        "FAMILY_ASOF_INVALID",
+        `${label} max_date needs { array: string|null, key: string }`,
+      );
+    }
+    const rows = topLevelArray ? json : json?.[maxDate.array];
+    if (!Array.isArray(rows) || rows.length === 0) {
+      fail(
+        "FAMILY_ASOF_INVALID",
+        topLevelArray
+          ? `${label} must be a non-empty array`
+          : `${label}.${maxDate.array} must be a non-empty array`,
+      );
+    }
+    const values = rows.map((row) => toIsoDay(row?.[maxDate.key]));
+    const badIndex = values.findIndex((value) => value === null);
+    if (badIndex !== -1) {
+      const rowLabel = topLevelArray ? `${label}[${badIndex}]` : `${label}.${maxDate.array}[${badIndex}]`;
+      fail(
+        "FAMILY_ASOF_INVALID",
+        `${rowLabel}.${maxDate.key} is not an ISO date or date-time`,
+      );
+    }
+    return values.sort().at(-1);
+  };
   if (config.files) {
     if (typeof config.files !== "object" || config.files === null || Array.isArray(config.files)) {
       fail("FAMILY_ASOF_INVALID", "source_as_of.files must be an object mapping file paths to { key }");
@@ -527,18 +628,30 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = n
     }
     const perAsset = new Map();
     for (const [relative, entry] of Object.entries(config.files)) {
-      if (typeof entry !== "object" || entry === null || typeof entry.key !== "string") {
-        fail("FAMILY_ASOF_INVALID", `source_as_of.files["${relative}"] must be { key: "..." }`);
+      if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
+        fail("FAMILY_ASOF_INVALID", `source_as_of.files["${relative}"] must declare key or max_date`);
+      }
+      const entryModes = [entry.key !== undefined, entry.max_date !== undefined].filter(Boolean).length;
+      if (entryModes !== 1) {
+        fail("FAMILY_ASOF_INVALID", `source_as_of.files["${relative}"] must declare exactly one of key or max_date`);
       }
       const bytes = payloads.get(`${relRoot}/${relative}`);
       if (!bytes) {
         fail("FAMILY_ASOF_INVALID", `declared source_as_of file ${relative} is not enrolled in this tree`);
       }
       const json = decodeJson(bytes);
-      const raw = json?.[entry.key];
-      const value = toIsoDay(raw);
-      if (value === null) {
-        fail("FAMILY_ASOF_INVALID", `${relative}.${entry.key} = ${JSON.stringify(raw)} is not an ISO date or date-time`);
+      let value;
+      if (entry.max_date !== undefined) {
+        value = resolveMaxDate({ json, maxDate: entry.max_date, label: relative });
+      } else {
+        if (typeof entry.key !== "string") {
+          fail("FAMILY_ASOF_INVALID", `source_as_of.files["${relative}"].key must be a string`);
+        }
+        const raw = json?.[entry.key];
+        value = toIsoDay(raw);
+        if (value === null) {
+          fail("FAMILY_ASOF_INVALID", `${relative}.${entry.key} = ${JSON.stringify(raw)} is not an ISO date or date-time`);
+        }
       }
       perAsset.set(relative, value);
     }
@@ -546,25 +659,18 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = n
     return { value: values[0], origin: "per-asset", perAsset };
   }
   if (config.max_date) {
-    if (typeof config.file !== "string" || typeof config.max_date !== "object" || config.max_date === null
-      || typeof config.max_date.array !== "string" || typeof config.max_date.key !== "string") {
-      fail("FAMILY_ASOF_INVALID", "max_date source_as_of needs { file: string, max_date: { array: string, key: string } }");
+    if (typeof config.file !== "string") {
+      fail("FAMILY_ASOF_INVALID", "max_date source_as_of needs a file string");
     }
     const bytes = payloads.get(`${family.manifest_prefix ?? family.root}/${config.file}`);
     if (!bytes) {
       fail("FAMILY_ASOF_INVALID", `declared source_as_of file ${config.file} is not present in this tree`);
     }
     const json = decodeJson(bytes);
-    const rows = json?.[config.max_date.array];
-    if (!Array.isArray(rows) || rows.length === 0) {
-      fail("FAMILY_ASOF_INVALID", `${config.file}.${config.max_date.array} must be a non-empty array`);
-    }
-    const values = rows.map((row) => toIsoDay(row?.[config.max_date.key]));
-    const badIndex = values.findIndex((value) => value === null);
-    if (badIndex !== -1) {
-      fail("FAMILY_ASOF_INVALID", `${config.file}.${config.max_date.array}[${badIndex}].${config.max_date.key} is not an ISO date or date-time`);
-    }
-    return { value: values.sort().at(-1), origin: "payload-max-date" };
+    return {
+      value: resolveMaxDate({ json, maxDate: config.max_date, label: config.file }),
+      origin: "payload-max-date",
+    };
   }
   let json;
   let origin;

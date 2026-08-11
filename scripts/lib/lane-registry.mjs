@@ -139,6 +139,10 @@ export const PLANE_PUBLISH_OUTCOME_BINDINGS = Object.freeze({
   "slickcharts-history": { lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-history.yml" },
   "slickcharts-symbols": { lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-symbols.yml" },
   "edgar-korean-summaries": { lane_id: "edgar_filings", workflow: ".github/workflows/fetch-edgar-filings.yml" },
+  "us-indices-daily": { lane_id: "us_indices_daily", workflow: ".github/workflows/fetch-us-indices-daily.yml" },
+  "finra-short-volume": { lane_id: "finra_short_volume", workflow: ".github/workflows/fenok-edge-daily.yml" },
+  "finra-ats-weekly": { lane_id: "finra_ats_weekly", workflow: ".github/workflows/fetch-finra-ats-weekly.yml" },
+  "gdelt-news-tone": { lane_id: "gdelt_news_tone", workflow: ".github/workflows/fetch-fenok-news-tone.yml" },
 });
 
 const providers = [
@@ -154,7 +158,6 @@ const providers = [
   { id: "nasdaq_indexes", label: "Nasdaq Indexes", class: "external_data" },
   { id: "oecd", label: "OECD", class: "external_data" },
   { id: "krx", label: "KRX", class: "external_data" },
-  { id: "open_dart", label: "OpenDART", class: "external_data" },
   { id: "slickcharts", label: "Slickcharts", class: "external_data" },
   { id: "sec_edgar", label: "SEC EDGAR", class: "external_data" },
   { id: "bloomberg_terminal", label: "Bloomberg Terminal", class: "external_data" },
@@ -249,7 +252,12 @@ const lanes = [
     admin_store: "data/admin/fred_yardeni",
     detection_attempt: attemptShard("fred_yardeni"),
     canonical_outputs: ["data/yardney/yardney_model.json"],
-    public_mirror: [],
+    // Private lane, public-safe aggregate served and plane-enrolled: the
+    // bundled git mirror is the worker's ASSETS fallback. The declaration
+    // keeps it out of the derived sync exclusions (same pattern as the OCC
+    // private lane with a public-safe availability aggregate); the lane
+    // stages canonical only, full sync remains the updater.
+    public_mirror: ["100xfenok-next/public/data/yardney/yardney_model.json"],
     commit_shards: [
       attemptShard("fred_yardeni"),
       publishOutcomeShard("fred-yardeni"),
@@ -460,13 +468,19 @@ const lanes = [
     admin_store: "data/admin/yahoo-hourly-ticker",
     detection_attempt: attemptShard("yahoo_ticker_macro"),
     canonical_outputs: ["data/macro/yahoo-ticker.json"],
+    // Mirror ownership moved to the merge boundary (sync-public-data full
+    // walk + update-manifest materialize) once the plane serving enrollment
+    // (ENROLLED_PATHS "/data/macro/yahoo-ticker.json" + hourly publish +
+    // serving probe) landed. The lane stages canonical only; the mirror copy
+    // stays sync-covered and is refreshed by the boundary. The declaration is
+    // load-bearing: without it the derived sync exclusions treat the bundled
+    // fallback copy as removable, contradicting the worker-read fallback.
     public_mirror: ["100xfenok-next/public/data/macro/yahoo-ticker.json"],
     commit_shards: [
       attemptShard("yahoo_ticker_macro"),
       publishOutcomeShard("yahoo-ticker-macro"),
       "data/admin/yahoo-hourly-ticker",
       "data/macro/yahoo-ticker.json",
-      "100xfenok-next/public/data/macro/yahoo-ticker.json",
     ],
     recovery_store: "data/admin/yahoo-hourly-ticker/index.json",
     kpi_recovery_shape: "keyed_v2",
@@ -553,6 +567,7 @@ const lanes = [
     public_mirror: [],
     commit_shards: [
       attemptShard("us_indices_daily"),
+      publishOutcomeShard("us-indices-daily"),
       "data/admin/us-indices-daily",
       "data/indices/sp500.json",
       "data/indices/nasdaq.json",
@@ -632,34 +647,6 @@ const lanes = [
     recovery_store: "data/admin/krx/index.json",
     kpi_recovery_shape: "general",
     script_sources: ["scripts/fetch-fenok-krx-daily-private.mjs", "scripts/emit-fenok-krx-attempt.mjs"],
-  }),
-  record({
-    id: "kospi_dart_payout",
-    label: "KOSPI OpenDART annual payout aggregate",
-    owner_workflow: ".github/workflows/fetch-kospi-dart-payout.yml",
-    provider_members: null,
-    provider_refs: [{ provider_id: "open_dart", role: "source", members: null }],
-    store_kind: "payload",
-    lane_class: "auxiliary",
-    cadence: {
-      kind: "annual",
-      provenance: { kind: "github_workflow", evidence: ".github/workflows/fetch-kospi-dart-payout.yml" },
-    },
-    enforcement: "shadow",
-    privacy_class: "private",
-    public_mirror_allowed: false,
-    admin_store: "_private/admin/fenok-edge-korea/dart",
-    detection_attempt: null,
-    canonical_outputs: ["data/computed/fenok-rim/kospi-dart-payout"],
-    public_mirror: [],
-    commit_shards: [
-      "data/computed/fenok-rim/kospi-dart-payout/current.json",
-      "data/computed/fenok-rim/kospi-dart-payout/fy*.json",
-    ],
-    recovery_store: null,
-    declared_exception:
-      "OpenDART corpCode and issuer response cache is Git-ignored under the private admin root; this auxiliary shadow lane commits only the validated index-level FY/current aggregate and has no public mirror",
-    script_sources: ["scripts/fetch-kospi-dart-payout.mjs", "scripts/lib/kospi-dart-payout.mjs"],
   }),
   record({
     id: "slickcharts",
@@ -949,6 +936,7 @@ const lanes = [
     public_mirror: [],
     commit_shards: [
       attemptShard("finra_short_volume"),
+      publishOutcomeShard("finra-short-volume"),
       "data/admin/finra_short_volume/index.json",
       "data/admin/finra_short_volume/current/regsho_daily.json",
       "data/admin/finra_short_volume/lkg/regsho_daily.json",
@@ -975,6 +963,7 @@ const lanes = [
     public_mirror: [],
     commit_shards: [
       attemptShard("finra_ats"),
+      publishOutcomeShard("finra-ats-weekly"),
       "data/admin/finra-ats/index.json",
       "data/admin/finra-ats/current/weekly-summary.json",
       "data/admin/finra-ats/lkg/weekly-summary.json",
@@ -1026,7 +1015,12 @@ const lanes = [
     admin_store: "data/admin/yahoo_private_options",
     detection_attempt: attemptShard("yahoo_private_options"),
     canonical_outputs: ["data/computed/fenok_yahoo_private_options_availability.json"],
-    public_mirror: [],
+    // The producer writes the public-safe availability marker to the mirror
+    // (public_safe=true, raw_payload_included=false); the declaration keeps
+    // it out of the derived sync exclusions so the merge boundary (sync full
+    // walk) is its updater. The family stays plane-blocked: its source time
+    // is acquisition-derived, so no FAMILIES/publish binding exists.
+    public_mirror: ["100xfenok-next/public/data/computed/fenok_yahoo_private_options_availability.json"],
     commit_shards: [
       attemptShard("yahoo_private_options"),
       "data/admin/yahoo_private_options",
@@ -1092,6 +1086,7 @@ const lanes = [
     public_mirror: [],
     commit_shards: [
       attemptShard("gdelt_news_tone"),
+      publishOutcomeShard("gdelt-news-tone"),
       "data/admin/gdelt_news_tone/index.json",
       "data/admin/gdelt_news_tone/lkg/news_tone_proxy.json",
       "data/computed/fenok_news_tone_proxy.json",
@@ -1414,6 +1409,7 @@ workflow_policies[".github/workflows/fetch-fenok-apewisdom.yml"] = policy(["apew
 workflow_policies[".github/workflows/fetch-fenok-news-tone.yml"] = policy(["gdelt_news_tone"], {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/gdelt_news_tone.json", "file"),
+    commitSpec(publishOutcomeShard("gdelt-news-tone"), "file"),
     commitSpec("data/admin/gdelt_news_tone/index.json", "file"),
     commitSpec("data/admin/gdelt_news_tone/lkg/news_tone_proxy.json", "file"),
   ],
@@ -1438,6 +1434,7 @@ workflow_policies[".github/workflows/fetch-sentiment.yml"] = policy(["sentiment"
 workflow_policies[".github/workflows/fetch-us-indices-daily.yml"] = policy(["us_indices_daily"], {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/us_indices_daily.json", "file"),
+    commitSpec(publishOutcomeShard("us-indices-daily"), "file"),
     commitSpec("data/admin/us-indices-daily", "directory"),
   ],
   success_if_exists: [
@@ -1445,12 +1442,6 @@ workflow_policies[".github/workflows/fetch-us-indices-daily.yml"] = policy(["us_
     commitSpec("data/indices/nasdaq.json", "file"),
     commitSpec("data/indices/nasdaq100.json", "file"),
     commitSpec("data/indices/sox.json", "file"),
-  ],
-});
-workflow_policies[".github/workflows/fetch-kospi-dart-payout.yml"] = policy(["kospi_dart_payout"], {
-  success_if_exists: [
-    commitSpec("data/computed/fenok-rim/kospi-dart-payout/current.json", "file", true),
-    commitSpec("data/computed/fenok-rim/kospi-dart-payout/fy*.json", "glob", true),
   ],
 });
 workflow_policies[".github/workflows/fetch-oecd-cli.yml"] = policy(["oecd_cli"], {
@@ -1480,6 +1471,7 @@ workflow_policies[".github/workflows/fenok-edge-daily.yml"] = policy(["finra_sho
 workflow_policies[".github/workflows/fetch-finra-ats-weekly.yml"] = policy(["finra_ats_weekly"], {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/finra_ats.json", "file"),
+    commitSpec(publishOutcomeShard("finra-ats-weekly"), "file"),
     commitSpec("data/admin/finra-ats/index.json", "file"),
     commitSpec("data/admin/finra-ats/lkg/weekly-summary.json", "file"),
   ],
@@ -1514,6 +1506,25 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_
   commitSpec("data/stockanalysis/backfill/history_gap_report_latest.json", "file"),
   commitSpec("data/yf/finance/_summary.json", "file"),
 ]);
+// Owner-approved dispatch-only recovery lane: re-publishes one already
+// retained StockAnalysis artifact by staging the SAME always_if_exists
+// surface as fetch-stockanalysis.yml (helper calls name that workflow) plus
+// its one direct add. The entry declares exactly the paths the workflow's own
+// text evidences (helper-staged paths like the attempt shards, the v1
+// detection store and 100xfenok-next/public/data remain governed by the
+// fetch-stockanalysis.yml policy the helper actually names). No success
+// stage, no provider, no schedule; the workflow file itself is the
+// remove-after-closeout marker.
+workflow_policies[".github/workflows/publish-stockanalysis-artifact-recovery.yml"] = policy(["yahoo_etf_fallback", "stockanalysis_etf_universe", "stockanalysis_stock_financial", "stockanalysis_surfaces"], {
+  always_if_exists: [
+    commitSpec("data/stockanalysis", "directory", true),
+    commitSpec("data/yf/etf-details", "directory", true),
+    commitSpec("data/admin/stockanalysis-recovery", "directory", true),
+    commitSpec("data/admin/yahoo_etf_fallback", "directory", false),
+    commitSpec("data/yf/finance", "dynamic_set"),
+    commitSpec("data/computed/data-supply/etf-detail", "directory"),
+  ],
+});
 workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = policy(["krx"], {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/krx.json", "file"),

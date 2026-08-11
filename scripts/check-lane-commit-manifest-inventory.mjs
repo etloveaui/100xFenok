@@ -28,7 +28,7 @@ const actual = enumerateCommitCapableWorkflows();
 const declared = Object.keys(LANE_REGISTRY.workflow_policies).sort();
 export function assertCommitSurfaceInventory() {
   assert.deepEqual(actual, declared, `commit-capable workflow inventory drifted: actual=${actual.join(",")} declared=${declared.join(",")}`);
-  assert.equal(actual.length, 29, "repo-wide commit surface count must remain 29 until a conscious inventory update");
+  assert.equal(actual.length, 30, "repo-wide commit surface count must remain 30 until a conscious inventory update");
   return actual;
 }
 

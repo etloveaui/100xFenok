@@ -69,11 +69,26 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
     def tearDown(self) -> None:
         self.tmp.cleanup()
 
-    def test_yahoo_symbol_delegates_to_stock_detail_alias_contract(self) -> None:
+    def test_yahoo_symbol_preserves_single_letter_exchange_suffixes(self) -> None:
+        # TSE new-format listing codes end in a letter and must keep the dotted
+        # exchange suffix: 285A.T is KIOXIA HOLDINGS on JPX, and 285A-T is a
+        # real Yahoo "Not Found" (verified against the live provider 2026-08-11).
+        # This is the corpus shape that produced 14 consecutive empty-payload
+        # failures classified as transient provider misses (regression #285A).
+        self.assertEqual(self.fetcher.yahoo_symbol("285A.T"), "285A.T")
+        self.assertEqual(self.fetcher.yahoo_symbol("7203.T"), "7203.T")
+        # Other single-letter exchange suffixes are equally exchange suffixes,
+        # not class shares.
+        self.assertEqual(self.fetcher.yahoo_symbol("VOD.L"), "VOD.L")
+        self.assertEqual(self.fetcher.yahoo_symbol("SAP.F"), "SAP.F")
+        self.assertEqual(self.fetcher.yahoo_symbol("ACB.V"), "ACB.V")
+
+    def test_yahoo_symbol_keeps_class_share_and_suffix_aliases(self) -> None:
         self.assertEqual(self.fetcher.yahoo_symbol("BRK.A"), "BRK-A")
         self.assertEqual(self.fetcher.yahoo_symbol("BRK.B"), "BRK-B")
         self.assertEqual(self.fetcher.yahoo_symbol("005930.KS"), "005930.KS")
         self.assertEqual(self.fetcher.yahoo_symbol("BMW.DE"), "BMW.DE")
+        self.assertEqual(self.fetcher.yahoo_symbol("MC.PA"), "MC.PA")
 
     def _daily_payload(self, ticker: str) -> dict:
         return self.fetcher.decorate_finance_payload(
@@ -2764,10 +2779,12 @@ assert callable(namespace["load_universe"])
         self.assertIn("data/yf/finance", candidate_step)
         self.assertIn("data/admin/yahoo-batch-quote-history", candidate_step)
         self.assertIn("data/yf/quarter_closes.json", candidate_step)
-        self.assertIn("100xfenok-next/public/data/yf/quarter_closes.json", candidate_step)
         self.assertIn("git restore --staged --worktree -- data/yf/finance/_summary.json", candidate_step)
         self.assertIn("always()", candidate_step)
-        self.assertNotIn("100xfenok-next/public/data/yf/finance", candidate_step)
+        # #377 slice 2: the lane persists canonical candidates only; the public
+        # mirror is owned by the merge boundary, so no public path may be
+        # staged from this lane (03365d7c44 removed the last one).
+        self.assertNotIn("100xfenok-next/public", candidate_step)
 
         run_step = workflow[workflow.index("      - name: Run batch fetch"):quarter_start]
         self.assertIn("id: fetch_batch", run_step)

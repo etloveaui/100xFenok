@@ -62,10 +62,26 @@ def _fail(reason_code: str, detail: str):
     raise StockDetailValidationError(reason_code, detail)
 
 
+# Yahoo serves single-letter class-share suffixes in dash form (BRK.B -> BRK-B),
+# but single-letter EXCHANGE suffixes keep the dot. Guard the known single-letter
+# exchange suffixes first so exchange symbols are never rewritten: .T Tokyo
+# (including TSE new-format listing codes such as 285A.T = KIOXIA HOLDINGS),
+# .L London, .F Frankfurt, .V TSX Venture. The fetch lane relies on the same
+# set, so consumers of this helper and the fetch lane stay aligned.
+SINGLE_LETTER_EXCHANGE_SUFFIXES = frozenset({"T", "L", "F", "V"})
+
+
 def yahoo_provider_symbol(entity: str) -> str:
     """Return Yahoo's alias only for single-letter class-share suffixes."""
     head, separator, tail = entity.rpartition(".")
-    if separator and head and tail.isalpha() and len(tail) == 1 and not head[-1].isdigit():
+    if (
+        separator
+        and head
+        and tail.isalpha()
+        and len(tail) == 1
+        and tail not in SINGLE_LETTER_EXCHANGE_SUFFIXES
+        and not head[-1].isdigit()
+    ):
         return f"{head}-{tail}"
     return entity
 

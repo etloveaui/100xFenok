@@ -10,6 +10,11 @@
  *       derived exclusion lists) OR explicitly lane-staged — otherwise its mirror
  *       has no updater and silently freezes (the regression class hit twice on
  *       2026-08-10: slice-2 staging removal + registry public_mirror surgery).
+ * (a) has no remaining lane exceptions since 2026-08-11: the last one
+ *       (fetch-yahoo-ticker.yml) was removed when the plane serving enrollment
+ *       (ENROLLED_PATHS "/data/macro/yahoo-ticker.json" + hourly publish +
+ *       serving probe) landed. Companion untrack-prerequisite measurement:
+ *       scripts/test-public-mirror-untrack-prereqs.mjs.
  *
  * Tree-state only (no network, no writes). Mirrors freshness stays with the KPI
  * and the hourly serving probe; this gate is structural.
@@ -32,15 +37,6 @@ const BOUNDARY_WORKFLOWS = new Set([
   ".github/workflows/update-manifest.yml",
   ".github/workflows/fetch-stockanalysis.yml", // full sync + its commit
   ".github/workflows/publish-stockanalysis-artifact-recovery.yml", // recovery full sync
-]);
-
-// Documented exceptions (with reason; each must carry a removal tracker):
-// - fetch-yahoo-ticker.yml: HOURLY lane — the mirror needs sub-daily freshness the
-//   daily full sync cannot provide; lane staging is retained until the plane
-//   serving enrollment (Phase B, ENROLLED_PATHS) lands, then this exception is
-//   removed and the lane stages canonical only. Tracked with #377 Phase B.
-const LANE_STAGING_EXCEPTIONS = new Set([
-  ".github/workflows/fetch-yahoo-ticker.yml",
 ]);
 
 function listDir(dir) {
@@ -80,9 +76,12 @@ function laneStagedMirrorPaths() {
   for (const file of listDir(WORKFLOWS_DIR)) {
     if (!file.name.endsWith(".yml")) continue;
     const rel = `.github/workflows/${file.name}`;
-    if (BOUNDARY_WORKFLOWS.has(rel) || LANE_STAGING_EXCEPTIONS.has(rel)) continue;
+    if (BOUNDARY_WORKFLOWS.has(rel)) continue;
     const src = fs.readFileSync(path.join(WORKFLOWS_DIR, file.name), "utf8");
-    for (const line of src.split("\n")) {
+    // Normalize shell line continuations so a `git add -- \` split across two
+    // lines cannot hide a mirror path from the scan.
+    const normalized = src.replace(/\\[ \t]*\r?\n[ \t]*/g, " ");
+    for (const line of normalized.split("\n")) {
       const m = line.match(/git\s+add.*?100xfenok-next\/public\/data(?:\/|$)/);
       if (m) staged.push(`${rel}: ${line.trim()}`);
     }

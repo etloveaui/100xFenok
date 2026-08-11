@@ -250,7 +250,10 @@ jobs:
               if [ "$EVENT_SCHEDULE" = "20 23 * * 0" ]; then
                 # BACKLOG #331: one complete weekly universe collection. Current
                 # measured universe is 11 pages; 100 preserves headroom without
-                # turning weekday bounded runs into broad discovery.
+                # turning weekday bounded runs into broad discovery. StockAnalysis
+                # publishes no membership source date, so the fetcher emits the
+                # KPI freshness attempt only for this exact natural schedule;
+                # manual dispatch may refresh the payload but cannot impersonate it.
                 INPUT_DISCOVER_UNIVERSE="true"
                 INPUT_MAX_UNIVERSE_PAGES="100"
                 NATURAL_RECOVERY_KINDS="etf,surface,universe"

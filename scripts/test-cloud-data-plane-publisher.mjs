@@ -1139,6 +1139,71 @@ try {
     assert.equal(fdic.sourceAsOf.origin, "payload-max-date");
     console.log("fdic-tier1 max-quarter source_as_of ok (max data[].date, not top-level updated)");
 
+    // us-indices-daily: per-file top-level-array max_date mode. Each series is
+    // independent, so differing latest dates must stay attached to their own
+    // assets; the summary is the conservative minimum, never one series'
+    // date stamped across the family.
+    const indicesDir = path.join(asofFilesRoot, "data/indices");
+    await mkdir(indicesDir, { recursive: true });
+    const series = (endDate) => [
+      { date: "2026-08-07", value: 1.0 },
+      { date: endDate, value: 2.0 },
+    ];
+    const indexDates = {
+      "sp500.json": "2026-08-10",
+      "nasdaq.json": "2026-08-09",
+      "nasdaq100.json": "2026-08-08",
+      "sox.json": "2026-08-07",
+    };
+    for (const [name, endDate] of Object.entries(indexDates)) {
+      await writeFile(path.join(indicesDir, name), JSON.stringify(series(endDate)));
+    }
+    const usIndices = await buildFamilyManifest({
+      familyName: "us-indices-daily",
+      absRoot: indicesDir,
+      relRoot: "public/data/indices",
+      now: () => NOW_1,
+    });
+    validateGenerationManifest(usIndices.manifest);
+    assert.equal(usIndices.manifest.assets.length, 4);
+    const indexDatesByAsset = new Map(usIndices.manifest.assets.map((asset) => [
+      asset.path.slice("public/data/indices/".length),
+      asset.source_as_of,
+    ]));
+    assert.deepEqual(Object.fromEntries(indexDatesByAsset), indexDates);
+    assert.equal(usIndices.sourceAsOf.value, "2026-08-07");
+    assert.equal(usIndices.sourceAsOf.origin, "per-asset");
+    assert.ok(usIndices.sourceAsOf.perAsset instanceof Map);
+    assert.deepEqual(Object.fromEntries(usIndices.sourceAsOf.perAsset), indexDates);
+    assert.ok(usIndices.manifest.assets.every((asset) => asset.privacy_class === "public"));
+    console.log("us-indices-daily per-file max_date source_as_of ok (4 independent dates, min summary, origin per-asset)");
+
+    // Per-file top-level-array mode fails loudly on a malformed row date and
+    // on an empty array — never a silent created_at fallback.
+    await writeFile(
+      path.join(indicesDir, "sp500.json"),
+      JSON.stringify([{ date: "2026-08-10" }, { date: "soon" }]),
+    );
+    await assertRejectsCode(
+      buildFamilyManifest({
+        familyName: "us-indices-daily",
+        absRoot: indicesDir,
+        relRoot: "public/data/indices",
+        now: () => NOW_1,
+      }),
+      "FAMILY_ASOF_INVALID",
+    );
+    await writeFile(path.join(indicesDir, "sp500.json"), JSON.stringify([]));
+    await assertRejectsCode(
+      buildFamilyManifest({
+        familyName: "us-indices-daily",
+        absRoot: indicesDir,
+        relRoot: "public/data/indices",
+        now: () => NOW_1,
+      }),
+      "FAMILY_ASOF_INVALID",
+    );
+
     // Malformed/missing declarations fail loudly, never a silent fallback:
     // 1. per-file value missing/invalid.
     await writeFile(

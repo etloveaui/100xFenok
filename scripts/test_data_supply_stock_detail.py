@@ -77,6 +77,22 @@ class StockDetailValidationTests(unittest.TestCase):
         self.assertEqual(yahoo_provider_symbol("005930.KS"), "005930.KS")
         self.assertEqual(yahoo_provider_symbol("BMW.DE"), "BMW.DE")
 
+    def test_yahoo_provider_symbol_preserves_single_letter_exchange_suffixes(self):
+        # TSE new-format listing codes end in a letter and must keep the dotted
+        # exchange suffix: 285A.T is KIOXIA HOLDINGS on JPX, and 285A-T is a
+        # real Yahoo "Not Found" (verified against the live provider 2026-08-11).
+        # 99 corpus symbols use the .T exchange suffix, so a rewrite would be a
+        # systematic miss, not a one-off.
+        self.assertEqual(yahoo_provider_symbol("285A.T"), "285A.T")
+        self.assertEqual(yahoo_provider_symbol("7203.T"), "7203.T")
+        self.assertEqual(yahoo_provider_symbol("7309.T"), "7309.T")
+        # Other single-letter exchange suffixes are exchange suffixes, not
+        # class shares (kept dotted even though the current corpus has no .L,
+        # .F, or .V symbols yet).
+        self.assertEqual(yahoo_provider_symbol("VOD.L"), "VOD.L")
+        self.assertEqual(yahoo_provider_symbol("SAP.F"), "SAP.F")
+        self.assertEqual(yahoo_provider_symbol("ACB.V"), "ACB.V")
+
     def test_yahoo_true_quote_identity_mismatch_is_rejected(self):
         with self.assertRaises(StockDetailValidationError) as caught:
             self.validate("yahoo_finance", "BRK.A", "yahoo_quote_identity_mismatch.fixture.json")

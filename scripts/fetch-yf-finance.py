@@ -821,12 +821,32 @@ def safe(fn, default=None):
         return default
 
 
+# Yahoo serves single-letter class-share suffixes in dash form (BRK.B -> BRK-B),
+# but single-letter EXCHANGE suffixes keep the dot. The shared stock-detail
+# alias helper cannot tell the two apart, so the fetch lane guards the known
+# single-letter exchange suffixes first. Tokyo (.T) matters today: TSE
+# new-format listing codes end in a letter (285A.T = KIOXIA HOLDINGS), and
+# mangling them to 285A-T makes Yahoo answer "Not Found" for every attempt.
+SINGLE_LETTER_EXCHANGE_SUFFIXES = frozenset({"T", "L", "F", "V"})
+
+
 def yahoo_symbol(ticker):
     """Class-share dot notation (BRK.B) -> Yahoo dash notation (BRK-B).
-    Exchange suffixes keep their dot: numeric heads (005930.KS, 7203.T)
-    and 2+ letter suffixes (BMW.DE, MC.PA) — verified working as-is in
-    the 2026-06-11 full batch; only single-letter class shares failed."""
-    return yahoo_provider_symbol(ticker)
+    Exchange suffixes keep their dot: numeric heads (005930.KS, 7203.T),
+    2+ letter suffixes (BMW.DE, MC.PA), and single-letter exchange suffixes
+    (.T Tokyo, .L London, .F Frankfurt, .V TSX Venture) — verified working
+    as-is in the 2026-06-11 full batch; only single-letter class shares
+    failed."""
+    head, separator, tail = ticker.rpartition(".")
+    if (
+        separator
+        and head
+        and tail.isalpha()
+        and len(tail) == 1
+        and tail not in SINGLE_LETTER_EXCHANGE_SUFFIXES
+    ):
+        return yahoo_provider_symbol(ticker)
+    return ticker
 
 
 def fetch_ticker(ticker, profile="full", include_options=False, include_shares_full=False):
