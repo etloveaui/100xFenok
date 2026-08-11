@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-08-11T21:24:22.476Z",
+  "generated_at": "2026-08-11T21:53:48.368Z",
   "source_file": "computed/stock_action_index.json",
   "source_date": "2026-08-07",
   "source_date_reason": null,
-  "source_generated_at": "2026-08-11T21:24:20.544Z",
+  "source_generated_at": "2026-08-11T21:53:46.415Z",
   "source_score_contract": "action-score-v0.3.1",
   "formula_version": "fenok-native-signals-v0.2.3-common-basis",
   "contract_doc": "docs/planning/CONTRACT_fenok_native_signals_v0_2_phase_a_20260628.md",
@@ -4762,9 +4762,9 @@
         "action_bucket": "momentum"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 79.24,
+        "common_basis_score_0_100": 78.9,
         "common_basis_call": "concentrated",
-        "conviction_score_0_100": 74.89,
+        "conviction_score_0_100": 74.68,
         "conviction_call": "concentrated",
         "input_count": 5,
         "basis_code": "us_enriched_v1"
@@ -5045,7 +5045,7 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 78.49,
+          "score_0_100": 77.45,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -5053,25 +5053,25 @@
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 833229625.1177,
-              "score": 73.02,
+              "value": 892273789.6783,
+              "score": 73.76,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 1.1215,
-              "score": 55.47,
+              "value": 1.1669,
+              "score": 60.81,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 1.907,
-              "score": 93.8,
+              "value": 1.643,
+              "score": 76.2,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": 0.2622,
+              "value": 0.2623,
               "score": 100,
               "peer_group": "rule",
               "peer_count": null
@@ -5087,19 +5087,19 @@
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": 0.2304,
+              "value": 0.2305,
               "score": 100,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": 0.345,
+              "value": 0.3398,
               "score": 100,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": 0.2622,
+              "value": 0.2623,
               "score": 100,
               "peer_group": "rule",
               "peer_count": null
@@ -100522,9 +100522,9 @@
         "action_bucket": "index_core"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 62.41,
+        "common_basis_score_0_100": 57.3,
         "common_basis_call": "mixed",
-        "conviction_score_0_100": 49.08,
+        "conviction_score_0_100": 46.01,
         "conviction_call": "mixed",
         "input_count": 5,
         "basis_code": "us_enriched_v1"
@@ -100805,62 +100805,62 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 59.4,
-          "direction": "constructive",
+          "score_0_100": 54.9,
+          "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_1y_volume_liquidity_trend_proxy",
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 3809539166.5549,
-              "score": 89.52,
+              "value": 3923425428.0635,
+              "score": 89.84,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 0.8875,
-              "score": 27.95,
+              "value": 0.9,
+              "score": 29.41,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 1.292,
-              "score": 52.8,
+              "value": 1.1761,
+              "score": 45.07,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": 0.0591,
-              "score": 52.66,
+              "value": 0.0071,
+              "score": 37.38,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 32.61,
-          "direction": "weak",
+          "score_0_100": 21.76,
+          "direction": "stressed",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_20d_60d_relative_strength_vs_spy",
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": 0.0272,
-              "score": 49.07,
+              "value": -0.0247,
+              "score": 31.75,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.2545,
+              "value": -0.225,
               "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": 0.0591,
-              "score": 52.66,
+              "value": 0.0071,
+              "score": 37.38,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -176179,9 +176179,9 @@
         "action_bucket": "value_momentum"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 30.04,
+        "common_basis_score_0_100": 27.31,
         "common_basis_call": "diluted",
-        "conviction_score_0_100": 43.73,
+        "conviction_score_0_100": 42.09,
         "conviction_call": "mixed",
         "input_count": 5,
         "basis_code": "us_enriched_v1"
@@ -176457,7 +176457,7 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 39.82,
+          "score_0_100": 31.61,
           "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -176465,25 +176465,25 @@
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 234199489.4575,
-              "score": 59.24,
+              "value": 235623208.5611,
+              "score": 59.31,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 0.9985,
-              "score": 41.01,
+              "value": 0.9875,
+              "score": 39.71,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 1.3831,
-              "score": 58.87,
+              "value": 0.5923,
+              "score": 6.15,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": -0.2172,
+              "value": -0.1983,
               "score": 0,
               "peer_group": "rule",
               "peer_count": null
@@ -176499,19 +176499,19 @@
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": -0.2491,
+              "value": -0.2301,
               "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.3757,
+              "value": -0.3548,
               "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": -0.2172,
+              "value": -0.1983,
               "score": 0,
               "peer_group": "rule",
               "peer_count": null
@@ -177542,9 +177542,9 @@
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 42.67,
-        "common_basis_call": "mixed",
-        "conviction_score_0_100": 42.64,
+        "common_basis_score_0_100": 39.12,
+        "common_basis_call": "diluted",
+        "conviction_score_0_100": 40.51,
         "conviction_call": "mixed",
         "input_count": 5,
         "basis_code": "us_enriched_v1"
@@ -177820,41 +177820,41 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 46.8,
-          "direction": "neutral",
+          "score_0_100": 36.68,
+          "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_1y_volume_liquidity_trend_proxy",
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 261406709.7017,
-              "score": 60.43,
+              "value": 256651013.7011,
+              "score": 60.23,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 0.8763,
-              "score": 26.63,
+              "value": 0.8692,
+              "score": 25.79,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 1.5979,
-              "score": 73.19,
+              "value": 0.592,
+              "score": 6.13,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": -0.011,
-              "score": 32.05,
+              "value": -0.008,
+              "score": 32.93,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 32.37,
+          "score_0_100": 31.84,
           "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -177862,20 +177862,20 @@
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": -0.0429,
-              "score": 25.71,
+              "value": -0.0399,
+              "score": 26.71,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": 0.0173,
-              "score": 41.11,
+              "value": 0.0015,
+              "score": 37.82,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": -0.011,
-              "score": 32.05,
+              "value": -0.008,
+              "score": 32.93,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -197171,9 +197171,9 @@
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 33.52,
+        "common_basis_score_0_100": 29.93,
         "common_basis_call": "diluted",
-        "conviction_score_0_100": 33.52,
+        "conviction_score_0_100": 29.93,
         "conviction_call": "diluted",
         "input_count": 3,
         "basis_code": "common_3_v1"
@@ -197439,7 +197439,7 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 47.36,
+          "score_0_100": 51.69,
           "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -197447,33 +197447,33 @@
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 15865513405,
+              "value": 15109895640,
               "score": 100,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 0.7086,
-              "score": 6.9,
+              "value": 0.723,
+              "score": 8.59,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 0.4563,
-              "score": 0,
+              "value": 1.4222,
+              "score": 61.48,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": 0.0246,
-              "score": 42.53,
+              "value": -0.0477,
+              "score": 21.27,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 25.42,
+          "score_0_100": 10.32,
           "direction": "stressed",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -197481,20 +197481,20 @@
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": -0.0072,
-              "score": 37.59,
+              "value": -0.0795,
+              "score": 13.49,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.3246,
+              "value": -0.4065,
               "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": 0.0246,
-              "score": 42.53,
+              "value": -0.0477,
+              "score": 21.27,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -201061,9 +201061,9 @@
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 24.71,
+        "common_basis_score_0_100": 31.52,
         "common_basis_call": "diluted",
-        "conviction_score_0_100": 24.71,
+        "conviction_score_0_100": 31.52,
         "conviction_call": "diluted",
         "input_count": 3,
         "basis_code": "common_3_v1"
@@ -201329,62 +201329,62 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 34.55,
-          "direction": "weak",
+          "score_0_100": 46.32,
+          "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_1y_volume_liquidity_trend_proxy",
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 270402660,
-              "score": 60.8,
+              "value": 279699750,
+              "score": 61.17,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 0.2529,
+              "value": 0.2576,
               "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 0.816,
-              "score": 21.07,
+              "value": 1.6741,
+              "score": 78.28,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": 0.0175,
-              "score": 40.44,
+              "value": 0.0591,
+              "score": 52.66,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 23.94,
-          "direction": "stressed",
+          "score_0_100": 32.61,
+          "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_20d_60d_relative_strength_vs_spy",
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": -0.0143,
-              "score": 35.22,
+              "value": 0.0272,
+              "score": 49.07,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.2168,
+              "value": -0.2107,
               "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": 0.0175,
-              "score": 40.44,
+              "value": 0.0591,
+              "score": 52.66,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -217399,9 +217399,9 @@
         "action_bucket": "momentum"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 55.7,
+        "common_basis_score_0_100": 53.69,
         "common_basis_call": "mixed",
-        "conviction_score_0_100": 55.7,
+        "conviction_score_0_100": 53.69,
         "conviction_call": "mixed",
         "input_count": 3,
         "basis_code": "common_3_v1"
@@ -217667,7 +217667,7 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 47.4,
+          "score_0_100": 45.25,
           "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -217675,33 +217675,33 @@
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 168412702500,
+              "value": 160444708575,
               "score": 100,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 0.5348,
+              "value": 0.5338,
               "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 0.5786,
-              "score": 5.24,
+              "value": 0.4878,
+              "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": 0.0379,
-              "score": 46.44,
+              "value": 0.0194,
+              "score": 41.01,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 28.2,
+          "score_0_100": 24.34,
           "direction": "stressed",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -217709,20 +217709,20 @@
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": 0.0061,
-              "score": 42.02,
+              "value": -0.0124,
+              "score": 35.86,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.2636,
+              "value": -0.2795,
               "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": 0.0379,
-              "score": 46.44,
+              "value": 0.0194,
+              "score": 41.01,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -244629,9 +244629,9 @@
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 45.92,
+        "common_basis_score_0_100": 52.69,
         "common_basis_call": "mixed",
-        "conviction_score_0_100": 45.92,
+        "conviction_score_0_100": 52.69,
         "conviction_call": "mixed",
         "input_count": 3,
         "basis_code": "common_3_v1"
@@ -244897,7 +244897,7 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 71.5,
+          "score_0_100": 79.88,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -244905,54 +244905,54 @@
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 1438160400,
-              "score": 78.95,
+              "value": 1701240300,
+              "score": 80.77,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 1.1609,
-              "score": 60.11,
+              "value": 1.2798,
+              "score": 74.1,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 2.9398,
+              "value": 2.7501,
               "score": 100,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": 0.0682,
-              "score": 55.37,
+              "value": 0.1259,
+              "score": 72.33,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 42.96,
-          "direction": "weak",
+          "score_0_100": 54.88,
+          "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_20d_60d_relative_strength_vs_spy",
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": 0.0364,
-              "score": 52.13,
+              "value": 0.0941,
+              "score": 71.36,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.0645,
-              "score": 24.07,
+              "value": -0.0662,
+              "score": 23.71,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": 0.0682,
-              "score": 55.37,
+              "value": 0.1259,
+              "score": 72.33,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -260189,9 +260189,9 @@
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 47.92,
+        "common_basis_score_0_100": 45.18,
         "common_basis_call": "mixed",
-        "conviction_score_0_100": 47.92,
+        "conviction_score_0_100": 45.18,
         "conviction_call": "mixed",
         "input_count": 3,
         "basis_code": "common_3_v1"
@@ -260457,7 +260457,7 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 35.3,
+          "score_0_100": 32.21,
           "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -260465,33 +260465,33 @@
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 566544649.0459,
-              "score": 68.83,
+              "value": 547583065.897,
+              "score": 68.46,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 0.6928,
-              "score": 5.04,
+              "value": 0.6844,
+              "score": 4.04,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 0.5673,
-              "score": 4.49,
+              "value": 0.3841,
+              "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": 0.0061,
-              "score": 37.09,
+              "value": -0.0215,
+              "score": 28.96,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 23.28,
+          "score_0_100": 18.15,
           "direction": "stressed",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -260499,20 +260499,20 @@
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": -0.0257,
-              "score": 31.42,
+              "value": -0.0534,
+              "score": 22.21,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.1564,
-              "score": 4.92,
+              "value": -0.1476,
+              "score": 6.74,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": 0.0061,
-              "score": 37.09,
+              "value": -0.0215,
+              "score": 28.96,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -339722,9 +339722,9 @@
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 51.88,
+        "common_basis_score_0_100": 54.35,
         "common_basis_call": "mixed",
-        "conviction_score_0_100": 64.17,
+        "conviction_score_0_100": 65.65,
         "conviction_call": "mixed",
         "input_count": 5,
         "basis_code": "us_enriched_v1"
@@ -339990,41 +339990,41 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 43.61,
-          "direction": "weak",
+          "score_0_100": 45.4,
+          "direction": "neutral",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_1y_volume_liquidity_trend_proxy",
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 91761671.6021,
-              "score": 49.07,
+              "value": 93336351.703,
+              "score": 49.25,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 0.9677,
-              "score": 37.38,
+              "value": 0.9683,
+              "score": 37.45,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 0.3236,
+              "value": 0.4066,
               "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": 0.1124,
-              "score": 68.36,
+              "value": 0.1357,
+              "score": 75.2,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 55.04,
+          "score_0_100": 60.65,
           "direction": "constructive",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -340032,20 +340032,20 @@
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": 0.0806,
-              "score": 66.86,
+              "value": 0.1038,
+              "score": 74.61,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.0253,
-              "score": 32.23,
+              "value": -0.0149,
+              "score": 34.4,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": 0.1124,
-              "score": 68.36,
+              "value": 0.1357,
+              "score": 75.2,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -343690,9 +343690,9 @@
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 34.83,
+        "common_basis_score_0_100": 32.45,
         "common_basis_call": "diluted",
-        "conviction_score_0_100": 34.83,
+        "conviction_score_0_100": 32.45,
         "conviction_call": "diluted",
         "input_count": 3,
         "basis_code": "common_3_v1"
@@ -343958,7 +343958,7 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 38.51,
+          "score_0_100": 37.68,
           "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -343966,33 +343966,33 @@
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 95013744.8728,
-              "score": 49.44,
+              "value": 91377619.3945,
+              "score": 49.02,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 0.8601,
-              "score": 24.71,
+              "value": 0.8413,
+              "score": 22.5,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 0.6027,
-              "score": 6.85,
+              "value": 0.8352,
+              "score": 22.35,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": 0.0704,
-              "score": 55.99,
+              "value": 0.037,
+              "score": 46.18,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 40.16,
+          "score_0_100": 33.86,
           "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -344000,20 +344000,20 @@
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": 0.0385,
-              "score": 52.84,
+              "value": 0.0052,
+              "score": 41.72,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.1089,
-              "score": 14.81,
+              "value": -0.0998,
+              "score": 16.71,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": 0.0704,
-              "score": 55.99,
+              "value": 0.037,
+              "score": 46.18,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -348028,9 +348028,9 @@
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 28.45,
+        "common_basis_score_0_100": 27.77,
         "common_basis_call": "diluted",
-        "conviction_score_0_100": 37.63,
+        "conviction_score_0_100": 37.22,
         "conviction_call": "diluted",
         "input_count": 5,
         "basis_code": "us_enriched_v1"
@@ -348296,7 +348296,7 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 44.06,
+          "score_0_100": 42.35,
           "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -348304,33 +348304,33 @@
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 608983150.2994,
-              "score": 69.62,
+              "value": 605694837.937,
+              "score": 69.56,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 1.02,
-              "score": 43.52,
+              "value": 1.0334,
+              "score": 45.11,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 0.7303,
-              "score": 15.35,
+              "value": 0.5749,
+              "score": 4.99,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": -0.0315,
-              "score": 26.04,
+              "value": -0.0387,
+              "score": 23.91,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 24.63,
+          "score_0_100": 24.29,
           "direction": "stressed",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -348338,20 +348338,20 @@
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": -0.0633,
-              "score": 18.9,
+              "value": -0.0706,
+              "score": 16.48,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.0303,
-              "score": 31.2,
+              "value": -0.0142,
+              "score": 34.55,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": -0.0315,
-              "score": 26.04,
+              "value": -0.0387,
+              "score": 23.91,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -394327,9 +394327,9 @@
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 20.61,
+        "common_basis_score_0_100": 20.37,
         "common_basis_call": "diluted",
-        "conviction_score_0_100": 20.61,
+        "conviction_score_0_100": 20.37,
         "conviction_call": "diluted",
         "input_count": 3,
         "basis_code": "common_3_v1"
@@ -394595,41 +394595,41 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 30.27,
-          "direction": "weak",
+          "score_0_100": 24.9,
+          "direction": "stressed",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_1y_volume_liquidity_trend_proxy",
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 117101964,
-              "score": 51.71,
+              "value": 114470620,
+              "score": 51.47,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 0.4968,
+              "value": 0.5066,
               "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 1.1912,
-              "score": 46.08,
+              "value": 0.4056,
+              "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": -0.0485,
-              "score": 21.02,
+              "value": -0.0264,
+              "score": 27.53,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 10.14,
+          "score_0_100": 14.77,
           "direction": "stressed",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -394637,20 +394637,20 @@
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": -0.0804,
-              "score": 13.2,
+              "value": -0.0583,
+              "score": 20.58,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.2601,
+              "value": -0.2579,
               "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": -0.0485,
-              "score": 21.02,
+              "value": -0.0264,
+              "score": 27.53,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -404048,10 +404048,10 @@
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 41.49,
-        "common_basis_call": "mixed",
-        "conviction_score_0_100": 41.49,
-        "conviction_call": "mixed",
+        "common_basis_score_0_100": 34.16,
+        "common_basis_call": "diluted",
+        "conviction_score_0_100": 34.16,
+        "conviction_call": "diluted",
         "input_count": 3,
         "basis_code": "common_3_v1"
       },
@@ -404316,62 +404316,62 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 56.28,
-          "direction": "constructive",
+          "score_0_100": 43.73,
+          "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_1y_volume_liquidity_trend_proxy",
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 314593987.5967,
-              "score": 62.44,
+              "value": 293249536.0045,
+              "score": 61.68,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 0.9671,
-              "score": 37.3,
+              "value": 0.9265,
+              "score": 32.53,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 1.8355,
-              "score": 89.03,
+              "value": 0.9296,
+              "score": 28.64,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": 0.0397,
-              "score": 46.97,
+              "value": 0.0121,
+              "score": 38.86,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 37.42,
-          "direction": "weak",
+          "score_0_100": 27.97,
+          "direction": "stressed",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_20d_60d_relative_strength_vs_spy",
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": 0.0079,
-              "score": 42.62,
+              "value": -0.0197,
+              "score": 33.43,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.0587,
-              "score": 25.27,
+              "value": -0.1094,
+              "score": 14.72,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": 0.0397,
-              "score": 46.97,
+              "value": 0.0121,
+              "score": 38.86,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -410661,9 +410661,9 @@
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 69.58,
+        "common_basis_score_0_100": 64.13,
         "common_basis_call": "mixed",
-        "conviction_score_0_100": 69.58,
+        "conviction_score_0_100": 64.13,
         "conviction_call": "mixed",
         "input_count": 3,
         "basis_code": "common_3_v1"
@@ -410929,7 +410929,7 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 60.7,
+          "score_0_100": 59,
           "direction": "constructive",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -410937,54 +410937,54 @@
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 53617383840,
+              "value": 51878032850,
               "score": 100,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 0.9239,
-              "score": 32.23,
+              "value": 0.9497,
+              "score": 35.26,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 0.8653,
-              "score": 24.35,
+              "value": 0.8997,
+              "score": 26.65,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": 0.0703,
-              "score": 55.98,
+              "value": 0.0321,
+              "score": 44.74,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 48.03,
-          "direction": "neutral",
+          "score_0_100": 33.39,
+          "direction": "weak",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_20d_60d_relative_strength_vs_spy",
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": 0.0385,
-              "score": 52.82,
+              "value": 0.0003,
+              "score": 40.09,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": -0.0008,
-              "score": 37.33,
+              "value": -0.0922,
+              "score": 18.29,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": 0.0703,
-              "score": 55.98,
+              "value": 0.0321,
+              "score": 44.74,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -420713,9 +420713,9 @@
         "action_bucket": "momentum"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 77.29,
+        "common_basis_score_0_100": 77.44,
         "common_basis_call": "concentrated",
-        "conviction_score_0_100": 72.57,
+        "conviction_score_0_100": 72.66,
         "conviction_call": "concentrated",
         "input_count": 5,
         "basis_code": "us_enriched_v1"
@@ -420971,7 +420971,7 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 72.66,
+          "score_0_100": 73.11,
           "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -420979,25 +420979,25 @@
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 1266049966.357,
-              "score": 77.56,
+              "value": 1260326205.0306,
+              "score": 77.51,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 1.2874,
-              "score": 74.98,
+              "value": 1.2588,
+              "score": 71.62,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 0.6774,
-              "score": 11.82,
+              "value": 0.8079,
+              "score": 20.53,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": 0.3156,
+              "value": 0.3166,
               "score": 100,
               "peer_group": "rule",
               "peer_count": null
@@ -421013,19 +421013,19 @@
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": 0.2838,
+              "value": 0.2847,
               "score": 100,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": 0.6022,
+              "value": 0.5816,
               "score": 100,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": 0.3156,
+              "value": 0.3166,
               "score": 100,
               "peer_group": "rule",
               "peer_count": null
@@ -444406,7 +444406,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 87,
+          "score_0_100": 86.74,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -444415,19 +444415,19 @@
           "vector_feature_count": 4,
           "nearest_peers": [
             {
-              "ticker": "HONA",
-              "company": "Honeywell Aerospace Inc.",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 87.65,
-              "shared_feature_count": 4
-            },
-            {
               "ticker": "MRSH",
               "company": "Marsh & McLennan Companies, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
               "similarity_score": 87.36,
+              "shared_feature_count": 4
+            },
+            {
+              "ticker": "HONA",
+              "company": "Honeywell Aerospace Inc.",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 86.87,
               "shared_feature_count": 4
             },
             {
@@ -444815,7 +444815,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 90.24,
+          "score_0_100": 90.35,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -444832,6 +444832,14 @@
               "shared_feature_count": 4
             },
             {
+              "ticker": "CAG",
+              "company": "Conagra Brands, Inc.",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 88.41,
+              "shared_feature_count": 4
+            },
+            {
               "ticker": "PSKY",
               "company": "Paramount Skydance Corporation",
               "market_scope": "us",
@@ -444845,14 +444853,6 @@
               "market_scope": "us",
               "canonical_sector": "Other",
               "similarity_score": 88.08,
-              "shared_feature_count": 4
-            },
-            {
-              "ticker": "CAG",
-              "company": "Conagra Brands, Inc.",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 87.97,
               "shared_feature_count": 4
             },
             {
@@ -445224,7 +445224,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 89.54,
+          "score_0_100": 89.34,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -445237,7 +445237,7 @@
               "company": "Honeywell Aerospace Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 94.59,
+              "similarity_score": 94.01,
               "shared_feature_count": 4
             },
             {
@@ -446042,7 +446042,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 90.66,
+          "score_0_100": 90.72,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -446055,7 +446055,7 @@
               "company": "Jacobs Solutions Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 92.23,
+              "similarity_score": 92.42,
               "shared_feature_count": 4
             },
             {
@@ -446266,9 +446266,9 @@
         "action_bucket": "index_core"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 51.11,
+        "common_basis_score_0_100": 50.9,
         "common_basis_call": "mixed",
-        "conviction_score_0_100": 45.42,
+        "conviction_score_0_100": 45.3,
         "conviction_call": "mixed",
         "input_count": 5,
         "basis_code": "us_enriched_v1"
@@ -446375,20 +446375,20 @@
           }
         },
         "technical_flow": {
-          "score_0_100": 26.13,
+          "score_0_100": 25.5,
           "direction": "stressed",
           "coverage_ratio": 1,
           "confidence": "high",
           "components": {
             "return12m": {
               "value": -0.1817,
-              "score": 17.86,
+              "score": 16.96,
               "peer_group": "market_sector",
               "peer_count": 113
             },
             "ret1y": {
               "value": -0.1817,
-              "score": 17.86,
+              "score": 16.96,
               "peer_group": "market_sector",
               "peer_count": 113
             },
@@ -446407,12 +446407,12 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 11.48,
+          "score_0_100": 11.12,
           "direction": "downside_bias",
           "coverage_ratio": 0.375,
           "confidence": "medium",
-          "upside_score_0_100": 12.71,
-          "downside_score_0_100": 89.74,
+          "upside_score_0_100": 12.44,
+          "downside_score_0_100": 90.2,
           "components": {
             "upside": {
               "valuation_room": null,
@@ -446425,7 +446425,7 @@
               "growth_support": null,
               "technical_confirmation": {
                 "value": null,
-                "score": 26.13,
+                "score": 25.5,
                 "peer_group": "rule",
                 "peer_count": null
               },
@@ -446441,7 +446441,7 @@
               },
               "negative_momentum": {
                 "value": 0.1817,
-                "score": 82.14,
+                "score": 83.04,
                 "peer_group": "market_sector",
                 "peer_count": 113
               },
@@ -446451,7 +446451,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 88.62,
+          "score_0_100": 88.5,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -446464,7 +446464,7 @@
               "company": "Cintas Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 91.17,
+              "similarity_score": 90.88,
               "shared_feature_count": 4
             },
             {
@@ -446472,7 +446472,7 @@
               "company": "TransDigm Group Incorporated",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.56,
+              "similarity_score": 88.71,
               "shared_feature_count": 4
             },
             {
@@ -446480,7 +446480,7 @@
               "company": "AvalonBay Communities, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.14,
+              "similarity_score": 85.92,
               "shared_feature_count": 4
             },
             {
@@ -446488,7 +446488,7 @@
               "company": "Extra Space Storage Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 83.11,
+              "similarity_score": 82.65,
               "shared_feature_count": 4
             },
             {
@@ -446496,7 +446496,7 @@
               "company": "Nasdaq, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 82.11,
+              "similarity_score": 81.74,
               "shared_feature_count": 4
             }
           ]
@@ -447313,7 +447313,7 @@
               "company": "Jacobs Solutions Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.68,
+              "similarity_score": 87.76,
               "shared_feature_count": 4
             }
           ]
@@ -448053,7 +448053,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 92.83,
+          "score_0_100": 92.95,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -448066,7 +448066,7 @@
               "company": "Equifax Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 94.44,
+              "similarity_score": 94.82,
               "shared_feature_count": 4
             },
             {
@@ -448090,7 +448090,7 @@
               "company": "Erie Indemnity Company",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.24,
+              "similarity_score": 88.45,
               "shared_feature_count": 4
             },
             {
@@ -448462,7 +448462,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 93.52,
+          "score_0_100": 93.63,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -448471,19 +448471,19 @@
           "vector_feature_count": 4,
           "nearest_peers": [
             {
+              "ticker": "EFX",
+              "company": "Equifax Inc.",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 93.83,
+              "shared_feature_count": 4
+            },
+            {
               "ticker": "BR",
               "company": "Broadridge Financial Solutions,",
               "market_scope": "us",
               "canonical_sector": "Other",
               "similarity_score": 93.69,
-              "shared_feature_count": 4
-            },
-            {
-              "ticker": "EFX",
-              "company": "Equifax Inc.",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 93.48,
               "shared_feature_count": 4
             },
             {
@@ -450542,7 +450542,7 @@
               "company": "Fifth Third Bancorp",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.31,
+              "similarity_score": 89.7,
               "shared_feature_count": 4
             },
             {
@@ -452769,9 +452769,9 @@
         "action_bucket": "index_core"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 52.35,
+        "common_basis_score_0_100": 53.27,
         "common_basis_call": "mixed",
-        "conviction_score_0_100": 48.18,
+        "conviction_score_0_100": 48.73,
         "conviction_call": "mixed",
         "input_count": 5,
         "basis_code": "us_enriched_v1"
@@ -452884,13 +452884,13 @@
           "confidence": "high",
           "components": {
             "return12m": {
-              "value": -0.081,
+              "value": -0.0713,
               "score": 25,
               "peer_group": "market_sector",
               "peer_count": 113
             },
             "ret1y": {
-              "value": -0.081,
+              "value": -0.0713,
               "score": 25,
               "peer_group": "market_sector",
               "peer_count": 113
@@ -452920,7 +452920,7 @@
             "upside": {
               "valuation_room": null,
               "forward_pe_discount": {
-                "value": 33.1648,
+                "value": 33.5852,
                 "score": 14.16,
                 "peer_group": "market_sector",
                 "peer_count": 114
@@ -452937,13 +452937,13 @@
             "downside": {
               "valuation_crowding": null,
               "forward_pe_pressure": {
-                "value": 33.1648,
+                "value": 33.5852,
                 "score": 85.84,
                 "peer_group": "market_sector",
                 "peer_count": 114
               },
               "negative_momentum": {
-                "value": 0.081,
+                "value": 0.0713,
                 "score": 75,
                 "peer_group": "market_sector",
                 "peer_count": 113
@@ -452954,7 +452954,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 90.23,
+          "score_0_100": 90.14,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -452967,7 +452967,7 @@
               "company": "Axon Enterprise, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 91.17,
+              "similarity_score": 90.88,
               "shared_feature_count": 4
             },
             {
@@ -453005,7 +453005,7 @@
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 55.71,
+          "score_0_100": 56.44,
           "direction": "constructive",
           "coverage_ratio": 1,
           "confidence": "high",
@@ -453013,54 +453013,54 @@
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 538355229.0016,
-              "score": 68.28,
+              "value": 533920416.033,
+              "score": 68.19,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": {
-              "value": 1.1358,
-              "score": 57.15,
+              "value": 1.1099,
+              "score": 54.11,
               "peer_group": "rule",
               "peer_count": null
             },
             "latest_volume_vs_20d": {
-              "value": 0.6112,
-              "score": 7.42,
+              "value": 0.6862,
+              "score": 12.41,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": 0.1032,
-              "score": 65.64,
+              "value": 0.1137,
+              "score": 68.72,
               "peer_group": "rule",
               "peer_count": null
             }
           }
         },
         "short_term_relative_strength": {
-          "score_0_100": 69.44,
-          "direction": "constructive",
+          "score_0_100": 71.45,
+          "direction": "strong",
           "coverage_ratio": 1,
           "confidence": "high",
           "basis": "local_yf_20d_60d_relative_strength_vs_spy",
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": 0.0713,
-              "score": 63.78,
+              "value": 0.0818,
+              "score": 67.27,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": {
-              "value": 0.1987,
-              "score": 78.9,
+              "value": 0.1963,
+              "score": 78.39,
               "peer_group": "rule",
               "peer_count": null
             },
             "absolute_return_20d": {
-              "value": 0.1032,
-              "score": 65.64,
+              "value": 0.1137,
+              "score": 68.72,
               "peer_group": "rule",
               "peer_count": null
             }
@@ -454545,18 +454545,18 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 26.54,
+          "score_0_100": 27.02,
           "direction": "downside_bias",
           "coverage_ratio": 0.375,
           "confidence": "medium",
-          "upside_score_0_100": 27.82,
-          "downside_score_0_100": 74.73,
+          "upside_score_0_100": 28.33,
+          "downside_score_0_100": 74.3,
           "components": {
             "upside": {
               "valuation_room": null,
               "forward_pe_discount": {
                 "value": 17.8258,
-                "score": 40.71,
+                "score": 41.59,
                 "peer_group": "market_sector",
                 "peer_count": 114
               },
@@ -454573,7 +454573,7 @@
               "valuation_crowding": null,
               "forward_pe_pressure": {
                 "value": 17.8258,
-                "score": 59.29,
+                "score": 58.41,
                 "peer_group": "market_sector",
                 "peer_count": 114
               },
@@ -454589,7 +454589,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 92.32,
+          "score_0_100": 92.68,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -454602,7 +454602,7 @@
               "company": "Broadridge Financial Solutions,",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 94.44,
+              "similarity_score": 94.82,
               "shared_feature_count": 4
             },
             {
@@ -454610,7 +454610,7 @@
               "company": "Brown & Brown, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 93.48,
+              "similarity_score": 93.83,
               "shared_feature_count": 4
             },
             {
@@ -454618,7 +454618,7 @@
               "company": "International Paper Company",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.03,
+              "similarity_score": 89.38,
               "shared_feature_count": 4
             },
             {
@@ -454634,7 +454634,7 @@
               "company": "Veralto Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.83,
+              "similarity_score": 87.64,
               "shared_feature_count": 4
             }
           ]
@@ -455772,18 +455772,18 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 25.01,
+          "score_0_100": 25.48,
           "direction": "downside_bias",
           "coverage_ratio": 0.375,
           "confidence": "medium",
-          "upside_score_0_100": 26.53,
-          "downside_score_0_100": 76.51,
+          "upside_score_0_100": 27.03,
+          "downside_score_0_100": 76.07,
           "components": {
             "upside": {
               "valuation_room": null,
               "forward_pe_discount": {
                 "value": 18.0121,
-                "score": 38.94,
+                "score": 39.82,
                 "peer_group": "market_sector",
                 "peer_count": 114
               },
@@ -455800,7 +455800,7 @@
               "valuation_crowding": null,
               "forward_pe_pressure": {
                 "value": 18.0121,
-                "score": 61.06,
+                "score": 60.18,
                 "peer_group": "market_sector",
                 "peer_count": 114
               },
@@ -455816,7 +455816,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 88.65,
+          "score_0_100": 88.83,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -455829,7 +455829,7 @@
               "company": "FactSet Research Systems Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.72,
+              "similarity_score": 90.07,
               "shared_feature_count": 4
             },
             {
@@ -455837,7 +455837,7 @@
               "company": "Broadridge Financial Solutions,",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.24,
+              "similarity_score": 88.45,
               "shared_feature_count": 4
             },
             {
@@ -455853,7 +455853,7 @@
               "company": "Paycom Software, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.71,
+              "similarity_score": 87.87,
               "shared_feature_count": 4
             },
             {
@@ -455861,7 +455861,7 @@
               "company": "Wynn Resorts, Limited",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.76,
+              "similarity_score": 86.67,
               "shared_feature_count": 4
             }
           ]
@@ -457489,7 +457489,7 @@
               "company": "Erie Indemnity Company",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.72,
+              "similarity_score": 90.07,
               "shared_feature_count": 4
             },
             {
@@ -458669,7 +458669,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 91.26,
+          "score_0_100": 91.47,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -458682,15 +458682,7 @@
               "company": "M&T Bank Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 94.49,
-              "shared_feature_count": 4
-            },
-            {
-              "ticker": "BK",
-              "company": "Bank of New York Mellon Corp",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 89.81,
+              "similarity_score": 94.92,
               "shared_feature_count": 4
             },
             {
@@ -458698,7 +458690,7 @@
               "company": "Northern Trust Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.47,
+              "similarity_score": 89.79,
               "shared_feature_count": 4
             },
             {
@@ -458706,7 +458698,15 @@
               "company": "Citizens Financial Group, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.31,
+              "similarity_score": 89.7,
+              "shared_feature_count": 4
+            },
+            {
+              "ticker": "BK",
+              "company": "Bank of New York Mellon Corp",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 89.63,
               "shared_feature_count": 4
             },
             {
@@ -458714,7 +458714,7 @@
               "company": "United Airlines Holdings, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.54,
+              "similarity_score": 88.69,
               "shared_feature_count": 4
             }
           ]
@@ -461756,9 +461756,9 @@
         "action_bucket": "index_core"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 18.88,
+        "common_basis_score_0_100": 18.58,
         "common_basis_call": "diluted",
-        "conviction_score_0_100": 33.42,
+        "conviction_score_0_100": 33.24,
         "conviction_call": "diluted",
         "input_count": 5,
         "basis_code": "us_enriched_v1"
@@ -461865,20 +461865,20 @@
           }
         },
         "technical_flow": {
-          "score_0_100": 14.85,
+          "score_0_100": 16.11,
           "direction": "stressed",
           "coverage_ratio": 1,
           "confidence": "high",
           "components": {
             "return12m": {
-              "value": -0.1846,
-              "score": 16.96,
+              "value": -0.1704,
+              "score": 18.75,
               "peer_group": "market_sector",
               "peer_count": 113
             },
             "ret1y": {
-              "value": -0.1846,
-              "score": 16.96,
+              "value": -0.1704,
+              "score": 18.75,
               "peer_group": "market_sector",
               "peer_count": 113
             },
@@ -461897,25 +461897,25 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 29.7,
+          "score_0_100": 29,
           "direction": "downside_bias",
           "coverage_ratio": 0.375,
           "confidence": "low",
-          "upside_score_0_100": 30.13,
-          "downside_score_0_100": 70.72,
+          "upside_score_0_100": 29.16,
+          "downside_score_0_100": 71.16,
           "components": {
             "upside": {
               "valuation_room": null,
               "forward_pe_discount": {
-                "value": 17.7269,
-                "score": 41.59,
+                "value": 18.0356,
+                "score": 38.94,
                 "peer_group": "market_sector",
                 "peer_count": 114
               },
               "growth_support": null,
               "technical_confirmation": {
                 "value": null,
-                "score": 14.85,
+                "score": 16.11,
                 "peer_group": "rule",
                 "peer_count": null
               },
@@ -461924,14 +461924,14 @@
             "downside": {
               "valuation_crowding": null,
               "forward_pe_pressure": {
-                "value": 17.7269,
-                "score": 58.41,
+                "value": 18.0356,
+                "score": 61.06,
                 "peer_group": "market_sector",
                 "peer_count": 114
               },
               "negative_momentum": {
-                "value": 0.1846,
-                "score": 83.04,
+                "value": 0.1704,
+                "score": 81.25,
                 "peer_group": "market_sector",
                 "peer_count": 113
               },
@@ -461941,7 +461941,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 90.88,
+          "score_0_100": 91.46,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -461954,7 +461954,7 @@
               "company": "Ares Management Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 94.59,
+              "similarity_score": 94.01,
               "shared_feature_count": 4
             },
             {
@@ -461962,7 +461962,7 @@
               "company": "TransDigm Group Incorporated",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.97,
+              "similarity_score": 91.3,
               "shared_feature_count": 4
             },
             {
@@ -461970,7 +461970,7 @@
               "company": "Marsh & McLennan Companies, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.09,
+              "similarity_score": 89.06,
               "shared_feature_count": 4
             },
             {
@@ -461978,7 +461978,7 @@
               "company": "Apollo Global Management, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.65,
+              "similarity_score": 86.87,
               "shared_feature_count": 4
             },
             {
@@ -461986,13 +461986,13 @@
               "company": "Nasdaq, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 83.22,
+              "similarity_score": 84.71,
               "shared_feature_count": 4
             }
           ]
         },
         "volume_liquidity_trend": {
-          "score_0_100": 41.8,
+          "score_0_100": 39.64,
           "direction": "weak",
           "coverage_ratio": 0.75,
           "confidence": "medium",
@@ -462000,20 +462000,20 @@
           "caveat": "Volume/liquidity trend is a local OHLCV proxy, not true order flow.",
           "components": {
             "dollar_liquidity_20d": {
-              "value": 656022211.9918,
-              "score": 70.42,
+              "value": 674264016.9772,
+              "score": 70.72,
               "peer_group": "rule",
               "peer_count": null
             },
             "volume_trend_20d_vs_60d": null,
             "latest_volume_vs_20d": {
-              "value": 1.1701,
-              "score": 44.67,
+              "value": 0.9982,
+              "score": 33.21,
               "peer_group": "rule",
               "peer_count": null
             },
             "price_confirmation_20d": {
-              "value": -0.2345,
+              "value": -0.2004,
               "score": 0,
               "peer_group": "rule",
               "peer_count": null
@@ -462029,14 +462029,14 @@
           "caveat": "Short-term relative strength is a price-return proxy versus SPY, not a forecast.",
           "components": {
             "relative_return_20d_vs_spy": {
-              "value": -0.2663,
+              "value": -0.2322,
               "score": 0,
               "peer_group": "rule",
               "peer_count": null
             },
             "relative_return_60d_vs_spy": null,
             "absolute_return_20d": {
-              "value": -0.2345,
+              "value": -0.2004,
               "score": 0,
               "peer_group": "rule",
               "peer_count": null
@@ -464385,7 +464385,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 90.92,
+          "score_0_100": 91.04,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -464414,7 +464414,7 @@
               "company": "Equifax Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.03,
+              "similarity_score": 89.38,
               "shared_feature_count": 4
             },
             {
@@ -465568,18 +465568,18 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 42.63,
+          "score_0_100": 43.1,
           "direction": "balanced",
           "coverage_ratio": 0.375,
           "confidence": "medium",
-          "upside_score_0_100": 43.91,
-          "downside_score_0_100": 58.66,
+          "upside_score_0_100": 44.42,
+          "downside_score_0_100": 58.22,
           "components": {
             "upside": {
               "valuation_room": null,
               "forward_pe_discount": {
                 "value": 17.839,
-                "score": 39.82,
+                "score": 40.71,
                 "peer_group": "market_sector",
                 "peer_count": 114
               },
@@ -465596,7 +465596,7 @@
               "valuation_crowding": null,
               "forward_pe_pressure": {
                 "value": 17.839,
-                "score": 60.18,
+                "score": 59.29,
                 "peer_group": "market_sector",
                 "peer_count": 114
               },
@@ -465625,7 +465625,7 @@
               "company": "Avery Dennison Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 92.23,
+              "similarity_score": 92.42,
               "shared_feature_count": 4
             },
             {
@@ -465633,7 +465633,7 @@
               "company": "News Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.35,
+              "similarity_score": 89.07,
               "shared_feature_count": 4
             },
             {
@@ -465641,15 +465641,7 @@
               "company": "Brown-Forman Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.68,
-              "shared_feature_count": 4
-            },
-            {
-              "ticker": "REG",
-              "company": "Regency Centers Corporation",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 86.94,
+              "similarity_score": 87.76,
               "shared_feature_count": 4
             },
             {
@@ -465657,7 +465649,15 @@
               "company": "Textron Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.62,
+              "similarity_score": 87,
+              "shared_feature_count": 4
+            },
+            {
+              "ticker": "SW",
+              "company": "Smurfit Westrock Plc",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 86.7,
               "shared_feature_count": 4
             }
           ]
@@ -468475,7 +468475,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 90.94,
+          "score_0_100": 91.27,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -468504,7 +468504,7 @@
               "company": "Honeywell Aerospace Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.09,
+              "similarity_score": 89.06,
               "shared_feature_count": 4
             },
             {
@@ -469293,7 +469293,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 92.97,
+          "score_0_100": 93.11,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -469306,7 +469306,7 @@
               "company": "Fifth Third Bancorp",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 94.49,
+              "similarity_score": 94.92,
               "shared_feature_count": 4
             },
             {
@@ -469747,7 +469747,7 @@
               "company": "Fifth Third Bancorp",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 79.82,
+              "similarity_score": 79.88,
               "shared_feature_count": 4
             }
           ]
@@ -470111,7 +470111,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 94.24,
+          "score_0_100": 94.36,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -470140,7 +470140,7 @@
               "company": "Conagra Brands, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 92.79,
+              "similarity_score": 93.15,
               "shared_feature_count": 4
             },
             {
@@ -470929,7 +470929,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 91.18,
+          "score_0_100": 91.28,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -470958,7 +470958,7 @@
               "company": "Fifth Third Bancorp",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.47,
+              "similarity_score": 89.79,
               "shared_feature_count": 4
             },
             {
@@ -471379,11 +471379,11 @@
               "shared_feature_count": 4
             },
             {
-              "ticker": "J",
-              "company": "Jacobs Solutions Inc.",
+              "ticker": "BXP",
+              "company": "BXP, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.35,
+              "similarity_score": 89.18,
               "shared_feature_count": 4
             }
           ]
@@ -473015,11 +473015,11 @@
               "shared_feature_count": 4
             },
             {
-              "ticker": "FDS",
-              "company": "FactSet Research Systems Inc.",
+              "ticker": "CAG",
+              "company": "Conagra Brands, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.52,
+              "similarity_score": 89.89,
               "shared_feature_count": 4
             }
           ]
@@ -475428,7 +475428,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 86.59,
+          "score_0_100": 86.34,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -475441,7 +475441,7 @@
               "company": "Equifax Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.76,
+              "similarity_score": 87.36,
               "shared_feature_count": 4
             },
             {
@@ -475449,7 +475449,7 @@
               "company": "Erie Indemnity Company",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.46,
+              "similarity_score": 86.12,
               "shared_feature_count": 4
             },
             {
@@ -477064,7 +477064,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 92.73,
+          "score_0_100": 92.62,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -477077,7 +477077,7 @@
               "company": "Conagra Brands, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 98.16,
+              "similarity_score": 97.83,
               "shared_feature_count": 4
             },
             {
@@ -477473,7 +477473,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 90.19,
+          "score_0_100": 90.63,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -477481,6 +477481,14 @@
           "peer_count": 113,
           "vector_feature_count": 4,
           "nearest_peers": [
+            {
+              "ticker": "HONA",
+              "company": "Honeywell Aerospace Inc.",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 91.3,
+              "shared_feature_count": 4
+            },
             {
               "ticker": "ARES",
               "company": "Ares Management Corporation",
@@ -477498,19 +477506,11 @@
               "shared_feature_count": 4
             },
             {
-              "ticker": "HONA",
-              "company": "Honeywell Aerospace Inc.",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 89.97,
-              "shared_feature_count": 4
-            },
-            {
               "ticker": "AXON",
               "company": "Axon Enterprise, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.56,
+              "similarity_score": 88.71,
               "shared_feature_count": 4
             },
             {
@@ -478332,11 +478332,11 @@
               "shared_feature_count": 4
             },
             {
-              "ticker": "APO",
-              "company": "Apollo Global Management, Inc.",
+              "ticker": "HONA",
+              "company": "Honeywell Aerospace Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 84.09,
+              "similarity_score": 84.2,
               "shared_feature_count": 4
             }
           ]
@@ -479109,7 +479109,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 88.12,
+          "score_0_100": 88.25,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -479138,7 +479138,7 @@
               "company": "Jacobs Solutions Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.62,
+              "similarity_score": 87,
               "shared_feature_count": 4
             },
             {
@@ -479518,7 +479518,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 88.19,
+          "score_0_100": 88.24,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -479527,19 +479527,19 @@
           "vector_feature_count": 4,
           "nearest_peers": [
             {
+              "ticker": "FITB",
+              "company": "Fifth Third Bancorp",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 88.69,
+              "shared_feature_count": 4
+            },
+            {
               "ticker": "MTB",
               "company": "M&T Bank Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
               "similarity_score": 88.65,
-              "shared_feature_count": 4
-            },
-            {
-              "ticker": "FITB",
-              "company": "Fifth Third Bancorp",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 88.54,
               "shared_feature_count": 4
             },
             {
@@ -481191,7 +481191,7 @@
               "company": "Equifax Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.83,
+              "similarity_score": 87.64,
               "shared_feature_count": 4
             },
             {
@@ -483653,7 +483653,7 @@
               "company": "Erie Indemnity Company",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 86.76,
+              "similarity_score": 86.67,
               "shared_feature_count": 4
             }
           ]
@@ -486532,7 +486532,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 87.71,
+          "score_0_100": 87.65,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -486545,7 +486545,7 @@
               "company": "Fifth Third Bancorp",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.81,
+              "similarity_score": 89.63,
               "shared_feature_count": 4
             },
             {
@@ -486723,9 +486723,9 @@
         "action_bucket": "watch"
       },
       "short_term_composite": {
-        "common_basis_score_0_100": 33.53,
+        "common_basis_score_0_100": 33.27,
         "common_basis_call": "diluted",
-        "conviction_score_0_100": 37.45,
+        "conviction_score_0_100": 37.29,
         "conviction_call": "diluted",
         "input_count": 5,
         "basis_code": "us_enriched_v1"
@@ -486832,20 +486832,20 @@
           }
         },
         "technical_flow": {
-          "score_0_100": 18.91,
+          "score_0_100": 18.13,
           "direction": "stressed",
           "coverage_ratio": 0.8,
           "confidence": "high",
           "components": {
             "return12m": {
               "value": -0.1719,
-              "score": 18.75,
+              "score": 17.86,
               "peer_group": "market_sector",
               "peer_count": 113
             },
             "ret1y": {
               "value": -0.1719,
-              "score": 18.75,
+              "score": 17.86,
               "peer_group": "market_sector",
               "peer_count": 113
             },
@@ -486859,12 +486859,12 @@
           }
         },
         "upside_downside": {
-          "score_0_100": 53.3,
+          "score_0_100": 52.92,
           "direction": "balanced",
           "coverage_ratio": 0.375,
           "confidence": "low",
-          "upside_score_0_100": 55.64,
-          "downside_score_0_100": 49.03,
+          "upside_score_0_100": 55.31,
+          "downside_score_0_100": 49.47,
           "components": {
             "upside": {
               "valuation_room": null,
@@ -486877,7 +486877,7 @@
               "growth_support": null,
               "technical_confirmation": {
                 "value": null,
-                "score": 18.91,
+                "score": 18.13,
                 "peer_group": "rule",
                 "peer_count": null
               },
@@ -486893,7 +486893,7 @@
               },
               "negative_momentum": {
                 "value": 0.1719,
-                "score": 81.25,
+                "score": 82.14,
                 "peer_group": "market_sector",
                 "peer_count": 113
               },
@@ -486903,7 +486903,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 93.45,
+          "score_0_100": 93.62,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -486916,7 +486916,7 @@
               "company": "Molson Coors Beverage Company",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 98.16,
+              "similarity_score": 97.83,
               "shared_feature_count": 4
             },
             {
@@ -486924,7 +486924,7 @@
               "company": "Norwegian Cruise Line Holdings Ltd.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 92.79,
+              "similarity_score": 93.15,
               "shared_feature_count": 4
             },
             {
@@ -486932,7 +486932,7 @@
               "company": "Paramount Skydance Corporation",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.41,
+              "similarity_score": 89.89,
               "shared_feature_count": 4
             },
             {
@@ -486940,7 +486940,7 @@
               "company": "The Campbell's Company",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.32,
+              "similarity_score": 89.67,
               "shared_feature_count": 4
             },
             {
@@ -486948,7 +486948,7 @@
               "company": "EPAM Systems, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 88.11,
+              "similarity_score": 88.67,
               "shared_feature_count": 4
             }
           ]
@@ -487352,7 +487352,7 @@
               "company": "Conagra Brands, Inc.",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 89.32,
+              "similarity_score": 89.67,
               "shared_feature_count": 4
             }
           ]
@@ -488115,7 +488115,7 @@
           }
         },
         "market_similarity": {
-          "score_0_100": 91.05,
+          "score_0_100": 91.13,
           "direction": "peer_comparable",
           "coverage_ratio": 0.5714,
           "confidence": "medium",
@@ -488140,19 +488140,19 @@
               "shared_feature_count": 4
             },
             {
+              "ticker": "CAG",
+              "company": "Conagra Brands, Inc.",
+              "market_scope": "us",
+              "canonical_sector": "Other",
+              "similarity_score": 88.67,
+              "shared_feature_count": 4
+            },
+            {
               "ticker": "NCLH",
               "company": "Norwegian Cruise Line Holdings Ltd.",
               "market_scope": "us",
               "canonical_sector": "Other",
               "similarity_score": 88.44,
-              "shared_feature_count": 4
-            },
-            {
-              "ticker": "CAG",
-              "company": "Conagra Brands, Inc.",
-              "market_scope": "us",
-              "canonical_sector": "Other",
-              "similarity_score": 88.11,
               "shared_feature_count": 4
             },
             {
@@ -489776,7 +489776,7 @@
               "company": "Erie Indemnity Company",
               "market_scope": "us",
               "canonical_sector": "Other",
-              "similarity_score": 87.71,
+              "similarity_score": 87.87,
               "shared_feature_count": 4
             }
           ]
