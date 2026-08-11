@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-22T01:10:12Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29879427185",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "error": "StockDetailValidationError: Yahoo history close must be a finite number",
       "event_name": "schedule",
@@ -182,29 +169,42 @@
       "run_id": "31228360458",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 545,
+      "natural": true,
+      "observed_at": "2026-08-10T23:58:37Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31444023136",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T22:54:50Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-11T00:01:11Z",
+    "history_as_of": "2026-08-10",
     "path": "data/yf/finance/MRSH.json",
-    "payload_sha256": "fd5ca2784979a471fb4412d072ad491b8fa6f42e4fabfdf210fb62cd2ecea526",
-    "quote_as_of": "2026-08-07T20:00:02Z",
-    "source_as_of": "2026-08-07"
+    "payload_sha256": "5490d178d518d124594a683846442de1b20622360b901f5b6c6e4001f2b3d086",
+    "quote_as_of": "2026-08-10T20:00:02Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 545,
     "natural": true,
-    "observed_at": "2026-08-07T23:55:57Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-10T23:58:37Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31228360458",
+    "run_id": "31444023136",
     "schedule": "20 23 * * 1-5",
     "shard": "1/5"
   },
@@ -231,14 +231,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-07T22:50:55Z",
-    "payload_sha256": "7ca33128b800385771c6b93ed604fb72b06e380b2d77f48be4b3ad67cf39349c",
-    "quote_as_of": "2026-08-07T20:00:02Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-10T23:58:37Z",
+    "payload_sha256": "c652fffa4325c12ac4afa7a5dc0b87e82eda2e76cc90bd4f4c7ed5af63dc554a",
+    "quote_as_of": "2026-08-10T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "31225112049",
+    "run_id": "31444023136",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-08-10"
   },
   "recovered_at": "2026-07-28T00:14:11Z",
   "recovered_from_run_id": "30135937225",
@@ -249,5 +249,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MRSH",
-  "updated_at": "2026-08-07T23:55:57Z"
+  "updated_at": "2026-08-10T23:58:37Z"
 }

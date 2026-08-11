@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-01T18:50:24Z",
     "history_as_of": "2026-07-31",
-    "path": "data/yf/finance/CNQQ.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CNQQ.json",
     "payload_sha256": "1bc1e793c43910c94395194b2bbd1942f1a38b931e86b7377cb6aff28fca6099",
     "quote_as_of": "2026-07-31T20:00:01Z",
     "source_as_of": "2026-07-31"
@@ -38,6 +38,14 @@
     "schedule": "",
     "shard": "5/6"
   },
+  "lkg": {
+    "fetched_at": "2026-08-01T18:50:24Z",
+    "history_as_of": "2026-07-31",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CNQQ.json",
+    "payload_sha256": "1bc1e793c43910c94395194b2bbd1942f1a38b931e86b7377cb6aff28fca6099",
+    "quote_as_of": "2026-07-31T20:00:01Z",
+    "source_as_of": "2026-07-31"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "workflow_dispatch",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-11T00:02:00Z",
+    "classified_run_id": "31444023136",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "CNQQ holds LKG because Yahoo source date 2026-07-31 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-31"
+  },
   "ticker": "CNQQ",
-  "updated_at": "2026-08-01T18:48:56Z"
+  "updated_at": "2026-08-11T00:02:00Z"
 }

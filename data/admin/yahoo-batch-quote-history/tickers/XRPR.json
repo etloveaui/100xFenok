@@ -61,7 +61,7 @@
   "current": {
     "fetched_at": "2026-08-02T23:00:03Z",
     "history_as_of": "2026-07-31",
-    "path": "data/yf/finance/XRPR.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/XRPR.json",
     "payload_sha256": "c14398f80578e81397ff6f41e3c4ef70b2af8d03680c2e7a87a277557729081e",
     "quote_as_of": "2026-07-31T19:59:28Z",
     "source_as_of": "2026-07-31"
@@ -114,12 +114,12 @@
     "shard": "0/6"
   },
   "lkg": {
-    "fetched_at": "2026-07-09T09:26:01Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-08-02T23:00:03Z",
+    "history_as_of": "2026-07-31",
     "path": "data/admin/yahoo-batch-quote-history/lkg/XRPR.json",
-    "payload_sha256": "d3b39eb0fc45fd6fd1ee067bcc3e26122c0da5f2a5a9e4192f0a92c309ac3993",
-    "quote_as_of": "2026-07-08T19:59:50Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "c14398f80578e81397ff6f41e3c4ef70b2af8d03680c2e7a87a277557729081e",
+    "quote_as_of": "2026-07-31T19:59:28Z",
+    "source_as_of": "2026-07-31"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -133,19 +133,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-07-17T00:15:36Z",
-    "classified_run_id": "29544227703",
+    "classified_at": "2026-08-11T00:02:00Z",
+    "classified_run_id": "31444023136",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "XRPR holds LKG because Yahoo source date 2026-07-08 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "XRPR holds LKG because Yahoo source date 2026-07-31 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-08"
+    "source_as_of": "2026-07-31"
   },
   "ticker": "XRPR",
-  "updated_at": "2026-08-02T22:59:12Z"
+  "updated_at": "2026-08-11T00:02:00Z"
 }
