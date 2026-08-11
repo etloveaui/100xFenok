@@ -8,6 +8,7 @@ import sys
 import tempfile
 import threading
 import unittest
+from unittest import mock
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -208,6 +209,57 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
                 )
                 self.assertFalse(pending.exists(), "commit must clear its consumed pending pointer")
 
+    def test_observation_history_parses_once_per_run_across_entities(self) -> None:
+        for entity, source_as_of in FRESH_FALLBACKS.items():
+            self.publish_pair(
+                entity,
+                source_as_of,
+                "2026-07-26T04:30:00Z",
+                legacy_yahoo_endpoint=True,
+            )
+        calls: list[list[str]] = []
+        original = latest_recorded_observations
+
+        def counting_latest(state_root, entities):
+            calls.append(sorted(entities))
+            return original(state_root, entities)
+
+        with mock.patch(
+            "resolve_etf_detail_candidates.latest_recorded_observations",
+            side_effect=counting_latest,
+        ):
+            result = resolve_entities(
+                self.store,
+                entities=FRESH_FALLBACKS,
+                decided_at="2026-07-26T04:30:01Z",
+            )
+        self.assertEqual(len(result["results"]), len(FRESH_FALLBACKS))
+        self.assertEqual(
+            len(calls),
+            1,
+            "full observation history must be parsed once per resolver run, not per entity",
+        )
+        self.assertEqual(calls[0], sorted(FRESH_FALLBACKS))
+
+    def test_empty_entity_set_is_noop_without_parsing_history(self) -> None:
+        with mock.patch(
+            "resolve_etf_detail_candidates.latest_recorded_observations"
+        ) as history_parser:
+            result = resolve_entities(
+                self.store,
+                entities=[],
+                decided_at="2026-07-26T04:30:01Z",
+            )
+        history_parser.assert_not_called()
+        self.assertEqual(
+            result,
+            {
+                "domain": "etf_detail",
+                "decided_at": "2026-07-26T04:30:01Z",
+                "results": [],
+            },
+        )
+
     def test_bhyp_and_ibim_stale_candidates_fail_closed(self) -> None:
         for entity, source_as_of in {
             "BHYP": "2026-06-18T11:25:17Z",
@@ -361,6 +413,12 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         self.store.commit_prepared = interleaved_commit  # type: ignore[method-assign]
         stale_result: list[dict] = []
         stale_errors: list[BaseException] = []
+        history_calls: list[tuple[str, list[str]]] = []
+        original_latest = latest_recorded_observations
+
+        def counting_latest(state_root, entities):
+            history_calls.append((threading.current_thread().name, sorted(entities)))
+            return original_latest(state_root, entities)
 
         def run_stale() -> None:
             try:
@@ -374,21 +432,25 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
             except BaseException as exc:  # pragma: no cover - assertion retains the error
                 stale_errors.append(exc)
 
-        stale_thread = threading.Thread(target=run_stale, name="stale-resolver")
-        stale_thread.start()
-        self.assertTrue(stale_waiting.wait(timeout=5))
-        self.publish_pair(
-            "HYGW",
-            "2026-07-25T20:00:00Z",
-            "2026-07-26T01:00:00Z",
-        )
-        winner = resolve_entities(
-            self.store,
-            entities=["HYGW"],
-            decided_at="2026-07-26T04:30:01Z",
-        )
-        winner_committed.set()
-        stale_thread.join(timeout=10)
+        with mock.patch(
+            "resolve_etf_detail_candidates.latest_recorded_observations",
+            side_effect=counting_latest,
+        ):
+            stale_thread = threading.Thread(target=run_stale, name="stale-resolver")
+            stale_thread.start()
+            self.assertTrue(stale_waiting.wait(timeout=5))
+            self.publish_pair(
+                "HYGW",
+                "2026-07-25T20:00:00Z",
+                "2026-07-26T01:00:00Z",
+            )
+            winner = resolve_entities(
+                self.store,
+                entities=["HYGW"],
+                decided_at="2026-07-26T04:30:01Z",
+            )
+            winner_committed.set()
+            stale_thread.join(timeout=10)
 
         self.assertFalse(stale_errors)
         self.assertEqual(len(stale_result), 1)
@@ -397,6 +459,15 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         self.assertEqual(
             self.store.read_active_domain("etf_detail")["current"]["HYGW"]["source_as_of"],
             "2026-07-25T20:00:00Z",
+        )
+        self.assertEqual(
+            [entities for thread, entities in history_calls if thread == "stale-resolver"],
+            [["HYGW"], ["HYGW"]],
+            "CAS loser must parse once initially and re-read its entity once after the loss",
+        )
+        self.assertEqual(
+            [entities for thread, entities in history_calls if thread != "stale-resolver"],
+            [["HYGW"]],
         )
         self.assertEqual(self.resolution_count(), 1)
 

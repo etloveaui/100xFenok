@@ -167,11 +167,12 @@ def _canonicalize_legacy_yahoo_observation(
     return migrated
 
 
-def _latest_canonical_observations(
+def _canonical_latest_observations(
     store: DataSupplyStateStore,
+    latest_rows: Mapping[str, list[dict[str, Any]]],
     entity: str,
 ) -> list[dict[str, Any]]:
-    rows = latest_recorded_observations(store.root, [entity]).get(entity, [])
+    rows = latest_rows.get(entity, [])
     if not rows:
         raise SchemaError(f"ETF resolver has no recorded observations for {entity}")
     return [_canonicalize_legacy_yahoo_observation(store, row) for row in rows]
@@ -182,11 +183,16 @@ def resolve_with_single_retry(
     *,
     entity: str,
     decided_at: str,
+    latest_rows: dict[str, list[dict[str, Any]]],
 ) -> tuple[dict[str, Any], bool]:
     """Re-read and recompute exactly once after a compare-and-swap loss."""
 
     for attempt in range(2):
-        observations = _latest_canonical_observations(store, entity)
+        if attempt > 0:
+            latest_rows[entity] = latest_recorded_observations(
+                store.root, [entity]
+            ).get(entity, [])
+        observations = _canonical_latest_observations(store, latest_rows, entity)
         resolver = DataSupplyResolver(store)
         try:
             return resolver.resolve_etf_detail_with_outcome(
@@ -207,12 +213,16 @@ def resolve_entities(
     decided_at: str,
 ) -> dict[str, Any]:
     requested = sorted(set(entities))
+    if not requested:
+        return {"domain": DOMAIN, "decided_at": decided_at, "results": []}
+    latest_rows = latest_recorded_observations(store.root, requested)
     results: list[dict[str, Any]] = []
     for entity in requested:
         active, committed = resolve_with_single_retry(
             store,
             entity=entity,
             decided_at=decided_at,
+            latest_rows=latest_rows,
         )
         selected = active["current"].get(entity)
         if selected is None:
