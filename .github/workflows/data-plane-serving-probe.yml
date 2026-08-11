@@ -68,7 +68,6 @@ jobs:
       # comment-sink issue is the counterexample this avoids).
       - name: Close probe issue on recovery
         if: steps.probe.outcome == 'success'
-        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -79,6 +78,8 @@ jobs:
           gh issue comment "$existing" --body "[all-clear] Every enrolled asset is served from a published generation with a fresh source date. Observed by: $RUN_URL"
           gh issue close "$existing" --reason completed
 
-      - name: Fail on alarm
-        if: steps.probe.outcome == 'failure'
-        run: exit 1
+      # The run's conclusion is probe-machinery health, not incident state: an
+      # unhealthy asset is reported through the OPS issue above, and this run
+      # stays green as long as incident or recovery reporting succeeded. Red is
+      # reserved for a genuine issue comment/create/close API failure. No
+      # incident-conditioned exit 1 exists.

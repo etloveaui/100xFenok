@@ -4,9 +4,10 @@
  * on BOTH firing and quiet-success resolution, so the owner dashboard can read
  * "is any alarm open" without opening GitHub Actions.
  *
- * The alarm-state commit must NEVER mask the alarm itself: the workflow runs this
- * with continue-on-error and keeps the OPS issue + job failure as the primary
- * channel (spec P3 constraint). This script only computes/writes the state file.
+ * The emitter and OPS issue reporting are non-best-effort, so their machinery
+ * failures turn the run red. The later alarm-state Git commit is best-effort and
+ * can never mask the issue channel (spec P3 constraint). This script computes/
+ * writes the state file and publishes its transition outputs.
  *
  * Content is public-safe by construction: GitHub run ids, workflow FILE basenames,
  * actions run URLs, and our own issue title — no store roots, private paths, or
@@ -183,8 +184,8 @@ function significantAlarmState(state) {
  * repeated ourselves".
  *
  * This deliberately does NOT touch the alarm's firing path. The job still exits
- * non-zero and the OPS issue is still the primary channel; only the redundant
- * commit is suppressed.
+ * green when emission and reporting succeed, and the OPS issue is still the
+ * primary channel; only the redundant commit is suppressed.
  */
 export function alarmStateUnchanged(prior, next) {
   const a = significantAlarmState(prior);
@@ -217,6 +218,11 @@ export function writeAlarmStateMirrors({ state, outPath, publicOutPath }) {
   return json;
 }
 
+export function writeWorkflowOutputs({ outputPath, incidentChanged, incidentResolved }) {
+  fs.appendFileSync(outputPath, `incident_changed=${incidentChanged}\n`);
+  fs.appendFileSync(outputPath, `incident_resolved=${incidentResolved}\n`);
+}
+
 function main() {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const repoRoot = path.resolve(__dirname, "..", "..");
@@ -240,14 +246,15 @@ function main() {
   // The workflow gating that consumes this is a separate change and is not made here.
   const incidentResolved = alarmStateResolved(prior, emitted) ? "true" : "false";
   if (process.env.GITHUB_OUTPUT) {
-    try {
-      fs.appendFileSync(process.env.GITHUB_OUTPUT, `incident_changed=${incidentChanged}\n`);
-      fs.appendFileSync(process.env.GITHUB_OUTPUT, `incident_resolved=${incidentResolved}\n`);
-    } catch (error) {
-      // Never let output plumbing mask the alarm; the job exit code and the OPS
-      // issue remain the primary channel.
-      console.warn(`::warning::alarm-state could not write GITHUB_OUTPUT: ${error.message}`);
-    }
+    // Output publication is machinery, not best-effort persistence: without
+    // these values the workflow cannot safely report a new incident or recovery.
+    // Let any write failure reject the emitter step directly; later reporting
+    // and persistence remain skipped by GitHub's default success semantics.
+    writeWorkflowOutputs({
+      outputPath: process.env.GITHUB_OUTPUT,
+      incidentChanged,
+      incidentResolved,
+    });
   }
 
   const suffix = unchanged

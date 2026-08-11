@@ -41,43 +41,21 @@ jobs:
       - name: Emit alarm state
         id: alarm_state
         if: always()
-        continue-on-error: true
         env:
           PIPELINE_JOB_HEALTH_RESULT: pipeline-job-health-result.json
         run: node scripts/ops/emit-alarm-state.mjs
 
-      - name: Commit alarm state
-        if: always()
-        continue-on-error: true
-        run: |
-          # Fail-closed: this whole step is continue-on-error so an alarm-state
-          # commit failure can NEVER mask the alarm — the OPS issue + job failure
-          # (below) stay the primary channel. [skip ci] keeps this ops-metadata
-          # commit from re-triggering the pipeline it is reporting on.
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          scripts/stage-lane-manifest.sh \
-            --workflow .github/workflows/pipeline-failure-alarm.yml \
-            --stage always_if_exists || exit 0
-          git add data/admin/alarm-state.json || exit 0
-          if git diff --cached --quiet; then
-            echo "alarm-state unchanged; nothing to commit"
-            exit 0
-          fi
-          branch="${GITHUB_REF_NAME:-main}"
-          git commit -m "ops: refresh alarm-state.json [skip ci]"
-          for attempt in 1 2 3; do
-            if git pull --rebase --autostash origin "$branch" && git push origin "HEAD:$branch"; then
-              exit 0
-            fi
-            sleep $((attempt * 3))
-          done
+      # The detector is intentionally continue-on-error so its incident result
+      # can drive reporting. The emitter is directly non-best-effort: if it
+      # cannot compute state or publish transition outputs, the step itself turns
+      # the run red and later reporting/persistence stays skipped.
 
       # Comment only on a state transition. An unresolved incident is re-reported
       # on every trigger, which put 9 identical comments on the OPS issue between
       # 04:53 and 06:35 on 2026-07-22. incident_changed is false only when nothing
-      # the alarm asserts has moved; it fails OPEN (treated as changed) if the
-      # emit step could not run, so a plumbing fault can never silence the alarm.
+      # the alarm asserts has moved. A direct emitter/output failure turns this
+      # run red and blocks both reporting and persistence, so the next run
+      # retries from the prior canonical state.
       - name: Prepare issue body
         if: steps.pipeline.outcome == 'failure' && steps.alarm_state.outputs.incident_changed != 'false'
         run: |
@@ -110,7 +88,6 @@ jobs:
       # and never writes to the repo.
       - name: Post all-clear on the OPS issue
         if: steps.alarm_state.outputs.incident_resolved == 'true'
-        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -135,6 +112,39 @@ jobs:
           # timeline instead of appending to a finished one.
           gh issue close "$existing" --reason completed --comment "Closed by all-clear; the next incident opens a new issue."
 
-      - name: Fail on alarm
-        if: steps.pipeline.outcome == 'failure'
-        run: exit 1
+      # Persist only after incident/recovery reporting has succeeded. The
+      # default success gate means a failed emitter or issue create/comment/close
+      # leaves the prior canonical state intact, so the next run retries the same
+      # transition. Git persistence itself remains best-effort and can never mask
+      # the issue channel.
+      - name: Commit alarm state
+        continue-on-error: true
+        run: |
+          # [skip ci] keeps this ops-metadata commit from re-triggering the
+          # pipeline it is reporting on.
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          scripts/stage-lane-manifest.sh \
+            --workflow .github/workflows/pipeline-failure-alarm.yml \
+            --stage always_if_exists || exit 0
+          git add data/admin/alarm-state.json || exit 0
+          if git diff --cached --quiet; then
+            echo "alarm-state unchanged; nothing to commit"
+            exit 0
+          fi
+          branch="${GITHUB_REF_NAME:-main}"
+          git commit -m "ops: refresh alarm-state.json [skip ci]"
+          for attempt in 1 2 3; do
+            if git pull --rebase --autostash origin "$branch" && git push origin "HEAD:$branch"; then
+              exit 0
+            fi
+            sleep $((attempt * 3))
+          done
+
+      # The run's conclusion is alarm-machinery health, not incident state: an
+      # open incident is reported through the OPS issue and the alarm-state
+      # commit above, and this run stays green as long as that reporting and
+      # alarm-state emission succeeded. Red is reserved for emitter/output or
+      # non-best-effort issue preparation/API failure.
+      # The alarm-state Git commit stays best-effort (continue-on-error) and can
+      # never mask the issue channel. No incident-conditioned exit 1 exists.

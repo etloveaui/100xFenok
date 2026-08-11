@@ -13,6 +13,7 @@ import {
   buildAlarmState,
   alarmStateUnchanged,
   writeAlarmStateMirrors,
+  writeWorkflowOutputs,
   ALARM_STATE_SCHEMA,
 } from "./emit-alarm-state.mjs";
 import { evaluateWorkflow } from "./check-pipeline-job-health.mjs";
@@ -391,6 +392,25 @@ for (const state of [firing, resolved, unknown]) {
 
   // A first-ever emission has no prior and must always be written.
   assert.ok(!alarmStateUnchanged(null, openNow), "a first emission must be written");
+}
+
+// GITHUB_OUTPUT is machinery, not best-effort persistence. An unwritable
+// target must escape the helper so the direct emitter process exits non-zero.
+{
+  const unwritableOutput = fs.mkdtempSync(path.join(os.tmpdir(), "alarm-state-output-failure-"));
+  try {
+    assert.throws(
+      () => writeWorkflowOutputs({
+        outputPath: unwritableOutput,
+        incidentChanged: "true",
+        incidentResolved: "true",
+      }),
+      (error) => error?.code === "EISDIR",
+      "GITHUB_OUTPUT write failure must throw instead of warning and returning green",
+    );
+  } finally {
+    fs.rmSync(unwritableOutput, { recursive: true, force: true });
+  }
 }
 
 console.log(JSON.stringify({ ok: true, suite: "emit-alarm-state contract" }, null, 2));

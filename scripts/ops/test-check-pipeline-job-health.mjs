@@ -601,10 +601,11 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
 
 // Real-repository contract: at least 31 scheduled workflows are discovered. The
 // alarm itself is the sole declared exclusion, while the non-scheduled workflow
-// syntax gate is an explicit inclusion. Operational observer/alarm workflows
-// remain watched: their own repeated failure is also an outage worth paging.
-// The floor catches accidental parser shrinkage without making future scheduled
-// workflows wait for a hand-edited exact count.
+// syntax gate is an explicit inclusion. The serving probe is watched, not
+// excluded: its own run turns red only on machinery failure (issue/API), so a
+// genuine probe failure is an outage worth paging, and a stale exclusion would
+// hide it. The floor catches accidental parser shrinkage without making future
+// scheduled workflows wait for a hand-edited exact count.
 {
   const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
   const policy = deriveWorkflowWatchPolicy({
@@ -618,10 +619,6 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
     "every scheduled workflow must be watched or explicitly excluded",
   );
   assert.deepEqual(policy.excluded, [{
-    file: "data-plane-serving-probe.yml",
-    label: "Data Plane Serving Probe",
-    reason: SCHEDULED_WORKFLOW_EXCLUSIONS["data-plane-serving-probe.yml"],
-  }, {
     file: "pipeline-failure-alarm.yml",
     label: "Pipeline Failure Alarm",
     reason: SCHEDULED_WORKFLOW_EXCLUSIONS["pipeline-failure-alarm.yml"],
@@ -652,6 +649,7 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
   );
   for (const file of [
     "build-stocks-analyzer.yml",
+    "data-plane-serving-probe.yml",
     "fetch-us-indices-daily.yml",
     "global-writer-queue-observer.yml",
     "update-manifest.yml",
@@ -660,6 +658,11 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
   ]) {
     assert.ok(policy.watched.some((row) => row.file === file), `${file} must be watched`);
   }
+  assert.deepEqual(
+    policy.watched.find((row) => row.file === "data-plane-serving-probe.yml")?.events,
+    ["schedule"],
+    "the probe contributes its scheduled cadence only; manual dispatch stays excluded",
+  );
   const calendars = JSON.parse(fs.readFileSync(path.join(repoRoot, "scripts", "lib", "data-supply-detection-calendars.json"), "utf8"));
   const initialCadence = deriveWorkflowCadenceProjection({
     watched: policy.watched,
@@ -1181,8 +1184,8 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
   assert.match(workflow, /steps\.pipeline\.outcome == 'failure'/);
   assert.equal(
     (workflow.match(/if: steps\.pipeline\.outcome == 'failure'/g) || []).length,
-    3,
-    "healthy workflow_run completions remain quiet: issue preparation, mutation, and final failure are alarm-only",
+    2,
+    "healthy workflow_run completions remain quiet: issue preparation and issue update are alarm-only, and the run concludes green when reporting succeeded",
   );
   assert.doesNotMatch(workflow, /\$\{\{\s*runner\./, "must not reference the runner context in expressions (#357)");
 }

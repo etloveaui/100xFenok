@@ -64,10 +64,6 @@ jobs:
             gh issue create --title "$title" --body-file worker-request-budget-issue.md
           fi
 
-      - name: Fail on alarm
-        if: steps.budget.outcome == 'failure'
-        run: exit 1
-
   data-supply-analytics:
     if: github.event_name == 'workflow_dispatch' || github.event.schedule == '17 2,14 * * *'
     runs-on: ubuntu-latest
@@ -116,6 +112,8 @@ jobs:
             gh issue create --title "$title" --body-file data-supply-analytics-issue.md
           fi
 
-      - name: Fail on telemetry alarm
-        if: steps.telemetry.outcome == 'failure'
-        run: exit 1
+      # The run's conclusion is alarm-machinery health, not incident state: an
+      # exceeded budget is reported through the OPS issues above, and this run
+      # stays green as long as that reporting succeeded. Red is reserved for a
+      # genuine issue preparation/API failure — the open-or-update steps are NOT
+      # continue-on-error. No deliberate exit 1 here.
