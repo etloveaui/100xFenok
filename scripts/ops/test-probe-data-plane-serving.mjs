@@ -759,6 +759,64 @@ const sourceDateForPolicy = ({ path, family }) => {
   assert.match(futurePublished.failures[0], /published at .* is in the future relative to now/);
 }
 
+// Regression (issue #90): a generation promoted after the probe started but
+// before a later response is evaluated must not be flagged future. Production
+// judges each response against a fresh wall-clock read taken immediately
+// after its fetch; deterministic callers that pin nowIso keep the old
+// behavior, including strict future-date rejection.
+{
+  const probeStart = "2026-08-11T22:23:14.274Z"; // run-start capture of the failing run
+  const promotionInstant = "2026-08-11T22:25:47.138Z"; // slickcharts-history promoted mid-sweep
+  const evaluationInstant = "2026-08-11T22:26:00.000Z"; // when the later responses were evaluated
+  const sourceDateForInstant = (days) =>
+    new Date(Date.parse(probeStart) - days * MS_PER_DAY).toISOString().slice(0, 10);
+  let fetchCount = 0;
+  let clockReads = 0;
+  const wallClockNowFn = () => {
+    clockReads += 1;
+    return clockReads === 1 ? probeStart : evaluationInstant;
+  };
+  const results = await probeAll({
+    baseUrl: "https://example.test",
+    wallClockNowFn,
+    fetchFn: async (url) => {
+      fetchCount += 1;
+      const path = new URL(url).pathname;
+      const family = ENROLLED_PATHS.get(path);
+      return new Response(null, {
+        status: 200,
+        headers: {
+          "x-data-plane-generation": `${family}-abc123`,
+          "x-data-plane-source-as-of": sourceDateForInstant(1),
+          "x-data-plane-published-at": fetchCount === 1 ? "2026-08-11T22:00:00.000Z" : promotionInstant,
+        },
+      });
+    },
+  });
+  assert.equal(fetchCount, ENROLLED_PATHS.size);
+  assert.equal(clockReads, ENROLLED_PATHS.size, "every successful fetch gets its own fresh wall-clock read");
+  assert.equal(results.length, ENROLLED_PATHS.size);
+  const failing = results.filter((r) => !r.ok);
+  assert.deepEqual(
+    failing.map((r) => ({ path: r.path, failures: r.failures })),
+    [],
+    "a mid-sweep promotion must not be flagged future",
+  );
+  assert.equal(results.every((r) => r.mode === "strict"), true);
+
+  // The future-date check itself is unchanged: the same post-start publication
+  // still fails when the caller pins the reference to the run start.
+  const pinned = evaluateProbeResponse({
+    ...base,
+    generationHeader: "fred-macro-abc123",
+    sourceAsOfHeader: sourceDateForInstant(1),
+    publishedAtHeader: promotionInstant,
+    nowIso: probeStart,
+  });
+  assert.equal(pinned.ok, false);
+  assert.match(pinned.failures[0], /published at .* is in the future relative to now/);
+}
+
 // Legacy environment parsing preserves the old input while rejecting zero or
 // invalid values; the resulting cap is still clamped against immutable policy.
 {

@@ -21,6 +21,10 @@
 // A URL that never answers becomes a strict FAIL for exactly that path — never
 // a fallback pass. Once the total deadline is reached, every unvisited path is
 // also recorded as strict FAIL without starting another network request.
+//
+// Each successful response is judged against a fresh wall-clock read taken
+// immediately after its fetch, so a generation promoted mid-sweep cannot be
+// mistaken for a future publication (issue #90).
 
 import { ENROLLED_PATHS, ENROLLED_PREFIXES } from "../lib/cloud-data-plane-worker-read.mjs";
 import { performance } from "node:perf_hooks";
@@ -303,6 +307,7 @@ export async function probeAll({
   baseUrl,
   fetchFn,
   nowIso,
+  wallClockNowFn = () => new Date().toISOString(),
   maxAgeDays,
   requestTimeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   totalDeadlineMs = DEFAULT_TOTAL_PROBE_DEADLINE_MS,
@@ -352,6 +357,13 @@ export async function probeAll({
       }
       continue;
     }
+    // Judge against the instant the response actually arrived: a generation
+    // promoted while this request was in flight (issue #90) must not look like
+    // a future publication against the run-start time. An explicit nowIso
+    // still pins every evaluation for deterministic callers; only its absence
+    // reads the wall clock fresh here, and an explicit invalid value stays
+    // invalid instead of silently falling back.
+    const evaluationNowIso = nowIso === undefined ? wallClockNowFn() : nowIso;
     results.push(evaluateProbeResponse({
       path,
       family,
@@ -359,7 +371,7 @@ export async function probeAll({
       generationHeader: response.headers.get("x-data-plane-generation"),
       sourceAsOfHeader: response.headers.get("x-data-plane-source-as-of"),
       publishedAtHeader: response.headers.get("x-data-plane-published-at"),
-      nowIso,
+      nowIso: evaluationNowIso,
       maxAgeDays,
     }));
   }
@@ -392,7 +404,6 @@ async function main() {
   const results = await probeAll({
     baseUrl,
     fetchFn: fetch,
-    nowIso: new Date().toISOString(),
     maxAgeDays,
     requestTimeoutMs,
     totalDeadlineMs,
