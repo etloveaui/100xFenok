@@ -12,31 +12,44 @@
       "run_id": "30711926935",
       "schedule": "",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 623,
+      "natural": true,
+      "observed_at": "2026-08-11T05:18:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31461137754",
+      "schedule": "7 4 * * 0-5",
+      "shard": "26/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T18:50:08Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CGHY.json",
-    "payload_sha256": "70a6f51e700a2f5c124d4ecb907702628fc54f0b190f5546279e11a8df2ad3f7",
-    "quote_as_of": "2026-07-31T19:39:44Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-11T05:20:08Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/CGHY.json",
+    "payload_sha256": "7833c826632783b1d36d8362e87c02479b5a8f36460fcba468f0543d01269062",
+    "quote_as_of": "2026-08-10T19:59:50Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 559,
+    "latency_ms": 623,
     "natural": true,
-    "observed_at": "2026-08-01T18:48:56Z",
+    "observed_at": "2026-08-11T05:18:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711926935",
-    "schedule": "",
-    "shard": "5/6"
+    "run_id": "31461137754",
+    "schedule": "7 4 * * 0-5",
+    "shard": "26/72"
   },
   "lkg": {
     "fetched_at": "2026-08-01T18:50:08Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T18:48:56Z",
-    "payload_sha256": "c7430367d86862b5420053e830189fec2e6dc208502a8f04b46b3f920d134a61",
-    "quote_as_of": "2026-07-31T19:39:44Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T05:18:59Z",
+    "payload_sha256": "ffe3eeb4211018f80ce951e83d83bd6efbbd9eba13a00cf7c9cdcf54a78da81a",
+    "quote_as_of": "2026-08-10T19:59:50Z",
     "run_attempt": 1,
-    "run_id": "30711926935",
+    "run_id": "31461137754",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "CGHY",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T05:18:59Z"
 }

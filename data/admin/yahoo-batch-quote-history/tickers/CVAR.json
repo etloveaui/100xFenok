@@ -12,31 +12,44 @@
       "run_id": "30711924670",
       "schedule": "",
       "shard": "3/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 546,
+      "natural": true,
+      "observed_at": "2026-08-11T05:18:59Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31461137754",
+      "schedule": "7 4 * * 0-5",
+      "shard": "26/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T18:36:50Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CVAR.json",
-    "payload_sha256": "1df08a380f43055a1084c2790b4f0b573ba9c02a349604d78cc69b36ab9a33fa",
-    "quote_as_of": "2026-07-31T19:25:45Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-11T05:19:17Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/CVAR.json",
+    "payload_sha256": "7d0f328fca55f507285dd7462500d47e0aba0d21ee06a60e4c47be5a298158e0",
+    "quote_as_of": "2026-08-10T18:42:33Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 816,
+    "latency_ms": 546,
     "natural": true,
-    "observed_at": "2026-08-01T18:35:05Z",
+    "observed_at": "2026-08-11T05:18:59Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30711924670",
-    "schedule": "",
-    "shard": "3/6"
+    "run_id": "31461137754",
+    "schedule": "7 4 * * 0-5",
+    "shard": "26/72"
   },
   "lkg": {
     "fetched_at": "2026-08-01T18:36:50Z",
@@ -48,18 +61,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T18:35:05Z",
-    "payload_sha256": "cc422324802ea82255e2e34c4a55c1cffd00a0b0e9bc329a87ae9e4ee35ccf88",
-    "quote_as_of": "2026-07-31T19:25:45Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T05:18:59Z",
+    "payload_sha256": "c4dea5069342916363c6ce1c1ba335f0889a4c9c098aa0255f3b79bb4467159f",
+    "quote_as_of": "2026-08-10T18:42:33Z",
     "run_attempt": 1,
-    "run_id": "30711924670",
+    "run_id": "31461137754",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "CVAR",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T05:18:59Z"
 }
