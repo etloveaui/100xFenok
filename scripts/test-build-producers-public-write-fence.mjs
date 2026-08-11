@@ -26,9 +26,15 @@ const PRODUCERS = Object.freeze([
 ]);
 
 // Every public mirror output this batch removed from the producers must be
-// re-established by an Update Manifest materialization route (single route
-// per output, never delete:true). The investors tree is the one dynamic
-// directory mirror and is covered by its delete:false rsync_tree route.
+// re-established by one exact Update Manifest materialization route per
+// output, non-destructive except for the explicit investors exact-mirror
+// exception. The investors tree is the one dynamic
+// directory mirror and is the sole exception: its exact-mirror rsync_tree
+// route owns the destination with delete:true while excluding griffin.json.
+const INVESTORS_MIRROR = Object.freeze({
+  source: "data/sec-13f/investors",
+  destination: "100xfenok-next/public/data/sec-13f/investors",
+});
 const REMOVED_MIRROR_OUTPUTS = Object.freeze({
   "scripts/build-stocks-analyzer.mjs": [
     { source: "data/global-scouter/core/stocks_analyzer.json", destination: "100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json" },
@@ -121,11 +127,24 @@ for (const [relativePath, removedOutputs] of Object.entries(REMOVED_MIRROR_OUTPU
       1,
       `${relativePath} removed mirror output must keep its exact source/destination route: ${expectedRoute.source} -> ${expectedRoute.destination}`,
     );
-    assert.equal(
-      covering[0].delete,
-      false,
-      `${relativePath} mirror route must never delete destination content: ${expectedRoute.destination}`,
-    );
+    if (expectedRoute.source === INVESTORS_MIRROR.source && expectedRoute.destination === INVESTORS_MIRROR.destination) {
+      assert.equal(
+        covering[0].delete,
+        true,
+        `${relativePath} investors mirror route must keep delete:true exact-mirror parity: ${expectedRoute.destination}`,
+      );
+      assert.deepEqual(
+        covering[0].excludes,
+        ["griffin.json"],
+        `${relativePath} investors mirror route must keep the exact griffin.json exclusion: ${expectedRoute.destination}`,
+      );
+    } else {
+      assert.equal(
+        covering[0].delete,
+        false,
+        `${relativePath} mirror route must never delete destination content: ${expectedRoute.destination}`,
+      );
+    }
   }
 }
 
