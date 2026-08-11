@@ -41,18 +41,21 @@ const expectedCentralDirectories = centralPaths.filter(isDirectoryPath);
 
 const ATTEMPT_SHARD_ROOT = "data/admin/data-supply-state/detection-attempts";
 
-// Both tests are direct CI dependencies: each path must be present in push and
-// pull_request filters, and both commands must run inside the existing Update
-// Manifest validation step (no separate job/step).
+// All three tests and the detection-floor fixture are direct CI dependencies:
+// each path must appear in both push and pull_request filters, and the three
+// test commands must run inside the existing Update Manifest validation step
+// (no separate job/step).
 const validateFilterText = validateWorkflowsText.slice(0, validateWorkflowsText.indexOf("jobs:"));
-for (const testPath of [
+for (const dependencyPath of [
   "scripts/test-update-manifest-central-staging.mjs",
   "scripts/test-lane-commit-manifest-parity.mjs",
+  "scripts/test-build-data-supply-detection-floor.mjs",
+  "scripts/fixtures/data_supply/detection_floor/**",
 ]) {
   assert.equal(
-    (validateFilterText.match(new RegExp(testPath.replaceAll(".", "\\."), "g")) ?? []).length,
+    (validateFilterText.match(new RegExp(dependencyPath.replaceAll(".", "\\.").replaceAll("*", "\\*"), "g")) ?? []).length,
     2,
-    `${testPath} must be in both validate-workflows path filters`,
+    `${dependencyPath} must be in both validate-workflows path filters`,
   );
 }
 const updateValidationBlock = validateWorkflowsText
