@@ -10,7 +10,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { canonicalJson } from "./json-canonical.mjs";
-import { LANE_REGISTRY } from "./lane-registry.mjs";
+import { COMPUTED_SIGNALS_SOURCE_LANE_IDS, LANE_REGISTRY } from "./lane-registry.mjs";
 
 export const DERIVED_ASSET_REGISTRY_SCHEMA = "derived-asset-registry/v1";
 export const DERIVED_ASSET_LIFECYCLES = Object.freeze(["active", "orphaned"]);
@@ -537,13 +537,7 @@ const assets = [
     outputs: [output("data/computed/signals.json")],
     owner_workflow: ".github/workflows/update-manifest.yml",
     writer: "scripts/export-computed-signals.mjs",
-    inputs: [
-      lane("fred_macro"),
-      lane("treasury_tga"),
-      lane("defillama_stablecoins"),
-      lane("fdic_tier1"),
-      lane("sentiment"),
-    ],
+    inputs: COMPUTED_SIGNALS_SOURCE_LANE_IDS.map(lane),
     cadence: TWICE_DAILY,
     privacy_class: "public_mirror",
     public_outputs: [output("100xfenok-next/public/data/computed/signals.json")],

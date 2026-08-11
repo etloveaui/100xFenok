@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import {
   COMMIT_PATH_KINDS,
   COMMIT_STAGE_KEYS,
+  COMPUTED_SIGNALS_SOURCE_LANE_IDS,
   LANE_REGISTRY,
   registryDigest,
   validateLaneRegistry,
@@ -22,6 +23,25 @@ export const COMMIT_MANIFEST_SCHEMA = "lane-commit-manifest/v1";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(__dirname, "..");
 export const DEFAULT_OUTPUT_PATH = path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json");
+
+function computedSignalsSourceTriggerExclusions(registry = LANE_REGISTRY) {
+  const lanes = COMPUTED_SIGNALS_SOURCE_LANE_IDS.map((laneId) => {
+    const lane = registry.lanes.find((candidate) => candidate.id === laneId);
+    if (!lane) fail(`computed-signals source lane is missing: ${laneId}`);
+    if (!lane.owner_workflow) fail(`computed-signals source lane has no owner workflow: ${laneId}`);
+    if (!lane.roots.admin_store) fail(`computed-signals source lane has no admin store: ${laneId}`);
+    if (lane.roots.canonical_outputs.length === 0) fail(`computed-signals source lane has no canonical outputs: ${laneId}`);
+    return lane;
+  });
+  const canonical = lanes.flatMap((lane) => lane.roots.canonical_outputs.map((output) => {
+    const basename = path.posix.basename(output);
+    return `!${basename.includes(".") ? output : `${output}/**`}`;
+  }));
+  const admin = lanes.map((lane) => `!${lane.roots.admin_store}/**`);
+  const exclusions = [...canonical, ...admin];
+  if (new Set(exclusions).size !== exclusions.length) fail("computed-signals source trigger exclusions contain duplicates");
+  return exclusions;
+}
 
 const UPDATE_MANIFEST_TRIGGER_PATHS = [
   "data/**",
@@ -45,6 +65,11 @@ const UPDATE_MANIFEST_TRIGGER_PATHS = [
   "!data/admin/lane-registry-projection.json",
   "!data/admin/lane-commit-manifest.json",
   "!data/admin/alarm-state.json",
+  // Six coordinator-source families publish their own plane generations and no
+  // longer dispatch Update Manifest per run; their owned canonical/admin
+  // commits must not implicitly trigger the full reconciliation either.
+  // Scheduled/manual reconciliation and every unrelated data trigger remain.
+  ...computedSignalsSourceTriggerExclusions(),
   "!data/stockanalysis/**",
   "!data/slickcharts/discovery-summary.json",
   "!data/slickcharts/membership-changes.json",
@@ -71,7 +96,7 @@ const UPDATE_MANIFEST_TRIGGER_PATHS = [
   "tools/macro-monitor/shared/signals-core.mjs",
 ];
 
-const UPDATE_MANIFEST_MATERIALIZATIONS = [
+export const UPDATE_MANIFEST_MATERIALIZATIONS = [
   {
     source: "data/slickcharts",
     destination: "100xfenok-next/public/data/slickcharts",
@@ -147,9 +172,166 @@ const UPDATE_MANIFEST_MATERIALIZATIONS = [
     required: true,
     trailing_slash: false,
   },
+  {
+    source: "data/computed/fenok_etf_core_daily_basket_summary.json",
+    destination: "100xfenok-next/public/data/computed/fenok_etf_core_daily_basket_summary.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  // Batch 2 canonical-only producer mirrors (2026-08-11). The nine
+  // build-stocks-analyzer lane producers publish only data/ paths; these
+  // routes re-establish their former public mirrors at the merge boundary.
+  // Bounded files are exact cp_file routes; the dynamic investor set is an
+  // exact rsync_tree mirror except for the explicit public exclusion below.
+  {
+    source: "data/global-scouter/core/stocks_analyzer.json",
+    destination: "100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  {
+    source: "data/global-scouter/core/per_bands_index.json",
+    destination: "100xfenok-next/public/data/global-scouter/core/per_bands_index.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  {
+    source: "data/global-scouter/core/slick_index.json",
+    destination: "100xfenok-next/public/data/global-scouter/core/slick_index.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  {
+    source: "data/global-scouter/core/revision_movers.json",
+    destination: "100xfenok-next/public/data/global-scouter/core/revision_movers.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  {
+    source: "data/sec-13f/summary.json",
+    destination: "100xfenok-next/public/data/sec-13f/summary.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  {
+    source: "data/sec-13f/by_sector.json",
+    destination: "100xfenok-next/public/data/sec-13f/by_sector.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  {
+    source: "data/sec-13f/by_ticker.json",
+    destination: "100xfenok-next/public/data/sec-13f/by_ticker.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  {
+    source: "data/sec-13f/analytics/consensus.json",
+    destination: "100xfenok-next/public/data/sec-13f/analytics/consensus.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  {
+    source: "data/sec-13f/analytics/ticker_aliases.json",
+    destination: "100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  {
+    source: "data/sec-13f/analytics/trades_ranking.json",
+    destination: "100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  {
+    source: "data/sec-13f/analytics/portfolio_views.json",
+    destination: "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  {
+    source: "data/sec-13f/analytics/guru_holders_index.json",
+    destination: "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  {
+    source: "data/damodaran/industry_benchmarks.json",
+    destination: "100xfenok-next/public/data/damodaran/industry_benchmarks.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  {
+    source: "data/calendar/prev-values.json",
+    destination: "100xfenok-next/public/data/calendar/prev-values.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  {
+    source: "data/sec-13f/investors",
+    destination: "100xfenok-next/public/data/sec-13f/investors",
+    mode: "rsync_tree",
+    delete: true,
+    // griffin.json is an intentionally absent public mirror artifact and is
+    // explicitly ignored at that destination by the repository contract.
+    excludes: ["griffin.json"],
+    required: true,
+    trailing_slash: true,
+  },
 ];
 
-const CENTRAL_COMMIT_PATHS = [
+// Hand-maintained central commit paths, EXCLUDING materialization
+// destinations. Every route destination is derived from
+// UPDATE_MANIFEST_MATERIALIZATIONS and appended in route-table order (see
+// deriveCentralCommitPaths), so adding a materialization route cannot desync
+// the central staging policy. The base keeps its stable relative order and
+// must never repeat a route destination.
+export const CENTRAL_COMMIT_PATHS = [
   "data/computed/signals.json",
   "data/computed/stock_action_index.json",
   "data/computed/stock_action_summary.json",
@@ -189,9 +371,6 @@ const CENTRAL_COMMIT_PATHS = [
   "100xfenok-next/public/data/computed/stock_action_summary.json",
   "100xfenok-next/public/data/computed/fenok_signals_summary.json",
   "100xfenok-next/public/data/computed/fenok_etf_signals_summary.json",
-  "100xfenok-next/public/data/computed/fenok_etf_core_daily_basket_summary.json",
-  "100xfenok-next/public/data/computed/fenok_occ_options_availability.json",
-  "100xfenok-next/public/data/computed/market_facts/index.json",
   "100xfenok-next/public/data/computed/market_source_parity.json",
   "100xfenok-next/public/data/computed/market_data_audit.json",
   "100xfenok-next/public/data/computed/entity_graph.json",
@@ -199,12 +378,6 @@ const CENTRAL_COMMIT_PATHS = [
   "100xfenok-next/public/data/computed/entity_graph_stock_services.json",
   "100xfenok-next/public/data/computed/market_structure_index.json",
   "100xfenok-next/public/data/computed/rim-index/inputs.json",
-  "100xfenok-next/public/data/yf/finance",
-  "100xfenok-next/public/data/stockanalysis",
-  "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json",
-  "100xfenok-next/public/data/slickcharts",
-  "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json",
-  "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json",
   "100xfenok-next/public/data/admin/fenok-edge-coverage-index.json",
   "100xfenok-next/public/data/admin/data-usage-manifest.json",
   "100xfenok-next/public/data/admin/product-surface-coverage.json",
@@ -213,6 +386,48 @@ const CENTRAL_COMMIT_PATHS = [
   "100xfenok-next/public/data/manifest.json",
   "100xfenok-next/src/generated/static-route-manifest.ts",
 ];
+
+function materializationDestinations(routes = UPDATE_MANIFEST_MATERIALIZATIONS) {
+  if (!Array.isArray(routes)) fail("materialization routes must be an array");
+  const destinations = routes.map((route, index) => {
+    if (!route || typeof route !== "object" || Array.isArray(route) || typeof route.destination !== "string") {
+      fail(`materialization route ${index} has no destination`);
+    }
+    validatePathString(route.destination, `materialization route ${index}.destination`);
+    return route.destination;
+  });
+  const seen = new Set();
+  for (const destination of destinations) {
+    if (seen.has(destination)) fail(`materialization destinations contain duplicates: ${destination}`);
+    seen.add(destination);
+  }
+  return destinations;
+}
+
+// Single authority for the file/directory kind of a central commit path. A
+// path whose final segment carries an extension is a file; everything else
+// (bare names and extensionless directories) is a directory. Consumers must
+// import this classifier instead of re-deriving the extension heuristic.
+export function centralCommitPathKind(pathValue) {
+  return pathValue.includes("/") && pathValue.split("/").at(-1).includes(".") ? "file" : "directory";
+}
+
+// Single source of truth for the final central list: the hand-maintained base
+// (non-materialization paths only, stable relative order) followed by every
+// route destination in route-table order. Uniqueness and base/destination
+// disjointness are enforced here and re-validated on the generated manifest,
+// so a route addition needs no central-path edit and cannot introduce
+// duplicates or unsafe paths.
+export function deriveCentralCommitPaths(routes = UPDATE_MANIFEST_MATERIALIZATIONS) {
+  const base = [...CENTRAL_COMMIT_PATHS];
+  const baseSet = new Set(base);
+  if (baseSet.size !== base.length) fail("central commit base paths contain duplicates");
+  const destinations = materializationDestinations(routes);
+  for (const destination of destinations) {
+    if (baseSet.has(destination)) fail(`materialization destination duplicates a central base path: ${destination}`);
+  }
+  return [...base, ...destinations];
+}
 
 function fail(message) {
   throw new Error(`lane-commit-manifest: ${message}`);
@@ -290,7 +505,9 @@ export function validateLaneCommitManifest(manifest, { registry = LANE_REGISTRY 
     if (seenCentral.has(pathValue)) fail(`central_commit_paths duplicates ${pathValue}`);
     seenCentral.add(pathValue);
   }
-  if (!Array.isArray(update.materializations) || update.materializations.length !== 8) fail("materializations must contain exactly eight routes");
+  if (!Array.isArray(update.materializations) || update.materializations.length !== UPDATE_MANIFEST_MATERIALIZATIONS.length) {
+    fail(`materializations must contain exactly ${UPDATE_MANIFEST_MATERIALIZATIONS.length} routes`);
+  }
   for (const [index, route] of update.materializations.entries()) {
     const routeKeys = Object.keys(route).sort();
     if (JSON.stringify(routeKeys) !== JSON.stringify(["delete", "destination", "excludes", "mode", "required", "source", "trailing_slash"])) fail(`materializations[${index}] keys are invalid`);
@@ -300,7 +517,7 @@ export function validateLaneCommitManifest(manifest, { registry = LANE_REGISTRY 
     const seenExcludes = new Set();
     for (const [excludeIndex, exclude] of route.excludes.entries()) {
       validatePathString(exclude, `materializations[${index}].excludes[${excludeIndex}]`);
-      if (exclude.endsWith("/") || exclude.includes("*")) fail(`materializations[${index}].excludes[${excludeIndex}] must be an exact relative subtree`);
+      if (exclude.endsWith("/") || exclude.includes("*")) fail(`materializations[${index}].excludes[${excludeIndex}] must be an exact relative path`);
       if (seenExcludes.has(exclude)) fail(`materializations[${index}].excludes duplicates ${exclude}`);
       seenExcludes.add(exclude);
     }
@@ -308,7 +525,7 @@ export function validateLaneCommitManifest(manifest, { registry = LANE_REGISTRY 
     if (typeof route.delete !== "boolean" || typeof route.required !== "boolean" || typeof route.trailing_slash !== "boolean") fail(`materializations[${index}] booleans are invalid`);
     if (route.mode === "rsync_tree" && route.trailing_slash !== true) fail(`materializations[${index}] rsync route must declare trailing slash semantics`);
     if (route.mode === "cp_file" && route.trailing_slash !== false) fail(`materializations[${index}] cp route must not carry trailing slash semantics`);
-    if (route.mode === "cp_file" && route.excludes.length > 0) fail(`materializations[${index}] cp route cannot exclude subtrees`);
+    if (route.mode === "cp_file" && route.excludes.length > 0) fail(`materializations[${index}] cp route cannot exclude paths`);
   }
   return true;
 }
@@ -327,12 +544,13 @@ export function buildLaneCommitManifest(registry = LANE_REGISTRY) {
   for (const workflowRel of Object.keys(registry.workflow_policies).sort()) {
     workflows[workflowRel] = cloneJson(registry.workflow_policies[workflowRel]);
   }
+  const centralCommitPaths = deriveCentralCommitPaths();
   // Update Manifest's central staging policy is published in the dedicated
   // top-level contract as well as its workflow entry, so a consumer can prove
   // the workflow key/stage/count before reading the central path list.
-  workflows[".github/workflows/update-manifest.yml"].stages.always_if_exists = CENTRAL_COMMIT_PATHS.map((pathValue) => ({
+  workflows[".github/workflows/update-manifest.yml"].stages.always_if_exists = centralCommitPaths.map((pathValue) => ({
     path: pathValue,
-    kind: pathValue.includes("/") && pathValue.split("/").at(-1).includes(".") ? "file" : "directory",
+    kind: centralCommitPathKind(pathValue),
     required: false,
   }));
   const manifest = {
@@ -343,7 +561,7 @@ export function buildLaneCommitManifest(registry = LANE_REGISTRY) {
     update_manifest: {
       trigger_paths: [...UPDATE_MANIFEST_TRIGGER_PATHS],
       materializations: cloneJson(UPDATE_MANIFEST_MATERIALIZATIONS),
-      central_commit_paths: [...CENTRAL_COMMIT_PATHS],
+      central_commit_paths: [...centralCommitPaths],
     },
   };
   validateLaneCommitManifest(manifest, { registry });
