@@ -25,12 +25,32 @@
       "run_id": "31111230701",
       "schedule": "7 12 * * 0-5",
       "shard": "54/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for ANEW despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 455,
+      "natural": true,
+      "observed_at": "2026-08-12T22:55:30Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31648785047",
+      "schedule": "7 22 * * 0-5",
+      "shard": "47/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-06T14:33:46Z",
     "history_as_of": "2026-08-05",
-    "path": "data/yf/finance/ANEW.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ANEW.json",
     "payload_sha256": "2ecd6643c8829822986944e8e2f8ce64ef1f2bb05f8e5712dd35732cc0574fe6",
     "quote_as_of": "2026-08-06T13:46:02Z",
     "source_as_of": "2026-08-05"
@@ -40,24 +60,49 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for ANEW despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 993,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 455,
     "natural": true,
-    "observed_at": "2026-08-06T14:33:02Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31111230701",
-    "schedule": "7 12 * * 0-5",
-    "shard": "54/72"
+    "run_id": "31648785047",
+    "schedule": "7 22 * * 0-5",
+    "shard": "47/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for ANEW despite available history",
+    "failure_kind": "systemic_rate_limit",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "run_attempt": 1,
+    "run_id": "31648785047"
   },
   "lkg": {
-    "fetched_at": "2026-07-24T23:14:05Z",
-    "history_as_of": "2026-07-23",
+    "fetched_at": "2026-08-06T14:33:46Z",
+    "history_as_of": "2026-08-05",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ANEW.json",
-    "payload_sha256": "89876bf4bce1011c83a176a16eb3ff2f4aa95018a627a4023d68aeea9b0021df",
-    "quote_as_of": "2026-07-21T14:23:16Z",
-    "source_as_of": "2026-07-21T14:23:16Z"
+    "payload_sha256": "2ecd6643c8829822986944e8e2f8ce64ef1f2bb05f8e5712dd35732cc0574fe6",
+    "quote_as_of": "2026-08-06T13:46:02Z",
+    "source_as_of": "2026-08-05"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,8 +116,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-05"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +130,5 @@
     "source_as_of": "2026-07-21T14:23:16Z"
   },
   "ticker": "ANEW",
-  "updated_at": "2026-08-06T14:33:02Z"
+  "updated_at": "2026-08-12T22:55:30Z"
 }

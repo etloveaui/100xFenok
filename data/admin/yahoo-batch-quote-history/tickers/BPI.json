@@ -25,12 +25,32 @@
       "run_id": "31133672903",
       "schedule": "7 18 * * 0-5",
       "shard": "69/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for BPI despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 448,
+      "natural": true,
+      "observed_at": "2026-08-12T22:55:30Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31648785047",
+      "schedule": "7 22 * * 0-5",
+      "shard": "47/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-07T00:13:11Z",
     "history_as_of": "2026-08-06",
-    "path": "data/yf/finance/BPI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BPI.json",
     "payload_sha256": "19c1cb15d68ee58555fe564fd6b0dda94cc5abb76a83aa21eaf450953215aef4",
     "quote_as_of": "2026-08-06T20:00:00Z",
     "source_as_of": "2026-08-06"
@@ -40,24 +60,49 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for BPI despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 768,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 448,
     "natural": true,
-    "observed_at": "2026-08-07T00:12:01Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31133672903",
-    "schedule": "7 18 * * 0-5",
-    "shard": "69/72"
+    "run_id": "31648785047",
+    "schedule": "7 22 * * 0-5",
+    "shard": "47/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for BPI despite available history",
+    "failure_kind": "systemic_rate_limit",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "run_attempt": 1,
+    "run_id": "31648785047"
   },
   "lkg": {
-    "fetched_at": "2026-07-24T23:15:18Z",
-    "history_as_of": "2026-07-23",
+    "fetched_at": "2026-08-07T00:13:11Z",
+    "history_as_of": "2026-08-06",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BPI.json",
-    "payload_sha256": "7d4bc7db7aec560c473581804e83a7af99b76d170b28e1c9434c2d03165e5178",
-    "quote_as_of": "2026-07-23T18:54:04Z",
-    "source_as_of": "2026-07-23"
+    "payload_sha256": "19c1cb15d68ee58555fe564fd6b0dda94cc5abb76a83aa21eaf450953215aef4",
+    "quote_as_of": "2026-08-06T20:00:00Z",
+    "source_as_of": "2026-08-06"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,8 +116,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-06"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +130,5 @@
     "source_as_of": "2026-07-23"
   },
   "ticker": "BPI",
-  "updated_at": "2026-08-07T00:12:01Z"
+  "updated_at": "2026-08-12T22:55:30Z"
 }

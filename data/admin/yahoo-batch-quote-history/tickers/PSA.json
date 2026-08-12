@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 612,
-      "natural": true,
-      "observed_at": "2026-07-24T00:37:55Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30055546565",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 620,
       "natural": true,
       "observed_at": "2026-07-25T00:31:32Z",
@@ -181,12 +168,32 @@
       "run_id": "31548744038",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for PSA despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 694,
+      "natural": true,
+      "observed_at": "2026-08-12T22:55:30Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31648785047",
+      "schedule": "7 22 * * 0-5",
+      "shard": "47/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-12T00:35:30Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/PSA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PSA.json",
     "payload_sha256": "e36a089669c9a07af384adc39aa62fa8b6310bf311a2305887334f27ea15c15a",
     "quote_as_of": "2026-08-11T20:00:02Z",
     "source_as_of": "2026-08-11"
@@ -197,24 +204,49 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for PSA despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 479,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 694,
     "natural": true,
-    "observed_at": "2026-08-12T00:32:27Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31548744038",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "31648785047",
+    "schedule": "7 22 * * 0-5",
+    "shard": "47/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for PSA despite available history",
+    "failure_kind": "systemic_rate_limit",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "run_attempt": 1,
+    "run_id": "31648785047"
   },
   "lkg": {
-    "fetched_at": "2026-07-09T02:42:48Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-08-12T00:35:30Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/PSA.json",
-    "payload_sha256": "0f42b2a857d56e82aabec370e13fff935a6314916fb9114fd8de9eed386bc93a",
-    "quote_as_of": "2026-07-08T20:00:02Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "e36a089669c9a07af384adc39aa62fa8b6310bf311a2305887334f27ea15c15a",
+    "quote_as_of": "2026-08-11T20:00:02Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -228,8 +260,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -242,5 +274,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "PSA",
-  "updated_at": "2026-08-12T00:32:27Z"
+  "updated_at": "2026-08-12T22:55:30Z"
 }

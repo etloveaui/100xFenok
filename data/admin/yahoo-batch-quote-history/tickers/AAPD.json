@@ -25,12 +25,32 @@
       "run_id": "31100540842",
       "schedule": "7 10 * * 0-5",
       "shard": "53/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for AAPD despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 426,
+      "natural": true,
+      "observed_at": "2026-08-12T22:55:30Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31648785047",
+      "schedule": "7 22 * * 0-5",
+      "shard": "47/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-06T12:17:13Z",
     "history_as_of": "2026-08-05",
-    "path": "data/yf/finance/AAPD.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AAPD.json",
     "payload_sha256": "cf522e6c5c1c872c96220ab8483de06a773e402004823423340c3a49c8c39040",
     "quote_as_of": "2026-08-05T20:00:01Z",
     "source_as_of": "2026-08-05"
@@ -40,24 +60,49 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for AAPD despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 1148,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 426,
     "natural": true,
-    "observed_at": "2026-08-06T12:16:00Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31100540842",
-    "schedule": "7 10 * * 0-5",
-    "shard": "53/72"
+    "run_id": "31648785047",
+    "schedule": "7 22 * * 0-5",
+    "shard": "47/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for AAPD despite available history",
+    "failure_kind": "systemic_rate_limit",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "run_attempt": 1,
+    "run_id": "31648785047"
   },
   "lkg": {
-    "fetched_at": "2026-07-24T23:13:23Z",
-    "history_as_of": "2026-07-24",
+    "fetched_at": "2026-08-06T12:17:13Z",
+    "history_as_of": "2026-08-05",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AAPD.json",
-    "payload_sha256": "0c1c82d74383456d5eca298598e31c5a7bb22d7ce5a885f1a614b396a913f37e",
-    "quote_as_of": "2026-07-24T20:00:01Z",
-    "source_as_of": "2026-07-24"
+    "payload_sha256": "cf522e6c5c1c872c96220ab8483de06a773e402004823423340c3a49c8c39040",
+    "quote_as_of": "2026-08-05T20:00:01Z",
+    "source_as_of": "2026-08-05"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,8 +116,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-05"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +130,5 @@
     "source_as_of": "2026-07-24"
   },
   "ticker": "AAPD",
-  "updated_at": "2026-08-06T12:16:00Z"
+  "updated_at": "2026-08-12T22:55:30Z"
 }

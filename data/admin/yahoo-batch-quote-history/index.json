@@ -1,24 +1,30 @@
 {
   "counts": {
     "active": 6756,
-    "failed": 35,
-    "fresh": 6475,
-    "lkg": 34,
+    "failed": 113,
+    "fresh": 6397,
+    "lkg": 112,
     "pending_acquisition": 243,
     "pending_history": 0,
-    "retry": 35,
-    "stale": 34,
+    "retry": 113,
+    "stale": 54,
     "terminal": 3,
     "unavailable": 1,
     "untracked": 0
   },
   "current_attempt": {
-    "attempted": 139,
+    "attempted": 122,
     "errors": [
       {
-        "error": "recovery_not_advanced_by_provider",
-        "failures": [],
-        "ticker": "000880.KS"
+        "error": "ValueError: quote_as_of is unavailable for 000240.KS despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "000240.KS"
       },
       {
         "error": "ValueError: quote_as_of is unavailable for 012510.KS despite available history",
@@ -26,25 +32,170 @@
         "ticker": "012510.KS"
       },
       {
-        "error": "recovery_not_advanced_by_provider",
-        "failures": [],
-        "ticker": "036800.KQ"
-      },
-      {
-        "error": "recovery_not_advanced_by_provider",
-        "failures": [],
-        "ticker": "183300.KQ"
-      },
-      {
-        "error": "ValueError: provider source timestamp is unavailable for 230360.KQ",
+        "error": "ValueError: quote_as_of is unavailable for 069620.KS despite available history",
         "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "069620.KS"
+      },
+      {
+        "error": "empty payload",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+            "source": "provider_safe_call"
+          },
           {
             "attempt": 1,
             "error": "KeyError=[redacted]",
             "source": "provider_safe_call"
+          },
+          {
+            "attempt": 1,
+            "error": "empty payload"
+          },
+          {
+            "attempt": 2,
+            "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 2,
+            "error": "KeyError=[redacted]",
+            "source": "provider_safe_call"
+          },
+          {
+            "attempt": 2,
+            "error": "empty payload"
           }
         ],
         "ticker": "230360.KQ"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for 357780.KQ despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "357780.KQ"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for AAPD despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "AAPD"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for ABI despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "ABI"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for ANEW despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "ANEW"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for APRJ despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "APRJ"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for ARM despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "ARM"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for AXTC despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "AXTC"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for BABW despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "BABW"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for BBAG despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "BBAG"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for BESO despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "BESO"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for BFEB despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "BFEB"
       },
       {
         "error": "empty payload",
@@ -81,14 +232,146 @@
         "ticker": "BK"
       },
       {
+        "error": "ValueError: quote_as_of is unavailable for BOXA despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "BOXA"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for BPI despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "BPI"
+      },
+      {
         "error": "recovery_not_advanced_by_provider",
         "failures": [],
         "ticker": "BRZX"
       },
       {
+        "error": "ValueError: quote_as_of is unavailable for BSCW despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "BSCW"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for CARX despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "CARX"
+      },
+      {
         "error": "recovery_not_advanced_by_provider",
         "failures": [],
         "ticker": "CCRP"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for CGGR despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "CGGR"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for CI despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "CI"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for CLCV despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "CLCV"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for CPLS despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "CPLS"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for CPSN despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "CPSN"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for CRWV despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "CRWV"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for CSCS despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "CSCS"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for CSSD despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "CSSD"
       },
       {
         "error": "empty payload",
@@ -125,9 +408,251 @@
         "ticker": "CTRA"
       },
       {
+        "error": "ValueError: quote_as_of is unavailable for DDFM despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "DDFM"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for DDFO despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "DDFO"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for DFGX despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "DFGX"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for DFVE despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "DFVE"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for DJTU despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "DJTU"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for DLNV despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "DLNV"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for DWMF despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "DWMF"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for DYNB despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "DYNB"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for EIDO despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "EIDO"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for EMMY despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "EMMY"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for ENFR despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "ENFR"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for FDG despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "FDG"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for FTMN despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "FTMN"
+      },
+      {
         "error": "recovery_not_advanced_by_provider",
         "failures": [],
         "ticker": "FUSD"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for FXF despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "FXF"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for GE despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "GE"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for GSEW despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "GSEW"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for GWX despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "GWX"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for HOLA despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "HOLA"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for HWIV despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "HWIV"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for ICOP despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "ICOP"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for IDVZ despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "IDVZ"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for IHDG despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "IHDG"
       },
       {
         "error": "recovery_not_advanced_by_provider",
@@ -135,8 +660,47 @@
         "ticker": "IMTG"
       },
       {
-        "error": "recovery_not_advanced_by_provider",
-        "failures": [],
+        "error": "ValueError: quote_as_of is unavailable for JCAL despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "JCAL"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for JPIB despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "JPIB"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for KMID despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "KMID"
+      },
+      {
+        "error": "foreign_writer_conflict",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "AttributeError: 'Index' object has no attribute 'date'",
+            "source": "provider_safe_call"
+          }
+        ],
         "ticker": "LEAD"
       },
       {
@@ -145,9 +709,64 @@
         "ticker": "LGDX"
       },
       {
-        "error": "ValueError: source timestamp regression for LIAE: quote_as_of 2026-07-21T15:51:39Z < 2026-08-10T13:46:05Z",
+        "error": "foreign_writer_conflict",
         "failures": [],
         "ticker": "LIAE"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for LNG despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "LNG"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for LQ despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "LQ"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for MAGC despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "MAGC"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for MFC despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "MFC"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for MLM despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "MLM"
       },
       {
         "error": "ValueError: provider source timestamp is unavailable for MMC",
@@ -166,9 +785,31 @@
         "ticker": "MMC"
       },
       {
+        "error": "ValueError: quote_as_of is unavailable for MSI despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "MSI"
+      },
+      {
         "error": "recovery_not_advanced_by_provider",
         "failures": [],
         "ticker": "MUNB"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for NVDQ despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "NVDQ"
       },
       {
         "error": "recovery_not_advanced_by_provider",
@@ -176,9 +817,97 @@
         "ticker": "ODHY"
       },
       {
+        "error": "ValueError: quote_as_of is unavailable for OSEA despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "OSEA"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for PBAU despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "PBAU"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for PJFV despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "PJFV"
+      },
+      {
         "error": "recovery_not_advanced_by_provider",
         "failures": [],
         "ticker": "PMDE"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for PMMY despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "PMMY"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for PSA despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "PSA"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for PSR despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "PSR"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for QCML despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "QCML"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for QUAL despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "QUAL"
       },
       {
         "error": "recovery_not_advanced_by_provider",
@@ -201,9 +930,42 @@
         "ticker": "REFA"
       },
       {
+        "error": "ValueError: quote_as_of is unavailable for REGL despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "REGL"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for RINT despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "RINT"
+      },
+      {
         "error": "ValueError: quote_as_of is unavailable for SATS despite available history",
         "failures": [],
         "ticker": "SATS"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for SCHF despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "SCHF"
       },
       {
         "error": "recovery_not_advanced_by_provider",
@@ -211,86 +973,287 @@
         "ticker": "SHUS"
       },
       {
-        "error": "ValueError: provider source timestamp is unavailable for SMAP",
+        "error": "ValueError: quote_as_of is unavailable for SMAP despite available history",
         "failures": [
           {
             "attempt": 1,
-            "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
             "source": "provider_safe_call"
           },
           {
             "attempt": 1,
-            "error": "KeyError=[redacted]",
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
             "source": "provider_safe_call"
           }
         ],
         "ticker": "SMAP"
       },
       {
-        "error": "recovery_not_advanced_by_provider",
-        "failures": [],
+        "error": "ValueError: quote_as_of is unavailable for SPSK despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "SPSK"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for TAPR despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
         "ticker": "TAPR"
       },
       {
-        "error": "recovery_not_advanced_by_provider",
-        "failures": [],
+        "error": "ValueError: quote_as_of is unavailable for TFNS despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "TFNS"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for TROT despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
         "ticker": "TROT"
       },
       {
-        "error": "recovery_not_advanced_by_provider",
-        "failures": [],
+        "error": "ValueError: quote_as_of is unavailable for TSLZ despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "TSLZ"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for TYA despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "TYA"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for UJUL despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "UJUL"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for VEXC despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "VEXC"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for VGLT despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "VGLT"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for WDE despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
         "ticker": "WDE"
       },
       {
-        "error": "recovery_not_advanced_by_provider",
-        "failures": [],
+        "error": "ValueError: quote_as_of is unavailable for WTIB despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "WTIB"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for WTMY despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "WTMY"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for XEML despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
         "ticker": "XEML"
       },
       {
-        "error": "recovery_not_advanced_by_provider",
-        "failures": [],
+        "error": "ValueError: quote_as_of is unavailable for XEUR despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
         "ticker": "XEUR"
       },
       {
-        "error": "recovery_not_advanced_by_provider",
-        "failures": [],
+        "error": "ValueError: quote_as_of is unavailable for XJAN despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "XJAN"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for XLP despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "XLP"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for XMVM despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "XMVM"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for XPAV despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
         "ticker": "XPAV"
       },
       {
-        "error": "recovery_not_advanced_by_provider",
-        "failures": [],
+        "error": "ValueError: quote_as_of is unavailable for XVO despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
         "ticker": "XVO"
       },
       {
-        "error": "recovery_not_advanced_by_provider",
-        "failures": [],
+        "error": "ValueError: quote_as_of is unavailable for YBST despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
+        "ticker": "YBST"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for ZCBB despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
         "ticker": "ZCBB"
       },
       {
-        "error": "recovery_not_advanced_by_provider",
-        "failures": [],
+        "error": "ValueError: quote_as_of is unavailable for ZCBE despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
         "ticker": "ZCBE"
       },
       {
-        "error": "recovery_not_advanced_by_provider",
-        "failures": [],
+        "error": "ValueError: quote_as_of is unavailable for ZCBG despite available history",
+        "failures": [
+          {
+            "attempt": 1,
+            "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+            "source": "provider_safe_call"
+          }
+        ],
         "ticker": "ZCBG"
       }
     ],
     "event_name": "schedule",
-    "failed": 35,
-    "fetch_attempts": 134,
+    "failed": 113,
+    "fetch_attempts": 125,
     "natural": true,
     "promotion_deferral_symbols": [
-      "000880.KS",
-      "036800.KQ",
-      "183300.KQ",
       "BRZX",
       "CCRP",
       "FUSD",
       "IMTG",
       "LEAD",
       "LGDX",
+      "LIAE",
       "MUNB",
       "ODHY",
       "PMDE",
@@ -298,56 +1261,52 @@
       "RAAY",
       "RCLY",
       "REFA",
-      "SHUS",
-      "TAPR",
-      "TROT",
-      "WDE",
-      "XEML",
-      "XEUR",
-      "XPAV",
-      "XVO",
-      "ZCBB",
-      "ZCBE",
-      "ZCBG"
+      "SHUS"
     ],
-    "promotion_deferrals": 27,
+    "promotion_deferrals": 15,
     "run_attempt": 1,
-    "run_id": "31639747711",
-    "schedule": "7 20 * * 0-5",
-    "skipped": 7,
-    "successes": 97
+    "run_id": "31648785047",
+    "schedule": "7 22 * * 0-5",
+    "skipped": 0,
+    "successes": 9
   },
-  "generated_at": "2026-08-12T20:54:05Z",
+  "generated_at": "2026-08-12T22:55:30Z",
   "lane_id": "yahoo_batch_quote_history",
   "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
-    "error": "ValueError: quote_as_of is unavailable for 012510.KS despite available history",
-    "failure_kind": "transient_provider_miss",
-    "failures": [],
+    "error": "ValueError: quote_as_of is unavailable for 000240.KS despite available history",
+    "failure_kind": "systemic_rate_limit",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
     "lkg_status": "retained",
-    "observed_at": "2026-08-12T20:54:05Z",
+    "observed_at": "2026-08-12T22:55:30Z",
     "run_attempt": 1,
-    "run_id": "31639747711",
-    "ticker": "012510.KS"
+    "run_id": "31648785047",
+    "ticker": "000240.KS"
   },
   "lkg_details": [
     {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "e3298d8564bf93b873d72fd17ccc3a83e24941d3d4cbddf33d86b2281f33a272",
-      "source_age_business_days": 10,
-      "source_as_of": "2026-07-29T06:30:02Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "000880.KS"
+      "expected_resolution": null,
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
+      "max_source_age_business_days": null,
+      "payload_sha256": "83556c51c89a8e865a7ecb5a82673b4a3d6a9d9ccb4d789f199054b47d5275ab",
+      "source_age_business_days": null,
+      "source_as_of": "2026-08-12",
+      "state_reason": null,
+      "symbol": "000240.KS"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-08-12T20:54:05Z",
-      "failure_run_id": "31639747711",
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
       "max_source_age_business_days": 6,
       "payload_sha256": "3afedd0593b21109b3c9a7d5459a8f1ef37be9498a2cbb7ba4740762f97e9410",
       "source_age_business_days": 14,
@@ -356,31 +1315,20 @@
       "symbol": "012510.KS"
     },
     {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "a078a017da493c88c1ccd5b7bd5858504cd236ec0c5449820b26a08ef423cbb6",
-      "source_age_business_days": 11,
-      "source_as_of": "2026-07-28T06:30:17Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "036800.KQ"
+      "expected_resolution": null,
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
+      "max_source_age_business_days": null,
+      "payload_sha256": "6be365f92e867e441d5ae0331da8c22348966172f2f508d5df929c45fed1b26e",
+      "source_age_business_days": null,
+      "source_as_of": "2026-08-12",
+      "state_reason": null,
+      "symbol": "069620.KS"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "1d1f271e2aeaaa45f1de038aaaad5f08e603c76a8f0c88b87b1dd717f85c2f51",
-      "source_age_business_days": 11,
-      "source_as_of": "2026-07-28T06:30:17Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "183300.KQ"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-08-12T20:54:05Z",
-      "failure_run_id": "31639747711",
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
       "max_source_age_business_days": 6,
       "payload_sha256": "1045a62575964dd495119208688f18897b4819bfdea0ebe9b04b2cdd9c73bf8f",
       "source_age_business_days": 23,
@@ -389,15 +1337,158 @@
       "symbol": "230360.KQ"
     },
     {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
+      "max_source_age_business_days": null,
+      "payload_sha256": "0c51db0ecac4068e2091b0026b445252c605ae00b007059bc13a2986e9a83ce2",
+      "source_age_business_days": null,
+      "source_as_of": "2026-08-12",
+      "state_reason": null,
+      "symbol": "357780.KQ"
+    },
+    {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-08-12T20:54:05Z",
-      "failure_run_id": "31639747711",
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "cf522e6c5c1c872c96220ab8483de06a773e402004823423340c3a49c8c39040",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-08-05",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "AAPD"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "06a763498583e96133988d961ed678fc70a7fae5c8696af21e9a855dbc180eb7",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-08-05",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "ABI"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "2ecd6643c8829822986944e8e2f8ce64ef1f2bb05f8e5712dd35732cc0574fe6",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-08-05",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "ANEW"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "7b3608496d82bc27712b1633db753882a3f66e30b4c6a03f7d921fc7641a2e82",
+      "source_age_business_days": 9,
+      "source_as_of": "2026-08-05",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "APRJ"
+    },
+    {
+      "expected_resolution": null,
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
+      "max_source_age_business_days": null,
+      "payload_sha256": "4741d6a01d92791aac077ba809b4bdaadf76146dad46e58055c8018b69d52b34",
+      "source_age_business_days": null,
+      "source_as_of": "2026-08-11",
+      "state_reason": null,
+      "symbol": "ARM"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "ad84be2111071e8bafb80b89145bfd4282bddbe71f9601cfb6ccfc740e5e8702",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-08-06",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "AXTC"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "6bb8a34b21c21631a3b96956ec6f4f89ad623148d4a6b89e6af9e7cbd788e7ec",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-08-06",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "BABW"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "c0d185ed9e9eb034b6ac860da99e61453e72faf2900b68cf60854eb3c9fc2f17",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-08-06",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "BBAG"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "723547b1895b583037da2d1bf6f6bf21f209c99c168cb0c5bee911a4ccd0fd15",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-08-06",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "BESO"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "122a2d159eaf48113a925d1b20a17856287c14414a8bb92d6b84d682a62cb388",
+      "source_age_business_days": 9,
+      "source_as_of": "2026-08-05",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "BFEB"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
       "max_source_age_business_days": 6,
       "payload_sha256": "9a18aac9ec21b758f886d3106e54facef2cfb0011356353c84097bd3fc0c356c",
       "source_age_business_days": 7,
       "source_as_of": "2026-07-02",
       "state_reason": "source_age_exceeds_lane_bound",
       "symbol": "BK"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "d1643e41adbc80bc61fdd07e2772ff8d2df283ddf455aff3306b3e1ecde30f79",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-08-04T14:38:20Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "BOXA"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "19c1cb15d68ee58555fe564fd6b0dda94cc5abb76a83aa21eaf450953215aef4",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-08-06",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "BPI"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
@@ -412,171 +1503,39 @@
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
       "max_source_age_business_days": 6,
-      "payload_sha256": "3a2e3e9bd204cad10b0e091d48feb241bb6cdee540cf59bc96e4036a1a45b9fd",
-      "source_age_business_days": 69,
-      "source_as_of": "2026-05-04T20:00:00Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "CCRP"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-08-12T20:54:05Z",
-      "failure_run_id": "31639747711",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "c1557c52900d93608f067b98d2df714394a7322a8d53d674d3524d275ab36b27",
-      "source_age_business_days": 45,
-      "source_as_of": "2026-05-06",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "CTRA"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "49822dfb937750dbdf6981a362721cf10561c16868eca1ed51ff38f2d7f25eb8",
+      "payload_sha256": "38653dea85fd14438b84577e162a8c291103b643c9ee672484b5d94bef36f043",
       "source_age_business_days": 7,
-      "source_as_of": "2026-08-03T18:46:47Z",
+      "source_as_of": "2026-08-06",
       "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "FUSD"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "134bb47da1c587f07b3077064b435800e9896df803f04c962d4dc998cd9a4fa6",
-      "source_age_business_days": 51,
-      "source_as_of": "2026-05-29T18:07:20Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "IMTG"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "e42a605590bd8604ecf0b3be7e0b6308de55e1f9a175ddab2d70e9796759f4f1",
-      "source_age_business_days": 19,
-      "source_as_of": "2026-07-14T17:31:32Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "LEAD"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "ce4aff24388ba62452819b91ca72f98738be1c274ee60143859bf1f0a1973743",
-      "source_age_business_days": 35,
-      "source_as_of": "2026-06-23T19:22:05Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "LGDX"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-08-12T20:54:05Z",
-      "failure_run_id": "31639747711",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "54323bc1e23f22c2d44fb39e44732b7a8bd844e9c7be797eefe6fc56f96516e9",
-      "source_age_business_days": 13,
-      "source_as_of": "2026-08-10",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "LIAE"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "1d28cffc3d980d7210b79793e784ca5b914f34d137c2d4e9222c44fef4d222fb",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-08-03T19:39:05Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "MUNB"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "ee0c21297a8baa871f1ca2ff06cdd422b868e84e2a71f8c501afc692c608173c",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-08-03T19:25:00Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "ODHY"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "1e2257ee589451f71ca97ebf43eb82bb63a0d35117ba039252c6a434efa2556e",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-08-03T19:01:06Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "PMDE"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "5fd9231ead6648d1422026a7ea4f61a5d54fc4d31893ca75968efe3d914d64d0",
-      "source_age_business_days": 42,
-      "source_as_of": "2026-06-11T15:15:38Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "QULL"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "b267e455774f8bfe23444074e5e8074d5601d6b5b006da94f42a5ddaf7f93c0d",
-      "source_age_business_days": 109,
-      "source_as_of": "2026-03-06T19:02:43Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "RAAY"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "b698eefb06fd88a33375d7155b708ed1f3bbc5a7cca447a31da98c43dc934da7",
-      "source_age_business_days": 69,
-      "source_as_of": "2026-05-04T14:23:04Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "RCLY"
+      "symbol": "BSCW"
     }
   ],
   "lkg_symbols": [
-    "000880.KS",
+    "000240.KS",
     "012510.KS",
-    "036800.KQ",
-    "183300.KQ",
+    "069620.KS",
     "230360.KQ",
+    "357780.KQ",
+    "AAPD",
+    "ABI",
+    "ANEW",
+    "APRJ",
+    "ARM",
+    "AXTC",
+    "BABW",
+    "BBAG",
+    "BESO",
+    "BFEB",
     "BK",
+    "BOXA",
+    "BPI",
     "BRZX",
-    "CCRP",
-    "CTRA",
-    "FUSD",
-    "IMTG",
-    "LEAD",
-    "LGDX",
-    "LIAE",
-    "MUNB",
-    "ODHY",
-    "PMDE",
-    "QULL",
-    "RAAY",
-    "RCLY"
+    "BSCW"
   ],
-  "message": "Yahoo quote/history: fresh=6475, lkg=34, pending_history=0, unavailable=1, pending_acquisition=243, terminal=3, retry=35, failed=35, source_stale=34. Pending history is a normal new-listing state and self-resolves on a natural Yahoo run.",
+  "message": "Yahoo quote/history: fresh=6397, lkg=112, pending_history=0, unavailable=1, pending_acquisition=243, terminal=3, retry=113, failed=113, source_stale=54. Pending history is a normal new-listing state and self-resolves on a natural Yahoo run.",
   "oldest_source_as_of": "2026-03-06T19:02:43Z",
   "oldest_source_ticker": "RAAY",
   "pending_acquisition_details": [
@@ -591,8 +1550,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "ANGU"
@@ -608,8 +1567,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "ARCP"
@@ -625,8 +1584,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "ARIA"
@@ -642,8 +1601,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "ARMS"
@@ -659,8 +1618,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "AUGC"
@@ -676,8 +1635,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "CAUG"
@@ -693,8 +1652,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "CHDG"
@@ -710,8 +1669,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "CTAU"
@@ -727,8 +1686,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "DDFG"
@@ -744,8 +1703,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "DDTG"
@@ -761,8 +1720,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "DLCU"
@@ -778,8 +1737,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EDIV"
@@ -795,8 +1754,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EFFI"
@@ -812,8 +1771,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "ELOL"
@@ -829,8 +1788,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EMAU"
@@ -846,8 +1805,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EPV"
@@ -863,8 +1822,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "ESGD"
@@ -880,8 +1839,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EWI"
@@ -897,8 +1856,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "FAPR"
@@ -914,8 +1873,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-12T20:54:05Z",
-      "last_seen_run_id": "31639747711",
+      "last_seen_at": "2026-08-12T22:55:30Z",
+      "last_seen_run_id": "31648785047",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "FBT"
@@ -948,308 +1907,266 @@
   "promotion_deferral_details": [
     {
       "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
-      "provider_history_as_of": "2026-08-11",
-      "provider_quote_as_of": "2026-06-22T15:29:26Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31639747711",
-      "ticker": "ZCBG"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
-      "provider_history_as_of": "2026-08-11",
-      "provider_quote_as_of": "2026-04-10T19:35:04Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31639747711",
-      "ticker": "ZCBE"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
-      "provider_history_as_of": "2026-08-11",
-      "provider_quote_as_of": "2026-06-09T13:34:35Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31639747711",
-      "ticker": "ZCBB"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
-      "provider_history_as_of": "2026-08-11",
-      "provider_quote_as_of": "2026-06-03T16:59:52Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31639747711",
-      "ticker": "XVO"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
-      "provider_history_as_of": "2026-08-11",
-      "provider_quote_as_of": "2026-06-15T18:55:51Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31639747711",
-      "ticker": "XPAV"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
-      "provider_history_as_of": "2026-08-11",
-      "provider_quote_as_of": "2026-06-09T17:45:38Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31639747711",
-      "ticker": "XEUR"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
-      "provider_history_as_of": "2026-08-11",
-      "provider_quote_as_of": "2026-03-20T18:21:26Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31639747711",
-      "ticker": "XEML"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
-      "provider_history_as_of": "2026-08-11",
-      "provider_quote_as_of": "2026-05-21T14:19:45Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31639747711",
-      "ticker": "WDE"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
-      "provider_history_as_of": "2026-08-11",
-      "provider_quote_as_of": "2026-03-24T15:56:44Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31639747711",
-      "ticker": "TROT"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
-      "provider_history_as_of": "2026-08-11",
-      "provider_quote_as_of": "2026-08-03T15:10:54Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31639747711",
-      "ticker": "TAPR"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
+      "observed_at": "2026-08-12T22:55:30Z",
       "provider_history_as_of": "2026-08-11",
       "provider_quote_as_of": "2026-06-04T18:12:01Z",
       "reason": "recovery_not_advanced_by_provider",
       "run_attempt": 1,
-      "run_id": "31639747711",
+      "run_id": "31648785047",
       "ticker": "SHUS"
     },
     {
       "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
+      "observed_at": "2026-08-12T22:55:30Z",
       "provider_history_as_of": "2026-08-11",
       "provider_quote_as_of": "2026-05-06T14:34:26Z",
       "reason": "recovery_not_advanced_by_provider",
       "run_attempt": 1,
-      "run_id": "31639747711",
+      "run_id": "31648785047",
       "ticker": "REFA"
     },
     {
       "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
+      "observed_at": "2026-08-12T22:55:30Z",
       "provider_history_as_of": "2026-08-11",
       "provider_quote_as_of": "2026-05-04T14:23:04Z",
       "reason": "recovery_not_advanced_by_provider",
       "run_attempt": 1,
-      "run_id": "31639747711",
+      "run_id": "31648785047",
       "ticker": "RCLY"
     },
     {
       "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
+      "observed_at": "2026-08-12T22:55:30Z",
       "provider_history_as_of": "2026-08-11",
       "provider_quote_as_of": "2026-03-06T19:02:43Z",
       "reason": "recovery_not_advanced_by_provider",
       "run_attempt": 1,
-      "run_id": "31639747711",
+      "run_id": "31648785047",
       "ticker": "RAAY"
     },
     {
       "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
+      "observed_at": "2026-08-12T22:55:30Z",
       "provider_history_as_of": "2026-08-11",
       "provider_quote_as_of": "2026-06-11T15:15:38Z",
       "reason": "recovery_not_advanced_by_provider",
       "run_attempt": 1,
-      "run_id": "31639747711",
+      "run_id": "31648785047",
       "ticker": "QULL"
     },
     {
       "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
+      "observed_at": "2026-08-12T22:55:30Z",
       "provider_history_as_of": "2026-08-11",
       "provider_quote_as_of": "2026-08-03T19:01:06Z",
       "reason": "recovery_not_advanced_by_provider",
       "run_attempt": 1,
-      "run_id": "31639747711",
+      "run_id": "31648785047",
       "ticker": "PMDE"
     },
     {
       "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
+      "observed_at": "2026-08-12T22:55:30Z",
       "provider_history_as_of": "2026-08-11",
       "provider_quote_as_of": "2026-08-03T19:25:00Z",
       "reason": "recovery_not_advanced_by_provider",
       "run_attempt": 1,
-      "run_id": "31639747711",
+      "run_id": "31648785047",
       "ticker": "ODHY"
     },
     {
       "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
+      "observed_at": "2026-08-12T22:55:30Z",
       "provider_history_as_of": "2026-08-11",
       "provider_quote_as_of": "2026-08-03T19:39:05Z",
       "reason": "recovery_not_advanced_by_provider",
       "run_attempt": 1,
-      "run_id": "31639747711",
+      "run_id": "31648785047",
       "ticker": "MUNB"
     },
     {
       "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
+      "observed_at": "2026-08-12T22:55:30Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-07-21T15:51:39Z",
+      "reason": "foreign_writer_conflict",
+      "run_attempt": 1,
+      "run_id": "31648785047",
+      "ticker": "LIAE"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T22:55:30Z",
       "provider_history_as_of": "2026-08-11",
       "provider_quote_as_of": "2026-06-23T19:22:05Z",
       "reason": "recovery_not_advanced_by_provider",
       "run_attempt": 1,
-      "run_id": "31639747711",
+      "run_id": "31648785047",
       "ticker": "LGDX"
     },
     {
       "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
-      "provider_history_as_of": "2026-07-21",
+      "observed_at": "2026-08-12T22:55:30Z",
+      "provider_history_as_of": "2026-07-14",
       "provider_quote_as_of": "2026-07-14T17:31:32Z",
-      "reason": "recovery_not_advanced_by_provider",
+      "reason": "foreign_writer_conflict",
       "run_attempt": 1,
-      "run_id": "31639747711",
+      "run_id": "31648785047",
       "ticker": "LEAD"
     },
     {
       "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
+      "observed_at": "2026-08-12T22:55:30Z",
       "provider_history_as_of": "2026-08-11",
       "provider_quote_as_of": "2026-05-29T18:07:20Z",
       "reason": "recovery_not_advanced_by_provider",
       "run_attempt": 1,
-      "run_id": "31639747711",
+      "run_id": "31648785047",
       "ticker": "IMTG"
     },
     {
       "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
+      "observed_at": "2026-08-12T22:55:30Z",
       "provider_history_as_of": "2026-08-11",
       "provider_quote_as_of": "2026-08-03T18:46:47Z",
       "reason": "recovery_not_advanced_by_provider",
       "run_attempt": 1,
-      "run_id": "31639747711",
+      "run_id": "31648785047",
       "ticker": "FUSD"
     },
     {
       "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
+      "observed_at": "2026-08-12T22:55:30Z",
       "provider_history_as_of": "2026-08-11",
       "provider_quote_as_of": "2026-05-04T20:00:00Z",
       "reason": "recovery_not_advanced_by_provider",
       "run_attempt": 1,
-      "run_id": "31639747711",
+      "run_id": "31648785047",
       "ticker": "CCRP"
     },
     {
       "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
+      "observed_at": "2026-08-12T22:55:30Z",
       "provider_history_as_of": "2026-08-11",
       "provider_quote_as_of": "2026-06-15T14:35:42Z",
       "reason": "recovery_not_advanced_by_provider",
       "run_attempt": 1,
-      "run_id": "31639747711",
+      "run_id": "31648785047",
       "ticker": "BRZX"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
-      "provider_history_as_of": "2026-08-11",
-      "provider_quote_as_of": "2026-07-28T06:30:17Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31639747711",
-      "ticker": "183300.KQ"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
-      "provider_history_as_of": "2026-08-11",
-      "provider_quote_as_of": "2026-07-28T06:30:17Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31639747711",
-      "ticker": "036800.KQ"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T20:54:05Z",
-      "provider_history_as_of": "2026-08-11",
-      "provider_quote_as_of": "2026-07-29T06:30:02Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31639747711",
-      "ticker": "000880.KS"
     }
   ],
   "retry_symbols": [
-    "000880.KS",
+    "000240.KS",
     "012510.KS",
-    "036800.KQ",
-    "183300.KQ",
+    "069620.KS",
     "230360.KQ",
+    "357780.KQ",
+    "AAPD",
+    "ABI",
+    "ANEW",
+    "APRJ",
+    "ARM",
+    "AXTC",
+    "BABW",
+    "BBAG",
+    "BESO",
+    "BFEB",
     "BK",
+    "BOXA",
+    "BPI",
     "BRZX",
+    "BSCW",
+    "CARX",
     "CCRP",
+    "CGGR",
+    "CI",
+    "CLCV",
+    "CPLS",
+    "CPSN",
+    "CRWV",
+    "CSCS",
+    "CSSD",
     "CTRA",
+    "DDFM",
+    "DDFO",
+    "DFGX",
+    "DFVE",
+    "DJTU",
+    "DLNV",
+    "DWMF",
+    "DYNB",
+    "EIDO",
+    "EMMY",
+    "ENFR",
+    "FDG",
+    "FTMN",
     "FUSD",
+    "FXF",
+    "GE",
+    "GSEW",
+    "GWX",
+    "HOLA",
+    "HWIV",
+    "ICOP",
+    "IDVZ",
+    "IHDG",
     "IMTG",
+    "JCAL",
+    "JPIB",
+    "KMID",
     "LEAD",
     "LGDX",
     "LIAE",
+    "LNG",
+    "LQ",
+    "MAGC",
+    "MFC",
+    "MLM",
     "MMC",
+    "MSI",
     "MUNB",
+    "NVDQ",
     "ODHY",
+    "OSEA",
+    "PBAU",
+    "PJFV",
     "PMDE",
+    "PMMY",
+    "PSA",
+    "PSR",
+    "QCML",
+    "QUAL",
     "QULL",
     "RAAY",
     "RCLY",
     "REFA",
+    "REGL",
+    "RINT",
     "SATS",
+    "SCHF",
     "SHUS",
     "SMAP",
+    "SPSK",
     "TAPR",
+    "TFNS",
     "TROT",
+    "TSLZ",
+    "TYA",
+    "UJUL",
+    "VEXC",
+    "VGLT",
     "WDE",
+    "WTIB",
+    "WTMY",
     "XEML",
     "XEUR",
+    "XJAN",
+    "XLP",
+    "XMVM",
     "XPAV",
     "XVO",
+    "YBST",
     "ZCBB",
     "ZCBE",
     "ZCBG"
@@ -1430,6 +2347,15 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
+      "source_age_business_days": 15,
+      "source_as_of": "2026-06-18",
+      "symbols": [
+        "UJUL"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
       "source_age_business_days": 36,
       "source_as_of": "2026-06-22T15:29:26Z",
       "symbols": [
@@ -1460,7 +2386,20 @@
       "source_age_business_days": 10,
       "source_as_of": "2026-06-26",
       "symbols": [
-        "SATS"
+        "CPSN",
+        "SATS",
+        "XLP"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 9,
+      "source_as_of": "2026-06-29",
+      "symbols": [
+        "APRJ",
+        "BFEB",
+        "TYA"
       ]
     },
     {
@@ -1475,10 +2414,39 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-07-08",
+      "symbols": [
+        "MFC",
+        "MSI",
+        "PSA"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
       "source_age_business_days": 19,
       "source_as_of": "2026-07-14T17:31:32Z",
       "symbols": [
         "LEAD"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 17,
+      "source_as_of": "2026-07-15T19:04:45Z",
+      "symbols": [
+        "PMMY"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-07-21T14:23:16Z",
+      "symbols": [
+        "ANEW"
       ]
     },
     {
@@ -1493,20 +2461,36 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 11,
-      "source_as_of": "2026-07-28T06:30:17Z",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-07-21T18:20:19Z",
       "symbols": [
-        "036800.KQ",
-        "183300.KQ"
+        "CARX"
       ]
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 10,
-      "source_as_of": "2026-07-29T06:30:02Z",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-07-23",
       "symbols": [
-        "000880.KS"
+        "BOXA",
+        "BPI"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-07-24",
+      "symbols": [
+        "AAPD",
+        "ABI",
+        "AXTC",
+        "BABW",
+        "BBAG",
+        "BESO",
+        "BSCW",
+        "FXF"
       ]
     },
     {
@@ -1553,6 +2537,15 @@
       "symbols": [
         "MUNB"
       ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-08-03T19:41:38Z",
+      "symbols": [
+        "DLNV"
+      ]
     }
   ],
   "terminal_symbols": [
@@ -1566,8 +2559,8 @@
       "deferred_acquisition": true,
       "expected_resolution": "next_natural_yahoo_run",
       "failure_kind": "transient_provider_miss",
-      "failure_observed_at": "2026-08-12T20:54:05Z",
-      "failure_run_id": "31639747711",
+      "failure_observed_at": "2026-08-12T22:55:30Z",
+      "failure_run_id": "31648785047",
       "lkg_status": "absent",
       "retry": true,
       "symbol": "MMC"

@@ -5,20 +5,6 @@
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 733,
-      "natural": true,
-      "observed_at": "2026-08-11T17:08:04Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31515819191",
-      "schedule": "7 16 * * 0-5",
-      "shard": "32/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 997,
       "natural": true,
       "observed_at": "2026-08-11T19:54:36Z",
@@ -200,13 +186,26 @@
       "run_id": "31639747711",
       "schedule": "7 20 * * 0-5",
       "shard": "46/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 761,
+      "natural": true,
+      "observed_at": "2026-08-12T22:55:30Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31648785047",
+      "schedule": "7 22 * * 0-5",
+      "shard": "47/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T23:30:11Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/036800.KQ.json",
-    "payload_sha256": "a078a017da493c88c1ccd5b7bd5858504cd236ec0c5449820b26a08ef423cbb6",
+    "fetched_at": "2026-08-12T22:56:01Z",
+    "history_as_of": "2026-08-12",
+    "path": "data/yf/finance/036800.KQ.json",
+    "payload_sha256": "fac8efba099901071e4de1a9bfca3378d79913787667bc94e8d3588df512f444",
     "quote_as_of": "2026-07-28T06:30:17Z",
     "source_as_of": "2026-07-28T06:30:17Z"
   },
@@ -216,26 +215,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 844,
+    "latency_ms": 761,
     "natural": true,
-    "observed_at": "2026-08-12T20:54:05Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31639747711",
-    "schedule": "7 20 * * 0-5",
-    "shard": "46/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-12T20:54:05Z",
-    "provider_history_as_of": "2026-08-11",
-    "provider_quote_as_of": "2026-07-28T06:30:17Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31639747711"
+    "run_id": "31648785047",
+    "schedule": "7 22 * * 0-5",
+    "shard": "47/72"
   },
   "lkg": {
     "fetched_at": "2026-08-11T23:30:11Z",
@@ -248,17 +237,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-11T23:29:49Z",
-    "payload_sha256": "a7dccf5dead712bc9500f686ec2f24462c0cc7c9007efe33a86bf8a9949a55d9",
+    "history_as_of": "2026-08-12",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "payload_sha256": "c2c0800e5c1b1ba39165343c92dd2aee1c8ec3075f18f5e9504ffa1eae66e73f",
     "quote_as_of": "2026-07-28T06:30:17Z",
     "run_attempt": 1,
-    "run_id": "31544436443",
+    "run_id": "31648785047",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-28T06:30:17Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 11,
@@ -271,5 +260,5 @@
     "source_as_of": "2026-07-28T06:30:17Z"
   },
   "ticker": "036800.KQ",
-  "updated_at": "2026-08-12T20:54:05Z"
+  "updated_at": "2026-08-12T22:55:30Z"
 }

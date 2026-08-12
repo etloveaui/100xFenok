@@ -38,12 +38,32 @@
       "run_id": "31557511991",
       "schedule": "7 0 * * 0-5",
       "shard": "36/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for DLNV despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 420,
+      "natural": true,
+      "observed_at": "2026-08-12T22:55:30Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31648785047",
+      "schedule": "7 22 * * 0-5",
+      "shard": "47/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-12T02:42:07Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/DLNV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DLNV.json",
     "payload_sha256": "76235ddffe484fad70a5ca906abd8c504488c4b14a561e156505faa90f546013",
     "quote_as_of": "2026-08-10T17:38:28Z",
     "source_as_of": "2026-08-10"
@@ -53,24 +73,49 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for DLNV despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 939,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 420,
     "natural": true,
-    "observed_at": "2026-08-12T02:41:04Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31557511991",
-    "schedule": "7 0 * * 0-5",
-    "shard": "36/72"
+    "run_id": "31648785047",
+    "schedule": "7 22 * * 0-5",
+    "shard": "47/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for DLNV despite available history",
+    "failure_kind": "systemic_rate_limit",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "run_attempt": 1,
+    "run_id": "31648785047"
   },
   "lkg": {
-    "fetched_at": "2026-08-05T23:16:50Z",
-    "history_as_of": "2026-08-04",
+    "fetched_at": "2026-08-12T02:42:07Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/DLNV.json",
-    "payload_sha256": "2a772bc6711878e6c173a3b2d999d1d32ffe662e69bbe8195df297c29a9ce942",
-    "quote_as_of": "2026-08-03T19:41:38Z",
-    "source_as_of": "2026-08-03T19:41:38Z"
+    "payload_sha256": "76235ddffe484fad70a5ca906abd8c504488c4b14a561e156505faa90f546013",
+    "quote_as_of": "2026-08-10T17:38:28Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,8 +129,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -98,5 +143,5 @@
     "source_as_of": "2026-08-03T19:41:38Z"
   },
   "ticker": "DLNV",
-  "updated_at": "2026-08-12T02:41:04Z"
+  "updated_at": "2026-08-12T22:55:30Z"
 }

@@ -43,12 +43,32 @@
       "run_id": "31055557073",
       "schedule": "7 22 * * 0-5",
       "shard": "47/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for MAGC despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 523,
+      "natural": true,
+      "observed_at": "2026-08-12T22:55:30Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31648785047",
+      "schedule": "7 22 * * 0-5",
+      "shard": "47/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-05T23:17:36Z",
     "history_as_of": "2026-08-05",
-    "path": "data/yf/finance/MAGC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MAGC.json",
     "payload_sha256": "8096d2455cb2e3a8282d47b51600313a3f7a231ee9fb0ebbd50e8b99deb570d2",
     "quote_as_of": "2026-08-05T19:50:30Z",
     "source_as_of": "2026-08-05"
@@ -58,47 +78,49 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for MAGC despite available history",
     "event_name": "schedule",
     "failures": [
       {
         "attempt": 1,
-        "error": "YFDataException: MAGC: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: MAGC: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: MAGC: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: MAGC: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: MAGC: No Fund data found.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFDataException: MAGC: No Fund data found.",
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 1251,
+    "latency_ms": 523,
     "natural": true,
-    "observed_at": "2026-08-05T23:14:16Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31055557073",
+    "run_id": "31648785047",
     "schedule": "7 22 * * 0-5",
     "shard": "47/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for MAGC despite available history",
+    "failure_kind": "systemic_rate_limit",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "run_attempt": 1,
+    "run_id": "31648785047"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-05T23:17:36Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MAGC.json",
+    "payload_sha256": "8096d2455cb2e3a8282d47b51600313a3f7a231ee9fb0ebbd50e8b99deb570d2",
+    "quote_as_of": "2026-08-05T19:50:30Z",
+    "source_as_of": "2026-08-05"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -112,9 +134,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-05"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MAGC",
-  "updated_at": "2026-08-05T23:14:16Z"
+  "updated_at": "2026-08-12T22:55:30Z"
 }

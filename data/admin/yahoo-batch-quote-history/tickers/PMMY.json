@@ -108,12 +108,32 @@
       "run_id": "31411954324",
       "schedule": "7 16 * * 0-5",
       "shard": "20/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for PMMY despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 424,
+      "natural": true,
+      "observed_at": "2026-08-12T22:55:30Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31648785047",
+      "schedule": "7 22 * * 0-5",
+      "shard": "47/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-10T17:05:23Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/PMMY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PMMY.json",
     "payload_sha256": "9f512930b4182cdb28ff0687cf2eefb72afe5e5e8f8b9de19b87cb5653263b41",
     "quote_as_of": "2026-08-10T13:46:06Z",
     "source_as_of": "2026-08-10"
@@ -123,24 +143,49 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for PMMY despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 663,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 424,
     "natural": true,
-    "observed_at": "2026-08-10T17:04:11Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31411954324",
-    "schedule": "7 16 * * 0-5",
-    "shard": "20/72"
+    "run_id": "31648785047",
+    "schedule": "7 22 * * 0-5",
+    "shard": "47/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for PMMY despite available history",
+    "failure_kind": "systemic_rate_limit",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "run_attempt": 1,
+    "run_id": "31648785047"
   },
   "lkg": {
-    "fetched_at": "2026-08-09T05:16:11Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-10T17:05:23Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/PMMY.json",
-    "payload_sha256": "df9d1c738c1e18be643861e70d540ffc376532e0ad5d1e71fbf05e589c48f0b9",
-    "quote_as_of": "2026-07-15T19:04:45Z",
-    "source_as_of": "2026-07-15T19:04:45Z"
+    "payload_sha256": "9f512930b4182cdb28ff0687cf2eefb72afe5e5e8f8b9de19b87cb5653263b41",
+    "quote_as_of": "2026-08-10T13:46:06Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -154,8 +199,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 17,
@@ -168,5 +213,5 @@
     "source_as_of": "2026-07-15T19:04:45Z"
   },
   "ticker": "PMMY",
-  "updated_at": "2026-08-10T17:04:11Z"
+  "updated_at": "2026-08-12T22:55:30Z"
 }

@@ -38,12 +38,32 @@
       "run_id": "31055557073",
       "schedule": "7 22 * * 0-5",
       "shard": "47/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for CPSN despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 460,
+      "natural": true,
+      "observed_at": "2026-08-12T22:55:30Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31648785047",
+      "schedule": "7 22 * * 0-5",
+      "shard": "47/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-05T23:16:31Z",
     "history_as_of": "2026-08-05",
-    "path": "data/yf/finance/CPSN.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CPSN.json",
     "payload_sha256": "6da1e7813aedc799acb3a539c8f81e40d9a9d9467c119cf433362c6d92f801df",
     "quote_as_of": "2026-08-05T18:01:24Z",
     "source_as_of": "2026-08-05"
@@ -53,24 +73,49 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for CPSN despite available history",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 1026,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 460,
     "natural": true,
-    "observed_at": "2026-08-05T23:14:16Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31055557073",
+    "run_id": "31648785047",
     "schedule": "7 22 * * 0-5",
     "shard": "47/72"
   },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for CPSN despite available history",
+    "failure_kind": "systemic_rate_limit",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "run_attempt": 1,
+    "run_id": "31648785047"
+  },
   "lkg": {
-    "fetched_at": "2026-06-29T23:51:59Z",
-    "history_as_of": "2026-06-26",
+    "fetched_at": "2026-08-05T23:16:31Z",
+    "history_as_of": "2026-08-05",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CPSN.json",
-    "payload_sha256": "d6e351a88a7eb1ca20634eaaeaddea5ff62f4d1899cf6ab582c269e6d32a20a7",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-26"
+    "payload_sha256": "6da1e7813aedc799acb3a539c8f81e40d9a9d9467c119cf433362c6d92f801df",
+    "quote_as_of": "2026-08-05T18:01:24Z",
+    "source_as_of": "2026-08-05"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,8 +129,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-05"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
@@ -98,5 +143,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "CPSN",
-  "updated_at": "2026-08-05T23:14:16Z"
+  "updated_at": "2026-08-12T22:55:30Z"
 }

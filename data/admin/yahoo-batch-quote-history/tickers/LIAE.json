@@ -122,6 +122,20 @@
       "run_id": "31639747711",
       "schedule": "7 20 * * 0-5",
       "shard": "46/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 646,
+      "natural": true,
+      "observed_at": "2026-08-12T22:55:30Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31648785047",
+      "schedule": "7 22 * * 0-5",
+      "shard": "47/72"
     }
   ],
   "current": {
@@ -137,17 +151,17 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: source timestamp regression for LIAE: quote_as_of 2026-07-21T15:51:39Z < 2026-08-10T13:46:05Z",
+    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 547,
+    "latency_ms": 646,
     "natural": true,
-    "observed_at": "2026-08-12T20:54:05Z",
+    "observed_at": "2026-08-12T22:55:30Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31639747711",
-    "schedule": "7 20 * * 0-5",
-    "shard": "46/72"
+    "run_id": "31648785047",
+    "schedule": "7 22 * * 0-5",
+    "shard": "47/72"
   },
   "latest_failure": {
     "attempts_used": 1,
@@ -160,6 +174,15 @@
     "observed_at": "2026-08-12T20:54:05Z",
     "run_attempt": 1,
     "run_id": "31639747711"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-12T22:55:30Z",
+    "provider_history_as_of": "2026-08-11",
+    "provider_quote_as_of": "2026-07-21T15:51:39Z",
+    "reason": "foreign_writer_conflict",
+    "run_attempt": 1,
+    "run_id": "31648785047"
   },
   "lkg": {
     "fetched_at": "2026-08-10T15:11:00Z",
@@ -195,5 +218,5 @@
     "source_as_of": "2026-07-21T15:51:39Z"
   },
   "ticker": "LIAE",
-  "updated_at": "2026-08-12T20:54:05Z"
+  "updated_at": "2026-08-12T22:55:30Z"
 }
