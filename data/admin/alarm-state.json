@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-12T09:16:08.154Z",
+  "generated_at": "2026-08-12T13:53:34.280Z",
   "status": "open",
-  "open_incident_count": 4,
+  "open_incident_count": 5,
   "open_incidents": [
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -17,6 +17,19 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "overdue"
+    },
+    {
+      "workflow": "fetch-finra-ats-weekly.yml",
+      "label": "Fetch FINRA ATS OTC Weekly Summary",
+      "streak": 1,
+      "failure_streak_threshold": 1,
+      "first_failing_run_id": 31594452315,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31594452315",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
     },
     {
       "workflow": "fetch-fred-macro.yml",
@@ -450,12 +463,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31581944400",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31581944400",
-    "observed_at": "2026-08-12T09:16:08.154Z",
-    "event": "workflow_run",
+    "run_id": "31603579834",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31603579834",
+    "observed_at": "2026-08-12T13:53:34.280Z",
+    "event": "schedule",
     "workflows": [
       "fetch-edgar-filings.yml",
+      "fetch-finra-ats-weekly.yml",
       "fetch-fred-macro.yml",
       "fetch-stockanalysis.yml",
       "fetch-yf-finance.yml"
