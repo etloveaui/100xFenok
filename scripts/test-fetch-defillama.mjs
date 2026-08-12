@@ -464,6 +464,11 @@ for (const failure of [
   assert.deepEqual(producer?.schedule, workflowCrons, "workflow and detection-config cron declarations stay aligned");
   assert.match(workflow, /node scripts\/test-fetch-defillama\.mjs/);
   assert.match(workflow, /node scripts\/fetch-defillama\.mjs/);
+  assert.match(
+    workflow,
+    /- name: Start from latest main\n\s+run: \|\n\s+git fetch origin \+main:refs\/remotes\/origin\/main\n\s+git checkout -B main origin\/main/,
+    "workflow must pin execution to latest main immediately after checkout",
+  );
   assert.match(workflow, /controlled_failure_endpoint/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE_ENDPOINT/);
   assert.match(workflow, new RegExp(`detection-attempts/${DEFILLAMA_LANE_ID}\\.json`));
@@ -476,6 +481,57 @@ for (const failure of [
   assert.match(workflow, /FETCH_OUTCOME.*success[\s\S]*--stage success_if_exists/);
   assert.doesNotMatch(workflow, /node << ['"]?EOF/);
   assert.doesNotMatch(workflow, /git add -A/);
+}
+
+// DefiLlama integration: a structured first workflow_dispatch writes a
+// run-bound attempt and may recover when the provider source advances.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-defillama-bound-dispatch-recovery-"));
+  const rp = paths(root);
+  await runCase(root, {
+    chartDate: "2026-07-15",
+    runId: "bound-dispatch-baseline",
+    observedAt: "2026-07-15T04:00:00.000Z",
+  });
+  const boundFailure = await runDefillama({
+    ...rp,
+    request: async (_url, endpoint) => (
+      endpoint === "chart" ? response(200, chart("2026-07-16")) : response(200, stablecoins())
+    ),
+    observedAt: "2026-07-16T03:10:00.000Z",
+    runId: "31551148251",
+    eventName: "workflow_dispatch",
+    controlledFailureEndpoint: "chart",
+    sleep: async () => {},
+  });
+  assert.equal(boundFailure.ok, false);
+  assert.equal(boundFailure.reason, "controlled_failure");
+  assert.deepEqual(boundFailure.retrySet, ["stablecoins"]);
+  const boundFailureShard = readJson(rp.attemptShardPath);
+  assert.equal(
+    boundFailureShard.attempts[0].attempt_id,
+    "defillama-stablecoins-run-31551148251-attempt-1",
+    "attempt shard id is run-bound for a structured run context",
+  );
+
+  const boundRecovered = await runDefillama({
+    ...rp,
+    request: async (_url, endpoint) => (
+      endpoint === "chart" ? response(200, chart("2026-07-16")) : response(200, stablecoins())
+    ),
+    observedAt: "2026-07-16T03:40:00.000Z",
+    runId: "31551148254",
+    eventName: "workflow_dispatch",
+    sleep: async () => {},
+  });
+  assert.equal(boundRecovered.ok, true, "structured first-attempt workflow_dispatch may recover when the source advances");
+  assert.equal(boundRecovered.recovered, true);
+  const boundState = readJson(path.join(root, "data", "admin", DEFILLAMA_LANE_ID, "index.json"));
+  assert.deepEqual(boundState.retry_set, []);
+  assert.equal(boundState.items.stablecoins.recovery_run_id, "31551148254");
+  assert.equal(boundState.items.stablecoins.recovery_event_name, "workflow_dispatch");
+  const boundAttempt = readJson(rp.attemptShardPath).attempts[0];
+  assert.equal(boundAttempt.attempt_id, "defillama-stablecoins-run-31551148254-attempt-1");
 }
 
 

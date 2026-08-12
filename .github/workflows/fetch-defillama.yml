@@ -38,6 +38,11 @@ jobs:
             data/admin/defillama_stablecoins
             data/macro
 
+      - name: Start from latest main
+        run: |
+          git fetch origin +main:refs/remotes/origin/main
+          git checkout -B main origin/main
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:

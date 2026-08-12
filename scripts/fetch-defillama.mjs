@@ -22,7 +22,8 @@ import {
   allNaturalRequestsFailed,
   buildProviderObservationV2,
   classifyLkgFailure,
-  isNaturalScheduleRun,
+  hasStructuredGithubRunBinding,
+  isEligibleRecoveryRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
 import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
@@ -43,6 +44,11 @@ export const DEFILLAMA_PERSISTENCE_POLICY = Object.freeze({
   max_series_days: DEFILLAMA_MAX_SERIES_DAYS,
   eviction: "oldest_source_date_first",
 });
+
+// DefiLlama opts into recovery promotion for structured first-attempt
+// workflow_dispatch runs only; every other LaneLkgStore caller keeps the
+// natural-schedule-only default.
+const ALLOW_BOUND_WORKFLOW_DISPATCH_RECOVERY = true;
 
 const MAX_RETRIES = 2;
 const BACKOFFS_MS = Object.freeze([1000, 2000, 4000]);
@@ -223,7 +229,7 @@ export async function runDefillama({
   attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", `${DEFILLAMA_LANE_ID}.json`),
   request = requestBytes,
   observedAt = new Date().toISOString(),
-  attemptId = defaultAttemptId("defillama-stablecoins", observedAt),
+  attemptId,
   runId = process.env.GITHUB_RUN_ID || "local",
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || "local",
@@ -232,7 +238,16 @@ export async function runDefillama({
 } = {}) {
   const injectedEndpoint = validateControlledFailureEndpoint(controlledFailureEndpoint.trim(), eventName);
   const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
-  const lkgStore = new LaneLkgStore({ repoRoot, laneId: DEFILLAMA_LANE_ID });
+  const resolvedAttemptId = attemptId ?? (
+    hasStructuredGithubRunBinding(run)
+      ? `defillama-stablecoins-run-${run.runId}-attempt-${run.runAttempt}`
+      : defaultAttemptId("defillama-stablecoins", observedAt)
+  );
+  const lkgStore = new LaneLkgStore({
+    repoRoot,
+    laneId: DEFILLAMA_LANE_ID,
+    allowBoundWorkflowDispatchRecovery: ALLOW_BOUND_WORKFLOW_DISPATCH_RECOVERY,
+  });
   const lkgArtifacts = [{
     key: "stablecoins",
     canonicalPath,
@@ -254,7 +269,7 @@ export async function runDefillama({
     laneId: DEFILLAMA_LANE_ID,
     attemptShardPath,
     observedAt,
-    attemptId,
+    attemptId: resolvedAttemptId,
     result,
   });
 
@@ -315,7 +330,7 @@ export async function runDefillama({
     }),
   };
   const state = lkgStore.stateSnapshot();
-  if (state.items.stablecoins?.retry === true && !isNaturalScheduleRun(run)) {
+  if (state.items.stablecoins?.retry === true && !isEligibleRecoveryRun(run, ALLOW_BOUND_WORKFLOW_DISPATCH_RECOVERY)) {
     return {
       ok: false,
       reason: "recovery_requires_schedule",
