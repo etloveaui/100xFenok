@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1059,
-      "natural": true,
-      "observed_at": "2026-08-09T07:09:35Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31300442711",
-      "schedule": "7 6 * * 0-5",
-      "shard": "3/72"
-    },
-    {
-      "attempts_used": 1,
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
@@ -193,34 +180,46 @@
       "run_id": "31602424796",
       "schedule": "7 12 * * 0-5",
       "shard": "42/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 533,
+      "natural": true,
+      "observed_at": "2026-08-12T17:16:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31620820614",
+      "schedule": "7 16 * * 0-5",
+      "shard": "44/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T17:05:10Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/HJLY.json",
-    "payload_sha256": "69adcd8f5ec1d4e80604fddbe42d139f007c600eb37bc391811b871b4d557827",
-    "quote_as_of": "2026-08-10T13:46:05Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-08-12T17:16:26Z",
+    "history_as_of": "2026-08-12",
+    "path": "data/yf/finance/HJLY.json",
+    "payload_sha256": "23222e68b984c7cf1a9c87d9a105ef5acca6e60fd8cace09d9e0e0ae0b58e927",
+    "quote_as_of": "2026-08-12T13:46:06Z",
+    "source_as_of": "2026-08-12"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 927,
+    "latency_ms": 533,
     "natural": true,
-    "observed_at": "2026-08-12T13:41:31Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-12T17:16:04Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31602424796",
-    "schedule": "7 12 * * 0-5",
-    "shard": "42/72"
+    "run_id": "31620820614",
+    "schedule": "7 16 * * 0-5",
+    "shard": "44/72"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -231,15 +230,6 @@
     "observed_at": "2026-08-11T21:30:39Z",
     "run_attempt": 1,
     "run_id": "31535092071"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-12T13:41:31Z",
-    "provider_history_as_of": "2026-08-10",
-    "provider_quote_as_of": "2026-07-24T16:48:53Z",
-    "reason": "foreign_writer_conflict",
-    "run_attempt": 1,
-    "run_id": "31602424796"
   },
   "lkg": {
     "fetched_at": "2026-08-10T17:05:10Z",
@@ -252,17 +242,22 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-10T17:04:11Z",
-    "payload_sha256": "430dcaea558d3e1a8545077dc7734799e46f0d4232266733aa6dcfd897f884e1",
-    "quote_as_of": "2026-08-10T13:46:05Z",
+    "history_as_of": "2026-08-12",
+    "observed_at": "2026-08-12T17:16:04Z",
+    "payload_sha256": "4a66f2ba0adec67877e53b27298b532d02df24de83c0e3d911cf8a605275da3e",
+    "quote_as_of": "2026-08-12T13:46:06Z",
     "run_attempt": 1,
-    "run_id": "31411954324",
+    "run_id": "31620820614",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-08-12"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-08-12T17:16:04Z",
+  "recovered_from_run_id": "31535092071",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "31620820614",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
@@ -275,5 +270,5 @@
     "source_as_of": "2026-07-24T16:48:53Z"
   },
   "ticker": "HJLY",
-  "updated_at": "2026-08-12T13:41:31Z"
+  "updated_at": "2026-08-12T17:16:04Z"
 }

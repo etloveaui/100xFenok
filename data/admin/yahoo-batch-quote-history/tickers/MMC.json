@@ -16,31 +16,6 @@
           "source": "provider_safe_call"
         }
       ],
-      "latency_ms": 963,
-      "natural": true,
-      "observed_at": "2026-08-10T20:51:42Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31430923656",
-      "schedule": "7 20 * * 0-5",
-      "shard": "22/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: provider source timestamp is unavailable for MMC",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        }
-      ],
       "latency_ms": 827,
       "natural": true,
       "observed_at": "2026-08-10T22:52:08Z",
@@ -339,6 +314,31 @@
       "run_id": "31610461024",
       "schedule": "7 14 * * 0-5",
       "shard": "43/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: provider source timestamp is unavailable for MMC",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 798,
+      "natural": true,
+      "observed_at": "2026-08-12T17:16:04Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31620820614",
+      "schedule": "7 16 * * 0-5",
+      "shard": "44/72"
     }
   ],
   "discovered_from": [
@@ -360,14 +360,14 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 578,
+    "latency_ms": 798,
     "natural": true,
-    "observed_at": "2026-08-12T15:08:24Z",
+    "observed_at": "2026-08-12T17:16:04Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31610461024",
-    "schedule": "7 14 * * 0-5",
-    "shard": "43/72"
+    "run_id": "31620820614",
+    "schedule": "7 16 * * 0-5",
+    "shard": "44/72"
   },
   "latest_failure": {
     "attempts_used": 1,
@@ -388,13 +388,13 @@
       }
     ],
     "lkg_status": "absent",
-    "observed_at": "2026-08-12T15:08:24Z",
+    "observed_at": "2026-08-12T17:16:04Z",
     "run_attempt": 1,
-    "run_id": "31610461024"
+    "run_id": "31620820614"
   },
   "resolution_state": "unavailable",
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MMC",
-  "updated_at": "2026-08-12T15:08:24Z"
+  "updated_at": "2026-08-12T17:16:04Z"
 }

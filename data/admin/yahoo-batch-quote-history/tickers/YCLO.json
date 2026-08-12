@@ -95,41 +95,44 @@
       "run_id": "31602424796",
       "schedule": "7 12 * * 0-5",
       "shard": "42/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 544,
+      "natural": true,
+      "observed_at": "2026-08-12T17:16:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31620820614",
+      "schedule": "7 16 * * 0-5",
+      "shard": "44/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T09:23:55Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/YCLO.json",
-    "payload_sha256": "33ab15164008acd65cf68f1467c73e9644cdd3061a62c23244ced0f6ee959b65",
-    "quote_as_of": "2026-07-21T19:17:58Z",
-    "source_as_of": "2026-07-21T19:17:58Z"
+    "fetched_at": "2026-08-12T17:16:48Z",
+    "history_as_of": "2026-08-12",
+    "path": "data/yf/finance/YCLO.json",
+    "payload_sha256": "bd3761931716bd483d5edbde084c19b772aa7580edbc7c5da91024fc0e467e4b",
+    "quote_as_of": "2026-08-12T15:34:04Z",
+    "source_as_of": "2026-08-12"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 637,
+    "latency_ms": 544,
     "natural": true,
-    "observed_at": "2026-08-12T13:41:31Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-12T17:16:04Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31602424796",
-    "schedule": "7 12 * * 0-5",
-    "shard": "42/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-12T13:41:31Z",
-    "provider_history_as_of": "2026-08-10",
-    "provider_quote_as_of": "2026-07-21T19:17:58Z",
-    "reason": "foreign_writer_conflict",
-    "run_attempt": 1,
-    "run_id": "31602424796"
+    "run_id": "31620820614",
+    "schedule": "7 16 * * 0-5",
+    "shard": "44/72"
   },
   "lkg": {
     "fetched_at": "2026-08-12T09:23:55Z",
@@ -142,17 +145,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T09:23:29Z",
-    "payload_sha256": "b2bcd82a76bd30c449c3056ae1d619d4ac63be45f53a138240dc61e209d1bbf4",
-    "quote_as_of": "2026-07-21T19:17:58Z",
+    "history_as_of": "2026-08-12",
+    "observed_at": "2026-08-12T17:16:04Z",
+    "payload_sha256": "6355a2d9f3092836f2822735d4d099df1da0ceb7698d8a75232c2d0ded030ef1",
+    "quote_as_of": "2026-08-12T15:34:04Z",
     "run_attempt": 1,
-    "run_id": "31582524321",
+    "run_id": "31620820614",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-21T19:17:58Z"
+    "source_as_of": "2026-08-12"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 16,
@@ -165,5 +168,5 @@
     "source_as_of": "2026-07-21T19:17:58Z"
   },
   "ticker": "YCLO",
-  "updated_at": "2026-08-12T13:41:31Z"
+  "updated_at": "2026-08-12T17:16:04Z"
 }

@@ -80,41 +80,44 @@
       "run_id": "31602424796",
       "schedule": "7 12 * * 0-5",
       "shard": "42/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 650,
+      "natural": true,
+      "observed_at": "2026-08-12T17:16:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31620820614",
+      "schedule": "7 16 * * 0-5",
+      "shard": "44/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T09:24:52Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/LFDR.json",
-    "payload_sha256": "5c154b64b068d65231723f31d992d46396a3c0e8a8d2de6267f1b4fb3bef1eed",
-    "quote_as_of": "2026-08-03T18:30:03Z",
-    "source_as_of": "2026-08-03T18:30:03Z"
+    "fetched_at": "2026-08-12T17:16:30Z",
+    "history_as_of": "2026-08-12",
+    "path": "data/yf/finance/LFDR.json",
+    "payload_sha256": "b15851c386267b9383e48a6978a27b766e9e82112bb7cc051d7101dbf7f5acd2",
+    "quote_as_of": "2026-08-12T13:46:06Z",
+    "source_as_of": "2026-08-12"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 828,
+    "latency_ms": 650,
     "natural": true,
-    "observed_at": "2026-08-12T13:41:31Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-12T17:16:04Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31602424796",
-    "schedule": "7 12 * * 0-5",
-    "shard": "42/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-12T13:41:31Z",
-    "provider_history_as_of": "2026-08-10",
-    "provider_quote_as_of": "2026-08-03T18:30:03Z",
-    "reason": "foreign_writer_conflict",
-    "run_attempt": 1,
-    "run_id": "31602424796"
+    "run_id": "31620820614",
+    "schedule": "7 16 * * 0-5",
+    "shard": "44/72"
   },
   "lkg": {
     "fetched_at": "2026-08-12T09:24:52Z",
@@ -127,17 +130,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T09:23:29Z",
-    "payload_sha256": "f2c936e8701498df6cbced0c213264ca76f95274a54bf6942dfb9a2a03bfdf0a",
-    "quote_as_of": "2026-08-03T18:30:03Z",
+    "history_as_of": "2026-08-12",
+    "observed_at": "2026-08-12T17:16:04Z",
+    "payload_sha256": "d7da69286f5f088e7c73c1602893a082c4a01bdb9fb9406e393709793633951a",
+    "quote_as_of": "2026-08-12T13:46:06Z",
     "run_attempt": 1,
-    "run_id": "31582524321",
+    "run_id": "31620820614",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03T18:30:03Z"
+    "source_as_of": "2026-08-12"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -150,5 +153,5 @@
     "source_as_of": "2026-08-03T18:30:03Z"
   },
   "ticker": "LFDR",
-  "updated_at": "2026-08-12T13:41:31Z"
+  "updated_at": "2026-08-12T17:16:04Z"
 }

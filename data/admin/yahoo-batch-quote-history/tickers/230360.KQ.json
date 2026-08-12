@@ -5,20 +5,6 @@
       "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 514,
-      "natural": true,
-      "observed_at": "2026-08-11T11:03:07Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31484759300",
-      "schedule": "7 10 * * 0-5",
-      "shard": "29/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 736,
       "natural": true,
       "observed_at": "2026-08-11T13:36:55Z",
@@ -201,6 +187,31 @@
       "run_id": "31610461024",
       "schedule": "7 14 * * 0-5",
       "shard": "43/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: provider source timestamp is unavailable for 230360.KQ",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 1018,
+      "natural": true,
+      "observed_at": "2026-08-12T17:16:04Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31620820614",
+      "schedule": "7 16 * * 0-5",
+      "shard": "44/72"
     }
   ],
   "current": {
@@ -216,29 +227,51 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
+    "error": "ValueError: provider source timestamp is unavailable for 230360.KQ",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 348,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "KeyError=[redacted]",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 1018,
     "natural": true,
-    "observed_at": "2026-08-12T15:08:24Z",
+    "observed_at": "2026-08-12T17:16:04Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31610461024",
-    "schedule": "7 14 * * 0-5",
-    "shard": "43/72"
+    "run_id": "31620820614",
+    "schedule": "7 16 * * 0-5",
+    "shard": "44/72"
   },
   "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
-    "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
+    "error": "ValueError: provider source timestamp is unavailable for 230360.KQ",
     "failure_kind": "transient_provider_miss",
-    "failures": [],
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "KeyError=[redacted]",
+        "source": "provider_safe_call"
+      }
+    ],
     "lkg_status": "retained",
-    "observed_at": "2026-08-12T15:08:24Z",
+    "observed_at": "2026-08-12T17:16:04Z",
     "run_attempt": 1,
-    "run_id": "31610461024"
+    "run_id": "31620820614"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:48:17Z",
@@ -262,5 +295,5 @@
     "source_as_of": "2026-06-10T06:30:30Z"
   },
   "ticker": "230360.KQ",
-  "updated_at": "2026-08-12T15:08:24Z"
+  "updated_at": "2026-08-12T17:16:04Z"
 }

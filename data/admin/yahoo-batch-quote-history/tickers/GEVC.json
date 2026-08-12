@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 485,
-      "natural": true,
-      "observed_at": "2026-08-02T22:59:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30771231562",
-      "schedule": "0 22 * * 0",
-      "shard": "0/6"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 748,
       "natural": true,
       "observed_at": "2026-08-09T03:52:19Z",
@@ -192,34 +179,46 @@
       "run_id": "31602424796",
       "schedule": "7 12 * * 0-5",
       "shard": "42/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 616,
+      "natural": true,
+      "observed_at": "2026-08-12T17:16:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31620820614",
+      "schedule": "7 16 * * 0-5",
+      "shard": "44/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T17:05:06Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GEVC.json",
-    "payload_sha256": "a2feb2e6a78a18d0ccb62c4e476d406eb58e1b5ce05c0864ad0bde40dec20a2a",
-    "quote_as_of": "2026-08-10T13:46:04Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-08-12T17:16:24Z",
+    "history_as_of": "2026-08-12",
+    "path": "data/yf/finance/GEVC.json",
+    "payload_sha256": "0c5b28e1286573aed15c120a55b3316f5f83799d192b1cafe124245f0541684e",
+    "quote_as_of": "2026-08-12T13:46:05Z",
+    "source_as_of": "2026-08-12"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1650,
+    "latency_ms": 616,
     "natural": true,
-    "observed_at": "2026-08-12T13:41:31Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-12T17:16:04Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31602424796",
-    "schedule": "7 12 * * 0-5",
-    "shard": "42/72"
+    "run_id": "31620820614",
+    "schedule": "7 16 * * 0-5",
+    "shard": "44/72"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -230,15 +229,6 @@
     "observed_at": "2026-08-12T02:41:04Z",
     "run_attempt": 1,
     "run_id": "31557511991"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-12T13:41:31Z",
-    "provider_history_as_of": "2026-08-10",
-    "provider_quote_as_of": "2026-07-29T16:46:45Z",
-    "reason": "foreign_writer_conflict",
-    "run_attempt": 1,
-    "run_id": "31602424796"
   },
   "lkg": {
     "fetched_at": "2026-08-10T17:05:06Z",
@@ -251,17 +241,22 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-10T17:04:11Z",
-    "payload_sha256": "95e0e2606b6f866f9104a05c53efc74535fe96bfe68f19b0ba7d8d5d28952cc9",
-    "quote_as_of": "2026-08-10T13:46:04Z",
+    "history_as_of": "2026-08-12",
+    "observed_at": "2026-08-12T17:16:04Z",
+    "payload_sha256": "9b8742c76b6592e205c0e18a1728703c638a977d343547ff923ab963248759b5",
+    "quote_as_of": "2026-08-12T13:46:05Z",
     "run_attempt": 1,
-    "run_id": "31411954324",
+    "run_id": "31620820614",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-08-12"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-08-12T17:16:04Z",
+  "recovered_from_run_id": "31557511991",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "31620820614",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -274,5 +269,5 @@
     "source_as_of": "2026-07-29T16:46:45Z"
   },
   "ticker": "GEVC",
-  "updated_at": "2026-08-12T13:41:31Z"
+  "updated_at": "2026-08-12T17:16:04Z"
 }
