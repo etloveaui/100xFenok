@@ -227,7 +227,7 @@ assert(JSON.stringify(detA) === JSON.stringify(detB), "readBenchmarkOrdinals mus
 // --- live structural invariants (no exact values: the estate refreshes weekly) ---------
 
 const ROOT = path.join(path.dirname(new URL(import.meta.url).pathname), "..");
-const liveUs = JSON.parse(fs.readFileSync(path.join(ROOT, "public/data/benchmarks/us.json"), "utf8")) as {
+const liveUs = JSON.parse(fs.readFileSync(path.join(ROOT, "../data/benchmarks/us.json"), "utf8")) as {
   sections?: Record<string, { data?: Array<{ date?: string; best_pe_ratio?: number }> }>;
 };
 const liveView = readBenchmarkOrdinals({ us: liveUs as Partial<Record<BenchmarkGroupId, unknown>>["us"] });
@@ -250,12 +250,12 @@ for (const row of liveUsGroup?.rows ?? []) {
 // --- live window invariants across ALL six benchmark files (data-derived) -------------
 
 const LIVE_BENCH_FILES = [
-  "public/data/benchmarks/us.json",
-  "public/data/benchmarks/us_sectors.json",
-  "public/data/benchmarks/developed.json",
-  "public/data/benchmarks/emerging.json",
-  "public/data/benchmarks/msci.json",
-  "public/data/benchmarks/micro_sectors.json",
+  "../data/benchmarks/us.json",
+  "../data/benchmarks/us_sectors.json",
+  "../data/benchmarks/developed.json",
+  "../data/benchmarks/emerging.json",
+  "../data/benchmarks/msci.json",
+  "../data/benchmarks/micro_sectors.json",
 ] as const;
 const livePayloads: Partial<Record<BenchmarkGroupId, unknown>> = {};
 for (const file of LIVE_BENCH_FILES) {

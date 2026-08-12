@@ -38,7 +38,7 @@ const projection = JSON.parse(fs.readFileSync(
   "utf8",
 ));
 const yardeniDoc = JSON.parse(fs.readFileSync(
-  path.join(ROOT, "public/data/yardney/yardney_model.json"),
+  path.join(ROOT, "../data/yardney/yardney_model.json"),
   "utf8",
 ));
 
