@@ -36,7 +36,8 @@ development, Cloudflare build, and deploy commands.
 
 Pull requests are welcome. Please run `node tests/run-tests.js` before submitting changes and ensure HTML pages remain valid. By contributing you agree that your contributions will be licensed under the MIT License as detailed in the LICENSE file. Describe any significant changes in your commit messages.
 
-## Codex & AI Contributors
+## Automated and AI-assisted contributions
 
-For all automated or AI-assisted contributions (Codex, Gemini, GPT, etc.), please refer to `AGENTS.md` in the root directory.  
-It contains required rules for HTML structure, version control, preview sync, and file path conventions.
+This repository does not carry a root `AGENTS.md`. Follow the active host/project
+instructions supplied by the workspace, then use `100xfenok-next/README.md` and
+the package scripts as the repository-local development contract.
