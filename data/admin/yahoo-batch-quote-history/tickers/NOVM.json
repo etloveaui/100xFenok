@@ -12,15 +12,28 @@
       "run_id": "31172586227",
       "schedule": "7 10 * * 0-5",
       "shard": "65/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1033,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T11:08:34Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/NOVM.json",
-    "payload_sha256": "81d7e52359df7b0e850e10ec5754f4bbc1659c2be0325341a3178c94e387ac20",
-    "quote_as_of": "2026-08-03T19:39:50Z",
-    "source_as_of": "2026-08-03T19:39:50Z"
+    "fetched_at": "2026-08-12T02:42:36Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/NOVM.json",
+    "payload_sha256": "23a5d87009c7ebd9a64c492098ee8c6921e638d610cec2c14e49a0ef40fcfc81",
+    "quote_as_of": "2026-08-11T17:55:13Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 770,
+    "latency_ms": 1033,
     "natural": true,
-    "observed_at": "2026-08-07T11:06:01Z",
+    "observed_at": "2026-08-12T02:41:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31172586227",
-    "schedule": "7 10 * * 0-5",
-    "shard": "65/72"
+    "run_id": "31557511991",
+    "schedule": "7 0 * * 0-5",
+    "shard": "36/72"
   },
   "lkg": {
     "fetched_at": "2026-08-07T11:08:34Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T11:06:01Z",
-    "payload_sha256": "2499a78d376d817bd036eb659ac94d2ee2769859c48f92f6b8e7971cfaab3a8d",
-    "quote_as_of": "2026-08-03T19:39:50Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T02:41:04Z",
+    "payload_sha256": "aaf35b621700528071c6f9e5cd30758c58dd1756483fa60dcfc6faa49a4febd2",
+    "quote_as_of": "2026-08-11T17:55:13Z",
     "run_attempt": 1,
-    "run_id": "31172586227",
+    "run_id": "31557511991",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03T19:39:50Z"
+    "source_as_of": "2026-08-11"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-03T19:39:50Z"
   },
   "ticker": "NOVM",
-  "updated_at": "2026-08-12T00:28:31Z"
+  "updated_at": "2026-08-12T02:41:04Z"
 }

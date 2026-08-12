@@ -12,15 +12,28 @@
       "run_id": "30990520626",
       "schedule": "7 6 * * 0-5",
       "shard": "39/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 957,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-05T08:52:08Z",
-    "history_as_of": "2026-08-04",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/NVIR.json",
-    "payload_sha256": "1b5eff60735b098a5468c1da94a75555df1289d793c5b56c45d676d89f2c8eb2",
-    "quote_as_of": "2026-08-03T13:34:48Z",
-    "source_as_of": "2026-08-03T13:34:48Z"
+    "fetched_at": "2026-08-12T02:41:52Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/NVIR.json",
+    "payload_sha256": "f686ac7c7dd10944ef810ee7d42331e75fa61a4bf9fc483c7f0a74f276c60f9f",
+    "quote_as_of": "2026-08-10T20:00:00Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 621,
+    "latency_ms": 957,
     "natural": true,
-    "observed_at": "2026-08-05T08:49:49Z",
+    "observed_at": "2026-08-12T02:41:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30990520626",
-    "schedule": "7 6 * * 0-5",
-    "shard": "39/72"
+    "run_id": "31557511991",
+    "schedule": "7 0 * * 0-5",
+    "shard": "36/72"
   },
   "lkg": {
     "fetched_at": "2026-08-05T08:52:08Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-04",
-    "observed_at": "2026-08-05T08:49:49Z",
-    "payload_sha256": "922bdf1202e1187bafcd48cd19ac3d549ebf68a9a1c3495a7ee9407ed6126b6f",
-    "quote_as_of": "2026-08-03T13:34:48Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-12T02:41:04Z",
+    "payload_sha256": "09fc261c94757f43d8c4614667e650c3a0ef2f94bc844029dd384dce786b1602",
+    "quote_as_of": "2026-08-10T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30990520626",
+    "run_id": "31557511991",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03T13:34:48Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-03T13:34:48Z"
   },
   "ticker": "NVIR",
-  "updated_at": "2026-08-12T00:28:31Z"
+  "updated_at": "2026-08-12T02:41:04Z"
 }

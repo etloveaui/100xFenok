@@ -12,15 +12,28 @@
       "run_id": "30860500094",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 966,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-03T23:00:56Z",
-    "history_as_of": "2026-08-03",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GNOM.json",
-    "payload_sha256": "0432152f61bd2d0aa289989c804c1fc7ca4217a0fafd4758fd0710628e17d6e6",
-    "quote_as_of": "2026-08-03T20:00:00Z",
-    "source_as_of": "2026-08-03"
+    "fetched_at": "2026-08-12T02:41:36Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/GNOM.json",
+    "payload_sha256": "b5bff27c88cf8f1fe0e2a869504b7a70b4bd0f994ebf79823452c5f34c34e4e7",
+    "quote_as_of": "2026-08-11T20:00:00Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1935,
+    "latency_ms": 966,
     "natural": true,
-    "observed_at": "2026-08-03T22:58:08Z",
+    "observed_at": "2026-08-12T02:41:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30860500094",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31557511991",
+    "schedule": "7 0 * * 0-5",
+    "shard": "36/72"
   },
   "lkg": {
     "fetched_at": "2026-08-03T23:00:56Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-03",
-    "observed_at": "2026-08-03T22:58:08Z",
-    "payload_sha256": "a927f4796fcc5cc5bf793f22b7cbb738dbc869a4de30a137e72790b72ce69386",
-    "quote_as_of": "2026-08-03T20:00:00Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T02:41:04Z",
+    "payload_sha256": "94da67717e07b294ff78dae915b6eb6f7bdef24856720d7b11210c2316c52800",
+    "quote_as_of": "2026-08-11T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30860500094",
+    "run_id": "31557511991",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03"
+    "source_as_of": "2026-08-11"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-03"
   },
   "ticker": "GNOM",
-  "updated_at": "2026-08-12T00:28:31Z"
+  "updated_at": "2026-08-12T02:41:04Z"
 }

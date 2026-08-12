@@ -12,15 +12,28 @@
       "run_id": "30860500094",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 811,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-03T23:00:45Z",
-    "history_as_of": "2026-08-03",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GIEQ.json",
-    "payload_sha256": "b518f4a0ef26e03de77c40212b84a9bc01c7256134887ad64b6cd6f1c06fb558",
-    "quote_as_of": "2026-08-03T20:00:00Z",
-    "source_as_of": "2026-08-03"
+    "fetched_at": "2026-08-12T02:41:32Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/GIEQ.json",
+    "payload_sha256": "465912659cf6559c4e411ea01266644939914aa5b24a451c02d3cc1bcc5d7b9b",
+    "quote_as_of": "2026-08-11T20:00:00Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 815,
+    "latency_ms": 811,
     "natural": true,
-    "observed_at": "2026-08-03T22:58:08Z",
+    "observed_at": "2026-08-12T02:41:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30860500094",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31557511991",
+    "schedule": "7 0 * * 0-5",
+    "shard": "36/72"
   },
   "lkg": {
     "fetched_at": "2026-08-03T23:00:45Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-03",
-    "observed_at": "2026-08-03T22:58:08Z",
-    "payload_sha256": "ceb585a771728fe9522da011e0fdb4c280af8bb4e283c90cbc1a49bc8aaf4fd1",
-    "quote_as_of": "2026-08-03T20:00:00Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T02:41:04Z",
+    "payload_sha256": "edaee85e6de112a6478381b920c72f37fcedd1369ef4542c2305acecab5151fb",
+    "quote_as_of": "2026-08-11T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30860500094",
+    "run_id": "31557511991",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03"
+    "source_as_of": "2026-08-11"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-03"
   },
   "ticker": "GIEQ",
-  "updated_at": "2026-08-12T00:28:31Z"
+  "updated_at": "2026-08-12T02:41:04Z"
 }

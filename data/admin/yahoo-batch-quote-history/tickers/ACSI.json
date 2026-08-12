@@ -25,15 +25,28 @@
       "run_id": "31047972318",
       "schedule": "7 20 * * 0-5",
       "shard": "46/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 961,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-05T21:20:57Z",
-    "history_as_of": "2026-08-04",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ACSI.json",
-    "payload_sha256": "7eb71070f448f7c7871702c12b7d081b6d2540371799d955002cdb55d95fa9e6",
-    "quote_as_of": "2026-08-03T13:52:04Z",
-    "source_as_of": "2026-08-03T13:52:04Z"
+    "fetched_at": "2026-08-12T02:42:04Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/ACSI.json",
+    "payload_sha256": "11e6742807c74fda8d1ea0f387e4174974bb4ed68587a36f721a504f541073a2",
+    "quote_as_of": "2026-08-10T13:53:17Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 717,
+    "latency_ms": 961,
     "natural": true,
-    "observed_at": "2026-08-05T21:19:22Z",
+    "observed_at": "2026-08-12T02:41:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31047972318",
-    "schedule": "7 20 * * 0-5",
-    "shard": "46/72"
+    "run_id": "31557511991",
+    "schedule": "7 0 * * 0-5",
+    "shard": "36/72"
   },
   "lkg": {
     "fetched_at": "2026-08-05T21:20:57Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-04",
-    "observed_at": "2026-08-05T21:19:22Z",
-    "payload_sha256": "08acd15575b26145ce1da8e5aca97f8abf6d9da618dd6d48cfdb4b1cd4132b46",
-    "quote_as_of": "2026-08-03T13:52:04Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-12T02:41:04Z",
+    "payload_sha256": "6b6d06d42bd3e202447335a3165937cca6f2604d5d9300cef89b365317a75edb",
+    "quote_as_of": "2026-08-10T13:53:17Z",
     "run_attempt": 1,
-    "run_id": "31047972318",
+    "run_id": "31557511991",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03T13:52:04Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-08-03T13:52:04Z"
   },
   "ticker": "ACSI",
-  "updated_at": "2026-08-12T00:28:31Z"
+  "updated_at": "2026-08-12T02:41:04Z"
 }

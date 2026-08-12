@@ -64,15 +64,28 @@
       "run_id": "30860500094",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1174,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-03T22:59:08Z",
-    "history_as_of": "2026-08-03",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AMJB.json",
-    "payload_sha256": "d506bb928b7274713cde73738b541e36f306592ca22e1dedf52cfbaf9e6b540a",
-    "quote_as_of": "2026-08-03T19:59:52Z",
-    "source_as_of": "2026-08-03"
+    "fetched_at": "2026-08-12T02:41:22Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/AMJB.json",
+    "payload_sha256": "7bf19d236fcf6be1c46547225e8fefa7f430b8615d1f346d963cf2eadf5498ea",
+    "quote_as_of": "2026-08-11T19:07:08Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -81,14 +94,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 961,
+    "latency_ms": 1174,
     "natural": true,
-    "observed_at": "2026-08-03T22:58:08Z",
+    "observed_at": "2026-08-12T02:41:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30860500094",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31557511991",
+    "schedule": "7 0 * * 0-5",
+    "shard": "36/72"
   },
   "lkg": {
     "fetched_at": "2026-08-03T22:59:08Z",
@@ -101,17 +114,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-03",
-    "observed_at": "2026-08-03T22:58:08Z",
-    "payload_sha256": "be290a65c2a36ad22ea550f60f8c5025456349f25e5c6f18f3b298a3fd13e281",
-    "quote_as_of": "2026-08-03T19:59:52Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T02:41:04Z",
+    "payload_sha256": "45d4b00a7c409985e8482a02ccc711e069179dd6e6044629f6d297b726b22696",
+    "quote_as_of": "2026-08-11T19:07:08Z",
     "run_attempt": 1,
-    "run_id": "30860500094",
+    "run_id": "31557511991",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03"
+    "source_as_of": "2026-08-11"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -124,5 +137,5 @@
     "source_as_of": "2026-08-03"
   },
   "ticker": "AMJB",
-  "updated_at": "2026-08-12T00:28:31Z"
+  "updated_at": "2026-08-12T02:41:04Z"
 }
