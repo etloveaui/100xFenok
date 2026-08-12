@@ -1533,25 +1533,6 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_
   commitSpec("data/stockanalysis/backfill/history_gap_report_latest.json", "file"),
   commitSpec("data/yf/finance/_summary.json", "file"),
 ]);
-// Owner-approved dispatch-only recovery lane: re-publishes one already
-// retained StockAnalysis artifact by staging the SAME always_if_exists
-// surface as fetch-stockanalysis.yml (helper calls name that workflow) plus
-// its one direct add. The entry declares exactly the paths the workflow's own
-// text evidences (helper-staged paths like the attempt shards, the v1
-// detection store and 100xfenok-next/public/data remain governed by the
-// fetch-stockanalysis.yml policy the helper actually names). No success
-// stage, no provider, no schedule; the workflow file itself is the
-// remove-after-closeout marker.
-workflow_policies[".github/workflows/publish-stockanalysis-artifact-recovery.yml"] = policy(["yahoo_etf_fallback", "stockanalysis_etf_universe", "stockanalysis_stock_financial", "stockanalysis_surfaces"], {
-  always_if_exists: [
-    commitSpec("data/stockanalysis", "directory", true),
-    commitSpec("data/yf/etf-details", "directory", true),
-    commitSpec("data/admin/stockanalysis-recovery", "directory", true),
-    commitSpec("data/admin/yahoo_etf_fallback", "directory", false),
-    commitSpec("data/yf/finance", "dynamic_set"),
-    commitSpec("data/computed/data-supply/etf-detail", "directory"),
-  ],
-});
 workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = policy(["krx"], {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/krx.json", "file"),

@@ -36,7 +36,6 @@ const MIRROR_ROOT = path.join(REPO_ROOT, "100xfenok-next", "public", "data");
 const BOUNDARY_WORKFLOWS = new Set([
   ".github/workflows/update-manifest.yml",
   ".github/workflows/fetch-stockanalysis.yml", // full sync + its commit
-  ".github/workflows/publish-stockanalysis-artifact-recovery.yml", // recovery full sync
 ]);
 
 function listDir(dir) {

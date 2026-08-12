@@ -25,20 +25,6 @@ assert.equal(policy.canonical_branch, "main", "writer workflows are observed onl
 assert.equal(policy.default_observation_mode, "workflow_run", "other writers retain workflow-level observation");
 assert.ok(Array.isArray(policy.workflows) && policy.workflows.length > 10, "writer workflow set is derived");
 assert.equal(new Set(policy.workflows).size, policy.workflows.length, "writer workflow list has no duplicates");
-// The stockanalysis recovery lane writes inside the global writer group and
-// must stay observable after its concurrency moved from job scope to workflow
-// scope: it is included in the derived workflow set and has no job-level
-// target, so it is observed at the workflow-run level (default_observation_mode).
-assert.equal(
-  policy.workflows.includes("publish-stockanalysis-artifact-recovery.yml"),
-  true,
-  "the recovery lane remains part of the observed global writer queue",
-);
-assert.equal(
-  policy.job_level_targets["publish-stockanalysis-artifact-recovery.yml"],
-  undefined,
-  "the recovery lane keeps workflow-scope observation after the concurrency move",
-);
 assert.equal(policy.api.runs_per_page, 100, "API page size stays within the REST limit");
 assert.ok(policy.api.max_pages >= 1, "API query depth is bounded");
 assert.ok(policy.thresholds.max_depth >= 0, "queue-depth threshold is configurable");

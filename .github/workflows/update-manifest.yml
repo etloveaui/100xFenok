@@ -242,7 +242,7 @@ jobs:
           set -euo pipefail
           guard="$(node scripts/check-recovery-deploy-gate.mjs \
             --mode dispatch \
-            --recovery-workflows slickcharts-history.yml,publish-stockanalysis-artifact-recovery.yml)"
+            --recovery-workflows slickcharts-history.yml)"
           case "$guard" in
             skip)
               echo "skip=true" >> "$GITHUB_OUTPUT"

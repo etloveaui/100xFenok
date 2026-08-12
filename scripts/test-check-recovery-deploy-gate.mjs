@@ -29,8 +29,8 @@ function runGate(args, env) {
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "rdg-test-"));
 // Status shims: respond per --status ($6): the named status returns 1, others 0.
 const statusShim = (activeStatus) => writeShim(tmp, `gh-${activeStatus}`, `case "$6" in ${activeStatus}) echo 1;; *) echo 0;; esac`);
-// Sibling shim: publish-stockanalysis recovery has an in_progress run, slickcharts-history is clear.
-const siblingActiveShim = writeShim(tmp, "gh-sibling", `case "$4/$6" in "publish-stockanalysis-artifact-recovery.yml/in_progress") echo 1;; *) echo 0;; esac`);
+// Sibling shim: the second (dummy) recovery workflow has an in_progress run, slickcharts-history is clear.
+const siblingActiveShim = writeShim(tmp, "gh-sibling", `case "$4/$6" in "example-recovery.yml/in_progress") echo 1;; *) echo 0;; esac`);
 const idleShim = writeShim(tmp, "gh-idle", "echo 0");
 const malformedShim = writeShim(tmp, "gh-malformed", "echo garbage");
 const emptyShim = writeShim(tmp, "gh-empty", "exit 0");
@@ -40,7 +40,7 @@ const compareShim = (json) => writeShim(tmp, `cmp-${json.length}`, `echo '${json
 const compareFailShim = writeShim(tmp, "cmp-fail", "exit 1");
 const compareMalformedShim = writeShim(tmp, "cmp-malformed", "echo not-json");
 
-const WF = "--recovery-workflows slickcharts-history.yml,publish-stockanalysis-artifact-recovery.yml";
+const WF = "--recovery-workflows slickcharts-history.yml,example-recovery.yml";
 const WF_ONE = "--recovery-workflows slickcharts-history.yml";
 
 // Realistic Actions push payload: commit objects WITHOUT modified/added/removed.
@@ -64,7 +64,7 @@ const evPush = writeEvent("ev-push.json", pushEvent());
 const evPushNoRepo = writeEvent("ev-push-norepo.json", pushEvent({ repository: undefined }));
 const evPushNoRange = writeEvent("ev-push-norange.json", pushEvent({ before: undefined }));
 const evRunSuccess = writeEvent("ev-run-success.json", { workflow_run: { conclusion: "success", name: "SlickCharts History" } });
-const evRunFailure = writeEvent("ev-run-fail.json", { workflow_run: { conclusion: "failure", name: "Publish StockAnalysis Artifact Recovery" } });
+const evRunFailure = writeEvent("ev-run-fail.json", { workflow_run: { conclusion: "failure", name: "Example Recovery" } });
 const evRunCancel = writeEvent("ev-run-cancel.json", { workflow_run: { conclusion: "cancelled", name: "SlickCharts History" } });
 const evRunNoConcl = writeEvent("ev-run-noconcl.json", { workflow_run: { name: "SlickCharts History" } });
 

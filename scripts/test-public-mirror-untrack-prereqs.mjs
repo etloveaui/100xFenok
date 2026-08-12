@@ -13,9 +13,8 @@
  *   staging_workflows — every workflow whose shell names a
  *     100xfenok-next/public/data path in a `git add`, after line-continuation
  *     normalization, excluding the merge-boundary workflows that legitimately
- *     own the mirror (update-manifest.yml, fetch-stockanalysis.yml,
- *     publish-stockanalysis-artifact-recovery.yml). Anything else is
- *     lane-owned staging and blocks untracking.
+ *     own the mirror (update-manifest.yml, fetch-stockanalysis.yml). Anything
+ *     else is lane-owned staging and blocks untracking.
  *   mirror orphans — mirror files with no canonical counterpart in data/,
  *     classified deterministically as:
  *       boundary-copy            canonical data/<rel> exists; the sync full
@@ -65,7 +64,6 @@ const DISPOSITION_PATH = path.join(SCRIPT_DIR, "public-mirror-untrack-dispositio
 const BOUNDARY_WORKFLOWS = new Set([
   ".github/workflows/update-manifest.yml",
   ".github/workflows/fetch-stockanalysis.yml", // full sync + its commit
-  ".github/workflows/publish-stockanalysis-artifact-recovery.yml", // recovery full sync
 ]);
 
 // Sync transform roots: files under these have no canonical counterpart by

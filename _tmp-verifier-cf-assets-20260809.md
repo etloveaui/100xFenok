@@ -20,7 +20,7 @@ Reply to cx — fh-20260809-622 independent verification: Cloudflare asset reduc
 | `test-lane-commit-manifest.mjs` | PASS (after regeneration, see §3) |
 | `test-stage-lane-manifest.mjs` | PASS |
 | `test-derived-asset-registry.mjs` | **FAIL** — derived digest `5486ce40…` vs pinned fixture `60f132a8…`; `scripts/fixtures/derived-asset-registry/registry.expected.json` was NOT bumped along with the lane-registry change (diff-caused gap; needs the conscious fixture bump) |
-| `test-lane-commit-manifest-parity.mjs` | **FAIL at line 80** — `publish-stockanalysis-artifact-recovery.yml` is enumerated from disk but absent from manifest.workflows; verified PRE-EXISTING (tracked at HEAD, enumerator unchanged, HEAD manifest also lacks it) — unrelated to this diff |
+| `test-lane-commit-manifest-parity.mjs` | **FAIL at line 80** — the then-orphan StockAnalysis artifact recovery workflow (retired 2026-08-12) was enumerated from disk but absent from manifest.workflows; verified PRE-EXISTING (tracked at HEAD, enumerator unchanged, HEAD manifest also lacked it) — unrelated to this diff |
 | `check-lane-commit-manifest-inventory.mjs` | **FAIL** — same pre-existing recovery-workflow root cause |
 
 ## 3. Files changed by this verification (exact)
@@ -32,4 +32,4 @@ Reply to cx — fh-20260809-622 independent verification: Cloudflare asset reduc
 
 - **Asset reduction effect: PASS** — exclusion is correctly wired in registry + materializer, projected count 16,356 < 20,000 (budget gate clears), scouter/macro preserved.
 - **Diff completeness: CONDITIONAL FAIL** — one diff-caused gap: `scripts/fixtures/derived-asset-registry/registry.expected.json` digest must be bumped consciously (or the derived-registry change re-scoped). The lane-registry fixture WAS updated; the derived-asset-registry fixture was not.
-- **Pre-existing (not this diff):** lane-commit-manifest parity/inventory fail on `publish-stockanalysis-artifact-recovery.yml` — flagged for a separate decision (orphan workflow vs registry lane addition).
+- **Pre-existing (not this diff):** lane-commit-manifest parity/inventory fail on the then-orphan StockAnalysis artifact recovery workflow — flagged for a separate decision (orphan workflow vs registry lane addition); the workflow was retired on 2026-08-12, closing the gap.

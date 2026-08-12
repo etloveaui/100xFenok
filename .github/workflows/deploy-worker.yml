@@ -53,7 +53,7 @@ on:
   # NOTE: workflow_run.workflows matches the workflows' DISPLAY names (name:),
   # not their file names.
   workflow_run:
-    workflows: ["SlickCharts History", "Publish StockAnalysis Artifact Recovery"]
+    workflows: ["SlickCharts History"]
     types: [completed]
 
 jobs:
@@ -78,7 +78,7 @@ jobs:
             --mode push \
             --event-name "${{ github.event_name }}" \
             --event-json "$GITHUB_EVENT_PATH" \
-            --recovery-workflows slickcharts-history.yml,publish-stockanalysis-artifact-recovery.yml)"
+            --recovery-workflows slickcharts-history.yml)"
           case "$guard" in
             skip)
               echo "skip=true" >> "$GITHUB_OUTPUT"
@@ -234,7 +234,7 @@ jobs:
             --mode push \
             --event-name "${{ github.event_name }}" \
             --event-json "$GITHUB_EVENT_PATH" \
-            --recovery-workflows slickcharts-history.yml,publish-stockanalysis-artifact-recovery.yml)"
+            --recovery-workflows slickcharts-history.yml)"
           case "$guard" in
             skip)
               echo "SUPERSEDED=true" >> "$GITHUB_ENV"

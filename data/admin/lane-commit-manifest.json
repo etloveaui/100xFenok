@@ -1,5 +1,5 @@
 {
-  "registry_digest": "769017b2299fd2beb905bd8c111fe76edfd38d43e7e2e25a7b6b366ffc9a7bc5",
+  "registry_digest": "42c68a014fa07a797f1dc094f1b3d55b061da9836068dfdfb949df5347494095",
   "registry_schema": "lane-registry/v3",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -1511,52 +1511,6 @@
           {
             "kind": "file",
             "path": "data/admin/alarm-state.json",
-            "required": false
-          }
-        ],
-        "required_on_success": [],
-        "success_if_exists": [],
-        "success_verify_not_plan_if_exists": []
-      }
-    },
-    ".github/workflows/publish-stockanalysis-artifact-recovery.yml": {
-      "exclude": [],
-      "lanes": [
-        "yahoo_etf_fallback",
-        "stockanalysis_etf_universe",
-        "stockanalysis_stock_financial",
-        "stockanalysis_surfaces"
-      ],
-      "stages": {
-        "always_if_exists": [
-          {
-            "kind": "directory",
-            "path": "data/stockanalysis",
-            "required": true
-          },
-          {
-            "kind": "directory",
-            "path": "data/yf/etf-details",
-            "required": true
-          },
-          {
-            "kind": "directory",
-            "path": "data/admin/stockanalysis-recovery",
-            "required": true
-          },
-          {
-            "kind": "directory",
-            "path": "data/admin/yahoo_etf_fallback",
-            "required": false
-          },
-          {
-            "kind": "dynamic_set",
-            "path": "data/yf/finance",
-            "required": false
-          },
-          {
-            "kind": "directory",
-            "path": "data/computed/data-supply/etf-detail",
             "required": false
           }
         ],
