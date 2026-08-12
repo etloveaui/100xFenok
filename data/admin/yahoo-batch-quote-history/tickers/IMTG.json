@@ -5,20 +5,6 @@
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 500,
-      "natural": true,
-      "observed_at": "2026-08-09T08:59:39Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31304762930",
-      "schedule": "7 8 * * 0-5",
-      "shard": "4/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 1186,
       "natural": true,
       "observed_at": "2026-08-09T13:12:35Z",
@@ -194,13 +180,26 @@
       "run_id": "31544436443",
       "schedule": "7 22 * * 0-5",
       "shard": "35/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 517,
+      "natural": true,
+      "observed_at": "2026-08-12T04:17:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31562660637",
+      "schedule": "7 2 * * 0-5",
+      "shard": "37/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T11:03:26Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/IMTG.json",
-    "payload_sha256": "cc31fd787805584bc3c16ba4aa43b1096ea5681d40c015cee01abdae6e0f960e",
+    "fetched_at": "2026-08-12T04:18:24Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/IMTG.json",
+    "payload_sha256": "134bb47da1c587f07b3077064b435800e9896df803f04c962d4dc998cd9a4fa6",
     "quote_as_of": "2026-05-29T18:07:20Z",
     "source_as_of": "2026-05-29T18:07:20Z"
   },
@@ -209,26 +208,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 433,
+    "latency_ms": 517,
     "natural": true,
-    "observed_at": "2026-08-11T23:29:49Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31544436443",
-    "schedule": "7 22 * * 0-5",
-    "shard": "35/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-11T23:29:49Z",
-    "provider_history_as_of": "2026-08-10",
-    "provider_quote_as_of": "2026-05-29T18:07:20Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31544436443"
+    "run_id": "31562660637",
+    "schedule": "7 2 * * 0-5",
+    "shard": "37/72"
   },
   "lkg": {
     "fetched_at": "2026-08-11T11:03:26Z",
@@ -241,17 +230,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-11T11:03:07Z",
-    "payload_sha256": "fd277434fac4738a8feddab5d4b3d68143403af91d10bcbe0b617d5de5e59dd5",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "payload_sha256": "fb1b410ced8ae602358c368e98e5e9ccdee580fae9e5d099026947aed288e4d1",
     "quote_as_of": "2026-05-29T18:07:20Z",
     "run_attempt": 1,
-    "run_id": "31484759300",
+    "run_id": "31562660637",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-05-29T18:07:20Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 50,
@@ -264,5 +253,5 @@
     "source_as_of": "2026-05-29T18:07:20Z"
   },
   "ticker": "IMTG",
-  "updated_at": "2026-08-11T23:29:49Z"
+  "updated_at": "2026-08-12T04:17:21Z"
 }

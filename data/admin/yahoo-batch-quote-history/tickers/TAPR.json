@@ -12,13 +12,26 @@
       "run_id": "31172586227",
       "schedule": "7 10 * * 0-5",
       "shard": "65/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 539,
+      "natural": true,
+      "observed_at": "2026-08-12T04:17:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31562660637",
+      "schedule": "7 2 * * 0-5",
+      "shard": "37/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T11:09:00Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/TAPR.json",
-    "payload_sha256": "04c98f51cf4cc2e33d915d85cf5931c4039ed404a85e4dd9fd394c2ee742afdd",
+    "fetched_at": "2026-08-12T04:17:52Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/TAPR.json",
+    "payload_sha256": "f02f4d44caf815c9cc9a3ac1764f3c474b34198d1e805a49a468cb7966570cc9",
     "quote_as_of": "2026-08-03T15:10:54Z",
     "source_as_of": "2026-08-03T15:10:54Z"
   },
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 510,
+    "latency_ms": 539,
     "natural": true,
-    "observed_at": "2026-08-07T11:06:01Z",
+    "observed_at": "2026-08-12T04:17:21Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31172586227",
-    "schedule": "7 10 * * 0-5",
-    "shard": "65/72"
+    "run_id": "31562660637",
+    "schedule": "7 2 * * 0-5",
+    "shard": "37/72"
   },
   "lkg": {
     "fetched_at": "2026-08-07T11:09:00Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T11:06:01Z",
-    "payload_sha256": "cf0b5d5f193e2f7a1c13b30b48f7fca4a089237caf6332237c431a7d11059dce",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "payload_sha256": "129e1b4db389bb8cfb68e94a4a2215189bf8b2895bd8d0c19a296b41625ea9ee",
     "quote_as_of": "2026-08-03T15:10:54Z",
     "run_attempt": 1,
-    "run_id": "31172586227",
+    "run_id": "31562660637",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-03T15:10:54Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-03T15:10:54Z"
   },
   "ticker": "TAPR",
-  "updated_at": "2026-08-12T00:28:31Z"
+  "updated_at": "2026-08-12T04:17:21Z"
 }

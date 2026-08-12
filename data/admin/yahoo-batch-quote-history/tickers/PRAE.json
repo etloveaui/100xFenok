@@ -12,15 +12,28 @@
       "run_id": "31376005252",
       "schedule": "7 8 * * 0-5",
       "shard": "16/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 627,
+      "natural": true,
+      "observed_at": "2026-08-12T04:17:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31562660637",
+      "schedule": "7 2 * * 0-5",
+      "shard": "37/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T09:49:44Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/PRAE.json",
-    "payload_sha256": "485416f631204dc63703321e4de9e8dd17efff9182a5269eb5eb1c824aa1e969",
-    "quote_as_of": "2026-08-03T19:47:51Z",
-    "source_as_of": "2026-08-03T19:47:51Z"
+    "fetched_at": "2026-08-12T04:18:10Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/PRAE.json",
+    "payload_sha256": "e4a22353c54584509446718503bb1ff72a0bb82eb22e6151b0ac727340a29dd2",
+    "quote_as_of": "2026-08-11T18:47:15Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 589,
+    "latency_ms": 627,
     "natural": true,
-    "observed_at": "2026-08-10T09:46:13Z",
+    "observed_at": "2026-08-12T04:17:21Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31376005252",
-    "schedule": "7 8 * * 0-5",
-    "shard": "16/72"
+    "run_id": "31562660637",
+    "schedule": "7 2 * * 0-5",
+    "shard": "37/72"
   },
   "lkg": {
     "fetched_at": "2026-08-10T09:49:44Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-10T09:46:13Z",
-    "payload_sha256": "a8bca3b625c724804569ff9a348b3497aad961114c58418850216e3546b05301",
-    "quote_as_of": "2026-08-03T19:47:51Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "payload_sha256": "d2aa782c2dfbc4ae2b41126f5527586cebfc1eaec568a15d48d61ec1ef987afb",
+    "quote_as_of": "2026-08-11T18:47:15Z",
     "run_attempt": 1,
-    "run_id": "31376005252",
+    "run_id": "31562660637",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03T19:47:51Z"
+    "source_as_of": "2026-08-11"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-03T19:47:51Z"
   },
   "ticker": "PRAE",
-  "updated_at": "2026-08-12T00:28:31Z"
+  "updated_at": "2026-08-12T04:17:21Z"
 }

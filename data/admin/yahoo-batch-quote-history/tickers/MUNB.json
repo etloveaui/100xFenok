@@ -25,13 +25,26 @@
       "run_id": "31210066712",
       "schedule": "7 18 * * 0-5",
       "shard": "69/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 437,
+      "natural": true,
+      "observed_at": "2026-08-12T04:17:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31562660637",
+      "schedule": "7 2 * * 0-5",
+      "shard": "37/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T19:12:08Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MUNB.json",
-    "payload_sha256": "0d90e36d0e0f2feb07e080c85a36e0ba95b3d35b3de3fd32ed72a49e74071fad",
+    "fetched_at": "2026-08-12T04:17:58Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/MUNB.json",
+    "payload_sha256": "1d28cffc3d980d7210b79793e784ca5b914f34d137c2d4e9222c44fef4d222fb",
     "quote_as_of": "2026-08-03T19:39:05Z",
     "source_as_of": "2026-08-03T19:39:05Z"
   },
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 407,
+    "latency_ms": 437,
     "natural": true,
-    "observed_at": "2026-08-07T19:09:09Z",
+    "observed_at": "2026-08-12T04:17:21Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31210066712",
-    "schedule": "7 18 * * 0-5",
-    "shard": "69/72"
+    "run_id": "31562660637",
+    "schedule": "7 2 * * 0-5",
+    "shard": "37/72"
   },
   "lkg": {
     "fetched_at": "2026-08-07T19:12:08Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T19:09:09Z",
-    "payload_sha256": "b0dd471083a879cef3d092e12965933815a5de8d7b1c192420f190043e5c0e58",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "payload_sha256": "59c1c56f26d70920d7cd6a35ef3bc71256de77c9e5f1f3dddd37bbc247ed1ea9",
     "quote_as_of": "2026-08-03T19:39:05Z",
     "run_attempt": 1,
-    "run_id": "31210066712",
+    "run_id": "31562660637",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-03T19:39:05Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-08-03T19:39:05Z"
   },
   "ticker": "MUNB",
-  "updated_at": "2026-08-12T00:28:31Z"
+  "updated_at": "2026-08-12T04:17:21Z"
 }

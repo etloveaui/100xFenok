@@ -12,13 +12,26 @@
       "run_id": "31340064113",
       "schedule": "7 22 * * 0-5",
       "shard": "11/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 526,
+      "natural": true,
+      "observed_at": "2026-08-12T04:17:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31562660637",
+      "schedule": "7 2 * * 0-5",
+      "shard": "37/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T22:47:54Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VNIE.json",
-    "payload_sha256": "04c06d3ca94bcfd440d93b5b12bcd610da6f4f644d3513667907c25785bed09d",
+    "fetched_at": "2026-08-12T04:18:07Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/VNIE.json",
+    "payload_sha256": "d7fb20b2dce4955cc3d3ae1fd818f06055e4c97d21c64fee765e421e3b82c358",
     "quote_as_of": "2026-08-03T16:07:02Z",
     "source_as_of": "2026-08-03T16:07:02Z"
   },
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 875,
+    "latency_ms": 526,
     "natural": true,
-    "observed_at": "2026-08-09T22:44:05Z",
+    "observed_at": "2026-08-12T04:17:21Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31340064113",
-    "schedule": "7 22 * * 0-5",
-    "shard": "11/72"
+    "run_id": "31562660637",
+    "schedule": "7 2 * * 0-5",
+    "shard": "37/72"
   },
   "lkg": {
     "fetched_at": "2026-08-09T22:47:54Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T22:44:05Z",
-    "payload_sha256": "ffd14f9511c72a688eba934b206bc8a9ae3349684b7eafbe95db73cce213b456",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "payload_sha256": "8fe1084ef551162a651fa1ad2f1241f02ec377a5a2c096929cd052ea3c93a784",
     "quote_as_of": "2026-08-03T16:07:02Z",
     "run_attempt": 1,
-    "run_id": "31340064113",
+    "run_id": "31562660637",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-03T16:07:02Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-03T16:07:02Z"
   },
   "ticker": "VNIE",
-  "updated_at": "2026-08-12T00:28:31Z"
+  "updated_at": "2026-08-12T04:17:21Z"
 }

@@ -5,20 +5,6 @@
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 950,
-      "natural": true,
-      "observed_at": "2026-08-09T13:12:35Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31315136344",
-      "schedule": "7 12 * * 0-5",
-      "shard": "6/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 843,
       "natural": true,
       "observed_at": "2026-08-09T16:47:26Z",
@@ -194,13 +180,26 @@
       "run_id": "31544436443",
       "schedule": "7 22 * * 0-5",
       "shard": "35/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 507,
+      "natural": true,
+      "observed_at": "2026-08-12T04:17:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31562660637",
+      "schedule": "7 2 * * 0-5",
+      "shard": "37/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T09:14:31Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CCRP.json",
-    "payload_sha256": "0727b7b1719867dea609b18262cb28d703f8d402e88dc9b44b8d909711d86a9b",
+    "fetched_at": "2026-08-12T04:18:19Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/CCRP.json",
+    "payload_sha256": "3a2e3e9bd204cad10b0e091d48feb241bb6cdee540cf59bc96e4036a1a45b9fd",
     "quote_as_of": "2026-05-04T20:00:00Z",
     "source_as_of": "2026-05-04T20:00:00Z"
   },
@@ -209,26 +208,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 356,
+    "latency_ms": 507,
     "natural": true,
-    "observed_at": "2026-08-11T23:29:49Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31544436443",
-    "schedule": "7 22 * * 0-5",
-    "shard": "35/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-11T23:29:49Z",
-    "provider_history_as_of": "2026-08-10",
-    "provider_quote_as_of": "2026-05-04T20:00:00Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31544436443"
+    "run_id": "31562660637",
+    "schedule": "7 2 * * 0-5",
+    "shard": "37/72"
   },
   "lkg": {
     "fetched_at": "2026-08-11T09:14:31Z",
@@ -241,17 +230,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-11T09:13:07Z",
-    "payload_sha256": "38c9644f3a6e6e47fc7b3d6907b736e2a43329b9ca523585e4be45631c1c6157",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "payload_sha256": "e547a4ecd819c2bef23dd2905ebde3ec2fd56de4ea13984cfb18f1c37708a5a3",
     "quote_as_of": "2026-05-04T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31476569032",
+    "run_id": "31562660637",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-05-04T20:00:00Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 68,
@@ -264,5 +253,5 @@
     "source_as_of": "2026-05-04T20:00:00Z"
   },
   "ticker": "CCRP",
-  "updated_at": "2026-08-11T23:29:49Z"
+  "updated_at": "2026-08-12T04:17:21Z"
 }

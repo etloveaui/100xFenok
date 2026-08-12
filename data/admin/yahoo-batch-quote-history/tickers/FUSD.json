@@ -51,13 +51,26 @@
       "run_id": "31439945275",
       "schedule": "7 22 * * 0-5",
       "shard": "23/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 529,
+      "natural": true,
+      "observed_at": "2026-08-12T04:17:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31562660637",
+      "schedule": "7 2 * * 0-5",
+      "shard": "37/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T22:55:07Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FUSD.json",
-    "payload_sha256": "08d2e89de7a122d8a29f400e82a7a9fcfd9df08c6b78b3de017768ad9d642e6e",
+    "fetched_at": "2026-08-12T04:18:13Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/FUSD.json",
+    "payload_sha256": "49822dfb937750dbdf6981a362721cf10561c16868eca1ed51ff38f2d7f25eb8",
     "quote_as_of": "2026-08-03T18:46:47Z",
     "source_as_of": "2026-08-03T18:46:47Z"
   },
@@ -68,14 +81,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 932,
+    "latency_ms": 529,
     "natural": true,
-    "observed_at": "2026-08-10T22:52:08Z",
+    "observed_at": "2026-08-12T04:17:21Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31439945275",
-    "schedule": "7 22 * * 0-5",
-    "shard": "23/72"
+    "run_id": "31562660637",
+    "schedule": "7 2 * * 0-5",
+    "shard": "37/72"
   },
   "lkg": {
     "fetched_at": "2026-08-10T22:55:07Z",
@@ -88,17 +101,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-10T22:52:08Z",
-    "payload_sha256": "48060fd80837ac06aeb4183dec6c8f84a722d17d3927f217b2d4c5eed3f23302",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "payload_sha256": "44812d86ccb1bce02955db7508bb314e39a2c6b500ace4cc89a4e7686d29cc34",
     "quote_as_of": "2026-08-03T18:46:47Z",
     "run_attempt": 1,
-    "run_id": "31439945275",
+    "run_id": "31562660637",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-03T18:46:47Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -111,5 +124,5 @@
     "source_as_of": "2026-08-03T18:46:47Z"
   },
   "ticker": "FUSD",
-  "updated_at": "2026-08-12T00:28:31Z"
+  "updated_at": "2026-08-12T04:17:21Z"
 }

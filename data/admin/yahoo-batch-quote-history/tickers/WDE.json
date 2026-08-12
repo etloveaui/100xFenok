@@ -2,20 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "error": "recovery_requires_schedule",
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 523,
-      "natural": true,
-      "observed_at": "2026-08-01T18:48:56Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "30711926935",
-      "schedule": "",
-      "shard": "5/6"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 908,
@@ -193,13 +179,26 @@
       "run_id": "31544436443",
       "schedule": "7 22 * * 0-5",
       "shard": "35/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 449,
+      "natural": true,
+      "observed_at": "2026-08-12T04:17:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31562660637",
+      "schedule": "7 2 * * 0-5",
+      "shard": "37/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T11:03:51Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/WDE.json",
-    "payload_sha256": "95ee548fac84084664a69ff6413649fbcc53b053fe3c006b03dfdabf13416e5f",
+    "fetched_at": "2026-08-12T04:18:46Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/WDE.json",
+    "payload_sha256": "c64d0fd98f7989e9b3bf44da1e91ce424ef4bef7fa1510c98abfc6eecef06bd8",
     "quote_as_of": "2026-05-21T14:19:45Z",
     "source_as_of": "2026-05-21T14:19:45Z"
   },
@@ -208,26 +207,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 388,
+    "latency_ms": 449,
     "natural": true,
-    "observed_at": "2026-08-11T23:29:49Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31544436443",
-    "schedule": "7 22 * * 0-5",
-    "shard": "35/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-11T23:29:49Z",
-    "provider_history_as_of": "2026-08-10",
-    "provider_quote_as_of": "2026-05-21T14:19:45Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31544436443"
+    "run_id": "31562660637",
+    "schedule": "7 2 * * 0-5",
+    "shard": "37/72"
   },
   "lkg": {
     "fetched_at": "2026-08-11T11:03:51Z",
@@ -240,17 +229,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-11T11:03:07Z",
-    "payload_sha256": "b631bc2f1dbe28e31b182cdff64ae36b05014d3a039b53219d8da4b83de104f3",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "payload_sha256": "13d6da4dd45dac0ab4a141bd8a637e9c6fb4484d2b03a7c064a2c29ee1042a23",
     "quote_as_of": "2026-05-21T14:19:45Z",
     "run_attempt": 1,
-    "run_id": "31484759300",
+    "run_id": "31562660637",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-05-21T14:19:45Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 55,
@@ -263,5 +252,5 @@
     "source_as_of": "2026-05-21T14:19:45Z"
   },
   "ticker": "WDE",
-  "updated_at": "2026-08-11T23:29:49Z"
+  "updated_at": "2026-08-12T04:17:21Z"
 }

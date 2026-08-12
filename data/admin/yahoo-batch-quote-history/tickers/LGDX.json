@@ -151,13 +151,26 @@
       "run_id": "31544436443",
       "schedule": "7 22 * * 0-5",
       "shard": "35/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 559,
+      "natural": true,
+      "observed_at": "2026-08-12T04:17:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31562660637",
+      "schedule": "7 2 * * 0-5",
+      "shard": "37/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T11:03:31Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/LGDX.json",
-    "payload_sha256": "75126a3692e05379c8063ad8fa0781c3fb5a8da8c2b936318c21fef884657360",
+    "fetched_at": "2026-08-12T04:18:27Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/LGDX.json",
+    "payload_sha256": "ce4aff24388ba62452819b91ca72f98738be1c274ee60143859bf1f0a1973743",
     "quote_as_of": "2026-06-23T19:22:05Z",
     "source_as_of": "2026-06-23T19:22:05Z"
   },
@@ -166,26 +179,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 492,
+    "latency_ms": 559,
     "natural": true,
-    "observed_at": "2026-08-11T23:29:49Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31544436443",
-    "schedule": "7 22 * * 0-5",
-    "shard": "35/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-11T23:29:49Z",
-    "provider_history_as_of": "2026-08-10",
-    "provider_quote_as_of": "2026-06-23T19:22:05Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31544436443"
+    "run_id": "31562660637",
+    "schedule": "7 2 * * 0-5",
+    "shard": "37/72"
   },
   "lkg": {
     "fetched_at": "2026-08-11T11:03:31Z",
@@ -198,17 +201,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-11T11:03:07Z",
-    "payload_sha256": "d622b94bc9faf59f17db5744980003cc1b8565068680d4ac1f034875a618c899",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "payload_sha256": "986b9b7154cbea979859dd6125e7addd4e77154538f8dd658a7180de1eb2270c",
     "quote_as_of": "2026-06-23T19:22:05Z",
     "run_attempt": 1,
-    "run_id": "31484759300",
+    "run_id": "31562660637",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-06-23T19:22:05Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 34,
@@ -221,5 +224,5 @@
     "source_as_of": "2026-06-23T19:22:05Z"
   },
   "ticker": "LGDX",
-  "updated_at": "2026-08-11T23:29:49Z"
+  "updated_at": "2026-08-12T04:17:21Z"
 }

@@ -12,13 +12,26 @@
       "run_id": "31535092071",
       "schedule": "7 20 * * 0-5",
       "shard": "34/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 472,
+      "natural": true,
+      "observed_at": "2026-08-12T04:17:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31562660637",
+      "schedule": "7 2 * * 0-5",
+      "shard": "37/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T21:34:05Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/PMDE.json",
-    "payload_sha256": "159655be8b86a98c8a8952ad8bc345cf7d264f5a2fa8d7604eddbd71a18e4126",
+    "fetched_at": "2026-08-12T04:18:15Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/PMDE.json",
+    "payload_sha256": "1e2257ee589451f71ca97ebf43eb82bb63a0d35117ba039252c6a434efa2556e",
     "quote_as_of": "2026-08-03T19:01:06Z",
     "source_as_of": "2026-08-03T19:01:06Z"
   },
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 565,
+    "latency_ms": 472,
     "natural": true,
-    "observed_at": "2026-08-11T21:30:39Z",
+    "observed_at": "2026-08-12T04:17:21Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31535092071",
-    "schedule": "7 20 * * 0-5",
-    "shard": "34/72"
+    "run_id": "31562660637",
+    "schedule": "7 2 * * 0-5",
+    "shard": "37/72"
   },
   "lkg": {
     "fetched_at": "2026-08-11T21:34:05Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-11T21:30:39Z",
-    "payload_sha256": "4d50d1b23644ea5133a5cc1dd40e3073003aacaa8cb65b548a403d7c47435706",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "payload_sha256": "061c10fb1c087085cdd8db0850e79c3fb9047cb9852047a12814351e192d7f74",
     "quote_as_of": "2026-08-03T19:01:06Z",
     "run_attempt": 1,
-    "run_id": "31535092071",
+    "run_id": "31562660637",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-03T19:01:06Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-03T19:01:06Z"
   },
   "ticker": "PMDE",
-  "updated_at": "2026-08-12T00:28:31Z"
+  "updated_at": "2026-08-12T04:17:21Z"
 }

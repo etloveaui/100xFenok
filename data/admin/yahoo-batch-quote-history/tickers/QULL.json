@@ -5,20 +5,6 @@
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 570,
-      "natural": true,
-      "observed_at": "2026-08-09T08:59:39Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31304762930",
-      "schedule": "7 8 * * 0-5",
-      "shard": "4/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 523,
       "natural": true,
       "observed_at": "2026-08-09T14:44:24Z",
@@ -194,13 +180,26 @@
       "run_id": "31544436443",
       "schedule": "7 22 * * 0-5",
       "shard": "35/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 529,
+      "natural": true,
+      "observed_at": "2026-08-12T04:17:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31562660637",
+      "schedule": "7 2 * * 0-5",
+      "shard": "37/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T11:03:32Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/QULL.json",
-    "payload_sha256": "dfb8e1b927d0cf0accab46d37cd034003e09bd6abff8a7c15f3af075895fd934",
+    "fetched_at": "2026-08-12T04:18:33Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/QULL.json",
+    "payload_sha256": "5fd9231ead6648d1422026a7ea4f61a5d54fc4d31893ca75968efe3d914d64d0",
     "quote_as_of": "2026-06-11T15:15:38Z",
     "source_as_of": "2026-06-11T15:15:38Z"
   },
@@ -209,26 +208,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 434,
+    "latency_ms": 529,
     "natural": true,
-    "observed_at": "2026-08-11T23:29:49Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31544436443",
-    "schedule": "7 22 * * 0-5",
-    "shard": "35/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-11T23:29:49Z",
-    "provider_history_as_of": "2026-08-10",
-    "provider_quote_as_of": "2026-06-11T15:15:38Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31544436443"
+    "run_id": "31562660637",
+    "schedule": "7 2 * * 0-5",
+    "shard": "37/72"
   },
   "lkg": {
     "fetched_at": "2026-08-11T11:03:32Z",
@@ -241,17 +230,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-11T11:03:07Z",
-    "payload_sha256": "905f3d8021d4fdd47e28f75e122476210aee7cd668f40325d9ba3d5d798675be",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "payload_sha256": "c7d10a22420a4653a76c92f216afec933c4714e1a4f5e10fde440486aa755f1d",
     "quote_as_of": "2026-06-11T15:15:38Z",
     "run_attempt": 1,
-    "run_id": "31484759300",
+    "run_id": "31562660637",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-06-11T15:15:38Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 41,
@@ -264,5 +253,5 @@
     "source_as_of": "2026-06-11T15:15:38Z"
   },
   "ticker": "QULL",
-  "updated_at": "2026-08-11T23:29:49Z"
+  "updated_at": "2026-08-12T04:17:21Z"
 }

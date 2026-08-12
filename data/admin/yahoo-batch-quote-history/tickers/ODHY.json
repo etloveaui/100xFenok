@@ -12,13 +12,26 @@
       "run_id": "31544436443",
       "schedule": "7 22 * * 0-5",
       "shard": "35/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 510,
+      "natural": true,
+      "observed_at": "2026-08-12T04:17:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31562660637",
+      "schedule": "7 2 * * 0-5",
+      "shard": "37/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T23:32:45Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ODHY.json",
-    "payload_sha256": "aa4fe1a77ee9db0448659424124d9f7c47856a3071aca0d0f932c118428bdf26",
+    "fetched_at": "2026-08-12T04:18:30Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/ODHY.json",
+    "payload_sha256": "ee0c21297a8baa871f1ca2ff06cdd422b868e84e2a71f8c501afc692c608173c",
     "quote_as_of": "2026-08-03T19:25:00Z",
     "source_as_of": "2026-08-03T19:25:00Z"
   },
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 399,
+    "latency_ms": 510,
     "natural": true,
-    "observed_at": "2026-08-11T23:29:49Z",
+    "observed_at": "2026-08-12T04:17:21Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31544436443",
-    "schedule": "7 22 * * 0-5",
-    "shard": "35/72"
+    "run_id": "31562660637",
+    "schedule": "7 2 * * 0-5",
+    "shard": "37/72"
   },
   "lkg": {
     "fetched_at": "2026-08-11T23:32:45Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-11T23:29:49Z",
-    "payload_sha256": "ccfb581e9779b4eaf7d42d31f8a3f2a388654a84ca59d86e4b514660c1cb3588",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "payload_sha256": "0ab8052b84f73fd3d426d6b58deadf0a1041328d1c32a058dd5f964d696ff262",
     "quote_as_of": "2026-08-03T19:25:00Z",
     "run_attempt": 1,
-    "run_id": "31544436443",
+    "run_id": "31562660637",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-03T19:25:00Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-03T19:25:00Z"
   },
   "ticker": "ODHY",
-  "updated_at": "2026-08-12T00:28:31Z"
+  "updated_at": "2026-08-12T04:17:21Z"
 }
