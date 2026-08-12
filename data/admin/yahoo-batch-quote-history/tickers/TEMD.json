@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-12T05:48:24Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/TEMD.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TEMD.json",
     "payload_sha256": "fc877203c4a15eac59cb7bfec333f4868589fbe0929bc22e4ed0ece112f4b255",
     "quote_as_of": "2026-07-24T18:45:35Z",
     "source_as_of": "2026-07-24T18:45:35Z"
@@ -38,6 +38,14 @@
     "schedule": "7 4 * * 0-5",
     "shard": "38/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-12T05:48:24Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TEMD.json",
+    "payload_sha256": "fc877203c4a15eac59cb7bfec333f4868589fbe0929bc22e4ed0ece112f4b255",
+    "quote_as_of": "2026-07-24T18:45:35Z",
+    "source_as_of": "2026-07-24T18:45:35Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-24T18:45:35Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 13,
+    "classified_at": "2026-08-12T07:19:10Z",
+    "classified_run_id": "31573324569",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "TEMD holds LKG because Yahoo source date 2026-07-24T18:45:35Z is 13 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-24T18:45:35Z"
+  },
   "ticker": "TEMD",
-  "updated_at": "2026-08-12T05:45:23Z"
+  "updated_at": "2026-08-12T07:19:10Z"
 }
