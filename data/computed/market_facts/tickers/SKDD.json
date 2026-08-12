@@ -2,18 +2,18 @@
   "schema_version": "market-facts/v1",
   "ticker": "SKDD",
   "asset_type": "etf",
-  "generated_at": "2026-07-25T01:38:08Z",
+  "generated_at": "2026-08-12T04:40:24Z",
   "source_as_of": "2026-07-24",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
-    "name": "SKDD",
-    "exchange": null,
-    "currency": null,
+    "name": "GraniteShares 2x Short SK Hynix Daily ETF",
+    "exchange": "NGM",
+    "currency": "USD",
     "sector": null,
     "industry": null,
-    "fund_family": null,
-    "category": null
+    "fund_family": "Graniteshares",
+    "category": "Trading--Inverse Equity"
   },
   "facts": {
     "price": {
@@ -41,10 +41,10 @@
       "candidate_count": 1
     },
     "previous_close": {
-      "value": 14.89,
-      "source": "stockanalysis.quote",
-      "as_of": "2026-07-24",
-      "fetched_at": "2026-07-25T01:23:06Z",
+      "value": 16.04,
+      "source": "yf",
+      "as_of": "2026-08-11",
+      "fetched_at": "2026-08-12T04:20:23Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -53,6 +53,13 @@
       ],
       "candidates": [
         {
+          "value": 16.04,
+          "source": "yf",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-12T04:20:23Z",
+          "confidence": "observed"
+        },
+        {
           "value": 14.89,
           "source": "stockanalysis.quote",
           "as_of": "2026-07-24",
@@ -60,7 +67,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change": {
       "value": 2.19,
@@ -81,9 +88,16 @@
           "as_of": "2026-07-24",
           "fetched_at": "2026-07-25T01:23:06Z",
           "confidence": "observed"
+        },
+        {
+          "value": -1.49,
+          "source": "yf",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-12T04:20:23Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change_pct": {
       "value": 17.24,
@@ -104,9 +118,122 @@
           "as_of": "2026-07-24",
           "fetched_at": "2026-07-25T01:23:06Z",
           "confidence": "observed"
+        },
+        {
+          "value": -9.28928,
+          "source": "yf",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-12T04:20:23Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "total_assets": {
+      "value": 19506362,
+      "source": "yf",
+      "as_of": "2026-08-11",
+      "fetched_at": "2026-08-12T04:20:23Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 19506362,
+          "source": "yf",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-12T04:20:23Z",
+          "confidence": "observed"
         }
       ],
       "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 2.2,
+      "source": "yf",
+      "as_of": "2026-08-11",
+      "fetched_at": "2026-08-12T04:20:23Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 2.2,
+          "source": "yf",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-12T04:20:23Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_ytd": {
+      "value": 29.67914299870047,
+      "source": "yf.history_1y",
+      "as_of": "2026-08-11",
+      "fetched_at": "2026-08-12T04:20:23Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 29.67914299870047,
+          "source": "yf.history_1y",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-12T04:20:23Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "return_1y": {
+      "value": 29.67914299870047,
+      "source": "yf.history_1y",
+      "as_of": "2026-08-11",
+      "fetched_at": "2026-08-12T04:20:23Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.performance",
+        "stockanalysis.etf_screener.performance",
+        "stockanalysis.etf_universe.performance",
+        "yf"
+      ],
+      "candidates": [
+        {
+          "value": 29.67914299870047,
+          "source": "yf.history_1y",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-12T04:20:23Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
+        {
+          "value": 29.679144,
+          "source": "yf",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-12T04:20:23Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
     }
   },
   "etf": {
@@ -125,18 +252,18 @@
       "source": "stockanalysis.overview.description",
       "confidence": "high"
     },
-    "yahoo_funds_data_available": false
+    "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
-    "yf": false,
+    "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
-    "yf": null,
+    "yf": "yf/finance/SKDD.json",
     "stockanalysis": "stockanalysis/etfs/SKDD.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",
