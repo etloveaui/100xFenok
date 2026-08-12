@@ -17,12 +17,18 @@ const helperCall = "node scripts/materialize-update-manifest-routes.mjs";
 // Independent oracle: never derive this map from the manifest generator. A
 // corrupt generator and regenerated artifact must fail here even if they drift
 // together. The map deliberately owns the exact source/destination pairing and
-// materialization semantics for all 24 routes.
+// materialization semantics for all 30 routes.
 const EXPECTED_ROUTES = [
   { source: "data/slickcharts", destination: "100xfenok-next/public/data/slickcharts", mode: "rsync_tree", delete: true, excludes: [] },
   { source: "data/yf/finance", destination: "100xfenok-next/public/data/yf/finance", mode: "rsync_tree", delete: true, excludes: [] },
   { source: "data/stockanalysis", destination: "100xfenok-next/public/data/stockanalysis", mode: "rsync_tree", delete: true, excludes: ["etfs"] },
+  { source: "data/indices/README.md", destination: "100xfenok-next/public/data/indices/README.md", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/indices/schema.json", destination: "100xfenok-next/public/data/indices/schema.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/indices/nasdaq-giw-sox-constituents.json", destination: "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/indices/sp500.json", destination: "100xfenok-next/public/data/indices/sp500.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/indices/nasdaq.json", destination: "100xfenok-next/public/data/indices/nasdaq.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/indices/nasdaq100.json", destination: "100xfenok-next/public/data/indices/nasdaq100.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/indices/sox.json", destination: "100xfenok-next/public/data/indices/sox.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/admin/fenok-edge-korea-krx-daily-index.json", destination: "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/computed/fenok-edge-korea-krx-bridge-history.json", destination: "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/computed/fenok_occ_options_availability.json", destination: "100xfenok-next/public/data/computed/fenok_occ_options_availability.json", mode: "cp_file", delete: false, excludes: [] },
@@ -55,8 +61,8 @@ function routeOracleFields(route) {
   };
 }
 
-assert.equal(EXPECTED_ROUTES.length, 24, "route oracle must contain exactly 24 routes");
-assert.equal(manifest.update_manifest.materializations.length, 24, "manifest must contain exactly 24 routes");
+assert.equal(EXPECTED_ROUTES.length, 30, "route oracle must contain exactly 30 routes");
+assert.equal(manifest.update_manifest.materializations.length, 30, "manifest must contain exactly 30 routes");
 assert.deepEqual(manifest.update_manifest.materializations.map(routeOracleFields), EXPECTED_ROUTES);
 for (const route of EXPECTED_ROUTES) {
   assert.ok(

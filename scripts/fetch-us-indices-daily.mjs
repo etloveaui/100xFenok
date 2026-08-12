@@ -317,11 +317,10 @@ export function writeUsIndicesGitHubOutputs(result, outputPath = process.env.GIT
   fs.appendFileSync(outputPath, `rollback_failed=${result?.rollback_failed === true}\n`);
 }
 
-function transactionPaths({ canonicalRoot, publicRoot, stateRoot, persistencePath, candidates = [] }) {
+function transactionPaths({ canonicalRoot, stateRoot, persistencePath, candidates = [] }) {
   return [
     ...SERIES.flatMap(({ key }) => [
       path.join(canonicalRoot, `${key}.json`),
-      path.join(publicRoot, `${key}.json`),
       path.join(stateRoot, "keys", `${key}.json`),
       path.join(stateRoot, "lkg", `${key}.json`),
       path.join(stateRoot, "promotion-contracts", `${key}.json`),
@@ -337,7 +336,6 @@ function transactionPaths({ canonicalRoot, publicRoot, stateRoot, persistencePat
 
 export async function runUsIndicesDaily({
   canonicalRoot = path.join(REPO_ROOT, "data", "indices"),
-  publicRoot = path.join(REPO_ROOT, "100xfenok-next", "public", "data", "indices"),
   stateRoot = path.join(REPO_ROOT, "data", "admin", "us-indices-daily"),
   persistencePath = path.join(stateRoot, "persistence.json"),
   attemptShardPath = path.join(REPO_ROOT, ATTEMPT_SHARD_RELATIVE_PATH),
@@ -504,7 +502,6 @@ export async function runUsIndicesDaily({
     for (const result of results) {
       const key = `${result.descriptor.key}.json`;
       const canonicalPath = path.join(canonicalRoot, key);
-      const publicPath = path.join(publicRoot, key);
       const existing = readSeries(canonicalPath);
       const merged = mergeSeries(existing, result.rows, {
         seriesKey: result.descriptor.key,
@@ -531,7 +528,7 @@ export async function runUsIndicesDaily({
         run,
         providerObservation: store.buildProviderObservation({ key, payloadBytes: providerBytes, run }),
       });
-      candidates.push({ candidate, canonicalPath, publicPath, bytes: payloadBytes });
+      candidates.push({ candidate, canonicalPath, bytes: payloadBytes });
     }
   } catch (error) {
     return recordPipelineFailure(error);
@@ -593,7 +590,7 @@ export async function runUsIndicesDaily({
     let deferredIndex;
     try {
       deferredIndex = withFileRollbackFn(
-        transactionPaths({ canonicalRoot, publicRoot, stateRoot, persistencePath }),
+        transactionPaths({ canonicalRoot, stateRoot, persistencePath }),
         () => {
           for (const candidate of atomicCandidates) store.recordPromotionDeferral(candidate);
           return buildIndexFn(store, keys, run);
@@ -632,12 +629,11 @@ export async function runUsIndicesDaily({
   let index;
   try {
     index = withFileRollbackFn(
-      transactionPaths({ canonicalRoot, publicRoot, stateRoot, persistencePath, candidates }),
+      transactionPaths({ canonicalRoot, stateRoot, persistencePath, candidates }),
       () => {
         writeTargetsAtomic([
-          ...candidates.flatMap(({ canonicalPath, publicPath, bytes }) => [
+          ...candidates.flatMap(({ canonicalPath, bytes }) => [
             { targetPath: canonicalPath, bytes },
-            { targetPath: publicPath, bytes },
           ]),
           { targetPath: persistencePath, bytes: Buffer.from(`${JSON.stringify(persistence, null, 2)}\n`) },
         ]);

@@ -23,6 +23,7 @@ const PRODUCERS = Object.freeze([
   ["scripts/build-industry-benchmarks.mjs", "data/damodaran/industry_benchmarks.json"],
   ["scripts/build-calendar-prev.mjs", "data/calendar/prev-values.json"],
   ["scripts/build-slickcharts-discovery.mjs", "data/slickcharts/discovery-summary.json"],
+  ["scripts/fetch-us-indices-daily.mjs", "data/indices/${key}"],
 ]);
 
 // Every public mirror output this batch removed from the producers must be
@@ -69,6 +70,12 @@ const REMOVED_MIRROR_OUTPUTS = Object.freeze({
   ],
   "scripts/build-calendar-prev.mjs": [
     { source: "data/calendar/prev-values.json", destination: "100xfenok-next/public/data/calendar/prev-values.json" },
+  ],
+  "scripts/fetch-us-indices-daily.mjs": [
+    { source: "data/indices/sp500.json", destination: "100xfenok-next/public/data/indices/sp500.json" },
+    { source: "data/indices/nasdaq.json", destination: "100xfenok-next/public/data/indices/nasdaq.json" },
+    { source: "data/indices/nasdaq100.json", destination: "100xfenok-next/public/data/indices/nasdaq100.json" },
+    { source: "data/indices/sox.json", destination: "100xfenok-next/public/data/indices/sox.json" },
   ],
 });
 
@@ -167,4 +174,4 @@ for (const [relativePath, removedOutputs] of Object.entries(REMOVED_TREE_MIRROR_
   }
 }
 
-console.log("build-producers public-write fence: ok (10 canonical-only APIs)");
+console.log("build-producers public-write fence: ok (11 canonical-only APIs)");

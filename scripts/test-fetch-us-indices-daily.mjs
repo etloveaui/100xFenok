@@ -56,7 +56,6 @@ function pathsFor(root) {
   const stateRoot = path.join(root, "data", "admin", "us-indices-daily");
   return {
     canonicalRoot: path.join(root, "data", "indices"),
-    publicRoot: path.join(root, "public", "data", "indices"),
     stateRoot,
     persistencePath: path.join(stateRoot, "persistence.json"),
     attemptShardPath: path.join(root, "attempts", "us_indices_daily.json"),
@@ -270,7 +269,6 @@ assert.deepEqual(
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-live-success-"));
   const paths = pathsFor(root);
   fs.mkdirSync(paths.canonicalRoot, { recursive: true });
-  fs.mkdirSync(paths.publicRoot, { recursive: true });
   const initialRows = {
     sp500: [["2026-07-16", 6200.1], ["2026-07-17", 6210.2]],
     nasdaq: [["2026-07-16", 20200.1], ["2026-07-17", 20250.2]],
@@ -283,7 +281,6 @@ assert.deepEqual(
       `${JSON.stringify([{ date: initialRows[key][0][0], value: initialRows[key][0][1] }])}\n`,
     );
   }
-  fs.cpSync(paths.canonicalRoot, paths.publicRoot, { recursive: true });
   const request = async (_url, key) => yahooResponseForKey(key, initialRows);
   const first = await runUsIndicesDaily({
     ...paths,
@@ -296,8 +293,6 @@ assert.deepEqual(
   assert.equal(first.updated, true);
   for (const key of US_SERIES_KEYS) {
     const canonical = fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`));
-    const publicMirror = fs.readFileSync(path.join(paths.publicRoot, `${key}.json`));
-    assert.deepEqual(publicMirror, canonical, `${key} public mirror must be byte-identical`);
     assert.equal(JSON.parse(canonical).length, 2);
   }
   const persistence = JSON.parse(fs.readFileSync(paths.persistencePath, "utf8"));
@@ -325,7 +320,6 @@ assert.deepEqual(
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-live-provider-revision-"));
   const paths = pathsFor(root);
   fs.mkdirSync(paths.canonicalRoot, { recursive: true });
-  fs.mkdirSync(paths.publicRoot, { recursive: true });
   const initial = {
     sp500: [{ date: "2026-07-20", value: 7443.27978515625 }],
     nasdaq: [{ date: "2026-07-20", value: 25508.072265625 }],
@@ -333,9 +327,7 @@ assert.deepEqual(
     sox: [{ date: "2026-07-20", value: 11311.08 }],
   };
   for (const [key, rows] of Object.entries(initial)) {
-    for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
-      fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify(rows)}\n`);
-    }
+    fs.writeFileSync(path.join(paths.canonicalRoot, `${key}.json`), `${JSON.stringify(rows)}\n`);
   }
   const result = await runUsIndicesDaily({
     ...paths,
@@ -356,17 +348,12 @@ assert.deepEqual(
     initial.nasdaq[0],
     { date: "2026-07-21", value: 25837.2109375 },
   ]);
-  assert.deepEqual(
-    fs.readFileSync(path.join(paths.publicRoot, "nasdaq.json")),
-    fs.readFileSync(path.join(paths.canonicalRoot, "nasdaq.json")),
-  );
 }
 
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-live-backfill-"));
   const paths = pathsFor(root);
   fs.mkdirSync(paths.canonicalRoot, { recursive: true });
-  fs.mkdirSync(paths.publicRoot, { recursive: true });
   const rows = {
     sp500: [["2026-07-20", 6200], ["2026-07-21", 6210], ["2026-07-22", 6220]],
     nasdaq: [["2026-07-20", 20200], ["2026-07-21", 20210], ["2026-07-22", 20220]],
@@ -375,9 +362,7 @@ assert.deepEqual(
   };
   for (const [key, values] of Object.entries(rows)) {
     const initial = [{ date: values[0][0], value: values[0][1] }];
-    for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
-      fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify(initial)}\n`);
-    }
+    fs.writeFileSync(path.join(paths.canonicalRoot, `${key}.json`), `${JSON.stringify(initial)}\n`);
   }
   const result = await runUsIndicesDaily({
     ...paths,
@@ -397,7 +382,6 @@ assert.deepEqual(
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-live-rounded-provider-revision-"));
   const paths = pathsFor(root);
   fs.mkdirSync(paths.canonicalRoot, { recursive: true });
-  fs.mkdirSync(paths.publicRoot, { recursive: true });
   const initial = {
     sp500: [{ date: "2026-07-23", value: 6400 }],
     nasdaq: [{ date: "2026-07-23", value: 25137.69 }],
@@ -405,9 +389,7 @@ assert.deepEqual(
     sox: [{ date: "2026-07-23", value: 11311.08 }],
   };
   for (const [key, rows] of Object.entries(initial)) {
-    for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
-      fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify(rows)}\n`);
-    }
+    fs.writeFileSync(path.join(paths.canonicalRoot, `${key}.json`), `${JSON.stringify(rows)}\n`);
   }
   const result = await runUsIndicesDaily({
     ...paths,
@@ -431,24 +413,17 @@ assert.deepEqual(
     initial.nasdaq[0],
     { date: "2026-07-24", value: 25200.125 },
   ], "the rounded settled value must be preserved while the new date appends");
-  assert.deepEqual(
-    fs.readFileSync(path.join(paths.publicRoot, "nasdaq.json")),
-    fs.readFileSync(path.join(paths.canonicalRoot, "nasdaq.json")),
-  );
 }
 
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-live-out-of-tolerance-"));
   const paths = pathsFor(root);
   fs.mkdirSync(paths.canonicalRoot, { recursive: true });
-  fs.mkdirSync(paths.publicRoot, { recursive: true });
   for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200, nasdaq100: 28200, sox: 11300 })) {
-    for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
-      fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify([{ date: "2026-07-20", value }])}\n`);
-    }
+    fs.writeFileSync(path.join(paths.canonicalRoot, `${key}.json`), `${JSON.stringify([{ date: "2026-07-20", value }])}\n`);
   }
-  const before = [paths.canonicalRoot, paths.publicRoot].flatMap((rootPath) =>
-    US_SERIES_KEYS.map((key) => fs.readFileSync(path.join(rootPath, `${key}.json`))));
+  const before = US_SERIES_KEYS.map((key) =>
+    fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`)));
   const result = await runUsIndicesDaily({
     ...paths,
     request: async (_url, key) => yahooResponseForKey(key, {
@@ -463,8 +438,8 @@ assert.deepEqual(
   });
   assert.equal(result.exitCode, 2, "out-of-tolerance settled-date changes must remain fail-closed after parity retirement");
   assert.equal(result.providerRevisions.some((row) => row.within_tolerance === false), true);
-  const after = [paths.canonicalRoot, paths.publicRoot].flatMap((rootPath) =>
-    US_SERIES_KEYS.map((key) => fs.readFileSync(path.join(rootPath, `${key}.json`))));
+  const after = US_SERIES_KEYS.map((key) =>
+    fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`)));
   after.forEach((bytes, index) => assert.deepEqual(bytes, before[index]));
   const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
   assert.equal(shard.attempts[0].assertions.some((assertion) => assertion.passed === false), true);
@@ -473,8 +448,7 @@ assert.deepEqual(
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-live-atomic-"));
   const paths = pathsFor(root);
-  const protectedPaths = [paths.canonicalRoot, paths.publicRoot].flatMap((rootPath) =>
-    US_SERIES_KEYS.map((key) => path.join(rootPath, `${key}.json`)));
+  const protectedPaths = US_SERIES_KEYS.map((key) => path.join(paths.canonicalRoot, `${key}.json`));
   for (const [index, filePath] of protectedPaths.entries()) {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, `sentinel-${index}\n`);
@@ -506,11 +480,8 @@ assert.deepEqual(
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-state-write-rollback-"));
   const paths = pathsFor(root);
   fs.mkdirSync(paths.canonicalRoot, { recursive: true });
-  fs.mkdirSync(paths.publicRoot, { recursive: true });
   for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200, nasdaq100: 28200, sox: 11300 })) {
-    for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
-      fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify([{ date: "2026-07-16", value }])}\n`);
-    }
+    fs.writeFileSync(path.join(paths.canonicalRoot, `${key}.json`), `${JSON.stringify([{ date: "2026-07-16", value }])}\n`);
   }
   const request = async (_url, key) => yahooResponseForKey(key, {
     sp500: [["2026-07-16", 6200], ["2026-07-17", 6210]],
@@ -526,8 +497,7 @@ assert.deepEqual(
     eventName: "schedule",
   });
   const payloadPaths = [
-    ...[paths.canonicalRoot, paths.publicRoot].flatMap((rootPath) =>
-      US_SERIES_KEYS.map((key) => path.join(rootPath, `${key}.json`))),
+    ...US_SERIES_KEYS.map((key) => path.join(paths.canonicalRoot, `${key}.json`)),
     paths.persistencePath,
   ];
   const before = payloadPaths.map((filePath) => fs.readFileSync(filePath));
@@ -564,7 +534,7 @@ assert.deepEqual(
   assert.deepEqual(
     fs.readdirSync(providerReceiptRoot).sort(),
     receiptsBefore,
-    "provider receipt creation must roll back with canonical/public/state publication",
+    "provider receipt creation must roll back with canonical/state publication",
   );
   const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
   assert.equal(shard.attempts[0].execution, "threw");
@@ -595,11 +565,8 @@ assert.deepEqual(
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-rollback-failure-"));
   const paths = pathsFor(root);
   fs.mkdirSync(paths.canonicalRoot, { recursive: true });
-  fs.mkdirSync(paths.publicRoot, { recursive: true });
   for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200, nasdaq100: 28200, sox: 11300 })) {
-    for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
-      fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify([{ date: "2026-07-16", value }])}\n`);
-    }
+    fs.writeFileSync(path.join(paths.canonicalRoot, `${key}.json`), `${JSON.stringify([{ date: "2026-07-16", value }])}\n`);
   }
   const result = await runUsIndicesDaily({
     ...paths,
@@ -670,11 +637,8 @@ assert.deepEqual(
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-fresh-retry-mixed-"));
   const paths = pathsFor(root);
   fs.mkdirSync(paths.canonicalRoot, { recursive: true });
-  fs.mkdirSync(paths.publicRoot, { recursive: true });
   for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200, nasdaq100: 28200, sox: 11300 })) {
-    for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
-      fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify([{ date: "2026-07-16", value }])}\n`);
-    }
+    fs.writeFileSync(path.join(paths.canonicalRoot, `${key}.json`), `${JSON.stringify([{ date: "2026-07-16", value }])}\n`);
   }
   const seeded = await runUsIndicesDaily({
     ...paths,
@@ -712,8 +676,6 @@ assert.deepEqual(
   assert.equal(oneFailed.index.retry_keys.includes("sox.json"), false);
   const canonicalBeforeMixed = US_SERIES_KEYS.map((key) =>
     fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`)));
-  const publicBeforeMixed = US_SERIES_KEYS.map((key) =>
-    fs.readFileSync(path.join(paths.publicRoot, `${key}.json`)));
   const mixed = await runUsIndicesDaily({
     ...paths,
     request: async (_url, key) => yahooResponseForKey(key, {
@@ -748,11 +710,6 @@ assert.deepEqual(
       canonicalBeforeMixed[index],
       "fresh/retry mixed recovery cannot publish partial canonical bytes",
     );
-    assert.deepEqual(
-      fs.readFileSync(path.join(paths.publicRoot, `${key}.json`)),
-      publicBeforeMixed[index],
-      "fresh/retry mixed recovery cannot publish partial public bytes",
-    );
   }
   const recovered = await runUsIndicesDaily({
     ...paths,
@@ -775,11 +732,8 @@ assert.deepEqual(
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "us-indices-controlled-recovery-"));
   const paths = pathsFor(root);
   fs.mkdirSync(paths.canonicalRoot, { recursive: true });
-  fs.mkdirSync(paths.publicRoot, { recursive: true });
   for (const [key, value] of Object.entries({ sp500: 6200, nasdaq: 20200, nasdaq100: 28200, sox: 11300 })) {
-    for (const rootPath of [paths.canonicalRoot, paths.publicRoot]) {
-      fs.writeFileSync(path.join(rootPath, `${key}.json`), `${JSON.stringify([{ date: "2026-07-16", value }])}\n`);
-    }
+    fs.writeFileSync(path.join(paths.canonicalRoot, `${key}.json`), `${JSON.stringify([{ date: "2026-07-16", value }])}\n`);
   }
   await runUsIndicesDaily({
     ...paths,
@@ -795,8 +749,6 @@ assert.deepEqual(
   });
   const canonicalBefore = US_SERIES_KEYS.map((key) =>
     fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`)));
-  const publicBefore = US_SERIES_KEYS.map((key) =>
-    fs.readFileSync(path.join(paths.publicRoot, `${key}.json`)));
   const failed = await runUsIndicesDaily({
     ...paths,
     request: async () => {
@@ -869,11 +821,6 @@ assert.deepEqual(
       fs.readFileSync(path.join(paths.canonicalRoot, `${key}.json`)),
       canonicalBefore[index],
       "mixed recovery cannot publish partial canonical bytes",
-    );
-    assert.deepEqual(
-      fs.readFileSync(path.join(paths.publicRoot, `${key}.json`)),
-      publicBefore[index],
-      "mixed recovery cannot publish partial public bytes",
     );
     const state = JSON.parse(fs.readFileSync(path.join(paths.stateRoot, "keys", `${key}.json`), "utf8"));
     assert.deepEqual(state.latest_failure, recoveryStateBeforeMixed[key].latest_failure);
@@ -1068,8 +1015,10 @@ assert.deepEqual(
       "accepted provider revisions must be recorded before merge continues");
     assert.match(source, /if \(outOfTolerance\.length > 0\) \{/,
       "out-of-tolerance settled-date revisions must fail closed");
-    assert.match(source, /\{ targetPath: canonicalPath, bytes \},\s*\{ targetPath: publicPath, bytes \}/u,
-      "successful live writes must include canonical and public mirror targets");
+    assert.match(source, /\{ targetPath: canonicalPath, bytes \}/u,
+      "successful live writes must include the canonical target");
+    assert.doesNotMatch(source, /\bpublicPath\b/u,
+      "the live producer must not retain a public write target");
     assert.doesNotMatch(source, /emitUsIndicesParity|qualification/,
       "the live producer must not retain the retired qualification clock or emit parity");
   }
