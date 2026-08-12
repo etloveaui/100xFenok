@@ -349,13 +349,13 @@ export const UPDATE_MANIFEST_MATERIALIZATIONS = [
     trailing_slash: false,
   },
   {
-    source: "data/damodaran/industry_benchmarks.json",
-    destination: "100xfenok-next/public/data/damodaran/industry_benchmarks.json",
-    mode: "cp_file",
-    delete: false,
+    source: "data/damodaran",
+    destination: "100xfenok-next/public/data/damodaran",
+    mode: "rsync_tree",
+    delete: true,
     excludes: [],
     required: true,
-    trailing_slash: false,
+    trailing_slash: true,
   },
   {
     source: "data/calendar/prev-values.json",

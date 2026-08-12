@@ -65,9 +65,6 @@ const REMOVED_MIRROR_OUTPUTS = Object.freeze({
   "scripts/build-revision-movers.mjs": [
     { source: "data/global-scouter/core/revision_movers.json", destination: "100xfenok-next/public/data/global-scouter/core/revision_movers.json" },
   ],
-  "scripts/build-industry-benchmarks.mjs": [
-    { source: "data/damodaran/industry_benchmarks.json", destination: "100xfenok-next/public/data/damodaran/industry_benchmarks.json" },
-  ],
   "scripts/build-calendar-prev.mjs": [
     { source: "data/calendar/prev-values.json", destination: "100xfenok-next/public/data/calendar/prev-values.json" },
   ],
@@ -79,13 +76,17 @@ const REMOVED_MIRROR_OUTPUTS = Object.freeze({
   ],
 });
 
-// The SlickCharts discovery summary is the one removed output owned by a
-// whole-tree rsync boundary: the destination directory is fully route-owned,
-// so the covering route must be exactly one rsync_tree mirror with
-// delete:true parity (never a file-level cp_file or delete:false route).
+// The SlickCharts discovery summary and the Damodaran industry benchmarks are
+// the removed outputs owned by a whole-tree rsync boundary: each destination
+// directory is fully route-owned, so the covering route must be exactly one
+// rsync_tree mirror with delete:true parity (never a file-level cp_file or
+// delete:false route).
 const REMOVED_TREE_MIRROR_OUTPUTS = Object.freeze({
   "scripts/build-slickcharts-discovery.mjs": [
     "100xfenok-next/public/data/slickcharts/discovery-summary.json",
+  ],
+  "scripts/build-industry-benchmarks.mjs": [
+    "100xfenok-next/public/data/damodaran/industry_benchmarks.json",
   ],
 });
 

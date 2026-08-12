@@ -46,7 +46,7 @@ const EXPECTED_ROUTES = [
   { source: "data/sec-13f/analytics/trades_ranking.json", destination: "100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/analytics/portfolio_views.json", destination: "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/analytics/guru_holders_index.json", destination: "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json", mode: "cp_file", delete: false, excludes: [] },
-  { source: "data/damodaran/industry_benchmarks.json", destination: "100xfenok-next/public/data/damodaran/industry_benchmarks.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/damodaran", destination: "100xfenok-next/public/data/damodaran", mode: "rsync_tree", delete: true, excludes: [] },
   { source: "data/calendar/prev-values.json", destination: "100xfenok-next/public/data/calendar/prev-values.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/investors", destination: "100xfenok-next/public/data/sec-13f/investors", mode: "rsync_tree", delete: true, excludes: ["griffin.json"] },
 ];
@@ -129,12 +129,39 @@ const relevantPublicIgnoreRules = fs.readFileSync(path.join(root, ".gitignore"),
   )));
 assert.deepEqual(
   relevantPublicIgnoreRules,
-  ["100xfenok-next/public/data/sec-13f/investors/griffin.json"],
+  [
+    "100xfenok-next/public/data/sec-13f/investors/griffin.json",
+    "100xfenok-next/public/data/damodaran/",
+  ],
   "batch-2 routes must account for every overlapping public-data ignore rule",
 );
 for (const ignoreRule of relevantPublicIgnoreRules) {
-  const coveringRoute = BATCH2_ROUTES.find((route) => ignoreRule.startsWith(`${route.destination}/`));
+  const isDirectoryRule = ignoreRule.endsWith("/");
+  const ignorePath = isDirectoryRule ? ignoreRule.slice(0, -1) : ignoreRule;
+  const coveringRoute = BATCH2_ROUTES.find((route) => ignorePath.startsWith(`${route.destination}/`));
+  if (isDirectoryRule) {
+    // A directory ignore is valid only when an explicit exclude covers it via
+    // a broader route (griffin behavior) or one rsync_tree route owns that
+    // exact destination with delete parity, which reconstructs canonical
+    // content from the committed source tree. Partial or non-delete routes
+    // never satisfy this oracle.
+    const excludedByBroaderRoute = coveringRoute
+      && coveringRoute.excludes.includes(path.posix.relative(coveringRoute.destination, ignorePath));
+    const owningRoute = manifest.update_manifest.materializations.find(
+      (route) => route.destination === ignorePath,
+    );
+    const ownedByDeleteParityRoute = owningRoute
+      && owningRoute.mode === "rsync_tree"
+      && owningRoute.trailing_slash === true
+      && owningRoute.delete === true;
+    assert.ok(
+      excludedByBroaderRoute || ownedByDeleteParityRoute,
+      `ignored public directory must be excluded by a broader route or owned by a delete-parity rsync_tree route: ${ignoreRule}`,
+    );
+    continue;
+  }
   assert.ok(coveringRoute, `ignored public path must have a batch-2 route: ${ignoreRule}`);
+  if (ignoreRule === coveringRoute.destination) continue;
   assert.ok(
     coveringRoute.excludes.includes(path.posix.relative(coveringRoute.destination, ignoreRule)),
     `ignored public path must be excluded by its route: ${ignoreRule}`,

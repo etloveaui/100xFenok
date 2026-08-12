@@ -84,7 +84,7 @@
       "100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json",
       "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json",
       "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
-      "100xfenok-next/public/data/damodaran/industry_benchmarks.json",
+      "100xfenok-next/public/data/damodaran",
       "100xfenok-next/public/data/calendar/prev-values.json",
       "100xfenok-next/public/data/sec-13f/investors"
     ],
@@ -335,13 +335,13 @@
         "trailing_slash": false
       },
       {
-        "delete": false,
-        "destination": "100xfenok-next/public/data/damodaran/industry_benchmarks.json",
+        "delete": true,
+        "destination": "100xfenok-next/public/data/damodaran",
         "excludes": [],
-        "mode": "cp_file",
+        "mode": "rsync_tree",
         "required": true,
-        "source": "data/damodaran/industry_benchmarks.json",
-        "trailing_slash": false
+        "source": "data/damodaran",
+        "trailing_slash": true
       },
       {
         "delete": false,
@@ -2325,8 +2325,8 @@
             "required": false
           },
           {
-            "kind": "file",
-            "path": "100xfenok-next/public/data/damodaran/industry_benchmarks.json",
+            "kind": "directory",
+            "path": "100xfenok-next/public/data/damodaran",
             "required": false
           },
           {
