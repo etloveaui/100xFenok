@@ -5,20 +5,6 @@
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 1076,
-      "natural": true,
-      "observed_at": "2026-08-09T22:44:05Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31340064113",
-      "schedule": "7 22 * * 0-5",
-      "shard": "11/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 926,
       "natural": true,
       "observed_at": "2026-08-10T07:59:31Z",
@@ -193,12 +179,26 @@
       "run_id": "31544436443",
       "schedule": "7 22 * * 0-5",
       "shard": "35/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 630,
+      "natural": true,
+      "observed_at": "2026-08-12T00:28:31Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31548744038",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
     "fetched_at": "2026-08-11T23:30:08Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/000880.KS.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/000880.KS.json",
     "payload_sha256": "e3298d8564bf93b873d72fd17ccc3a83e24941d3d4cbddf33d86b2281f33a272",
     "quote_as_of": "2026-07-29T06:30:02Z",
     "source_as_of": "2026-07-29T06:30:02Z"
@@ -209,22 +209,32 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 884,
+    "latency_ms": 630,
     "natural": true,
-    "observed_at": "2026-08-11T23:29:49Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T00:28:31Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31544436443",
-    "schedule": "7 22 * * 0-5",
-    "shard": "35/72"
+    "run_id": "31548744038",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-12T00:28:31Z",
+    "provider_history_as_of": "2026-08-11",
+    "provider_quote_as_of": "2026-07-29T06:30:02Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "31548744038"
   },
   "lkg": {
-    "fetched_at": "2026-08-10T22:52:32Z",
-    "history_as_of": "2026-08-10",
+    "fetched_at": "2026-08-11T23:30:08Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/000880.KS.json",
-    "payload_sha256": "dd073174ae9c7b9f0811b477b784d0f00995b4132ea04d3bca3901fe4bfcc4b3",
+    "payload_sha256": "e3298d8564bf93b873d72fd17ccc3a83e24941d3d4cbddf33d86b2281f33a272",
     "quote_as_of": "2026-07-29T06:30:02Z",
     "source_as_of": "2026-07-29T06:30:02Z"
   },
@@ -240,19 +250,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-29T06:30:02Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-08-10T23:54:50Z",
-    "classified_run_id": "31444023136",
+    "age_business_days": 10,
+    "classified_at": "2026-08-12T00:28:31Z",
+    "classified_run_id": "31548744038",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "000880.KS holds LKG because Yahoo source date 2026-07-29T06:30:02Z is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "000880.KS holds LKG because Yahoo source date 2026-07-29T06:30:02Z is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-07-29T06:30:02Z"
   },
   "ticker": "000880.KS",
-  "updated_at": "2026-08-11T23:29:49Z"
+  "updated_at": "2026-08-12T00:28:31Z"
 }

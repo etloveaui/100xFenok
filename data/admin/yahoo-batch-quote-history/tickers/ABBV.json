@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-24T00:32:28Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "30055546565",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,32 +168,45 @@
       "run_id": "31456720047",
       "schedule": "7 2 * * 0-5",
       "shard": "25/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 697,
+      "natural": true,
+      "observed_at": "2026-08-12T00:28:31Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31548744038",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T00:10:07Z",
-    "history_as_of": "2026-08-10",
+    "fetched_at": "2026-08-12T00:30:24Z",
+    "history_as_of": "2026-08-11",
     "path": "data/yf/finance/ABBV.json",
-    "payload_sha256": "131fa5f049f524ab035f3d2862aa8f6c6ac6d438b01bbb19079aeb2372d38e55",
-    "quote_as_of": "2026-08-10T20:04:14Z",
-    "source_as_of": "2026-08-10"
+    "payload_sha256": "0a2630944075800b257be073d9135df70ec6f698e9fa481eec8fe4b194186601",
+    "quote_as_of": "2026-08-11T20:03:03Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 697,
     "natural": true,
-    "observed_at": "2026-08-11T03:59:23Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-12T00:28:31Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31456720047",
-    "schedule": "7 2 * * 0-5",
-    "shard": "25/72"
+    "run_id": "31548744038",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -231,14 +231,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-11T00:08:41Z",
-    "payload_sha256": "35fb0205dcffbbb15bb8c9bcc0ca8552da43f71dcd22975ad49d309a717f2fce",
-    "quote_as_of": "2026-08-10T20:04:14Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T00:28:31Z",
+    "payload_sha256": "e2e6181975ef6bcf56993dd1233797e1b5433fec6faef4bf5dae6672bb8dba00",
+    "quote_as_of": "2026-08-11T20:03:03Z",
     "run_attempt": 1,
-    "run_id": "31444023136",
+    "run_id": "31548744038",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-08-11"
   },
   "recovered_at": "2026-07-17T00:15:36Z",
   "recovered_from_run_id": "29460793523",
@@ -249,5 +249,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "ABBV",
-  "updated_at": "2026-08-11T03:59:23Z"
+  "updated_at": "2026-08-12T00:28:31Z"
 }

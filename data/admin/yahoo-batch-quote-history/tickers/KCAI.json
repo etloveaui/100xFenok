@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-06T08:53:19Z",
     "history_as_of": "2026-08-05",
-    "path": "data/yf/finance/KCAI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/KCAI.json",
     "payload_sha256": "93feb76c41a169110c8e853622ba1fe576749ea3420b37f0340c0f24b753df9f",
     "quote_as_of": "2026-08-03T17:10:31Z",
     "source_as_of": "2026-08-03T17:10:31Z"
@@ -38,6 +38,14 @@
     "schedule": "7 6 * * 0-5",
     "shard": "51/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-06T08:53:19Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/KCAI.json",
+    "payload_sha256": "93feb76c41a169110c8e853622ba1fe576749ea3420b37f0340c0f24b753df9f",
+    "quote_as_of": "2026-08-03T17:10:31Z",
+    "source_as_of": "2026-08-03T17:10:31Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-03T17:10:31Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-12T00:28:31Z",
+    "classified_run_id": "31548744038",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "KCAI holds LKG because Yahoo source date 2026-08-03T17:10:31Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-03T17:10:31Z"
+  },
   "ticker": "KCAI",
-  "updated_at": "2026-08-06T08:51:05Z"
+  "updated_at": "2026-08-12T00:28:31Z"
 }

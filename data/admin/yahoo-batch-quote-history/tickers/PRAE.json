@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-10T09:49:44Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/PRAE.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PRAE.json",
     "payload_sha256": "485416f631204dc63703321e4de9e8dd17efff9182a5269eb5eb1c824aa1e969",
     "quote_as_of": "2026-08-03T19:47:51Z",
     "source_as_of": "2026-08-03T19:47:51Z"
@@ -38,6 +38,14 @@
     "schedule": "7 8 * * 0-5",
     "shard": "16/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-10T09:49:44Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PRAE.json",
+    "payload_sha256": "485416f631204dc63703321e4de9e8dd17efff9182a5269eb5eb1c824aa1e969",
+    "quote_as_of": "2026-08-03T19:47:51Z",
+    "source_as_of": "2026-08-03T19:47:51Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-03T19:47:51Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-12T00:28:31Z",
+    "classified_run_id": "31548744038",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "PRAE holds LKG because Yahoo source date 2026-08-03T19:47:51Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-03T19:47:51Z"
+  },
   "ticker": "PRAE",
-  "updated_at": "2026-08-10T09:46:13Z"
+  "updated_at": "2026-08-12T00:28:31Z"
 }

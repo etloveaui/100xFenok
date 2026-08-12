@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-09T22:47:54Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/VNIE.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VNIE.json",
     "payload_sha256": "04c06d3ca94bcfd440d93b5b12bcd610da6f4f644d3513667907c25785bed09d",
     "quote_as_of": "2026-08-03T16:07:02Z",
     "source_as_of": "2026-08-03T16:07:02Z"
@@ -38,6 +38,14 @@
     "schedule": "7 22 * * 0-5",
     "shard": "11/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-09T22:47:54Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VNIE.json",
+    "payload_sha256": "04c06d3ca94bcfd440d93b5b12bcd610da6f4f644d3513667907c25785bed09d",
+    "quote_as_of": "2026-08-03T16:07:02Z",
+    "source_as_of": "2026-08-03T16:07:02Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-03T16:07:02Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-12T00:28:31Z",
+    "classified_run_id": "31548744038",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "VNIE holds LKG because Yahoo source date 2026-08-03T16:07:02Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-03T16:07:02Z"
+  },
   "ticker": "VNIE",
-  "updated_at": "2026-08-09T22:44:05Z"
+  "updated_at": "2026-08-12T00:28:31Z"
 }

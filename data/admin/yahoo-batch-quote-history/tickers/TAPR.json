@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-07T11:09:00Z",
     "history_as_of": "2026-08-06",
-    "path": "data/yf/finance/TAPR.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TAPR.json",
     "payload_sha256": "04c98f51cf4cc2e33d915d85cf5931c4039ed404a85e4dd9fd394c2ee742afdd",
     "quote_as_of": "2026-08-03T15:10:54Z",
     "source_as_of": "2026-08-03T15:10:54Z"
@@ -38,6 +38,14 @@
     "schedule": "7 10 * * 0-5",
     "shard": "65/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-07T11:09:00Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TAPR.json",
+    "payload_sha256": "04c98f51cf4cc2e33d915d85cf5931c4039ed404a85e4dd9fd394c2ee742afdd",
+    "quote_as_of": "2026-08-03T15:10:54Z",
+    "source_as_of": "2026-08-03T15:10:54Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-03T15:10:54Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-12T00:28:31Z",
+    "classified_run_id": "31548744038",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "TAPR holds LKG because Yahoo source date 2026-08-03T15:10:54Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-03T15:10:54Z"
+  },
   "ticker": "TAPR",
-  "updated_at": "2026-08-07T11:06:01Z"
+  "updated_at": "2026-08-12T00:28:31Z"
 }

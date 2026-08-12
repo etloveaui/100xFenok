@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-24T00:41:05Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "30055546565",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,32 +168,45 @@
       "run_id": "31444023136",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 611,
+      "natural": true,
+      "observed_at": "2026-08-12T00:43:18Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31548744038",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T13:40:45Z",
-    "history_as_of": "2026-08-10",
+    "fetched_at": "2026-08-12T00:45:09Z",
+    "history_as_of": "2026-08-11",
     "path": "data/yf/finance/CAH.json",
-    "payload_sha256": "24e85bdb6e7b8082f48cb2a0012e74c7f8b6acecd0529be9bb755427e4d0e29f",
-    "quote_as_of": "2026-08-10T13:40:32Z",
-    "source_as_of": "2026-08-10"
+    "payload_sha256": "4dc153f5ac23a70b1a0f8eb896bee100ae7f6e1594b62831b38a0d820c5e6f68",
+    "quote_as_of": "2026-08-11T20:00:02Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 611,
     "natural": true,
-    "observed_at": "2026-08-11T00:05:28Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-12T00:43:18Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31444023136",
+    "run_id": "31548744038",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "4/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -237,14 +237,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-10T13:38:56Z",
-    "payload_sha256": "994f6827aafdc8486fe54e81cfef8ecd61fcfd6c2d541253e9a5a38ba3bb091e",
-    "quote_as_of": "2026-08-10T13:40:32Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T00:43:18Z",
+    "payload_sha256": "e9da04272c95b373673372e2f4f62770ec29fb14f52d521564e88ac34312db9b",
+    "quote_as_of": "2026-08-11T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "31393796703",
+    "run_id": "31548744038",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-08-11"
   },
   "recovered_at": "2026-07-24T00:27:41Z",
   "recovered_from_run_id": "29968542251",
@@ -255,5 +255,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CAH",
-  "updated_at": "2026-08-11T00:05:28Z"
+  "updated_at": "2026-08-12T00:43:18Z"
 }
