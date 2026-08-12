@@ -36,51 +36,6 @@
           "source": "provider_safe_call"
         }
       ],
-      "latency_ms": 1264,
-      "natural": true,
-      "observed_at": "2026-08-09T16:47:26Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31324627429",
-      "schedule": "7 16 * * 0-5",
-      "shard": "8/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "YFDataException: CTJN: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: CTJN: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: CTJN: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: CTJN: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: CTJN: No Fund data found.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFDataException: CTJN: No Fund data found.",
-          "source": "provider_safe_call"
-        }
-      ],
       "latency_ms": 861,
       "natural": true,
       "observed_at": "2026-08-09T20:40:44Z",
@@ -627,12 +582,57 @@
       "run_id": "31562660637",
       "schedule": "7 2 * * 0-5",
       "shard": "37/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJN: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJN: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJN: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJN: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJN: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJN: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 577,
+      "natural": true,
+      "observed_at": "2026-08-12T05:45:23Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31567478446",
+      "schedule": "7 4 * * 0-5",
+      "shard": "38/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-12T04:18:21Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/CTJN.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CTJN.json",
     "payload_sha256": "026d8ff63c861dfb34180fbd672ba1526d0776e5632836e89a3e8978ed7208e5",
     "quote_as_of": "2026-06-09T17:11:49Z",
     "source_as_of": "2026-06-09T17:11:49Z"
@@ -642,6 +642,7 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [
       {
@@ -675,20 +676,29 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 465,
+    "latency_ms": 577,
     "natural": true,
-    "observed_at": "2026-08-12T04:17:21Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31562660637",
-    "schedule": "7 2 * * 0-5",
-    "shard": "37/72"
+    "run_id": "31567478446",
+    "schedule": "7 4 * * 0-5",
+    "shard": "38/72"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "provider_history_as_of": "2026-08-10",
+    "provider_quote_as_of": "2026-06-09T17:11:49Z",
+    "reason": "foreign_writer_conflict",
+    "run_attempt": 1,
+    "run_id": "31567478446"
   },
   "lkg": {
-    "fetched_at": "2026-08-11T09:14:38Z",
-    "history_as_of": "2026-08-10",
+    "fetched_at": "2026-08-12T04:18:21Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CTJN.json",
-    "payload_sha256": "c2597efac5d9b53dc41e16b7b8bf2c862d2237f87675d84fd7efdee93ff81d67",
+    "payload_sha256": "026d8ff63c861dfb34180fbd672ba1526d0776e5632836e89a3e8978ed7208e5",
     "quote_as_of": "2026-06-09T17:11:49Z",
     "source_as_of": "2026-06-09T17:11:49Z"
   },
@@ -704,19 +714,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-06-09T17:11:49Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 43,
-    "classified_at": "2026-08-11T11:03:07Z",
-    "classified_run_id": "31484759300",
+    "age_business_days": 44,
+    "classified_at": "2026-08-12T05:45:23Z",
+    "classified_run_id": "31567478446",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CTJN holds LKG because Yahoo source date 2026-06-09T17:11:49Z is 43 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CTJN holds LKG because Yahoo source date 2026-06-09T17:11:49Z is 44 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-06-09T17:11:49Z"
   },
   "ticker": "CTJN",
-  "updated_at": "2026-08-12T04:17:21Z"
+  "updated_at": "2026-08-12T05:45:23Z"
 }

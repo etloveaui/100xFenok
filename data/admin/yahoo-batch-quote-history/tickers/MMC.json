@@ -16,31 +16,6 @@
           "source": "provider_safe_call"
         }
       ],
-      "latency_ms": 578,
-      "natural": true,
-      "observed_at": "2026-08-09T18:54:49Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31330182297",
-      "schedule": "7 18 * * 0-5",
-      "shard": "9/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: provider source timestamp is unavailable for MMC",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        }
-      ],
       "latency_ms": 500,
       "natural": true,
       "observed_at": "2026-08-10T05:42:10Z",
@@ -339,6 +314,31 @@
       "run_id": "31548744038",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: provider source timestamp is unavailable for MMC",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 406,
+      "natural": true,
+      "observed_at": "2026-08-12T05:45:23Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31567478446",
+      "schedule": "7 4 * * 0-5",
+      "shard": "38/72"
     }
   ],
   "discovered_from": [
@@ -351,18 +351,23 @@
     "failures": [
       {
         "attempt": 1,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
         "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 550,
+    "latency_ms": 406,
     "natural": true,
-    "observed_at": "2026-08-12T00:28:31Z",
+    "observed_at": "2026-08-12T05:45:23Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31548744038",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "31567478446",
+    "schedule": "7 4 * * 0-5",
+    "shard": "38/72"
   },
   "latest_failure": {
     "attempts_used": 1,
@@ -373,18 +378,23 @@
     "failures": [
       {
         "attempt": 1,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
         "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       }
     ],
     "lkg_status": "absent",
-    "observed_at": "2026-08-12T00:28:31Z",
+    "observed_at": "2026-08-12T05:45:23Z",
     "run_attempt": 1,
-    "run_id": "31548744038"
+    "run_id": "31567478446"
   },
   "resolution_state": "unavailable",
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MMC",
-  "updated_at": "2026-08-12T00:28:31Z"
+  "updated_at": "2026-08-12T05:45:23Z"
 }

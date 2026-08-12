@@ -52,12 +52,26 @@
       "run_id": "31562660637",
       "schedule": "7 2 * * 0-5",
       "shard": "37/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 436,
+      "natural": true,
+      "observed_at": "2026-08-12T05:45:23Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31567478446",
+      "schedule": "7 4 * * 0-5",
+      "shard": "38/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-12T04:17:55Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/MMAY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MMAY.json",
     "payload_sha256": "6a6f89ad1b11f7389056f5db8804dcca5b1130b9f237ef66bb73dc11a952a881",
     "quote_as_of": "2026-08-03T14:23:05Z",
     "source_as_of": "2026-08-03T14:23:05Z"
@@ -67,22 +81,32 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 462,
+    "latency_ms": 436,
     "natural": true,
-    "observed_at": "2026-08-12T04:17:21Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31562660637",
-    "schedule": "7 2 * * 0-5",
-    "shard": "37/72"
+    "run_id": "31567478446",
+    "schedule": "7 4 * * 0-5",
+    "shard": "38/72"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "provider_history_as_of": "2026-08-10",
+    "provider_quote_as_of": "2026-08-03T14:23:05Z",
+    "reason": "foreign_writer_conflict",
+    "run_attempt": 1,
+    "run_id": "31567478446"
   },
   "lkg": {
-    "fetched_at": "2026-08-07T13:27:45Z",
-    "history_as_of": "2026-08-06",
+    "fetched_at": "2026-08-12T04:17:55Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/MMAY.json",
-    "payload_sha256": "b980281543395aea5602508f61e460b794ce9b1a4c1226aa077e69f0763700fd",
+    "payload_sha256": "6a6f89ad1b11f7389056f5db8804dcca5b1130b9f237ef66bb73dc11a952a881",
     "quote_as_of": "2026-08-03T14:23:05Z",
     "source_as_of": "2026-08-03T14:23:05Z"
   },
@@ -98,13 +122,13 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-03T14:23:05Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-12T00:28:31Z",
-    "classified_run_id": "31548744038",
+    "classified_at": "2026-08-12T05:45:23Z",
+    "classified_run_id": "31567478446",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "MMAY holds LKG because Yahoo source date 2026-08-03T14:23:05Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -112,5 +136,5 @@
     "source_as_of": "2026-08-03T14:23:05Z"
   },
   "ticker": "MMAY",
-  "updated_at": "2026-08-12T04:17:21Z"
+  "updated_at": "2026-08-12T05:45:23Z"
 }

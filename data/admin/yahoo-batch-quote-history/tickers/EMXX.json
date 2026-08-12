@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -187,12 +174,26 @@
       "run_id": "31411954324",
       "schedule": "7 16 * * 0-5",
       "shard": "20/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: source timestamp regression for EMXX: quote_as_of 2026-06-24T16:07:21Z < 2026-08-10T13:46:03Z",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 442,
+      "natural": true,
+      "observed_at": "2026-08-12T05:45:23Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31567478446",
+      "schedule": "7 4 * * 0-5",
+      "shard": "38/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-10T17:04:58Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/EMXX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EMXX.json",
     "payload_sha256": "e62e8e3541ea402e6ab0620b2fec6c4947dcc4686f94739aecceaacfd2cad0b8",
     "quote_as_of": "2026-08-10T13:46:03Z",
     "source_as_of": "2026-08-10"
@@ -202,24 +203,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: source timestamp regression for EMXX: quote_as_of 2026-06-24T16:07:21Z < 2026-08-10T13:46:03Z",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 504,
+    "latency_ms": 442,
     "natural": true,
-    "observed_at": "2026-08-10T17:04:11Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31411954324",
-    "schedule": "7 16 * * 0-5",
-    "shard": "20/72"
+    "run_id": "31567478446",
+    "schedule": "7 4 * * 0-5",
+    "shard": "38/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: source timestamp regression for EMXX: quote_as_of 2026-06-24T16:07:21Z < 2026-08-10T13:46:03Z",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "run_attempt": 1,
+    "run_id": "31567478446"
   },
   "lkg": {
-    "fetched_at": "2026-08-09T03:52:54Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-10T17:04:58Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/EMXX.json",
-    "payload_sha256": "7a158fa71f7d1dc1b1fa5bd38c9788049d074710fc6c1a9aab2acd17138bacec",
-    "quote_as_of": "2026-06-24T16:07:21Z",
-    "source_as_of": "2026-06-24T16:07:21Z"
+    "payload_sha256": "e62e8e3541ea402e6ab0620b2fec6c4947dcc4686f94739aecceaacfd2cad0b8",
+    "quote_as_of": "2026-08-10T13:46:03Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -233,8 +247,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 31,
@@ -247,5 +261,5 @@
     "source_as_of": "2026-06-24T16:07:21Z"
   },
   "ticker": "EMXX",
-  "updated_at": "2026-08-10T17:04:11Z"
+  "updated_at": "2026-08-12T05:45:23Z"
 }

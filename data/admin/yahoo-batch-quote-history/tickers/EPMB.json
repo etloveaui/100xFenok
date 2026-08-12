@@ -39,6 +39,20 @@
       "run_id": "31562660637",
       "schedule": "7 2 * * 0-5",
       "shard": "37/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 580,
+      "natural": true,
+      "observed_at": "2026-08-12T05:45:23Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31567478446",
+      "schedule": "7 4 * * 0-5",
+      "shard": "38/72"
     }
   ],
   "current": {
@@ -54,17 +68,17 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: source timestamp regression for EPMB: quote_as_of 2026-07-24T19:59:46Z < 2026-08-05T13:46:04Z",
+    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 515,
+    "latency_ms": 580,
     "natural": true,
-    "observed_at": "2026-08-12T04:17:21Z",
+    "observed_at": "2026-08-12T05:45:23Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31562660637",
-    "schedule": "7 2 * * 0-5",
-    "shard": "37/72"
+    "run_id": "31567478446",
+    "schedule": "7 4 * * 0-5",
+    "shard": "38/72"
   },
   "latest_failure": {
     "attempts_used": 1,
@@ -77,6 +91,15 @@
     "observed_at": "2026-08-12T04:17:21Z",
     "run_attempt": 1,
     "run_id": "31562660637"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "provider_history_as_of": "2026-08-10",
+    "provider_quote_as_of": "2026-07-24T19:59:46Z",
+    "reason": "foreign_writer_conflict",
+    "run_attempt": 1,
+    "run_id": "31567478446"
   },
   "lkg": {
     "fetched_at": "2026-08-05T19:49:40Z",
@@ -112,5 +135,5 @@
     "source_as_of": "2026-07-13T18:32:06Z"
   },
   "ticker": "EPMB",
-  "updated_at": "2026-08-12T04:17:21Z"
+  "updated_at": "2026-08-12T05:45:23Z"
 }

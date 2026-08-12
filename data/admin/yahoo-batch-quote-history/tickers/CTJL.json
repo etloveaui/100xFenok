@@ -232,12 +232,57 @@
       "run_id": "31562660637",
       "schedule": "7 2 * * 0-5",
       "shard": "37/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 631,
+      "natural": true,
+      "observed_at": "2026-08-12T05:45:23Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31567478446",
+      "schedule": "7 4 * * 0-5",
+      "shard": "38/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-12T04:18:02Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/CTJL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CTJL.json",
     "payload_sha256": "b86dcf5ee4cb8f4903d69ccdda0bc1ca369ae06bf57a3f1b3e3adb413971d668",
     "quote_as_of": "2026-08-03T14:36:32Z",
     "source_as_of": "2026-08-03T14:36:32Z"
@@ -247,6 +292,7 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [
       {
@@ -280,20 +326,29 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 526,
+    "latency_ms": 631,
     "natural": true,
-    "observed_at": "2026-08-12T04:17:21Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31562660637",
-    "schedule": "7 2 * * 0-5",
-    "shard": "37/72"
+    "run_id": "31567478446",
+    "schedule": "7 4 * * 0-5",
+    "shard": "38/72"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "provider_history_as_of": "2026-08-10",
+    "provider_quote_as_of": "2026-08-03T14:36:32Z",
+    "reason": "foreign_writer_conflict",
+    "run_attempt": 1,
+    "run_id": "31567478446"
   },
   "lkg": {
-    "fetched_at": "2026-08-09T13:15:20Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-12T04:18:02Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CTJL.json",
-    "payload_sha256": "864008ce1149bceb7faf7828e5011693a8bd1dff6c26f568d63b9d9d4daec431",
+    "payload_sha256": "b86dcf5ee4cb8f4903d69ccdda0bc1ca369ae06bf57a3f1b3e3adb413971d668",
     "quote_as_of": "2026-08-03T14:36:32Z",
     "source_as_of": "2026-08-03T14:36:32Z"
   },
@@ -309,13 +364,13 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-03T14:36:32Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-12T00:28:31Z",
-    "classified_run_id": "31548744038",
+    "classified_at": "2026-08-12T05:45:23Z",
+    "classified_run_id": "31567478446",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "CTJL holds LKG because Yahoo source date 2026-08-03T14:36:32Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -323,5 +378,5 @@
     "source_as_of": "2026-08-03T14:36:32Z"
   },
   "ticker": "CTJL",
-  "updated_at": "2026-08-12T04:17:21Z"
+  "updated_at": "2026-08-12T05:45:23Z"
 }

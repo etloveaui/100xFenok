@@ -136,6 +136,20 @@
       "run_id": "31557511991",
       "schedule": "7 0 * * 0-5",
       "shard": "36/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 712,
+      "natural": true,
+      "observed_at": "2026-08-12T05:45:23Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31567478446",
+      "schedule": "7 4 * * 0-5",
+      "shard": "38/72"
     }
   ],
   "current": {
@@ -151,17 +165,17 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: source timestamp regression for GEVC: quote_as_of 2026-07-29T16:46:45Z < 2026-08-10T13:46:04Z",
+    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 727,
+    "latency_ms": 712,
     "natural": true,
-    "observed_at": "2026-08-12T02:41:04Z",
+    "observed_at": "2026-08-12T05:45:23Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31557511991",
-    "schedule": "7 0 * * 0-5",
-    "shard": "36/72"
+    "run_id": "31567478446",
+    "schedule": "7 4 * * 0-5",
+    "shard": "38/72"
   },
   "latest_failure": {
     "attempts_used": 1,
@@ -174,6 +188,15 @@
     "observed_at": "2026-08-12T02:41:04Z",
     "run_attempt": 1,
     "run_id": "31557511991"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "provider_history_as_of": "2026-08-10",
+    "provider_quote_as_of": "2026-07-29T16:46:45Z",
+    "reason": "foreign_writer_conflict",
+    "run_attempt": 1,
+    "run_id": "31567478446"
   },
   "lkg": {
     "fetched_at": "2026-08-10T17:05:06Z",
@@ -209,5 +232,5 @@
     "source_as_of": "2026-07-29T16:46:45Z"
   },
   "ticker": "GEVC",
-  "updated_at": "2026-08-12T02:41:04Z"
+  "updated_at": "2026-08-12T05:45:23Z"
 }

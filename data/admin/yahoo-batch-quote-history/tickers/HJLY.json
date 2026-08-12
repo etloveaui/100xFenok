@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -189,6 +176,20 @@
       "run_id": "31562660637",
       "schedule": "7 2 * * 0-5",
       "shard": "37/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 456,
+      "natural": true,
+      "observed_at": "2026-08-12T05:45:23Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31567478446",
+      "schedule": "7 4 * * 0-5",
+      "shard": "38/72"
     }
   ],
   "current": {
@@ -207,14 +208,14 @@
     "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 483,
+    "latency_ms": 456,
     "natural": true,
-    "observed_at": "2026-08-12T04:17:21Z",
+    "observed_at": "2026-08-12T05:45:23Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31562660637",
-    "schedule": "7 2 * * 0-5",
-    "shard": "37/72"
+    "run_id": "31567478446",
+    "schedule": "7 4 * * 0-5",
+    "shard": "38/72"
   },
   "latest_failure": {
     "attempts_used": 1,
@@ -230,12 +231,12 @@
   },
   "latest_promotion_deferral": {
     "event_name": "schedule",
-    "observed_at": "2026-08-12T04:17:21Z",
-    "provider_history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "provider_history_as_of": "2026-08-10",
     "provider_quote_as_of": "2026-07-24T16:48:53Z",
     "reason": "foreign_writer_conflict",
     "run_attempt": 1,
-    "run_id": "31562660637"
+    "run_id": "31567478446"
   },
   "lkg": {
     "fetched_at": "2026-08-10T17:05:10Z",
@@ -271,5 +272,5 @@
     "source_as_of": "2026-07-24T16:48:53Z"
   },
   "ticker": "HJLY",
-  "updated_at": "2026-08-12T04:17:21Z"
+  "updated_at": "2026-08-12T05:45:23Z"
 }
