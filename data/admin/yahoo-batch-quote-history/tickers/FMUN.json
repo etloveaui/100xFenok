@@ -12,31 +12,57 @@
       "run_id": "30771231562",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 563,
+      "natural": true,
+      "observed_at": "2026-08-11T07:21:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31468517777",
+      "schedule": "7 6 * * 0-5",
+      "shard": "27/72"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-11T13:36:55Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31496919771",
+      "schedule": "7 12 * * 0-5",
+      "shard": "30/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-02T23:00:44Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FMUN.json",
-    "payload_sha256": "c910369c0304af46416270edc8133df53d3fdf61bf02f33d380c6f8d2f4dc958",
-    "quote_as_of": "2026-07-31T20:00:00Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-11T07:22:19Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/FMUN.json",
+    "payload_sha256": "c9117374676707701cacf89029aac07b7eed1c9b17644eecee6157592b06060a",
+    "quote_as_of": "2026-08-10T20:00:00Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 613,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-02T22:59:12Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-11T13:36:55Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "30771231562",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31496919771",
+    "schedule": "7 12 * * 0-5",
+    "shard": "30/72"
   },
   "lkg": {
     "fetched_at": "2026-08-02T23:00:44Z",
@@ -49,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-02T22:59:12Z",
-    "payload_sha256": "fb3cd2e5d58dd23dbdfa0c9255620a0729115d0380fdc94e710fbcc54520e61d",
-    "quote_as_of": "2026-07-31T20:00:00Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T07:21:44Z",
+    "payload_sha256": "0c09003cb916d72ac767d88ff233de2de8463e14efc81bb06418271ca322325a",
+    "quote_as_of": "2026-08-10T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30771231562",
+    "run_id": "31468517777",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +98,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "FMUN",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T13:36:55Z"
 }

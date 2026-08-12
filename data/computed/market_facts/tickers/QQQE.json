@@ -2,18 +2,18 @@
   "schema_version": "market-facts/v1",
   "ticker": "QQQE",
   "asset_type": "etf",
-  "generated_at": "2026-07-30T01:33:27Z",
+  "generated_at": "2026-08-12T01:38:27Z",
   "source_as_of": "2026-06-18",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
   "identity": {
-    "name": "QQQE",
-    "exchange": null,
-    "currency": null,
+    "name": "Direxion NASDAQ-100 Equal Weighted Index Shares",
+    "exchange": "NGM",
+    "currency": "USD",
     "sector": null,
     "industry": null,
-    "fund_family": null,
-    "category": null
+    "fund_family": "Direxion Funds",
+    "category": "Large Growth"
   },
   "facts": {
     "price": {
@@ -41,10 +41,10 @@
       "candidate_count": 1
     },
     "previous_close": {
-      "value": 121.68,
-      "source": "stockanalysis.quote",
-      "as_of": "2026-06-18",
-      "fetched_at": "2026-06-19T09:38:13Z",
+      "value": 122.15,
+      "source": "yf",
+      "as_of": "2026-08-11",
+      "fetched_at": "2026-08-11T21:34:11Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -53,6 +53,13 @@
       ],
       "candidates": [
         {
+          "value": 122.15,
+          "source": "yf",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-11T21:34:11Z",
+          "confidence": "observed"
+        },
+        {
           "value": 121.68,
           "source": "stockanalysis.quote",
           "as_of": "2026-06-18",
@@ -60,7 +67,7 @@
           "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change": {
       "value": 2.22,
@@ -81,9 +88,16 @@
           "as_of": "2026-06-18",
           "fetched_at": "2026-06-19T09:38:13Z",
           "confidence": "observed"
+        },
+        {
+          "value": 0.20999908,
+          "source": "yf",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-11T21:34:11Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "change_pct": {
       "value": 1.86,
@@ -104,15 +118,22 @@
           "as_of": "2026-06-18",
           "fetched_at": "2026-06-19T09:38:13Z",
           "confidence": "observed"
+        },
+        {
+          "value": 0.17191902,
+          "source": "yf",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-11T21:34:11Z",
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "total_assets": {
-      "value": 1310000000.0,
-      "source": "stockanalysis.overview",
-      "as_of": "2026-06-18",
-      "fetched_at": "2026-06-19T09:38:13Z",
+      "value": 1329086976,
+      "source": "yf",
+      "as_of": "2026-08-11",
+      "fetched_at": "2026-08-11T21:34:11Z",
       "confidence": "observed",
       "policy": [
         "yf",
@@ -121,6 +142,13 @@
       ],
       "candidates": [
         {
+          "value": 1329086976,
+          "source": "yf",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-11T21:34:11Z",
+          "confidence": "observed"
+        },
+        {
           "value": 1310000000.0,
           "source": "stockanalysis.overview",
           "as_of": "2026-06-18",
@@ -128,13 +156,34 @@
           "confidence": "observed"
         }
       ],
+      "candidate_count": 2
+    },
+    "trailing_pe": {
+      "value": 30.401009,
+      "source": "yf",
+      "as_of": "2026-08-11",
+      "fetched_at": "2026-08-11T21:34:11Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 30.401009,
+          "source": "yf",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-11T21:34:11Z",
+          "confidence": "observed"
+        }
+      ],
       "candidate_count": 1
     },
     "dividend_yield": {
-      "value": 0.52,
-      "source": "stockanalysis.overview",
-      "as_of": "2026-06-18",
-      "fetched_at": "2026-06-19T09:38:13Z",
+      "value": 0.58,
+      "source": "yf",
+      "as_of": "2026-08-11",
+      "fetched_at": "2026-08-11T21:34:11Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -145,6 +194,14 @@
       ],
       "candidates": [
         {
+          "value": 0.58,
+          "source": "yf",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-11T21:34:11Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 0.52,
           "source": "stockanalysis.overview",
           "as_of": "2026-06-18",
@@ -153,7 +210,7 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "beta": {
       "value": 1.07,
@@ -179,9 +236,9 @@
     },
     "expense_ratio": {
       "value": 0.35,
-      "source": "stockanalysis.overview",
-      "as_of": "2026-06-18",
-      "fetched_at": "2026-06-19T09:38:13Z",
+      "source": "yf",
+      "as_of": "2026-08-11",
+      "fetched_at": "2026-08-11T21:34:11Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -192,6 +249,14 @@
       "candidates": [
         {
           "value": 0.35,
+          "source": "yf",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-11T21:34:11Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 0.35,
           "source": "stockanalysis.overview",
           "as_of": "2026-06-18",
           "fetched_at": "2026-06-19T09:38:13Z",
@@ -199,14 +264,14 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_1m": {
-      "value": 8.006,
-      "source": "stockanalysis.detail.performance",
-      "as_of": "2026-06-18",
-      "fetched_at": "2026-06-19T09:38:13Z",
-      "confidence": "observed",
+      "value": 2.6940822856602797,
+      "source": "yf.history_1y",
+      "as_of": "2026-08-11",
+      "fetched_at": "2026-08-11T21:34:11Z",
+      "confidence": "derived",
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
@@ -215,6 +280,14 @@
         "stockanalysis.etf_universe.performance"
       ],
       "candidates": [
+        {
+          "value": 2.6940822856602797,
+          "source": "yf.history_1y",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-11T21:34:11Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
         {
           "value": 8.006,
           "source": "stockanalysis.detail.performance",
@@ -227,18 +300,18 @@
           "value": 8.006,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
-          "fetched_at": "2026-07-30T01:04:24Z",
+          "fetched_at": "2026-08-12T00:45:16Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_3m": {
-      "value": 21.417085870597532,
-      "source": "stockanalysis.detail.history",
-      "as_of": "2026-06-18",
-      "fetched_at": "2026-06-19T09:38:13Z",
+      "value": 7.3498147311959094,
+      "source": "yf.history_1y",
+      "as_of": "2026-08-11",
+      "fetched_at": "2026-08-11T21:34:11Z",
       "confidence": "derived",
       "unit": "percent_points",
       "policy": [
@@ -246,6 +319,14 @@
         "stockanalysis.detail.history"
       ],
       "candidates": [
+        {
+          "value": 7.3498147311959094,
+          "source": "yf.history_1y",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-11T21:34:11Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
         {
           "value": 21.417085870597532,
           "source": "stockanalysis.detail.history",
@@ -255,14 +336,14 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_ytd": {
-      "value": 19.127,
-      "source": "stockanalysis.detail.performance",
-      "as_of": "2026-06-18",
-      "fetched_at": "2026-06-19T09:38:13Z",
-      "confidence": "observed",
+      "value": 19.920707723422463,
+      "source": "yf.history_1y",
+      "as_of": "2026-08-11",
+      "fetched_at": "2026-08-11T21:34:11Z",
+      "confidence": "derived",
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
@@ -272,6 +353,14 @@
         "yf"
       ],
       "candidates": [
+        {
+          "value": 19.920707723422463,
+          "source": "yf.history_1y",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-11T21:34:11Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
         {
           "value": 19.127,
           "source": "stockanalysis.detail.performance",
@@ -284,19 +373,27 @@
           "value": 19.127,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
-          "fetched_at": "2026-07-30T01:04:24Z",
+          "fetched_at": "2026-08-12T00:45:16Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 14.85784,
+          "source": "yf",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-11T21:34:11Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 4
     },
     "return_1y": {
-      "value": 28.774,
-      "source": "stockanalysis.detail.performance",
-      "as_of": "2026-06-18",
-      "fetched_at": "2026-06-19T09:38:13Z",
-      "confidence": "observed",
+      "value": 25.184356125572055,
+      "source": "yf.history_1y",
+      "as_of": "2026-08-11",
+      "fetched_at": "2026-08-11T21:34:11Z",
+      "confidence": "derived",
       "unit": "percent_points",
       "policy": [
         "yf.history_1y",
@@ -306,6 +403,14 @@
         "yf"
       ],
       "candidates": [
+        {
+          "value": 25.184356125572055,
+          "source": "yf.history_1y",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-11T21:34:11Z",
+          "confidence": "derived",
+          "unit": "percent_points"
+        },
         {
           "value": 28.774,
           "source": "stockanalysis.detail.performance",
@@ -318,25 +423,41 @@
           "value": 28.774,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
-          "fetched_at": "2026-07-30T01:04:24Z",
+          "fetched_at": "2026-08-12T00:45:16Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 24.174034,
+          "source": "yf",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-11T21:34:11Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 4
     },
     "return_3y_avg": {
-      "value": 9.07141337647488,
-      "source": "stockanalysis.detail.history",
-      "as_of": "2026-06-01",
-      "fetched_at": "2026-06-19T09:38:13Z",
-      "confidence": "derived",
+      "value": 17.163560999999998,
+      "source": "yf",
+      "as_of": "2026-08-11",
+      "fetched_at": "2026-08-11T21:34:11Z",
+      "confidence": "observed",
       "unit": "percent_points",
       "policy": [
         "yf",
         "stockanalysis.detail.history"
       ],
       "candidates": [
+        {
+          "value": 17.163560999999998,
+          "source": "yf",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-11T21:34:11Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
         {
           "value": 9.07141337647488,
           "source": "stockanalysis.detail.history",
@@ -346,13 +467,13 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_5y_avg": {
-      "value": 9.934,
-      "source": "stockanalysis.detail.performance",
-      "as_of": "2026-06-18",
-      "fetched_at": "2026-06-19T09:38:13Z",
+      "value": 8.9912504,
+      "source": "yf",
+      "as_of": "2026-08-11",
+      "fetched_at": "2026-08-11T21:34:11Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -363,6 +484,14 @@
       ],
       "candidates": [
         {
+          "value": 8.9912504,
+          "source": "yf",
+          "as_of": "2026-08-11",
+          "fetched_at": "2026-08-11T21:34:11Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
           "value": 9.934,
           "source": "stockanalysis.detail.performance",
           "as_of": "2026-06-18",
@@ -374,12 +503,12 @@
           "value": 9.934,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
-          "fetched_at": "2026-07-30T01:04:24Z",
+          "fetched_at": "2026-08-12T00:45:16Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 2
+      "candidate_count": 3
     },
     "return_10y_avg": {
       "value": 15.853,
@@ -406,7 +535,7 @@
           "value": 15.853,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
-          "fetched_at": "2026-07-30T01:04:24Z",
+          "fetched_at": "2026-08-12T00:45:16Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -438,7 +567,7 @@
           "value": 14.745,
           "source": "stockanalysis.etf_screener.performance",
           "as_of": null,
-          "fetched_at": "2026-07-30T01:04:24Z",
+          "fetched_at": "2026-08-12T00:45:16Z",
           "confidence": "observed",
           "unit": "percent_points"
         }
@@ -885,18 +1014,18 @@
       "source": "stockanalysis.overview.description",
       "confidence": "high"
     },
-    "yahoo_funds_data_available": false
+    "yahoo_funds_data_available": true
   },
   "financials": null,
   "sources": {
-    "yf": false,
+    "yf": true,
     "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
-    "yf": null,
+    "yf": "yf/finance/QQQE.json",
     "stockanalysis": "stockanalysis/etfs/QQQE.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/surfaces/etf_screener.json",

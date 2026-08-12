@@ -38,15 +38,28 @@
       "run_id": "31023479262",
       "schedule": "7 14 * * 0-5",
       "shard": "43/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 783,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-05T16:07:57Z",
-    "history_as_of": "2026-08-04",
+    "fetched_at": "2026-08-12T02:42:02Z",
+    "history_as_of": "2026-08-11",
     "path": "data/yf/finance/AOTS.json",
-    "payload_sha256": "dd61e665d092881b150964fa471726f13ffcae329bf998bb9c3e3cc4801e8bbc",
-    "quote_as_of": "2026-08-03T15:25:39Z",
-    "source_as_of": "2026-08-03T15:25:39Z"
+    "payload_sha256": "95f04865b4d0b105c1cbbc67bcb8821769e7269f590b9db39f442b9a3b102121",
+    "quote_as_of": "2026-08-11T14:28:43Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -55,30 +68,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 624,
+    "latency_ms": 783,
     "natural": true,
-    "observed_at": "2026-08-05T16:06:31Z",
+    "observed_at": "2026-08-12T02:41:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31023479262",
-    "schedule": "7 14 * * 0-5",
-    "shard": "43/72"
+    "run_id": "31557511991",
+    "schedule": "7 0 * * 0-5",
+    "shard": "36/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-05T16:07:57Z",
+    "history_as_of": "2026-08-04",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AOTS.json",
+    "payload_sha256": "dd61e665d092881b150964fa471726f13ffcae329bf998bb9c3e3cc4801e8bbc",
+    "quote_as_of": "2026-08-03T15:25:39Z",
+    "source_as_of": "2026-08-03T15:25:39Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-04",
-    "observed_at": "2026-08-05T16:06:31Z",
-    "payload_sha256": "a052dea15240714b7fe30948ceb4d4a400480808029511419af2a3c254aead85",
-    "quote_as_of": "2026-08-03T15:25:39Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T02:41:04Z",
+    "payload_sha256": "4e27adfefd898ff59c04f822ce9e489f7e833b7c6b23dbecc5610122c8caaefc",
+    "quote_as_of": "2026-08-11T14:28:43Z",
     "run_attempt": 1,
-    "run_id": "31023479262",
+    "run_id": "31557511991",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03T15:25:39Z"
+    "source_as_of": "2026-08-11"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-12T00:28:31Z",
+    "classified_run_id": "31548744038",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "AOTS holds LKG because Yahoo source date 2026-08-03T15:25:39Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-03T15:25:39Z"
+  },
   "ticker": "AOTS",
-  "updated_at": "2026-08-05T16:06:31Z"
+  "updated_at": "2026-08-12T02:41:04Z"
 }

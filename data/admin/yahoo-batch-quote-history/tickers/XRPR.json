@@ -56,15 +56,103 @@
       "run_id": "30771231562",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: XRPR: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: XRPR: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: XRPR: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: XRPR: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: XRPR: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: XRPR: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 618,
+      "natural": true,
+      "observed_at": "2026-08-11T07:21:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31468517777",
+      "schedule": "7 6 * * 0-5",
+      "shard": "27/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: XRPR: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: XRPR: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: XRPR: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: XRPR: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: XRPR: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: XRPR: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 525,
+      "natural": true,
+      "observed_at": "2026-08-12T04:17:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31562660637",
+      "schedule": "7 2 * * 0-5",
+      "shard": "37/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-02T23:00:03Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XRPR.json",
-    "payload_sha256": "c14398f80578e81397ff6f41e3c4ef70b2af8d03680c2e7a87a277557729081e",
-    "quote_as_of": "2026-07-31T19:59:28Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-12T04:20:46Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/XRPR.json",
+    "payload_sha256": "81713285a4c392c804baade48d4597713d7c349b1083bd94a57412437725f00f",
+    "quote_as_of": "2026-08-11T19:59:45Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -104,14 +192,14 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 532,
+    "latency_ms": 525,
     "natural": true,
-    "observed_at": "2026-08-02T22:59:12Z",
+    "observed_at": "2026-08-12T04:17:21Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30771231562",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31562660637",
+    "schedule": "7 2 * * 0-5",
+    "shard": "37/72"
   },
   "lkg": {
     "fetched_at": "2026-08-02T23:00:03Z",
@@ -124,17 +212,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-02T22:59:12Z",
-    "payload_sha256": "97c576b01f6d9565e9f03663e781b3eae9ab96d9dcd4eb1c552ecd7a07c178d7",
-    "quote_as_of": "2026-07-31T19:59:28Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "payload_sha256": "27c9bfe9cc8906d0494f382a1c5388f5638ed29e732437c9903314d6094ef1bf",
+    "quote_as_of": "2026-08-11T19:59:45Z",
     "run_attempt": 1,
-    "run_id": "30771231562",
+    "run_id": "31562660637",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-11"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -147,5 +235,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "XRPR",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-12T04:17:21Z"
 }

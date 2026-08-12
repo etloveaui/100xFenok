@@ -12,31 +12,57 @@
       "run_id": "30771231562",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 699,
+      "natural": true,
+      "observed_at": "2026-08-11T07:21:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31468517777",
+      "schedule": "7 6 * * 0-5",
+      "shard": "27/72"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-11T13:36:55Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31496919771",
+      "schedule": "7 12 * * 0-5",
+      "shard": "30/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-02T23:00:47Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FNDA.json",
-    "payload_sha256": "7c203bc2af631c71cd70ef759849316b07c64f769ce398b9f6253dd523d81ab0",
-    "quote_as_of": "2026-07-31T19:59:55Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-11T07:22:20Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/FNDA.json",
+    "payload_sha256": "07b169f5893e3f20eb5904b66e5b7180a99f053837b97a60f1953bcbc90fd4d5",
+    "quote_as_of": "2026-08-10T20:00:00Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 712,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-02T22:59:12Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-11T13:36:55Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "30771231562",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31496919771",
+    "schedule": "7 12 * * 0-5",
+    "shard": "30/72"
   },
   "lkg": {
     "fetched_at": "2026-08-02T23:00:47Z",
@@ -49,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-02T22:59:12Z",
-    "payload_sha256": "42f7216f945137e20176734eb1acd64f319c07398b534a215cef94c59583b3f1",
-    "quote_as_of": "2026-07-31T19:59:55Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T07:21:44Z",
+    "payload_sha256": "d0799c41fb9c0b57a96e1e04cc1e35160414589bcf173eaba05b1d93e029b086",
+    "quote_as_of": "2026-08-10T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30771231562",
+    "run_id": "31468517777",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +98,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "FNDA",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T13:36:55Z"
 }

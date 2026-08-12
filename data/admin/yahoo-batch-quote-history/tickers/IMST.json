@@ -12,13 +12,40 @@
       "run_id": "31296241377",
       "schedule": "7 4 * * 0-5",
       "shard": "2/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 788,
+      "natural": true,
+      "observed_at": "2026-08-11T09:13:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31476569032",
+      "schedule": "7 8 * * 0-5",
+      "shard": "28/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 815,
+      "natural": true,
+      "observed_at": "2026-08-11T13:36:55Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31496919771",
+      "schedule": "7 12 * * 0-5",
+      "shard": "30/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T05:18:38Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-11T09:13:55Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/IMST.json",
-    "payload_sha256": "02a636f494f772a0ea46133750276532f3895833dec5304eb8bfe43e1e5a1c4f",
+    "payload_sha256": "18f362427e401f829bfc56cb319e67aa0cd77b4fa97310d4917104edcc310535",
     "quote_as_of": "2026-07-31T20:00:00Z",
     "source_as_of": "2026-07-31T20:00:00Z"
   },
@@ -27,34 +54,44 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 987,
+    "latency_ms": 815,
     "natural": true,
-    "observed_at": "2026-08-09T05:15:44Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-11T13:36:55Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31296241377",
-    "schedule": "7 4 * * 0-5",
-    "shard": "2/72"
+    "run_id": "31496919771",
+    "schedule": "7 12 * * 0-5",
+    "shard": "30/72"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-11T13:36:55Z",
+    "provider_history_as_of": "2026-08-10",
+    "provider_quote_as_of": "2026-07-31T20:00:00Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "31496919771"
   },
   "lkg": {
-    "fetched_at": "2026-08-09T05:18:38Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-11T09:13:55Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/IMST.json",
-    "payload_sha256": "02a636f494f772a0ea46133750276532f3895833dec5304eb8bfe43e1e5a1c4f",
+    "payload_sha256": "18f362427e401f829bfc56cb319e67aa0cd77b4fa97310d4917104edcc310535",
     "quote_as_of": "2026-07-31T20:00:00Z",
     "source_as_of": "2026-07-31T20:00:00Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T05:15:44Z",
-    "payload_sha256": "bf5df221d2a48170a1304087b746fa44383e67895a1df36c2dabb3ab4c90fc9a",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T09:13:07Z",
+    "payload_sha256": "231922ff84432abaf0a940340313a0306d7bdbf1d658a4cee3873ee6ae884c13",
     "quote_as_of": "2026-07-31T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31296241377",
+    "run_id": "31476569032",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-31T20:00:00Z"
   },
@@ -63,8 +100,8 @@
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-11T00:02:00Z",
-    "classified_run_id": "31444023136",
+    "classified_at": "2026-08-11T11:03:07Z",
+    "classified_run_id": "31484759300",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
     "message": "IMST holds LKG because Yahoo source date 2026-07-31T20:00:00Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
@@ -72,5 +109,5 @@
     "source_as_of": "2026-07-31T20:00:00Z"
   },
   "ticker": "IMST",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T13:36:55Z"
 }

@@ -12,15 +12,41 @@
       "run_id": "30860500094",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 565,
+      "natural": true,
+      "observed_at": "2026-08-11T07:21:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31468517777",
+      "schedule": "7 6 * * 0-5",
+      "shard": "27/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 571,
+      "natural": true,
+      "observed_at": "2026-08-12T04:17:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31562660637",
+      "schedule": "7 2 * * 0-5",
+      "shard": "37/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-03T23:01:15Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GVUS.json",
-    "payload_sha256": "b2c6e189c597542c70e3f1efbb28ebb6afea96e1ca6833b5c40e2930b37db2fa",
-    "quote_as_of": "2026-07-31T20:00:00Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-12T04:19:30Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/GVUS.json",
+    "payload_sha256": "f9726ba9b50f78bca83567d32b173ddb74ee26ef19e9896cd6600e140c9e163b",
+    "quote_as_of": "2026-08-11T19:59:50Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 992,
+    "latency_ms": 571,
     "natural": true,
-    "observed_at": "2026-08-03T22:58:08Z",
+    "observed_at": "2026-08-12T04:17:21Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30860500094",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31562660637",
+    "schedule": "7 2 * * 0-5",
+    "shard": "37/72"
   },
   "lkg": {
     "fetched_at": "2026-08-03T23:01:15Z",
@@ -49,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-03T22:58:08Z",
-    "payload_sha256": "1b18aa87318709547a221e6c57c683f95ec4683ddb8b05343e879f9c0673a0b1",
-    "quote_as_of": "2026-07-31T20:00:00Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "payload_sha256": "00b756138815ef40ee96b34e2b6dc0a81dc2f138022db4f00d4a204720b959c0",
+    "quote_as_of": "2026-08-11T19:59:50Z",
     "run_attempt": 1,
-    "run_id": "30860500094",
+    "run_id": "31562660637",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-11"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +98,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "GVUS",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-12T04:17:21Z"
 }

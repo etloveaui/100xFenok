@@ -3,72 +3,83 @@
   "source": "stockanalysis",
   "asset_type": "stock",
   "ticker": "AMAT",
-  "fetched_at": "2026-07-08T22:46:30Z",
+  "source_as_of": "2026-08-11T14:38:41Z",
+  "fetched_at": "2026-08-11T14:38:48Z",
   "endpoints": {
-    "overview": "/api/symbol/s/AMAT/overview",
+    "overview": "/stocks/amat/__data.json",
     "history": "/api/symbol/s/AMAT/history?range=1Y&period=Monthly",
     "quote": "/api/quotes/s/AMAT"
   },
   "normalized": {
     "overview": {
-      "marketCap": "452.95B",
+      "marketCap": "425.56B",
       "revenue": "29.02B",
       "revenue_type": "ttm",
       "netIncome": "8.51B",
       "sharesOut": "793.96M",
       "eps": "10.63",
-      "peRatio": "52.15",
-      "forwardPE": "37.51",
-      "dividend": "$2.12 (0.37%)",
-      "beta": "1.57",
+      "peRatio": "49.11",
+      "forwardPE": "34.26",
+      "dividend": "$2.12 (0.40%)",
+      "beta": "1.62",
       "analysts": "Strong Buy",
-      "target": "586.63 (+2.83%)",
+      "target": "629.06 (+17.36%)",
       "earningsDate": "Aug 13, 2026"
     },
     "quote": {
-      "p": 570.5,
-      "pd": 570.5,
-      "c": 16,
-      "cp": 2.89,
-      "cl": 554.5,
+      "p": 535.6,
+      "pd": 535.6,
+      "c": 13.48,
+      "cp": 2.58,
+      "cl": 522.12,
       "cdr": 1,
-      "o": 547.1,
-      "h": 578.14,
-      "l": 546.18,
-      "v": 7509399,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
+      "o": 539.99,
+      "h": 539.99,
+      "l": 525.73,
+      "v": 1177405,
+      "ts": 1786459121023.2466,
+      "u": "Aug 11, 2026, 10:38 AM EDT",
+      "td": "2026-08-11",
       "h52": 739.67,
       "l52": 154.465,
       "ex": "NASDAQ",
-      "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 568.21,
-      "epd": 568.21,
-      "ec": -2.29,
-      "ecp": -0.4,
-      "eu": "Jul 8, 2026, 6:33 PM EDT",
-      "es": "After-hours",
-      "ets": 1783550034643.6182,
-      "etd": "2026-07-08",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1786459121023.2466,
+      "etd": null,
       "epv": null,
       "days": 0,
-      "exp": 1783550794730,
+      "exp": 1786459132904,
       "symbol": "AMAT",
       "uid": "AMAT"
     },
     "history": [
       {
+        "t": "2026-08-03",
+        "o": 498.86,
+        "h": 555.32,
+        "l": 491.68,
+        "c": 522.12,
+        "a": 522.12,
+        "v": 34293561,
+        "ch": 2.85
+      },
+      {
         "t": "2026-07-01",
         "o": 668.405,
         "h": 693.78,
-        "l": 527.63,
-        "c": 570.5,
-        "a": 570.5,
-        "v": 59391272,
-        "ch": -21.09
+        "l": 436.33,
+        "c": 507.67,
+        "a": 507.67,
+        "v": 200141181,
+        "ch": -29.78
       },
       {
         "t": "2026-06-01",
@@ -159,73 +170,53 @@
         "a": 232.065687,
         "v": 181463323,
         "ch": 13.85
-      },
-      {
-        "t": "2025-09-02",
-        "o": 156.72,
-        "h": 210.5,
-        "l": 154.465,
-        "c": 204.74,
-        "a": 203.831526,
-        "v": 186624668,
-        "ch": 27.36
-      },
-      {
-        "t": "2025-08-01",
-        "o": 176.6,
-        "h": 191.14,
-        "l": 157.94,
-        "c": 160.76,
-        "a": 160.046674,
-        "v": 171946987,
-        "ch": -10.46
       }
     ],
     "financials": {
       "path": "financials/AMAT.json",
-      "fetched_at": "2026-07-08T22:46:30Z",
+      "fetched_at": "2026-08-11T14:38:48Z",
       "role": "financial statement cross-check candidate; not valuation SSOT",
       "summary": {
         "annual": {
           "income": {
-            "field_count": 37,
+            "field_count": 31,
             "period_count": 6,
             "period": "annual"
           },
           "balance_sheet": {
-            "field_count": 37,
+            "field_count": 35,
             "period_count": 6,
             "period": "annual"
           },
           "cash_flow": {
-            "field_count": 37,
+            "field_count": 34,
             "period_count": 6,
             "period": "annual"
           },
           "ratios": {
-            "field_count": 36,
+            "field_count": 35,
             "period_count": 6,
             "period": "annual"
           }
         },
         "quarterly": {
           "income": {
-            "field_count": 37,
+            "field_count": 31,
             "period_count": 20,
             "period": "quarterly"
           },
           "balance_sheet": {
-            "field_count": 37,
+            "field_count": 35,
             "period_count": 20,
             "period": "quarterly"
           },
           "cash_flow": {
-            "field_count": 37,
+            "field_count": 34,
             "period_count": 20,
             "period": "quarterly"
           },
           "ratios": {
-            "field_count": 36,
+            "field_count": 35,
             "period_count": 20,
             "period": "quarterly"
           }
@@ -236,19 +227,49 @@
   "financials_path": "financials/AMAT.json",
   "raw": {
     "overview": {
-      "marketCap": "452.95B",
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          }
+        ],
+        "topic": "overview",
+        "ticker": "AMAT",
+        "lastChecked": 1786459093176,
+        "summary": {
+          "text": "Fundamental and historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP."
+        }
+      },
+      "marketCap": "425.56B",
+      "marketCapGrowth": 186.8485879946993,
       "revenue": "29.02B",
       "revenue_type": "ttm",
+      "revenueGrowth": 3.329,
       "netIncome": "8.51B",
+      "netIncomeGrowth": 25.895,
       "sharesOut": "793.96M",
       "eps": "10.63",
-      "peRatio": "52.15",
-      "forwardPE": "37.51",
-      "dividend": "$2.12 (0.37%)",
+      "epsGrowth": 29.359,
+      "peRatio": "49.11",
+      "forwardPE": "34.26",
+      "dividend": "$2.12 (0.40%)",
       "exDividendDate": "Aug 20, 2026",
-      "beta": "1.57",
+      "beta": "1.62",
       "analysts": "Strong Buy",
-      "target": "586.63 (+2.83%)",
+      "target": "629.06 (+17.36%)",
       "earningsDate": "Aug 13, 2026",
       "description": "Applied Materials, Inc. provides materials engineering solutions, equipment, services, and software to the semiconductor and related industries in the United States, China, Korea, Taiwan, Japan, Southeast Asia, Europe, and internationally. The company operates through Semiconductor Systems and Applied Global Services (AGS) segments. The Semiconductor Systems segment includes semiconductor capital equipment to enable materials engineering steps, including etch, rapid thermal processing, deposition, chemical mechanical planarization, metrology an...",
       "infoTable": [
@@ -323,31 +344,292 @@
           "earningsGrowth": -2.494
         }
       ],
-      "analystIntro": "According to 39 analysts, the average rating for AMAT stock is \"Strong Buy.\" The 12-month stock price target is $586.63, which is an increase of 2.83% from the latest price.",
+      "analystIntro": "According to 39 analysts, the average rating for AMAT stock is \"Strong Buy.\" The 12-month stock price target is $629.06, which is an increase of 17.36% from the latest price.",
       "analystTarget": {
-        "target": "$586.63",
-        "change": "2.83%",
+        "target": "$629.06",
+        "change": "17.36%",
         "changeWord": "upside"
       },
       "analystChart": {
         "strongBuy": 28,
         "buy": 4,
-        "hold": 6,
-        "sell": 1,
+        "hold": 7,
+        "sell": 0,
         "strongSell": 0
       },
       "news": {
-        "exp": "1783554048269",
+        "exp": "1786461504207",
         "data": [
           {
-            "url": "https://www.tipranks.com/news/the-fly/applied-materials-price-target-raised-to-650-from-540-at-mizuho-thefly-news",
+            "url": "https://www.tipranks.com/news/the-fly/applied-materials-assumed-with-a-market-perform-at-william-blair-thefly-news",
             "img": "https://blog.tipranks.com/wp-content/uploads/2022/10/shutterstock_2171728399.jpg",
-            "title": "Applied Materials price target raised to $650 from $540 at Mizuho",
-            "text": "Mizuho raised the firm’s price target on Applied Materials (AMAT) to $650 from $540 and keeps an Outperform rating on the shares. The firm sees wafer fab equipment estimates in…",
+            "title": "Applied Materials assumed with a Market Perform at William Blair",
+            "text": "William Blair assumed coverage of Applied Materials (AMAT) with a Market Perform rating. The company is a beneficiary of ramping AI capex as global semiconductor capacity expands, the analyst tells…",
             "source": "TheFly",
             "type": "Article",
-            "time": "2026-07-08T20:40:24.000Z",
+            "tickers": null,
+            "time": "2026-08-11T11:45:22.000Z",
             "ago": "2 hours ago"
+          },
+          {
+            "url": "https://www.investopedia.com/what-to-expect-in-markets-this-week-july-inflation-data-plus-updates-on-us-consumer-spending-and-sentiment-12035567",
+            "img": "https://cdn.snapi.dev/images/v1/k/i/w/semi16-3858838.jpg",
+            "title": "What to Expect in Markets This Week: July Inflation Data, Plus Updates on US Consumer Spending and Sentiment",
+            "text": "It's time for a cost-of-living checkup.",
+            "source": "Investopedia",
+            "type": "Article",
+            "tickers": [
+              "$ASTS",
+              "$BIRK",
+              "$CAVA",
+              "$CBRS",
+              "$COHR",
+              "$CRWV",
+              "$EAT"
+            ],
+            "time": "Aug 9, 2026, 6:16 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/08/06/jim-cramer-5-investing-themes-stocks-to-buy.html",
+            "img": "https://cdn.snapi.dev/images/v1/d/u/r/asset-management31-3821293-3855010.jpg",
+            "title": "Jim Cramer highlights 5 investing themes — and the stocks to buy for each",
+            "text": "CNBC's Jim Cramer said earnings season reinforced five investing themes he thinks will produce the market's best buying opportunities. He highlighted stocks to buy for each theme, including Capital On...",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": [
+              "$AXP",
+              "$COF",
+              "$CRWD",
+              "$GS",
+              "$JNJ",
+              "$KLAC",
+              "$LLY"
+            ],
+            "time": "Aug 6, 2026, 6:23 PM EDT",
+            "ago": "4 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/applied-materials-downgraded-to-hold-from-buy-at-erste-group-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/10/shutterstock_2171728403.jpg",
+            "title": "Applied Materials downgraded to Hold from Buy at Erste Group",
+            "text": "Erste Group analyst Stephan Lingnau downgraded Applied Materials (AMAT) to Hold from Buy. The company’s revenue and profit are lower than the sector average in 2026, the analyst tells investors…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-05T14:36:06.000Z",
+            "ago": "6 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/applied-materials-price-target-lowered-to-646-from-647-at-morgan-stanley-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/10/shutterstock_1928569943.jpg",
+            "title": "Applied Materials price target lowered to $646 from $647 at Morgan Stanley",
+            "text": "Morgan Stanley lowered the firm’s price target on Applied Materials (AMAT) to $646 from $647 and keeps an Equal Weight rating on the shares.",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-05T14:11:42.000Z",
+            "ago": "6 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/citi-adds-upside-30-day-catalyst-watch-on-applied-materials-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/10/shutterstock_1928569943.jpg",
+            "title": "Citi adds ‘upside 30-day catalyst watch’ on Applied Materials",
+            "text": "Citi analyst Atif Malik added an “upside 30-day catalyst watch” on shares of Applied Materials (AMAT) while keeping a Buy rating on the name with a $710 price target Citi…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-03T10:05:15.000Z",
+            "ago": "8 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/applied-materials-added-to-us-conviction-list-at-goldman-sachs-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/10/shutterstock_2171728389.jpg",
+            "title": "Applied Materials added to US Conviction List at Goldman Sachs",
+            "text": "Goldman Sachs analysts added Applied Materials (AMAT) to the firm’s US Conviction List as part of its monthly update while keeping a Buy rating on the shares with a $645…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-03T09:25:09.000Z",
+            "ago": "8 days ago"
+          },
+          {
+            "url": "https://www.etftrends.com/equity-etf-content-hub/semiconductor-etfs-draw-cash-chip-stocks-rally/",
+            "img": "https://cdn.snapi.dev/images/v1/v/m/5/semi5-3839612.jpg",
+            "title": "Semiconductor ETFs Draw Cash This Week as Chip Stocks Rally",
+            "text": "Chip stocks rallied this week on a wave of strong tech earnings, and investors rewarded semiconductor ETFs with a rush of new cash. Three funds tracking the chip sector ranked among those pulling in t...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "$ADI",
+              "$AMD",
+              "$ASML",
+              "$AVGO",
+              "$CDNS",
+              "$INTC",
+              "$KLAC"
+            ],
+            "time": "Jul 31, 2026, 3:23 PM EDT",
+            "ago": "10 days ago"
+          },
+          {
+            "url": "Holb4mkTWxs",
+            "img": "https://cdn.snapi.dev/images/v1/e/z/l/semi26-3837723.jpg",
+            "title": "Semiconductor stocks SOAR as strong Microsoft outlook revives AI trade",
+            "text": "Key Advisors Wealth Management co-founder and CEO Eddie Ghabour discusses the surge in semiconductor stocks, including NVIDIA, and Microsoft's strong cloud-driven earnings outlook on ‘The Claman Count...",
+            "source": "Fox Business",
+            "type": "Video",
+            "tickers": [
+              "$ADI",
+              "$AMD",
+              "$ASML",
+              "$AVGO",
+              "$CDNS",
+              "$INTC",
+              "$KLAC"
+            ],
+            "time": "Jul 31, 2026, 3:15 AM EDT",
+            "ago": "11 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/applied-materials-price-target-raised-to-683-from-522-at-hsbc-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/10/shutterstock_2171728413.jpg",
+            "title": "Applied Materials price target raised to $683 from $522 at HSBC",
+            "text": "HSBC raised the firm’s price target on Applied Materials (AMAT) to $683 from $522 and keeps a Buy rating on the shares.",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-27T11:40:17.000Z",
+            "ago": "15 days ago"
+          },
+          {
+            "url": "https://www.etftrends.com/equity-etf-content-hub/semiconductor-crossroads-healthy-consolidation-deeper-repricing/",
+            "img": "https://cdn.snapi.dev/images/v1/c/m/j/semi11-3823056.jpg",
+            "title": "Semiconductor Crossroads: Healthy Consolidation or Deeper Repricing?",
+            "text": "The semiconductor market, which has significantly outperformed the broader market in 2026 is seeing a pullback in July. The factors driving this rise include aggressive profit-taking, valuation concer...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "$ADI",
+              "$AMD",
+              "$ASML",
+              "$AVGO",
+              "$CDNS",
+              "$INTC",
+              "$KLAC"
+            ],
+            "time": "Jul 24, 2026, 4:07 PM EDT",
+            "ago": "17 days ago"
+          },
+          {
+            "url": "https://www.etftrends.com/equity-etf-content-hub/semiconductor-etfs-surge-ahead-of-intel-earnings/",
+            "img": "https://cdn.snapi.dev/images/v1/a/f/e/semi22-3820292.jpg",
+            "title": "Semiconductor ETFs Surge Ahead of Intel Earnings",
+            "text": "Semiconductor exchange-traded funds have gained more than 25% this year. Intel Corporation's (INTC) second-quarter earnings report after today's close could test whether that rally continues.",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "$ADI",
+              "$AMD",
+              "$ASML",
+              "$AVGO",
+              "$CDNS",
+              "$INTC",
+              "$KLAC"
+            ],
+            "time": "Jul 23, 2026, 3:37 PM EDT",
+            "ago": "18 days ago"
+          },
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/07/23/3332037/0/en/Applied-Materials-to-Report-Fiscal-Third-Quarter-2026-Results-on-Aug-13-2026.html",
+            "img": "https://cdn.snapi.dev/images/v1/h/3/v/conf7-3818205.jpg",
+            "title": "Applied Materials to Report Fiscal Third Quarter 2026 Results on Aug. 13, 2026",
+            "text": "SANTA CLARA, Calif., July 23, 2026 (GLOBE NEWSWIRE) -- Applied Materials, Inc. today announced that it will hold its fiscal third quarter 2026 earnings conference call on Thursday, Aug. 13, 2026, at 4...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 23, 2026, 7:30 AM EDT",
+            "ago": "19 days ago"
+          },
+          {
+            "url": "TfzOfcTEbEc",
+            "img": "https://cdn.snapi.dev/images/v1/n/z/j/semi22-3809027.jpg",
+            "title": "What ASML Earnings Means for AMAT, Chip Manufacturers & AI Memory",
+            "text": "Matt Dmytryszyn talks about what ASML's (ASML) earnings beat means for the greater AI chip trade. He says ASML Holding intends to raise prices for chipmaking equipment, which can impact companies like...",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": [
+              "$ASML",
+              "$KLAC",
+              "$LRCX"
+            ],
+            "time": "Jul 18, 2026, 9:30 AM EDT",
+            "ago": "24 days ago"
+          },
+          {
+            "url": "https://www.forbes.com/sites/michaelfoster/2026/07/18/this-cef-holds-the-biggest-bargains-in-tech-pays-74/",
+            "img": "https://cdn.snapi.dev/images/v1/t/g/m/this-cef-holds-the-biggest-bar-3809016.jpg",
+            "title": "This CEF Holds The Biggest Bargains In Tech, Pays 7.4%",
+            "text": "One of our favorite tech-focused closed-end funds (CEFs) is showing a pattern we love to see. What I'm going to show you below is one of my favorite setups for future gains for us, while we collect st...",
+            "source": "Forbes",
+            "type": "Article",
+            "tickers": [
+              "$AMD",
+              "$ASML",
+              "$AVGO",
+              "$BTX",
+              "$INTC",
+              "$LITE",
+              "$MU"
+            ],
+            "time": "Jul 18, 2026, 9:25 AM EDT",
+            "ago": "24 days ago"
+          },
+          {
+            "url": "https://www.reuters.com/world/asia-pacific/chipmakers-other-high-flying-stocks-slide-ai-trade-wobbles-2026-07-17/",
+            "img": "https://cdn.snapi.dev/images/v1/b/t/o/asset-management15-3798637-3807723.jpg",
+            "title": "Chipmakers and other high-flying stocks slide as AI trade wobbles",
+            "text": "A rotation out of the biggest winners of the recent rally gathered momentum this week, sending chip stocks toward their steepest weekly decline in more than a year and sparking fresh concerns about th...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "$AMD",
+              "$ASML",
+              "$GOOG",
+              "$GOOGL",
+              "$LUNR",
+              "$MU",
+              "$NVDA"
+            ],
+            "time": "Jul 17, 2026, 9:51 AM EDT",
+            "ago": "25 days ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/07/09/applied-materials-stock-jumps-as-meta-ai-chip-plan-lifts-semiconductor-names/",
+            "img": "https://cdn.snapi.dev/images/v1/6/r/r/semi6-3794104.jpg",
+            "title": "Applied Materials stock jumps as Meta AI chip plan lifts semiconductor names",
+            "text": "Applied Materials Inc. shares AMAT climbed nearly 7% on Thursday as semiconductor stocks rallied after reports that Meta Platforms plans to begin manufacturing its in-house artificial intelligence chi...",
+            "source": "Invezz",
+            "type": "Article",
+            "tickers": [
+              "$META"
+            ],
+            "time": "Jul 9, 2026, 1:48 PM EDT",
+            "ago": "4 weeks ago"
+          },
+          {
+            "url": "https://www.barrons.com/articles/applied-materials-lam-research-meta-chip-10398bf4",
+            "img": "https://cdn.snapi.dev/images/v1/m/q/t/business-services2-3538830-3793752.jpg",
+            "title": "Applied Materials and Lam Research Take Off on Meta's Chip Plans",
+            "text": "Meta's decision to make its in-house chip could be a boon for Applied Materials, Lam Research, and KLA, which all make equipment that turns raw silicon wafers into microchips.",
+            "source": "Barrons",
+            "type": "Article",
+            "tickers": [
+              "$LRCX",
+              "$META"
+            ],
+            "time": "Jul 9, 2026, 11:27 AM EDT",
+            "ago": "4 weeks ago"
           },
           {
             "url": "https://www.marketwatch.com/story/elon-musks-terafab-could-give-a-major-boost-to-this-corner-of-the-chip-sector-27ad6099",
@@ -364,7 +646,7 @@
               "$TSM"
             ],
             "time": "Jul 7, 2026, 3:05 PM EDT",
-            "ago": "1 day ago"
+            "ago": "4 weeks ago"
           },
           {
             "url": "https://www.cnbc.com/2026/07/07/chip-stocks-ai-selloff-samsung.html",
@@ -380,17 +662,7 @@
               "$SNDK"
             ],
             "time": "Jul 7, 2026, 1:16 PM EDT",
-            "ago": "1 day ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/applied-materials-price-target-raised-to-647-from-502-at-morgan-stanley-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/10/shutterstock_2171728389.jpg",
-            "title": "Applied Materials price target raised to $647 from $502 at Morgan Stanley",
-            "text": "Morgan Stanley raised the firm’s price target on Applied Materials (AMAT) to $647 from $502 and keeps an Equal Weight rating on the shares.",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-07-06T12:15:09.000Z",
-            "ago": "2 days ago"
+            "ago": "4 weeks ago"
           },
           {
             "url": "qojZF7ieAxg",
@@ -399,8 +671,9 @@
             "text": "Applied Materials (AMAT) is becoming one of the biggest beneficiaries of the AI semiconductor buildout, supplying the advanced manufacturing equipment needed to produce next-generation chips. In this ...",
             "source": "Schwab Network",
             "type": "Video",
+            "tickers": null,
             "time": "Jul 4, 2026, 1:00 PM EDT",
-            "ago": "4 days ago"
+            "ago": "5 weeks ago"
           },
           {
             "url": "https://www.wsj.com/finance/stocks/michael-burry-cites-beginning-of-the-end-with-new-ai-short-bets-50793c12",
@@ -415,33 +688,7 @@
               "#SOXX"
             ],
             "time": "Jul 1, 2026, 2:24 PM EDT",
-            "ago": "7 days ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/michael-burry-bets-against-tesla-nvidia-and-caterpillar-as-he-warns-of-an-ai-bubble",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/06/shutterstock_1471268228-750x406.jpg",
-            "title": "Michael Burry Bets Against Tesla, Nvidia, and Caterpillar as He Warns of an AI Bubble",
-            "text": "Michael Burry, the famed “Big Short” investor, disclosed on Tuesday that he has opened new short positions against Caterpillar ($CAT), Nvidia ($NVDA), Applied Materials ($AMAT), Tesla ($TSLA), and the...",
-            "source": "TipRanks",
-            "type": "Article",
-            "tickers": [
-              "$CAT",
-              "$NVDA",
-              "#SOXX",
-              "$TSLA"
-            ],
-            "time": "2026-06-30T21:42:13.000Z",
-            "ago": "8 days ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/applied-materials-price-target-raised-to-900-from-575-at-susquehanna-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/10/shutterstock_2171728399.jpg",
-            "title": "Applied Materials price target raised to $900 from $575 at Susquehanna",
-            "text": "Susquehanna analyst Mehdi Hosseini raised the firm’s price target on Applied Materials (AMAT) to $900 from $575 and keeps a Positive rating on the shares. The firm updated its model…",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-06-30T11:21:06.000Z",
-            "ago": "8 days ago"
+            "ago": "5 weeks ago"
           },
           {
             "url": "https://invezz.com/news/2026/06/29/applied-materials-stock-surges-10-heres-why/",
@@ -450,47 +697,9 @@
             "text": "Applied Materials (AMAT) shares drew investor attention on Monday, rising more than 10% after KeyBanc Capital Markets issued early commentary ahead of the company's upcoming third-quarter earnings. Th...",
             "source": "Invezz",
             "type": "Article",
+            "tickers": null,
             "time": "Jun 29, 2026, 1:40 PM EDT",
-            "ago": "9 days ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-chip-rally-is-far-from-over-says-cantor-here-are-its-top-semiconductor-picks",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2025/08/shutterstock_2242167987-750x406.jpg",
-            "title": "The Chip Rally Is Far From Over, Says Cantor. Here Are Its Top Semiconductor Picks",
-            "text": "Artificial intelligence has already fueled a huge rally in semiconductor stocks. But Cantor Fitzgerald’s C.J. Muse believes companies like ASML ($ASML), Lam Research ($LRCX), Applied Materials ($AMAT)...",
-            "source": "TipRanks",
-            "type": "Article",
-            "tickers": [
-              "$ADI",
-              "$AMD",
-              "$ASML",
-              "$AVGO",
-              "$INTC",
-              "$LRCX",
-              "$MRVL"
-            ],
-            "time": "2026-06-29T12:28:39.000Z",
-            "ago": "9 days ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/applied-materials-price-target-raised-to-850-from-650-at-cantor-fitzgerald-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_1938746143-750x406.jpg",
-            "title": "Applied Materials price target raised to $850 from $650 at Cantor Fitzgerald",
-            "text": "Cantor Fitzgerald raised the firm’s price target on Applied Materials (AMAT) to $850 from $650 and keeps an Overweight rating on the shares. The AI infrastructure buildout is viewed as…",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-06-29T11:46:56.000Z",
-            "ago": "9 days ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/applied-materials-price-target-raised-to-750-from-550-at-keybanc-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/10/shutterstock_2171728401.jpg",
-            "title": "Applied Materials price target raised to $750 from $550 at KeyBanc",
-            "text": "KeyBanc raised the firm’s price target on Applied Materials (AMAT) to $750 from $550 and keeps an Overweight rating on the shares. Heading into Q2 earnings, expectations for the firm’s…",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-06-29T10:20:48.000Z",
-            "ago": "9 days ago"
+            "ago": "6 weeks ago"
           },
           {
             "url": "https://www.wsj.com/tech/ai/chip-makers-are-profiting-off-ai-at-the-expense-of-just-about-everyone-else-fe893bdd",
@@ -508,7 +717,7 @@
               "#SOXX"
             ],
             "time": "Jun 27, 2026, 10:00 PM EDT",
-            "ago": "10 days ago"
+            "ago": "6 weeks ago"
           },
           {
             "url": "CfIO5kGyeTw",
@@ -521,1733 +730,1292 @@
               "$NKE"
             ],
             "time": "Jun 26, 2026, 10:30 AM EDT",
-            "ago": "12 days ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/applied-materials-price-target-raised-to-790-from-550-at-b-riley-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/10/shutterstock_2008114601.jpg",
-            "title": "Applied Materials price target raised to $790 from $550 at B. Riley",
-            "text": "B. Riley raised the firm’s price target on Applied Materials (AMAT) to $790 from $550 and keeps a Buy rating on the shares. Applied Materials’ DRAM and Advanced Packaging Master…",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-06-26T12:25:48.000Z",
-            "ago": "12 days ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/applied-materials-price-target-raised-to-740-from-715-at-wells-fargo-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/10/shutterstock_2008114601.jpg",
-            "title": "Applied Materials price target raised to $740 from $715 at Wells Fargo",
-            "text": "Wells Fargo raised the firm’s price target on Applied Materials (AMAT) to $740 from $715 and keeps an Overweight rating on the shares. Applied Materials’ Memory & AP Master Class…",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-06-26T10:05:24.000Z",
-            "ago": "12 days ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/applied-materials-price-target-raised-to-770-from-510-at-jefferies-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/10/shutterstock_2171728403.jpg",
-            "title": "Applied Materials price target raised to $770 from $510 at Jefferies",
-            "text": "Jefferies raised the firm’s price target on Applied Materials (AMAT) to $770 from $510 and keeps a Buy rating on the shares after the company hosted its advanced packaging event.",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-06-26T01:50:09.000Z",
-            "ago": "12 days ago"
-          },
-          {
-            "url": "/stocks/amat/filings/3208824/",
-            "img": "",
-            "title": "Applied Materials Slides: Investor update presentation",
-            "text": "Applied Materials has posted slides in relation to its latest quarterly earnings report, which was published on June 25, 2026.",
-            "source": "Filings",
-            "type": "Article",
-            "time": "Jun 25, 2026, 12:00 PM EDT",
-            "ago": "13 days ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/heres-why-applied-materials-stock-amat-is-soaring-today",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2026/06/aaa-161-750x406.jpg",
-            "title": "Here’s Why Applied Materials Stock (AMAT) Is Soaring Today",
-            "text": "The company is involved in the chip sector.",
-            "source": "TipRanks",
-            "type": "Article",
-            "tickers": [
-              "$GOOGL",
-              "$MU",
-              "$NVDA"
-            ],
-            "time": "2026-06-25T15:22:46.000Z",
-            "ago": "13 days ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/applied-materials-announces-suite-of-new-chipmaking-systems-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/10/shutterstock_2171728405.jpg",
-            "title": "Applied Materials announces suite of new chipmaking systems",
-            "text": "Applied Materials (AMAT) introduced a suite of new chipmaking systems for building the advanced 3D chip architectures that power next-generation AI. The company said, “AI compute is increasingly const...",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-06-25T13:10:49.000Z",
-            "ago": "13 days ago"
-          },
-          {
-            "url": "https://www.globenewswire.com/news-release/2026/06/25/3317583/0/en/applied-materials-introduces-new-systems-to-accelerate-dram-and-advanced-packaging-for-ai-chips.html",
-            "img": "https://cdn.snapi.dev/images/v1/c/7/f/press6-3771630.jpg",
-            "title": "Applied Materials Introduces New Systems to Accelerate DRAM and Advanced Packaging for AI Chips",
-            "text": "Innovations spanning DRAM and advanced packaging enable the 3D architectures behind cutting-edge AI chips A new epitaxy system optimized for DRAM fabs adds a critical logic-class step—boosting memory ...",
-            "source": "GlobeNewsWire",
-            "type": "Article",
-            "time": "Jun 25, 2026, 9:00 AM EDT",
-            "ago": "13 days ago"
-          },
-          {
-            "url": "https://invezz.com/news/2026/06/24/forget-nvidia-philippe-laffont-reveals-his-preferred-way-to-gain-ai-exposure/",
-            "img": "https://cdn.snapi.dev/images/v1/w/7/f/semi8-3768639.jpg",
-            "title": "Forget Nvidia: Philippe Laffont reveals his preferred way to gain AI exposure",
-            "text": "The likes of Nvidia (NVDA) and Micron (MU) remain the front and center of all AI-related debates in 2026, but billionaire investor Philippe Laffont is approaching the boom from a different angle. Spea...",
-            "source": "Invezz",
-            "type": "Article",
-            "tickers": [
-              "$LRCX",
-              "$TSM"
-            ],
-            "time": "Jun 24, 2026, 12:06 AM EDT",
-            "ago": "14 days ago"
-          },
-          {
-            "url": "https://www.marketwatch.com/story/these-stocks-are-falling-the-most-on-tuesday-as-the-tech-sector-comes-under-pressure-33558ade",
-            "img": "https://cdn.snapi.dev/images/v1/e/y/r/v2edf2-2521075-3767361.jpg",
-            "title": "These stocks are falling the most on Tuesday as the tech sector comes under pressure",
-            "text": "Most of the day's biggest losers are still up tremendously for 2026.",
-            "source": "Market Watch",
-            "type": "Article",
-            "tickers": [
-              "$ADI",
-              "$ANET",
-              "$CCL",
-              "$COHR",
-              "$FIX",
-              "$GLW",
-              "$KLAC"
-            ],
-            "time": "Jun 23, 2026, 11:21 AM EDT",
-            "ago": "15 days ago"
-          },
-          {
-            "url": "3mzYHucTzNQ",
-            "img": "https://cdn.snapi.dev/images/v1/e/w/6/semi29-3765277.jpg",
-            "title": "ASML, AMAT, KLAC & LRCX Get PT Hikes as Analysts Turn Bullish on AI Manufacturers",
-            "text": "The pick and shovels behind the AI trade are getting more favorable coverage from analysts, seen in Wells Fargo's price target hikes in ASML (ASML), Applied Materials (AMAT), KLA Corp. (KLAC), and Lam...",
-            "source": "Schwab Network",
-            "type": "Video",
-            "tickers": [
-              "$ASML",
-              "$KLAC",
-              "$LRCX"
-            ],
-            "time": "Jun 22, 2026, 11:30 AM EDT",
-            "ago": "16 days ago"
-          },
-          {
-            "url": "https://invezz.com/news/2026/06/17/applied-materials-surges-as-citi-lifts-target-on-ai-demand-boom/",
-            "img": "https://cdn.snapi.dev/images/v1/b/r/j/amm13-2436079-2592815-2675402-3759544.jpg",
-            "title": "Applied Materials surges as Citi lifts target on AI demand boom",
-            "text": "Applied Materials AMAT shares surged on Wednesday after Citi raised its price target on the semiconductor equipment maker, citing accelerating artificial intelligence spending and growing demand for m...",
-            "source": "Invezz",
-            "type": "Article",
-            "time": "Jun 17, 2026, 1:14 PM EDT",
-            "ago": "21 days ago"
+            "ago": "6 weeks ago"
           }
         ]
       },
       "chart": {
-        "expiration": 1783554072126,
+        "expiration": 1786459132031,
         "data": [
           {
-            "c": 554,
-            "o": 545.91,
-            "t": 1783503000
+            "c": 530.97,
+            "o": 539.99,
+            "t": 1786440600
           },
           {
-            "c": 560.7,
-            "t": 1783503060
+            "c": 532.96,
+            "t": 1786440660
           },
           {
-            "c": 562.91,
-            "t": 1783503120
+            "c": 533.65,
+            "t": 1786440720
           },
           {
-            "c": 564.2,
-            "t": 1783503180
+            "c": 532.125,
+            "t": 1786440780
           },
           {
-            "c": 567.85,
-            "t": 1783503240
+            "c": 532.46,
+            "t": 1786440840
           },
           {
-            "c": 570.8,
-            "t": 1783503300
+            "c": 530.64,
+            "t": 1786440900
           },
           {
-            "c": 568.36,
-            "t": 1783503360
+            "c": 530.5,
+            "t": 1786440960
           },
           {
-            "c": 566.97,
-            "t": 1783503420
+            "c": 532.11,
+            "t": 1786441020
           },
           {
-            "c": 564.76,
-            "t": 1783503480
+            "c": 532.04,
+            "t": 1786441080
           },
           {
-            "c": 568.29,
-            "t": 1783503540
+            "c": 531.31,
+            "t": 1786441140
           },
           {
-            "c": 571.16,
-            "t": 1783503600
+            "c": 533.19,
+            "t": 1786441200
           },
           {
-            "c": 572.11,
-            "t": 1783503660
+            "c": 533.46,
+            "t": 1786441260
           },
           {
-            "c": 572.67,
-            "t": 1783503720
+            "c": 534.22,
+            "t": 1786441320
           },
           {
-            "c": 572.85,
-            "t": 1783503780
+            "c": 535.65,
+            "t": 1786441380
           },
           {
-            "c": 573.35,
-            "t": 1783503840
+            "c": 536.52,
+            "t": 1786441440
           },
           {
-            "c": 574.58,
-            "t": 1783503900
+            "c": 534.22,
+            "t": 1786441500
           },
           {
-            "c": 576.31,
-            "t": 1783503960
+            "c": 532.06,
+            "t": 1786441560
           },
           {
-            "c": 573.7,
-            "t": 1783504020
+            "c": 531.94,
+            "t": 1786441620
           },
           {
-            "c": 571.79,
-            "t": 1783504080
+            "c": 531,
+            "t": 1786441680
           },
           {
-            "c": 569.17,
-            "t": 1783504140
+            "c": 529.14,
+            "t": 1786441740
           },
           {
-            "c": 569.35,
-            "t": 1783504200
+            "c": 528.62,
+            "t": 1786441800
           },
           {
-            "c": 571.85,
-            "t": 1783504260
+            "c": 528.305,
+            "t": 1786441860
           },
           {
-            "c": 574.02,
-            "t": 1783504320
+            "c": 527.82,
+            "t": 1786441920
           },
           {
-            "c": 574.64,
-            "t": 1783504380
+            "c": 527.805,
+            "t": 1786441980
           },
           {
-            "c": 572.88,
-            "t": 1783504440
+            "c": 526.25,
+            "t": 1786442040
           },
           {
-            "c": 571.89,
-            "t": 1783504500
+            "c": 527.36,
+            "t": 1786442100
           },
           {
-            "c": 571.59,
-            "t": 1783504560
+            "c": 528.36,
+            "t": 1786442160
           },
           {
-            "c": 571,
-            "t": 1783504620
+            "c": 527.105,
+            "t": 1786442220
           },
           {
-            "c": 574.18,
-            "t": 1783504680
+            "c": 527.63,
+            "t": 1786442280
           },
           {
-            "c": 573.79,
-            "t": 1783504740
+            "c": 527.095,
+            "t": 1786442340
           },
           {
-            "c": 574.78,
-            "t": 1783504800
+            "c": 528.17,
+            "t": 1786442400
           },
           {
-            "c": 571.83,
-            "t": 1783504860
+            "c": 529.4,
+            "t": 1786442460
           },
           {
-            "c": 570.09,
-            "t": 1783504920
+            "c": 528.8,
+            "t": 1786442520
           },
           {
-            "c": 567.25,
-            "t": 1783504980
+            "c": 529.73,
+            "t": 1786442580
           },
           {
-            "c": 567.33,
-            "t": 1783505040
+            "c": 529.27,
+            "t": 1786442640
           },
           {
-            "c": 565.96,
-            "t": 1783505100
+            "c": 529.67,
+            "t": 1786442700
           },
           {
-            "c": 564.75,
-            "t": 1783505160
+            "c": 530.48,
+            "t": 1786442760
           },
           {
-            "c": 564.37,
-            "t": 1783505220
+            "c": 532.445,
+            "t": 1786442820
           },
           {
-            "c": 564.95,
-            "t": 1783505280
+            "c": 531.95,
+            "t": 1786442880
           },
           {
-            "c": 565.63,
-            "t": 1783505340
+            "c": 531.72,
+            "t": 1786442940
           },
           {
-            "c": 564.26,
-            "t": 1783505400
+            "c": 532.425,
+            "t": 1786443000
           },
           {
-            "c": 562,
-            "t": 1783505460
+            "c": 533,
+            "t": 1786443060
           },
           {
-            "c": 561.09,
-            "t": 1783505520
+            "c": 533.56,
+            "t": 1786443120
           },
           {
-            "c": 561.56,
-            "t": 1783505580
+            "c": 534.2,
+            "t": 1786443180
           },
           {
-            "c": 561.64,
-            "t": 1783505640
+            "c": 533.06,
+            "t": 1786443240
           },
           {
-            "c": 559.8,
-            "t": 1783505700
+            "c": 534.34,
+            "t": 1786443300
           },
           {
-            "c": 562,
-            "t": 1783505760
+            "c": 534.87,
+            "t": 1786443360
           },
           {
-            "c": 565,
-            "t": 1783505820
+            "c": 534.687,
+            "t": 1786443420
           },
           {
-            "c": 564.4,
-            "t": 1783505880
+            "c": 533.715,
+            "t": 1786443480
           },
           {
-            "c": 564.2,
-            "t": 1783505940
+            "c": 533.52,
+            "t": 1786443540
           },
           {
-            "c": 564.04,
-            "t": 1783506000
+            "c": 533.34,
+            "t": 1786443600
           },
           {
-            "c": 566.41,
-            "t": 1783506060
+            "c": 532.41,
+            "t": 1786443660
           },
           {
-            "c": 565.88,
-            "t": 1783506120
+            "c": 532.54,
+            "t": 1786443720
           },
           {
-            "c": 565.64,
-            "t": 1783506180
+            "c": 533.38,
+            "t": 1786443780
           },
           {
-            "c": 564.42,
-            "t": 1783506240
+            "c": 532.59,
+            "t": 1786443840
           },
           {
-            "c": 565.8,
-            "t": 1783506300
+            "c": 533.04,
+            "t": 1786443900
           },
           {
-            "c": 564.74,
-            "t": 1783506360
+            "c": 533.205,
+            "t": 1786443960
           },
           {
-            "c": 563.73,
-            "t": 1783506420
+            "c": 533.5,
+            "t": 1786444020
           },
           {
-            "c": 563.63,
-            "t": 1783506480
+            "c": 533.33,
+            "t": 1786444080
           },
           {
-            "c": 563.47,
-            "t": 1783506540
+            "c": 533.9,
+            "t": 1786444140
           },
           {
-            "c": 563.93,
-            "t": 1783506600
+            "c": 532.74,
+            "t": 1786444200
           },
           {
-            "c": 563.47,
-            "t": 1783506660
+            "c": 532.75,
+            "t": 1786444260
           },
           {
-            "c": 563,
-            "t": 1783506720
+            "c": 533.61,
+            "t": 1786444320
           },
           {
-            "c": 564.44,
-            "t": 1783506780
+            "c": 535.69,
+            "t": 1786444380
           },
           {
-            "c": 564.24,
-            "t": 1783506840
+            "c": 535.31,
+            "t": 1786444440
           },
           {
-            "c": 563.54,
-            "t": 1783506900
+            "c": 535.44,
+            "t": 1786444500
           },
           {
-            "c": 562.89,
-            "t": 1783506960
+            "c": 536,
+            "t": 1786444560
           },
           {
-            "c": 565.12,
-            "t": 1783507020
+            "c": 534.745,
+            "t": 1786444620
           },
           {
-            "c": 564,
-            "t": 1783507080
+            "t": 1786444679
           },
           {
-            "c": 563,
-            "t": 1783507140
+            "t": 1786444739
           },
           {
-            "c": 562.87,
-            "t": 1783507200
+            "t": 1786444799
           },
           {
-            "c": 562.52,
-            "t": 1783507260
+            "t": 1786444859
           },
           {
-            "c": 560.37,
-            "t": 1783507320
+            "t": 1786444919
           },
           {
-            "c": 560.12,
-            "t": 1783507380
+            "t": 1786444979
           },
           {
-            "c": 561.17,
-            "t": 1783507440
+            "t": 1786445039
           },
           {
-            "c": 560.45,
-            "t": 1783507500
+            "t": 1786445099
           },
           {
-            "c": 560.31,
-            "t": 1783507560
+            "t": 1786445159
           },
           {
-            "c": 557.38,
-            "t": 1783507620
+            "t": 1786445219
           },
           {
-            "c": 557.26,
-            "t": 1783507680
+            "t": 1786445279
           },
           {
-            "c": 557.64,
-            "t": 1783507740
+            "t": 1786445339
           },
           {
-            "c": 558.12,
-            "t": 1783507800
+            "t": 1786445399
           },
           {
-            "c": 559.86,
-            "t": 1783507860
+            "t": 1786445459
           },
           {
-            "c": 562.7,
-            "t": 1783507920
+            "t": 1786445519
           },
           {
-            "c": 563.65,
-            "t": 1783507980
+            "t": 1786445579
           },
           {
-            "c": 563.78,
-            "t": 1783508040
+            "t": 1786445639
           },
           {
-            "c": 564.07,
-            "t": 1783508100
+            "t": 1786445699
           },
           {
-            "c": 564.39,
-            "t": 1783508160
+            "t": 1786445759
           },
           {
-            "c": 563,
-            "t": 1783508220
+            "t": 1786445819
           },
           {
-            "c": 562.57,
-            "t": 1783508280
+            "t": 1786445879
           },
           {
-            "c": 563.32,
-            "t": 1783508340
+            "t": 1786445939
           },
           {
-            "c": 563.99,
-            "t": 1783508400
+            "t": 1786445999
           },
           {
-            "c": 563.26,
-            "t": 1783508460
+            "t": 1786446059
           },
           {
-            "c": 562.78,
-            "t": 1783508520
+            "t": 1786446119
           },
           {
-            "c": 562.94,
-            "t": 1783508580
+            "t": 1786446179
           },
           {
-            "c": 561.4,
-            "t": 1783508640
+            "t": 1786446239
           },
           {
-            "c": 562.8,
-            "t": 1783508700
+            "t": 1786446299
           },
           {
-            "c": 562.05,
-            "t": 1783508760
+            "t": 1786446359
           },
           {
-            "c": 561.48,
-            "t": 1783508820
+            "t": 1786446419
           },
           {
-            "c": 562.71,
-            "t": 1783508880
+            "t": 1786446479
           },
           {
-            "c": 562.59,
-            "t": 1783508940
+            "t": 1786446539
           },
           {
-            "c": 563,
-            "t": 1783509000
+            "t": 1786446599
           },
           {
-            "c": 562.31,
-            "t": 1783509060
+            "t": 1786446659
           },
           {
-            "c": 561.46,
-            "t": 1783509120
+            "t": 1786446719
           },
           {
-            "c": 560.14,
-            "t": 1783509180
+            "t": 1786446779
           },
           {
-            "c": 559.23,
-            "t": 1783509240
+            "t": 1786446839
           },
           {
-            "c": 559.92,
-            "t": 1783509300
+            "t": 1786446899
           },
           {
-            "c": 558.09,
-            "t": 1783509360
+            "t": 1786446959
           },
           {
-            "c": 557.55,
-            "t": 1783509420
+            "t": 1786447019
           },
           {
-            "c": 558.11,
-            "t": 1783509480
+            "t": 1786447079
           },
           {
-            "c": 559.76,
-            "t": 1783509540
+            "t": 1786447139
           },
           {
-            "c": 559.43,
-            "t": 1783509600
+            "t": 1786447199
           },
           {
-            "c": 559.36,
-            "t": 1783509660
+            "t": 1786447259
           },
           {
-            "c": 557.05,
-            "t": 1783509720
+            "t": 1786447319
           },
           {
-            "c": 556.29,
-            "t": 1783509780
+            "t": 1786447379
           },
           {
-            "c": 556.35,
-            "t": 1783509840
+            "t": 1786447439
           },
           {
-            "c": 555.74,
-            "t": 1783509900
+            "t": 1786447499
           },
           {
-            "c": 556.2,
-            "t": 1783509960
+            "t": 1786447559
           },
           {
-            "c": 556.34,
-            "t": 1783510020
+            "t": 1786447619
           },
           {
-            "c": 557.22,
-            "t": 1783510080
+            "t": 1786447679
           },
           {
-            "c": 557.25,
-            "t": 1783510140
+            "t": 1786447739
           },
           {
-            "c": 556.93,
-            "t": 1783510200
+            "t": 1786447799
           },
           {
-            "c": 557.09,
-            "t": 1783510260
+            "t": 1786447859
           },
           {
-            "c": 558.08,
-            "t": 1783510320
+            "t": 1786447919
           },
           {
-            "c": 558.3,
-            "t": 1783510380
+            "t": 1786447979
           },
           {
-            "c": 558.94,
-            "t": 1783510440
+            "t": 1786448039
           },
           {
-            "c": 559.65,
-            "t": 1783510500
+            "t": 1786448099
           },
           {
-            "c": 561.25,
-            "t": 1783510560
+            "t": 1786448159
           },
           {
-            "c": 561.35,
-            "t": 1783510620
+            "t": 1786448219
           },
           {
-            "c": 561.27,
-            "t": 1783510680
+            "t": 1786448279
           },
           {
-            "c": 559.84,
-            "t": 1783510740
+            "t": 1786448339
           },
           {
-            "c": 561.92,
-            "t": 1783510800
+            "t": 1786448399
           },
           {
-            "c": 561.46,
-            "t": 1783510860
+            "t": 1786448459
           },
           {
-            "c": 560.51,
-            "t": 1783510920
+            "t": 1786448519
           },
           {
-            "c": 560.88,
-            "t": 1783510980
+            "t": 1786448579
           },
           {
-            "c": 561.05,
-            "t": 1783511040
+            "t": 1786448639
           },
           {
-            "c": 559.82,
-            "t": 1783511100
+            "t": 1786448699
           },
           {
-            "c": 559.98,
-            "t": 1783511160
+            "t": 1786448759
           },
           {
-            "c": 559.11,
-            "t": 1783511220
+            "t": 1786448819
           },
           {
-            "c": 559.39,
-            "t": 1783511280
+            "t": 1786448879
           },
           {
-            "c": 560.03,
-            "t": 1783511340
+            "t": 1786448939
           },
           {
-            "c": 559.38,
-            "t": 1783511400
+            "t": 1786448999
           },
           {
-            "c": 559.21,
-            "t": 1783511460
+            "t": 1786449059
           },
           {
-            "c": 558.62,
-            "t": 1783511520
+            "t": 1786449119
           },
           {
-            "c": 559.31,
-            "t": 1783511580
+            "t": 1786449179
           },
           {
-            "c": 558.88,
-            "t": 1783511640
+            "t": 1786449239
           },
           {
-            "c": 559.34,
-            "t": 1783511700
+            "t": 1786449299
           },
           {
-            "c": 558.75,
-            "t": 1783511760
+            "t": 1786449359
           },
           {
-            "c": 559.35,
-            "t": 1783511820
+            "t": 1786449419
           },
           {
-            "c": 560.43,
-            "t": 1783511880
+            "t": 1786449479
           },
           {
-            "c": 561.35,
-            "t": 1783511940
+            "t": 1786449539
           },
           {
-            "c": 563.51,
-            "t": 1783512000
+            "t": 1786449599
           },
           {
-            "c": 563.28,
-            "t": 1783512060
+            "t": 1786449659
           },
           {
-            "c": 563.56,
-            "t": 1783512120
+            "t": 1786449719
           },
           {
-            "c": 564.43,
-            "t": 1783512180
+            "t": 1786449779
           },
           {
-            "c": 563.57,
-            "t": 1783512240
+            "t": 1786449839
           },
           {
-            "c": 564.2,
-            "t": 1783512300
+            "t": 1786449899
           },
           {
-            "c": 564.47,
-            "t": 1783512360
+            "t": 1786449959
           },
           {
-            "c": 564.02,
-            "t": 1783512420
+            "t": 1786450019
           },
           {
-            "c": 563.98,
-            "t": 1783512480
+            "t": 1786450079
           },
           {
-            "c": 566.28,
-            "t": 1783512540
+            "t": 1786450139
           },
           {
-            "c": 567.74,
-            "t": 1783512600
+            "t": 1786450199
           },
           {
-            "c": 567.46,
-            "t": 1783512660
+            "t": 1786450259
           },
           {
-            "c": 569.19,
-            "t": 1783512720
+            "t": 1786450319
           },
           {
-            "c": 568.73,
-            "t": 1783512780
+            "t": 1786450379
           },
           {
-            "c": 568.71,
-            "t": 1783512840
+            "t": 1786450439
           },
           {
-            "c": 566.97,
-            "t": 1783512900
+            "t": 1786450499
           },
           {
-            "c": 567.34,
-            "t": 1783512960
+            "t": 1786450559
           },
           {
-            "c": 568.19,
-            "t": 1783513020
+            "t": 1786450619
           },
           {
-            "c": 567.86,
-            "t": 1783513080
+            "t": 1786450679
           },
           {
-            "c": 567.735,
-            "t": 1783513140
+            "t": 1786450739
           },
           {
-            "c": 569.145,
-            "t": 1783513200
+            "t": 1786450799
           },
           {
-            "c": 571.035,
-            "t": 1783513260
+            "t": 1786450859
           },
           {
-            "c": 569.998,
-            "t": 1783513320
+            "t": 1786450919
           },
           {
-            "c": 569.62,
-            "t": 1783513380
+            "t": 1786450979
           },
           {
-            "c": 568.24,
-            "t": 1783513440
+            "t": 1786451039
           },
           {
-            "c": 569.135,
-            "t": 1783513500
+            "t": 1786451099
           },
           {
-            "c": 569.91,
-            "t": 1783513560
+            "t": 1786451159
           },
           {
-            "c": 570.39,
-            "t": 1783513620
+            "t": 1786451219
           },
           {
-            "c": 569.86,
-            "t": 1783513680
+            "t": 1786451279
           },
           {
-            "c": 569.12,
-            "t": 1783513740
+            "t": 1786451339
           },
           {
-            "c": 570.3,
-            "t": 1783513800
+            "t": 1786451399
           },
           {
-            "c": 570.15,
-            "t": 1783513860
+            "t": 1786451459
           },
           {
-            "c": 569.955,
-            "t": 1783513920
+            "t": 1786451519
           },
           {
-            "c": 569.5,
-            "t": 1783513980
+            "t": 1786451579
           },
           {
-            "c": 568.5,
-            "t": 1783514040
+            "t": 1786451639
           },
           {
-            "c": 569.225,
-            "t": 1783514100
+            "t": 1786451699
           },
           {
-            "c": 568.01,
-            "t": 1783514160
+            "t": 1786451759
           },
           {
-            "c": 567.98,
-            "t": 1783514220
+            "t": 1786451819
           },
           {
-            "c": 567.345,
-            "t": 1783514280
+            "t": 1786451879
           },
           {
-            "c": 568.71,
-            "t": 1783514340
+            "t": 1786451939
           },
           {
-            "c": 570.345,
-            "t": 1783514400
+            "t": 1786451999
           },
           {
-            "c": 570.7,
-            "t": 1783514460
+            "t": 1786452059
           },
           {
-            "c": 570.345,
-            "t": 1783514520
+            "t": 1786452119
           },
           {
-            "c": 570.745,
-            "t": 1783514580
+            "t": 1786452179
           },
           {
-            "c": 571.51,
-            "t": 1783514640
+            "t": 1786452239
           },
           {
-            "c": 569.775,
-            "t": 1783514700
+            "t": 1786452299
           },
           {
-            "c": 570.985,
-            "t": 1783514760
+            "t": 1786452359
           },
           {
-            "c": 570.42,
-            "t": 1783514820
+            "t": 1786452419
           },
           {
-            "c": 570.812,
-            "t": 1783514880
+            "t": 1786452479
           },
           {
-            "c": 571.357,
-            "t": 1783514940
+            "t": 1786452539
           },
           {
-            "c": 572.375,
-            "t": 1783515000
+            "t": 1786452599
           },
           {
-            "c": 571.989,
-            "t": 1783515060
+            "t": 1786452659
           },
           {
-            "c": 573.63,
-            "t": 1783515120
+            "t": 1786452719
           },
           {
-            "c": 573.175,
-            "t": 1783515180
+            "t": 1786452779
           },
           {
-            "c": 573.6,
-            "t": 1783515240
+            "t": 1786452839
           },
           {
-            "c": 573.452,
-            "t": 1783515300
+            "t": 1786452899
           },
           {
-            "c": 573.014,
-            "t": 1783515360
+            "t": 1786452959
           },
           {
-            "c": 574.45,
-            "t": 1783515420
+            "t": 1786453019
           },
           {
-            "c": 574.605,
-            "t": 1783515480
+            "t": 1786453079
           },
           {
-            "c": 575,
-            "t": 1783515540
+            "t": 1786453139
           },
           {
-            "c": 574.11,
-            "t": 1783515600
+            "t": 1786453199
           },
           {
-            "c": 573.02,
-            "t": 1783515660
+            "t": 1786453259
           },
           {
-            "c": 572.77,
-            "t": 1783515720
+            "t": 1786453319
           },
           {
-            "c": 572.35,
-            "t": 1783515780
+            "t": 1786453379
           },
           {
-            "c": 572.625,
-            "t": 1783515840
+            "t": 1786453439
           },
           {
-            "c": 572.26,
-            "t": 1783515900
+            "t": 1786453499
           },
           {
-            "c": 573.095,
-            "t": 1783515960
+            "t": 1786453559
           },
           {
-            "c": 574.35,
-            "t": 1783516020
+            "t": 1786453619
           },
           {
-            "c": 573.605,
-            "t": 1783516080
+            "t": 1786453679
           },
           {
-            "c": 572.27,
-            "t": 1783516140
+            "t": 1786453739
           },
           {
-            "c": 571.81,
-            "t": 1783516200
+            "t": 1786453799
           },
           {
-            "c": 571.33,
-            "t": 1783516260
+            "t": 1786453859
           },
           {
-            "c": 571.3,
-            "t": 1783516320
+            "t": 1786453919
           },
           {
-            "c": 572.615,
-            "t": 1783516380
+            "t": 1786453979
           },
           {
-            "c": 570,
-            "t": 1783516440
+            "t": 1786454039
           },
           {
-            "c": 570.335,
-            "t": 1783516500
+            "t": 1786454099
           },
           {
-            "c": 571.47,
-            "t": 1783516560
+            "t": 1786454159
           },
           {
-            "c": 571.84,
-            "t": 1783516620
+            "t": 1786454219
           },
           {
-            "c": 571.34,
-            "t": 1783516680
+            "t": 1786454279
           },
           {
-            "c": 571.863,
-            "t": 1783516740
+            "t": 1786454339
           },
           {
-            "c": 572.1,
-            "t": 1783516800
+            "t": 1786454399
           },
           {
-            "c": 573.39,
-            "t": 1783516860
+            "t": 1786454459
           },
           {
-            "c": 573.49,
-            "t": 1783516920
+            "t": 1786454519
           },
           {
-            "c": 573.675,
-            "t": 1783516980
+            "t": 1786454579
           },
           {
-            "c": 573.498,
-            "t": 1783517040
+            "t": 1786454639
           },
           {
-            "c": 574.64,
-            "t": 1783517100
+            "t": 1786454699
           },
           {
-            "c": 574.166,
-            "t": 1783517160
+            "t": 1786454759
           },
           {
-            "c": 574.112,
-            "t": 1783517220
+            "t": 1786454819
           },
           {
-            "c": 574.563,
-            "t": 1783517280
+            "t": 1786454879
           },
           {
-            "c": 574.705,
-            "t": 1783517340
+            "t": 1786454939
           },
           {
-            "c": 574.795,
-            "t": 1783517400
+            "t": 1786454999
           },
           {
-            "c": 574.094,
-            "t": 1783517460
+            "t": 1786455059
           },
           {
-            "c": 574.412,
-            "t": 1783517520
+            "t": 1786455119
           },
           {
-            "c": 575.6,
-            "t": 1783517580
+            "t": 1786455179
           },
           {
-            "c": 575.26,
-            "t": 1783517640
+            "t": 1786455239
           },
           {
-            "c": 575.131,
-            "t": 1783517700
+            "t": 1786455299
           },
           {
-            "c": 575,
-            "t": 1783517760
+            "t": 1786455359
           },
           {
-            "c": 575.055,
-            "t": 1783517820
+            "t": 1786455419
           },
           {
-            "c": 574.3,
-            "t": 1783517880
+            "t": 1786455479
           },
           {
-            "c": 574.791,
-            "t": 1783517940
+            "t": 1786455539
           },
           {
-            "c": 573.71,
-            "t": 1783518000
+            "t": 1786455599
           },
           {
-            "c": 572.89,
-            "t": 1783518060
+            "t": 1786455659
           },
           {
-            "c": 573.145,
-            "t": 1783518120
+            "t": 1786455719
           },
           {
-            "c": 572.5,
-            "t": 1783518180
+            "t": 1786455779
           },
           {
-            "c": 571.961,
-            "t": 1783518240
+            "t": 1786455839
           },
           {
-            "c": 570.923,
-            "t": 1783518300
+            "t": 1786455899
           },
           {
-            "c": 571.45,
-            "t": 1783518360
+            "t": 1786455959
           },
           {
-            "c": 571.56,
-            "t": 1783518420
+            "t": 1786456019
           },
           {
-            "c": 570.94,
-            "t": 1783518480
+            "t": 1786456079
           },
           {
-            "c": 570.74,
-            "t": 1783518540
+            "t": 1786456139
           },
           {
-            "c": 571.231,
-            "t": 1783518600
+            "t": 1786456199
           },
           {
-            "c": 572.307,
-            "t": 1783518660
+            "t": 1786456259
           },
           {
-            "c": 573.325,
-            "t": 1783518720
+            "t": 1786456319
           },
           {
-            "c": 572.365,
-            "t": 1783518780
+            "t": 1786456379
           },
           {
-            "c": 571.36,
-            "t": 1783518840
+            "t": 1786456439
           },
           {
-            "c": 570.7,
-            "t": 1783518900
+            "t": 1786456499
           },
           {
-            "c": 570.64,
-            "t": 1783518960
+            "t": 1786456559
           },
           {
-            "c": 570.931,
-            "t": 1783519020
+            "t": 1786456619
           },
           {
-            "c": 571.685,
-            "t": 1783519080
+            "t": 1786456679
           },
           {
-            "c": 572.33,
-            "t": 1783519140
+            "t": 1786456739
           },
           {
-            "c": 573.003,
-            "t": 1783519200
+            "t": 1786456799
           },
           {
-            "c": 574.33,
-            "t": 1783519260
+            "t": 1786456859
           },
           {
-            "c": 573.06,
-            "t": 1783519320
+            "t": 1786456919
           },
           {
-            "c": 574.23,
-            "t": 1783519380
+            "t": 1786456979
           },
           {
-            "c": 574.53,
-            "t": 1783519440
+            "t": 1786457039
           },
           {
-            "c": 573.4,
-            "t": 1783519500
+            "t": 1786457099
           },
           {
-            "c": 573.7,
-            "t": 1783519560
+            "t": 1786457159
           },
           {
-            "c": 573.798,
-            "t": 1783519620
+            "t": 1786457219
           },
           {
-            "c": 573.698,
-            "t": 1783519680
+            "t": 1786457279
           },
           {
-            "c": 573.95,
-            "t": 1783519740
+            "t": 1786457339
           },
           {
-            "c": 574.017,
-            "t": 1783519800
+            "t": 1786457399
           },
           {
-            "c": 574.137,
-            "t": 1783519860
+            "t": 1786457459
           },
           {
-            "c": 574.3,
-            "t": 1783519920
+            "t": 1786457519
           },
           {
-            "c": 574.2,
-            "t": 1783519980
+            "t": 1786457579
           },
           {
-            "c": 574.563,
-            "t": 1783520040
+            "t": 1786457639
           },
           {
-            "c": 574.191,
-            "t": 1783520100
+            "t": 1786457699
           },
           {
-            "c": 573.568,
-            "t": 1783520160
+            "t": 1786457759
           },
           {
-            "c": 574.005,
-            "t": 1783520220
+            "t": 1786457819
           },
           {
-            "c": 574.555,
-            "t": 1783520280
+            "t": 1786457879
           },
           {
-            "c": 574.92,
-            "t": 1783520340
+            "t": 1786457939
           },
           {
-            "c": 574.02,
-            "t": 1783520400
+            "t": 1786457999
           },
           {
-            "c": 574.26,
-            "t": 1783520460
+            "t": 1786458059
           },
           {
-            "c": 574.7,
-            "t": 1783520520
+            "t": 1786458119
           },
           {
-            "c": 574,
-            "t": 1783520580
+            "t": 1786458179
           },
           {
-            "c": 574.02,
-            "t": 1783520640
+            "t": 1786458239
           },
           {
-            "c": 574.47,
-            "t": 1783520700
+            "t": 1786458299
           },
           {
-            "c": 574.71,
-            "t": 1783520760
+            "t": 1786458359
           },
           {
-            "c": 575.17,
-            "t": 1783520820
+            "t": 1786458419
           },
           {
-            "c": 574.305,
-            "t": 1783520880
+            "t": 1786458479
           },
           {
-            "c": 574.285,
-            "t": 1783520940
+            "t": 1786458539
           },
           {
-            "c": 574.328,
-            "t": 1783521000
+            "t": 1786458599
           },
           {
-            "c": 574.8,
-            "t": 1783521060
+            "t": 1786458659
           },
           {
-            "c": 574.56,
-            "t": 1783521120
+            "t": 1786458719
           },
           {
-            "c": 574.507,
-            "t": 1783521180
+            "t": 1786458779
           },
           {
-            "c": 574.705,
-            "t": 1783521240
+            "t": 1786458839
           },
           {
-            "c": 574.848,
-            "t": 1783521300
+            "t": 1786458899
           },
           {
-            "c": 576.29,
-            "t": 1783521360
+            "t": 1786458959
           },
           {
-            "c": 576.795,
-            "t": 1783521420
+            "t": 1786459019
           },
           {
-            "c": 576.47,
-            "t": 1783521480
+            "t": 1786459079
           },
           {
-            "c": 575.895,
-            "t": 1783521540
+            "t": 1786459139
           },
           {
-            "c": 576.085,
-            "t": 1783521600
+            "t": 1786459199
           },
           {
-            "c": 576.29,
-            "t": 1783521660
+            "t": 1786459259
           },
           {
-            "c": 575.43,
-            "t": 1783521720
+            "t": 1786459319
           },
           {
-            "c": 575.56,
-            "t": 1783521780
+            "t": 1786459379
           },
           {
-            "c": 575.535,
-            "t": 1783521840
+            "t": 1786459439
           },
           {
-            "c": 575.845,
-            "t": 1783521900
+            "t": 1786459499
           },
           {
-            "c": 575.68,
-            "t": 1783521960
+            "t": 1786459559
           },
           {
-            "c": 575.32,
-            "t": 1783522020
+            "t": 1786459619
           },
           {
-            "c": 574.96,
-            "t": 1783522080
+            "t": 1786459679
           },
           {
-            "c": 575.39,
-            "t": 1783522140
+            "t": 1786459739
           },
           {
-            "c": 575.335,
-            "t": 1783522200
+            "t": 1786459799
           },
           {
-            "c": 575.34,
-            "t": 1783522260
+            "t": 1786459859
           },
           {
-            "c": 575.35,
-            "t": 1783522320
+            "t": 1786459919
           },
           {
-            "c": 575.31,
-            "t": 1783522380
+            "t": 1786459979
           },
           {
-            "c": 575.16,
-            "t": 1783522440
+            "t": 1786460039
           },
           {
-            "c": 575.27,
-            "t": 1783522500
+            "t": 1786460099
           },
           {
-            "c": 575.155,
-            "t": 1783522560
+            "t": 1786460159
           },
           {
-            "c": 575.31,
-            "t": 1783522620
+            "t": 1786460219
           },
           {
-            "c": 575.1,
-            "t": 1783522680
+            "t": 1786460279
           },
           {
-            "c": 575.44,
-            "t": 1783522740
+            "t": 1786460339
           },
           {
-            "c": 575.425,
-            "t": 1783522800
+            "t": 1786460399
           },
           {
-            "c": 575.3,
-            "t": 1783522860
+            "t": 1786460459
           },
           {
-            "c": 574.74,
-            "t": 1783522920
+            "t": 1786460519
           },
           {
-            "c": 574.64,
-            "t": 1783522980
+            "t": 1786460579
           },
           {
-            "c": 574.635,
-            "t": 1783523040
+            "t": 1786460639
           },
           {
-            "c": 574.58,
-            "t": 1783523100
+            "t": 1786460699
           },
           {
-            "c": 574.175,
-            "t": 1783523160
+            "t": 1786460759
           },
           {
-            "c": 575.125,
-            "t": 1783523220
+            "t": 1786460819
           },
           {
-            "c": 575.075,
-            "t": 1783523280
+            "t": 1786460879
           },
           {
-            "c": 574.765,
-            "t": 1783523340
+            "t": 1786460939
           },
           {
-            "c": 574.384,
-            "t": 1783523400
+            "t": 1786460999
           },
           {
-            "c": 573.762,
-            "t": 1783523460
+            "t": 1786461059
           },
           {
-            "c": 574.11,
-            "t": 1783523520
+            "t": 1786461119
           },
           {
-            "c": 573.7,
-            "t": 1783523580
+            "t": 1786461179
           },
           {
-            "c": 574.365,
-            "t": 1783523640
+            "t": 1786461239
           },
           {
-            "c": 573.515,
-            "t": 1783523700
+            "t": 1786461299
           },
           {
-            "c": 574.32,
-            "t": 1783523760
+            "t": 1786461359
           },
           {
-            "c": 574.24,
-            "t": 1783523820
+            "t": 1786461419
           },
           {
-            "c": 574.26,
-            "t": 1783523880
+            "t": 1786461479
           },
           {
-            "c": 574.108,
-            "t": 1783523940
+            "t": 1786461539
           },
           {
-            "c": 574.79,
-            "t": 1783524000
+            "t": 1786461599
           },
           {
-            "c": 575.078,
-            "t": 1783524060
+            "t": 1786461659
           },
           {
-            "c": 574.525,
-            "t": 1783524120
+            "t": 1786461719
           },
           {
-            "c": 574.45,
-            "t": 1783524180
+            "t": 1786461779
           },
           {
-            "c": 574.209,
-            "t": 1783524240
+            "t": 1786461839
           },
           {
-            "c": 575.01,
-            "t": 1783524300
+            "t": 1786461899
           },
           {
-            "c": 575.735,
-            "t": 1783524360
+            "t": 1786461959
           },
           {
-            "c": 576.525,
-            "t": 1783524420
+            "t": 1786462019
           },
           {
-            "c": 577.18,
-            "t": 1783524480
+            "t": 1786462079
           },
           {
-            "c": 577.75,
-            "t": 1783524540
+            "t": 1786462139
           },
           {
-            "c": 575.71,
-            "t": 1783524600
+            "t": 1786462199
           },
           {
-            "c": 574.5,
-            "t": 1783524660
+            "t": 1786462259
           },
           {
-            "c": 576.59,
-            "t": 1783524720
+            "t": 1786462319
           },
           {
-            "c": 576.035,
-            "t": 1783524780
+            "t": 1786462379
           },
           {
-            "c": 574.785,
-            "t": 1783524840
+            "t": 1786462439
           },
           {
-            "c": 575.173,
-            "t": 1783524900
+            "t": 1786462499
           },
           {
-            "c": 576.04,
-            "t": 1783524960
+            "t": 1786462559
           },
           {
-            "c": 576.17,
-            "t": 1783525020
+            "t": 1786462619
           },
           {
-            "c": 575.134,
-            "t": 1783525080
+            "t": 1786462679
           },
           {
-            "c": 575.103,
-            "t": 1783525140
+            "t": 1786462739
           },
           {
-            "c": 575.013,
-            "t": 1783525200
+            "t": 1786462799
           },
           {
-            "c": 574.19,
-            "t": 1783525260
+            "t": 1786462859
           },
           {
-            "c": 573.47,
-            "t": 1783525320
+            "t": 1786462919
           },
           {
-            "c": 572.6,
-            "t": 1783525380
+            "t": 1786462979
           },
           {
-            "c": 571.89,
-            "t": 1783525440
+            "t": 1786463039
           },
           {
-            "c": 574.176,
-            "t": 1783525500
+            "t": 1786463099
           },
           {
-            "c": 573.339,
-            "t": 1783525560
+            "t": 1786463159
           },
           {
-            "c": 572.881,
-            "t": 1783525620
+            "t": 1786463219
           },
           {
-            "c": 571.92,
-            "t": 1783525680
+            "t": 1786463279
           },
           {
-            "c": 572.06,
-            "t": 1783525740
+            "t": 1786463339
           },
           {
-            "c": 570.43,
-            "t": 1783525800
+            "t": 1786463399
           },
           {
-            "c": 571.27,
-            "t": 1783525860
+            "t": 1786463459
           },
           {
-            "c": 571.165,
-            "t": 1783525920
+            "t": 1786463519
           },
           {
-            "c": 571.155,
-            "t": 1783525980
+            "t": 1786463579
           },
           {
-            "c": 571.965,
-            "t": 1783526040
+            "t": 1786463639
           },
           {
-            "c": 570.72,
-            "t": 1783526100
+            "t": 1786463699
           },
           {
-            "c": 569.37,
-            "t": 1783526160
+            "t": 1786463759
           },
           {
-            "c": 570.58,
-            "t": 1783526220
+            "t": 1786463819
           },
           {
-            "c": 570.26,
-            "t": 1783526280
+            "t": 1786463879
           },
           {
-            "c": 570.46,
-            "t": 1783526340
+            "t": 1786463939
           },
           {
-            "c": 570.5,
-            "t": 1783526400
+            "t": 1786463999
+          },
+          {
+            "t": 1786464000
           }
         ]
       },
       "changes": {
-        "price1w": 650.91,
-        "price1m": 453.01,
+        "price1w": 518.21,
+        "price1m": 602.5,
+        "price3m": 435.44,
+        "price6m": 329.07,
         "priceYTD": 256.99,
-        "price1y": 190.78,
-        "price5y": 134.87,
+        "price1y": 184.87,
+        "price5y": 138.06,
         "priceMAX": 0.2383
       },
       "source": "polygon"
     },
     "history": [
       {
+        "t": "2026-08-03",
+        "o": 498.86,
+        "h": 555.32,
+        "l": 491.68,
+        "c": 522.12,
+        "a": 522.12,
+        "v": 34293561,
+        "ch": 2.85
+      },
+      {
         "t": "2026-07-01",
         "o": 668.405,
         "h": 693.78,
-        "l": 527.63,
-        "c": 570.5,
-        "a": 570.5,
-        "v": 59391272,
-        "ch": -21.09
+        "l": 436.33,
+        "c": 507.67,
+        "a": 507.67,
+        "v": 200141181,
+        "ch": -29.78
       },
       {
         "t": "2026-06-01",
@@ -2338,59 +2106,39 @@
         "a": 232.065687,
         "v": 181463323,
         "ch": 13.85
-      },
-      {
-        "t": "2025-09-02",
-        "o": 156.72,
-        "h": 210.5,
-        "l": 154.465,
-        "c": 204.74,
-        "a": 203.831526,
-        "v": 186624668,
-        "ch": 27.36
-      },
-      {
-        "t": "2025-08-01",
-        "o": 176.6,
-        "h": 191.14,
-        "l": 157.94,
-        "c": 160.76,
-        "a": 160.046674,
-        "v": 171946987,
-        "ch": -10.46
       }
     ],
     "quote": {
-      "p": 570.5,
-      "pd": 570.5,
-      "c": 16,
-      "cp": 2.89,
-      "cl": 554.5,
+      "p": 535.6,
+      "pd": 535.6,
+      "c": 13.48,
+      "cp": 2.58,
+      "cl": 522.12,
       "cdr": 1,
-      "o": 547.1,
-      "h": 578.14,
-      "l": 546.18,
-      "v": 7509399,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
+      "o": 539.99,
+      "h": 539.99,
+      "l": 525.73,
+      "v": 1177405,
+      "ts": 1786459121023.2466,
+      "u": "Aug 11, 2026, 10:38 AM EDT",
+      "td": "2026-08-11",
       "h52": 739.67,
       "l52": 154.465,
       "ex": "NASDAQ",
-      "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 568.21,
-      "epd": 568.21,
-      "ec": -2.29,
-      "ecp": -0.4,
-      "eu": "Jul 8, 2026, 6:33 PM EDT",
-      "es": "After-hours",
-      "ets": 1783550034643.6182,
-      "etd": "2026-07-08",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1786459121023.2466,
+      "etd": null,
       "epv": null,
       "days": 0,
-      "exp": 1783550794730,
+      "exp": 1786459132904,
       "symbol": "AMAT",
       "uid": "AMAT"
     }

@@ -5,14 +5,17 @@ name: Global Writer Queue Observability
 # `global-writer candidate queued runs`, not `lock wait`.
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    # One full writer-inventory scan per hour. The prior 15-minute declaration
+    # was not achieved by Actions in practice and multiplied API work without
+    # improving the observed incident timeline.
+    - cron: '11 * * * *'
   workflow_dispatch:
 
 permissions:
   actions: read
   contents: read
-  # Notification only. The observer measured a breach every 15 minutes and told
-  # nobody: read-only permissions and no notification step meant the signal died
+  # Notification only. The observer once measured breaches and told nobody:
+  # read-only permissions and no notification step meant the signal died
   # in the run log. It gains issue write and nothing else — never repo write,
   # because it watches a blocked writer queue and must not join it.
   issues: write

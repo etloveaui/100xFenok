@@ -1,34 +1,21 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-10T06:11:16.627Z",
+  "generated_at": "2026-08-12T00:04:28.387Z",
   "status": "open",
-  "open_incident_count": 9,
+  "open_incident_count": 5,
   "open_incidents": [
     {
-      "workflow": "build-stocks-analyzer.yml",
-      "label": "Build Stocks Analyzer",
-      "streak": 5,
+      "workflow": "fenok-edge-daily.yml",
+      "label": "Fenok Edge Daily Data",
+      "streak": 0,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": 30990499079,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/30990499079",
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
       "alarm_reasons": [
-        "failure_streak"
+        "unrecovered_overdue"
       ],
       "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
-    {
-      "workflow": "fetch-damodaran-shadow.yml",
-      "label": "Fetch Damodaran Data",
-      "streak": 1,
-      "failure_streak_threshold": 1,
-      "first_failing_run_id": 31255487819,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31255487819",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
+      "cadence_status": "overdue"
     },
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -44,22 +31,9 @@
       "cadence_status": "not_due"
     },
     {
-      "workflow": "fetch-fred-yardeni.yml",
-      "label": "Fetch FRED Yardeni Data",
-      "streak": 1,
-      "failure_streak_threshold": 1,
-      "first_failing_run_id": 31252801134,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31252801134",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
-    },
-    {
       "workflow": "fetch-stockanalysis.yml",
       "label": "Fetch StockAnalysis Data",
-      "streak": 0,
+      "streak": 1,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
       "first_failing_run_url": null,
@@ -83,38 +57,12 @@
       "cadence_status": "overdue"
     },
     {
-      "workflow": "qa-rim-v2.yml",
-      "label": "QA RIM v2",
-      "streak": 8,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 31136433451,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31136433451",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
-    {
-      "workflow": "update-manifest.yml",
-      "label": "Update Manifest",
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
       "streak": 4,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": 31350397868,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31350397868",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
-    {
-      "workflow": "validate-workflows.yml",
-      "label": "Validate GitHub Workflows",
-      "streak": 2,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 31350397885,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31350397885",
+      "first_failing_run_id": 31536746242,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31536746242",
       "alarm_reasons": [
         "failure_streak"
       ],
@@ -126,6 +74,17 @@
     {
       "file": "build-stocks-analyzer.yml",
       "label": "Build Stocks Analyzer",
+      "events": [
+        "schedule"
+      ],
+      "event": "schedule",
+      "failure_streak_threshold": 2,
+      "cadence_status": "no_declaration",
+      "cadence_evidence": []
+    },
+    {
+      "file": "data-plane-serving-probe.yml",
+      "label": "Data Plane Serving Probe",
       "events": [
         "schedule"
       ],
@@ -155,8 +114,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "attempt_gap"
+      ]
     },
     {
       "file": "fenok-edge-krx-daily.yml",
@@ -291,17 +252,6 @@
       "cadence_evidence": []
     },
     {
-      "file": "fetch-kospi-dart-payout.yml",
-      "label": "Fetch KOSPI OpenDART Payout",
-      "events": [
-        "schedule"
-      ],
-      "event": "schedule",
-      "failure_streak_threshold": 2,
-      "cadence_status": "no_declaration",
-      "cadence_evidence": []
-    },
-    {
       "file": "fetch-nasdaq-giw-sox.yml",
       "label": "Fetch Nasdaq GIW SOX Constituents",
       "events": [
@@ -405,19 +355,6 @@
       "cadence_evidence": []
     },
     {
-      "file": "qa-rim-v2.yml",
-      "label": "QA RIM v2",
-      "events": [
-        "push",
-        "pull_request",
-        "schedule"
-      ],
-      "event": null,
-      "failure_streak_threshold": 2,
-      "cadence_status": "no_declaration",
-      "cadence_evidence": []
-    },
-    {
       "file": "slickcharts-daily.yml",
       "label": "SlickCharts Daily",
       "events": [
@@ -508,47 +445,33 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 24,
-    "overdue": 2,
+    "not_due": 23,
+    "overdue": 3,
     "recovered": 0,
-    "no_declaration": 8,
+    "no_declaration": 7,
     "unknown": 0
   },
   "excluded_workflows": [
-    {
-      "file": "data-plane-serving-probe.yml",
-      "label": "Data Plane Serving Probe",
-      "reason": "observer that fails its own run on alarm; watching it would page twice for one incident"
-    },
     {
       "file": "pipeline-failure-alarm.yml",
       "label": "Pipeline Failure Alarm",
       "reason": "self-monitoring would create a recursive alarm loop"
     }
   ],
-  "unknown_workflows": [
-    {
-      "workflow": "fetch-kospi-dart-payout.yml",
-      "status": "unknown"
-    }
-  ],
+  "unknown_workflows": [],
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31360887987",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31360887987",
-    "observed_at": "2026-08-10T06:11:16.627Z",
-    "event": "workflow_run",
+    "run_id": "31548724502",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31548724502",
+    "observed_at": "2026-08-12T00:04:28.387Z",
+    "event": "schedule",
     "workflows": [
-      "build-stocks-analyzer.yml",
-      "fetch-damodaran-shadow.yml",
+      "fenok-edge-daily.yml",
       "fetch-edgar-filings.yml",
-      "fetch-fred-yardeni.yml",
       "fetch-stockanalysis.yml",
       "fetch-yf-finance.yml",
-      "qa-rim-v2.yml",
-      "update-manifest.yml",
-      "validate-workflows.yml"
+      "global-writer-queue-observer.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },

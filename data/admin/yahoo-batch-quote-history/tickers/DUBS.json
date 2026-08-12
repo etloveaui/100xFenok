@@ -12,31 +12,57 @@
       "run_id": "30711926935",
       "schedule": "",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 553,
+      "natural": true,
+      "observed_at": "2026-08-11T07:21:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31468517777",
+      "schedule": "7 6 * * 0-5",
+      "shard": "27/72"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-11T11:03:07Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31484759300",
+      "schedule": "7 10 * * 0-5",
+      "shard": "29/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T18:51:39Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DUBS.json",
-    "payload_sha256": "f71a15a170d9fd8a6923ccd495bc55831d2afd808b266fb4b420a4e1f31f0da4",
-    "quote_as_of": "2026-07-31T19:59:46Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-11T07:22:10Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/DUBS.json",
+    "payload_sha256": "9d6f0cb011d1eec31765be9d028733f72d5c1b576850b4182d584204fd7c66da",
+    "quote_as_of": "2026-08-10T19:51:48Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 0,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 615,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-01T18:48:56Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-11T11:03:07Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "30711926935",
-    "schedule": "",
-    "shard": "5/6"
+    "run_id": "31484759300",
+    "schedule": "7 10 * * 0-5",
+    "shard": "29/72"
   },
   "lkg": {
     "fetched_at": "2026-08-01T18:51:39Z",
@@ -48,18 +74,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T18:48:56Z",
-    "payload_sha256": "f5b3ceee6c60525e4f3d6d508d0c48051ff2c539ceb33897aff9d6bd2fde30a0",
-    "quote_as_of": "2026-07-31T19:59:46Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T07:21:44Z",
+    "payload_sha256": "4a5086f617f1b7a72b1443f338a472c21bed58f35d482976001720831c4fc2d7",
+    "quote_as_of": "2026-08-10T19:51:48Z",
     "run_attempt": 1,
-    "run_id": "30711926935",
+    "run_id": "31468517777",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +98,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "DUBS",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T11:03:07Z"
 }

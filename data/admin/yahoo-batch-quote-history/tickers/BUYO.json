@@ -25,13 +25,40 @@
       "run_id": "31319162316",
       "schedule": "7 14 * * 0-5",
       "shard": "7/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 519,
+      "natural": true,
+      "observed_at": "2026-08-12T04:17:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31562660637",
+      "schedule": "7 2 * * 0-5",
+      "shard": "37/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 499,
+      "natural": true,
+      "observed_at": "2026-08-12T05:45:23Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31567478446",
+      "schedule": "7 4 * * 0-5",
+      "shard": "38/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T14:46:27Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/BUYO.json",
-    "payload_sha256": "41a2d27a78980bea91c2aab707a8fa4af0c8f39e69718276316c8b3126eba7ef",
+    "fetched_at": "2026-08-12T04:18:04Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BUYO.json",
+    "payload_sha256": "1abcb6f5ffc739314a52c6b86386d3b01f40e95f611a230831b459e881724b1c",
     "quote_as_of": "2026-08-03T17:35:20Z",
     "source_as_of": "2026-08-03T17:35:20Z"
   },
@@ -40,32 +67,60 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 714,
+    "latency_ms": 499,
     "natural": true,
-    "observed_at": "2026-08-09T14:44:24Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31319162316",
-    "schedule": "7 14 * * 0-5",
-    "shard": "7/72"
+    "run_id": "31567478446",
+    "schedule": "7 4 * * 0-5",
+    "shard": "38/72"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "provider_history_as_of": "2026-08-10",
+    "provider_quote_as_of": "2026-08-03T17:35:20Z",
+    "reason": "foreign_writer_conflict",
+    "run_attempt": 1,
+    "run_id": "31567478446"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-12T04:18:04Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BUYO.json",
+    "payload_sha256": "1abcb6f5ffc739314a52c6b86386d3b01f40e95f611a230831b459e881724b1c",
+    "quote_as_of": "2026-08-03T17:35:20Z",
+    "source_as_of": "2026-08-03T17:35:20Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T14:44:24Z",
-    "payload_sha256": "29a7b0ccb6dc1c242e7ac2e35e0c31050e8ab779684c4d26a02c142d310341f7",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "payload_sha256": "036ad4f9ee01fb345f442499b4388459b95a69cbf062ca453ad5b6f69f086b58",
     "quote_as_of": "2026-08-03T17:35:20Z",
     "run_attempt": 1,
-    "run_id": "31319162316",
+    "run_id": "31562660637",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-03T17:35:20Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-12T05:45:23Z",
+    "classified_run_id": "31567478446",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "BUYO holds LKG because Yahoo source date 2026-08-03T17:35:20Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-03T17:35:20Z"
+  },
   "ticker": "BUYO",
-  "updated_at": "2026-08-09T14:44:24Z"
+  "updated_at": "2026-08-12T05:45:23Z"
 }

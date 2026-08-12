@@ -12,31 +12,57 @@
       "run_id": "30771231562",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 645,
+      "natural": true,
+      "observed_at": "2026-08-11T07:21:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31468517777",
+      "schedule": "7 6 * * 0-5",
+      "shard": "27/72"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-11T13:36:55Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31496919771",
+      "schedule": "7 12 * * 0-5",
+      "shard": "30/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-02T23:01:45Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GROZ.json",
-    "payload_sha256": "a2231647599c86aaacb27183d780b71dd49c4cc8c1e3fa3d2e54a7739e671201",
-    "quote_as_of": "2026-07-31T19:59:50Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-11T07:22:27Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/GROZ.json",
+    "payload_sha256": "db22f8c272ea2cbe91056bc3cebe0b8b9982d2f4036147cff33ee96f9160296e",
+    "quote_as_of": "2026-08-10T18:28:54Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 522,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-02T22:59:12Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-11T13:36:55Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "30771231562",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31496919771",
+    "schedule": "7 12 * * 0-5",
+    "shard": "30/72"
   },
   "lkg": {
     "fetched_at": "2026-08-02T23:01:45Z",
@@ -49,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-02T22:59:12Z",
-    "payload_sha256": "be0d1dc51621eb1d0f0b6ead7015f14bf6267d2b28bced95ffedb89f00133922",
-    "quote_as_of": "2026-07-31T19:59:50Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T07:21:44Z",
+    "payload_sha256": "6e494ad1ac2a864681af0c820d4f90b2fc694d9ce035370b925596287595512e",
+    "quote_as_of": "2026-08-10T18:28:54Z",
     "run_attempt": 1,
-    "run_id": "30771231562",
+    "run_id": "31468517777",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +98,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "GROZ",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T13:36:55Z"
 }

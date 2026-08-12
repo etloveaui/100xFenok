@@ -38,13 +38,40 @@
       "run_id": "31182487397",
       "schedule": "7 12 * * 0-5",
       "shard": "66/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 471,
+      "natural": true,
+      "observed_at": "2026-08-12T04:17:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31562660637",
+      "schedule": "7 2 * * 0-5",
+      "shard": "37/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 498,
+      "natural": true,
+      "observed_at": "2026-08-12T05:45:23Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31567478446",
+      "schedule": "7 4 * * 0-5",
+      "shard": "38/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T13:27:15Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/yf/finance/DVVY.json",
-    "payload_sha256": "3788fd8c7a4062189fa1e1ce92c800a7624302fb996a8a3f1ff9cf36340affed",
+    "fetched_at": "2026-08-12T04:17:53Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DVVY.json",
+    "payload_sha256": "4ec74882f8262bbf09e4adcdd6fed53eab3bbc5df8f8316bbcb6531140ec9b01",
     "quote_as_of": "2026-08-03T16:32:49Z",
     "source_as_of": "2026-08-03T16:32:49Z"
   },
@@ -53,50 +80,60 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1092,
+    "latency_ms": 498,
     "natural": true,
-    "observed_at": "2026-08-07T13:26:16Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31182487397",
-    "schedule": "7 12 * * 0-5",
-    "shard": "66/72"
+    "run_id": "31567478446",
+    "schedule": "7 4 * * 0-5",
+    "shard": "38/72"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "provider_history_as_of": "2026-08-10",
+    "provider_quote_as_of": "2026-08-03T16:32:49Z",
+    "reason": "foreign_writer_conflict",
+    "run_attempt": 1,
+    "run_id": "31567478446"
   },
   "lkg": {
-    "fetched_at": "2026-07-30T23:35:18Z",
-    "history_as_of": "2026-07-29",
+    "fetched_at": "2026-08-12T04:17:53Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/DVVY.json",
-    "payload_sha256": "72b562ce50ddca594431421b3d2ee66e16334a004fd7848acf1355d85951e519",
-    "quote_as_of": "2026-07-22T19:03:36Z",
-    "source_as_of": "2026-07-22T19:03:36Z"
+    "payload_sha256": "4ec74882f8262bbf09e4adcdd6fed53eab3bbc5df8f8316bbcb6531140ec9b01",
+    "quote_as_of": "2026-08-03T16:32:49Z",
+    "source_as_of": "2026-08-03T16:32:49Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T13:26:16Z",
-    "payload_sha256": "3897dae553f9cd6cfcaf9bdfd7a3b693bd73a4ecd9a7a522c96a727cefc09dc5",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "payload_sha256": "6e3126536e7df3d19e63bd3f6f6c0944e29082fe95c6e9ecb09cf197a9dcb6d0",
     "quote_as_of": "2026-08-03T16:32:49Z",
     "run_attempt": 1,
-    "run_id": "31182487397",
+    "run_id": "31562660637",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-03T16:32:49Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-07-31T00:55:40Z",
-    "classified_run_id": "30593079919",
+    "classified_at": "2026-08-12T05:45:23Z",
+    "classified_run_id": "31567478446",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "DVVY holds LKG because Yahoo source date 2026-07-22T19:03:36Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "DVVY holds LKG because Yahoo source date 2026-08-03T16:32:49Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-22T19:03:36Z"
+    "source_as_of": "2026-08-03T16:32:49Z"
   },
   "ticker": "DVVY",
-  "updated_at": "2026-08-07T13:26:16Z"
+  "updated_at": "2026-08-12T05:45:23Z"
 }

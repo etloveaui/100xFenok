@@ -1,7 +1,7 @@
 {
   "schema_version": "sentiment-source-bundle/v2",
   "source_key": "cnn",
-  "source_as_of": "2026-08-07",
+  "source_as_of": "2026-08-11",
   "persistence_policy": {
     "schema_version": "sentiment-bounded-persistence/v1",
     "basis": "distinct_source_date_per_file",
@@ -11,52 +11,52 @@
   "persistence_state": {
     "files": {
       "cnn-fear-greed.json": {
-        "available_distinct_source_dates": 3965,
-        "retained_distinct_source_dates": 3965,
+        "available_distinct_source_dates": 3967,
+        "retained_distinct_source_dates": 3967,
         "pruned_distinct_source_dates": 0,
-        "retained_rows": 3965
+        "retained_rows": 3967
       },
       "cnn-components.json": {
-        "available_distinct_source_dates": 213,
-        "retained_distinct_source_dates": 213,
+        "available_distinct_source_dates": 215,
+        "retained_distinct_source_dates": 215,
         "pruned_distinct_source_dates": 0,
-        "retained_rows": 213
+        "retained_rows": 215
       },
       "cnn-put-call.json": {
-        "available_distinct_source_dates": 711,
-        "retained_distinct_source_dates": 711,
+        "available_distinct_source_dates": 713,
+        "retained_distinct_source_dates": 713,
         "pruned_distinct_source_dates": 0,
-        "retained_rows": 711
+        "retained_rows": 713
       },
       "cnn-momentum.json": {
-        "available_distinct_source_dates": 713,
-        "retained_distinct_source_dates": 713,
+        "available_distinct_source_dates": 715,
+        "retained_distinct_source_dates": 715,
         "pruned_distinct_source_dates": 0,
-        "retained_rows": 713
+        "retained_rows": 715
       },
       "cnn-strength.json": {
-        "available_distinct_source_dates": 713,
-        "retained_distinct_source_dates": 713,
+        "available_distinct_source_dates": 715,
+        "retained_distinct_source_dates": 715,
         "pruned_distinct_source_dates": 0,
-        "retained_rows": 713
+        "retained_rows": 715
       },
       "cnn-breadth.json": {
-        "available_distinct_source_dates": 713,
-        "retained_distinct_source_dates": 713,
+        "available_distinct_source_dates": 715,
+        "retained_distinct_source_dates": 715,
         "pruned_distinct_source_dates": 0,
-        "retained_rows": 713
+        "retained_rows": 715
       },
       "cnn-junk-bond.json": {
-        "available_distinct_source_dates": 712,
-        "retained_distinct_source_dates": 712,
+        "available_distinct_source_dates": 714,
+        "retained_distinct_source_dates": 714,
         "pruned_distinct_source_dates": 0,
-        "retained_rows": 712
+        "retained_rows": 714
       },
       "cnn-safe-haven.json": {
-        "available_distinct_source_dates": 712,
-        "retained_distinct_source_dates": 712,
+        "available_distinct_source_dates": 714,
+        "retained_distinct_source_dates": 714,
         "pruned_distinct_source_dates": 0,
-        "retained_rows": 712
+        "retained_rows": 714
       }
     }
   },
@@ -15921,6 +15921,14 @@
       {
         "date": "2026-08-07",
         "score": 63.7
+      },
+      {
+        "date": "2026-08-10",
+        "score": 64.4
+      },
+      {
+        "date": "2026-08-11",
+        "score": 60.8
       }
     ],
     "cnn-components.json": [
@@ -18053,6 +18061,26 @@
         "volatility": 50,
         "safe_haven": 64.6,
         "junk_bond": 97.4
+      },
+      {
+        "date": "2026-08-10",
+        "market_momentum": 76.8,
+        "stock_strength": 31.8,
+        "stock_breadth": 44.2,
+        "put_call": 77.4,
+        "volatility": 50,
+        "safe_haven": 71.8,
+        "junk_bond": 98.8
+      },
+      {
+        "date": "2026-08-11",
+        "market_momentum": 67.6,
+        "stock_strength": 31.4,
+        "stock_breadth": 49,
+        "put_call": 62.2,
+        "volatility": 50,
+        "safe_haven": 66.8,
+        "junk_bond": 98.6
       }
     ],
     "cnn-put-call.json": [
@@ -21609,6 +21637,16 @@
       {
         "date": "2026-08-07",
         "value": 0.68,
+        "rating": "extreme fear"
+      },
+      {
+        "date": "2026-08-10",
+        "value": 0.69,
+        "rating": "extreme fear"
+      },
+      {
+        "date": "2026-08-11",
+        "value": 0.71,
         "rating": "extreme fear"
       }
     ],
@@ -25177,6 +25215,16 @@
         "date": "2026-08-07",
         "value": 7757.64,
         "rating": "extreme greed"
+      },
+      {
+        "date": "2026-08-10",
+        "value": 7753.11,
+        "rating": "extreme greed"
+      },
+      {
+        "date": "2026-08-11",
+        "value": 7728.2,
+        "rating": "extreme greed"
       }
     ],
     "cnn-strength.json": [
@@ -28743,6 +28791,16 @@
       {
         "date": "2026-08-07",
         "value": 1.14,
+        "rating": "extreme fear"
+      },
+      {
+        "date": "2026-08-10",
+        "value": 1.08,
+        "rating": "extreme fear"
+      },
+      {
+        "date": "2026-08-11",
+        "value": 1.04,
         "rating": "extreme fear"
       }
     ],
@@ -32311,6 +32369,16 @@
         "date": "2026-08-07",
         "value": 959.07,
         "rating": "extreme greed"
+      },
+      {
+        "date": "2026-08-10",
+        "value": 976.75,
+        "rating": "extreme greed"
+      },
+      {
+        "date": "2026-08-11",
+        "value": 993.76,
+        "rating": "extreme greed"
       }
     ],
     "cnn-junk-bond.json": [
@@ -35873,6 +35941,16 @@
         "date": "2026-08-07",
         "value": 1.23,
         "rating": "extreme fear"
+      },
+      {
+        "date": "2026-08-10",
+        "value": 1.22,
+        "rating": "extreme fear"
+      },
+      {
+        "date": "2026-08-11",
+        "value": 1.22,
+        "rating": "extreme fear"
       }
     ],
     "cnn-safe-haven.json": [
@@ -39434,6 +39512,16 @@
       {
         "date": "2026-08-07",
         "value": 2.94,
+        "rating": "extreme fear"
+      },
+      {
+        "date": "2026-08-10",
+        "value": 3.76,
+        "rating": "extreme fear"
+      },
+      {
+        "date": "2026-08-11",
+        "value": 3.24,
         "rating": "extreme fear"
       }
     ]

@@ -1,6 +1,8 @@
 # Fenok RIM Valuation Range Contract v0.2
 
-> **Status**: 🔄 In Progress — producer and consumer implemented and locally gated; not yet deployed or live-verified.
+> **Status**: **RETIRED HISTORY** — the RIM mission and automatic execution were
+> closed under the parent project's DEC-302. This contract is retained as the
+> v0.2 range-design record and is not a live deployment or promotion contract.
 
 Date: 2026-08-01
 Supersedes the output-scope section of `CONTRACT_fenok_rim_index_inputs_v0_1_20260708.md`.

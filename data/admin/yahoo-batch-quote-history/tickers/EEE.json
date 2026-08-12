@@ -51,15 +51,28 @@
       "run_id": "30860500094",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 943,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-03T23:03:02Z",
-    "history_as_of": "2026-08-03",
+    "fetched_at": "2026-08-12T02:41:24Z",
+    "history_as_of": "2026-08-11",
     "path": "data/yf/finance/EEE.json",
-    "payload_sha256": "fe2fe4d862ad3fbec4db347187f263cab78dfff483a592477805de8f47903dd1",
-    "quote_as_of": "2026-08-03T20:00:00Z",
-    "source_as_of": "2026-08-03"
+    "payload_sha256": "7043bf4a61e93c50436363db72ff00f0d7c2d6059d70899008c256920aa0a72d",
+    "quote_as_of": "2026-08-11T20:00:00Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -68,30 +81,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 802,
+    "latency_ms": 943,
     "natural": true,
-    "observed_at": "2026-08-03T22:58:08Z",
+    "observed_at": "2026-08-12T02:41:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30860500094",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31557511991",
+    "schedule": "7 0 * * 0-5",
+    "shard": "36/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-03T23:03:02Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EEE.json",
+    "payload_sha256": "fe2fe4d862ad3fbec4db347187f263cab78dfff483a592477805de8f47903dd1",
+    "quote_as_of": "2026-08-03T20:00:00Z",
+    "source_as_of": "2026-08-03"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-03",
-    "observed_at": "2026-08-03T22:58:08Z",
-    "payload_sha256": "443a93582441bfbbeaed5b8063c49eb99fd8b8d0186c9c32d7dcc3460705e36c",
-    "quote_as_of": "2026-08-03T20:00:00Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T02:41:04Z",
+    "payload_sha256": "e4d9ede5ce5e80cb0ef61cc8892fb6dd613b78ca6d5cc622edc0408f28e8c0d4",
+    "quote_as_of": "2026-08-11T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30860500094",
+    "run_id": "31557511991",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03"
+    "source_as_of": "2026-08-11"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-12T00:28:31Z",
+    "classified_run_id": "31548744038",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "EEE holds LKG because Yahoo source date 2026-08-03 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-03"
+  },
   "ticker": "EEE",
-  "updated_at": "2026-08-03T22:58:08Z"
+  "updated_at": "2026-08-12T02:41:04Z"
 }

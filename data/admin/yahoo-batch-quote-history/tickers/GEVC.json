@@ -122,12 +122,40 @@
       "run_id": "31411954324",
       "schedule": "7 16 * * 0-5",
       "shard": "20/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: source timestamp regression for GEVC: quote_as_of 2026-07-29T16:46:45Z < 2026-08-10T13:46:04Z",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 727,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 712,
+      "natural": true,
+      "observed_at": "2026-08-12T05:45:23Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31567478446",
+      "schedule": "7 4 * * 0-5",
+      "shard": "38/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-10T17:05:06Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/GEVC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GEVC.json",
     "payload_sha256": "a2feb2e6a78a18d0ccb62c4e476d406eb58e1b5ce05c0864ad0bde40dec20a2a",
     "quote_as_of": "2026-08-10T13:46:04Z",
     "source_as_of": "2026-08-10"
@@ -137,24 +165,46 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 648,
+    "latency_ms": 712,
     "natural": true,
-    "observed_at": "2026-08-10T17:04:11Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31411954324",
-    "schedule": "7 16 * * 0-5",
-    "shard": "20/72"
+    "run_id": "31567478446",
+    "schedule": "7 4 * * 0-5",
+    "shard": "38/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: source timestamp regression for GEVC: quote_as_of 2026-07-29T16:46:45Z < 2026-08-10T13:46:04Z",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-12T02:41:04Z",
+    "run_attempt": 1,
+    "run_id": "31557511991"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "provider_history_as_of": "2026-08-10",
+    "provider_quote_as_of": "2026-07-29T16:46:45Z",
+    "reason": "foreign_writer_conflict",
+    "run_attempt": 1,
+    "run_id": "31567478446"
   },
   "lkg": {
-    "fetched_at": "2026-08-09T03:52:39Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-10T17:05:06Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/GEVC.json",
-    "payload_sha256": "35c18e9e564836ca15c7684d5d9207e1d2c9eab3ca59a2ec6ee1c02d3a4dd638",
-    "quote_as_of": "2026-07-29T16:46:45Z",
-    "source_as_of": "2026-07-29T16:46:45Z"
+    "payload_sha256": "a2feb2e6a78a18d0ccb62c4e476d406eb58e1b5ce05c0864ad0bde40dec20a2a",
+    "quote_as_of": "2026-08-10T13:46:04Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -168,8 +218,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -182,5 +232,5 @@
     "source_as_of": "2026-07-29T16:46:45Z"
   },
   "ticker": "GEVC",
-  "updated_at": "2026-08-10T17:04:11Z"
+  "updated_at": "2026-08-12T05:45:23Z"
 }

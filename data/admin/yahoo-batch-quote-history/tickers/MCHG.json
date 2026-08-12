@@ -51,15 +51,41 @@
       "run_id": "30771231562",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 561,
+      "natural": true,
+      "observed_at": "2026-08-11T07:21:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31468517777",
+      "schedule": "7 6 * * 0-5",
+      "shard": "27/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 813,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-02T23:03:16Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MCHG.json",
-    "payload_sha256": "376cce10ae22a4f47ceafc82848e5019fe910547b13fd09701236d5f2080492d",
-    "quote_as_of": "2026-07-31T18:51:48Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-12T02:44:01Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/MCHG.json",
+    "payload_sha256": "ed8a3bc9206b4c94b3ef358dcbddaf0ed267a6a3660edf629416a648a9fcc9a9",
+    "quote_as_of": "2026-08-11T19:48:36Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -68,14 +94,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 564,
+    "latency_ms": 813,
     "natural": true,
-    "observed_at": "2026-08-02T22:59:12Z",
+    "observed_at": "2026-08-12T02:41:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30771231562",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31557511991",
+    "schedule": "7 0 * * 0-5",
+    "shard": "36/72"
   },
   "lkg": {
     "fetched_at": "2026-08-02T23:03:16Z",
@@ -88,17 +114,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-02T22:59:12Z",
-    "payload_sha256": "7fddc48e224516e669a53a0e8e0b1ddd93e5b34d5a45e880e724fab6bb65100c",
-    "quote_as_of": "2026-07-31T18:51:48Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T02:41:04Z",
+    "payload_sha256": "9e6e44e70b5d57f7a716577f40faa7d223683024778ab8e95d3e8a92a72115e8",
+    "quote_as_of": "2026-08-11T19:48:36Z",
     "run_attempt": 1,
-    "run_id": "30771231562",
+    "run_id": "31557511991",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-11"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -111,5 +137,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "MCHG",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-12T02:41:04Z"
 }

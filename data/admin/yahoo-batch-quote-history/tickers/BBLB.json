@@ -25,65 +25,91 @@
       "run_id": "31047972318",
       "schedule": "7 20 * * 0-5",
       "shard": "46/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 849,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-12T05:45:23Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31567478446",
+      "schedule": "7 4 * * 0-5",
+      "shard": "38/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-05T21:20:33Z",
-    "history_as_of": "2026-08-04",
+    "fetched_at": "2026-08-12T02:42:05Z",
+    "history_as_of": "2026-08-11",
     "path": "data/yf/finance/BBLB.json",
-    "payload_sha256": "e69620e3fec56844df1d6135a7a3e4901a0d3d81a15bb6fa6e456223e56ea532",
-    "quote_as_of": "2026-08-03T13:45:09Z",
-    "source_as_of": "2026-08-03T13:45:09Z"
+    "payload_sha256": "ead11dd2c50d9fd811b898399ce135da91405069b775084900f6a04a10a64d4f",
+    "quote_as_of": "2026-08-11T19:49:49Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 745,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-05T21:19:22Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "31047972318",
-    "schedule": "7 20 * * 0-5",
-    "shard": "46/72"
+    "run_id": "31567478446",
+    "schedule": "7 4 * * 0-5",
+    "shard": "38/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-21T23:08:18Z",
-    "history_as_of": "2026-07-20",
+    "fetched_at": "2026-08-05T21:20:33Z",
+    "history_as_of": "2026-08-04",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BBLB.json",
-    "payload_sha256": "2813a0873c5202597180159ac7e4d0be168c700e4a3a105584d5822a35522810",
-    "quote_as_of": "2026-07-20T13:48:55Z",
-    "source_as_of": "2026-07-20"
+    "payload_sha256": "e69620e3fec56844df1d6135a7a3e4901a0d3d81a15bb6fa6e456223e56ea532",
+    "quote_as_of": "2026-08-03T13:45:09Z",
+    "source_as_of": "2026-08-03T13:45:09Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-04",
-    "observed_at": "2026-08-05T21:19:22Z",
-    "payload_sha256": "3c16a24227f6eebb9f68120e603e590e9f8c6e598c370b04d1134f368e6d9d68",
-    "quote_as_of": "2026-08-03T13:45:09Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T02:41:04Z",
+    "payload_sha256": "5e38b5c51be169e3314c546ca3f02b0a7a0a8dceadecf64ac49e8c870ac45741",
+    "quote_as_of": "2026-08-11T19:49:49Z",
     "run_attempt": 1,
-    "run_id": "31047972318",
+    "run_id": "31557511991",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03T13:45:09Z"
+    "source_as_of": "2026-08-11"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-07-30T00:35:13Z",
-    "classified_run_id": "30502016705",
+    "age_business_days": 7,
+    "classified_at": "2026-08-12T00:28:31Z",
+    "classified_run_id": "31548744038",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BBLB holds LKG because Yahoo source date 2026-07-20 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BBLB holds LKG because Yahoo source date 2026-08-03T13:45:09Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-08-03T13:45:09Z"
   },
   "ticker": "BBLB",
-  "updated_at": "2026-08-05T21:19:22Z"
+  "updated_at": "2026-08-12T05:45:23Z"
 }

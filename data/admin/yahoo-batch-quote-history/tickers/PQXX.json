@@ -12,15 +12,28 @@
       "run_id": "31151738848",
       "schedule": "7 4 * * 0-5",
       "shard": "62/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 770,
+      "natural": true,
+      "observed_at": "2026-08-11T09:13:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31476569032",
+      "schedule": "7 8 * * 0-5",
+      "shard": "28/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T05:51:20Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/PQXX.json",
-    "payload_sha256": "d824148c976713bab909bda08aa2a1699eda4bb38a8ac7a9e79317d4a219e7c5",
-    "quote_as_of": "2026-07-31T18:58:26Z",
-    "source_as_of": "2026-07-31T18:58:26Z"
+    "fetched_at": "2026-08-11T09:13:49Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/PQXX.json",
+    "payload_sha256": "e23b1212a840146f012efb14b900b69450cd539c0cd1da18403f41128d130962",
+    "quote_as_of": "2026-08-10T18:16:33Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 561,
+    "latency_ms": 770,
     "natural": true,
-    "observed_at": "2026-08-07T05:49:05Z",
+    "observed_at": "2026-08-11T09:13:07Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31151738848",
-    "schedule": "7 4 * * 0-5",
-    "shard": "62/72"
+    "run_id": "31476569032",
+    "schedule": "7 8 * * 0-5",
+    "shard": "28/72"
   },
   "lkg": {
     "fetched_at": "2026-08-07T05:51:20Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T05:49:05Z",
-    "payload_sha256": "5fc05745613370c91242a1653072a15950f066833460699dcd7d184f3dd54939",
-    "quote_as_of": "2026-07-31T18:58:26Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T09:13:07Z",
+    "payload_sha256": "66497899c668c21a759f71ba699c053fc7d1c83c7ea3999a14d617323bfc0051",
+    "quote_as_of": "2026-08-10T18:16:33Z",
     "run_attempt": 1,
-    "run_id": "31151738848",
+    "run_id": "31476569032",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31T18:58:26Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-31T18:58:26Z"
   },
   "ticker": "PQXX",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T09:13:07Z"
 }

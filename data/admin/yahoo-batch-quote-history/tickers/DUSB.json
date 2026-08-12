@@ -12,31 +12,57 @@
       "run_id": "30711926935",
       "schedule": "",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 712,
+      "natural": true,
+      "observed_at": "2026-08-11T07:21:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31468517777",
+      "schedule": "7 6 * * 0-5",
+      "shard": "27/72"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-11T23:29:49Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31544436443",
+      "schedule": "7 22 * * 0-5",
+      "shard": "35/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T18:51:43Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DUSB.json",
-    "payload_sha256": "b1a30ac917a32bf089262ccea76ab24f6abe5119b36b62c3a1d585d28b2dea44",
-    "quote_as_of": "2026-07-31T20:00:00Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-11T07:22:12Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/DUSB.json",
+    "payload_sha256": "d2f81728676da75b5887e338a6ef2f022db9ffdf4b6d655d61219999b44e7743",
+    "quote_as_of": "2026-08-10T19:59:53Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 0,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 695,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-01T18:48:56Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-11T23:29:49Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "30711926935",
-    "schedule": "",
-    "shard": "5/6"
+    "run_id": "31544436443",
+    "schedule": "7 22 * * 0-5",
+    "shard": "35/72"
   },
   "lkg": {
     "fetched_at": "2026-08-01T18:51:43Z",
@@ -48,18 +74,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T18:48:56Z",
-    "payload_sha256": "eb2574a4eb9c871cd343dd391d0c4b937f172b0dcc53413b891ac63e901bd877",
-    "quote_as_of": "2026-07-31T20:00:00Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T07:21:44Z",
+    "payload_sha256": "8ceebba696459e930a84e38ef87e64723e78744258d56d7d41ed328eacd6566a",
+    "quote_as_of": "2026-08-10T19:59:53Z",
     "run_attempt": 1,
-    "run_id": "30711926935",
+    "run_id": "31468517777",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +98,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "DUSB",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T23:29:49Z"
 }

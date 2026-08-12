@@ -39,34 +39,60 @@
       "run_id": "31456720047",
       "schedule": "7 2 * * 0-5",
       "shard": "25/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 523,
+      "natural": true,
+      "observed_at": "2026-08-11T11:03:07Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31484759300",
+      "schedule": "7 10 * * 0-5",
+      "shard": "29/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 567,
+      "natural": true,
+      "observed_at": "2026-08-11T15:09:25Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31505333713",
+      "schedule": "7 14 * * 0-5",
+      "shard": "31/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T15:05:29Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CCOM.json",
-    "payload_sha256": "35db8c05d08d37d586d8502584515d1c4fb9c2020d4393de4933c9ba231681dd",
-    "quote_as_of": "2026-08-07T13:46:03Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-08-11T15:09:50Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/CCOM.json",
+    "payload_sha256": "f34dc8cd7c1605d5049005de98d32dbffc561d994d6e2cf1386c1dd8d8002c3e",
+    "quote_as_of": "2026-08-11T13:46:03Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: source timestamp regression for CCOM: quote_as_of 2026-08-06T15:01:14Z < 2026-08-07T13:46:03Z",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 517,
+    "latency_ms": 567,
     "natural": true,
-    "observed_at": "2026-08-11T03:59:23Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-11T15:09:25Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31456720047",
-    "schedule": "7 2 * * 0-5",
-    "shard": "25/72"
+    "run_id": "31505333713",
+    "schedule": "7 14 * * 0-5",
+    "shard": "31/72"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -89,17 +115,22 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-07T15:04:20Z",
-    "payload_sha256": "f93c01e9addca348534d67c60409a6d3df819a06b2952f1dc8a78d3691f72e6a",
-    "quote_as_of": "2026-08-07T13:46:03Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-11T15:09:25Z",
+    "payload_sha256": "60a5d269f1b508ece911ce587b1ff54cb43f698827ea0338a4624a7cf36951c1",
+    "quote_as_of": "2026-08-11T13:46:03Z",
     "run_attempt": 1,
-    "run_id": "31190633378",
+    "run_id": "31505333713",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-08-11"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-08-11T15:09:25Z",
+  "recovered_from_run_id": "31456720047",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "31505333713",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 19,
@@ -112,5 +143,5 @@
     "source_as_of": "2026-07-06T17:59:52Z"
   },
   "ticker": "CCOM",
-  "updated_at": "2026-08-11T03:59:23Z"
+  "updated_at": "2026-08-11T15:09:25Z"
 }

@@ -3,72 +3,83 @@
   "source": "stockanalysis",
   "asset_type": "stock",
   "ticker": "GE",
-  "fetched_at": "2026-07-08T22:46:45Z",
+  "source_as_of": "2026-08-11T14:38:14Z",
+  "fetched_at": "2026-08-11T14:38:58Z",
   "endpoints": {
-    "overview": "/api/symbol/s/GE/overview",
+    "overview": "/stocks/ge/__data.json",
     "history": "/api/symbol/s/GE/history?range=1Y&period=Monthly",
     "quote": "/api/quotes/s/GE"
   },
   "normalized": {
     "overview": {
-      "marketCap": "372.21B",
-      "revenue": "48.31B",
+      "marketCap": "384.28B",
+      "revenue": "50.64B",
       "revenue_type": "ttm",
-      "netIncome": "8.63B",
+      "netIncome": "8.97B",
       "sharesOut": "1.04B",
-      "eps": "8.12",
-      "peRatio": "45.56",
-      "forwardPE": "47.42",
-      "dividend": "$1.88 (0.53%)",
-      "beta": "1.35",
-      "analysts": "Buy",
-      "target": "358.29 (+0.43%)",
+      "eps": "8.49",
+      "peRatio": "43.22",
+      "forwardPE": "43.69",
+      "dividend": "$1.88 (0.51%)",
+      "beta": "1.37",
+      "analysts": "Strong Buy",
+      "target": "404.90 (+9.33%)",
       "earningsDate": "Jul 16, 2026"
     },
     "quote": {
-      "p": 356.75,
-      "pd": 356.75,
-      "c": -10.23,
-      "cp": -2.79,
-      "cl": 366.98,
-      "cdr": -1,
-      "o": 360.12,
-      "h": 363.01,
-      "l": 354.25,
-      "v": 1890032,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
-      "h52": 382.97,
-      "l52": 243.34,
+      "p": 369.3,
+      "pd": 369.3,
+      "c": 2.6,
+      "cp": 0.71,
+      "cl": 366.7,
+      "cdr": 1,
+      "o": 367.74,
+      "h": 372.56,
+      "l": 367.48,
+      "v": 305605,
+      "ts": 1786459094344.7258,
+      "u": "Aug 11, 2026, 10:38 AM EDT",
+      "td": "2026-08-11",
+      "h52": 388.84,
+      "l52": 263.8,
       "ex": "NYSE",
-      "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 356.03,
-      "epd": 356.03,
-      "ec": -0.72,
-      "ecp": -0.2,
-      "eu": "Jul 8, 2026, 6:30 PM EDT",
-      "es": "After-hours",
-      "ets": 1783549800002.3044,
-      "etd": "2026-07-08",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1786459094344.7258,
+      "etd": null,
       "epv": null,
       "days": 0,
-      "exp": 1783550809635,
+      "exp": 1786459142429,
       "symbol": "GE",
       "uid": "GE"
     },
     "history": [
       {
+        "t": "2026-08-03",
+        "o": 363.79,
+        "h": 388.84,
+        "l": 360.965,
+        "c": 366.7,
+        "a": 366.7,
+        "v": 19088192,
+        "ch": 1.84
+      },
+      {
         "t": "2026-07-01",
         "o": 375.03,
         "h": 382.97,
-        "l": 354.25,
-        "c": 356.03,
-        "a": 356.03,
-        "v": 19509132,
-        "ch": -4.62
+        "l": 336.53,
+        "c": 360.07,
+        "a": 360.07,
+        "v": 84589677,
+        "ch": -3.53
       },
       {
         "t": "2026-06-01",
@@ -159,73 +170,53 @@
         "a": 307.764547,
         "v": 81475543,
         "ch": 2.7
-      },
-      {
-        "t": "2025-09-02",
-        "o": 273.9,
-        "h": 307.25,
-        "l": 268.01,
-        "c": 300.82,
-        "a": 299.665743,
-        "v": 93107853,
-        "ch": 9.44
-      },
-      {
-        "t": "2025-08-01",
-        "o": 265.53,
-        "h": 281.5,
-        "l": 261.71,
-        "c": 275.2,
-        "a": 273.809476,
-        "v": 86109824,
-        "ch": 1.52
       }
     ],
     "financials": {
       "path": "financials/GE.json",
-      "fetched_at": "2026-07-08T22:46:45Z",
+      "fetched_at": "2026-08-11T14:38:58Z",
       "role": "financial statement cross-check candidate; not valuation SSOT",
       "summary": {
         "annual": {
           "income": {
-            "field_count": 40,
+            "field_count": 34,
             "period_count": 6,
             "period": "annual"
           },
           "balance_sheet": {
-            "field_count": 40,
+            "field_count": 39,
             "period_count": 6,
             "period": "annual"
           },
           "cash_flow": {
-            "field_count": 38,
+            "field_count": 36,
             "period_count": 6,
             "period": "annual"
           },
           "ratios": {
-            "field_count": 36,
+            "field_count": 35,
             "period_count": 6,
             "period": "annual"
           }
         },
         "quarterly": {
           "income": {
-            "field_count": 40,
+            "field_count": 34,
             "period_count": 20,
             "period": "quarterly"
           },
           "balance_sheet": {
-            "field_count": 42,
+            "field_count": 41,
             "period_count": 20,
             "period": "quarterly"
           },
           "cash_flow": {
-            "field_count": 39,
+            "field_count": 37,
             "period_count": 20,
             "period": "quarterly"
           },
           "ratios": {
-            "field_count": 36,
+            "field_count": 35,
             "period_count": 20,
             "period": "quarterly"
           }
@@ -236,19 +227,49 @@
   "financials_path": "financials/GE.json",
   "raw": {
     "overview": {
-      "marketCap": "372.21B",
-      "revenue": "48.31B",
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          }
+        ],
+        "topic": "overview",
+        "ticker": "GE",
+        "lastChecked": 1786459093176,
+        "summary": {
+          "text": "Fundamental and historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP."
+        }
+      },
+      "marketCap": "384.28B",
+      "marketCapGrowth": 31.76799210475964,
+      "revenue": "50.64B",
       "revenue_type": "ttm",
-      "netIncome": "8.63B",
+      "revenueGrowth": 21.696,
+      "netIncome": "8.97B",
+      "netIncomeGrowth": 15.65,
       "sharesOut": "1.04B",
-      "eps": "8.12",
-      "peRatio": "45.56",
-      "forwardPE": "47.42",
-      "dividend": "$1.88 (0.53%)",
+      "eps": "8.49",
+      "epsGrowth": 18.388,
+      "peRatio": "43.22",
+      "forwardPE": "43.69",
+      "dividend": "$1.88 (0.51%)",
       "exDividendDate": "Jul 6, 2026",
-      "beta": "1.35",
-      "analysts": "Buy",
-      "target": "358.29 (+0.43%)",
+      "beta": "1.37",
+      "analysts": "Strong Buy",
+      "target": "404.90 (+9.33%)",
       "earningsDate": "Jul 16, 2026",
       "description": "General Electric Company, doing business as GE Aerospace, designs and produces commercial and defense aircraft engines, integrated engine components, electric power, and aircraft systems. The company operates through two segments, Commercial Engines & Services, and Defense & Propulsion Technologies. The Commercial Engines & Services segment designs, develops, manufactures, maintenance, repair, and overhaul (MRO) services of jet engines and sale of spare parts for commercial airframes, business aviation, and aeroderivative applications. The Defe...",
       "infoTable": [
@@ -323,335 +344,1592 @@
           "earningsGrowth": 32.763999999999996
         }
       ],
-      "analystIntro": "According to 22 analysts, the average rating for GE stock is \"Buy.\" The 12-month stock price target is $358.29, which is an increase of 0.43% from the latest price.",
+      "analystIntro": "According to 22 analysts, the average rating for GE stock is \"Strong Buy.\" The 12-month stock price target is $404.9, which is an increase of 9.33% from the latest price.",
       "analystTarget": {
-        "target": "$358.29",
-        "change": "0.43%",
+        "target": "$404.9",
+        "change": "9.33%",
         "changeWord": "upside"
       },
       "analystChart": {
         "strongBuy": 16,
         "buy": 3,
-        "hold": 1,
-        "sell": 2,
+        "hold": 2,
+        "sell": 1,
         "strongSell": 0
       },
       "news": {
-        "exp": "1783554369471",
+        "exp": "1786459889608",
         "data": [
           {
-            "url": "https://nypost.com/2026/07/07/business/us-airlines-spent-over-6-billion-on-monthly-fuel-in-may-up-84-from-year-ago/",
-            "img": "https://cdn.snapi.dev/images/v1/v/u/6/airline8-3790417.jpg",
-            "title": "US airlines' spent over $6 billion on monthly fuel in May amid Iran war — up 84% from year ago",
-            "text": "The latest government data reveals that U.S. airlines spent $6.66 billion on jet fuel in May 2026.",
-            "source": "New York Post",
+            "url": "https://www.businesswire.com/news/home/20260804557753/en/GE-Appliances-Leverages-Texas-Instruments-Semiconductors-to-Power-Next-Generation-Connected-Appliances-Manufactured-in-the-U.S./",
+            "img": "https://cdn.snapi.dev/images/v1/a/k/n/press20-3844187.jpg",
+            "title": "GE Appliances Leverages Texas Instruments Semiconductors to Power Next-Generation Connected Appliances Manufactured in the U.S.",
+            "text": "LOUISVILLE, Ky.--(BUSINESS WIRE)--GE Appliances, a Haier company, today announced that it will integrate US-manufactured, Texas Instruments (TI) microcontrollers, Wi-Fi® connectivity solutions, and an...",
+            "source": "Business Wire",
             "type": "Article",
             "tickers": [
-              "$AAL",
-              "$ALGT",
-              "$ALK",
-              "$AZUL",
-              "$BA",
-              "$CPA",
-              "$DAL"
+              "$TXN"
             ],
-            "time": "Jul 7, 2026, 10:15 PM EDT",
-            "ago": "20 hours ago"
-          },
-          {
-            "url": "2zg7WiGIMd4",
-            "img": "https://cdn.snapi.dev/images/v1/1/2/z/ik2n2d-2711734-3787964.jpg",
-            "title": "MSFT, GE & PANW: Finding Value in a Stock Picker's Market",
-            "text": "Steven E. Orr explains why investors should focus on out-of-favor companies with strong fundamentals, highlighting Microsoft (MSFT) as a potential rebound candidate. He also shares his views on the AI...",
-            "source": "Schwab Network",
-            "type": "Video",
-            "tickers": [
-              "$MSFT",
-              "$PANW"
-            ],
-            "time": "Jul 6, 2026, 8:00 PM EDT",
-            "ago": "1 day ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/ge-aerospace-price-target-raised-to-455-from-365-at-jefferies-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Industrials-5-750x406.jpg",
-            "title": "GE Aerospace price target raised to $455 from $365 at Jefferies",
-            "text": "Jefferies analyst Sheila Kahyaoglu raised the firm’s price target on GE Aerospace (GE) to $455 from $365 and keeps a Buy rating on the shares. 2026 guidance is due for…",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-07-02T12:15:09.000Z",
-            "ago": "6 days ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/ge-aerospace-price-target-raised-to-431-from-353-at-citi-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Industrials-4-750x406.jpg",
-            "title": "GE Aerospace price target raised to $431 from $353 at Citi",
-            "text": "Citi raised the firm’s price target on GE Aerospace (GE) to $431 from $353 and keeps a Buy rating on the shares. The firm updated estimates and price targets in…",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-07-01T10:47:06.000Z",
+            "time": "Aug 4, 2026, 8:00 AM EDT",
             "ago": "7 days ago"
           },
           {
-            "url": "https://www.prnewswire.com/news-releases/ge-aerospace-board-of-directors-authorizes-quarterly-dividend-302810702.html",
-            "img": "https://cdn.snapi.dev/images/v1/b/r/c/press2-3771502.jpg",
-            "title": "GE Aerospace Board of Directors Authorizes Quarterly Dividend",
-            "text": "CINCINNATI , June 25, 2026 /PRNewswire/ -- The Board of Directors of GE Aerospace (NYSE: GE) today declared a $0.47 per share dividend on the outstanding common stock of the Company. The dividend is p...",
-            "source": "PRNewsWire",
+            "url": "https://www.tipranks.com/news/the-fly/ge-aerospace-awarded-117-85m-navy-contract-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Industrials-9-750x406.jpg",
+            "title": "GE Aerospace awarded $117.85M Navy contract",
+            "text": "GE Aerospace (GE) was awarded a $117.85M firm-fixed-price indefinite-delivery/indefinite-quantity contract. This contract is for commercial depot-level services regarding standard rework of Navy and M...",
+            "source": "TheFly",
             "type": "Article",
-            "time": "Jun 25, 2026, 8:23 AM EDT",
-            "ago": "13 days ago"
+            "tickers": null,
+            "time": "2026-07-30T21:30:49.000Z",
+            "ago": "11 days ago"
           },
           {
-            "url": "https://www.globenewswire.com/news-release/2026/06/24/3316951/0/en/Latest-Global-Neonatal-Intensive-Care-Respiratory-Devices-Market-Size-Share-Worth-USD-5-7-Billion-by-2035-at-a-10-5-CAGR-Healthcare-Foresights-Analysis-Outlook-Leaders-Report-Trend.html",
-            "img": "https://cdn.snapi.dev/images/v1/8/m/g/press9-3769467.jpg",
-            "title": "[Latest] Global Neonatal Intensive Care Respiratory Devices Market Size/Share Worth USD 5.7 Billion by 2035 at a 10.5% CAGR: Healthcare Foresights (Analysis, Outlook, Leaders, Report, Trends, Forecast, Segmentation, Growth, SWOT Analysis)",
-            "text": "[220+ Pages Latest Report] According to a market research study published by Healthcare Foresights, the demand analysis of Global Neonatal Intensive Care Respiratory Devices Market size & share revenu...",
+            "url": "https://www.tipranks.com/news/the-fly/ge-aerospace-price-target-raised-to-450-from-442-at-deutsche-bank-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Industrials-10-750x406.jpg",
+            "title": "GE Aerospace price target raised to $450 from $442 at Deutsche Bank",
+            "text": "Deutsche Bank raised the firm’s price target on GE Aerospace (GE) to $450 from $442 and keeps a Buy rating on the shares. With demand metrics climbing, the firm contends…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-27T12:45:58.000Z",
+            "ago": "15 days ago"
+          },
+          {
+            "url": "https://www.reuters.com/legal/transactional/plane-engine-makers-tug-war-over-future-jet-servicing-profits-2026-07-24/",
+            "img": "https://cdn.snapi.dev/images/v1/l/v/q/gfewsdc-3800184-3822819.jpg",
+            "title": "Plane and engine makers in tug of war over future jet servicing profits",
+            "text": "The launch of a new generation of aircraft is setting up a \"once-in-a-lifetime\" tussle over how billions of dollars of ​future revenues will be divided within the aviation sector, with planemakers eye...",
+            "source": "Reuters",
+            "type": "Article",
+            "tickers": [
+              "$BA",
+              "$RTX"
+            ],
+            "time": "Jul 24, 2026, 1:37 PM EDT",
+            "ago": "17 days ago"
+          },
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/07/24/3332847/0/en/GE-Aerospace-Wraps-Historic-Farnborough-Airshow.html",
+            "img": "https://cdn.snapi.dev/images/v1/h/q/f/press14-3821783.jpg",
+            "title": "GE Aerospace Wraps Historic Farnborough Airshow",
+            "text": "Commitment for ~1,800 engines*, including largest LEAP agreement ever with IndiGo Commitment for ~1,800 engines*, including largest LEAP agreement ever with IndiGo",
             "source": "GlobeNewsWire",
             "type": "Article",
-            "time": "Jun 24, 2026, 9:30 AM EDT",
-            "ago": "14 days ago"
+            "tickers": null,
+            "time": "Jul 24, 2026, 8:53 AM EDT",
+            "ago": "18 days ago"
           },
           {
-            "url": "https://www.businesswire.com/news/home/20260616410381/en/GE-Vernova%E2%80%99s-New-Sustainability-Report-Highlights-Progress-Adding-New-Power-to-the-Grid-Enabling-People-to-Thrive-Reducing-Carbon-Intensity-and-Advancing-Breakthrough-Energy-Technologies/",
-            "img": "https://cdn.snapi.dev/images/v1/g/o/a/press14-3759358.jpg",
-            "title": "GE Vernova's New Sustainability Report Highlights Progress Adding New Power to the Grid, Enabling People to Thrive, Reducing Carbon Intensity, and Advancing Breakthrough Energy Technologies",
-            "text": "CAMBRIDGE, Mass.--(BUSINESS WIRE)--GE Vernova today released its 2025 Sustainability Report, demonstrating continued progress toward its mission to electrify the world to thrive and decarbonize, with ...",
+            "url": "https://www.tipranks.com/news/the-fly/ge-aerospace-receives-order-from-national-airlines-for-seven-engines-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Industrials-7-750x406.jpg",
+            "title": "GE Aerospace receives order from National Airlines for seven engines",
+            "text": "GE Aerospace (GE) announced that National Airlines has committed to purchase one GE90-110B and six CF6-80C2 engines to power their Boeing 777F/747F cargo airplanes. National Airlines owns thirty CF6 e...",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-23T13:30:14.000Z",
+            "ago": "19 days ago"
+          },
+          {
+            "url": "https://www.prnewswire.com/news-releases/national-airlines-orders-more-ge-aerospace-cf6-and-ge90-engines-302833365.html",
+            "img": "https://cdn.snapi.dev/images/v1/i/t/f/press4-3818764.jpg",
+            "title": "National Airlines Orders More GE Aerospace CF6 and GE90 Engines",
+            "text": "FARNBOROUGH, England, July 23, 2026 /PRNewswire/ -- GE Aerospace (NYSE: GE) announced today that National Airlines has committed to purchase one GE90-110B and six CF6-80C2 engines to power their Boein...",
+            "source": "PRNewsWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 23, 2026, 9:25 AM EDT",
+            "ago": "19 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/standardaero-chosen-by-ge-aerospace-to-build-maintain-overhaul-ct7-2e1-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/image-1-1-750x406.png",
+            "title": "StandardAero chosen by GE Aerospace to build, maintain, overhaul CT7-2E1",
+            "text": "StandardAero (SARO) has been chosen by GE Aerospace (GE) to build, maintain and overhaul the CT7-2E1 engines selected to power the United Kingdom Ministry of Defence’s, MOD, New Medium Helicopter,…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": [
+              "$SARO"
+            ],
+            "time": "2026-07-23T12:20:59.000Z",
+            "ago": "19 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/ge-aerospace-price-target-raised-to-421-from-405-at-bernstein-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Industrials-2-750x406.jpg",
+            "title": "GE Aerospace price target raised to $421 from $405 at Bernstein",
+            "text": "Bernstein raised the firm’s price target on GE Aerospace (GE) to $421 from $405 and keeps an Outperform rating on the shares. The firm notes GE Aerospace beat consensus and…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-23T10:50:27.000Z",
+            "ago": "19 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/ge-aerospace-magellan-aerospace-sign-mou-for-f414-ge-39e-mro-in-canada-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Industrials-8-750x406.jpg",
+            "title": "GE Aerospace, Magellan Aerospace sign MOU for F414-GE-39E MRO in Canada",
+            "text": "GE Aerospace (GE) and Magellan Aerospace (MALJF) signed a strategic memorandum of understanding, or MOU, to establish maintenance, repair, and overhaul, or MRO, capabilities in Canada for the F414-GE-...",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-22T21:10:50.000Z",
+            "ago": "19 days ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20260722242282/en/GE-Aerospace-and-Magellan-Aerospace-Sign-Memorandum-of-Understanding-for-F414-Sustainment/",
+            "img": "https://cdn.snapi.dev/images/v1/b/g/m/press7-3817173.jpg",
+            "title": "GE Aerospace and Magellan Aerospace Sign Memorandum of Understanding for F414 Sustainment",
+            "text": "FARNBOROUGH, England--(BUSINESS WIRE)--FARNBOROUGH AIR SHOW – GE Aerospace (NYSE:GE) and Magellan Aerospace Corporation signed a strategic Memorandum of Understanding (MOU) to establish maintenance, r...",
             "source": "Business Wire",
             "type": "Article",
-            "time": "Jun 17, 2026, 12:10 PM EDT",
+            "tickers": null,
+            "time": "Jul 22, 2026, 5:00 PM EDT",
+            "ago": "19 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/ge-aerospace-magellan-aerospace-sign-mou-for-f414-sustainment-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Industrials-4-750x406.jpg",
+            "title": "GE Aerospace, Magellan Aerospace sign MOU for F414 sustainment",
+            "text": "GE Aerospace (GE) and Magellan Aerospace (MALJF) signed a strategic Memorandum of Understanding to establish maintenance, repair, and overhaul capabilities in Canada for the F414-GE-39E engine that po...",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-22T15:00:31.000Z",
+            "ago": "19 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/ge-aerospace-says-aercap-selects-genx-engines-to-power-15-dreamliners-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Industrials-10-750x406.jpg",
+            "title": "GE Aerospace says AerCap selects GEnx engines to power 15 Dreamliners",
+            "text": "GE Aerospace (GE) nnounced that AerCap Holdings N.V. (AER) has selected the GEnx-1B engine to power an additional 15 Boeing (BA) 787 Dreamliners. “We take great pride in AerCap’s continued…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": [
+              "$AER",
+              "$BA"
+            ],
+            "time": "2026-07-21T15:55:19.000Z",
+            "ago": "20 days ago"
+          },
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/07/21/3330744/0/en/ge-aerospace-announces-aercap-selects-genx-engines-to-power-15-additional-boeing-787-dreamliners.html",
+            "img": "https://cdn.snapi.dev/images/v1/z/p/m/press8-3813389.jpg",
+            "title": "GE Aerospace Announces AerCap Selects GEnx Engines to Power 15 Additional Boeing 787 Dreamliners",
+            "text": "FARNBOROUGH, England, July 21, 2026 (GLOBE NEWSWIRE) -- GE Aerospace (NYSE: GE) today announced that AerCap Holdings N.V. (\"AerCap\") has selected the GEnx-1B engine to power an additional 15 Boeing 78...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 21, 2026, 11:53 AM EDT",
+            "ago": "20 days ago"
+          },
+          {
+            "url": "pjRVOklNHuc",
+            "img": "https://cdn.snapi.dev/images/v1/g/y/n/aero6-3813301.jpg",
+            "title": "GE CEO Says Improved Supplier Deliveries Helping to Boost Output",
+            "text": "GE Aerospace Chairman and CEO Larry Culp discusses the company's order backlog, supply chain investments, and how improved deliveries from key suppliers is helping to boost output. He speaks with Guy ...",
+            "source": "Bloomberg Markets and Finance",
+            "type": "Video",
+            "tickers": null,
+            "time": "Jul 21, 2026, 11:12 AM EDT",
+            "ago": "20 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/philippine-airlines-selects-ges-genx-engines-to-power-new-787-10-dreamliners-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Industrials-1-750x406.jpg",
+            "title": "Philippine Airlines selects GE’s GEnx engines to Power New 787-10 Dreamliners",
+            "text": "GE Aerospace (GE) announced that Philippine Airlines has selected the GEnx-1B engines to power its 15 new Boeing (BA) 787-10 Dreamliners, including purchase rights for five additional aircraft. Mohame...",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": [
+              "$BA"
+            ],
+            "time": "2026-07-20T17:05:22.000Z",
             "ago": "21 days ago"
           },
           {
-            "url": "https://www.reuters.com/business/energy/venezuela-general-electric-sign-cooperation-agreement-power-supply-2026-06-15/",
-            "img": "https://cdn.snapi.dev/images/v1/w/d/k/aero2-3755255.jpg",
-            "title": "Venezuela, General Electric sign cooperation agreement on power supply",
-            "text": "Venezuela's government and the local ​branch of U.S. conglomerate General ‌Electric signed a memorandum of understanding, Venezuelan state TV showed on ​Monday.",
+            "url": "https://www.tipranks.com/news/the-fly/indigo-cfm-sign-mou-for-order-of-1000-leap-1a-engines-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Industrials-10-750x406.jpg",
+            "title": "IndiGo, CFM sign MOU for order of 1,000 LEAP-1A engines",
+            "text": "IndiGo announced it has signed an MoU with CFM International, a 50/50 joint venture between GE Aerospace (GE) and Safran Aircraft Engines, for an order of 1,000+ LEAP-1A engines to…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-20T16:00:48.000Z",
+            "ago": "21 days ago"
+          },
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/07/20/3329935/0/en/IndiGo-and-CFM-sign-MOU-paving-the-way-to-a-record-agreement-for-1-000-LEAP-1A-engines.html",
+            "img": "https://cdn.snapi.dev/images/v1/3/3/z/press7-3810770.jpg",
+            "title": "IndiGo and CFM sign MOU paving the way to a record agreement for 1,000+ LEAP-1A engines",
+            "text": "Landmark deal includes creation of MRO capabilities for IndiGo's growing fleet Landmark deal includes creation of MRO capabilities for IndiGo's growing fleet",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 20, 2026, 11:55 AM EDT",
+            "ago": "21 days ago"
+          },
+          {
+            "url": "https://www.reuters.com/business/aerospace-defense/ge-aerospace-unveils-breakthrough-hybrid-electric-flight-2026-07-20/",
+            "img": "https://cdn.snapi.dev/images/v1/b/l/i/aero7-3810342.jpg",
+            "title": "GE Aerospace unveils breakthrough in hybrid-electric flight",
+            "text": "GE Aerospace has ​carried out the world's first high-altitude flight assisted by hybrid-electric propulsion, it said on Monday, ‌part of an arsenal of technologies for future jet engines being showcas...",
             "source": "Reuters",
             "type": "Article",
-            "time": "Jun 15, 2026, 6:05 PM EDT",
+            "tickers": null,
+            "time": "Jul 20, 2026, 9:41 AM EDT",
+            "ago": "22 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/ge-aerospace-price-target-raised-to-400-from-335-at-jpmorgan-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Industrials-1-750x406.jpg",
+            "title": "GE Aerospace price target raised to $400 from $335 at JPMorgan",
+            "text": "JPMorgan raised the firm’s price target on GE Aerospace (GE) to $400 from $335 and keeps an Overweight rating on the shares. The stock underperformed post the Q2 report despite…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-20T11:05:08.000Z",
+            "ago": "22 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/ge-aerospace-price-target-raised-to-390-from-325-at-wells-fargo-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Industrials-3-750x406.jpg",
+            "title": "GE Aerospace price target raised to $390 from $325 at Wells Fargo",
+            "text": "Wells Fargo raised the firm’s price target on GE Aerospace (GE) to $390 from $325 and keeps an Overweight rating on the shares. Post its callback, the firm is raising…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-07-20T10:55:23.000Z",
+            "ago": "22 days ago"
+          },
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/07/20/3329589/0/en/GE-Aerospace-Partners-with-NASA-BETA-Technologies-and-Boeing-on-World-s-First-High-Altitude-Hybrid-Electric-Flight.html",
+            "img": "https://cdn.snapi.dev/images/v1/7/y/h/press5-3809743.jpg",
+            "title": "GE Aerospace Partners with NASA, BETA Technologies, and Boeing on World's First High-Altitude Hybrid Electric Flight",
+            "text": "FARNBOROUGH, England, July 20, 2026 (GLOBE NEWSWIRE) -- Hybrid electric system enabled aircraft to reach more than 30,000 feet First public demonstration takes place at Farnborough International Airsh...",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 20, 2026, 6:47 AM EDT",
+            "ago": "22 days ago"
+          },
+          {
+            "url": "https://www.globenewswire.com/news-release/2026/07/19/3329385/0/en/GEnx-1B-Engines-Surpass-50-Million-Flight-Hours.html",
+            "img": "https://cdn.snapi.dev/images/v1/h/h/a/press2-3809267.jpg",
+            "title": "GEnx-1B Engines Surpass 50 Million Flight Hours",
+            "text": "Milestone is the fastest ever for a GE Aerospace widebody engine model Milestone is the fastest ever for a GE Aerospace widebody engine model",
+            "source": "GlobeNewsWire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Jul 19, 2026, 8:49 AM EDT",
             "ago": "23 days ago"
           },
           {
-            "url": "https://www.globenewswire.com/news-release/2026/06/09/3308971/0/en/Former-GE-CTO-and-Director-of-GE-Global-Research-Mark-Little-Joins-LiquidPiston-Board.html",
-            "img": "https://cdn.snapi.dev/images/v1/k/3/q/press4-3744128.jpg",
-            "title": "Former GE CTO and Director of GE Global Research, Mark Little, Joins LiquidPiston Board",
-            "text": "BLOOMFIELD, Conn., June 09, 2026 (GLOBE NEWSWIRE) -- LiquidPiston, Inc. , a leading innovator in compact, efficient, heavy-fueled rotary combustion engine technologies and hybrid power systems, today ...",
-            "source": "GlobeNewsWire",
+            "url": "https://www.tipranks.com/news/is-the-ge-aerospace-stock-pullback-a-buying-opportunity-jim-cramer-thinks-so",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/gestock-750x406.jpg",
+            "title": "Is the GE Aerospace Stock Pullback a Buying Opportunity? Jim Cramer Thinks So",
+            "text": "GE Aerospace stock experienced a pullback after earnings and Jim Cramer argued this presents a buying oppurtunity.",
+            "source": "TipRanks",
             "type": "Article",
-            "time": "Jun 9, 2026, 9:36 AM EDT",
-            "ago": "4 weeks ago"
+            "tickers": null,
+            "time": "2026-07-17T14:03:39.000Z",
+            "ago": "25 days ago"
           },
           {
-            "url": "https://www.reuters.com/business/energy/us-airlines-fuel-costs-soared-april-65-billion-2026-06-08/",
-            "img": "https://cdn.snapi.dev/images/v1/2/j/r/airline10-3741797.jpg",
-            "title": "US airlines fuel costs soared in April to $6.5 billion",
-            "text": "U.S. passenger airlines' fuel ​costs jumped 78% ‌in April to nearly $6.5 billion over the ​same month ​last year as the ⁠conflict in the Middle ​East has sharply ​driven up fuel costs, the U.S. Transp...",
-            "source": "Reuters",
-            "type": "Article",
-            "tickers": [
-              "$AAL",
-              "$ALK",
-              "$ASR",
-              "$BA",
-              "#BNO",
-              "$CPA",
-              "$DAL"
-            ],
-            "time": "Jun 8, 2026, 9:51 AM EDT",
-            "ago": "4 weeks ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/wolfspeed-ge-aerospace-enter-into-mou-to-accelerate-adoption-of-sic-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_137090738-750x406.jpg",
-            "title": "Wolfspeed, GE Aerospace enter into MOU to accelerate adoption of SiC",
-            "text": "GE Aerospace (GE) and Wolfspeed (WOLF) announced that they have entered into a Memorandum of Understanding, MOU, to collaborate on accelerating the adoption of high-voltage silicon carbide, SiC, acros...",
+            "url": "https://www.tipranks.com/news/the-fly/ge-aerospace-price-target-raised-to-405-from-365-at-bofa-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Industrials-2-750x406.jpg",
+            "title": "GE Aerospace price target raised to $405 from $365 at BofA",
+            "text": "BofA raised the firm’s price target on GE Aerospace (GE) to $405 from $365 and keeps a Buy rating on the shares. The company’s 2026 outlook raise came in below…",
             "source": "TheFly",
             "type": "Article",
-            "tickers": [
-              "$WOLF"
-            ],
-            "time": "2026-06-08T13:07:43.000Z",
-            "ago": "4 weeks ago"
-          },
-          {
-            "url": "https://www.businesswire.com/news/home/20260608182179/en/GE-Aerospace-and-Wolfspeed-Collaborate-to-Accelerate-High-Voltage-Silicon-Carbide-SiC-Adoption/",
-            "img": "https://cdn.snapi.dev/images/v1/x/g/w/press9-3741673.jpg",
-            "title": "GE Aerospace and Wolfspeed Collaborate to Accelerate High-Voltage Silicon Carbide (SiC) Adoption",
-            "text": "DURHAM, N.C.--(BUSINESS WIRE)--GE Aerospace (NYSE: GE) and Wolfspeed Inc. (NYSE: WOLF) today announced that they have entered into a Memorandum of Understanding (MOU) to collaborate on accelerating th...",
-            "source": "Business Wire",
-            "type": "Article",
-            "tickers": [
-              "$WOLF"
-            ],
-            "time": "Jun 8, 2026, 9:00 AM EDT",
-            "ago": "4 weeks ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/ge-aerospace-believes-it-can-get-more-engine-orders-from-china-bloomberg-says-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Industrials-8-750x406.jpg",
-            "title": "GE Aerospace believes it can get more engine orders from China, Bloomberg says",
-            "text": "GE Aerospace (GE) is optimistic it can secure more aircraft-engine orders from China after President Donald Trump’s meeting with Xi Jinping last month, Siddharth Philip and Guy Johnson of Bloomberg…",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-06-08T00:30:07.000Z",
-            "ago": "4 weeks ago"
-          },
-          {
-            "url": "znknLGxam4s",
-            "img": "https://cdn.snapi.dev/images/v1/g/8/y/okjnh-2869278-3740668.jpg",
-            "title": "GE Aerospace Evolves Amid High Aviation Demand",
-            "text": "CEO of GE Aerospace Larry Culp spoke with Bloomberg's Co-Anchor of The Opening Trade Guy Johnson about GE's recent corporate restructuring and the company's current position and strategic outlook with...",
-            "source": "Bloomberg Markets and Finance",
-            "type": "Video",
-            "time": "Jun 7, 2026, 11:55 AM EDT",
-            "ago": "4 weeks ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/ge-aerospace-reaffirms-services-targets-says-jefferies-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Industrials-4-750x406.jpg",
-            "title": "GE Aerospace reaffirms services targets, says Jefferies",
-            "text": "Jefferies notes that GE Aerospace (GE) management continues to expect services to grow mid-teens in 2026 with double-digit growth in 2027 and reaffirmed expectations for services to increase at a…",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-05-27T18:46:45.000Z",
-            "ago": "6 weeks ago"
-          },
-          {
-            "url": "/stocks/ge/transcripts/681948-bernstein-42nd-annual-strategic-decisions-conference/",
-            "img": "",
-            "title": "GE Aerospace Transcript: Bernstein 42nd Annual Strategic Decisions Conference",
-            "text": "The business is experiencing robust growth in both commercial and defense sectors, driven by a large installed base, strong backlog, and ongoing investment in technology. Operational improvements and supply chain collaboration are supporting record engine deliveries and aftermarket expansion, with double-digit growth expected through 2027.",
-            "source": "Transcripts",
-            "type": "Article",
-            "time": "May 27, 2026, 11:50 AM EDT",
-            "ago": "6 weeks ago"
-          },
-          {
-            "url": "/stocks/ge/filings/3228377/",
-            "img": "",
-            "title": "GE Aerospace Slides: Bernstein 42nd Annual Strategic Decisions Conference",
-            "text": "GE Aerospace has posted slides in relation to its latest quarterly earnings report, which was published on May 27, 2026.",
-            "source": "Filings",
-            "type": "Article",
-            "time": "May 27, 2026, 11:50 AM EDT",
-            "ago": "6 weeks ago"
-          },
-          {
-            "url": "https://www.reuters.com/business/aerospace-defense/ge-aerospace-ceo-says-airlines-still-spending-engine-upkeep-despite-fuel-spike-2026-05-27/",
-            "img": "https://cdn.snapi.dev/images/v1/g/p/s/aero7-3722414.jpg",
-            "title": "GE Aerospace CEO says airlines still spending on engine upkeep despite fuel spike",
-            "text": "GE Aerospace has not ​seen airlines pull ‌back on engine maintenance or parts orders ​despite higher fuel ​prices and softer flight ⁠departures, CEO ​Larry Culp said on ​Wednesday, signaling continued...",
-            "source": "Reuters",
-            "type": "Article",
-            "time": "May 27, 2026, 11:34 AM EDT",
-            "ago": "6 weeks ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/ge-aerospace-initiated-with-a-buy-at-seaport-research-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Industrials-7-750x406.jpg",
-            "title": "GE Aerospace initiated with a Buy at Seaport Research",
-            "text": "Seaport Research initiated coverage of GE Aerospace (GE) with a Buy rating and $375 price target After stellar topline growth due to the delayed commercial OE – Original Equipment –…",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-05-26T21:25:09.000Z",
-            "ago": "6 weeks ago"
-          },
-          {
-            "url": "https://www.tipranks.com/news/the-fly/ge-aerospace-awarded-u-s-air-force-contract-to-advance-ge426-engine-thefly-news",
-            "img": "https://blog.tipranks.com/wp-content/uploads/2023/06/Industrials-9-750x406.jpg",
-            "title": "GE Aerospace awarded U.S. Air Force contract to advance GE426 engine",
-            "text": "GE Aerospace (GE) announced that it has been awarded a contract from the U.S. Air Force to complete the preliminary design review for its new GE426 engine in support of…",
-            "source": "TheFly",
-            "type": "Article",
-            "time": "2026-05-19T16:15:26.000Z",
-            "ago": "7 weeks ago"
-          },
-          {
-            "url": "https://www.globenewswire.com/news-release/2026/05/19/3297825/0/en/GE-Aerospace-Awarded-U-S-Air-Force-Contract-to-Advance-GE426-Engine-for-Autonomous-Collaborative-Platform.html",
-            "img": "https://cdn.snapi.dev/images/v1/a/s/n/press6-3709312.jpg",
-            "title": "GE Aerospace Awarded U.S. Air Force Contract to Advance GE426 Engine for Autonomous Collaborative Platform",
-            "text": "Cincinnati, Ohio, May 19, 2026 (GLOBE NEWSWIRE) -- GE Aerospace (NYSE:GE) has been awarded a contract from the U.S. Air Force to complete the preliminary design review (PDR) for its new GE426 engine i...",
-            "source": "GlobeNewsWire",
-            "type": "Article",
-            "time": "May 19, 2026, 12:08 PM EDT",
-            "ago": "7 weeks ago"
-          },
-          {
-            "url": "https://www.reuters.com/business/aerospace-defense/ge-aerospace-ceo-larry-culp-visits-chinas-state-planner-headquarters-2026-05-15/",
-            "img": "https://cdn.snapi.dev/images/v1/b/o/s/aero13-3702954.jpg",
-            "title": "GE Aerospace CEO Larry Culp visits China's state planner headquarters",
-            "text": "GE Aerospace CEO Larry Culp was ​seen on Friday in Beijing leaving a ‌meeting at the headquarters of China's powerful state planner, the National Development and Reform Commission, according to ​a Reu...",
-            "source": "Reuters",
-            "type": "Article",
-            "time": "May 14, 2026, 11:59 PM EDT",
-            "ago": "7 weeks ago"
-          },
-          {
-            "url": "https://www.marketwatch.com/story/what-ceos-from-tesla-nvidia-and-over-a-dozen-other-companies-hope-to-gain-by-joining-trump-in-china-98f1559c",
-            "img": "https://cdn.snapi.dev/images/v1/g/7/c/asset-management6-3462278-3698437.jpg",
-            "title": "What CEOs from Tesla, Nvidia and over a dozen other companies hope to gain by joining Trump in China",
-            "text": "A key part of President Donald Trump's visit to China this week is his effort to bring along with him at least 17 executives from prominent U.S. companies. Here's what it means for them.",
-            "source": "Market Watch",
-            "type": "Article",
-            "tickers": [
-              "$NVDA",
-              "$TSLA",
-              "$AAPL",
-              "$BA",
-              "$BLK",
-              "$BX",
-              "$C"
-            ],
-            "time": "May 13, 2026, 12:03 PM EDT",
-            "ago": "2 months ago"
-          },
-          {
-            "url": "https://www.barrons.com/articles/buy-ge-aerospace-stock-price-pick-68880129",
-            "img": "https://cdn.snapi.dev/images/v1/v/l/w/aero11-3683877.jpg",
-            "title": "GE Aerospace Stock Has Been Unfairly Punished",
-            "text": "Investors can't seem to look past the Middle East, but GE's core business continues to grow.",
-            "source": "Barrons",
-            "type": "Article",
-            "time": "May 7, 2026, 8:00 AM EDT",
-            "ago": "2 months ago"
-          },
-          {
-            "url": "/stocks/ge/transcripts/601539-agm-2026/",
-            "img": "",
-            "title": "GE Aerospace Transcript: AGM 2026",
-            "text": "The meeting highlighted strong financial growth, robust order backlog, and ongoing investments in R&D and manufacturing. All management proposals passed with overwhelming support, while a shareholder proposal on defense-related product due diligence was rejected. Strategic priorities include reinvestment, shareholder returns, and global expansion.",
-            "source": "Transcripts",
-            "type": "Article",
-            "time": "May 5, 2026, 10:00 AM EDT",
-            "ago": "2 months ago"
+            "tickers": null,
+            "time": "2026-07-17T13:15:20.000Z",
+            "ago": "25 days ago"
           }
         ]
       },
       "chart": {
-        "expiration": null,
-        "data": null
+        "expiration": 1786459056368,
+        "data": [
+          {
+            "c": 369.15,
+            "o": 367.74,
+            "t": 1786440600
+          },
+          {
+            "c": 368.98,
+            "t": 1786440660
+          },
+          {
+            "c": 369.04,
+            "t": 1786440720
+          },
+          {
+            "c": 368.57,
+            "t": 1786440780
+          },
+          {
+            "c": 368.23,
+            "t": 1786440840
+          },
+          {
+            "c": 368.57,
+            "t": 1786440900
+          },
+          {
+            "c": 370.18,
+            "t": 1786440960
+          },
+          {
+            "c": 370.13,
+            "t": 1786441020
+          },
+          {
+            "c": 370.28,
+            "t": 1786441080
+          },
+          {
+            "c": 370.17,
+            "t": 1786441140
+          },
+          {
+            "c": 370.17,
+            "t": 1786441200
+          },
+          {
+            "c": 370.6,
+            "t": 1786441260
+          },
+          {
+            "c": 370.6,
+            "t": 1786441320
+          },
+          {
+            "c": 371.02,
+            "t": 1786441380
+          },
+          {
+            "c": 370.88,
+            "t": 1786441440
+          },
+          {
+            "c": 371.05,
+            "t": 1786441500
+          },
+          {
+            "c": 370.58,
+            "t": 1786441560
+          },
+          {
+            "c": 371.13,
+            "t": 1786441620
+          },
+          {
+            "c": 371.26,
+            "t": 1786441680
+          },
+          {
+            "c": 371.68,
+            "t": 1786441740
+          },
+          {
+            "c": 371.34,
+            "t": 1786441800
+          },
+          {
+            "c": 370.83,
+            "t": 1786441860
+          },
+          {
+            "c": 371,
+            "t": 1786441920
+          },
+          {
+            "c": 371.36,
+            "t": 1786441980
+          },
+          {
+            "c": 371.02,
+            "t": 1786442040
+          },
+          {
+            "c": 371.18,
+            "t": 1786442100
+          },
+          {
+            "c": 371.33,
+            "t": 1786442160
+          },
+          {
+            "c": 371.45,
+            "t": 1786442220
+          },
+          {
+            "c": 371.57,
+            "t": 1786442280
+          },
+          {
+            "c": 371.89,
+            "t": 1786442340
+          },
+          {
+            "c": 371.79,
+            "t": 1786442400
+          },
+          {
+            "c": 371.94,
+            "t": 1786442460
+          },
+          {
+            "c": 371.42,
+            "t": 1786442520
+          },
+          {
+            "c": 370.92,
+            "t": 1786442580
+          },
+          {
+            "c": 371.13,
+            "t": 1786442640
+          },
+          {
+            "c": 371.43,
+            "t": 1786442700
+          },
+          {
+            "c": 371.13,
+            "t": 1786442760
+          },
+          {
+            "c": 371.31,
+            "t": 1786442820
+          },
+          {
+            "c": 371.31,
+            "t": 1786442880
+          },
+          {
+            "c": 371.07,
+            "t": 1786442940
+          },
+          {
+            "c": 371.48,
+            "t": 1786443000
+          },
+          {
+            "c": 371.05,
+            "t": 1786443060
+          },
+          {
+            "c": 370.98,
+            "t": 1786443120
+          },
+          {
+            "c": 370.8,
+            "t": 1786443180
+          },
+          {
+            "c": 370.61,
+            "t": 1786443240
+          },
+          {
+            "c": 370.76,
+            "t": 1786443300
+          },
+          {
+            "c": 370.61,
+            "t": 1786443360
+          },
+          {
+            "c": 370.62,
+            "t": 1786443420
+          },
+          {
+            "c": 370.51,
+            "t": 1786443480
+          },
+          {
+            "c": 370.3,
+            "t": 1786443540
+          },
+          {
+            "c": 370.54,
+            "t": 1786443600
+          },
+          {
+            "c": 370.32,
+            "t": 1786443660
+          },
+          {
+            "c": 370,
+            "t": 1786443720
+          },
+          {
+            "c": 370.27,
+            "t": 1786443780
+          },
+          {
+            "c": 370.29,
+            "t": 1786443840
+          },
+          {
+            "c": 370.82,
+            "t": 1786443900
+          },
+          {
+            "c": 370.71,
+            "t": 1786443960
+          },
+          {
+            "c": 370.81,
+            "t": 1786444020
+          },
+          {
+            "c": 370.73,
+            "t": 1786444080
+          },
+          {
+            "c": 370.54,
+            "t": 1786444140
+          },
+          {
+            "c": 370.4,
+            "t": 1786444200
+          },
+          {
+            "c": 369.99,
+            "t": 1786444260
+          },
+          {
+            "c": 369.98,
+            "t": 1786444320
+          },
+          {
+            "c": 370.043,
+            "t": 1786444380
+          },
+          {
+            "c": 370.11,
+            "t": 1786444440
+          },
+          {
+            "c": 370.22,
+            "t": 1786444500
+          },
+          {
+            "c": 370.295,
+            "t": 1786444560
+          },
+          {
+            "t": 1786444619
+          },
+          {
+            "t": 1786444679
+          },
+          {
+            "t": 1786444739
+          },
+          {
+            "t": 1786444799
+          },
+          {
+            "t": 1786444859
+          },
+          {
+            "t": 1786444919
+          },
+          {
+            "t": 1786444979
+          },
+          {
+            "t": 1786445039
+          },
+          {
+            "t": 1786445099
+          },
+          {
+            "t": 1786445159
+          },
+          {
+            "t": 1786445219
+          },
+          {
+            "t": 1786445279
+          },
+          {
+            "t": 1786445339
+          },
+          {
+            "t": 1786445399
+          },
+          {
+            "t": 1786445459
+          },
+          {
+            "t": 1786445519
+          },
+          {
+            "t": 1786445579
+          },
+          {
+            "t": 1786445639
+          },
+          {
+            "t": 1786445699
+          },
+          {
+            "t": 1786445759
+          },
+          {
+            "t": 1786445819
+          },
+          {
+            "t": 1786445879
+          },
+          {
+            "t": 1786445939
+          },
+          {
+            "t": 1786445999
+          },
+          {
+            "t": 1786446059
+          },
+          {
+            "t": 1786446119
+          },
+          {
+            "t": 1786446179
+          },
+          {
+            "t": 1786446239
+          },
+          {
+            "t": 1786446299
+          },
+          {
+            "t": 1786446359
+          },
+          {
+            "t": 1786446419
+          },
+          {
+            "t": 1786446479
+          },
+          {
+            "t": 1786446539
+          },
+          {
+            "t": 1786446599
+          },
+          {
+            "t": 1786446659
+          },
+          {
+            "t": 1786446719
+          },
+          {
+            "t": 1786446779
+          },
+          {
+            "t": 1786446839
+          },
+          {
+            "t": 1786446899
+          },
+          {
+            "t": 1786446959
+          },
+          {
+            "t": 1786447019
+          },
+          {
+            "t": 1786447079
+          },
+          {
+            "t": 1786447139
+          },
+          {
+            "t": 1786447199
+          },
+          {
+            "t": 1786447259
+          },
+          {
+            "t": 1786447319
+          },
+          {
+            "t": 1786447379
+          },
+          {
+            "t": 1786447439
+          },
+          {
+            "t": 1786447499
+          },
+          {
+            "t": 1786447559
+          },
+          {
+            "t": 1786447619
+          },
+          {
+            "t": 1786447679
+          },
+          {
+            "t": 1786447739
+          },
+          {
+            "t": 1786447799
+          },
+          {
+            "t": 1786447859
+          },
+          {
+            "t": 1786447919
+          },
+          {
+            "t": 1786447979
+          },
+          {
+            "t": 1786448039
+          },
+          {
+            "t": 1786448099
+          },
+          {
+            "t": 1786448159
+          },
+          {
+            "t": 1786448219
+          },
+          {
+            "t": 1786448279
+          },
+          {
+            "t": 1786448339
+          },
+          {
+            "t": 1786448399
+          },
+          {
+            "t": 1786448459
+          },
+          {
+            "t": 1786448519
+          },
+          {
+            "t": 1786448579
+          },
+          {
+            "t": 1786448639
+          },
+          {
+            "t": 1786448699
+          },
+          {
+            "t": 1786448759
+          },
+          {
+            "t": 1786448819
+          },
+          {
+            "t": 1786448879
+          },
+          {
+            "t": 1786448939
+          },
+          {
+            "t": 1786448999
+          },
+          {
+            "t": 1786449059
+          },
+          {
+            "t": 1786449119
+          },
+          {
+            "t": 1786449179
+          },
+          {
+            "t": 1786449239
+          },
+          {
+            "t": 1786449299
+          },
+          {
+            "t": 1786449359
+          },
+          {
+            "t": 1786449419
+          },
+          {
+            "t": 1786449479
+          },
+          {
+            "t": 1786449539
+          },
+          {
+            "t": 1786449599
+          },
+          {
+            "t": 1786449659
+          },
+          {
+            "t": 1786449719
+          },
+          {
+            "t": 1786449779
+          },
+          {
+            "t": 1786449839
+          },
+          {
+            "t": 1786449899
+          },
+          {
+            "t": 1786449959
+          },
+          {
+            "t": 1786450019
+          },
+          {
+            "t": 1786450079
+          },
+          {
+            "t": 1786450139
+          },
+          {
+            "t": 1786450199
+          },
+          {
+            "t": 1786450259
+          },
+          {
+            "t": 1786450319
+          },
+          {
+            "t": 1786450379
+          },
+          {
+            "t": 1786450439
+          },
+          {
+            "t": 1786450499
+          },
+          {
+            "t": 1786450559
+          },
+          {
+            "t": 1786450619
+          },
+          {
+            "t": 1786450679
+          },
+          {
+            "t": 1786450739
+          },
+          {
+            "t": 1786450799
+          },
+          {
+            "t": 1786450859
+          },
+          {
+            "t": 1786450919
+          },
+          {
+            "t": 1786450979
+          },
+          {
+            "t": 1786451039
+          },
+          {
+            "t": 1786451099
+          },
+          {
+            "t": 1786451159
+          },
+          {
+            "t": 1786451219
+          },
+          {
+            "t": 1786451279
+          },
+          {
+            "t": 1786451339
+          },
+          {
+            "t": 1786451399
+          },
+          {
+            "t": 1786451459
+          },
+          {
+            "t": 1786451519
+          },
+          {
+            "t": 1786451579
+          },
+          {
+            "t": 1786451639
+          },
+          {
+            "t": 1786451699
+          },
+          {
+            "t": 1786451759
+          },
+          {
+            "t": 1786451819
+          },
+          {
+            "t": 1786451879
+          },
+          {
+            "t": 1786451939
+          },
+          {
+            "t": 1786451999
+          },
+          {
+            "t": 1786452059
+          },
+          {
+            "t": 1786452119
+          },
+          {
+            "t": 1786452179
+          },
+          {
+            "t": 1786452239
+          },
+          {
+            "t": 1786452299
+          },
+          {
+            "t": 1786452359
+          },
+          {
+            "t": 1786452419
+          },
+          {
+            "t": 1786452479
+          },
+          {
+            "t": 1786452539
+          },
+          {
+            "t": 1786452599
+          },
+          {
+            "t": 1786452659
+          },
+          {
+            "t": 1786452719
+          },
+          {
+            "t": 1786452779
+          },
+          {
+            "t": 1786452839
+          },
+          {
+            "t": 1786452899
+          },
+          {
+            "t": 1786452959
+          },
+          {
+            "t": 1786453019
+          },
+          {
+            "t": 1786453079
+          },
+          {
+            "t": 1786453139
+          },
+          {
+            "t": 1786453199
+          },
+          {
+            "t": 1786453259
+          },
+          {
+            "t": 1786453319
+          },
+          {
+            "t": 1786453379
+          },
+          {
+            "t": 1786453439
+          },
+          {
+            "t": 1786453499
+          },
+          {
+            "t": 1786453559
+          },
+          {
+            "t": 1786453619
+          },
+          {
+            "t": 1786453679
+          },
+          {
+            "t": 1786453739
+          },
+          {
+            "t": 1786453799
+          },
+          {
+            "t": 1786453859
+          },
+          {
+            "t": 1786453919
+          },
+          {
+            "t": 1786453979
+          },
+          {
+            "t": 1786454039
+          },
+          {
+            "t": 1786454099
+          },
+          {
+            "t": 1786454159
+          },
+          {
+            "t": 1786454219
+          },
+          {
+            "t": 1786454279
+          },
+          {
+            "t": 1786454339
+          },
+          {
+            "t": 1786454399
+          },
+          {
+            "t": 1786454459
+          },
+          {
+            "t": 1786454519
+          },
+          {
+            "t": 1786454579
+          },
+          {
+            "t": 1786454639
+          },
+          {
+            "t": 1786454699
+          },
+          {
+            "t": 1786454759
+          },
+          {
+            "t": 1786454819
+          },
+          {
+            "t": 1786454879
+          },
+          {
+            "t": 1786454939
+          },
+          {
+            "t": 1786454999
+          },
+          {
+            "t": 1786455059
+          },
+          {
+            "t": 1786455119
+          },
+          {
+            "t": 1786455179
+          },
+          {
+            "t": 1786455239
+          },
+          {
+            "t": 1786455299
+          },
+          {
+            "t": 1786455359
+          },
+          {
+            "t": 1786455419
+          },
+          {
+            "t": 1786455479
+          },
+          {
+            "t": 1786455539
+          },
+          {
+            "t": 1786455599
+          },
+          {
+            "t": 1786455659
+          },
+          {
+            "t": 1786455719
+          },
+          {
+            "t": 1786455779
+          },
+          {
+            "t": 1786455839
+          },
+          {
+            "t": 1786455899
+          },
+          {
+            "t": 1786455959
+          },
+          {
+            "t": 1786456019
+          },
+          {
+            "t": 1786456079
+          },
+          {
+            "t": 1786456139
+          },
+          {
+            "t": 1786456199
+          },
+          {
+            "t": 1786456259
+          },
+          {
+            "t": 1786456319
+          },
+          {
+            "t": 1786456379
+          },
+          {
+            "t": 1786456439
+          },
+          {
+            "t": 1786456499
+          },
+          {
+            "t": 1786456559
+          },
+          {
+            "t": 1786456619
+          },
+          {
+            "t": 1786456679
+          },
+          {
+            "t": 1786456739
+          },
+          {
+            "t": 1786456799
+          },
+          {
+            "t": 1786456859
+          },
+          {
+            "t": 1786456919
+          },
+          {
+            "t": 1786456979
+          },
+          {
+            "t": 1786457039
+          },
+          {
+            "t": 1786457099
+          },
+          {
+            "t": 1786457159
+          },
+          {
+            "t": 1786457219
+          },
+          {
+            "t": 1786457279
+          },
+          {
+            "t": 1786457339
+          },
+          {
+            "t": 1786457399
+          },
+          {
+            "t": 1786457459
+          },
+          {
+            "t": 1786457519
+          },
+          {
+            "t": 1786457579
+          },
+          {
+            "t": 1786457639
+          },
+          {
+            "t": 1786457699
+          },
+          {
+            "t": 1786457759
+          },
+          {
+            "t": 1786457819
+          },
+          {
+            "t": 1786457879
+          },
+          {
+            "t": 1786457939
+          },
+          {
+            "t": 1786457999
+          },
+          {
+            "t": 1786458059
+          },
+          {
+            "t": 1786458119
+          },
+          {
+            "t": 1786458179
+          },
+          {
+            "t": 1786458239
+          },
+          {
+            "t": 1786458299
+          },
+          {
+            "t": 1786458359
+          },
+          {
+            "t": 1786458419
+          },
+          {
+            "t": 1786458479
+          },
+          {
+            "t": 1786458539
+          },
+          {
+            "t": 1786458599
+          },
+          {
+            "t": 1786458659
+          },
+          {
+            "t": 1786458719
+          },
+          {
+            "t": 1786458779
+          },
+          {
+            "t": 1786458839
+          },
+          {
+            "t": 1786458899
+          },
+          {
+            "t": 1786458959
+          },
+          {
+            "t": 1786459019
+          },
+          {
+            "t": 1786459079
+          },
+          {
+            "t": 1786459139
+          },
+          {
+            "t": 1786459199
+          },
+          {
+            "t": 1786459259
+          },
+          {
+            "t": 1786459319
+          },
+          {
+            "t": 1786459379
+          },
+          {
+            "t": 1786459439
+          },
+          {
+            "t": 1786459499
+          },
+          {
+            "t": 1786459559
+          },
+          {
+            "t": 1786459619
+          },
+          {
+            "t": 1786459679
+          },
+          {
+            "t": 1786459739
+          },
+          {
+            "t": 1786459799
+          },
+          {
+            "t": 1786459859
+          },
+          {
+            "t": 1786459919
+          },
+          {
+            "t": 1786459979
+          },
+          {
+            "t": 1786460039
+          },
+          {
+            "t": 1786460099
+          },
+          {
+            "t": 1786460159
+          },
+          {
+            "t": 1786460219
+          },
+          {
+            "t": 1786460279
+          },
+          {
+            "t": 1786460339
+          },
+          {
+            "t": 1786460399
+          },
+          {
+            "t": 1786460459
+          },
+          {
+            "t": 1786460519
+          },
+          {
+            "t": 1786460579
+          },
+          {
+            "t": 1786460639
+          },
+          {
+            "t": 1786460699
+          },
+          {
+            "t": 1786460759
+          },
+          {
+            "t": 1786460819
+          },
+          {
+            "t": 1786460879
+          },
+          {
+            "t": 1786460939
+          },
+          {
+            "t": 1786460999
+          },
+          {
+            "t": 1786461059
+          },
+          {
+            "t": 1786461119
+          },
+          {
+            "t": 1786461179
+          },
+          {
+            "t": 1786461239
+          },
+          {
+            "t": 1786461299
+          },
+          {
+            "t": 1786461359
+          },
+          {
+            "t": 1786461419
+          },
+          {
+            "t": 1786461479
+          },
+          {
+            "t": 1786461539
+          },
+          {
+            "t": 1786461599
+          },
+          {
+            "t": 1786461659
+          },
+          {
+            "t": 1786461719
+          },
+          {
+            "t": 1786461779
+          },
+          {
+            "t": 1786461839
+          },
+          {
+            "t": 1786461899
+          },
+          {
+            "t": 1786461959
+          },
+          {
+            "t": 1786462019
+          },
+          {
+            "t": 1786462079
+          },
+          {
+            "t": 1786462139
+          },
+          {
+            "t": 1786462199
+          },
+          {
+            "t": 1786462259
+          },
+          {
+            "t": 1786462319
+          },
+          {
+            "t": 1786462379
+          },
+          {
+            "t": 1786462439
+          },
+          {
+            "t": 1786462499
+          },
+          {
+            "t": 1786462559
+          },
+          {
+            "t": 1786462619
+          },
+          {
+            "t": 1786462679
+          },
+          {
+            "t": 1786462739
+          },
+          {
+            "t": 1786462799
+          },
+          {
+            "t": 1786462859
+          },
+          {
+            "t": 1786462919
+          },
+          {
+            "t": 1786462979
+          },
+          {
+            "t": 1786463039
+          },
+          {
+            "t": 1786463099
+          },
+          {
+            "t": 1786463159
+          },
+          {
+            "t": 1786463219
+          },
+          {
+            "t": 1786463279
+          },
+          {
+            "t": 1786463339
+          },
+          {
+            "t": 1786463399
+          },
+          {
+            "t": 1786463459
+          },
+          {
+            "t": 1786463519
+          },
+          {
+            "t": 1786463579
+          },
+          {
+            "t": 1786463639
+          },
+          {
+            "t": 1786463699
+          },
+          {
+            "t": 1786463759
+          },
+          {
+            "t": 1786463819
+          },
+          {
+            "t": 1786463879
+          },
+          {
+            "t": 1786463939
+          },
+          {
+            "t": 1786463999
+          },
+          {
+            "t": 1786464000
+          }
+        ]
       },
       "changes": {
-        "price1w": 374.94,
-        "price1m": 328,
+        "price1w": 368.93,
+        "price1m": 359.27,
+        "price3m": 297.15,
+        "price6m": 316.33,
         "priceYTD": 308.03,
-        "price1y": 248.65,
-        "price5y": 103.84,
+        "price1y": 275.01,
+        "price5y": 106.08,
         "priceMAX": 7.969
       },
       "source": "polygon"
     },
     "history": [
       {
+        "t": "2026-08-03",
+        "o": 363.79,
+        "h": 388.84,
+        "l": 360.965,
+        "c": 366.7,
+        "a": 366.7,
+        "v": 19088192,
+        "ch": 1.84
+      },
+      {
         "t": "2026-07-01",
         "o": 375.03,
         "h": 382.97,
-        "l": 354.25,
-        "c": 356.03,
-        "a": 356.03,
-        "v": 19509132,
-        "ch": -4.62
+        "l": 336.53,
+        "c": 360.07,
+        "a": 360.07,
+        "v": 84589677,
+        "ch": -3.53
       },
       {
         "t": "2026-06-01",
@@ -742,59 +2020,39 @@
         "a": 307.764547,
         "v": 81475543,
         "ch": 2.7
-      },
-      {
-        "t": "2025-09-02",
-        "o": 273.9,
-        "h": 307.25,
-        "l": 268.01,
-        "c": 300.82,
-        "a": 299.665743,
-        "v": 93107853,
-        "ch": 9.44
-      },
-      {
-        "t": "2025-08-01",
-        "o": 265.53,
-        "h": 281.5,
-        "l": 261.71,
-        "c": 275.2,
-        "a": 273.809476,
-        "v": 86109824,
-        "ch": 1.52
       }
     ],
     "quote": {
-      "p": 356.75,
-      "pd": 356.75,
-      "c": -10.23,
-      "cp": -2.79,
-      "cl": 366.98,
-      "cdr": -1,
-      "o": 360.12,
-      "h": 363.01,
-      "l": 354.25,
-      "v": 1890032,
-      "ts": 1783540800000,
-      "u": "Jul 8, 2026, 4:00 PM EDT",
-      "td": "2026-07-08",
-      "h52": 382.97,
-      "l52": 243.34,
+      "p": 369.3,
+      "pd": 369.3,
+      "c": 2.6,
+      "cp": 0.71,
+      "cl": 366.7,
+      "cdr": 1,
+      "o": 367.74,
+      "h": 372.56,
+      "l": 367.48,
+      "v": 305605,
+      "ts": 1786459094344.7258,
+      "u": "Aug 11, 2026, 10:38 AM EDT",
+      "td": "2026-08-11",
+      "h52": 388.84,
+      "l52": 263.8,
       "ex": "NYSE",
-      "ms": "closed",
-      "fms": "post",
-      "e": true,
-      "ep": 356.03,
-      "epd": 356.03,
-      "ec": -0.72,
-      "ecp": -0.2,
-      "eu": "Jul 8, 2026, 6:30 PM EDT",
-      "es": "After-hours",
-      "ets": 1783549800002.3044,
-      "etd": "2026-07-08",
+      "ms": "open",
+      "fms": "open",
+      "e": false,
+      "ep": null,
+      "epd": 0,
+      "ec": 0,
+      "ecp": 0,
+      "eu": null,
+      "es": null,
+      "ets": 1786459094344.7258,
+      "etd": null,
       "epv": null,
       "days": 0,
-      "exp": 1783550809635,
+      "exp": 1786459142429,
       "symbol": "GE",
       "uid": "GE"
     }

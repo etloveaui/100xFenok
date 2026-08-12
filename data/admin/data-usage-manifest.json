@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-08-10T15:26:11.760Z",
+  "generated_at": "2026-08-12T04:41:53.936Z",
   "totals": {
-    "rootJsonCount": 23369,
-    "publicJsonCount": 15905,
-    "mirroredRootJsonCount": 10698,
-    "missingPublicMirrorCount": 12671,
+    "rootJsonCount": 24346,
+    "publicJsonCount": 16898,
+    "mirroredRootJsonCount": 11691,
+    "missingPublicMirrorCount": 12655,
     "publicOnlyJsonCount": 5207,
-    "directDataFetchCount": 109,
+    "directDataFetchCount": 128,
     "dynamicPatternCount": 10
   },
   "mirror_sync_status": "partial",
@@ -117,8 +117,8 @@
   "categories": [
     {
       "category": "admin",
-      "rootJsonCount": 588,
-      "publicJsonCount": 528,
+      "rootJsonCount": 620,
+      "publicJsonCount": 583,
       "directFetchCount": 4,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 0,
@@ -157,8 +157,8 @@
     },
     {
       "category": "computed",
-      "rootJsonCount": 7544,
-      "publicJsonCount": 1560,
+      "rootJsonCount": 7696,
+      "publicJsonCount": 1700,
       "directFetchCount": 9,
       "dynamicPatternCount": 1,
       "generatedSourceCount": 1,
@@ -167,9 +167,9 @@
     },
     {
       "category": "damodaran",
-      "rootJsonCount": 3,
-      "publicJsonCount": 3,
-      "directFetchCount": 1,
+      "rootJsonCount": 9,
+      "publicJsonCount": 9,
+      "directFetchCount": 7,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 1,
       "status": "active",
@@ -217,18 +217,18 @@
     },
     {
       "category": "indices",
-      "rootJsonCount": 2,
-      "publicJsonCount": 2,
-      "directFetchCount": 0,
+      "rootJsonCount": 6,
+      "publicJsonCount": 6,
+      "directFetchCount": 3,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 0,
-      "status": "catalog_only",
+      "status": "active",
       "usage": "market trend and drawdown context"
     },
     {
       "category": "kf-french",
       "rootJsonCount": 1,
-      "publicJsonCount": 0,
+      "publicJsonCount": 1,
       "directFetchCount": 0,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 0,
@@ -237,9 +237,9 @@
     },
     {
       "category": "macro",
-      "rootJsonCount": 3,
-      "publicJsonCount": 3,
-      "directFetchCount": 2,
+      "rootJsonCount": 11,
+      "publicJsonCount": 11,
+      "directFetchCount": 9,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 2,
       "status": "active",
@@ -297,9 +297,9 @@
     },
     {
       "category": "stockanalysis",
-      "rootJsonCount": 5728,
-      "publicJsonCount": 1167,
-      "directFetchCount": 7,
+      "rootJsonCount": 5740,
+      "publicJsonCount": 1169,
+      "directFetchCount": 9,
       "dynamicPatternCount": 5,
       "generatedSourceCount": 0,
       "status": "active",
@@ -317,18 +317,18 @@
     },
     {
       "category": "yardney",
-      "rootJsonCount": 0,
-      "publicJsonCount": 0,
-      "directFetchCount": 0,
+      "rootJsonCount": 1,
+      "publicJsonCount": 1,
+      "directFetchCount": 1,
       "dynamicPatternCount": 0,
       "generatedSourceCount": 0,
-      "status": "catalog_only",
+      "status": "active",
       "usage": "bond-yield valuation card"
     },
     {
       "category": "yf",
-      "rootJsonCount": 5802,
-      "publicJsonCount": 5787,
+      "rootJsonCount": 6564,
+      "publicJsonCount": 6563,
       "directFetchCount": 1,
       "dynamicPatternCount": 1,
       "generatedSourceCount": 1,
@@ -526,10 +526,57 @@
       ]
     },
     {
+      "dataPath": "damodaran/credit_ratings.json",
+      "category": "damodaran",
+      "consumers": [
+        "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js"
+      ]
+    },
+    {
+      "dataPath": "damodaran/erp.json",
+      "category": "damodaran",
+      "consumers": [
+        "100xfenok-next/public/admin/data-lab/shared/data-lab-config.js",
+        "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js",
+        "100xfenok-next/src/hooks/useMarketValuation.ts"
+      ]
+    },
+    {
+      "dataPath": "damodaran/historical_erp.json",
+      "category": "damodaran",
+      "consumers": [
+        "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js",
+        "100xfenok-next/src/hooks/useMarketValuation.ts"
+      ]
+    },
+    {
+      "dataPath": "damodaran/industries.json",
+      "category": "damodaran",
+      "consumers": [
+        "100xfenok-next/public/admin/valuation-lab/DEV.md",
+        "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js"
+      ]
+    },
+    {
       "dataPath": "damodaran/industry_benchmarks.json",
       "category": "damodaran",
       "consumers": [
         "100xfenok-next/src/app/stock/[ticker]/StockTabs.tsx"
+      ]
+    },
+    {
+      "dataPath": "damodaran/industry_metrics_regions.json",
+      "category": "damodaran",
+      "consumers": [
+        "100xfenok-next/public/admin/valuation-lab/DEV.md",
+        "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js"
+      ]
+    },
+    {
+      "dataPath": "damodaran/industry_metrics.json",
+      "category": "damodaran",
+      "consumers": [
+        "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js"
       ]
     },
     {
@@ -627,11 +674,92 @@
       ]
     },
     {
+      "dataPath": "indices/nasdaq.json",
+      "category": "indices",
+      "consumers": [
+        "100xfenok-next/public/admin/valuation-lab/expansion/indices-nasdaq.html",
+        "100xfenok-next/src/hooks/useMarketValuation.ts",
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
+      ]
+    },
+    {
+      "dataPath": "indices/nasdaq100.json",
+      "category": "indices",
+      "consumers": [
+        "100xfenok-next/public/admin/data-lab/shared/data-lab-config.js",
+        "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js"
+      ]
+    },
+    {
+      "dataPath": "indices/sp500.json",
+      "category": "indices",
+      "consumers": [
+        "100xfenok-next/public/admin/data-lab/shared/data-lab-config.js",
+        "100xfenok-next/public/admin/valuation-lab/expansion/indices-sp500.html",
+        "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js",
+        "100xfenok-next/src/hooks/useMarketValuation.ts",
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
+      ]
+    },
+    {
       "dataPath": "macro/activity-surveys.json",
       "category": "macro",
       "consumers": [
         "100xfenok-next/public/admin/data-lab/app/ops-console.js",
         "100xfenok-next/src/hooks/useMarketValuation.ts",
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
+      ]
+    },
+    {
+      "dataPath": "macro/fdic-tier1.json",
+      "category": "macro",
+      "consumers": [
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
+      ]
+    },
+    {
+      "dataPath": "macro/fred-banking-daily.json",
+      "category": "macro",
+      "consumers": [
+        "100xfenok-next/src/hooks/useDashboardData.ts",
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
+      ]
+    },
+    {
+      "dataPath": "macro/fred-banking-quarterly.json",
+      "category": "macro",
+      "consumers": [
+        "100xfenok-next/public/admin/data-lab/app/ops-console.js",
+        "100xfenok-next/src/hooks/useDashboardData.ts"
+      ]
+    },
+    {
+      "dataPath": "macro/fred-banking-weekly.json",
+      "category": "macro",
+      "consumers": [
+        "100xfenok-next/src/hooks/useDashboardData.ts",
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
+      ]
+    },
+    {
+      "dataPath": "macro/fred-macro.json",
+      "category": "macro",
+      "consumers": [
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
+      ]
+    },
+    {
+      "dataPath": "macro/stablecoins.json",
+      "category": "macro",
+      "consumers": [
+        "100xfenok-next/src/lib/macro-chart/catalog.ts"
+      ]
+    },
+    {
+      "dataPath": "macro/tga.json",
+      "category": "macro",
+      "consumers": [
+        "100xfenok-next/src/app/api/data/route.ts",
         "100xfenok-next/src/lib/macro-chart/catalog.ts"
       ]
     },
@@ -1165,6 +1293,14 @@
       ]
     },
     {
+      "dataPath": "stockanalysis/etf_universe.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/public/admin/data-lab/app/ops-console.js",
+        "100xfenok-next/src/lib/server/data-loader.ts"
+      ]
+    },
+    {
       "dataPath": "stockanalysis/index.json",
       "category": "stockanalysis",
       "consumers": [
@@ -1187,6 +1323,14 @@
       ]
     },
     {
+      "dataPath": "stockanalysis/surfaces/index.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/public/admin/data-lab/app/ops-console.js",
+        "100xfenok-next/src/lib/server/data-loader.ts"
+      ]
+    },
+    {
       "dataPath": "stockanalysis/surfaces/new_etfs.json",
       "category": "stockanalysis",
       "consumers": [
@@ -1205,6 +1349,14 @@
       "category": "winddown",
       "consumers": [
         "100xfenok-next/src/generated/winddown-published-lkg.ts"
+      ]
+    },
+    {
+      "dataPath": "yardney/yardney_model.json",
+      "category": "yardney",
+      "consumers": [
+        "100xfenok-next/src/app/market-valuation/YardeniCard.tsx",
+        "100xfenok-next/src/app/market-valuation/yardeniReading.ts"
       ]
     },
     {
@@ -1276,17 +1428,17 @@
       },
       {
         "id": "liquidity_flow",
-        "asOf": "2026-08-10",
-        "status": "rising"
+        "asOf": "2026-08-12",
+        "status": "stable"
       },
       {
         "id": "liquidity_stress",
-        "asOf": "2026-08-10",
+        "asOf": "2026-08-11",
         "status": "caution"
       },
       {
         "id": "sentiment_signal",
-        "asOf": "2026-08-10",
+        "asOf": "2026-08-11",
         "status": "neutral"
       }
     ]
@@ -1299,13 +1451,6 @@
       "admin/data-supply-detection-floor.json",
       "admin/edgar_filings/current/edgar_filings.json",
       "admin/edgar_filings/index.json",
-      "admin/fenok-edge-etf-daily1y-fetchable-plan.json",
-      "admin/fenok-edge-etf-daily1y-readiness.json",
-      "admin/fenok-etf-core-daily-basket.json",
-      "admin/fenok-s0-finra-occ-mapping-ledger.json",
-      "admin/fenok-s1-public-mutation-enable-readiness.json",
-      "admin/fenok-s1-stock-promotion-gate-plan.json",
-      "admin/fenok-s1-stock-public-promotion-dry-run.json",
       "admin/finra-ats/current/weekly-summary.json",
       "admin/finra-ats/index.json",
       "admin/finra-ats/weeks/2026-06-22.json",
@@ -1333,16 +1478,23 @@
       "admin/oecd_cli/parity-report.json",
       "admin/oecd_cli/shadow/oecd-cli.json",
       "admin/sec-13f-shadow-parity.json",
-      "admin/slickcharts-composite-recovery/index.json",
-      "admin/us-indices-daily/keys/nasdaq100.json",
-      "admin/us-indices-daily/keys/sox.json",
-      "admin/us-indices-daily/lkg/nasdaq100.json",
-      "admin/us-indices-daily/lkg/sox.json",
-      "admin/us-indices-daily/promotion-contracts/nasdaq100.json",
-      "admin/us-indices-daily/promotion-contracts/sox.json",
-      "admin/us-indices-daily/provider-observations/008e1520291891899255a892b50da86860de5d55e0640eb938c9519c87a44652.json",
-      "admin/us-indices-daily/provider-observations/3c91cadade757510a9156bef0f64ea5b51e070acf61ca0fc6dae36dc33435938.json",
-      "admin/us-indices-daily/provider-observations/ecdba5febe4c55fef76616e044e299a072277b35f96b0cea4b21ecc6bb9e20d0.json"
+      "admin/yahoo_etf_fallback/index.json",
+      "admin/yahoo_etf_fallback/lkg/ticker_54515151.json",
+      "admin/yahoo_private_options/index.json",
+      "admin/yahoo_private_options/lkg/availability.json",
+      "computed/feno-rim-recovery/FENO_RIM_B2B_SUMMARY.json",
+      "computed/feno-rim-recovery/FENO_RIM_BOOK_PATH_RECONCILIATION.json",
+      "computed/feno-rim-recovery/FENO_RIM_CLEAN_SURPLUS_BRIDGE.json",
+      "computed/feno-rim-recovery/FENO_RIM_CURRENT_NDX_20260808.json",
+      "computed/feno-rim-recovery/FENO_RIM_CURRENT_QQQ_EQUIVALENT_20260808.json",
+      "computed/feno-rim-recovery/FENO_RIM_CURRENT_SPX_20260808.json",
+      "computed/feno-rim-recovery/FENO_RIM_FORECAST_COVERAGE_2019_2025.json",
+      "computed/feno-rim-recovery/FENO_RIM_FORECAST_ORIGIN_ELIGIBILITY.json",
+      "computed/feno-rim-recovery/FENO_RIM_FORWARD_BOOK_PATH.json",
+      "computed/feno-rim-recovery/FENO_RIM_FORWARD_BOOK_PATHS.json",
+      "computed/feno-rim-recovery/FENO_RIM_FORWARD_BOOK_PATHS_P3.json",
+      "computed/feno-rim-recovery/FENO_RIM_KE_CONTEXT_COMPARISON.json",
+      "computed/feno-rim-recovery/FENO_RIM_KE_FETCH_RECEIPTS.json"
     ],
     "publicOnly": [
       "computed/market_facts/shards/0000.json",

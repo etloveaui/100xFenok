@@ -51,31 +51,57 @@
       "run_id": "30771231562",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 509,
+      "natural": true,
+      "observed_at": "2026-08-11T07:21:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31468517777",
+      "schedule": "7 6 * * 0-5",
+      "shard": "27/72"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-11T13:36:55Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31496919771",
+      "schedule": "7 12 * * 0-5",
+      "shard": "30/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-02T23:03:13Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/LOFF.json",
-    "payload_sha256": "95c7a31a6cefccc6c03f7e4a01d854ea87fca9e91380be21442ec442d267e363",
-    "quote_as_of": "2026-07-31T20:00:00Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-11T07:22:44Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/LOFF.json",
+    "payload_sha256": "64de04e8de6499bf5dfc520cb5c21e32f4587475c01cb6b0f32a8fe96812ac79",
+    "quote_as_of": "2026-08-10T20:00:00Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 497,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-02T22:59:12Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-11T13:36:55Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "30771231562",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31496919771",
+    "schedule": "7 12 * * 0-5",
+    "shard": "30/72"
   },
   "lkg": {
     "fetched_at": "2026-08-02T23:03:13Z",
@@ -88,17 +114,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-02T22:59:12Z",
-    "payload_sha256": "c32f16c7bd7194efa966e894b3317134dc69061f7d9134b38e21fc5e3ff78214",
-    "quote_as_of": "2026-07-31T20:00:00Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T07:21:44Z",
+    "payload_sha256": "e92f051d0483e9c22ad16199320d9d56583c616bb45178bd18e7aa11a73ec4ca",
+    "quote_as_of": "2026-08-10T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30771231562",
+    "run_id": "31468517777",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -111,5 +137,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "LOFF",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T13:36:55Z"
 }

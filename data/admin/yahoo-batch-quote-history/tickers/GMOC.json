@@ -25,15 +25,28 @@
       "run_id": "31078091927",
       "schedule": "7 4 * * 0-5",
       "shard": "50/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 755,
+      "natural": true,
+      "observed_at": "2026-08-11T09:13:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31476569032",
+      "schedule": "7 8 * * 0-5",
+      "shard": "28/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T06:43:49Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GMOC.json",
-    "payload_sha256": "b18d35cde0728c19ada4da89dbd4c1194034c8ed05824859d58117c451b2ecc4",
-    "quote_as_of": "2026-07-31T18:18:40Z",
-    "source_as_of": "2026-07-31T18:18:40Z"
+    "fetched_at": "2026-08-11T09:13:36Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/GMOC.json",
+    "payload_sha256": "5c8f84430c0c98aa7e237b876c9107d4247d651090e2c30c15cf5f17877be945",
+    "quote_as_of": "2026-08-10T15:14:06Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 373,
+    "latency_ms": 755,
     "natural": true,
-    "observed_at": "2026-08-06T06:42:20Z",
+    "observed_at": "2026-08-11T09:13:07Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31078091927",
-    "schedule": "7 4 * * 0-5",
-    "shard": "50/72"
+    "run_id": "31476569032",
+    "schedule": "7 8 * * 0-5",
+    "shard": "28/72"
   },
   "lkg": {
     "fetched_at": "2026-08-06T06:43:49Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-06T06:42:20Z",
-    "payload_sha256": "0c7ba9e00345fdb617e8b1a3632478b2813e9e34b6eb3fd44b27bc8d281eb3aa",
-    "quote_as_of": "2026-07-31T18:18:40Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T09:13:07Z",
+    "payload_sha256": "c2a7641d169ef142bf0bd3e558b957d73e3101ebc6b4886e09090ea8d3dae0fa",
+    "quote_as_of": "2026-08-10T15:14:06Z",
     "run_attempt": 1,
-    "run_id": "31078091927",
+    "run_id": "31476569032",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31T18:18:40Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-07-31T18:18:40Z"
   },
   "ticker": "GMOC",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T09:13:07Z"
 }

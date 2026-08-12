@@ -12,31 +12,57 @@
       "run_id": "30711926935",
       "schedule": "",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 665,
+      "natural": true,
+      "observed_at": "2026-08-11T07:21:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31468517777",
+      "schedule": "7 6 * * 0-5",
+      "shard": "27/72"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-11T23:29:49Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31544436443",
+      "schedule": "7 22 * * 0-5",
+      "shard": "35/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-01T18:50:53Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DAX.json",
-    "payload_sha256": "cc400e8a02340383cb0a4f5e31dfe1202f85a32f50a98b3611e46297509aa4fe",
-    "quote_as_of": "2026-07-31T20:00:00Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-11T07:22:04Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/DAX.json",
+    "payload_sha256": "15fd7323899b360e8dd643620cbb1154d6069a156c751c31feb20fe435dc3692",
+    "quote_as_of": "2026-08-10T20:00:00Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 0,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 815,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-01T18:48:56Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-11T23:29:49Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "30711926935",
-    "schedule": "",
-    "shard": "5/6"
+    "run_id": "31544436443",
+    "schedule": "7 22 * * 0-5",
+    "shard": "35/72"
   },
   "lkg": {
     "fetched_at": "2026-08-01T18:50:53Z",
@@ -48,18 +74,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-01T18:48:56Z",
-    "payload_sha256": "dbea5887bec3a76a79df86d6292eb58f0f35f02b7fa40043d5ea08ddac9b434b",
-    "quote_as_of": "2026-07-31T20:00:00Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T07:21:44Z",
+    "payload_sha256": "b37bd50877d71344c1a5fa876ee19706ef7360f5a6a3c163be890019d952de41",
+    "quote_as_of": "2026-08-10T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "30711926935",
+    "run_id": "31468517777",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +98,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "DAX",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T23:29:49Z"
 }

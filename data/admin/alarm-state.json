@@ -1,22 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-11T06:09:22.514Z",
+  "generated_at": "2026-08-12T04:48:08.776Z",
   "status": "open",
-  "open_incident_count": 4,
+  "open_incident_count": 3,
   "open_incidents": [
-    {
-      "workflow": "fetch-defillama.yml",
-      "label": "Fetch DefiLlama Stablecoins Data",
-      "streak": 3,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 31452280144,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31452280144",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
-    },
     {
       "workflow": "fetch-edgar-filings.yml",
       "label": "Fetch EDGAR Filing Timeline",
@@ -25,20 +12,20 @@
       "first_failing_run_id": 31351108376,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31351108376",
       "alarm_reasons": [
-        "failure_streak"
+        "failure_streak",
+        "unrecovered_overdue"
       ],
       "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
+      "cadence_status": "overdue"
     },
     {
       "workflow": "fetch-stockanalysis.yml",
       "label": "Fetch StockAnalysis Data",
-      "streak": 3,
+      "streak": 0,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": 31436484563,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31436484563",
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
       "alarm_reasons": [
-        "failure_streak",
         "unrecovered_overdue"
       ],
       "lost_schedule_slot_count": 0,
@@ -62,6 +49,17 @@
     {
       "file": "build-stocks-analyzer.yml",
       "label": "Build Stocks Analyzer",
+      "events": [
+        "schedule"
+      ],
+      "event": "schedule",
+      "failure_streak_threshold": 2,
+      "cadence_status": "no_declaration",
+      "cadence_evidence": []
+    },
+    {
+      "file": "data-plane-serving-probe.yml",
+      "label": "Data Plane Serving Probe",
       "events": [
         "schedule"
       ],
@@ -135,8 +133,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 1,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "suspected_skip"
+      ]
     },
     {
       "file": "fetch-fdic.yml",
@@ -420,18 +420,13 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 24,
-    "overdue": 2,
+    "not_due": 23,
+    "overdue": 3,
     "recovered": 0,
-    "no_declaration": 6,
+    "no_declaration": 7,
     "unknown": 0
   },
   "excluded_workflows": [
-    {
-      "file": "data-plane-serving-probe.yml",
-      "label": "Data Plane Serving Probe",
-      "reason": "observer that fails its own run on alarm; watching it would page twice for one incident"
-    },
     {
       "file": "pipeline-failure-alarm.yml",
       "label": "Pipeline Failure Alarm",
@@ -442,12 +437,11 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31463938810",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31463938810",
-    "observed_at": "2026-08-11T06:09:22.514Z",
-    "event": "schedule",
+    "run_id": "31564301009",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31564301009",
+    "observed_at": "2026-08-12T04:48:08.776Z",
+    "event": "workflow_run",
     "workflows": [
-      "fetch-defillama.yml",
       "fetch-edgar-filings.yml",
       "fetch-stockanalysis.yml",
       "fetch-yf-finance.yml"

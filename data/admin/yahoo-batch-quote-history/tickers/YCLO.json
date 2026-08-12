@@ -1,0 +1,142 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 515,
+      "natural": true,
+      "observed_at": "2026-08-11T15:09:25Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31505333713",
+      "schedule": "7 14 * * 0-5",
+      "shard": "31/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 775,
+      "natural": true,
+      "observed_at": "2026-08-11T19:54:36Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31526744910",
+      "schedule": "7 18 * * 0-5",
+      "shard": "33/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 494,
+      "natural": true,
+      "observed_at": "2026-08-11T21:30:39Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31535092071",
+      "schedule": "7 20 * * 0-5",
+      "shard": "34/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 345,
+      "natural": true,
+      "observed_at": "2026-08-11T23:29:49Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31544436443",
+      "schedule": "7 22 * * 0-5",
+      "shard": "35/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 384,
+      "natural": true,
+      "observed_at": "2026-08-12T05:45:23Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31567478446",
+      "schedule": "7 4 * * 0-5",
+      "shard": "38/72"
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-08-11T15:12:46Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/YCLO.json",
+    "payload_sha256": "e518a2f995ea8344490f01c70a6ba378e0ffbed8545fbc43f6b03673281dd106",
+    "quote_as_of": "2026-07-21T19:17:58Z",
+    "source_as_of": "2026-07-21T19:17:58Z"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "error": "recovery_not_advanced_by_provider",
+    "event_name": "schedule",
+    "failures": [],
+    "latency_ms": 384,
+    "natural": true,
+    "observed_at": "2026-08-12T05:45:23Z",
+    "outcome": "failed",
+    "run_attempt": 1,
+    "run_id": "31567478446",
+    "schedule": "7 4 * * 0-5",
+    "shard": "38/72"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-12T05:45:23Z",
+    "provider_history_as_of": "2026-08-10",
+    "provider_quote_as_of": "2026-07-21T19:17:58Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "31567478446"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-11T15:12:46Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/YCLO.json",
+    "payload_sha256": "e518a2f995ea8344490f01c70a6ba378e0ffbed8545fbc43f6b03673281dd106",
+    "quote_as_of": "2026-07-21T19:17:58Z",
+    "source_as_of": "2026-07-21T19:17:58Z"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T15:09:25Z",
+    "payload_sha256": "c762ae7ccb477b03081b66b04adfe1c9ceaebf4b26d988d9d2e7d166cf22b678",
+    "quote_as_of": "2026-07-21T19:17:58Z",
+    "run_attempt": 1,
+    "run_id": "31505333713",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-07-21T19:17:58Z"
+  },
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 15,
+    "classified_at": "2026-08-11T17:08:04Z",
+    "classified_run_id": "31515819191",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "YCLO holds LKG because Yahoo source date 2026-07-21T19:17:58Z is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-21T19:17:58Z"
+  },
+  "ticker": "YCLO",
+  "updated_at": "2026-08-12T05:45:23Z"
+}

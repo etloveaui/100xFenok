@@ -38,15 +38,41 @@
       "run_id": "30771231562",
       "schedule": "0 22 * * 0",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 508,
+      "natural": true,
+      "observed_at": "2026-08-11T07:21:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31468517777",
+      "schedule": "7 6 * * 0-5",
+      "shard": "27/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 710,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-02T23:02:56Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FITZ.json",
-    "payload_sha256": "c94eda59f8db0afda6ad3ddcdd1a25536872045eb898740a97fc7583cd30d9d9",
-    "quote_as_of": "2026-07-31T19:59:20Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-12T02:43:23Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/FITZ.json",
+    "payload_sha256": "3626dfc16e89e475af964a58c6c1dcac9484b3f058f1f92aa46eae46ba045b7b",
+    "quote_as_of": "2026-08-11T19:59:39Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -55,14 +81,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 545,
+    "latency_ms": 710,
     "natural": true,
-    "observed_at": "2026-08-02T22:59:12Z",
+    "observed_at": "2026-08-12T02:41:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30771231562",
-    "schedule": "0 22 * * 0",
-    "shard": "0/6"
+    "run_id": "31557511991",
+    "schedule": "7 0 * * 0-5",
+    "shard": "36/72"
   },
   "lkg": {
     "fetched_at": "2026-08-02T23:02:56Z",
@@ -75,17 +101,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-02T22:59:12Z",
-    "payload_sha256": "dcdcb21a0b63a46e72f2a83fa5f90501eda0eaad3dc54d8287b093cb28a3a96c",
-    "quote_as_of": "2026-07-31T19:59:20Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T02:41:04Z",
+    "payload_sha256": "6a73adfd268c2e0e2b0953d14f156e62f67f4ce2950f5a30c0c007ec5cc73ff9",
+    "quote_as_of": "2026-08-11T19:59:39Z",
     "run_attempt": 1,
-    "run_id": "30771231562",
+    "run_id": "31557511991",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-11"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -98,5 +124,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "FITZ",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-12T02:41:04Z"
 }

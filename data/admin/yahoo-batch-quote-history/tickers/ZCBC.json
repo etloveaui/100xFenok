@@ -12,15 +12,42 @@
       "run_id": "31461137754",
       "schedule": "7 4 * * 0-5",
       "shard": "26/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 541,
+      "natural": true,
+      "observed_at": "2026-08-11T11:03:07Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31484759300",
+      "schedule": "7 10 * * 0-5",
+      "shard": "29/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 606,
+      "natural": true,
+      "observed_at": "2026-08-11T15:09:25Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31505333713",
+      "schedule": "7 14 * * 0-5",
+      "shard": "31/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T05:22:14Z",
-    "history_as_of": "2026-08-10",
+    "fetched_at": "2026-08-11T15:10:45Z",
+    "history_as_of": "2026-08-11",
     "path": "data/yf/finance/ZCBC.json",
-    "payload_sha256": "ba1ba2eee8d9ff47ac12bf578e745270f5e92168f35f9d59c08823f5fc495a67",
-    "quote_as_of": "2026-06-29T19:46:34Z",
-    "source_as_of": "2026-06-29T19:46:34Z"
+    "payload_sha256": "dcd49b0eeb1387258e5b97aa486703b7064b3e60b98515f44af7ffba5e505206",
+    "quote_as_of": "2026-08-11T13:46:10Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,30 +56,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 595,
+    "latency_ms": 606,
     "natural": true,
-    "observed_at": "2026-08-11T05:18:59Z",
+    "observed_at": "2026-08-11T15:09:25Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31461137754",
-    "schedule": "7 4 * * 0-5",
-    "shard": "26/72"
+    "run_id": "31505333713",
+    "schedule": "7 14 * * 0-5",
+    "shard": "31/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-11T05:22:14Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ZCBC.json",
+    "payload_sha256": "ba1ba2eee8d9ff47ac12bf578e745270f5e92168f35f9d59c08823f5fc495a67",
+    "quote_as_of": "2026-06-29T19:46:34Z",
+    "source_as_of": "2026-06-29T19:46:34Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-11T05:18:59Z",
-    "payload_sha256": "93b7dd4134c6cc2171333d28716b108d7b618880839c5d0442693d9cca44752f",
-    "quote_as_of": "2026-06-29T19:46:34Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-11T15:09:25Z",
+    "payload_sha256": "1a26ec60ead0936b3aa4232e254219fba90ad72a89f3000afad12f9daaf27224",
+    "quote_as_of": "2026-08-11T13:46:10Z",
     "run_attempt": 1,
-    "run_id": "31461137754",
+    "run_id": "31505333713",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-06-29T19:46:34Z"
+    "source_as_of": "2026-08-11"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 30,
+    "classified_at": "2026-08-11T07:21:44Z",
+    "classified_run_id": "31468517777",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "ZCBC holds LKG because Yahoo source date 2026-06-29T19:46:34Z is 30 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-06-29T19:46:34Z"
+  },
   "ticker": "ZCBC",
-  "updated_at": "2026-08-11T05:18:59Z"
+  "updated_at": "2026-08-11T15:09:25Z"
 }

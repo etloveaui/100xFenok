@@ -1,6 +1,9 @@
 # v5 Default-Promotion — Rollout Review (REVIEW ONLY, not executed)
 
-> **Status**: ~~review only~~ → **EXECUTED 2026-06-26** per owner mandate. v5 is now the default home (commit `de3d80cae8`, `version.ts`); `?v1=1` / cookie `v1` backdoor is LIVE and V1 stays byte-intact. The §4 gate items below are now **incremental hardening** (mobile LCP/a11y/touch-44px/drawer-URL-sync/render-flicker), not pre-flip blockers — v5 shipped as default first per owner direction, hardening follows.
+> **Status**: Historical rollout review. v5 became default on 2026-06-26,
+> then v6 became the production default on 2026-07-03. The current selector is
+> `100xfenok-next/src/lib/design/version.ts`; the review below preserves the v5
+> rollout decision and its incremental-hardening notes.
 > **Owner decision (2026-06-26)**: review the rollout of making v5 the default home (currently `?v5=1`-gated, V1 = default).
 > **Architect**: Claude (right-top). **Critique**: AGY (left-bottom) — `docs/agent-work/v5_rollout_critique_report.md`.
 > **Constraint (HARD)**: V1 must stay reachable + byte-intact. Free/internal first; no backend change.

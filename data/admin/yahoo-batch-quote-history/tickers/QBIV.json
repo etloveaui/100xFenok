@@ -12,15 +12,28 @@
       "run_id": "31324627429",
       "schedule": "7 16 * * 0-5",
       "shard": "8/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 457,
+      "natural": true,
+      "observed_at": "2026-08-12T04:17:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31562660637",
+      "schedule": "7 2 * * 0-5",
+      "shard": "37/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T16:51:50Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-12T04:18:05Z",
+    "history_as_of": "2026-08-11",
     "path": "data/yf/finance/QBIV.json",
-    "payload_sha256": "a3dc85fa1ed95a85ae87fd07aa5c5f9fd7aefe4dfec1edcac390e7237cb269d8",
-    "quote_as_of": "2026-08-03T19:53:30Z",
-    "source_as_of": "2026-08-03T19:53:30Z"
+    "payload_sha256": "30114c6e05285f90858b51758ad72c33ab306629ef98eaa0c6bd636653493f9d",
+    "quote_as_of": "2026-08-10T15:19:29Z",
+    "source_as_of": "2026-08-10T15:19:29Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,30 +42,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 949,
+    "latency_ms": 457,
     "natural": true,
-    "observed_at": "2026-08-09T16:47:26Z",
+    "observed_at": "2026-08-12T04:17:21Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31324627429",
-    "schedule": "7 16 * * 0-5",
-    "shard": "8/72"
+    "run_id": "31562660637",
+    "schedule": "7 2 * * 0-5",
+    "shard": "37/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-09T16:51:50Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/QBIV.json",
+    "payload_sha256": "a3dc85fa1ed95a85ae87fd07aa5c5f9fd7aefe4dfec1edcac390e7237cb269d8",
+    "quote_as_of": "2026-08-03T19:53:30Z",
+    "source_as_of": "2026-08-03T19:53:30Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T16:47:26Z",
-    "payload_sha256": "e989e1db49eba10641adee7c3df8e2a49d038f054d43d649741752fac722d959",
-    "quote_as_of": "2026-08-03T19:53:30Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "payload_sha256": "04ba3692bbbac6a7e58ac3c5a664c0555acd05df1c16d8c7145c9148b4749dcc",
+    "quote_as_of": "2026-08-10T15:19:29Z",
     "run_attempt": 1,
-    "run_id": "31324627429",
+    "run_id": "31562660637",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03T19:53:30Z"
+    "source_as_of": "2026-08-10T15:19:29Z"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-12T00:28:31Z",
+    "classified_run_id": "31548744038",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "QBIV holds LKG because Yahoo source date 2026-08-03T19:53:30Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-03T19:53:30Z"
+  },
   "ticker": "QBIV",
-  "updated_at": "2026-08-09T16:47:26Z"
+  "updated_at": "2026-08-12T04:17:21Z"
 }

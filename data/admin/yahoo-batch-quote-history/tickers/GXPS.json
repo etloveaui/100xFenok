@@ -12,15 +12,28 @@
       "run_id": "30860500094",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 844,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-03T23:01:19Z",
-    "history_as_of": "2026-08-03",
+    "fetched_at": "2026-08-12T02:41:40Z",
+    "history_as_of": "2026-08-11",
     "path": "data/yf/finance/GXPS.json",
-    "payload_sha256": "718a3d89b23d15901aaea21adb1094233dba185be48b74a246038d961c47a80d",
-    "quote_as_of": "2026-08-03T19:59:51Z",
-    "source_as_of": "2026-08-03"
+    "payload_sha256": "85d0339e3406ae2bc2e364191c42bb9883ceb03bd4506f636cc2748f68a1e81e",
+    "quote_as_of": "2026-08-11T19:56:14Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,30 +42,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 809,
+    "latency_ms": 844,
     "natural": true,
-    "observed_at": "2026-08-03T22:58:08Z",
+    "observed_at": "2026-08-12T02:41:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30860500094",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31557511991",
+    "schedule": "7 0 * * 0-5",
+    "shard": "36/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-03T23:01:19Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GXPS.json",
+    "payload_sha256": "718a3d89b23d15901aaea21adb1094233dba185be48b74a246038d961c47a80d",
+    "quote_as_of": "2026-08-03T19:59:51Z",
+    "source_as_of": "2026-08-03"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-03",
-    "observed_at": "2026-08-03T22:58:08Z",
-    "payload_sha256": "03357fbbb02deaa86c628d393000e32642e0c5412973011924bc114f50cf0d90",
-    "quote_as_of": "2026-08-03T19:59:51Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T02:41:04Z",
+    "payload_sha256": "0285baad6e2fe3c0dd75082db7a878925c03351a3b117ad8f8e04ac19ae25197",
+    "quote_as_of": "2026-08-11T19:56:14Z",
     "run_attempt": 1,
-    "run_id": "30860500094",
+    "run_id": "31557511991",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03"
+    "source_as_of": "2026-08-11"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-12T00:28:31Z",
+    "classified_run_id": "31548744038",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "GXPS holds LKG because Yahoo source date 2026-08-03 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-03"
+  },
   "ticker": "GXPS",
-  "updated_at": "2026-08-03T22:58:08Z"
+  "updated_at": "2026-08-12T02:41:04Z"
 }

@@ -1,0 +1,103 @@
+{
+  "attempts": [
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 984,
+      "natural": true,
+      "observed_at": "2026-08-11T09:13:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31476569032",
+      "schedule": "7 8 * * 0-5",
+      "shard": "28/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 863,
+      "natural": true,
+      "observed_at": "2026-08-11T13:36:55Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31496919771",
+      "schedule": "7 12 * * 0-5",
+      "shard": "30/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 705,
+      "natural": true,
+      "observed_at": "2026-08-11T17:08:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31515819191",
+      "schedule": "7 16 * * 0-5",
+      "shard": "32/72"
+    }
+  ],
+  "current": {
+    "fetched_at": "2026-08-11T17:08:32Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/LIAU.json",
+    "payload_sha256": "451b454fdbb5d99518d050a83a86daa758c2897b7895121e5d838280be67a2cd",
+    "quote_as_of": "2026-08-11T13:46:06Z",
+    "source_as_of": "2026-08-11"
+  },
+  "discovered_from": [
+    "stockanalysis_etf"
+  ],
+  "last_attempt": {
+    "attempts_used": 1,
+    "event_name": "schedule",
+    "failures": [],
+    "latency_ms": 705,
+    "natural": true,
+    "observed_at": "2026-08-11T17:08:04Z",
+    "outcome": "fresh",
+    "run_attempt": 1,
+    "run_id": "31515819191",
+    "schedule": "7 16 * * 0-5",
+    "shard": "32/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-11T09:15:45Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/LIAU.json",
+    "payload_sha256": "5c9d78c5feb02cd9b8fbfd36f033e8ef3e90a8ead3158a36e1059dcb5699c826",
+    "quote_as_of": "2026-07-31T17:45:38Z",
+    "source_as_of": "2026-07-31T17:45:38Z"
+  },
+  "promotion_contract": "provider_observation/v2",
+  "provider_observation": {
+    "event_name": "schedule",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-11T17:08:04Z",
+    "payload_sha256": "760d743d7900e71225b44f96138444df40034ade79533d6438cab56c985b1e16",
+    "quote_as_of": "2026-08-11T13:46:06Z",
+    "run_attempt": 1,
+    "run_id": "31515819191",
+    "schema_version": "provider_observation/v2",
+    "source_as_of": "2026-08-11"
+  },
+  "resolution_state": "fresh_primary",
+  "retry": false,
+  "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-11T11:03:07Z",
+    "classified_run_id": "31484759300",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "LIAU holds LKG because Yahoo source date 2026-07-31T17:45:38Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-07-31T17:45:38Z"
+  },
+  "ticker": "LIAU",
+  "updated_at": "2026-08-11T17:08:04Z"
+}

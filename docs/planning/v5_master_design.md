@@ -1,5 +1,9 @@
 # 100x Fenok v5 — 마스터 설계 (병렬 종합)
 
+> **Lifecycle**: Historical v5 design baseline. The production default moved to
+> v6 on 2026-07-03; use `100xfenok-next/src/lib/design/version.ts` for current
+> selection behavior. This document preserves the v5 implementation rationale.
+
 > 작성: Claude(종합) + 울트라코드 워크플로(7에이전트) + Codex(구현·feasibility) + AGY(가드레일) + MiMo(감사, 일부 교정됨)
 > 범위: `?v5=1` 격리 · `.fnk-shell.v5-home` 스코프 · 라이트 전용 · V1 기본 무손상 · 백엔드/파이프라인 무변경
 > 날짜: 2026-06-25

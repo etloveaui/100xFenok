@@ -12,15 +12,28 @@
       "run_id": "31004461242",
       "schedule": "7 10 * * 0-5",
       "shard": "41/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 909,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-05T12:14:50Z",
-    "history_as_of": "2026-08-04",
+    "fetched_at": "2026-08-12T02:42:00Z",
+    "history_as_of": "2026-08-11",
     "path": "data/yf/finance/USFE.json",
-    "payload_sha256": "1a24a6b92d96b164da9f2816d56605bf9f6a275f6477fadc4c4e759eef179ae2",
-    "quote_as_of": "2026-08-03T14:43:34Z",
-    "source_as_of": "2026-08-03T14:43:34Z"
+    "payload_sha256": "d3adae69040c66aa41f4c0a8c5c0954fffd93b10b62157945734d859421c39d8",
+    "quote_as_of": "2026-08-11T17:59:33Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,30 +42,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1244,
+    "latency_ms": 909,
     "natural": true,
-    "observed_at": "2026-08-05T12:11:49Z",
+    "observed_at": "2026-08-12T02:41:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31004461242",
-    "schedule": "7 10 * * 0-5",
-    "shard": "41/72"
+    "run_id": "31557511991",
+    "schedule": "7 0 * * 0-5",
+    "shard": "36/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-05T12:14:50Z",
+    "history_as_of": "2026-08-04",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/USFE.json",
+    "payload_sha256": "1a24a6b92d96b164da9f2816d56605bf9f6a275f6477fadc4c4e759eef179ae2",
+    "quote_as_of": "2026-08-03T14:43:34Z",
+    "source_as_of": "2026-08-03T14:43:34Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-04",
-    "observed_at": "2026-08-05T12:11:49Z",
-    "payload_sha256": "41fd90bc167eed940c556f1ac322d298aff2554a656ad38a15f1cc7c60a09b66",
-    "quote_as_of": "2026-08-03T14:43:34Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T02:41:04Z",
+    "payload_sha256": "7209edc4a9e009303a0fe05bfdadb05ba3e43dec9a4e918ccca37c1a18ba0fef",
+    "quote_as_of": "2026-08-11T17:59:33Z",
     "run_attempt": 1,
-    "run_id": "31004461242",
+    "run_id": "31557511991",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03T14:43:34Z"
+    "source_as_of": "2026-08-11"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-12T00:28:31Z",
+    "classified_run_id": "31548744038",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "USFE holds LKG because Yahoo source date 2026-08-03T14:43:34Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-03T14:43:34Z"
+  },
   "ticker": "USFE",
-  "updated_at": "2026-08-05T12:11:49Z"
+  "updated_at": "2026-08-12T02:41:04Z"
 }

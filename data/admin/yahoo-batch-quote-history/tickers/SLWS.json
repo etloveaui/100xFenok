@@ -12,15 +12,28 @@
       "run_id": "31068593165",
       "schedule": "7 0 * * 0-5",
       "shard": "48/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 587,
+      "natural": true,
+      "observed_at": "2026-08-11T09:13:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31476569032",
+      "schedule": "7 8 * * 0-5",
+      "shard": "28/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T03:33:46Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SLWS.json",
-    "payload_sha256": "5b56a19ef49eb4f891d60d59de59b512e6647e75b7456702e516d455a75071ee",
-    "quote_as_of": "2026-07-31T19:58:17Z",
-    "source_as_of": "2026-07-31T19:58:17Z"
+    "fetched_at": "2026-08-11T09:13:32Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/yf/finance/SLWS.json",
+    "payload_sha256": "30013f6104dfce2fc975da66ae7b8554945c7f70f027f3e1dc402a9d34c0430a",
+    "quote_as_of": "2026-08-10T16:39:15Z",
+    "source_as_of": "2026-08-10"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,14 +42,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 358,
+    "latency_ms": 587,
     "natural": true,
-    "observed_at": "2026-08-06T03:31:35Z",
+    "observed_at": "2026-08-11T09:13:07Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31068593165",
-    "schedule": "7 0 * * 0-5",
-    "shard": "48/72"
+    "run_id": "31476569032",
+    "schedule": "7 8 * * 0-5",
+    "shard": "28/72"
   },
   "lkg": {
     "fetched_at": "2026-08-06T03:33:46Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-06T03:31:35Z",
-    "payload_sha256": "a0f85ddc17a3bad8eaf6a4d8eee29d3763a4428d4c65244be1e139186a38b682",
-    "quote_as_of": "2026-07-31T19:58:17Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-11T09:13:07Z",
+    "payload_sha256": "11c05dc80831f0803df2371519dfbe60770a85d4200cf8d592bb53fa14de62d6",
+    "quote_as_of": "2026-08-10T16:39:15Z",
     "run_attempt": 1,
-    "run_id": "31068593165",
+    "run_id": "31476569032",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31T19:58:17Z"
+    "source_as_of": "2026-08-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-07-31T19:58:17Z"
   },
   "ticker": "SLWS",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-11T09:13:07Z"
 }

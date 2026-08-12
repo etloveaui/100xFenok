@@ -25,15 +25,41 @@
       "run_id": "30860500094",
       "schedule": "0 22 * * 1",
       "shard": "1/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 471,
+      "natural": true,
+      "observed_at": "2026-08-11T07:21:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31468517777",
+      "schedule": "7 6 * * 0-5",
+      "shard": "27/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 485,
+      "natural": true,
+      "observed_at": "2026-08-12T04:17:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31562660637",
+      "schedule": "7 2 * * 0-5",
+      "shard": "37/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-03T23:03:03Z",
-    "history_as_of": "2026-07-31",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/ETFT.json",
-    "payload_sha256": "967a892e0e673d8f696a9cdb84a2cfe1d99049084c59644a15610880e491c39b",
-    "quote_as_of": "2026-07-31T16:18:54Z",
-    "source_as_of": "2026-07-31"
+    "fetched_at": "2026-08-12T04:19:20Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/ETFT.json",
+    "payload_sha256": "8be022da96bf654d100992e6808a9f97be6775988500085561b9caa5017a5adc",
+    "quote_as_of": "2026-08-10T17:09:10Z",
+    "source_as_of": "2026-08-10T17:09:10Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -42,14 +68,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 798,
+    "latency_ms": 485,
     "natural": true,
-    "observed_at": "2026-08-03T22:58:08Z",
+    "observed_at": "2026-08-12T04:17:21Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "30860500094",
-    "schedule": "0 22 * * 1",
-    "shard": "1/6"
+    "run_id": "31562660637",
+    "schedule": "7 2 * * 0-5",
+    "shard": "37/72"
   },
   "lkg": {
     "fetched_at": "2026-08-03T23:03:03Z",
@@ -62,17 +88,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-07-31",
-    "observed_at": "2026-08-03T22:58:08Z",
-    "payload_sha256": "debed817b9ee9653e108d3ea8d9f5beec3540547c6a80c3349ae0ac98fd9aae7",
-    "quote_as_of": "2026-07-31T16:18:54Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T04:17:21Z",
+    "payload_sha256": "ef680fd0d7389ef6f976b3a533314edebf85cef694033d9156ee2a6c4782f756",
+    "quote_as_of": "2026-08-10T17:09:10Z",
     "run_attempt": 1,
-    "run_id": "30860500094",
+    "run_id": "31562660637",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10T17:09:10Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +111,5 @@
     "source_as_of": "2026-07-31"
   },
   "ticker": "ETFT",
-  "updated_at": "2026-08-11T00:02:00Z"
+  "updated_at": "2026-08-12T04:17:21Z"
 }

@@ -12,15 +12,28 @@
       "run_id": "31074084652",
       "schedule": "7 2 * * 0-5",
       "shard": "49/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 833,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T05:29:18Z",
-    "history_as_of": "2026-08-03",
+    "fetched_at": "2026-08-12T02:42:11Z",
+    "history_as_of": "2026-08-10",
     "path": "data/yf/finance/MVAL.json",
-    "payload_sha256": "bca43867f55dba17014efbcb7e561f65efa9648680e58e0acfbf0b83682d1cc5",
-    "quote_as_of": "2026-08-03T14:24:24Z",
-    "source_as_of": "2026-08-03"
+    "payload_sha256": "68a1eabf3aad8e8f3086c507f11296339e1cb5404e4696fd12f80d036ee6df77",
+    "quote_as_of": "2026-08-07T13:41:06Z",
+    "source_as_of": "2026-08-07T13:41:06Z"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,30 +42,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 752,
+    "latency_ms": 833,
     "natural": true,
-    "observed_at": "2026-08-06T05:27:19Z",
+    "observed_at": "2026-08-12T02:41:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31074084652",
-    "schedule": "7 2 * * 0-5",
-    "shard": "49/72"
+    "run_id": "31557511991",
+    "schedule": "7 0 * * 0-5",
+    "shard": "36/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-06T05:29:18Z",
+    "history_as_of": "2026-08-03",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MVAL.json",
+    "payload_sha256": "bca43867f55dba17014efbcb7e561f65efa9648680e58e0acfbf0b83682d1cc5",
+    "quote_as_of": "2026-08-03T14:24:24Z",
+    "source_as_of": "2026-08-03"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-03",
-    "observed_at": "2026-08-06T05:27:19Z",
-    "payload_sha256": "2a76022549dd510f527033ad37ec2d8ea52b4ed827796e1289796d19bdc9e7d7",
-    "quote_as_of": "2026-08-03T14:24:24Z",
+    "history_as_of": "2026-08-10",
+    "observed_at": "2026-08-12T02:41:04Z",
+    "payload_sha256": "37cdef5bea3756a19a073abdea51f324c963a35da0d9b813d2e08cbe5cf1b0d4",
+    "quote_as_of": "2026-08-07T13:41:06Z",
     "run_attempt": 1,
-    "run_id": "31074084652",
+    "run_id": "31557511991",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03"
+    "source_as_of": "2026-08-07T13:41:06Z"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-12T00:28:31Z",
+    "classified_run_id": "31548744038",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "MVAL holds LKG because Yahoo source date 2026-08-03 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-03"
+  },
   "ticker": "MVAL",
-  "updated_at": "2026-08-06T05:27:19Z"
+  "updated_at": "2026-08-12T02:41:04Z"
 }

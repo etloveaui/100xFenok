@@ -12,15 +12,28 @@
       "run_id": "31164940276",
       "schedule": "7 8 * * 0-5",
       "shard": "64/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 980,
+      "natural": true,
+      "observed_at": "2026-08-12T02:41:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31557511991",
+      "schedule": "7 0 * * 0-5",
+      "shard": "36/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T09:16:57Z",
-    "history_as_of": "2026-08-06",
+    "fetched_at": "2026-08-12T02:42:34Z",
+    "history_as_of": "2026-08-11",
     "path": "data/yf/finance/IQSM.json",
-    "payload_sha256": "a12daafe1d8ce60cd6e4e022f186caa9be7055b9f39d48d2936c4a3f1a8b1d7c",
-    "quote_as_of": "2026-08-03T19:21:42Z",
-    "source_as_of": "2026-08-03T19:21:42Z"
+    "payload_sha256": "700c313fca946509c0b5b1b133ad0a7a6f84deaf5fcbf5f0f4a8a597af0747bd",
+    "quote_as_of": "2026-08-11T18:29:55Z",
+    "source_as_of": "2026-08-11"
   },
   "discovered_from": [
     "stockanalysis_etf"
@@ -29,30 +42,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 545,
+    "latency_ms": 980,
     "natural": true,
-    "observed_at": "2026-08-07T09:14:45Z",
+    "observed_at": "2026-08-12T02:41:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31164940276",
-    "schedule": "7 8 * * 0-5",
-    "shard": "64/72"
+    "run_id": "31557511991",
+    "schedule": "7 0 * * 0-5",
+    "shard": "36/72"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-07T09:16:57Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/IQSM.json",
+    "payload_sha256": "a12daafe1d8ce60cd6e4e022f186caa9be7055b9f39d48d2936c4a3f1a8b1d7c",
+    "quote_as_of": "2026-08-03T19:21:42Z",
+    "source_as_of": "2026-08-03T19:21:42Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T09:14:45Z",
-    "payload_sha256": "4da6ea07df6b0a421ddb2d6c0e8b7de19c0e94790fc572d5e845768b21a68617",
-    "quote_as_of": "2026-08-03T19:21:42Z",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T02:41:04Z",
+    "payload_sha256": "d5cea0cc6369a0944bdef72bb81351756fea42b20e73943d77e210fc2f9d95e5",
+    "quote_as_of": "2026-08-11T18:29:55Z",
     "run_attempt": 1,
-    "run_id": "31164940276",
+    "run_id": "31557511991",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03T19:21:42Z"
+    "source_as_of": "2026-08-11"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-12T00:28:31Z",
+    "classified_run_id": "31548744038",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "IQSM holds LKG because Yahoo source date 2026-08-03T19:21:42Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-03T19:21:42Z"
+  },
   "ticker": "IQSM",
-  "updated_at": "2026-08-07T09:14:45Z"
+  "updated_at": "2026-08-12T02:41:04Z"
 }
