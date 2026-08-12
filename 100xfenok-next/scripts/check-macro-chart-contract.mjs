@@ -94,7 +94,8 @@ async function inspectStaticContracts() {
     readFile(new URL("../src/app/macro-chart/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/macro-chart/context.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/components/market/MarketQuickLinks.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../public/data/catalog/macro-series.json", import.meta.url), "utf8"),
+    // canonical-only mirror: validate the source of truth, not the generated public copy
+    readFile(new URL("../../data/catalog/macro-series.json", import.meta.url), "utf8"),
     readFile(new URL("../src/app/screener/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/screener/ScreenerClient.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/etfs/page.tsx", import.meta.url), "utf8"),
