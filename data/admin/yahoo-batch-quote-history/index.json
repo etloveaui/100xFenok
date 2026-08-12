@@ -1,29 +1,59 @@
 {
   "counts": {
     "active": 6756,
-    "failed": 57,
-    "fresh": 6446,
-    "lkg": 58,
-    "pending_acquisition": 248,
+    "failed": 51,
+    "fresh": 6455,
+    "lkg": 50,
+    "pending_acquisition": 247,
     "pending_history": 0,
-    "retry": 59,
-    "stale": 57,
+    "retry": 51,
+    "stale": 49,
     "terminal": 3,
     "unavailable": 1,
     "untracked": 0
   },
   "current_attempt": {
-    "attempted": 140,
+    "attempted": 132,
     "errors": [
+      {
+        "error": "recovery_not_advanced_by_provider",
+        "failures": [],
+        "ticker": "000880.KS"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for 012510.KS despite available history",
+        "failures": [],
+        "ticker": "012510.KS"
+      },
+      {
+        "error": "recovery_not_advanced_by_provider",
+        "failures": [],
+        "ticker": "036800.KQ"
+      },
+      {
+        "error": "recovery_not_advanced_by_provider",
+        "failures": [],
+        "ticker": "183300.KQ"
+      },
+      {
+        "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
+        "failures": [],
+        "ticker": "230360.KQ"
+      },
       {
         "error": "StockDetailValidationError: Yahoo history close must be a finite number",
         "failures": [],
         "ticker": "AAPL"
       },
       {
-        "error": "ValueError: source timestamp regression for AKAF: quote_as_of 2026-07-13T16:30:21Z < 2026-08-10T13:46:01Z",
+        "error": "foreign_writer_conflict",
         "failures": [],
         "ticker": "AKAF"
+      },
+      {
+        "error": "foreign_writer_conflict",
+        "failures": [],
+        "ticker": "ARKT"
       },
       {
         "error": "empty payload",
@@ -60,17 +90,22 @@
         "ticker": "BK"
       },
       {
-        "error": "foreign_writer_conflict",
+        "error": "recovery_not_advanced_by_provider",
+        "failures": [],
+        "ticker": "BRZX"
+      },
+      {
+        "error": "recovery_not_advanced_by_provider",
         "failures": [],
         "ticker": "BUYO"
       },
       {
-        "error": "foreign_writer_conflict",
+        "error": "recovery_not_advanced_by_provider",
         "failures": [],
         "ticker": "CCRP"
       },
       {
-        "error": "foreign_writer_conflict",
+        "error": "recovery_not_advanced_by_provider",
         "failures": [
           {
             "attempt": 1,
@@ -106,7 +141,7 @@
         "ticker": "CTJL"
       },
       {
-        "error": "foreign_writer_conflict",
+        "error": "recovery_not_advanced_by_provider",
         "failures": [
           {
             "attempt": 1,
@@ -176,12 +211,12 @@
         "ticker": "CTRA"
       },
       {
-        "error": "foreign_writer_conflict",
+        "error": "recovery_not_advanced_by_provider",
         "failures": [],
         "ticker": "CVRD"
       },
       {
-        "error": "foreign_writer_conflict",
+        "error": "recovery_not_advanced_by_provider",
         "failures": [],
         "ticker": "DVVY"
       },
@@ -196,12 +231,12 @@
         "ticker": "EPMB"
       },
       {
-        "error": "foreign_writer_conflict",
+        "error": "recovery_not_advanced_by_provider",
         "failures": [],
         "ticker": "FUSD"
       },
       {
-        "error": "foreign_writer_conflict",
+        "error": "recovery_not_advanced_by_provider",
         "failures": [],
         "ticker": "GBHI"
       },
@@ -216,7 +251,7 @@
         "ticker": "HJLY"
       },
       {
-        "error": "foreign_writer_conflict",
+        "error": "recovery_not_advanced_by_provider",
         "failures": [],
         "ticker": "IMTG"
       },
@@ -228,140 +263,50 @@
       {
         "error": "recovery_not_advanced_by_provider",
         "failures": [],
-        "ticker": "LFDR"
-      },
-      {
-        "error": "foreign_writer_conflict",
-        "failures": [],
         "ticker": "LGDX"
-      },
-      {
-        "error": "foreign_writer_conflict",
-        "failures": [],
-        "ticker": "LIAM"
-      },
-      {
-        "error": "ValueError: source timestamp regression for MAUG: quote_as_of 2026-07-07T19:38:13Z < 2026-08-10T13:46:05Z",
-        "failures": [],
-        "ticker": "MAUG"
-      },
-      {
-        "error": "foreign_writer_conflict",
-        "failures": [],
-        "ticker": "MMAY"
-      },
-      {
-        "error": "ValueError: provider source timestamp is unavailable for MMC",
-        "failures": [
-          {
-            "attempt": 1,
-            "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-            "source": "provider_safe_call"
-          },
-          {
-            "attempt": 1,
-            "error": "KeyError=[redacted]",
-            "source": "provider_safe_call"
-          }
-        ],
-        "ticker": "MMC"
-      },
-      {
-        "error": "foreign_writer_conflict",
-        "failures": [],
-        "ticker": "MUNB"
-      },
-      {
-        "error": "foreign_writer_conflict",
-        "failures": [],
-        "ticker": "NICO"
-      },
-      {
-        "error": "foreign_writer_conflict",
-        "failures": [],
-        "ticker": "ODHY"
-      },
-      {
-        "error": "foreign_writer_conflict",
-        "failures": [],
-        "ticker": "PMDE"
-      },
-      {
-        "error": "foreign_writer_conflict",
-        "failures": [],
-        "ticker": "RAAY"
-      },
-      {
-        "error": "foreign_writer_conflict",
-        "failures": [],
-        "ticker": "RCLY"
-      },
-      {
-        "error": "foreign_writer_conflict",
-        "failures": [],
-        "ticker": "REFA"
-      },
-      {
-        "error": "foreign_writer_conflict",
-        "failures": [],
-        "ticker": "SHUS"
       },
       {
         "error": "recovery_not_advanced_by_provider",
         "failures": [],
-        "ticker": "SMAP"
+        "ticker": "LIAM"
       },
       {
         "error": "foreign_writer_conflict",
         "failures": [],
-        "ticker": "TAPR"
+        "ticker": "MAUG"
+      },
+      {
+        "error": "recovery_not_advanced_by_provider",
+        "failures": [],
+        "ticker": "MMAY"
       },
       {
         "error": "foreign_writer_conflict",
         "failures": [],
-        "ticker": "TOAO"
+        "ticker": "QJN"
       },
       {
-        "error": "foreign_writer_conflict",
+        "error": "recovery_not_advanced_by_provider",
         "failures": [],
-        "ticker": "TROT"
+        "ticker": "QULL"
       },
       {
-        "error": "foreign_writer_conflict",
+        "error": "ValueError: quote_as_of is unavailable for SATS despite available history",
         "failures": [],
-        "ticker": "VMSB"
-      },
-      {
-        "error": "foreign_writer_conflict",
-        "failures": [],
-        "ticker": "VNIE"
-      },
-      {
-        "error": "foreign_writer_conflict",
-        "failures": [],
-        "ticker": "WDE"
-      },
-      {
-        "error": "foreign_writer_conflict",
-        "failures": [],
-        "ticker": "XEML"
-      },
-      {
-        "error": "foreign_writer_conflict",
-        "failures": [],
-        "ticker": "XEUR"
-      },
-      {
-        "error": "foreign_writer_conflict",
-        "failures": [],
-        "ticker": "XPAV"
+        "ticker": "SATS"
       }
     ],
     "event_name": "schedule",
-    "failed": 42,
-    "fetch_attempts": 122,
+    "failed": 32,
+    "fetch_attempts": 118,
     "natural": true,
     "promotion_deferral_symbols": [
+      "000880.KS",
+      "036800.KQ",
+      "183300.KQ",
+      "AKAF",
+      "ARKT",
+      "BRZX",
       "BUYO",
       "CCRP",
       "CTJL",
@@ -376,56 +321,95 @@
       "HJLY",
       "IMTG",
       "LEAD",
-      "LFDR",
       "LGDX",
       "LIAM",
+      "MAUG",
       "MMAY",
-      "MUNB",
-      "NICO",
-      "ODHY",
-      "PMDE",
-      "RAAY",
-      "RCLY",
-      "REFA",
-      "SHUS",
-      "SMAP",
-      "TAPR",
-      "TOAO",
-      "TROT",
-      "VMSB",
-      "VNIE",
-      "WDE",
-      "XEML",
-      "XEUR",
-      "XPAV"
+      "QJN",
+      "QULL"
     ],
-    "promotion_deferrals": 36,
+    "promotion_deferrals": 26,
     "run_attempt": 1,
-    "run_id": "31575211549",
-    "schedule": "7 6 * * 0-5",
-    "skipped": 20,
-    "successes": 78
+    "run_id": "31582524321",
+    "schedule": "7 8 * * 0-5",
+    "skipped": 16,
+    "successes": 84
   },
-  "generated_at": "2026-08-12T07:59:44Z",
+  "generated_at": "2026-08-12T09:23:29Z",
   "lane_id": "yahoo_batch_quote_history",
   "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
-    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
-    "failure_kind": "unexpected",
+    "error": "ValueError: quote_as_of is unavailable for 012510.KS despite available history",
+    "failure_kind": "transient_provider_miss",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-08-12T07:59:44Z",
+    "observed_at": "2026-08-12T09:23:29Z",
     "run_attempt": 1,
-    "run_id": "31575211549",
-    "ticker": "AAPL"
+    "run_id": "31582524321",
+    "ticker": "012510.KS"
   },
   "lkg_details": [
     {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": null,
+      "failure_run_id": null,
+      "max_source_age_business_days": 6,
+      "payload_sha256": "e3298d8564bf93b873d72fd17ccc3a83e24941d3d4cbddf33d86b2281f33a272",
+      "source_age_business_days": 10,
+      "source_as_of": "2026-07-29T06:30:02Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "000880.KS"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-08-12T09:23:29Z",
+      "failure_run_id": "31582524321",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "3afedd0593b21109b3c9a7d5459a8f1ef37be9498a2cbb7ba4740762f97e9410",
+      "source_age_business_days": 14,
+      "source_as_of": "2026-06-25T06:30:30Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "012510.KS"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": null,
+      "failure_run_id": null,
+      "max_source_age_business_days": 6,
+      "payload_sha256": "a078a017da493c88c1ccd5b7bd5858504cd236ec0c5449820b26a08ef423cbb6",
+      "source_age_business_days": 11,
+      "source_as_of": "2026-07-28T06:30:17Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "036800.KQ"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": null,
+      "failure_run_id": null,
+      "max_source_age_business_days": 6,
+      "payload_sha256": "1d1f271e2aeaaa45f1de038aaaad5f08e603c76a8f0c88b87b1dd717f85c2f51",
+      "source_age_business_days": 11,
+      "source_as_of": "2026-07-28T06:30:17Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "183300.KQ"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-08-12T09:23:29Z",
+      "failure_run_id": "31582524321",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "1045a62575964dd495119208688f18897b4819bfdea0ebe9b04b2cdd9c73bf8f",
+      "source_age_business_days": 23,
+      "source_as_of": "2026-06-10T06:30:30Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "230360.KQ"
+    },
+    {
       "expected_resolution": null,
-      "failure_observed_at": "2026-08-12T07:59:44Z",
-      "failure_run_id": "31575211549",
+      "failure_observed_at": "2026-08-12T09:23:29Z",
+      "failure_run_id": "31582524321",
       "max_source_age_business_days": null,
       "payload_sha256": "d01ae0f8be7a8196b6fc5e84f113e9f8fda18c295bc9d57d1e8c13d8c8bd3a30",
       "source_age_business_days": null,
@@ -446,14 +430,36 @@
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-08-12T07:59:44Z",
-      "failure_run_id": "31575211549",
+      "failure_observed_at": "2026-08-11T23:29:49Z",
+      "failure_run_id": "31544436443",
+      "max_source_age_business_days": 6,
+      "payload_sha256": "951d754d4eea6a674d1e0a56bccd304c1f5a7846114270c6cd66f668d29d6622",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-08-05",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "ARKT"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": "2026-08-12T09:23:29Z",
+      "failure_run_id": "31582524321",
       "max_source_age_business_days": 6,
       "payload_sha256": "9a18aac9ec21b758f886d3106e54facef2cfb0011356353c84097bd3fc0c356c",
       "source_age_business_days": 7,
       "source_as_of": "2026-07-02",
       "state_reason": "source_age_exceeds_lane_bound",
       "symbol": "BK"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": null,
+      "failure_run_id": null,
+      "max_source_age_business_days": 6,
+      "payload_sha256": "f4991f3bd9c77ba449478eb22282642e43ce965c2beb674fd9c104fca4756eaa",
+      "source_age_business_days": 40,
+      "source_as_of": "2026-06-15T14:35:42Z",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "BRZX"
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
@@ -501,8 +507,8 @@
     },
     {
       "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-08-12T07:59:44Z",
-      "failure_run_id": "31575211549",
+      "failure_observed_at": "2026-08-12T09:23:29Z",
+      "failure_run_id": "31582524321",
       "max_source_age_business_days": 6,
       "payload_sha256": "c1557c52900d93608f067b98d2df714394a7322a8d53d674d3524d275ab36b27",
       "source_age_business_days": 45,
@@ -564,83 +570,6 @@
       "source_as_of": "2026-08-03T18:46:47Z",
       "state_reason": "source_age_exceeds_lane_bound",
       "symbol": "FUSD"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "5ef75a8dc3d5fc35a34657b6c76dc954f4bcf96aa4c2b7da8568d56bc20eefce",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-08-03T17:51:46Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "GBHI"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-08-12T02:41:04Z",
-      "failure_run_id": "31557511991",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "a2feb2e6a78a18d0ccb62c4e476d406eb58e1b5ce05c0864ad0bde40dec20a2a",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-08-10",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "GEVC"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": "2026-08-11T21:30:39Z",
-      "failure_run_id": "31535092071",
-      "max_source_age_business_days": 6,
-      "payload_sha256": "69adcd8f5ec1d4e80604fddbe42d139f007c600eb37bc391811b871b4d557827",
-      "source_age_business_days": 10,
-      "source_as_of": "2026-08-10",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "HJLY"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "134bb47da1c587f07b3077064b435800e9896df803f04c962d4dc998cd9a4fa6",
-      "source_age_business_days": 51,
-      "source_as_of": "2026-05-29T18:07:20Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "IMTG"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "e42a605590bd8604ecf0b3be7e0b6308de55e1f9a175ddab2d70e9796759f4f1",
-      "source_age_business_days": 19,
-      "source_as_of": "2026-07-14T17:31:32Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "LEAD"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "d89a16140900f6734fe887de6e8f48feba345b17df13b7ee964500a1914f9c78",
-      "source_age_business_days": 7,
-      "source_as_of": "2026-08-03T18:30:03Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "LFDR"
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "failure_observed_at": null,
-      "failure_run_id": null,
-      "max_source_age_business_days": 6,
-      "payload_sha256": "ce4aff24388ba62452819b91ca72f98738be1c274ee60143859bf1f0a1973743",
-      "source_age_business_days": 35,
-      "source_as_of": "2026-06-23T19:22:05Z",
-      "state_reason": "source_age_exceeds_lane_bound",
-      "symbol": "LGDX"
     }
   ],
   "lkg_symbols": [
@@ -665,7 +594,7 @@
     "EPMB",
     "FUSD"
   ],
-  "message": "Yahoo quote/history: fresh=6446, lkg=58, pending_history=0, unavailable=1, pending_acquisition=248, terminal=3, retry=59, failed=57, source_stale=57. Pending history is a normal new-listing state and self-resolves on a natural Yahoo run.",
+  "message": "Yahoo quote/history: fresh=6455, lkg=50, pending_history=0, unavailable=1, pending_acquisition=247, terminal=3, retry=51, failed=51, source_stale=49. Pending history is a normal new-listing state and self-resolves on a natural Yahoo run.",
   "oldest_source_as_of": "2026-03-06T19:02:43Z",
   "oldest_source_ticker": "RAAY",
   "pending_acquisition_details": [
@@ -680,8 +609,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "AKAL"
@@ -697,8 +626,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "ANGU"
@@ -714,8 +643,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "ARCP"
@@ -731,8 +660,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "ARIA"
@@ -748,8 +677,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "ARMS"
@@ -765,8 +694,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "AUGC"
@@ -782,8 +711,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "CAUG"
@@ -799,8 +728,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "CHDG"
@@ -816,8 +745,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "CTAU"
@@ -833,8 +762,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "DDFG"
@@ -850,8 +779,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "DDTG"
@@ -867,8 +796,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "DLCU"
@@ -884,8 +813,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EDIV"
@@ -901,8 +830,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EFFI"
@@ -918,8 +847,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "ELOL"
@@ -935,8 +864,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "31515819191",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EMAU"
@@ -952,8 +881,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EPV"
@@ -969,8 +898,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "ESGD"
@@ -986,8 +915,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "EWI"
@@ -1003,8 +932,8 @@
         "stockanalysis_etf"
       ],
       "first_seen_run_id": "30707126488",
-      "last_seen_at": "2026-08-12T07:59:44Z",
-      "last_seen_run_id": "31575211549",
+      "last_seen_at": "2026-08-12T09:23:29Z",
+      "last_seen_run_id": "31582524321",
       "provider_reachability": "not_attempted",
       "resolution_state": "pending_acquisition",
       "symbol": "FAPR"
@@ -1035,6 +964,266 @@
   "pending_details": [],
   "pending_symbols": [],
   "promotion_deferral_details": [
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-06-11T15:15:38Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "QULL"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-07-21T18:20:05Z",
+      "reason": "foreign_writer_conflict",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "QJN"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-08-03T14:23:05Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "MMAY"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-07-07T19:38:13Z",
+      "reason": "foreign_writer_conflict",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "MAUG"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-07-31T17:45:00Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "LIAM"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-06-23T19:22:05Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "LGDX"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-07-21",
+      "provider_quote_as_of": "2026-07-14T17:31:32Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "LEAD"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-05-29T18:07:20Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "IMTG"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-07-24T16:48:53Z",
+      "reason": "foreign_writer_conflict",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "HJLY"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-07-29T16:46:45Z",
+      "reason": "foreign_writer_conflict",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "GEVC"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-08-03T17:51:46Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "GBHI"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-08-03T18:46:47Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "FUSD"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-07-24T19:59:46Z",
+      "reason": "foreign_writer_conflict",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "EPMB"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-06-24T16:07:21Z",
+      "reason": "foreign_writer_conflict",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "EMXX"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-08-03T16:32:49Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "DVVY"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-08-03T13:30:00Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "CVRD"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-06-09T17:11:49Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "CTJN"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-08-03T14:36:32Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "CTJL"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-05-04T20:00:00Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "CCRP"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-08-03T17:35:20Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "BUYO"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-06-15T14:35:42Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "BRZX"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-08-04T19:12:00Z",
+      "reason": "foreign_writer_conflict",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "ARKT"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-07-13T16:30:21Z",
+      "reason": "foreign_writer_conflict",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "AKAF"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-07-28T06:30:17Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "183300.KQ"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-07-28T06:30:17Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "036800.KQ"
+    },
+    {
+      "event_name": "schedule",
+      "observed_at": "2026-08-12T09:23:29Z",
+      "provider_history_as_of": "2026-08-11",
+      "provider_quote_as_of": "2026-07-29T06:30:02Z",
+      "reason": "recovery_not_advanced_by_provider",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "ticker": "000880.KS"
+    },
     {
       "event_name": "schedule",
       "observed_at": "2026-08-12T07:59:44Z",
@@ -1214,306 +1403,6 @@
       "run_attempt": 1,
       "run_id": "31575211549",
       "ticker": "MUNB"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T07:59:44Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-08-03T14:23:05Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "ticker": "MMAY"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T07:59:44Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-07-31T17:45:00Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "ticker": "LIAM"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T07:59:44Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-06-23T19:22:05Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "ticker": "LGDX"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T07:59:44Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-08-03T18:30:03Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "ticker": "LFDR"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T07:59:44Z",
-      "provider_history_as_of": "2026-07-21",
-      "provider_quote_as_of": "2026-07-14T17:31:32Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "ticker": "LEAD"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T07:59:44Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-05-29T18:07:20Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "ticker": "IMTG"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T07:59:44Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-07-24T16:48:53Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "ticker": "HJLY"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T07:59:44Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-07-29T16:46:45Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "ticker": "GEVC"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T07:59:44Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-08-03T17:51:46Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "ticker": "GBHI"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T07:59:44Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-08-03T18:46:47Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "ticker": "FUSD"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T07:59:44Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-07-24T19:59:46Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "ticker": "EPMB"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T07:59:44Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-06-24T16:07:21Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "ticker": "EMXX"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T07:59:44Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-08-03T16:32:49Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "ticker": "DVVY"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T07:59:44Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-08-03T13:30:00Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "ticker": "CVRD"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T07:59:44Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-06-09T17:11:49Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "ticker": "CTJN"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T07:59:44Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-08-03T14:36:32Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "ticker": "CTJL"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T07:59:44Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-05-04T20:00:00Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "ticker": "CCRP"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T07:59:44Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-08-03T17:35:20Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "ticker": "BUYO"
-    },
-    {
-      "event_name": "workflow_dispatch",
-      "observed_at": "2026-08-12T07:19:10Z",
-      "provider_history_as_of": "2026-08-11",
-      "provider_quote_as_of": "2026-06-15T14:35:42Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31573324569",
-      "ticker": "BRZX"
-    },
-    {
-      "event_name": "workflow_dispatch",
-      "observed_at": "2026-08-12T07:19:10Z",
-      "provider_history_as_of": "2026-08-11",
-      "provider_quote_as_of": "2026-08-04T19:12:00Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31573324569",
-      "ticker": "ARKT"
-    },
-    {
-      "event_name": "workflow_dispatch",
-      "observed_at": "2026-08-12T07:19:10Z",
-      "provider_history_as_of": "2026-08-11",
-      "provider_quote_as_of": "2026-07-28T06:30:17Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31573324569",
-      "ticker": "183300.KQ"
-    },
-    {
-      "event_name": "workflow_dispatch",
-      "observed_at": "2026-08-12T07:19:10Z",
-      "provider_history_as_of": "2026-08-11",
-      "provider_quote_as_of": "2026-07-28T06:30:17Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31573324569",
-      "ticker": "036800.KQ"
-    },
-    {
-      "event_name": "workflow_dispatch",
-      "observed_at": "2026-08-12T07:19:10Z",
-      "provider_history_as_of": "2026-08-11",
-      "provider_quote_as_of": "2026-07-29T06:30:02Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31573324569",
-      "ticker": "000880.KS"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T05:45:23Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-06-22T15:29:26Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31567478446",
-      "ticker": "ZCBG"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T05:45:23Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-04-10T19:35:04Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31567478446",
-      "ticker": "ZCBE"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T05:45:23Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-06-09T13:34:35Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31567478446",
-      "ticker": "ZCBB"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T05:45:23Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-07-21T19:17:58Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31567478446",
-      "ticker": "YCLO"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T05:45:23Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-06-03T16:59:52Z",
-      "reason": "recovery_not_advanced_by_provider",
-      "run_attempt": 1,
-      "run_id": "31567478446",
-      "ticker": "XVO"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T05:45:23Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-06-11T15:15:38Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31567478446",
-      "ticker": "QULL"
-    },
-    {
-      "event_name": "schedule",
-      "observed_at": "2026-08-12T05:45:23Z",
-      "provider_history_as_of": "2026-08-10",
-      "provider_quote_as_of": "2026-07-21T18:20:05Z",
-      "reason": "foreign_writer_conflict",
-      "run_attempt": 1,
-      "run_id": "31567478446",
-      "ticker": "QJN"
     }
   ],
   "retry_symbols": [
@@ -1542,7 +1431,6 @@
     "HJLY",
     "IMTG",
     "LEAD",
-    "LFDR",
     "LGDX",
     "LIAM",
     "MAUG",
@@ -1560,9 +1448,7 @@
     "SATS",
     "SHUS",
     "SMAP",
-    "SSMG",
     "TAPR",
-    "TEMD",
     "TOAO",
     "TROT",
     "VMSB",
@@ -1570,12 +1456,7 @@
     "WDE",
     "XEML",
     "XEUR",
-    "XPAV",
-    "XVO",
-    "YCLO",
-    "ZCBB",
-    "ZCBE",
-    "ZCBG"
+    "XPAV"
   ],
   "schema_version": "yahoo-batch-quote-history-index/v1",
   "stale_groups": [
@@ -1604,15 +1485,6 @@
       "source_as_of": "2026-03-24T15:56:44Z",
       "symbols": [
         "TROT"
-      ]
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 84,
-      "source_as_of": "2026-04-10T19:35:04Z",
-      "symbols": [
-        "ZCBE"
       ]
     },
     {
@@ -1700,27 +1572,9 @@
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
       "source_age_business_days": 47,
-      "source_as_of": "2026-06-03T16:59:52Z",
-      "symbols": [
-        "XVO"
-      ]
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 47,
       "source_as_of": "2026-06-04T18:12:01Z",
       "symbols": [
         "SHUS"
-      ]
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 43,
-      "source_as_of": "2026-06-09T13:34:35Z",
-      "symbols": [
-        "ZCBB"
       ]
     },
     {
@@ -1775,15 +1629,6 @@
       "source_as_of": "2026-06-15T18:55:51Z",
       "symbols": [
         "XPAV"
-      ]
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 35,
-      "source_as_of": "2026-06-22T15:29:26Z",
-      "symbols": [
-        "ZCBG"
       ]
     },
     {
@@ -1879,15 +1724,6 @@
     {
       "expected_resolution": "next_natural_yahoo_run",
       "max_source_age_business_days": 6,
-      "source_age_business_days": 15,
-      "source_as_of": "2026-07-21T19:17:58Z",
-      "symbols": [
-        "YCLO"
-      ]
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "max_source_age_business_days": 6,
       "source_age_business_days": 7,
       "source_as_of": "2026-07-24",
       "symbols": [
@@ -1901,15 +1737,6 @@
       "source_as_of": "2026-07-24T16:48:53Z",
       "symbols": [
         "HJLY"
-      ]
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 13,
-      "source_as_of": "2026-07-24T18:45:35Z",
-      "symbols": [
-        "TEMD"
       ]
     },
     {
@@ -1938,15 +1765,6 @@
       "source_as_of": "2026-07-29T16:46:45Z",
       "symbols": [
         "GEVC"
-      ]
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 9,
-      "source_as_of": "2026-07-30T19:35:41Z",
-      "symbols": [
-        "SSMG"
       ]
     },
     {
@@ -2037,15 +1855,6 @@
       "source_as_of": "2026-08-03T17:51:46Z",
       "symbols": [
         "GBHI"
-      ]
-    },
-    {
-      "expected_resolution": "next_natural_yahoo_run",
-      "max_source_age_business_days": 6,
-      "source_age_business_days": 7,
-      "source_as_of": "2026-08-03T18:30:03Z",
-      "symbols": [
-        "LFDR"
       ]
     },
     {

@@ -53,13 +53,26 @@
       "run_id": "31575211549",
       "schedule": "7 6 * * 0-5",
       "shard": "39/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 586,
+      "natural": true,
+      "observed_at": "2026-08-12T09:23:29Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "schedule": "7 8 * * 0-5",
+      "shard": "40/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T02:42:30Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/LFDR.json",
-    "payload_sha256": "d89a16140900f6734fe887de6e8f48feba345b17df13b7ee964500a1914f9c78",
+    "fetched_at": "2026-08-12T09:24:52Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/yf/finance/LFDR.json",
+    "payload_sha256": "5c154b64b068d65231723f31d992d46396a3c0e8a8d2de6267f1b4fb3bef1eed",
     "quote_as_of": "2026-08-03T18:30:03Z",
     "source_as_of": "2026-08-03T18:30:03Z"
   },
@@ -68,26 +81,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 667,
+    "latency_ms": 586,
     "natural": true,
-    "observed_at": "2026-08-12T07:59:44Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-12T09:23:29Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31575211549",
-    "schedule": "7 6 * * 0-5",
-    "shard": "39/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-12T07:59:44Z",
-    "provider_history_as_of": "2026-08-10",
-    "provider_quote_as_of": "2026-08-03T18:30:03Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31575211549"
+    "run_id": "31582524321",
+    "schedule": "7 8 * * 0-5",
+    "shard": "40/72"
   },
   "lkg": {
     "fetched_at": "2026-08-12T02:42:30Z",
@@ -100,17 +103,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-12T02:41:04Z",
-    "payload_sha256": "adf4eaf92918cac61edfb56981b773a5331d9d66f300d0c17823a61907b4b601",
+    "history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T09:23:29Z",
+    "payload_sha256": "f2c936e8701498df6cbced0c213264ca76f95274a54bf6942dfb9a2a03bfdf0a",
     "quote_as_of": "2026-08-03T18:30:03Z",
     "run_attempt": 1,
-    "run_id": "31557511991",
+    "run_id": "31582524321",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-03T18:30:03Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -123,5 +126,5 @@
     "source_as_of": "2026-08-03T18:30:03Z"
   },
   "ticker": "LFDR",
-  "updated_at": "2026-08-12T07:59:44Z"
+  "updated_at": "2026-08-12T09:23:29Z"
 }

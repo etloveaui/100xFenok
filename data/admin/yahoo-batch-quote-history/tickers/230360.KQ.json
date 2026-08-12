@@ -5,20 +5,6 @@
       "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 689,
-      "natural": true,
-      "observed_at": "2026-08-10T19:09:16Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31422533403",
-      "schedule": "7 18 * * 0-5",
-      "shard": "21/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 572,
       "natural": true,
       "observed_at": "2026-08-10T20:51:42Z",
@@ -201,6 +187,20 @@
       "run_id": "31573324569",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 495,
+      "natural": true,
+      "observed_at": "2026-08-12T09:23:29Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31582524321",
+      "schedule": "7 8 * * 0-5",
+      "shard": "40/72"
     }
   ],
   "current": {
@@ -217,22 +217,16 @@
   "last_attempt": {
     "attempts_used": 1,
     "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
-    "event_name": "workflow_dispatch",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "ImportError: `Import lxml` failed. Use pip or conda to install the lxml package.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 4140,
-    "natural": false,
-    "observed_at": "2026-08-12T07:19:10Z",
+    "event_name": "schedule",
+    "failures": [],
+    "latency_ms": 495,
+    "natural": true,
+    "observed_at": "2026-08-12T09:23:29Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31573324569",
-    "schedule": "",
-    "shard": ""
+    "run_id": "31582524321",
+    "schedule": "7 8 * * 0-5",
+    "shard": "40/72"
   },
   "latest_failure": {
     "attempts_used": 1,
@@ -240,17 +234,11 @@
     "deferred_acquisition": false,
     "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
     "failure_kind": "transient_provider_miss",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "ImportError: `Import lxml` failed. Use pip or conda to install the lxml package.",
-        "source": "provider_safe_call"
-      }
-    ],
+    "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-08-12T07:19:10Z",
+    "observed_at": "2026-08-12T09:23:29Z",
     "run_attempt": 1,
-    "run_id": "31573324569"
+    "run_id": "31582524321"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:48:17Z",
@@ -274,5 +262,5 @@
     "source_as_of": "2026-06-10T06:30:30Z"
   },
   "ticker": "230360.KQ",
-  "updated_at": "2026-08-12T07:19:10Z"
+  "updated_at": "2026-08-12T09:23:29Z"
 }
