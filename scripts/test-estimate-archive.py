@@ -456,6 +456,87 @@ def test_11_cli_seed_smoke_and_usage_exit_code() -> None:
         assert estimate_archive.main([]) == 2  # usage error, returns before any path work
 
 
+def test_12_initial_all_null_estimate_block_skipped_without_shard_entry() -> None:
+    """Efficiency defect (#380 follow-up): an all-null 7-field block with NO prior
+    archived entry must NOT be archived (ETF-style payloads carry the fields as
+    null, and the first observation of such a ticker is noise, not an estimate).
+    A later real block must still be archived as the ticker's first observation."""
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp) / "archive"
+        archive = estimate_archive.EstimateArchive(root, now_iso=NOW_ISO)
+        null_block = {key: None for key in estimate_archive.ESTIMATE_FIELDS}
+        payload = make_payload("SPY", fetched_at="2026-08-10T01:00:00Z", block=null_block)
+
+        outcome = archive.archive_if_changed("SPY", payload)
+        assert outcome == {
+            "appended": False, "skipped": True, "failure": False, "reason": "no_estimate_values",
+        }, outcome
+        assert not (root / f"{DAY}.json").exists(), \
+            "an all-null initial observation must not create a shard"
+
+        # a subsequent real block is still the FIRST observation (must append)
+        real = make_payload("SPY", fetched_at="2026-08-10T02:00:00Z")
+        assert archive.archive_if_changed("SPY", real)["appended"] is True
+        shard = read_json(root / f"{DAY}.json")
+        assert len(shard) == 1, shard
+        assert shard[0]["block_hash"] == estimate_archive.block_hash(real["data"])
+
+
+def test_13_valued_to_all_null_transition_appends_disappearance_event() -> None:
+    """A ticker that previously archived a valued block must archive a later
+    all-null block: that is a meaningful disappearance event, not noise."""
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp) / "archive"
+        archive = estimate_archive.EstimateArchive(root, now_iso=NOW_ISO)
+        valued = make_payload("MSFT", fetched_at="2026-08-10T01:00:00Z")
+        null_block = {key: None for key in estimate_archive.ESTIMATE_FIELDS}
+        vanished = make_payload("MSFT", fetched_at="2026-08-11T01:00:00Z", block=null_block)
+
+        assert archive.archive_if_changed("MSFT", valued)["appended"]
+        day2 = estimate_archive.EstimateArchive(root, now_iso="2026-08-11T05:00:00Z")
+        outcome = day2.archive_if_changed("MSFT", vanished)
+        assert outcome["appended"] is True, outcome
+        assert outcome["reason"] is None, outcome
+
+        shard = read_json(root / "2026-08-11.json")
+        assert len(shard) == 1, shard
+        assert shard[0]["block_hash"] == estimate_archive.block_hash(null_block)
+        assert shard[0]["estimates"] == null_block
+
+        # repeating the all-null block is an unchanged skip (hash already archived)
+        again = day2.archive_if_changed("MSFT", vanished)
+        assert again["reason"] == "unchanged", again
+        assert len(read_json(root / "2026-08-11.json")) == 1
+
+
+def test_14_seed_skips_initial_all_null_files_and_still_seeds_valued() -> None:
+    """Seed applies the same rule: an all-null estimate file with no prior entry
+    is not a covered file and must not create shard rows."""
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        finance = tmp_path / "finance"
+        finance.mkdir()
+        null_block = {key: None for key in estimate_archive.ESTIMATE_FIELDS}
+        paths = [
+            finance / "AAA.json",  # valued -> seeded
+            finance / "BBB.json",  # all-null initial -> skipped
+        ]
+        paths[0].write_text(
+            json.dumps(make_payload("AAA", fetched_at="2026-07-01T03:00:00Z")), encoding="utf-8"
+        )
+        paths[1].write_text(
+            json.dumps(make_payload("BBB", fetched_at="2026-07-10T00:00:00Z", block=null_block)),
+            encoding="utf-8",
+        )
+
+        archive = estimate_archive.EstimateArchive(tmp_path / "archive", now_iso=NOW_ISO)
+        counts = archive.seed(paths)
+        assert counts == {"seeded": 1, "skipped": 1, "failures": 0, "no_fields": 0}, counts
+        assert (tmp_path / "archive" / "2026-07-01.json").is_file()
+        assert not (tmp_path / "archive" / "2026-07-10.json").exists(), \
+            "an all-null initial file must not create a shard"
+
+
 # --------------------------------------------------------------------------
 # known-issue probe (does NOT gate the exit code; reproduced bug, see report)
 # --------------------------------------------------------------------------
@@ -510,6 +591,9 @@ CASES = [
     ("9 last_entry_for returns newest-day entry", test_9_last_entry_for_returns_newest_day_entry),
     ("10 canonical finance files stay byte-identical", test_10_canonical_finance_files_stay_byte_identical),
     ("11 CLI --seed smoke and usage exit code", test_11_cli_seed_smoke_and_usage_exit_code),
+    ("12 initial all-null block skipped, no shard row", test_12_initial_all_null_estimate_block_skipped_without_shard_entry),
+    ("13 valued -> all-null transition appends disappearance event", test_13_valued_to_all_null_transition_appends_disappearance_event),
+    ("14 seed skips initial all-null files", test_14_seed_skips_initial_all_null_files_and_still_seeds_valued),
 ]
 
 PROBES = [

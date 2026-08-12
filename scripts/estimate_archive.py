@@ -57,6 +57,11 @@ def block_hash(block: dict) -> str:
     return hashlib.sha256(stable_dumps(block).encode("utf-8")).hexdigest()
 
 
+def _all_values_null(block: dict) -> bool:
+    """True when the block exists syntactically but carries no usable value."""
+    return bool(block) and all(value is None for value in block.values())
+
+
 def _atomic_write_bytes(path: Path, payload_bytes: bytes) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_bytes(payload_bytes)
@@ -161,6 +166,16 @@ class EstimateArchive:
                 outcome["reason"] = "unchanged"
                 self._bump_summary(appended=0, skipped=1, failures=0)
                 return outcome
+            if _all_values_null(block) and prior is None:
+                # Efficiency guard: an initial all-null observation (ETF-style
+                # payloads carry the 7 fields as null) is not a point-in-time
+                # estimate and must not create a shard row. A valued -> all-null
+                # transition is a disappearance event and still appends
+                # (prior is not None, so this branch is not taken).
+                outcome["skipped"] = True
+                outcome["reason"] = "no_estimate_values"
+                self._bump_summary(appended=0, skipped=1, failures=0)
+                return outcome
             if receipt_at is None:
                 receipt_at = payload.get("fetched_at")
             if not _parse_iso(receipt_at):
@@ -225,6 +240,11 @@ class EstimateArchive:
             entry_hash = block_hash(block)
             prior = self.last_entry_for(ticker)
             if prior is not None and prior.get("block_hash") == entry_hash:
+                counts["skipped"] += 1
+                continue
+            if _all_values_null(block) and prior is None:
+                # Same efficiency guard as archive_if_changed: an all-null
+                # estimate file with no prior entry is not a covered file.
                 counts["skipped"] += 1
                 continue
             shard, shard_ok = self._read_shard(receipt_at[:10])
