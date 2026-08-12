@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-12T04:48:08.776Z",
+  "generated_at": "2026-08-12T09:16:08.154Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 4,
   "open_incidents": [
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -17,6 +17,19 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "overdue"
+    },
+    {
+      "workflow": "fetch-fred-macro.yml",
+      "label": "Fetch FRED Macro Data",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 31474859038,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31474859038",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
     },
     {
       "workflow": "fetch-stockanalysis.yml",
@@ -437,12 +450,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31564301009",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31564301009",
-    "observed_at": "2026-08-12T04:48:08.776Z",
+    "run_id": "31581944400",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31581944400",
+    "observed_at": "2026-08-12T09:16:08.154Z",
     "event": "workflow_run",
     "workflows": [
       "fetch-edgar-filings.yml",
+      "fetch-fred-macro.yml",
       "fetch-stockanalysis.yml",
       "fetch-yf-finance.yml"
     ],
