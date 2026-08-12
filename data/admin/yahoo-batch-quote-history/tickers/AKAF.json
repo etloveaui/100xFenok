@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 638,
-      "natural": true,
-      "observed_at": "2026-08-05T10:46:42Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30998672232",
-      "schedule": "7 8 * * 0-5",
-      "shard": "40/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 850,
       "natural": true,
       "observed_at": "2026-08-09T03:52:19Z",
@@ -192,34 +179,46 @@
       "run_id": "31602424796",
       "schedule": "7 12 * * 0-5",
       "shard": "42/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 416,
+      "natural": true,
+      "observed_at": "2026-08-12T15:08:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31610461024",
+      "schedule": "7 14 * * 0-5",
+      "shard": "43/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T19:10:00Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AKAF.json",
-    "payload_sha256": "bbe5426cb7b13ebb8ba11e389da20cc28278f83ecde6dba0ee40767a7b6da413",
-    "quote_as_of": "2026-08-10T13:46:01Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-08-12T15:09:18Z",
+    "history_as_of": "2026-08-12",
+    "path": "data/yf/finance/AKAF.json",
+    "payload_sha256": "6bca549450ecd7d535b5fbb90e98d100c1ab926fc5b0d57b44627f941647f636",
+    "quote_as_of": "2026-08-12T13:46:02Z",
+    "source_as_of": "2026-08-12"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 804,
+    "latency_ms": 416,
     "natural": true,
-    "observed_at": "2026-08-12T13:41:31Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-12T15:08:24Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31602424796",
-    "schedule": "7 12 * * 0-5",
-    "shard": "42/72"
+    "run_id": "31610461024",
+    "schedule": "7 14 * * 0-5",
+    "shard": "43/72"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -230,15 +229,6 @@
     "observed_at": "2026-08-12T07:59:44Z",
     "run_attempt": 1,
     "run_id": "31575211549"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-12T13:41:31Z",
-    "provider_history_as_of": "2026-08-10",
-    "provider_quote_as_of": "2026-07-13T16:30:21Z",
-    "reason": "foreign_writer_conflict",
-    "run_attempt": 1,
-    "run_id": "31602424796"
   },
   "lkg": {
     "fetched_at": "2026-08-10T19:10:00Z",
@@ -251,17 +241,22 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-10T19:09:16Z",
-    "payload_sha256": "8a34947b08b1a7f76c0047a3024892be97f613d7f63be105d09cfca35357a83e",
-    "quote_as_of": "2026-08-10T13:46:01Z",
+    "history_as_of": "2026-08-12",
+    "observed_at": "2026-08-12T15:08:24Z",
+    "payload_sha256": "dc2f23328715bac5bd7e7a1a77d34e9cbd04d92ba315fe9c5138b28eaf08e260",
+    "quote_as_of": "2026-08-12T13:46:02Z",
     "run_attempt": 1,
-    "run_id": "31422533403",
+    "run_id": "31610461024",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-08-12"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-08-12T15:08:24Z",
+  "recovered_from_run_id": "31575211549",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "31610461024",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 19,
@@ -274,5 +269,5 @@
     "source_as_of": "2026-07-13T16:30:21Z"
   },
   "ticker": "AKAF",
-  "updated_at": "2026-08-12T13:41:31Z"
+  "updated_at": "2026-08-12T15:08:24Z"
 }

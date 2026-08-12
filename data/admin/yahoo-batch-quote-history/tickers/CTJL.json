@@ -457,22 +457,65 @@
       "run_id": "31602424796",
       "schedule": "7 12 * * 0-5",
       "shard": "42/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 483,
+      "natural": true,
+      "observed_at": "2026-08-12T15:08:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31610461024",
+      "schedule": "7 14 * * 0-5",
+      "shard": "43/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T04:18:02Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CTJL.json",
-    "payload_sha256": "b86dcf5ee4cb8f4903d69ccdda0bc1ca369ae06bf57a3f1b3e3adb413971d668",
-    "quote_as_of": "2026-08-03T14:36:32Z",
-    "source_as_of": "2026-08-03T14:36:32Z"
+    "fetched_at": "2026-08-12T15:09:32Z",
+    "history_as_of": "2026-08-12",
+    "path": "data/yf/finance/CTJL.json",
+    "payload_sha256": "a34cd28957a641d51fc5dca9b79d5666427fbaae985b6fe8090f28a9e31a87fa",
+    "quote_as_of": "2026-08-12T13:46:03Z",
+    "source_as_of": "2026-08-12"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [
       {
@@ -506,23 +549,14 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 1063,
+    "latency_ms": 483,
     "natural": true,
-    "observed_at": "2026-08-12T13:41:31Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-12T15:08:24Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31602424796",
-    "schedule": "7 12 * * 0-5",
-    "shard": "42/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-12T13:41:31Z",
-    "provider_history_as_of": "2026-08-10",
-    "provider_quote_as_of": "2026-08-03T14:36:32Z",
-    "reason": "foreign_writer_conflict",
-    "run_attempt": 1,
-    "run_id": "31602424796"
+    "run_id": "31610461024",
+    "schedule": "7 14 * * 0-5",
+    "shard": "43/72"
   },
   "lkg": {
     "fetched_at": "2026-08-12T04:18:02Z",
@@ -535,17 +569,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T04:17:21Z",
-    "payload_sha256": "ac673f46d242cdc976fe8736597cd9af0645d161c328b7768a42e0ad764ee0a3",
-    "quote_as_of": "2026-08-03T14:36:32Z",
+    "history_as_of": "2026-08-12",
+    "observed_at": "2026-08-12T15:08:24Z",
+    "payload_sha256": "ac023d8bef1d88eaaff4637d411ad6f03ea2af6888c5e5ad7f94b44760cffcff",
+    "quote_as_of": "2026-08-12T13:46:03Z",
     "run_attempt": 1,
-    "run_id": "31562660637",
+    "run_id": "31610461024",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03T14:36:32Z"
+    "source_as_of": "2026-08-12"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -558,5 +592,5 @@
     "source_as_of": "2026-08-03T14:36:32Z"
   },
   "ticker": "CTJL",
-  "updated_at": "2026-08-12T13:41:31Z"
+  "updated_at": "2026-08-12T15:08:24Z"
 }

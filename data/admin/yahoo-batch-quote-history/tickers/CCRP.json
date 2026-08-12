@@ -5,20 +5,6 @@
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 615,
-      "natural": true,
-      "observed_at": "2026-08-10T20:51:42Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31430923656",
-      "schedule": "7 20 * * 0-5",
-      "shard": "22/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 763,
       "natural": true,
       "observed_at": "2026-08-10T22:52:08Z",
@@ -193,6 +179,20 @@
       "run_id": "31602424796",
       "schedule": "7 12 * * 0-5",
       "shard": "42/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 431,
+      "natural": true,
+      "observed_at": "2026-08-12T15:08:24Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31610461024",
+      "schedule": "7 14 * * 0-5",
+      "shard": "43/72"
     }
   ],
   "current": {
@@ -211,23 +211,23 @@
     "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 974,
+    "latency_ms": 431,
     "natural": true,
-    "observed_at": "2026-08-12T13:41:31Z",
+    "observed_at": "2026-08-12T15:08:24Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31602424796",
-    "schedule": "7 12 * * 0-5",
-    "shard": "42/72"
+    "run_id": "31610461024",
+    "schedule": "7 14 * * 0-5",
+    "shard": "43/72"
   },
   "latest_promotion_deferral": {
     "event_name": "schedule",
-    "observed_at": "2026-08-12T13:41:31Z",
+    "observed_at": "2026-08-12T15:08:24Z",
     "provider_history_as_of": "2026-08-10",
     "provider_quote_as_of": "2026-05-04T20:00:00Z",
     "reason": "foreign_writer_conflict",
     "run_attempt": 1,
-    "run_id": "31602424796"
+    "run_id": "31610461024"
   },
   "lkg": {
     "fetched_at": "2026-08-12T04:18:19Z",
@@ -263,5 +263,5 @@
     "source_as_of": "2026-05-04T20:00:00Z"
   },
   "ticker": "CCRP",
-  "updated_at": "2026-08-12T13:41:31Z"
+  "updated_at": "2026-08-12T15:08:24Z"
 }

@@ -67,41 +67,44 @@
       "run_id": "31590557839",
       "schedule": "7 10 * * 0-5",
       "shard": "41/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 570,
+      "natural": true,
+      "observed_at": "2026-08-12T15:08:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31610461024",
+      "schedule": "7 14 * * 0-5",
+      "shard": "43/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T04:17:56Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/NICO.json",
-    "payload_sha256": "ee620559050cd599eaff7416009d8b207a1aa0edd23f99f4937b68873fc26c5f",
-    "quote_as_of": "2026-08-03T15:31:08Z",
-    "source_as_of": "2026-08-03T15:31:08Z"
+    "fetched_at": "2026-08-12T15:08:45Z",
+    "history_as_of": "2026-08-12",
+    "path": "data/yf/finance/NICO.json",
+    "payload_sha256": "629f09fcee99ce317a8ba9aac04e2df647dd20a330d75d3b4e80b1a4e796ab1e",
+    "quote_as_of": "2026-08-12T13:46:07Z",
+    "source_as_of": "2026-08-12"
   },
   "discovered_from": [
     "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 658,
+    "latency_ms": 570,
     "natural": true,
-    "observed_at": "2026-08-12T11:11:11Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-12T15:08:24Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31590557839",
-    "schedule": "7 10 * * 0-5",
-    "shard": "41/72"
-  },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-12T11:11:11Z",
-    "provider_history_as_of": "2026-08-11",
-    "provider_quote_as_of": "2026-08-03T15:31:08Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31590557839"
+    "run_id": "31610461024",
+    "schedule": "7 14 * * 0-5",
+    "shard": "43/72"
   },
   "lkg": {
     "fetched_at": "2026-08-12T04:17:56Z",
@@ -114,17 +117,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T04:17:21Z",
-    "payload_sha256": "ecac59201d17db584b51dd9636f5138703217ba2107a3d8281cba2b7636fe4a1",
-    "quote_as_of": "2026-08-03T15:31:08Z",
+    "history_as_of": "2026-08-12",
+    "observed_at": "2026-08-12T15:08:24Z",
+    "payload_sha256": "d96c2c86437279ac646f666079885244049d0ea3bfe71f36fdc0aa8f46744acd",
+    "quote_as_of": "2026-08-12T13:46:07Z",
     "run_attempt": 1,
-    "run_id": "31562660637",
+    "run_id": "31610461024",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-03T15:31:08Z"
+    "source_as_of": "2026-08-12"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -137,5 +140,5 @@
     "source_as_of": "2026-08-03T15:31:08Z"
   },
   "ticker": "NICO",
-  "updated_at": "2026-08-12T11:11:11Z"
+  "updated_at": "2026-08-12T15:08:24Z"
 }

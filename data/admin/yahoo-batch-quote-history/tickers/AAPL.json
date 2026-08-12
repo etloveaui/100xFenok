@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 649,
-      "natural": false,
-      "observed_at": "2026-08-01T21:14:53Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30718396938",
-      "schedule": "",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 551,
@@ -186,6 +173,19 @@
       "run_id": "31602424796",
       "schedule": "7 12 * * 0-5",
       "shard": "42/72"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-12T15:08:24Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31610461024",
+      "schedule": "7 14 * * 0-5",
+      "shard": "43/72"
     }
   ],
   "current": {
@@ -202,17 +202,17 @@
     "portfolio_configuration"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1070,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-12T13:41:31Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T15:08:24Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "31602424796",
-    "schedule": "7 12 * * 0-5",
-    "shard": "42/72"
+    "run_id": "31610461024",
+    "schedule": "7 14 * * 0-5",
+    "shard": "43/72"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -255,5 +255,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AAPL",
-  "updated_at": "2026-08-12T13:41:31Z"
+  "updated_at": "2026-08-12T15:08:24Z"
 }
